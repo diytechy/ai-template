@@ -621,6 +621,27 @@ def _launch(root, table, branch, wi_ids, exclusive, args, worker):
     table.append(ln)
 
 
+def _close_done_adjudication(root, branch):
+    """THE ADJUDICATION-ROW CLOSE (OI-70/OI-73, Done-when 1) on a DONE worker.
+
+    A DONE worker whose specs are still in active/ is normally the stall
+    candidate — but an adjudication row that recorded its verdict owes a
+    MECHANICAL close, because the machinery (not the agent's own spec_move) is
+    what moves its drafts into queued/ and archives the row terminal (the C6
+    loop OI-70 measured, where the dispatcher resumed a finished adjudication
+    row forever). `close_adjudication` no-ops for a non-adjudication lane (that
+    stall candidate is unchanged) and for one already self-closed, and refuses a
+    disposition that drafted no successor (the refusal invariant). Returns the
+    fatal exit code on a refusal, else None."""
+    if branch in integrate.finished_branches(root):
+        return None
+    _ids, refusal = handback.close_adjudication(root, branch)
+    if refusal:
+        _say("cannot close adjudication {}: {}".format(branch, refusal), err=True)
+        return ac.EXIT_PREFLIGHT
+    return None
+
+
 def _advance(root, ln, tier):
     """Advance one lane's state machine by one poll: None while busy, else a
     `(verb, code)` event —
@@ -640,22 +661,10 @@ def _advance(root, ln, tier):
             rc = _lane_close(root, ln.branch, code)
             if rc is not None:
                 return ("fatal", rc)
-        elif ln.branch not in integrate.finished_branches(root):
-            # THE ADJUDICATION-ROW CLOSE (OI-70/OI-73, Done-when 1). A DONE
-            # worker whose specs are still in active/ is normally the stall
-            # candidate — but an adjudication row that recorded its verdict owes
-            # a mechanical close, because the machinery (not the agent's own
-            # spec_move) is what moves its drafts into queued/ and archives the
-            # row terminal. `close_adjudication` no-ops for a non-adjudication
-            # lane (that stall candidate is unchanged) and refuses a disposition
-            # that drafted no successor (the refusal invariant).
-            _ids, refusal = handback.close_adjudication(root, ln.branch)
-            if refusal:
-                _say(
-                    "cannot close adjudication {}: {}".format(ln.branch, refusal),
-                    err=True,
-                )
-                return ("fatal", ac.EXIT_PREFLIGHT)
+        else:
+            rc = _close_done_adjudication(root, ln.branch)
+            if rc is not None:
+                return ("fatal", rc)
         if ln.branch in integrate.finished_branches(root):
             # The lane's tree named an outcome — run ITS refresh in ITS own
             # subprocess (§A4.3: N bars must overlap, not queue here).

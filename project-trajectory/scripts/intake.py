@@ -1414,6 +1414,51 @@ def _mint_shape_refusal(draft, subject_verb):
     return None
 
 
+def _write_context(path, root, draft, row, registry):
+    """Append the minted row's `## Context` — the trigger's derived context then
+    the advisory registry joins (clause 4, consumer 1: a minted row has no spec
+    author, so the block is written at mint, computed over the pre-mint
+    registry). A no-op when neither is present."""
+    context = str(draft.get("context") or "").rstrip("\n")
+    joins = context_block(root, row, registry)
+    if joins:
+        context = (context + "\n\n" if context else "") + joins
+    if context:
+        with path.open("a", encoding="utf-8", newline="\n") as fh:
+            fh.write("\n## Context\n\n" + context + "\n")
+
+
+def _apply_supersede(root, draft, wi_id):
+    """OI-73 arm 4: a successor carrying `supersedes` REPLACES the superseded
+    row's inbound hard edges, in the SAME commit as the mint, so the WI-541-class
+    strand (a live dependent left waiting on a terminal row) is unrepresentable
+    rather than merely reported by the validator net."""
+    superseded = str(draft.get("supersedes") or "").strip()
+    if not superseded:
+        return
+    for rel_changed in _replace_inbound_edges(root, superseded, wi_id):
+        _say("re-pointed {}'s edge {} -> {}".format(rel_changed, superseded, wi_id))
+
+
+def _inject_open_item(root, draft, wi_id):
+    """OI-73 exit (B): where a draft names a human-owed `open_item`, mint a
+    `pending` open item (id from the watermark's OI space) and land its id in
+    THIS successor's `needs` — BEFORE the row is written, so the ruling gates
+    the successor's readiness (a new waiting reason) instead of relying on
+    adjudicator restraint. No standalone OI exit exists. Returns `(draft,
+    refusal)`; the draft is unchanged when it names no open item."""
+    question = str(draft.get("open_item") or "").strip()
+    if not question:
+        return draft, None
+    oi_id, refusal = _mint_open_item(root, question, wi_id)
+    if refusal:
+        return draft, refusal
+    needs = list(draft.get("needs") or [])
+    if oi_id not in needs:
+        needs.append(oi_id)
+    return dict(draft, needs=needs), None
+
+
 def _mint(root, drafts, subject_verb):
     """Write every draft as a queued spec, then ONE bookkeeping commit.
     `([(wi_id, relpath)], refusal)`; all-or-nothing — a refusal restores trunk
@@ -1431,22 +1476,11 @@ def _mint(root, drafts, subject_verb):
     minted = []
     for draft in drafts:
         wi_id = next_wi_id(root)
-        # OI-73 exit (B): a human-owed answer becomes a `pending` open item that
-        # is a HARD dependency of THIS successor — minted BEFORE the row is
-        # written so the OI id rides into its `needs`, so the ruling gates the
-        # successor's readiness (a new waiting reason) instead of relying on
-        # adjudicator restraint. No standalone OI exit exists.
-        question = str(draft.get("open_item") or "").strip()
-        if question:
-            oi_id, oi_refusal = _mint_open_item(root, question, wi_id)
-            if oi_refusal:
-                ac.git(root, "reset", "--hard", "HEAD")
-                ac.git(root, "clean", "-fd", "--", WORK)
-                return [], "{}: {}".format(subject_verb, oi_refusal)
-            needs = list(draft.get("needs") or [])
-            if oi_id not in needs:
-                needs.append(oi_id)
-            draft = dict(draft, needs=needs)
+        draft, oi_refusal = _inject_open_item(root, draft, wi_id)
+        if oi_refusal:
+            ac.git(root, "reset", "--hard", "HEAD")
+            ac.git(root, "clean", "-fd", "--", WORK)
+            return [], "{}: {}".format(subject_verb, oi_refusal)
         row = _draft_row(wi_id, draft)
         try:
             rel = wi_convert.write_spec_file(root / WORK, row)
@@ -1454,26 +1488,9 @@ def _mint(root, drafts, subject_verb):
             ac.git(root, "reset", "--hard", "HEAD")
             ac.git(root, "clean", "-fd", "--", WORK)
             return [], "the mint could not write {}: {}".format(wi_id, exc)
-        path = root / WORK / rel
-        # The trigger's derived context, then the registry joins (clause 4,
-        # consumer 1: minted rows have no spec author, so the block is written
-        # at mint — advisory, and computed over the pre-mint registry).
-        context = str(draft.get("context") or "").rstrip("\n")
-        joins = context_block(root, row, registry)
-        if joins:
-            context = (context + "\n\n" if context else "") + joins
-        if context:
-            with path.open("a", encoding="utf-8", newline="\n") as fh:
-                fh.write("\n## Context\n\n" + context + "\n")
+        _write_context(root / WORK / rel, root, draft, row, registry)
         minted.append((wi_id, (Path(WORK) / rel).as_posix()))
-        # OI-73 arm 4: a successor carrying `supersedes` REPLACES the superseded
-        # row's inbound hard edges, in the SAME commit as the mint, so the
-        # WI-541-class strand (a live dependent left waiting on a terminal row)
-        # is unrepresentable rather than merely reported by the validator net.
-        superseded = str(draft.get("supersedes") or "").strip()
-        if superseded:
-            for rel_changed in _replace_inbound_edges(root, superseded, wi_id):
-                _say("re-pointed {}'s edge {} -> {}".format(rel_changed, superseded, wi_id))
+        _apply_supersede(root, draft, wi_id)
     # RAISE THE MARK IN THE SAME COMMIT that files the specs. A mint that
     # allocates an id without recording it leaves the mark behind the tree, and
     # trace.py's integrity pass reads that as "an id was allocated past the

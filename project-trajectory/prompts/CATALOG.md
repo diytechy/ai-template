@@ -20,7 +20,7 @@ is a refusal rather than a silently empty instruction.
 |---|---|---|---|
 | `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:b002346788d8` | `{baseline}`, `{rows}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-CONFLICT` | [adjudicate-conflict.template.md](adjudicate-conflict.template.md) | `sha256:19eb35c3acd3` | `{candidate}`, `{digests}`, `{mechanical}`, `{open_rows}`, `{spine}`, `{verdict}`, `{wi}` |
-| `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:025b9f3d1f64` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:0ff70d31d143` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-RED-TC` | [adjudicate-red-tc.template.md](adjudicate-red-tc.template.md) | `sha256:6c33cffc9727` | `{spine}`, `{tcs}`, `{verdict}`, `{wi}` |
 | `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:ae826fef3e73` | `{brief}`, `{verdict}` |
 | `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:5a363cd311c3` | `{process_doc}`, `{scripts}`, `{trunk}`, `{verdict}` |

@@ -767,6 +767,26 @@ def _title_length_warns(wis):
     ]
 
 
+def _predecessor_errors(w, ids, known_ois):
+    """The dangling-edge ERRORs for one WI's predecessors: a WI edge (hard or
+    soft) that names no work item, or an `OI-###` edge (OI-73) that names no
+    minted open item. The two edge kinds resolve against different registries —
+    the WI id set and the open-items registry — but are the same dangling-edge
+    error class."""
+    out = []
+    for p in w["preds"] + w["soft"]:
+        if p not in ids:
+            out.append("{}: predecessor {!r} is not a work item".format(w["id"], p))
+    for o in w["oi_preds"]:
+        if o not in known_ois:
+            out.append(
+                "{}: open-item predecessor {!r} is not a minted open item "
+                "(OI-73 typed edge; check docs/requirements/open-items.toml and "
+                "the id-watermark's OI space)".format(w["id"], o)
+            )
+    return out
+
+
 def validate(wis, known_srs, known_ois=None):
     """Return the hard-error strings for the work-item graph ([] = clean).
 
@@ -793,18 +813,7 @@ def validate(wis, known_srs, known_ois=None):
     errors = []
 
     for w in wis:
-        for p in w["preds"] + w["soft"]:
-            if p not in ids:
-                errors.append(
-                    "{}: predecessor {!r} is not a work item".format(w["id"], p)
-                )
-        for o in w["oi_preds"]:
-            if o not in known_ois:
-                errors.append(
-                    "{}: open-item predecessor {!r} is not a minted open item "
-                    "(OI-73 typed edge; check docs/requirements/open-items.toml "
-                    "and the id-watermark's OI space)".format(w["id"], o)
-                )
+        errors.extend(_predecessor_errors(w, ids, known_ois))
         for s in w["srs"]:
             if known_srs and s not in known_srs:
                 print(
@@ -844,6 +853,14 @@ def load_known_srs(root):
     }
 
 
+#: The open-items registry — read directly through `spine_carrier` (already a
+#: dependency) rather than through `trace.open_item_states`, because a
+#: `check_trajectory -> trace` import edge would form a new module cycle
+#: (`trace` reaches back into `check_trajectory`); the import-cycle ratchet
+#: forbids it. The read is the same one `trace.open_item_states` performs.
+OPEN_ITEMS_REL = "docs/requirements/open-items.toml"
+
+
 def load_known_ois(root):
     """The set of minted open-item ids (for the typed OI-edge resolution, OI-73).
 
@@ -853,10 +870,15 @@ def load_known_ois(root):
     open-items registry at all (the D-5 absent-vs-empty distinction), which
     `validate` treats as the non-adopter posture rather than failing every OI
     edge."""
-    import trace as _trace
-
-    states = _trace.open_item_states(Path(root))
-    return None if states is None else frozenset(states)
+    path = Path(root) / OPEN_ITEMS_REL
+    if spine_carrier.resolve(path) is None:
+        return None
+    return frozenset(
+        oid
+        for r in spine_carrier.load(path, "OI-ID")
+        if (oid := (r.get("OI-ID") or "").strip()).startswith("OI-")
+        and not oid.endswith("-000")
+    )
 
 
 # Source-file extensions stripped when normalizing a module path, so the arch-map
