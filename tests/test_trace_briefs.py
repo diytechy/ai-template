@@ -298,6 +298,131 @@ def test_reattest_brief_truncates_long_anchor_requirement_with_marker(tmp_path):
     assert "B" * 100 in out
 
 
+def _git_repo(root):
+    """Init a committable git repo at `root`, skipping the test when git is
+    absent. Returns the runner. The re-attestation baseline is the snapshot,
+    but the brief still reads git for its stamp, so a repo has to exist."""
+    import shutil as _sh
+    import subprocess as _sp
+
+    skip_without_env_gates("git")
+    git = _sh.which("git")
+
+    def run_git(*a):
+        return _sp.run([git, "-C", str(root), *a], capture_output=True, text=True)
+
+    run_git("init")
+    pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
+    run_git("config", "user.email", "t@example.com")
+    run_git("config", "user.name", "T")
+    return run_git
+
+
+def test_reattest_brief_never_labels_a_drafted_rows_cells_approved(tmp_path):
+    """OI-71 defect 1 — round 019 of the wi508 lane saw a `Drafted` row's cells
+    rendered under the heading `approved — re-attestation owed`.
+
+    `_cell_diff_lines` splits a changed row's cells into the §A5.1 two groups
+    keyed on the cell's COLUMN class (`SPINE_APPROVED_CELLS`), independent of
+    the ROW's Status. A `Drafted` TC that drifted in both an approved-class
+    cell (`Method`) and a traced-class cell (`Evidence`) therefore renders its
+    `Method` change under `approved — re-attestation owed` — asserting an
+    attestation window that never opened, since the row was never approved. The
+    row owes a FIRST approval wholesale, which its own section heading already
+    states."""
+    run_git = _git_repo(tmp_path)
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (tmp_path / "docs" / "test").mkdir(parents=True)
+
+    def write_spine(method, evidence):
+        (req / "system-requirements.csv").write_text(
+            _REATTEST_SR_H
+            + 'SR-001,Adder,SN-001,"a stable requirement","why","ac",,C,Test,Approved,1\n',
+            encoding="utf-8",
+        )
+        (req / "low-level-requirements.csv").write_text(
+            _REATTEST_LLR_H, encoding="utf-8"
+        )
+        (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+            _REATTEST_TC_H
+            + 'TC-001,SR-001,Unit,"{}","Smoke","a=1","sum",Yes,"{}",Drafted\n'.format(
+                method, evidence
+            ),
+            encoding="utf-8",
+        )
+
+    # Snapshot taken with the TC already Drafted (the snapshot copies every row
+    # wholesale, approved or not), then the draft is edited in an approved-class
+    # AND a traced-class cell — both groups non-empty, so the split heading shows.
+    write_spine("drive the add path", "ev-old")
+    load_script("baseline_snapshot").copy_live(tmp_path, seed=True)
+    run_git("add", "-A")
+    run_git("commit", "-m", "attested SR + snapshot with a Drafted TC")
+    write_spine("drive the add path anew", "ev-new")
+    run_git("add", "-A")
+    run_git("commit", "-m", "amend the Drafted TC in two cell classes")
+
+    proc = run_py([SCRIPTS / "trace.py", "--approve", "modified"], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    out = proc.stdout
+    # The TC is on the page and correctly tagged as a never-approved draft...
+    assert "TC TC-001" in out
+    assert "Drafted — never approved" in out
+    # ...and its cells are NOT labelled as owing a re-attestation: a Drafted row
+    # was never approved, so no cell of it can owe one (OI-71 defect 1).
+    assert "approved — re-attestation owed" not in out
+    # The change itself is still shown, just not mislabelled.
+    assert "drive the add path anew" in out
+
+
+def test_reattest_brief_shows_a_long_changed_cell_whole(tmp_path):
+    """OI-71 defect 2 — round 019 also saw a changed `Method` cell TRUNCATED so
+    the reader could not see what changed. `_cell_diff_lines` ran each of
+    before/after through `truncate_cell` (a 1,500-char PREFIX). A cell whose
+    divergence sits past the cutoff truncates before AND after to the identical
+    prefix, so the two render the same and the change vanishes. The changed cell
+    must render WHOLE (the WI-554 Done-when)."""
+    run_git = _git_repo(tmp_path)
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (tmp_path / "docs" / "test").mkdir(parents=True)
+    head = "M" * 1500  # the common prefix, longer than CELL_TRUNCATE_LIMIT
+
+    def write_spine(method_tail):
+        (req / "system-requirements.csv").write_text(
+            _REATTEST_SR_H
+            + 'SR-001,Adder,SN-001,"a stable requirement","why","ac",,C,Test,Approved,1\n',
+            encoding="utf-8",
+        )
+        (req / "low-level-requirements.csv").write_text(
+            _REATTEST_LLR_H, encoding="utf-8"
+        )
+        (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+            _REATTEST_TC_H
+            + 'TC-001,SR-001,Unit,"{}","Smoke","a=1","sum",Yes,ev,Approved\n'.format(
+                head + method_tail
+            ),
+            encoding="utf-8",
+        )
+
+    write_spine("-OLD-TAIL")
+    load_script("baseline_snapshot").copy_live(tmp_path, seed=True)
+    run_git("add", "-A")
+    run_git("commit", "-m", "attested SR + snapshot with a long-Method TC")
+    write_spine("-NEW-TAIL")
+    run_git("add", "-A")
+    run_git("commit", "-m", "amend the Method cell past the truncation cutoff")
+
+    proc = run_py([SCRIPTS / "trace.py", "--approve", "modified"], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    out = proc.stdout
+    # Both the before and the after tail must be visible — otherwise the reader
+    # cannot see what changed, which is exactly the defect.
+    assert "-OLD-TAIL" in out, "the before tail was truncated away"
+    assert "-NEW-TAIL" in out, "the after tail was truncated away"
+
+
 def test_reattest_brief_stays_silent_for_an_approved_undrifted_chain(tmp_path):
     """The negative half: an `Approved` LLR under an `Approved`, undrifted SR
     owes nothing. The widening asks the chain the `Drafted` question; it must

@@ -3369,7 +3369,7 @@ def _anchor_lines(sr_row):
     return out
 
 
-def _cell_diff_lines(changed, approved=frozenset()):
+def _cell_diff_lines(changed, approved=frozenset(), drafted=False):
     """The per-cell before/after bullets, split into the §A5.1 two groups.
 
     The split is a capability the snapshot comparison hands the reader for free
@@ -3377,15 +3377,36 @@ def _cell_diff_lines(changed, approved=frozenset()):
     routes to adjudication and arms no window. Rendering them in one
     undifferentiated list asked the owner to make that judgement per cell, from
     memory, mid-sitting. Headings appear only when BOTH groups are present —
-    a lone heading over the only group is noise."""
-    groups = [
-        ("approved — re-attestation owed", [c for c in changed if c[0] in approved]),
-        (
-            "traced — routes to adjudication",
-            [c for c in changed if c[0] not in approved],
-        ),
-    ]
-    show_headings = all(rows for _label, rows in groups)
+    a lone heading over the only group is noise.
+
+    `drafted` COLLAPSES THE SPLIT (OI-71 defect 1). The two group labels are a
+    property of a row that HAS been approved: an approved cell of it "owes a
+    re-attestation", a traced one "routes to adjudication". A `Drafted` row was
+    never approved — none of its cells owes a re-attestation and none arms a
+    window; the whole row owes a FIRST approval, which its own section heading
+    already states. Keyed on the cell's COLUMN class alone, the split rendered a
+    Drafted row's approved-class cells under "approved — re-attestation owed" —
+    the exact false label round 019 of the wi508 lane caught. For a Drafted row
+    the cells therefore render in one plain list, no group heading.
+
+    The before/after render WHOLE, never through `truncate_cell` (OI-71 defect
+    2). A changed cell is the one thing the reader must see entire: clipping it
+    to a fixed prefix rendered before and after identically whenever the
+    divergence sat past the cutoff, hiding the very change under review. The
+    generous cap stays on the CONTEXT surfaces — the anchor Requirement /
+    Rationale and the whole-row `_full_row_bullets` dumps — not on the targeted
+    diff a signer rules from."""
+    if drafted:
+        groups = [(None, changed)]
+    else:
+        groups = [
+            ("approved — re-attestation owed", [c for c in changed if c[0] in approved]),
+            (
+                "traced — routes to adjudication",
+                [c for c in changed if c[0] not in approved],
+            ),
+        ]
+    show_headings = not drafted and all(rows for _label, rows in groups)
     lines = []
     for label, rows in groups:
         if not rows:
@@ -3394,8 +3415,8 @@ def _cell_diff_lines(changed, approved=frozenset()):
             lines.append("_{}_".format(label))
         for cell, b, a in rows:
             lines.append("- **{}**".format(cell))
-            lines.append("  - before: {}".format(truncate_cell(b) or "(empty)"))
-            lines.append("  - after: {}".format(truncate_cell(a) or "(empty)"))
+            lines.append("  - before: {}".format(b or "(empty)"))
+            lines.append("  - after: {}".format(a or "(empty)"))
     return lines
 
 
@@ -4083,7 +4104,9 @@ def reattest_lines(root, srs, llrs, tcs):
                     "",
                     "### {} {}{}".format(row["kind"], row["id"], suffix),
                 ]
-                lines += _cell_diff_lines(row["cells"], row["approved"])
+                lines += _cell_diff_lines(
+                    row["cells"], row["approved"], drafted=row.get("drafted", False)
+                )
             elif row["state"] == "removed":
                 lines += [
                     "",

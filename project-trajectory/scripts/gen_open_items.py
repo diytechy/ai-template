@@ -565,18 +565,28 @@ def _chain_row(row):
         # and the snapshot comparison hands the split over for free. The heading
         # appears only when both groups are present; a lone heading over the
         # only group is noise.
+        # A `Drafted` row was never approved, so no cell of it "owes a
+        # re-attestation" and none "routes to adjudication" — the whole row owes
+        # a FIRST approval, which the row tag already states. The §A5.1 split is
+        # a property of an approved row; keyed on the cell's COLUMN class alone
+        # it mislabelled a Drafted row's approved-class cells (OI-71 defect 1,
+        # the wi508 round-019 finding). Collapse it to one list here so this HTML
+        # view and the `--approve modified` markdown brief agree (IF-074).
         approved = row.get("approved") or frozenset()
-        groups = [
-            (
-                "approved — re-attestation owed",
-                [c for c in row["cells"] if c[0] in approved],
-            ),
-            (
-                "traced — routes to adjudication",
-                [c for c in row["cells"] if c[0] not in approved],
-            ),
-        ]
-        both = all(cells for _label, cells in groups)
+        if row.get("drafted"):
+            groups = [(None, row["cells"])]
+        else:
+            groups = [
+                (
+                    "approved — re-attestation owed",
+                    [c for c in row["cells"] if c[0] in approved],
+                ),
+                (
+                    "traced — routes to adjudication",
+                    [c for c in row["cells"] if c[0] not in approved],
+                ),
+            ]
+        both = not row.get("drafted") and all(cells for _label, cells in groups)
         for label, cells in groups:
             if not cells:
                 continue
