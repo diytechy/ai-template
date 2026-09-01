@@ -97,6 +97,25 @@ def test_the_three_engine_briefs_load_and_carry_their_load_bearing_clauses():
     assert "{brief}" in critique and "{verdict}" in critique
 
 
+def test_the_reviewer_brief_carries_the_construction_first_clause():
+    # WI-567: the finding contract requires, for any remedy that ADDS a check,
+    # guard, warn, or invariant, one clause naming why the defect cannot be made
+    # unrepresentable instead — citing the vendored `antidote` skill rather than
+    # restating it (CLAUDE.md, "Dogfood the philosophy"). Warn-first: it binds
+    # the remedy's WORDING, never the verdict, and the MINOR/`for clarity` arm
+    # and trust-boundary validation are exempt. Pinned here the same way the
+    # other reviewer load-bearing clauses are, so an edit that quietly drops the
+    # discipline reds a test instead of a review round.
+    reviewer = pr.load(pr.REVIEWER)
+    assert "cannot be made UNREPRESENTABLE instead" in reviewer
+    assert "the `antidote` skill" in reviewer
+    # The exemptions are load-bearing — dropping either re-opens the failure the
+    # plan's §2 warns against (a gate, or over-reach onto every MINOR).
+    assert "MINOR `for clarity`" in reviewer
+    assert "validation at a genuine trust boundary" in reviewer
+    assert "REACHABLE bad state the design could have made unreachable" in reviewer
+
+
 def test_the_worker_brief_carries_the_standing_state_ritual():
     # WI-506 (OI-57 ruled (b)): the worker gains a standing-state contract —
     # write the log.d fragment + the spec's own Context/Deliverable edits
