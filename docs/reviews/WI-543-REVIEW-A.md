@@ -5,7 +5,11 @@ Compiled by the supervising session (2026-09-01) from the round files under
 last — the loop does not write this file yet (OI-76, WI-558). Sessions 010
 and 011 ended REVIEW-A ERROR (provider failures; no round file); round 3 ran
 with heterogeneity **relaxed and recorded** (independent Opus fallback,
-`012-REVIEW-A-7b49d30-relaxed.md`, scoreboard alongside).
+`012-REVIEW-A-7b49d30-relaxed.md`, scoreboard alongside). After the APPROVE,
+one mechanical bookkeeping merge landed (`8ed5fcda`, trunk `81591d3a` — the
+WI-552 claim commit — resolved by REGENERATING the two conflicted generated
+files, `PROJECT_STATE.html` + `docs/stage`; no reviewed content changed),
+the same disposable-refresh class the verdict clock peels.
 
 ### REVIEW-A — Round 1 — session 005 — tip 47579c8
 
