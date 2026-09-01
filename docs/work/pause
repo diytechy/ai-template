@@ -1,5 +1,0 @@
-# Tracked pause (concurrency-restructure §5.6): the dispatcher stops CLAIMING at
-# the next session boundary; the in-flight lane finishes and merges. Unpausing is
-# a reviewed deletion commit of this file.
-reason = "Supervised session end 2026-09-01 (decision 51 in docs/decisions-for-review-2026-08-31.md): five rows merged (the SR-163 mechanism, both OI-70 repairs, the corrected spot-check and amendment adjudications), two rows minted for the discovered strict-ERRORs, decisions 47-51 recorded. The frontier holds until the owner has read decisions 47-51 and signed the --approve modified re-attestation brief for the six MEANING rows. Delete this file in a reviewed commit to resume at the generated frontier."
-since = "2026-09-01"
