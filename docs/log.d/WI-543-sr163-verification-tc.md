@@ -55,3 +55,36 @@ retires against; gating flips only at zero, per the ruling.
   checker over the real inventory on every suite run — the "on every run"
   evidence the ruling asks for. An adopter with their own inventory can call the
   `gen_arch_map` functions directly.
+
+### Close
+
+- **Harness re-stamps (reviewed baseline edits naming this WI):** the checker's
+  new behavior grew two ratcheted modules past baseline — `bootstrap.py` +29
+  SLOC (1571 → 1600, the tolerant cell) and `gen_arch_map.py` +79 SLOC (1262 →
+  1341, the four-class checker) — both re-stamped UP in `tests/test_module_size_ratchet.py`
+  as reviewed bumps, not monolith drift (the placement is LLR-204's module by
+  the ruling; decomposition remains WI-521's program). TC-204's 17 in-process
+  smoke tests pushed the smoke tier to 1450 collected, so `docs/stack.ini`
+  `[smoke-budget] max-tests` re-stamped 1440 → 1458 (+8 headroom, the standing
+  small-slack posture); the seconds budget is NOT touched (smoke wall 21.8 s vs
+  60 s).
+- **Approval brief regenerated** (`trace.py --approve modified`): TC-204 (the
+  one spine row this WI minted, Drafted) now appears in `docs/ratify/CURRENT.md`
+  as ADDED-since-snapshot / never-approved — approving it is the owner's act.
+- **Verification:** commit bar green — smoke 1442 passed / 8 skipped / 23.6 s,
+  budget within (60 s). Full unfiltered suite: **3199 passed, 24 skipped, 1
+  failed** in 586 s. The one failure is
+  `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`: this
+  WI's `8978b265` added TC-204 to `docs/test/test-cases.toml` (a declared
+  stage-derivation input), staling the committed `docs/stage` fingerprint. That
+  is an EXPECTED work-branch condition, not a regression — `docs/stage` is a
+  trunk-lane-regenerated generated artifact (the `derived-stage` pre-commit step
+  SKIPS on a work branch precisely because "generated freshness is the trunk
+  lane's, §5.2", and `git log -- docs/stage` shows it moves only on
+  claim/mint/refresh trunk commits, never on a worker WI commit). The branch
+  rules forbid a worker from regenerating it; the trunk lane re-derives it at
+  merge and the test goes green on trunk. Latent gap surfaced (NOT fixed here,
+  out of SR-163 scope): the dogfood test mirrors the commit-bar `--check` claim
+  but, unlike that check step, is not work-branch-aware, so it reds on ANY work
+  branch that touches a stage-derivation input — a candidate OI for a
+  work-branch skip mirroring the step.
