@@ -157,6 +157,7 @@ SLOW_MODULES = frozenset(
         "test_trajectory_staged",  # --staged git-effect + git-time recovery
         "test_trajectory_arch",  # decision over architecture inputs
         "test_trajectory_specs",  # decision over spec bodies
+        "test_trajectory_holdban",  # WI-553 hold-by-rename detector on git scaffolds
         "test_components_registry",  # components gate on scaffolds
         "test_spine_rules",  # spine_rules on scaffolds
         # WI-498 slice 1: the same module, the same cost class — every test in it

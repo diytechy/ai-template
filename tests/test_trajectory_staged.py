@@ -987,6 +987,10 @@ def _init_amended_sr_repo(tmp_path, status="active"):
     write_spec(tmp_path, "docs/specs/WI-001.md")
     run_git("add", "-A")
     run_git("commit", "-m", "init", at=1000)
+    # A real active lane carries its branch ref; cut it so the WI-553 hold-by-
+    # rename detector stays silent (a ref-less active claim is the banned hold).
+    if status == "active":
+        run_git("branch", ACTIVE_BRANCH, "HEAD")
     _write_sr_row(tmp_path, SR_ROW_V2)
     run_git("add", "-A")
     run_git("commit", "-m", "amend SR-001", at=2000)

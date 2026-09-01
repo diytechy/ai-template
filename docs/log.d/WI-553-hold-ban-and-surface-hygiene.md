@@ -30,6 +30,16 @@ doctrine statement supervisors read. Four Done-when arms:
   (`pending.py`, `gen_open_items.py` deferral arms, `check_trajectory.load_wis`
   blockref field). Launched three mapping passes (blockref retirement surface,
   claim-ref check design, doctrine surfaces).
+- **Done-when 1 (claim-ref check) LANDED.** `check_trajectory.holdbyrename_findings`
+  reports every `docs/work/active/<branch>/` claim directory with no matching
+  `refs/heads/<branch>` — the exact rename-hold / phantom-head signature. Same
+  warn-plain / ERROR-under-`--strict` tier as R-E/R-F (silent off-git). Wired
+  into `main()`. Tests `tests/test_trajectory_holdban.py` drive it both ways
+  (matching ref: silent; renamed ref: named + gated), plus the empty-dir and
+  off-git fail-soft edges. On the real tree it correctly names the wi508
+  phantom head (WARN on this branch; tracked by WI-555). Tiered into
+  `conftest.SLOW_MODULES` (git-scaffold subprocesses); `check_trajectory.py`
+  SLOC baseline bumped 2245→2274.
 
 Deferred open items: none — OI-70 is ruled and this WI mechanizes it; no new
 question is raised.

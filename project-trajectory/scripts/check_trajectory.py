@@ -3861,6 +3861,59 @@ def branch_length_findings(root):
     return out
 
 
+def holdbyrename_findings(root):
+    """A `docs/work/active/<branch>/` claim directory with NO matching git
+    branch ref — the exact signature of a HOLD-BY-RENAME, which OI-70 BANS: a
+    lane that must stop CLOSES PARTIAL (the only sanctioned stop), it is never
+    parked by renaming its ref (`git branch -m ... -HELD`) while its claim stays
+    on trunk. That mismatch is also the phantom head the scheduler/dispatcher
+    disagree over: the row reads `ready` off the claim while the dispatcher
+    silently skips it (no ref to resume), so the frontier's head is a lane the
+    loop can never take.
+
+    The claim-dir basename IS the branch short name (`integrate.claim` cuts
+    `refs/heads/<branch>` for `active/<branch>/`), so the match is exact and the
+    finding has no false-positive class: a lane mid-work always has its ref, and
+    a closed lane has moved its specs out of `active/` — the only ref-less
+    active claim is a rename-hold or a stranded leftover, both of which OI-70
+    resolves by closing the lane.
+
+    WARN at the commit bar, ERROR under `--strict` (the DevStg-Impl gate) — the
+    warn-plain / error-under-strict tier the rest of this module's promotable
+    findings ride (no new branch in `main`). Degrades silently off-git (a
+    checkout with no history has no refs to match), the module's warn-tier
+    contract."""
+    active = Path(root) / WI_WORK / "active"
+    if not active.is_dir():
+        return []
+    # Off-git: nothing to say. `rev-parse --git-dir` answers None only when git
+    # cannot answer at all, so it separates "no repository" (degrade silently)
+    # from "ref absent" (the finding) — which a per-ref `--verify` alone cannot,
+    # since both return None.
+    if _git(root, ["rev-parse", "--git-dir"]) is None:
+        return []
+    out = []
+    for d in sorted(p for p in active.iterdir() if p.is_dir()):
+        if not any(d.glob("WI-*.md")):
+            continue  # an empty dir is a claim-machinery leftover, not a hold
+        branch = d.name
+        if (
+            _git(root, ["rev-parse", "--verify", "--quiet", "refs/heads/" + branch])
+            is None
+        ):
+            out.append(
+                "hold-by-rename: claim directory {}/active/{}/ has no matching "
+                "branch ref refs/heads/{} — a lane parked by renaming its ref is "
+                "BANNED (OI-70): close it PARTIAL through the kit's own path (the "
+                "handback report; nothing else), or delete the stranded claim. "
+                "As it stands the scheduler reads this lane ready off the claim "
+                "while the dispatcher can never resume it".format(
+                    WI_WORK, branch, branch
+                )
+            )
+    return out
+
+
 def _tests_dir(root):
     """The declared tests root (docs/stack.ini [paths] tests), default `tests` —
     the surface a real validation-logic change would touch."""
@@ -4667,6 +4720,12 @@ def main():
     # --strict tier (no new branch in main); the R-E open-half's closing
     # counterpart.
     findings.extend(("R-F", False, msg) for msg in spec_lifecycle_findings(root, wis))
+    # Hold-by-rename ban (WI-553, OI-70) — a ref-less `active/<branch>/` claim
+    # directory. Same warn-plain / error-under-strict tier as R-E/R-F (no new
+    # branch in main); silent off-git.
+    findings.extend(
+        ("hold-by-rename", False, msg) for msg in holdbyrename_findings(root)
+    )
     # Completion reconciliation (WI-352) — the declared `Status` cell against the
     # spec's Done-when boxes and the `WI:` trailers. WARN plain, ERROR under
     # --strict, the same warn tier as R-E/R-F, EXCEPT the trailer signal.
