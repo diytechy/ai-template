@@ -3163,3 +3163,10 @@ status = "pending"
 raised = "2026-09-01"
 one_line = "intake._SPEC_NEEDS_RE (intake.py:1344) has no re.DOTALL, so _replace_inbound_edges silently skips a dependent whose `needs` is a MULTI-LINE TOML list: WI-552 arm 4's 'the WI-541 strand becomes unrepresentable' guarantee in fact holds only under the single-line-`needs` invariant the machine writers happen to keep (a tree-wide scan finds no multi-line `needs` today, so it does not bite). Rule which the kit means: (a) tighten the regex to DOTALL (or a real TOML read) so the guarantee is unconditional, (b) keep the regex and DECLARE the single-line-`needs` invariant, enforced by a check so a hand-written multi-line `needs` is refused rather than silently skipped, or (c) accept the narrowed guarantee and amend WI-552's claim to match."
 wi_refs = ["WI-565"]
+
+[open_item.OI-78]
+title = "Does trunk's docs/archive/last_approved/ baseline for interfaces.toml, external.toml, and component…"
+status = "pending"
+raised = "2026-09-01"
+one_line = "Does trunk's docs/archive/last_approved/ baseline for interfaces.toml, external.toml, and components.toml STAND as-is at the wi508 branch's 2026-08-30 bytes — which absorbed interfaces.toml's 132 changed / 30 added / 3 removed rows (OI-64, OI-65, OI-67, WI-522, WI-528, WI-530, WI-531, WI-533, WI-534, WI-553), components.toml's 1 changed row (WI-520) and one external.toml comment correction — and is resealed at the successor's approval commit, or does the owner REVIEW that diff first (git diff 6d3d9db4 551d1b2c -- docs/archive/last_approved/docs/requirements/) and amend any rejected row LIVE, which returns it to the re-attestation brief, before the reseal? (A byte-level restore of the old snapshot is unavailable: the mirror invariant reds a snapshot that is not a copy of live at its writing commit.)"
+wi_refs = ["WI-569"]
