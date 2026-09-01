@@ -1,0 +1,39 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 002
+# date: 2026-09-01 14:50
+# train: wi-567-construction-first-remedies-t
+# base: 6eeaf20f3e04
+# phase: REVIEW-A
+# wi: WI-567
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 7db83a48..aec6c5fb
+# tokens:
+# cost-usd:
+# wall-secs: 165
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 3687
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:f75906714a2f
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+APPROVE recorded and committed.
+
+Verdict: [002-REVIEW-A-dfbfe08.md](/Users/diytechy/Documents/ai-template-drive/wi-567-construction-first-remedies-t/docs/reviews/wi-567-construction-first-remedies-t/002-REVIEW-A-dfbfe08.md)
+
+Commit: `aec6c5fb review: record WI-567 verdict`
+
+Verified prompt loader behavior; the added test body fails on `contract_split` and passes on HEAD. Harness summary: `RESULT: PASS`; strict integrity reports `integrity=0`.
