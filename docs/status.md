@@ -24,29 +24,43 @@ supervisor prompt at the owner's request). Backward-looking homes:
 status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **RESUME HERE — THE FRONTIER IS UNPAUSED (the owner confirmed on
-  2026-09-01 evening; `docs/work/pause` deleted in a reviewed commit) and a
-  supervised loop runs the generated frontier below.** The prior supervised
-  session merged five rows and left three new rows queued; its account is the
-  log's 2026-09-01 supervised-unpause entry and its addendum. Same sitting: all
-  three codex rows in `docs/agents.toml` now pin reasoning effort to medium
-  (owner directive; the routing commit's message carries the why).
-  **For the owner's review:** delegated decisions 47–51 in
+- **RESUME HERE — THE FRONTIER IS PAUSED (tracked `docs/work/pause`,
+  re-armed by owner direction at the 2026-09-01 evening session's end;
+  decision 56).** That session merged four rows (the construction-first
+  reviewer clause, the approval-brief renderer defects, the wi508
+  partial-close conversion and its disposition adjudication) and left one
+  new successor queued behind a pending open item; its account is the log's
+  2026-09-01 supervised-evening entry, and one reviewed deletion of the pause
+  file resumes the generated frontier below. All three codex rows in
+  `docs/agents.toml` now pin reasoning effort to medium (owner directive).
+  **For the owner's review:** delegated decisions 47–56 in
   [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md)
-  (47 the prose-scrub, 48–49 the spot-check lane's undrawn-round disposal +
-  intake recovery and its two kit defects, 50 the amendment adjudication's
-  census correction and the amendment-arm invariant gap, 51 the re-arm); the six MEANING rows awaiting
-  the owner's signature on the `trace.py --approve modified` re-attestation
-  brief; `check_trajectory --strict` carries two KNOWN queued ERRORs (the
-  schedule→trace seam and the wi508 stranded claim the new hold-ban detector
-  now sees — both have queued rows, neither reds the non-strict bar); the
-  review-churn finding this run measured, filed as a row against
-  [plans/2026-09-01-construction-first-remedies.md](plans/2026-09-01-construction-first-remedies.md)
-  (1 structural remedy in 13 rounds; it heads the frontier); and the
-  standing 2026-08-31 items below. Hand-authored prose here names no
-  queued id (the claim-refusal rule); a fresh reader starts at
-  [handoff-2026-08-31.md](handoff-2026-08-31.md) — **read its banner: the
-  2026-09-01 run superseded parts of it** — and the log.
+  (52–56 are the evening session's: the hand merge + drawn rounds that
+  landed the wi508 conversion, its record corrections, the adjudication's
+  rework and by-hand close, the loop stopped on a C6 cycle, the re-arm);
+  **`OI-78`** — the off-spine approval baseline absorbed by the wi508
+  handback merge (132 rows now read as approved unseen): STAND or
+  REVIEW-THEN-STAND, the brief on the successor row's spec, recommendation
+  REVIEW-THEN-STAND; `OI-77` (the intake regex DOTALL ruling); the six MEANING
+  rows awaiting the owner's signature on the `trace.py --approve modified`
+  re-attestation brief; **the six dropped log entries** — the wi508 branch's
+  2026-08-30 entries (slice 6, two reworks, rounds 010/011/013) are absent
+  from `log.md` after the conversion took trunk's side of the conflict, and
+  the archived wi508 spec's link to one of them is a broken anchor that reds
+  `check_docs --stale` on trunk (restore them from history in one reviewed
+  commit, or accept the loss); the origin ref
+  `wi508-architectural-remap-HELD-for-owner-verdict` to rename or delete now
+  its range is in trunk history; `OI-72`'s "four Drafted rows" wording (two
+  were Approved when it was written); `check_trajectory --strict` carries one
+  KNOWN queued ERROR (the schedule→trace seam; its row is queued, and it does
+  not red the non-strict bar); nine unfiled kit findings listed in the
+  evening log entry (a lane cut before a trunk snapshot move cannot refresh;
+  the thin `open_item` mint; the C6 re-adjudication cycle; the audit flagging
+  intake's own OI mint); and the standing 2026-08-31 items below.
+  Hand-authored prose here names no queued id (the claim-refusal rule); a
+  fresh reader starts at [handoff-2026-08-31.md](handoff-2026-08-31.md) —
+  **read its banner: the 2026-09-01 runs superseded parts of it** — and the
+  log.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). `wi416-parked-handback-contract` is still

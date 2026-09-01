@@ -1110,3 +1110,109 @@ detector (alongside the WI-564 seam ERROR) — both are queued rows' business,
 neither blocks the non-strict bar. **The alternative:** leave the loop
 running unsupervised into and past the 12:00-19:00 UTC blackout.
 **Reversal cost:** deleting one file in one commit.
+
+## 52. The wi508 partial-close lane (WI-555) was landed by a hand merge of trunk into the lane and two supervisor-drawn rounds, because the station refresh cannot carry a trunk snapshot delta
+
+**Decided (2026-09-01, evening):** the WI-555 lane was cut at `6d3d9db4`,
+before its own worker performed the OI-71 conversion directly on trunk
+(`979c3e5f`, `551d1b2c`), which moved `docs/archive/last_approved/`. The
+in-slot refresh (`merge --no-ff --no-commit`, `add -A`, bar) then staged
+trunk's snapshot delta and was REFUSED twice: the staged mirror rule read the
+delta as a snapshot WRITE (integrity ERROR) and `approval-fresh` compared the
+committed old snapshot against the live merged registries (STALE). A plain
+merge of trunk into the lane passes both checks (measured in a detached probe
+worktree, then removed). Disposed by the precedented remedy on the wi508
+branch itself (`9bdd56b6`): merge trunk into the lane as a plain commit
+(`5c8a007a`), accept that it stales the round-004 APPROVE, and DRAW the round
+it costs through an independent Opus reviewer with a hostile brief (round
+005, CHANGES-REQUESTED 9; after a record-only rework, round 006, APPROVE 5),
+then compile the rollup and merge from the trunk root (`77270030`). **The
+alternatives:** re-cut the lane from current trunk (the id is claimed in
+`active/`; no kit path re-cuts a claimed record-only lane), or edit the two
+checks to tolerate a staged merge delta (sanctioning a check to green a step,
+and product code a supervisor may not touch unreviewed). **Reversal cost:**
+none — every act is a recorded commit on the merged lane; the misfire is
+filed as a kit finding for its own row.
+
+## 53. The WI-555 record was corrected under drawn review: the absorbed off-spine baseline disclosed, the handback report's "four Drafted" misstatement corrected in the log, the false arm-4 premise stated as such
+
+**Decided (2026-09-01, evening):** round 005 found three record-level MAJORs
+on a conversion that stands. The wi508 handback merge carried the BRANCH's
+`docs/archive/last_approved/` bytes onto trunk, collapsing `CURRENT.md`'s
+off-spine re-attestation census from 132 changed / 30 added / 3 removed rows
+to 1 changed — trunk's unsigned off-spine approval debt absorbed into the
+approved baseline by a `partial` lane, undisclosed; the immutable handback
+report says "four Drafted" rows where LLR-203/LLR-204 are Approved; Done-when
+arm 4's "unflipped" premise (inherited from OI-72's wording) was false as
+written. Disposed by a rework that left the immutable report and every
+registry untouched: the fragment carries the disclosure and the correction of
+record, the Deliverable a "Corrected by round 005" paragraph, and the queued
+disposition row's Context three explicit items for its adjudicator (the
+LLR-203/204 flips, the baseline move, the report's misstatement). The
+restore-or-stand question was routed to the owner through that adjudication.
+**The alternatives:** hand-revert the two LLR flips on trunk (a spine act a
+supervisor may not take; the flips were loop-permitted under the Needs-only
+dial), or edit the immutable report (the record of the close as it was made).
+**Reversal cost:** none — record-only commits on the merged lane.
+
+## 54. The WI-568 disposition adjudication was reworked under drawn review and closed BY HAND through the kit's own function after the loop resumed it in a C6 cycle
+
+**Decided (2026-09-01, evening):** the ADJUDICATE session ruled PARTIAL /
+keep-all / one successor but put its `## Dispositions` block in the verdict
+file, so `handback.close_adjudication` refused the mechanical close and the
+loop stopped; it had also declared the owner-owed baseline question "not
+owner-owed" without addressing it. Disposed by a supervisor-drawn round 002
+(CHANGES-REQUESTED 7: two BLOCKERs, two MAJORs), a supervisor-dispatched
+rework (block moved to the spec with an `open_item` cell, the executable scope
+written after the fence, the verdict re-issued in place per the WI-566
+precedent, a fragment written), and a verification round 003 (APPROVE 1). On
+relaunch the loop scheduled a Terra round (CHANGES-REQUESTED 1: the scalar
+`open_item` mints a thin OI row) and then re-adjudicated the finished lane in
+a cycle (sessions 003–007, two concurring Sol verdicts, then NO-COMMIT /
+ERROR / a rate-limit WAIT) without closing. The supervisor stopped the loop
+(`pkill` of the coordinator and its codex child — the one act this session
+took outside the kit's scripts, because the cycle would have run to the
+40-session cap), carried the owner brief into the successor's captured scope,
+closed the row through `handback.close_adjudication(root, branch)` from the
+trunk root (`4d9dba7f`), drew round 004 (CHANGES-REQUESTED 2 — the
+supervisor's own brief was wrong: external.toml DID move, and a byte-level
+RESTORE is unavailable under the mirror invariant), corrected it, drew round
+005 (APPROVE 2), compiled the five-round rollup and merged (`5ac6ef2b`); the
+merge minted the successor and `OI-78`. **The alternatives:** let the cycle
+run to its cap (36 more sessions of concurring verdicts), or close the lane
+partial (stranding the owner's question a third time). **Reversal cost:** none
+for the lane; `OI-78` is the owner's to rule and its two answers are both
+reversible (the successor's spec carries the costs).
+
+## 55. The owner's question minted as `OI-78` is STAND versus REVIEW-THEN-STAND — a byte-level restore is not offered, because the kit's mirror invariant makes it unrepresentable
+
+**Decided (2026-09-01, evening):** the first draft of the owner brief (the
+supervisor's) recommended RESTORE — re-copy the pre-merge `6d3d9db4` off-spine
+snapshot files. Round 004 falsified it: `committed_snapshot_findings` reds a
+snapshot file that is not byte-identical to its live counterpart at the commit
+that wrote it, permanently ("a forgery stays red forever"), the wi508 lane's
+own decision 10 measured exactly that red and reverted, and the re-copy would
+re-land external.toml's since-corrected header comment. The question and the
+brief were re-issued: STAND (reseal at the successor's approval commit) or
+REVIEW-THEN-STAND (the owner reads the absorbed diff and amends any rejected
+row live, which returns it to the re-attestation brief through the ordinary
+path, before the reseal); recommendation REVIEW-THEN-STAND. **The
+alternative:** leave RESTORE on the card and let the successor discover the
+red. **Reversal cost:** the two offered answers are each one commit apart.
+
+## 56. The pause is RE-ARMED by owner direction while the last lane finishes under it; the loop ends drained, with the six dropped log entries left as the owner's call
+
+**Decided (2026-09-01, evening):** the owner asked for the pause at 22:52 UTC;
+it was written and committed (`b3658346`) while the WI-568 lane was in flight,
+per the pause's own contract (no new claim at the next boundary; the in-flight
+lane finishes). The lane finished by hand (decision 54), the loop is stopped,
+no worktree remains, and the frontier behind the pause is the successor row
+parked `waiting:open-item-pending` on `OI-78` plus the standing queue. The six
+2026-08-30 log entries the conversion dropped are NOT restored: the classifier
+blocked the restore script and a `git show` of the held branch's log, so the
+restoration (from history, one reviewed commit, the precedented splice) is
+recorded for the owner rather than worked around; until then `check_docs
+--stale` is red on trunk for that one anchor. **The alternative:** restore
+through the Edit tool without asking (a hand edit of `docs/log.md` on trunk
+the owner had not seen). **Reversal cost:** deleting one file in one commit
+resumes the loop; the log restoration is one commit whenever the owner says so.
