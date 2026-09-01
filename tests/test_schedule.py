@@ -107,6 +107,20 @@ def test_cancelled_predecessor_does_not_satisfy_a_hard_dependency():
     assert "waiting:hard-pred-cancelled:WI-001" in d["reasons"]
 
 
+def test_partial_predecessor_is_a_dead_edge_with_its_own_reason():
+    # OI-73 extends decision 3 to `partial`: a partial predecessor is terminal
+    # and never integrates `done`, so the successor stays `waiting` on a DEAD
+    # edge — surfaced as its own code so the scheduler agrees with the validator's
+    # `dead_dependency_findings` (which flags cancelled AND partial).
+    wis = sched.load_wis(
+        [row("WI-001", status="partial"), row("WI-002", preds="WI-001")]
+    )
+    assert ready_ids(wis) == []
+    d = disposition(wis, "WI-002")
+    assert d["disposition"] == "waiting"
+    assert "waiting:hard-pred-partial:WI-001" in d["reasons"]
+
+
 def test_done_predecessor_still_satisfies_a_hard_dependency():
     # Decision 3 (the LIVE-edge direction, the control): a `done` pred DOES
     # satisfy — cancellation is the only terminal that leaves the edge dead.
@@ -121,6 +135,50 @@ def test_cancelled_wi_is_never_scheduled_in_simulate():
     scheduled = [wid for rnd in sched.simulate(wis, 4) for wid in rnd]
     assert "WI-001" not in scheduled
     assert set(scheduled) == {"WI-002", "WI-003"}
+
+
+# --- OI-73: a typed hard OPEN-ITEM edge in Predecessors -----------------------
+# An `OI-###` id is a hard edge on an open-item ruling, satisfied once the row
+# leaves `pending`, resolved through the `oi_status` map — never a WI graph node
+# (no acyclicity, no downstream count).
+
+
+def test_oi_edge_pending_holds_the_wi_waiting():
+    wis = sched.load_wis([row("WI-002", preds="OI-70")])
+    # Split cleanly: the OI is not a WI predecessor, it is an oi_pred.
+    assert wis[0]["preds"] == [] and wis[0]["oi_preds"] == ["OI-70"]
+    oi = {"OI-70": "pending"}
+    assert [r["id"] for r in sched.frontier(wis, oi_status=oi)] == []
+    d = next(r for r in sched.evaluate(wis, oi_status=oi) if r["id"] == "WI-002")
+    assert d["disposition"] == "waiting"
+    assert "waiting:open-item-pending:OI-70" in d["reasons"]
+
+
+def test_oi_edge_satisfied_once_ruled():
+    wis = sched.load_wis([row("WI-002", preds="OI-70")])
+    oi = {"OI-70": "ruled"}
+    assert [r["id"] for r in sched.frontier(wis, oi_status=oi)] == ["WI-002"]
+
+
+def test_absent_oi_edge_fails_closed():
+    # An OI id with no state (never minted, or no registry) never satisfies —
+    # the same fail-closed posture as a dangling WI predecessor.
+    wis = sched.load_wis([row("WI-002", preds="OI-70")])
+    assert [r["id"] for r in sched.frontier(wis, oi_status={})] == []
+    d = next(r for r in sched.evaluate(wis, oi_status={}) if r["id"] == "WI-002")
+    assert d["disposition"] == "waiting"
+
+
+def test_mixed_wi_and_oi_edges_both_gate():
+    wis = sched.load_wis(
+        [row("WI-001", status="done"), row("WI-002", preds="WI-001;OI-70")]
+    )
+    # WI edge satisfied, OI edge still pending -> waiting.
+    assert [r["id"] for r in sched.frontier(wis, oi_status={"OI-70": "pending"})] == []
+    # Both satisfied -> ready.
+    assert [r["id"] for r in sched.frontier(wis, oi_status={"OI-70": "ruled"})] == [
+        "WI-002"
+    ]
 
 
 # --- WI-384: `draft` is never-ready, exactly like `deferred` ------------------

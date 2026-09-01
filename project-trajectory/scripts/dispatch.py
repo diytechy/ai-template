@@ -621,6 +621,27 @@ def _launch(root, table, branch, wi_ids, exclusive, args, worker):
     table.append(ln)
 
 
+def _close_done_adjudication(root, branch):
+    """THE ADJUDICATION-ROW CLOSE (OI-70/OI-73, Done-when 1) on a DONE worker.
+
+    A DONE worker whose specs are still in active/ is normally the stall
+    candidate — but an adjudication row that recorded its verdict owes a
+    MECHANICAL close, because the machinery (not the agent's own spec_move) is
+    what moves its drafts into queued/ and archives the row terminal (the C6
+    loop OI-70 measured, where the dispatcher resumed a finished adjudication
+    row forever). `close_adjudication` no-ops for a non-adjudication lane (that
+    stall candidate is unchanged) and for one already self-closed, and refuses a
+    disposition that drafted no successor (the refusal invariant). Returns the
+    fatal exit code on a refusal, else None."""
+    if branch in integrate.finished_branches(root):
+        return None
+    _ids, refusal = handback.close_adjudication(root, branch)
+    if refusal:
+        _say("cannot close adjudication {}: {}".format(branch, refusal), err=True)
+        return ac.EXIT_PREFLIGHT
+    return None
+
+
 def _advance(root, ln, tier):
     """Advance one lane's state machine by one poll: None while busy, else a
     `(verb, code)` event —
@@ -638,6 +659,10 @@ def _advance(root, ln, tier):
         ln.proc = None
         if code != ac.EXIT_DONE:
             rc = _lane_close(root, ln.branch, code)
+            if rc is not None:
+                return ("fatal", rc)
+        else:
+            rc = _close_done_adjudication(root, ln.branch)
             if rc is not None:
                 return ("fatal", rc)
         if ln.branch in integrate.finished_branches(root):
@@ -965,7 +990,11 @@ def _admit(
             root, table, args, worker, parked, free, config_refusal, state
         )
     wis = schedule._load(root)
-    ready = [r for r in schedule.frontier(wis) if r["status"] == "queued"]
+    ready = [
+        r
+        for r in schedule.frontier(wis, oi_status=schedule.load_oi_status(root))
+        if r["status"] == "queued"
+    ]
     kinds = {w["id"]: schedule.kind_of(w) for w in wis}
     verb, payload = _admission(
         [(r["id"], kinds.get(r["id"])) for r in ready],

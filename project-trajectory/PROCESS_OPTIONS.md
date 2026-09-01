@@ -1711,10 +1711,14 @@ independent tracks meet, which task is in flight, how far along the whole is. A
   (`scripts`, `docs`, a subsystem). *Not* a "track": that word named the
   retired parallel-execution lane (this file, "Parallel tracks"; WI-210) — the
   legacy `Track` CSV header is still read as `Workstream`;
-- it **depends on** predecessor work items (`Predecessors`) — the edges of a DAG.
-  A bare id is a **hard** edge (a real technical blocker: drives readiness,
+- it **depends on** predecessors (`Predecessors`) — the edges of a DAG.
+  A bare `WI-###` is a **hard** edge (a real technical blocker: drives readiness,
   ranking, and the acyclicity rule); a `~`-prefixed id (`~WI-013`) is a **soft**
   edge (advisory ordering — must resolve, never blocks, dashed in the render);
+  and a bare `OI-###` is a **hard open-item** edge (OI-73) — the row waits until
+  that open item leaves `pending`, so an owner ruling gates it (an open item is
+  not a DAG node: no acyclicity, no ranking). The grammar widened tolerantly, so
+  a bare WI id still means exactly what it always did;
 - it moves through a **lifecycle**: `draft → queued → active → done`; `draft`
   holds thinking-in-progress (written down, not claimable), `deferred` parks
   intentionally postponed work, `blocked` parks work on a named `BlockRef`, and
@@ -1763,7 +1767,8 @@ nothing re-claims it and the remainder is carried by a new WI. An unknown status
 refuses rather than buckets.
 
 **Validation** — `check_trajectory.py`, wired as the `trajectory` gate step from
-DevStg-Tests. Every `Predecessors` id (hard or soft) resolves to a real work item and the
+DevStg-Tests. Every `Predecessors` WI id (hard or soft) resolves to a real work
+item, every `OI-###` edge to a minted open item, and the
 graph is **acyclic over its hard edges** — both **errors** (a trajectory that
 depends on itself can never start); a cycle that closes only through soft
 edges is a **warning** (conflicting ordering hints, not a blocker); every `SR-Refs` id exists in the SR registry — a **warning**, since a

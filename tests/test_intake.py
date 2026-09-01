@@ -532,6 +532,204 @@ def test_a_drafted_successor_keeps_its_supersedes_lineage_at_the_mint():
     )
 
 
+_SUPERSEDING = """
+## Deliverable
+
+Adjudicated: WI-005 stopped early; a successor continues the work by another route.
+
+## Dispositions
+
+```toml
+title = "Continue the WI-005 work by another route"
+workstream = "scripts"
+buildtier = "medium"
+supersedes = "WI-005"
+```
+"""
+
+
+def test_the_mint_replaces_inbound_edges_of_the_superseded_row(tmp_path):
+    # OI-73 arm 4: minting a successor carrying `supersedes` REPLACES the
+    # superseded row's inbound hard `needs` edges, in the same commit — the
+    # WI-541 -> WI-540 strand (a live dependent left waiting on a terminal row)
+    # becomes unrepresentable rather than a hand repair.
+    root = git_repo(tmp_path)
+    write_sr(root)
+    write_spec(
+        root, "partial", "WI-005", slug="returned", body="\n## Deliverable\n\nstopped\n"
+    )
+    write_spec(
+        root, "queued", "WI-006", slug="dependent", specref="seed.txt", needs=["WI-005"]
+    )
+    # A soft edge and an unrelated dependent must be left ALONE.
+    write_spec(
+        root, "queued", "WI-007", slug="soft-dep", specref="seed.txt", needs=["~WI-005"]
+    )
+    write_spec(
+        root,
+        "complete",
+        "WI-008",
+        slug="adjudicate",
+        safety_class="adjudication",
+        body=_SUPERSEDING,
+    )
+    _commit(root, "setup", when=T_CODE)
+    before = after = _rev(root)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-008": "merged"}, "wi-008"
+    )
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    successor = minted[0][0]
+    rows = queued_rows(root)
+    # the HARD edge is re-pointed at the successor...
+    assert rows["WI-006"]["Predecessors"] == successor
+    # ...the SOFT edge is advisory ordering and is left on the terminal row...
+    assert rows["WI-007"]["Predecessors"] == "~WI-005"
+    # ...and the successor carries the lineage.
+    assert rows[successor]["Supersedes"] == "WI-005"
+
+
+def _adjudicated_early_close(root, outcome, brief):
+    """A merged adjudication row judging an `outcome` (partial/cancelled) close
+    that queued NO successor. It models the SELF-close reality: specref is
+    CLEARED (the row already moved itself to complete/ following the close
+    ritual), so the durable "dispose:" title prefix — not `brief`, not specref —
+    is what the refusal invariant reads. `brief=""` models the cancelled arm,
+    which is brief-LESS by design and which the old `brief`-only guard missed."""
+    write_sr(root)
+    kw = {
+        "safety_class": "adjudication",
+        "title": "dispose: the {} close of WI-005".format(outcome),
+        "specref": "",  # the self-close CLEARS specref — the title is the signal
+    }
+    if brief:
+        kw["brief"] = brief
+    write_spec(
+        root,
+        "complete",
+        "WI-008",
+        slug="adjudicate",
+        body="\n## Deliverable\n\nOUTCOME: {} successors=0\n".format(outcome.upper()),
+        **kw,
+    )
+    _commit(root, "merged with no successor", when=T_CODE)
+
+
+def test_a_disposition_row_with_no_successor_is_refused(tmp_path):
+    # OI-70/OI-73 refusal invariant: an adjudication row judging a partial/
+    # cancelled close that queues NO successor is refused at the close — an OI
+    # alone no longer discharges it, and there is no third exit. The merge
+    # stands; the mint refuses and the run stops for a human.
+    root = git_repo(tmp_path)
+    _adjudicated_early_close(root, "partial", brief="disposition")
+    before = after = _rev(root)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-008": "merged"}, "wi-008"
+    )
+    assert minted == []
+    assert refusal is not None and "successor" in refusal
+
+
+def test_a_cancelled_close_with_no_successor_is_refused_at_merge(tmp_path):
+    # The gap REVIEW-A found: a CANCELLED close mints a brief-LESS adjudication
+    # row, so the old `brief == "disposition"` merge guard never fired and it
+    # merged silently. The outcome its specref names (`cancelled`) is the signal.
+    root = git_repo(tmp_path)
+    _adjudicated_early_close(root, "cancelled", brief="")
+    before = after = _rev(root)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-008": "merged"}, "wi-008"
+    )
+    assert minted == []
+    assert refusal is not None and "successor" in refusal
+
+
+def write_open_items(root):
+    """A minimal TOML open-items registry — the carrier the OI mint appends to."""
+    path = root / "docs" / "requirements" / "open-items.toml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("# open-items registry\n", encoding="utf-8", newline="\n")
+    return path
+
+
+_HUMAN_OWED = """
+## Deliverable
+
+Adjudicated: the remaining question is the owner's to answer.
+
+## Dispositions
+
+```toml
+title = "Continue once the owner rules the boundary"
+workstream = "scripts"
+buildtier = "medium"
+supersedes = "WI-005"
+open_item = "Does the retention window include partial closes?"
+```
+"""
+
+
+def test_the_close_mints_a_pending_oi_that_gates_the_successor(tmp_path):
+    # OI-73 exit (B): a human-owed answer becomes a PENDING open item minted
+    # from the watermark's OI space, and its id lands in the queued successor's
+    # needs — the ruling gates readiness, not adjudicator restraint. No
+    # standalone OI exit: the OI is always a dependency of a successor.
+    root = git_repo(tmp_path)
+    write_sr(root)
+    write_open_items(root)
+    write_spec(
+        root, "partial", "WI-005", slug="returned", body="\n## Deliverable\n\nstopped\n"
+    )
+    write_spec(
+        root,
+        "complete",
+        "WI-008",
+        slug="adjudicate",
+        safety_class="adjudication",
+        body=_HUMAN_OWED,
+    )
+    _commit(root, "setup", when=T_CODE)
+    before = after = _rev(root)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-008": "merged"}, "wi-008"
+    )
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    successor = minted[0][0]
+    # the successor hard-depends on the minted OI id...
+    rows = queued_rows(root)
+    preds = rows[successor]["Predecessors"]
+    assert preds.startswith("OI-"), preds
+    # ...and that OI is a real, PENDING row in the registry.
+    tr = load_script("trace")
+    states = tr.open_item_states(root)
+    assert states.get(preds) == "pending"
+
+
+def test_the_oi_mint_refuses_on_a_non_toml_registry(tmp_path):
+    # A downstream repo without a TOML open-items registry keeps its
+    # hand-authored path rather than getting a malformed row — the mint refuses
+    # loudly (all-or-nothing) instead of writing nowhere.
+    root = git_repo(tmp_path)
+    write_sr(root)  # no open-items registry at all
+    write_spec(
+        root,
+        "complete",
+        "WI-008",
+        slug="adjudicate",
+        safety_class="adjudication",
+        body=_HUMAN_OWED,
+    )
+    _commit(root, "setup", when=T_CODE)
+    before = after = _rev(root)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-008": "merged"}, "wi-008"
+    )
+    assert minted == []
+    assert refusal is not None and "open-items" in refusal
+
+
 def test_a_malformed_disposition_block_refuses_and_mints_nothing(tmp_path):
     bad = DISPOSITIONS.replace('title = "Re-verify', '= "Re-verify')
     root = merged_adjudication_repo(tmp_path, body=bad)

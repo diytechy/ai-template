@@ -554,14 +554,11 @@ def load_wis(rows):
         seen.add(wid)
         if wid.endswith("-000"):
             continue  # inert template example row (like trace.py)
-        # A `~` prefix marks a soft (advisory-ordering) predecessor edge; the
-        # bare id is a hard (blocking) edge — see the module docstring.
-        preds, soft = [], []
-        for p in _split_refs(r.get("Predecessors", "")):
-            if p.startswith("~"):
-                soft.append(p[1:])
-            else:
-                preds.append(p)
+        # A `~` prefix marks a soft (advisory-ordering) predecessor edge; a bare
+        # WI id is a hard (blocking) edge; a bare `OI-###` id is a hard
+        # OPEN-ITEM edge (OI-73), resolved against the open-items registry rather
+        # than the WI graph — see `kitlib.spine.split_pred_edges`.
+        preds, oi_preds, soft = _kitspine.split_pred_edges(r.get("Predecessors", ""))
         wis.append(
             {
                 "id": wid,
@@ -570,6 +567,7 @@ def load_wis(rows):
                 or "other",
                 "srs": _split_refs(r.get("SR-Refs", "")),
                 "preds": preds,
+                "oi_preds": oi_preds,
                 "soft": soft,
                 "status": (r.get("Status") or "queued").strip().lower(),
                 # Backward-only summary (R-A) and the forward bridge (R-E). A
@@ -769,7 +767,27 @@ def _title_length_warns(wis):
     ]
 
 
-def validate(wis, known_srs):
+def _predecessor_errors(w, ids, known_ois):
+    """The dangling-edge ERRORs for one WI's predecessors: a WI edge (hard or
+    soft) that names no work item, or an `OI-###` edge (OI-73) that names no
+    minted open item. The two edge kinds resolve against different registries —
+    the WI id set and the open-items registry — but are the same dangling-edge
+    error class."""
+    out = []
+    for p in w["preds"] + w["soft"]:
+        if p not in ids:
+            out.append("{}: predecessor {!r} is not a work item".format(w["id"], p))
+    for o in w["oi_preds"]:
+        if o not in known_ois:
+            out.append(
+                "{}: open-item predecessor {!r} is not a minted open item "
+                "(OI-73 typed edge; check docs/requirements/open-items.toml and "
+                "the id-watermark's OI space)".format(w["id"], o)
+            )
+    return out
+
+
+def validate(wis, known_srs, known_ois=None):
     """Return the hard-error strings for the work-item graph ([] = clean).
 
     Dangling `SR-Refs` are WARNED on stderr (a draft SR referenced ahead of its
@@ -780,17 +798,22 @@ def validate(wis, known_srs):
     is a WARN (conflicting ordering hints), never a failure. An overlong OPEN
     Title also WARNS (never fails) — see `_title_length_warns`.
 
+    A hard OPEN-ITEM edge (OI-73) resolves against `known_ois` — the open-items
+    registry read through the spine carrier — not the WI id set: an `OI-###` in
+    `Predecessors` that names no minted open item is a dangling edge, the same
+    ERROR class as an unknown WI predecessor. `known_ois` is `None` only for the
+    non-adopter with no registry, where any OI edge cannot be resolved and is
+    left to the scheduler's fail-closed `waiting`; the caller passes the real
+    set (see `main`).
+
     Implements: SR-157, LLR-034
     """
     ids = {w["id"] for w in wis}
+    known_ois = known_ois if known_ois is not None else frozenset()
     errors = []
 
     for w in wis:
-        for p in w["preds"] + w["soft"]:
-            if p not in ids:
-                errors.append(
-                    "{}: predecessor {!r} is not a work item".format(w["id"], p)
-                )
+        errors.extend(_predecessor_errors(w, ids, known_ois))
         for s in w["srs"]:
             if known_srs and s not in known_srs:
                 print(
@@ -828,6 +851,34 @@ def load_known_srs(root):
         for r in spine_carrier.load(root / SR_CSV, "SR-ID")
         if (r.get("SR-ID") or "").startswith("SR-")
     }
+
+
+#: The open-items registry — read directly through `spine_carrier` (already a
+#: dependency) rather than through `trace.open_item_states`, because a
+#: `check_trajectory -> trace` import edge would form a new module cycle
+#: (`trace` reaches back into `check_trajectory`); the import-cycle ratchet
+#: forbids it. The read is the same one `trace.open_item_states` performs.
+OPEN_ITEMS_REL = "docs/requirements/open-items.toml"
+
+
+def load_known_ois(root):
+    """The set of minted open-item ids (for the typed OI-edge resolution, OI-73).
+
+    Reads the same registry the readiness gate resolves an OI edge against, so
+    the validator's ERROR and the scheduler's `waiting` cannot disagree about
+    whether an `OI-###` edge is even real. `None` when the repo carries no
+    open-items registry at all (the D-5 absent-vs-empty distinction), which
+    `validate` treats as the non-adopter posture rather than failing every OI
+    edge."""
+    path = Path(root) / OPEN_ITEMS_REL
+    if spine_carrier.resolve(path) is None:
+        return None
+    return frozenset(
+        oid
+        for r in spine_carrier.load(path, "OI-ID")
+        if (oid := (r.get("OI-ID") or "").strip()).startswith("OI-")
+        and not oid.endswith("-000")
+    )
 
 
 # Source-file extensions stripped when normalizing a module path, so the arch-map
@@ -3379,19 +3430,32 @@ def status_forward_only_findings(root, wis):
     ]
 
 
-def dead_dependency_findings(wis):
-    """Surface a live WI that hard-depends on a `cancelled` predecessor (WI-267).
+# The terminal WON'T-INTEGRATE predecessor states a hard edge can never be
+# satisfied by (OI-73 arm 4): `cancelled` (WI-267) AND `partial` — a lane that
+# stopped early moves its spec to the terminal `partial/` and NEVER integrates
+# `done` (LLR-161), so a live WI hard-depending on one waits forever exactly as
+# it would on a cancelled row. `partial` was the WI-541 -> WI-540 strand that
+# waited invisibly and was repaired by hand; extending this finding is the
+# validator net that makes such a strand reported rather than silent.
+_DEAD_PRED_STATES = ("cancelled", "partial")
 
-    A `cancelled` WI is a terminal WON'T-BUILD row — it will never integrate
-    `done`, so an open successor whose hard edge points at it can NEVER become
-    ready. The conservative decision (WI-267 design-decision 3) is to SURFACE
-    the dead edge rather than let a cancelled predecessor silently "satisfy" the
-    dependency the way `done` does: the owner must re-home the successor's edge
-    or cancel it too. The scheduler already refuses to schedule such a WI
-    (schedule.hard_preds_satisfied requires `done`, not merely terminal); this
-    makes the same dead edge visible in the validator. WARN plain, ERROR under
-    `--strict`. Soft (`~`) edges are advisory and never gate readiness, so they
-    are exempt. Vacuous until a registry actually cancels a still-depended-on WI.
+
+def dead_dependency_findings(wis):
+    """Surface a live WI that hard-depends on a terminal predecessor (WI-267,
+    extended to `partial` by OI-73).
+
+    A `cancelled` or `partial` WI is terminal — it will never integrate `done`,
+    so an open successor whose hard edge points at it can NEVER become ready. The
+    conservative decision (WI-267 design-decision 3) is to SURFACE the dead edge
+    rather than let a terminal predecessor silently "satisfy" the dependency the
+    way `done` does: the owner must re-home the successor's edge (an OI-70/OI-73
+    close now REPLACES inbound edges at the mint, so a strand minted through that
+    path never reaches here) or cancel it too. The scheduler already refuses to
+    schedule such a WI (schedule.hard_preds_satisfied requires `done`, not merely
+    terminal); this makes the same dead edge visible in the validator. WARN
+    plain, ERROR under `--strict`. Soft (`~`) edges are advisory and never gate
+    readiness, so they are exempt. Vacuous until a registry actually leaves a
+    still-depended-on WI terminal.
     """
     by_id = {w["id"]: w for w in wis}
     out = []
@@ -3399,13 +3463,14 @@ def dead_dependency_findings(wis):
         if w["status"] not in OPEN_STATUSES:
             continue
         dead = sorted(
-            p for p in w["preds"] if by_id.get(p, {}).get("status") == "cancelled"
+            p for p in w["preds"] if by_id.get(p, {}).get("status") in _DEAD_PRED_STATES
         )
         if dead:
             out.append(
-                "{}: open WI hard-depends on cancelled WI(s) {} — a cancelled "
-                "predecessor is terminal and never satisfies a hard dependency; "
-                "re-home the edge or cancel this WI too".format(w["id"], ";".join(dead))
+                "{}: open WI hard-depends on terminal WI(s) {} — a "
+                "cancelled/partial predecessor never integrates `done` and so "
+                "never satisfies a hard dependency; re-home the edge or close "
+                "this WI too".format(w["id"], ";".join(dead))
             )
     return out
 
@@ -4538,7 +4603,10 @@ def main():
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
     errors = (
-        comp_errors + if_tc_errors + integrity + validate(wis, load_known_srs(root))
+        comp_errors
+        + if_tc_errors
+        + integrity
+        + validate(wis, load_known_srs(root), load_known_ois(root))
     )
     # Specs act on declared interface boundaries (WI-191) — WARN plain, ERROR
     # under --strict (DevStg-Tests+); vacuous until a spec adopts an `## Interfaces` section.

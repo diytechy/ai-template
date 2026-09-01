@@ -431,8 +431,21 @@ def then_closing(first_worker):
     and the same run drives it — so a stub worker that fails every call would
     stop the run at the R3 no-recursion refusal (the invariant working, but
     not these tests' subject). The second session records its judgement by
-    closing the disposition row, the way a real adjudication session ends."""
+    drafting a successor and closing the disposition row, the way a real
+    adjudication session ends — OI-73 REFUSES a partial/cancelled disposition
+    that queues no successor, so the stub drafts one to stay conformant."""
     calls = []
+    successor = """
+## Dispositions
+
+```toml
+title = "Continue the {wi} work by another route"
+workstream = "process"
+buildtier = "quick"
+```
+
+Re-land the reviewed parts.
+"""
 
     def worker(root, branch, wi_ids, args):
         calls.append((branch, tuple(wi_ids)))
@@ -441,11 +454,15 @@ def then_closing(first_worker):
         wt, err = drv.integrate.lane_worktree(root, branch)
         assert err is None, err
         for spec in sorted((wt / "docs" / "work" / "active" / branch).glob("WI-*.md")):
+            text = spec.read_text(encoding="utf-8")
+            # A `disposition`-brief adjudication row must queue a successor
+            # (OI-73). Draft one unless the row already carries a Dispositions
+            # section (a fresh mint never does).
+            if 'brief = "disposition"' in text and "\n## Dispositions\n" not in text:
+                text += successor.format(wi=wi_ids[0])
             dst = wt / "docs" / "work" / "complete" / spec.name
             dst.parent.mkdir(parents=True, exist_ok=True)
-            dst.write_text(
-                spec.read_text(encoding="utf-8"), encoding="utf-8", newline="\n"
-            )
+            dst.write_text(text, encoding="utf-8", newline="\n")
             _git(wt, "rm", "-q", "docs/work/active/{}/{}".format(branch, spec.name))
         _commit(wt, "{}: adjudicated + closed".format(";".join(wi_ids)), when=T_LATER)
         return 0

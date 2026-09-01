@@ -365,8 +365,12 @@ def _frontier_lines(root):
             root / "docs/requirements/work-items.csv"
         )
         wis = traj_parse.schedule.load_wis(rows)
-        # reserved=None -> pure registry frontier
-        ready = traj_parse.schedule.frontier(wis)
+        # reserved=None -> pure registry frontier; oi_status resolves hard
+        # open-item edges (OI-73) so a WI gated on a ruled OI is not shown
+        # forever waiting.
+        ready = traj_parse.schedule.frontier(
+            wis, oi_status=traj_parse.schedule.load_oi_status(root)
+        )
     except (OSError, ValueError):
         return []
     if not ready:
