@@ -19,7 +19,7 @@ Contract IF-024: the same registry read as the roadmap DAG — each row's id,
     a second statement of state anywhere.
 Contract IF-054: the same registry read for READINESS. A row offers its status,
     its `needs` edges (an entry prefixed `~` is a SOFT edge and never blocks)
-    and the optional `priority`, `exclusive`, `blockref`, `est_tokens` and
+    and the optional `priority`, `exclusive`, `est_tokens` and
     `safety_class` keys. An absent optional key reads as its documented default,
     and the defaults are chosen to fail closed: an absent safety class is
     `unclassified` and is never scheduled, an absent priority is 0, an absent
@@ -54,7 +54,7 @@ is documented in the [WI-000 exemplar](queued/WI-000-example.md) beside this fil
 | Location | Status |
 |---|---|
 | `draft/WI-###-<slug>.md` | `draft` — written down, not claimable |
-| `queued/WI-###-<slug>.md` | `queued` — filed, unclaimed (`blockref` set = parked) |
+| `queued/WI-###-<slug>.md` | `queued` — filed, unclaimed |
 | `active/<branch>/WI-###-<slug>.md` | `active` — claimed by that branch |
 | `deferred/WI-###-<slug>.md` | `deferred` — a decision to park; not now |
 | `../archive/work/complete/WI-###-<slug>.md` | `done` — it shipped |

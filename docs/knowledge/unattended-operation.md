@@ -48,8 +48,9 @@ not to invent one.
 - **A failure that pages nobody.** When a lane cannot proceed, the exit is
   `EXIT_NEEDS_HUMAN` (`agent_common.py:134`, value 7). `agent_loop.py`
   (~:640-641) turns it into `handback.close_partial` — an immutable per-close
-  report plus a `blockref` that `schedule._disposition` reads as `blocked` — so
-  the hold is a visible, queued, durable page rather than a stalled process.
+  report and a move to the terminal `partial/`, which `schedule._disposition`
+  reads as `partial` (never ready) — so the hold is a visible, durable page
+  rather than a stalled process.
   `adjudicate_brief.py` states the sharp rule the hat should enforce on any
   paging surface: **"a half-filled brief is WORSE than the generic prompt"**
   (~:26) — a thin evidence section reads as a completed investigation that found
@@ -74,7 +75,7 @@ not to invent one.
   not a read cell. A periodic census, not only a gate, is what caught it.
 - A warn-only tripwire is a silent degrade unless something reads the warning;
   say who reads it, or make it block.
-- Any human-facing hold must page durably (`blockref`/terminal close) and must
+- Any human-facing hold must page durably (a terminal partial close) and must
   refuse to emit a half-filled artifact rather than one that looks complete.
 
 ## Open questions / bounded here

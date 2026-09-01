@@ -173,7 +173,7 @@ sequenceDiagram
         end
         Lane-->>Disp: worker exit
         alt decided non-DONE exit (NEEDS-HUMAN, blocked, budget, stall)
-            Disp->>Hand: hand_back — commit as-is, spec to queued/ with a Handback section and a blockref
+            Disp->>Hand: close_partial — commit as-is, spec to terminal partial/ with a per-close report
             Note over Disp,Hand: the lane still closes into trunk and the run<br/>continues; only a FAILED handback stops it (LLR-144)
         else crash (traceback, signal)
             Note over Disp: claim stays in active/&lt;branch&gt;/; the next tick<br/>resumes it, bounded by the stall guard

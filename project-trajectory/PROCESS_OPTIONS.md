@@ -1721,7 +1721,8 @@ independent tracks meet, which task is in flight, how far along the whole is. A
   a bare WI id still means exactly what it always did;
 - it moves through a **lifecycle**: `draft → queued → active → done`; `draft`
   holds thinking-in-progress (written down, not claimable), `deferred` parks
-  intentionally postponed work, `blocked` parks work on a named `BlockRef`, and
+  intentionally postponed work, `blocked` marks work parked on an external
+  dependency, and
   `cancelled` is a **terminal** won't-build row (its reason in `Deliverable`),
   as is `partial` — could not finish; scope ends here.
 
@@ -1757,9 +1758,10 @@ directory because specs in an undeclared one are skipped by every reader and so
 never enter the registry — the duplicate-id guard and the dashboard go blind to
 the id a draft is holding (the mint itself reads filenames and is safe either
 way, so the declaration makes the reservation checked, not merely possible);
-`blocked` is
-`queued/` plus a `blockref` naming what must clear (no directory — readiness is
-derived, one home per fact); and `cancelled` (WI-267, spelled `retired` until
+`blocked` has
+no directory of its own — the `blockref` mechanism that once expressed it
+retired at WI-553/OI-70, and a stopped lane now closes PARTIAL; and `cancelled`
+(WI-267, spelled `retired` until
 WI-384) is terminal — a deliberate won't-build, counted separately
 from `done`, never scheduled, its reason in the body. `partial` (SR-144) is the
 **third terminal**: the work could not finish and its scope ends there, so

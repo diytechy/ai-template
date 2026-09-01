@@ -71,6 +71,22 @@ doctrine statement supervisors read. Four Done-when arms:
   - PRE-EXISTING failure noted: `test_dispatch::test_drive_end_to_end...` fails
     on a `lint` (ruff I001) finding in a *scaffolded demo* file — a ruff-version
     skew, reproduced on the clean tree before this WI; not in scope.
+- **Done-when 2c (templates + docs) LANDED.** The `-000` example twin
+  (`docs/work/queued/WI-000-example.md` + `project-trajectory/work/WI-000.template.md`)
+  rewrites the `blocked`-has-no-directory bullet to the current model (a stopped
+  lane closes PARTIAL; hold-by-rename banned, OI-70) and drops `blockref` from
+  the scheduler-inputs list. The shipped `work-items.template.csv` header +
+  teaching text, the `docs/work/README.md`+template README twin (its IF-054
+  contract comment is the SOURCE for generated `interface-reference.md`, which
+  the trunk lane regenerates), and the authored docs (`runtime-flows.md`,
+  `project-trajectory/README.md`, `knowledge/unattended-operation.md`,
+  `PROCESS_OPTIONS.md`) all drop the retired-mechanism teaching. Stale-producer
+  doc `concurrency-restructure.md` left as dated Phase-5 history (already hedged
+  "retiring"). A RESYNC_PACK.md §3 entry documents the optional column-drop
+  migration + the new check (anchored at the preceding kit commit). Byte
+  budgets: `PROCESS_OPTIONS.md` 181,326→181,369 (+43, FLAGGED, re-stamped in the
+  byte-budget-guard skill, which re-stamped its own 4,829 row); skill copies
+  re-fanned. `interface-reference.md` left stale on the branch by design.
 
 Deferred open items: none — OI-70 is ruled and this WI mechanizes it; no new
 question is raised.
