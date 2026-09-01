@@ -2046,8 +2046,44 @@ def resolve_requirement_reference(ref, sr_by_id, sn_ids):
     return None
 
 
+def _delivery_source_findings(entries, delivery):
+    """Manifest/exclusion drift against the physical package source census."""
+    sources, source_exclusions, conditional, _generated = delivery
+    mapped = {src for src, _dst, _ref in entries}
+    delivery_sources = {src for src, _dst in conditional}
+    classified = mapped | set(source_exclusions) | delivery_sources
+    findings = [
+        (
+            "missing_file",
+            src,
+            "package source is absent from MAPPING and delivery exclusions",
+        )
+        for src in sorted(set(sources) - classified)
+    ]
+    findings.extend(
+        ("stale_entry", src, "declared delivery source is absent from package")
+        for src in sorted(classified - set(sources))
+    )
+    findings.extend(
+        ("stale_entry", src, "source is both mapped and declared kit-only")
+        for src in sorted(mapped & set(source_exclusions))
+    )
+    return findings
+
+
+def _inherited_delivery_entries(entries, delivery, present):
+    """Generated/materialized outputs, carrying their source row's reference."""
+    _sources, _exclusions, conditional, generated = delivery
+    mapped = {src: ref for src, _dst, ref in entries}
+    inherited = [(src, dst, mapped.get(src)) for src, dst in generated]
+    inherited.extend(
+        (src, dst, mapped.get(src)) for src, dst in conditional if present(dst)
+    )
+    return inherited
+
+
 def mapping_purpose_findings(
-    entries, *, present, sr_by_id, sn_ids, declared_absences=()
+    entries, *, present, sr_by_id, sn_ids, declared_absences=(), delivery=None
 ):
     """The four SR-163 finding classes over a shipped-file inventory, as a list
     of `(class, destination, detail)` tuples. PURE: every environment fact is an
@@ -2066,6 +2102,13 @@ def mapping_purpose_findings(
                              arm — the same marker rule the dogfood walk applies,
                              stated once (`check_doc_refs.load_declared_absences`
                              is its shape).
+      `delivery`           — optional `(physical_sources, source_exclusions,
+                             conditional_outputs, generated_outputs)` from
+                             `bootstrap.delivery_inventory()`. This universe is
+                             independent of MAPPING, so deleting a real manifest
+                             row remains observable. Conditional outputs are
+                             graded only when materialized; generated outputs
+                             inherit their generator source's reference.
 
     Classes (each carried by `MAPPING_FINDING_POLICY`):
       unmapped_file        — a bare pair: the file ships with no recorded purpose.
@@ -2073,8 +2116,13 @@ def mapping_purpose_findings(
       missing_file         — a declared destination that is absent and not excluded.
       stale_entry          — a declared exclusion whose destination is now present.
     """
+    entries = list(entries)
     absences = dict(declared_absences)
+    absent_paths = {str(path).rstrip("/") for path in absences}
     findings = []
+    if delivery is not None:
+        findings.extend(_delivery_source_findings(entries, delivery))
+        entries.extend(_inherited_delivery_entries(entries, delivery, present))
     for _src, dst, ref in entries:
         if ref is None:
             findings.append(
@@ -2090,7 +2138,7 @@ def mapping_purpose_findings(
                         "reference {!r} {}".format(ref, reason),
                     )
                 )
-        if not present(dst) and dst not in absences:
+        if not present(dst) and str(dst).rstrip("/") not in absent_paths:
             findings.append(("missing_file", dst, "declared destination is absent"))
     for dst, reason in sorted(absences.items()):
         if not str(reason).startswith("LIFECYCLE:") and present(dst):
@@ -2156,6 +2204,7 @@ def mapping_purpose_over_repo(
     check_doc_refs = _import_sibling("check_doc_refs")
     root = Path(root)
     entries = bootstrap.mapping_entries()
+    delivery = bootstrap.delivery_inventory()
     sr_by_id, sn_ids = load_spine_index(root, sr_registry, sn_registry)
     absences = check_doc_refs.load_declared_absences(
         root / "docs" / "declared-absences"
@@ -2163,6 +2212,8 @@ def mapping_purpose_over_repo(
 
     def present(dst):
         if (root / dst).exists():
+            return True
+        if dst in bootstrap.GITKEEP_DIRS and (root / dst).is_dir():
             return True
         for src, d, _ref in entries:
             if (
@@ -2179,6 +2230,7 @@ def mapping_purpose_over_repo(
         sr_by_id=sr_by_id,
         sn_ids=sn_ids,
         declared_absences=absences,
+        delivery=delivery,
     )
 
 

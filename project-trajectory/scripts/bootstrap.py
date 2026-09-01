@@ -2317,6 +2317,80 @@ GITKEEP_DIRS = [
     "docs/log.d",
 ]
 
+
+def _mapping_source_exclusions():
+    """Reasoned kit-only sources; malformed rows deliberately exclude nothing."""
+    entries = {}
+    path = KIT / "mapping-source-exclusions"
+    if not path.is_file():
+        return entries
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        source, sep, reason = raw.partition(" — ")
+        if sep and source.strip() and reason.strip():
+            entries[source.strip()] = reason.strip()
+    return entries
+
+
+def delivery_inventory():
+    """The independent universe SR-163 compares with `MAPPING`.
+
+    Returns `(sources, exclusions, conditional, generated)`:
+
+    - every physical file under `KIT` (runtime bytecode caches excluded);
+    - the reasoned kit-only source exclusions above, plus `scope: this-repo`
+      skills whose own frontmatter declares why they do not materialize;
+    - possible conditional `(source, destination)` copies for agent hooks,
+      kit-scope skills and knowledge packs (graded only when materialized);
+    - unconditional `(generator-source, destination)` outputs made by a fresh
+      scaffold, including the directories represented by generated `.gitkeep`s.
+
+    The physical walk is what makes a deleted MAPPING row observable. Generated
+    outputs name their generator source so the purpose checker can inherit that
+    source's MAPPING reference instead of inventing a second purpose cell.
+    """
+    sources = {
+        p.relative_to(KIT).as_posix()
+        for p in KIT.rglob("*")
+        if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc"
+    }
+    exclusions = _mapping_source_exclusions()
+    conditional = []
+    for spec in AGENTS.values():
+        if spec.get("hooks_src"):
+            conditional.append((spec["hooks_src"], spec["hooks_dst"]))
+    for skill_md in sorted((KIT / "skills").glob("*/SKILL.md")):
+        rel = skill_md.relative_to(KIT).as_posix()
+        fm = parse_skill_frontmatter(skill_md.read_text(encoding="utf-8"))
+        if (fm.get("scope") or "kit").strip() != "kit":
+            exclusions[rel] = "scope: this-repo skill; never materialized downstream"
+            continue
+        for spec in AGENTS.values():
+            conditional.append(
+                (rel, "{}/{}/SKILL.md".format(spec["skills_dir"], skill_md.parent.name))
+            )
+    for rows in KNOWLEDGE_PACKS.values():
+        for label, _topic, _domain in rows:
+            conditional.append(
+                ("knowledge/{}.md".format(label), "docs/knowledge/{}.md".format(label))
+            )
+    generated = [
+        ("LICENSE", "docs/kit-license"),
+        ("scripts/bootstrap.py", "docs/kit-version"),
+        ("scripts/bootstrap.py", "docs/kit-profile"),
+        ("scripts/trace.py", "docs/test/report.md"),
+        ("scripts/gen_open_items.py", "docs/open-items.html"),
+    ]
+    generated.extend(("scripts/bootstrap.py", d) for d in GITKEEP_DIRS)
+    return (
+        sources,
+        exclusions,
+        tuple(sorted(set(conditional))),
+        tuple(generated),
+    )
+
+
 # Per-destination text fixups applied right after a template is generated: the
 # in-line rewrites a marker strip can't express (a phrase inside a line that
 # must otherwise survive). Whole-region copy-me prose belongs in kit-only

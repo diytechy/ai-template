@@ -5,9 +5,9 @@ functions directly and stays in the commit smoke bar, where it is cheap. This
 module drives the SHIPPED `gen_arch_map.py --mapping-purpose` command the way an
 adopter's `stack.ini` would — a real interpreter subprocess — so a regression
 that unwired the CLI mode is caught end-to-end: were the checker left defined but
-reachable only from the test suite, adding an unmapped/unresolved/missing/stale
-inventory entry in a real repo would produce no SR-163 report or gate, and these
-assertions would fail. Kept SEPARATE and re-tiered into conftest.SLOW_MODULES for
+reachable only from the test suite, adding an inventory defect or omitting a
+shipped source from the manifest would produce no SR-163 report or gate, and
+these assertions would fail. Kept SEPARATE and re-tiered into conftest.SLOW_MODULES for
 the same reason test_check_complexity_cli.py is: each case pays interpreter
 startup, so it is the subprocess-dominated class the per-commit bar drops and the
 slice/phase-close + CI run exercises in full.
@@ -42,3 +42,28 @@ def test_cli_mapping_purpose_gates_when_destinations_are_absent(tmp_path):
     red = run_py([_GAM, "--mapping-purpose", "--root", str(tmp_path)], cwd=tmp_path)
     assert red.returncode == 1
     assert "GATE" in red.stderr and "missing_file" in red.stderr
+
+
+def test_cli_mapping_purpose_gates_when_real_shipped_row_is_removed():
+    # REVIEW-A round 2: the manifest must not define its own coverage universe.
+    # Remove one REAL row in the child process, then drive main() exactly as the
+    # command does. The physical `process.toml.template` source remains in the
+    # kit, so the independent package census must still observe and gate it.
+    code = """
+import sys
+sys.path.insert(0, {scripts!r})
+import bootstrap
+import gen_arch_map
+
+bootstrap.MAPPING = [
+    row for row in bootstrap.MAPPING if row[1] != "docs/process.toml"
+]
+sys.argv = [
+    "gen_arch_map.py", "--mapping-purpose", "--root", {root!r}
+]
+gen_arch_map.main()
+""".format(scripts=str(_GAM.parent), root=str(ROOT))
+    red = run_py(["-c", code], cwd=ROOT)
+    assert red.returncode == 1
+    assert "GATE" in red.stderr and "missing_file" in red.stderr
+    assert "process.toml.template" in red.stderr

@@ -32,40 +32,49 @@ SR-163's verification shipped mechanism-first, all four done-when met:
    **Wired to a delivered command (REVIEW-A rework):** `mapping_purpose_over_repo`
    assembles the real inventory, spine, and declared-absences ledger and grades
    them, exposed as the warn-first `gen_arch_map.py --mapping-purpose` REPORT MODE
-   (the `--backlink-coverage` sibling) — so a real defect in a live repo produces
-   an SR-163 report and a gate exit, not just a green test suite.
+   (the `--backlink-coverage` sibling). **Round-2 closure:**
+   `bootstrap.delivery_inventory()` now enumerates the physical kit independently
+   of MAPPING, partitioning each source across a static row, a conditional
+   materialization, or the fail-safe reasoned
+   `project-trajectory/mapping-source-exclusions` carrier, and separately names
+   every fresh-scaffold generator output. The checker diffs that universe before
+   grading purposes/destinations; an omitted shipped source is `missing_file`
+   (GATE), a vanished or contradictory declaration is `stale_entry` (GATE), and
+   generated outputs inherit their generator source's reference.
 3. **The direct TC on SR-163** — TC-204 (`tests/test_mapping_purpose.py`, Smoke
    tier, registered Drafted; approving it is the owner's act) plants one defect
    of each class on a synthetic scaffold plus a clean control and asserts each is
-   reported, drives the checker over the real `bootstrap.MAPPING` + this repo's
-   real spine and asserts no gate-class finding survives and every filled
-   reference resolves — so the TC claims exactly what it exercises. Its
-   `_real_mapping_findings` runs the delivered `mapping_purpose_over_repo`, and a
-   separate `tests/test_mapping_purpose_cli.py` (re-tiered to `SLOW_MODULES`)
-   drives the shipped `--mapping-purpose` command end-to-end as a subprocess.
+   reported, proves a generated output inherits a resolving generator mapping,
+   drives the checker over the real package + MAPPING + exclusions + spine, and
+   asserts every physical source is classified, no gate-class finding survives,
+   and every filled reference resolves. Its `_real_mapping_findings` runs the
+   delivered `mapping_purpose_over_repo`; the separate slow CLI module drives the
+   shipped command and removes the REAL `process.toml.template →
+   docs/process.toml` row in a child process, requiring exit 1 plus a
+   `missing_file` report naming the still-physical source.
 4. **The burn-down begun, not finished** — 20 references filled to unambiguous
    EXISTING SRs; no new SR needed (no filled file lacked a justifying
    requirement). **Baseline for the burn-down:** of 147 MAPPING rows, 20 carry a
    resolved reference and **127 remain bare** (unmapped_file WARN); 0 unresolved,
-   0 missing, 0 stale over the real inventory. The 127 is the count the burn-down
-   retires against; gating flips only at zero, per the ruling.
+   0 missing, 0 stale over the real inventory. The independent census additionally
+   exposes 25 generated/materialized outputs whose generator/direct purpose cell
+   is still bare, for 152 warn-class findings total and zero gate-class findings.
+   The 127 remains the MAPPING-row burn-down baseline; gating flips only at zero,
+   per the ruling.
+   <!-- fig: cmd="python3 -c 'load bootstrap/gen_arch_map; count delivery_inventory and mapping_purpose_over_repo'" rev=this-worktree -->
 
-Harness kept green: the module-size ratchet (`bootstrap.py` +29 SLOC,
-`gen_arch_map.py` +79 SLOC) and the smoke membership budget (max-tests 1440 →
-1458, +17 in-process TC-204 tests) re-stamped as reviewed baseline edits naming
-this WI. No new LLR, no new `stack.ini` step (`bootstrap.py` never ships
-downstream, so the kit self-check home is TC-204, which runs the checker over
-the real inventory on every suite run). Full design record in
+Harness records the original ratchet changes plus the two review closures:
+`bootstrap.py` 1600 → 1652 SLOC and `gen_arch_map.py` 1394 → 1433 SLOC for the
+independent census/diff, with every function still below the C901 floor; smoke
+membership stays within its existing 1458 ceiling. The affected 160-test slice
+passed with one skip. Full unfiltered suite: 3204 passed, 24 skipped, and the one
+known work-branch-only failure in
+`test_this_repo_s_committed_stage_is_current` after TC-204 changed a declared
+stage input; `docs/stage` is generated only by the trunk lane and is forbidden
+on this worker branch, while the branch-aware freshness step skips it by design.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=this-worktree -->
+No new LLR or `stack.ini` step. Full design/verification record in
 `docs/log.d/WI-543-sr163-verification-tc.md`.
-
-**REVIEW-A round-2 rework in progress:** the delivered path still treated
-`MAPPING` as both the declaration and the enumerated universe, so deleting a
-real row made the shipped source disappear from observation. The corrective
-boundary is the kit package itself: every physical package source must be
-covered by `MAPPING` or a reasoned source exclusion, and generator-derived
-scaffold outputs inherit their mapped generator row. The delivered
-`--mapping-purpose` path will diff that independent universe against the live
-manifest and TC-204 will drive a real-row deletion through the command path.
 
 ## Context
 

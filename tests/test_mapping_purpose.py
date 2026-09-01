@@ -7,8 +7,8 @@ carry a requirement reference as a tolerant third element, and a checker
 under a declared warn-vs-gate policy. This module proves the CHECKER catches
 each of the four classes on a planted scaffold — remove a file, plant a bogus
 reference, leave a bare pair, and add a stale exclusion — so the test claims
-exactly what it exercises. Its green over the REAL MAPPING is the standing
-every-file-maps evidence.
+exactly what it exercises. Its green over the independently enumerated REAL
+DELIVERY UNIVERSE is the standing every-file-maps evidence.
 """
 
 from conftest import ROOT, load_script
@@ -159,7 +159,24 @@ def test_report_gates_only_on_gate_classed_findings():
     assert not ok
 
 
-# ── the standing evidence: the checker over the REAL inventory, every run ──
+def test_generated_output_inherits_its_generator_mapping():
+    delivery = (
+        {"generator.tmpl"},
+        {},
+        (),
+        (("generator.tmpl", "docs/generated"),),
+    )
+    findings = gen_arch_map.mapping_purpose_findings(
+        [("generator.tmpl", "scripts/generator", "SR-900")],
+        present=lambda _dst: True,
+        sr_by_id=SR_BY_ID,
+        sn_ids=SN_IDS,
+        delivery=delivery,
+    )
+    assert not [f for f in findings if f[1] == "docs/generated"]
+
+
+# ── the standing evidence: checker over the REAL delivery universe, every run ──
 
 
 def _real_mapping_findings():
@@ -170,9 +187,9 @@ def _real_mapping_findings():
 
 
 def test_real_mapping_has_no_gate_class_findings():
-    # The every-file-maps standing evidence: over the real MAPPING no missing
-    # file and no stale exclusion survives, so the checker passes. Unmapped
-    # bare pairs remain (warn-only) — the burn-down, not a failure.
+    # The every-file-maps standing evidence: over the physical package, MAPPING,
+    # conditional/generated deliveries and exclusions, no gate finding survives.
+    # Unmapped entries remain warn-only — the burn-down, not a failure.
     findings = _real_mapping_findings()
     gate = [
         (cls, dst, detail)
@@ -204,7 +221,18 @@ def test_burndown_has_begun_and_the_baseline_is_measurable():
     entries = bootstrap.mapping_entries()
     filled = [e for e in entries if e[2] is not None]
     assert filled, "no reference has been filled — the burn-down has not begun"
+    mapped_destinations = {dst for _src, dst, _ref in entries}
     unmapped = [
-        dst for cls, dst, _d in _real_mapping_findings() if cls == "unmapped_file"
+        dst
+        for cls, dst, _d in _real_mapping_findings()
+        if cls == "unmapped_file" and dst in mapped_destinations
     ]
     assert len(unmapped) == len(entries) - len(filled)
+
+
+def test_delivery_census_classifies_every_physical_package_source():
+    sources, exclusions, conditional, _generated = bootstrap.delivery_inventory()
+    classified = {src for src, _dst, _ref in bootstrap.mapping_entries()}
+    classified.update(exclusions)
+    classified.update(src for src, _dst in conditional)
+    assert sources == classified

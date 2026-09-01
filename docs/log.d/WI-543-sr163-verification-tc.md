@@ -155,3 +155,80 @@ reference they inherit. `mapping_purpose_over_repo` will diff that universe
 against the live manifest before grading destinations/references, and an
 end-to-end TC-204 regression will remove the real process-policy row and require
 the shipped command to report and gate the omission.
+
+Implemented at that boundary:
+
+- **Independent delivery census:** `bootstrap.delivery_inventory()` walks the
+  physical kit tree rather than `MAPPING`, then joins each source to one of three
+  delivery declarations: a static MAPPING row, the reasoned
+  `project-trajectory/mapping-source-exclusions` carrier, or a conditional
+  agent-skill/hook/knowledge materialization; unconditional generator outputs
+  are enumerated separately and name a source in one of those classes. The
+  exclusion carrier includes itself and fails safe: missing,
+  malformed, or reasonless lines exclude nothing. `scope: this-repo` skills are
+  exclusions by their own frontmatter rather than a hand-maintained duplicate.
+- **Generated outputs inherit, never re-declare:** the census names the source
+  that produces each fresh-scaffold output (`bootstrap.py` for stamps/status
+  directories, `trace.py` for `docs/test/report.md`, and
+  `gen_open_items.py` for `docs/open-items.html`). The checker reuses that
+  source's MAPPING reference; an unfilled generator remains the existing
+  `unmapped_file` warning instead of growing a second purpose cell.
+- **Four-class checker widened at its one input boundary:**
+  `mapping_purpose_findings(..., delivery=...)` diffs physical sources against
+  the declarations before grading destinations/references. An unclassified
+  package source is `missing_file` (GATE); a declaration whose source vanished,
+  or a source both mapped and excluded, is `stale_entry` (GATE). Conditional
+  destinations are graded only when materialized; unconditional generated
+  destinations always are. `_delivery_source_findings` and
+  `_inherited_delivery_entries` keep this separate from the four-class loop and
+  kept the complexity ratchet green without a new function baseline.
+- **Direct/end-to-end TC:** the synthetic arm proves a generated output inherits
+  a resolving generator mapping; the live arm proves every physical source is
+  classified and the real census has no gate finding; the subprocess arm removes
+  the real `process.toml.template → docs/process.toml` row in memory, calls
+  `gen_arch_map.main()` with `--mapping-purpose`, and requires exit 1 plus a
+  `missing_file` report naming the still-physical source. This is the exact
+  previously-green review probe, now red under the declared gate policy.
+
+Live census: 212 physical sources, 147 MAPPING rows, 31 reasoned exclusions, 86
+possible conditional destinations (10 materialized in this repo), and 15
+unconditional generated outputs; findings are 152 `unmapped_file` WARN, 0
+unresolved, 0 missing, 0 stale. Of those warnings, 127 remain the original bare
+MAPPING-row burn-down; the added 25 expose purpose debt on generated/materialized
+deliveries rather than hiding it.
+<!-- fig: cmd="python3 -c 'load bootstrap/gen_arch_map; count delivery_inventory and mapping_purpose_over_repo'" rev=this-worktree -->
+
+Ratchet posture: the independent package walk/classifier adds 52 SLOC to
+`bootstrap.py` (1600 → 1652); the shared delivery-diff/inheritance boundary adds
+39 SLOC to `gen_arch_map.py` (1394 → 1433). Both are deliberate reviewed bumps
+for SR-163's missing acceptance arm, recorded here rather than hidden as
+headroom. The new logic was decomposed until no function crossed the C901
+complexity floor; a separate shipped module would split MAPPING from the
+bootstrap boundary that owns it and create another source the census must
+bootstrap before it can validate itself.
+
+Verification (round-2 rework):
+
+- Characterization before the fix: the new real-row CLI test failed because the
+  child exited 0; after the census boundary it exits 1 and names
+  `process.toml.template` as gate-class `missing_file`.
+- Direct TC + both ratchets: 26 passed. The affected bootstrap/dogfood/profile/
+  resync/kit-path/mapping slice: 160 passed, 1 skipped in 39.77 s.
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto tests/test_bootstrap.py tests/test_dogfood_sync.py tests/test_kit_path_invariant.py tests/test_profile.py tests/test_resync_pack.py tests/test_mapping_purpose.py tests/test_mapping_purpose_cli.py tests/test_module_size_ratchet.py tests/test_complexity_ratchet.py" rev=this-worktree -->
+- Full unfiltered suite: 3204 passed, 24 skipped, 1 failed in 625.62 s. The one
+  failure is the same work-branch generated-state condition already recorded at
+  the original close:
+  `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current` sees
+  TC-204's modified registry row and therefore a stale committed
+  `docs/stage` fingerprint. Worker branches are forbidden to regenerate this
+  trunk-owned artifact; `derive_stage.py --check` skips generated freshness on
+  this branch for that reason. No product/test behavior failed.
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=this-worktree -->
+- Registry integrity remains clean. The broader non-gating `trace.py --strict`
+  audit still names the pre-existing SR-181 orphan pair and LLR-197 provenance
+  finding, outside WI-543; TC-204's modified approval brief was regenerated into
+  `docs/ratify/CURRENT.md`.
+
+Deferred open items: none — the review finding is fully discharged; the
+remaining MAPPING/generated purpose warnings are the already-ruled burn-down,
+not a newly deferred decision.
