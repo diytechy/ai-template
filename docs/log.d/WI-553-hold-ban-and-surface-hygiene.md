@@ -97,6 +97,17 @@ doctrine statement supervisors read. Four Done-when arms:
   fragment mentions is history — and a `none` citing nothing pending passes
   clean). Four tests in `test_gen_open_items.py` (contradiction; ruled/absent
   cite passes; position-is-scope both ways).
+- **Done-when 4 (ban stated where supervisors read) LANDED.** The
+  session-protocol skill gains a Standing rule (partial close is the only
+  sanctioned stop; hold-by-rename BANNED; cites OI-70; names the claim-ref
+  check) — re-fanned to the `.claude`/`.gemini`/`.agents` copies.
+  `docs/handbacks/README.md` states the same after its opening. The ADJUDICATE
+  `adjudicate-disposition` prompt's opening now names the partial close as the
+  ONLY sanctioned stop and cites OI-70 (it already carried OI-73's two-exit
+  rule); `prompts/CATALOG.md` regenerated (a commit-time gate). The worker
+  `Blocked-WI:`/`BlockRef:` block path was deliberately left unchanged — it is
+  the sanctioned worker stop (the loop turns it into a partial close), distinct
+  from the banned ref-rename, which is a SUPERVISOR action.
 
 Deferred open items: none — OI-70 is ruled and this WI mechanizes it; no new
 question is raised.
