@@ -24,6 +24,9 @@ doctrine statement supervisors read. Four Done-when arms:
    handback/ADJUDICATE docs name the sanctioned stop (the partial close; nothing
    else) and cite OI-70 as the ruling of record.
 
+Deferred open items: none — this WI mechanizes a ruling already made; no new
+question is raised. (File-level, so it speaks for the whole fragment.)
+
 ### Progress
 
 - Read OI-70 (ruled 2026-08-31), the four Done-when arms, and the core surfaces
@@ -109,5 +112,18 @@ doctrine statement supervisors read. Four Done-when arms:
   the sanctioned worker stop (the loop turns it into a partial close), distinct
   from the banned ref-rename, which is a SUPERVISOR action.
 
-Deferred open items: none — OI-70 is ruled and this WI mechanizes it; no new
-question is raised.
+### Follow-up surfaced (not fixed — out of this WI's lane)
+
+Retiring the blockref *mechanism* left five APPROVED spine cells still
+*describing* it: `low-level-requirements.toml` LLR-158 (Detail: "a queued WI
+carrying a blockref reads as blocked"), LLR-161 (Detail: "schedule reads
+queued+blockref as blocked"), LLR-198 (CodeSymbol names `blocked_pending`; Detail
+describes it as a source), and `test-cases.toml` two Method cells (the handback
+and intake TCs mention a blockref cell). These are semantic prose drift only —
+I did NOT edit the spine registries, so there is no registry-vs-snapshot drift
+and no re-attest is triggered, and the codesymbol crosscheck emits no NEW finding
+(its LLR-198 note is the pre-existing module-scope-tag shape). Amending an
+Approved cell is owner-held (owes a re-attest), and WI-553 owns no spine row
+(`sr_refs = []`, it traces to OI-70), so correcting these is left for a
+spine-hygiene pass or the owner's re-attest rather than fixed off-lane. Filed as
+a finding, not a blocker: warn-only, no gate impact.

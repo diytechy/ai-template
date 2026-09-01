@@ -259,8 +259,10 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # and wired its `{offspine}` slot through `render`'s format call, all above
     # this site. 1266 -> 1281 when WI-530 (OI-67 slice 3) moved the module's
     # five `Contract IF-###:` bodies into its docstring — docstring lines only,
-    # above everything.
-    assert sites == [("gen_open_items.py", 1281)], sites
+    # above everything. 1281 -> 1352 when WI-553 (OI-70) added the fragment-`none`
+    # cross-check (`_scope_span` + `_none_declaration_findings`, ARM 4) and its
+    # `deferral_findings` wiring, all above this site.
+    assert sites == [("gen_open_items.py", 1352)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still
