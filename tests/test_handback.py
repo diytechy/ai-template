@@ -649,9 +649,7 @@ def test_the_refusal_invariant_stops_a_cancelled_close_with_no_successor(tmp_pat
     # brief-LESS adjudication row, so a `brief == "disposition"` guard missed it
     # and a cancelled close that queued no successor archived silently. The
     # signal is the OUTCOME the row's specref names (`cancelled`), not the brief.
-    root = adjudication_repo(
-        tmp_path, brief="", outcome="cancelled", dispositions=""
-    )
+    root = adjudication_repo(tmp_path, brief="", outcome="cancelled", dispositions="")
     ids, refusal = hb.close_adjudication(root, "wi-401")
     assert ids is None
     assert refusal is not None and "no successor" in refusal.lower()

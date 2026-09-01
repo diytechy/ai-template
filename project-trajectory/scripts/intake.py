@@ -206,9 +206,8 @@ def owes_successor(meta):
     close-side guard (`handback.close_adjudication`, pre-close) and the
     merge-side guard (`_disposition_drafts`, post-close, on a row an agent may
     have SELF-closed past the first guard) read the same durable signal."""
-    return (
-        str(meta.get("title") or "").strip().startswith(_DISPOSITION_TITLE_PREFIX)
-    )
+    return str(meta.get("title") or "").strip().startswith(_DISPOSITION_TITLE_PREFIX)
+
 
 # A fenced TOML draft inside the ## Dispositions section.
 _TOML_FENCE_RE = re.compile(r"```toml\s*\n(.*?)```", re.S)
