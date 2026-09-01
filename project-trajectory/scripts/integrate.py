@@ -698,7 +698,12 @@ def _claim_refusal(root, wi_ids, branch):
             return refusal
     import schedule  # sibling; deferred so the cheap refusals above stay cheap
 
-    ready = {r["id"] for r in schedule.frontier(schedule._load(root))}
+    ready = {
+        r["id"]
+        for r in schedule.frontier(
+            schedule._load(root), oi_status=schedule.load_oi_status(root)
+        )
+    }
     missing = [w for w in wi_ids if w not in ready]
     if missing:
         return "{} is not on the ready frontier (unmet needs or not queued)".format(

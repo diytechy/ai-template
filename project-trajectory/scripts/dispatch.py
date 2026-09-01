@@ -965,7 +965,11 @@ def _admit(
             root, table, args, worker, parked, free, config_refusal, state
         )
     wis = schedule._load(root)
-    ready = [r for r in schedule.frontier(wis) if r["status"] == "queued"]
+    ready = [
+        r
+        for r in schedule.frontier(wis, oi_status=schedule.load_oi_status(root))
+        if r["status"] == "queued"
+    ]
     kinds = {w["id"]: schedule.kind_of(w) for w in wis}
     verb, payload = _admission(
         [(r["id"], kinds.get(r["id"])) for r in ready],
