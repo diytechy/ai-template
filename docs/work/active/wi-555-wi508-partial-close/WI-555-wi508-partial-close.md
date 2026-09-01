@@ -12,6 +12,9 @@ priority = 3
 
 ## Context
 
+Execution record and the exact conversion sequence live in the log fragment
+`docs/log.d/WI-555-wi508-partial-close.md`.
+
 `OI-71` RULED 2026-08-31: (c) — the lane closes `partial`, performed MANUALLY
 as the special case its history makes it, and nothing is discarded. The branch
 (`wi508-architectural-remap-HELD-for-owner-verdict`, pushed to origin
