@@ -549,6 +549,76 @@ ROW_STATE_TAGS = {
 }
 
 
+def _changed_cell_groups(row):
+    """The `(label, cells)` groups a `changed` row's cells render under.
+
+    TWO GROUPS, §A5.1 (D-9 step 4). An APPROVED cell that moved owes an
+    attestation; a TRACED one routes to adjudication and arms no window (the
+    WI-388 ruling). Rendering them in one undifferentiated list asked the owner
+    to make that judgement per cell, from memory, mid-sitting — and the snapshot
+    comparison hands the split over for free.
+
+    A `Drafted` row was never approved, so no cell of it "owes a re-attestation"
+    and none "routes to adjudication" — the whole row owes a FIRST approval,
+    which the row tag already states. The §A5.1 split is a property of an
+    approved row; keyed on the cell's COLUMN class alone it mislabelled a
+    Drafted row's approved-class cells (OI-71 defect 1, the wi508 round-019
+    finding). For a Drafted row the cells collapse to ONE unlabelled group, so
+    this HTML view and the `--approve modified` markdown brief agree (IF-074)."""
+    if row.get("drafted"):
+        return [(None, row["cells"])]
+    approved = row.get("approved") or frozenset()
+    return [
+        (
+            "approved — re-attestation owed",
+            [c for c in row["cells"] if c[0] in approved],
+        ),
+        (
+            "traced — routes to adjudication",
+            [c for c in row["cells"] if c[0] not in approved],
+        ),
+    ]
+
+
+def _changed_cell_lines(row):
+    """The inner HTML for a `changed` row: its per-cell word-diff under the
+    §A5.1 group headings, then the unchanged rest of the row as context.
+
+    Split out of `_chain_row` so its own branch count stays under the C901
+    ratchet — decomposition rather than a baseline bump, the escape the ratchet
+    exists to force (the same move that first split `_chain_row` off
+    `_attestation_cards`). The group heading appears only when BOTH groups are
+    present; a lone heading over the only group is noise (and a Drafted row's
+    single collapsed group never shows one)."""
+    groups = _changed_cell_groups(row)
+    both = all(cells for _label, cells in groups)
+    inner = []
+    for label, cells in groups:
+        if not cells:
+            continue
+        if both and label:
+            inner.append('<div class="cellgroup">{}</div>'.format(esc(label)))
+        for name, before, after in cells:
+            inner.append(
+                '<div class="cellname">{n} <span class="pill">{p}% of the '
+                'words changed</span></div><div class="diff">{d}</div>'.format(
+                    n=esc(name),
+                    p=changed_percent(before, after),
+                    d=word_diff(before, after),
+                )
+            )
+    inner.append(
+        _context_block(
+            row["full"],
+            skip={name for name, _, _ in row["cells"]},
+            heading="the rest of this {} — unchanged since the snapshot".format(
+                row["kind"]
+            ),
+        )
+    )
+    return inner
+
+
 def _chain_row(row):
     """One chain row of a section: its per-cell diff where the baseline has a
     before, its whole current content where it does not.
@@ -558,48 +628,7 @@ def _chain_row(row):
     bump, which is the escape the ratchet exists to force."""
     inner = []
     if row["state"] == "changed":
-        # TWO GROUPS, §A5.1 (D-9 step 4). An APPROVED cell that moved owes an
-        # attestation; a TRACED one routes to adjudication and arms no window
-        # (the WI-388 ruling). Rendering them in one undifferentiated list asked
-        # the owner to make that judgement per cell, from memory, mid-sitting —
-        # and the snapshot comparison hands the split over for free. The heading
-        # appears only when both groups are present; a lone heading over the
-        # only group is noise.
-        approved = row.get("approved") or frozenset()
-        groups = [
-            (
-                "approved — re-attestation owed",
-                [c for c in row["cells"] if c[0] in approved],
-            ),
-            (
-                "traced — routes to adjudication",
-                [c for c in row["cells"] if c[0] not in approved],
-            ),
-        ]
-        both = all(cells for _label, cells in groups)
-        for label, cells in groups:
-            if not cells:
-                continue
-            if both:
-                inner.append('<div class="cellgroup">{}</div>'.format(esc(label)))
-            for name, before, after in cells:
-                inner.append(
-                    '<div class="cellname">{n} <span class="pill">{p}% of the '
-                    'words changed</span></div><div class="diff">{d}</div>'.format(
-                        n=esc(name),
-                        p=changed_percent(before, after),
-                        d=word_diff(before, after),
-                    )
-                )
-        inner.append(
-            _context_block(
-                row["full"],
-                skip={name for name, _, _ in row["cells"]},
-                heading="the rest of this {} — unchanged since the snapshot".format(
-                    row["kind"]
-                ),
-            )
-        )
+        inner = _changed_cell_lines(row)
     else:
         if row["state"] == "drafted":
             # Same wording the pre-widening EMPTY-entry branch used for this

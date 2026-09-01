@@ -251,6 +251,35 @@ def test_drafted_child_unchanged_since_snapshot_still_owes(tmp_path):
     assert "No cell differs from the approved snapshot" in page
 
 
+def test_drafted_row_cells_are_not_labelled_approved(tmp_path):
+    """OI-71 defect 1, the HTML half — this view and the `--approve modified`
+    markdown brief must agree (IF-074). A `Drafted` TC that drifted in both an
+    approved-class cell (`Method`) and a traced-class cell (`Evidence`) used to
+    render its `Method` change under the §A5.1 heading `approved — re-attestation
+    owed`, keyed on the cell's COLUMN class alone — a re-attestation window on a
+    row that was never approved. It owes a FIRST approval wholesale."""
+    sr = (
+        "SR-023,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Approved,1,W\n"
+    )
+    tc = "TC-023,SR-023,Unit,drive the old path,Smoke,a=1,sum,Yes,old-ev,Drafted,1\n"
+    root = repo(tmp_path, sr_rows=sr, tc_rows=tc)
+    _git_init(root)
+    _approve(root)  # snapshots the Drafted TC with its old Method/Evidence
+    # Amend both a Method (approved-class) and an Evidence (traced-class) cell,
+    # still Drafted: both groups would be non-empty on the approved path, so the
+    # split heading would show — unless the row's Drafted status collapses it.
+    (root / "docs" / "test" / "test-cases.csv").write_text(
+        TC_HEADER
+        + "TC-023,SR-023,Unit,drive the NEW path,Smoke,a=1,sum,Yes,new-ev,Drafted,1\n",
+        encoding="utf-8",
+    )
+    assert gen(root).returncode == 0
+    page = html_of(root)
+    assert "TC-023" in page and "never approved" in page
+    assert "<ins>NEW</ins>" in page  # the change is still shown, via word_diff
+    assert "approved — re-attestation owed" not in page
+
+
 # --- the SR-177 gap: the anchor SR's own text, unconditional and never -----
 # --- hidden behind the "Collapse unchanged text" toggle --------------------
 
