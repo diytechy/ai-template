@@ -892,4 +892,13 @@ Note: This really points to an architectural remapping excersize, what does rese
 
 
 ***********************************
-N
+
+And some new items that might require you to spin up some opus reseach agents to see what alternatives / tools exist to capture what I note here:
+
+1. Need open-items.html to allow user to type in a prompt + check options.  Note the recommended option should show seperately from the other options unless it is just a simple single option.
+
+(Type in prompt at the top of open-items.html + checkboxes for each open item under each alternative, with recommoneded alternative at the top, even if it is a combination of options below)
+
+2. Additionally, we may need a new registry to hold decisions for owner review, where a work item or adjudicator may contain decisions in a handback that it believes could be high-risk and could use a second look from the owner, without necesasrily having to surface as an open-item.  Below each review item / decision to affirm (semantics on this are debatable).  How can the work items and adjudicators be encouraged to leave something that "desires owner assertion"?  This may actually highlight the need for yet another dial in process.toml, something that indicates what level of confidence we want an adjudicator or work item to permit it self to make decisiosns, vs documenting it for assertion, vs handing back / surfacing as an open-item for the owner to make a decision.  Are there practical methods for an LLM to measure and act on it's "confidence"?  I assume this is quite a gray area, and may not be very reliable.  Are there other ways (though I cannot image how) confidence and decision making capability might be determined / estimated mechanically based on other indicators?  I'm not a fan of more dials but I don't know that there is a better method.  As another variable - it may be highly dependent on the owner's mood.
+
+When agent-resume first resumes from a cold-start it could read open-items to see if anything has been ruled via the html itself, query the user input field?  However that is a lot of complexity for what a user will probably just interact with a regular terminal for.  Perhaps the first part is something to come back to (related to setting / ruling items in the html itself) vs a registry for decision assertions which would be more stable.
