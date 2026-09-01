@@ -41,4 +41,24 @@ one thing the reader must see entire.
 Banked, not fixed here — see `## Deliverable`. A lane-local approval reverted to
 `Drafted` before reaching trunk reads as "never approved" because the ladder
 enum carries no demoted state; this is orthogonal to the two rendering defects
-and is filed forward.
+and is filed forward. A worker branch does not mint coordination OI ids
+(collision risk on the shared watermark), so it stays banked with a pointer
+(decision 9 + the Deliverable) for a trunk sitting to mint.
+
+### Verification
+
+- `tests/test_trace_briefs.py` (27) and `tests/test_gen_open_items.py` (48)
+  green, including the four new reproduction/lock tests; the ratchet and
+  pinned-site tests (`test_module_size_ratchet.py`, `test_complexity_ratchet.py`,
+  `test_generated_newlines.py`) green after the reviewed +8 SLOC bump on
+  `trace.py`, the `_chain_row` C901 decomposition, and the LF-site re-pin.
+- `ruff format --check` clean over `project-trajectory/scripts` + `tests`
+  (232 files); the pre-commit check bar green (`format` now runs — ruff
+  installed into `.venv`).
+- Full unfiltered suite: **3225 passed, 9 failed, 24 skipped** (526 s). The 9
+  failures are the pre-existing ruff-0.16 skew — `check_harness`/`dispatch`/
+  `integrate` end-to-end scaffold tests failing on ruff I001 (`from demo import
+  add`) in the generated bootstrap demo, NOT this WI's regression. This diff
+  touches only `trace.py`, `gen_open_items.py`, and four test files — none of
+  the failing modules nor the scaffold generator; every test in the touched
+  areas passed.
