@@ -107,3 +107,27 @@ with a typed open-item table — `[open_item]` carrying `one_line`,
 verbatim, so a thin owner card becomes unrepresentable rather than a thing a
 reviewer must catch; and a DONE adjudication lane whose close is refused must
 not be resumed as a fresh ADJUDICATE session — the refusal is the stop.
+
+### Round 004 (supervisor-drawn, at the closed tip) — the brief corrected: RESTORE is unavailable by construction
+
+Round 004 falsified two claims in the owner brief the supervisor wrote. First,
+"external.toml is unaffected either way" was false: `git diff 6d3d9db4 HEAD --
+docs/archive/last_approved/docs/requirements/external.toml` is 8+/4−, written by
+the branch's `580df781` — a stale header comment ("at this repo's dial of 4 …
+every value here is the OWNER'S to flip") replaced by the correct one ("READ
+THE DIAL … DevStg-Boundary is NOT held"). Second, the RESTORE option as written
+(re-copy the `6d3d9db4` snapshot bytes) is not available under the kit's own
+rule: the mirror invariant (`acceptance_record.committed_snapshot_findings`)
+reds any snapshot file that is not byte-identical to its live counterpart at
+the commit that wrote it — permanently — and the wi508 lane's own decision 10
+measured exactly that red and reverted. RESTORE would also have re-landed the
+corrected-away external.toml comment.
+
+The brief and the `open_item` question are re-issued accordingly: the two
+available answers are **STAND** (reseal at the successor's approval commit)
+and **REVIEW-THEN-STAND** (the owner reads the absorbed diff and amends any
+rejected row live — which returns it to the re-attestation brief through the
+ordinary path — before the reseal); the recommendation is REVIEW-THEN-STAND.
+The ADJUDICATE verdict files (001, 003, 004) still phrase the question as
+"STAND or RESTORE"; they are records of what each session ruled, and the
+successor's captured scope is the text the mint and the owner's card reach.

@@ -36,7 +36,7 @@ priority = 2
 supersedes = "WI-508"
 planmode = "single"
 buildtier = "strong"
-open_item = "Does trunk's docs/archive/last_approved/ baseline for interfaces.toml, external.toml, and components.toml STAND at the wi508 branch's 2026-08-30 bytes — absorbing interfaces.toml's 132 changed / 30 added / 3 removed rows (OI-64, OI-65, OI-67, WI-522, WI-528, WI-530, WI-531, WI-533, WI-534, WI-553) and components.toml's 1 changed row (WI-520), while external.toml had no row-level census — or is it RESTORED to the pre-merge 6d3d9db4 bytes so those rows return to the re-attestation brief for explicit approval?"
+open_item = "Does trunk's docs/archive/last_approved/ baseline for interfaces.toml, external.toml, and components.toml STAND as-is at the wi508 branch's 2026-08-30 bytes — which absorbed interfaces.toml's 132 changed / 30 added / 3 removed rows (OI-64, OI-65, OI-67, WI-522, WI-528, WI-530, WI-531, WI-533, WI-534, WI-553), components.toml's 1 changed row (WI-520) and one external.toml comment correction — and is resealed at the successor's approval commit, or does the owner REVIEW that diff first (git diff 6d3d9db4 551d1b2c -- docs/archive/last_approved/docs/requirements/) and amend any rejected row LIVE, which returns it to the re-attestation brief, before the reseal? (A byte-level restore of the old snapshot is unavailable: the mirror invariant reds a snapshot that is not a copy of live at its writing commit.)"
 ```
 
 IN SCOPE — four rows and one baseline question.
@@ -61,40 +61,47 @@ after it lands (the mint parks this row `waiting:open-item-pending`):
   approval commit (never copied from the branch's snapshot bytes, per OI-71 (c)),
   and record in the Deliverable that the regeneration RE-SEALS the absorbed
   off-spine rows rather than re-reviewing them;
-- ruling **"restore"** -> re-copy the `6d3d9db4` off-spine snapshot files
-  (`interfaces.toml`, `external.toml`, `components.toml`) under
-  `docs/archive/last_approved/` in a reviewed commit, then regenerate
-  `docs/ratify/CURRENT.md` and let the re-attestation brief re-list the rows for
-  an explicit act.
+- ruling **"review-then-stand"** -> the owner reads the absorbed diff
+  (`git diff 6d3d9db4 551d1b2c -- docs/archive/last_approved/docs/requirements/`)
+  and amends any rejected row LIVE in the registry through the ordinary
+  amendment path — the amended row then drifts from the snapshot and returns
+  to the re-attestation brief for an explicit act — and only after that act
+  does this row regenerate the snapshot as under "stand". A byte-level
+  RESTORE of the `6d3d9db4` snapshot is NOT an option: the mirror invariant
+  (`committed_snapshot_findings`) reds a snapshot file that is not a copy of
+  its live counterpart at the commit that wrote it, permanently — the wi508
+  lane's own decision 10 measured that red and reverted — and it would
+  re-land external.toml's since-corrected header comment.
 
 **OWNER BRIEF for the open item this row mints** (the mint carries only the
 one-line question — `intake._mint_open_item` writes title/status/raised/
 one_line/wi_refs and nothing else — so this is the brief; round 002 (Terra)
-MAJOR):
-- *Blast radius.* The question decides what the approval surface asks a human
-  to attest. Under **RESTORE**, the pre-merge `6d3d9db4` off-spine snapshot
-  returns and the re-attestation brief re-lists interfaces.toml's 132 changed /
-  30 added / 3 removed rows (rulings `OI-64`, `OI-65`, `OI-67`; rows `WI-522`,
-  `WI-528`, `WI-530`, `WI-531`, `WI-533`, `WI-534`, `WI-553`) and
-  components.toml's own absorbed line (behind `WI-520`) for an explicit act;
-  external.toml is unaffected either way. Under **STAND**, those rows are
-  accepted as already approved at the wi508 branch's 2026-08-30 bytes and the
-  brief keeps reading "1 changed"; nothing on the spine (LLR/TC) moves under
-  either answer.
-- *Options.* **STAND** — keep the branch's bytes; this row regenerates the
-  snapshot with `intake.py snapshot` at its own approval commit, which re-seals
-  the same content. **RESTORE** — re-copy the three `6d3d9db4` off-spine files
-  in a reviewed commit, let the brief re-list the rows, and reseal only after
-  the owner's explicit act on them.
-- *Recommendation.* **RESTORE.** STAND is within authority (`DevStg-Needs`
-  leaves the Arch and Boundary rungs loop-approvable), but the 132 rows were
-  never shown to anyone as a batch — they entered the baseline as a side
-  effect of a `partial` lane's handback merge, not as an approval act — and
-  the kit's own rule is that an approval rides a copy someone blessed. STAND is
-  defensible only if the owner has read the 132-row diff.
-- *Reversal cost.* STAND then RESTORE later: one reviewed re-copy commit at any
-  time (the bytes are in history). RESTORE then STAND later: one `intake.py
-  snapshot` commit. Neither loses anything.
+MAJOR; corrected at round 004):
+- *Blast radius.* What moved into the approved baseline with the handback
+  merge, all written on the branch by `580df781`/`4824c0ba`: interfaces.toml's
+  132 changed / 30 added / 3 removed rows (rulings `OI-64`, `OI-65`, `OI-67`;
+  rows `WI-522`, `WI-528`, `WI-530`, `WI-531`, `WI-533`, `WI-534`, `WI-553`),
+  components.toml's one absorbed row (behind `WI-520`), and external.toml's
+  header comment (a stale "dial of 4" claim replaced by the correct
+  DevStg-Boundary wording — a correction, not a row). The re-attestation brief
+  now reads "1 changed" for the off-spine registries where it read 132 before
+  the merge. Nothing on the spine (LLR/TC) moves under either answer.
+- *Options.* **STAND** — accept the bytes as the baseline; this row regenerates
+  the snapshot with `intake.py snapshot` at its own approval commit, which
+  re-seals the same content. **REVIEW-THEN-STAND** — the owner reads the diff
+  above; any row they reject is amended live, which returns it to the brief
+  through the ordinary path; the reseal follows that act. A byte-level RESTORE
+  is unavailable by construction (the mirror invariant, above).
+- *Recommendation.* **REVIEW-THEN-STAND.** STAND is within authority
+  (`DevStg-Needs` leaves the Arch and Boundary rungs loop-approvable), but the
+  132 rows entered the baseline as a side effect of a `partial` lane's
+  handback merge, not as an approval act, and were never shown to anyone as a
+  batch. Reading the diff once costs an hour; STAND without it accepts rows
+  unseen.
+- *Reversal cost.* STAND then review later: any row can still be amended live
+  at any time and re-enters the brief — nothing is lost, only the batch view.
+  REVIEW-THEN-STAND: the amendments are ordinary edits; the reseal is one
+  `intake.py snapshot` commit.
 
 **Inherited ruling.** This row inherits `OI-72`'s `SR-163` ruling (owned and
 discharged by the re-scoped `WI-543`); do not re-open the `SR-163` shape.
