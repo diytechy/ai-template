@@ -77,3 +77,33 @@ The verdict file was re-issued IN PLACE rather than appended to (the WI-566
 precedent: the first `OUTCOME:` line governs and `docs/reviews/` carries no
 immutability convention), and `OUTCOME: PARTIAL successors=1` remains its single
 machine line.
+
+### Round 002 (Terra, mechanized) — the thin open-item mint, answered in the record
+
+After the rework the loop's resume scheduled a mechanized Terra round over the
+train diff (`002-REVIEW-A-9d4fc41.md`): one MAJOR — the disposition's scalar
+`open_item` mints an open-items row carrying only `title`, `status`, `raised`,
+`one_line` and `wi_refs` (`intake._mint_open_item`), omitting the registry
+contract's `decision`, `blast_radius`, `options` and `recommendation`, so the
+owner would be handed a bare binary question. The lane cannot change the mint
+(kit code is not an adjudication lane's to touch), so the brief is carried in
+the record the OI row points at: an **OWNER BRIEF** block (blast radius under
+each answer, both options, a recommendation — RESTORE — and the reversal
+costs) now sits in the successor's captured scope, which the minted OI reaches
+through its `wi_refs` -> the successor spec, and is summarised here.
+
+Two further loop sessions (003 DESIGN-CHECK and 004 ADJUDICATE, both Sol under
+the tripwire's family shift) re-adjudicated the same close and concurred on
+every point (PARTIAL, keep-all, one strong-tier successor, the baseline
+question owner-owed); session 004 tidied the `open_item` text to attribute the
+interfaces/components census separately (round 003's MINOR). Neither closed
+the row — the dispatcher resumed the finished lane in a cycle (the C6 shape)
+until the supervisor stopped the loop and performed the mechanical close
+through `handback.close_adjudication` by hand.
+
+Kit findings for rows (construction-first): extend the disposition grammar
+with a typed open-item table — `[open_item]` carrying `one_line`,
+`blast_radius`, `options`, `recommendation` — that `_mint_open_item` writes
+verbatim, so a thin owner card becomes unrepresentable rather than a thing a
+reviewer must catch; and a DONE adjudication lane whose close is refused must
+not be resumed as a fresh ADJUDICATE session — the refusal is the stop.

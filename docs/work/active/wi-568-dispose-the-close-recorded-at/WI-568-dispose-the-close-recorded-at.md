@@ -63,6 +63,35 @@ after it lands (the mint parks this row `waiting:open-item-pending`):
   `docs/ratify/CURRENT.md` and let the re-attestation brief re-list the rows for
   an explicit act.
 
+**OWNER BRIEF for the open item this row mints** (the mint carries only the
+one-line question — `intake._mint_open_item` writes title/status/raised/
+one_line/wi_refs and nothing else — so this is the brief; round 002 (Terra)
+MAJOR):
+- *Blast radius.* The question decides what the approval surface asks a human
+  to attest. Under **RESTORE**, the pre-merge `6d3d9db4` off-spine snapshot
+  returns and the re-attestation brief re-lists interfaces.toml's 132 changed /
+  30 added / 3 removed rows (rulings `OI-64`, `OI-65`, `OI-67`; rows `WI-522`,
+  `WI-528`, `WI-530`, `WI-531`, `WI-533`, `WI-534`, `WI-553`) and
+  components.toml's own absorbed line (behind `WI-520`) for an explicit act;
+  external.toml is unaffected either way. Under **STAND**, those rows are
+  accepted as already approved at the wi508 branch's 2026-08-30 bytes and the
+  brief keeps reading "1 changed"; nothing on the spine (LLR/TC) moves under
+  either answer.
+- *Options.* **STAND** — keep the branch's bytes; this row regenerates the
+  snapshot with `intake.py snapshot` at its own approval commit, which re-seals
+  the same content. **RESTORE** — re-copy the three `6d3d9db4` off-spine files
+  in a reviewed commit, let the brief re-list the rows, and reseal only after
+  the owner's explicit act on them.
+- *Recommendation.* **RESTORE.** STAND is within authority (`DevStg-Needs`
+  leaves the Arch and Boundary rungs loop-approvable), but the 132 rows were
+  never shown to anyone as a batch — they entered the baseline as a side
+  effect of a `partial` lane's handback merge, not as an approval act — and
+  the kit's own rule is that an approval rides a copy someone blessed. STAND is
+  defensible only if the owner has read the 132-row diff.
+- *Reversal cost.* STAND then RESTORE later: one reviewed re-copy commit at any
+  time (the bytes are in history). RESTORE then STAND later: one `intake.py
+  snapshot` commit. Neither loses anything.
+
 **Inherited ruling.** This row inherits `OI-72`'s `SR-163` ruling (owned and
 discharged by the re-scoped `WI-543`); do not re-open the `SR-163` shape.
 
