@@ -162,9 +162,9 @@ def test_mixed_wi_and_oi_edges_both_gate():
     # WI edge satisfied, OI edge still pending -> waiting.
     assert [r["id"] for r in sched.frontier(wis, oi_status={"OI-70": "pending"})] == []
     # Both satisfied -> ready.
-    assert [
-        r["id"] for r in sched.frontier(wis, oi_status={"OI-70": "ruled"})
-    ] == ["WI-002"]
+    assert [r["id"] for r in sched.frontier(wis, oi_status={"OI-70": "ruled"})] == [
+        "WI-002"
+    ]
 
 
 # --- WI-384: `draft` is never-ready, exactly like `deferred` ------------------

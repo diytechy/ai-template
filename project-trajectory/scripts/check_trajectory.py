@@ -3463,9 +3463,7 @@ def dead_dependency_findings(wis):
         if w["status"] not in OPEN_STATUSES:
             continue
         dead = sorted(
-            p
-            for p in w["preds"]
-            if by_id.get(p, {}).get("status") in _DEAD_PRED_STATES
+            p for p in w["preds"] if by_id.get(p, {}).get("status") in _DEAD_PRED_STATES
         )
         if dead:
             out.append(

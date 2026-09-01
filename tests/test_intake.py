@@ -619,9 +619,7 @@ def write_open_items(root):
     """A minimal TOML open-items registry — the carrier the OI mint appends to."""
     path = root / "docs" / "requirements" / "open-items.toml"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        "# open-items registry\n", encoding="utf-8", newline="\n"
-    )
+    path.write_text("# open-items registry\n", encoding="utf-8", newline="\n")
     return path
 
 

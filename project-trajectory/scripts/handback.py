@@ -105,6 +105,7 @@ def spec_move_split(text):
     close = lines.index("+++", 1)
     return "\n".join(lines[1:close]) + "\n", "\n".join(lines[close + 1 :])
 
+
 # Where a quarantined red close's failing diff lands. Under `docs/work/` because
 # that is where the work item's own record lives, and as a `.patch` because no
 # bar reads one: the doc checkers discover `*.md`, the stub check reads

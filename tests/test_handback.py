@@ -485,7 +485,7 @@ def test_a_disposition_rows_own_handback_is_refused_structurally(tmp_path):
 
 # --- the mechanical adjudication close (OI-70/OI-73, Done-when 1) --------------
 
-_DRAFTED_DISPOSITIONS = '''
+_DRAFTED_DISPOSITIONS = """
 
 ## Dispositions
 
@@ -497,10 +497,12 @@ supersedes = "WI-005"
 ```
 
 Scope: re-land the reviewed parts.
-'''
+"""
 
 
-def adjudication_repo(tmp_path, branch="wi-401", brief="disposition", dispositions=None):
+def adjudication_repo(
+    tmp_path, branch="wi-401", brief="disposition", dispositions=None
+):
     """A trunk with an ADJUDICATION row claimed onto `branch`, then its verdict
     recorded ON THE LANE — the `## Dispositions` are drafted after the claim,
     exactly as an ADJUDICATE session does (the queued spec carries only its
@@ -577,10 +579,7 @@ def test_the_mechanical_adjudication_close_archives_terminal_and_finishes(tmp_pa
     assert "## Dispositions" in spec and "supersedes" in spec
     assert 'specref = ""' in spec
     # Every registry reader parses the closed adjudication spec.
-    rows = {
-        r["WI-ID"]: r
-        for r in acommon.read_spec_rows(root / "docs" / "work")
-    }
+    rows = {r["WI-ID"]: r for r in acommon.read_spec_rows(root / "docs" / "work")}
     assert rows["WI-401"]["Status"] == "done"
 
 
@@ -596,9 +595,7 @@ def test_the_mechanical_close_mints_the_drafted_successor_at_merge(tmp_path):
     assert mrefusal is None, mrefusal
     assert len(minted) == 1
     successor = minted[0][0]
-    rows = {
-        r["WI-ID"]: r for r in acommon.read_spec_rows(root / "docs" / "work")
-    }
+    rows = {r["WI-ID"]: r for r in acommon.read_spec_rows(root / "docs" / "work")}
     # The successor continues the ORIGINAL closed row (WI-005) that the
     # adjudicator's disposition named — the lineage the mint preserves.
     assert rows[successor]["Supersedes"] == "WI-005"
@@ -612,7 +609,9 @@ def test_the_refusal_invariant_stops_a_disposition_with_no_successor(tmp_path):
     assert ids is None
     assert refusal is not None and "no successor" in refusal.lower()
     # The claim did NOT move: the row stays in active/ for a human.
-    assert (root / "docs" / "work" / "active" / "wi-401" / "WI-401-dispose.md").is_file()
+    assert (
+        root / "docs" / "work" / "active" / "wi-401" / "WI-401-dispose.md"
+    ).is_file()
 
 
 def test_the_mechanical_close_no_ops_for_a_non_adjudication_lane(tmp_path):

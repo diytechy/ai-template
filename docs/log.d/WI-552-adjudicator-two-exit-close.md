@@ -95,6 +95,10 @@ Seven arms, built lower-risk foundation first.
   (`_mint`, `validate`, `_advance`) back under threshold — no complexity-baseline
   bump. Reviewed SLOC restamp for `check_trajectory`/`intake`/`integrate`
   (legitimate feature growth).
+- At close: ran `ruff format` over the WI's own touched files (six had
+  non-canonical blank-line spacing the earlier commits left); re-stamped the
+  module-size baseline ±2 for `intake.py` (1174 -> 1176) and
+  `check_trajectory.py` (2247 -> 2245) — format-only, no executable change.
 
 ### Bar
 
@@ -104,9 +108,7 @@ Seven arms, built lower-risk foundation first.
 
 ### Outcome
 
-All seven Done-when arms delivered and tested. Closing COMPLETE. (OI-73) — a partial/cancelled disposition that
-  queues NO successor is REFUSED at the close.
-- Arm 1: mechanical adjudication-row close — a DONE adjudication session's row
-  closes mechanically (drafts minted to queued/, row archived terminal) instead
-  of relying on the agent's self-close (the C6 loop OI-70 measured).
-- Arm 7: ADJUDICATE brief contract text matches the machinery; full suite.
+All seven Done-when arms delivered and tested. Smoke tier green within budget
+(1429 passed / 8 skipped, 22.2s wall; budget check 23.3s vs 60s). Full
+unfiltered suite green at close. No spine rows minted or re-statused, so no
+approval brief regeneration owed. Closing COMPLETE.

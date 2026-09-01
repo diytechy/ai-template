@@ -1148,7 +1148,9 @@ def _disposition_drafts(root, outcomes):
             # merge stands (all-or-nothing mint), the run stops, and a human
             # reads the lane rather than a partial close silently vanishing
             # without a continuation.
-            if (meta.get("brief") or "").strip().lower() == "disposition" and not parsed:
+            if (
+                meta.get("brief") or ""
+            ).strip().lower() == "disposition" and not parsed:
                 return [], (
                     "{}: a `disposition` adjudication row merged with an EMPTY "
                     "## Dispositions section — a partial/cancelled close must "
