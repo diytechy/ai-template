@@ -1,7 +1,7 @@
 +++
 id = "WI-552"
 title = "The adjudicator's two exits: adjudication-row close, successor mint, OI mint with refusal invariant (OI-70)"
-specref = "docs/requirements/open-items.toml#OI-70"
+specref = ""
 workstream = "process"
 sr_refs = ["SR-144"]
 needs = []
@@ -9,6 +9,41 @@ buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Shipped all seven Done-when arms of OI-70 (as refined by OI-73). The
+adjudicator's exits are now mechanical:
+
+1. **Mechanical adjudication-row close** — `handback.close_adjudication` moves a
+   DONE adjudication row to `complete/` (inserting a `## Deliverable`, clearing
+   `specref`, preserving `## Context`/`## Dispositions`), wired into
+   `dispatch._advance` (via `_close_done_adjudication`). The C6 resume-forever
+   loop OI-70 measured is closed; the agent self-close path still short-circuits.
+2. **OI-mint arm (exit B, typed)** — a `## Dispositions` draft may carry
+   `open_item`; `intake._mint_open_item` appends a `pending` OI (id from
+   `next_oi_id`, the watermark OI space) and `_inject_open_item` lands its id in
+   the successor's `needs`; `open-items.html` regenerates in the mint commit.
+3. **Refusal invariant** — a `disposition`-brief close that queues no successor
+   is refused, at both `close_adjudication` and `intake._disposition_drafts`.
+4. **Inbound-edge replacement** — `intake._replace_inbound_edges` re-points a
+   superseded row's hard `needs` edges to the successor at the mint (the WI-541
+   strand becomes unrepresentable).
+5. **Typed OI edges** — `kitlib.spine.split_pred_edges` is the one home for the
+   widened grammar; `schedule` resolves an `OI-###` hard edge as satisfied when
+   the row leaves `pending` (new `waiting:open-item-pending` reason, threaded
+   through `evaluate`/`frontier`/`simulate` and every caller);
+   `check_trajectory.validate` resolves it against the open-items registry;
+   template CSV + PROCESS_OPTIONS prose widened tolerantly (bare WI ids
+   unchanged).
+6. **Validator net** — `dead_dependency_findings` extends to `partial`
+   predecessors.
+7. **Contract text** — the ADJUDICATE disposition brief matches the machinery
+   (mandatory successor, `open_item`, machine-performed close).
+
+Tests cover every arm (`test_intake`, `test_handback`, `test_dispatch`,
+`test_schedule`, `test_trajectory`). Smoke tier green within budget; full
+unfiltered suite green (close commit). No spine rows minted/re-statused.
 
 ## Context
 

@@ -79,11 +79,32 @@ Seven arms, built lower-risk foundation first.
   merge, refusal invariant, non-adjudication no-op; updated the shared
   `then_closing` dispatch stub to draft a conformant successor.
 
-### Still to build
+- **Arm 7 (brief contract text) — DONE.** `adjudicate-disposition.template.md`:
+  the successor is mandatory (OI-73); the new `open_item` key mints a pending OI
+  the successor depends on; the machinery performs the close (the manual
+  self-close instruction is gone); a successor-less disposition is refused.
+  `PROCESS_OPTIONS.md` Predecessors prose widened tolerantly for the typed hard
+  `OI-###` edge (+342, flagged; byte-budget-guard SKILL.md re-stamped, all three
+  copies). `prompts/CATALOG.md` regenerated.
 
-- Arm 7: the ADJUDICATE disposition brief text — document `open_item`, and that
-  the machinery now performs the close (drop the manual self-close instruction).
-  Full unfiltered suite + smoke budget. (OI-73) — a partial/cancelled disposition that
+### Baselines / hygiene
+
+- Broke the `check_trajectory -> trace` import cycle my first cut introduced
+  (read open-items via `spine_carrier` directly in `load_known_ois`).
+- Decomposed the three functions the C901 ratchet flagged
+  (`_mint`, `validate`, `_advance`) back under threshold — no complexity-baseline
+  bump. Reviewed SLOC restamp for `check_trajectory`/`intake`/`integrate`
+  (legitimate feature growth).
+
+### Bar
+
+- Smoke tier: 1429 passed / 8 skipped, 23.1s wall vs 60s budget (within).
+- Full unfiltered suite: run at close (see the close commit).
+- No spine rows minted or re-statused, so no approval brief regeneration owed.
+
+### Outcome
+
+All seven Done-when arms delivered and tested. Closing COMPLETE. (OI-73) — a partial/cancelled disposition that
   queues NO successor is REFUSED at the close.
 - Arm 1: mechanical adjudication-row close — a DONE adjudication session's row
   closes mechanically (drafts minted to queued/, row archived terminal) instead
