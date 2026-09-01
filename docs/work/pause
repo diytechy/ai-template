@@ -1,0 +1,5 @@
+# Tracked pause (concurrency-restructure §5.6): the dispatcher stops CLAIMING at
+# the next session boundary; the in-flight lane finishes and merges. Unpausing is
+# a reviewed deletion commit of this file.
+reason = "Owner direction 2026-09-01 evening (supervised session, decision 52 in docs/decisions-for-review-2026-08-31.md): re-armed while the WI-568 adjudication lane finishes under it. This session merged WI-567, WI-554 and WI-555 (the wi508 partial close), every verdict rollup compiled by hand and both adjudications corrected under drawn review. The frontier holds until the owner has read decisions 47-55, ruled the open items the WI-568 merge mints (the off-spine baseline restore-or-stand question) and OI-77, and decided the six-entry log restoration. Delete this file in a reviewed commit to resume at the generated frontier."
+since = "2026-09-01"
