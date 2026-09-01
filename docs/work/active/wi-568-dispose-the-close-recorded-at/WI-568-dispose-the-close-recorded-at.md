@@ -32,7 +32,7 @@ priority = 2
 supersedes = "WI-508"
 planmode = "single"
 buildtier = "strong"
-open_item = "Does trunk's docs/archive/last_approved/ baseline for the off-spine registries (interfaces.toml, external.toml, components.toml) STAND at the wi508 branch's 2026-08-30 bytes — which absorbed 132 changed / 30 added / 3 removed drifted rows from rulings OI-64, OI-65, OI-67 and rows WI-522, WI-528, WI-530, WI-531, WI-533, WI-534, WI-553 into the approved baseline, collapsing the ratify census to 1/0/1 — or is it RESTORED to the pre-merge 6d3d9db4 bytes so those rows return to the re-attestation brief and are re-blessed by an explicit act?"
+open_item = "Does trunk's docs/archive/last_approved/ baseline for the off-spine registries (interfaces.toml, external.toml, components.toml) STAND at the wi508 branch's 2026-08-30 bytes — which absorbed 132 changed / 30 added / 3 removed drifted rows from rulings OI-64, OI-65, OI-67 and rows WI-522, WI-528, WI-530, WI-531, WI-533, WI-534, WI-553 into the approved baseline, collapsing the approval census to 1/0/1 — or is it RESTORED to the pre-merge 6d3d9db4 bytes so those rows return to the re-attestation brief and are re-blessed by an explicit act?"
 ```
 
 IN SCOPE — four rows and one baseline question.
