@@ -532,6 +532,64 @@ def test_a_drafted_successor_keeps_its_supersedes_lineage_at_the_mint():
     )
 
 
+_SUPERSEDING = """
+## Deliverable
+
+Adjudicated: WI-005 stopped early; a successor continues the work by another route.
+
+## Dispositions
+
+```toml
+title = "Continue the WI-005 work by another route"
+workstream = "scripts"
+buildtier = "medium"
+supersedes = "WI-005"
+```
+"""
+
+
+def test_the_mint_replaces_inbound_edges_of_the_superseded_row(tmp_path):
+    # OI-73 arm 4: minting a successor carrying `supersedes` REPLACES the
+    # superseded row's inbound hard `needs` edges, in the same commit — the
+    # WI-541 -> WI-540 strand (a live dependent left waiting on a terminal row)
+    # becomes unrepresentable rather than a hand repair.
+    root = git_repo(tmp_path)
+    write_sr(root)
+    write_spec(
+        root, "partial", "WI-005", slug="returned", body="\n## Deliverable\n\nstopped\n"
+    )
+    write_spec(
+        root, "queued", "WI-006", slug="dependent", specref="seed.txt", needs=["WI-005"]
+    )
+    # A soft edge and an unrelated dependent must be left ALONE.
+    write_spec(
+        root, "queued", "WI-007", slug="soft-dep", specref="seed.txt", needs=["~WI-005"]
+    )
+    write_spec(
+        root,
+        "complete",
+        "WI-008",
+        slug="adjudicate",
+        safety_class="adjudication",
+        body=_SUPERSEDING,
+    )
+    _commit(root, "setup", when=T_CODE)
+    before = after = _rev(root)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-008": "merged"}, "wi-008"
+    )
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    successor = minted[0][0]
+    rows = queued_rows(root)
+    # the HARD edge is re-pointed at the successor...
+    assert rows["WI-006"]["Predecessors"] == successor
+    # ...the SOFT edge is advisory ordering and is left on the terminal row...
+    assert rows["WI-007"]["Predecessors"] == "~WI-005"
+    # ...and the successor carries the lineage.
+    assert rows[successor]["Supersedes"] == "WI-005"
+
+
 def test_a_malformed_disposition_block_refuses_and_mints_nothing(tmp_path):
     bad = DISPOSITIONS.replace('title = "Re-verify', '= "Re-verify')
     root = merged_adjudication_repo(tmp_path, body=bad)

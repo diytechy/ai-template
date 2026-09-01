@@ -43,10 +43,15 @@ Seven arms, built lower-risk foundation first.
   assertion. `test_schedule`/`test_trajectory`/`test_dispatch`/
   `test_gen_trajectory` green.
 
+- **Arm 4 (mint replaces inbound edges) — DONE.** `intake._replace_inbound_edges`
+  re-points every OPEN row's HARD `needs` edge on a superseded row to the
+  successor, in the same commit as the mint; soft edges and terminal rows'
+  history left alone; surgical `needs`-line rewrite preserves each dependent's
+  `## Context`/Deliverable. Wired into `_mint` per minted successor carrying
+  `supersedes`. Test added.
+
 ### Still to build
 
-- Arm 4: the mint REPLACES the superseded row's inbound hard `needs` edges
-  (`supersedes` carrier) — in `intake._mint`/`_disposition_drafts`.
 - Arm 2: the OI-mint arm — a disposition draft can mint an OI row into
   open-items.toml (id from watermark OI space, `status="pending"`,
   `gen_open_items` regenerated same commit) and land that OI id in the queued

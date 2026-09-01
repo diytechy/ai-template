@@ -1225,6 +1225,59 @@ def _red_tc_context(line, targets):
 
 # --- the mint itself -----------------------------------------------------------
 
+# The OPEN statuses whose inbound edges a supersede-carrying mint re-points
+# (OI-73 arm 4). A terminal row's `needs` is historical record — never rewritten
+# — so only these four are candidates. `parse_spec_status` maps `complete/` to
+# `done`, so a terminal row is anything outside this set.
+_OPEN_STATUSES = frozenset({"draft", "queued", "active", "deferred"})
+# The frontmatter `needs = [...]` array line, replaced surgically so the rest of
+# a spec (its `## Context`, its Deliverable, every other cell) is untouched.
+_SPEC_NEEDS_RE = re.compile(r"(?m)^needs\s*=\s*\[.*?\]\s*$")
+
+
+def _replace_inbound_edges(root, superseded, successor):
+    """Re-point every OPEN row's HARD `needs` edge on `superseded` to
+    `successor` (OI-73 arm 4). Returns the relpaths changed.
+
+    THE STRAND THIS MAKES UNREPRESENTABLE. A partial/cancelled close leaves the
+    closed row terminal, and any live WI that hard-depended on it can never
+    become ready (`schedule.hard_preds_satisfied` requires `done`). The WI-541
+    -> WI-540 strand waited invisibly and was repaired by hand. OI-73 rules the
+    repair mechanical: at the mint of a successor carrying `supersedes`, the
+    superseded row's inbound HARD edges are REPLACED with the successor, so the
+    dependent's readiness now waits on the row that actually continues the work.
+    Soft (`~`) edges are advisory ordering and are left alone; a terminal row's
+    own `needs` is history and is never touched. The edit is surgical (only the
+    `needs` line) so a dependent's `## Context` and Deliverable are preserved.
+    """
+    changed = []
+    work = Path(root) / WORK
+    for path in ac.spec_files(work):
+        # `parse_spec_status` reads the STATUS directory as the first path
+        # segment, so the relpath is taken against the work dir, not the repo.
+        rel = path.relative_to(work).as_posix()
+        try:
+            if ac.parse_spec_status(rel) not in _OPEN_STATUSES:
+                continue
+            text = path.read_text(encoding="utf-8")
+            data, _body = ac.parse_spec_frontmatter(text, rel)
+        except (OSError, ValueError, UnicodeDecodeError):
+            continue
+        needs = [str(v) for v in (data.get("needs") or [])]
+        if superseded not in needs:
+            continue
+        new_needs = []
+        for tok in needs:
+            repl = successor if tok == superseded else tok
+            if repl not in new_needs:
+                new_needs.append(repl)
+        new_line = "needs = " + wi_convert.toml_value(new_needs)
+        new_text, n = _SPEC_NEEDS_RE.subn(new_line, text, count=1)
+        if n:
+            path.write_text(new_text, encoding="utf-8", newline="\n")
+            changed.append(rel)
+    return changed
+
 
 def _draft_row(wi_id, draft):
     """One draft as the 18-column registry row `wi_convert.write_spec_file`
@@ -1321,6 +1374,14 @@ def _mint(root, drafts, subject_verb):
             with path.open("a", encoding="utf-8", newline="\n") as fh:
                 fh.write("\n## Context\n\n" + context + "\n")
         minted.append((wi_id, (Path(WORK) / rel).as_posix()))
+        # OI-73 arm 4: a successor carrying `supersedes` REPLACES the superseded
+        # row's inbound hard edges, in the SAME commit as the mint, so the
+        # WI-541-class strand (a live dependent left waiting on a terminal row)
+        # is unrepresentable rather than merely reported by the validator net.
+        superseded = str(draft.get("supersedes") or "").strip()
+        if superseded:
+            for rel_changed in _replace_inbound_edges(root, superseded, wi_id):
+                _say("re-pointed {}'s edge {} -> {}".format(rel_changed, superseded, wi_id))
     # RAISE THE MARK IN THE SAME COMMIT that files the specs. A mint that
     # allocates an id without recording it leaves the mark behind the tree, and
     # trace.py's integrity pass reads that as "an id was allocated past the
