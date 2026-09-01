@@ -29,22 +29,42 @@ ADJUDICATE brief promises "the machinery mints your draft at this row's own
 close" and NOTHING performs that close — the dispatcher resumes a finished
 adjudication row in a cycle until a supervisor closes it by hand.
 
+RE-SCOPED by `OI-73`, RULED 2026-08-31 (record
+`docs/log.d/2026-08-31-owner-ruling-oi73.md`), same-day refinement of OI-70's
+exits: a successor is MANDATORY at every partial/cancelled close (the
+OI-alone exit is retired); a minted OI becomes a typed hard dependency of the
+successor rather than a standalone exit; the mint REPLACES the superseded
+row's inbound hard `needs` edges; and `OI-###` ids become valid hard tokens
+in `needs`, satisfied when the row leaves `pending`. Done-when 2–4 below are
+amended and 5–6 added accordingly.
+
 ## Done-when
 
 1. An adjudication row whose session recorded a verdict CLOSES mechanically:
    its `## Dispositions` successor drafts are minted into `queued/` (ids from
    the watermark, `spec_move.py` for every move), the row archives terminal,
    and the dispatcher no longer resumes it.
-2. The human-owed exit exists: the close can mint an OPEN ITEM row into
+2. The human-owed arm exists: the close can mint an OPEN ITEM row into
    `docs/requirements/open-items.toml` — id from the watermark's OI space,
    `status = "pending"`, `gen_open_items.py` regenerated in the same commit —
-   so the question reaches the owner surface with no human prose required.
-3. The refusal invariant: a PARTIAL or CANCELLED disposition that names
-   neither a queued successor nor a minted OI id is REFUSED at the close — no
-   third exit, nothing silent.
-4. A minted successor carrying `supersedes` re-points, or loudly reports, the
-   `needs` edges of the row it supersedes — the `WI-541` strand class (its
-   `needs` waited on a terminal row) becomes unrepresentable or at least
-   visible at mint time.
-5. Tests drive all four on a scaffold, and the ADJUDICATE brief's contract
+   and the minted id lands in the queued successor's `needs`, so the ruling
+   gates the successor's readiness instead of relying on adjudicator
+   restraint (OI-73).
+3. The refusal invariant (as tightened by OI-73): a PARTIAL or CANCELLED
+   disposition that queues NO successor is REFUSED at the close — an OI alone
+   no longer discharges it; no third exit, nothing silent.
+4. The mint REPLACES the inbound hard `needs` edges of the row the successor
+   supersedes (`supersedes` is the carrier) — the `WI-541` strand class (its
+   `needs` waited on a terminal row) becomes unrepresentable, not merely
+   visible (OI-73's replacement-not-report arm).
+5. Typed OI edges: an `OI-###` id is a valid HARD token in `needs` —
+   existence validated through the spine carrier and the id-watermark's OI
+   space, readiness satisfied when the row leaves `pending` (a new waiting
+   reason in the scheduler), the template grammar and PROCESS_OPTIONS
+   dependency prose widened TOLERANTLY so bare WI ids keep meaning what they
+   mean and no downstream registry migrates.
+6. The validator net: `dead_dependency_findings` extends to `partial`
+   predecessors, so a strand minted outside this path is reported rather than
+   silent.
+7. Tests drive all six on a scaffold, and the ADJUDICATE brief's contract
    text matches what the machinery now actually does.
