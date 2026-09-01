@@ -64,10 +64,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   contract_split — the integrator's trunk is HEAD; stay on this branch, never
   merge to main, never push (push = "human"); commit is permitted. Read
   CLAUDE.md, the session-protocol skill, docs/status.md (RESUME HERE),
-  docs/handoff-2026-08-31.md, docs/decisions-for-review-2026-08-31.md (46
-  delegated decisions), and the memories unattended-run-2026-08-30-traps and
-  unattended-run-2026-08-31-traps. Spin up opus subagents for edits and
-  analysis to keep your own context low.
+  docs/handoff-2026-08-31.md, and docs/decisions-for-review-2026-08-31.md
+  (46 delegated decisions; the trap memories from the Windows box do not
+  exist on this Mac — the traps ride inline below). Spin up opus subagents
+  for edits and analysis to keep your own context low.
   State at handoff: OI-70..OI-76 are RULED (log.md, the 2026-08-31 rulings
   entries) and their rows are queued: WI-543 (SR-163 mechanism, spine, frontier
   head), WI-552/WI-553 (the OI-70 repairs; WI-552 re-scoped by OI-73),
