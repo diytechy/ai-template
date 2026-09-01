@@ -1138,7 +1138,7 @@ component = "CMP-009"
 notes = """sink — the import moved with the views; the seam is IF-056's. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-009."""
 
 [interface.IF-084]
-rationale = """A seam is declared per importing module, and the import that holds IF-056's derivation-loader seam moved to this split sibling with the --status layer. The pending-owner-actions projection is not this module's: it took its own loader read with it, and pending.py holds that endpoint as IF-138, the same IF-056 shape."""
+rationale = """A seam is declared per importing module, and the import that holds IF-056's derivation-loader seam moved to this split sibling with the --status layer."""
 owner = "scripts/check_trajectory"
 requestors = ["scripts/traj_status"]
 channel = "call"
@@ -1665,17 +1665,6 @@ data = "close_partial and quarantine"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-
-[interface.IF-138]
-rationale = """A seam is declared per importing module, and the import that holds IF-056's derivation-loader seam is carried by this read model."""
-owner = "scripts/check_trajectory"
-requestors = ["scripts/pending"]
-channel = "call"
-data = "check_trajectory loaders: read_registry_rows, load_wis, WI_CSV"
-version = "v1"
-status = "Drafted"
-component = "CMP-009"
-notes = """sink - a read model: it provides nothing across a component boundary, its three readers are all inside CMP-008/CMP-009 and the one that crosses is declared as IF-088. A separate row rather than a clause on IF-084 because both modules now perform the loader read for their own derivation, and a seam is held by the module that carries the import - the IF-082/IF-083/IF-084 split-sibling idiom, applied again"""
 
 [interface.IF-139]
 owner = "scripts/gen_components"

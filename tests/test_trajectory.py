@@ -32,8 +32,9 @@ wi_convert = load_script("wi_convert")
 # now itself an integrity error), so the writers below map each line through the
 # format's own writer instead of writing a CSV.
 WI_COLUMNS = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable"
-# ...plus the SpecRef + BlockRef columns (S1) — used by the SSOT-rule tests.
-SR_WI_COLUMNS = WI_COLUMNS + ",SpecRef,BlockRef"
+# ...plus the SpecRef column (S1) — used by the SSOT-rule tests. (A BlockRef
+# column retired with the blockref vocabulary at WI-553/OI-70.)
+SR_WI_COLUMNS = WI_COLUMNS + ",SpecRef"
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
     "Permutations,Priority,Verification,Status\n"
@@ -116,7 +117,7 @@ def run_traj(root, *extra):
 
 
 def write_wis_sr(root, body):
-    """`write_wis` for a `body` that also fills the SpecRef + BlockRef cells."""
+    """`write_wis` for a `body` that also fills the SpecRef cell."""
     return write_wis(root, body, SR_WI_COLUMNS)
 
 
@@ -561,6 +562,44 @@ def test_nearest_anchor_prefix_pass_beats_difflib_on_a_severe_truncation():
     assert ct.nearest_anchor(severe, anchors) == full
 
 
+def _wi_row(wid, preds="", status="queued"):
+    return {
+        "WI-ID": wid,
+        "Title": wid,
+        "Workstream": "scripts",
+        "Status": status,
+        "Predecessors": preds,
+        "SR-Refs": "",
+        "SpecRef": "",
+        "Deliverable": "",
+        "BlockRef": "",
+    }
+
+
+def test_oi_predecessor_resolves_against_the_open_items_registry():
+    # OI-73 arm 5: an `OI-###` in Predecessors is a hard edge on an open-item
+    # ruling, split out of the WI graph and resolved against the open-items
+    # registry — a known OI is clean, an unknown one is a dangling-edge ERROR
+    # (the same class as an unknown WI predecessor), never a WI-graph cycle node.
+    ct = load_script("check_trajectory")
+    wis, _integrity = ct.load_wis([_wi_row("WI-001", preds="OI-70")])
+    assert wis[0]["preds"] == [] and wis[0]["oi_preds"] == ["OI-70"]
+    assert ct.validate(wis, frozenset(), frozenset({"OI-70"})) == []
+    errs = ct.validate(wis, frozenset(), frozenset())
+    assert any("OI-70" in e and "not a minted open item" in e for e in errs)
+
+
+def test_oi_predecessor_is_never_a_dependency_cycle_node():
+    # An open item is not a WI node, so a self-referential-looking edge through
+    # an OI can never be reported as a cycle — the acyclicity set is WI-only.
+    ct = load_script("check_trajectory")
+    wis, _ = ct.load_wis(
+        [_wi_row("WI-001", preds="OI-70"), _wi_row("WI-002", preds="WI-001")]
+    )
+    errs = ct.validate(wis, frozenset(), frozenset({"OI-70"}))
+    assert not any("cycle" in e for e in errs)
+
+
 def test_specref_with_no_path_is_a_finding(tmp_path):
     # 131-REVIEW-A BLOCKER 1: a bare `#anchor` names no document, so nothing can
     # resolve it. This returned CLEAN both before and after WI-354 — the one shape
@@ -793,15 +832,34 @@ def test_open_wi_depending_on_cancelled_pred_is_flagged(tmp_path):
     plain = run_traj(tmp_path)
     assert plain.returncode == 0, plain.stdout + plain.stderr
     assert "dead-dep WI-002" in plain.stderr
-    assert "cancelled WI(s) WI-001" in plain.stderr
+    assert "terminal WI(s) WI-001" in plain.stderr
     strict = run_traj(tmp_path, "--strict")
     assert strict.returncode == 1
     assert "dead-dep WI-002" in strict.stderr
 
 
+def test_open_wi_depending_on_partial_pred_is_flagged(tmp_path):
+    # OI-73 arm 6: `partial` is as terminal to the scheduler as `cancelled` — a
+    # lane that stopped early moves its spec to partial/ and never integrates
+    # `done`, so a live WI hard-depending on one waits forever. This was the
+    # WI-541 -> WI-540 strand repaired by hand; the finding now reports it.
+    write_spec(tmp_path, "docs/specs/WI-002.md")
+    write_wis_sr(
+        tmp_path,
+        "WI-001,Stopped,scripts,,,partial,stopped early,\n"
+        "WI-002,Live,scripts,,WI-001,queued,,docs/specs/WI-002.md\n",
+    )
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "dead-dep WI-002" in plain.stderr
+    assert "terminal WI(s) WI-001" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+
+
 def test_done_predecessor_of_open_wi_is_not_a_dead_dep(tmp_path):
     # Decision 3 control: a `done` predecessor is a LIVE, satisfied edge — never
-    # flagged dead. Only a `cancelled` predecessor triggers the finding.
+    # flagged dead. Only a terminal (cancelled/partial) predecessor triggers it.
     write_spec(tmp_path, "docs/specs/WI-002.md")
     write_wis_sr(
         tmp_path,

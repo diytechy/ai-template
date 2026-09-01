@@ -21,8 +21,8 @@ attributable to the refresh that caused it.
 THREE TERMINAL OUTCOMES, NO FOURTH (§A3). Every lane ends in a merge: `merged`
 (specs -> complete/), `cancelled` (specs -> cancelled/, so the cancellation is a
 trunk fact and the id stays retired) and `handback` (the work so far committed
-as-is, the specs back in queued/ carrying a `## Handback` section and a
-blockref). The outcome is not a flag anyone sets: it IS the folder the branch
+as-is, the specs moved to the TERMINAL partial/ with an immutable per-close
+report). The outcome is not a flag anyone sets: it IS the folder the branch
 moved its specs into, read back by `branch_outcomes` off the same move that made
 the branch finished - so a merge queue that reads the outcome cannot disagree
 with the tree it is merging.
@@ -698,7 +698,12 @@ def _claim_refusal(root, wi_ids, branch):
             return refusal
     import schedule  # sibling; deferred so the cheap refusals above stay cheap
 
-    ready = {r["id"] for r in schedule.frontier(schedule._load(root))}
+    ready = {
+        r["id"]
+        for r in schedule.frontier(
+            schedule._load(root), oi_status=schedule.load_oi_status(root)
+        )
+    }
     missing = [w for w in wi_ids if w not in ready]
     if missing:
         return "{} is not on the ready frontier (unmet needs or not queued)".format(
@@ -1724,6 +1729,24 @@ def _worktree_dirt(wt):
 # bar run, sole-copy evidence never.
 _RESIDUE_DIR_NAMES = frozenset({".pytest_cache", ".ruff_cache", "__pycache__"})
 _RESIDUE_FILES = frozenset({"docs/test/report.md", "docs/test/report.html"})
+# The loop's OWN artifacts (C6, docs/plans/2026-08-30-stall-guard-plan.md):
+# the raw per-session streams agent_loop itself wrote for THIS lane under
+# out/run-logs/ (their clipped, tracked copies live under docs/iteration/),
+# and out/review-owed, the C2 parked-state marker, moot once the lane merged.
+# Measured 2026-08-30: every mechanized lane ended UNLOAD INCOMPLETE over
+# exactly these, ending the run after every merge. Same double lock as the
+# caches: ignored by git AND declared here — never sole-copy evidence.
+#
+# Declared BY NAME, never by directory (WI-548 round 4): a stream is
+# `<train>-<NNN>-<YYYYMMDD>-<HHMMSS>.log`, the shape `agent_loop.write_raw_stream`
+# produces, and ONLY that shape is the loop's. Anything else under
+# out/run-logs/ — an operator's notes, a foreign log — is a surprise, and a
+# surprise is evidence that refuses the unload by name.
+# out/agent-loop.lock is the loop's OWN per-checkout coordinator lock, dead once
+# its process exited (measured 2026-08-31: it held WI-547's lane after the shed).
+_RESIDUE_STREAM_RE = re.compile(r"^out/run-logs/[^/]+-\d{3}-\d{8}-\d{6}\.log$")
+_RESIDUE_STREAM_DIRS = ("out/run-logs/",)
+_RESIDUE_OUT_FILES = frozenset({"out/review-owed", "out/agent-loop.lock"})
 
 
 def _is_declared_residue(rel):
@@ -1735,7 +1758,9 @@ def _is_declared_residue(rel):
     `.pytest_cache/` at the rootdir). The file's own NAME never matches - a
     file merely named `.pytest_cache` is a surprise, and a surprise is
     evidence."""
-    if rel in _RESIDUE_FILES:
+    if rel in _RESIDUE_FILES or rel in _RESIDUE_OUT_FILES:
+        return True
+    if _RESIDUE_STREAM_RE.match(rel):
         return True
     return any(part in _RESIDUE_DIR_NAMES for part in rel.split("/")[:-1])
 
@@ -1789,8 +1814,17 @@ def _sweep_residue_dirs(wt):
         if directory == wt:
             continue
         rel_parts = directory.relative_to(wt).parts
-        if ".git" in rel_parts or not any(
-            part in _RESIDUE_DIR_NAMES for part in rel_parts
+        rel_posix = "/".join(rel_parts) + "/"
+        # A directory inside a declared prefix (out/run-logs/) — or an
+        # ancestor of one (out/ itself, once the streams are shed and nothing
+        # else lives there) — is sweepable exactly like the named cache trees;
+        # rmdir still refuses anything non-empty, so a surprise survives.
+        declared_prefix = any(
+            rel_posix.startswith(p) or p.startswith(rel_posix)
+            for p in _RESIDUE_STREAM_DIRS
+        )
+        if ".git" in rel_parts or not (
+            declared_prefix or any(part in _RESIDUE_DIR_NAMES for part in rel_parts)
         ):
             continue
         if ac.git(wt, "check-ignore", "-q", "--", "/".join(rel_parts))[0] != 0:

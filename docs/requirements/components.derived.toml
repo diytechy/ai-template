@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 187
-seam_rows = 163
-requirements_placed = 71
+design_rows = 188
+seam_rows = 162
+requirements_placed = 72
 requirements_unplaced = 4
 seams_unplaced = 0
 
@@ -206,7 +206,6 @@ seam_boundary_refs = [
   "IF-126",
   "IF-132",
   "IF-133",
-  "IF-138",
   "IF-141",
   "IF-142",
   "IF-143",
@@ -241,6 +240,7 @@ sr_refs = [
   "SR-167",
   "SR-170",
   "SR-182",
+  "SR-183",
 ]
 sr_shared_refs = [
   "SR-017",
@@ -272,6 +272,7 @@ llr_refs = [
   "LLR-190",
   "LLR-191",
   "LLR-195",
+  "LLR-206",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -289,6 +290,7 @@ modules = [
   "project-trajectory/hooks/pre-commit",
   "project-trajectory/hooks/pre-push",
   "project-trajectory/scripts/check.py",
+  "project-trajectory/scripts/check_complexity.py",
   "project-trajectory/scripts/check_coverage.py",
   "project-trajectory/scripts/check_doc_refs.py",
   "project-trajectory/scripts/check_docs.py",
@@ -739,7 +741,6 @@ seam_boundary_refs = [
   "IF-125",
   "IF-126",
   "IF-131",
-  "IF-138",
   "IF-139",
   "IF-140",
   "IF-141",

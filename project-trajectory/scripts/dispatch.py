@@ -58,8 +58,8 @@ the walk-away loop restarts with the same double-click that started it.
 EVERY LANE ENDS IN A MERGE (docs/concurrency-v2.md §A3, WI-387). A worker that
 cannot finish no longer stops the run: the dispatcher reads its exit code, and a
 DECIDED one (`_WORKER_OUTCOMES`) closes the lane as a HANDBACK — the work so
-far committed as-is, the specs back in `queued/` blocked on a blockref, the
-branch merged like any other. A CRASH is not a hang and keeps the parked-resume
+far committed as-is, the specs moved to the TERMINAL `partial/` with a per-close
+report, the branch merged like any other. A CRASH is not a hang and keeps the parked-resume
 path unchanged. The WRITES themselves stay in the handback.py sibling, which
 owns closing a lane; what lives here is only the DECISION of which outcome a
 cycle reached.
@@ -473,15 +473,16 @@ def _branch_exclusive(root, branch):
 # WI-387 a worker that hit its session ceiling stopped the run with the claim
 # parked, and a relaunch resumed the same lane, so a WI needing more than one
 # worker budget finished across relaunches with no human in the loop. They are
-# decided exits, so they now hand back — and `hand_back` sets a `blockref`,
-# which `schedule._disposition` reads as `blocked`, so an unattended run can
-# never pick that WI up again until a human clears it. §A3's ruling is "any
-# non-zero worker exit that is not a crash", and its justification (the dominant
-# shape is green-but-not-approved or cannot-proceed-for-config-reasons) is about
-# EXIT_NEEDS_HUMAN, not about a ceiling. The alternative — hand back WITHOUT a
-# blockref so a ceiling stays resumable — re-opens the claim/return/re-claim
-# loop this row closed, bounded then only by --max-iterations, so it is an owner
-# call rather than a builder's: filed as a finding, not decided here.
+# decided exits, so they now hand back — and `close_partial` moves the specs to
+# the TERMINAL `partial/`, which `schedule._disposition` reads as `partial` (never
+# ready), so an unattended run can never pick that WI up again until a successor
+# is minted. §A3's ruling is "any non-zero worker exit that is not a crash", and
+# its justification (the dominant shape is green-but-not-approved or
+# cannot-proceed-for-config-reasons) is about EXIT_NEEDS_HUMAN, not about a
+# ceiling. The alternative — a handback that stays resumable — re-opens the
+# claim/return/re-claim loop this row closed, bounded then only by
+# --max-iterations, so it is an owner call rather than a builder's: filed as a
+# finding, not decided here.
 _WORKER_OUTCOMES = frozenset(
     {
         ac.EXIT_PREFLIGHT,
@@ -524,6 +525,19 @@ def _lane_close(root, branch, code):
             "worker on {} exited {} but its specs are already out of active/ - "
             "the tree has named an outcome, so the drain merges it on that "
             "rather than handing back over the top of it.".format(branch, code)
+        )
+        return None
+    if code == ac.EXIT_REVIEW_OWED:
+        # C2 (docs/plans/2026-08-30-stall-guard-plan.md): the build is
+        # committed and no reviewer could be drawn. Deliberately parked, not
+        # decided — the next cycle resumes the lane, whose worker schedules
+        # the owed round first (the out/review-owed marker). A reviewer
+        # outage never hands finished work back (owner direction 2026-08-30).
+        _say(
+            "worker on {} exited REVIEW OWED (exit {}) - the build is "
+            "committed and no reviewer could be drawn; the lane stays parked "
+            "with its work and the next cycle resumes it to draw the "
+            "round.".format(branch, code)
         )
         return None
     if code not in _WORKER_OUTCOMES:
@@ -608,6 +622,27 @@ def _launch(root, table, branch, wi_ids, exclusive, args, worker):
     table.append(ln)
 
 
+def _close_done_adjudication(root, branch):
+    """THE ADJUDICATION-ROW CLOSE (OI-70/OI-73, Done-when 1) on a DONE worker.
+
+    A DONE worker whose specs are still in active/ is normally the stall
+    candidate — but an adjudication row that recorded its verdict owes a
+    MECHANICAL close, because the machinery (not the agent's own spec_move) is
+    what moves its drafts into queued/ and archives the row terminal (the C6
+    loop OI-70 measured, where the dispatcher resumed a finished adjudication
+    row forever). `close_adjudication` no-ops for a non-adjudication lane (that
+    stall candidate is unchanged) and for one already self-closed, and refuses a
+    disposition that drafted no successor (the refusal invariant). Returns the
+    fatal exit code on a refusal, else None."""
+    if branch in integrate.finished_branches(root):
+        return None
+    _ids, refusal = handback.close_adjudication(root, branch)
+    if refusal:
+        _say("cannot close adjudication {}: {}".format(branch, refusal), err=True)
+        return ac.EXIT_PREFLIGHT
+    return None
+
+
 def _advance(root, ln, tier):
     """Advance one lane's state machine by one poll: None while busy, else a
     `(verb, code)` event —
@@ -625,6 +660,10 @@ def _advance(root, ln, tier):
         ln.proc = None
         if code != ac.EXIT_DONE:
             rc = _lane_close(root, ln.branch, code)
+            if rc is not None:
+                return ("fatal", rc)
+        else:
+            rc = _close_done_adjudication(root, ln.branch)
             if rc is not None:
                 return ("fatal", rc)
         if ln.branch in integrate.finished_branches(root):
@@ -748,14 +787,15 @@ def _pending_cards(root):
     2026-08-01: gen_open_items renders `pending.pending_block` verbatim, and
     the dispatcher's exit banner must derive from that one read so
     agent-resume and the owner surfaces can never disagree about what is
-    blocking). Blocked rows with a BlockRef plus Drafted/drifted spine rows;
-    the tracked-pause card is excluded because a pause has its own earlier
-    exit, and the coordinator's git-trailer reads stay for in-flight lanes
-    only.
+    blocking). Drafted/drifted spine rows; the tracked-pause card is excluded
+    because a pause has its own earlier exit, and the coordinator's git-trailer
+    reads stay for in-flight lanes only. (A blocked-rows-with-a-BlockRef source
+    retired with the blockref vocabulary at WI-553/OI-70 — it had zero
+    producers.)
 
     THE IMPORT MOVED AT WI-483 SLICE 3, and the move is the point. It used to
     be the FACADE — `import gen_trajectory`, reaching in for the private
-    `_blocked_pending` and `_spine_pending` — which the 2026-08-19 review
+    `_spine_pending` — which the 2026-08-19 review
     recorded twice over: a ~1,000-line render family imported for a state
     query, through private names used as a cross-module API (H-02, M-02). The
     old judgment note argued the facade crossed no *forbidden* seam, which was
@@ -787,9 +827,9 @@ def _surface_banner(root, surfaced):
     disagree with `pending_block`, but review drove the cost — one unrelated
     card silently SUPPRESSED two genuinely queued attestation rows, hiding
     work the owner had every reason to see. The reason given for suppressing
-    them (that the populations overlap, since `_pending_cards` yields blocked
-    rows with a BlockRef plus Drafted/drifted spine rows while `surfaced`
-    yields queued gate/attestation frontier rows, and one row can be both)
+    them (that the populations overlap, since `_pending_cards` yields
+    Drafted/drifted spine rows while `surfaced` yields queued gate/attestation
+    frontier rows, and one row can be both)
     justifies never SUMMING them — it does not justify hiding one.
 
     So both are named, separately labelled, never added together, with the
@@ -952,7 +992,11 @@ def _admit(
             root, table, args, worker, parked, free, config_refusal, state
         )
     wis = schedule._load(root)
-    ready = [r for r in schedule.frontier(wis) if r["status"] == "queued"]
+    ready = [
+        r
+        for r in schedule.frontier(wis, oi_status=schedule.load_oi_status(root))
+        if r["status"] == "queued"
+    ]
     kinds = {w["id"]: schedule.kind_of(w) for w in wis}
     verb, payload = _admission(
         [(r["id"], kinds.get(r["id"])) for r in ready],

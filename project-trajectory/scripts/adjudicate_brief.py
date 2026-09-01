@@ -36,8 +36,9 @@ TWO RULES GOVERN EVERYTHING BELOW, and both are load-bearing.
      chair, and a builder session ends DONE like any other, so the miss would
      be silent. `agent_loop.session_body` returns the reason and
      `route_session` pages (`EXIT_NEEDS_HUMAN`), which `dispatch._lane_close`
-     turns into an immutable per-close report plus a `blockref` — a durable
-     record, not a line in a terminal buffer. A row that declares NO brief is
+     turns into an immutable per-close report and a move to the TERMINAL
+     partial/ — a durable record, not a line in a terminal buffer. A row that
+     declares NO brief is
      untouched by all of this: that is an adjudication class the kit never
      authored a brief for, not a claim it failed to honour.
 

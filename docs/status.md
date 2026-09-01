@@ -16,305 +16,56 @@ Contract IF-163: the forward-only blackboard's HAND-AUTHORED bytes — everythin
 
 # Meta-Repo Status — Blackboard
 
-The **working surface** for developing the kit itself — the same `status.md`
-pattern the kit scaffolds downstream, self-applied. This file is
-**forward-only**: only what must happen **next** lives here. Backward-looking
-homes: [log.md](log.md) (sessions, verdicts, **Decisions**),
-[open-items.html](open-items.html) (the generated **Open items** owner surface),
-[docs/work/](work/) (the WI registry's active workspace — status = directory;
-terminal rows live on under [archive/work/](archive/work/), one directory
-deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
-[`PROJECT_STATE.html`](../PROJECT_STATE.html)), and
-[archive/](archive/README.md) (design history, with per-file dispositions), and
-the folder map [docs/README.md](README.md) (what each `docs/` directory holds and
-the seams it owns).
+The **working surface** for developing the kit itself. **Forward-only**, held to
+the declared S-1 budget (`docs/status-lint`; raised 2026-08-31 to carry the
+supervisor prompt at the owner's request). Backward-looking homes:
+[log.md](log.md) (sessions, verdicts, **Decisions**), [open-items.html](open-items.html)
+(the generated **Open items** owner surface), [docs/work/](work/) (the WI registry —
+status = directory; terminal rows under [archive/work/](archive/work/)),
+[archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **THE SPINE IS SIGNED AND THE BASELINE IS SEEDED** (sitting 3, 2026-08-20 —
-  the owner's written approval; the record: [log.md](log.md) Decisions
-  `2026-08-20a` + the Sittings row of the same date). `docs/archive/last_approved/`
-  exists and drift detection is live: a post-sign amendment is a live edit the
-  snapshot comparison reports, adjudicated per the declared approval level —
-  never a silent ride. The D-9 step 7/8 follow-on (retire `Modified`, arm
-  UNANCHORED as an ERROR, compute `Founded`) lands as the same-sequence
-  mechanical act. Known-open, unrelated: the `trajectory` gating red (owned,
-  first in the grind).
-- **The frontier is OPEN and the grind runs in series** (owner directive
-  2026-08-20): the generated block below carries the order. The second batch's
-  closing review (internal Opus + cross-family Sol) is **taken and iterated** —
-  all 22 worklist items dispositioned, the two CRITICALs proven against the
-  reviewers' own executed attacks, record in
-  [reviews/2026-08-21-program-grind-close/RESUME.md](reviews/2026-08-21-program-grind-close/RESUME.md).
-  Five of the six queued briefs RULED (2026-08-21; record:
-  [log.d/2026-08-21-owner-rulings-oi48-52.md](log.md#2026-08-21--four-of-the-six-queued-briefs-rule-in-one-owner-message-the-floor-question-is-answered-but-deliberately-not-yet-ruled);
-  execution rows in the generated frontier below) — the largest being the
-  **stage unification program**, whose six ruled slices are all BUILT per
-  [plans/2026-08-21-stage-unification-plan.md](plans/2026-08-21-stage-unification-plan.md)
-  (v1 FINAL, the owner's four answers in its §6): `docs/gate` and the whole bar
-  axis are deleted, `docs/stage` is the one derived value, and the approval
-  dial takes a rung. All six slices are now LANDED and green, and **the
-  program close's adversarial round is TAKEN AND ITERATED** (2026-08-22,
-  internal Opus + cross-family Sol): all 17 worklist items dispositioned, the
-  three trust-bearing fixes proven against the reviewers' own executed attacks
-  — including both Release-producer mutants, which the shipped pins PASSED and
-  the rebuilt ones fail. Resume state:
-  [reviews/2026-08-22-wi498-program-close/RESUME.md](reviews/2026-08-22-wi498-program-close/RESUME.md).
-  The program row is **CLOSED COMPLETE** (2026-08-22): every close-owed item
-  is dispositioned, the signed figures were independently reproduced
-  (2831/14 exact at the approval commit), and the remainders all carry rows
-  in the frontier below (the cell repairs + cross check, the approval-brief
-  split, and the four open lanes). The spine's surfaced set is
-  APPROVED and the baseline is CURRENT (2026-08-23, the owner's in-session
-  act — the dated brief he signed from is
-  [ratify/2026-08-23-spine-approval.md](ratify/2026-08-23-spine-approval.md)):
-  the drift is at **zero rows** and the open-items surface at **zero pending
-  decisions**. The component registry is APPROVED too (2026-08-22, the
-  owner's ruling after reading the four rows in full), and the ladder reads
-  `DevStg-LLReqs`: what holds it there is the orphan debt — **one**
-  undecomposed SR remaining
-  (`SR-181`; no TC-less LLR remains), assigned (owner-directed
-  2026-08-22) and riding fold-in notes on the queued rows that own their
-  subjects, so the grind pays the debt as a side effect and the ladder climbs
-  as the mints approve — each mint lands `Drafted`, so the ladder itself has
-  not moved. (The CI pair — the hosted bar
-  per trigger and the hosted verdict — was the first fold-in paid, minting
-  three LLR/TC pairs beside the test-evidence carrier.)
-  **THE NINETEEN ARE APPROVED AND THE BASELINE IS RE-SEEDED** (2026-08-24,
-  the owner's in-session act, from the corrected brief the three preceding
-  fixes produced — the dated copy he signed from is
-  [ratify/2026-08-24-spine-approval.md](ratify/2026-08-24-spine-approval.md);
-  record: [log.d/2026-08-24-oi62-rule-and-spine-approval.md](log.md#2026-08-24--oi-62-ruled-e-and-the-nineteen-are-approved-from-the-corrected-brief)):
-  `docs/stage`'s draft count was taken to **zero**, the re-attest window closed
-  (`trace.py --approve modified --check` exit 0), and **phase 4 climbed back
-  to `DevStg-Impl`** — the reopened-phase warning its minted drafts held open
-  is cleared. The ladder's live rung stays `DevStg-LLReqs` on phase 5. Still
-  owner-owed from the wording round that lightened the brief: the two banked
-  findings about `Approved` text nobody may edit
-  ([reviews/2026-08-24-draft-wording-round/RESUME.md](reviews/2026-08-24-draft-wording-round/RESUME.md)).
-  Environment, RE-MEASURED 2026-08-25: **41 GB free on C:** — the disk pressure
-  that forced the batched/cleaned-basetemp form is gone. Measured in the other
-  direction on the same box, and worth knowing before reaching for the
-  workaround: pointing `--basetemp` at D: roughly **doubles** the smoke tier's
-  wall time (26 s on the declared command, 60 s with the redirect), so redirect
-  it only when C: is genuinely short.
-- **`OI-68` AND `OI-69` ARE RULED (2026-08-30)** — record
-  [log.d/2026-08-30-owner-rulings-oi68-oi69.md](log.md#2026-08-30--the-owner-rules-oi-68-1c-a-sloc-based-line-ratchet--2a--3a--4a-and-oi-69-a1--b1--c2--d1--e1-once-the-dial-is-on-five-rows-filed-with-their-edges).
-  `OI-68` (the complexity sensor): (1c) BOTH sensors stay armed and the
-  module-size line ratchet is RE-BASED to SLOC — non-blank, non-comment,
-  non-docstring lines, one definition shared with the sensor — (2a) the sensor
-  censuses `tests/` too, (3a) armed here, (4a) the prototype's conventions at
-  15; plan of record
-  [plans/2026-08-29-complexity-sensor-plan.md](plans/2026-08-29-complexity-sensor-plan.md)
-  (its phase 2 is now arm + re-base, nothing deleted; its byte arithmetic is a
-  day stale — measure, don't trust). `OI-69` (adjudicator session retention):
-  (a1) a retained transcript is not an actor, (b1) `reset_on_same_artifact =
-  false` with the fork hardening banked, (c2) keep-warm pings THROUGH the
-  blackout (≈ $1.20 a window against a ≈ $3 rewrite), (d1)
-  `process.toml [adjudicator]`, (e1) dedicated CLI homes once the dial is on;
-  plan of record
-  [plans/2026-08-29-adjudicator-session-retention-plan.md](plans/2026-08-29-adjudicator-session-retention-plan.md).
-  **RESUME HERE:** the generated frontier below names the queued rows and
-  their order — the sensor report-only (strong, spine) → arm-and-re-base
-  (soft-edged to the debt owner) → ship; the adjudicator telemetry-first row
-  → the retention layer → its on-box verification; and the knowledge-pack
-  review's byte-paid edits, unblocked by anything. Enabling the dial is the
-  owner's edit of one number afterwards. **Before the grind starts: the
-  bar** — the full suite's floor is one 304 s test and nine 60–90 s dispatch
-  lanes (measured 2026-08-30,
-  [log.d/2026-08-30-oi67-docs-pass-and-bar-timing.md](log.md#2026-08-30--docs-the-oi-67-programs-shipped-and-reference-docs-brought-level-with-the-tree-and-the-bars-wall-time-measured-piece-by-piece));
-  a row for it when the work is ready to start, ideally driven by the sensor's
-  first census.
-- **THE INTERFACE ROW IS BEING RESHAPED — `OI-67` RULED (a), 2026-08-29.**
-  One row is one owner, its consumers and a typed statement of the
-  information; `provider`, `req_refs` and the prose `contract` leave the row
-  and the module header is the definition's only home. The plan of record
-  is [plans/2026-08-29-if-row-shape-plan.md](plans/2026-08-29-if-row-shape-plan.md)
-  (six slices, sequenced by `needs`; the rows are in `docs/work/queued/` and
-  the generated frontier below names them — **slice 1 is LANDED**, record
-  [log.d/2026-08-29-wi528-if-row-shape.md](log.md#2026-08-29--wi-528-the-interface-row-shape-in-code-oi-67-slice-1):
-  the row reads `owner` + `requestors`|`consumers` + `channel` + `data`, the
-  kit's registry is converted, and the far side names the direction — the
-  owner's in-session addition; **slice 5 is LANDED too**, out of plan order so
-  the shipped `PROCESS.md` §8 and templates stopped describing cells the code
-  no longer reads — record
-  [log.d/2026-08-29-wi532-if-row-shape-shipped.md](log.md#2026-08-29--wi-532-the-interface-row-shape-ships-to-adopters-oi-67-slice-5),
-  converter `migrate_carrier.py --if-shape`; **slice 2 is LANDED** — a
-  registry, config or hook file declares through its comment header, the two
-  git hooks declare, and the reverse check is owner-exact, record
-  [log.d/2026-08-29-wi529-header-non-python.md](log.md#2026-08-29--wi-529-the-contract-header-reaches-every-owner-oi-67-slice-2);
-  the 67 owner-exact warnings it surfaces were slice 3's worklist; **slice 3 is
-  LANDED** — 132 of 136 definitions stated beside their owners by a four-worker
-  round, record
-  [log.d/2026-08-29-wi530-cell-pass.md](log.md#2026-08-29--wi-530-the-cell-pass-on-the-new-shape-oi-67-slice-3),
-  the round itself at
-  [reviews/2026-08-29-oi67-slice3/](reviews/2026-08-29-oi67-slice3/README.md)).
-  **slice 4 is LANDED** — one row, one direction, one kind: twenty rows
-  minted (`IF-145`–`IF-164`), two duplicate pairs collapsed, 136 → 154 rows,
-  the reference at 73 sources / 150 seams / 150 stated, by a three-worker
-  round recorded at
-  [reviews/2026-08-29-oi67-slice4/](reviews/2026-08-29-oi67-slice4/README.md),
-  record [log.d/2026-08-29-wi531-if-row-split.md](log.md#2026-08-29--wi-531-the-split--one-row-one-direction-one-kind-oi-67-slice-4).
-  **slice 6 is LANDED — THE PROGRAM'S SIX SLICES ARE ALL BUILT:** the gate is
-  armed (a declared seam with no body, an external-owned row no far-side
-  module states, a stray declaration, and any retired cell are `--strict`
-  findings), every one of the 154 rows is stated (reference 74 / 154 / 154),
-  the CSV loaders read through one comment-skipping reader so `IF-031`'s
-  owner declares in its own header, and the three `external:`-owned rows are
-  stated by their far side — record
-  [log.d/2026-08-29-wi533-arm-the-gate.md](log.md#2026-08-29--wi-533-the-gate-is-armed-oi-67-slice-6).
-  **Slice 6's cross-family round RAN** (gpt-5.6-sol, eleven findings, nine
-  folded at the root — the gate's grammar arm, the no-in-tree-endpoint rule,
-  presence-based retired cells, four raw CSV readers, the blank preamble line
-  — record [log.d/2026-08-29-oi67-slice6-round.md](log.md#2026-08-29--review-the-oi-67-slice-6-cross-family-round--eleven-findings-nine-folded-at-the-root),
-  dispositions [reviews/2026-08-29-oi67-slice6/](reviews/2026-08-29-oi67-slice6/README.md)),
-  and **the arms the split surfaced are DONE** — nine rows (`IF-165`–`IF-173`),
-  154 → 163, the reference at 74 / 163 / 163, `gen_arch_map` running every
-  target it is named — record
-  [log.d/2026-08-29-wi534-if-arms.md](log.md#2026-08-29--wi-534-the-arms-the-split-surfaced--nine-rows-minted-and-stated-oi-67-follow-on).
-  **The owner accepted decisions 4.1, 6.2, 6.7 and 6.8** — record
-  [log.d/2026-08-29-owner-rulings-oi67-decisions.md](log.md#2026-08-29--the-owner-accepts-decisions-41-62-67-and-68-of-the-oi-67-slices--recorded-nothing-changes-in-code);
-  the first session's decisions file (below) is still unread. **RESUME
-  HERE:** (1) the smoke budget read **40.7 s → within** on 2026-08-30 once
-  the other sessions went quiet, after two days of OVER readings (88–180 s)
-  on a box they held at 50–90 %; the budget is untouched and the quiet number
-  is on record in
-  [log.d/2026-08-30-owner-rulings-oi68-oi69.md](log.md#2026-08-30--the-owner-rules-oi-68-1c-a-sloc-based-line-ratchet--2a--3a--4a-and-oi-69-a1--b1--c2--d1--e1-once-the-dial-is-on-five-rows-filed-with-their-edges);
-  (2) left standing,
-  each recorded in the two fragments:
-  the three tracked fragments opening with `#`/`###` (the trunk lane's),
-  `TC-161`'s approved prose naming `IF-127` (the owner's), the seven
-  `_`-prefixed names crossing `IF-173` (a rename to file), the ten seam-TC
-  allowlist entries the arms added past the seed (the burn-down), and a
-  repo-wide `ruff check tests/` red on two pre-existing F401s. The ruling
-  record is
-  [log.d/2026-08-29-oi67-ruled-a.md](log.md#2026-08-29--the-owner-rules-oi-67-a-one-row-one-direction-one-kind--the-cells-go). The
-  contract header from `OI-66` stays and becomes load-bearing: a module states each contract beside the code as a
-  `Contract IF-###:` block, and `docs/interface-reference.md` harvests them
-  under a freshness gate that sits on the pre-commit floor. Records:
-  [log.d/2026-08-29-wi527-contract-header.md](log.md#2026-08-29--wi-527-the-component-side-contract-header-built-and-adversarially-reviewed),
-  and the decisions this session took unconsulted are filed for review at
-  [decisions-for-review-2026-08-29.md](decisions-for-review-2026-08-29.md);
-  slices 4 and 6's are at
-  [decisions-for-review-2026-08-29-slices-4-6.md](decisions-for-review-2026-08-29-slices-4-6.md).
-  - **THE 71-ROW CELL PASS IS SUPERSEDED by the plan's slice 3**, which
-    spends the same authoring on the new shape. **Two rows are done as proof
-    the pipeline works end to end** (`IF-013`, `IF-144`); the reference reads
-    **137 declarations over 134 seams, 2 stated**. Measured for the ruling: 14
-    rows are two-way, 35 bundle several kinds, 31 are owned by something the
-    `*.py` scanner cannot see — slice 2 widens the scanner before slice 3
-    authors into it.
-  - **The marker grammar tightened, and that is the adopter-visible half.** It
-    must OPEN its line and parse as an id list — line-start alone still leaked
-    (`Contracts: not IF-080; an example` declared IF-080). Both lossy forms are
-    reported by name so no repo loses a seam in silence; 0 findings here, and
-    the detector was proved to fire by planting one.
-  - **A false green closed for the whole kit:** a `[generated]` row naming an
-    absent FILE now fails `staged-divergence`. Every freshness step is vacuous
-    on an absent target, so deleting a declared artifact disarmed its own gate.
-    Prefix rows stay exempt — `docs/okf/` is absent by dial.
-  - **Left broken on purpose, both recorded:** `IF-134`/`IF-135` have no
-    declaring module because the git hooks are extensionless and a `*.py` scan
-    cannot see them; and the reverse check is id-global, so an id declared on
-    the WRONG module still passes.
-  `OI-61`'s (c) stays deferred and was NOT re-raised.
-- **The interface tier's end-state schema is LANDED.**
-  A seam row now reads `provider -> consumers`: no direction
-  column, no endpoint cell restating what the row's owner already derives, and
-  the derivations held by test rather than by claim
-  ([test_seam_resolution.py](../tests/test_seam_resolution.py)). Two follow-ons
-  are OPEN and neither is owed by the lane that shipped this: **the twelve
-  requirement-owned provider-side rows** wait on an owner-informed re-point, one
-  seam at a time, fed by
-  [plans/2026-08-23-sr-owned-provides-report.md](plans/2026-08-23-sr-owned-provides-report.md)
-  — `trace.py`'s Provider derivability advisory asks for each cell back as its
-  owner moves to the design tier; and **the 21 published-medium rows state no
-  provider**, because none was ever recorded, so recording the medium each row's
-  `contract` names is authoring per row rather than a rename. Adopters take the
-  migration through [RESYNC_PACK.md](../project-trajectory/RESYNC_PACK.md)'s
-  entry, which classifies the four `Consumes` shapes before any cell is touched.
-- **The snapshot block is CLEARED and STAYS clear** (2026-08-23, re-seeded
-  again 2026-08-24): `intake.py snapshot` does not refuse, so a session can
-  record an approval by refreshing it. The standing rule survives the closes
-  around it: a `Drafted` row is approved on its own merits, from the rendered
-  brief — never bulk-flipped to tidy a surface.
-- **THE UNATTENDED RUN OF 2026-08-30 IS SUPERVISED UNDER DELEGATED AUTHORITY**
-  — every decision it took in the owner's stead, with its alternative, is in
-  [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md);
-  read that file first at return. Approval authority is whatever
-  [process.toml](process.toml) `human_approval_through` declares — do not
-  paraphrase it here; the two owner-owed lanes were delegated for the run
-  (record: [log.md — the delegation sitting](log.md#2026-08-30--sitting-the-three-stranded-claims-become-parked-lanes-again-and-the-two-owner-owed-rows-carry-the-owners-delegation-for-an-unattended-run)).
-  **Next for the concern/hat program:** its lane closed `partial` (the worker
-  read a branch spec the delegation had not reached — its per-close report
-  lands under [handbacks/](handbacks/README.md) when that branch merges);
-  the disposition row intake mints for that report is where the work
-  continues, by drafting a SUCCESSOR whose body carries the delegation in its
-  first paragraph: the `knowledge` values into `hats.toml` (re-point to
-  `docs/knowledge/` packs, draft only where none carries the perspective,
-  mark drafts) and the 17 duplicated `Rationale` attributions trimmed under
-  ordinary review. **Next for the remap program:** nothing — its lane is
-  closed complete on its branch and merges when its verdict round clears;
-  what it leaves the owner is in the decisions file (the snapshot-vocabulary
-  finding, the blind-derivation census correction).
-- **The `wi521-decomposition-debt-owner` lane is OPEN with slice 1 landed**
-  (2026-08-25; record:
-  [log.d/2026-08-25-wi521-slice1-acceptance-record.md](log.md#2026-08-25--wi-521-slice-1-the-acceptance-record-leaves-the-checker)).
-  The acceptance record left the checker: 677 lines moved VERBATIM into
-  `project-trajectory/scripts/acceptance_record.py`, `check_trajectory.py`
-  re-stamped **4,963 → 4,327**, every name re-exported so no caller moved, the
-  CLI byte-identical across nine driven paths and 56 API probes, and `intake.py`
-  no longer importing a ~5,000-line validator at all. **Before trusting the
-  fusion table this row inherited, read the re-derivation that corrects it:** 13
-  of the 71 SRs have a TIED live module and `agent_loop`'s head position rests
-  on one of them, so the table says WHICH modules fuse obligations, not in what
-  order. **The row does not close** — it is the standing debt owner and the
-  ratchet still points at it. **Slice 2 took M-06's largest monolith
-  standalone** (record:
-  [log.d/2026-08-25-wi521-slice2-integrate-test-split.md](log.md#2026-08-25--wi-521-slice-2-m-06s-largest-monolith-split-standalone)):
-  `tests/test_integrate.py` 3,520 lines → four modules along its OWN seven
-  banner sections plus `tests/integrate_fixtures.py`, proven by node-id SET
-  equality against the monolith (133 ids, diff empty) rather than by a green,
-  and with smoke membership unmoved at 1,369 because all three new modules were
-  re-tiered into `conftest.SLOW_MODULES`. Next, in that order: the rest of
-  `check_trajectory`, then `agent_common` / `bootstrap` / `agent_loop`, then
-  M-06's remaining three (`test_trace` 2,099, `test_trajectory_arch` 1,993,
-  `test_agent_loop` 1,640). The test-tree sensor gap stays CARRIED, its axis
-  still under an unruled owner question.
+- **RESUME HERE — THE FRONTIER IS UNPAUSED (the owner confirmed on
+  2026-09-01 evening; `docs/work/pause` deleted in a reviewed commit) and a
+  supervised loop runs the generated frontier below.** The prior supervised
+  session merged five rows and left three new rows queued; its account is the
+  log's 2026-09-01 supervised-unpause entry and its addendum. Same sitting: all
+  three codex rows in `docs/agents.toml` now pin reasoning effort to medium
+  (owner directive; the routing commit's message carries the why).
+  **For the owner's review:** delegated decisions 47–51 in
+  [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md)
+  (47 the prose-scrub, 48–49 the spot-check lane's undrawn-round disposal +
+  intake recovery and its two kit defects, 50 the amendment adjudication's
+  census correction and the amendment-arm invariant gap, 51 the re-arm); the six MEANING rows awaiting
+  the owner's signature on the `trace.py --approve modified` re-attestation
+  brief; `check_trajectory --strict` carries two KNOWN queued ERRORs (the
+  schedule→trace seam and the wi508 stranded claim the new hold-ban detector
+  now sees — both have queued rows, neither reds the non-strict bar); the
+  review-churn finding this run measured, filed as a row against
+  [plans/2026-09-01-construction-first-remedies.md](plans/2026-09-01-construction-first-remedies.md)
+  (1 structural remedy in 13 rounds; it heads the frontier); and the
+  standing 2026-08-31 items below. Hand-authored prose here names no
+  queued id (the claim-refusal rule); a fresh reader starts at
+  [handoff-2026-08-31.md](handoff-2026-08-31.md) — **read its banner: the
+  2026-09-01 run superseded parts of it** — and the log.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
-  and this branch (`push = "human"`). Known residue, kept deliberately: the
-  `wi416-parked-handback-contract` branch holds a 271-line pre-ruling draft
-  that exists nowhere else (its rows are disposed; the handback ruling
-  superseded it) — delete only after deciding the draft is not wanted.
-- **STARTING COLD? Read in this order:** this block → the `2026-08-22`
-  fragments in [log.d/](log.d/) (the rulings, the program close, the
-  per-WI sessions) → the generated frontier below, then grind it IN SERIES
-  (one worker per row, routed by BuildTier; full-suite runs FOREGROUND with
-  an explicit timeout — a backgrounded run dies when the session's turn
-  ends, the lesson every interrupted worker of this arc re-learned; use a
-  `--basetemp` on D: while C: stays low). The standing constraint under all
-  of it: **the depth-0 frame is LOCKED and APPROVED** — **4 entities ·
-  4 crossings · 3 relationships**, cut-row ids spent and watermark-held;
-  the repository is the system, the template is the deliverable. The
-  2026-08-15 interface-rework provisional state is ruled (`OI-49` (b),
-  2026-08-21): live cells approve in bulk, the named exception reads have a
-  recommendation each in
-  [`docs/plans/2026-08-22-interface-exception-dossier.md`](plans/2026-08-22-interface-exception-dossier.md)
-  awaiting the owner's approving Status-change commit, `IF-097`/`IF-080`
-  closed by the record.
-- **Unfiled follow-ups** (no ids yet, so listed as topics): the stage-ladder
-  program's deferred codex review round; the SN-036 per-decomposition coverage
-  record (re-derive it — the basis line now reads `uncovered=0`); the two
-  findings in the archived
-  [2026-08-01 handoff §6](archive/history/handoff-2026-08-01.md); and the three
-  unruled residues + §8 dead-symbol table in
-  [spine-restructure-2026-08-08.md](spine-restructure-2026-08-08.md) (its §7
-  items 2/4/5 need a destination before that file can archive); and
-  PROCESS.md §4 still describing the approval dial as "an ordinal `0`–`4`" —
-  staleness predating the vocabulary campaign (the rung-string rekey
-  superseded it), surfaced 2026-08-23 and left for its own row.
-- **Conventions:** spec-of-record [specs/README.md](specs/README.md) · rubrics
-  [rubrics/README.md](rubrics/README.md) · partial-close reports
-  [handbacks/](handbacks/README.md).
+  and this branch (`push = "human"`). `wi416-parked-handback-contract` is still
+  single-copy — delete only after deciding it is not wanted. The held wi508
+  branch is on origin; the queued wi508-partial-close row is the only
+  sanctioned act on it (`OI-71`).
+- **Standing constraints:** the depth-0 frame is **LOCKED and APPROVED** (4
+  entities · 4 crossings · 3 relationships, watermark-held); owner-owed, not
+  re-raised: `OI-49` (b)'s exception reads
+  ([plans/2026-08-22-interface-exception-dossier.md](plans/2026-08-22-interface-exception-dossier.md)),
+  `OI-61` (c) deferred, and the wording round's two banked findings
+  ([reviews/2026-08-24-draft-wording-round/RESUME.md](reviews/2026-08-24-draft-wording-round/RESUME.md)).
+- **Unfiled follow-ups** (topics, no ids): the stage-ladder program's deferred
+  codex round; the SN-036 coverage record (re-derive — basis reads
+  `uncovered=0`); the archived [2026-08-01 handoff §6](archive/history/handoff-2026-08-01.md)
+  findings; the [spine-restructure-2026-08-08.md](spine-restructure-2026-08-08.md)
+  residues (§7 items 2/4/5 need a destination); PROCESS.md §4's stale
+  "ordinal `0`–`4`" approval dial.
+- **Conventions:** [specs/README.md](specs/README.md) · [rubrics/README.md](rubrics/README.md) · partial closes [handbacks/](handbacks/README.md).
 
 ## Current State
 
@@ -322,37 +73,42 @@ the seams it owns).
 _GENERATED by `python project-trajectory/scripts/gen_trajectory.py --status` — do not hand-edit; cite the spine registries + `docs/stage`, not this rendering (the forward-only intent below is hand-authored)._
 
 - **In stage:** **DevStg-LLReqs** (stage 5 of 8, LLR definition in work) (per-phase `1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-LLReqs`, derived current **phase=5**) — the rung this repo is IN, derived over its settled spine. [`derive_stage.py`](../project-trajectory/scripts/derive_stage.py) derives it, recorded in [`docs/stage`](stage).
-- **Spine:** **SN=27 SR=75 LLR=187 TC=184** (4 drafts) · 163 seams · 4 components.
+- **Spine:** **SN=27 SR=76 LLR=188 TC=187** (11 drafts) · 162 seams · 4 components.
+- **Open items** _(pending rows of [requirements/open-items.toml](requirements/open-items.toml); each item's blast radius, options and recommendation render in [open-items.html](open-items.html), the generated owner surface):_
+  - **OI-77** — intake._SPEC_NEEDS_RE (intake.py:1344) has no re.DOTALL, so _replace_inbound_edges silently skips a dependent whose needs is a MULTI-LINE TOML list: WI-552 arm 4's 'the WI-541 strand becomes unrepresentable' guarantee in fact holds only under the single-line-needs invariant the machine writers happen to keep (a tree-wide scan finds no multi-line needs today, so it does not bite). Rule which the kit means: (a) tighten the regex to DOTALL (or a real TOML read) so the guarantee is unconditional, (b) keep the regex and DECLARE the single-line-needs invariant, enforced by a check so a hand-written multi-line needs is refused rather than silently skipped, or (c) accept the narrowed guarantee and amend WI-552's claim to match.
 - **Ready frontier** _(dependency-ready WIs in build order — generated from the scheduler; a closed WI drops out automatically, so this list is never stale and never names a `done` id):_
-  - **WI-537** `P2` — check_complexity.py: a stdlib cognitive-complexity and SLOC census with a TSV baseline, r…
-  - **WI-484** `P2` — Concern/hat references on SR and LLR rows and the generated component view: effective set…
-  - **WI-542** — dispose: the close recorded at docs/handbacks/WI-521-wi521-decomposition-debt-owner.md
-  - **WI-535** `P2` — Adjudicator telemetry first, dial off: session id and occupancy / window / percent per fa…
+  - **WI-555** `P3` — Execute OI-71: convert the wi508 complete-close to a handback and close it partial throug…
+  - **WI-508** `P2` — The architectural remapping program: blind minimal-map re-derivation, divergences filed a…
+  - **WI-557** `P3` — The delegated-decisions record: per-run TOML file, close-time obligation under the decisi…
+  - **WI-560** `P3` — One freshness definition for verdicts, and the approval brief's two staleness traps (OI-7…
+  - **WI-561** `P3` — The quarantine spares what is monotone or record: the id watermark, docs/reviews, docs/lo…
+  - **WI-562** `P3` — Unload residue and scratch: integrate.lock declared, the worker told where scratch belong…
+  - **WI-551** `P2` — Re-land the adjudicator session-retention layer from its preserved patch, inert at dial 0…
   - **WI-536** `P2` — Agent-brief and scope: the knowledge-pack review's six byte-paid edits and two kit findin…
+  - **WI-539** `P2` — Ship the complexity sensor: MAPPING row, template step, the opt-in layer, the deep-module…
+  - **WI-545** `P2` — The decomposition debt owner (cont.): three wide modules, check_trajectory's remaining fu…
+  - **WI-556** `P2` — Spine-authoring doctrine: the children-coverage rule stated as trust-based prose (OI-72 r…
+  - **WI-558** `P2` — The verdict carrier rebuilt: the gate computes over logged rounds, the tree-bound trailer…
+  - _(+2 more ready — see the dashboard)_
 <!-- END GENERATED STATUS -->
 
 - **Bar (per commit)** and the **standing rules** (claim refusal on prose ids,
-  never sanction a check to green a step, signed-claim/one-machine humility,
-  line-ending hygiene, claiming through the integrator): the `session-protocol`
-  skill §2–§3, which is their home — relocated out of this forward-only surface
-  at the 2026-08-20 docs sweep. Additionally: run `check_trajectory.py --strict` directly and
-  unfiltered before claiming anything done, since the DEFAULTED pre-commit floor
-  stays warn-first by design and is never the strict bar. Probe providers before
-  planning a critique dispatch, and route by PROVIDER, not gateway.
-- **External follow-up** *(not this repo's work)*: guardrails content
-  enrichment lives in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
+  never sanction a check to green a step, line-ending hygiene, claiming through
+  the integrator): the `session-protocol` skill §2–§3. Run
+  `check_trajectory.py --strict` unfiltered before claiming anything done;
+  route a critique dispatch by PROVIDER, probing first.
 - **Process (kit source):** [PROCESS.md](../project-trajectory/PROCESS.md) ·
   [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md) · working rules
-  [CLAUDE.md](../CLAUDE.md) + the `session-protocol` skill · still-owed lock
-  items [repo-lock.md](repo-lock.md) (§1 now defers to the generated surfaces).
+  [CLAUDE.md](../CLAUDE.md) + the `session-protocol` skill · lock items
+  [repo-lock.md](repo-lock.md) · external (not this repo's work): guardrails
+  content in `TheColliny/FableClaudeMDForOpus`.
 
 ## Scope
 
-- **Goal:** keep the kit **maintainable and trustworthy** — the
-  `PROJECT-VISION:` tag opening [README.md](../README.md) is canonical.
-- **Supported platforms:** Windows + POSIX; kit scripts stdlib-only on
-  Python 3.11+.
-- **Non-goals (self-application boundary):** no product **launch** — the
-  kit's "product" is `project-trajectory/` + `tests/`, a meta-repo has no
-  product to launch, and an actions-menu launcher is in scope; no scaffolded
-  `docs/process.md` (the masters live in `project-trajectory/`).
+- **Goal:** keep the kit **maintainable and trustworthy** — the `PROJECT-VISION:`
+  tag opening [README.md](../README.md) is canonical.
+- **Supported platforms:** Windows + POSIX; kit scripts stdlib-only, Python 3.11+.
+- **Non-goals (self-application boundary):** no product **launch** — the kit's
+  "product" is `project-trajectory/` + `tests/`; an actions-menu launcher is in
+  scope, a `run.*` product launcher is not. No scaffolded `docs/process.md` (the
+  masters live in `project-trajectory/`).

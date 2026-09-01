@@ -1,0 +1,2 @@
+- [MINOR] docs/archive/work/complete/WI-547-adjudicate-sr-024-sr-033-sr.md:19 -> the record says every rationale amendment retained its charter clause, but SR-111 and SR-112 removed their C-MNT-7 clauses entirely in 579abf1..b057b09 -> correct the closure record to distinguish those two removals from label-only edits while retaining the independently supported CLARITY conclusion -> @owner
+VERDICT: CHANGES-REQUESTED findings=1

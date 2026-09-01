@@ -1,0 +1,2 @@
+- [MAJOR] docs/complexity-baseline:16 -> The re-stamp raises the already-armed cognitive baselines for `agent_loop.py::route_session` (35 -> 37) and `run_iteration` (17 -> 18), contradicting the baseline's downward-only contract and masking the divergences the new gate must reject -> Restore the prior ceilings and decompose the functions (or place a separately justified change under the applicable policy rather than raising this ratchet) -> @owner
+VERDICT: CHANGES-REQUESTED findings=1

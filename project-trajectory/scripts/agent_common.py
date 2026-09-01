@@ -137,6 +137,16 @@ EXIT_NEEDS_HUMAN = 7
 EXIT_PAUSED = 8
 
 
+# REVIEW OWED (C2, docs/plans/2026-08-30-stall-guard-plan.md): the build is
+# committed but a review verdict could not be drawn — every route on the
+# reviewer ladder errored, hung or was cooled. Deliberately NOT a decided
+# worker outcome (dispatch._WORKER_OUTCOMES): the lane parks with its work,
+# like a crash, and the next cycle resumes it to draw the round — finished
+# work is never handed back over a reviewer outage (owner direction
+# 2026-08-30). Appended at the END of the exit alphabet; 10 stays retired.
+EXIT_REVIEW_OWED = 9
+
+
 # (EXIT_TRAIN_END = 10 retired with session grouping — WI-383, §A6.1: it ended a
 # PACKED assignment early when the §7 continuation re-check refused the next
 # constituent, and nothing packs. The number stays retired rather than reused —
@@ -2219,9 +2229,25 @@ def write_session_log(iter_dir, meta, transcript):
         # not authenticate, and a full digest per row would dominate the header.
         "prompt-template",
         "prompt-sha",
+        # Which deadline ended a TIMEOUT session — "wall" or "idle" (C3), ""
+        # for every session that finished on its own. The label makes the two
+        # kill classes distinguishable in telemetry without a transcript read.
+        "timeout",
+        # "relaxed" when a review verdict was drawn same-family under the C5
+        # fallback rung (heterogeneity relaxed, recorded, never silent); ""
+        # for every other session.
+        "heterogeneity",
         "exit-code",
+        # WI-535 (docs/plans/2026-08-29-adjudicator-session-retention-plan.md
+        # §3.3, telemetry first, retention dial off): the CLI's own session
+        # id and context occupancy/window/percent, per family — "" wherever
+        # today's one-shot call doesn't report it (family_context_telemetry).
+        "session-id",
+        "context-used",
+        "context-window",
+        "context-pct",
     ):
-        header.append("# {}: {}".format(key, meta.get(key, "")))
+        header.append("# {}: {}".format(key, meta.get(key, "")).rstrip())
     if redacted:
         header.append("# redacted: {} credential-shaped token(s)".format(redacted))
     header.append("# ---")
@@ -2291,7 +2317,7 @@ def regenerate_index(docs_dir):
             continue
         rows.append(
             "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} "
-            "| [{}](iteration/{}) |".format(
+            "| {} | [{}](iteration/{}) |".format(
                 meta.get("session", ""),
                 meta.get("date", ""),
                 meta.get("phase", "") or "—",
@@ -2306,6 +2332,10 @@ def regenerate_index(docs_dir):
                 meta.get("turns", "") or "—",
                 per_turn_pace(meta) or "—",
                 per_turn_context(meta) or "—",
+                # WI-535: the adjudicator-retention plan's telemetry-first
+                # column — the CLI's own reported context occupancy, "—" on
+                # every family/CLI call that doesn't report it yet.
+                "{}%".format(meta["context-pct"]) if meta.get("context-pct") else "—",
                 log.name,
                 log.name,
             )
@@ -2318,8 +2348,8 @@ def regenerate_index(docs_dir):
         '"which session did this" pointer (process-options.md "Unattended\n'
         'operation")._\n\n'
         "| # | Date | Phase | WI | Model | Outcome | Commits | Tokens | Cost USD "
-        "| Wall s | API s | Turns | s/turn | Ctx/turn | Log |\n"
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
+        "| Wall s | API s | Turns | s/turn | Ctx/turn | Ctx % | Log |\n"
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
         + "\n".join(rows)
         + "\n"
     )

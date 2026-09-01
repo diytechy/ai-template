@@ -67,6 +67,7 @@ run.command — no product to launch (status.md non-goal)
 src/ — the kit's product is project-trajectory/ + tests/, not an application tree
 docs/kit-license — a stamp bootstrap.py writes into a SCAFFOLD; the kit itself is the source
 docs/kit-profile — likewise a scaffold stamp, recording which kit rung a repo adopted
+docs/kit-version — likewise a scaffold stamp; this kit checkout is the versioned source rather than an adoption of itself
 docs/release-checklist.md — a scaffolded artifact for a repo that ships releases
 docs/releases/ — gen_release_checklist.py --version files the stamped, signed checklist here; a meta-repo performs no DevStg-Release, so the directory is created by the first one that ships (see the line above)
 

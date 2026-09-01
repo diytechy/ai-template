@@ -69,41 +69,49 @@
 applies_when = "always"
 asks = """What secret, credential, or irreversible action does this touch — and which requirement says who may reach it?"""
 listens_for = """A decomposition that spends a secret, or takes an action nothing can undo, with no requirement naming the authority for it."""
+knowledge = ["docs/knowledge/security-review.md"]
 
 [hat.FIRST-RUN-ADOPTER]
 applies_when = 'tags contains "scripts" or tags contains "templates" or tags contains "process"'
 asks = """Does this hold for a stranger with only the shipped README and examples — no context from this project, no one to ask?"""
 listens_for = """A requirement only satisfiable by someone who already knows this project: an undocumented convention, an example that does not run as shipped, a step whose prerequisite is never stated."""
+knowledge = ["docs/knowledge/instruction-file-adherence.md"]
 
 [hat.UNATTENDED-OPS]
 applies_when = 'tags contains "unattended" or tags contains "loop"'
 asks = """What does this look like at 3am with no human — what happens when its input is missing, stale, or half-written?"""
 listens_for = """A failure that pages nobody: a silent degrade, a partial write left behind, an unbounded retry, a green that is green because nothing looked."""
+knowledge = ["docs/knowledge/unattended-operation.md"]
 
 [hat.CROSS-PLATFORM]
 applies_when = 'tags contains "scripts" or tags contains "launcher" or tags contains "shell"'
 asks = """Which of Windows, macOS and Linux breaks this — path separators, line endings, console encoding, shell quoting, case sensitivity?"""
 listens_for = """A rule that is true only on the author's platform and shipped as if it were universal."""
+knowledge = ["docs/knowledge/cross-platform-scripting.md"]
 
 [hat.MAINTAINER]
 applies_when = "always"
 asks = """Can a reader two years from now tell why this exists, and what would break if they deleted it?"""
 listens_for = """A requirement whose reason lives only in the session that wrote it, leaving the next reviser unable to tell load-bearing from accident."""
+knowledge = ["docs/knowledge/instruction-file-adherence.md", "docs/knowledge/traceability-enforcement.md"]
 
 [hat.TEST-ENGINEER]
 applies_when = "always"
 asks = """What mechanical check fails if this is quietly violated — and can that check be shown to fail when it should?"""
 listens_for = """An obligation with no enforcer, or an enforcer that passes because it never actually looks at the thing it claims to check."""
+knowledge = ["docs/knowledge/traceability-enforcement.md"]
 
 [hat.UX-DESIGNER]
 applies_when = "always"
 asks = """Who reads this surface, what decision are they making on it, and does the layout put that first?"""
 listens_for = """A surface that renders every fact it has instead of the one the reader came for."""
+knowledge = ["docs/knowledge/rendered-surface-review.md"]
 
 [hat.UX-ENGINEER]
 applies_when = "always"
 asks = """Does this hold up at the real widths, themes and content volumes — and what does it do when the data is empty, huge, or malformed?"""
 listens_for = """A view verified only by reading its generator, never by looking at it rendered."""
+knowledge = ["docs/knowledge/rendered-surface-review.md"]
 
 [hat.SAFETY]
 applies_when = 'tags contains "safety"'
@@ -129,6 +137,7 @@ listens_for = """Personal data crossing a boundary with no stated basis, retenti
 applies_when = "always"
 asks = """Can someone using a keyboard, a screen reader, or a low-vision setting complete this — and is that stated as a requirement rather than hoped for?"""
 listens_for = """A surface whose acceptance names only how it looks to a sighted mouse user."""
+knowledge = ["docs/knowledge/rendered-surface-review.md"]
 
 # RULED `always` 2026-08-16, same ruling and same reason as ACCESSIBILITY: a
 # budget is a thing you declare BEFORE you find out you needed one, so the
@@ -142,6 +151,7 @@ listens_for = """A surface whose acceptance names only how it looks to a sighted
 applies_when = "always"
 asks = """Does this need a measurable performance or size bound? If yes, what is the budget, measured on what, and what happens when it is exceeded?"""
 listens_for = """A material speed or size risk left unassessed, or a declared budget with no measurement behind it."""
+knowledge = ["docs/knowledge/prompt-image-token-efficiency.md", "docs/knowledge/parallel-scheduling.md"]
 
 # RULED `always` 2026-08-16 (owner, in session), out of the provisional block
 # below it — the R-4 finding accepted as stated. The roster carried no coherence
@@ -159,6 +169,7 @@ listens_for = """A material speed or size risk left unassessed, or a declared bu
 applies_when = "always"
 asks = """Where else does this same fact, state or action already appear — and does this render it in the same words, the same vocabulary and the same idiom as that one?"""
 listens_for = """One meaning given two treatments: a status word that differs between the console and the dashboard, one concept with two colour or shape vocabularies, an interaction idiom that changes where the underlying structure does not, a rule the template states one way and the instance another."""
+knowledge = ["docs/knowledge/rendered-surface-review.md"]
 
 # RULED `always` 2026-08-17 (owner, in session), closing the provisional block:
 # *"keep both, as long as they can be opted out of downstream users I tend to
@@ -186,6 +197,7 @@ listens_for = """One meaning given two treatments: a status word that differs be
 applies_when = "always"
 asks = """If this is interrupted mid-write — a kill, a crash, a lane that dies holding it — what does the next reader find, and what gets the system back to a state it can name?"""
 listens_for = """A durable artifact updated in place with no all-or-nothing guarantee; a claim or reservation nothing can reclaim once its holder is gone; a recovery path written only for the unattended run when the same corruption is reachable attended."""
+knowledge = ["docs/knowledge/crash-atomicity-recovery.md"]
 
 # R-6 — every other charter in this roster is engineering-side. None asks whether the
 # thing being hardened is still the right thing, which is why SN-033 (the one

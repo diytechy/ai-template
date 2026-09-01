@@ -703,6 +703,21 @@ control input — was retired):
   concurrency-restructure Phase 5 — git history and the integrator's own
   refusals are the durable record). **A wrong DONE is a false green** (§4);
   a worker's exit code and committed trailers are its whole result channel.
+- **REVIEW-OWED parking** is **exit code 9** (`EXIT_REVIEW_OWED`, appended at
+  the end of the exit alphabet 2026-08-30, the stall-guard change set): the
+  build is committed but no review verdict could be drawn — every reviewer
+  route errored, hung or cooled. The dispatcher treats it like a crash, not a
+  decided outcome: the lane stays parked with its work (marker
+  `out/review-owed`) and the next cycle resumes it to draw the round, so a
+  reviewer outage never closes finished work `partial`. The reviewer ladder
+  ends same-family: when every cross-family candidate is exhausted, the draw
+  relaxes heterogeneity and RECORDS it (`-relaxed` on the verdict filename,
+  `heterogeneity: relaxed` in the session telemetry) — fresh context is the
+  invariant; family diversity is best-effort policy, and a single-family
+  roster was always "relaxed" by construction, now honestly labelled. A route
+  that failed earlier in the run must answer a 30 s `OK` liveness probe on
+  its own command template before another real session is spent on it; a
+  route with a clean history is never probed (recovery aid, not a tax).
 - **The resume-from-`status.md` prompt is retired** with the path: the
   generated `status.md` block (`gen_trajectory.py --status`) is a snapshot for
   humans, never a session's input — the hand-authored remainder stays the
@@ -1089,6 +1104,15 @@ names an **unavailable agent**, not a stuck task, and points at the fix — an
 unsupported model is repointed by hand (`--model` / the model map). Auto-fallback
 to a substitute model is deliberately **not** done: the human consented to a
 specific tier, and a silent swap could run an unlisted (unguarded) model.
+
+**A reviewer outage is not the builder's stall** (2026-08-30): the stall
+guard counts only non-committing BUILD-side sessions; failed REVIEW/CRITIQUE
+draws are counted on their own streak and bounded by the REVIEW-OWED exit
+above, never by a `partial` close of committed work. **Sessions carry two
+deadlines**: the wall (`--session-timeout` / `AGENT_SESSION_TIMEOUT`) and an
+idle deadline (`--session-idle-timeout` / `AGENT_SESSION_IDLE_TIMEOUT`,
+default 900 s; 0 disables) that kills a child this long after its LAST output
+line — a silent hang is discovered in minutes, not at the two-hour wall.
 
 **Consent is unmissable.** Unattended mode passes the agent CLI's
 permission-bypass flag. The human consents by (1) filling the launcher's
@@ -1687,13 +1711,18 @@ independent tracks meet, which task is in flight, how far along the whole is. A
   (`scripts`, `docs`, a subsystem). *Not* a "track": that word named the
   retired parallel-execution lane (this file, "Parallel tracks"; WI-210) — the
   legacy `Track` CSV header is still read as `Workstream`;
-- it **depends on** predecessor work items (`Predecessors`) — the edges of a DAG.
-  A bare id is a **hard** edge (a real technical blocker: drives readiness,
+- it **depends on** predecessors (`Predecessors`) — the edges of a DAG.
+  A bare `WI-###` is a **hard** edge (a real technical blocker: drives readiness,
   ranking, and the acyclicity rule); a `~`-prefixed id (`~WI-013`) is a **soft**
   edge (advisory ordering — must resolve, never blocks, dashed in the render);
+  and a bare `OI-###` is a **hard open-item** edge (OI-73) — the row waits until
+  that open item leaves `pending`, so an owner ruling gates it (an open item is
+  not a DAG node: no acyclicity, no ranking). The grammar widened tolerantly, so
+  a bare WI id still means exactly what it always did;
 - it moves through a **lifecycle**: `draft → queued → active → done`; `draft`
   holds thinking-in-progress (written down, not claimable), `deferred` parks
-  intentionally postponed work, `blocked` parks work on a named `BlockRef`, and
+  intentionally postponed work, `blocked` marks work parked on an external
+  dependency, and
   `cancelled` is a **terminal** won't-build row (its reason in `Deliverable`),
   as is `partial` — could not finish; scope ends here.
 
@@ -1729,9 +1758,10 @@ directory because specs in an undeclared one are skipped by every reader and so
 never enter the registry — the duplicate-id guard and the dashboard go blind to
 the id a draft is holding (the mint itself reads filenames and is safe either
 way, so the declaration makes the reservation checked, not merely possible);
-`blocked` is
-`queued/` plus a `blockref` naming what must clear (no directory — readiness is
-derived, one home per fact); and `cancelled` (WI-267, spelled `retired` until
+`blocked` has
+no directory of its own — the `blockref` mechanism that once expressed it
+retired at WI-553/OI-70, and a stopped lane now closes PARTIAL; and `cancelled`
+(WI-267, spelled `retired` until
 WI-384) is terminal — a deliberate won't-build, counted separately
 from `done`, never scheduled, its reason in the body. `partial` (SR-144) is the
 **third terminal**: the work could not finish and its scope ends there, so
@@ -1739,7 +1769,8 @@ nothing re-claims it and the remainder is carried by a new WI. An unknown status
 refuses rather than buckets.
 
 **Validation** — `check_trajectory.py`, wired as the `trajectory` gate step from
-DevStg-Tests. Every `Predecessors` id (hard or soft) resolves to a real work item and the
+DevStg-Tests. Every `Predecessors` WI id (hard or soft) resolves to a real work
+item, every `OI-###` edge to a minted open item, and the
 graph is **acyclic over its hard edges** — both **errors** (a trajectory that
 depends on itself can never start); a cycle that closes only through soft
 edges is a **warning** (conflicting ordering hints, not a blocker); every `SR-Refs` id exists in the SR registry — a **warning**, since a

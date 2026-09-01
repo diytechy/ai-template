@@ -180,6 +180,45 @@ def refs(value):
     return [t for t in re.split(r"[;,\s]+", (value or "").strip()) if t]
 
 
+#: A hard, gating open-item edge token — an `OI-###` id in a `Predecessors`
+#: cell. OI-73 widened the `needs` grammar TOLERANTLY so an open-item ruling can
+#: gate a work item's readiness the way a predecessor WI does, without any bare
+#: WI id changing meaning.
+_OI_TOKEN_RE = re.compile(r"^OI-\d+$")
+
+
+def split_pred_edges(value):
+    """Split a `Predecessors` cell into `(hard_wi, hard_oi, soft_wi)`.
+
+    The `needs` token grammar, widened TOLERANTLY by OI-73's ruling so bare WI
+    ids keep meaning exactly what they meant (no downstream registry migrates):
+
+      `WI-###`   a HARD (blocking) edge — satisfied only when that WI integrates
+                 `done`, the acyclicity rule's node set.
+      `~WI-###`  a SOFT (advisory-ordering) edge — must resolve, never blocks.
+      `OI-###`   a HARD edge on an OPEN-ITEM ruling — satisfied when that open
+                 item leaves `pending` (`schedule.hard_preds_satisfied`), the
+                 typed dependency the OI-70/OI-73 exits mint. An OI edge is hard
+                 BY RULING, so a `~` prefix on one is ignored rather than making
+                 a soft OI edge — there is no such thing. OI ids are NOT graph
+                 nodes (an open item never integrates), so they stay out of the
+                 WI hard-edge cycle set and the downstream-count walk.
+
+    Returned as three lists so every reader — the scheduler's readiness gate,
+    the validator's predecessor resolution, the dashboard — reads the same
+    partition of one cell rather than re-deriving the grammar."""
+    hard_wi, hard_oi, soft = [], [], []
+    for tok in refs(value):
+        bare = tok.lstrip("~")
+        if _OI_TOKEN_RE.match(bare):
+            hard_oi.append(bare)
+        elif tok.startswith("~"):
+            soft.append(bare)
+        else:
+            hard_wi.append(bare)
+    return hard_wi, hard_oi, soft
+
+
 # Source-file extensions stripped when normalizing a module path, so an IF
 # endpoint written with the full repo path
 # (`project-trajectory/scripts/check.py`), an LLR `Module` cell and an arch-map

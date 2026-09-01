@@ -1169,7 +1169,9 @@ def _next_work_html(root):
                 root / "docs/requirements/work-items.csv"
             )
         )
-        records = traj_parse.schedule.evaluate(wis)
+        records = traj_parse.schedule.evaluate(
+            wis, oi_status=traj_parse.schedule.load_oi_status(root)
+        )
     except (OSError, ValueError):
         return ""
     if not wis:

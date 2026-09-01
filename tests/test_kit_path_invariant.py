@@ -95,7 +95,12 @@ def _mapping_sources():
         "regex - MAPPING's shape changed; update "
         "tests/test_kit_path_invariant.py's `_mapping_sources` to match."
     )
-    pairs = re.findall(r'\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*\)', m.group(1))
+    # A MAPPING row may carry a third element (its SR-163 requirement
+    # reference) after the (source, dest) pair; the optional tail keeps this
+    # source-inventory reader tolerant of both pairs and triples.
+    pairs = re.findall(
+        r'\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*(?:,\s*"[^"]+"\s*)?\)', m.group(1)
+    )
     assert pairs, (
         "tests/test_kit_path_invariant.py parsed bootstrap.py's MAPPING as "
         "empty - the parsing regex is stale."

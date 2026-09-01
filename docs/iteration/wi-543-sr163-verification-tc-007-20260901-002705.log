@@ -1,0 +1,39 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 007
+# date: 2026-09-01 00:29
+# train: wi-543-sr163-verification-tc
+# base: b3b4efa0ed32
+# phase: REVIEW-A
+# wi: WI-543
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: a4f5ae4a..7d198a70
+# tokens:
+# cost-usd:
+# wall-secs: 137
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 3671
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:5a648547bfae
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+CHANGES-REQUESTED — recorded and committed as `7d198a70`.
+
+Finding: SR-163’s shipped-file-absent-from-inventory case silently passes because the checker only iterates `MAPPING`; it never enumerates the delivered package to detect omissions.
+
+Verdict: [007-REVIEW-A-35c7146.md](/Users/diytechy/Documents/ai-template-drive/wi-543-sr163-verification-tc/docs/reviews/wi-543-sr163-verification-tc/007-REVIEW-A-35c7146.md)
+
+The pre-existing modified WI deliverable file was left untouched.

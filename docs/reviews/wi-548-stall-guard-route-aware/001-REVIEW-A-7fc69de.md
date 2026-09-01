@@ -1,0 +1,2 @@
+- [MAJOR] project-trajectory/scripts/agent_loop.py:2965 -> C4's required fake-route regression is UNCOVERED: no changed test drives `probe_route`/`select_with_probe`, so a failing probe can regress into spending a real session on a known-bad route without a test detecting it -> add an end-to-end fake-route test proving a cooled route's non-OK/limit probe is cooled and skipped, a valid `OK` probe proceeds, and a clean route is not probed -> @owner
+VERDICT: CHANGES-REQUESTED findings=1

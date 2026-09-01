@@ -431,8 +431,21 @@ def then_closing(first_worker):
     and the same run drives it — so a stub worker that fails every call would
     stop the run at the R3 no-recursion refusal (the invariant working, but
     not these tests' subject). The second session records its judgement by
-    closing the disposition row, the way a real adjudication session ends."""
+    drafting a successor and closing the disposition row, the way a real
+    adjudication session ends — OI-73 REFUSES a partial/cancelled disposition
+    that queues no successor, so the stub drafts one to stay conformant."""
     calls = []
+    successor = """
+## Dispositions
+
+```toml
+title = "Continue the {wi} work by another route"
+workstream = "process"
+buildtier = "quick"
+```
+
+Re-land the reviewed parts.
+"""
 
     def worker(root, branch, wi_ids, args):
         calls.append((branch, tuple(wi_ids)))
@@ -441,11 +454,15 @@ def then_closing(first_worker):
         wt, err = drv.integrate.lane_worktree(root, branch)
         assert err is None, err
         for spec in sorted((wt / "docs" / "work" / "active" / branch).glob("WI-*.md")):
+            text = spec.read_text(encoding="utf-8")
+            # A `disposition`-brief adjudication row must queue a successor
+            # (OI-73). Draft one unless the row already carries a Dispositions
+            # section (a fresh mint never does).
+            if 'brief = "disposition"' in text and "\n## Dispositions\n" not in text:
+                text += successor.format(wi=wi_ids[0])
             dst = wt / "docs" / "work" / "complete" / spec.name
             dst.parent.mkdir(parents=True, exist_ok=True)
-            dst.write_text(
-                spec.read_text(encoding="utf-8"), encoding="utf-8", newline="\n"
-            )
+            dst.write_text(text, encoding="utf-8", newline="\n")
             _git(wt, "rm", "-q", "docs/work/active/{}/{}".format(branch, spec.name))
         _commit(wt, "{}: adjudicated + closed".format(";".join(wi_ids)), when=T_LATER)
         return 0
@@ -986,17 +1003,22 @@ def test_empty_frontier_rung_two_banner_derives_from_the_shared_pending_read(
 ):
     # Rung 2: census empty but a pending attestation exists — that is NOT
     # missing work. The banner's count comes from the SAME pending_block(root)
-    # read the dashboard and open-items.html share (a blocked row with a
-    # BlockRef is one card), so agent-resume and the owner surfaces can never
-    # disagree about what is blocking.
+    # read the dashboard and open-items.html share (a Drafted spine row owing an
+    # approval is one card), so agent-resume and the owner surfaces can never
+    # disagree about what is blocking. (A blocked WI carrying a BlockRef used to
+    # be that card; the blockref vocabulary retired at WI-553/OI-70, so the
+    # surviving owner_card source is the spine arm.)
     root = git_repo(tmp_path)
-    path = write_spec(root, "queued", "WI-700", slug="stuck", specref="seed.txt")
-    text = path.read_text(encoding="utf-8").replace(
-        'workstream = "ws"', 'workstream = "ws"\nblockref = "docs/log.md"'
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "system-requirements.csv").write_text(
+        "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+        "Permutations,Priority,Verification,Status,Phase,Area\n"
+        "SR-700,Waiting,SN-001,Shall wait.,Because.,Waits.,,1,Test,Drafted,,\n",
+        encoding="utf-8",
+        newline="\n",
     )
-    path.write_text(text, encoding="utf-8", newline="\n")
-    (root / "docs" / "log.md").write_text("# log\n", encoding="utf-8", newline="\n")
-    _commit(root, "file the blocked row", when=T_CODE)
+    _commit(root, "file the drafted spine row", when=T_CODE)
     worker = Recorder()
 
     rc = drv.run(root, drive_args(), worker=worker)
@@ -1020,3 +1042,25 @@ def test_plain_agent_loop_launch_enters_the_drive_mode(tmp_path, monkeypatch):
     assert proc.returncode == 0, out
     assert "queue drained" in out
     assert "no role given" not in out
+
+
+def test_a_review_owed_worker_stays_parked_and_the_next_cycle_resumes_it(
+    tmp_path, capfd
+):
+    # C2 (docs/plans/2026-08-30-stall-guard-plan.md): exit 9 is NOT a decided
+    # outcome — the lane parks with its committed work (no handback report,
+    # spec still in active/) and the next cycle resumes it; the dispatcher's
+    # own trunk-unmoved stall guard still bounds a lane that never lands its
+    # round, WITHOUT closing it partial.
+    root = parked_repo(tmp_path)
+    worker = Recorder(outcomes=(drv.ac.EXIT_REVIEW_OWED, drv.ac.EXIT_REVIEW_OWED))
+
+    rc = drv.run(root, drive_args(stall_limit=2), worker=worker)
+    assert rc == 4
+    captured = capfd.readouterr()
+    assert "REVIEW OWED" in captured.out
+    assert "STALL" in captured.err
+    assert len(worker.calls) == 2
+    assert (root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md").is_file()
+    assert not (root / "docs" / "handbacks").exists()
+    assert "wi-401" in _git(root, "branch", "--format=%(refname:short)")

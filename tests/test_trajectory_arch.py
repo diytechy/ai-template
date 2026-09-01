@@ -51,8 +51,9 @@ check_trajectory = load_script("check_trajectory")
 # now itself an integrity error), so the writers below map each line through the
 # format's own writer instead of writing a CSV.
 WI_COLUMNS = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable"
-# ...plus the SpecRef + BlockRef columns (S1) — used by the SSOT-rule tests.
-SR_WI_COLUMNS = WI_COLUMNS + ",SpecRef,BlockRef"
+# ...plus the SpecRef column (S1) — used by the SSOT-rule tests. (A BlockRef
+# column retired with the blockref vocabulary at WI-553/OI-70.)
+SR_WI_COLUMNS = WI_COLUMNS + ",SpecRef"
 
 # `active/<branch>/` is the only status two levels deep and the branch is the
 # integrator's, so a fixture writing an active row has to name one.

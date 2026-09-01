@@ -43,7 +43,7 @@ Two contracts live here:
     which **fails closed** (never scheduled) for that WI without stopping
     disjoint classified work.
 
-The optional schema columns (`Priority`, `Exclusive`, `BlockRef`, `EstTokens`,
+The optional schema columns (`Priority`, `Exclusive`, `EstTokens`,
 `SafetyClass`) are read via `DictReader`, so a legacy registry without them reads
 every value as its documented default — `Priority=0`, empty `Exclusive`,
 `SafetyClass` absent => `unclassified` (empty is never silently `ordinary`).
@@ -306,20 +306,21 @@ def load_wis(rows):
         seen.add(wid)
         if wid.endswith("-000"):
             continue
-        preds, soft = [], []
-        for p in _split_refs(r.get("Predecessors", "")):
-            (soft if p.startswith("~") else preds).append(p.lstrip("~"))
+        preds, oi_preds, soft = _kitspine.split_pred_edges(r.get("Predecessors", ""))
         wis.append(
             {
                 "id": wid,
                 "title": (r.get("Title") or "").strip(),
                 "status": (r.get("Status") or "queued").strip().lower(),
                 "preds": preds,
+                # Hard OPEN-ITEM edges (OI-73): satisfied when the OI leaves
+                # `pending`, resolved against `oi_status` rather than the WI
+                # status map — an open item is not a graph node.
+                "oi_preds": oi_preds,
                 "soft": soft,
                 "srs": _split_refs(r.get("SR-Refs", "")),
                 "priority": _int(r.get("Priority"), 0),
                 "exclusive": _split_refs(r.get("Exclusive", "")),
-                "blockref": (r.get("BlockRef") or "").strip(),
                 "est_tokens": _int(r.get("EstTokens"), 0),
                 "safetyclass": (r.get("SafetyClass") or "").strip().lower(),
                 "planmode": (r.get("PlanMode") or "").strip().lower(),
@@ -426,12 +427,43 @@ def _status(wis):
     return {w["id"]: w["status"] for w in wis}
 
 
-def hard_preds_satisfied(wi, status):
-    """Every hard predecessor is integrated `done`. An unknown predecessor id
-    (dangling edge — the validator's error) OR a `retired` predecessor (WI-267:
-    terminal, will never integrate) counts as NOT satisfied, so the scheduler
-    fails closed rather than scheduling on a broken or dead-ended graph."""
-    return all(status.get(p) == _DONE for p in wi["preds"])
+# The one open-item state that does NOT satisfy a hard OI edge (OI-73): a
+# `pending` open item is an unanswered human question, so a successor that
+# hard-depends on it stays `waiting` until the row is ruled. Any other PRESENT
+# state — `ruled` — satisfies the edge; an OI id absent from the states map
+# (never minted, the row gone, or no registry) is NOT satisfied (fails closed,
+# the validator's dangling-edge error), matching an unknown WI predecessor.
+_OI_PENDING = "pending"
+
+
+def load_oi_status(root):
+    """`{OI-###: status}` for the readiness gate, `{}` when the repo carries no
+    open-items registry (the non-adopter posture — no OI edges to resolve). A
+    thin wrapper over `trace.open_item_states`, imported lazily to keep this
+    module's import graph free of the heavier `trace` at load time."""
+    import trace as _trace
+
+    return _trace.open_item_states(Path(root)) or {}
+
+
+def _oi_satisfied(oid, oi_status):
+    """An open-item hard edge is satisfied once its row LEAVES `pending`. Absent
+    from the map (never minted, or no registry) is NOT satisfied: fail closed."""
+    return oid in oi_status and oi_status[oid] != _OI_PENDING
+
+
+def hard_preds_satisfied(wi, status, oi_status=None):
+    """Every hard predecessor is satisfied. A WI edge is satisfied only by an
+    integrated `done` predecessor; an unknown id (dangling edge — the
+    validator's error) or a `cancelled`/`partial` predecessor (WI-267: terminal,
+    will never integrate) counts as NOT satisfied. A hard OPEN-ITEM edge
+    (OI-73) is satisfied once its row leaves `pending`, read from `oi_status`.
+    The scheduler fails closed rather than scheduling on a broken or dead-ended
+    graph."""
+    oi_status = oi_status or {}
+    if not all(status.get(p) == _DONE for p in wi["preds"]):
+        return False
+    return all(_oi_satisfied(o, oi_status) for o in wi.get("oi_preds", ()))
 
 
 def _hard_children(wis):
@@ -525,25 +557,29 @@ def order_key(wi, rank, downstream, hardpath):
     return (rank, -wi["priority"], -downstream, -hardpath, wi["id"])
 
 
-def evaluate(wis, reserved=None):
+def evaluate(wis, reserved=None, oi_status=None):
     """Classify every WI and compute its readiness disposition — the one pass the
     frontier, --explain, and simulate all share. Returns a list of records dicts,
     one per WI, ordered by the deterministic key. `reserved` is an optional set of
     WI ids already claimed by a live train (excluded from the ready frontier).
+    `oi_status` is the `{OI-###: state}` map that resolves hard open-item edges
+    (OI-73); omitted (or `{}`) a WI carrying an OI edge stays `waiting`, since an
+    unresolved open item never satisfies its edge.
 
     Implements: SR-148, LLR-058, LLR-123
     """
     reserved = set(reserved or ())
+    oi_status = oi_status or {}
     status = _status(wis)
     downstream = downstream_counts(wis)
     hardpath = hard_path_lengths(wis)
-    exclusive_ready = _exclusive_conflicts(wis, status, reserved)
+    exclusive_ready = _exclusive_conflicts(wis, status, reserved, oi_status)
 
     records = []
     for w in wis:
         concurrency, rank, class_reasons = classify(w)
         disposition, reasons = _disposition(
-            w, status, reserved, concurrency, class_reasons, exclusive_ready
+            w, status, reserved, concurrency, class_reasons, exclusive_ready, oi_status
         )
         records.append(
             {
@@ -569,7 +605,7 @@ def evaluate(wis, reserved=None):
     return records
 
 
-def _exclusive_conflicts(wis, status, reserved):
+def _exclusive_conflicts(wis, status, reserved, oi_status=None):
     """`{exclusive-key: winning WI id}` — among the WIs that would otherwise be
     ready and share a non-empty `Exclusive` key, the deterministically-first one
     (by id) wins the key; the rest are exclusive-conflicting. A key held by a
@@ -599,7 +635,7 @@ def _exclusive_conflicts(wis, status, reserved):
             for w in wis
             if w["status"] == "queued"
             and w["id"] not in reserved
-            and hard_preds_satisfied(w, status)
+            and hard_preds_satisfied(w, status, oi_status)
             and is_schedulable(classify(w)[0])
         ),
         key=lambda w: w["id"],
@@ -618,30 +654,51 @@ _TERMINAL_DISPOSITION = {
     _CANCELLED: ("cancelled", "cancelled:terminal-wont-build"),
     # LLR-161: `partial` is as final as the other two — a lane stopped early and
     # said so, and the disposition row it mints decides what happens next by
-    # MINTING A SUCCESSOR, never by putting this row back on the frontier.
-    # Read FIRST in `_disposition`, ahead of the queued+blockref arm, which is
-    # the whole anti-livelock property: the old contract returned the spec to
-    # `queued/` and leaned on a `blockref` to keep the driver from claiming,
-    # handing back and re-claiming the same row forever.
+    # MINTING A SUCCESSOR, never by putting this row back on the frontier. That
+    # terminal move IS the anti-livelock property (WI-553/OI-70 retired the old
+    # `queued/`-plus-`blockref` shape, which leaned on a blockref to keep the
+    # driver from claiming, handing back and re-claiming the same row forever).
     _PARTIAL: ("partial", "partial:terminal-stopped-early"),
 }
 
 
-def _waiting_reasons(wi, status):
+def _waiting_reasons(wi, status, oi_status=None):
     """Reason codes for a WI held `waiting` on unmet hard predecessors. WI-267
-    design-decision 3: a cancelled predecessor is a DEAD hard edge — it will
-    never integrate `done`, so the WI can never become ready. It is surfaced as
-    its own reason code (the WI still just waits, never silently satisfied) so
-    the owner sees the will-never-happen dependency."""
+    design-decision 3, extended to `partial` by OI-73: a cancelled OR partial
+    predecessor is a DEAD hard edge — it is terminal and will never integrate
+    `done`, so the WI can never become ready. Each is surfaced as its own reason
+    code (the WI still just waits, never silently satisfied) so the owner sees
+    the will-never-happen dependency — and the two codes match the validator's
+    `dead_dependency_findings`, which flags exactly this pair, so the scheduler
+    and the checker never disagree on whether an edge is dead. An unmet hard
+    OPEN-ITEM edge (OI-73) is its own reason code too — a `pending` open item is
+    an unanswered human question, a waiting reason the scheduler had no
+    vocabulary for before the typed OI edge existed."""
+    oi_status = oi_status or {}
     unmet = [p for p in wi["preds"] if status.get(p) != _DONE]
-    dead = [p for p in unmet if status.get(p) == _CANCELLED]
-    reasons = ["waiting:hard-preds-not-done:%s" % ",".join(unmet)]
-    if dead:
-        reasons.insert(0, "waiting:hard-pred-cancelled:%s" % ",".join(dead))
-    return reasons
+    dead_cancelled = [p for p in unmet if status.get(p) == _CANCELLED]
+    dead_partial = [p for p in unmet if status.get(p) == _PARTIAL]
+    reasons = []
+    if unmet:
+        reasons.append("waiting:hard-preds-not-done:%s" % ",".join(unmet))
+    oi_unmet = [o for o in wi.get("oi_preds", ()) if not _oi_satisfied(o, oi_status)]
+    if oi_unmet:
+        reasons.append("waiting:open-item-pending:%s" % ",".join(oi_unmet))
+    # Insert the dead-edge codes last so they lead the list; cancelled stays
+    # ahead of partial only for a stable order, both are equally will-never-happen.
+    if dead_partial:
+        reasons.insert(0, "waiting:hard-pred-partial:%s" % ",".join(dead_partial))
+    if dead_cancelled:
+        reasons.insert(0, "waiting:hard-pred-cancelled:%s" % ",".join(dead_cancelled))
+    # A WI reaches `waiting` only because SOME hard edge is unmet; name the WI
+    # arm even when the sole unmet edge is an open item, so the code is never
+    # empty (the old single-reason form always emitted this line).
+    return reasons or ["waiting:hard-preds-not-done:"]
 
 
-def _disposition(wi, status, reserved, concurrency, class_reasons, exclusive_ready):
+def _disposition(
+    wi, status, reserved, concurrency, class_reasons, exclusive_ready, oi_status=None
+):
     """`(disposition, [reason_codes])` for one WI: ready | waiting | reserved |
     blocked | deferred | draft | done | cancelled | excluded. The reason list is
     its own codes; the classifier's reason is carried only where classification
@@ -652,12 +709,9 @@ def _disposition(wi, status, reserved, concurrency, class_reasons, exclusive_rea
     if st in _TERMINAL_DISPOSITION:
         disposition, code = _TERMINAL_DISPOSITION[st]
         return disposition, [code]
-    # `blocked` has no directory in the spec-folder registry (concurrency-
-    # restructure §2.1): a blocked item is `queued/` plus a `blockref` key, so
-    # the disposition is DERIVED here rather than read as a status. (The
-    # literal Status=blocked arm retired with the CSV home at Phase 5.)
-    if st == "queued" and wi["blockref"]:
-        return "blocked", ["excluded:blocked:%s" % wi["blockref"]]
+    # (A derived `blocked` disposition — `queued/` plus a `blockref` key — retired
+    # with the blockref vocabulary at WI-553/OI-70: nothing produces a queued-row
+    # blockref any more, so the arm read a state that could not occur.)
     if st in _NEVER_READY:
         return st, ["excluded:%s" % st]
     if st not in ("queued", "active"):
@@ -667,8 +721,8 @@ def _disposition(wi, status, reserved, concurrency, class_reasons, exclusive_rea
         return "excluded", ["excluded:unknown-status:%s" % (st or "(empty)")]
     if wi["id"] in reserved:
         return "reserved", ["reserved:claimed-by-live-train"]
-    if not hard_preds_satisfied(wi, status):
-        return "waiting", _waiting_reasons(wi, status)
+    if not hard_preds_satisfied(wi, status, oi_status):
+        return "waiting", _waiting_reasons(wi, status, oi_status)
     if not is_schedulable(concurrency):
         return "excluded", list(class_reasons) + ["excluded:unclassified-fail-closed"]
     # Exclusive-key conflict: another WI owns a key this one needs.
@@ -679,12 +733,14 @@ def _disposition(wi, status, reserved, concurrency, class_reasons, exclusive_rea
     return "ready", list(class_reasons) + ["ready"]
 
 
-def frontier(wis, reserved=None):
+def frontier(wis, reserved=None, oi_status=None):
     """The ordered ready frontier: records whose disposition is `ready`."""
-    return [r for r in evaluate(wis, reserved) if r["disposition"] == "ready"]
+    return [
+        r for r in evaluate(wis, reserved, oi_status) if r["disposition"] == "ready"
+    ]
 
 
-def simulate(wis, jobs, reserved=None):
+def simulate(wis, jobs, reserved=None, oi_status=None):
     """Greedy list-scheduling simulation over the hard DAG: each round assigns up
     to `jobs` ready WIs (in the deterministic order), marks them integrated, and
     rescans — the shape the dispatcher's dynamic refill produces. Returns a list
@@ -705,7 +761,7 @@ def simulate(wis, jobs, reserved=None):
     guard = len(work) + 1
     while guard >= 0:
         guard -= 1
-        ready = [r["id"] for r in frontier(work, reserved)]
+        ready = [r["id"] for r in frontier(work, reserved, oi_status)]
         if not ready:
             break
         assigned = ready[:jobs]
@@ -724,10 +780,11 @@ def _load(root):
 
 def _cmd_ready(args):
     wis = _load(args.root)
+    oi_status = load_oi_status(args.root)
     if args.explain:
-        records = evaluate(wis)
+        records = evaluate(wis, oi_status=oi_status)
     else:
-        records = frontier(wis)
+        records = frontier(wis, oi_status=oi_status)
     if args.format == "json":
         print(json.dumps(records, indent=2, sort_keys=True))
         return 0
@@ -758,7 +815,7 @@ def _cmd_ready(args):
 
 def _cmd_simulate(args):
     wis = _load(args.root)
-    rounds = simulate(wis, args.jobs)
+    rounds = simulate(wis, args.jobs, oi_status=load_oi_status(args.root))
     if args.format == "json":
         print(json.dumps({"jobs": args.jobs, "rounds": rounds}, indent=2))
         return 0

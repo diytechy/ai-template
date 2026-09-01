@@ -74,6 +74,12 @@ REM lane forever - the walk-away guarantee (repo-review 2026-07-21 M-18).
 REM Blank the slot to disable (engine default 0 = no timeout). Keep
 REM agent-resume.sh in sync.
 if not defined AGENT_SESSION_TIMEOUT set "AGENT_SESSION_TIMEOUT=7200"
+REM Per-session IDLE bound (seconds): a child that stops emitting output is
+REM killed this long after its last line, instead of being discovered at the
+REM wall deadline above (C3, the stall-guard plan). Blank the slot to fall
+REM through to the engine default (900); 0 disables the idle kill entirely.
+REM Keep agent-resume.sh in sync.
+if not defined AGENT_SESSION_IDLE_TIMEOUT set "AGENT_SESSION_IDLE_TIMEOUT=900"
 REM ----------------------------------------------------------------------------
 
 cd /d "%~dp0"
@@ -117,6 +123,9 @@ if defined AGENT_SESSION_TIMEOUT (
   set "TIMEOUT_ARGS=--session-timeout %AGENT_SESSION_TIMEOUT%"
 ) else (
   set "TIMEOUT_ARGS="
+)
+if defined AGENT_SESSION_IDLE_TIMEOUT (
+  set "TIMEOUT_ARGS=%TIMEOUT_ARGS% --session-idle-timeout %AGENT_SESSION_IDLE_TIMEOUT%"
 )
 REM --root . : in this repo the engine lives under project-trajectory\scripts\,
 REM so its script-relative default would resolve to the kit dir, not the repo.

@@ -8,6 +8,14 @@ archive 2026-08-22; this report's own home, `docs/handbacks/`, did not move);
 the integrator merges the branch like any other; `intake._close_drafts` mints
 the disposition row that judges it.
 
+**This partial close is the ONLY sanctioned stop (OI-70).** A lane that stops
+for the owner is not HELD — there is no held state, and parking a lane by
+renaming its branch ref away from its `docs/work/active/<branch>/` claim is
+BANNED: a lane must close or it gets lost, as the wi508 hold nearly was.
+`check_trajectory` reports any active claim with no matching branch ref, and the
+adjudicator's exits after the close are exactly two — a queued successor WI, or
+a minted open item — never a third, never silent.
+
 **The file IS the event's identity.** That is the whole design, and it is what
 dissolved a defect class rather than mitigating it: five successive dedup
 mechanisms had tried to answer *"is a judgement still owed for THIS close?"* by

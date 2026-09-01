@@ -43,16 +43,16 @@ just left the frontier an agent scans to find what is still open.
 
 Three consequences worth stating, because they are the reason for the shape:
 
-- **`blocked` has no directory.** A blocked item is `queued/` plus a `blockref`
-  frontmatter key naming the reason, so a second encoding of "not now" would be
-  a second home for one fact. The scheduler derives `blocked` from the key's
-  **presence** — it never consults the state of what the key names, so ruling
-  an open item or closing a blocking WI does not, by itself, return the row to
-  the frontier. What releases a park: a handed-back row is disposed by the
-  dispatcher's handback-intake arm, which mints the disposition row when the
-  handback merge lands (loop machinery, never another work item); any other
-  park is released by editing the row — deleting the `blockref` — in a
-  reviewed commit.
+- **A stopped lane closes; it does not park.** There is no held state and no
+  `blocked/` directory. A lane that cannot finish CLOSES PARTIAL — its spec
+  moves to the terminal `partial/` with an immutable handback report — and the
+  adjudicator judges that handback, queueing a successor or minting an open
+  item. Parking a lane by renaming its branch ref is BANNED (OI-70): a lane
+  must close or it gets lost, and the harness reports any `active/<branch>/`
+  claim with no matching branch ref. (`blocked` survives as a status WORD in
+  the vocabulary, but the `blockref` mechanism that once minted it — a `queued/`
+  spec carrying a key the scheduler read — retired with that vocabulary at
+  WI-553/OI-70, so nothing mints it now.)
 - **`cancelled` is a move, never a deletion.** A terminal won't-build record
   that stays in the registry forever with its reason in this body. It gets its
   OWN directory rather than sharing one with `done`, because a folder holding
@@ -94,7 +94,7 @@ a wall of `= ""`.
   positive integer or `inf`, and `move-on` or `block`. Absent keeps the global
   default plus `move-on`.
 - `priority` (integer, default 0), `exclusive` (semantic mutex keys),
-  `blockref`, `est_tokens`, `safety_class`
+  `est_tokens`, `safety_class`
   (`ordinary|spine|gate|attestation|protected|high-risk|adjudication`) and `planmode`
   (`dual` opts into dual-plan decomposition) are the scheduler's optional
   inputs. `safety_class` **fails closed**: absent reads as `unclassified` and is

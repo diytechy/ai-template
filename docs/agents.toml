@@ -60,24 +60,24 @@ family = "OPENAI"
 model = "gpt-5.6-sol"
 version = "5.6"
 tier = "strong"
-cmd_template = "codex exec --model {model} --dangerously-bypass-approvals-and-sandbox"
-notes = """GPT-5.6 flagship (Sol) - the strong-tier cross-family draw (its WI-160 preferred-BUILD pin was retired by the owner directive 2026-07-19: Anthropic leads BUILD per tier); provider CLI (codex) replaces opencode for the OPENAI family (WI-160); install: npm i -g @openai/codex; sign in: codex login"""
+cmd_template = "codex exec -c model_reasoning_effort=medium --model {model} --dangerously-bypass-approvals-and-sandbox"
+notes = """GPT-5.6 flagship (Sol) - the strong-tier cross-family draw (its WI-160 preferred-BUILD pin was retired by the owner directive 2026-07-19: Anthropic leads BUILD per tier); provider CLI (codex) replaces opencode for the OPENAI family (WI-160); install: npm i -g @openai/codex; sign in: codex login. Owner directive 2026-09-01: -c model_reasoning_effort=medium pinned on ALL three codex rows (codex 0.145.0 has no --effort flag; the -c override is the only CLI dial). Before this, Sol and Luna silently inherited model_reasoning_effort=\"xhigh\" from this box's ~/.codex/config.toml, so the WI-548 C7 Terra experiment compared medium against xhigh, not a provider default"""
 
 [agent.OPENAI-TERRA]
 family = "OPENAI"
 model = "gpt-5.6-terra"
 version = "5.6"
 tier = "medium"
-cmd_template = "codex exec --model {model} --dangerously-bypass-approvals-and-sandbox"
-notes = """GPT-5.6 balanced (Terra) - the cross-family review leg; provider CLI (codex) replaces opencode (WI-160); install: npm i -g @openai/codex; sign in: codex login"""
+cmd_template = "codex exec -c model_reasoning_effort=medium --model {model} --dangerously-bypass-approvals-and-sandbox"
+notes = """GPT-5.6 balanced (Terra) - the cross-family review leg; provider CLI (codex) replaces opencode (WI-160); install: npm i -g @openai/codex; sign in: codex login. C7 EXPERIMENT (2026-08-30, WI-548): -c model_reasoning_effort=medium pins the review leg's reasoning effort (codex has no env dial; CmdTemplate is the declared home) - measure round wall + the codex `tokens used` line against the ~10-min unpinned rounds of 2026-08-30 and keep or revert on the numbers. KEPT and generalised by the owner directive 2026-09-01: all three codex rows carry the same medium pin (see OPENAI-SOL notes for the config-inheritance caveat)"""
 
 [agent.OPENAI-LUNA]
 family = "OPENAI"
 model = "gpt-5.6-luna"
 version = "5.6"
 tier = "quick"
-cmd_template = "codex exec --model {model} --dangerously-bypass-approvals-and-sandbox"
-notes = """GPT-5.6 fast/affordable (Luna); provider CLI (codex) replaces opencode (WI-160); install: npm i -g @openai/codex; sign in: codex login"""
+cmd_template = "codex exec -c model_reasoning_effort=medium --model {model} --dangerously-bypass-approvals-and-sandbox"
+notes = """GPT-5.6 fast/affordable (Luna); provider CLI (codex) replaces opencode (WI-160); install: npm i -g @openai/codex; sign in: codex login. Owner directive 2026-09-01: -c model_reasoning_effort=medium pinned (see OPENAI-SOL notes)"""
 
 # OPENCODE family (owner directive 2026-07-19): Kimi K3 + Grok 4.6 via the OpenCode CLI (opencode.ai / sst-opencode - the ACTIVE mid-2026 project; NOT the legacy opencode-ai Go TUI). ENABLED 2026-07-19 (both ids in docs/agents-enabled) after the three enablement gates all passed: CLI installed, STDIN contract verified, auth live. Web-verified 2026-07-19 (opus research session): both models GA 2026-07-16. PATHWAY-TESTED 2026-07-19 on the installed CLI (1.17.18): STDIN prompt delivery VERIFIED by differential probe (piped stdin proceeds to session start; empty stdin errors "must provide a message" - the WI-216/217 contract holds, templates stay {prompt}-free); --auto exists as a GLOBAL flag (not under run --help; --dangerously-skip-permissions does NOT exist on this build); the models catalog is AUTH-GATED so the kimi/grok slugs below remain research-sourced until keys exist. AUTH VERIFIED 2026-07-19 (owner ran `opencode auth login`, provider = the OpenCode Go gateway): live one-token probes returned PONG from BOTH models via piped stdin - auth, slug, stdin CONTENT fidelity, and clean final-text-only stdout all confirmed end-to-end; Model cells use the auth-unlocked catalog slugs (opencode-go/...). The OpenAI oauth credential in opencode remains invalidated (unused - OPENAI routes via codex). NOTE: in this CLI `-p` is the basic-auth PASSWORD, not the prompt. Tier slots follow routing intent (Opus-at-medium precedent): KIMI=strong (the owner's judge/CRITIQUE draw), GROK=medium (reviewer pool leg).
 
@@ -92,8 +92,8 @@ notes = """Kimi K3 (Moonshot; GA 2026-07-16; frontier-class per Artificial Analy
 [agent.OPENCODE-GROK]
 family = "OPENCODE"
 model = "opencode-go/grok-4.6"
-version = "4.5"
+version = "4.6"
 tier = "medium"
 cmd_template = "opencode run --dir . -m {model} --auto"
-notes = """Grok 4.5 (xAI; GA 2026-07-16; frontier-class - slotted medium as the reviewer-pool leg per owner intent + Opus-at-medium precedent) - cross-family review leg 3; install: curl -fsSL https://opencode.ai/install | bash; sign in: opencode auth login with XAI_API_KEY (x.ai console; OpenAI-compatible) or OpenRouter (catalog slug confirmed post-auth); pathway FULLY verified 2026-07-19 (live PONG via stdin) - ENABLED, see family comment"""
+notes = """Grok 4.6 (xAI; GA 2026-07-16; frontier-class - slotted medium as the reviewer-pool leg per owner intent + Opus-at-medium precedent) - cross-family review leg 3; install: curl -fsSL https://opencode.ai/install | bash; sign in: opencode auth login with XAI_API_KEY (x.ai console; OpenAI-compatible) or OpenRouter (catalog slug confirmed post-auth); pathway FULLY verified 2026-07-19 (live PONG via stdin) - ENABLED, see family comment"""
 

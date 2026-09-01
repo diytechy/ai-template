@@ -55,6 +55,7 @@ Contracts (interfaces): IF-015
 | `--tier-map` | per-phase tier map "BUILD=medium,PLAN=strong" (strong\|medium\|quick; legacy `weak` reads as quick) used by the docs/agents.toml router when the enable-list is present; falls back to the built-in phase->tier defaults (default: AGENT_TIER_MAP env var) |
 | `--prefer-map` | per-phase within-tier preference map "BUILD=OPENAI-SOL"; the preferred id is tried before docs/agents-enabled order without changing tier, and unknown/cooling ids fall through (default: AGENT_PREFER_MAP env var) |
 | `--session-timeout` | per-session timeout in seconds so a hung session can't wedge the loop (0 = none) |
+| `--session-idle-timeout` | kill a session this many seconds after its LAST output line (C3, the stall-guard plan; default: the AGENT_SESSION_IDLE_TIMEOUT env slot, else 900; 0 disables) — --session-timeout stays the outer wall bound |
 | `--pause` | seconds between sessions (default 10) |
 | `--no-session-echo` | silence the live echo of session output on the coordinator console (WI-125; the full stream is still captured to the session log and out/run-logs either way) |
 | `--live-status` | upgrade the scrolling session echo to one in-place status line per workstream (WI-136) — only when stdout is a TTY (a pipe / CI log keeps the append-only scroll); also enabled by docs/process.toml [checks] live_status = true. Overridden by --no-session-echo. |
@@ -112,6 +113,19 @@ Contracts (interfaces): IF-013, IF-040, IF-144
 | `--strict` | with --staged-divergence: exit 1 on a divergent artifact instead of warning. The ruled promotion path (OI-31: error 'once it has run clean for a program'); the step itself does NOT pass it today |
 | `--approval-immutable` | run ONLY the re-attestation-brief immutability enforcer and exit (WI-503): refuse a STAGED change (other than a plain add) to an existing docs/ratify/<date>-*.md. Fail-closed by default — no --strict, no warn mode. This is the self-invoked body of the 'approval-immutable' step, not a separate contract |
 | `--jobs` | run the plan's steps concurrently on N workers (0 = one per step); every step is read-only or writes a distinct artifact, except the two trace.py steps, which share a lane. Default 1: sequential, with each step's output streamed live exactly as before |
+
+### `scripts/check_complexity`
+_check_complexity.py — the stdlib cognitive-complexity + SLOC census._
+
+| Option | Help |
+|---|---|
+| `--root` | repo root (default: cwd) |
+| `--mode` |  |
+| `--report` | alias for --mode report |
+| `--restamp` | rewrite the baseline |
+| `--threshold` |  |
+| `--include` |  |
+| `--baseline` |  |
 
 ### `scripts/check_coverage`
 _Per-module coverage floors: stop the global floor hiding weak high-risk modules._
@@ -228,7 +242,7 @@ Contracts (interfaces): IF-006
 
 ### `scripts/check_trajectory`
 _Validate the work-item registry — stdlib only._
-Contracts (interfaces): IF-009, IF-056, IF-082, IF-083, IF-084, IF-138
+Contracts (interfaces): IF-009, IF-056, IF-082, IF-083, IF-084
 
 | Option | Help |
 |---|---|
@@ -286,7 +300,8 @@ Contracts (interfaces): IF-010, IF-028, IF-117, IF-131, IF-132, IF-150
 | `--check` | do not write; exit 1 if any target is stale |
 | `--strict-parse` | exit 1 if any scanned module fails to parse |
 | `--backlink-coverage` | REPORT MODE (writes nothing, needs no --doc): what share of live LLR rows is named by a literal `Implements:` declaration under --src. The bar is docs/process.toml [checks] backlink_coverage_min |
-| `--root` | repo root holding docs/process.toml and the LLR registry (--backlink-coverage only; default: .) |
+| `--mapping-purpose` | REPORT MODE (writes nothing, needs no --doc): grade the shipped-file inventory (bootstrap.MAPPING) for SR-163 — each entry maps through a requirement reference to a live stakeholder need, its destination exists, and no declared exclusion is stale. Warn-first: exits 1 only on a gate-class finding (missing file / stale exclusion); unmapped and unresolved rows are reported but never gate (the burn-down) |
+| `--root` | repo root holding docs/process.toml, the LLR registry, the SR/SN spine, and docs/declared-absences (--backlink-coverage / --mapping-purpose; default: .) |
 | `--backlink-ext` | source extension the back-link scan reads (repeatable; REPLACES the default list, which is _MODULE_EXTS plus the wider source families — see BACKLINK_EXTS) |
 | `--strict-backlinks` | exit 1 when back-link coverage is below the declared minimum (warn-first without it; vacuous while the minimum is 0) |
 

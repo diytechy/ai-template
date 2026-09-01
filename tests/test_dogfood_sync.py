@@ -703,7 +703,7 @@ def _mapping_unaccounted():
     itself — that copy would be the drift this module exists to prevent)."""
     bootstrap = load_script("bootstrap")
     out = []
-    for src, dst in bootstrap.MAPPING:
+    for src, dst, *_ref in bootstrap.MAPPING:
         if (ROOT / dst).exists():
             continue
         if dst.startswith("scripts/") and (ROOT / "project-trajectory" / src).exists():
@@ -757,13 +757,13 @@ def test_the_lifecycle_rows_carry_the_marker():
 def test_bite_scaffold_walk_catches_an_undeclared_absence():
     # Bite-proof: drop a declared omission and the walk must flag its dest.
     bootstrap = load_script("bootstrap")
-    dests = {d for _, d in bootstrap.MAPPING}
+    dests = {row[1] for row in bootstrap.MAPPING}
     assert "docs/plan.md" in dests  # the walk actually covers the probe entry
     without = dict(SCAFFOLD_OMISSIONS)
     del without["docs/plan.md"]
     missing = [
         d
-        for _, d in bootstrap.MAPPING
+        for _, d, *_ref in bootstrap.MAPPING
         if not (ROOT / d).exists()
         and not (d.startswith("scripts/"))
         and d not in without

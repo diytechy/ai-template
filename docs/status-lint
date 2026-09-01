@@ -1,0 +1,8 @@
+# docs/status-lint — the declared S-1 line budget for docs/status.md
+# (check_docs.py: int budget, "off", or absent => the shipped default 120).
+#
+# Raised 2026-08-31 at the owner's request: status.md carries the embedded
+# supervisor prompt for unattended-run resumes (RESUME HERE), which the owner
+# asked to live on this surface. Ruling record:
+# docs/log.d/2026-08-31-owner-rulings-oi70-71-72.md (compiled into log.md).
+160

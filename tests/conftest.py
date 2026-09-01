@@ -157,6 +157,7 @@ SLOW_MODULES = frozenset(
         "test_trajectory_staged",  # --staged git-effect + git-time recovery
         "test_trajectory_arch",  # decision over architecture inputs
         "test_trajectory_specs",  # decision over spec bodies
+        "test_trajectory_holdban",  # WI-553 hold-by-rename detector on git scaffolds
         "test_components_registry",  # components gate on scaffolds
         "test_spine_rules",  # spine_rules on scaffolds
         # WI-498 slice 1: the same module, the same cost class — every test in it
@@ -249,6 +250,21 @@ SLOW_MODULES = frozenset(
         # Nothing here is deleted or weakened: all five still run in full at
         # slice/phase close and in CI. Re-stamped seconds/max-tests together
         # below with the reason (docs/log.d/2026-08-23-wi496-smoke-retier.md).
+        # WI-537: the complexity census's CLI drives. Each of the 8 cases spawns
+        # check_complexity.py as a subprocess against a synthetic scaffold, so it
+        # is the same interpreter-startup-dominated class as the sibling
+        # subprocess suites above — measured ~5 s for the module. The METRIC
+        # itself is pinned in-process in test_check_complexity.py, which stays in
+        # the commit bar; only the subprocess CLI half is re-tiered here.
+        "test_check_complexity_cli",  # check_complexity.py driven as a subprocess
+        # WI-543 rework (REVIEW-A): the SR-163 mapping-purpose checker's CLI
+        # drives. Each case spawns gen_arch_map.py --mapping-purpose as a
+        # subprocess (real interpreter startup) to prove the delivered command is
+        # wired end-to-end; the METRIC and the four finding classes are pinned
+        # in-process in test_mapping_purpose.py, which stays in the commit bar —
+        # only the subprocess half is re-tiered here, the test_check_complexity_cli
+        # split's precedent.
+        "test_mapping_purpose_cli",  # gen_arch_map --mapping-purpose as a subprocess
     }
 )
 
@@ -713,10 +729,10 @@ def run_py(args, cwd):
 # real variants are parameters, not copies:
 #   - `sr`: each suite tags its rows with the SR it verifies (SR-060..SR-065);
 #   - `columns`: the registry SHAPES the suites exercise are prefixes of one
-#     canonical column list — worker's 9 (a registry predating SafetyClass),
-#     the four dispatcher-era suites' 10, and integrate's 11 (+BlockRef, the
-#     column the integrator adopts). Slicing one list is what makes them
-#     provably prefixes rather than three hand-kept constants.
+#     canonical column list — worker's 9 (a registry predating SafetyClass) and
+#     the dispatcher/integrate suites' 10. Slicing one list is what makes them
+#     provably prefixes rather than hand-kept constants. (A former 11th column
+#     +BlockRef retired with the blockref vocabulary at WI-553/OI-70.)
 # Each suite keeps its own module-level `HEADER`/`_wi_row`/`_write_registry`
 # name bound to a partial of these, so its ~250 call sites read unchanged.
 
@@ -731,7 +747,6 @@ WI_REGISTRY_COLUMNS = [
     "SpecRef",
     "BuildTier",
     "SafetyClass",
-    "BlockRef",
 ]
 
 

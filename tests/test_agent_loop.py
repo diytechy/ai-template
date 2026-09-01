@@ -1620,6 +1620,62 @@ def test_read_csv_rows_tolerates_a_bom(tmp_path):
     assert rows[0]["Title"] == "two\nline title"  # quoted newline survives
 
 
+def test_session_log_header_carries_no_trailing_whitespace(tmp_path):
+    # An empty header value used to render as `# guardrails: ` — a trailing
+    # space in a TRACKED file, so every reviewer running `git diff --check`
+    # over a lane range flagged the loop's own telemetry (three lanes in a
+    # row on 2026-08-30). The header line is right-stripped.
+    ac = load_script("agent_common")
+    meta = {"session": "007", "stamp": "test", "guardrails": "", "commits": ""}
+    path = ac.write_session_log(tmp_path, meta, "transcript\n")
+    text = path.read_text(encoding="utf-8")
+    for line in text.splitlines():
+        if line.startswith("# "):
+            assert line == line.rstrip(), repr(line)
+    assert "# guardrails:\n" in text
+
+
+def test_session_log_header_carries_the_wi535_context_columns(tmp_path):
+    ac = load_script("agent_common")
+    meta = {
+        "session": "007",
+        "stamp": "test",
+        "session-id": "cc77a65f-c2f7-4779-bd42-0be7e188a717",
+        "context-used": 232598,
+        "context-window": 1000000,
+        "context-pct": 23,
+    }
+    path = ac.write_session_log(tmp_path, meta, "transcript\n")
+    text = path.read_text(encoding="utf-8")
+    assert "# session-id: cc77a65f-c2f7-4779-bd42-0be7e188a717\n" in text
+    assert "# context-used: 232598\n" in text
+    assert "# context-window: 1000000\n" in text
+    assert "# context-pct: 23\n" in text
+    meta_back = ac.read_log_meta(path)
+    assert meta_back["context-pct"] == "23"
+
+
+def test_regenerate_index_renders_the_ctx_pct_column(tmp_path):
+    ac = load_script("agent_common")
+    docs = tmp_path / "docs"
+    (docs / "iteration").mkdir(parents=True)
+    ac.write_session_log(
+        docs / "iteration",
+        {"session": "007", "stamp": "test", "context-pct": 23},
+        "transcript\n",
+    )
+    ac.write_session_log(
+        docs / "iteration",
+        {"session": "008", "stamp": "test", "context-pct": ""},
+        "transcript\n",
+    )
+    ac.regenerate_index(docs)
+    text = (docs / "iteration_index.md").read_text(encoding="utf-8")
+    assert "| Ctx % |" in text
+    assert "| 23% |" in text
+    assert "| — |" in text  # the blank row still renders a placeholder, not ""
+
+
 def test_session_log_redacts_credential_shapes(tmp_path):
     # M-19: session transcripts are committed to tracked history; well-known
     # credential shapes must not land there verbatim (a CLI auth error echoing

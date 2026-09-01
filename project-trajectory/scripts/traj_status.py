@@ -53,11 +53,11 @@ from traj_parse import cmp_rows, spine_stats
 # The former private names are kept as aliases rather than updated at their call
 # sites: the facade re-exports them, the dashboard's own tests name them, and a
 # rename would have cost this slice the byte-identical-behaviour contract it is
-# held to for no layering gain. `_SR_REL`, `PAUSE_MALFORMED` and the three
-# sources are all `pending`'s now.
+# held to for no layering gain. `_SR_REL`, `PAUSE_MALFORMED` and the two
+# surviving sources are all `pending`'s now. (`_blocked_pending` retired with the
+# blockref vocabulary at WI-553/OI-70 — its queued-row source had zero producers.)
 from pending import (  # noqa: F401
     PAUSE_MALFORMED,
-    blocked_pending as _blocked_pending,
     pause_pending as _pause_pending,
     pending_block,
     spine_pending as _spine_pending,
@@ -365,8 +365,12 @@ def _frontier_lines(root):
             root / "docs/requirements/work-items.csv"
         )
         wis = traj_parse.schedule.load_wis(rows)
-        # reserved=None -> pure registry frontier
-        ready = traj_parse.schedule.frontier(wis)
+        # reserved=None -> pure registry frontier; oi_status resolves hard
+        # open-item edges (OI-73) so a WI gated on a ruled OI is not shown
+        # forever waiting.
+        ready = traj_parse.schedule.frontier(
+            wis, oi_status=traj_parse.schedule.load_oi_status(root)
+        )
     except (OSError, ValueError):
         return []
     if not ready:

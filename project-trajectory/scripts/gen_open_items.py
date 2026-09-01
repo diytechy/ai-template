@@ -549,6 +549,76 @@ ROW_STATE_TAGS = {
 }
 
 
+def _changed_cell_groups(row):
+    """The `(label, cells)` groups a `changed` row's cells render under.
+
+    TWO GROUPS, §A5.1 (D-9 step 4). An APPROVED cell that moved owes an
+    attestation; a TRACED one routes to adjudication and arms no window (the
+    WI-388 ruling). Rendering them in one undifferentiated list asked the owner
+    to make that judgement per cell, from memory, mid-sitting — and the snapshot
+    comparison hands the split over for free.
+
+    A `Drafted` row was never approved, so no cell of it "owes a re-attestation"
+    and none "routes to adjudication" — the whole row owes a FIRST approval,
+    which the row tag already states. The §A5.1 split is a property of an
+    approved row; keyed on the cell's COLUMN class alone it mislabelled a
+    Drafted row's approved-class cells (OI-71 defect 1, the wi508 round-019
+    finding). For a Drafted row the cells collapse to ONE unlabelled group, so
+    this HTML view and the `--approve modified` markdown brief agree (IF-074)."""
+    if row.get("drafted"):
+        return [(None, row["cells"])]
+    approved = row.get("approved") or frozenset()
+    return [
+        (
+            "approved — re-attestation owed",
+            [c for c in row["cells"] if c[0] in approved],
+        ),
+        (
+            "traced — routes to adjudication",
+            [c for c in row["cells"] if c[0] not in approved],
+        ),
+    ]
+
+
+def _changed_cell_lines(row):
+    """The inner HTML for a `changed` row: its per-cell word-diff under the
+    §A5.1 group headings, then the unchanged rest of the row as context.
+
+    Split out of `_chain_row` so its own branch count stays under the C901
+    ratchet — decomposition rather than a baseline bump, the escape the ratchet
+    exists to force (the same move that first split `_chain_row` off
+    `_attestation_cards`). The group heading appears only when BOTH groups are
+    present; a lone heading over the only group is noise (and a Drafted row's
+    single collapsed group never shows one)."""
+    groups = _changed_cell_groups(row)
+    both = all(cells for _label, cells in groups)
+    inner = []
+    for label, cells in groups:
+        if not cells:
+            continue
+        if both and label:
+            inner.append('<div class="cellgroup">{}</div>'.format(esc(label)))
+        for name, before, after in cells:
+            inner.append(
+                '<div class="cellname">{n} <span class="pill">{p}% of the '
+                'words changed</span></div><div class="diff">{d}</div>'.format(
+                    n=esc(name),
+                    p=changed_percent(before, after),
+                    d=word_diff(before, after),
+                )
+            )
+    inner.append(
+        _context_block(
+            row["full"],
+            skip={name for name, _, _ in row["cells"]},
+            heading="the rest of this {} — unchanged since the snapshot".format(
+                row["kind"]
+            ),
+        )
+    )
+    return inner
+
+
 def _chain_row(row):
     """One chain row of a section: its per-cell diff where the baseline has a
     before, its whole current content where it does not.
@@ -558,48 +628,7 @@ def _chain_row(row):
     bump, which is the escape the ratchet exists to force."""
     inner = []
     if row["state"] == "changed":
-        # TWO GROUPS, §A5.1 (D-9 step 4). An APPROVED cell that moved owes an
-        # attestation; a TRACED one routes to adjudication and arms no window
-        # (the WI-388 ruling). Rendering them in one undifferentiated list asked
-        # the owner to make that judgement per cell, from memory, mid-sitting —
-        # and the snapshot comparison hands the split over for free. The heading
-        # appears only when both groups are present; a lone heading over the
-        # only group is noise.
-        approved = row.get("approved") or frozenset()
-        groups = [
-            (
-                "approved — re-attestation owed",
-                [c for c in row["cells"] if c[0] in approved],
-            ),
-            (
-                "traced — routes to adjudication",
-                [c for c in row["cells"] if c[0] not in approved],
-            ),
-        ]
-        both = all(cells for _label, cells in groups)
-        for label, cells in groups:
-            if not cells:
-                continue
-            if both:
-                inner.append('<div class="cellgroup">{}</div>'.format(esc(label)))
-            for name, before, after in cells:
-                inner.append(
-                    '<div class="cellname">{n} <span class="pill">{p}% of the '
-                    'words changed</span></div><div class="diff">{d}</div>'.format(
-                        n=esc(name),
-                        p=changed_percent(before, after),
-                        d=word_diff(before, after),
-                    )
-                )
-        inner.append(
-            _context_block(
-                row["full"],
-                skip={name for name, _, _ in row["cells"]},
-                heading="the rest of this {} — unchanged since the snapshot".format(
-                    row["kind"]
-                ),
-            )
-        )
+        inner = _changed_cell_lines(row)
     else:
         if row["state"] == "drafted":
             # Same wording the pre-widening EMPTY-entry branch used for this
@@ -1062,6 +1091,67 @@ def fragment_scope_findings(root):
     return out
 
 
+def _scope_span(text, sections, scope):
+    """The text a declaration's scope speaks for: a `### ` section's own span
+    (its heading to the next `### `, or EOF) when the declaration stands inside
+    one, else the WHOLE fragment for a file-level declaration (`scope is None`).
+    Fail-soft: an unresolvable scope name judges the whole file rather than
+    nothing, the same direction every arm here leans."""
+    if scope is None:
+        return text
+    starts = [start for start, head in sections if head == scope]
+    if not starts:
+        return text
+    start = starts[0]
+    later = [s for s, _h in sections if s > start]
+    return text[start : (later[0] if later else len(text))]
+
+
+def _none_declaration_findings(root, pending):
+    """ARM 4 (WI-553, OI-70): a fragment declaring `none` deferred while its own
+    SCOPE cites a PENDING open item is CONTRADICTED. This is the exact weakness
+    OI-70 named — `gen_open_items --check` verified a fragment DECLARES its
+    deferrals, never that the declaration is TRUE, so a sitting could honestly
+    write `none` while holding a lane for the owner and nothing contradicted it.
+
+    POSITION IS SCOPE, as ARM 2 already reads it: a section-scoped `none` is
+    judged against the pending ids cited in THAT section, a file-level one
+    against the whole fragment. Warn-first like the rest of ARM 2/3, and
+    fail-soft in two directions — only PENDING citations contradict (a ruled or
+    absent id a `none` fragment mentions is history, not a held decision), and a
+    session that declares `none` and cites nothing pending passes clean. It
+    reaches exactly the honest-`none`-over-a-held-lane case, and no other."""
+    if not pending:
+        return []
+    out = []
+    for path in sorted(Path(root).joinpath(LOG_D_REL).glob("*.md")):
+        rel = "{}/{}".format(LOG_D_REL, path.name)
+        decls = [
+            d for d in fragment_declarations(root) if d["file"] == rel and d["none"]
+        ]
+        if not decls:
+            continue
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        sections = [(m.start(), m.group(1).strip()) for m in _SECTION_RE.finditer(text)]
+        for d in decls:
+            cited = sorted(
+                set(_OI_IN_TEXT_RE.findall(_scope_span(text, sections, d["scope"])))
+                & pending
+            )
+            if not cited:
+                continue
+            where = (
+                "its `{}` section".format(d["scope"]) if d["scope"] else "this fragment"
+            )
+            out.append(
+                "{}:{} declares `none` deferred, but {} cites pending {} — a "
+                "`none` that names a still-open decision is contradicted: defer "
+                "the row (name the id) or say why it is not this session's to "
+                "carry".format(d["file"], d["line"], where, ", ".join(cited))
+            )
+    return out
+
+
 def _entry_groups(entries):
     """Allow entries grouped by the `OI-###` they name, for a finding that NAMES
     them without printing one line per entry (16 of this repo's 17 name one row).
@@ -1074,11 +1164,18 @@ def _entry_groups(entries):
 
 
 def deferral_findings(root, states=None):
-    """ARM 2 + ARM 3 of OI-41 as printable lines — warn-first, never the exit code.
+    """ARM 2 + ARM 3 (OI-41) + ARM 4 (OI-70) as printable lines — warn-first,
+    never the exit code.
 
     ARM 2: every id a fragment declares deferred must name a PENDING row (an id
     with no row, or a row already ruled, is a declaration that resolves to
     nothing).
+
+    ARM 4 (WI-553): the reverse of ARM 2's presence check — a fragment declaring
+    `none` deferred while its own scope cites a PENDING open item is
+    contradicted, the TRUTH check OI-70 named (`--check` verified a fragment
+    DECLARES its deferrals, never that a `none` was true). See
+    `_none_declaration_findings`.
 
     ARM 3, the vacuity check RE-AIMED so it names something: a pending count of
     ZERO while the declared-exception surface still carries entries is a
@@ -1131,6 +1228,9 @@ def deferral_findings(root, states=None):
                         d["file"], d["line"], oid, states[oid] or "(no status)"
                     )
                 )
+    # ARM 4 (WI-553): a `none` declaration contradicted by a pending citation in
+    # its own scope — the TRUTH check OI-70 named, beside ARM 2's presence check.
+    out.extend(_none_declaration_findings(root, set(pending)))
     if pending:
         return out
     entries = tr.parse_provenance_allow(root)

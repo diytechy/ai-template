@@ -101,7 +101,7 @@ def test_the_pack_is_not_scaffolded_and_that_is_the_ruling():
     contents row and the pack's own header both say so.
     """
     bootstrap = load_script("bootstrap")
-    srcs = {src for src, _ in bootstrap.MAPPING}
+    srcs = {row[0] for row in bootstrap.MAPPING}
     assert "RESYNC_PACK.md" not in srcs, (
         "RESYNC_PACK.md became a scaffold destination — a copy frozen at the "
         "adopter's adoption commit cannot carry the entries added since, which "
