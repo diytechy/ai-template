@@ -1,0 +1,6 @@
+# agent-review scoreboard (advisory; the declared win-stay/lose-shift
+# policy picks the next routing - nothing here auto-optimizes). Written
+# by score_reviews.py. Per-provider decayed substance + the round history
+# the escalation policy (agent_route.escalate) reads.
+provider OPENAI substance=0.6667 rounds=1
+round 1 verdict=CHANGES-REQUESTED tier=strong margin=0 primary= tripwire=0 contradiction=0
