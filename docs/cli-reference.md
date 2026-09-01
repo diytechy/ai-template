@@ -300,7 +300,8 @@ Contracts (interfaces): IF-010, IF-028, IF-117, IF-131, IF-132, IF-150
 | `--check` | do not write; exit 1 if any target is stale |
 | `--strict-parse` | exit 1 if any scanned module fails to parse |
 | `--backlink-coverage` | REPORT MODE (writes nothing, needs no --doc): what share of live LLR rows is named by a literal `Implements:` declaration under --src. The bar is docs/process.toml [checks] backlink_coverage_min |
-| `--root` | repo root holding docs/process.toml and the LLR registry (--backlink-coverage only; default: .) |
+| `--mapping-purpose` | REPORT MODE (writes nothing, needs no --doc): grade the shipped-file inventory (bootstrap.MAPPING) for SR-163 — each entry maps through a requirement reference to a live stakeholder need, its destination exists, and no declared exclusion is stale. Warn-first: exits 1 only on a gate-class finding (missing file / stale exclusion); unmapped and unresolved rows are reported but never gate (the burn-down) |
+| `--root` | repo root holding docs/process.toml, the LLR registry, the SR/SN spine, and docs/declared-absences (--backlink-coverage / --mapping-purpose; default: .) |
 | `--backlink-ext` | source extension the back-link scan reads (repeatable; REPLACES the default list, which is _MODULE_EXTS plus the wider source families — see BACKLINK_EXTS) |
 | `--strict-backlinks` | exit 1 when back-link coverage is below the declared minimum (warn-first without it; vacuous while the minimum is 0) |
 

@@ -1,0 +1,35 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 005
+# date: 2026-09-01 00:17
+# train: wi-543-sr163-verification-tc
+# base: b3b4efa0ed32
+# phase: REVIEW-A
+# wi: WI-543
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 9d745b68..52e3dba2
+# tokens:
+# cost-usd:
+# wall-secs: 150
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 3671
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:c3d0ed99c22d
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Review recorded and committed: [005-REVIEW-A-47579c8.md](/Users/diytechy/Documents/ai-template-drive/wi-543-sr163-verification-tc/docs/reviews/wi-543-sr163-verification-tc/005-REVIEW-A-47579c8.md)
+
+Verdict: `CHANGES-REQUESTED findings=1` — SR-163’s new checker is not wired into any delivered runtime or harness path.

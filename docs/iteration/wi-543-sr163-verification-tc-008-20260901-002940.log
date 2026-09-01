@@ -1,0 +1,495 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 008
+# date: 2026-09-01 01:01
+# train: wi-543-sr163-verification-tc
+# base: b3b4efa0ed32
+# phase: DESIGN-CHECK
+# wi: WI-543
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: 8a37f9e2..ac83cf22
+# tokens:
+# cost-usd:
+# wall-secs: 1882
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 9691
+# prompt-template: kit:DESIGN-CHECK
+# prompt-sha: sha256:120233b589f6
+# timeout:
+# heterogeneity:
+# exit-code: 1
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Reading prompt from stdin...
+2026-09-01T05:29:40.640094Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 97 column 5
+OpenAI Codex v0.145.0
+--------
+workdir: /Users/diytechy/Documents/ai-template-drive/wi-543-sr163-verification-tc
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a05b71-d1cf-7953-8bd2-e725b76e784c
+--------
+user
+You are a worker session for a CLAIMED work item (scripts/agent_loop.py --wi, on a branch cut by `integrate.py claim`) — assume no human is watching. You are assigned ONE work item on ONE claimed branch; this assignment is your whole scope. Read AGENTS.md first, then the SpecRef and SR rows below — they are the spec of record.
+
+Assignment:
+- WI: WI-543 — SR-163's owner: the tolerant requirement-reference cell, the four-class checker warn-first, the direct TC (OI-72)
+- SR-Refs: SR-163 | SpecRef: docs/requirements/system-requirements.toml#SR-163
+- Branch: wi-543-sr163-verification-tc (its claim is docs/work/active/wi-543-sr163-verification-tc/; integration base b3b4efa0ed327dd78bce64152496f22b1ac468b4)
+- Context (advisory registry joins; read the Context refs below before starting):
+  Advisory registry joins (WI-388; never gating):
+  
+  ### Decomposition code map (LLR/TC on the same SRs)
+  - LLR-203 [project-trajectory/scripts/bootstrap.py :: MAPPING] tests: (see TC-199) — The shipped-file inventory and its declared exclusions, car…
+  - LLR-204 [project-trajectory/scripts/gen_arch_map.py :: backlink_ids/scan_backlinks/read_backlink_min] tests: (see TC-200) — The purpose-reference grammar and its declared warn-to-gate…
+  - TC-199 -> tests/test_dogfood_sync.py::test_scaffold_mapping_covered_or_declared; tests/test_dogfood_sync.py::test_scaffold_omissions_list_is_current; tests/test_dogfood_sync.py::test_bite_scaffold_walk_catches_an_undeclared_absence; tests/test_bootstrap.py::test_the_common_package_ships_complete; tests/test_bootstrap.py::test_every_sibling_imported_module_is_shipped_by_mapping
+  - TC-200 -> tests/test_gen_arch_map.py::test_backlink_ids_is_the_one_definition_of_a_declaration; tests/test_gen_arch_map.py::test_backlink_cli_is_warn_first_and_strict_only_on_demand
+  - TC-204 -> tests/test_mapping_purpose.py::test_checker_catches_unmapped_file; tests/test_mapping_purpose.py::test_checker_catches_unresolved_reference; tests/test_mapping_purpose.py::test_checker_catches_missing_file; tests/test_mapping_purpose.py::test_checker_catches_stale_entry; tests/test_mapping_purpose.py::test_stale_arm_exempts_the_lifecycle_marker; tests/test_mapping_purpose.py::test_policy_is_warn_first_for_the_reference_classes; tests/test_mapping_purpose.py::test_real_mapping_has_no_gate_class_findings; tests/test_mapping_purpose.py::test_every_filled_reference_resolves
+  
+  ### Knowledge packs the touched components declare (read before building)
+  - CMP-006 W1 Registry & conformance: registry-hygiene
+  - CMP-009 W4 Human & adopter surfaces: downstream-resync
+  
+  ### Interface seams via the touched modules
+  - IF-010 scripts/gen_arch_map <- scripts/check;scripts/trunk_step: cli --doc | --cli-doc | --contracts-doc | --src | --mode | --check | --strict-parse | --backlink-coverage | --str…
+  - IF-150 scripts/gen_arch_map -> scripts/check;scripts/trunk_step: exit-code 0 current · 1 a stale target under --check, an unparseable module under --strict-parse, or coverage below the…
+  - IF-014 scripts/bootstrap -> external:downstream adopter: bytes the scaffolded template tree written under the destination root
+  - IF-025 project-trajectory/scripts -> scripts/gen_arch_map: file None
+  - IF-028 scripts/gen_arch_map <- scripts/check_doc_refs: call scan_inventory(src_roots, strict=False) -> (rel, summary, imports, contracts, rows) per module
+  - IF-035 project-trajectory/skills/ -> scripts/gen_skills_index;scripts/bootstrap: file SKILL.md frontmatter: name, scope, stacks, domains, phases, tags
+- Current branch diff (b3b4efa..HEAD — earlier work on this branch, accepted but not yet reviewed/integrated):
+8a37f9e2 telemetry: session 007 review scoreboard
+29d0a01a telemetry: session wi-543-sr163-verification-tc-007 REVIEW-A COMMITTED
+7d198a70 review: record WI-543 independent verdict
+a4f5ae4a telemetry: session wi-543-sr163-verification-tc-006 BUILD COMMITTED
+35c71464 WI-543 rework: wire SR-163 checker to a delivered --mapping-purpose CLI path (REVIEW-A MAJOR)
+5dc61801 telemetry: session 005 review scoreboard
+cfd0c616 telemetry: session wi-543-sr163-verification-tc-005 REVIEW-A COMMITTED
+52e3dba2 review: record WI-543 independent verdict
+9d745b68 telemetry: session wi-543-sr163-verification-tc-004 BUILD COMMITTED
+47579c89 WI-543: close SR-163 owner — tolerant reference cell, four-class checker, direct TC (OI-72)
+9d2caa3a WI-543: re-stamp module-size ratchet + smoke membership budget for SR-163 checker
+8be01563 telemetry: session wi-543-sr163-verification-tc-001 BUILD COMMITTED
+5ea77b2b WI-543: record burn-down baseline (127 bare of 147) and design notes in log fragment
+8978b265 WI-543: tolerant MAPPING reference cell + four-class purpose checker + direct TC (SR-163)
+7016f95c WI-543: start log fragment (standing-state checkpoint)
+R051	docs/work/active/wi-543-sr163-verification-tc/WI-543-sr163-verification-tc.md	docs/archive/work/complete/WI-543-sr163-verification-tc.md
+M	docs/id-watermark
+A	docs/iteration/wi-543-sr163-verification-tc-001-20260831-232635.log
+
+[... 63489 line(s) elided — full stream in out/run-logs/ ...]
+
+ level = "Integration"
+-method = """The direct test on SR-163: the tolerant reference cell and the four-class checker, proven catching each class on a planted scaffold, and standing green over the real inventory. THE CELL: bootstrap.mapping_entries() normalizes every MAPPING row to (source, destination, reference), a bare pair surviving as reference None with no flag day, adding and dropping no rows. THE CHECKER, gen_arch_map.mapping_purpose_findings, driven on one synthetic inventory carrying exactly one defect of each class plus a clean control: a bare pair is reported UNMAPPED; a reference naming no live requirement, or one whose requirement resolves to no live stakeholder need, is reported UNRESOLVED; a declared destination that is absent and unexcluded is reported MISSING; a declared exclusion whose destination has materialized is reported STALE, with the lifecycle marker exempting only a path whose presence is a legal state, and the mapped-present control raising nothing. THE POLICY: unmapped and unresolved are warn-first and missing and stale gate, so a warn-only inventory passes and one gate-class finding fails it. THE STANDING EVIDENCE, over the live MAPPING literal and this repository's real spine: no missing file and no stale exclusion survives (the checker passes), every filled reference resolves SR to a live need, and the remaining unmapped warnings are exactly the un-filled rows — the burn-down baseline, visible without a flag day."""
++method = """The direct test on SR-163: the tolerant reference cell and the four-class checker, proven catching each class on a planted scaffold, and standing green over the real delivered-package universe. THE CELL: bootstrap.mapping_entries() normalizes every MAPPING row to (source, destination, reference), a bare pair surviving as reference None with no flag day, adding and dropping no rows. THE INDEPENDENT UNIVERSE: bootstrap.delivery_inventory() walks every physical kit source and classifies it as a MAPPING source, a reasoned kit-only exclusion, or a conditional materialization; it separately enumerates generator outputs, which inherit their generator source's reference. The real-row end-to-end bite removes process.toml.template -> docs/process.toml from MAPPING in the child process while leaving the source in the package, drives gen_arch_map.main() through --mapping-purpose, and requires a gate-class missing_file report naming the omitted source. THE CHECKER, gen_arch_map.mapping_purpose_findings, driven on one synthetic inventory carrying exactly one defect of each class plus a clean control: a bare pair is reported UNMAPPED; a reference naming no live requirement, or one whose requirement resolves to no live stakeholder need, is reported UNRESOLVED; a declared destination that is absent and unexcluded is reported MISSING; a declared exclusion whose destination has materialized is reported STALE, with the lifecycle marker exempting only a path whose presence is a legal state, and the mapped-present control raising nothing. THE POLICY: unmapped and unresolved are warn-first and missing and stale gate, so a warn-only inventory passes and one gate-class finding fails it. THE STANDING EVIDENCE, over the live package census, MAPPING literal and this repository's real spine: no missing file and no stale exclusion survives (the checker passes), every filled reference resolves SR to a live need, every generated output maps through its generator declaration, and the remaining unmapped warnings expose both unfilled MAPPING rows and unfilled derived/materialized deliveries without a flag day."""
+ tier = "Smoke"
+-expected = "Satisfies SR-163 AcceptanceCriteria: over the declared inventory the four finding classes are each reported under the declared warn-versus-gate policy, and a file's purpose maps through a requirement reference that resolves SR to a live stakeholder need (a generated output naming its generator's requirement resolves the same way)"
++expected = "Satisfies SR-163 AcceptanceCriteria: the independently enumerated delivered-package universe is diffed against MAPPING plus reasoned exclusions; an omitted real shipped source and each of the four finding classes are reported under the declared warn-versus-gate policy; and a file's purpose maps through a requirement reference that resolves SR to a live stakeholder need, with a generated output inheriting its generator's mapping"
+ automated = "Yes"
+-evidence = """tests/test_mapping_purpose.py::test_checker_catches_unmapped_file; tests/test_mapping_purpose.py::test_checker_catches_unresolved_reference; tests/test_mapping_purpose.py::test_checker_catches_missing_file; tests/test_mapping_purpose.py::test_checker_catches_stale_entry; tests/test_mapping_purpose.py::test_stale_arm_exempts_the_lifecycle_marker; tests/test_mapping_purpose.py::test_policy_is_warn_first_for_the_reference_classes; tests/test_mapping_purpose.py::test_real_mapping_has_no_gate_class_findings; tests/test_mapping_purpose.py::test_every_filled_reference_resolves"""
++evidence = """tests/test_mapping_purpose.py::test_checker_catches_unmapped_file; tests/test_mapping_purpose.py::test_checker_catches_unresolved_reference; tests/test_mapping_purpose.py::test_checker_catches_missing_file; tests/test_mapping_purpose.py::test_checker_catches_stale_entry; tests/test_mapping_purpose.py::test_stale_arm_exempts_the_lifecycle_marker; tests/test_mapping_purpose.py::test_policy_is_warn_first_for_the_reference_classes; tests/test_mapping_purpose.py::test_generated_output_inherits_its_generator_mapping; tests/test_mapping_purpose.py::test_real_mapping_has_no_gate_class_findings; tests/test_mapping_purpose.py::test_every_filled_reference_resolves; tests/test_mapping_purpose.py::test_delivery_census_classifies_every_physical_package_source; tests/test_mapping_purpose_cli.py::test_cli_mapping_purpose_gates_when_real_shipped_row_is_removed"""
+ status = "Drafted"
+ phase = 5
+diff --git a/project-trajectory/mapping-source-exclusions b/project-trajectory/mapping-source-exclusions
+new file mode 100644
+index 0000000000000000000000000000000000000000..5290bfbafc254bb02a94dbcc0ca4e1ccd541d7aa
+--- /dev/null
++++ b/project-trajectory/mapping-source-exclusions
+@@ -0,0 +1,34 @@
++# Physical kit sources that deliberately are not bootstrap MAPPING rows.
++# One `<source> — <reason>` per line. The package census is fail-safe: a missing
++# file, malformed line, or blank reason excludes nothing and the source becomes
++# an SR-163 missing_file finding. Conditional copies and generator inputs are
++# derived from bootstrap's executable delivery paths and do not belong here.
++
++mapping-source-exclusions — this reasoned exclusion registry; kit-side only
++ADOPTING.md — kit-side adoption reference; read from the kit checkout
++EXAMPLE.md — kit-side worked example; read from the kit checkout
++EXTERNAL_SKILLS.md — kit-side external-skill catalog; read from the kit checkout
++KICKOFF_PROMPT.md — kit-side kickoff aid; read from the kit checkout
++MULTI_REPO.md — kit-side multi-repository reference; read from the kit checkout
++README.md — the portable kit's own landing page, not an adopter file
++RESYNC_PACK.md — kit-side re-sync procedure; never scaffolded into an adopter
++LICENSE — generator input for docs/kit-license; the source license stays kit-side
++agent-hooks/README.md — kit-side hook activation instructions
++registries/README.md — kit-side registry-template authoring reference
++scripts/README.md — kit-side script inventory reference
++scripts/bootstrap.py — installer/generator run from the kit; deliberately not scaffolded
++skills/README.md — kit-side skill authoring reference
++blackout.template — retired one-word policy retained for migration reference
++gate-policy.template — retired one-word policy retained for migration reference
++privacy-check.template — retired one-word policy retained for migration reference
++push-policy.template — retired one-word policy retained for migration reference
++review-policy.template — retired one-word policy retained for migration reference
++registries/repos.template.csv — legacy optional registry retained for migration
++registries/work-items.template.csv — legacy WI carrier retained for migration
++prompts/CATALOG.md — generated kit-side prompt catalog
++scripts/check_complexity.py — meta-repo complexity census, not an adopter check
++scripts/check_dupes_census.py — meta-repo historical duplication census
++scripts/gen_arch_map.reference.ps1 — kit-side launcher reference
++scripts/gen_prompt_catalog.py — meta-repo prompt-catalog generator
++scripts/gen_skills_index.py — meta-repo skills-index generator
++skills/INDEX.csv — generated kit-side skill catalog
+diff --git a/project-trajectory/scripts/bootstrap.py b/project-trajectory/scripts/bootstrap.py
+index ea1717bfea30552f0048623344c6b3cfe357f1a7..aad28aa315a65b79f36faf9bf64051bfbef9b872
+--- a/project-trajectory/scripts/bootstrap.py
++++ b/project-trajectory/scripts/bootstrap.py
+@@ -2317,6 +2317,80 @@
+     "docs/log.d",
+ ]
+ 
++
++def _mapping_source_exclusions():
++    """Reasoned kit-only sources; malformed rows deliberately exclude nothing."""
++    entries = {}
++    path = KIT / "mapping-source-exclusions"
++    if not path.is_file():
++        return entries
++    for raw in path.read_text(encoding="utf-8").splitlines():
++        if not raw.strip() or raw.lstrip().startswith("#"):
++            continue
++        source, sep, reason = raw.partition(" — ")
++        if sep and source.strip() and reason.strip():
++            entries[source.strip()] = reason.strip()
++    return entries
++
++
++def delivery_inventory():
++    """The independent universe SR-163 compares with `MAPPING`.
++
++    Returns `(sources, exclusions, conditional, generated)`:
++
++    - every physical file under `KIT` (runtime bytecode caches excluded);
++    - the reasoned kit-only source exclusions above, plus `scope: this-repo`
++      skills whose own frontmatter declares why they do not materialize;
++    - possible conditional `(source, destination)` copies for agent hooks,
++      kit-scope skills and knowledge packs (graded only when materialized);
++    - unconditional `(generator-source, destination)` outputs made by a fresh
++      scaffold, including the directories represented by generated `.gitkeep`s.
++
++    The physical walk is what makes a deleted MAPPING row observable. Generated
++    outputs name their generator source so the purpose checker can inherit that
++    source's MAPPING reference instead of inventing a second purpose cell.
++    """
++    sources = {
++        p.relative_to(KIT).as_posix()
++        for p in KIT.rglob("*")
++        if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc"
++    }
++    exclusions = _mapping_source_exclusions()
++    conditional = []
++    for spec in AGENTS.values():
++        if spec.get("hooks_src"):
++            conditional.append((spec["hooks_src"], spec["hooks_dst"]))
++    for skill_md in sorted((KIT / "skills").glob("*/SKILL.md")):
++        rel = skill_md.relative_to(KIT).as_posix()
++        fm = parse_skill_frontmatter(skill_md.read_text(encoding="utf-8"))
++        if (fm.get("scope") or "kit").strip() != "kit":
++            exclusions[rel] = "scope: this-repo skill; never materialized downstream"
++            continue
++        for spec in AGENTS.values():
++            conditional.append(
++                (rel, "{}/{}/SKILL.md".format(spec["skills_dir"], skill_md.parent.name))
++            )
++    for rows in KNOWLEDGE_PACKS.values():
++        for label, _topic, _domain in rows:
++            conditional.append(
++                ("knowledge/{}.md".format(label), "docs/knowledge/{}.md".format(label))
++            )
++    generated = [
++        ("LICENSE", "docs/kit-license"),
++        ("scripts/bootstrap.py", "docs/kit-version"),
++        ("scripts/bootstrap.py", "docs/kit-profile"),
++        ("scripts/trace.py", "docs/test/report.md"),
++        ("scripts/gen_open_items.py", "docs/open-items.html"),
++    ]
++    generated.extend(("scripts/bootstrap.py", d) for d in GITKEEP_DIRS)
++    return (
++        sources,
++        exclusions,
++        tuple(sorted(set(conditional))),
++        tuple(generated),
++    )
++
++
+ # Per-destination text fixups applied right after a template is generated: the
+ # in-line rewrites a marker strip can't express (a phrase inside a line that
+ # must otherwise survive). Whole-region copy-me prose belongs in kit-only
+diff --git a/project-trajectory/scripts/gen_arch_map.py b/project-trajectory/scripts/gen_arch_map.py
+index 256de4e9de3c980470d01b1f79f495cd93f45469..4b8c93dd8e6b34fdfb176905f6d56abdbed8e75b
+--- a/project-trajectory/scripts/gen_arch_map.py
++++ b/project-trajectory/scripts/gen_arch_map.py
+@@ -2046,8 +2046,44 @@
+     return None
+ 
+ 
++def _delivery_source_findings(entries, delivery):
++    """Manifest/exclusion drift against the physical package source census."""
++    sources, source_exclusions, conditional, _generated = delivery
++    mapped = {src for src, _dst, _ref in entries}
++    delivery_sources = {src for src, _dst in conditional}
++    classified = mapped | set(source_exclusions) | delivery_sources
++    findings = [
++        (
++            "missing_file",
++            src,
++            "package source is absent from MAPPING and delivery exclusions",
++        )
++        for src in sorted(set(sources) - classified)
++    ]
++    findings.extend(
++        ("stale_entry", src, "declared delivery source is absent from package")
++        for src in sorted(classified - set(sources))
++    )
++    findings.extend(
++        ("stale_entry", src, "source is both mapped and declared kit-only")
++        for src in sorted(mapped & set(source_exclusions))
++    )
++    return findings
++
++
++def _inherited_delivery_entries(entries, delivery, present):
++    """Generated/materialized outputs, carrying their source row's reference."""
++    _sources, _exclusions, conditional, generated = delivery
++    mapped = {src: ref for src, _dst, ref in entries}
++    inherited = [(src, dst, mapped.get(src)) for src, dst in generated]
++    inherited.extend(
++        (src, dst, mapped.get(src)) for src, dst in conditional if present(dst)
++    )
++    return inherited
++
++
+ def mapping_purpose_findings(
+-    entries, *, present, sr_by_id, sn_ids, declared_absences=()
++    entries, *, present, sr_by_id, sn_ids, declared_absences=(), delivery=None
+ ):
+     """The four SR-163 finding classes over a shipped-file inventory, as a list
+     of `(class, destination, detail)` tuples. PURE: every environment fact is an
+@@ -2066,6 +2102,13 @@
+                              arm — the same marker rule the dogfood walk applies,
+                              stated once (`check_doc_refs.load_declared_absences`
+                              is its shape).
++      `delivery`           — optional `(physical_sources, source_exclusions,
++                             conditional_outputs, generated_outputs)` from
++                             `bootstrap.delivery_inventory()`. This universe is
++                             independent of MAPPING, so deleting a real manifest
++                             row remains observable. Conditional outputs are
++                             graded only when materialized; generated outputs
++                             inherit their generator source's reference.
+ 
+     Classes (each carried by `MAPPING_FINDING_POLICY`):
+       unmapped_file        — a bare pair: the file ships with no recorded purpose.
+@@ -2073,8 +2116,13 @@
+       missing_file         — a declared destination that is absent and not excluded.
+       stale_entry          — a declared exclusion whose destination is now present.
+     """
++    entries = list(entries)
+     absences = dict(declared_absences)
++    absent_paths = {str(path).rstrip("/") for path in absences}
+     findings = []
++    if delivery is not None:
++        findings.extend(_delivery_source_findings(entries, delivery))
++        entries.extend(_inherited_delivery_entries(entries, delivery, present))
+     for _src, dst, ref in entries:
+         if ref is None:
+             findings.append(
+@@ -2090,7 +2138,7 @@
+                         "reference {!r} {}".format(ref, reason),
+                     )
+                 )
+-        if not present(dst) and dst not in absences:
++        if not present(dst) and str(dst).rstrip("/") not in absent_paths:
+             findings.append(("missing_file", dst, "declared destination is absent"))
+     for dst, reason in sorted(absences.items()):
+         if not str(reason).startswith("LIFECYCLE:") and present(dst):
+@@ -2156,6 +2204,7 @@
+     check_doc_refs = _import_sibling("check_doc_refs")
+     root = Path(root)
+     entries = bootstrap.mapping_entries()
++    delivery = bootstrap.delivery_inventory()
+     sr_by_id, sn_ids = load_spine_index(root, sr_registry, sn_registry)
+     absences = check_doc_refs.load_declared_absences(
+         root / "docs" / "declared-absences"
+@@ -2164,6 +2213,8 @@
+     def present(dst):
+         if (root / dst).exists():
+             return True
++        if dst in bootstrap.GITKEEP_DIRS and (root / dst).is_dir():
++            return True
+         for src, d, _ref in entries:
+             if (
+                 d == dst
+@@ -2179,6 +2230,7 @@
+         sr_by_id=sr_by_id,
+         sn_ids=sn_ids,
+         declared_absences=absences,
++        delivery=delivery,
+     )
+ 
+ 
+diff --git a/tests/test_mapping_purpose.py b/tests/test_mapping_purpose.py
+index fd075fec903affac789a3b343ab108edf0cca9bd..4c7c247c416807878e9aea9c4b12830f0fb3743c
+--- a/tests/test_mapping_purpose.py
++++ b/tests/test_mapping_purpose.py
+@@ -7,8 +7,8 @@
+ under a declared warn-vs-gate policy. This module proves the CHECKER catches
+ each of the four classes on a planted scaffold — remove a file, plant a bogus
+ reference, leave a bare pair, and add a stale exclusion — so the test claims
+-exactly what it exercises. Its green over the REAL MAPPING is the standing
+-every-file-maps evidence.
++exactly what it exercises. Its green over the independently enumerated REAL
++DELIVERY UNIVERSE is the standing every-file-maps evidence.
+ """
+ 
+ from conftest import ROOT, load_script
+@@ -159,7 +159,24 @@
+     assert not ok
+ 
+ 
+-# ── the standing evidence: the checker over the REAL inventory, every run ──
++def test_generated_output_inherits_its_generator_mapping():
++    delivery = (
++        {"generator.tmpl"},
++        {},
++        (),
++        (("generator.tmpl", "docs/generated"),),
++    )
++    findings = gen_arch_map.mapping_purpose_findings(
++        [("generator.tmpl", "scripts/generator", "SR-900")],
++        present=lambda _dst: True,
++        sr_by_id=SR_BY_ID,
++        sn_ids=SN_IDS,
++        delivery=delivery,
++    )
++    assert not [f for f in findings if f[1] == "docs/generated"]
++
++
++# ── the standing evidence: checker over the REAL delivery universe, every run ──
+ 
+ 
+ def _real_mapping_findings():
+@@ -170,9 +187,9 @@
+ 
+ 
+ def test_real_mapping_has_no_gate_class_findings():
+-    # The every-file-maps standing evidence: over the real MAPPING no missing
+-    # file and no stale exclusion survives, so the checker passes. Unmapped
+-    # bare pairs remain (warn-only) — the burn-down, not a failure.
++    # The every-file-maps standing evidence: over the physical package, MAPPING,
++    # conditional/generated deliveries and exclusions, no gate finding survives.
++    # Unmapped entries remain warn-only — the burn-down, not a failure.
+     findings = _real_mapping_findings()
+     gate = [
+         (cls, dst, detail)
+@@ -204,7 +221,18 @@
+     entries = bootstrap.mapping_entries()
+     filled = [e for e in entries if e[2] is not None]
+     assert filled, "no reference has been filled — the burn-down has not begun"
++    mapped_destinations = {dst for _src, dst, _ref in entries}
+     unmapped = [
+-        dst for cls, dst, _d in _real_mapping_findings() if cls == "unmapped_file"
++        dst
++        for cls, dst, _d in _real_mapping_findings()
++        if cls == "unmapped_file" and dst in mapped_destinations
+     ]
+     assert len(unmapped) == len(entries) - len(filled)
++
++
++def test_delivery_census_classifies_every_physical_package_source():
++    sources, exclusions, conditional, _generated = bootstrap.delivery_inventory()
++    classified = {src for src, _dst, _ref in bootstrap.mapping_entries()}
++    classified.update(exclusions)
++    classified.update(src for src, _dst in conditional)
++    assert sources == classified
+diff --git a/tests/test_mapping_purpose_cli.py b/tests/test_mapping_purpose_cli.py
+index a3d4f39f57066e5b2604230feef7bb3b0da9f2b4..4dcac5fbf672e1efd4573755dd536099af500327
+--- a/tests/test_mapping_purpose_cli.py
++++ b/tests/test_mapping_purpose_cli.py
+@@ -5,9 +5,9 @@
+ module drives the SHIPPED `gen_arch_map.py --mapping-purpose` command the way an
+ adopter's `stack.ini` would — a real interpreter subprocess — so a regression
+ that unwired the CLI mode is caught end-to-end: were the checker left defined but
+-reachable only from the test suite, adding an unmapped/unresolved/missing/stale
+-inventory entry in a real repo would produce no SR-163 report or gate, and these
+-assertions would fail. Kept SEPARATE and re-tiered into conftest.SLOW_MODULES for
++reachable only from the test suite, adding an inventory defect or omitting a
++shipped source from the manifest would produce no SR-163 report or gate, and
++these assertions would fail. Kept SEPARATE and re-tiered into conftest.SLOW_MODULES for
+ the same reason test_check_complexity_cli.py is: each case pays interpreter
+ startup, so it is the subprocess-dominated class the per-commit bar drops and the
+ slice/phase-close + CI run exercises in full.
+@@ -42,3 +42,28 @@
+     red = run_py([_GAM, "--mapping-purpose", "--root", str(tmp_path)], cwd=tmp_path)
+     assert red.returncode == 1
+     assert "GATE" in red.stderr and "missing_file" in red.stderr
++
++
++def test_cli_mapping_purpose_gates_when_real_shipped_row_is_removed():
++    # REVIEW-A round 2: the manifest must not define its own coverage universe.
++    # Remove one REAL row in the child process, then drive main() exactly as the
++    # command does. The physical `process.toml.template` source remains in the
++    # kit, so the independent package census must still observe and gate it.
++    code = """
++import sys
++sys.path.insert(0, {scripts!r})
++import bootstrap
++import gen_arch_map
++
++bootstrap.MAPPING = [
++    row for row in bootstrap.MAPPING if row[1] != "docs/process.toml"
++]
++sys.argv = [
++    "gen_arch_map.py", "--mapping-purpose", "--root", {root!r}
++]
++gen_arch_map.main()
++""".format(scripts=str(_GAM.parent), root=str(ROOT))
++    red = run_py(["-c", code], cwd=ROOT)
++    assert red.returncode == 1
++    assert "GATE" in red.stderr and "missing_file" in red.stderr
++    assert "process.toml.template" in red.stderr
+
+ succeeded in 22020ms:
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [  4%]
+........................................................................ [  9%]
+........................................................................ [ 14%]
+........................................................................ [ 19%]
+........................................................................ [ 24%]
+..........ss............................................................ [ 29%]
+.......................s................................................ [ 34%]
+........................................................................ [ 39%]
+........................................................................ [ 44%]
+............................s........................................... [ 49%]
+........................................................................ [ 54%]
+........................................................................ [ 59%]
+........................................................................ [ 64%]
+........................................................................ [ 69%]
+........................................................................ [ 74%]
+........................................................................ [ 79%]
+........................................................................ [ 84%]
+........................................................................ [ 89%]
+......................................................sss............... [ 94%]
+..............................................s......................... [ 99%]
+............                                                             [100%]
+1444 passed, 8 skipped in 21.88s
+
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:23 AM.
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:23 AM.
+tokens used
+357,673

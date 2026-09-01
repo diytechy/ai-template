@@ -54264,3 +54264,428 @@ record paths), `WI-562` (unload residue and scratch). The plan's section 2.3
 (close ritual in every adjudicator brief) is already owned by `WI-552`
 Done-when 1 and is deliberately not duplicated. The supervisor prompt's
 hand-compile instruction stands until `WI-558` lands, then retires with it.
+
+## 2026-08-31 — WI-543: SR-163's owner — the tolerant reference cell, the four-class checker warn-first, the direct TC (OI-72)
+
+Re-scoped row per `OI-72`'s ruling (log.md 2026-08-31). SR-163's verification is
+mechanism-first: ship the tolerant `MAPPING` reference cell, a checker that runs
+the four finding classes over the real inventory, and a direct TC on SR-163 that
+proves the checker catches each class on a scaffold — with the reference
+burn-down begun, not finished.
+
+### Build
+
+1. **Tolerant cell** — `bootstrap.py::MAPPING` rows may carry a requirement
+   reference as an optional third element; `bootstrap.mapping_entries()`
+   normalizes every row to `(src, dst, ref|None)` so a bare pair keeps working
+   and is by definition an unmapped-entry warning. All consumers (the copy pass,
+   the dogfood walk, the kit-path invariant, the resync/profile tests) unpack
+   pairs and triples.
+2. **The checker** — in `gen_arch_map.py` (LLR-204's module, the purpose-
+   reference home), the forward direction beside the backlink machinery:
+   `mapping_purpose_findings(entries, present, sr_by_id, sn_ids,
+   declared_absences)` returns the four classes; `resolve_requirement_reference`
+   is the SR → live-stakeholder-need join stated once; `load_spine_index` loads
+   the repo's SR/SN registries; `mapping_purpose_report` computes the pass.
+   `MAPPING_FINDING_POLICY` is the one home for warn-vs-gate: `unmapped_file` and
+   `unresolved_reference` WARN, `missing_file` and `stale_entry` GATE (they are
+   already delivered/zero via the dogfood+bootstrap checks). The stale arm
+   honors the `LIFECYCLE:` marker, the same rule the dogfood walk applies. The
+   flip of a warn class to gate at count zero is a later reviewed commit.
+3. **The direct TC on SR-163** — TC-204 (`tests/test_mapping_purpose.py`, Smoke
+   tier so it runs on every commit bar): plants one defect of each class on a
+   synthetic scaffold plus a clean control and asserts each is reported; drives
+   the checker over the real `bootstrap.MAPPING` + this repo's real spine and
+   asserts NO gate-class finding survives (the standing every-file-maps
+   evidence) and every filled reference resolves. Registered Drafted (SR-163 is
+   Approved; approving TC-204 is the owner's act).
+4. **Burn-down begun** — 20 references filled to unambiguous EXISTING SRs
+   (`SR-049` derived stage, `SR-137` one policy home, `SR-146` prompts ×9,
+   `SR-147` spine registries ×3, `SR-159` interfaces ×2, `SR-015` perf budgets,
+   `SR-151` hosted CI, `SR-161` hats). No new SR needed yet — no filled file
+   lacked a justifying requirement.
+
+**Baseline (recorded for the burn-down):** of 147 MAPPING rows, 20 carry a
+resolved reference and **127 remain bare (unmapped_file WARN)**; 0 unresolved, 0
+missing, 0 stale over the real inventory. The 127 is the count the burn-down
+retires against; gating flips only at zero, per the ruling.
+
+### Design notes
+
+- No new LLR: the ruling keeps the wi508 rows (LLR-203/204, TC-199/200) as they
+  are and makes TC-204 a DIRECT test on SR-163. The checker's functions carry no
+  `Implements:` tag / LLR — back-link coverage is warn-only, and the mechanism
+  is verified by its direct TC.
+- No new `stack.ini` step: `bootstrap.py` is excluded from its own MAPPING and
+  never ships downstream, so a harness step over `bootstrap.MAPPING` would be
+  dead in every adopter. The kit self-check home is the test, which runs the
+  checker over the real inventory on every suite run — the "on every run"
+  evidence the ruling asks for. An adopter with their own inventory can call the
+  `gen_arch_map` functions directly.
+
+### Close
+
+- **Harness re-stamps (reviewed baseline edits naming this WI):** the checker's
+  new behavior grew two ratcheted modules past baseline — `bootstrap.py` +29
+  SLOC (1571 → 1600, the tolerant cell) and `gen_arch_map.py` +79 SLOC (1262 →
+  1341, the four-class checker) — both re-stamped UP in `tests/test_module_size_ratchet.py`
+  as reviewed bumps, not monolith drift (the placement is LLR-204's module by
+  the ruling; decomposition remains WI-521's program). TC-204's 17 in-process
+  smoke tests pushed the smoke tier to 1450 collected, so `docs/stack.ini`
+  `[smoke-budget] max-tests` re-stamped 1440 → 1458 (+8 headroom, the standing
+  small-slack posture); the seconds budget is NOT touched (smoke wall 21.8 s vs
+  60 s).
+- **Approval brief regenerated** (`trace.py --approve modified`): TC-204 (the
+  one spine row this WI minted, Drafted) now appears in `docs/ratify/CURRENT.md`
+  as ADDED-since-snapshot / never-approved — approving it is the owner's act.
+- **Verification:** commit bar green — smoke 1442 passed / 8 skipped / 23.6 s,
+  budget within (60 s). Full unfiltered suite: **3199 passed, 24 skipped, 1
+  failed** in 586 s. The one failure is
+  `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`: this
+  WI's `8978b265` added TC-204 to `docs/test/test-cases.toml` (a declared
+  stage-derivation input), staling the committed `docs/stage` fingerprint. That
+  is an EXPECTED work-branch condition, not a regression — `docs/stage` is a
+  trunk-lane-regenerated generated artifact (the `derived-stage` pre-commit step
+  SKIPS on a work branch precisely because "generated freshness is the trunk
+  lane's, §5.2", and `git log -- docs/stage` shows it moves only on
+  claim/mint/refresh trunk commits, never on a worker WI commit). The branch
+  rules forbid a worker from regenerating it; the trunk lane re-derives it at
+  merge and the test goes green on trunk. Latent gap surfaced (NOT fixed here,
+  out of SR-163 scope): the dogfood test mirrors the commit-bar `--check` claim
+  but, unlike that check step, is not work-branch-aware, so it reds on ANY work
+  branch that touches a stage-derivation input — a candidate OI for a
+  work-branch skip mirroring the step.
+
+### 2026-09-01 — REVIEW-A rework: wire the checker to a delivered path (MAJOR)
+
+REVIEW-A (`docs/reviews/wi-543-sr163-verification-tc/005-REVIEW-A-47579c8.md`)
+returned CHANGES-REQUESTED with one MAJOR: `mapping_purpose_findings` /
+`mapping_purpose_report` were defined in `gen_arch_map.py` but reached only from
+`tests/test_mapping_purpose.py` — no delivered CLI, bootstrap flow, or `check.py`
+step called them, so a real unmapped/unresolved/missing/stale inventory entry
+produced no SR-163 report or gate. The mechanism was verified but not *wired*.
+
+Fix (mechanism-first, one delivered home, no new LLR/TC — the same posture the
+ruling took):
+
+- **`mapping_purpose_over_repo(root)`** — the ONE delivered function that
+  assembles every environment fact the pure checker needs from the real repo:
+  `bootstrap.mapping_entries()` (the inventory), `load_spine_index` (SR/SN), and
+  `check_doc_refs.load_declared_absences` (the ledger), plus the kit-served
+  `present()` predicate. The `bootstrap`/`check_doc_refs` imports are deferred to
+  call time via `_import_sibling` (the `spine_carrier` idiom) so a plain
+  `gen_arch_map` invocation never pays to import `bootstrap`.
+- **`--mapping-purpose`** — a warn-first REPORT MODE on `main`, the
+  `--backlink-coverage` sibling (`_mapping_purpose_exit`, added to the composing
+  `modes` tuple so it runs beside the other report modes and the verdict is the
+  worst). Exits 1 only on a gate-class finding; unmapped/unresolved rows are
+  reported but never gate — the burn-down stays visible without a flag day.
+  Verified over the real repo: 127 unmapped WARN, 0 gate-class, exit 0.
+- **TC-204 now drives the delivered path.** `_real_mapping_findings` collapsed
+  onto `mapping_purpose_over_repo` (was a hand-assembled copy of the same logic),
+  so the standing evidence and the shipped command grade the inventory through
+  identical code. Added `tests/test_mapping_purpose_cli.py` — two end-to-end
+  subprocess drives of `gen_arch_map.py --mapping-purpose` (green over the real
+  repo; gate-class `missing_file` fires and exits 1 when `--root` points at a
+  tree missing every destination). Kept SEPARATE and re-tiered into
+  `conftest.SLOW_MODULES` (the `test_check_complexity_cli` precedent): each case
+  pays interpreter startup, so the commit bar drops it and close/CI runs it — the
+  in-process unit module stays in smoke unchanged, so `max-tests` stays 1458.
+- **Ratchet re-stamp:** `gen_arch_map.py` +53 SLOC (1341 → 1394) — the delivered
+  path and CLI wiring — re-stamped UP as a reviewed bump in
+  `tests/test_module_size_ratchet.py`. Not decomposed: it is the report-mode
+  sibling of `_backlink_exit`, same file, same `main` dispatch.
+- **`docs/cli-reference.md` left stale on purpose:** the new flag changes
+  `gen_arch_map`'s argparse surface, but the `cli` artifact is a trunk-owned
+  generated block (its freshness step SKIPS on a work branch, and it rides
+  `trunk_step.py --regen`). A worker must not commit it; the trunk regenerates it
+  at merge.
+
+Verification (rework): commit bar green — smoke 1442 passed / 8 skipped / 23.0 s,
+budget within (60 s). Full unfiltered suite re-run recorded at close below.
+
+### 2026-09-01 — REVIEW-A round-2 rework: enumerate the delivered universe (MAJOR)
+
+REVIEW-A (`docs/reviews/wi-543-sr163-verification-tc/007-REVIEW-A-35c7146.md`)
+returned CHANGES-REQUESTED with one MAJOR: the newly delivered
+`mapping_purpose_over_repo` still supplied the checker only
+`bootstrap.mapping_entries()`. The declaration therefore also defined the
+universe being checked; deleting the real `process.toml.template →
+docs/process.toml` row made that shipped source invisible and left the report
+green.
+
+Root-cause correction selected before implementation: the bootstrap boundary
+will expose an independent delivered-package census. Every physical kit source
+must be classified exactly once as a `MAPPING` source or a reasoned exclusion;
+generator-derived scaffold outputs will name the mapped generator row whose
+reference they inherit. `mapping_purpose_over_repo` will diff that universe
+against the live manifest before grading destinations/references, and an
+end-to-end TC-204 regression will remove the real process-policy row and require
+the shipped command to report and gate the omission.
+
+Implemented at that boundary:
+
+- **Independent delivery census:** `bootstrap.delivery_inventory()` walks the
+  physical kit tree rather than `MAPPING`, then joins each source to one of three
+  delivery declarations: a static MAPPING row, the reasoned
+  `project-trajectory/mapping-source-exclusions` carrier, or a conditional
+  agent-skill/hook/knowledge materialization; unconditional generator outputs
+  are enumerated separately and name a source in one of those classes. The
+  exclusion carrier includes itself and fails safe: missing,
+  malformed, or reasonless lines exclude nothing. `scope: this-repo` skills are
+  exclusions by their own frontmatter rather than a hand-maintained duplicate.
+- **Generated outputs inherit, never re-declare:** the census names the source
+  that produces each fresh-scaffold output (`bootstrap.py` for stamps/status
+  directories, `trace.py` for `docs/test/report.md`, and
+  `gen_open_items.py` for `docs/open-items.html`). The checker reuses that
+  source's MAPPING reference; an unfilled generator remains the existing
+  `unmapped_file` warning instead of growing a second purpose cell.
+- **Four-class checker widened at its one input boundary:**
+  `mapping_purpose_findings(..., delivery=...)` diffs physical sources against
+  the declarations before grading destinations/references. An unclassified
+  package source is `missing_file` (GATE); a declaration whose source vanished,
+  or a source both mapped and excluded, is `stale_entry` (GATE). Conditional
+  destinations are graded only when materialized; unconditional generated
+  destinations always are. `_delivery_source_findings` and
+  `_inherited_delivery_entries` keep this separate from the four-class loop and
+  kept the complexity ratchet green without a new function baseline.
+- **Direct/end-to-end TC:** the synthetic arm proves a generated output inherits
+  a resolving generator mapping; the live arm proves every physical source is
+  classified and the real census has no gate finding; the subprocess arm removes
+  the real `process.toml.template → docs/process.toml` row in memory, calls
+  `gen_arch_map.main()` with `--mapping-purpose`, and requires exit 1 plus a
+  `missing_file` report naming the still-physical source. This is the exact
+  previously-green review probe, now red under the declared gate policy.
+
+Live census: 212 physical sources, 147 MAPPING rows, 31 reasoned exclusions, 86
+possible conditional destinations (10 materialized in this repo), and 15
+unconditional generated outputs; findings are 152 `unmapped_file` WARN, 0
+unresolved, 0 missing, 0 stale. Of those warnings, 127 remain the original bare
+MAPPING-row burn-down; the added 25 expose purpose debt on generated/materialized
+deliveries rather than hiding it.
+<!-- fig: cmd="python3 -c 'load bootstrap/gen_arch_map; count delivery_inventory and mapping_purpose_over_repo'" rev=this-worktree -->
+
+Ratchet posture: the independent package walk/classifier adds 52 SLOC to
+`bootstrap.py` (1600 → 1652); the shared delivery-diff/inheritance boundary adds
+39 SLOC to `gen_arch_map.py` (1394 → 1433). Both are deliberate reviewed bumps
+for SR-163's missing acceptance arm, recorded here rather than hidden as
+headroom. The new logic was decomposed until no function crossed the C901
+complexity floor; a separate shipped module would split MAPPING from the
+bootstrap boundary that owns it and create another source the census must
+bootstrap before it can validate itself.
+
+Verification (round-2 rework):
+
+- Characterization before the fix: the new real-row CLI test failed because the
+  child exited 0; after the census boundary it exits 1 and names
+  `process.toml.template` as gate-class `missing_file`.
+- Direct TC + both ratchets: 26 passed. The affected bootstrap/dogfood/profile/
+  resync/kit-path/mapping slice: 160 passed, 1 skipped in 39.77 s.
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto tests/test_bootstrap.py tests/test_dogfood_sync.py tests/test_kit_path_invariant.py tests/test_profile.py tests/test_resync_pack.py tests/test_mapping_purpose.py tests/test_mapping_purpose_cli.py tests/test_module_size_ratchet.py tests/test_complexity_ratchet.py" rev=this-worktree -->
+- Full unfiltered suite: 3204 passed, 24 skipped, 1 failed in 625.62 s. The one
+  failure is the same work-branch generated-state condition already recorded at
+  the original close:
+  `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current` sees
+  TC-204's modified registry row and therefore a stale committed
+  `docs/stage` fingerprint. Worker branches are forbidden to regenerate this
+  trunk-owned artifact; `derive_stage.py --check` skips generated freshness on
+  this branch for that reason. No product/test behavior failed.
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=this-worktree -->
+- Registry integrity remains clean. The broader non-gating `trace.py --strict`
+  audit still names the pre-existing SR-181 orphan pair and LLR-197 provenance
+  finding, outside WI-543; TC-204's modified approval brief was regenerated into
+  `docs/ratify/CURRENT.md`.
+
+Deferred open items: none — the review finding is fully discharged; the
+remaining MAPPING/generated purpose warnings are the already-ruled burn-down,
+not a newly deferred decision.
+
+## 2026-09-01 — WI-552: the adjudicator's two exits (adjudication-row close, successor mint, OI mint with refusal invariant, OI-70/OI-73)
+
+Session claimed `WI-552` on branch `wi-552-adjudicator-two-exit-close`. SpecRef
+`docs/requirements/open-items.toml#OI-70` (as refined by OI-73). The work owns
+seven Done-when arms spanning the adjudication-row close, the OI-mint arm, the
+refusal invariant, inbound-needs replacement, typed OI edges in `needs`, the
+`dead_dependency_findings` partial-predecessor net, and the brief contract text.
+
+### Design (the two exits, OI-73 posture)
+
+The adjudicator's exits are realised through the `## Dispositions` section the
+ADJUDICATE session drafts in its own spec, minted at merge by
+`intake._disposition_drafts`. OI-73 refines OI-70: every partial/cancelled
+close MUST queue a successor; a minted OI becomes a typed hard dependency of
+that successor (not a standalone exit); the mint REPLACES the superseded row's
+inbound hard edges; and `OI-###` ids become valid hard `needs` tokens.
+
+Seven arms, built lower-risk foundation first.
+
+### Progress
+
+- Read the OI-70 / OI-73 rulings and the spec's seven Done-when; mapped the
+  touched modules (handback, station, intake, adjudicate_brief, agent_loop,
+  dispatch, schedule, check_trajectory, trace, gen_open_items).
+- **Arm 5 (typed OI edges in `needs`) — DONE.** New `kitlib.spine.split_pred_edges`
+  is the one home for the widened grammar: `(hard_wi, hard_oi, soft)`. Both
+  loaders (`schedule.load_wis`, `check_trajectory.load_wis`) carry an `oi_preds`
+  list, kept OUT of the WI graph (no acyclicity node, no downstream count).
+  Scheduler readiness: `hard_preds_satisfied(wi, status, oi_status)` — an OI
+  edge is satisfied once its row leaves `pending`, read from
+  `schedule.load_oi_status` (wraps `trace.open_item_states`); new
+  `waiting:open-item-pending:` reason code; `oi_status` threaded through
+  `evaluate`/`frontier`/`simulate` and the four external callers (dispatch,
+  integrate, traj_status, traj_panels). Validator: `validate(..., known_ois)`
+  resolves an OI edge against the open-items registry (dangling → ERROR); new
+  `check_trajectory.load_known_ois`. Shipped grammar prose widened tolerantly
+  in `registries/work-items.template.csv`.
+- **Arm 6 (`dead_dependency_findings` → partial) — DONE.** The finding now
+  fires on `partial` predecessors too (the WI-541→WI-540 strand class), message
+  reworded to "terminal WI(s)".
+- Tests: OI scheduler readiness (pending/ruled/absent/mixed), validator
+  existence + non-cycle, dead-dep partial case; updated the reworded cancelled
+  assertion. `test_schedule`/`test_trajectory`/`test_dispatch`/
+  `test_gen_trajectory` green.
+
+- **Arm 4 (mint replaces inbound edges) — DONE.** `intake._replace_inbound_edges`
+  re-points every OPEN row's HARD `needs` edge on a superseded row to the
+  successor, in the same commit as the mint; soft edges and terminal rows'
+  history left alone; surgical `needs`-line rewrite preserves each dependent's
+  `## Context`/Deliverable. Wired into `_mint` per minted successor carrying
+  `supersedes`. Test added.
+
+- **Arm 2 (the OI-mint arm) — DONE.** A disposition draft carries a new
+  `open_item` key (the human question). At the mint, `intake._mint_open_item`
+  appends a `pending` OI row to open-items.toml (id from `next_oi_id`, the same
+  watermark read-and-bump as WI ids), and the OI id is injected into the
+  successor's `needs` BEFORE the row is written — so the ruling gates the
+  successor's readiness. `open-items.html` regenerates in the mint's bookkeeping
+  commit (`trunk_step --regen` runs `gen_open_items`). Refuses on a non-TOML
+  registry (all-or-nothing). Also fixed `gen_trajectory`'s `validate` call to
+  pass `known_ois` (it validates the WI graph during regen). Tests: OI minted
+  pending + gates successor; non-TOML refusal.
+
+- **Arm 3 (refusal invariant) — DONE.** Enforced in TWO places: (i)
+  `intake._disposition_drafts` at merge — a `disposition`-brief adjudication row
+  that merged with an empty `## Dispositions` section is refused (the merge
+  stands, the mint refuses, the run stops); (ii) `handback.close_adjudication`
+  at the mechanical close — refuses before the spec moves terminal. An OI alone
+  no longer discharges it; no third exit. Tests at both levels.
+- **Arm 1 (mechanical adjudication close) — DONE.** `handback.close_adjudication`
+  moves a DONE adjudication row's spec to `complete/` (inserting a valid
+  `## Deliverable`, clearing `specref`, preserving `## Context`/`## Dispositions`
+  so the merge mints), commits with the WI trailer; no-ops for a
+  non-adjudication lane; refuses a successor-less disposition. Wired into
+  `dispatch._advance`'s EXIT_DONE path: a DONE adjudication row whose specs are
+  still in active/ is closed mechanically instead of resumed forever (the C6
+  loop OI-70 measured). The agent self-close path still works (finished_branches
+  short-circuits). Tests: archives-terminal + finishes, mints the successor at
+  merge, refusal invariant, non-adjudication no-op; updated the shared
+  `then_closing` dispatch stub to draft a conformant successor.
+
+- **Arm 7 (brief contract text) — DONE.** `adjudicate-disposition.template.md`:
+  the successor is mandatory (OI-73); the new `open_item` key mints a pending OI
+  the successor depends on; the machinery performs the close (the manual
+  self-close instruction is gone); a successor-less disposition is refused.
+  `PROCESS_OPTIONS.md` Predecessors prose widened tolerantly for the typed hard
+  `OI-###` edge (+342, flagged; byte-budget-guard SKILL.md re-stamped, all three
+  copies). `prompts/CATALOG.md` regenerated.
+
+### Baselines / hygiene
+
+- Broke the `check_trajectory -> trace` import cycle my first cut introduced
+  (read open-items via `spine_carrier` directly in `load_known_ois`).
+- Decomposed the three functions the C901 ratchet flagged
+  (`_mint`, `validate`, `_advance`) back under threshold — no complexity-baseline
+  bump. Reviewed SLOC restamp for `check_trajectory`/`intake`/`integrate`
+  (legitimate feature growth).
+- At close: ran `ruff format` over the WI's own touched files (six had
+  non-canonical blank-line spacing the earlier commits left); re-stamped the
+  module-size baseline ±2 for `intake.py` (1174 -> 1176) and
+  `check_trajectory.py` (2247 -> 2245) — format-only, no executable change.
+
+### Bar
+
+- Smoke tier: 1429 passed / 8 skipped, 23.1s wall vs 60s budget (within).
+- Full unfiltered suite: run at close (see the close commit).
+- No spine rows minted or re-statused, so no approval brief regeneration owed.
+
+### Outcome
+
+All seven Done-when arms delivered and tested. Smoke tier green within budget
+(1429 passed / 8 skipped, 22.2s wall; budget check 23.3s vs 60s). Full
+unfiltered suite green at close. No spine rows minted or re-statused, so no
+approval brief regeneration owed. Closing COMPLETE.
+
+### REVIEW-A rework (005 CHANGES-REQUESTED, 3 findings)
+
+REVIEW-A found the refusal invariant gated on `brief == "disposition"`, but a
+CANCELLED original close mints a brief-LESS adjudication row (its brief is
+omitted so `agent_loop` gives it the ordinary assignment rather than holding it
+for a report the close never owed). So neither guard fired for a cancelled
+close that queued no successor — it archived/merged silently, contradicting
+OI-73, Done-when 3 and the shipped contract text. Two MINORs: the scheduler's
+dead-edge reason omitted `partial` (Done-when 6 made it terminal too), and a
+stale `_OI_PENDING` comment clause.
+
+- **MAJOR (cancelled-close refusal gap) — FIXED.** The signal is now the
+  durable `dispose:` TITLE prefix the two early-close arms share, read by a new
+  single-sourced `intake.owes_successor(meta)` + `_DISPOSITION_TITLE_PREFIX`
+  (the two title builders now reference the constant). Both guards
+  (`intake._disposition_drafts` at merge, `handback.close_adjudication` at the
+  close) refuse when the row owes a successor and none was drafted; the
+  clean-close spot check (`spot-check …`), the amendment (`adjudicate: …`) and
+  the census rows do NOT carry the prefix and owe none. WHY TITLE, not specref
+  or brief: `brief == "disposition"` is set only on the partial arm (cancelled
+  is brief-LESS by design); `specref` names the outcome but the close CLEARS it
+  (`_adjudication_close_text`) — and the merge-side guard is the PRIMARY
+  enforcement for the cancelled case, because a cancelled row is dispatched as
+  an ordinary worker that SELF-closes past `close_adjudication`
+  (`dispatch._close_done_adjudication` short-circuits on a finished branch), so
+  by merge time specref is already gone. The title is the one signal that both
+  survives the close AND distinguishes the arms. Tests: a cancelled close with
+  no successor is refused at BOTH guards (`test_intake` models the self-close
+  with specref CLEARED; `test_handback`), plus the brief-less cancelled row that
+  DID queue a successor still closes (no over-fire). DW7's contract prose is now
+  accurate — the machinery it described covers cancelled.
+- **MINOR (scheduler/validator disagree on partial) — FIXED.**
+  `schedule._waiting_reasons` now emits `waiting:hard-pred-partial:<ids>`
+  alongside `waiting:hard-pred-cancelled`, so `--explain` and the validator's
+  `dead_dependency_findings` (which flags cancelled AND partial) agree an edge
+  is dead. Test added.
+- **MINOR (stale `_OI_PENDING` comment) — FIXED.** Dropped the "or the row
+  simply gone … satisfies the edge" clause that contradicted the code (a gone/
+  absent OI fails closed); the comment now matches `_oi_satisfied`.
+- Baseline: `intake.py` re-stamped 1176 → 1179 (+3, `owes_successor` +
+  `_DISPOSITION_TITLE_PREFIX`; reviewed bump). No spine rows touched — no
+  approval brief owed.
+
+### REVIEW-A (009) rework — the un-restamped ratchet left the smoke bar red
+
+- **BLOCKER (per-commit bar red) — FIXED.** After the +3 bump above, a later
+  ruff/format pass (blank-line normalization) shrank `intake.py` to 1177 SLOC
+  without the ratchet being re-stamped in the same commit. Because
+  `test_module_size_ratchet` compares `check_complexity.module_sloc` exact-
+  equality in BOTH directions, the committed 1179 baseline vs the measured 1177
+  failed under `-m smoke` on the clean tree — so the per-commit bar was red and
+  the Deliverable's "smoke tier green" claim was false. Re-stamped the
+  `intake.py` entry **1179 → 1177 (RE-STAMPED DOWN -2)** with the reason inline,
+  per this file's record-the-drop-in-the-same-commit rule. Re-ran the bar:
+  `pytest -q -n auto -m smoke` → 1430 passed, 8 skipped in 20.9s;
+  `check_smoke_budget.py --mode enforce` → 20.9s vs 60s within. No executable
+  line changed — a test baseline only.
+
+### Surfaced (not fixed here): dormant cognitive-complexity baseline drift
+
+- The `docs/complexity-baseline` cognitive census (`check_complexity.py --mode
+  enforce`, `[step:complexity]`) has drifted against this branch's reviewed code:
+  tightenings `check_trajectory.load_wis 23→17` / `validate 24→20` and removals
+  `intake._mint 21→∅` / `schedule.load_wis 17→∅`, plus growths/new rows
+  `dispatch._advance 16→20`, `intake._disposition_drafts 21→25`,
+  `handback.close_adjudication ∅→16`, `intake._replace_inbound_edges ∅→18`.
+  This is **not** fixed in this WI and does **not** gate it: `[step:complexity]`
+  is `from-stage = DevStg-Impl` and the repo's effective `stage = DevStg-LLReqs`,
+  so the sensor is dormant — the norm since WI-538 armed it is that
+  script-touching branches do not re-stamp while dormant (no WI has). Recorded
+  here so the DevStg-Impl transition re-stamps the tightenings/removals and takes
+  the reviewed bumps (code already APPROVE'd at REVIEW-A 007) with reasons, per
+  the stack.ini escape hatch. The SLOC module-size ratchet above (smoke tier) is
+  a separate sensor and is green.
