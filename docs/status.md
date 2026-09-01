@@ -26,9 +26,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 
 - **RESUME HERE — THE FRONTIER IS PAUSED AGAIN (tracked `docs/work/pause`,
   re-armed at the 2026-09-01 supervised session's end; decision 51).** The
-  session merged five rows and minted two; the account is the log's
-  2026-09-01 supervised-unpause entry, and one reviewed deletion of the
-  pause file resumes the generated frontier below.
+  session merged five rows and left three new rows queued; the account is
+  the log's 2026-09-01 supervised-unpause entry and its addendum, and one
+  reviewed deletion of the pause file resumes the generated frontier below
+  (whose head is the construction-first remedies row, filed last).
   **For the owner's review:** delegated decisions 47–51 in
   [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md)
   (47 the prose-scrub, 48–49 the WI-563 undrawn-round disposal + intake
@@ -37,10 +38,14 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   the owner's signature on the `trace.py --approve modified` re-attestation
   brief; `check_trajectory --strict` carries two KNOWN queued ERRORs (the
   schedule→trace seam and the wi508 stranded claim the new hold-ban detector
-  now sees — both have queued rows, neither reds the non-strict bar); and
-  the standing 2026-08-31 items below. Hand-authored prose here names no
+  now sees — both have queued rows, neither reds the non-strict bar); the
+  review-churn finding this run measured, filed as a row against
+  [plans/2026-09-01-construction-first-remedies.md](plans/2026-09-01-construction-first-remedies.md)
+  (1 structural remedy in 13 rounds; it heads the frontier); and the
+  standing 2026-08-31 items below. Hand-authored prose here names no
   queued id (the claim-refusal rule); a fresh reader starts at
-  [handoff-2026-08-31.md](handoff-2026-08-31.md) and the log.
+  [handoff-2026-08-31.md](handoff-2026-08-31.md) — **read its banner: the
+  2026-09-01 run superseded parts of it** — and the log.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). `wi416-parked-handback-contract` is still
