@@ -52660,6 +52660,359 @@ owner asked for.
 **pytest totals:** smoke tier under Git Bash **1378 passed, 6 skipped in 29.58 s** — the budget read **30.0 s vs 60 s → within** on a quiet box (the WI-496 re-tier's own reading, 27 s, is now reproduced within a few seconds); `check_trajectory --strict`: exit 0;
 `check_docs --stale`: 0 broken; every generated document current.
 
+## 2026-08-30 — WI-508 slice 6: the four spine rows blessed, the row closed
+
+The unattended lane the owner delegated on 2026-08-30 (the spec's *DELEGATED FOR
+THE UNATTENDED RUN* section). Item 1 (`OI-64`) was already discharged — ruled (b)
+and executed 2026-08-28 as `IF-144` (the ruling's durable home is the `OI-64` row
+in `docs/requirements/open-items.toml`; it was executed via `WI-523`–`WI-526`).
+Item 2 was mine: approve the four `Drafted` rows this program authored in slice 1
+through the ordinary adjudication flow, close the row as the bookkeeping act, and
+list the flip here for the owner's later review. Under
+`docs/process.toml [attestation] human_approval_through = "DevStg-Needs"` only the
+Needs rung is human-held; the `DevStg-LLReqs`/`DevStg-Tests` rungs these rows sit
+at are loop-held, so a recorded LLM verdict carries approval authority — the flip
+is a reviewed-commit act, not a human sitting (`intake.flip_verified`'s mechanical
+arm is retired, OI-45 (b)).
+
+### The adjudication
+
+Read the four rows in full off the re-attestation surface
+([../ratify/CURRENT.md](ratify/CURRENT.md)) — the surface, per the delegation.
+Verdict **approve** on all four, grounded rather than eyeballed:
+
+- **`LLR-203`** (`bootstrap.py::MAPPING`, CMP-009) and **`LLR-204`**
+  (`gen_arch_map.py::backlink_ids/scan_backlinks/read_backlink_min`, CMP-006) each
+  name a **delivered, tested** mechanism and state on the row exactly what is *not*
+  discharged (LLR-203: no cell joins an inventoried file to a requirement id, the
+  arms walk declared destinations not the shipped tree, the installer's own
+  exclusion is prose; LLR-204: DIRECTION and UNIVERSE). That honesty is the
+  load-bearing half — approving does not read as "the obligation is discharged".
+- **`TC-199`** (verifies SR-163 + LLR-203) and **`TC-200`** (verifies SR-163 +
+  LLR-204) cite **7 existing** node ids. Ran them on this tree before flipping:
+  **7 passed in 4.99s** — the TC evidence resolves, so the rows bless mechanisms a
+  green test already drives, not aspirations.
+
+No cell but `Status` moved; the four rows are authored-then-blessed, so no prior
+attestation was re-worded.
+
+### The flip and its record
+
+`Status` **`Drafted` → `Approved`** on `LLR-203`, `LLR-204`
+(`docs/requirements/low-level-requirements.toml`) and `TC-199`, `TC-200`
+(`docs/test/test-cases.toml`) — exactly four `Drafted → Approved` pairs, nothing
+else. `intake.py snapshot` in the same act mirrors the record; the four rows now
+read `Approved` in both the live registries and
+`docs/archive/last_approved/`.
+
+**What the wholesale re-seed absorbed, disclosed rather than left to be found.**
+The snapshot is whole by design, and this tree's `last_approved` had not moved
+since the 2026-08-24 sitting, so the copy re-baselined the off-spine registries to
+their current *already-merged* state. The authority gate
+(`baseline_snapshot.refresh_refusal`) blocked on exactly **one** approved-text
+cell with no flip to authorise it: **`components.toml` `CMP-006` `Notes`** — the
+addition of `secret_classes.py via LLR-205` to the kitlib module listing, which is
+**WI-520's** already-merged change. `CMP-006`/`components` is loop-held
+(`DevStg-Arch`, above the human-held Needs rung; OI-30 D3 derives off-spine
+authority from the same dial), and a copy records a decision rather than making
+one — so I named the act with `--approves "WI-508 close sitting 2026-08-30 —
+absorbs WI-520's already-merged CMP-006 kitlib listing…"`, recorded in the
+snapshot's prose stamp. The wholesale copy also re-baselined `interfaces.toml` and
+`external.toml` to their merged state (neither tripped the gate — their drift is on
+new/Drafted rows or traced cells, not blessed-text amendments), which simply
+shrinks the off-spine census the next `CURRENT.md` renders.
+
+**`LLR-205`/`TC-201` were left `Drafted` deliberately** — they are WI-520's rows,
+not this program's, and are the owner/WI-520 lane's to bless. They stay on the
+re-attestation surface, correctly showing as owing.
+
+### The close
+
+WI-508 had no agent-executable work left but these two items, and both are now
+discharged. The program's own products are all landed or filed as their own
+claimable rows (`WI-519`, `WI-520`, `WI-521`); the module-size ratchet pointer
+already moved to `WI-521` at slice 5, so this close re-points nothing — the
+dead-owner defect was made unreachable rather than deferred. The spec moves from
+`docs/work/active/wi508-architectural-remap/` to `docs/work/complete/`, which is
+the close signal the integrator reads.
+
+**For the owner's later review:** four `Drafted → Approved` flips (LLR-203,
+LLR-204, TC-199, TC-200), and a wholesale `last_approved` re-seed that absorbed
+WI-520's merged `CMP-006` `Notes` amendment under the `--approves` ref above.
+Nothing human-held was touched.
+
+### Correction: the close MOVE was never actually performed (follow-up session)
+
+The approval commit (`580df781`) landed the four flips and this fragment, but the
+prose above claims a spec move that the commit did **not** carry: the spec file
+stayed at `docs/work/active/wi508-architectural-remap/`, so under the
+directory-is-status rule (`docs/work/README.md`, IF-023/IF-159) **WI-508 read as
+still `active`, not `done`** — the close signal the integrator reads was never
+emitted. The four approvals were real and are unchanged; only the terminal
+state-change was missing.
+
+This follow-up session performs the owed close, which is more than the bare move
+the earlier prose implied — the terminal-state checks (`check_trajectory` R-A,
+R-F) are exactly why a lone `git mv` fails:
+
+1. **`git mv`** `WI-508-architectural-remap-program.md` from the claim directory
+   to `docs/archive/work/complete/` (the archive home terminal states moved to
+   under WI-504 — `docs/work/complete/` is now only a redirect README), and remove
+   the now-empty claim dir. Status is the directory, so this is the state-change
+   itself, not a re-render.
+2. **R-A** (ERROR at every run): a terminal WI's `## Deliverable` must be
+   non-empty. The spec carried only `## Context` and slice records, so a
+   `## Deliverable` summary of what the six slices shipped was added ahead of the
+   context — backward-only, no forward bridge.
+3. **R-F**: a terminal WI clears its `SpecRef`. `specref` moved from
+   `docs/requirements/open-items.toml#OI-58` to `""`. WI-508 has no `docs/specs/`
+   narrative to archive, so nothing else R-F governs applies.
+
+`check_trajectory` exits 0 after all three; the smoke bar is green; the row now
+reads `done` in the one place status lives.
+
+## 2026-08-30 — WI-508 rework: the three REVIEW-A findings addressed
+
+The slice-6 approval/close (commits `580df781`, `f179a0b4`) drew a
+**CHANGES-REQUESTED** verdict (`docs/reviews/wi508-architectural-remap/003-REVIEW-A-f179a0b.md`,
+three MAJOR findings). This session addresses all three; none needs a decision
+above the loop-held rung the flips sat at, so each was fixable in place rather
+than escalated.
+
+### Finding 1 & 2 — TC-199/TC-200 over-claimed SR-163 coverage
+
+The findings: `TC-199` and `TC-200`, flipped to `Approved` in slice 6, verify
+both their LLR **and** the parent `SR-163`. As **LLR** evidence they are sound —
+`LLR-203`/`LLR-204` name delivered, tested mechanisms and state their own
+undischarged halves on-row, and the seven cited node ids pass. But as **SR-163**
+evidence they are partial: `SR-163` asks that every shipped file JOIN to a
+requirement id across the whole shipped universe, and both LLRs record on their
+face that the join does not exist and the walk covers only declared destinations
+(`LLR-203`) / runs the inverse direction over the source roots only (`LLR-204`).
+An `Approved` TC on `SR-163` therefore reads as "the full mapping obligation is
+verified" when it is not — the false-green the kit exists to prevent.
+
+The reviewer offered two remediations: keep the partial evidence `Drafted`, or
+add and approve a TC that drives the complete join and universe. The second is
+explicitly **not** WI-508's job — this program's mandate is to *file* divergences
+as consolidation WIs, not resolve them, and the gaps are already filed
+(`WI-519`/`WI-520`/`WI-521`). So the correct rework is the first: revert the two
+TCs to `Drafted`.
+
+- `docs/test/test-cases.toml`: `TC-199`, `TC-200` `Approved` → `Drafted`.
+- `docs/archive/last_approved/docs/test/test-cases.toml`: the same two, kept
+  byte-symmetric with live so no drift/immutability guard fires (`Status` is
+  excluded from `baseline_snapshot.is_drifted`'s comparison and a `Drafted` row
+  differing from its snapshot copy is work-in-progress, not drift).
+
+`LLR-203`/`LLR-204` stay `Approved` — the reviewer flagged only the TCs and cited
+the LLRs' honest content as authoritative; a blessed design row may carry `Drafted`
+test evidence while final verification is still owed. `SR-163` stays `Approved`
+and keeps its TC rows in `Verifies`, so it is not orphaned (`coherence.py` counts
+a `Drafted` TC toward the child-completeness rule); its verification now honestly
+reads *owed*, matching the filed-as-WIs reality.
+
+### Finding 3 — the dead OI-64/OI-65 link
+
+The slice-6 fragment cited `../log.d/2026-08-28-owner-rulings-oi64-oi65.md`, a
+file that was never created (the same phantom path is `OI-64`'s `ruling_ref`, a
+pre-existing state outside this WI's scope). `doc-navigability` (`check_docs.py`,
+which link-checks `docs/log.d/`) failed on the one broken link. Replaced the dead
+markdown link with a plain-text pointer to the ruling's real durable home — the
+`OI-64` row in `docs/requirements/open-items.toml`, executed as `IF-144` via
+`WI-523`–`WI-526`. No markdown link remains to break, and the stated fact (ruled
+(b), executed 2026-08-28) is unchanged and true.
+
+### Verification
+
+`check_docs.py` re-run: broken-link count 0. Smoke bar and the full suite run
+recorded in the commit.
+
+## 2026-08-30 — WI-508 rework: SR-163's remaining verification is unscheduled
+
+The second REVIEW-A round returned two findings against WI-508's archived
+Deliverable. The record assigned `SR-163`'s still-undelivered file→requirement
+join and shipped-universe coverage to `WI-519`/`WI-520`/`WI-521`, but those WIs
+have empty `sr_refs` and none scopes `SR-163`, `LLR-203`, or `LLR-204`. The
+Deliverable now records the remaining acceptance criteria as **unscheduled**;
+no ownership is inferred from the fact that those three WIs were filed by the
+same remapping program.
+
+The record also now distinguishes the formal links from evidence. `TC-199` and
+`TC-200` still list `SR-163` in `verifies`, but their `Drafted` status makes
+those direct links non-evidence. Their cited tests exercise only the delivered
+arms named by `LLR-203` and `LLR-204`, not `SR-163`'s complete join and universe.
+
+The focused document check also found the archived slice-6 record targeting a
+not-yet-compiled `docs/log.md` anchor. Its label already named the real branch
+fragment, so the target now resolves to that `docs/log.d` source as well.
+
+### Verification
+
+- `python project-trajectory/scripts/trace.py --strict-integrity` passed. The
+  broader `--strict` probe retains the branch baseline: `LLR-197`'s provenance
+  finding and `SR-181`'s orphan arms; this record-only rework does not alter
+  those unrelated rows.
+- `python project-trajectory/scripts/check_docs.py --root . --stale` passed with
+  no broken links.
+- With Git's installed `sh.exe` added to `PATH`, both the smoke tier and its
+  enforced wall-clock budget passed.
+
+After the two long full-suite runs, one later budget invocation breached the
+declared wall-clock ceiling under transient machine load. The immediately
+preceding unchanged smoke command had passed, and the unchanged enforcer passed
+again on its next run. The ceiling was not moved or re-stamped to fit the outlier;
+one machine remains one timing data point.
+
+The close run was driven at checkpoint `15a89009`. On the claimed branch,
+`python -m pytest -q -n auto` reported **3,107 passed, 16 skipped, 1 failed in
+692.70 s**: only
+`tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current` failed,
+because WI-508's LLR status changes are derivation inputs while `docs/stage`
+remains frozen at the integration base. That is the trunk-owned stale-cache
+signal, not a product-test failure, and concurrency-restructure §5.2 forbids a
+work branch from committing its regeneration.
+
+The composed-tree proof ran the same checkpoint in a disposable detached
+worktree, regenerated only `docs/stage`, then ran the identical unfiltered
+command: **3,108 passed, 16 skipped in 710.85 s**. The temporary worktree was
+removed, and the claimed branch never modified a generated artifact.
+
+<!-- fig: cmd="python -m pytest -q -n auto" rev=15a89009 -->
+<!-- fig: cmd="detached worktree at 15a89009; python project-trajectory/scripts/derive_stage.py --root .; python -m pytest -q -n auto" rev=15a89009 -->
+
+Deferred open items: none — this rework records the existing unscheduled gap;
+it neither allocates new work nor requests a new ruling.
+
+## 2026-08-30 — WI-508 review round 010: the snapshot BLOCKER, confirmed in part and refuted in part with driven evidence
+
+Deferred open items: none — the residue is a generator-vocabulary gap the
+supervisor's decisions file carries to the owner, not a ruling.
+
+Round 010 (`docs/reviews/wi508-architectural-remap/010-REVIEW-A-085de8d.md`,
+gpt-5.6-terra, cross-family) returned one BLOCKER: the round-1 rework
+(`4824c0ba`) rewrote `docs/archive/last_approved/docs/test/test-cases.toml`
+by hand when it demoted `TC-199`/`TC-200` from `Approved` to `Drafted`, so the
+regenerated brief renders both rows "Drafted, never approved" although
+`580df781` had approved and snapshotted them — "a false attestation record".
+
+**Confirmed:** the snapshot file was edited by hand in `4824c0ba`. PROCESS.md
+§4 names `intake.py snapshot` as the snapshot's only writer, and the hand
+edit was the wrong instrument even where its bytes were right.
+
+**Refuted, with the instrument run:** the claim that the record is false.
+Driven on this branch at `ed3e976b`:
+
+- `intake.py --root . snapshot` — the kit's own wholesale writer — copies
+  seven registries and leaves `git status --porcelain` EMPTY: the hand-edited
+  snapshot is byte-identical to what the approval-act writer produces from
+  the live registries. Nothing was laundered; the file holds exactly the text
+  the kit would have written.
+  <!-- fig: cmd="python project-trajectory/scripts/intake.py --root . snapshot && git status --porcelain" rev=ed3e976b -->
+- The approval and its reversal are both trunk-reachable history on this
+  branch, not a rewrite: `580df781` (four rows `Drafted -> Approved`, snapshot
+  taken) and `4824c0ba` (two rows `Approved -> Drafted`, the reviewer's own
+  round-1 finding executed, recorded in
+  `2026-08-30-wi508-rework-review-a-changes-requested.md`). The demotion is an
+  auditable state by construction — `git log -p -- docs/test/test-cases.toml`
+  shows both moves.
+- Restoring the `580df781` snapshot while live reads `Drafted` was tried and
+  rejected: it violates the same §4 sentence the finding cites ("a snapshot
+  file must always equal its live counterpart"), and the brief STILL renders
+  "Drafted, never approved", because that label is derived from the live
+  `Status`, not from the snapshot — `trace.py --approve modified` has no
+  vocabulary for "approved, then demoted". That wording gap is the true
+  residue, and it is a generator finding for the owner, outside WI-508's
+  scope.
+
+**Why demotion rather than re-approval was right:** the two TCs stood as
+evidence for `SR-163`'s full file-to-requirement join, which their own LLRs
+record as undischarged (round 003, findings 1–2). An `Approved` TC on that
+obligation was a false green; the rows were minted `Drafted` on 2026-08-25
+and never reached trunk as `Approved` — the lane's own flip was the error and
+the lane corrected it before merging. `LLR-203`/`LLR-204` stay `Approved`;
+`SR-163`'s verification reads honestly UNSCHEDULED in the archived Deliverable.
+
+**Deviations from spec:** none — a review-round record.
+
+**Byte deltas on budgeted files:** none touched.
+
+**pytest totals:** not re-run for a record-only commit; the trunk-lane bar on
+this tree read PASS on every step but `derived-stage`, which the station
+refresh regenerates before its own bar.
+
+## 2026-08-30 — WI-508 review round 011 (gpt-5.6-sol): eight findings dispositioned, two by running the kit's own rules against the fix each asked for
+
+Deferred open items: none — the two generator/instrument gaps below are
+carried to the owner in the supervisor's decisions file, not owed a ruling.
+
+Round 011 (`docs/reviews/wi508-architectural-remap/010-REVIEW-A-5175065.md`,
+strong cross-family route) returned 3 BLOCKER / 4 MAJOR / 1 MINOR. Each was
+either driven or located; none was accepted or rejected on reading alone.
+
+**1–3. The blind-derivation brief was not committed before the returns; both
+teams saw the harness context; Team A's census is 25 not 24 — OUT OF THIS
+LANE'S DIFF.** `git diff --stat 7e2d3f82..HEAD` touches 27 files and none of
+`docs/plans/2026-08-25-blind-minimal-map-*.md`; slice 2 landed on trunk on
+2026-08-25 (`docs/log.md`, "WI-508 slice 2") and disclosed the contamination
+itself ("Blindness was NOT total and both teams disclosed it… a future run of
+this instrument must strip the harness context"). A rerun is a new row, not a
+rework of a close whose diff does not contain the derivation. The census
+arithmetic (25 modules with the zero-SR F5) is a real MINOR against the
+2026-08-25 record and is carried to the owner's list.
+
+**4. The `last_approved` snapshot must keep `580df781`'s `Approved` for
+TC-199/TC-200 — REFUTED BY THE KIT'S OWN INTEGRITY RULE, driven.** The fix
+was applied exactly as asked (`git checkout 580df781 --
+docs/archive/last_approved/docs/test/test-cases.toml`, live left `Drafted`)
+and `trace.py --strict-integrity` then reports
+`FINDING (integrity): docs/archive/last_approved/docs/test/test-cases.toml is
+NOT byte-identical to docs/test/test-cases.toml in this commit — the snapshot
+is the record of what a human blessed, so it may only ever be written by
+copying the live file (intake.py snapshot)` — `integrity=1
+approval-record=1`, a red `registry-integrity` step at the merge slot. The
+kit's rule is snapshot == live, and `intake.py --root . snapshot` on this
+tree is a byte-for-byte no-op (round 010's record), so the committed snapshot
+IS the kit-written one. Reverted to the committed state. Two independent
+reviewers have now read §4 as "written only by the approval act"; the
+instrument reads it as "always equal to live". The instrument decides the
+bar; the wording tension is the owner's.
+<!-- fig: cmd="git checkout 580df781 -- docs/archive/last_approved/docs/test/test-cases.toml && python project-trajectory/scripts/trace.py --strict-integrity" rev=892ee28f -->
+
+**5–6. Drop `SR-163` from TC-199/TC-200's `verifies` — REFUTED BY THE ORPHAN
+RULE, driven.** Applied (`verifies = ["LLR-203"]` / `["LLR-204"]`):
+`trace.py --strict` moves from `orphans=2` to `orphans=3` with
+`FINDING (orphan): SR SR-163 has no test (TC)` — the one rung the ladder is
+held on, raised by one. A `Drafted` TC is non-evidence by definition, which
+is what the round-1 rework chose and the archived Deliverable now states in
+so many words; the false SR-163 green the reviewer fears cannot arise while
+the rows stay `Drafted`, and re-approving them is nobody's act in this lane.
+Reverted.
+<!-- fig: cmd="python project-trajectory/scripts/trace.py --strict" rev=892ee28f -->
+
+**7. `docs/stage`, `PROJECT_STATE.html` and the generated status block are
+stale on the lane — TRUE, AND THE REFRESH'S JOB.** A work branch never
+commits a generated artifact; `integrate.py refresh` runs `trunk_step --regen`
+(derived-stage, trajectory, status, open-items, component-view, the two
+references) BEFORE its bar, on the merged tree. The refresh that reached the
+bar earlier today failed only on `approval-fresh`, since fixed (`085de8de`),
+with every regen step green.
+
+**8. Hand-authored `docs/status.md` still narrates this lane as OPEN and
+calls LLR/TC blessing the owner's act — TRUE, TRUNK-OWNED.** `status.md` is
+the trunk lane's file (§5.2); the supervising session removes the closed-lane
+recap and points approval authority at `docs/process.toml` in its own trunk
+commit after this branch merges, so the edit cannot conflict with the
+refresh's regenerated block.
+
+**Deviations from spec:** none — a review-round record; the two trial edits
+above were reverted before this commit, and the tree is byte-identical to
+`892ee28f` outside this fragment.
+
+**Byte deltas on budgeted files:** none touched.
+
+**pytest totals:** smoke tier on this tree **1378 passed, 6 skipped in 24.63 s**; the budget read **28.7 s vs 60 s -> within**; `check_docs --stale`: 0 broken; `trace.py --strict-integrity` on the reverted tree: `integrity=0 approval-record=0`. (Round 012 asked for the commit bar on the record commit; here it is, run alone on the box.)
+
 ## 2026-08-30 — WI-521 slice 3: M-06's second monolith split, `test_trace.py`'s IF-seam tier walks
 
 **Summary.** `tests/test_trace.py`'s IF-### interface-seam tier moved verbatim to
@@ -52742,6 +53095,54 @@ fig: cmd="python -m pytest -q -n auto" rev=c9203f47
 Deferred open items: none — this slice defers nothing new (the §3 sensor/axis
 question was owner-ruled and re-homed, per the summary above).
 
+## 2026-08-30 — WI-508 review round 013: the SR-163 `verifies` finding TAKEN — the honest orphan beats a Drafted row that trace reads as coverage
+
+Deferred open items: none — an orphan the ladder already counts as assigned
+debt, not a ruling.
+
+Round 013 (`docs/reviews/wi508-architectural-remap/010-REVIEW-A-c225c34.md`,
+gpt-5.6-terra, on the refreshed tip `c225c34d`) returned one MAJOR, the same
+finding rounds 003 and 011 raised: `TC-199`/`TC-200` formally verify `SR-163`
+while both TC methods and both LLRs leave the file-to-requirement join and the
+shipped-file universe unimplemented, and `trace.py` therefore reports `SR-163`
+as covered.
+
+**Round 011's disposition of this point is REVERSED here, and the reason is
+the reviewer's, not a new reading.** Round 011's record refuted the fix on its
+cost — dropping the targets raises `orphans` 2 → 3 with `SR SR-163 has no
+test (TC)` — which is a cost, not a refutation of the claim. The claim is
+that a `Drafted` TC citing an SR still makes the coverage matrix read the SR
+as tested; three independent rounds said so and the instrument agrees
+(`trace.py` counts the row's `verifies` regardless of `Status`). An orphan
+finding on `SR-163` is the TRUE state of its verification — "owed and
+unscheduled", exactly what the archived Deliverable already says in prose —
+where a Drafted TC on the SR was a claim waiting to become false the day
+someone approved it.
+
+Applied:
+
+- `docs/test/test-cases.toml`: `TC-199` `verifies = ["LLR-203"]`, `TC-200`
+  `verifies = ["LLR-204"]` (was `["SR-163", "LLR-203"]` / `["SR-163",
+  "LLR-204"]`). Both rows stay `Drafted`; the LLR links stand.
+- `docs/archive/work/complete/WI-508-architectural-remap-program.md`: the
+  Deliverable sentence that described the direct `SR-163` links as
+  "non-evidence while Drafted" now records their removal and the resulting
+  orphan.
+- `trace.py --strict-integrity`: `orphans=3 integrity=0` — the new orphan is
+  `SR-163` (no TC), beside `SR-181`'s two standing findings.
+  <!-- fig: cmd="python project-trajectory/scripts/trace.py --strict-integrity" rev=this-commit -->
+
+`SR-163`'s verification is now visibly the ladder's debt: the acceptance row
+needs a TC that drives the complete join over the whole shipped universe, and
+no queued row owns it (the 2026-08-25 alignment filed consolidation rows, not
+that TC). That row is the owner's to file or delegate — carried in the
+supervisor's decisions file.
+
+**Deviations from spec:** none — a review-round rework inside the close.
+
+**Byte deltas on budgeted files:** none touched.
+
+**pytest totals:** smoke tier **1378 passed, 6 skipped in 24.89 s**; budget **24.3 s vs 60 s -> within**; `check_trajectory --strict`: clean; `trace.py --strict-integrity`: `orphans=3 integrity=0`.
 ## 2026-08-30 — WI-484: the six-phase program's residue is OWNER-GATED, and this worker session BLOCKS on it rather than manufacturing a slice
 
 **Assessment session, no code changed.** This claim branch
