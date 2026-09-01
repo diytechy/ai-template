@@ -1022,3 +1022,47 @@ the one it launched). **The alternative:** carve a prose exemption into the
 refusal for the supervisor-prompt block — rejected as sanctioning a check to
 green a step, and the prompt's job was done. **Reversal cost:** none — one
 status.md edit, fully in history.
+
+## 48. WI-563's undrawn round: the adjudication lane claimed "review round approved" with no round drawn — disposed by supervisor-drawn rounds, a rework, and a verification APPROVE
+
+**Decided (2026-09-01):** the WI-563 spot-check lane (minted at WI-552's
+merge) closed in one ADJUDICATE session whose exit banner claimed "review
+round approved"; no round existed (the WI-559 defect — scheduling exists
+after a committing BUILD only), and the verdict gate refused the absent
+rollup. Rather than fabricate a rollup for an unreviewed lane, the
+supervisor drew round 2 through an independent Opus reviewer with a hostile
+brief (recorded as `002-REVIEW-A-ef9f326-supervisor.md`): CHANGES-REQUESTED
+findings=4 — the spot-check had missed a live `check_trajectory --strict`
+ERROR that WI-552 arm 5 introduced (`schedule.py` lazy `import trace`, an
+undeclared CMP-008 -> CMP-006 crossing, attributed by control to
+`b2b06898`), excused by a false "no pytest toolchain" Bar claim. A
+supervisor-dispatched rework (`26c18f8b`) corrected the verdict to "stands
+WITH FINDINGS — successor owed", restated the Bar with real output, and
+drafted the successor + OI as fenced disposition blocks; the same reviewer's
+verification round APPROVEd (findings=2 MINOR), and the lane merged with the
+rollup compiled from both rounds. **The alternatives:** author an APPROVE
+rollup with no round (the exact forgery hazard OI-70/OI-76 name), or close
+the lane partial and strand the spot-check. **Reversal cost:** none — every
+act is a recorded commit on the merged lane.
+
+## 49. The post-merge intake crash and the sweep's retroactive bite — recovered by calling `intake_after_merge` with the merge's own scope
+
+**Decided (2026-09-01):** the WI-563 merge's intake step crashed
+(`ModuleNotFoundError: intake`) because the supervisor ran `integrate.py`
+from inside the lane worktree and the auto-unload deleted the script's own
+directory mid-run — the merge stood, the disposition drafts went unminted.
+The documented recovery (`intake.py sweep`) REFUSED on `WI-457`, a
+2026-08-15 DONE disposition row that predates the fenced `## Dispositions`
+convention: `_cmd_sweep` builds its outcome map from EVERY terminal folder,
+so the new OI-70/OI-73 guard bites historical rows and the recovery sweep is
+structurally unusable while any pre-convention adjudication row is archived
+(kit defect, unfiled — a candidate rider for WI-565's ruling or its own
+row). Disposed by invoking `intake.intake_after_merge` directly with the
+merge's honest scope (`{'WI-563': 'merged'}`, the real before/after shas):
+minted WI-564 (the seam) and WI-565 (the OI ruling row) at `9368db32`.
+**The alternatives:** edit the archived WI-457 spec to satisfy the guard
+(falsifies a settled 2026-08-15 record — its successors WI-458/459/460 were
+already minted by the old mechanism), or patch `owes_successor`/`_cmd_sweep`
+on trunk unreviewed. **Reversal cost:** none — the mint is one bookkeeping
+commit; operational lesson recorded: run `integrate.py` from the TRUNK root
+path, never from inside a lane worktree it may unload.
