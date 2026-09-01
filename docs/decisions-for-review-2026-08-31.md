@@ -1008,3 +1008,17 @@ the next boundary), and the unpause is the owner's one-line act — the same
 shape the owner just used. **The alternative:** leave the loop running
 through the weekday blackout (it idles 12:00–19:00 UTC) and let it resume
 unsupervised at 19:00. **Reversal cost:** deleting one file in one commit.
+
+## 47. The claim-refusal on status.md prose is disposed by scrubbing the queued ids from the hand-authored surface — the retired supervisor prompt included
+
+**Decided (2026-09-01):** the unpaused loop's first claim (the frontier head)
+was REFUSED by `integrate._status_prose_refusal` because the RESUME HERE
+narrative and the embedded supervisor prompt named the queued ids in
+hand-authored prose. Disposed exactly as the refusal prescribes: a trunk
+commit rewrote the RESUME HERE bullet to point at the generated frontier
+without naming any queued id, and deleted the now-consumed supervisor prompt
+block (it survives in this file's git history at `ac2f29fa`; this session is
+the one it launched). **The alternative:** carve a prose exemption into the
+refusal for the supervisor-prompt block — rejected as sanctioning a check to
+green a step, and the prompt's job was done. **Reversal cost:** none — one
+status.md edit, fully in history.

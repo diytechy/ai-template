@@ -24,26 +24,23 @@ supervisor prompt at the owner's request). Backward-looking homes:
 status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **RESUME HERE — THE FRONTIER IS PAUSED (tracked `docs/work/pause`); THE
-  2026-08-31 RULINGS ARE LANDED AND THEIR ROWS ARE QUEUED.** `OI-70`..`OI-76`
-  are ruled (the log's 2026-08-31 rulings entries); WI-552..WI-562 are
-  filed — WI-552 re-scoped by `OI-73` (typed OI edges in `needs`, the
-  mandatory successor, edges replaced at the mint), WI-557 owns the
-  delegated-decisions record + `decision_recording` dial (`OI-74`/`OI-75`),
-  WI-558..WI-562 the verdict-carrier rebuild and queue-blocker set (`OI-76`,
-  plan [plans/2026-08-31-verdict-record-and-queue-blockers.md](plans/2026-08-31-verdict-record-and-queue-blockers.md)) —
-  WI-543 is re-scoped and queued (SR-163's owner, frontier head), WI-541 is
-  re-pointed to WI-551, WI-545 sequenced behind WI-552/WI-553.
-  Nothing further is owner-owed here beyond the standing acts below.
-  To resume the loop, paste the supervisor prompt below into a fresh session.
-  A fresh reader starts at [handoff-2026-08-31.md](handoff-2026-08-31.md), the
-  sitting in [log.md](log.md), and delegated decisions 1–46 in
-  [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md).
+- **RESUME HERE — THE FRONTIER IS UNPAUSED (2026-09-01, owner-authorized) and
+  the mechanized loop runs under a supervisor session.** The 2026-08-31
+  rulings (`OI-70`..`OI-76`, the log's rulings entries) are landed and their
+  rows are queued — the scheduler's generated frontier below is the order of
+  record; hand-authored prose here names no queued id (the claim-refusal
+  rule). A fresh reader starts at
+  [handoff-2026-08-31.md](handoff-2026-08-31.md), the sitting in
+  [log.md](log.md), and delegated decisions in
+  [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md)
+  (numbering continues there as the supervisor disposes stops). The retired
+  supervisor prompt lives in git history of this file (`ac2f29fa`).
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). `wi416-parked-handback-contract` is still
   single-copy — delete only after deciding it is not wanted. The held wi508
-  branch is on origin; WI-555 is the only sanctioned act on it (`OI-71`).
+  branch is on origin; the queued wi508-partial-close row is the only
+  sanctioned act on it (`OI-71`).
 - **Standing constraints:** the depth-0 frame is **LOCKED and APPROVED** (4
   entities · 4 crossings · 3 relationships, watermark-held); owner-owed, not
   re-raised: `OI-49` (b)'s exception reads
@@ -57,60 +54,6 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   residues (§7 items 2/4/5 need a destination); PROCESS.md §4's stale
   "ordinal `0`–`4`" approval dial.
 - **Conventions:** [specs/README.md](specs/README.md) · [rubrics/README.md](rubrics/README.md) · partial closes [handbacks/](handbacks/README.md).
-- **Supervisor prompt** (owner-authorized unpause — paste into a fresh session):
-
-  ```text
-  You are the supervisor of this repository's mechanized loop, on branch
-  contract_split — the integrator's trunk is HEAD; stay on this branch, never
-  merge to main, never push (push = "human"); commit is permitted. Read
-  CLAUDE.md, the session-protocol skill, docs/status.md (RESUME HERE),
-  docs/handoff-2026-08-31.md, and docs/decisions-for-review-2026-08-31.md
-  (46 delegated decisions; the trap memories from the Windows box do not
-  exist on this Mac — the traps ride inline below). Spin up opus subagents
-  for edits and analysis to keep your own context low.
-  State at handoff: OI-70..OI-76 are RULED (log.md, the 2026-08-31 rulings
-  entries) and their rows are queued: WI-543 (SR-163 mechanism, spine, frontier
-  head), WI-552/WI-553 (the OI-70 repairs; WI-552 re-scoped by OI-73),
-  WI-554 (brief-renderer defects), WI-557 (delegated-decisions record + dial),
-  WI-558..WI-562 (verdict-carrier rebuild + queue-blockers, OI-76),
-  WI-555 (the wi508 partial close; needs WI-554), WI-556 (doctrine, quick);
-  WI-541 waits on WI-551, WI-545 on WI-552/WI-553. The scheduler's generated
-  frontier is the order of record. The wi508 row in active/ is a phantom head
-  the dispatcher skips until WI-555 clears it; the held branch is pushed to
-  origin — touch it only through WI-555's row.
-  Unpause — the owner confirms it: delete docs/work/pause in a reviewed
-  commit (regenerate docs/open-items.html in the same commit) and run the
-  real loop (./agent-resume.sh --wait-on-limit 14400 from a terminal at the
-  repo root — this box is macOS; agent-resume.cmd/PowerShell is the Windows
-  form), supervising rather than replacing it: honour the
-  12:00–19:00 UTC weekday blackout, intervene only through the kit's scripts,
-  never a hand-minted id, never a hand-moved spec, never touch a tracked
-  trunk file while the loop runs. Until WI-558 re-points the gate (OI-76,
-  ruled B+C), compile the WI-level docs/reviews/WI-<n>-REVIEW-A.md from the
-  round files (time-ordered, governing line last) after the loop's rounds
-  APPROVE — the loop does not write it yet. Watch and record: the worker/adjudicator close
-  ritual, the C2 REVIEW-OWED park + resume, the C4 probe lines, any -relaxed
-  verdict, the C6 unload. Merge a hand-finished lane yourself from the trunk
-  root (drains run only before exclusive claims); after merging a lane that
-  regenerated docs/ratify/CURRENT.md, regenerate it again on trunk.
-  Re-measure the smoke budget on a quiet box before the first commit
-  (python -m pytest -q -n auto -m smoke && python
-  scripts/check_smoke_budget.py --mode enforce; 60 s; this Mac read
-  20.3-28.4 s quiet across 2026-08-31, full suite 602 s) and record it.
-  Do not touch: main, the approval dial, [policies], the TERRA
-  reasoning-effort dial, any ruled open item, or WI-543's ruled scope.
-  Dispose NEEDS-HUMAN stops with the best decision the information supports,
-  through the kit's own mechanisms, recording each with its alternative in
-  docs/decisions-for-review-2026-08-31.md (continue numbering at 47; the
-  format WI-557 builds replaces this file class when it lands). Traps: the
-  PowerShell-absolute-path and agent_common._utf8_console() traps are
-  Windows-only — moot on this Mac; write big patch scripts with the Write
-  tool, not heredocs; the full suite is ~10 min here — run it FOREGROUND
-  with an explicit timeout, never backgrounded. End by writing
-  the session fragment under docs/log.d/ (then trunk_step.py --compile-log on
-  trunk once committed), updating RESUME HERE with a "for the owner's
-  review" list, and stopping with the repo drained and quiet.
-  ```
 
 ## Current State
 
