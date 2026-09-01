@@ -152,7 +152,7 @@ exit-code change, at any stage); vacuous on a single-phase repo with no anchors
 Usage:  python scripts/check_trajectory.py [--root .] [--strict] [--staged]
 Exit codes: 0 clean / vacuous / opted-out, 1 a hard error, 2 usage/environment.
 
-Contracts: IF-009, IF-056, IF-082, IF-083, IF-084, IF-138 — the interface seams
+Contracts: IF-009, IF-056, IF-082, IF-083, IF-084 — the interface seams
 this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
@@ -185,10 +185,6 @@ Contract IF-083: the same loader surface as taken by `traj_views`, the
 Contract IF-084: the same loader surface as taken by `traj_status`, the `--status`
     snapshot layer: `load_ifs`, `IF_CSV` and `spine_carrier`. The seam rows the
     generated status block reports are the rows validation reads.
-Contract IF-138: the same loader surface as taken by `pending`, the blocked-work
-    read model: `read_registry_rows`, `load_wis` and `WI_CSV`. What the owner
-    surfaces call blocked is the derivation validation performs, never a second
-    opinion about the same rows.
 """
 
 import argparse

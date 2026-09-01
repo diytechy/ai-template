@@ -112,18 +112,53 @@ question is raised. (File-level, so it speaks for the whole fragment.)
   the sanctioned worker stop (the loop turns it into a partial close), distinct
   from the banned ref-rename, which is a SUPERVISOR action.
 
-### Follow-up surfaced (not fixed — out of this WI's lane)
+### Review-A rework (CHANGES-REQUESTED, 5 MAJOR — addressed)
 
-Retiring the blockref *mechanism* left five APPROVED spine cells still
-*describing* it: `low-level-requirements.toml` LLR-158 (Detail: "a queued WI
-carrying a blockref reads as blocked"), LLR-161 (Detail: "schedule reads
-queued+blockref as blocked"), LLR-198 (CodeSymbol names `blocked_pending`; Detail
-describes it as a source), and `test-cases.toml` two Method cells (the handback
-and intake TCs mention a blockref cell). These are semantic prose drift only —
-I did NOT edit the spine registries, so there is no registry-vs-snapshot drift
-and no re-attest is triggered, and the codesymbol crosscheck emits no NEW finding
-(its LLR-198 note is the pre-existing module-scope-tag shape). Amending an
-Approved cell is owner-held (owes a re-attest), and WI-553 owns no spine row
-(`sr_refs = []`, it traces to OI-70), so correcting these is left for a
-spine-hygiene pass or the owner's re-attest rather than fixed off-lane. Filed as
-a finding, not a blocker: warn-only, no gate impact.
+Review A rejected leaving the stale spine cells for a later pass: they are the
+DIRECT consequence of this diff removing the mechanism, so an Approved
+requirement that still specifies the deleted behaviour is a spec-vs-code
+contradiction, not out-of-lane prose drift. Re-pointed all five (the reviewer's
+line numbers, not the earlier fragment's mis-ids):
+
+- **LLR-058** (`schedule` frontier): dropped "a queued WI carrying a blockref
+  reads as blocked"; a lane stopped early now leaves the frontier through its
+  terminal `partial/` move (its spec is no longer `queued/`). "excludes
+  blocked/…" → "excludes terminally-closed/…".
+- **LLR-144** (`handback.close_partial`): "schedule reads queued+blockref as
+  blocked …" → the terminal `partial/` move ALONE is the anti-livelock property.
+- **LLR-198** (`pending`): CodeSymbol `blocked_pending`→`pause_pending`; Detail
+  now names TWO sources (spine, pause), records `blocked_pending`'s retirement as
+  a parenthetical, and the facade re-exports the THREE surviving names
+  (spine_pending, pause_pending, pending_block), reached through ONE private name.
+- **TC-138** (handback): "an already-declared blockref … survive" → a close
+  writes NO blockref because the `partial/` folder is itself terminal (the
+  contract that now verifies LLR-144's anti-livelock property —
+  `test_a_close_writes_no_blockref_because_the_folder_is_terminal`).
+- **TC-194** (pending read model): dropped the blocked-row arm and the IF-138
+  loader-seam arm; Method + names → spine/pause projections and the three
+  surviving former names; `verifies` drops `IF-138`.
+
+Swept one stale cell the review did not enumerate but is the same defect class:
+**TC-147** (intake) "id max+1, blockref empty, …" → the minted adjudication row
+carries no blockref field at all (intake.py already dropped it this WI).
+
+**IF-138 retired (completes done-when 2).** `blocked_pending` was `pending.py`'s
+ONLY reader of the `check_trajectory` loaders (`read_registry_rows`/`load_wis`/
+`WI_CSV`); removing it deleted that import, so the IF-138 loader seam no longer
+exists in code. Retired the Drafted `IF-138` row from `interfaces.toml`, its
+`Contract IF-138:` docstring block + `Contracts:` list entry in
+`check_trajectory.py` (docstring-only — SLOC unchanged, no ratchet re-stamp), its
+`TC-194` coverage, and the dangling `IF-084` rationale pointer. Interfaces carry
+no Retired status in this kit (all 163 are Drafted), so retirement is row
+deletion.
+
+**Consequences.** The five edited Approved cells now DRIFT from their
+`docs/archive/last_approved/` snapshot → they owe the owner a re-attest;
+regenerated `docs/ratify/CURRENT.md` carries them. Generated surfaces still
+naming IF-138 (`interface-reference.md`, `cli-reference.md`,
+`components.derived.toml`, trace `report.md`) are left STALE on-branch for the
+trunk regen — the same posture this WI already took for `interface-reference.md`.
+Targeted suites green: trajectory/specs/arch/views/pending/holdban 254; import-
+layers/intake/handback/schedule 112; freshness-wiring/gen-components/arch-map/
+check-lane 106; `check_trajectory.py --root .` exits 0 (only the expected wi508
+hold-by-rename WARN + shared-spec WARNs).
