@@ -242,7 +242,7 @@ Contracts (interfaces): IF-006
 
 ### `scripts/check_trajectory`
 _Validate the work-item registry — stdlib only._
-Contracts (interfaces): IF-009, IF-056, IF-082, IF-083, IF-084, IF-138
+Contracts (interfaces): IF-009, IF-056, IF-082, IF-083, IF-084
 
 | Option | Help |
 |---|---|
