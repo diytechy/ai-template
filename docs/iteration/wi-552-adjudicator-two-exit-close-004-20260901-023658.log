@@ -1,0 +1,39 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 004
+# date: 2026-09-01 02:36
+# train: wi-552-adjudicator-two-exit-close
+# base: 81591d3abd93
+# phase: REVIEW-A
+# wi: WI-552
+# model: opencode-go/grok-4.6
+# guardrails:
+# outcome: ERROR
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 1
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 3681
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:8cef2b098262
+# timeout:
+# heterogeneity:
+# exit-code: 1
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+[91m[1mError: [0m{
+  "name": "UnknownError",
+  "data": {
+    "message": "Unexpected server error. Check server logs for details.",
+    "ref": "err_49109a36"
+  }
+}
