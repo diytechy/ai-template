@@ -22,6 +22,7 @@ through change intake and keep the spine authoritative.
 | [cross-platform-scripting](cross-platform-scripting.md) | **DRAFT** — the `hat.CROSS-PLATFORM` perspective: Windows/macOS/Linux from one stdlib-preferred kit (line endings, encoding, quoting, locks) | — | DRAFT 2026-08-30 |
 | [crash-atomicity-recovery](crash-atomicity-recovery.md) | **DRAFT** — the `hat.INTEGRITY-RECOVERABILITY` perspective: what the next reader finds after an interrupted write, and the reader that refuses a torn state | — | DRAFT 2026-08-30 |
 | [rendered-surface-review](rendered-surface-review.md) | **DRAFT** — shared by `hat.UX-DESIGNER`/`hat.UX-ENGINEER`/`hat.ACCESSIBILITY` (and cited by `hat.CONSISTENCY`): layout priority, rendered robustness, accessibility of the generated owner surfaces | — | DRAFT 2026-08-30 |
+| [decision-routing](decision-routing.md) | Routing agent decisions (decide / record-for-affirmation / escalate): confidence-signal reliability, action-property routing, review-queue decay, and this repo's own measured prototype | — | 2026-08-31 |
 
 The five `DRAFT 2026-08-30` packs above were drafted by an agent for WI-546 to
 give the hats roster's new `knowledge` cells (`docs/requirements/hats.toml`) a
