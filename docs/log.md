@@ -56279,3 +56279,9 @@ tree (`bar PASS (11 steps, tier all)` in each refresh trailer).
 anchor named above and for no other reason. `check_trajectory --strict`
 carries exactly one KNOWN ERROR now (the schedule→trace seam, queued as its
 own row); the wi508 hold-ban ERROR cleared with the phantom head.
+
+## 2026-09-01 — Addendum: the owner ruled on the evening session's three open asks in the same sitting
+
+After the pause was re-armed the owner directed, and the session performed as reviewed trunk commits: (1) the six wi508 2026-08-30 log entries restored verbatim from the branch's own log at `fa3c99c4` (`0e4cbfb1`, 401 insertions, 0 deletions; `check_docs --stale` back to 0 broken — decision 56's "not restored" is superseded); (2) `OI-77` and `OI-78` hand-filled with the owner brief cells the automated mint omitted (`6032ce69`); (3) the typed open-item brief filed as its own row through `intake._mint` against [plans/2026-09-01-typed-open-item-brief.md](plans/2026-09-01-typed-open-item-brief.md) and prioritized to the head of the frontier (`c19db8df`, classified and given its Context at `3034abca`, priority corrected at `8af51523` — the scheduler sorts Priority DESCENDING, so P1 had placed it sixth; the direct `_mint` call also wrote neither `safety_class` nor `## Context`, a mint-shape gap for the same row). The row's design answers the owner's question: the ADJUDICATOR authors the brief in a typed `[open_item]` table and the mint writes it verbatim, refusing a thin one.
+
+Deferred open items: OI-77, OI-78

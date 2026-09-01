@@ -1216,3 +1216,5 @@ recorded for the owner rather than worked around; until then `check_docs
 through the Edit tool without asking (a hand edit of `docs/log.md` on trunk
 the owner had not seen). **Reversal cost:** deleting one file in one commit
 resumes the loop; the log restoration is one commit whenever the owner says so.
+
+**Superseded in part (2026-09-01, later the same evening):** the owner directed the restoration; the six entries were restored at `0e4cbfb1` (see the log addendum). The re-arm stands.
