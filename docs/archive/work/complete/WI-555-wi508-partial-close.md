@@ -12,6 +12,17 @@ priority = 3
 
 ## Deliverable
 
+> **Record-only lane — verify on trunk, not on this branch's tree.** By OI-71's
+> sanctioned manual special case, the wi508 mutations were performed directly on
+> trunk, not carried in this claim branch's diff (which touches only this WI's
+> spec, logs, and review records). This branch was cut at base `6d3d9db4`,
+> before the conversion landed, so its tree still shows the pre-conversion state
+> — that is expected, not a false close. The effects are committed on trunk
+> `contract_split` at `551d1b2c` (commits `09f88ca2` partial → `979c3e5f` merge
+> → `551d1b2c` WI-568 mint); the shipped admission path there returns
+> `_claimed_specs(wi508)=[]`. Verification recipe and the REVIEW-A false-positive
+> reconciliation: `docs/log.d/WI-555-wi508-partial-close.md` (rework section).
+
 OI-71 (c) executed: the held wi508 lane's complete-close was CONVERTED to a
 partial handback and closed through the kit's own path — nothing discarded.
 

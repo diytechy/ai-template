@@ -102,3 +102,64 @@ to Drafted is a keep/discard call this close deliberately left to the adjudicato
 
 The origin backup `origin/wi508-architectural-remap-HELD-for-owner-verdict` is
 left in place (nothing discarded; `push = "human"`).
+
+## 2026-09-01 — WI-555 REVIEW-A rework: the finding is a verified false positive
+
+REVIEW-A (`docs/reviews/wi-555-wi508-partial-close/002-REVIEW-A-a5a75d9.md`)
+returned one MAJOR: the Deliverable "falsely records all four Done-when
+conditions as complete" because the tree "still has WI-508 claimed in
+`docs/work/active/`", "lacks the required immutable handback report and terminal
+`partial/` spec", and `integrate._merge_refusal` "refuses it as outcome-less".
+
+**The finding is a false positive. The conversion is real and committed on
+trunk.** Root cause: REVIEW-A diffed `contract_split...HEAD` and drove the
+admission path against **this claim branch's tree**. This branch was cut at the
+integration base `6d3d9db4` — *before* the manual wi508 conversion landed on
+trunk — and it is a **record-only lane**: by OI-71's sanctioned manual special
+case the wi508 mutations were performed directly on trunk, not carried in this
+claim branch's diff (`git diff 6d3d9db4 HEAD` touches only this WI's own spec,
+logs, and review records — no wi508 files, no generated artifacts, no other
+claims). So the branch tree legitimately still shows the pre-conversion state;
+that is not where the deliverable's effects live.
+
+Verified on trunk (`/Users/.../ai-template`, `contract_split` at `551d1b2c`):
+
+- `docs/handbacks/WI-508-wi508-architectural-remap.md` — present (`claimed_outcome
+  = "partial"`, `commit_range ff29fef8f9..6ba2711078`, `split_decided_by =
+  "adjudicator"`).
+- `docs/work/partial/WI-508-architectural-remap-program.md` — present; wi508 gone
+  from `docs/work/active/`.
+- `docs/work/queued/WI-568-dispose-the-close-recorded-at.md` — present (the
+  disposition row, `specref = docs/work/partial/WI-508-architectural-remap-program.md`).
+- Trunk history: `09f88ca2` partial close → `979c3e5f` integrate merge →
+  `d8848bf4` regen approval brief (WI-554-fixed renderer) → `551d1b2c` mint
+  WI-568.
+- Shipped admission path against trunk root (the tree WI-555 integrates INTO):
+  `integrate._claimed_specs(root, "wi508-architectural-remap")` → `[]`;
+  `integrate.branch_outcomes(...)` → `({}, [])`;
+  `integrate.finished_branches(root)` → `['wi-555-wi508-partial-close']` (wi508
+  phantom cleared; the only finished branch awaiting merge is WI-555 itself).
+
+To verify in seconds from the trunk root:
+
+```
+cd /Users/diytechy/Documents/ai-template   # contract_split @ 551d1b2c
+ls docs/handbacks/WI-508-wi508-architectural-remap.md \
+   docs/work/partial/WI-508-architectural-remap-program.md \
+   docs/work/queued/WI-568-dispose-the-close-recorded-at.md
+python3 -c "import sys;from pathlib import Path;sys.path.insert(0,'project-trajectory/scripts');import integrate;r=Path('.');print(integrate._claimed_specs(r,'wi508-architectural-remap'),integrate.finished_branches(r))"
+```
+
+All four Done-when conditions hold on trunk. The `_merge_refusal` REVIEW-A saw is
+a **pre-refresh artifact of the claim branch**, not a live blocker: the
+integrator refreshes this branch onto trunk in-slot before merging, and trunk
+already carries the resolved wi508 state, so the merged result reads wi508
+`partial` (confirmed: `finished_branches` on trunk already admits this branch).
+
+The legitimate kernel of REVIEW-A — that the close was not verifiable from the
+lane's own diff — is answered by this record and the Deliverable note below: the
+lane is a record for a manual trunk operation, and the verification recipe above
+makes the committed state checkable in seconds. No branch mutation is warranted:
+refreshing trunk into this record-only lane would drag the already-reviewed
+(19 rounds) and already-merged wi508 conversion into this lane's diff and is the
+integrator's in-slot job. The close stands.
