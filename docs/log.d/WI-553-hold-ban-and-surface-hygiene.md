@@ -161,4 +161,25 @@ trunk regen — the same posture this WI already took for `interface-reference.m
 Targeted suites green: trajectory/specs/arch/views/pending/holdban 254; import-
 layers/intake/handback/schedule 112; freshness-wiring/gen-components/arch-map/
 check-lane 106; `check_trajectory.py --root .` exits 0 (only the expected wi508
-hold-by-rename WARN + shared-spec WARNs).
+hold-by-rename WARN + shared-spec WARNs). Commit bar: smoke 1451 passed / 8
+skipped, 22.3s < 60s budget.
+
+**Full unfiltered suite: 3220 passed, 10 failed, 24 skipped (9m32s).** No
+regression — every failure accounted for:
+- 9 are the KNOWN pre-existing ruff-0.16.5 scaffold skew (`test_check_harness`
+  ×5, `test_dispatch::…end_to_end`, `test_integrate_station::…end_to_end`,
+  `test_integrate_unload` ×2): each bootstraps a demo and runs ruff, which reds
+  `I001` on the bootstrap-generated `demo` import. A spine-toml + docstring
+  change cannot reach a scaffolded demo file; the same set is called out in this
+  WI's own build Deliverable and confirmed on the integration base.
+- 1 is `test_derive_stage::test_this_repo_s_committed_stage_is_current`: the
+  committed `docs/stage` fingerprint no longer matches because this rework edited
+  two fingerprinted spine inputs (`low-level-requirements.toml`,
+  `test-cases.toml`). VERIFIED expected-staleness, not breakage: the test PASSED
+  at HEAD~1 (pre-rework), the recompute is clean, and `docs/stage` is a
+  trunk-regenerated derived artifact — the commit hook already SKIPs its
+  `--check` on a work branch ("generated freshness is the trunk lane's",
+  concurrency-restructure §5.2). Left stale on-branch for the trunk regen, with
+  `interface-reference.md` / `cli-reference.md` / `components.derived.toml` /
+  trace `report.md`. Not hand-refreshed (branch discipline: never edit generated
+  artifacts on a work branch).
