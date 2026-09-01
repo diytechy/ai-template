@@ -55183,3 +55183,38 @@ row's `needs` (the WI-565 mint), owner-owed via a standing generated surface
 (the six MEANING rows render in the `--approve modified` re-attestation
 brief), or recorded as a decision-file kit finding awaiting the owner's read
 (decisions 47–51).
+
+## 2026-09-01 — Addendum: the review-churn finding filed as a row (construction-first remedies)
+
+Filed after the session entry above, at the owner's direction, from that
+run's own review/rework analysis: across thirteen REVIEW-A rounds exactly
+**one** remedy was structural (WI-543 round 2's delivery-universe
+enumeration, which made an omitted shipped file unrepresentable); every
+other was additive. The successor invariant shows the accretion in three
+steps — gated on `brief`, re-keyed to a title-string prefix and enforced in
+two places, then found to slip both guards for an `amendment` brief, with a
+third guard proposed as the remedy — while the construction alternative (a
+typed obligation cell written at the mint, which `intake._close_drafts`
+already knows and deliberately launders through the title) went unproposed
+by anyone in the chain.
+
+Implementers were NOT the source: two WI-552 MINORs were queued rather than
+patched inline (`intake._OI_ID_RE` is still dead at intake.py:304), a WI-543
+MINOR likewise rode, and WI-566's rework refused a remedy outright after
+proving with `parse_dispositions` that it would halt the merge sweep. The
+bias is in what the reviewer is asked to produce, and it is economic:
+complying costs zero rounds, disputing costs one.
+
+The plan of record is
+[plans/2026-09-01-construction-first-remedies.md](plans/2026-09-01-construction-first-remedies.md);
+the row minted against it through `intake._mint` (watermark-allocated,
+`ff246f24`) is **WI-567**, priority 4 — the head of the ready frontier
+behind only the wi508 phantom the dispatcher skips. Scope is deliberately
+*wiring, not authoring*: the doctrine already ships in the vendored
+`antidote` skill with PROCESS.md §3 as its repo-scale form, so the row
+references it from `prompts/reviewer.template.md`'s finding contract,
+warn-first, and restates nothing. The plan's §2 fences the obvious failure
+modes (not a gate, not "reviewers design the fix", trust-boundary validation
+exempt) — its own risk being that a row about over-widening gets widened.
+
+**Deferred open items: none** — the row and its plan carry the whole finding.
