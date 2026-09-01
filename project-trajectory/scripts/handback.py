@@ -477,10 +477,11 @@ def close_adjudication(root, branch):
     an adjudication row (the caller leaves the DONE lane to its own tree — a
     non-adjudication worker that did not move its specs is the stall candidate,
     not this close); or `(None, refusal)` for the refusal invariant or a close
-    failure. THE REFUSAL INVARIANT (OI-73): a `disposition`-brief row that
-    drafted NO successor is refused — a partial/cancelled close must queue at
-    least one successor, an OI alone no longer discharges it, and there is no
-    third exit.
+    failure. THE REFUSAL INVARIANT (OI-73): a row judging a PARTIAL or CANCELLED
+    close (told apart from a clean-close spot check by `intake.owes_successor`,
+    the durable title signal) that drafted NO successor is refused — such a close
+    must queue at least one successor, an OI alone no longer discharges it, and
+    there is no third exit.
 
     The caller invokes this ONLY on a worker's EXIT_DONE, where the verdict is
     already recorded (`agent_loop.worker_endstate` gates DONE on it), so the
@@ -507,16 +508,20 @@ def close_adjudication(root, branch):
             # move its specs is the stall candidate the dispatcher already
             # handles, not a row this mechanical close owns.
             return None, None
-        # THE REFUSAL INVARIANT, at the close: a partial/cancelled close is
-        # judged by a `disposition`-brief row, and every such judgement MUST
-        # queue at least one successor (OI-70/OI-73, no third exit).
+        # THE REFUSAL INVARIANT, at the close: a partial/cancelled close MUST
+        # queue at least one successor (OI-70/OI-73, no third exit). The signal
+        # is `intake.owes_successor` (the durable title prefix), NOT the `brief`
+        # cell — the `partial` arm carries `brief = "disposition"` but the
+        # `cancelled` arm is brief-LESS by design, so a `brief`-only guard let a
+        # cancelled close queue no successor and archive silently. A clean-close
+        # spot check owes none and is not caught.
         parsed, drefusal = intake.parse_dispositions(text, src_rel)
         if drefusal:
             return None, "cannot close {}: {}".format(branch, drefusal)
-        if (meta.get("brief") or "").strip().lower() == "disposition" and not parsed:
+        if intake.owes_successor(meta) and not parsed:
             return None, (
                 "{} judged a partial/cancelled close but drafted NO successor in "
-                "its ## Dispositions section — a disposition must queue at least "
+                "its ## Dispositions section — such a close must queue at least "
                 "one successor (OI-70/OI-73, no third exit). The run stops for a "
                 "human to draft the continuation".format(name)
             )

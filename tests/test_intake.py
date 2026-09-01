@@ -590,23 +590,53 @@ def test_the_mint_replaces_inbound_edges_of_the_superseded_row(tmp_path):
     assert rows[successor]["Supersedes"] == "WI-005"
 
 
-def test_a_disposition_row_with_no_successor_is_refused(tmp_path):
-    # OI-70/OI-73 refusal invariant: a `disposition`-brief adjudication row
-    # (judging a partial/cancelled close) that queues NO successor is refused at
-    # the close — an OI alone no longer discharges it, and there is no third
-    # exit. The merge stands; the mint refuses and the run stops for a human.
-    root = git_repo(tmp_path)
+def _adjudicated_early_close(root, outcome, brief):
+    """A merged adjudication row judging an `outcome` (partial/cancelled) close
+    that queued NO successor. It models the SELF-close reality: specref is
+    CLEARED (the row already moved itself to complete/ following the close
+    ritual), so the durable "dispose:" title prefix — not `brief`, not specref —
+    is what the refusal invariant reads. `brief=""` models the cancelled arm,
+    which is brief-LESS by design and which the old `brief`-only guard missed."""
     write_sr(root)
+    kw = {
+        "safety_class": "adjudication",
+        "title": "dispose: the {} close of WI-005".format(outcome),
+        "specref": "",  # the self-close CLEARS specref — the title is the signal
+    }
+    if brief:
+        kw["brief"] = brief
     write_spec(
         root,
         "complete",
         "WI-008",
         slug="adjudicate",
-        safety_class="adjudication",
-        brief="disposition",
-        body="\n## Deliverable\n\nOUTCOME: PARTIAL successors=0\n",
+        body="\n## Deliverable\n\nOUTCOME: {} successors=0\n".format(outcome.upper()),
+        **kw,
     )
     _commit(root, "merged with no successor", when=T_CODE)
+
+
+def test_a_disposition_row_with_no_successor_is_refused(tmp_path):
+    # OI-70/OI-73 refusal invariant: an adjudication row judging a partial/
+    # cancelled close that queues NO successor is refused at the close — an OI
+    # alone no longer discharges it, and there is no third exit. The merge
+    # stands; the mint refuses and the run stops for a human.
+    root = git_repo(tmp_path)
+    _adjudicated_early_close(root, "partial", brief="disposition")
+    before = after = _rev(root)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-008": "merged"}, "wi-008"
+    )
+    assert minted == []
+    assert refusal is not None and "successor" in refusal
+
+
+def test_a_cancelled_close_with_no_successor_is_refused_at_merge(tmp_path):
+    # The gap REVIEW-A found: a CANCELLED close mints a brief-LESS adjudication
+    # row, so the old `brief == "disposition"` merge guard never fired and it
+    # merged silently. The outcome its specref names (`cancelled`) is the signal.
+    root = git_repo(tmp_path)
+    _adjudicated_early_close(root, "cancelled", brief="")
     before = after = _rev(root)
     minted, refusal = intake.intake_after_merge(
         root, before, after, {"WI-008": "merged"}, "wi-008"

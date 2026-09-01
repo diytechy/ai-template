@@ -107,6 +107,20 @@ def test_cancelled_predecessor_does_not_satisfy_a_hard_dependency():
     assert "waiting:hard-pred-cancelled:WI-001" in d["reasons"]
 
 
+def test_partial_predecessor_is_a_dead_edge_with_its_own_reason():
+    # OI-73 extends decision 3 to `partial`: a partial predecessor is terminal
+    # and never integrates `done`, so the successor stays `waiting` on a DEAD
+    # edge — surfaced as its own code so the scheduler agrees with the validator's
+    # `dead_dependency_findings` (which flags cancelled AND partial).
+    wis = sched.load_wis(
+        [row("WI-001", status="partial"), row("WI-002", preds="WI-001")]
+    )
+    assert ready_ids(wis) == []
+    d = disposition(wis, "WI-002")
+    assert d["disposition"] == "waiting"
+    assert "waiting:hard-pred-partial:WI-001" in d["reasons"]
+
+
 def test_done_predecessor_still_satisfies_a_hard_dependency():
     # Decision 3 (the LIVE-edge direction, the control): a `done` pred DOES
     # satisfy — cancellation is the only terminal that leaves the edge dead.

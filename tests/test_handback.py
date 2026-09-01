@@ -501,14 +501,20 @@ Scope: re-land the reviewed parts.
 
 
 def adjudication_repo(
-    tmp_path, branch="wi-401", brief="disposition", dispositions=None
+    tmp_path, branch="wi-401", brief="disposition", dispositions=None, outcome="partial"
 ):
     """A trunk with an ADJUDICATION row claimed onto `branch`, then its verdict
     recorded ON THE LANE — the `## Dispositions` are drafted after the claim,
     exactly as an ADJUDICATE session does (the queued spec carries only its
     Context, so it parses and schedules cleanly). This is the DONE state the
     mechanical close acts on. `dispositions=""` models a judge that drafted
-    nothing (the refusal-invariant case)."""
+    nothing (the refusal-invariant case).
+
+    `outcome` is the terminal folder of the ORIGINAL close the row judges, which
+    its `specref` points at so the claim resolves (R-E). The refusal invariant
+    itself reads the durable `dispose:` TITLE prefix, not that folder and not the
+    `brief`, so a `cancelled` row (brief-LESS by design) is caught exactly as the
+    `partial` one — pass `brief=""`, `outcome="cancelled"` to model it."""
     skip_without_env_gates("git")
     root = tmp_path / "repo"
     root.mkdir()
@@ -535,7 +541,10 @@ def adjudication_repo(
         'safety_class = "adjudication"',
         'brief = "{}"'.format(brief),
         "order = 0",
-        'specref = "seed.txt"',
+        # The specref points at the CLOSED original spec under its terminal
+        # folder so the claim resolves (R-E); the "dispose:" title above is what
+        # the refusal invariant reads to tell an early close from a clean one.
+        'specref = "docs/work/{}/WI-005-orig.md"'.format(outcome),
     ]
     text = (
         "+++\n"
@@ -546,6 +555,27 @@ def adjudication_repo(
     spec = root / "docs" / "work" / "queued" / "WI-401-dispose.md"
     spec.parent.mkdir(parents=True, exist_ok=True)
     spec.write_text(text, encoding="utf-8", newline="\n")
+    # The CLOSED original the row judges, in its terminal folder — a real file so
+    # the row's specref resolves (R-E) and the outcome the refusal invariant
+    # reads is the true one.
+    orig_lines = [
+        'id = "WI-005"',
+        'title = "the original WI-005 work"',
+        'workstream = "process"',
+        "needs = []",
+        "order = 0",
+        'specref = ""',
+    ]
+    orig_text = (
+        "+++\n"
+        + "".join(ln + "\n" for ln in orig_lines)
+        + "+++\n"
+        + "\n## Deliverable\n\nStopped early; the reviewed part landed.\n"
+        + "\n## Context\n\nThe original WI-005 work.\n"
+    )
+    orig = root / "docs" / "work" / outcome / "WI-005-orig.md"
+    orig.parent.mkdir(parents=True, exist_ok=True)
+    orig.write_text(orig_text, encoding="utf-8", newline="\n")
     _commit(root, "seed + adjudication row", when=T_BASE)
     assert integ.claim(root, "WI-401", branch) == 0
     # The session records its verdict ON THE LANE: draft the successors into the
@@ -612,6 +642,33 @@ def test_the_refusal_invariant_stops_a_disposition_with_no_successor(tmp_path):
     assert (
         root / "docs" / "work" / "active" / "wi-401" / "WI-401-dispose.md"
     ).is_file()
+
+
+def test_the_refusal_invariant_stops_a_cancelled_close_with_no_successor(tmp_path):
+    # OI-73, the gap REVIEW-A found: a CANCELLED original close mints a
+    # brief-LESS adjudication row, so a `brief == "disposition"` guard missed it
+    # and a cancelled close that queued no successor archived silently. The
+    # signal is the OUTCOME the row's specref names (`cancelled`), not the brief.
+    root = adjudication_repo(
+        tmp_path, brief="", outcome="cancelled", dispositions=""
+    )
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    assert ids is None
+    assert refusal is not None and "no successor" in refusal.lower()
+    # The claim did NOT move: the row stays in active/ for a human.
+    assert (
+        root / "docs" / "work" / "active" / "wi-401" / "WI-401-dispose.md"
+    ).is_file()
+
+
+def test_the_cancelled_close_still_closes_when_it_queues_a_successor(tmp_path):
+    # The other side of the same invariant: a brief-less cancelled row that DID
+    # draft a successor closes cleanly — the outcome-based guard does not over-fire.
+    root = adjudication_repo(tmp_path, brief="", outcome="cancelled")
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    assert refusal is None, refusal
+    assert ids == ["WI-401"]
+    assert integ.finished_branches(root) == ["wi-401"]
 
 
 def test_the_mechanical_close_no_ops_for_a_non_adjudication_lane(tmp_path):

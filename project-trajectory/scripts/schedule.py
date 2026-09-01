@@ -430,10 +430,10 @@ def _status(wis):
 
 # The one open-item state that does NOT satisfy a hard OI edge (OI-73): a
 # `pending` open item is an unanswered human question, so a successor that
-# hard-depends on it stays `waiting` until the row is ruled. Any other state —
-# `ruled`, or the row simply gone — is "left pending" and satisfies the edge;
-# an OI id absent from the states map is NOT satisfied (fails closed, the
-# validator's dangling-edge error), matching an unknown WI predecessor.
+# hard-depends on it stays `waiting` until the row is ruled. Any other PRESENT
+# state — `ruled` — satisfies the edge; an OI id absent from the states map
+# (never minted, the row gone, or no registry) is NOT satisfied (fails closed,
+# the validator's dangling-edge error), matching an unknown WI predecessor.
 _OI_PENDING = "pending"
 
 
@@ -666,24 +666,32 @@ _TERMINAL_DISPOSITION = {
 
 def _waiting_reasons(wi, status, oi_status=None):
     """Reason codes for a WI held `waiting` on unmet hard predecessors. WI-267
-    design-decision 3: a cancelled predecessor is a DEAD hard edge — it will
-    never integrate `done`, so the WI can never become ready. It is surfaced as
-    its own reason code (the WI still just waits, never silently satisfied) so
-    the owner sees the will-never-happen dependency. An unmet hard OPEN-ITEM
-    edge (OI-73) is its own reason code too — a `pending` open item is an
-    unanswered human question, a waiting reason the scheduler had no vocabulary
-    for before the typed OI edge existed."""
+    design-decision 3, extended to `partial` by OI-73: a cancelled OR partial
+    predecessor is a DEAD hard edge — it is terminal and will never integrate
+    `done`, so the WI can never become ready. Each is surfaced as its own reason
+    code (the WI still just waits, never silently satisfied) so the owner sees
+    the will-never-happen dependency — and the two codes match the validator's
+    `dead_dependency_findings`, which flags exactly this pair, so the scheduler
+    and the checker never disagree on whether an edge is dead. An unmet hard
+    OPEN-ITEM edge (OI-73) is its own reason code too — a `pending` open item is
+    an unanswered human question, a waiting reason the scheduler had no
+    vocabulary for before the typed OI edge existed."""
     oi_status = oi_status or {}
     unmet = [p for p in wi["preds"] if status.get(p) != _DONE]
-    dead = [p for p in unmet if status.get(p) == _CANCELLED]
+    dead_cancelled = [p for p in unmet if status.get(p) == _CANCELLED]
+    dead_partial = [p for p in unmet if status.get(p) == _PARTIAL]
     reasons = []
     if unmet:
         reasons.append("waiting:hard-preds-not-done:%s" % ",".join(unmet))
     oi_unmet = [o for o in wi.get("oi_preds", ()) if not _oi_satisfied(o, oi_status)]
     if oi_unmet:
         reasons.append("waiting:open-item-pending:%s" % ",".join(oi_unmet))
-    if dead:
-        reasons.insert(0, "waiting:hard-pred-cancelled:%s" % ",".join(dead))
+    # Insert the dead-edge codes last so they lead the list; cancelled stays
+    # ahead of partial only for a stable order, both are equally will-never-happen.
+    if dead_partial:
+        reasons.insert(0, "waiting:hard-pred-partial:%s" % ",".join(dead_partial))
+    if dead_cancelled:
+        reasons.insert(0, "waiting:hard-pred-cancelled:%s" % ",".join(dead_cancelled))
     # A WI reaches `waiting` only because SOME hard edge is unmet; name the WI
     # arm even when the sole unmet edge is an open item, so the code is never
     # empty (the old single-reason form always emitted this line).

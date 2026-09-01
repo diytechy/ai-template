@@ -184,6 +184,32 @@ ROUTED_TRACED_CELLS = {
 # states the same four; the two homes must not disagree about a row's authority.
 _DISPOSITION_OUTCOMES = "cancel / defer / draft a successor / surface an open item"
 
+# The title prefix the two EARLY-CLOSE disposition arms share (`_close_drafts`:
+# the partial and the cancelled arm). It is the ONE durable signal the refusal
+# invariant can read at BOTH ends of the close: `specref` points at the closed
+# spec (the outcome under judgement) but the close CLEARS it, and `brief` is
+# `"disposition"` only for the partial arm — the cancelled arm is brief-LESS by
+# design — so neither survives-and-distinguishes. The kit generates every one of
+# these titles, so a shared constant keeps the writer and the guards in one
+# home; the clean-close spot check ("spot-check ..."), the amendment
+# ("adjudicate: ...") and the census rows do NOT carry it and owe no successor.
+_DISPOSITION_TITLE_PREFIX = "dispose:"
+
+
+def owes_successor(meta):
+    """Whether an adjudication row judges an EARLY close (partial/cancelled) and
+    so MUST queue at least one successor (OI-70/OI-73, no third exit).
+
+    Read off the kit-generated title prefix the two early-close arms share, NOT
+    the `brief` cell (which distinguishes only the partial arm) or `specref`
+    (which the close clears): the title is preserved across the close, so the
+    close-side guard (`handback.close_adjudication`, pre-close) and the
+    merge-side guard (`_disposition_drafts`, post-close, on a row an agent may
+    have SELF-closed past the first guard) read the same durable signal."""
+    return (
+        str(meta.get("title") or "").strip().startswith(_DISPOSITION_TITLE_PREFIX)
+    )
+
 # A fenced TOML draft inside the ## Dispositions section.
 _TOML_FENCE_RE = re.compile(r"```toml\s*\n(.*?)```", re.S)
 # The keys a drafted follow-up may carry — a typo'd key is a refusal, because
@@ -833,9 +859,9 @@ def _close_drafts(root, outcomes):
             drafts.append(
                 {
                     "title": (
-                        "dispose: the cancellation recorded at {} - {} (a "
+                        "{} the cancellation recorded at {} - {} (a "
                         "disposition row never closes early; R3)".format(
-                            relpath, _DISPOSITION_OUTCOMES
+                            _DISPOSITION_TITLE_PREFIX, relpath, _DISPOSITION_OUTCOMES
                         )
                     ),
                     "kind": "adjudication",
@@ -891,9 +917,9 @@ def _close_drafts(root, outcomes):
                     # the F1/F2 starvation class returning through a new proxy;
                     # the outcome belongs in the Context, where nothing dedups.
                     "title": (
-                        "dispose: the close recorded at {} - {} (a disposition "
+                        "{} the close recorded at {} - {} (a disposition "
                         "row never closes early; R3)".format(
-                            rel_report, _DISPOSITION_OUTCOMES
+                            _DISPOSITION_TITLE_PREFIX, rel_report, _DISPOSITION_OUTCOMES
                         )
                     ),
                     "kind": "adjudication",
@@ -1140,23 +1166,29 @@ def _disposition_drafts(root, outcomes):
             if refusal:
                 return [], refusal
             # THE REFUSAL INVARIANT (OI-70, tightened by OI-73): a PARTIAL or
-            # CANCELLED close is judged by a `disposition`-brief adjudication
-            # row, and every such judgement MUST queue at least one successor —
-            # an OI alone no longer discharges it (OI-70 exit-(B)-alone is
-            # retired), and there is no third exit. A merged disposition row
-            # with an empty `## Dispositions` section is REFUSED here: the
-            # merge stands (all-or-nothing mint), the run stops, and a human
-            # reads the lane rather than a partial close silently vanishing
-            # without a continuation.
-            if (
-                meta.get("brief") or ""
-            ).strip().lower() == "disposition" and not parsed:
+            # CANCELLED close MUST queue at least one successor — an OI alone no
+            # longer discharges it (OI-70 exit-(B)-alone is retired), and there
+            # is no third exit. `owes_successor` reads the durable title signal,
+            # NOT `brief`: the `partial` arm carries `brief = "disposition"` but
+            # the `cancelled` arm is brief-LESS by design (it owes no report, so
+            # the kit assembles no brief and `agent_loop` gives it the ordinary
+            # worker assignment), and gating on `brief` let a cancelled close
+            # queue no successor and merge silently. THIS guard is the one that
+            # catches the SELF-close path — an agent that moved its own spec to
+            # `complete/` never reaches `close_adjudication` (dispatch short-
+            # circuits on a finished branch), and the self-close CLEARS specref,
+            # so the title is the only signal left. A clean-close spot check owes
+            # none and is not caught. A merged early-close row with an empty
+            # `## Dispositions` section is REFUSED here: the merge stands
+            # (all-or-nothing mint), the run stops, and a human reads the lane
+            # rather than a close silently vanishing without a continuation.
+            if owes_successor(meta) and not parsed:
                 return [], (
-                    "{}: a `disposition` adjudication row merged with an EMPTY "
-                    "## Dispositions section — a partial/cancelled close must "
-                    "queue at least one successor (OI-70/OI-73, no third exit). "
-                    "Draft the successor in the row's ## Dispositions section "
-                    "and re-run `python intake.py sweep`".format(relpath)
+                    "{}: an early-close (partial/cancelled) adjudication row "
+                    "merged with an EMPTY ## Dispositions section — such a close "
+                    "must queue at least one successor (OI-70/OI-73, no third "
+                    "exit). Draft the successor in the row's ## Dispositions "
+                    "section and re-run `python intake.py sweep`".format(relpath)
                 )
             for draft in parsed:
                 draft.setdefault("specref", relpath)

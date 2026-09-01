@@ -112,3 +112,46 @@ All seven Done-when arms delivered and tested. Smoke tier green within budget
 (1429 passed / 8 skipped, 22.2s wall; budget check 23.3s vs 60s). Full
 unfiltered suite green at close. No spine rows minted or re-statused, so no
 approval brief regeneration owed. Closing COMPLETE.
+
+### REVIEW-A rework (005 CHANGES-REQUESTED, 3 findings)
+
+REVIEW-A found the refusal invariant gated on `brief == "disposition"`, but a
+CANCELLED original close mints a brief-LESS adjudication row (its brief is
+omitted so `agent_loop` gives it the ordinary assignment rather than holding it
+for a report the close never owed). So neither guard fired for a cancelled
+close that queued no successor — it archived/merged silently, contradicting
+OI-73, Done-when 3 and the shipped contract text. Two MINORs: the scheduler's
+dead-edge reason omitted `partial` (Done-when 6 made it terminal too), and a
+stale `_OI_PENDING` comment clause.
+
+- **MAJOR (cancelled-close refusal gap) — FIXED.** The signal is now the
+  durable `dispose:` TITLE prefix the two early-close arms share, read by a new
+  single-sourced `intake.owes_successor(meta)` + `_DISPOSITION_TITLE_PREFIX`
+  (the two title builders now reference the constant). Both guards
+  (`intake._disposition_drafts` at merge, `handback.close_adjudication` at the
+  close) refuse when the row owes a successor and none was drafted; the
+  clean-close spot check (`spot-check …`), the amendment (`adjudicate: …`) and
+  the census rows do NOT carry the prefix and owe none. WHY TITLE, not specref
+  or brief: `brief == "disposition"` is set only on the partial arm (cancelled
+  is brief-LESS by design); `specref` names the outcome but the close CLEARS it
+  (`_adjudication_close_text`) — and the merge-side guard is the PRIMARY
+  enforcement for the cancelled case, because a cancelled row is dispatched as
+  an ordinary worker that SELF-closes past `close_adjudication`
+  (`dispatch._close_done_adjudication` short-circuits on a finished branch), so
+  by merge time specref is already gone. The title is the one signal that both
+  survives the close AND distinguishes the arms. Tests: a cancelled close with
+  no successor is refused at BOTH guards (`test_intake` models the self-close
+  with specref CLEARED; `test_handback`), plus the brief-less cancelled row that
+  DID queue a successor still closes (no over-fire). DW7's contract prose is now
+  accurate — the machinery it described covers cancelled.
+- **MINOR (scheduler/validator disagree on partial) — FIXED.**
+  `schedule._waiting_reasons` now emits `waiting:hard-pred-partial:<ids>`
+  alongside `waiting:hard-pred-cancelled`, so `--explain` and the validator's
+  `dead_dependency_findings` (which flags cancelled AND partial) agree an edge
+  is dead. Test added.
+- **MINOR (stale `_OI_PENDING` comment) — FIXED.** Dropped the "or the row
+  simply gone … satisfies the edge" clause that contradicted the code (a gone/
+  absent OI fails closed); the comment now matches `_oi_satisfied`.
+- Baseline: `intake.py` re-stamped 1176 → 1179 (+3, `owes_successor` +
+  `_DISPOSITION_TITLE_PREFIX`; reviewed bump). No spine rows touched — no
+  approval brief owed.
