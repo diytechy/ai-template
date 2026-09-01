@@ -1066,3 +1066,47 @@ already minted by the old mechanism), or patch `owes_successor`/`_cmd_sweep`
 on trunk unreviewed. **Reversal cost:** none — the mint is one bookkeeping
 commit; operational lesson recorded: run `integrate.py` from the TRUNK root
 path, never from inside a lane worktree it may unload.
+
+## 50. WI-566's adjudication corrected under supervisor-drawn review: the census de-inflated to rows=6 and the false successor promise replaced with the true carrier
+
+**Decided (2026-09-01):** the WI-566 amendment adjudication (one ADJUDICATE
+session, no round drawn — the same WI-559 defect as WI-563) ruled the right
+rows MEANING but inflated its census to rows=23 with seventeen SR rows
+WI-547 had already adjudicated, and closed with no `## Dispositions` while
+its machine-inserted Deliverable promised minting successors. Disposed by
+the same supervised pattern: an independent Opus round (CHANGES-REQUESTED
+findings=5), a rework (`80405032`) that re-issued the verdict IN PLACE to
+`VERDICT: MEANING rows=6` (evidence: `verdict_refusal` is per-session and
+`re.search` takes the FIRST verdict line, so an appended correction would
+never govern; no immutability convention covers docs/reviews/), replaced the
+false sentence with the true reasoning (WI-553 already moved the code; the
+re-attestation obligation is carried by snapshot drift and renders 6/6 rows
+in the `--approve modified` brief), and wrote the missing fragment; a
+verification round APPROVEd (findings=2 MINOR) and the lane merged clean.
+**Kit findings for the owner (unfiled, candidates for rows):** the
+amendment-brief adjudication arm has NO refusal invariant (`dispose:`-prefix
+keying misses `adjudicate:` titles — a MEANING ruling can close successorless
+and merge silently, handback.py:519); `intake.parse_dispositions` REFUSES a
+prose-only `## Dispositions`, so the kit has no shape for "adjudicated
+MEANING, no successor owed"; and the lane commit hook resolves ruff via the
+SYSTEM python3 and prints a loud SKIP on every commit from a worktree on
+this box. **The alternative:** merge the adjudication as-written (a permanent
+record with an inflated census and a promise of successors that cannot
+exist). **Reversal cost:** none — the correction chain is fully recorded on
+the merged lane.
+
+## 51. The pause is RE-ARMED at this session's end — five rows merged, the queue advanced, the repo drained and quiet
+
+**Decided (2026-09-01):** write the tracked `docs/work/pause` back in a
+reviewed commit once WI-566 is merged and unloaded, leaving no loop process
+running, per the owner's standing "end with the repo drained and quiet"
+brief and decision 46's precedent. The session merged WI-543, WI-552,
+WI-553, WI-563 and WI-566; minted WI-564 (the strict-ERROR seam), WI-565
+(the DOTALL OI ruling row) and WI-566 (consumed); recorded decisions 47-51.
+The frontier behind the pause, in the scheduler's order: WI-554, WI-557,
+WI-560..WI-562, WI-564, WI-565, then the standing queue. The wi508 phantom
+claim now REDS `check_trajectory --strict` via WI-553's new hold-ban
+detector (alongside the WI-564 seam ERROR) — both are queued rows' business,
+neither blocks the non-strict bar. **The alternative:** leave the loop
+running unsupervised into and past the 12:00-19:00 UTC blackout.
+**Reversal cost:** deleting one file in one commit.

@@ -24,17 +24,23 @@ supervisor prompt at the owner's request). Backward-looking homes:
 status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **RESUME HERE — THE FRONTIER IS UNPAUSED (2026-09-01, owner-authorized) and
-  the mechanized loop runs under a supervisor session.** The 2026-08-31
-  rulings (`OI-70`..`OI-76`, the log's rulings entries) are landed and their
-  rows are queued — the scheduler's generated frontier below is the order of
-  record; hand-authored prose here names no queued id (the claim-refusal
-  rule). A fresh reader starts at
-  [handoff-2026-08-31.md](handoff-2026-08-31.md), the sitting in
-  [log.md](log.md), and delegated decisions in
+- **RESUME HERE — THE FRONTIER IS PAUSED AGAIN (tracked `docs/work/pause`,
+  re-armed at the 2026-09-01 supervised session's end; decision 51).** The
+  session merged five rows and minted two; the account is the log's
+  2026-09-01 supervised-unpause entry, and one reviewed deletion of the
+  pause file resumes the generated frontier below.
+  **For the owner's review:** delegated decisions 47–51 in
   [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md)
-  (numbering continues there as the supervisor disposes stops). The retired
-  supervisor prompt lives in git history of this file (`ac2f29fa`).
+  (47 the prose-scrub, 48–49 the WI-563 undrawn-round disposal + intake
+  recovery and its two kit defects, 50 the WI-566 census correction and the
+  amendment-arm invariant gap, 51 this stop); the six MEANING rows awaiting
+  the owner's signature on the `trace.py --approve modified` re-attestation
+  brief; `check_trajectory --strict` carries two KNOWN queued ERRORs (the
+  schedule→trace seam and the wi508 stranded claim the new hold-ban detector
+  now sees — both have queued rows, neither reds the non-strict bar); and
+  the standing 2026-08-31 items below. Hand-authored prose here names no
+  queued id (the claim-refusal rule); a fresh reader starts at
+  [handoff-2026-08-31.md](handoff-2026-08-31.md) and the log.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). `wi416-parked-handback-contract` is still
