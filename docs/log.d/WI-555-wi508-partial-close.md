@@ -67,4 +67,38 @@ The keep/discard split and the `docs/archive/last_approved/` REGENERATION
 (never a copy of the branch bytes — the ruling's degradation-risk condition) are
 the DOWNSTREAM disposition row's and its successor's job, not this WI.
 
-<!-- Final merge result appended once the background integrate completes. -->
+### Outcome (landed on trunk `contract_split`)
+
+`integrate.py integrate --tier all` from the trunk root, fail-closed throughout:
+
+- **Refresh bar RED first pass** (trunk untouched): `approval-fresh` — the merged
+  `docs/ratify/CURRENT.md` was stale (I took trunk's side; the trunk step
+  regenerates the `[generated]` artifacts but NOT the approval brief).
+  Regenerated it on the branch with the WI-554-fixed renderer (branch commit
+  `d8848bf4`); `approval-check` → current.
+- **Refresh bar PASS** second pass — `bar PASS (11 steps, tier all)`, attestation
+  commit `e78b07c4`. (A transient `git: Unable to write index` aborted that run's
+  `--no-ff` step with trunk untouched; a clean retry merged it.)
+- **Merged**: trunk `6d3d9db4` → `551d1b2c`. `integrate: wi508-architectural-remap
+  merged (WI-508=partial); bar PASS`; `audit clean (product changes by merge
+  only)`. The local `wi508-architectural-remap` ref (its commits now in trunk
+  history and on `origin/…-HELD-…`) force-deleted to finish the §5.6 unload.
+- **Disposition minted**: `intake: minted WI-568 at
+  docs/work/queued/WI-568-dispose-the-close-recorded-at.md` — the keep/discard
+  adjudication (under OI-70's bounds) that drafts the re-land successor.
+- **Phantom head cleared**: `check_trajectory: clean` — the hold-by-rename
+  (OI-70) WARN is gone; WI-508 now reads `partial:terminal-stopped-early`
+  (terminal, not a phantom ready head); scheduler and dispatcher agree.
+- **Approval brief current on trunk**; the SR-163 rows landed with their honest
+  branch status intact (unflipped by any renderer/merge defect).
+
+**Flagged for the WI-568 disposition adjudicator:** LLR-203 and LLR-204 arrive on
+trunk `Approved` — the branch's pre-OI-72 approval (commit `580df781`,
+2026-08-30) — while TC-199/TC-200 are `Drafted`. OI-72 (ruled 2026-08-31) reads
+the SR-163 cluster as "four Drafted rows … honest as-is (they verify the
+delivered arms only)". Whether the two LLR approvals should STAND or be reverted
+to Drafted is a keep/discard call this close deliberately left to the adjudicator
+(`split_decided_by = "adjudicator"`); it is visible in the report's commit range.
+
+The origin backup `origin/wi508-architectural-remap-HELD-for-owner-verdict` is
+left in place (nothing discarded; `push = "human"`).

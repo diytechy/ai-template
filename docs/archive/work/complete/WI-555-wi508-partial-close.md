@@ -1,7 +1,7 @@
 +++
 id = "WI-555"
 title = "Execute OI-71: convert the wi508 complete-close to a handback and close it partial through the kit's shape"
-specref = "docs/requirements/open-items.toml#OI-71"
+specref = ""
 workstream = "process"
 sr_refs = []
 needs = ["WI-554"]
@@ -9,6 +9,35 @@ buildtier = "strong"
 safety_class = "spine"
 priority = 3
 +++
+
+## Deliverable
+
+OI-71 (c) executed: the held wi508 lane's complete-close was CONVERTED to a
+partial handback and closed through the kit's own path — nothing discarded.
+
+1. Local `wi508-architectural-remap` created at the origin HELD ref (the ref
+   "renamed back" to match the trunk claim); the spec restored from
+   `archive/work/complete/` to `active/` (undo the self-close); then
+   `handback.close_partial` wrote the immutable report
+   `docs/handbacks/WI-508-wi508-architectural-remap.md` (outcome `partial`,
+   reason, `commit_range ff29fef8..6ba27110`, `split_decided_by = "adjudicator"`)
+   and moved the spec to the terminal `docs/work/partial/`. Verified drainable:
+   the verdict gate stands down (no APPROVE owed), exactly as OI-71 predicted.
+2. Merged via `integrate.py integrate` from the trunk root as a partial close
+   (no verdict owed): trunk `6d3d9db4` → `551d1b2c`, `bar PASS (11 steps)`,
+   `audit clean`. The six generated/record conflicts took trunk's side and were
+   regenerated; the approval brief was regenerated with the WI-554-fixed renderer
+   and is current on trunk.
+3. Intake minted the disposition row **WI-568** from the report — it carries the
+   keep/discard adjudication (under OI-70's bounds) that drafts the re-land
+   successor. The last_approved REGENERATION condition is that successor's job.
+4. Phantom head cleared: the wi508 claim left trunk's `active/`,
+   `check_trajectory` is clean (the OI-70 hold-by-rename WARN is gone), scheduler
+   and dispatcher agree (WI-508 reads `partial:terminal-stopped-early`). The
+   SR-163 rows reached trunk with their honest branch status intact; the
+   LLR-203/204-Approved-vs-Drafted question is flagged for WI-568 in the log.
+
+Full execution record: `docs/log.d/WI-555-wi508-partial-close.md`.
 
 ## Context
 
