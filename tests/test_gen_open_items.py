@@ -969,6 +969,77 @@ def test_a_session_that_defers_silently_passes_clean(tmp_path):
     assert gi.deferral_findings(root, load_script("trace").open_item_states(root)) == []
 
 
+# --- OI-70 ARM 4 (WI-553): a `none` declaration cross-checked for TRUTH, not
+# --- merely presence — a fragment that writes `none` while its own scope cites a
+# --- PENDING open item is contradicted. Warn-first, position-is-scope, fail-soft.
+
+
+def test_a_none_declaration_is_contradicted_by_a_pending_citation(tmp_path):
+    # The honest-`none`-over-a-held-lane case OI-70 named: the fragment declares
+    # it deferred nothing while its own text still cites a still-pending OI.
+    gi = load_script("gen_open_items")
+    tr = load_script("trace")
+    root = repo(tmp_path, oi_rows=PENDING_OI + RULED_OI)
+    _log_d(
+        root,
+        "WI-1-held.md",
+        "## a session\n\nWe kept working around OI-4 all day.\n\n"
+        "Deferred open items: none — nothing new here.\n",
+    )
+    findings = gi.deferral_findings(root, tr.open_item_states(root))
+    assert any("OI-4" in f and "declares `none`" in f for f in findings), findings
+
+
+def test_a_none_declaration_citing_only_a_ruled_or_absent_oi_passes_clean(tmp_path):
+    # Fail-soft: a ruled (OI-5) or absent (OI-99) id a `none` fragment mentions is
+    # history, not a held decision, so it never contradicts.
+    gi = load_script("gen_open_items")
+    tr = load_script("trace")
+    root = repo(tmp_path, oi_rows=PENDING_OI + RULED_OI)
+    _log_d(
+        root,
+        "WI-2-hist.md",
+        "## s\n\nOI-5 was ruled last week and OI-99 never existed; we built on "
+        "them.\n\nDeferred open items: none — every question was answered.\n",
+    )
+    findings = gi.deferral_findings(root, tr.open_item_states(root))
+    assert not any("declares `none`" in f for f in findings), findings
+
+
+def test_a_section_scoped_none_is_judged_only_against_its_own_section(tmp_path):
+    # POSITION IS SCOPE (ARM 2's rule, applied to the truth check): a `none`
+    # inside one `### ` section is contradicted by a pending cite in THAT section
+    # (WI-1), never by one discussed in a different section (WI-2).
+    gi = load_script("gen_open_items")
+    tr = load_script("trace")
+    root = repo(tmp_path, oi_rows=PENDING_OI)
+    _log_d(
+        root,
+        "WI-3-clean.md",
+        "## day\n\n### WI-1 — clean\n\nnothing owed here.\n\n"
+        "Deferred open items: none — this WI raised nothing.\n\n"
+        "### WI-2 — other\n\nwe are still chewing on OI-4.\n",
+    )
+    # ARM 4 stays silent — OI-4 is cited in WI-2's span, not WI-1's. (The
+    # existing scope arm may still note WI-2 carries no declaration; that is a
+    # different finding, so this check is ARM-4-specific.)
+    assert not any(
+        "declares `none`" in f
+        for f in gi.deferral_findings(root, tr.open_item_states(root))
+    )
+
+    root2 = repo(tmp_path / "two", oi_rows=PENDING_OI)
+    _log_d(
+        root2,
+        "WI-4-held.md",
+        "## day\n\n### WI-1 — held\n\nstill waiting on OI-4.\n\n"
+        "Deferred open items: none — nothing new.\n\n"
+        "### WI-2 — shipped\n\ndone.\n",
+    )
+    findings = gi.deferral_findings(root2, tr.open_item_states(root2))
+    assert any("OI-4" in f and "`WI-1 — held` section" in f for f in findings), findings
+
+
 def test_the_vacuity_arm_names_the_contradicting_entry(tmp_path):
     # ARM 3 RE-AIMED: not "0 pending is a finding" — the unactionable form the
     # ruling refused — but a COUNT contradicted by a surface that still defers,

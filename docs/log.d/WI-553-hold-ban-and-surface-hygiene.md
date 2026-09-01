@@ -87,6 +87,16 @@ doctrine statement supervisors read. Four Done-when arms:
   budgets: `PROCESS_OPTIONS.md` 181,326→181,369 (+43, FLAGGED, re-stamped in the
   byte-budget-guard skill, which re-stamped its own 4,829 row); skill copies
   re-fanned. `interface-reference.md` left stale on the branch by design.
+- **Done-when 3 (fragment `none` cross-checked) LANDED.** `gen_open_items` gains
+  ARM 4 (`_none_declaration_findings` + `_scope_span`): a fragment declaring
+  `Deferred open items: none` while its own SCOPE cites a PENDING open item is
+  contradicted — the TRUTH check OI-70 named, the reverse of ARM 2's presence
+  check. POSITION IS SCOPE (a section-scoped `none` judged against that section,
+  a file-level one against the whole fragment); warn-first, never the exit code;
+  fail-soft (only pending citations contradict — a ruled/absent id a `none`
+  fragment mentions is history — and a `none` citing nothing pending passes
+  clean). Four tests in `test_gen_open_items.py` (contradiction; ruled/absent
+  cite passes; position-is-scope both ways).
 
 Deferred open items: none — OI-70 is ruled and this WI mechanizes it; no new
 question is raised.
