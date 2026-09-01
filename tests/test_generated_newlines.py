@@ -261,11 +261,12 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # five `Contract IF-###:` bodies into its docstring — docstring lines only,
     # above everything. 1281 -> 1352 when WI-553 (OI-70) added the fragment-`none`
     # cross-check (`_scope_span` + `_none_declaration_findings`, ARM 4) and its
-    # `deferral_findings` wiring, all above this site. 1352 -> 1362 when WI-554
-    # (OI-71 defect 1) collapsed `_chain_row`'s §A5.1 group split for a `Drafted`
-    # row — a never-approved row's cells no longer render under "approved —
-    # re-attestation owed" — ten lines above this site.
-    assert sites == [("gen_open_items.py", 1362)], sites
+    # `deferral_findings` wiring, all above this site. 1352 -> 1381 when WI-554
+    # (OI-71 defect 1) fixed the false "approved — re-attestation owed" label on
+    # a `Drafted` row and, to keep `_chain_row` under the C901 ratchet, split its
+    # changed-cell rendering into `_changed_cell_groups`/`_changed_cell_lines` —
+    # all above this site.
+    assert sites == [("gen_open_items.py", 1381)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still

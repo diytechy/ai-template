@@ -3400,7 +3400,10 @@ def _cell_diff_lines(changed, approved=frozenset(), drafted=False):
         groups = [(None, changed)]
     else:
         groups = [
-            ("approved — re-attestation owed", [c for c in changed if c[0] in approved]),
+            (
+                "approved — re-attestation owed",
+                [c for c in changed if c[0] in approved],
+            ),
             (
                 "traced — routes to adjudication",
                 [c for c in changed if c[0] not in approved],
