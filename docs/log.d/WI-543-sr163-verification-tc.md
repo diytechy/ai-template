@@ -136,3 +136,22 @@ ruling took):
 
 Verification (rework): commit bar green — smoke 1442 passed / 8 skipped / 23.0 s,
 budget within (60 s). Full unfiltered suite re-run recorded at close below.
+
+### 2026-09-01 — REVIEW-A round-2 rework: enumerate the delivered universe (MAJOR)
+
+REVIEW-A (`docs/reviews/wi-543-sr163-verification-tc/007-REVIEW-A-35c7146.md`)
+returned CHANGES-REQUESTED with one MAJOR: the newly delivered
+`mapping_purpose_over_repo` still supplied the checker only
+`bootstrap.mapping_entries()`. The declaration therefore also defined the
+universe being checked; deleting the real `process.toml.template →
+docs/process.toml` row made that shipped source invisible and left the report
+green.
+
+Root-cause correction selected before implementation: the bootstrap boundary
+will expose an independent delivered-package census. Every physical kit source
+must be classified exactly once as a `MAPPING` source or a reasoned exclusion;
+generator-derived scaffold outputs will name the mapped generator row whose
+reference they inherit. `mapping_purpose_over_repo` will diff that universe
+against the live manifest before grading destinations/references, and an
+end-to-end TC-204 regression will remove the real process-policy row and require
+the shipped command to report and gate the omission.

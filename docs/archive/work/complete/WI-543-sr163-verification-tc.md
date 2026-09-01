@@ -29,12 +29,20 @@ SR-163's verification shipped mechanism-first, all four done-when met:
    WARN; missing/stale GATE — already delivered/zero via the dogfood+bootstrap
    checks). The stale arm honors the `LIFECYCLE:` marker the dogfood walk applies.
    The flip of a warn class to gate at count zero is a later reviewed commit.
+   **Wired to a delivered command (REVIEW-A rework):** `mapping_purpose_over_repo`
+   assembles the real inventory, spine, and declared-absences ledger and grades
+   them, exposed as the warn-first `gen_arch_map.py --mapping-purpose` REPORT MODE
+   (the `--backlink-coverage` sibling) — so a real defect in a live repo produces
+   an SR-163 report and a gate exit, not just a green test suite.
 3. **The direct TC on SR-163** — TC-204 (`tests/test_mapping_purpose.py`, Smoke
    tier, registered Drafted; approving it is the owner's act) plants one defect
    of each class on a synthetic scaffold plus a clean control and asserts each is
    reported, drives the checker over the real `bootstrap.MAPPING` + this repo's
    real spine and asserts no gate-class finding survives and every filled
-   reference resolves — so the TC claims exactly what it exercises.
+   reference resolves — so the TC claims exactly what it exercises. Its
+   `_real_mapping_findings` runs the delivered `mapping_purpose_over_repo`, and a
+   separate `tests/test_mapping_purpose_cli.py` (re-tiered to `SLOW_MODULES`)
+   drives the shipped `--mapping-purpose` command end-to-end as a subprocess.
 4. **The burn-down begun, not finished** — 20 references filled to unambiguous
    EXISTING SRs; no new SR needed (no filled file lacked a justifying
    requirement). **Baseline for the burn-down:** of 147 MAPPING rows, 20 carry a
@@ -49,6 +57,15 @@ this WI. No new LLR, no new `stack.ini` step (`bootstrap.py` never ships
 downstream, so the kit self-check home is TC-204, which runs the checker over
 the real inventory on every suite run). Full design record in
 `docs/log.d/WI-543-sr163-verification-tc.md`.
+
+**REVIEW-A round-2 rework in progress:** the delivered path still treated
+`MAPPING` as both the declaration and the enumerated universe, so deleting a
+real row made the shipped source disappear from observation. The corrective
+boundary is the kit package itself: every physical package source must be
+covered by `MAPPING` or a reasoned source exclusion, and generator-derived
+scaffold outputs inherit their mapped generator row. The delivered
+`--mapping-purpose` path will diff that independent universe against the live
+manifest and TC-204 will drive a real-row deletion through the command path.
 
 ## Context
 
@@ -68,6 +85,14 @@ Drafted on the wi508 branch until `WI-555` lands them). UNRESOLVED REFERENCE
 and UNMAPPED FILE cannot occur because `bootstrap.py::MAPPING` — the declared
 inventory — is source→destination pairs with no place to record WHY a file
 ships (the undischarged arm `LLR-203` records on-row).
+
+REWORK context (REVIEW-A round 2): wiring the checker to a CLI did not make an
+inventory omission observable. `mapping_purpose_over_repo` still passed only
+`bootstrap.mapping_entries()` to the pure checker, so the manifest defined its
+own universe; removing the `process.toml.template → docs/process.toml` row in
+memory returned no finding. The fix must enumerate the delivered kit package
+independently, including generator-derived outputs, rather than add another
+caller-side guard around the same circular input.
 
 ## Done-when
 
