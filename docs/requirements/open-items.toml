@@ -3156,3 +3156,10 @@ options = """- (A) KEEP THE FILE, LOOP COMPILES IT: smallest diff; the loop hold
 - (D) GIT NOTES/REFS: rejected — invisible in a file tree, lossy across clones, and this repo is deliberately auditable with cat.
 - Governing-rule sub-options: last-by-commit-time (today's convention, needs a rule for the stale-promote case) vs tree-identity under (C) (no ordering rule at all)."""
 recommendation = """B with C as the attestation and a GENERATED per-WI rollup for the human (declared in [generated] with a regenerator and a --check, never trusted by the gate) — the plan's own recommendation, unchanged by this filing. On the sub-question, tree-identity: it dissolves the staleness comparison instead of adjudicating it, and the stricter reading fails closed. Nothing changes about who approves — only which artifact carries the verdict and who may author it. After the ruling: file the section-1 build row and the six section-2 shapes as their own rows off the frontier."""
+
+[open_item.OI-77]
+title = "intake._SPEC_NEEDS_RE (intake.py:1344) has no re.DOTALL, so _replace_inbound_edges silently skips a…"
+status = "pending"
+raised = "2026-09-01"
+one_line = "intake._SPEC_NEEDS_RE (intake.py:1344) has no re.DOTALL, so _replace_inbound_edges silently skips a dependent whose `needs` is a MULTI-LINE TOML list: WI-552 arm 4's 'the WI-541 strand becomes unrepresentable' guarantee in fact holds only under the single-line-`needs` invariant the machine writers happen to keep (a tree-wide scan finds no multi-line `needs` today, so it does not bite). Rule which the kit means: (a) tighten the regex to DOTALL (or a real TOML read) so the guarantee is unconditional, (b) keep the regex and DECLARE the single-line-`needs` invariant, enforced by a check so a hand-written multi-line `needs` is refused rather than silently skipped, or (c) accept the narrowed guarantee and amend WI-552's claim to match."
+wi_refs = ["WI-565"]
