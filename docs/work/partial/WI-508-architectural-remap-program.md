@@ -1,7 +1,7 @@
 +++
 id = "WI-508"
 title = "The architectural remapping program: blind minimal-map re-derivation, divergences filed as consolidation WIs"
-specref = "docs/requirements/open-items.toml#OI-58"
+specref = ""
 workstream = "process"
 sr_refs = ["SR-163"]
 needs = ["WI-448", "WI-483", "WI-507"]
@@ -9,6 +9,64 @@ buildtier = "strong"
 safety_class = "spine"
 priority = 2
 +++
+
+## Deliverable
+
+OI-58's (c) half executed: the architecture was blind-re-derived from the
+requirements alone, diffed against the live map, and every divergence adjudicated
+— consolidations filed as their own rows rather than merged in place. Six slices,
+2026-08-25 → 2026-08-30.
+
+- **`SR-163` decomposed (slice 1).** Four rows minted: `LLR-203`/`TC-199` (the
+  shipped-file inventory `bootstrap.py::MAPPING` and its declared exclusions) and
+  `LLR-204`/`TC-200` (the purpose-reference grammar
+  `gen_arch_map.py::backlink_ids`/`scan_backlinks`/`read_backlink_min` and its
+  warn-to-gate dial). Each LLR names a delivered, tested mechanism and states its
+  undischarged half on-row (the file→requirement join, and the direction/universe
+  gaps). The two **LLRs are `Approved`**; the two **TCs are `Drafted`** — slice 6
+  blessed all four, but REVIEW-A found the TCs over-claimed `SR-163` (they verify
+  only the delivered LLR arms, not the parent's full join and universe), so the
+  rework reverted `TC-199`/`TC-200` to `Drafted`, and the round-013 rework
+  removed `SR-163` from both rows' `verifies` (they now cite only `LLR-203` /
+  `LLR-204`): the cited tests exercise the delivered inventory/grammar/policy
+  arms only, and a TC naming the SR made the coverage matrix read `SR-163` as
+  tested whatever its `Status`. `SR-163`'s requirement is approved; its full
+  verification remains honestly owed and **unscheduled**, and it is back on
+  the orphan list as `SR-163 has no test (TC)` — the true state. No active or
+  queued WI owns the complete file→requirement join and shipped-universe
+  acceptance criteria; in particular, `WI-519`/`WI-520`/`WI-521` carry distinct
+  consolidation findings, have empty `sr_refs`, and do not carry `SR-163`,
+  `LLR-203`, or `LLR-204`.
+- **The blind derivation ran on two axes (slice 2).** Brief written and recorded
+  before either agent ran; two agents (A worked backward from boundary outputs, B
+  clustered obligations by shared signal) each partitioned all 75 SRs from a
+  five-file input set. 97.2% pair agreement; both independently invented the same
+  zero-SR finding/severity/exit-composition module no requirement states — a
+  requirement gap, not a layout defect. The method finding (strip the harness
+  context, not only the input set) is recorded for future runs.
+- **The alignment survey completed (slices 3–5).** All eighteen dispersion
+  families adjudicated against the live map read as the registry defines it — one
+  consolidate, twelve keep-with-reason, the rest routed — with the shared-stage
+  test (*calls, not lines*) dissolving most apparent dispersion.
+- **Three consolidation WIs filed, none merged in place:** `WI-519` (the
+  allow-file parse-honesty arm carried to three readers), `WI-520` (the credential
+  class vocabulary — a PEM block refused at the hook but passing unredacted into a
+  transcript), and `WI-521` (the decomposition-debt owner). The module-size
+  ratchet's dead-owner pointer moved to `WI-521` at slice 5, so this close
+  re-points nothing.
+- **`OI-64` raised and discharged.** The zero-SR module both teams derived was
+  routed to the owner as a requirement gap; ruled (b) and executed 2026-08-28.
+- **Closed (slice 6, delegated unattended run), then reworked on REVIEW-A.**
+  Slice 6 adjudicated the four `Drafted` slice-1 rows off the re-attestation
+  surface (the 7 cited node ids ran, 7 passed) and blessed all four
+  `Drafted → Approved` under the loop-held dial; the row moved to
+  `docs/archive/work/complete/`. REVIEW-A (`003`) then returned CHANGES-REQUESTED:
+  approving `TC-199`/`TC-200` as `SR-163` evidence falsely marked the full mapping
+  obligation verified. The rework reverted the two TCs to `Drafted` (live and
+  snapshot) and fixed a dead `OI-64` link — see
+  `docs/log.d/2026-08-30-wi508-rework-review-a-changes-requested.md`. The census
+  instrument's structural-duplication blind spot and the test-tree sensor gap are
+  recorded, deliberately not filed.
 
 ## Context
 
@@ -170,13 +228,13 @@ approval act is claimed and none was needed.
 
 **Watermarks** `LLR` 202 → 204, `TC` 198 → 200, via `trace.py
 --bump-ids`. Record:
-[../../../log.d/2026-08-25-wi508-slice1-sr163-decomposition.md](../../../log.md#2026-08-25--wi-508-slice-1-the-row-re-validated-the-lane-claimed-and--decomposed).
+[../../../log.d/2026-08-25-wi508-slice1-sr163-decomposition.md](../../log.md#2026-08-25--wi-508-slice-1-the-row-re-validated-the-lane-claimed-and--decomposed).
 
 ### SLICE 2 LANDED 2026-08-25 — the blind derivation ran, on two axes
 
 **The brief was written and recorded BEFORE either agent ran**, so the question
 cannot be re-written to fit the answer:
-[../../../plans/2026-08-25-blind-minimal-map-brief.md](../../../plans/2026-08-25-blind-minimal-map-brief.md).
+[../../../plans/2026-08-25-blind-minimal-map-brief.md](../../plans/2026-08-25-blind-minimal-map-brief.md).
 Two agents derived the minimal module map from a **five-file input set** — the
 purpose statement, the needs, the requirements, the depth-0 frame and the hat
 roster — with the design tier, the component and interface registries, the
@@ -186,10 +244,10 @@ you little: **A worked backwards from the declared boundary outputs**, **B
 clustered obligations by shared signal and failure mode**.
 
 Returns, verbatim and durable:
-[a](../../../plans/2026-08-25-blind-derivation-a-outputs.md) (24 modules) ·
-[b](../../../plans/2026-08-25-blind-derivation-b-obligations.md) (23 modules) ·
+[a](../../plans/2026-08-25-blind-derivation-a-outputs.md) (24 modules) ·
+[b](../../plans/2026-08-25-blind-derivation-b-obligations.md) (23 modules) ·
 the record, the measured agreement and the disclosures:
-[../../../plans/2026-08-25-blind-minimal-map-derivation.md](../../../plans/2026-08-25-blind-minimal-map-derivation.md).
+[../../../plans/2026-08-25-blind-minimal-map-derivation.md](../../plans/2026-08-25-blind-minimal-map-derivation.md).
 
 **Agreement, measured rather than eyeballed.** Both returned complete forward
 assignments (75 SRs, no id twice), so the two maps are comparable as partitions:
@@ -234,12 +292,12 @@ keep the requirement-level findings out of the module-work pile.
 
 **Deferred to the owner: nothing new.** The derivation commissions no act; it is
 one half of a diff. Record:
-[../../../log.d/2026-08-25-wi508-slice2-blind-derivation.md](../../../log.md#2026-08-25--wi-508-slice-2-the-blind-derivation-runs-on-two-axes-and-both-teams-disclose-the-same-breach).
+[../../../log.d/2026-08-25-wi508-slice2-blind-derivation.md](../../log.md#2026-08-25--wi-508-slice-2-the-blind-derivation-runs-on-two-axes-and-both-teams-disclose-the-same-breach).
 
 ### SLICES 3 AND 4 LANDED 2026-08-25 — the alignment, one WI filed, one question to the owner
 
 Full record:
-[../../../plans/2026-08-25-remap-alignment.md](../../../plans/2026-08-25-remap-alignment.md).
+[../../../plans/2026-08-25-remap-alignment.md](../../plans/2026-08-25-remap-alignment.md).
 
 **The live side was read the way the registry defines it** — an LLR row's
 `module` cell joined through its `sr_refs` — so `SR` → `{modules}` is a join
@@ -328,7 +386,7 @@ pointer; M-06's four test monoliths. `OI-64` awaits a ruling.
 
 ### SLICE 5 LANDED 2026-08-25 — the survey is complete and the inherited debt has a live owner
 
-Record: [../../../plans/2026-08-25-remap-alignment.md](../../../plans/2026-08-25-remap-alignment.md)
+Record: [../../../plans/2026-08-25-remap-alignment.md](../../plans/2026-08-25-remap-alignment.md)
 §§8–10.
 
 **ALL EIGHTEEN dispersion families now carry a disposition** (four in slice 3,
@@ -409,4 +467,30 @@ and has delegated this in session; the lane's branch ref was re-cut at trunk
 HEAD on 2026-08-30 so the dispatcher resumes it as a parked lane.
 
 Record:
-[../../../log.d/2026-08-25-wi508-slice5-families-and-debt-routing.md](../../../log.md#2026-08-25--wi-508-slice-5-the-dispersion-survey-completes-one-more-row-is-earned-and-the-inherited-debt-gets-an-owner-that-outlives-this-program).
+[../../../log.d/2026-08-25-wi508-slice5-families-and-debt-routing.md](../../log.md#2026-08-25--wi-508-slice-5-the-dispersion-survey-completes-one-more-row-is-earned-and-the-inherited-debt-gets-an-owner-that-outlives-this-program).
+
+### SLICE 6 LANDED 2026-08-30 — the four rows blessed, the row closed
+
+The delegated close ran. `OI-64` was already discharged (ruled (b), executed
+2026-08-28); the remaining owed act was the four `Drafted` rows this program
+authored in slice 1. Under the declared dial only the `DevStg-Needs` rung is
+human-held, so `LLR-203`/`LLR-204`/`TC-199`/`TC-200` are loop-held and a recorded
+LLM verdict carries approval authority.
+
+**Adjudicated then flipped.** Read the four rows off the re-attestation surface,
+ran the 7 test node ids `TC-199`/`TC-200` cite (**7 passed**), and confirmed the
+two LLRs name delivered, tested mechanisms while stating their undischarged halves
+on-row. `Status` **`Drafted` → `Approved`** on all four — exactly four pairs, no
+other cell moved — anchored by `intake.py snapshot` in the same act.
+
+**Off-spine re-seed, disclosed.** The wholesale snapshot re-baselined the off-spine
+registries to their already-merged state; the authority gate blocked on one
+loop-held cell — `components.toml` `CMP-006` `Notes`, WI-520's merged
+`secret_classes.py`/`LLR-205` kitlib listing — so the copy was named with
+`--approves`. `LLR-205`/`TC-201` (WI-520's) were left `Drafted`, correctly still
+owing.
+
+**Closed.** Nothing agent-executable remained; the ratchet pointer already lives on
+`WI-521` (slice 5), so the close re-points nothing. The spec moves to
+`docs/work/complete/`. Record:
+[../../../log.d/2026-08-30-wi508-slice6-spine-approval-and-close.md](../../log.md#2026-08-30--wi-508-slice-6-the-four-spine-rows-blessed-the-row-closed).

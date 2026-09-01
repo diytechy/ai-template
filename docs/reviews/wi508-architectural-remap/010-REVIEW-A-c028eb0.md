@@ -1,0 +1,4 @@
+## 2026-08-30 — WI-508 independent review A — c028eb0
+
+- [MAJOR] docs/test/test-cases.toml:2019 -> TC-199's new LLR-203-only coverage claim still cites `test_the_common_package_ships_complete` and `test_every_sibling_imported_module_is_shipped_by_mapping`, which TC-176 already assigns to LLR-181/SR-166; SR-166 expressly owns fresh-scaffold manifest arrival and its rationale also names `test_scaffold_mapping_covered_or_declared`. This double attribution collapses SR-163's purpose-coverage scope into SR-166's materialization checks and leaves the new Expected false as a coverage statement -> split or reassign TC-199 so it retains only SR-163's source-absence/unmapped-file evidence, and record the manifest-materialization/dogfood checks only through LLR-181/TC-176 (or distinct LLR arms with accurate SR references) -> @owner
+VERDICT: CHANGES-REQUESTED findings=1

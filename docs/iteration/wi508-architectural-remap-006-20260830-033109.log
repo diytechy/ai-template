@@ -1,0 +1,34 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 006
+# date: 2026-08-30 04:09
+# train: wi508-architectural-remap
+# base: 7e2d3f82
+# phase: DESIGN-CHECK
+# wi: WI-508
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: COMMITTED
+# commits: 029bf064..e815a4b8
+# tokens: 
+# cost-usd: 
+# wall-secs: 2285
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 10222
+# prompt-template: kit:DESIGN-CHECK
+# prompt-sha: sha256:f9b6ebd2c2f2
+# exit-code: 0
+# ---
+Completed WI-508 rework on a clean branch.
+
+- Corrected the [archived Deliverable](C:/Projects/ai-template-drive/wi508-architectural-remap/docs/archive/work/complete/WI-508-architectural-remap-program.md): SR-163 verification is explicitly unscheduled; Drafted TC links are non-evidence.
+- Added the [session record](C:/Projects/ai-template-drive/wi508-architectural-remap/docs/log.d/2026-08-30-wi508-second-review-rework.md).
+- Final smoke: 1,378 passed, 6 skipped; budget 30.1s/60s.
+- Composed-tree full suite: 3,108 passed, 16 skipped.
+- Document and registry-integrity checks passed.
+- Commits: `15a89009`, `e815a4b8`; final commit includes `WI: WI-508`.

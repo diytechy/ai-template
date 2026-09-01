@@ -2012,22 +2012,22 @@ status = "Approved"
 phase = 5
 
 [test.TC-199]
-verifies = ["SR-163", "LLR-203"]
+verifies = ["LLR-203"]
 level = "Integration"
-method = """The inventory's two delivered finding classes, driven where each one can actually fail. THE DOGFOOD DIRECTION, in process against the live MAPPING literal: a declared destination that this repository neither carries nor serves in place out of the kit tree, and which no absence declaration covers, is reported by name; a declared absence whose destination has materialized is reported as stale, with the lifecycle marker exempting only the paths whose presence is a legal state; and the walk is bite-proofed by removing one declared entry and asserting its destination reappears in the finding set, so a walk that had quietly stopped looking could not pass. THE PACKAGE DIRECTION, asked of a REAL bootstrapped scaffold rather than of the kit tree, because the kit's own scripts directory holds every file and a partial copy reads green there: the copied helper package must hold exactly the kit's module set - a missing or stale MAPPING row is named as the cause - and must import from where a shipped script sits; and a shipped script importing a sibling the inventory omits is reported against the MAPPING literal read as an AST, never as a whole-file regex, so a comment naming a module cannot mark it mapped."""
+method = """The inventory's two delivered finding classes, driven where each one can actually fail. THE DOGFOOD DIRECTION, in process against the live MAPPING literal: a declared destination that this repository neither carries nor serves in place out of the kit tree, and which no absence declaration covers, is reported by name; a declared absence whose destination has materialized is reported as stale, with the lifecycle marker exempting only the paths whose presence is a legal state; and the walk is bite-proofed by removing one declared entry and asserting its destination reappears in the finding set, so a walk that had quietly stopped looking could not pass. THE PACKAGE DIRECTION, asked of a REAL bootstrapped scaffold rather than of the kit tree, because the kit's own scripts directory holds every file and a partial copy reads green there: the copied helper package must hold exactly the kit's module set - a missing or stale MAPPING row is named as the cause - and must import from where a shipped script sits; and a shipped script importing a sibling the inventory omits is reported against the MAPPING literal read as an AST, never as a whole-file regex, so a comment naming a module cannot mark it mapped. The two package-direction test nodes are ALSO TC-176's evidence, where they attest LLR-181/SR-166's materialization claim; TC-199 reads the same nodes for a different arm - LLR-203's MISSING-FILES finding, a MAPPING row absent from the shipped helper package - and asserts nothing about SR-166. One test, two arms, each traced to the row that owns it."""
 tier = "Full"
-expected = "Satisfies the acceptance folded into LLR-203 (parent SR-163)"
+expected = "Satisfies the acceptance folded into LLR-203 only — its delivered inventory arm; SR-163's complete file-to-requirement join and shipped-file universe are NOT covered here"
 automated = "Yes"
 evidence = """tests/test_dogfood_sync.py::test_scaffold_mapping_covered_or_declared; tests/test_dogfood_sync.py::test_scaffold_omissions_list_is_current; tests/test_dogfood_sync.py::test_bite_scaffold_walk_catches_an_undeclared_absence; tests/test_bootstrap.py::test_the_common_package_ships_complete; tests/test_bootstrap.py::test_every_sibling_imported_module_is_shipped_by_mapping"""
 status = "Drafted"
 phase = 5
 
 [test.TC-200]
-verifies = ["SR-163", "LLR-204"]
+verifies = ["LLR-204"]
 level = "Integration"
 method = """The grammar and the policy, separately, because they fail separately. THE GRAMMAR, driven directly on the shared function both the map column and the coverage percentage read, so a divergence between the two is unrepresentable: a declaration token opening a line yields its spine ids; prose naming ids without the token yields none; a token PRECEDED by prose yields none, including the two shapes that had previously harvested a sentence denying a link as a declaration of it; whitespace, comment markers and quote characters may precede the token and nothing else may; a wrapped list continuation line declares nothing. THE POLICY, driven through the real command line on a real bootstrapped scaffold rather than by reading the code: with a threshold declared in the policy home and a live design row that no source declaration names, the report prints the shortfall and exits ZERO, and only the explicit strict arm turns the same reading into a nonzero exit - which is what makes the threshold a gate a repository opts into rather than one the delivered package arms on its behalf."""
 tier = "Full"
-expected = "Satisfies the acceptance folded into LLR-204 (parent SR-163)"
+expected = "Satisfies the acceptance folded into LLR-204 only — its delivered grammar/policy arm; SR-163's complete join and shipped-file universe are NOT covered here"
 automated = "Yes"
 evidence = """tests/test_gen_arch_map.py::test_backlink_ids_is_the_one_definition_of_a_declaration; tests/test_gen_arch_map.py::test_backlink_cli_is_warn_first_and_strict_only_on_demand"""
 status = "Drafted"
