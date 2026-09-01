@@ -54689,3 +54689,150 @@ stale `_OI_PENDING` comment clause.
   the reviewed bumps (code already APPROVE'd at REVIEW-A 007) with reasons, per
   the stack.ini escape hatch. The SLOC module-size ratchet above (smoke tier) is
   a separate sensor and is green.
+
+## 2026-09-01 — WI-563: spot-check the clean close of WI-552 (sample attestation)
+
+Session claimed `WI-563` on branch `wi-563-spot-check-the-clean-close-of`.
+SpecRef `docs/archive/work/complete/WI-552-adjudicator-two-exit-close.md`. This
+is a `complete_review = 'sample'` spot-check (`docs/process.toml [attestation]`):
+the WI-552 close was GREEN and nothing is alleged; the one question is whether
+what shipped answers what the row asked for. A finding is a successor row, never
+a reversal — the close stands.
+
+### Method
+
+Read the WI-552 spec (seven Done-when arms, OI-70 as refined by OI-73), its log
+fragment, and the REVIEW-A rollup (4 rounds, governing APPROVE findings=2).
+Verified each Done-when arm against the merged tree at HEAD, not against the
+claim prose.
+
+### Each arm located in the merged tree and matched the ask
+
+- **Arm 1 (mechanical adjudication close)** — `handback.close_adjudication`
+  (handback.py:464) wired via `dispatch._close_done_adjudication`
+  (dispatch.py:624). Present.
+- **Arm 2 (OI-mint, exit B)** — `intake._mint_open_item` (intake.py:317) +
+  `intake._inject_open_item` (intake.py:1476). Present.
+- **Arm 3 (refusal invariant)** — enforced at both `close_adjudication` and
+  `intake._disposition_drafts`, and (per REVIEW-A round 1→2) extended to the
+  cancelled-brief-less arm. Present.
+- **Arm 4 (inbound-edge replacement)** — `intake._replace_inbound_edges`
+  (intake.py:1347). Present — see the one residual below.
+- **Arm 5 (typed OI edges)** — `kitlib.spine.split_pred_edges`
+  (spine.py:190); scheduler `waiting:open-item-pending`; validator
+  `check_trajectory.validate(..., known_ois)` + `load_known_ois`. Present.
+- **Arm 6 (validator net → partial)** — `dead_dependency_findings` fires on
+  `partial` predecessors (`TERMINAL_STATUSES` includes `partial`,
+  check_trajectory.py:344). Present.
+- **Arm 7 (contract text)** — brief + PROCESS_OPTIONS prose widened; verified
+  in the WI-552 diff (arm-7 commit 442715cd).
+
+### Verdict: the close STANDS — it answers what the row asked. No successor minted.
+
+All seven Done-when arms are present in the merged tree with covering tests; the
+merge slot ran the full bar green and REVIEW-A APPROVEd after driving each arm.
+This is a read-only attestation — no product code changed.
+
+### One residual surfaced (already on the REVIEW-A record, latent — not a reversal)
+
+`intake._SPEC_NEEDS_RE` (intake.py:1344) is
+`re.compile(r"(?m)^needs\s*=\s*\[.*?\]\s*$")` — multiline-anchored but WITHOUT
+`re.DOTALL`, so `.*?` cannot cross a newline. A dependent whose `needs` is
+written as a MULTI-LINE TOML list therefore fails `_SPEC_NEEDS_RE.subn`, `n==0`,
+and `_replace_inbound_edges` silently skips it (no `changed` entry, no error).
+Arm 4's stated guarantee — the WI-541 strand class "becomes unrepresentable,
+not merely visible" — thus holds only under the invariant that every dependent's
+`needs` is single-line.
+
+Assessment: **latent, does not bite today.** `wi_convert.toml_value` emits
+single-line `needs`, and a tree-wide scan (`docs/work`, `docs/archive/work`)
+finds NO multi-line `needs` list, so no live row can currently escape the
+re-point. It was already caught as REVIEW-A round-2 MINOR
+(`intake.py:1364 … _SPEC_NEEDS_RE is single-line … the rewrite can miss a
+multi-line edge`) and shipped routed `@owner`. Recording it here as the
+spot-check's independent confirmation; it does not warrant a spine mint from
+this branch — the guarantee is correct for every row the machine writers
+produce, and a hand-authored multi-line `needs` is the only exposure.
+
+The two other round-4 APPROVE MINORs are cosmetic and confirmed present:
+`intake._OI_ID_RE` (intake.py:304) is defined and unreferenced (dead), and
+`check_trajectory.validate`'s docstring (check_trajectory.py:804) still says a
+non-adopter's `known_ois=None` edge is left to the scheduler while line 812
+coerces `None → frozenset()` so every OI edge errors. Both are on the REVIEW-A
+record; neither narrows a shipped guarantee.
+
+### Bar
+
+Read-only docs-only close (log fragment + spec Deliverable + spec move). No
+spine rows minted or re-statused (adjudication row, no SR-Refs) — no
+approval-brief regeneration owed. The environment here has no pytest toolchain;
+the spot-check is a read-level attestation over the merged tree, and the merge
+slot already ran the declared bar green (the WI's own premise).
+
+### Outcome
+
+Close STANDS; all seven arms verified; one latent residual surfaced (already on
+record). Closing COMPLETE, no successor.
+
+## 2026-09-01 — WI-563 rework: the spot-check verdict re-opened
+
+Round 2 on the WI-563 adjudication lane, driven by the supervisor-drawn verdict
+`docs/reviews/wi-563-spot-check-the-clean-close-of/002-REVIEW-A-ef9f326-supervisor.md`
+(CHANGES-REQUESTED findings=4). The verdict record stands as written and is not
+edited here; this fragment records what the rework did about it.
+
+**The corrected verdict.** The first pass closed WI-563 as "the close STANDS —
+no successor". That is withdrawn. The close of WI-552 now reads **STANDS WITH
+FINDINGS — successor owed**. Nothing about the WI-552 merge is reversed (a
+spot-check finding is a successor row, never a reversal), but the finding is
+real: WI-552 arm 5 introduced a live `--strict` ERROR that the first pass did
+not detect.
+
+**The missed ERROR.** `project-trajectory/scripts/schedule.py:445` — the lazy
+`import trace as _trace` inside `schedule.load_oi_status` — creates an
+undeclared cross-component import `scripts/schedule` (CMP-008) ->
+`scripts/trace` (CMP-006). `check_trajectory.py --strict` exits 1 on it:
+
+```
+check_trajectory: ERROR - cross-component import scripts/schedule (CMP-008) -> scripts/trace (CMP-006) has no declared IF-### seam — declare the interface row in docs/requirements/interfaces.toml or retag the membership, or set docs/process.toml [checks] components_check = false
+```
+
+Attribution verified two ways: the import arrives with `b2b06898` ("WI-552 arms
+5+6"), and `git show b6e155d3^1:project-trajectory/scripts/schedule.py | grep
+'import trace'` finds nothing — trunk immediately before the WI-552 merge has no
+such import and no ERROR. Not fixed here: this is an adjudication lane, and the
+repair is the successor's work.
+
+**The false Bar claim, withdrawn.** The first pass declared "the environment
+here has no pytest toolchain; the spot-check is a read-level attestation" and
+skipped the checks on that basis. The claim was wrong — `check_trajectory.py`
+needs no pytest, the venv exists, and the station's own refresh trailer at
+`ef9f3268` attests `bar PASS (11 steps, tier all)` on this tree — and it is the
+direct cause of the miss. Replaced with real output, run in this worktree today:
+
+- `check_trajectory.py --strict` -> exit 1, the single ERROR above (non-strict
+  exit 0). That red is the finding, not a defect of this rework.
+- `pytest -q -n auto -m smoke` -> 1449 passed, 8 skipped in 22.45s
+- `check_smoke_budget.py --mode enforce` -> 20.6s vs 60s budget -> within
+- `check_docs.py --root . --stale` -> OK - 1152 doc(s), 1570 intra-repo link(s),
+  0 broken (1 orphan warning(s))
+
+**The exits, taken through the kit's own machinery.** Two successors are DRAFTED
+in WI-563's `## Dispositions` section (the spec re-opened in
+`docs/archive/work/complete/`, `## Deliverable` still ahead of `## Context`,
+filename unchanged) for `intake._disposition_drafts` to mint at this row's merge
+— a lane never mints a WI or OI id. Draft 1: declare the IF-### seam for the
+`schedule -> trace` crossing (or retag membership) and record the strict-ERROR
+miss against the WI-552 close. Draft 2 carries an `open_item` cell, so
+`intake._inject_open_item` raises a `pending` OI for the human-owed
+`intake._SPEC_NEEDS_RE` no-DOTALL ruling and lands that OI id in draft 2's
+`needs`, parking it `waiting:open-item-pending` until the owner rules; the two
+cosmetic WI-552 leftovers (dead `intake._OI_ID_RE`; the
+`check_trajectory.validate` docstring vs the `known_ois=None` coercion) ride the
+same row's text. Both blocks parse clean through `intake.parse_dispositions` and
+`intake._mint_shape_refusal`.
+
+Deferred open items: none nameable from a lane — the OI is DRAFTED as the `open_item` cell of WI-563's second `## Dispositions` block and is minted with its id at merge by `intake._inject_open_item`; no lane may allocate an OI id.
+
+No product code changed on this lane. Bar: smoke tier + budget + docs (this
+rework's declared bar); the full unfiltered suite was deliberately not run.
