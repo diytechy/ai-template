@@ -61,9 +61,29 @@ Seven arms, built lower-risk foundation first.
   pass `known_ois` (it validates the WI graph during regen). Tests: OI minted
   pending + gates successor; non-TOML refusal.
 
+- **Arm 3 (refusal invariant) — DONE.** Enforced in TWO places: (i)
+  `intake._disposition_drafts` at merge — a `disposition`-brief adjudication row
+  that merged with an empty `## Dispositions` section is refused (the merge
+  stands, the mint refuses, the run stops); (ii) `handback.close_adjudication`
+  at the mechanical close — refuses before the spec moves terminal. An OI alone
+  no longer discharges it; no third exit. Tests at both levels.
+- **Arm 1 (mechanical adjudication close) — DONE.** `handback.close_adjudication`
+  moves a DONE adjudication row's spec to `complete/` (inserting a valid
+  `## Deliverable`, clearing `specref`, preserving `## Context`/`## Dispositions`
+  so the merge mints), commits with the WI trailer; no-ops for a
+  non-adjudication lane; refuses a successor-less disposition. Wired into
+  `dispatch._advance`'s EXIT_DONE path: a DONE adjudication row whose specs are
+  still in active/ is closed mechanically instead of resumed forever (the C6
+  loop OI-70 measured). The agent self-close path still works (finished_branches
+  short-circuits). Tests: archives-terminal + finishes, mints the successor at
+  merge, refusal invariant, non-adjudication no-op; updated the shared
+  `then_closing` dispatch stub to draft a conformant successor.
+
 ### Still to build
 
-- Arm 3: the refusal invariant (OI-73) — a partial/cancelled disposition that
+- Arm 7: the ADJUDICATE disposition brief text — document `open_item`, and that
+  the machinery now performs the close (drop the manual self-close instruction).
+  Full unfiltered suite + smoke budget. (OI-73) — a partial/cancelled disposition that
   queues NO successor is REFUSED at the close.
 - Arm 1: mechanical adjudication-row close — a DONE adjudication session's row
   closes mechanically (drafts minted to queued/, row archived terminal) instead

@@ -590,6 +590,31 @@ def test_the_mint_replaces_inbound_edges_of_the_superseded_row(tmp_path):
     assert rows[successor]["Supersedes"] == "WI-005"
 
 
+def test_a_disposition_row_with_no_successor_is_refused(tmp_path):
+    # OI-70/OI-73 refusal invariant: a `disposition`-brief adjudication row
+    # (judging a partial/cancelled close) that queues NO successor is refused at
+    # the close — an OI alone no longer discharges it, and there is no third
+    # exit. The merge stands; the mint refuses and the run stops for a human.
+    root = git_repo(tmp_path)
+    write_sr(root)
+    write_spec(
+        root,
+        "complete",
+        "WI-008",
+        slug="adjudicate",
+        safety_class="adjudication",
+        brief="disposition",
+        body="\n## Deliverable\n\nOUTCOME: PARTIAL successors=0\n",
+    )
+    _commit(root, "merged with no successor", when=T_CODE)
+    before = after = _rev(root)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-008": "merged"}, "wi-008"
+    )
+    assert minted == []
+    assert refusal is not None and "successor" in refusal
+
+
 def write_open_items(root):
     """A minimal TOML open-items registry — the carrier the OI mint appends to."""
     path = root / "docs" / "requirements" / "open-items.toml"

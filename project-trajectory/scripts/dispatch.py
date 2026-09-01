@@ -640,6 +640,22 @@ def _advance(root, ln, tier):
             rc = _lane_close(root, ln.branch, code)
             if rc is not None:
                 return ("fatal", rc)
+        elif ln.branch not in integrate.finished_branches(root):
+            # THE ADJUDICATION-ROW CLOSE (OI-70/OI-73, Done-when 1). A DONE
+            # worker whose specs are still in active/ is normally the stall
+            # candidate — but an adjudication row that recorded its verdict owes
+            # a mechanical close, because the machinery (not the agent's own
+            # spec_move) is what moves its drafts into queued/ and archives the
+            # row terminal. `close_adjudication` no-ops for a non-adjudication
+            # lane (that stall candidate is unchanged) and refuses a disposition
+            # that drafted no successor (the refusal invariant).
+            _ids, refusal = handback.close_adjudication(root, ln.branch)
+            if refusal:
+                _say(
+                    "cannot close adjudication {}: {}".format(ln.branch, refusal),
+                    err=True,
+                )
+                return ("fatal", ac.EXIT_PREFLIGHT)
         if ln.branch in integrate.finished_branches(root):
             # The lane's tree named an outcome — run ITS refresh in ITS own
             # subprocess (§A4.3: N bars must overlap, not queue here).

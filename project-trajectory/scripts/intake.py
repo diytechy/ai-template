@@ -1139,6 +1139,23 @@ def _disposition_drafts(root, outcomes):
             parsed, refusal = parse_dispositions(text, relpath)
             if refusal:
                 return [], refusal
+            # THE REFUSAL INVARIANT (OI-70, tightened by OI-73): a PARTIAL or
+            # CANCELLED close is judged by a `disposition`-brief adjudication
+            # row, and every such judgement MUST queue at least one successor —
+            # an OI alone no longer discharges it (OI-70 exit-(B)-alone is
+            # retired), and there is no third exit. A merged disposition row
+            # with an empty `## Dispositions` section is REFUSED here: the
+            # merge stands (all-or-nothing mint), the run stops, and a human
+            # reads the lane rather than a partial close silently vanishing
+            # without a continuation.
+            if (meta.get("brief") or "").strip().lower() == "disposition" and not parsed:
+                return [], (
+                    "{}: a `disposition` adjudication row merged with an EMPTY "
+                    "## Dispositions section — a partial/cancelled close must "
+                    "queue at least one successor (OI-70/OI-73, no third exit). "
+                    "Draft the successor in the row's ## Dispositions section "
+                    "and re-run `python intake.py sweep`".format(relpath)
+                )
             for draft in parsed:
                 draft.setdefault("specref", relpath)
                 draft.setdefault("workstream", meta.get("workstream") or "process")

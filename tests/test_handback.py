@@ -483,6 +483,146 @@ def test_a_disposition_rows_own_handback_is_refused_structurally(tmp_path):
     assert not (root / "docs" / "work" / "queued" / "WI-401-widget.md").exists()
 
 
+# --- the mechanical adjudication close (OI-70/OI-73, Done-when 1) --------------
+
+_DRAFTED_DISPOSITIONS = '''
+
+## Dispositions
+
+```toml
+title = "Continue the WI-005 work by another route"
+workstream = "process"
+buildtier = "medium"
+supersedes = "WI-005"
+```
+
+Scope: re-land the reviewed parts.
+'''
+
+
+def adjudication_repo(tmp_path, branch="wi-401", brief="disposition", dispositions=None):
+    """A trunk with an ADJUDICATION row claimed onto `branch`, then its verdict
+    recorded ON THE LANE — the `## Dispositions` are drafted after the claim,
+    exactly as an ADJUDICATE session does (the queued spec carries only its
+    Context, so it parses and schedules cleanly). This is the DONE state the
+    mechanical close acts on. `dispositions=""` models a judge that drafted
+    nothing (the refusal-invariant case)."""
+    skip_without_env_gates("git")
+    root = tmp_path / "repo"
+    root.mkdir()
+    _git(root.parent, "init", "-q", str(root))
+    pin_autocrlf(root)
+    _git(root, "config", "user.email", "t@example.com")
+    _git(root, "config", "user.name", "T")
+    _git(root, "config", "commit.gpgsign", "false")
+    _git(root, "symbolic-ref", "HEAD", "refs/heads/main")
+    (root / "seed.txt").write_text("seed\n", encoding="utf-8", newline="\n")
+    (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
+    tr = load_script("trace")
+    (root / "docs").mkdir(parents=True, exist_ok=True)
+    (root / tr.WATERMARK).write_text(
+        tr.render_watermark({s: 0 for s in tr.WATERMARK_SPACES}),
+        encoding="utf-8",
+        newline="\n",
+    )
+    lines = [
+        'id = "WI-401"',
+        'title = "dispose: the WI-005 close"',
+        'workstream = "process"',
+        "needs = []",
+        'safety_class = "adjudication"',
+        'brief = "{}"'.format(brief),
+        "order = 0",
+        'specref = "seed.txt"',
+    ]
+    text = (
+        "+++\n"
+        + "".join(ln + "\n" for ln in lines)
+        + "+++\n"
+        + "\n## Context\n\nJudge the WI-005 partial close.\n"
+    )
+    spec = root / "docs" / "work" / "queued" / "WI-401-dispose.md"
+    spec.parent.mkdir(parents=True, exist_ok=True)
+    spec.write_text(text, encoding="utf-8", newline="\n")
+    _commit(root, "seed + adjudication row", when=T_BASE)
+    assert integ.claim(root, "WI-401", branch) == 0
+    # The session records its verdict ON THE LANE: draft the successors into the
+    # active spec's ## Dispositions section and commit with the WI trailer.
+    drafted = _DRAFTED_DISPOSITIONS if dispositions is None else dispositions
+    if drafted:
+        wt = lane(root, branch)
+        active = wt / "docs" / "work" / "active" / branch / "WI-401-dispose.md"
+        active.write_text(
+            active.read_text(encoding="utf-8") + drafted, encoding="utf-8", newline="\n"
+        )
+        _git(wt, "add", "-A")
+        _git(wt, "commit", "--no-verify", "-m", "adjudicate: verdict\n\nWI: WI-401")
+    return root
+
+
+def test_the_mechanical_adjudication_close_archives_terminal_and_finishes(tmp_path):
+    root = adjudication_repo(tmp_path)
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    assert refusal is None, refusal
+    assert ids == ["WI-401"]
+    # The branch is FINISHED by the integrator's own read: active/ is empty.
+    assert integ.finished_branches(root) == ["wi-401"]
+    merge_branch(root)
+    complete = root / "docs" / "work" / "complete" / "WI-401-dispose.md"
+    assert complete.is_file()
+    spec = complete.read_text(encoding="utf-8")
+    # A valid Deliverable was inserted, the Dispositions section SURVIVES (the
+    # merge reads it to mint the successors), and specref is cleared.
+    assert "## Deliverable" in spec
+    assert "## Dispositions" in spec and "supersedes" in spec
+    assert 'specref = ""' in spec
+    # Every registry reader parses the closed adjudication spec.
+    rows = {
+        r["WI-ID"]: r
+        for r in acommon.read_spec_rows(root / "docs" / "work")
+    }
+    assert rows["WI-401"]["Status"] == "done"
+
+
+def test_the_mechanical_close_mints_the_drafted_successor_at_merge(tmp_path):
+    root = adjudication_repo(tmp_path)
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    assert refusal is None, refusal
+    merge_branch(root)
+    before = after = _git(root, "rev-parse", "HEAD").strip()
+    minted, mrefusal = intake.intake_after_merge(
+        root, before, after, {"WI-401": "merged"}, "wi-401"
+    )
+    assert mrefusal is None, mrefusal
+    assert len(minted) == 1
+    successor = minted[0][0]
+    rows = {
+        r["WI-ID"]: r for r in acommon.read_spec_rows(root / "docs" / "work")
+    }
+    # The successor continues the ORIGINAL closed row (WI-005) that the
+    # adjudicator's disposition named — the lineage the mint preserves.
+    assert rows[successor]["Supersedes"] == "WI-005"
+
+
+def test_the_refusal_invariant_stops_a_disposition_with_no_successor(tmp_path):
+    # OI-73: a `disposition`-brief close that drafted NO successor is refused —
+    # no third exit, nothing silent.
+    root = adjudication_repo(tmp_path, dispositions="")
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    assert ids is None
+    assert refusal is not None and "no successor" in refusal.lower()
+    # The claim did NOT move: the row stays in active/ for a human.
+    assert (root / "docs" / "work" / "active" / "wi-401" / "WI-401-dispose.md").is_file()
+
+
+def test_the_mechanical_close_no_ops_for_a_non_adjudication_lane(tmp_path):
+    # A non-adjudication DONE lane that did not move its specs is the stall
+    # candidate the dispatcher already handles — close_adjudication leaves it.
+    root = claimed_repo(tmp_path)
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    assert ids is None and refusal is None
+
+
 # --- the quarantine (the RULED red arm) ---------------------------------------
 
 

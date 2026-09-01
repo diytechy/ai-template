@@ -82,12 +82,28 @@ Contract IF-137: the terminal-outcome WRITES for the two lane closes that are
 
 from __future__ import annotations
 
+import re
 import subprocess
 
 import agent_common as ac
 import integrate
 import spec_move
 from kitlib import station
+
+# The frontmatter `specref = ...` line, cleared at a terminal close (R-E: an
+# open row's forward bridge resolves; a closed row carries none).
+_SPECREF_LINE_RE = re.compile(r"(?m)^specref\s*=\s*.*$")
+
+
+def spec_move_split(text):
+    """`(frontmatter_text, body)` for one spec — the frontmatter WITHOUT its
+    `+++` fences (trailing newline kept) and everything after the closing fence.
+    Raises ValueError naming no file when the fences are absent."""
+    lines = text.split("\n")
+    if not lines or lines[0] != "+++" or "+++" not in lines[1:]:
+        raise ValueError("no closed +++ frontmatter fence")
+    close = lines.index("+++", 1)
+    return "\n".join(lines[1:close]) + "\n", "\n".join(lines[close + 1 :])
 
 # Where a quarantined red close's failing diff lands. Under `docs/work/` because
 # that is where the work item's own record lives, and as a `.patch` because no
@@ -416,6 +432,124 @@ def close_partial(root, branch, reason, fields=None):
         )
     )
     return ids, None
+
+
+# The Deliverable a mechanical adjudication close writes when the row itself has
+# not — a valid `## Deliverable` cell that records what happened and points at
+# where the successors and any human-owed answer land.
+_ADJUDICATION_CLOSE_DELIVERABLE = (
+    "Adjudication verdict recorded on the lane; this row is closed MECHANICALLY "
+    "at its DONE (OI-70/OI-73). Its `## Dispositions` successors mint at this "
+    "row's own merge (drafts-not-mints), the mint replaces the superseded row's "
+    "inbound hard edges, and any human-owed answer becomes a `pending` open "
+    "item the successor depends on. The verdict artifact is under "
+    "`docs/reviews/`."
+)
+
+
+def _adjudication_close_text(text, deliverable):
+    """Rewrite an in-`active/` adjudication spec for its terminal close: clear
+    `specref` and insert a `## Deliverable` BEFORE the rest of the body (its
+    `## Context` and, crucially, its `## Dispositions` section, which the merge
+    reads to mint the successors). Idempotent on the Deliverable — a row an
+    agent already self-closed keeps its own."""
+    fm, body = spec_move_split(text)
+    fm = _SPECREF_LINE_RE.sub('specref = ""', fm, count=1)
+    if "\n## Deliverable" not in ("\n" + body):
+        body = "\n## Deliverable\n\n" + deliverable + "\n" + body
+    return "+++\n" + fm + "+++\n" + body
+
+
+def close_adjudication(root, branch):
+    """Mechanically CLOSE a DONE adjudication row (OI-70/OI-73, Done-when 1).
+
+    The ADJUDICATE session records its verdict and drafts its successors in the
+    row's own `## Dispositions` section, but until now NOTHING moved the row
+    terminal — the dispatcher resumed a finished adjudication row in a cycle
+    until a supervisor closed it by hand (OI-70 decision 21; the C6 loop). This
+    is that close, performed by the machinery: the row's spec archives into
+    `complete/`, so the drain merges it and `intake._disposition_drafts` mints
+    the drafted successors (with the OI edge and the inbound-edge replacement)
+    at the merge.
+
+    Returns `(closed WI ids, None)`; `(None, None)` when the claimed row is NOT
+    an adjudication row (the caller leaves the DONE lane to its own tree — a
+    non-adjudication worker that did not move its specs is the stall candidate,
+    not this close); or `(None, refusal)` for the refusal invariant or a close
+    failure. THE REFUSAL INVARIANT (OI-73): a `disposition`-brief row that
+    drafted NO successor is refused — a partial/cancelled close must queue at
+    least one successor, an OI alone no longer discharges it, and there is no
+    third exit.
+
+    The caller invokes this ONLY on a worker's EXIT_DONE, where the verdict is
+    already recorded (`agent_loop.worker_endstate` gates DONE on it), so the
+    verdict's existence is the caller's precondition, not re-proven here.
+    """
+    import intake
+
+    specs = integrate._claimed_specs(root, branch)
+    if not specs:
+        return None, "trunk holds no claimed specs for {}".format(branch)
+    wt, err = _lane(root, branch)
+    if err:
+        return None, "cannot close {}: {}".format(branch, err)
+    closed = []
+    for wi_id, name in specs:
+        src_rel = "{}/{}/{}".format(integrate.ACTIVE, branch, name)
+        try:
+            text = (wt / src_rel).read_text(encoding="utf-8")
+            meta = integrate._spec_frontmatter(wt / src_rel)
+        except (OSError, ValueError):
+            return None, "cannot read the claimed spec {} on {}".format(name, branch)
+        if (meta.get("safety_class") or "").strip().lower() != "adjudication":
+            # Not this close's case: a non-adjudication DONE lane that did not
+            # move its specs is the stall candidate the dispatcher already
+            # handles, not a row this mechanical close owns.
+            return None, None
+        # THE REFUSAL INVARIANT, at the close: a partial/cancelled close is
+        # judged by a `disposition`-brief row, and every such judgement MUST
+        # queue at least one successor (OI-70/OI-73, no third exit).
+        parsed, drefusal = intake.parse_dispositions(text, src_rel)
+        if drefusal:
+            return None, "cannot close {}: {}".format(branch, drefusal)
+        if (meta.get("brief") or "").strip().lower() == "disposition" and not parsed:
+            return None, (
+                "{} judged a partial/cancelled close but drafted NO successor in "
+                "its ## Dispositions section — a disposition must queue at least "
+                "one successor (OI-70/OI-73, no third exit). The run stops for a "
+                "human to draft the continuation".format(name)
+            )
+        new_text = _adjudication_close_text(text, _ADJUDICATION_CLOSE_DELIVERABLE)
+        dest_rel = "{}/complete/{}".format(integrate.WORK, name)
+        _touched, refusal = spec_move.move_spec(
+            wt, src_rel, dest_rel, new_text=new_text
+        )
+        if refusal:
+            return None, "cannot close {}: {}".format(name, refusal)
+        closed.append(wi_id)
+    code, out = ac.git(
+        wt,
+        "commit",
+        "--no-verify",
+        "-m",
+        "adjudicate: {} -> complete/ (mechanical close)\n\n"
+        "The OI-70/OI-73 adjudication close: the verdict is recorded, so the "
+        "machinery archives this row terminal rather than leaving it in active/ "
+        "for the dispatcher to resume forever (the C6 loop). Its drafted "
+        "successors mint at this row's merge.\n\nWI: {}".format(
+            ", ".join(closed), ", ".join(closed)
+        ),
+    )
+    if code != 0:
+        return None, "the adjudication-close commit failed on {}:\n{}".format(
+            branch, ac._failure_tail(out)
+        )
+    print(
+        "handback: closed adjudication {} -> complete/ from {}".format(
+            ", ".join(closed), branch
+        )
+    )
+    return closed, None
 
 
 def quarantine(root, branch, why):
