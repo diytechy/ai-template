@@ -88,3 +88,51 @@ retires against; gating flips only at zero, per the ruling.
   but, unlike that check step, is not work-branch-aware, so it reds on ANY work
   branch that touches a stage-derivation input — a candidate OI for a
   work-branch skip mirroring the step.
+
+### 2026-09-01 — REVIEW-A rework: wire the checker to a delivered path (MAJOR)
+
+REVIEW-A (`docs/reviews/wi-543-sr163-verification-tc/005-REVIEW-A-47579c8.md`)
+returned CHANGES-REQUESTED with one MAJOR: `mapping_purpose_findings` /
+`mapping_purpose_report` were defined in `gen_arch_map.py` but reached only from
+`tests/test_mapping_purpose.py` — no delivered CLI, bootstrap flow, or `check.py`
+step called them, so a real unmapped/unresolved/missing/stale inventory entry
+produced no SR-163 report or gate. The mechanism was verified but not *wired*.
+
+Fix (mechanism-first, one delivered home, no new LLR/TC — the same posture the
+ruling took):
+
+- **`mapping_purpose_over_repo(root)`** — the ONE delivered function that
+  assembles every environment fact the pure checker needs from the real repo:
+  `bootstrap.mapping_entries()` (the inventory), `load_spine_index` (SR/SN), and
+  `check_doc_refs.load_declared_absences` (the ledger), plus the kit-served
+  `present()` predicate. The `bootstrap`/`check_doc_refs` imports are deferred to
+  call time via `_import_sibling` (the `spine_carrier` idiom) so a plain
+  `gen_arch_map` invocation never pays to import `bootstrap`.
+- **`--mapping-purpose`** — a warn-first REPORT MODE on `main`, the
+  `--backlink-coverage` sibling (`_mapping_purpose_exit`, added to the composing
+  `modes` tuple so it runs beside the other report modes and the verdict is the
+  worst). Exits 1 only on a gate-class finding; unmapped/unresolved rows are
+  reported but never gate — the burn-down stays visible without a flag day.
+  Verified over the real repo: 127 unmapped WARN, 0 gate-class, exit 0.
+- **TC-204 now drives the delivered path.** `_real_mapping_findings` collapsed
+  onto `mapping_purpose_over_repo` (was a hand-assembled copy of the same logic),
+  so the standing evidence and the shipped command grade the inventory through
+  identical code. Added `tests/test_mapping_purpose_cli.py` — two end-to-end
+  subprocess drives of `gen_arch_map.py --mapping-purpose` (green over the real
+  repo; gate-class `missing_file` fires and exits 1 when `--root` points at a
+  tree missing every destination). Kept SEPARATE and re-tiered into
+  `conftest.SLOW_MODULES` (the `test_check_complexity_cli` precedent): each case
+  pays interpreter startup, so the commit bar drops it and close/CI runs it — the
+  in-process unit module stays in smoke unchanged, so `max-tests` stays 1458.
+- **Ratchet re-stamp:** `gen_arch_map.py` +53 SLOC (1341 → 1394) — the delivered
+  path and CLI wiring — re-stamped UP as a reviewed bump in
+  `tests/test_module_size_ratchet.py`. Not decomposed: it is the report-mode
+  sibling of `_backlink_exit`, same file, same `main` dispatch.
+- **`docs/cli-reference.md` left stale on purpose:** the new flag changes
+  `gen_arch_map`'s argparse surface, but the `cli` artifact is a trunk-owned
+  generated block (its freshness step SKIPS on a work branch, and it rides
+  `trunk_step.py --regen`). A worker must not commit it; the trunk regenerates it
+  at merge.
+
+Verification (rework): commit bar green — smoke 1442 passed / 8 skipped / 23.0 s,
+budget within (60 s). Full unfiltered suite re-run recorded at close below.

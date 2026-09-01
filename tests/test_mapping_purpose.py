@@ -15,7 +15,6 @@ from conftest import ROOT, load_script
 
 bootstrap = load_script("bootstrap")
 gen_arch_map = load_script("gen_arch_map")
-check_doc_refs = load_script("check_doc_refs")
 
 
 # ── a tiny synthetic spine the resolver can be graded against, no I/O ──
@@ -164,33 +163,10 @@ def test_report_gates_only_on_gate_classed_findings():
 
 
 def _real_mapping_findings():
-    entries = bootstrap.mapping_entries()
-    sr_by_id, sn_ids = gen_arch_map.load_spine_index(ROOT)
-    absences = check_doc_refs.load_declared_absences(
-        ROOT / "docs" / "declared-absences"
-    )
-
-    def present(dst):
-        if (ROOT / dst).exists():
-            return True
-        # kit-served in place: a scripts/ dest whose source ships in the kit tree
-        # (the meta-repo runs its own scripts from project-trajectory/scripts/).
-        for src, d, _ref in entries:
-            if (
-                d == dst
-                and dst.startswith("scripts/")
-                and (ROOT / "project-trajectory" / src).exists()
-            ):
-                return True
-        return False
-
-    return gen_arch_map.mapping_purpose_findings(
-        entries,
-        present=present,
-        sr_by_id=sr_by_id,
-        sn_ids=sn_ids,
-        declared_absences=absences,
-    )
+    # Drive the ONE delivered path — the same `mapping_purpose_over_repo` the
+    # `--mapping-purpose` CLI mode runs — so the standing evidence and the shipped
+    # command grade the real inventory through identical code, not two copies.
+    return gen_arch_map.mapping_purpose_over_repo(ROOT)
 
 
 def test_real_mapping_has_no_gate_class_findings():

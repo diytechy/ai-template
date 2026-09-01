@@ -2124,6 +2124,80 @@ def mapping_purpose_report(findings, policy=MAPPING_FINDING_POLICY):
     return lines, ok
 
 
+def _import_sibling(name):
+    """Sibling script import, the idiom the `spine_carrier` block above uses:
+    run as a subprocess this script's own dir is `sys.path[0]`, so a plain
+    import resolves; the fallback covers an in-process import (a test) whose
+    `sys.path` does not yet carry `scripts/`. Deferred to call time so a plain
+    `gen_arch_map` invocation never pays to import `bootstrap`."""
+    try:
+        return __import__(name)
+    except ImportError:  # pragma: no cover - in-process fallback
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        return __import__(name)
+
+
+def mapping_purpose_over_repo(
+    root, *, sr_registry=SR_REGISTRY, sn_registry=SN_REGISTRY
+):
+    """Run the SR-163 checker over THIS repo's real inventory and return the four
+    finding classes. The ONE delivered path that assembles every environment fact
+    the pure `mapping_purpose_findings` needs — the shipped-file inventory
+    (`bootstrap.mapping_entries()`), the SR/SN spine (`load_spine_index`), and the
+    declared-absences ledger (`check_doc_refs.load_declared_absences`) — so the
+    `--mapping-purpose` CLI mode and TC-204 grade the same code over the same repo,
+    not two hand-assembled copies that can drift.
+
+    `present(dst)` is True when the destination materializes: physically present,
+    or a `scripts/` destination served in place from the kit tree (the meta-repo
+    runs its own scripts from `project-trajectory/scripts/`; downstream the file
+    is physically present, so that arm never fires there)."""
+    bootstrap = _import_sibling("bootstrap")
+    check_doc_refs = _import_sibling("check_doc_refs")
+    root = Path(root)
+    entries = bootstrap.mapping_entries()
+    sr_by_id, sn_ids = load_spine_index(root, sr_registry, sn_registry)
+    absences = check_doc_refs.load_declared_absences(
+        root / "docs" / "declared-absences"
+    )
+
+    def present(dst):
+        if (root / dst).exists():
+            return True
+        for src, d, _ref in entries:
+            if (
+                d == dst
+                and dst.startswith("scripts/")
+                and (root / "project-trajectory" / src).exists()
+            ):
+                return True
+        return False
+
+    return mapping_purpose_findings(
+        entries,
+        present=present,
+        sr_by_id=sr_by_id,
+        sn_ids=sn_ids,
+        declared_absences=absences,
+    )
+
+
+def _mapping_purpose_exit(src_roots, args):
+    """Print the SR-163 mapping-purpose report and return the process exit code.
+    Warn-first by policy: the report gates (exit 1) only on a gate-classed finding
+    (a missing file or a stale exclusion); unmapped bare pairs and unresolved
+    references are reported and counted but never fail the run, so the reference
+    burn-down is visible on every invocation without a flag day. Ignores
+    `src_roots` — the inventory it grades is `bootstrap.MAPPING`, not the scanned
+    source tree — and takes `--root` for the repo whose spine and ledger it reads,
+    the same knob `--backlink-coverage` uses."""
+    findings = mapping_purpose_over_repo(args.root)
+    lines, ok = mapping_purpose_report(findings)
+    for line in lines:
+        print(line, file=sys.stdout if ok else sys.stderr)
+    return 0 if ok else 1
+
+
 def _backlink_exit(src_roots, args):
     """Print the report and return the process exit code. Warn-first by default;
     `--strict-backlinks` promotes a below-minimum reading to a failure, the same
@@ -2215,10 +2289,21 @@ def main():
         "The bar is docs/process.toml [checks] backlink_coverage_min",
     )
     ap.add_argument(
+        "--mapping-purpose",
+        action="store_true",
+        help="REPORT MODE (writes nothing, needs no --doc): grade the shipped-file "
+        "inventory (bootstrap.MAPPING) for SR-163 — each entry maps through a "
+        "requirement reference to a live stakeholder need, its destination exists, "
+        "and no declared exclusion is stale. Warn-first: exits 1 only on a "
+        "gate-class finding (missing file / stale exclusion); unmapped and "
+        "unresolved rows are reported but never gate (the burn-down)",
+    )
+    ap.add_argument(
         "--root",
         default=".",
-        help="repo root holding docs/process.toml and the LLR registry "
-        "(--backlink-coverage only; default: .)",
+        help="repo root holding docs/process.toml, the LLR registry, the SR/SN "
+        "spine, and docs/declared-absences (--backlink-coverage / "
+        "--mapping-purpose; default: .)",
     )
     ap.add_argument(
         "--backlink-ext",
@@ -2247,6 +2332,7 @@ def main():
     # named mode runs, in this order, and the verdict is the worst of them.
     modes = (
         (args.backlink_coverage, _backlink_exit),
+        (args.mapping_purpose, _mapping_purpose_exit),
         (args.cli_doc, _cli_doc_exit),
         (args.contracts_doc, _contracts_doc_exit),
     )
