@@ -80,8 +80,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   origin — touch it only through WI-555's row.
   Unpause — the owner confirms it: delete docs/work/pause in a reviewed
   commit (regenerate docs/open-items.html in the same commit) and run the
-  real loop (agent-resume.cmd --wait-on-limit 14400, launched from PowerShell
-  by absolute path), supervising rather than replacing it: honour the
+  real loop (./agent-resume.sh --wait-on-limit 14400 from a terminal at the
+  repo root — this box is macOS; agent-resume.cmd/PowerShell is the Windows
+  form), supervising rather than replacing it: honour the
   12:00–19:00 UTC weekday blackout, intervene only through the kit's scripts,
   never a hand-minted id, never a hand-moved spec, never touch a tracked
   trunk file while the loop runs. Until WI-558 re-points the gate (OI-76,
@@ -94,16 +95,18 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   regenerated docs/ratify/CURRENT.md, regenerate it again on trunk.
   Re-measure the smoke budget on a quiet box before the first commit
   (python -m pytest -q -n auto -m smoke && python
-  scripts/check_smoke_budget.py --mode enforce; 60 s) and record the number.
+  scripts/check_smoke_budget.py --mode enforce; 60 s; this Mac read
+  20.3-28.4 s quiet across 2026-08-31, full suite 602 s) and record it.
   Do not touch: main, the approval dial, [policies], the TERRA
   reasoning-effort dial, any ruled open item, or WI-543's ruled scope.
   Dispose NEEDS-HUMAN stops with the best decision the information supports,
   through the kit's own mechanisms, recording each with its alternative in
-  docs/decisions-for-review-2026-08-31.md (continue numbering at 47). Traps:
-  agent-resume from PowerShell by absolute path; a helper printing a
-  reviewer's stream needs agent_common._utf8_console(); write big patch
-  scripts with the Write tool, not heredocs; the full suite is ~11 min — run
-  it FOREGROUND with an explicit timeout, never backgrounded. End by writing
+  docs/decisions-for-review-2026-08-31.md (continue numbering at 47; the
+  format WI-557 builds replaces this file class when it lands). Traps: the
+  PowerShell-absolute-path and agent_common._utf8_console() traps are
+  Windows-only — moot on this Mac; write big patch scripts with the Write
+  tool, not heredocs; the full suite is ~10 min here — run it FOREGROUND
+  with an explicit timeout, never backgrounded. End by writing
   the session fragment under docs/log.d/ (then trunk_step.py --compile-log on
   trunk once committed), updating RESUME HERE with a "for the owner's
   review" list, and stopping with the repo drained and quiet.
