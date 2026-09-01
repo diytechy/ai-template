@@ -4,7 +4,7 @@ title = "The typed open-item brief: an adjudicator-minted OI carries blast radiu
 workstream = "process"
 specref = "docs/plans/2026-09-01-typed-open-item-brief.md"
 buildtier = "medium"
-priority = 1
+priority = 5
 safety_class = "ordinary"
 +++
 
