@@ -74,18 +74,30 @@ trending to 100%, time-per-item trending to zero).
 **Autonomy-ladder precedent.** Sheridan & Verplank's 1978 levels 5-8 map
 onto escalate / veto-window / record / decide-silently: level 6 (execute
 after a delay unless countermanded) is a distinct tier that degrades into
-"record" when the owner is away and "escalate" when watching. Shipping
-products use a few NAMED MODES, not a continuous slider. "Defer to
-conservative" (take the reversible default and record it) converts would-be
-escalations into recordings — a fourth outcome beyond the three tiers.
+"record" when the owner is away and "escalate" when watching. Aviation's
+management-by-consent / management-by-exception vocabulary (Billings, NASA)
+names the same split, with the empirical rider that operator preference
+shifts from consent toward exception under time pressure and workload — the
+measured version of "it depends on the owner's mood," and the strongest
+argument that the setting must be cheap to move per sitting. Horvitz (CHI
+1999) formalizes the whole ladder as TWO THRESHOLDS on one score (below the
+first: act silently; between: record/dialog; above: ask), with the
+thresholds explicitly allowed to be "directly assessed by designers or
+users" — ship a dial, not a utility elicitation. Shipping products use a
+few NAMED MODES, not a continuous slider, always over a floor the dial
+cannot cross (deny rules that bind in every mode): the dial is a
+WORKLOAD-ALLOCATION instrument, never the security boundary. "Defer to
+conservative" (take the reversible default and record it) converts
+would-be escalations into recordings — a fourth outcome beyond the three
+tiers, as is narrowing scope and retrying before asking.
 
 **This repo's own measured evidence** (2026-08-31 survey): the
 decisions-for-review pattern arose ad hoc three times (72 entries total);
 4 were ever affirmed, nothing machine-reads the files, and the declared
 prose format degraded within one session (21 of 46 entries carried the
 `Decided:` field). The one affirmation that happened was per-sitting with
-exceptions, recorded as a ratify-style commit quoting the owner — not a
-per-entry queue worked down. 44 of the 46 most recent entries were
+exceptions, recorded as an approval commit quoting the owner's words — not
+a per-entry queue worked down. 44 of the 46 most recent entries were
 supervisor-altitude decisions about running the loop, an altitude the
 OI-70 adjudicator-exits doctrine does not reach.
 
@@ -101,8 +113,9 @@ OI-70 adjudicator-exits doctrine does not reach.
 - Size any owner-review surface from the owner's real capacity first, then
   set what qualifies to fill that budget; keep its precision high enough
   that reading it stays worth doing.
-- Land records where the owner already stops (a sitting, a ratify record, a
-  generated band on the open-items surface) rather than minting a new inbox.
+- Land records where the owner already stops (a sitting, a dated approval
+  record, a generated band on the open-items surface) rather than minting a
+  new inbox.
 - If a detector pass is wanted, make it a separate agent with its own
   context, run per-segment on long transcripts, reading visible reasoning.
 
