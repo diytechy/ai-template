@@ -2,11 +2,15 @@
 id = "WI-568"
 title = "dispose: the close recorded at docs/handbacks/WI-508-wi508-architectural-remap.md - cancel / defer / draft a successor / surface an open item (a disposition row never closes early; R3)"
 workstream = "process"
-specref = "docs/work/partial/WI-508-architectural-remap-program.md"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "disposition"
 +++
+
+## Deliverable
+
+Adjudication verdict recorded on the lane; this row is closed MECHANICALLY at its DONE (OI-70/OI-73). Its `## Dispositions` successors mint at this row's own merge (drafts-not-mints), the mint replaces the superseded row's inbound hard edges, and any human-owed answer becomes a `pending` open item the successor depends on. The verdict artifact is under `docs/reviews/`.
 
 ## Context
 
