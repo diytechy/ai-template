@@ -155,3 +155,18 @@ stale `_OI_PENDING` comment clause.
 - Baseline: `intake.py` re-stamped 1176 → 1179 (+3, `owes_successor` +
   `_DISPOSITION_TITLE_PREFIX`; reviewed bump). No spine rows touched — no
   approval brief owed.
+
+### REVIEW-A (009) rework — the un-restamped ratchet left the smoke bar red
+
+- **BLOCKER (per-commit bar red) — FIXED.** After the +3 bump above, a later
+  ruff/format pass (blank-line normalization) shrank `intake.py` to 1177 SLOC
+  without the ratchet being re-stamped in the same commit. Because
+  `test_module_size_ratchet` compares `check_complexity.module_sloc` exact-
+  equality in BOTH directions, the committed 1179 baseline vs the measured 1177
+  failed under `-m smoke` on the clean tree — so the per-commit bar was red and
+  the Deliverable's "smoke tier green" claim was false. Re-stamped the
+  `intake.py` entry **1179 → 1177 (RE-STAMPED DOWN -2)** with the reason inline,
+  per this file's record-the-drop-in-the-same-commit rule. Re-ran the bar:
+  `pytest -q -n auto -m smoke` → 1430 passed, 8 skipped in 20.9s;
+  `check_smoke_budget.py --mode enforce` → 20.9s vs 60s within. No executable
+  line changed — a test baseline only.
