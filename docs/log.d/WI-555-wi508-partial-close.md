@@ -8,6 +8,8 @@ closes **partial** through the kit's own path, performed MANUALLY as the special
 case its history makes it — nothing discarded, the evidence preserved in
 history, a successor re-lands the reviewed spine content from a preserved record.
 
+Deferred open items: none — the restore-or-stand ruling is routed through WI-568's disposition adjudication, which mints an OI through its own `open_item` cell if the adjudicator judges it owner-owed; a lane may not allocate an OI id.
+
 ### The mechanics, measured before touching anything
 
 - Held branch has no LOCAL ref — only `origin/wi508-architectural-remap-HELD-for-owner-verdict`.
@@ -163,3 +165,102 @@ makes the committed state checkable in seconds. No branch mutation is warranted:
 refreshing trunk into this record-only lane would drag the already-reviewed
 (19 rounds) and already-merged wi508 conversion into this lane's diff and is the
 integrator's in-slot job. The close stands.
+
+## 2026-09-01 — WI-555 REVIEW-A round 005 rework: the record corrected (supervisor-drawn round)
+
+REVIEW-A round 005
+(`docs/reviews/wi-555-wi508-partial-close/005-REVIEW-A-5c8a007-supervisor.md`,
+drawn against a tree that CONTAINS trunk `551d1b2c`, so the conversion was
+visible to it) returned nine findings. Three are corrections of record this
+lane owes; the rest route to WI-568, the owner, or kit rows. The build sections
+above stand as written — this section is the correction, not a rewrite.
+
+**The snapshot absorption (MAJOR 1).** The wi508 handback merge (`979c3e5f`)
+carried the BRANCH's `docs/archive/last_approved/` bytes onto trunk. They were
+written on the branch by the kit's own snapshot writer at `580df781` /
+`4824c0ba` (2026-08-30) — not hand-copied — but the merge is a plain content
+merge, so the trunk baseline for the off-spine registries (`interfaces.toml`,
+`external.toml`, `components.toml`) and the spine registries moved from the
+pre-merge anchor (`6d3d9db4:docs/archive/last_approved`, last written at
+`13593db9`) to the branch's copy:
+
+```
+git diff --stat 6d3d9db4 551d1b2c -- docs/archive/last_approved/
+  6 files changed, 1029 insertions(+), 893 deletions(-)
+git log --oneline 6d3d9db4..551d1b2c -- docs/archive/last_approved/
+  4824c0ba  WI-508 rework: revert TC-199/TC-200 to Drafted ...
+  580df781  WI-508: approve the four slice-1 spine rows and anchor the record
+```
+
+The effect is on the surface a signer reads. `docs/ratify/CURRENT.md`'s
+off-spine re-attestation census fell from "132 changed, 30 added, 3 removed"
+for `interfaces.toml` (rows from rulings OI-64, OI-65, OI-67 and rows WI-522,
+WI-528, WI-530, WI-531, WI-533, WI-534, WI-553) to "1 changed, 0 added, 1
+removed (WI-553)", with the baseline stamp now citing `4824c0ba` rather than
+`13593db9`. Trunk's unsigned off-spine approval debt was thereby absorbed into
+the approved baseline by a lane whose outcome is `partial`, and the surface
+that displayed that debt is now near-blank.
+
+Authority: this is not an authority breach. Under `docs/process.toml:116`
+`human_approval_through = "DevStg-Needs"`, the interfaces/components (Arch
+rung) and external (Boundary rung) registries are loop-approvable. It IS an
+undisclosed baseline move — now disclosed.
+
+Route: the restore-or-stand question — restore trunk's baseline to the
+`6d3d9db4` bytes for the off-spine registries, or let the absorption stand — is
+the OWNER's. WI-568's adjudication carries it as a named part of the `580df781`
+keep/discard. The earlier fragment sentence "The keep/discard split and the
+`docs/archive/last_approved/` REGENERATION … are the DOWNSTREAM disposition
+row's and its successor's job" is CORRECTED: the bytes have already landed;
+what remains downstream is the ruling on them, not their arrival.
+
+**The report's misstatement (MAJOR 2).**
+`docs/handbacks/WI-508-wi508-architectural-remap.md` `## Delivered` says "The
+four Drafted slice-1 spine rows". The true state at `551d1b2c` is LLR-203 and
+LLR-204 `Approved` (the branch's own approval commit `580df781`) with
+TC-199/TC-200 `Drafted` — as `docs/work/partial/WI-508-architectural-remap-program.md:24`,
+archived in the same commit, already says. `git show
+551d1b2c:docs/requirements/low-level-requirements.toml` confirms both LLRs
+`Approved`. The report is immutable and stays as the claim it was; this line is
+the correction of record.
+
+**Done-when arm 4 (MAJOR 3).** The clause "the four Drafted spine rows reach
+trunk unflipped" was false as written. Its premise came from OI-72's own
+wording ("The wi508 branch's four Drafted rows stay honest as-is", written
+2026-08-31, when two had been Approved since 2026-08-30); LLR-203/204 arrived
+`Approved` (`trace.py` `drafts` 11 -> 9 between the pre-merge and post-merge
+trees). The lane flagged it in the section above and did not claim the arm.
+WI-568 decides stand-or-revert as a named keep/discard over `580df781`; the
+OI-72 wording is the owner's to correct.
+
+**Wording corrections, arms 1 and 2.** Arm 1: the local ref was created at the
+origin HELD ref for the duration of the conversion and unloaded after the
+merge, not left renamed — `git for-each-ref | grep -i wi508` returns exactly
+one ref, `refs/remotes/origin/wi508-architectural-remap-HELD-for-owner-verdict
+fa3c99c4`; no `wi508-architectural-remap` ref exists now, and origin still
+carries the `-HELD-` ref, owner-owed under `push = "human"`. Arm 2:
+`docs/ratify/CURRENT.md` was regenerated on the BRANCH with the WI-554-fixed
+renderer (`d8848bf4`) and is current on trunk after the trivial merge — `git
+log --oneline 6d3d9db4..551d1b2c -- docs/ratify/CURRENT.md` returns only
+`d8848bf4`; no trunk commit after the merge touches it.
+
+**"Phantom head cleared" narrowed to what was measured.** The earlier
+"`check_trajectory: clean`" claim overstates. Measured: the OI-70
+hold-by-rename WARN is gone and no WI-508 row remains ready;
+`check_trajectory.py` exits 0 with 53 WARNs, and `--strict` exits 1 on the
+pre-existing WI-564 seam ERROR (`cross-component import scripts/schedule
+(CMP-008) -> scripts/trace (CMP-006) has no declared IF-### seam`, present at
+`6d3d9db4` and so predating this lane).
+
+**Three kit findings the round routed to rows** — not this lane's to fix:
+
+- `spec_move.move_spec` lacks the reverse `archive/work/complete -> active/<branch>`
+  un-close move, so the conversion used a bare `git mv` (`git show 6ba2711078
+  --stat`: a single rename, 0 insertions; `doc-navigability PASS`).
+- `intake.py`'s derived Title path minted WI-568 at 184 chars against the
+  120-char bound (`check_trajectory: WARN — … WI-568 (184 chars)`); it should
+  truncate to the declared bound at mint.
+- `station.render_report`'s `split_decided_by` boilerplate invents a reason —
+  "a dispatcher closing a lane whose worker exited or crashed has no view of
+  it" — which is false of this supervised close; it should state the deferral,
+  not invent a cause.
