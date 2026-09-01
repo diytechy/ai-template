@@ -152,6 +152,13 @@ exists in code. Retired the Drafted `IF-138` row from `interfaces.toml`, its
 no Retired status in this kit (all 163 are Drafted), so retirement is row
 deletion.
 
+**Spine stand-alone (process.md §3).** The first rework pass phrased the reason
+in each cell with a `WI-553/OI-70` citation frame; `trace.py --strict-integrity`
+flagged five new provenance findings (a spine cell states the system, not its own
+history). Restated all five as standalone prose with the provenance here in the
+log — `provenance-findings` back to 1 (the pre-existing `LLR-197` `WI-448` frame,
+not this WI's).
+
 **Consequences.** The five edited Approved cells now DRIFT from their
 `docs/archive/last_approved/` snapshot → they owe the owner a re-attest;
 regenerated `docs/ratify/CURRENT.md` carries them. Generated surfaces still
