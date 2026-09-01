@@ -1,5 +1,0 @@
-# Tracked pause (concurrency-restructure §5.6): the dispatcher stops CLAIMING at
-# the next session boundary; the in-flight lane finishes and merges. Unpausing is
-# a reviewed deletion commit of this file.
-reason = "Supervisor session end 2026-08-31 (decision 46 in docs/decisions-for-review-2026-08-31.md): the delegated unattended run after the unpause is DRAINED - four rows merged, one closed partial and disposed, its successor minted and queued - and the frontier holds until the owner has read decisions 40-46 and the sitting's kit findings A-O (docs/log.md, the 2026-08-31 sitting). Delete this file in a reviewed commit to resume at the generated frontier."
-since = "2026-08-31"
