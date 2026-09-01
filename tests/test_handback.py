@@ -343,7 +343,6 @@ def test_every_registry_reader_parses_a_closed_spec(tmp_path):
     for reader in (acommon, ctraj, sched):
         row, _order = reader.parse_spec_row(text, rel)
         assert row["Status"] == "partial", reader.__name__
-        assert row["BlockRef"] == "", reader.__name__
     row, _order = wi_convert.parse_spec(text, rel)
     assert row["Status"] == "partial"
 
@@ -435,9 +434,9 @@ def test_a_close_writes_no_blockref_because_the_folder_is_terminal(tmp_path):
     # The old contract bought its anti-livelock property with a `blockref`,
     # which meant the property depended on an ATTRIBUTE being written by the
     # close and never cleared by anyone. `partial/` is terminal, so there is
-    # nothing to write and nothing to forget. (A spec cannot ARRIVE carrying a
-    # blockref — a blocked row is not claimable — so the only honest form of
-    # this assertion is that the close introduces none.)
+    # nothing to write and nothing to forget. The blockref vocabulary itself
+    # retired at WI-553/OI-70; this stays as a regression guard that a close
+    # introduces no such attribute into the spec.
     root = claimed_repo(tmp_path)
     lane(root)
     assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
@@ -445,8 +444,6 @@ def test_a_close_writes_no_blockref_because_the_folder_is_terminal(tmp_path):
 
     out = closed_spec_path(root).read_text(encoding="utf-8")
     assert "blockref" not in out
-    rows = {w["id"]: w for w in sched._load(root)}
-    assert rows["WI-401"]["blockref"] == ""
     records = {r["id"]: r for r in sched.evaluate(sched._load(root))}
     assert records["WI-401"]["disposition"] == "partial"
     assert [r["id"] for r in sched.frontier(sched._load(root))] == []

@@ -289,17 +289,18 @@ def test_reserved_wi_keeps_its_exclusive_key_even_unclassified():
 
 
 # --- excluded dispositions carry reason codes --------------------------------
-def test_blocked_deferred_reserved_excluded_with_reason_codes():
+# (A `blocked = queued + blockref` case retired with the blockref vocabulary at
+# WI-553/OI-70; `test_legacy_blocked_status_is_excluded_fail_closed` below still
+# pins that a stray literal `blocked` never falls through to ready.)
+def test_deferred_reserved_excluded_with_reason_codes():
     wis = sched.load_wis(
         [
-            row("WI-001", blockref="OI-9"),  # blocked = queued + blockref (Phase 5)
             row("WI-002", status="deferred"),
             row("WI-003"),
             row("WI-004"),
         ]
     )
     assert ready_ids(wis, reserved={"WI-004"}) == ["WI-003"]
-    assert disposition(wis, "WI-001")["reasons"] == ["excluded:blocked:OI-9"]
     assert disposition(wis, "WI-002")["reasons"] == ["excluded:deferred"]
     d4 = disposition(wis, "WI-004", reserved={"WI-004"})
     assert d4["disposition"] == "reserved"

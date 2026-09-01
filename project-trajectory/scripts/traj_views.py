@@ -883,15 +883,11 @@ def sw_containment(root, mods):
 def _wi_status(w):
     """A work item's TRUE status, for every text surface (WI-272).
 
-    `blocked` is DERIVED here — a `queued/` spec carrying a `blockref`
-    (concurrency-restructure §2.1: blocked has no directory) — so the render
-    keeps telling the reader a parked row is parked, the exact distinction
-    WI-272/review-M-2 protects; the loaders themselves never mint the status.
-    Only a status the vocabulary does not know at all falls back, and it falls
-    back to `queued` because that is the safe read for an unrecognized row —
-    the declared statuses are always reported as themselves."""
-    if w["status"] == "queued" and w.get("blockref"):
-        return "blocked"
+    A status the vocabulary does not know at all falls back to `queued`, the
+    safe read for an unrecognized row — the declared statuses are always
+    reported as themselves. (`blocked` had been DERIVED here from a `queued/`
+    spec carrying a `blockref`; the blockref vocabulary retired at WI-553/OI-70,
+    so nothing derives it and the `blocked` bucket entry is now defensive-only.)"""
     return w["status"] if w["status"] in STATUS_BUCKET else "queued"
 
 

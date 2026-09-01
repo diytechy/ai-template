@@ -39,8 +39,9 @@ wi_convert = load_script("wi_convert")
 # now itself an integrity error), so the writers below map each line through the
 # format's own writer instead of writing a CSV.
 WI_COLUMNS = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable"
-# ...plus the SpecRef + BlockRef columns (S1) — used by the SSOT-rule tests.
-SR_WI_COLUMNS = WI_COLUMNS + ",SpecRef,BlockRef"
+# ...plus the SpecRef column (S1) — used by the SSOT-rule tests. (A BlockRef
+# column retired with the blockref vocabulary at WI-553/OI-70.)
+SR_WI_COLUMNS = WI_COLUMNS + ",SpecRef"
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
     "Permutations,Priority,Verification,Status\n"
@@ -108,7 +109,7 @@ def run_traj(root, *extra):
 
 
 def write_wis_sr(root, body):
-    """`write_wis` for a `body` that also fills the SpecRef + BlockRef cells."""
+    """`write_wis` for a `body` that also fills the SpecRef cell."""
     return write_wis(root, body, SR_WI_COLUMNS)
 
 

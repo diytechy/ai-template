@@ -227,7 +227,6 @@ from traj_status import (  # noqa: F401
     STATUS_BEGIN,
     STATUS_END,
     STATUS_MD,
-    _blocked_pending,
     _clip_title,
     _frontier_lines,
     _stage_facts,

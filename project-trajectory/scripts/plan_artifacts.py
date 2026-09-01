@@ -92,7 +92,6 @@ WI_HEADER = [
     "CritiqueExhaustion",
     "Priority",
     "Exclusive",
-    "BlockRef",
     "EstTokens",
     "SafetyClass",
     "PlanMode",

@@ -729,10 +729,10 @@ def run_py(args, cwd):
 # real variants are parameters, not copies:
 #   - `sr`: each suite tags its rows with the SR it verifies (SR-060..SR-065);
 #   - `columns`: the registry SHAPES the suites exercise are prefixes of one
-#     canonical column list — worker's 9 (a registry predating SafetyClass),
-#     the four dispatcher-era suites' 10, and integrate's 11 (+BlockRef, the
-#     column the integrator adopts). Slicing one list is what makes them
-#     provably prefixes rather than three hand-kept constants.
+#     canonical column list — worker's 9 (a registry predating SafetyClass) and
+#     the dispatcher/integrate suites' 10. Slicing one list is what makes them
+#     provably prefixes rather than hand-kept constants. (A former 11th column
+#     +BlockRef retired with the blockref vocabulary at WI-553/OI-70.)
 # Each suite keeps its own module-level `HEADER`/`_wi_row`/`_write_registry`
 # name bound to a partial of these, so its ~250 call sites read unchanged.
 
@@ -747,7 +747,6 @@ WI_REGISTRY_COLUMNS = [
     "SpecRef",
     "BuildTier",
     "SafetyClass",
-    "BlockRef",
 ]
 
 

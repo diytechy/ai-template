@@ -415,18 +415,17 @@ def test_meta_component_top_view_smoke(tmp_path):
 
 
 # --- WI-272 (review M-2): the registry statuses, four swatches, no rewriting ----
-# The `blocked` row below is stated in the CSV-shaped fixture vocabulary and
-# `write_wis` files it the way the folder registry encodes it since Phase 5: a
-# `queued/` spec carrying a `blockref`. So five statuses reach the render, and
-# `blocked` is a DISPOSITION derived from the pointer rather than a word in a
-# cell — see the two tests below for what that costs the dashboard.
+# Six statuses reach the render below. (A seventh, `blocked`, used to ride in as
+# a `queued/` spec carrying a `blockref` that `_wi_status` derived back; the
+# blockref vocabulary retired at WI-553/OI-70, so `blocked` is no longer
+# producible via that mechanism — the WI-384 status word stays in the palette as
+# defensive vocabulary, but nothing mints it, so the render cases below drop it.)
 
 SIX_STATUS_WIS = (
     "WI-001,Bootstrap,scripts,SR-001,,done,the adder\n"
     "WI-002,Harness,scripts,SR-001,WI-001,active,\n"
     "WI-003,Release,docs,SR-002,WI-002,queued,\n"
     "WI-004,Someday,docs,SR-002,WI-002,deferred,parked on purpose\n"
-    "WI-005,Waiting,docs,SR-002,WI-002,blocked,needs an upstream decision\n"
     "WI-006,Dropped,docs,SR-002,WI-002,cancelled,won't build\n"
     "WI-007,Sketch,docs,SR-002,WI-002,draft,\n"
 )
@@ -447,17 +446,13 @@ def test_wi272_deferred_and_blocked_are_never_rewritten_as_queued(tmp_path):
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
 
-    # All six statuses — `blocked` included: since Phase 5 it is DERIVED
-    # (`queued/` + a `blockref` key, no directory of its own), and the
-    # dashboard's `_wi_status` derives it so the render keeps the distinction
-    # this test exists to protect.
+    # All six producible statuses reach the DOM as themselves.
     for status in (
         "done",
         "active",
         "queued",
         "draft",
         "deferred",
-        "blocked",
         "cancelled",
     ):
         assert 'data-status="{}"'.format(status) in page, (
@@ -470,23 +465,21 @@ def test_wi272_deferred_and_blocked_are_never_rewritten_as_queued(tmp_path):
         )
     # the hover title names the row's own status, not its bucket
     assert "WI-004 — Someday (deferred)" in page
-    assert "WI-005 — Waiting (blocked)" in page
     # ...and `deferred` shares `queued`'s swatch, deliberately and visibly: the
     # legend names the grouping rather than leaving the shared colour to imply
     # it is queued, and it still spells out the impeded state in words + glyph.
     gt = load_script("gen_trajectory")
-    assert gt.STATUS_BUCKET["deferred"] == gt.STATUS_BUCKET["blocked"] == "queued"
+    assert gt.STATUS_BUCKET["deferred"] == "queued"
     assert "not started" in page
-    for glyph in (gt.STATUS_GLYPH["deferred"], gt.STATUS_GLYPH["blocked"]):
-        assert glyph in page, "the legend must show the glyph that tells them apart"
+    assert gt.STATUS_GLYPH["deferred"] in page, (
+        "the legend must show the glyph that tells them apart"
+    )
 
 
 def test_wi272_status_is_carried_through_the_tiered_drill_too(tmp_path):
     # The flat DAG and the tiered drill are separate emitters; M-2 named both.
-    # The drill's leaf label is glyph-prefixed per STATUS, so `deferred`,
-    # `blocked` (derived from queued+blockref since Phase 5), `draft` and
-    # `cancelled`
-    # differ from `queued` there without any colour at all.
+    # The drill's leaf label is glyph-prefixed per STATUS, so `deferred`, `draft`
+    # and `cancelled` differ from `queued` there without any colour at all.
     tiered_repo(tmp_path, TIER_UNION_WIS + SIX_STATUS_WIS.replace("WI-00", "WI-01"))
     assert gen(tmp_path).returncode == 0
     gt = load_script("gen_trajectory")
@@ -505,7 +498,6 @@ def test_wi272_status_is_carried_through_the_tiered_drill_too(tmp_path):
     # the parked/terminal minority glyphs actually reached the drill, so this is
     # not vacuous (both would be ○ if the emitter clamped to the bucket)
     assert any(lab[0] == gt.STATUS_GLYPH["deferred"] for lab in labels), labels
-    assert any(lab[0] == gt.STATUS_GLYPH["blocked"] for lab in labels), labels
     assert any(lab[0] == gt.STATUS_GLYPH["cancelled"] for lab in labels), labels
     assert any(lab[0] == gt.STATUS_GLYPH["draft"] for lab in labels), labels
 

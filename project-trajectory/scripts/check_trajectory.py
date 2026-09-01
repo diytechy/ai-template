@@ -332,9 +332,11 @@ WI_ID_RE = re.compile(r"^WI-\d+$")
 # stays in the registry forever with its reason in the `Deliverable` column — a
 # deliberate dead-end, NOT an overload of `done` (a `done` WI shipped something; a
 # `cancelled` WI deliberately never will). Since Phase 5 status is the spec's
-# DIRECTORY (an unknown one is a loader refusal) and `blocked` is DERIVED
-# (queued + blockref) rather than a status; the literal stays in these sets so
-# in-memory callers keep their meaning, but no loader can produce it.
+# DIRECTORY (an unknown one is a loader refusal) `blocked` was never a directory:
+# it had been DERIVED (queued + blockref), and with the blockref vocabulary
+# retired at WI-553/OI-70 nothing produces it at all now — the literal stays in
+# these sets as defensive S1 vocabulary so an in-memory caller that constructs it
+# keeps its meaning, but no loader or derivation reaches it.
 # "Open" = anything still in flight (not one of the two TERMINAL states).
 OPEN_STATUSES = ("draft", "queued", "active", "deferred", "blocked")
 # The terminal states: no further build/trace work is owed. Both require a filled
@@ -574,7 +576,6 @@ def load_wis(rows):
                 # legacy CSV without the column reads as "" (DictReader -> None).
                 "deliverable": (r.get("Deliverable") or "").strip(),
                 "specref": (r.get("SpecRef") or "").strip(),
-                "blockref": (r.get("BlockRef") or "").strip(),
             }
         )
     return wis, integrity
@@ -2883,9 +2884,9 @@ def ssot_findings(wis, root):
         st = w["status"]
         # (The `status-vocab` and `blocked-ref` rules retired with the CSV home
         # at Phase 5: status is the spec's DIRECTORY, so an unknown status is a
-        # loader refusal before any row exists, and `blocked` is DERIVED as
-        # queued+blockref — a queued row without one is simply queued. No row
-        # can reach either rule.)
+        # loader refusal before any row exists. `blocked` had been DERIVED as
+        # queued+blockref; with the blockref vocabulary retired at WI-553/OI-70
+        # nothing produces it, so no row can reach either rule.)
         # R-A: Deliverable non-empty IFF the WI is TERMINAL — with `partial`
         # exempt, and the exemption is the rule working rather than a hole in
         # it. What R-A is FOR is that a terminal row carries a permanent

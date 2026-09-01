@@ -696,9 +696,10 @@ def session_body(root, worker, current_wi, session, sha, reviews_dir, templates)
 # What a held adjudication row tells the human, appended to the stop banner.
 # The exit code is the DURABLE half: `dispatch._lane_close` turns
 # EXIT_NEEDS_HUMAN into a `handback.close_partial` — an immutable per-close
-# report plus a `blockref` that `schedule._disposition` reads as `blocked` — so
-# an unattended run can never re-pick the row until a human clears it. A print
-# alone would be gone with the terminal buffer.
+# report and a move to the TERMINAL partial/, which `schedule._disposition`
+# reads as `partial` (never ready) — so an unattended run can never re-pick the
+# row until a successor is minted. A print alone would be gone with the terminal
+# buffer.
 ADJUDICATION_HOLD_NOTE = (
     "This row is an ADJUDICATION: it exists to judge a claim, and the brief it "
     "declares is the whole reason it routes to a strong cross-family model. "
