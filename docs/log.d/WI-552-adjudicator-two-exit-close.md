@@ -170,3 +170,20 @@ stale `_OI_PENDING` comment clause.
   `pytest -q -n auto -m smoke` → 1430 passed, 8 skipped in 20.9s;
   `check_smoke_budget.py --mode enforce` → 20.9s vs 60s within. No executable
   line changed — a test baseline only.
+
+### Surfaced (not fixed here): dormant cognitive-complexity baseline drift
+
+- The `docs/complexity-baseline` cognitive census (`check_complexity.py --mode
+  enforce`, `[step:complexity]`) has drifted against this branch's reviewed code:
+  tightenings `check_trajectory.load_wis 23→17` / `validate 24→20` and removals
+  `intake._mint 21→∅` / `schedule.load_wis 17→∅`, plus growths/new rows
+  `dispatch._advance 16→20`, `intake._disposition_drafts 21→25`,
+  `handback.close_adjudication ∅→16`, `intake._replace_inbound_edges ∅→18`.
+  This is **not** fixed in this WI and does **not** gate it: `[step:complexity]`
+  is `from-stage = DevStg-Impl` and the repo's effective `stage = DevStg-LLReqs`,
+  so the sensor is dormant — the norm since WI-538 armed it is that
+  script-touching branches do not re-stamp while dormant (no WI has). Recorded
+  here so the DevStg-Impl transition re-stamps the tightenings/removals and takes
+  the reviewed bumps (code already APPROVE'd at REVIEW-A 007) with reasons, per
+  the stack.ini escape hatch. The SLOC module-size ratchet above (smoke tier) is
+  a separate sensor and is green.
