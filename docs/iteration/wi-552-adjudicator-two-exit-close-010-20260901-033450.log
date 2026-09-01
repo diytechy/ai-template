@@ -1,0 +1,193 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 010
+# date: 2026-09-01 03:34
+# train: wi-552-adjudicator-two-exit-close
+# base: 81591d3abd93
+# phase: DESIGN-CHECK
+# wi: WI-552
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: ERROR
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 3
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 13192
+# prompt-template: kit:DESIGN-CHECK
+# prompt-sha: sha256:aadc3b13d3a6
+# timeout:
+# heterogeneity:
+# exit-code: 1
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Reading prompt from stdin...
+2026-09-01T08:34:51.194135Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 97 column 5
+OpenAI Codex v0.145.0
+--------
+workdir: /Users/diytechy/Documents/ai-template-drive/wi-552-adjudicator-two-exit-close
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a05c1b-59cd-7aa1-b6c0-dc7ee69a8b08
+--------
+user
+You are a worker session for a CLAIMED work item (scripts/agent_loop.py --wi, on a branch cut by `integrate.py claim`) — assume no human is watching. You are assigned ONE work item on ONE claimed branch; this assignment is your whole scope. Read AGENTS.md first, then the SpecRef and SR rows below — they are the spec of record.
+
+Assignment:
+- WI: WI-552 — The adjudicator's two exits: adjudication-row close, successor mint, OI mint with refusal invariant (OI-70)
+- SR-Refs: SR-144 | SpecRef: docs/requirements/open-items.toml#OI-70
+- Branch: wi-552-adjudicator-two-exit-close (its claim is docs/work/active/wi-552-adjudicator-two-exit-close/; integration base 81591d3abd93514142de706e27436f26a50c1cf1)
+- Context (advisory registry joins; read the Context refs below before starting):
+  Advisory registry joins (WI-388; never gating):
+  
+  ### Decomposition code map (LLR/TC on the same SRs)
+  - LLR-144 [project-trajectory/scripts/handback.py :: close_partial/quarantine/report_path/render_report/_restore/diff_records] tests: (see TC-138) — Terminal lane outcomes (handback + quarantine)
+  - LLR-161 [project-trajectory/scripts/handback.py :: close_partial/render_report/report_path/_restore/_split_lines] tests: TC-156 — The close ritual and the disposition it owes
+  - LLR-167 [project-trajectory/scripts/adjudicate_brief.py :: compose/disposition_values/red_tc_values] tests: TC-161 — The adjudicator briefs' evidence, and the refusal that keep…
+  - LLR-182 [project-trajectory/scripts/kitlib/station.py :: Outcome/OUTCOME_DIRS/outcome_of] tests: (see TC-177) — The lane-close terminal-outcome vocabulary, one home below …
+  - LLR-189 [project-trajectory/scripts/kitlib/station.py :: REPORTS/CLAIMED_OUTCOMES/SUGGESTED_TIERS/SPLIT_DECIDERS/report_path/render_report/read_report/report_refusal] tests: TC-184 — The per-close report's shape, one home below the module tha…
+  - TC-138 -> tests/test_handback.py
+  
+  ### Knowledge packs the touched components declare (read before building)
+  - CMP-008 W3 Autonomy: docs/knowledge/agent-routing;docs/knowledge/effort-tiering;docs/knowledge/prompt-image-token-efficiency
+  
+  ### Interface seams via the touched modules
+  - IF-161 docs/test/ -> scripts/acceptance_record;scripts/adjudicate_brief;scripts/agent_loop;scripts/baseline_snapshot;scripts/check_doc_refs;scripts/check_flows;scripts/check_trajectory;scripts/gen_okf;scripts/gen_release_checklist;scripts/intake;scripts/spine_rules;scripts/trace;scripts/traj_parse;external:downstream adopter: file test-cases.toml: id-keyed TOML, one [test.TC-###] table per case; ids are the table keys
+  - IF-075 scripts/trace <- scripts/gen_open_items;scripts/adjudicate_brief: call reattest_model entries: chain rows, changed cells, baseline rev and date; an empty model is a valid answer
+  - IF-173 scripts/integrate <- scripts/dispatch;scripts/handback;scripts/lane: call claim, refresh, integrate, finished_branches, branch_outcomes, lane_worktree, the ACTIVE and WORK constants, …
+  - IF-093 scripts/kitlib/station <- scripts/traj_panels: call OUTCOME_DIRS: complete · cancelled · partial; BAR_GREEN
+  - IF-113 scripts/prompts <- scripts/adjudicate_brief: call ADJUDICATE-AMENDMENT · ADJUDICATE-DISPOSITION · ADJUDICATE-CONFLICT · ADJUDICATE-RED-TC
+  - IF-114 scripts/spine_carrier <- scripts/adjudicate_brief: call spine_carrier.load over the TC, SR and LLR tiers; every listed cell required, read-only
+- Current branch diff (81591d3..HEAD — earlier work on this branch, accepted but not yet reviewed/integrated):
+1120d2e9 telemetry: session 009 review scoreboard
+4d60a6e9 telemetry: session wi-552-adjudicator-two-exit-close-009 REVIEW-A COMMITTED
+a8108200 review: WI-552 REVIEW-A (009) CHANGES-REQUESTED — smoke bar red (intake.py ratchet un-restamped)
+f1a7e6b8 telemetry: session wi-552-adjudicator-two-exit-close-008 BUILD COMMITTED
+b797022b WI-552: ruff-format hygiene on touched files + session 007 review telemetry
+66937e75 review: WI-552 REVIEW-A (007) APPROVE — 9286104 rework verified
+9286104a WI-552 REVIEW-A rework: cancelled-close refusal + scheduler/comment fixes
+f17c1fb0 telemetry: session 005 review scoreboard
+2d66ad41 telemetry: session wi-552-adjudicator-two-exit-close-005 REVIEW-A COMMITTED
+0ddd82c3 review: WI-552 REVIEW-A (005) CHANGES-REQUESTED — cancelled-close refusal gap
+7053cace telemetry: session wi-552-adjudicator-two-exit-close-004 REVIEW-A ERROR
+04fcc15d telemetry: session wi-552-adjudicator-two-exit-close-003 REVIEW-A ERROR
+588859bd telemetry: session wi-552-adjudicator-two-exit-close-002 BUILD COMMITTED
+4ccabb26 WI-552: close COMPLETE — archive spec, restamp format hygiene
+9b72c3ec WI-552: fill Deliverable + clear specref; finalize log fragment
+033b9f5e WI-552: decompose new complexity, refresh baselines + prompt catalog
+442715cd WI-552 arm 7: brief contract text + PROCESS_OPTIONS grammar prose
+d09ff43f WI-552 arms 1+3: mechanical adjudication close + refusal invariant
+2381981b WI-552 arm 2: the OI-mint arm (exit B as a typed dependency)
+d5d8a0f4 WI-552 arm 4: the mint replaces the superseded row's inbound hard edges
+b2b06898 WI-552 arms 5+6: typed OI edges in needs + dead-dep extends to partial
+1a35fbba WI-552: start log fragment + standing-state record
+M	.agents/skills/byte-budget-guard/SKILL.md
+M	.claude/skills/byte-budget-guard/SKILL.md
+R063	docs/work/active/wi-552-adjudicator-two-exit-close/WI-552-adjudicator-two-exit-close.md	docs/archive/work/complete/WI-552-adjudicator-two-exit-close.md
+A	docs/iteration/wi-552-adjudicator-two-exit-close-001-20260901-012620.log
+A	docs/iteration/wi-552-adjudicator-two-exit-close-002-20260901-021946.log
+A	docs/iteration/wi-552-adjudicator-two-exit-close-003-20260901-023641.log
+A	docs/iteration/wi-552-adjudicator-two-exit-close-004-20260901-023658.log
+A	docs/iteration/wi-552-adjudicator-two-exit-close-005-20260901-023713.log
+A	docs/iteration/wi-552-adjudicator-two-exit-close-006-20260901-024702.log
+A	docs/iteration/wi-552-adjudicator-two-exit-close-007-20260901-031737.log
+A	docs/iteration/wi-552-adjudicator-two-exit-close-008-20260901-032614.log
+A	docs/iteration/wi-552-adjudicator-two-exit-close-009-20260901-032805.log
+A	docs/log.d/WI-552-adjudicator-two-exit-close.md
+A	docs/reviews/wi-552-adjudicator-two-exit-close/005-REVIEW-A-4ccabb2-relaxed.md
+A	docs/reviews/wi-552-adjudicator-two-exit-close/007-REVIEW-A-9286104-relaxed.md
+A	docs/reviews/wi-552-adjudicator-two-exit-close/009-REVIEW-A-b797022-relaxed.md
+A	docs/reviews/wi-552-adjudicator-two-exit-close/scoreboard.txt
+M	project-trajectory/PROCESS_OPTIONS.md
+M	project-trajectory/prompts/CATALOG.md
+M	project-trajectory/prompts/adjudicate-disposition.template.md
+M	project-trajectory/registries/work-items.template.csv
+M	project-trajectory/scripts/check_trajectory.py
+M	project-trajectory/scripts/dispatch.py
+M	project-trajectory/scripts/gen_trajectory.py
+M	project-trajectory/scripts/handback.py
+M	project-trajectory/scripts/intake.py
+M	project-trajectory/scripts/integrate.py
+M	project-trajectory/scripts/kitlib/spine.py
+M	project-trajectory/scripts/schedule.py
+M	project-trajectory/scripts/traj_panels.py
+M	project-trajectory/scripts/traj_status.py
+M	project-trajectory/skills/byte-budget-guard/SKILL.md
+M	tests/test_dispatch.py
+M	tests/test_handback.py
+M	tests/test_intake.py
+M	tests/test_module_size_ratchet.py
+M	tests/test_schedule.py
+M	tests/test_trajectory.py
+- REWORK FINDING (address this before anything else):
+# WI-552 REVIEW-A (009, relaxed) — the adjudicator's two exits
+
+Independent review of `contract_split...HEAD` (HEAD `f1a7e6b8`, tree clean).
+Requirement surface: `docs/archive/work/complete/WI-552-adjudicator-two-exit-close.md`
+Done-when 1–7 (OI-70 as refined by OI-73).
+
+## Harness (run once each, this reviewer's boxes)
+
+- `python3 project-trajectory/scripts/check.py --jobs 0` → `RESULT: PASS`
+  (registry-integrity PASS; orphans=2 / provenance-finding=1 are the
+  pre-existing LLR-197 residue, untouched by this diff — no spine rows minted).
+- `python3 project-trajectory/scripts/trace.py --strict-integrity` →
+  `SN=27 SR=76 LLR=188 TC=186 … integrity=0`.
+- `pytest -q tests/test_handback.py tests/test_intake.py tests/test_dispatch.py
+  tests/test_schedule.py tests/test_trajectory.py tests/test_module_size_ratchet.py`
+  → **1 failed, 196 passed**. The failure is `test_module_size_ratchet.py::
+  test_module_sizes_exactly_match_the_committed_baseline`, and it reproduces
+  under `-m smoke` (the per-commit bar) on the clean committed tree.
+
+## Done-when coverage (verified, not read)
+
+1. Mechanical close → `test_the_mechanical_adjudication_close_archives_terminal_and_finishes`. ✓
+2. OI mint gates successor → `test_the_close_mints_a_pending_oi_that_gates_the_successor`,
+   non-TOML refusal `test_the_oi_mint_refuses_on_a_non_toml_registry`. ✓ (minted row
+   carries title/status/raised/one_line/wi_refs; `_brief_cards` omits the absent
+   decision/options/recommendation fields rather than erroring — sparse but valid.)
+3. Refusal invariant, both arms and both guards → `test_the_refusal_invariant_stops_a_
+   disposition/..._cancelled_close_with_no_successor` (close-side) and
+   `test_a_cancelled_close_with_no_successor_is_refused_at_merge` (merge/self-close side).
+   The cancelled regression models `brief=""`, so it fails against the old brief-only
+   guard — the pre-fix behavior the fix targets. ✓
+4. Inbound-edge replacement → `test_the_mint_replaces_inbound_edges_of_the_superseded_row`
+   (hard re-pointed, soft `~` left on the terminal row). ✓
+5. Typed OI edges → `kitlib.spine.split_pred_edges` single-homes the grammar;
+   schedule/validator/dashboard callers all thread `oi_status`; watermark OI space is
+   raised by `_mint`'s `bump_watermark` (`_offspine_ids` counts open-items.toml, so no
+   id-collision gap). ✓
+6. `dead_dependency_findings` extends to `partial` (`_DEAD_PRED_STATES`); scheduler
+   `waiting:hard-pred-partial` reason matches. ✓
+7. ADJUDICATE brief + template CSV + PROCESS_OPTIONS prose widened tolerantly, CATALOG
+   digest re-stamped. ✓
+
+## Findings
+
+- [BLOCKER] tests/test_module_size_ratchet.py:1929 -> the committed `intake.py` baseline is 1179 SLOC but the module measures 1177 (`check_complexity.module_sloc`), so `test_module_sizes_exactly_match_the_committed_baseline` FAILS — verified red under `-m smoke` on the clean HEAD `f1a7e6b8`. The per-commit bar is therefore red and the WI Deliverable's "Smoke tier green within budget; full unfiltered suite green (close commit)" is false; a later ruff/format pass shrank intake.py without the ratchet being re-stamped down in the same commit (this file's own rule). -> Re-stamp the `intake.py` entry to `1177` with a `RE-STAMPED DOWN -2` note, then re-run `pytest -q -n auto -m smoke` to confirm green before the close. -> @owner
+
+    VERDICT: CHANGES-REQUESTED findings=1
+
+Rules (the branch discipline, docs/concurrency-restructure.md §2.3/§5):
+- Work ONLY the assigned WI. Do not resume from docs/status.md and do not look for docs/next-wi (retired) — the assignment above is authoritative.
+- Run the declared harness (docs/stack.ini) and keep it green; commit coherent progress. End your FINAL commit for this WI with the trailer:
+    WI: WI-552
+- NEVER edit root coordination truth on this branch: docs/status.md, docs/log.md (write your session record as a fragment docs/log.d/<WI-id>-<slug>.md instead; the trunk step compiles it), another branch's docs/work/active/ claims, or generated artifacts (docs/iteration_index.md, dashboards, generated maps). The trunk lane regenerates generated artifacts after each merge (§5.2); the integrator merges this branch only through its fail-closed queue.
+- Standing-state discipline: before spending effort on heavy verification (a full test suite, a broad multi-file sweep, a wide read), START your log.d fragment and land the spec's own `## Context`/`## Deliverable` edits in a commit — so a session killed or reaped mid-verification leaves a resumable record behind it instead of silent, uncommitted residue. This is not a one-shot write at the end: keep both current as the session continues. A relaunched session reads this branch's own diff and the fragment fresh, same as any other committed state — there is no separate hand-off file to produce.
+- CLOSE THE ROW before you stop (C6, the close ritual — a lane whose spec is still in active/ is resumed forever, and three found-nothing-to-do resumes read as a stall): fill the spec's `## Deliverable` body, placed BEFORE `## Context` (a Deliverable after Context parses as EMPTY); clear the spec's `specref` line; if this WI minted or re-statused spine rows, regenerate the approval brief (`python scripts/trace.py --approve modified --out docs/ratify/CURRENT.md`); make sure your log fragment's first line is a `## <YYYY-MM-DD> — <title>` heading (never `#` or `###`); then move the spec with `python scripts/spec_move.py` to the terminal folder the outcome names (docs/archive/work/complete/ when it shipped) and end that close commit with the same `WI: WI-552` trailer.
+- If the WI cannot proceed for a non-predecessor reason, commit the evidence you have with the trailers `Blocked-WI: WI-552` and `BlockRef: <OI-N | spec anchor | named external condition>` INSTEAD of the WI trailer, and stop.
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:23 AM.
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:23 AM.
