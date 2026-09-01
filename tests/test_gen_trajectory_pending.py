@@ -92,23 +92,10 @@ def _block(repo):
     return load_script("gen_trajectory").pending_block(repo)
 
 
-# --- (a) blocked row with a BlockRef --------------------------------------
-
-
-def test_blocked_row_with_dev_tree_doc_cites_the_plain_path(tmp_path):
-    # Blocked is DERIVED (queued + blockref, Phase 5): the projection cites
-    # the plain BlockRef path.
-    _init(
-        tmp_path,
-        [("queued", "WI-051", "split", 'blockref = "docs/ratify/WI-051.md"\n', "")],
-    )
-    (tmp_path / "docs" / "ratify").mkdir()
-    (tmp_path / "docs" / "ratify" / "WI-051.md").write_text("plan\n", encoding="utf-8")
-    _git(tmp_path, "add", "-A")
-    _git(tmp_path, "commit", "-q", "-m", "plan on dev")
-    body = _block(tmp_path)
-    assert "`docs/ratify/WI-051.md`" in body
-    assert "git show" not in body
+# (A former source (a) `blocked` WI rows carrying a BlockRef retired with the
+# blockref vocabulary at WI-553/OI-70 — nothing produces a queued-row blockref
+# now, so the owner surface no longer reads a zero-producer source. The spine
+# and pause arms below are the two surviving sources.)
 
 
 # --- (e) Drafted / DRIFTED spine rows (WI-316) ---------------------------------
@@ -274,13 +261,11 @@ def test_pause_projection_is_deterministic(tmp_path):
 def test_the_typed_model_kinds_every_pending_item(tmp_path):
     # `kind` is a FIELD, so a caller filtering by source never parses prose.
     pending = load_script("pending")
-    _init(
-        tmp_path,
-        [("queued", "WI-900", "blocked-one", 'blockref = "docs/x.md"\n', "")],
-    )
+    _init(tmp_path)
+    _write_srs(tmp_path, 'SR-007,New need,SN-001,"r","x","a",,C,Test,Drafted,3,\n')
     _pause(tmp_path, 'reason = "draining"\n')
     items = pending.pending_items(tmp_path)
-    assert [i.kind for i in items] == [pending.BLOCKED, pending.PAUSE]
+    assert [i.kind for i in items] == [pending.SPINE, pending.PAUSE]
     assert all(i.line for i in items)
 
 
@@ -289,24 +274,20 @@ def test_owner_cards_is_pending_items_minus_the_pause(tmp_path):
     # exit, so the pause must never inflate the approvals-waiting count — and
     # the exclusion is DECLARED in the read model, not re-derived at the banner.
     pending = load_script("pending")
-    _init(
-        tmp_path,
-        [("queued", "WI-900", "blocked-one", 'blockref = "docs/x.md"\n', "")],
-    )
+    _init(tmp_path)
+    _write_srs(tmp_path, 'SR-007,New need,SN-001,"r","x","a",,C,Test,Drafted,3,\n')
     _pause(tmp_path, 'reason = "draining"\n')
     assert len(pending.pending_items(tmp_path)) == 2
     cards = pending.owner_cards(tmp_path)
-    assert [c.kind for c in cards] == [pending.BLOCKED]
+    assert [c.kind for c in cards] == [pending.SPINE]
 
 
 def test_the_block_renders_exactly_the_model(tmp_path):
     # One derivation, one rendering: every item's line appears in the block, so
     # the banner's count and the owner surface can never disagree.
     pending = load_script("pending")
-    _init(
-        tmp_path,
-        [("queued", "WI-900", "blocked-one", 'blockref = "docs/x.md"\n', "")],
-    )
+    _init(tmp_path)
+    _write_srs(tmp_path, 'SR-007,New need,SN-001,"r","x","a",,C,Test,Drafted,3,\n')
     block = pending.pending_block(tmp_path)
     for item in pending.pending_items(tmp_path):
         assert item.line in block
@@ -314,15 +295,15 @@ def test_the_block_renders_exactly_the_model(tmp_path):
 
 def test_the_dashboard_still_answers_to_the_former_private_names(tmp_path):
     # The re-export shim, which is what keeps the extraction free for callers:
-    # the facade's `_blocked_pending` / `_spine_pending` / `_pause_pending` and
-    # `PAUSE_MALFORMED` still resolve, and to the SAME objects.
+    # the facade's `_spine_pending` / `_pause_pending` and `PAUSE_MALFORMED`
+    # still resolve, and to the SAME objects. (`_blocked_pending` retired with
+    # the blockref vocabulary at WI-553/OI-70.)
     gt = load_script("gen_trajectory")
     pending = load_script("pending")
     # `load_script` loads a FRESH module object per call, so identity would
     # compare two copies; the claim is that the facade name resolves to the
     # read model's function, which is what the module+qualname pair says.
     for facade_name, model_name in (
-        ("_blocked_pending", "blocked_pending"),
         ("_spine_pending", "spine_pending"),
         ("_pause_pending", "pause_pending"),
         ("pending_block", "pending_block"),

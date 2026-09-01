@@ -1003,17 +1003,22 @@ def test_empty_frontier_rung_two_banner_derives_from_the_shared_pending_read(
 ):
     # Rung 2: census empty but a pending attestation exists — that is NOT
     # missing work. The banner's count comes from the SAME pending_block(root)
-    # read the dashboard and open-items.html share (a blocked row with a
-    # BlockRef is one card), so agent-resume and the owner surfaces can never
-    # disagree about what is blocking.
+    # read the dashboard and open-items.html share (a Drafted spine row owing an
+    # approval is one card), so agent-resume and the owner surfaces can never
+    # disagree about what is blocking. (A blocked WI carrying a BlockRef used to
+    # be that card; the blockref vocabulary retired at WI-553/OI-70, so the
+    # surviving owner_card source is the spine arm.)
     root = git_repo(tmp_path)
-    path = write_spec(root, "queued", "WI-700", slug="stuck", specref="seed.txt")
-    text = path.read_text(encoding="utf-8").replace(
-        'workstream = "ws"', 'workstream = "ws"\nblockref = "docs/log.md"'
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "system-requirements.csv").write_text(
+        "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+        "Permutations,Priority,Verification,Status,Phase,Area\n"
+        "SR-700,Waiting,SN-001,Shall wait.,Because.,Waits.,,1,Test,Drafted,,\n",
+        encoding="utf-8",
+        newline="\n",
     )
-    path.write_text(text, encoding="utf-8", newline="\n")
-    (root / "docs" / "log.md").write_text("# log\n", encoding="utf-8", newline="\n")
-    _commit(root, "file the blocked row", when=T_CODE)
+    _commit(root, "file the drafted spine row", when=T_CODE)
     worker = Recorder()
 
     rc = drv.run(root, drive_args(), worker=worker)

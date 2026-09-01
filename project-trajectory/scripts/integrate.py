@@ -21,8 +21,8 @@ attributable to the refresh that caused it.
 THREE TERMINAL OUTCOMES, NO FOURTH (§A3). Every lane ends in a merge: `merged`
 (specs -> complete/), `cancelled` (specs -> cancelled/, so the cancellation is a
 trunk fact and the id stays retired) and `handback` (the work so far committed
-as-is, the specs back in queued/ carrying a `## Handback` section and a
-blockref). The outcome is not a flag anyone sets: it IS the folder the branch
+as-is, the specs moved to the TERMINAL partial/ with an immutable per-close
+report). The outcome is not a flag anyone sets: it IS the folder the branch
 moved its specs into, read back by `branch_outcomes` off the same move that made
 the branch finished - so a merge queue that reads the outcome cannot disagree
 with the tree it is merging.

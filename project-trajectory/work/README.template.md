@@ -9,7 +9,7 @@ is documented in the [WI-000 exemplar](queued/WI-000-example.md) beside this fil
 | Location | Status |
 |---|---|
 | `draft/WI-###-<slug>.md` | `draft` — written down, not claimable |
-| `queued/WI-###-<slug>.md` | `queued` — filed, unclaimed (`blockref` set = parked) |
+| `queued/WI-###-<slug>.md` | `queued` — filed, unclaimed |
 | `active/<branch>/WI-###-<slug>.md` | `active` — claimed by that branch |
 | `deferred/WI-###-<slug>.md` | `deferred` — a decision to park; not now |
 | `../archive/work/complete/WI-###-<slug>.md` | `done` — it shipped |

@@ -417,17 +417,6 @@ def test_a_drafted_id_is_visible_to_the_registry_and_so_reserved(tmp_path):
     assert sched.read_spec_rows(other / "docs" / "work") == []
 
 
-def test_blocked_is_queued_plus_a_blockref_not_a_directory(tmp_path):
-    """§7's design note: `blocked` gets no directory. Readiness is the
-    scheduler's to derive, so the folder carries the EVIDENCE (a blockref), not
-    a second status vocabulary."""
-    write_spec(tmp_path, "queued", "WI-001", blockref="docs/ratify/thing.md")
-    rows = sched.read_spec_rows(tmp_path / "docs" / "work")
-    assert rows[0]["Status"] == "queued"
-    assert rows[0]["BlockRef"] == "docs/ratify/thing.md"
-    assert sched.load_wis(rows)[0]["blockref"] == "docs/ratify/thing.md"
-
-
 def test_the_soft_prefix_survives_into_the_hard_soft_split(tmp_path):
     """`~` is meaning, not decoration — it is what makes an edge advisory."""
     write_spec(tmp_path, "queued", "WI-003", needs=["WI-001", "~WI-002"])

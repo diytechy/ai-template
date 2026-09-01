@@ -210,7 +210,6 @@ def test_a_approved_cell_diff_mints_one_adjudication_row(tmp_path):
     assert wid == "WI-004"  # max existing (WI-003) + 1
     row = queued_rows(root)[wid]
     assert row["SafetyClass"] == "adjudication"
-    assert row["BlockRef"] == ""  # work, not a decision brief
     assert row["SR-Refs"] == "SR-001"
     assert "adjudicate" in row["Title"] and "SR-001" in row["Title"]
     # The derived listing: each changed row, cell, and before/after, in the

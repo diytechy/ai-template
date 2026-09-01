@@ -3,18 +3,22 @@
 A READ MODEL OVER THE COMMITTED TREE, and nothing else — the sibling of
 `census.py`, which answers the other half of the same question. Where the census
 asks *which gaps do the registries name?*, this module asks *which durable
-actions is the owner holding?* and answers from three sources and no clock:
+actions is the owner holding?* and answers from two sources and no clock:
 
-    blocked_pending   `queued/` work items carrying a `blockref` — the
-                      attestation/approval page each one waits on
     spine_pending     `Drafted` SRs (a first approval is owed) and SRs whose
                       text has DRIFTED from its `docs/archive/last_approved/`
                       copy (a re-attest is owed, process.md §7)
     pause_pending     the tracked `docs/work/pause` declaration
 
-`pending_items` joins the three into the typed model — one `PendingItem` per
+(A THIRD SOURCE `blocked_pending` — `queued/` rows carrying a `blockref` —
+retired with the blockref vocabulary at WI-553, OI-70: `handback.close_partial`
+moves a stopped lane's specs to the TERMINAL `partial/`, never back to `queued/`
+with a blockref, so nothing has produced one since LLR-161 and the owner surface
+was reading a source with zero producers.)
+
+`pending_items` joins the two into the typed model — one `PendingItem` per
 action, carrying its `kind` and its rendered pointer line — and everything above
-this module consumes THAT rather than the three sources by name:
+this module consumes THAT rather than the sources by name:
 
     traj_status.py    re-exports the sources under their former names, so the
                       `gen_trajectory` facade and the dashboard family are
@@ -27,8 +31,8 @@ WHY THIS IS A MODULE AND NOT PART OF THE DASHBOARD (WI-483, slice 3). Until this
 module the derivation lived in `traj_status.py`, a RENDER module inside the
 `traj_*` family, reachable only through the ~1,000-line `gen_trajectory` facade —
 so the two readers that are not the dashboard each imported that facade to get
-at it, and one of them reached in for PRIVATE names (`_blocked_pending`,
-`_spine_pending`) across a module boundary. The 2026-08-19 repository review
+at it, and one of them reached in for a PRIVATE name (`_spine_pending`)
+across a module boundary. The 2026-08-19 repository review
 recorded both as bad edges: the private-name cross-module API (M-02) and
 `gen_open_items` importing the large facade for a state query (H-02), the latter
 DOCUMENTED by `IF-088` rather than removed. A derivation with three readers
@@ -38,8 +42,8 @@ belongs BELOW all three, which is the same cut `census.py` and
 NOT `kitlib`, and by the same hard rule that kept the census out: every module
 of that package must stay import-clean of the rest of `scripts/`
 (`tests/test_bootstrap.py::test_bootstrap_imports_only_the_common_package`),
-because `bootstrap.py` imports it. This module reads the work registry through
-the validator's loaders and the spine through `traj_parse`, so it imports
+because `bootstrap.py` imports it. This module reads the spine through
+`traj_parse` and its approved snapshot through `baseline_snapshot`, so it imports
 siblings by construction and is a plain sibling itself.
 
 THE ITEMS CARRY RENDERED LINES, deliberately. A `PendingItem` is a `kind` plus
@@ -57,7 +61,7 @@ Contract IF-088: the dispatcher's exit banner calls `owner_cards(root)` — the
     same `pending_items(root)` read model the dashboard and the generated
     open-items surface render, minus the tracked-pause kind, whose pause has
     its own earlier exit. Each item is a `PendingItem(kind, line)`: a `kind` of
-    `blocked` or `spine`, and the rendered markdown bullet a human reads. The
+    `spine` or `pause`, and the rendered markdown bullet a human reads. The
     kind is a FIELD, so the one caller that discriminates never parses prose to
     make a control-flow decision. The derivation is a pure function of the
     committed tree — sorted, no clocks — so the banner and the owner surfaces
@@ -75,7 +79,6 @@ from __future__ import annotations
 from typing import NamedTuple
 
 import baseline_snapshot
-import check_trajectory as ct
 from traj_parse import _spine
 
 # --- the pending-owner-actions projection (WI-234) ------------------------------
@@ -84,16 +87,17 @@ from traj_parse import _spine
 # leaves byte-untouched) — projecting every DURABLE pending-owner action so the
 # owner's one review surface never misses a hard stop. A pure projection of
 # committed-tree state ONLY:
-#   (a) `blocked` WI rows carrying a BlockRef (the attestation/approval
-#       page);
-#   (b) Drafted/DRIFTED SR rows (WI-316): a `Drafted` SR owes an approval, and
+#   (a) Drafted/DRIFTED SR rows (WI-316): a `Drafted` SR owes an approval, and
 #       an SR whose chain has moved away from its `docs/archive/last_approved/`
 #       copy owes a re-attest (post-attestation amendment, process.md §7) — one
 #       pointer line each, naming the on-demand brief (`trace.py --approve <id>`
 #       / `--approve modified`) that carries the depth.
-#   (c) a tracked `docs/work/pause` (concurrency-restructure §5.6): one
+#   (b) a tracked `docs/work/pause` (concurrency-restructure §5.6): one
 #       `Paused since <date>` line, the declared reason rendered verbatim (no
 #       clock), so an open pause is a visible accruing cost.
+# (A retired source (0) `blocked` WI rows carrying a BlockRef — went with the
+# blockref vocabulary at WI-553/OI-70: nothing produces a queued-row blockref
+# any more, so the owner surface no longer reads a zero-producer source.)
 # One line per pending action with a pointer (never a brief — the depth stays in
 # the hand-authored briefs). Deterministic (sorted rows, no clocks), so the
 # gated region is byte-stable; a pure function of the committed tree, so the
@@ -109,7 +113,7 @@ from traj_parse import _spine
 class PendingItem(NamedTuple):
     """One durable pending owner action: its source `kind` and its bullet.
 
-    `kind` is one of `blocked`, `spine`, `pause` — a field rather than a prefix
+    `kind` is one of `spine`, `pause` — a field rather than a prefix
     test on `line`, because the one caller that discriminates (`dispatch`,
     which excludes the pause) would otherwise be parsing prose to make a
     control-flow decision, which is the `NEEDS-HUMAN` lesson (LLR-161)."""
@@ -118,25 +122,7 @@ class PendingItem(NamedTuple):
     line: str
 
 
-BLOCKED, SPINE, PAUSE = "blocked", "spine", "pause"
-
-
-def blocked_pending(root):
-    """Source (a): `(lines, ids)` — one line per blocked work item, and the set
-    of WI ids covered. In the spec-folder registry blocked is DERIVED: a
-    `queued/` item carrying a `blockref` key (concurrency-restructure §2.1 —
-    `blocked` has no directory). The pointer is the BlockRef path."""
-    wis, _ = ct.load_wis(ct.read_registry_rows(root / ct.WI_CSV))
-    lines, ids = [], set()
-    for w in sorted(wis, key=lambda w: w["id"]):
-        if w["status"] != "queued" or not w["blockref"]:
-            continue
-        lines.append(
-            "- **{}** blocked — attest/approve `{}`, then unblock the registry "
-            "row.".format(w["id"], w["blockref"])
-        )
-        ids.add(w["id"])
-    return lines, ids
+SPINE, PAUSE = "spine", "pause"
 
 
 # The SR registry, for the snapshot join. Restated rather than imported from
@@ -219,10 +205,11 @@ def spine_pending(root):
 
 # Byte-identical with `agent_common.PAUSE_MALFORMED`: the coordinator's reader
 # and this projection must say the same thing about an unreadable pause file.
-# Copied rather than imported — this module's ONE sanctioned sibling import is
-# check_trajectory (see the header), and a renderer must not start depending on
-# the coordinator layer for a string. `tests/test_gen_trajectory_pending.py`
-# pins the two equal, so the copy cannot drift silently.
+# Copied rather than imported — this module's sanctioned sibling imports are the
+# read layers `traj_parse` and `baseline_snapshot` (see the header), and a
+# renderer must not start depending on the coordinator layer for a string.
+# `tests/test_gen_trajectory_pending.py` pins the two equal, so the copy cannot
+# drift silently.
 PAUSE_MALFORMED = "<malformed docs/work/pause — fix or delete it>"
 
 
@@ -267,9 +254,7 @@ def pending_items(root):
     count it, filter it or render it and get the same answer the owner surfaces
     show — which is the WI-381 amendment's requirement (ruled 2026-08-01) held
     by construction rather than by three callers agreeing to be careful."""
-    blocked_lines, _blocked_ids = blocked_pending(root)
-    items = [PendingItem(BLOCKED, line) for line in blocked_lines]
-    items += [PendingItem(SPINE, line) for line in spine_pending(root)]
+    items = [PendingItem(SPINE, line) for line in spine_pending(root)]
     items += [PendingItem(PAUSE, line) for line in pause_pending(root)]
     return tuple(items)
 
@@ -287,9 +272,8 @@ def owner_cards(root):
 
 PENDING_LEAD = (
     "_Pending owner actions — a generated projection of durable, "
-    "committed-tree state (blocked rows with an approve/attest pointer, "
-    "Drafted/drifted spine rows owing an approval or re-attest, and the "
-    "tracked pause declaration); regenerated by `python "
+    "committed-tree state (Drafted/drifted spine rows owing an approval or "
+    "re-attest, and the tracked pause declaration); regenerated by `python "
     "project-trajectory/scripts/gen_trajectory.py --status`, do not hand-edit. "
     "This section is freshness-gated by the harness `status-map` step. The "
     "briefs above are hand-authored and untouched by regeneration._"

@@ -1389,10 +1389,10 @@ def _replace_inbound_edges(root, superseded, successor):
 
 
 def _draft_row(wi_id, draft):
-    """One draft as the 18-column registry row `wi_convert.write_spec_file`
+    """One draft as the registry row `wi_convert.write_spec_file`
     materializes. Status is the DIRECTORY (queued); Deliverable stays empty
-    (R-A: open rows carry none); blockref stays empty on adjudication rows —
-    they are WORK, not decision briefs."""
+    (R-A: open rows carry none). (The row carries no blockref — that field
+    retired with the blockref vocabulary at WI-553/OI-70.)"""
     row = {column: "" for column in wi_convert.COLUMNS}
     row["WI-ID"] = wi_id
     row["Title"] = str(draft["title"]).strip()

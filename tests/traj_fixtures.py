@@ -80,11 +80,6 @@ GOOD_WIS = (
     "WI-004,Release,docs,SR-002,WI-002;WI-003,queued,shipped\n"
 )
 
-# The BlockRef a `blocked` fixture row gets when its header declares no column
-# for one: since Phase 5 the impediment pointer is what MAKES a row blocked, so
-# it cannot be left empty the way the CSV era could.
-BLOCKREF = "docs/ratify/attest-SR-001.md"
-
 
 def write_wis(root, wis_body=GOOD_WIS, header=WI_HEADER):
     """Write the fixture work items into the registry's one home — `docs/work/`
@@ -94,14 +89,14 @@ def write_wis(root, wis_body=GOOD_WIS, header=WI_HEADER):
     The CSV-shaped `wis_body`/`header` inputs stay: they are the compact,
     readable way to state a registry in a test, and the ROW ORDER they declare is
     reproduced through the `order` frontmatter key the folder reader sorts on.
-    Two statuses need translating, because the folder form encodes them
+    One status needs translating, because the folder form encodes it
     differently rather than as a word in a cell:
 
-      * `blocked` has no directory — a blocked item is a `queued/` spec carrying
-        a `blockref`, which is what schedule.py derives the "blocked" disposition
-        and gen_trajectory's pending block from;
       * `active` is `active/<branch>/`, one level deeper, so the spec is written
         and then MOVED exactly as `integrate.py claim` files a claim.
+
+    (A `blocked` translation to a `queued/` spec carrying a `blockref` retired
+    with the blockref vocabulary at WI-553/OI-70 — nothing produces one now.)
 
     Re-writing an id replaces its spec (fixtures re-seed freely); the file for a
     previous status is removed first so status = directory stays single-homed.
@@ -116,10 +111,7 @@ def write_wis(root, wis_body=GOOD_WIS, header=WI_HEADER):
         row = dict.fromkeys(wc.COLUMNS, "")
         row.update({c: (v or "") for c, v in zip(cols, cells) if c in row})
         status = row["Status"] or "queued"
-        if status == "blocked":
-            row["Status"] = "queued"
-            row["BlockRef"] = row["BlockRef"] or BLOCKREF
-        elif status == "active":
+        if status == "active":
             row["Status"] = "queued"  # relocated to active/<branch>/ below
         wid = row["WI-ID"]
         for old in list(work.glob("*/{}-*.md".format(wid))) + list(

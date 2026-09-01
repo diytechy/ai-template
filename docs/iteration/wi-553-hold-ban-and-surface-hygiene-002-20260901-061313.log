@@ -1,0 +1,36 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 002
+# date: 2026-09-01 06:16
+# train: wi-553-hold-ban-and-surface-hygiene
+# base: a024e766d070
+# phase: REVIEW-A
+# wi: WI-553
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 566a6c9c..647f0a85
+# tokens:
+# cost-usd:
+# wall-secs: 216
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 3685
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:330e8072ddbe
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Review recorded and committed: [002-REVIEW-A-ae02efc.md](/Users/diytechy/Documents/ai-template-drive/wi-553-hold-ban-and-surface-hygiene/docs/reviews/wi-553-hold-ban-and-surface-hygiene/002-REVIEW-A-ae02efc.md).
+
+Verdict: `CHANGES-REQUESTED findings=5`  
+Commit: `647f0a85`

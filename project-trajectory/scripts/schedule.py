@@ -43,7 +43,7 @@ Two contracts live here:
     which **fails closed** (never scheduled) for that WI without stopping
     disjoint classified work.
 
-The optional schema columns (`Priority`, `Exclusive`, `BlockRef`, `EstTokens`,
+The optional schema columns (`Priority`, `Exclusive`, `EstTokens`,
 `SafetyClass`) are read via `DictReader`, so a legacy registry without them reads
 every value as its documented default — `Priority=0`, empty `Exclusive`,
 `SafetyClass` absent => `unclassified` (empty is never silently `ordinary`).
@@ -321,7 +321,6 @@ def load_wis(rows):
                 "srs": _split_refs(r.get("SR-Refs", "")),
                 "priority": _int(r.get("Priority"), 0),
                 "exclusive": _split_refs(r.get("Exclusive", "")),
-                "blockref": (r.get("BlockRef") or "").strip(),
                 "est_tokens": _int(r.get("EstTokens"), 0),
                 "safetyclass": (r.get("SafetyClass") or "").strip().lower(),
                 "planmode": (r.get("PlanMode") or "").strip().lower(),
@@ -655,11 +654,10 @@ _TERMINAL_DISPOSITION = {
     _CANCELLED: ("cancelled", "cancelled:terminal-wont-build"),
     # LLR-161: `partial` is as final as the other two — a lane stopped early and
     # said so, and the disposition row it mints decides what happens next by
-    # MINTING A SUCCESSOR, never by putting this row back on the frontier.
-    # Read FIRST in `_disposition`, ahead of the queued+blockref arm, which is
-    # the whole anti-livelock property: the old contract returned the spec to
-    # `queued/` and leaned on a `blockref` to keep the driver from claiming,
-    # handing back and re-claiming the same row forever.
+    # MINTING A SUCCESSOR, never by putting this row back on the frontier. That
+    # terminal move IS the anti-livelock property (WI-553/OI-70 retired the old
+    # `queued/`-plus-`blockref` shape, which leaned on a blockref to keep the
+    # driver from claiming, handing back and re-claiming the same row forever).
     _PARTIAL: ("partial", "partial:terminal-stopped-early"),
 }
 
@@ -711,12 +709,9 @@ def _disposition(
     if st in _TERMINAL_DISPOSITION:
         disposition, code = _TERMINAL_DISPOSITION[st]
         return disposition, [code]
-    # `blocked` has no directory in the spec-folder registry (concurrency-
-    # restructure §2.1): a blocked item is `queued/` plus a `blockref` key, so
-    # the disposition is DERIVED here rather than read as a status. (The
-    # literal Status=blocked arm retired with the CSV home at Phase 5.)
-    if st == "queued" and wi["blockref"]:
-        return "blocked", ["excluded:blocked:%s" % wi["blockref"]]
+    # (A derived `blocked` disposition — `queued/` plus a `blockref` key — retired
+    # with the blockref vocabulary at WI-553/OI-70: nothing produces a queued-row
+    # blockref any more, so the arm read a state that could not occur.)
     if st in _NEVER_READY:
         return st, ["excluded:%s" % st]
     if st not in ("queued", "active"):

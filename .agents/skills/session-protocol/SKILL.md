@@ -69,6 +69,13 @@ always true.
   `*.ps1`/`*.cmd`/`*.bat` should appear.
 - **Claiming runs through the integrator** (`integrate.py claim`); merges are
   its serial fail-closed queue, and a pause is a tracked `docs/work/pause`.
+- **A stopped lane CLOSES; it is never held by renaming its ref (OI-70).** The
+  only sanctioned stop is the partial close (§4): the spec moves to the terminal
+  `docs/archive/work/partial/` with a handback report an adjudicator then judges
+  (queue a successor, or mint an open item). Parking a lane by renaming its
+  branch ref away from its `docs/work/active/<branch>/` claim is BANNED — a lane
+  must close or it gets lost, as the wi508 hold nearly was — and
+  `check_trajectory` reports any active claim with no matching branch ref.
 
 ## 3. End green (gates)
 

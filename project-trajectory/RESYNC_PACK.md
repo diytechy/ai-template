@@ -2410,6 +2410,36 @@ attention:
    always same-family — now it says so. The 30 s liveness probe runs only on
    routes that already failed this run.
 
+### The `blockref` vocabulary retires; the hold-by-rename ban is mechanized [since a024e766]
+
+(Anchored at the preceding kit commit — the WI-553 change lands just after it,
+so there is no merge SHA to name yet.)
+
+Two kit-owned changes, both taken by a plain re-sync of the scripts; what needs
+YOUR attention is one schema column and one new check.
+
+1. **The `BlockRef` column leaves the WI registry schema.** It fed
+   `pending.blocked_pending` — a "blocked" owner-surface line derived from a
+   `queued/` spec carrying a `blockref` — but nothing has PRODUCED one since a
+   stopped lane began closing to the terminal `partial/` (LLR-161), so OI-70
+   retired the field, the canonical column (`kitlib.registry.WI_COLUMNS`), and
+   the derivations that read it. The loaders are TOLERANT: a registry still
+   carrying a `BlockRef` column reads clean (the column is ignored), so this
+   migration is optional — drop the column from
+   `docs/requirements/work-items.csv` (and any folder-spec `blockref`
+   frontmatter key) at your convenience. The `blocked` STATUS word survives in
+   the lifecycle vocabulary; nothing mints it now. Distinct and UNCHANGED: the
+   `Blocked-WI:` / `BlockRef:` git COMMIT TRAILERS a worker uses to signal a
+   block are a different instrument and stay live.
+
+2. **A new harness check reports a ref-less active claim.** `check_trajectory`
+   now names any `docs/work/active/<branch>/` claim directory with no matching
+   `refs/heads/<branch>` — the signature of a hold-by-rename, which OI-70 BANS
+   (a lane must close PARTIAL, never park by renaming its ref). WARN at the
+   commit bar, ERROR under `--strict` (the DevStg-Impl gate); silent off-git. If
+   your repo carries a stranded active claim, close it partial or delete the
+   directory.
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which
