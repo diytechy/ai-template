@@ -1708,6 +1708,8 @@ def build_flow(src_roots, entry):
 # — an LLR that is verified but never built must not score as implemented, and
 # the LLR-to-TC link already lives in the registry (`TestRefs`/`Verifies`).
 LLR_REGISTRY = "docs/requirements/low-level-requirements.toml"
+SR_REGISTRY = "docs/requirements/system-requirements.toml"
+SN_REGISTRY = "docs/requirements/stakeholder-needs.toml"
 BACKLINK_MIN_KEY = "backlink_coverage_min"
 
 
@@ -1982,6 +1984,272 @@ def backlink_report(src_roots, root, exts=BACKLINK_EXTS, registry=LLR_REGISTRY):
     return lines, (pct >= minimum)
 
 
+# ── SR-163: the shipped-file purpose-coverage checker, the forward direction ──
+#
+# `backlink_report` above asks whether each live DESIGN ROW is NAMED by some
+# source declaration. SR-163 asks the INVERSE, over a different universe: does
+# each shipped-FILE inventory entry map, through a requirement reference, to a
+# stakeholder need — and does its destination exist. The inventory is
+# `bootstrap.mapping_entries()` (source, destination, optional requirement id);
+# a bare pair is by definition an unmapped-entry warning, so the reference
+# burn-down IS the migration and no flag day is forced (OI-72, 2026-08-31).
+#
+# THE DECLARED WARN-VS-GATE POLICY, one home. Unresolved references and unmapped
+# files START warn — filling references is a migration, and the SHIPPED default
+# for unmapped stays warn-only; the flip of either class to "gate" is a reviewed
+# commit taken once that class reaches zero. Missing files and stale exclusions
+# are already delivered and gated by the dogfood/bootstrap checks, so they gate
+# here too (they stand at zero, or those checks are already red).
+MAPPING_FINDING_POLICY = {
+    "missing_file": "gate",
+    "stale_entry": "gate",
+    "unresolved_reference": "warn",
+    "unmapped_file": "warn",
+}
+
+
+def load_spine_index(root, sr_registry=SR_REGISTRY, sn_registry=SN_REGISTRY):
+    """`(sr_by_id, sn_ids)` for the SR-163 join: a `{SR-ID: row}` map of live
+    system requirements and the set of live stakeholder-need ids, both `-000`
+    example rows dropped. Empty containers when a registry is absent — a repo
+    with no spine has nothing to resolve against, and the checker says so by
+    reporting every reference unresolved rather than by crashing."""
+    srs = spine_carrier.load(Path(root) / sr_registry, "SR-ID", False)
+    sns = spine_carrier.load(Path(root) / sn_registry, "SN-ID", False)
+    sr_by_id = {
+        str(r.get("SR-ID") or "").strip(): r
+        for r in srs
+        if str(r.get("SR-ID") or "").strip()
+    }
+    sn_ids = {
+        str(r.get("SN-ID") or "").strip()
+        for r in sns
+        if str(r.get("SN-ID") or "").strip()
+    }
+    return sr_by_id, sn_ids
+
+
+def resolve_requirement_reference(ref, sr_by_id, sn_ids):
+    """`None` when `ref` names a live system requirement whose stakeholder-need
+    references resolve to at least one live need; otherwise a short reason the
+    reference does not resolve. The SR-163 file→requirement→need join, stated
+    once so the checker and its TC read it the same way."""
+    ref = (ref or "").strip()
+    if not ref:
+        return "carries no reference"
+    sr = sr_by_id.get(ref)
+    if sr is None:
+        return "names no live system requirement"
+    needs = [n for n in _kitspine.refs(sr.get("SN-Refs")) if n in sn_ids]
+    if not needs:
+        return "system requirement resolves to no live stakeholder need"
+    return None
+
+
+def _delivery_source_findings(entries, delivery):
+    """Manifest/exclusion drift against the physical package source census."""
+    sources, source_exclusions, conditional, _generated = delivery
+    mapped = {src for src, _dst, _ref in entries}
+    delivery_sources = {src for src, _dst in conditional}
+    classified = mapped | set(source_exclusions) | delivery_sources
+    findings = [
+        (
+            "missing_file",
+            src,
+            "package source is absent from MAPPING and delivery exclusions",
+        )
+        for src in sorted(set(sources) - classified)
+    ]
+    findings.extend(
+        ("stale_entry", src, "declared delivery source is absent from package")
+        for src in sorted(classified - set(sources))
+    )
+    findings.extend(
+        ("stale_entry", src, "source is both mapped and declared kit-only")
+        for src in sorted(mapped & set(source_exclusions))
+    )
+    return findings
+
+
+def _inherited_delivery_entries(entries, delivery, present):
+    """Generated/materialized outputs, carrying their source row's reference."""
+    _sources, _exclusions, conditional, generated = delivery
+    mapped = {src: ref for src, _dst, ref in entries}
+    inherited = [(src, dst, mapped.get(src)) for src, dst in generated]
+    inherited.extend(
+        (src, dst, mapped.get(src)) for src, dst in conditional if present(dst)
+    )
+    return inherited
+
+
+def mapping_purpose_findings(
+    entries, *, present, sr_by_id, sn_ids, declared_absences=(), delivery=None
+):
+    """The four SR-163 finding classes over a shipped-file inventory, as a list
+    of `(class, destination, detail)` tuples. PURE: every environment fact is an
+    injected value, so the same function grades the real `bootstrap.MAPPING` and
+    a planted scaffold identically.
+
+      `entries`            — iterable of `(src, dst, ref)` (bootstrap.mapping_entries
+                             shape; `ref` None for a bare pair).
+      `present(dst)`       — True when the destination materializes (physically
+                             present, or served in place from the kit tree).
+      `sr_by_id`/`sn_ids`  — the spine index from `load_spine_index`.
+      `declared_absences`  — `{path: reason}` for destinations recorded as
+                             deliberately not shipped. A reason opening
+                             `LIFECYCLE:` marks a path whose PRESENCE is a legal,
+                             documented state, so it is exempt from the stale
+                             arm — the same marker rule the dogfood walk applies,
+                             stated once (`check_doc_refs.load_declared_absences`
+                             is its shape).
+      `delivery`           — optional `(physical_sources, source_exclusions,
+                             conditional_outputs, generated_outputs)` from
+                             `bootstrap.delivery_inventory()`. This universe is
+                             independent of MAPPING, so deleting a real manifest
+                             row remains observable. Conditional outputs are
+                             graded only when materialized; generated outputs
+                             inherit their generator source's reference.
+
+    Classes (each carried by `MAPPING_FINDING_POLICY`):
+      unmapped_file        — a bare pair: the file ships with no recorded purpose.
+      unresolved_reference — a reference that does not resolve SR → live need.
+      missing_file         — a declared destination that is absent and not excluded.
+      stale_entry          — a declared exclusion whose destination is now present.
+    """
+    entries = list(entries)
+    absences = dict(declared_absences)
+    absent_paths = {str(path).rstrip("/") for path in absences}
+    findings = []
+    if delivery is not None:
+        findings.extend(_delivery_source_findings(entries, delivery))
+        entries.extend(_inherited_delivery_entries(entries, delivery, present))
+    for _src, dst, ref in entries:
+        if ref is None:
+            findings.append(
+                ("unmapped_file", dst, "ships with no requirement reference")
+            )
+        else:
+            reason = resolve_requirement_reference(ref, sr_by_id, sn_ids)
+            if reason:
+                findings.append(
+                    (
+                        "unresolved_reference",
+                        dst,
+                        "reference {!r} {}".format(ref, reason),
+                    )
+                )
+        if not present(dst) and str(dst).rstrip("/") not in absent_paths:
+            findings.append(("missing_file", dst, "declared destination is absent"))
+    for dst, reason in sorted(absences.items()):
+        if not str(reason).startswith("LIFECYCLE:") and present(dst):
+            findings.append(
+                (
+                    "stale_entry",
+                    dst,
+                    "declared exclusion but the destination is present",
+                )
+            )
+    return findings
+
+
+def mapping_purpose_report(findings, policy=MAPPING_FINDING_POLICY):
+    """`(lines, ok)` — the per-finding report and whether the inventory passes.
+    `ok` is False exactly when a finding's class is policied `gate`; warn-classed
+    findings (unresolved references, unmapped files) are reported and counted but
+    never fail the run, so the burn-down is visible without a flag day."""
+    counts = {}
+    lines = []
+    for cls, dst, detail in findings:
+        counts[cls] = counts.get(cls, 0) + 1
+    for cls in sorted(MAPPING_FINDING_POLICY):
+        n = counts.get(cls, 0)
+        verb = policy.get(cls, "warn").upper()
+        lines.append("mapping purpose: {} — {} finding(s) [{}]".format(cls, n, verb))
+    for cls, dst, detail in findings:
+        verb = policy.get(cls, "warn").upper()
+        lines.append("mapping purpose: {} {} — {} ({})".format(verb, cls, dst, detail))
+    ok = not any(policy.get(cls, "warn") == "gate" for cls, _dst, _detail in findings)
+    return lines, ok
+
+
+def _import_sibling(name):
+    """Sibling script import, the idiom the `spine_carrier` block above uses:
+    run as a subprocess this script's own dir is `sys.path[0]`, so a plain
+    import resolves; the fallback covers an in-process import (a test) whose
+    `sys.path` does not yet carry `scripts/`. Deferred to call time so a plain
+    `gen_arch_map` invocation never pays to import `bootstrap`."""
+    try:
+        return __import__(name)
+    except ImportError:  # pragma: no cover - in-process fallback
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        return __import__(name)
+
+
+def mapping_purpose_over_repo(
+    root, *, sr_registry=SR_REGISTRY, sn_registry=SN_REGISTRY
+):
+    """Run the SR-163 checker over THIS repo's real inventory and return the four
+    finding classes. The ONE delivered path that assembles every environment fact
+    the pure `mapping_purpose_findings` needs — the shipped-file inventory
+    (`bootstrap.mapping_entries()`), the SR/SN spine (`load_spine_index`), and the
+    declared-absences ledger (`check_doc_refs.load_declared_absences`) — so the
+    `--mapping-purpose` CLI mode and TC-204 grade the same code over the same repo,
+    not two hand-assembled copies that can drift.
+
+    `present(dst)` is True when the destination materializes: physically present,
+    or a `scripts/` destination served in place from the kit tree (the meta-repo
+    runs its own scripts from `project-trajectory/scripts/`; downstream the file
+    is physically present, so that arm never fires there)."""
+    bootstrap = _import_sibling("bootstrap")
+    check_doc_refs = _import_sibling("check_doc_refs")
+    root = Path(root)
+    entries = bootstrap.mapping_entries()
+    delivery = bootstrap.delivery_inventory()
+    sr_by_id, sn_ids = load_spine_index(root, sr_registry, sn_registry)
+    absences = check_doc_refs.load_declared_absences(
+        root / "docs" / "declared-absences"
+    )
+
+    def present(dst):
+        if (root / dst).exists():
+            return True
+        if dst in bootstrap.GITKEEP_DIRS and (root / dst).is_dir():
+            return True
+        for src, d, _ref in entries:
+            if (
+                d == dst
+                and dst.startswith("scripts/")
+                and (root / "project-trajectory" / src).exists()
+            ):
+                return True
+        return False
+
+    return mapping_purpose_findings(
+        entries,
+        present=present,
+        sr_by_id=sr_by_id,
+        sn_ids=sn_ids,
+        declared_absences=absences,
+        delivery=delivery,
+    )
+
+
+def _mapping_purpose_exit(src_roots, args):
+    """Print the SR-163 mapping-purpose report and return the process exit code.
+    Warn-first by policy: the report gates (exit 1) only on a gate-classed finding
+    (a missing file or a stale exclusion); unmapped bare pairs and unresolved
+    references are reported and counted but never fail the run, so the reference
+    burn-down is visible on every invocation without a flag day. Ignores
+    `src_roots` — the inventory it grades is `bootstrap.MAPPING`, not the scanned
+    source tree — and takes `--root` for the repo whose spine and ledger it reads,
+    the same knob `--backlink-coverage` uses."""
+    findings = mapping_purpose_over_repo(args.root)
+    lines, ok = mapping_purpose_report(findings)
+    for line in lines:
+        print(line, file=sys.stdout if ok else sys.stderr)
+    return 0 if ok else 1
+
+
 def _backlink_exit(src_roots, args):
     """Print the report and return the process exit code. Warn-first by default;
     `--strict-backlinks` promotes a below-minimum reading to a failure, the same
@@ -2073,10 +2341,21 @@ def main():
         "The bar is docs/process.toml [checks] backlink_coverage_min",
     )
     ap.add_argument(
+        "--mapping-purpose",
+        action="store_true",
+        help="REPORT MODE (writes nothing, needs no --doc): grade the shipped-file "
+        "inventory (bootstrap.MAPPING) for SR-163 — each entry maps through a "
+        "requirement reference to a live stakeholder need, its destination exists, "
+        "and no declared exclusion is stale. Warn-first: exits 1 only on a "
+        "gate-class finding (missing file / stale exclusion); unmapped and "
+        "unresolved rows are reported but never gate (the burn-down)",
+    )
+    ap.add_argument(
         "--root",
         default=".",
-        help="repo root holding docs/process.toml and the LLR registry "
-        "(--backlink-coverage only; default: .)",
+        help="repo root holding docs/process.toml, the LLR registry, the SR/SN "
+        "spine, and docs/declared-absences (--backlink-coverage / "
+        "--mapping-purpose; default: .)",
     )
     ap.add_argument(
         "--backlink-ext",
@@ -2105,6 +2384,7 @@ def main():
     # named mode runs, in this order, and the verdict is the worst of them.
     modes = (
         (args.backlink_coverage, _backlink_exit),
+        (args.mapping_purpose, _mapping_purpose_exit),
         (args.cli_doc, _cli_doc_exit),
         (args.contracts_doc, _contracts_doc_exit),
     )

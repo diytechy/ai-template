@@ -1,0 +1,34 @@
+# Physical kit sources that deliberately are not bootstrap MAPPING rows.
+# One `<source> — <reason>` per line. The package census is fail-safe: a missing
+# file, malformed line, or blank reason excludes nothing and the source becomes
+# an SR-163 missing_file finding. Conditional copies and generator inputs are
+# derived from bootstrap's executable delivery paths and do not belong here.
+
+mapping-source-exclusions — this reasoned exclusion registry; kit-side only
+ADOPTING.md — kit-side adoption reference; read from the kit checkout
+EXAMPLE.md — kit-side worked example; read from the kit checkout
+EXTERNAL_SKILLS.md — kit-side external-skill catalog; read from the kit checkout
+KICKOFF_PROMPT.md — kit-side kickoff aid; read from the kit checkout
+MULTI_REPO.md — kit-side multi-repository reference; read from the kit checkout
+README.md — the portable kit's own landing page, not an adopter file
+RESYNC_PACK.md — kit-side re-sync procedure; never scaffolded into an adopter
+LICENSE — generator input for docs/kit-license; the source license stays kit-side
+agent-hooks/README.md — kit-side hook activation instructions
+registries/README.md — kit-side registry-template authoring reference
+scripts/README.md — kit-side script inventory reference
+scripts/bootstrap.py — installer/generator run from the kit; deliberately not scaffolded
+skills/README.md — kit-side skill authoring reference
+blackout.template — retired one-word policy retained for migration reference
+gate-policy.template — retired one-word policy retained for migration reference
+privacy-check.template — retired one-word policy retained for migration reference
+push-policy.template — retired one-word policy retained for migration reference
+review-policy.template — retired one-word policy retained for migration reference
+registries/repos.template.csv — legacy optional registry retained for migration
+registries/work-items.template.csv — legacy WI carrier retained for migration
+prompts/CATALOG.md — generated kit-side prompt catalog
+scripts/check_complexity.py — meta-repo complexity census, not an adopter check
+scripts/check_dupes_census.py — meta-repo historical duplication census
+scripts/gen_arch_map.reference.ps1 — kit-side launcher reference
+scripts/gen_prompt_catalog.py — meta-repo prompt-catalog generator
+scripts/gen_skills_index.py — meta-repo skills-index generator
+skills/INDEX.csv — generated kit-side skill catalog

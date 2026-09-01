@@ -256,6 +256,14 @@ SLOW_MODULES = frozenset(
         # itself is pinned in-process in test_check_complexity.py, which stays in
         # the commit bar; only the subprocess CLI half is re-tiered here.
         "test_check_complexity_cli",  # check_complexity.py driven as a subprocess
+        # WI-543 rework (REVIEW-A): the SR-163 mapping-purpose checker's CLI
+        # drives. Each case spawns gen_arch_map.py --mapping-purpose as a
+        # subprocess (real interpreter startup) to prove the delivered command is
+        # wired end-to-end; the METRIC and the four finding classes are pinned
+        # in-process in test_mapping_purpose.py, which stays in the commit bar —
+        # only the subprocess half is re-tiered here, the test_check_complexity_cli
+        # split's precedent.
+        "test_mapping_purpose_cli",  # gen_arch_map --mapping-purpose as a subprocess
     }
 )
 
