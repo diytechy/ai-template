@@ -1042,7 +1042,9 @@ def main():
         )
         return 0
 
-    errors = integrity + ct.validate(wis, ct.load_known_srs(root))
+    errors = integrity + ct.validate(
+        wis, ct.load_known_srs(root), ct.load_known_ois(root)
+    )
     if errors:
         for e in errors:
             print("gen_trajectory: ERROR - {}".format(e), file=sys.stderr)

@@ -50,12 +50,19 @@ Seven arms, built lower-risk foundation first.
   `## Context`/Deliverable. Wired into `_mint` per minted successor carrying
   `supersedes`. Test added.
 
+- **Arm 2 (the OI-mint arm) — DONE.** A disposition draft carries a new
+  `open_item` key (the human question). At the mint, `intake._mint_open_item`
+  appends a `pending` OI row to open-items.toml (id from `next_oi_id`, the same
+  watermark read-and-bump as WI ids), and the OI id is injected into the
+  successor's `needs` BEFORE the row is written — so the ruling gates the
+  successor's readiness. `open-items.html` regenerates in the mint's bookkeeping
+  commit (`trunk_step --regen` runs `gen_open_items`). Refuses on a non-TOML
+  registry (all-or-nothing). Also fixed `gen_trajectory`'s `validate` call to
+  pass `known_ois` (it validates the WI graph during regen). Tests: OI minted
+  pending + gates successor; non-TOML refusal.
+
 ### Still to build
 
-- Arm 2: the OI-mint arm — a disposition draft can mint an OI row into
-  open-items.toml (id from watermark OI space, `status="pending"`,
-  `gen_open_items` regenerated same commit) and land that OI id in the queued
-  successor's `needs`.
 - Arm 3: the refusal invariant (OI-73) — a partial/cancelled disposition that
   queues NO successor is REFUSED at the close.
 - Arm 1: mechanical adjudication-row close — a DONE adjudication session's row

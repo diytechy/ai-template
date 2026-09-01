@@ -590,6 +590,93 @@ def test_the_mint_replaces_inbound_edges_of_the_superseded_row(tmp_path):
     assert rows[successor]["Supersedes"] == "WI-005"
 
 
+def write_open_items(root):
+    """A minimal TOML open-items registry — the carrier the OI mint appends to."""
+    path = root / "docs" / "requirements" / "open-items.toml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "# open-items registry\n", encoding="utf-8", newline="\n"
+    )
+    return path
+
+
+_HUMAN_OWED = """
+## Deliverable
+
+Adjudicated: the remaining question is the owner's to answer.
+
+## Dispositions
+
+```toml
+title = "Continue once the owner rules the boundary"
+workstream = "scripts"
+buildtier = "medium"
+supersedes = "WI-005"
+open_item = "Does the retention window include partial closes?"
+```
+"""
+
+
+def test_the_close_mints_a_pending_oi_that_gates_the_successor(tmp_path):
+    # OI-73 exit (B): a human-owed answer becomes a PENDING open item minted
+    # from the watermark's OI space, and its id lands in the queued successor's
+    # needs — the ruling gates readiness, not adjudicator restraint. No
+    # standalone OI exit: the OI is always a dependency of a successor.
+    root = git_repo(tmp_path)
+    write_sr(root)
+    write_open_items(root)
+    write_spec(
+        root, "partial", "WI-005", slug="returned", body="\n## Deliverable\n\nstopped\n"
+    )
+    write_spec(
+        root,
+        "complete",
+        "WI-008",
+        slug="adjudicate",
+        safety_class="adjudication",
+        body=_HUMAN_OWED,
+    )
+    _commit(root, "setup", when=T_CODE)
+    before = after = _rev(root)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-008": "merged"}, "wi-008"
+    )
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    successor = minted[0][0]
+    # the successor hard-depends on the minted OI id...
+    rows = queued_rows(root)
+    preds = rows[successor]["Predecessors"]
+    assert preds.startswith("OI-"), preds
+    # ...and that OI is a real, PENDING row in the registry.
+    tr = load_script("trace")
+    states = tr.open_item_states(root)
+    assert states.get(preds) == "pending"
+
+
+def test_the_oi_mint_refuses_on_a_non_toml_registry(tmp_path):
+    # A downstream repo without a TOML open-items registry keeps its
+    # hand-authored path rather than getting a malformed row — the mint refuses
+    # loudly (all-or-nothing) instead of writing nowhere.
+    root = git_repo(tmp_path)
+    write_sr(root)  # no open-items registry at all
+    write_spec(
+        root,
+        "complete",
+        "WI-008",
+        slug="adjudicate",
+        safety_class="adjudication",
+        body=_HUMAN_OWED,
+    )
+    _commit(root, "setup", when=T_CODE)
+    before = after = _rev(root)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-008": "merged"}, "wi-008"
+    )
+    assert minted == []
+    assert refusal is not None and "open-items" in refusal
+
+
 def test_a_malformed_disposition_block_refuses_and_mints_nothing(tmp_path):
     bad = DISPOSITIONS.replace('title = "Re-verify', '= "Re-verify')
     root = merged_adjudication_repo(tmp_path, body=bad)
