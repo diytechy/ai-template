@@ -73,10 +73,14 @@
 #                  be machine-flipped only when this registry's stage rung —
 #                  DevStg-Boundary — is not human-held under the `[attestation]
 #                  human_approval_through` dial, the predicate being
-#                  `agent_common.human_approves(docs, "external")`. At this
-#                  repo's dial of 4 that means every value here is the OWNER'S to
-#                  flip, in a reviewed Status-change commit. No loop, no LLM
-#                  verdict and no script may set one to `Approved`.
+#                  `agent_common.human_approves(docs, "external")`. READ THE
+#                  DIAL, DO NOT ASSUME IT: this repo runs `DevStg-Needs`-held
+#                  only, so DevStg-Boundary is NOT held and the predicate
+#                  answers FALSE. What keeps these values the owner's today is
+#                  that the kit ships no automated writer for an off-spine
+#                  `status` — they are hand-edited, in a reviewed Status-change
+#                  commit. The predicate exists so the first such writer cannot
+#                  be added without consulting it.
 #
 #     absorbs      OPTIONAL — the earlier ids this row folded in, so a re-drawn
 #                  frame loses nothing and an old citation still lands.

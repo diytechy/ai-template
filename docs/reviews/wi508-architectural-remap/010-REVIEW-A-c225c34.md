@@ -1,0 +1,2 @@
+- [MAJOR] docs/test/test-cases.toml:2015 -> TC-199 (and TC-200 at :2026) formally verifies SR-163 even though both TC methods and their LLRs explicitly leave SR-163's required file-to-requirement join and shipped-file universe unimplemented; trace.py consequently reports SR-163 as covered now, and a future approval of these already-passing draft TCs can silently advance a false mapping claim -> remove the direct SR-163 targets until a complete mapping TC/check exists (or add that complete coverage before approving either TC) -> @owner
+VERDICT: CHANGES-REQUESTED findings=1

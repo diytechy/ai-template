@@ -1,0 +1,2 @@
+- [MAJOR] docs/requirements/system-requirements.toml:779 -> SR-163 remains an Approved Test requirement, but its only two child TCs are Drafted and explicitly leave the file-to-requirement join and shipped-file universe uncovered; `trace.py --strict` exits 1 with `SR SR-163 has no test (TC)` after this WI closes -> reopen WI-508 or file a successor owning SR-163, then implement and trace a TC that drives all of its acceptance classes before closing the owner -> @owner
+VERDICT: CHANGES-REQUESTED findings=1

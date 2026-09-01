@@ -19,7 +19,7 @@
 # correction: B 7 -> 8 (OI-47)
 # correction: REL 3 -> 4 (OI-47)
 #
-# basis: B=5 CMP=9 EXT=5 IF=173 LLR=206 OI=77 PB=4 REL=3 SN=40 SR=183 TC=204 WI=567
+# basis: B=5 CMP=9 EXT=5 IF=173 LLR=206 OI=77 PB=4 REL=3 SN=40 SR=183 TC=204 WI=568
 #
 ASSET = 0
 B = 8
@@ -37,4 +37,4 @@ REPO = 0
 SN = 40
 SR = 183
 TC = 204
-WI = 567
+WI = 568
