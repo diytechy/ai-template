@@ -1708,6 +1708,8 @@ def build_flow(src_roots, entry):
 # — an LLR that is verified but never built must not score as implemented, and
 # the LLR-to-TC link already lives in the registry (`TestRefs`/`Verifies`).
 LLR_REGISTRY = "docs/requirements/low-level-requirements.toml"
+SR_REGISTRY = "docs/requirements/system-requirements.toml"
+SN_REGISTRY = "docs/requirements/stakeholder-needs.toml"
 BACKLINK_MIN_KEY = "backlink_coverage_min"
 
 
@@ -1980,6 +1982,146 @@ def backlink_report(src_roots, root, exts=BACKLINK_EXTS, registry=LLR_REGISTRY):
             "the dial.".format(pct, minimum, len(uncovered), ", ".join(uncovered[:5]))
         )
     return lines, (pct >= minimum)
+
+
+# ── SR-163: the shipped-file purpose-coverage checker, the forward direction ──
+#
+# `backlink_report` above asks whether each live DESIGN ROW is NAMED by some
+# source declaration. SR-163 asks the INVERSE, over a different universe: does
+# each shipped-FILE inventory entry map, through a requirement reference, to a
+# stakeholder need — and does its destination exist. The inventory is
+# `bootstrap.mapping_entries()` (source, destination, optional requirement id);
+# a bare pair is by definition an unmapped-entry warning, so the reference
+# burn-down IS the migration and no flag day is forced (OI-72, 2026-08-31).
+#
+# THE DECLARED WARN-VS-GATE POLICY, one home. Unresolved references and unmapped
+# files START warn — filling references is a migration, and the SHIPPED default
+# for unmapped stays warn-only; the flip of either class to "gate" is a reviewed
+# commit taken once that class reaches zero. Missing files and stale exclusions
+# are already delivered and gated by the dogfood/bootstrap checks, so they gate
+# here too (they stand at zero, or those checks are already red).
+MAPPING_FINDING_POLICY = {
+    "missing_file": "gate",
+    "stale_entry": "gate",
+    "unresolved_reference": "warn",
+    "unmapped_file": "warn",
+}
+
+
+def load_spine_index(root, sr_registry=SR_REGISTRY, sn_registry=SN_REGISTRY):
+    """`(sr_by_id, sn_ids)` for the SR-163 join: a `{SR-ID: row}` map of live
+    system requirements and the set of live stakeholder-need ids, both `-000`
+    example rows dropped. Empty containers when a registry is absent — a repo
+    with no spine has nothing to resolve against, and the checker says so by
+    reporting every reference unresolved rather than by crashing."""
+    srs = spine_carrier.load(Path(root) / sr_registry, "SR-ID", False)
+    sns = spine_carrier.load(Path(root) / sn_registry, "SN-ID", False)
+    sr_by_id = {
+        str(r.get("SR-ID") or "").strip(): r
+        for r in srs
+        if str(r.get("SR-ID") or "").strip()
+    }
+    sn_ids = {
+        str(r.get("SN-ID") or "").strip()
+        for r in sns
+        if str(r.get("SN-ID") or "").strip()
+    }
+    return sr_by_id, sn_ids
+
+
+def resolve_requirement_reference(ref, sr_by_id, sn_ids):
+    """`None` when `ref` names a live system requirement whose stakeholder-need
+    references resolve to at least one live need; otherwise a short reason the
+    reference does not resolve. The SR-163 file→requirement→need join, stated
+    once so the checker and its TC read it the same way."""
+    ref = (ref or "").strip()
+    if not ref:
+        return "carries no reference"
+    sr = sr_by_id.get(ref)
+    if sr is None:
+        return "names no live system requirement"
+    needs = [n for n in _kitspine.refs(sr.get("SN-Refs")) if n in sn_ids]
+    if not needs:
+        return "system requirement resolves to no live stakeholder need"
+    return None
+
+
+def mapping_purpose_findings(
+    entries, *, present, sr_by_id, sn_ids, declared_absences=()
+):
+    """The four SR-163 finding classes over a shipped-file inventory, as a list
+    of `(class, destination, detail)` tuples. PURE: every environment fact is an
+    injected value, so the same function grades the real `bootstrap.MAPPING` and
+    a planted scaffold identically.
+
+      `entries`            — iterable of `(src, dst, ref)` (bootstrap.mapping_entries
+                             shape; `ref` None for a bare pair).
+      `present(dst)`       — True when the destination materializes (physically
+                             present, or served in place from the kit tree).
+      `sr_by_id`/`sn_ids`  — the spine index from `load_spine_index`.
+      `declared_absences`  — `{path: reason}` for destinations recorded as
+                             deliberately not shipped. A reason opening
+                             `LIFECYCLE:` marks a path whose PRESENCE is a legal,
+                             documented state, so it is exempt from the stale
+                             arm — the same marker rule the dogfood walk applies,
+                             stated once (`check_doc_refs.load_declared_absences`
+                             is its shape).
+
+    Classes (each carried by `MAPPING_FINDING_POLICY`):
+      unmapped_file        — a bare pair: the file ships with no recorded purpose.
+      unresolved_reference — a reference that does not resolve SR → live need.
+      missing_file         — a declared destination that is absent and not excluded.
+      stale_entry          — a declared exclusion whose destination is now present.
+    """
+    absences = dict(declared_absences)
+    findings = []
+    for _src, dst, ref in entries:
+        if ref is None:
+            findings.append(
+                ("unmapped_file", dst, "ships with no requirement reference")
+            )
+        else:
+            reason = resolve_requirement_reference(ref, sr_by_id, sn_ids)
+            if reason:
+                findings.append(
+                    (
+                        "unresolved_reference",
+                        dst,
+                        "reference {!r} {}".format(ref, reason),
+                    )
+                )
+        if not present(dst) and dst not in absences:
+            findings.append(("missing_file", dst, "declared destination is absent"))
+    for dst, reason in sorted(absences.items()):
+        if not str(reason).startswith("LIFECYCLE:") and present(dst):
+            findings.append(
+                (
+                    "stale_entry",
+                    dst,
+                    "declared exclusion but the destination is present",
+                )
+            )
+    return findings
+
+
+def mapping_purpose_report(findings, policy=MAPPING_FINDING_POLICY):
+    """`(lines, ok)` — the per-finding report and whether the inventory passes.
+    `ok` is False exactly when a finding's class is policied `gate`; warn-classed
+    findings (unresolved references, unmapped files) are reported and counted but
+    never fail the run, so the burn-down is visible without a flag day."""
+    counts = {}
+    lines = []
+    for cls, dst, detail in findings:
+        counts[cls] = counts.get(cls, 0) + 1
+    for cls in sorted(MAPPING_FINDING_POLICY):
+        n = counts.get(cls, 0)
+        verb = policy.get(cls, "warn").upper()
+        lines.append("mapping purpose: {} — {} finding(s) [{}]".format(cls, n, verb))
+    for cls, dst, detail in findings:
+        verb = policy.get(cls, "warn").upper()
+        lines.append("mapping purpose: {} {} — {} ({})".format(verb, cls, dst, detail))
+    ok = not any(policy.get(cls, "warn") == "gate" for cls, _dst, _detail in findings)
+    return lines, ok
 
 
 def _backlink_exit(src_roots, args):

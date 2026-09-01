@@ -96,7 +96,7 @@ def test_kit_masters_markers_balanced_with_known_axes():
     # raises otherwise) and every profile axis must be a declared one — an
     # unknown axis would silently never be omittable.
     every = frozenset(boot.PROFILE_AXES)
-    for src_rel, dst_rel in boot.MAPPING:
+    for src_rel, dst_rel, *_ref in boot.MAPPING:
         if not dst_rel.endswith(".md"):
             continue
         text = (KIT / src_rel).read_text(encoding="utf-8")

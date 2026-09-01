@@ -2065,3 +2065,14 @@ automated = "Yes"
 evidence = "tests/test_check_complexity_cli.py"
 status = "Drafted"
 phase = 5
+
+[test.TC-204]
+verifies = ["SR-163"]
+level = "Integration"
+method = """The direct test on SR-163: the tolerant reference cell and the four-class checker, proven catching each class on a planted scaffold, and standing green over the real inventory. THE CELL: bootstrap.mapping_entries() normalizes every MAPPING row to (source, destination, reference), a bare pair surviving as reference None with no flag day, adding and dropping no rows. THE CHECKER, gen_arch_map.mapping_purpose_findings, driven on one synthetic inventory carrying exactly one defect of each class plus a clean control: a bare pair is reported UNMAPPED; a reference naming no live requirement, or one whose requirement resolves to no live stakeholder need, is reported UNRESOLVED; a declared destination that is absent and unexcluded is reported MISSING; a declared exclusion whose destination has materialized is reported STALE, with the lifecycle marker exempting only a path whose presence is a legal state, and the mapped-present control raising nothing. THE POLICY: unmapped and unresolved are warn-first and missing and stale gate, so a warn-only inventory passes and one gate-class finding fails it. THE STANDING EVIDENCE, over the live MAPPING literal and this repository's real spine: no missing file and no stale exclusion survives (the checker passes), every filled reference resolves SR to a live need, and the remaining unmapped warnings are exactly the un-filled rows — the burn-down baseline, visible without a flag day."""
+tier = "Smoke"
+expected = "Satisfies SR-163 AcceptanceCriteria: over the declared inventory the four finding classes are each reported under the declared warn-versus-gate policy, and a file's purpose maps through a requirement reference that resolves SR to a live stakeholder need (a generated output naming its generator's requirement resolves the same way)"
+automated = "Yes"
+evidence = """tests/test_mapping_purpose.py::test_checker_catches_unmapped_file; tests/test_mapping_purpose.py::test_checker_catches_unresolved_reference; tests/test_mapping_purpose.py::test_checker_catches_missing_file; tests/test_mapping_purpose.py::test_checker_catches_stale_entry; tests/test_mapping_purpose.py::test_stale_arm_exempts_the_lifecycle_marker; tests/test_mapping_purpose.py::test_policy_is_warn_first_for_the_reference_classes; tests/test_mapping_purpose.py::test_real_mapping_has_no_gate_class_findings; tests/test_mapping_purpose.py::test_every_filled_reference_resolves"""
+status = "Drafted"
+phase = 5

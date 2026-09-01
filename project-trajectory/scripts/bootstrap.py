@@ -1718,7 +1718,7 @@ MAPPING = [
     # a second axis over the same rows; the ladder now answers both questions
     # with one value. An adopter's `docs/gate` is DELETED at re-sync, not
     # migrated: nothing reads it.
-    ("stage.template", "docs/stage"),
+    ("stage.template", "docs/stage", "SR-049"),
     # The id watermark (docs/id-watermark): the high-water mark per id space, so
     # a deleted row's number is never re-minted. REQUIRED, because trace.py
     # treats an absent mark as an error rather than as "no id is taken".
@@ -1740,7 +1740,7 @@ MAPPING = [
     # `migrate_legacy_config`). The three --gate-policy/--push-policy/
     # --privacy-check flags now rewrite a KEY in this file rather than writing
     # their own file.
-    ("process.toml.template", "docs/process.toml"),
+    ("process.toml.template", "docs/process.toml", "SR-137"),
     # THE PROMPTS (plan §8). Every brief the loop sends is a FILE now, not a
     # Python string constant, and `scripts/prompts.py` resolves them
     # SCRIPT-RELATIVELY — in a scaffolded repo `scripts/` sits at the root, so
@@ -1752,25 +1752,44 @@ MAPPING = [
     # Kit-owned: a re-sync overwrites them, and a repo that wants different
     # prose wires its own file through --prompt-map instead of editing these.
     ("prompts/README.md", "prompts/README.md"),
-    ("prompts/worker.template.md", "prompts/worker.template.md"),
-    ("prompts/reviewer.template.md", "prompts/reviewer.template.md"),
-    ("prompts/critique.template.md", "prompts/critique.template.md"),
+    ("prompts/worker.template.md", "prompts/worker.template.md", "SR-146"),
+    ("prompts/reviewer.template.md", "prompts/reviewer.template.md", "SR-146"),
+    ("prompts/critique.template.md", "prompts/critique.template.md", "SR-146"),
     (
         "prompts/adjudicate-amendment.template.md",
         "prompts/adjudicate-amendment.template.md",
+        "SR-146",
     ),
     (
         "prompts/adjudicate-disposition.template.md",
         "prompts/adjudicate-disposition.template.md",
+        "SR-146",
     ),
     (
         "prompts/adjudicate-conflict.template.md",
         "prompts/adjudicate-conflict.template.md",
+        "SR-146",
     ),
-    ("prompts/adjudicate-red-tc.template.md", "prompts/adjudicate-red-tc.template.md"),
-    ("prompts/dual-plan-planner.template.md", "prompts/dual-plan-planner.template.md"),
-    ("prompts/dual-plan-critic.template.md", "prompts/dual-plan-critic.template.md"),
-    ("prompts/dual-plan-arbiter.template.md", "prompts/dual-plan-arbiter.template.md"),
+    (
+        "prompts/adjudicate-red-tc.template.md",
+        "prompts/adjudicate-red-tc.template.md",
+        "SR-146",
+    ),
+    (
+        "prompts/dual-plan-planner.template.md",
+        "prompts/dual-plan-planner.template.md",
+        "SR-146",
+    ),
+    (
+        "prompts/dual-plan-critic.template.md",
+        "prompts/dual-plan-critic.template.md",
+        "SR-146",
+    ),
+    (
+        "prompts/dual-plan-arbiter.template.md",
+        "prompts/dual-plan-arbiter.template.md",
+        "SR-146",
+    ),
     # The model REGISTRY the coordinator's router reads (WI-059, S8): one row per
     # usable model keyed [PROVIDER]-[MODEL_NAME]-[VERSION], with example rows for
     # the verified headless shapes. Present but INERT until docs/agents-enabled
@@ -1821,24 +1840,32 @@ MAPPING = [
     # DevStg-Tests on. The structural half is DERIVED (dashboard + checks read
     # the registries and source AST), so no docs/architecture.md is scaffolded.
     ("RUNTIME_FLOWS.template.md", "docs/runtime-flows.md"),
-    ("INTERFACES.template.md", "docs/interfaces.md"),
+    ("INTERFACES.template.md", "docs/interfaces.md", "SR-159"),
     (
         "registries/stakeholder-needs.template.toml",
         "docs/requirements/stakeholder-needs.toml",
+        "SR-147",
     ),
     (
         "registries/system-requirements.template.toml",
         "docs/requirements/system-requirements.toml",
+        "SR-147",
     ),
     (
         "registries/low-level-requirements.template.toml",
         "docs/requirements/low-level-requirements.toml",
+        "SR-147",
     ),
-    ("registries/interfaces.template.toml", "docs/requirements/interfaces.toml"),
+    (
+        "registries/interfaces.template.toml",
+        "docs/requirements/interfaces.toml",
+        "SR-159",
+    ),
     ("registries/external.template.toml", "docs/requirements/external.toml"),
     (
         "registries/performance-budgets.template.csv",
         "docs/requirements/performance-budgets.csv",
+        "SR-015",
     ),
     (
         "registries/procurement.template.csv",
@@ -1861,7 +1888,7 @@ MAPPING = [
     # `applies_when` against their own vocabulary), which is the only thing that
     # keeps a roster inherited from a template honest. Deleting the file is a
     # supported opt-out; the composers proceed without hats.
-    ("registries/hats.template.toml", "docs/requirements/hats.toml"),
+    ("registries/hats.template.toml", "docs/requirements/hats.toml", "SR-161"),
     # registries/work-items.template.csv is deliberately NOT mapped: since the
     # Phase 2c authority flip the work-item registry scaffolds as the docs/work/
     # spec folder below, and the CSV template survives only as the legacy-format
@@ -2222,8 +2249,22 @@ MAPPING = [
     # Windows autocrlf). Skipped if the repo already has a .gitattributes —
     # merge the .githooks/pre-commit rule in by hand (ADOPTING.md §1).
     ("gitattributes.template", ".gitattributes"),
-    ("ci/check.yml", ".github/workflows/check.yml"),
+    ("ci/check.yml", ".github/workflows/check.yml", "SR-151"),
 ]
+
+
+def mapping_entries():
+    """`MAPPING` normalized to `(src, dst, requirement_ref)` triples.
+
+    A row may carry an OPTIONAL third element — a system-requirement id stating
+    why the file ships (SR-163). The reader is TOLERANT: a bare `(src, dst)` pair
+    is accepted and yields `ref = None`, and a bare pair is by definition an
+    unmapped-entry warning. So a downstream inventory keeps working with no flag
+    day and the reference burn-down IS the migration — references are filled row
+    by row, each one retiring one warning, rather than all at once behind a gate.
+    `gen_arch_map.mapping_purpose_findings` is the checker that reads these."""
+    return [(row[0], row[1], row[2] if len(row) > 2 else None) for row in MAPPING]
+
 
 GITKEEP_DIRS = [
     "src",
@@ -2884,7 +2925,9 @@ def copy_kit_files(dest, plan):
     Implements: SR-011, LLR-011
     """
     created, skipped, missing = [], [], []
-    for src_rel, dst_rel in MAPPING:
+    # Tolerant unpack: a MAPPING row may carry a third element (its
+    # requirement reference, SR-163) that the copy pass ignores.
+    for src_rel, dst_rel, *_ref in MAPPING:
         src = KIT / src_rel
         dst = dest / dst_rel
         # Stack-gated artifacts (Thread 34, R7/C3): an explicitly non-Python
