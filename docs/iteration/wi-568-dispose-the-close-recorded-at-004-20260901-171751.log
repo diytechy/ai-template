@@ -1,0 +1,41 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 004
+# date: 2026-09-01 17:22
+# train: wi-568-dispose-the-close-recorded-at
+# base: 4632f10a66d0
+# phase: ADJUDICATE
+# wi: WI-568
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: 740659a4..0d300eff
+# tokens:
+# cost-usd:
+# wall-secs: 292
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 43433
+# prompt-template: kit:ADJUDICATE
+# prompt-sha: sha256:972505f5fdd8
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Adjudication recorded and committed as `0d300eff`.
+
+- Outcome: `PARTIAL`, one successor.
+- Split: KEEP all commits in `ff29fef8f9..6ba2711078`; DISCARD none.
+- Human-owed: approval-baseline STAND vs RESTORE ruling.
+- Verdict: [004-ADJUDICATE-9d4fc41.md](/Users/diytechy/Documents/ai-template-drive/wi-568-dispose-the-close-recorded-at/docs/reviews/wi-568-dispose-the-close-recorded-at/004-ADJUDICATE-9d4fc41.md)
+- Successor draft: [WI-568 spec](/Users/diytechy/Documents/ai-template-drive/wi-568-dispose-the-close-recorded-at/docs/work/active/wi-568-dispose-the-close-recorded-at/WI-568-dispose-the-close-recorded-at.md)
+
+Verification: 1453 passed, 8 skipped; smoke budget 22.0s/60s; trajectory clean with warnings. `check_docs` retains one pre-existing broken link inside the untouchable closed WI-508 spec. The commit has a recognized `WI: WI-568` trailer.

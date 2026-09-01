@@ -1,0 +1,468 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 005
+# date: 2026-09-01 17:23
+# train: wi-568-dispose-the-close-recorded-at
+# base: 4632f10a66d0
+# phase: ADJUDICATE
+# wi: WI-568
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: NO-COMMIT
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 29
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 43433
+# prompt-template: kit:ADJUDICATE
+# prompt-sha: sha256:7af6a43fa425
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Reading prompt from stdin...
+2026-09-01T22:22:58.471113Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 97 column 5
+OpenAI Codex v0.145.0
+--------
+workdir: /Users/diytechy/Documents/ai-template-drive/wi-568-dispose-the-close-recorded-at
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 01a05f11-85fc-7a13-872f-fc07bb5a4a20
+--------
+user
+You are an INDEPENDENT adjudicator launched by the unattended coordinator, wearing a DIFFERENT hat from the lane that stopped. A lane could not finish (or decided the work should never ship) and closed itself into a terminal folder. That partial close is the ONLY sanctioned stop (OI-70): a lane is never HELD — parking one by renaming its branch ref is banned, a lane must close or it gets lost — so the terminal folder you are judging is the whole record, and your exits below are the only two. Its move is a **claim about what happened**. Your job is to decide what it **means**, and to say what happens next.
+
+You have three things and no others: the lane's report, the spec it was working from, and the commit facts.
+
+--- THE LANE'S REPORT (its claim — the thing under judgement, not a premise) ---
++++
+wi = "WI-508"
+branch = "wi508-architectural-remap"
+claimed_outcome = "partial"
+reason = "OI-71 RULED (c): the wi508 lane ran 19 review rounds and stopped at round 019's three MAJORs (two trunk-side renderer defects since fixed by WI-554; one the SR-163 tension ruled by OI-72). The owner ruled it closes PARTIAL through the kit's own path — nothing discarded, the evidence preserved in history, a successor re-lands the reviewed spine content from the preserved record."
+commit_range = "ff29fef8f9..6ba2711078"
+suggested_tier = "strong"
+keep_commits = []
+discard_commits = []
+split_decided_by = "adjudicator"
++++
+
+## What happened
+
+Lane `wi508-architectural-remap` closed `WI-508` as **partial**: OI-71 RULED (c): the wi508 lane ran 19 review rounds and stopped at round 019's three MAJORs (two trunk-side renderer defects since fixed by WI-554; one the SR-163 tension ruled by OI-72). The owner ruled it closes PARTIAL through the kit's own path — nothing discarded, the evidence preserved in history, a successor re-lands the reviewed spine content from the preserved record.
+
+The work so far is in trunk, not on a branch — the lane merges like any
+other. Read it with `git log --oneline ff29fef8f9..6ba2711078` / `git diff ff29fef8f9..6ba2711078`.
+
+## Delivered
+
+The four Drafted slice-1 spine rows for SR-163's DELIVERED arms (~4 lines of low-level-requirements.toml, ~10 of test-cases.toml, auto-merging clean per handoff §1.4), plus 19 rounds of review evidence and the compiled rollup `docs/reviews/WI-508-REVIEW-A.md` — all preserved in the commit range and on `origin/wi508-architectural-remap-HELD-for-owner-verdict`.
+
+## Not delivered
+
+The SR-163 direct-TC shape (ruled by OI-72; owned by the re-scoped WI-543) and a fresh reviewer round on a refreshed tree. The successor re-lands the LIVE registry edits and REGENERATES docs/archive/last_approved/ via intake.py snapshot at its own approval commit — never copied from the branch's snapshot bytes (the ruling's degradation-risk condition).
+
+## Keep / discard
+
+- **keep**: (none)
+- **discard**: (none)
+- **decided by**: adjudicator
+
+The closing party could not judge this work — a dispatcher closing a lane whose worker exited or crashed has no view of it. The split is therefore OWED, and the disposition row minted for this close is what owes it: read the commit range, decide which commits survive, and mint a corrective successor for anything that should not.
+
+--- THE WORK ITEM'S SPEC (what was asked for) ---
++++
+id = "WI-508"
+title = "The architectural remapping program: blind minimal-map re-derivation, divergences filed as consolidation WIs"
+specref = ""
+workstream = "process"
+
+[... 1106 line(s) elided — full stream in out/run-logs/ ...]
+
+  `uncovered=0`); the archived [2026-08-01 handoff §6](archive/history/handoff-2026-08-01.md)
+  findings; the [spine-restructure-2026-08-08.md](spine-restructure-2026-08-08.md)
+  residues (§7 items 2/4/5 need a destination); PROCESS.md §4's stale
+  "ordinal `0`–`4`" approval dial.
+- **Conventions:** [specs/README.md](specs/README.md) · [rubrics/README.md](rubrics/README.md) · partial closes [handbacks/](handbacks/README.md).
+
+## Current State
+
+<!-- BEGIN GENERATED STATUS -->
+_GENERATED by `python project-trajectory/scripts/gen_trajectory.py --status` — do not hand-edit; cite the spine registries + `docs/stage`, not this rendering (the forward-only intent below is hand-authored)._
+
+- **In stage:** **DevStg-LLReqs** (stage 5 of 8, LLR definition in work) (per-phase `1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-LLReqs`, derived current **phase=5**) — the rung this repo is IN, derived over its settled spine. [`derive_stage.py`](../project-trajectory/scripts/derive_stage.py) derives it, recorded in [`docs/stage`](stage).
+- **Spine:** **SN=27 SR=76 LLR=188 TC=187** (9 drafts) · 162 seams · 4 components.
+- **Open items** _(pending rows of [requirements/open-items.toml](requirements/open-items.toml); each item's blast radius, options and recommendation render in [open-items.html](open-items.html), the generated owner surface):_
+  - **OI-77** — intake._SPEC_NEEDS_RE (intake.py:1344) has no re.DOTALL, so _replace_inbound_edges silently skips a dependent whose needs is a MULTI-LINE TOML list: WI-552 arm 4's 'the WI-541 strand becomes unrepresentable' guarantee in fact holds only under the single-line-needs invariant the machine writers happen to keep (a tree-wide scan finds no multi-line needs today, so it does not bite). Rule which the kit means: (a) tighten the regex to DOTALL (or a real TOML read) so the guarantee is unconditional, (b) keep the regex and DECLARE the single-line-needs invariant, enforced by a check so a hand-written multi-line needs is refused rather than silently skipped, or (c) accept the narrowed guarantee and amend WI-552's claim to match.
+- **Ready frontier** _(dependency-ready WIs in build order — generated from the scheduler; a closed WI drops out automatically, so this list is never stale and never names a `done` id):_
+  - **WI-568** — dispose: the close recorded at docs/handbacks/WI-508-wi508-architectural-remap.md
+  - **WI-557** `P3` — The delegated-decisions record: per-run TOML file, close-time obligation under the decisi…
+  - **WI-560** `P3` — One freshness definition for verdicts, and the approval brief's two staleness traps (OI-7…
+  - **WI-561** `P3` — The quarantine spares what is monotone or record: the id watermark, docs/reviews, docs/lo…
+  - **WI-562** `P3` — Unload residue and scratch: integrate.lock declared, the worker told where scratch belong…
+  - **WI-551** `P2` — Re-land the adjudicator session-retention layer from its preserved patch, inert at dial 0…
+  - **WI-536** `P2` — Agent-brief and scope: the knowledge-pack review's six byte-paid edits and two kit findin…
+  - **WI-539** `P2` — Ship the complexity sensor: MAPPING row, template step, the opt-in layer, the deep-module…
+  - **WI-545** `P2` — The decomposition debt owner (cont.): three wide modules, check_trajectory's remaining fu…
+  - **WI-556** `P2` — Spine-authoring doctrine: the children-coverage rule stated as trust-based prose (OI-72 r…
+  - **WI-558** `P2` — The verdict carrier rebuilt: the gate computes over logged rounds, the tree-bound trailer…
+  - **WI-559** `P2` — A close a lane can finish: the one-turn close bar, review rounds after ADJUDICATE, honest…
+  - _(+1 more ready — see the dashboard)_
+<!-- END GENERATED STATUS -->
+
+- **Bar (per commit)** and the **standing rules** (claim refusal on prose ids,
+  never sanction a check to green a step, line-ending hygiene, claiming through
+  the integrator): the `session-protocol` skill §2–§3. Run
+  `check_trajectory.py --strict` unfiltered before claiming anything done;
+  route a critique dispatch by PROVIDER, probing first.
+- **Process (kit source):** [PROCESS.md](../project-trajectory/PROCESS.md) ·
+  [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md) · working rules
+  [CLAUDE.md](../CLAUDE.md) + the `session-protocol` skill · lock items
+  [repo-lock.md](repo-lock.md) · external (not this repo's work): guardrails
+  content in `TheColliny/FableClaudeMDForOpus`.
+
+## Scope
+
+- **Goal:** keep the kit **maintainable and trustworthy** — the `PROJECT-VISION:`
+  tag opening [README.md](../README.md) is canonical.
+- **Supported platforms:** Windows + POSIX; kit scripts stdlib-only, Python 3.11+.
+- **Non-goals (self-application boundary):** no product **launch** — the kit's
+  "product" is `project-trajectory/` + `tests/`; an actions-menu launcher is in
+  scope, a `run.*` product launcher is not. No scaffolded `docs/process.md` (the
+  masters live in `project-trajectory/`).
+docs/work/active/wi-568-dispose-the-close-recorded-at/WI-568-dispose-the-close-recorded-at.md:2:id = "WI-568"
+docs/work/active/wi-568-dispose-the-close-recorded-at/WI-568-dispose-the-close-recorded-at.md:17:Outcomes (R3): cancel / defer / draft a successor / surface an open item. Continuing the work MINTS A SUCCESSOR (drafted in THIS row's `## Dispositions` section, carrying `supersedes`), never a revival of the closed row — a closed row is never re-opened and a scope definition never changes to mean something else. An override moves the byte-identical spec to the corrected terminal folder; the report stays on record as the claim it was. An open item goes to docs/requirements/open-items.toml.
+docs/work/active/wi-568-dispose-the-close-recorded-at/WI-568-dispose-the-close-recorded-at.md:25:## Dispositions
+docs/work/complete/WI-566-adjudicate-llr-058-llr-144.md:3:title = "adjudicate: LLR-058, LLR-144, LLR-198, TC-138, TC-147, TC-194 - approved/routed cell(s) amended on merged trunk a024e76..fa92323 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
+docs/work/complete/WI-566-adjudicate-llr-058-llr-144.md:13:Adjudication verdict recorded on the lane; this row is closed MECHANICALLY at its DONE (OI-70/OI-73). The verdict artifact is `docs/reviews/wi-566-adjudicate-llr-058-llr-144/001-ADJUDICATE-05fb6a3.md`, governing line `VERDICT: MEANING rows=6` over LLR-058, LLR-144, LLR-198, TC-138, TC-147, TC-194 (re-issued 2026-09-01 after REVIEW-A finding 1: the first issue said `rows=23`, having re-counted seventeen SR rows WI-547 had already closed as CLARITY; those lines are retained in the file, marked as the WI-547 restatement and excluded from the counter).
+docs/work/complete/WI-566-adjudicate-llr-058-llr-144.md:15:**No `## Dispositions` successors are owed, and none are drafted — deliberately, on the record** (REVIEW-A finding 2). All six rows are MEANING, so §A5.2's "flip back to Approved" arm does not apply; but the work a scope-change successor would carry is already DONE, and the human act the amendment owes is already carried elsewhere:
+docs/work/complete/WI-566-adjudicate-llr-058-llr-144.md:20:- **Minting a WI to hold that signature would be wrong.** It is a HUMAN act on a generated brief, not schedulable work; a row for it would be a lane that can only wait. (The kit has no `## Dispositions` shape for "no successor owed" either: `intake.parse_dispositions` REFUSES a section with no fenced `toml` block, so a prose-only section would halt the merge sweep. This reasoning therefore lives here, in the Deliverable.)
+docs/work/complete/WI-566-adjudicate-llr-058-llr-144.md:39:a `## Dispositions` section of THIS spec — intake mints them at this
+docs/archive/work/cancelled/WI-416-dispose-wi-413-handed-back-e56f4e2c201.md:27:Outcomes (R3): cancel / defer / re-queue with drafted follow-up / surface an open item. Clearing its blockref re-queues it; moving it to cancelled/ (reason in the Deliverable) cancels it; a drafted follow-up goes in THIS row's ## Dispositions section; an open item goes to docs/requirements/open-items.csv.
+docs/work/queued/WI-545-the-decomposition-debt-owner.md:15:Drafted by WI-542 (its ## Dispositions section) and minted at its merge - drafts-not-mints, ruling R1/R3.
+docs/work/queued/WI-564-declare-the-if-seam-for-sc.md:13:Drafted by WI-563 (its ## Dispositions section) and minted at its merge - drafts-not-mints, ruling R1/R3.
+docs/work/queued/WI-551-re-land-the-adjudicator-sessio.md:14:Drafted by WI-550 (its ## Dispositions section) and minted at its merge - drafts-not-mints, ruling R1/R3.
+docs/work/queued/WI-565-rule-and-apply-the-intake-spe.md:14:Drafted by WI-563 (its ## Dispositions section) and minted at its merge - drafts-not-mints, ruling R1/R3.
+docs/work/queued/WI-559-one-turn-close-bar.md:3:title = "A close a lane can finish: the one-turn close bar, review rounds after ADJUDICATE, honest banners (OI-76 / plan 2.1+2.4)"
+docs/work/queued/WI-559-one-turn-close-bar.md:35:2. A committing ADJUDICATE session schedules its review round exactly as a
+docs/archive/work/complete/WI-425-repoint-retired-sn-citations.md:35:  `ADJUDICATE` needs its own routing weight — the `adjudication` row *kind*
+docs/reviews/wi-566-adjudicate-llr-058-llr-144/001-ADJUDICATE-05fb6a3.md:1:# WI-566 — ADJUDICATE amended-cell meaning/clarity — commit 05fb6a3
+docs/reviews/wi-566-adjudicate-llr-058-llr-144/001-ADJUDICATE-05fb6a3.md:28:`## Dispositions`.
+docs/work/handback/wi-540-adjudicator-retention-layer.patch:1531:-detail = """`split_cmd` recognises a JSON array ONLY when the value parses as a list, so no existing template can change meaning; a non-string token raises rather than being stringified. The prompt-transport decision reads the resulting TOKENS, so it is identical for both forms. Alongside it, `ADJUDICATE` joins `agent_route.WEIGHT_PHASES` and `agent_loop.DEFAULT_PHASE_TIER` with its own `route_intent` arm: cross-family like the reviewers, tier pinned by the row's measured estimate, and deliberately deaf to the implementer's escalation overrides."""
+docs/work/handback/wi-540-adjudicator-retention-layer.patch:1535:+detail = """`split_cmd` recognises a JSON array ONLY when the value parses as a list, so no existing template can change meaning; a non-string token raises rather than being stringified. The prompt-transport decision reads the resulting TOKENS, so it is identical for both forms. Alongside it, `ADJUDICATE` joins `agent_route.WEIGHT_PHASES` and `agent_loop.DEFAULT_PHASE_TIER` with its own `route_intent` arm: cross-family like the reviewers, tier pinned by the row's measured estimate, and deliberately deaf to the implementer's escalation overrides. When retained adjudicator sessions are enabled, `resume_template` consumes the same token parser and returns a JSON-array command template; the ordinary `build_argv` prompt-transport contract therefore remains the single launch boundary while family-specific mint/resume forms stay below it."""
+docs/work/handback/wi-540-adjudicator-retention-layer.patch:1597:-method = """Run the prompts and routing suites: strict slot filling and its refusals, the preflight on a missing template, the catalogue's freshness gate, the digest's line-ending normalization, the argv-array form with its fall-through and refusal cases, and the ADJUDICATE phase's tier, cross-family rule and escalation deafness."""
+docs/work/handback/wi-540-adjudicator-retention-layer.patch:1598:+method = """Run the prompts and routing suites: strict slot filling and its refusals, the preflight on a missing template, the catalogue's freshness gate, the digest's line-ending normalization, the argv-array form with its fall-through and refusal cases, and the ADJUDICATE phase's tier, cross-family rule and escalation deafness. Run the adjudicator-session suite over IF-174's call surface: dial-off inertia; compound family/route store identity and atomic writes; mint/resume argv forms; provider session-id, occupancy and window readers over emitted streams and the exact Codex rollout; loaded-template hashing; lifecycle transitions; and keep-warm gating."""
+docs/work/handback/wi-540-adjudicator-retention-layer.patch:3388:+    prompt_map = {"ADJUDICATE-DISPOSITION": str(override)}
+docs/work/handback/wi-540-adjudicator-retention-layer.patch:3405:+        assert Path(paths["ADJUDICATE-DISPOSITION"]) == override
+docs/reviews/2026-08-29-oi67-slice6/README.md:20:## Dispositions
+docs/reviews/wi-566-adjudicate-llr-058-llr-144/002-REVIEW-A-61ad8b8-supervisor.md:22:- [MAJOR] docs/reviews/wi-566-adjudicate-llr-058-llr-144/001-ADJUDICATE-05fb6a3.md:1 -> seventeen of the verdict's twenty-three lines (SR-024, 033, 043, 052, 053, 054, 111, 112, 129, 144, 146, 147, 149, 167, 175, 176, 177) were already adjudicated and CLOSED by WI-547 ("VERDICT: CLARITY rows=17", the id set matching byte for byte); the SR registry is untouched in this row's range (`git diff a024e766 fa923231 -- docs/requirements/system-requirements.toml` is EMPTY) and the spec's generated Context lists only the six LLR/TC rows. `rows=23` overstates the adjudicated population by 17 and silently re-imports a closed row's verdict -> re-issue the verdict over the six in-scope rows only (`VERDICT: MEANING rows=6`), or keep the SR lines explicitly marked as WI-547 restatement and excluded from the counter -> @owner
+docs/reviews/wi-566-adjudicate-llr-058-llr-144/002-REVIEW-A-61ad8b8-supervisor.md:23:- [MAJOR] docs/work/complete/WI-566-adjudicate-llr-058-llr-144.md:13 -> the row's Context demands either the no-scope-moved recommendation or drafted rows in a `## Dispositions` section, and six MEANING rows were found — yet the closed spec has NO `## Dispositions` section while its machine-inserted Deliverable asserts "Its `## Dispositions` successors mint at this row's own merge": a record promising successors that cannot exist. There may genuinely be no work owed (WI-553 already moved the code; the drift brief carries the re-attestation) but that reasoning appears nowhere -> add a `## Dispositions` section, or state on the record why the six MEANING rows owe no successor beyond the owner's signature on the `--approve modified` brief -> @owner
+docs/reviews/wi-566-adjudicate-llr-058-llr-144/002-REVIEW-A-61ad8b8-supervisor.md:24:- [MINOR] project-trajectory/scripts/handback.py:519 -> nothing guarded this close: `intake.owes_successor` keys on the `dispose:` title prefix, but this row's title begins `adjudicate:` and its brief is `amendment`, so an amendment-brief adjudication that rules MEANING and drafts no successor passes both refusal invariants untouched -> extend the invariant (or a warn) to an `amendment` brief whose verdict is MEANING and whose spec carries no `## Dispositions` section -> @owner
+docs/reviews/WI-566-REVIEW-A.md:15:closed, and six MEANING rows closed with NO `## Dispositions` while the
+docs/reviews/WI-566-REVIEW-A.md:31:`## Dispositions` proven correct (`parse_dispositions` REFUSES a prose-only
+docs/reviews/wi-555-wi508-partial-close/006-REVIEW-A-0143813-supervisor.md:111:- [MINOR] docs/log.d/WI-555-wi508-partial-close.md:255-266 -> the three kit findings (the missing `spec_move.move_spec` un-close direction, `intake.py`'s untruncated derived Title, `station.render_report`'s invented `split_decided_by` reason) are recorded only in a log fragment that compiles into `docs/log.md`; no row on any work surface carries them -> `ls docs/work/queued/` shows no new row, and correctly so — a lane never mints a WI id (WI-388 R1), so the fragment was the only act available -> WI-568's `## Dispositions` should draft them (or the next trunk bookkeeping mint should), otherwise three named kit defects live only in the log -> WI-568.
+docs/reviews/WI-568-REVIEW-A.md:8:with a hostile brief. `001-ADJUDICATE-4632f10.md` is the adjudicator's own
+docs/reviews/WI-568-REVIEW-A.md:13:The loop stopped on this lane before any round: the ADJUDICATE session had
+docs/reviews/WI-568-REVIEW-A.md:14:put its `## Dispositions` block in the verdict file, so
+docs/reviews/WI-568-REVIEW-A.md:16:successor in its ## Dispositions section"). The rework moved the block to its
+docs/reviews/WI-568-REVIEW-A.md:24:Two BLOCKERs: the `## Dispositions` block sat in the verdict file where the
+docs/reviews/WI-568-REVIEW-A.md:55:`OUTCOME:` line; the fragment's file-level `Deferred open items:` line is
+docs/archive/work/complete/WI-552-adjudicator-two-exit-close.md:20:   `specref`, preserving `## Context`/`## Dispositions`), wired into
+docs/archive/work/complete/WI-552-adjudicator-two-exit-close.md:23:2. **OI-mint arm (exit B, typed)** — a `## Dispositions` draft may carry
+docs/archive/work/complete/WI-552-adjudicator-two-exit-close.md:41:7. **Contract text** — the ADJUDICATE disposition brief matches the machinery
+docs/archive/work/complete/WI-552-adjudicator-two-exit-close.md:60:(`LLR-161`), and ADJUDICATE sessions draft successors (`WI-550` drafted
+docs/archive/work/complete/WI-552-adjudicator-two-exit-close.md:63:ADJUDICATE brief promises "the machinery mints your draft at this row's own
+docs/archive/work/complete/WI-552-adjudicator-two-exit-close.md:79:   its `## Dispositions` successor drafts are minted into `queued/` (ids from
+docs/archive/work/complete/WI-552-adjudicator-two-exit-close.md:104:7. Tests drive all six on a scaffold, and the ADJUDICATE brief's contract
+docs/reviews/WI-414-REVIEW-A.md:14:`## Dispositions` section removed, and nothing minted.
+docs/reviews/WI-414-REVIEW-A.md:129:   Remedy: remove `## Dispositions`, point the adjudication to WI-390’s existing spine amendment, and correct the permanent log fragment. No cancellation or open item is warranted: the work and authority are already settled. No immediate Status flip is appropriate either; WI-390 should amend the ratified cells and perform the corresponding Modified/re-attestation flow.
+docs/reviews/wi-550-dispose-the-close-recorded-at/002-REVIEW-A-b9e5dea.md:4:`active/ -> archive/work/complete/`, `## Deliverable` + `## Dispositions` added,
+docs/reviews/wi-550-dispose-the-close-recorded-at/002-REVIEW-A-b9e5dea.md:10:  filled with the `OUTCOME:` line + verdict path, placed BEFORE `## Context`;
+docs/reviews/wi-550-dispose-the-close-recorded-at/002-REVIEW-A-e8e49cd.md:4:spec moved `active/ -> archive/work/complete/` (`## Deliverable` + `## Dispositions`
+docs/reviews/wi-550-dispose-the-close-recorded-at/002-REVIEW-A-e8e49cd.md:35:  outcome from the folder, not the free-text `OUTCOME:` line — no machine parses
+docs/reviews/wi-550-dispose-the-close-recorded-at/001-ADJUDICATE-e3f0d04.md:43:`## Dispositions`, superseding WI-540, re-landing the patch inert at dial 0.
+docs/reviews/wi-550-dispose-the-close-recorded-at/001-ADJUDICATE-e3f0d04.md:49:OUTCOME: PARTIAL successors=1
+docs/reviews/WI-544-REVIEW-A.md:5:## Adjudication — `001-ADJUDICATE-a6a6748.md`
+docs/reviews/WI-544-REVIEW-A.md:7:# 001 — ADJUDICATE (independent) — WI-544 disposition of the WI-484 close
+docs/reviews/WI-544-REVIEW-A.md:13:`OUTCOME: PARTIAL successors=1`
+docs/archive/work/complete/WI-550-dispose-the-close-recorded-at.md:13:OUTCOME: PARTIAL successors=1
+docs/archive/work/complete/WI-550-dispose-the-close-recorded-at.md:15:Verdict: `docs/reviews/wi-550-dispose-the-close-recorded-at/001-ADJUDICATE-e3f0d04.md`
+docs/archive/work/complete/WI-550-dispose-the-close-recorded-at.md:22:successor drafted under `## Dispositions` (`supersedes = "WI-540"`, strong) to
+docs/archive/work/complete/WI-550-dispose-the-close-recorded-at.md:32:Outcomes (R3): cancel / defer / draft a successor / surface an open item. Continuing the work MINTS A SUCCESSOR (drafted in THIS row's `## Dispositions` section, carrying `supersedes`), never a revival of the closed row — a closed row is never re-opened and a scope definition never changes to mean something else. An override moves the byte-identical spec to the corrected terminal folder; the report stays on record as the claim it was. An open item goes to docs/requirements/open-items.toml.
+docs/archive/work/complete/WI-550-dispose-the-close-recorded-at.md:34:## Dispositions
+docs/reviews/wi-542-dispose-the-close-recorded-at/002-ADJUDICATE-035dc13.md:6:own work. A prior adjudication (`001-ADJUDICATE-1058868.md`, commit `9cc57286`)
+docs/reviews/wi-542-dispose-the-close-recorded-at/002-ADJUDICATE-035dc13.md:8:this row's `## Dispositions`. I re-derived the four answers from the commit range
+docs/reviews/wi-542-dispose-the-close-recorded-at/002-ADJUDICATE-035dc13.md:53:row is never revived. The successor in this row's `## Dispositions`
+docs/reviews/wi-542-dispose-the-close-recorded-at/002-ADJUDICATE-035dc13.md:74:- [MINOR] two adjudications now carry a `WI: WI-542` trailer for one disposition -> this is the independent second pass (002); session 001 already committed a valid verdict and the successor is drafted once in the spec's `## Dispositions` — I confirm it rather than re-author it, so no second successor is introduced -> at WI-542's close mint exactly the one drafted successor; the two verdict files are the recorded reasoning of two passes reaching the same ruling, not two dispositions -> @owner
+docs/reviews/wi-542-dispose-the-close-recorded-at/002-ADJUDICATE-035dc13.md:76:OUTCOME: PARTIAL successors=1
+docs/reviews/wi-542-dispose-the-close-recorded-at/001-ADJUDICATE-1058868.md:58:OUTCOME: PARTIAL successors=1
+docs/archive/work/complete/WI-414-adjudicate-tc-056-ratified-routed-cel.md:3:title = "adjudicate: TC-056 - ratified/routed cell(s) amended on merged trunk 7894457..5211f07 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
+docs/archive/work/complete/WI-414-adjudicate-tc-056-ratified-routed-cel.md:56:The first attempt drafted a `## Dispositions` row for TC-056's Method/Expected.
+docs/archive/work/complete/WI-414-adjudicate-tc-056-ratified-routed-cel.md:92:a `## Dispositions` section of THIS spec — intake mints them at this
+docs/archive/work/complete/WI-386-station-protocol-refresh-before-merge.md:3:title = "RULED 2026-07-31 (docs/concurrency-v2.md §A2) - the design is ruled into log.md's Decisions, so this row is CLAIMABLE. THE STATION PROTOCOL: the largest deletion in the concurrency-v2 design, and the one row that works at lanes=1. ONE CONSTRAINT - a branch may not enter the merge queue unless trunk is already an ancestor of it (git merge-base --is-ancestor, exact and cheap). A lane that finishes REFRESHES (merge trunk in, run trunk_step.py compile-log then regen, run check.py --tier all, commit) and records bar-green at the resulting branch-tip sha; the merge slot then verifies the ancestor relation and that sha, and merges --no-ff. EVERYTHING FOLLOWS FROM THE ONE LINE. A merge CONFLICT becomes unrepresentable, so integrate.py's conflict arm, its merge --abort paths and _candidate_worktree's parked-half-merge cleanup all delete. The composed tree IS the branch tree byte-for-byte, so the integrator's composed-tree bar deletes outright along with the candidate worktree, _teardown, the candidate-red parking branch and _composed_tree_script - the bar runs ONCE per WI on the branch instead of twice (today's self-reported builder close bar plus the mechanical integrator bar; only the latter is mechanical at all). Class C composition failures are still caught and BETTER: whichever branch merges second must refresh onto a trunk containing the first and bar THERE, so every pair composes exactly once on the real tree with the red attributable to the refresh that caused it - which is why WI-382 retired. TWO OWNER RULINGS 2026-07-31 fix the shape here. DECISION 3 - DELETE THE MERGE BAR OUTRIGHT rather than keeping a cheap non-test tier at merge as defence-in-depth: provably-redundant is the whole argument for the constraint, and a kept-just-in-case bar is exactly the shape the governing principle warns about. DECISION 4 - SPECULATIVE REFRESH. THE SLOT is the exclusive turn to advance trunk (today out/integrate.lock, held by integrate() for a whole drain); only one branch may move trunk at a time and that IS the merge queue - the only question is how much work a branch does while holding that turn. PESSIMISTIC would be take slot, merge trunk in, bar 11 minutes, merge, release: no race is possible, but the slot is held ~11 minutes so trunk advances at most ~5.5 times an hour REGARDLESS OF LANE COUNT - the slot becomes the bottleneck and extra lanes buy nothing. SPECULATIVE (ruled) is merge trunk in, bar 11 minutes, THEN take the slot for a sub-second ancestor check plus the merge. At lanes=2 with both finishing at T0: pessimistic bars A while B sits idle waiting for a turn it cannot use; speculative bars both concurrently, A wins the slot and merges in a second, and B refreshes once - bar-time it would have paid anyway going second. As lanes grow, pessimistic gets strictly worse and speculative does not. The retry is BOUNDED, not open-ended: after ONE lost race a branch takes the slot for its retry, degrading to pessimistic exactly for the branch that is losing, so no lane is starved by faster neighbours and the common case still pays nothing. THE OWNER ATTACHED A CAVEAT TO DECISION 4 - this might need restricting to pessimistic in the future, since optimistic concurrency caused pain historically, though that may have been the implementation. CHECKED, AND THE SUSPICION IS CORRECT: the recorded failure is the deleted dispatcher's 19 reservations -> 8 integrations -> 0 gate-verified -> 11 rescues, and concurrency-restructure.md §2.3 diagnoses it as speculation held in STATE GIT COULD NOT ADJUDICATE - refs/llm/ reservation refs used as compare-and-swap, out/dispatch/events.jsonl as run state, plus the residue that came with them (36 stale worktrees, 34 llm/* branches, an orphaned stash) on a module whose threat model was named as bugs and fail-open. The eleven rescues were rescues of RESERVATIONS, not of merge races, and the fix was making the claim a serial trunk commit (atomic and race-free because step 1 is a serial trunk commit). What this row speculates on is categorically different - ANCESTRY AND NOTHING ELSE: no reservation, no CAS ref, no events file, no run state; git itself is the arbiter, the question is one command, and a lost race has NOTHING TO RECONCILE because the branch simply redoes a refresh it would have owed anyway going second. TWO REQUIREMENTS ON THIS ROW FOLLOW FROM THE CAVEAT AND MUST BE BUILT, NOT HOPED FOR. (1) SLOT ACQUISITION MUST HAVE EXACTLY ONE CALL SITE, so pessimistic is the same code with that call moved BEFORE the refresh instead of after - a one-line move rather than a rewrite. Do NOT add a config dial for it now: a knob for a decision nobody has needed to change is the shape the governing principle warns about. (2) THE PESSIMISTIC PATH MUST NEVER BE DEAD CODE - the one-lost-race fallback IS the pessimistic sequence and executes in production every time a lane loses a race, so a later restriction switches to a path that has been running and passing all along rather than to a branch that rotted untested. MEASURED PRECONDITION (2026-07-31, holds): lane-side trunk_step determinism was verified by regenerating on a detached worktree at a clean committed HEAD - exactly two files drift (PROJECT_STATE.html and docs/gate) and both drift only by a HEAD-derived stamp line the freshness gates already exclude by design (gen_trajectory ASOF_RE; derive_gate --check compares only the # basis: line). THAT MEASUREMENT FORCED ONE RULE THAT MUST BE BUILT WITH THIS - THE REFRESH IS A DISPOSABLE COMMIT: a retry is git reset --hard to the last work commit then a fresh merge-trunk/trunk_step/bar, never a second merge stacked on the first, because docs/log.md is append-compiled from log.d fragments and a stacked refresh would conflict on the file end. Order inside the refresh is load-bearing: merge trunk, then trunk_step, then bar, then commit. Needs no dispatcher, so it can land before any concurrency exists - if only one row of this design ships, it should be this one. RE-AFFIRMED 2026-07-31 against the concurrency-v2 §A9.1 addition (the program-close row WI-390): that section adds a NEW row's scope - the spine amendment, connectivity, prose and stamps that no single builder can own - and changes nothing in this row's own scope, so this row stands as written."
+docs/archive/work/complete/WI-546-wi-484-delegated-residue-the.md:44:Drafted by WI-544 (its ## Dispositions section) and minted at its merge - drafts-not-mints, ruling R1/R3.
+docs/archive/work/complete/WI-457-dispose-the-close-recorded-at-docs-hand.md:38:Outcomes (R3): cancel / defer / draft a successor / surface an open item. Continuing the work MINTS A SUCCESSOR (drafted in THIS row's `## Dispositions` section, carrying `supersedes`), never a revival of the closed ro
+[... byte cap hit — full stream in out/run-logs/ ...]
+now, i.e. trunk's live state IS the absorbed content, so regenerating at the successor's approval commit re-seals the 132 rather than re-opening them; round 005 said this in terms ("the loss is the AUTHORITY and the visibility, not the content") -> replace the "risk is null" sentence with the true scope of decision 9 and state that the reseal preserves rather than reviews the absorption; this cannot be made unrepresentable — it is a reading error about what a recorded measurement covered, and no check can bind a prose citation to its subject -> @worker
+docs/reviews/wi-568-dispose-the-close-recorded-at/002-REVIEW-A-8b75283-supervisor.md:116:- [MAJOR] docs/reviews/wi-568-dispose-the-close-recorded-at/001-ADJUDICATE-4632f10.md:66 -> the successor as drafted is not executable: its minted `## Context` will carry no scope -> `parse_dispositions` captures only the prose AFTER the block (intake.py:1092,1109) and `_disposition_drafts` writes exactly that into the mint's Context (intake.py:1196-1199); the measured `scope` is `'OUTCOME: PARTIAL successors=1'`, because the "Disposition reasoning" paragraph — which names the rows, the command, and the verdict shape — sits BEFORE the block; the minted row would reach a worker as a 111-char title and nothing else -> move the Disposition-reasoning paragraph to sit between the fence and the `OUTCOME:` line, naming LLR-203/LLR-204/TC-199/TC-200, `python project-trajectory/scripts/intake.py --root . snapshot` in the approval commit, and the reviewer-round verdict shape owed; this is representable-but-empty by construction, so a guard would have to judge prose sufficiency — instead the fix is authorial placement -> @worker
+docs/reviews/wi-568-dispose-the-close-recorded-at/002-REVIEW-A-8b75283-supervisor.md:117:- [MINOR] docs/reviews/wi-568-dispose-the-close-recorded-at/001-ADJUDICATE-4632f10.md:17 -> "This is the governing round-10 APPROVE state" overstates the lane's review record and contradicts the same verdict's own PARTIAL finding ("the lane never landed a clean confirming reviewer round on current trunk") -> the APPROVE (`899352b7`, 05:47) was followed by `209773cf` (08:46, CHANGES-REQUESTED findings=1) and `fa3c99c4` (08:59, CHANGES-REQUESTED findings=3, the HELD tip and WI-554's "Round 019"), so the lane's LAST verdict is CHANGES-REQUESTED; the narrower claim survives on evidence the verdict does not cite — `git diff b8d57e9f 6ba2711078` touches only three unrelated `evidence` cells, leaving LLR-203/204 and TC-199/200 byte-identical to the approved tree -> restate as "the four rows are byte-identical to the round-010-approved tree (`b8d57e9f`), verified by diff; the lane's standing verdict is round 019 CHANGES-REQUESTED, discharged by WI-543/WI-554" -> @worker
+docs/reviews/wi-568-dispose-the-close-recorded-at/002-REVIEW-A-8b75283-supervisor.md:118:- [MINOR] docs/reviews/wi-568-dispose-the-close-recorded-at/001-ADJUDICATE-4632f10.md:60 -> `buildtier = "quick"` beside `safety_class = "spine"` under-tiers the worker that will re-approve spine rows and rewrite the approval baseline -> `agent_loop.claim_routing` pins the BUILD phase's model tier from `BuildTier` (agent_loop.py:548) and `quick` is the bottom of `agent_route.TIER_ORDER`; the predecessor consumed nineteen rounds at `strong`, the closed row's report suggested tier `strong`, and WI-568 itself is `strong` — "confirm and reseal" is precisely the shape where a cheap worker rubber-stamps -> raise to `medium`; the reviewer tier is set by phase and is unaffected, so this is a judgement call on the worker only, not a mechanizable rule -> @worker
+docs/reviews/wi-568-dispose-the-close-recorded-at/002-REVIEW-A-8b75283-supervisor.md:119:- [MINOR] docs/reviews/wi-568-dispose-the-close-recorded-at/001-ADJUDICATE-4632f10.md:29 -> the ruling accounts for round 019's three MAJORs and stops, leaving round `5175065`'s two BLOCKERs and one MINOR unrouted by the disposition that was this thread's last chance to route them -> those findings target `docs/plans/2026-08-25-blind-minimal-map-{brief,derivation}.md`, which are on trunk (`ls docs/plans/`), and `grep -rl` over `docs/requirements`, `docs/work` and `docs/status.md` finds them named only in the archived WI-508 spec; decision 10 said they were "carried to the owner as findings against that record", but no OI or WI carries them -> add one sentence to the Basis noting they fall outside the close's range and file them as their own trunk-side row (or name them in the successor's scope) rather than letting the adjudication close over them silently -> @owner
+docs/reviews/wi-568-dispose-the-close-recorded-at/003-ADJUDICATE-9d4fc41.md:7:is drafted in this session's own spec under `## Dispositions`; it carries
+docs/reviews/wi-568-dispose-the-close-recorded-at/003-ADJUDICATE-9d4fc41.md:14:- [MAJOR] a successor is mandatory and exactly one is drafted in WI-568's own `## Dispositions` section -> the terminal WI-508 row cannot be revived, while a clean current-tree review of `LLR-203`/`LLR-204` and Drafted `TC-199`/`TC-200`, the approval-baseline disposition, and the two preserved blind-derivation caveats remain executable work -> mint that `supersedes = "WI-508"` successor at this adjudication's close with `buildtier = "strong"` and `planmode = "single"` -> @owner
+docs/reviews/wi-568-dispose-the-close-recorded-at/003-ADJUDICATE-9d4fc41.md:17:OUTCOME: PARTIAL successors=1
+docs/archive/work/complete/WI-553-hold-ban-and-surface-hygiene.md:39:   Standing rule), `docs/handbacks/README.md`, and the ADJUDICATE
+docs/archive/work/complete/WI-553-hold-ban-and-surface-hygiene.md:94:   the handback/ADJUDICATE docs name the sanctioned stop (the partial close;
+docs/archive/work/complete/WI-542-dispose-the-close-recorded-at.md:16:none; one successor drafted** (the `## Dispositions` block below, `supersedes =
+docs/archive/work/complete/WI-542-dispose-the-close-recorded-at.md:19:the report's prose: `001-ADJUDICATE-1058868.md` (`9cc57286`) and
+docs/archive/work/complete/WI-542-dispose-the-close-recorded-at.md:20:`002-ADJUDICATE-035dc13.md` (`8e9f9e14`), both under
+docs/archive/work/complete/WI-542-dispose-the-close-recorded-at.md:40:Outcomes (R3): cancel / defer / draft a successor / surface an open item. Continuing the work MINTS A SUCCESSOR (drafted in THIS row's `## Dispositions` section, carrying `supersedes`), never a revival of the closed row — a closed row is never re-opened and a scope definition never changes to mean something else. An override moves the byte-identical spec to the corrected terminal folder; the report stays on record as the claim it was. An open item goes to docs/requirements/open-items.toml.
+docs/archive/work/complete/WI-542-dispose-the-close-recorded-at.md:42:## Dispositions
+docs/archive/work/complete/WI-542-dispose-the-close-recorded-at.md:45:`docs/reviews/wi-542-dispose-the-close-recorded-at/001-ADJUDICATE-1058868.md`:
+docs/archive/work/complete/WI-548-stall-guard-route-aware.md:43:  draft shape pinned: this spec's `## Dispositions`, top-level keys, title
+docs/archive/work/complete/WI-424-route-the-adjudicator-briefs.md:3:title = "Route each ADJUDICATE session to its own adjudicator brief - the four templates are authored, shipped, catalogued, and consumed by NOTHING. SN-032 moved the loop's prompts into files and authored four adjudicator briefs (adjudicate-amendment, adjudicate-disposition, adjudicate-conflict, adjudicate-red-tc); SN-026 gave adjudication rows their own routed phase, tier and cross-family rule. The seam between them was never built: agent_loop.route_session composes EVERY non-review session from the generic worker prompt, so an adjudication row routes to a strong cross-family model and then receives an implementer's instructions. The judge is briefed as a builder. TWO THINGS THIS ROW MUST DECIDE, and the second is why it was not done inside the program that found it. (1) THE DISCRIMINATOR: which of the four briefs a row wants is a typed fact, and the row does not currently carry it - the options are a new frontmatter key (honest, but a schema change across three F5-synced loaders), or derivation from the SpecRef cell (a spine CSV means amendment, a terminal spec means disposition, test-cases.csv means red TC), which costs nothing but infers rather than declares. Prefer the declared field unless the schema cost is real. (2) THE SLOTS: each brief demands assembled EVIDENCE - adjudicate-amendment wants {baseline} and {rows}, adjudicate-conflict wants {mechanical}, {open_rows}, {spine} and {digests}, adjudicate-disposition wants {report} and {evidence}. Those are real derivations (a baseline diff via trace._attested_baseline, the queue-conflict findings, a spine excerpt), and a half-filled brief is WORSE than the generic prompt: a judge's brief with hollow sections reads as though the evidence was looked for and found wanting. Fill every slot faithfully or leave the template unrouted. Done when: an adjudication row's session provably receives its own brief (fake-CLI prompts.txt capture, one test per template), the typed verdict line each brief demands is written to the declared path, and no slot is filled with a placeholder."
+docs/archive/work/complete/WI-424-route-the-adjudicator-briefs.md:132:`ADJUDICATE`, receives the generic worker template."* Verified — the four
+docs/archive/work/complete/WI-424-route-the-adjudicator-briefs.md:133:`prompts.ADJUDICATE_*` constants have zero references outside `prompts.py`, and
+docs/archive/work/complete/WI-547-adjudicate-sr-024-sr-033-sr.md:3:title = "adjudicate: SR-024, SR-033, SR-043, SR-052, SR-053, SR-054, SR-111, SR-112, SR-129, SR-144, SR-146, SR-147, SR-149, SR-167, SR-175, SR-176, SR-177 - approved/routed cell(s) amended on merged trunk 579abf1..b057b09 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
+docs/archive/work/complete/WI-547-adjudicate-sr-024-sr-033-sr.md:28:`docs/reviews/wi-547-adjudicate-sr-024-sr-033-sr/001-ADJUDICATE-fb0ed7c.md`.
+docs/archive/work/complete/WI-547-adjudicate-sr-024-sr-033-sr.md:69:a `## Dispositions` section of THIS spec — intake mints them at this
+docs/reviews/WI-388-REVIEW-A.md:69:path hunted and closed: a `## Dispositions` draft declaring
+docs/reviews/2026-08-22-wi498-program-close/RESUME.md:4:**14 FIXED, 1 ADJUDICATED (W-13), 1 QUEUED as a new row (W-17 → WI-503), and
+docs/reviews/2026-08-22-wi498-program-close/WORKLIST.md:92:- **W-13 (Sol 11 vs Opus suspicion — ADJUDICATED). The archive edits.**
+docs/archive/work/complete/WI-563-spot-check-the-clean-close-of.md:83:queue at all; they now ride the `## Dispositions` drafts below.
+docs/archive/work/complete/WI-563-spot-check-the-clean-close-of.md:85:**Exits taken.** Two successors are DRAFTED in `## Dispositions` (below), for
+docs/archive/work/complete/WI-563-spot-check-the-clean-close-of.md:104:## Dispositions
+docs/reviews/WI-542-REVIEW-A.md:3:**What this row is:** the disposition of `WI-521`'s `partial` close (report `docs/handbacks/WI-521-wi521-decomposition-debt-owner.md`). Its product is a recorded adjudication, not code. Two independent ADJUDICATE sessions (ANTHROPIC-OPUS, `opus`, fresh context each) ruled it, and one cross-family REVIEW-A round (OPENAI-TERRA, `gpt-5.6-terra` via `codex`) reviewed the lane's diff — the Deliverable, the `## Dispositions` successor draft and the two verdict files — against the requirement surface. **This file is a compilation** by the supervising session of the delegated unattended run: the merge slot's verdict rung (`integrate._verdict_gate`) reads a WI-level `REVIEW-A` file for every merged row, adjudication rows included, and nothing in the kit writes one; the round files below are quoted verbatim and the governing machine line is the last line of this file (decision 22 of `docs/decisions-for-review-2026-08-31.md`).
+docs/reviews/WI-542-REVIEW-A.md:5:## Adjudication 1 — `001-ADJUDICATE-1058868.md`
+docs/reviews/WI-542-REVIEW-A.md:14:`OUTCOME: PARTIAL successors=1`
+docs/reviews/WI-542-REVIEW-A.md:16:## Adjudication 2 — `002-ADJUDICATE-035dc13.md`
+docs/reviews/WI-542-REVIEW-A.md:23:own work. A prior adjudication (`001-ADJUDICATE-1058868.md`, commit `9cc57286`)
+docs/reviews/WI-542-REVIEW-A.md:25:`OUTCOME: PARTIAL successors=1`
+docs/reviews/wi-547-adjudicate-sr-024-sr-033-sr/001-ADJUDICATE-fb0ed7c.md:1:# ADJUDICATE — WI-547 — amendment at fb0ed7c
+docs/reviews/WI-550-REVIEW-A.md:21:`active/ -> archive/work/complete/`, `## Deliverable` + `## Dispositions` added,
+docs/reviews/WI-550-REVIEW-A.md:27:  filled with the `OUTCOME:` line + verdict path, placed BEFORE `## Context`;
+docs/reviews/WI-550-REVIEW-A.md:62:spec moved `active/ -> archive/work/complete/` (`## Deliverable` + `## Dispositions`
+docs/reviews/WI-550-REVIEW-A.md:93:  outcome from the folder, not the free-text `OUTCOME:` line — no machine parses
+docs/reviews/wi-544-dispose-the-close-recorded-at/001-ADJUDICATE-a6a6748.md:1:# 001 — ADJUDICATE (independent) — WI-544 disposition of the WI-484 close
+docs/reviews/wi-544-dispose-the-close-recorded-at/001-ADJUDICATE-a6a6748.md:35:## Dispositions
+docs/reviews/wi-544-dispose-the-close-recorded-at/001-ADJUDICATE-a6a6748.md:57:OUTCOME: PARTIAL successors=1
+docs/reviews/2026-08-29-oi67-slice4/README.md:38:## Dispositions (2026-08-29, taken at the slice-6 sitting)
+docs/reviews/wi-552-adjudicator-two-exit-close/009-REVIEW-A-b797022-relaxed.md:40:7. ADJUDICATE brief + template CSV + PROCESS_OPTIONS prose widened tolerantly, CATALOG
+docs/reviews/wi-552-adjudicator-two-exit-close/005-REVIEW-A-4ccabb2-relaxed.md:17:- [MAJOR] project-trajectory/scripts/intake.py:1150 (and handback.py:516) -> the refusal invariant gates on `brief == "disposition"`, but a CANCELLED original close mints a brief-LESS adjudication row (`intake._close_drafts` cancellation arm, ~line 841: "NO `brief`"), so neither the close-side (`close_adjudication`) nor the merge-side (`_disposition_drafts`) guard fires for a cancelled disposition — a cancelled close that queues no successor archives/merges silently, contradicting OI-73 ("Every PARTIAL or CANCELLED disposition must queue at least one successor WI"), Done-when 3 ("a PARTIAL or CANCELLED disposition that queues NO successor is REFUSED ... nothing silent"), and the newly-shipped ADJUDICATE contract text ("A PARTIAL or CANCELLED close MUST queue at least one successor ... REFUSED at that close"). The code comment at intake.py:1145 asserts the false premise ("a PARTIAL or CANCELLED close is judged by a `disposition`-brief adjudication row"). Confirmed empirically: a brief-less adjudication row with `dispositions=""` returns `IDS=['WI-401'] REFUSAL=None` from `close_adjudication` (closed, not refused). -> distinguish the cancelled-close adjudication row (its title/context, or a dedicated marker) from the complete-spot-check row — which legitimately needs no successor — and apply the refusal to the cancelled case at both guards; add a test driving a cancelled disposition with no successor. -> @owner
+docs/reviews/2026-08-29-oi67-slice3/slice3-worklist.json:1635:  "contract": "the unified trunk-side intake mint: intake_after_merge(root, before, after, outcomes, branch) mints the merge's forced rows (amendment adjudication, handback disposition, ## Dispositions drafts) as one bookkeeping commit inside the held slot; mint_gap_rows(root, census) is the dispatcher's rung-1 arm; flip_verified/adjudication_action flip a no-scope-moved spine row to Approved, or recommend only while the tier is human-held; context_block(root, wi_row) renders the advisory joins agent_loop's worker prompt consumes; all-or-nothing, idempotent by exact-title dedup (the sweep/census/adjudicate CLI is the recovery path)",
+docs/reviews/2026-08-29-oi67-slice3/slice3-report-C.json:156:  "data": "ADJUDICATE-AMENDMENT · ADJUDICATE-DISPOSITION · ADJUDICATE-CONFLICT · ADJUDICATE-RED-TC",
+docs/reviews/2026-08-29-oi67-slice3/slice3-batch-B.json:619:    "contract": "the unified trunk-side intake mint: intake_after_merge(root, before, after, outcomes, branch) mints the merge's forced rows (amendment adjudication, handback disposition, ## Dispositions drafts) as one bookkeeping commit inside the held slot; mint_gap_rows(root, census) is the dispatcher's rung-1 arm; flip_verified/adjudication_action flip a no-scope-moved spine row to Approved, or recommend only while the tier is human-held; context_block(root, wi_row) renders the advisory joins agent_loop's worker prompt consumes; all-or-nothing, idempotent by exact-title dedup (the sweep/census/adjudicate CLI is the recovery path)",
+
+codex
+The branch is clean, and this adjudication has prior rejected rounds in its record. I found the key procedural defect those rounds exposed: the successor draft must live in WI-568’s active spec, while the verdict only judges it. I’m now re-validating the substance from the range itself, including the approval-baseline question and the last reviewer state, rather than inheriting any earlier verdict’s conclusions.
+exec
+/bin/zsh -lc "sed -n '1,240p' docs/work/active/wi-568-dispose-the-close-recorded-at/WI-568-dispose-the-close-recorded-at.md && for f in docs/reviews/wi-568-dispose-the-close-recorded-at/003-ADJUDICATE-9d4fc41.md docs/reviews/wi-568-dispose-the-close-recorded-at/004-REVIEW-A-9d4fc41-supervisor.md; do if test -f \""'$f"; then sed -n '"'1,260p' \""'$f"; fi; done && git log --oneline --decorate -12 && git show --stat --oneline 6ba2711078 && git diff --stat ff29fef8f9..6ba2711078 && git diff --name-status ff29fef8f9..6ba2711078 | tail -80' in /Users/diytechy/Documents/ai-template-drive/wi-568-dispose-the-close-recorded-at
+ succeeded in 0ms:
++++
+id = "WI-568"
+title = "dispose: the close recorded at docs/handbacks/WI-508-wi508-architectural-remap.md - cancel / defer / draft a successor / surface an open item (a disposition row never closes early; R3)"
+workstream = "process"
+specref = "docs/work/partial/WI-508-architectural-remap-program.md"
+buildtier = "strong"
+safety_class = "adjudication"
+brief = "disposition"
++++
+
+## Context
+
+The closed spec is `docs/work/partial/WI-508-architectural-remap-program.md`.
+
+Its per-close report is `docs/handbacks/WI-508-wi508-architectural-remap.md` — READ IT FIRST. The report is the close EVENT's own immutable record: what the lane claims it delivered and did not, the commit range, the keep/discard split, and the review tier it suggests. The lane's claimed outcome is a CLAIM under judgement here, not this row's premise.
+
+Outcomes (R3): cancel / defer / draft a successor / surface an open item. Continuing the work MINTS A SUCCESSOR (drafted in THIS row's `## Dispositions` section, carrying `supersedes`), never a revival of the closed row — a closed row is never re-opened and a scope definition never changes to mean something else. An override moves the byte-identical spec to the corrected terminal folder; the report stays on record as the claim it was. An open item goes to docs/requirements/open-items.toml.
+
+**Named for this adjudication (WI-555 round 005, 2026-09-01):**
+
+- The `580df781` keep/discard explicitly includes the LLR-203 / LLR-204 `Drafted` -> `Approved` flips: stand or revert. They were `Drafted` on trunk at `6d3d9db4` and are `Approved` at `551d1b2c`; the flip is loop-permitted under `human_approval_through = "DevStg-Needs"`, so the question is disposition, not authority.
+- It explicitly includes the `docs/archive/last_approved/` baseline move for the off-spine registries: the merge `979c3e5f` carried the branch's snapshot bytes (`580df781` / `4824c0ba`) onto trunk, shifting the baseline off the pre-merge anchor `6d3d9db4:docs/archive/last_approved` (last written at `13593db9`) and collapsing `docs/ratify/CURRENT.md`'s off-spine census from "132 changed, 30 added, 3 removed" across nine rulings to "1 changed, 0 added, 1 removed (WI-553)". Restore trunk's baseline to the `6d3d9db4` bytes for `interfaces.toml` / `external.toml` / `components.toml`, or let the absorption stand — owner-owed; mint an OI through this row's `open_item` cell if the adjudicator judges it needs the owner.
+- The handback report's `## Delivered` sentence "the four Drafted slice-1 spine rows" is inaccurate: the true split is 2 `Approved` (LLR-203, LLR-204) / 2 `Drafted` (TC-199, TC-200). Read the archived spec at `docs/work/partial/WI-508-architectural-remap-program.md` and the WI-555 log entries in `docs/log.d/WI-555-wi508-partial-close.md` as the corrected record; the report is immutable and stays as the claim it was.
+
+## Dispositions
+
+```toml
+title = "WI-508 spine reseal: one clean reviewer round on current trunk, regenerate last_approved at the approval commit"
+workstream = "process"
+safety_class = "spine"
+priority = 2
+supersedes = "WI-508"
+planmode = "single"
+buildtier = "strong"
+open_item = "Does trunk's docs/archive/last_approved/ baseline for interfaces.toml, external.toml, and components.toml STAND at the wi508 branch's 2026-08-30 bytes — absorbing interfaces.toml's 132 changed / 30 added / 3 removed rows (OI-64, OI-65, OI-67, WI-522, WI-528, WI-530, WI-531, WI-533, WI-534, WI-553) and components.toml's 1 changed row (WI-520), while external.toml had no row-level census — or is it RESTORED to the pre-merge 6d3d9db4 bytes so those rows return to the re-attestation brief for explicit approval?"
+```
+
+IN SCOPE — four rows and one baseline question.
+
+**The rows.** `LLR-203`, `LLR-204` (`Approved` on trunk) and `TC-199`, `TC-200`
+(`Drafted` on trunk, `verifies = ["LLR-203"]` / `["LLR-204"]`, `Expected` scoped
+to the LLR arm). Draw the ONE clean cross-family reviewer round the WI-508 lane
+never landed — the "fresh reviewer round on a refreshed tree" its own handback
+report lists under *Not delivered* — on CURRENT trunk, confirming the four rows
+stand in their reviewed state. **The `580df781` `Drafted` -> `Approved` flips of
+`LLR-203`/`LLR-204` are KEPT by the WI-568 adjudication**: that is a named keep
+decision, not a defaulted one — the flip was loop-permitted under
+`human_approval_through = "DevStg-Needs"` and the rows are byte-identical to the
+round-010-approved tree (`b8d57e9f`), so the successor CONFIRMS them and does not
+re-litigate the flip. `TC-199`/`TC-200` STAY `Drafted`; do not approve them here
+(their `verifies` drift is normal on an unapproved row).
+
+**The baseline.** Apply the owner's ruling on the `open_item` above, and only
+after it lands (the mint parks this row `waiting:open-item-pending`):
+- ruling **"stand"** -> regenerate `docs/archive/last_approved/` with `python
+  project-trajectory/scripts/intake.py --root . snapshot` in THIS row's own
+  approval commit (never copied from the branch's snapshot bytes, per OI-71 (c)),
+  and record in the Deliverable that the regeneration RE-SEALS the absorbed
+  off-spine rows rather than re-reviewing them;
+- ruling **"restore"** -> re-copy the `6d3d9db4` off-spine snapshot files
+  (`interfaces.toml`, `external.toml`, `components.toml`) under
+  `docs/archive/last_approved/` in a reviewed commit, then regenerate
+  `docs/ratify/CURRENT.md` and let the re-attestation brief re-list the rows for
+  an explicit act.
+
+**Inherited ruling.** This row inherits `OI-72`'s `SR-163` ruling (owned and
+discharged by the re-scoped `WI-543`); do not re-open the `SR-163` shape.
+
+**Routed here rather than dropped** — the two `BLOCKER`s of
+`docs/reviews/wi508-architectural-remap/010-REVIEW-A-5175065.md`, which the
+WI-508 close left on no queue and which target files that are on trunk:
+1. `docs/plans/2026-08-25-blind-minimal-map-brief.md:3` — the anti-post-hoc
+   condition is uncovered: brief and both agent returns first appear together in
+   `64e9bf2a`, so nothing immutably fixes the question before the answers exist.
+2. `docs/plans/2026-08-25-blind-minimal-map-derivation.md:29` — both "blind" teams
+   received this repo's instruction context (Team B a memory index), breaking the
+   brief's closed five-file input set.
+Do NOT re-run the blind exercise here. Rule each: either annotate the two plan
+files on trunk with the defect as a standing caveat, or file a successor row for
+a sterile re-run — and say which, in the Deliverable.
+
+EXPLICITLY NOT IN SCOPE: any revert of the `ff29fef8f9..6ba2711078` range (WI-568
+ruled KEEP-all); re-opening `WI-508` (closed, superseded); the `5175065` Team-A
+census MINOR and the wider off-spine WARN population.
+# WI-568 adjudication — WI-508 architectural-remap close
+
+The lane's `partial` claim stands. The architectural derivation, alignment
+survey, and consolidation filings survive, while the final record honestly
+leaves `TC-199`/`TC-200` Drafted and still owes a clean review on current trunk
+plus an authoritative disposition of the approval baseline. The one successor
+is drafted in this session's own spec under `## Dispositions`; it carries
+`supersedes = "WI-508"`, `buildtier = "strong"`, and `planmode = "single"`.
+
+## Findings
+
+- [MINOR] the claimed outcome is correctly PARTIAL -> the range delivered the blind derivation, alignment survey, and consolidation rows, but its final reviewed state deliberately leaves `TC-199`/`TC-200` Drafted and does not land the fresh current-tree reviewer round named by the handback -> retain the partial close and carry only the remaining reseal work into the drafted successor -> @owner
+- [BLOCKER] the report's `keep_commits = []` / `discard_commits = []` is a missing keep/discard split -> a partial close cannot leave the already-landed range unjudged, especially where `580df781` contains both the surviving `LLR-203`/`LLR-204` approvals and snapshot movement while later commits correct the TC over-claim -> record KEEP all commits in `ff29fef8f9..6ba2711078`, including the explicit LLR approvals and the later TC corrections, DISCARD none; any owner-directed baseline restoration is a successor correction rather than rejected code silently left on trunk -> @owner
+- [MAJOR] a successor is mandatory and exactly one is drafted in WI-568's own `## Dispositions` section -> the terminal WI-508 row cannot be revived, while a clean current-tree review of `LLR-203`/`LLR-204` and Drafted `TC-199`/`TC-200`, the approval-baseline disposition, and the two preserved blind-derivation caveats remain executable work -> mint that `supersedes = "WI-508"` successor at this adjudication's close with `buildtier = "strong"` and `planmode = "single"` -> @owner
+- [MAJOR] the off-spine `docs/archive/last_approved/` baseline disposition is human-owed -> the range moved the snapshot while the handback requires regeneration at the successor's own approval act, and deciding whether the absorbed baseline stands or is restored changes what the approval surface asks a human to attest -> mint the successor's `open_item` as a pending typed dependency and keep the successor waiting until the owner rules STAND or RESTORE; then execute the corresponding branch already stated in the disposition scope -> @owner
+
+OUTCOME: PARTIAL successors=1
+1a6366a2 (HEAD -> wi-568-dispose-the-close-recorded-at) telemetry: session wi-568-dispose-the-close-recorded-at-004 ADJUDICATE COMMITTED
+0d300eff adjudicate: record WI-508 partial disposition
+740659a4 telemetry: session wi-568-dispose-the-close-recorded-at-003 DESIGN-CHECK COMMITTED
+807aea4f adjudicate: record WI-508 partial disposition
+30bd41c3 telemetry: session 002 review scoreboard
+25c29000 telemetry: session wi-568-dispose-the-close-recorded-at-002 REVIEW-A COMMITTED
+3287f061 review: record WI-568 round 002
+9d4fc41f review: compile the WI-568 REVIEW-A rollup (supervisor; two drawn rounds, governing APPROVE last)
+6e0172cb review: record WI-568 round 003 (supervisor-drawn verification, independent Opus) - APPROVE findings=1
+ba54f6a5 WI-568: REVIEW-A round 002 rework - the disposition block moved to the spec, the baseline question minted for the owner, the verdict re-issued in place
+49fcde88 review: record WI-568 round 002 (supervisor-drawn, independent Opus, hostile brief) - CHANGES-REQUESTED findings=7
+4f1590d9 telemetry: session wi-568-dispose-the-close-recorded-at-001 ADJUDICATE COMMITTED
+6ba27110 WI-508: restore the spec to active/ — undo the self-close for the OI-71 partial conversion
+ .../wi508-architectural-remap}/WI-508-architectural-remap-program.md      | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ PROJECT_STATE.html                                 |   16 +-
+ docs/archive/last_approved/README.md               |    1 +
+ .../docs/requirements/components.toml              |    2 +-
+ .../last_approved/docs/requirements/external.toml  |   12 +-
+ .../docs/requirements/interfaces.toml              | 1822 ++++++++++----------
+ .../docs/requirements/low-level-requirements.toml  |   42 +-
+ .../last_approved/docs/test/test-cases.toml        |   43 +-
+ ...508-architectural-remap-001-20260830-024203.log |   73 +
+ ...508-architectural-remap-002-20260830-025611.log |   57 +
+ ...508-architectural-remap-003-20260830-030349.log |   33 +
+ ...508-architectural-remap-004-20260830-031015.log |   59 +
+ ...508-architectural-remap-005-20260830-032302.log |   31 +
+ ...508-architectural-remap-006-20260830-033109.log |   34 +
+ ...508-architectural-remap-007-20260830-040934.log |   68 +
+ ...508-architectural-remap-008-20260830-041216.log |   57 +
+ ...508-architectural-remap-009-20260830-041457.log |   75 +
+ docs/log.md                                        |  402 +++++
+ docs/open-items.html                               |    7 +-
+ docs/ratify/CURRENT.md                             |   94 +-
+ docs/requirements/low-level-requirements.toml      |    4 +-
+ docs/reviews/WI-508-REVIEW-A.md                    |  116 ++
+ .../003-REVIEW-A-f179a0b.md                        |    4 +
+ .../005-REVIEW-A-82fb76a.md                        |    3 +
+ .../010-REVIEW-A-085de8d.md                        |    4 +
+ .../010-REVIEW-A-1cf170f.md                        |    4 +
+ .../010-REVIEW-A-31a1d6b.md                        |    5 +
+ .../010-REVIEW-A-5175065.md                        |    9 +
+ .../010-REVIEW-A-52faa5d.md                        |    2 +
+ .../010-REVIEW-A-5835bf4.md                        |    3 +
+ .../010-REVIEW-A-747c396.md                        |    2 +
+ .../010-REVIEW-A-b8d57e9.md                        |    1 +
+ .../010-REVIEW-A-c028eb0.md                        |    4 +
+ .../010-REVIEW-A-c225c34.md                        |    2 +
+ .../wi508-architectural-remap/scoreboard.txt       |    7 +
+ docs/stage                                         |    6 +-
+ docs/status.md                                     |    3 +-
+ docs/test/test-cases.toml                          |   10 +-
+ .../WI-508-architectural-remap-program.md          |   86 +-
+ 38 files changed, 2223 insertions(+), 980 deletions(-)
+M	PROJECT_STATE.html
+M	docs/archive/last_approved/README.md
+M	docs/archive/last_approved/docs/requirements/components.toml
+M	docs/archive/last_approved/docs/requirements/external.toml
+M	docs/archive/last_approved/docs/requirements/interfaces.toml
+M	docs/archive/last_approved/docs/requirements/low-level-requirements.toml
+M	docs/archive/last_approved/docs/test/test-cases.toml
+A	docs/iteration/wi508-architectural-remap-001-20260830-024203.log
+A	docs/iteration/wi508-architectural-remap-002-20260830-025611.log
+A	docs/iteration/wi508-architectural-remap-003-20260830-030349.log
+A	docs/iteration/wi508-architectural-remap-004-20260830-031015.log
+A	docs/iteration/wi508-architectural-remap-005-20260830-032302.log
+A	docs/iteration/wi508-architectural-remap-006-20260830-033109.log
+A	docs/iteration/wi508-architectural-remap-007-20260830-040934.log
+A	docs/iteration/wi508-architectural-remap-008-20260830-041216.log
+A	docs/iteration/wi508-architectural-remap-009-20260830-041457.log
+M	docs/log.md
+M	docs/open-items.html
+M	docs/ratify/CURRENT.md
+M	docs/requirements/low-level-requirements.toml
+A	docs/reviews/WI-508-REVIEW-A.md
+A	docs/reviews/wi508-architectural-remap/003-REVIEW-A-f179a0b.md
+A	docs/reviews/wi508-architectural-remap/005-REVIEW-A-82fb76a.md
+A	docs/reviews/wi508-architectural-remap/010-REVIEW-A-085de8d.md
+A	docs/reviews/wi508-architectural-remap/010-REVIEW-A-1cf170f.md
+A	docs/reviews/wi508-architectural-remap/010-REVIEW-A-31a1d6b.md
+A	docs/reviews/wi508-architectural-remap/010-REVIEW-A-5175065.md
+A	docs/reviews/wi508-architectural-remap/010-REVIEW-A-52faa5d.md
+A	docs/reviews/wi508-architectural-remap/010-REVIEW-A-5835bf4.md
+A	docs/reviews/wi508-architectural-remap/010-REVIEW-A-747c396.md
+A	docs/reviews/wi508-architectural-remap/010-REVIEW-A-b8d57e9.md
+A	docs/reviews/wi508-architectural-remap/010-REVIEW-A-c028eb0.md
+A	docs/reviews/wi508-architectural-remap/010-REVIEW-A-c225c34.md
+A	docs/reviews/wi508-architectural-remap/scoreboard.txt
+M	docs/stage
+M	docs/status.md
+M	docs/test/test-cases.toml
+M	docs/work/active/wi508-architectural-remap/WI-508-architectural-remap-program.md
+
