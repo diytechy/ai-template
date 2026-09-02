@@ -557,6 +557,18 @@ settled-scope refusal naming its rows), one at the mint, one at the loader
 triplet, and the widened schema pin. The widening regression is mutation-proven
 — dropping `rid in scope` reds it and the settled-scope refusal both.
 
+**One decomposition the fix earned.** Folding the awaiting-set collection into
+the existing walk (rather than re-walking every chain to answer "which filter
+emptied the population") pushed `first_approval_values` to C901 11, one over the
+declared 10 — and this repo's rule is that complexity is SIMPLIFIED, not bumped.
+So the per-row judgement came out as `_render_chain`: the three-way
+intersection, the label that says why a row is not yours, and the registry the
+act will name all live there, and the assembler around it is "walk the model,
+keep the chains holding one of mine, refuse if none do". The `--approves` set is
+accumulated THROUGH rather than returned, so it keeps one home; a chain the
+caller then drops contributes nothing to it, because a dropped chain has no
+`yours` row by construction.
+
 **Driven at this tip against this repo, not only against a fixture.** The
 review's own probe — a `first-approval` row with no merge context — now REFUSES
 by naming the missing cell. Given a scope of one real row (`LLR-206`, one of the

@@ -559,6 +559,46 @@ def _aftermath(root, tiers):
 # --- the first-approval brief (owner ruling 2026-09-01) -----------------------
 
 
+def _render_chain(root, entry, scope, srs, llrs_by_sr, tcs_by_ref, registries):
+    """One SR chain rendered for the first-approval brief:
+    `(lines, has_a_row_of_this_session's, the_Drafted_ids_seen)`.
+
+    Extracted from `first_approval_values` rather than nested in it because the
+    per-row judgement is where every rule of this arm lands — the three-way
+    intersection, the label that says WHY a row is not yours, and the registry
+    the act will name — and the assembler around it is then just "walk the model,
+    keep the chains that hold one of mine, refuse if none do". `registries` is
+    accumulated through rather than returned so the caller's `--approves` set has
+    one home; a chain the caller then DROPS contributes none, because a dropped
+    chain has no `yours` row by construction."""
+    lines = ["- chain of {} — {}".format(entry["id"], entry.get("title") or "")]
+    import trace as tr
+
+    mine, drafted_ids = False, set()
+    for kind, rid, full in tr.spine_chain(entry["id"], srs, llrs_by_sr, tcs_by_ref):
+        drafted = tr.is_drafted(full)
+        # THE INTERSECTION, in one expression: `Drafted` (the live model's
+        # answer), IN SCOPE (the mint's question) and RELEASED (the dial's).
+        # Nothing downstream can promote a row that fails any of the three,
+        # because `yours` is what mints both the label and the registry.
+        in_scope = rid in scope
+        yours = drafted and in_scope and _loop_approves(root, kind)
+        if drafted:
+            drafted_ids.add(rid)
+        lines.append(
+            "  - {} {} [{}]".format(kind, rid, _chain_label(drafted, in_scope, yours))
+        )
+        lines += [
+            "    - {}: {}".format(name, str(full[name]).strip())
+            for name in sorted(full)
+            if str(full[name] or "").strip()
+        ]
+        if yours:
+            mine = True
+            registries[_REGISTRY_OF[kind]] = True
+    return lines, mine, drafted_ids
+
+
 def first_approval_values(root, row):
     """`({chain, baseline, registries}, None)` for the spine rows a lane
     authored `Drafted` and did not approve, or `(None, reason)`.
@@ -671,35 +711,10 @@ def first_approval_values(root, row):
     llrs_by_sr, tcs_by_ref = tr.chain_buckets(reg.llrs, reg.tcs)
     lines, registries, awaiting = [], {}, set()
     for entry in model:
-        chain, mine = [], False
-        chain.append("- chain of {} — {}".format(entry["id"], entry.get("title") or ""))
-        for kind, rid, full in tr.spine_chain(
-            entry["id"], reg.srs, llrs_by_sr, tcs_by_ref
-        ):
-            drafted = tr.is_drafted(full)
-            # THE INTERSECTION, in one expression: `Drafted` (the live model's
-            # answer), IN SCOPE (the mint's question) and RELEASED (the dial's).
-            # Nothing downstream can promote a row that fails any of the three,
-            # because `yours` is what mints both the label and the registry.
-            in_scope = rid in scope
-            yours = drafted and in_scope and _loop_approves(root, kind)
-            if drafted:
-                # Collected on the ONE walk, for the refusal below — a second
-                # pass over the same chains to answer "which filter emptied it"
-                # would be the same walk asked the same question twice.
-                awaiting.add(rid)
-            chain.append(
-                "  - {} {} [{}]".format(
-                    kind, rid, _chain_label(drafted, in_scope, yours)
-                )
-            )
-            for name in sorted(full):
-                value = str(full[name] or "").strip()
-                if value:
-                    chain.append("    - {}: {}".format(name, value))
-            if yours:
-                mine = True
-                registries[_REGISTRY_OF[kind]] = True
+        chain, mine, drafted_here = _render_chain(
+            root, entry, scope, reg.srs, llrs_by_sr, tcs_by_ref, registries
+        )
+        awaiting |= drafted_here
         # An SR whose chain holds no row of this session's is not this session's
         # question — dropped whole rather than rendered as evidence for a
         # verdict it cannot be asked to give.
