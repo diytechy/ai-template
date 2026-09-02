@@ -59,6 +59,18 @@ Real output, quoted with its interpreter and revision in the row's
 broken**; `tests/test_derive_stage.py` **18 passed** (finding 1 is latent on this
 lane — it amends no spine row — so no red is handed on).
 
+Re-run at the branch tip after the close commit, because a close moves the spec
+out of `active/` and so changes what the bar covers: smoke **1463 passed, 4
+skipped in 20.99s**; budget **23.9s vs 60s -> within**. The four-skip delta is
+`tests/test_wi_convert.py:349/362/407/538`, which this row's own in-flight claim
+was darkening ("conversion is a drained-stop operation"); the close drains it and
+they run and pass. That also corrects an overstatement in the Deliverable's "Not
+a finding" paragraph — those four guards were called "green" at a revision where
+they had actually SKIPPED. The conclusion survives on better evidence, but the
+correction is recorded rather than quietly dropped: a claim reading as verified
+when the observation was a skip is the same failure mode this row exists to
+catch.
+
 Pre-existing and NOT this row's: the `check_trajectory` WARN that WI-574's own
 Title is 150 characters. It arrived with the mint, and editing the Title renames
 the spec file mid-lane; left for the trunk side.

@@ -116,6 +116,37 @@ fig: cmd="/Users/diytechy/Documents/ai-template/.venv/bin/python -m pytest -q -n
 fig: cmd="/Users/diytechy/Documents/ai-template/.venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=e2a8dfcb
 fig: cmd="/Users/diytechy/Documents/ai-template/.venv/bin/python -m pytest -q tests/test_derive_stage.py" rev=e2a8dfcb
 
+**Re-verified at the branch tip after the close.** The readings above were taken
+at `e2a8dfcb`, before the close commit moved this spec out of `active/` — and a
+close changes what the spec-walking tests enumerate, so a bar run before it is
+not a bar run on what merges. Re-run at the tip:
+
+- `pytest -q -n auto -m smoke` -> **1463 passed, 4 skipped in 20.99s**
+- `check_smoke_budget.py --mode enforce` -> **smoke wall-clock budget: 23.9s vs
+  60s budget -> within** (exit 0)
+
+The pass/skip counts moved (1459/8 -> 1463/4; total constant at 1467) for
+exactly that reason, and the four are named rather than inferred — measured by
+re-running the tier in a throwaway worktree at `e2a8dfcb` and diffing the `-rs`
+skip reasons. They are `tests/test_wi_convert.py:349`, `:362`, `:407` and `:538`,
+each skipping with *"live registry has in-flight claims: ... an in-flight claim
+(active/wi-574-spot-check-the-clean-close-of) — conversion is a drained-stop
+operation"*. This row's own open claim was darkening them; the close drains it
+and all four run and pass. No red at either revision.
+
+**This corrects a claim made above.** The "Not a finding" paragraph says the four
+`test_wi_convert.py` guards "run green here" — at the revision where that bar was
+taken they were SKIPPED, not green, for the reason just quoted. The conclusion it
+supports (round 4 did take the folder-home walk in lane) still holds and is now
+backed by the stronger evidence: the four guards actually EXECUTE and pass at the
+tip. But the wording overstated what the recorded run had shown, which is the
+precise failure mode this row exists to catch, so it is corrected here rather
+than quietly left standing — and it is itself a small instance of the finding:
+a claim reads as verified when what was really observed was a skip.
+
+fig: cmd="/Users/diytechy/Documents/ai-template/.venv/bin/python -m pytest -q -n auto -m smoke" rev=61651ac5
+fig: cmd="/Users/diytechy/Documents/ai-template/.venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=61651ac5
+
 This row authored and amended NO spine rows and moved no `Status`, so it owes no
 approval-brief regeneration.
 
