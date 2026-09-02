@@ -185,19 +185,20 @@ def test_the_mechanical_flip_TOUCHES_NO_SNAPSHOT_AT_ALL(tmp_path):
 
 
 def test_a_TRACED_only_refresh_needs_no_authority_at_all(tmp_path):
-    """The common case, and the one that must stay free: the WI-482/WI-452 class
-    (a `Module`/`CodeSymbol`/`TestRefs` re-point) moves no approved text, so a
-    gate that charged it a flag would be a gate every worker learns to route
-    around."""
+    """The common case, and the one that must stay free of a flag: the
+    WI-482/WI-452 class (a `Module`/`CodeSymbol`/`TestRefs` re-point) moves no
+    approved text, so the gate never fires. And since WI-571 it also authorises
+    NO copy — a traced re-point flips no Status and is named by nothing, so the
+    snapshot's whole-file copy of that registry simply lags live until a real
+    approval rides it. Harmless: traced cells are never drift- or
+    unanchored-compared, so a lagging copy of one changes no verdict."""
     root = _seeded(tmp_path)
-    sid, row = _first_row_at(root, "approved")
     llr_rel = "docs/requirements/low-level-requirements.toml"
+    before_llr = (SNAP.snapshot_root(root) / llr_rel).read_bytes()
     _rewrite(root, llr_rel, 'code_symbol = "', 'code_symbol = "renamed_')
-    assert SNAP.refresh_refusal(root) == ""
-    assert SNAP.copy_live(root), "the traced-only refresh was refused"
-    assert (SNAP.snapshot_root(root) / llr_rel).read_bytes() == (
-        root / llr_rel
-    ).read_bytes()
+    assert SNAP.refresh_refusal(root) == ""  # never refused...
+    assert SNAP.copy_live(root) == []  # ...and authorises no copy
+    assert (SNAP.snapshot_root(root) / llr_rel).read_bytes() == before_llr
 
 
 def test_a_APPROVED_amendment_with_no_flip_and_no_ref_is_REFUSED(tmp_path):
@@ -244,29 +245,117 @@ def test_an_explicit_APPROVES_ref_authorises_it_and_is_RECORDED(tmp_path):
     root = _seeded(tmp_path)
     sid, row = _first_row_at(root, "approved")
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended at the sitting)")
-    assert SNAP.refresh_refusal(root, "sitting-4") == ""
-    SNAP.copy_live(root, approves="sitting-4")
+    # The ref NAMES its registry now (WI-571): a ref for system-requirements.toml
+    # mutes the gate for it and no other.
+    assert SNAP.refresh_refusal(root, {SR_REL: "sitting-4"}) == ""
+    SNAP.copy_live(root, approves={SR_REL: "sitting-4"})
     stamp = (SNAP.snapshot_root(root) / SNAP.README).read_text(encoding="utf-8")
     assert "sitting-4" in stamp
+    assert "system-requirements.toml" in stamp  # the act's scope is recorded
     assert "Nothing parses it" in stamp  # still prose, design §F8
     # A second recorded refresh APPENDS rather than replacing the record.
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (again)")
-    SNAP.copy_live(root, approves="log 2026-08-20")
+    SNAP.copy_live(root, approves={SR_REL: "log 2026-08-20"})
     stamp2 = (SNAP.snapshot_root(root) / SNAP.README).read_text(encoding="utf-8")
     assert "sitting-4" in stamp2 and "log 2026-08-20" in stamp2
 
 
 def test_a_DRAFTED_rows_amendment_is_not_absorption(tmp_path):
     """The record of what was blessed for a `Drafted` row is *nothing*, so a copy
-    that carries its new text re-blesses nothing. Gating it would stall ordinary
-    drafting behind an approval flag."""
+    that carries its new text re-blesses nothing — the gate never fires. And
+    since WI-571 an amendment that flips no Status and is named by nothing
+    authorises no copy at all, so ordinary drafting leaves the snapshot alone."""
     root = _tree(tmp_path)
     _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')
     SNAP.copy_live(root, seed=True)
     sid, row = _first_row_at(root, "drafted")
+    before_sr = (SNAP.snapshot_root(root) / SR_REL).read_bytes()
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (still drafting)")
     assert SNAP.refresh_refusal(root) == ""
-    assert SNAP.copy_live(root)
+    assert SNAP.copy_live(root) == []
+    assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == before_sr
+
+
+# --- the copy is SCOPED to the act (WI-571) -----------------------------------
+# `copy_live` used to mirror all seven registries on every refresh, so a spine
+# `Status` flip re-sealed whatever off-spine drift was live at that moment and
+# silently zeroed the off-spine census (the only rendering of it is computed
+# against the snapshot). The copy now moves ONLY the registry the act
+# authorises: the one a `Status` moved in, plus every registry `--approves`
+# names. The rest keep their bytes.
+
+IF_REL = "docs/requirements/interfaces.toml"
+LLR_REL = "docs/requirements/low-level-requirements.toml"
+# A non-`status` cell of the first shipped interface row — off-spine drift that
+# authorises nothing, so a spine-only act must leave its snapshot copy alone.
+_IF_DRIFT_FROM = "printed whole for the harness"
+_IF_DRIFT_TO = "printed WHOLE for the harness"
+
+
+def test_a_spine_flip_LEAVES_the_offspine_snapshot_bytes_UNTOUCHED(tmp_path):
+    """The measured problem, driven: a `Status` flip in a spine registry copies
+    THAT registry and no other. An off-spine registry that merely drifted in the
+    same tree is NOT re-sealed, so the drift SURVIVES to its own census instead
+    of being zeroed by a whole-tree copy riding a spine approval. No flag."""
+    root = _seeded(tmp_path)
+    seed_if = (SNAP.snapshot_root(root) / IF_REL).read_bytes()
+    _rewrite(root, IF_REL, _IF_DRIFT_FROM, _IF_DRIFT_TO)  # off-spine drift, live
+    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')  # the flip
+    written = SNAP.copy_live(root)
+    # the flipped registry moved...
+    assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == (
+        root / SR_REL
+    ).read_bytes()
+    assert any("system-requirements" in w for w in written)
+    # ...and the off-spine one did NOT: its snapshot is still the seed bytes, and
+    # it still differs from live, so the census the snapshot renders is intact.
+    assert (SNAP.snapshot_root(root) / IF_REL).read_bytes() == seed_if
+    assert (SNAP.snapshot_root(root) / IF_REL).read_bytes() != (
+        root / IF_REL
+    ).read_bytes()
+    assert not any("interfaces" in w for w in written)
+
+
+def test_a_named_ref_copies_EXACTLY_its_registry(tmp_path):
+    """The `--approves` half of the scope: a ref names its registry, and the
+    copy moves that one and nothing else, even with unrelated off-spine drift in
+    the same tree."""
+    root = _seeded(tmp_path)
+    seed_if = (SNAP.snapshot_root(root) / IF_REL).read_bytes()
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")  # no flip
+    _rewrite(root, IF_REL, _IF_DRIFT_FROM, _IF_DRIFT_TO)  # off-spine drift, live
+    written = SNAP.copy_live(root, approves={SR_REL: "the sitting"})
+    assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == (
+        root / SR_REL
+    ).read_bytes()
+    assert (SNAP.snapshot_root(root) / IF_REL).read_bytes() == seed_if
+    assert any("system-requirements" in w for w in written)
+    assert not any("interfaces" in w for w in written)
+
+
+def test_a_named_ref_mutes_ONLY_the_registry_it_names(tmp_path):
+    """The secondary widening the plan names: a bare `--approves` used to short-
+    circuit the whole gate (`if approves: return ""`), so one ref for one
+    registry silenced all seven. Now naming the WRONG registry leaves the amended
+    one gated, and naming the right one clears exactly it."""
+    root = _seeded(tmp_path)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")  # SR absorbs
+    # A ref for a DIFFERENT registry does not mute the SR's gate...
+    refusal = SNAP.refresh_refusal(root, {LLR_REL: "ref"})
+    assert "REFUSED" in refusal and sid in refusal, refusal
+    # ...the ref for the SR itself does, and no other.
+    assert SNAP.refresh_refusal(root, {SR_REL: "ref"}) == ""
+
+
+def test_the_SEED_still_copies_the_WHOLE_tree(tmp_path):
+    """The seed is unchanged: it blesses the whole tree once, on the owner's
+    signing commit. Scope is a REFRESH-time property; the first copy is total."""
+    root = _tree(tmp_path)
+    SNAP.copy_live(root, seed=True)
+    for rel in SNAP.SNAPSHOTTED:
+        assert (SNAP.snapshot_root(root) / rel).is_file(), rel
 
 
 def test_the_refusal_reaches_the_CLI_and_the_flag_clears_it(tmp_path):
@@ -281,11 +370,18 @@ def test_the_refusal_reaches_the_CLI_and_the_flag_clears_it(tmp_path):
     assert proc.returncode != 0, proc.stdout + proc.stderr
     assert "REFUSED" in proc.stdout + proc.stderr
     proc = run_py(
-        [SCRIPTS / "intake.py", "--root", root, "snapshot", "--approves", "sitting-4"],
+        [
+            SCRIPTS / "intake.py",
+            "--root",
+            root,
+            "snapshot",
+            "--approves",
+            "system-requirements.toml=sitting-4",
+        ],
         cwd=root,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "APPROVED BY: sitting-4" in proc.stdout
+    assert "APPROVED BY: system-requirements.toml=sitting-4" in proc.stdout
 
 
 def test_seed_is_unreachable_from_every_loop_module_and_hook():
@@ -632,6 +728,33 @@ def test_a_clean_copy_satisfies_the_mirror_invariant(tmp_path):
     assert CT.staged_snapshot_findings(root) == []
 
 
+def test_a_SCOPED_refresh_leaves_the_UNTOUCHED_offspine_mirror_GREEN(tmp_path):
+    """WI-571 against the mirror: a spine flip copies only the spine registry,
+    so the off-spine registry it did NOT copy keeps its seed-commit bytes. Both
+    mirror rules stay green with no flag, because each is pinned to the file it
+    judges — the untouched file is never in the commit (staged) and still matches
+    live at ITS OWN writing commit, the seed (committed). "An untouched file is
+    not written." """
+    root, run_git = _git_tree(tmp_path)
+    seed_if = (SNAP.snapshot_root(root) / IF_REL).read_bytes()
+    _rewrite(root, IF_REL, _IF_DRIFT_FROM, _IF_DRIFT_TO)  # off-spine drift, live
+    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')  # the flip
+    SNAP.copy_live(root)  # no flag: the flip authorises the SR copy
+    run_git("add", "-A")
+    # The SR snapshot rode the flip and matches live; the interfaces snapshot was
+    # never staged, so the staged rule has nothing to fault.
+    assert CT.staged_snapshot_findings(root) == []
+    run_git("commit", "-m", "spine flip; off-spine drift left standing")
+    # The interfaces snapshot's writing commit is STILL the seed, where it
+    # matched live byte-for-byte, so the committed rule is green too.
+    assert CT.committed_snapshot_findings(root) == []
+    # And the drift survived the act — the census is intact, not zeroed.
+    assert (SNAP.snapshot_root(root) / IF_REL).read_bytes() == seed_if
+    assert (SNAP.snapshot_root(root) / IF_REL).read_bytes() != (
+        root / IF_REL
+    ).read_bytes()
+
+
 def test_a_HAND_EDITED_snapshot_fails_the_mirror_invariant(tmp_path):
     root, run_git = _git_tree(tmp_path)
     snap_sr = SNAP.snapshot_root(root) / SR_REL
@@ -879,17 +1002,20 @@ def test_a_LANDED_forgery_reds_A_REAL_STRICT_INTEGRITY_RUN(scaffold):
 
 def test_approval_stamp_names_the_commit_that_MOVED_A_STATUS_CELL(tmp_path):
     """The provenance the re-attestation brief promises its reader (MAJOR-4).
-    `stamp` moves on ANY snapshot write, including a traced-cell refresh that
-    approves nothing; this one moves only when a maturity cell does."""
+    `stamp` moves on ANY snapshot write, including a refresh that absorbs an
+    amendment approving no new maturity; this one moves only when a maturity cell
+    does. (Since WI-571 a traced-only refresh writes NOTHING, so the write that
+    exercises the distinction is a named amendment, not a traced re-point.)"""
     root, run_git = _git_tree(tmp_path)
     seeded = SNAP.approval_stamp(root)[0]
     assert seeded, "the seeding commit wrote every status line there is"
-    # A traced-cell refresh: the record is re-written, no maturity cell moves.
-    llr_rel = "docs/requirements/low-level-requirements.toml"
-    _rewrite(root, llr_rel, 'code_symbol = "', 'code_symbol = "renamed_')
-    SNAP.copy_live(root)
+    # An amendment absorbed under a ref: the record is re-written for the named
+    # registry, but no maturity cell moves.
+    ssid, srow = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, srow["Title"], srow["Title"] + " (amended)")
+    SNAP.copy_live(root, approves={SR_REL: "the sitting"})
     run_git("add", "-A")
-    run_git("commit", "-m", "a traced re-point")
+    run_git("commit", "-m", "an amendment absorbed under a ref")
     assert SNAP.stamp(root)[0] != seeded, "the write stamp must follow any write"
     assert SNAP.approval_stamp(root)[0] == seeded, "no status cell moved"
     # ...and now one does.

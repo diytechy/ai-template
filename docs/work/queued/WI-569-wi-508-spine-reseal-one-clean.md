@@ -37,6 +37,18 @@ after it lands (the mint parks this row `waiting:open-item-pending`):
   approval commit (never copied from the branch's snapshot bytes, per OI-71 (c)),
   and record in the Deliverable that the regeneration RE-SEALS the absorbed
   off-spine rows rather than re-reviewing them;
+  - **WI-571 UPDATE (triage, 2026-09-01):** `intake.py snapshot` is now SCOPED
+    to the act (`baseline_snapshot.copy_live`) — a plain run at this row's
+    approval commit copies only the registries a `Status` flip authorises (the
+    `LLR-203`/`LLR-204` spine rows) and leaves the off-spine `interfaces.toml`/
+    `external.toml`/`components.toml` snapshot bytes UNTOUCHED. So a bare
+    regeneration no longer re-seals the absorbed off-spine rows — the off-spine
+    census SURVIVES to its own review instead of being zeroed. If the owner
+    rules **"stand"** on the off-spine baseline, this row must name those
+    registries explicitly to re-seal them: `intake.py snapshot --approves
+    "interfaces.toml=<ref>;external.toml=<ref>;components.toml=<ref>"`. Absent
+    that, "stand" on the spine and "leave the off-spine census standing" is the
+    default a bare `intake.py snapshot` produces;
 - ruling **"review-then-stand"** -> the owner reads the absorbed diff
   (`git diff 6d3d9db4 551d1b2c -- docs/archive/last_approved/docs/requirements/`)
   and amends any rejected row LIVE in the registry through the ordinary

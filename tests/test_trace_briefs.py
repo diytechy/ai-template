@@ -710,7 +710,10 @@ def test_a_closed_window_is_a_no_op(tmp_path):
     _run_git, _rev, write = _approval_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
     write("Approved", sr_req="The system shall do the AMENDED thing.")
-    load_script("baseline_snapshot").copy_live(tmp_path, approves="the sitting")
+    load_script("baseline_snapshot").copy_live(
+        tmp_path,
+        approves={"docs/requirements/system-requirements.toml": "the sitting"},
+    )
     proc = _check(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "window is closed" in proc.stderr
@@ -738,7 +741,10 @@ def test_a_flip_WITHOUT_a_copy_leaves_the_row_drifted(tmp_path):
     # ...and the copy is what clears it — carrying the ref that names the act,
     # since 2026-08-20: absorbing approved text under a standing approval is the
     # one refresh that cannot be told from laundering without a human saying so.
-    load_script("baseline_snapshot").copy_live(tmp_path, approves="the sitting")
+    load_script("baseline_snapshot").copy_live(
+        tmp_path,
+        approves={"docs/requirements/system-requirements.toml": "the sitting"},
+    )
     after = run_py(
         [SCRIPTS / "trace.py", "--root", tmp_path, "--approve", "modified"],
         cwd=tmp_path,
