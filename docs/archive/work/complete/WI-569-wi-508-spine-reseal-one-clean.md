@@ -13,6 +13,18 @@ supersedes = "WI-508"
 
 ## Deliverable
 
+**A third act, taken knowingly.** The scope this row was narrowed to names two
+arms: draw the round, and rule the two routed BLOCKERs. Amending two `Approved`
+rows is a third, recorded here rather than left implicit because the drawn
+round's subject was the rows as they stood BEFORE that amendment, so its new
+text entered the lane unread by it. It is read now: the lane's own REVIEW-A
+round 002 re-derived every corrected statement against the code, found each one
+true, and found nothing true regressed. The structural backstop is the
+amendment adjudication this row's merge mints over the amended rows, which
+judges the new text on its own and owns the re-attestation that follows — no
+`Status` moved on this lane and nothing under the snapshot was written, so that
+judgement is unprejudiced.
+
 **The round was drawn, and it did NOT confirm the rows.** The one clean
 cross-family reviewer round the WI-508 lane never landed is
 `docs/reviews/wi-569-wi-508-spine-reseal-one-clean/001-REVIEW-A-2f660cb7-spine-rows.md`,
@@ -66,9 +78,21 @@ number; and the alignment pass already declines to defer to either return.
 write and no `Status` flip. The row was minted with a baseline-reseal arm that
 two merged predecessors removed from any work lane before this one started —
 `WI-571` scoped the snapshot to the act, and `WI-572` ruled the whole approval
-act the adjudicator's, on trunk. Nothing on the spine needed re-sealing in any
-case: all four rows are cell-for-cell identical to the round-010-approved tree
-`b8d57e9f`, which is the one claim in the row's premise that survived contact.
+act the adjudicator's, on trunk. Nothing on the spine needed re-sealing when
+that was ruled: at the lane base `2f660cb7` all four rows WERE cell-for-cell
+identical to the round-010-approved tree `b8d57e9f`, which is the one claim in
+the row's premise that survived contact. They are no longer, and deliberately —
+this lane's own `33aee707` corrected three false statements on `LLR-203`
+(`title`, `detail`, `rationale`) and one on `LLR-204` (`detail`), so those two
+rows now drift from `b8d57e9f` on exactly those cells, and the re-attestation is
+owed by the amendment adjudication this merge mints rather than by a baseline
+re-seal. `TC-199`/`TC-200` are still identical to `b8d57e9f` at the tip. Driven,
+not read: loading `docs/requirements/low-level-requirements.toml` and
+`docs/test/test-cases.toml` out of each of `b8d57e9f`, `2f660cb7` and `HEAD`
+with `tomllib` and diffing the four rows cell by cell returns IDENTICAL for all
+four at the base, and at the tip `LLR-203 -> ['detail', 'rationale', 'title']`,
+`LLR-204 -> ['detail']`, `TC-199`/`TC-200 -> IDENTICAL`, with `status` unmoved
+on all four (`Approved`/`Approved`/`Drafted`/`Drafted`).
 
 ## Context
 

@@ -1,5 +1,9 @@
 ## 2026-09-02 — WI-569: the WI-508 spine reseal — one clean cross-family round, and the two routed BLOCKERs ruled
 
+Deferred open items: none — nothing in this fragment is owed to the owner; the
+lane's remainder is queued as an amendment adjudication minted by this row's own
+merge.
+
 **One line:** the round the WI-508 lane never landed was drawn on current trunk
 and came back `CHANGES-REQUESTED findings=2` — `TC-199`/`TC-200` stand,
 `LLR-203`/`LLR-204` did not, because trunk delivered the mechanisms they still
@@ -136,6 +140,48 @@ by it.
 Byte deltas on budgeted files: none — `AGENTS.template.md` and `PROCESS.md`
 untouched.
 
-Deferred open items: none — `OI-78` was ruled STAND by the owner on 2026-09-01,
-and this lane's remainder is queued as an adjudication rather than owed to the
-owner.
+The baseline arm's open item, `OI-78`, was ruled STAND by the owner on
+2026-09-01, so nothing on it is owed to the owner by this lane; the lane's own
+remainder is queued as an amendment adjudication that this row's merge mints.
+
+### Rework — REVIEW-A round 002 (supervisor-drawn, `CHANGES-REQUESTED findings=5`)
+
+Three of the five findings were reworked in-lane. No `status` cell moved, no
+`intake.py snapshot` ran, nothing under `docs/archive/last_approved/` was
+written; the corrections are `detail`/`title`/prose text only.
+
+- **MAJOR — this fragment's `Deferred open items:` line was not file-level.**
+  It sat at line 139, inside the last `###` section, so `gen_open_items.py
+  --root . --check` exited 1 with two lane-introduced findings: *3 of 4 sections
+  carry no deferral declaration* and *:139 declares OI-78 deferred, but that row
+  reads `ruled`* (`open_items.toml` carries `status = "ruled"`). The declaration
+  now opens the top matter above the first heading, matching
+  `WI-575-llr-158-registry-bound.md`, and is widened to speak for the whole
+  fragment; the `OI-78` token left the declaration and its account stays in the
+  prose at the file's end, where a ruled row is not read as a deferral. The
+  check now emits only the pre-existing `docs/open-items.html STALE` advisory,
+  which is trunk's and is present at the lane base too.
+- **MAJOR — the WI-569 Deliverable contradicted itself on `b8d57e9f`.** Its
+  closing clause claimed in the present tense that all four rows *are*
+  cell-for-cell identical to the round-010-approved tree, four paragraphs after
+  recording that `33aee707` corrected `LLR-203` and `LLR-204`. Re-tensed to the
+  moment the reseal question was ruled, with the deliberate drift stated:
+  loading `low-level-requirements.toml` and `test-cases.toml` from each of
+  `b8d57e9f`, `2f660cb7` and `HEAD` with `tomllib` and diffing the four rows
+  cell by cell returns IDENTICAL for all four at the lane base, and at the tip
+  `LLR-203 -> ['detail', 'rationale', 'title']`, `LLR-204 -> ['detail']`,
+  `TC-199`/`TC-200 -> IDENTICAL`, `status` unmoved on all four.
+- **MINOR, treated as required — LLR-203 mis-stated the exclusion grammar.**
+  The cell wrote the carrier row as `<source> - <reason>` with a HYPHEN;
+  `bootstrap._mapping_source_exclusions` partitions on the literal `" — "`
+  (`bootstrap.py:2335`) and the carrier's own header says the same, so a row
+  written to the cell's instruction is skipped, excludes nothing, and its source
+  resurfaces as a gate-class `missing_file` finding. The cell now quotes the em
+  dash inside the code span and names the separator and the failure mode
+  explicitly; the surrounding prose keeps its ` - ` dashing, which is what
+  caused the drift. No WI/OI citation frame entered the cell.
+
+Finding 3 (a backticked path to `docs/reviews/WI-569-REVIEW-A.md`) is discharged
+by the rollup the supervisor compiles over this rework, which makes the citation
+true. Finding 5 asks for one sentence in the Deliverable recording the scope
+extension knowingly; it is not in this rework's scope.
