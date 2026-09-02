@@ -126,6 +126,15 @@ amendment adjudication trigger (a) raises a row for it at merge. This lane's own
 edit is the first customer of the arm the same lane shipped, which is the
 intended shape and not a special case.
 
+RE-CHECKED AT THE FINAL TIP, because the reading above was taken at a staged
+tree BEFORE the close, and the close changes an input this rung reads: draining
+`docs/work/active/` empties `_claimed_specs`, so `_adjudication_lane` answers
+False and this branch is judged as the work lane it is, with no exemption. Over
+`4d0b972d..78e20e4e` the answers are unchanged — `staged_approval_acts` `[]`,
+`lane_approval_refusal` `None`, `staged_spine_amendments` still reporting
+`LLR-158`. The branch that added the refusal is merge-clean under it at the tree
+the integrator sees, which is the only tree the claim is worth anything at.
+
 The amend-without-flip guard then fired on `LLR-158`, both arms, and both are
 answered rather than absorbed:
 
@@ -212,10 +221,19 @@ failure scenario actually turns on is the dial, and that is now filtered from
 one home at both ends. The identity-scoping half is named here rather than done
 silently; if the owner wants it, it is a schema row of its own.
 
-### The harness, and the one red it leaves
+### The harness, and the two reds it leaves
 
-Full unfiltered suite on this branch: **3257 passed, 1 failed, 24 skipped in
-557.32 s** (`python -m pytest -q -n auto`). The one failure is
+Full unfiltered suite, RE-MEASURED at the final tip `78e20e4e` — after the close
+and after the REVIEW-A rework, which is the tree an integrator actually merges:
+**3259 passed, 2 failed, 24 skipped in 573.88 s** (`python -m pytest -q -n
+auto`). Both failures are the two reds analysed below, and neither is this
+row's. The earlier reading in this section — 3257 passed, 1 failed, 24 skipped
+in 557.32 s — was taken BEFORE the close drained the last claim and before the
+rework added its two dial tests; it is kept here as the measurement it was, not
+corrected away. The smoke tier at the same tip: 1455 passed, 1 failed, 8
+skipped in 21.10 s, 23.0 s against the 60 s budget — within.
+
+The first failure is
 `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`, and
 it is the DERIVED-ARTIFACT SPLIT, not a defect in the change:
 
@@ -227,6 +245,9 @@ it is the DERIVED-ARTIFACT SPLIT, not a defect in the change:
   at `a68cc52a` changes **only** the `fingerprint` and the `# computed … as-of`
   stamp: `stage`, `stage-ord`, `settled-stage`, `live-stage`, `per-phase`,
   `per-phase-live` and `drafted` all come back byte-identical. No rung moved.
+  Re-confirmed at the final tip by `derive_stage.py --print`: every derived
+  value above, `phase = 5` included, matches the committed `docs/stage` line for
+  line, and `fingerprint` is the single field that differs.
 - Regenerating it is not this lane's act. `docs/stage` is a declared generated
   artifact, and every commit that has ever written it is a trunk-side
   bookkeeping commit (`claim:`, `refresh:`, `log:`, `mint:`). The commit bar
