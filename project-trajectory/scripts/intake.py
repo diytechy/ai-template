@@ -797,7 +797,7 @@ def _first_approval_context(records):
         "Outcomes (owner ruling 2026-09-01): read each row's WHOLE CHAIN — the",
         "parent SR, the sibling LLRs, the test cases — and either APPROVE (move",
         "the rows' `Status` to `Approved` and take the anchoring snapshot,",
-        "`python scripts/intake.py snapshot --approves <REGISTRY>=<this row>`,",
+        '`python scripts/intake.py snapshot --approves "<REGISTRY>=<this row>"`,',
         "in ONE reviewed commit on this lane) or RETURN with findings, drafting",
         "the follow-up in a `## Dispositions` section of THIS spec — intake mints",
         "it at this row's merge (drafts-not-mints, R1). The approval act is",

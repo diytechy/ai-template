@@ -829,6 +829,67 @@ green at **91 passed**, and the census reads **OK - 201 rows, unchanged**.
 <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_acceptance_record.py tests/test_integrate_admission.py tests/test_intake.py" rev=HEAD-dirty -->
 <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_complexity.py --root ." rev=HEAD-dirty -->
 
+**The derived `--approves` argument was rendered into a shell UNQUOTED (MAJOR
+2).** Round 5 gave the `;`-joined list one owning boundary
+(`baseline_snapshot.format_approves`) and closed the mis-parse at the CLI. It
+did not close the other end: the template renders that string into
+`` `python scripts/intake.py snapshot --approves {registries}` ``, and `;` is a
+COMMAND SEPARATOR. Reproduced against this repo's own live spine before fixing
+— `--approves docs/requirements/low-level-requirements.toml=WI-599;docs/test/test-cases.toml=WI-599`
+is two commands: the first snapshots one registry, the second tries to RUN
+`docs/test/test-cases.toml=WI-599`. The act then merges as approved-but-half-
+anchored and the merge slot refuses it. This repo carries `Drafted` rows in two
+registries today, so the two-registry batch is the current state, not a
+hypothetical. The template now quotes the argument and says why; `intake.py`'s
+placeholder line takes the same quotes as a net-zero edit (its ratchet says
+compact, not bump — the reasoning lives in the template, which is the surface
+the session actually follows).
+
+The guard is MECHANICAL, not an eyeball. `shlex.split` cannot serve — it is a
+lexer, so it returns `a;b` as one token whether quoted or not, and a test built
+on it would have passed against the defect. `shlex.shlex(...,
+punctuation_chars=True)` yields an unquoted `;` as its own token and keeps a
+quoted one inside its string, so the test asserts the rendered line is ONE shell
+command, and asserts the same line with its quotes stripped is TWO. Unquoting
+the template fails it.
+
+**A MIXED batch could still widen the snapshot (MAJOR 3).** `{registries}` is
+fixed at COMPOSITION time, but the template blesses a mixed verdict ("approve
+the rows that are ready, return the rest") and the approve/return split does not
+exist until the session rules. So an adjudication that RETURNED one registry's
+rows in full still ran the composed command, re-anchoring that registry's
+unreviewed live text — and `adjudication_approval_refusal` then stopped the
+merge as `snapshot WIDENED`, with a message that named neither what it did nor
+what to do.
+
+Answered at both ends, and the guard is kept rather than relaxed: admitting an
+unflipped `--approves` registry would defeat the point of the WIDENED arm, which
+is that a copy blesses whatever drift is live. Instead the session is given what
+it needs to DROP a token. `_render_chain` now accumulates the ROW IDS each
+`--approves` token covers (not merely that the token is owed), the brief renders
+that mapping beside the command, and the template states the drop rule. The
+merge refusal gained a per-arm remedy — WIDENED, WITHOUT ITS ANCHOR, OUTSIDE
+SCOPE each say what to do.
+
+**And driving it found a defect the fixture could not.** Rendered against this
+repo's live spine the mapping read `covers LLR-205, LLR-205`: `_render_chain`
+visits a row ONCE PER SR CHAIN it hangs under, and the accumulator was a list.
+A token naming one row twice reads as two rows, which is exactly the count the
+drop rule turns on. It is a dict-as-ordered-set per registry now. The first
+regression written for this was VACUOUS — `_first_approval_repo`'s LLR has one
+parent, so reverting the fix still passed — so the test builds the two-parent
+shape explicitly and asserts the premise (the row renders under both chains)
+before asserting the dedupe. Mutation-proven at that fixture: reverting to a
+list fails it.
+
+The structural antidote the review named — deriving the authorised set from the
+`Status` flips staged in the same tree, instead of typing the scope ahead of the
+act — is NOT taken here, and the review scoped it out for the same reason: it
+moves the boundary into `intake.py snapshot`, which is a row of its own. Named,
+not done silently.
+
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_adjudicate_brief.py tests/test_acceptance_record.py tests/test_integrate_admission.py tests/test_intake.py tests/test_prompts.py tests/test_module_size_ratchet.py" rev=HEAD-dirty -->
+
 ### Round-6 rework resume at the current tip
 
 The unattended worker was relaunched with round 6's merge-boundary finding

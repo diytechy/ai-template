@@ -595,7 +595,20 @@ def _render_chain(root, entry, scope, srs, llrs_by_sr, tcs_by_ref, registries):
         ]
         if yours:
             mine = True
-            registries[_REGISTRY_OF[kind]] = True
+            # The ROWS each `--approves` token covers, not just that the token
+            # is owed. `{registries}` is fixed at composition time while the
+            # approve/return split exists only after the verdict, so a mixed
+            # batch has to be able to DROP a token whose rows it returned in
+            # full — and dropping is only mechanical if the brief says which
+            # rows a token stands for. Accumulated through, same as before.
+            #
+            # A DICT AS AN ORDERED SET, per registry, because this walk visits
+            # one row ONCE PER SR CHAIN IT HANGS UNDER: an LLR reachable from
+            # two SRs was listed twice when this was a list (driven against
+            # this repo's live spine, `LLR-205` under two chains). Chain order
+            # is kept — it reads SR, LLR, TC, which is the order the session
+            # reads the rows in above.
+            registries.setdefault(_REGISTRY_OF[kind], {})[rid] = True
     return lines, mine, drafted_ids
 
 
@@ -765,6 +778,18 @@ def first_approval_values(root, row):
         # 2's failure, a `--approves` slot filled with prose.
         "registries": baseline_snapshot.format_approves(
             {rel: wi_id or "this adjudication" for rel in registries}
+        ),
+        # WHICH ROWS EACH TOKEN COVERS. The argument above is written for an
+        # ALL-APPROVE verdict, which the template blesses this session not to
+        # give ("a MIXED batch is normal"). Naming a registry whose rows were
+        # all returned re-anchors text nobody approved, and the merge slot
+        # refuses it as WIDENED — so the drop rule needs the mapping, derived
+        # here rather than left to the session to reconstruct from row kinds.
+        "approves_rows": "\n".join(
+            "    - `{}={}` covers {}".format(
+                rel, wi_id or "this adjudication", ", ".join(rids)
+            )
+            for rel, rids in registries.items()
         ),
     }, None
 

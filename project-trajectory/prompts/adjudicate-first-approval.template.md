@@ -35,7 +35,17 @@
        {baseline}  what the approval record currently anchors, and therefore
                    what your snapshot would move. Registry- and git-derived.
        {registries} the `--approves` argument your approving commit owes, one
-                   entry per registry whose rows you are flipping.
+                   entry per registry whose rows you are flipping. Written for
+                   an ALL-APPROVE verdict, because it is fixed HERE, at
+                   composition, and the approve/return split does not exist
+                   until you rule.
+       {approves_rows} which rows each of those `;`-joined tokens covers. This
+                   is what makes a MIXED verdict actionable: a token whose rows
+                   you returned in full must be DROPPED, because copying a
+                   registry this act flipped nothing in re-anchors unreviewed
+                   text, and acceptance_record.adjudication_approval_refusal
+                   stops that merge as WIDENED. Derived from the same walk that
+                   builds {registries}, so the two cannot disagree.
        {verdict}   the repo path this session writes its verdict to.
        {wi}        this adjudication row's own id, for the result trailer.
 
@@ -75,7 +85,13 @@ Method — read the CHAIN, not the row:
 If the answer is APPROVE, perform the act — it is yours, and nothing downstream does it for you:
 
 1. Move each approved row's `Status` from `Drafted` to `Approved` — only rows marked `[AWAITING FIRST APPROVAL]`, never a `HELD FOR THE OWNER` one — and NOTHING else in the registry. Every other cell of every row stays byte-exact.
-2. Take the anchoring snapshot in the SAME commit: `python scripts/intake.py snapshot --approves {registries}`. Without the copy, the record of what you blessed does not move, and the row reads as approved-but-unanchored.
+2. Take the anchoring snapshot in the SAME commit: `python scripts/intake.py snapshot --approves "{registries}"`. Without the copy, the record of what you blessed does not move, and the row reads as approved-but-unanchored. KEEP THE QUOTES: the argument joins registries with `;`, which every shell reads as a command separator, so an unquoted batch spanning two registries snapshots only the first and runs the second as a command.
+
+   THAT ARGUMENT IS WRITTEN FOR AN ALL-APPROVE VERDICT. Its `;`-joined tokens cover exactly these rows:
+
+{approves_rows}
+
+   If you RETURNED every row a token covers, DROP that token. Naming a registry you flipped nothing in re-anchors its live text — text this act did not bless — and the merge refuses the whole commit as a snapshot WIDENED without an approved row. Keep a token when at least ONE of its rows is approved: the copy takes the registry whole, and the rows you returned stay `Drafted` inside it, which is what they are.
 3. Commit those two together as one reviewed commit. That commit IS the approval.
 
 If the answer is RETURN, change NO registry cell. Draft the follow-up work in a `## Dispositions` section of this row's own spec — one fenced ```toml block per draft — and intake mints it at this row's merge. Do not file the row yourself; a lane that mints an id is refused at the merge slot.

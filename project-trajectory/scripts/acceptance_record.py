@@ -597,10 +597,22 @@ def adjudication_approval_refusal(scope, delta):
     lines += [
         "  {} was approved WITHOUT its anchoring snapshot".format(r) for r in missing
     ]
+    # THE REMEDY, PER ARM. The three lines above say what the delta did; a
+    # session reading only those learns it is stopped and not what to do — and
+    # the WIDENED arm in particular is reached by following the brief exactly
+    # (its `--approves` is fixed before the verdict, so a batch that returns a
+    # registry's rows in full still names it). Each arm's repair is stated
+    # where the stop is read.
     return (
         "first-approval adjudication exceeds the approval act recorded on its "
         "`Adjudicates` row: the merge admits only scoped flips and exactly their "
-        "registry snapshots; nothing was merged:\n{}".format("\n".join(lines))
+        "registry snapshots; nothing was merged:\n{}\nRemedy — WIDENED: "
+        "`--approves` named a registry this act flipped nothing in (its rows "
+        "were all RETURNED); drop that token and re-take the snapshot, so the "
+        "copy blesses only text this act approved. WITHOUT ITS ANCHOR: the flip "
+        "landed with no copy behind it; add that registry to `--approves`. "
+        "OUTSIDE SCOPE: the row is another adjudication's; restore its `Status` "
+        "byte-exact.".format("\n".join(lines))
     )
 
 
