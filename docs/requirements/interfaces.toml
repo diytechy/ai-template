@@ -1207,9 +1207,9 @@ component = "CMP-008"
 
 [interface.IF-091]
 owner = "scripts/acceptance_record"
-requestors = ["scripts/intake"]
+requestors = ["scripts/intake", "scripts/integrate"]
 channel = "call"
-data = "staged_spine_amendments records, plus SPINE_CSVS"
+data = "staged_spine_amendments and staged_drafted_rows records (intake) · staged_approval_acts records and the lane_approval_refusal text (integrate) · SPINE_CSVS"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"

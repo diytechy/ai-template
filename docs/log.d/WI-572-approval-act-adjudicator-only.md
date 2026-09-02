@@ -101,6 +101,30 @@ the amendment walk, plus the narrowing on the `Founded` row's OI-45 citation.
 **5. Tests**, all in the modules' existing style: five at the merge slot, four
 at the reader, three at the trigger, five at the brief.
 
+**6. The two registry rows this lane's own code moved.** New code under an
+existing row's Module leaves that row's cells stale, and the rule from the
+WI-553 reading is that a lane re-points its own staleness IN-LANE rather than
+deferring it:
+
+- `LLR-158` (`Approved`) — its `code_symbol` named four symbols; the module now
+  carries the shared two-tree walk and three more readers off it, and the row's
+  `Detail` gained the sentence that explains them. Amended, **not flipped**:
+  there is no status for a post-approval amendment, the row stays `Approved`,
+  and the DRIFT against `docs/archive/last_approved/` is the signal.
+- `IF-091` (`Drafted`) — `integrate` is now a second requestor of the seam, so
+  it is named as one. Without it the new import is a cross-component crossing
+  that no interface row declares.
+
+Both warns were **introduced by this branch** and both are gone;
+`check_trajectory` exits 0 with only the pre-existing `schedule -> trace`
+crossing standing. The amendment was checked against this row's OWN mechanism
+rather than assumed safe: `staged_approval_acts` returns `[]` and
+`lane_approval_refusal` returns `None` over `4d0b972d..<staged tree>` — amending
+is not approving — while `staged_spine_amendments` reports `LLR-158`, so the
+amendment adjudication trigger (a) raises a row for it at merge. This lane's own
+edit is the first customer of the arm the same lane shipped, which is the
+intended shape and not a special case.
+
 ### Deviations from the plan
 
 - **The refusal points at PROCESS.md §4, not at the plan.** The plan's
