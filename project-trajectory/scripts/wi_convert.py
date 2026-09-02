@@ -473,7 +473,7 @@ def parse_spec(text, relpath, where=None):
     row["Deliverable"] = parse_deliverable(body, where)
     for column, key in SCALAR_FIELDS:
         if key in data:
-            row[column] = _text(data[key], key, where)
+            row[column] = _scalar(data[key], key, where)
     for column, key in LIST_FIELDS:
         if key in data:
             row[column] = SEP.join(_text(v, key, where) for v in data[key])
@@ -485,6 +485,23 @@ def parse_spec(text, relpath, where=None):
             )
     order = data.get("order")
     return row, order if isinstance(order, int) else None
+
+
+def _scalar(value, key, where):
+    """One scalar frontmatter key as its cell, refusing a non-string — EXCEPT a
+    `LIST_TOLERANT_SCALARS` key written as a TOML list, which joins on `;` the
+    way a list column does.
+
+    `supersedes` is that one key (the 2026-09-02 restructure plan §1.5): a
+    consolidation absorbs several rows into one successor, so its lineage names
+    several ids. The elements are still `_text`-checked one by one, so a list of
+    non-strings is refused with the same message a bare non-string gets — the
+    tolerance is for the SHAPE, never for the type inside it. The write side is
+    unchanged: the cell is `;`-joined text and re-emits as a bare string, so a
+    one-id row's spec file stays byte-identical."""
+    if key in _kitregistry.LIST_TOLERANT_SCALARS and isinstance(value, (list, tuple)):
+        return SEP.join(_text(v, key, where) for v in value)
+    return _text(value, key, where)
 
 
 def _text(value, key, where):

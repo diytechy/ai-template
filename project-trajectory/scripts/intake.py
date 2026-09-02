@@ -1259,6 +1259,39 @@ def parse_dispositions(text, where):
     return drafts, None
 
 
+def _supersedes_refusal(value, at, known_ids=None):
+    """Refuse a `supersedes` that names something the mint cannot re-point.
+
+    Two failures, both silent before the value could be a LIST. A token that is
+    not a `WI-###` id never matches any dependent's `needs`, so the re-point is
+    a no-op and the lineage cell is a typo nobody reads. An id that is not a
+    LIVE row is worse in the consolidation case: the verdict named a row that
+    does not exist, so one of the rows it meant to absorb is still queued and
+    will be dispatched beside its own successor.
+
+    `known_ids` is the registry the mint already holds; pass None where there is
+    none to read (the hand-authored `## Dispositions` block is validated before
+    any registry is loaded) and the liveness half is skipped, the shape half is
+    not."""
+    ids = supersedes_ids(value)
+    bad = [tok for tok in ids if not ac.WI_TOKEN_RE.match(tok)]
+    if bad:
+        return (
+            "{} declares supersedes {} - every entry must be a WI-### id (one "
+            "id as a string, or several as a list); nothing minted".format(at, bad)
+        )
+    if known_ids is not None:
+        missing = [tok for tok in ids if tok not in known_ids]
+        if missing:
+            return (
+                "{} declares supersedes {} naming no live registry row - a "
+                "successor cannot continue a row that does not exist, and the "
+                "inbound-edge re-point would silently do nothing; nothing "
+                "minted".format(at, missing)
+            )
+    return None
+
+
 def _draft_refusal(data, where, index):
     """One drafted follow-up's validation — loud on anything a mint with
     nobody watching would otherwise mis-file."""
@@ -1292,7 +1325,9 @@ def _draft_refusal(data, where, index):
         return "{} declares bar = {!r} ({}) - nothing minted".format(
             at, data.get("bar"), "|".join(WI_BARS)
         )
-    return None
+    # Shape only here: this block is read before any registry is, so liveness is
+    # the mint's rung (`_mint_shape_refusal`), which holds the rows.
+    return _supersedes_refusal(data.get("supersedes"), at)
 
 
 def _disposition_drafts(root, outcomes):
@@ -1492,9 +1527,38 @@ _OPEN_STATUSES = frozenset({"draft", "queued", "active", "deferred"})
 _SPEC_NEEDS_RE = re.compile(r"(?m)^needs\s*=\s*\[.*?\]\s*$")
 
 
+def supersedes_ids(value):
+    """A draft's `supersedes` as an ORDERED, de-duplicated list of ids.
+
+    ONE id or SEVERAL, in one reader (the 2026-09-02 restructure plan §1.5).
+    Every disposition names exactly one predecessor and writes it as a bare
+    string; a CONSOLIDATION absorbs several rows into one successor and writes a
+    TOML list. Both spellings arrive here and leave as a list, so nothing
+    downstream — the cell, the edge re-point, the refusals — has two shapes to
+    handle. An absent or empty value is an empty list, which is what "this row
+    continues nothing" means."""
+    if value is None:
+        return []
+    items = value if isinstance(value, (list, tuple)) else [value]
+    out = []
+    for item in items:
+        token = str(item).strip()
+        if token and token not in out:
+            out.append(token)
+    return out
+
+
 def _replace_inbound_edges(root, superseded, successor):
     """Re-point every OPEN row's HARD `needs` edge on `superseded` to
     `successor` (OI-73 arm 4). Returns the relpaths changed.
+
+    `superseded` is one id or a list of them, read through `supersedes_ids`. A
+    consolidation absorbs SEVERAL rows into one successor, and the several are
+    re-pointed in ONE pass over each dependent rather than one pass per absorbed
+    id: a dependent that hard-needed two of the absorbed rows would otherwise be
+    rewritten twice, and the second write would be reading its own first one.
+    Duplicates cannot survive either way — the successor enters `needs` at most
+    once, however many of its predecessors a dependent named.
 
     THE STRAND THIS MAKES UNREPRESENTABLE. A partial/cancelled close leaves the
     closed row terminal, and any live WI that hard-depended on it can never
@@ -1507,6 +1571,9 @@ def _replace_inbound_edges(root, superseded, successor):
     own `needs` is history and is never touched. The edit is surgical (only the
     `needs` line) so a dependent's `## Context` and Deliverable are preserved.
     """
+    dead = set(supersedes_ids(superseded))
+    if not dead:
+        return []
     changed = []
     work = Path(root) / WORK
     for path in ac.spec_files(work):
@@ -1521,11 +1588,11 @@ def _replace_inbound_edges(root, superseded, successor):
         except (OSError, ValueError, UnicodeDecodeError):
             continue
         needs = [str(v) for v in (data.get("needs") or [])]
-        if superseded not in needs:
+        if not dead.intersection(needs):
             continue
         new_needs = []
         for tok in needs:
-            repl = successor if tok == superseded else tok
+            repl = successor if tok in dead else tok
             if repl not in new_needs:
                 new_needs.append(repl)
         new_line = "needs = " + wi_convert.toml_value(new_needs)
@@ -1554,7 +1621,9 @@ def _draft_row(wi_id, draft):
     row["Bar"] = normalize_bar(draft.get("bar"))
     row["SR-Refs"] = ";".join(draft.get("sr_refs") or [])
     row["Predecessors"] = ";".join(draft.get("needs") or [])
-    row["Supersedes"] = str(draft.get("supersedes") or "")  # LLR-161 lineage
+    # LLR-161 lineage, `;`-joined: one id from a disposition, several from a
+    # consolidation, one cell shape either way.
+    row["Supersedes"] = ";".join(supersedes_ids(draft.get("supersedes")))
     # WI-572: the SCOPE of an adjudication's act, fixed at the mint. A brief
     # that re-derives its population live intersects against this, so the act
     # can never widen past the rows the merge handed over.
@@ -1564,7 +1633,7 @@ def _draft_row(wi_id, draft):
     return row
 
 
-def _mint_shape_refusal(draft, subject_verb):
+def _mint_shape_refusal(draft, subject_verb, known_ids=None):
     """Refuse a draft this mint would write as an UNSCHEDULABLE row.
 
     THE GAP THIS CLOSES. `_draft_refusal` validates follow-ups a human wrote
@@ -1580,7 +1649,14 @@ def _mint_shape_refusal(draft, subject_verb):
     So the mint checks the two properties a row must have to be WORK AT ALL:
     a kind the scheduler classifies, and no kind/planmode contradiction. This
     is deliberately narrower than `_draft_refusal` — it is the floor every
-    minted row must clear, not the full grammar a hand-authored block owes."""
+    minted row must clear, not the full grammar a hand-authored block owes.
+
+    The third property is the one `_draft_refusal` structurally CANNOT check:
+    `supersedes` naming a live row. This rung runs with the pre-mint registry in
+    hand, so `known_ids` (absent = not checked) is where lineage liveness is
+    decided — and it matters most for a consolidation, whose verdict absorbs
+    several rows at once and whose typo would leave one of them queued beside
+    its own successor."""
     kind = str(draft.get("kind") or "").strip().lower()
     if kind and kind not in schedule.SAFETY_CLASSES:
         return (
@@ -1596,7 +1672,11 @@ def _mint_shape_refusal(draft, subject_verb):
             "row would be minted and then permanently parked off the "
             "frontier; nothing minted".format(subject_verb, draft.get("title"), kind)
         )
-    return None
+    return _supersedes_refusal(
+        draft.get("supersedes"),
+        "{}: draft {!r}".format(subject_verb, draft.get("title")),
+        known_ids,
+    )
 
 
 def _write_context(path, root, draft, row, registry):
@@ -1617,12 +1697,17 @@ def _apply_supersede(root, draft, wi_id):
     """OI-73 arm 4: a successor carrying `supersedes` REPLACES the superseded
     row's inbound hard edges, in the SAME commit as the mint, so the WI-541-class
     strand (a live dependent left waiting on a terminal row) is unrepresentable
-    rather than merely reported by the validator net."""
-    superseded = str(draft.get("supersedes") or "").strip()
+    rather than merely reported by the validator net.
+
+    `supersedes` may name SEVERAL rows (the 2026-09-02 restructure plan §1.5):
+    one consolidation absorbs several queued rows into one successor, and every
+    dependent of every absorbed row is re-pointed at that successor."""
+    superseded = supersedes_ids(draft.get("supersedes"))
     if not superseded:
         return
+    named = ";".join(superseded)
     for rel_changed in _replace_inbound_edges(root, superseded, wi_id):
-        _say("re-pointed {}'s edge {} -> {}".format(rel_changed, superseded, wi_id))
+        _say("re-pointed {}'s edge(s) {} -> {}".format(rel_changed, named, wi_id))
 
 
 def _inject_open_item(root, draft, wi_id):
@@ -1654,8 +1739,9 @@ def _mint(root, drafts, subject_verb):
     drafts = [d for d in drafts if str(d["title"]).strip() not in titles]
     if not drafts:
         return [], None
+    known_ids = {r["WI-ID"] for r in registry if r.get("WI-ID")}
     for draft in drafts:
-        refusal = _mint_shape_refusal(draft, subject_verb)
+        refusal = _mint_shape_refusal(draft, subject_verb, known_ids)
         if refusal:
             return [], refusal
     minted = []

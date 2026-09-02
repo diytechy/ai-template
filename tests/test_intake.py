@@ -795,6 +795,175 @@ def test_the_mint_replaces_inbound_edges_of_the_superseded_row(tmp_path):
     assert rows[successor]["Supersedes"] == "WI-005"
 
 
+_CONSOLIDATING = """
+## Deliverable
+
+Adjudicated: WI-005, WI-006 and WI-007 overlap; one successor carries all three.
+
+## Dispositions
+
+```toml
+title = "One row for the three overlapping scopes"
+workstream = "scripts"
+buildtier = "medium"
+supersedes = ["WI-005", "WI-006", "WI-007"]
+```
+"""
+
+
+def test_a_consolidation_re_points_every_dependent_of_every_absorbed_row(tmp_path):
+    """The list-valued `supersedes` (2026-09-02 restructure plan §1.5): three
+    absorbed rows, two dependents each, ONE successor. Every hard edge lands on
+    the successor exactly once, and a dependent that named TWO of the absorbed
+    rows carries the successor a single time — the de-duplication is the point,
+    because a `needs` list with a repeated token is a malformed row the mint
+    would have written itself."""
+    root = git_repo(tmp_path)
+    write_sr(root)
+    for absorbed in ("WI-005", "WI-006", "WI-007"):
+        write_spec(
+            root, "queued", absorbed, slug="absorbed", specref="seed.txt", needs=[]
+        )
+    dependents = {
+        "WI-010": ["WI-005"],
+        "WI-011": ["WI-005"],
+        "WI-012": ["WI-006"],
+        "WI-013": ["WI-006"],
+        "WI-014": ["WI-007"],
+        # The sixth names TWO of the absorbed rows at once.
+        "WI-015": ["WI-007", "WI-005"],
+    }
+    for dep, needs in dependents.items():
+        write_spec(
+            root, "queued", dep, slug="dependent", specref="seed.txt", needs=needs
+        )
+    # Left ALONE: a soft edge, and a dependent of a row nobody absorbed.
+    write_spec(
+        root, "queued", "WI-016", slug="soft", specref="seed.txt", needs=["~WI-005"]
+    )
+    write_spec(
+        root, "queued", "WI-017", slug="elsewhere", specref="seed.txt", needs=["WI-016"]
+    )
+    write_spec(
+        root,
+        "complete",
+        "WI-020",
+        slug="consolidate",
+        safety_class="adjudication",
+        body=_CONSOLIDATING,
+    )
+    _commit(root, "setup", when=T_CODE)
+    before = after = _rev(root)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-020": "merged"}, "wi-020"
+    )
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    successor = minted[0][0]
+    rows = queued_rows(root)
+    for dep in ("WI-010", "WI-011", "WI-012", "WI-013", "WI-014"):
+        assert rows[dep]["Predecessors"] == successor, dep
+    # Two absorbed predecessors, ONE successor token — not two.
+    assert rows["WI-015"]["Predecessors"] == successor
+    assert rows["WI-016"]["Predecessors"] == "~WI-005"
+    assert rows["WI-017"]["Predecessors"] == "WI-016"
+    # The lineage cell is the `;`-joined list, in the verdict's own order.
+    assert rows[successor]["Supersedes"] == "WI-005;WI-006;WI-007"
+
+
+def test_a_one_id_supersedes_string_is_unchanged_by_the_list_form():
+    """The string spelling every disposition writes keeps its exact behaviour —
+    one id in, one id in the cell, no list bracket anywhere. The two shapes meet
+    in `supersedes_ids` and are indistinguishable after it."""
+    one = intake._draft_row(
+        "WI-999", {"title": "s", "supersedes": "WI-521", "kind": "ordinary"}
+    )
+    listed = intake._draft_row(
+        "WI-999", {"title": "s", "supersedes": ["WI-521"], "kind": "ordinary"}
+    )
+    assert one["Supersedes"] == listed["Supersedes"] == "WI-521"
+    assert intake.supersedes_ids("WI-521") == ["WI-521"]
+    assert intake.supersedes_ids(["WI-1", "WI-2", "WI-1"]) == ["WI-1", "WI-2"]
+    assert intake.supersedes_ids(None) == intake.supersedes_ids("") == []
+    assert (
+        intake._draft_row("WI-998", {"title": "fresh", "kind": "ordinary"})[
+            "Supersedes"
+        ]
+        == ""
+    )
+
+
+def test_a_supersedes_naming_a_non_wi_token_or_a_dead_row_refuses(tmp_path):
+    """Both halves of the lineage refusal. A token that is not a `WI-###` id
+    matches no dependent's `needs`, so the re-point is a silent no-op; an id
+    that is no live row means the verdict named a row that does not exist, and
+    for a CONSOLIDATION that leaves one of the rows it meant to absorb queued
+    beside its own successor. Shape is refused where the block is parsed;
+    liveness at the mint, which is the rung that holds the registry."""
+    at = "docs/work/complete/WI-020-x.md: ## Dispositions block 1"
+    shape = intake._draft_refusal(
+        {"title": "s", "supersedes": ["WI-005", "the other one"]}, at.split(":")[0], 1
+    )
+    assert shape is not None and "WI-### id" in shape and "the other one" in shape
+    # The same list, all WI-shaped, passes the shape rung...
+    assert (
+        intake._draft_refusal(
+            {"title": "s", "supersedes": ["WI-005", "WI-6"]}, at.split(":")[0], 1
+        )
+        is None
+    )
+    # ...and is refused at the mint when one of them is no live row.
+    live = intake._mint_shape_refusal(
+        {"title": "s", "supersedes": ["WI-005", "WI-006"]},
+        "intake at merge of wi-020",
+        {"WI-005"},
+    )
+    assert live is not None and "WI-006" in live and "no live registry row" in live
+    assert (
+        intake._mint_shape_refusal(
+            {"title": "s", "supersedes": ["WI-005", "WI-006"]},
+            "intake at merge of wi-020",
+            {"WI-005", "WI-006"},
+        )
+        is None
+    )
+    # With no registry to read, liveness is not asserted — shape still is.
+    assert (
+        intake._mint_shape_refusal({"title": "s", "supersedes": ["WI-005"]}, "x")
+        is None
+    )
+    assert intake._mint_shape_refusal({"title": "s", "supersedes": ["nope"]}, "x")
+
+
+def test_a_frontmatter_supersedes_list_reads_back_as_the_joined_cell(tmp_path):
+    """The read side of the two spellings (restructure plan §1.5): a spec whose
+    frontmatter writes `supersedes` as a TOML LIST reads as the `;`-joined cell,
+    through the shipped loader AND through the converter — one cell shape, so no
+    reader downstream learns a second one. A bare string still reads verbatim."""
+    write_spec(
+        root := git_repo(tmp_path),
+        "queued",
+        "WI-030",
+        slug="listed",
+        supersedes=["WI-005", "WI-006"],
+    )
+    write_spec(root, "queued", "WI-031", slug="stringy", supersedes="WI-007")
+    acommon = load_script("agent_common")
+    rows = {r["WI-ID"]: r for r in acommon.read_spec_rows(root / "docs" / "work")}
+    assert rows["WI-030"]["Supersedes"] == "WI-005;WI-006"
+    assert rows["WI-031"]["Supersedes"] == "WI-007"
+    listed = (root / "docs/work/queued/WI-030-listed.md").read_text(encoding="utf-8")
+    parsed, _order = wi_convert.parse_spec(listed, "queued/WI-030-listed.md")
+    assert parsed["Supersedes"] == "WI-005;WI-006"
+    # And a list of NON-strings is still refused, the same as a bare non-string:
+    # the tolerance is for the shape, never for what is inside it.
+    with pytest.raises(wi_convert.ConvertError):
+        wi_convert.parse_spec(
+            listed.replace('supersedes = ["WI-005", "WI-006"]', "supersedes = [1, 2]"),
+            "queued/WI-030-listed.md",
+        )
+
+
 def _adjudicated_early_close(root, outcome, brief):
     """A merged adjudication row judging an `outcome` (partial/cancelled) close
     that queued NO successor. It models the SELF-close reality: specref is
@@ -918,6 +1087,12 @@ def test_the_oi_mint_refuses_on_a_non_toml_registry(tmp_path):
     # loudly (all-or-nothing) instead of writing nowhere.
     root = git_repo(tmp_path)
     write_sr(root)  # no open-items registry at all
+    # The row the draft supersedes has to EXIST — the mint's lineage rung refuses
+    # a `supersedes` naming no live row, and would otherwise pre-empt the
+    # open-items refusal this test is about.
+    write_spec(
+        root, "partial", "WI-005", slug="returned", body="\n## Deliverable\n\nstopped\n"
+    )
     write_spec(
         root,
         "complete",

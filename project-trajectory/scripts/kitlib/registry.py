@@ -33,6 +33,8 @@ __all__ = [
     "WI_COLUMNS",
     "SPEC_SCALARS",
     "SPEC_LISTS",
+    "LIST_TOLERANT_SCALARS",
+    "scalar_cell",
     "SPEC_STATUS_DIRS",
     "SPEC_FENCE",
     "SPEC_DELIVERABLE",
@@ -116,6 +118,18 @@ SPEC_LISTS = (
     ("Predecessors", "needs"),
     ("Adjudicates", "adjudicates"),
 )
+# The scalars whose frontmatter key may ALSO be written as a TOML list, read
+# either way into the same `;`-joined cell. `supersedes` is the one (the
+# 2026-09-02 restructure plan §1.5): a consolidation absorbs SEVERAL rows into
+# one successor, so the successor's lineage names several predecessors, while
+# every other successor names exactly one. Widening the CELL to a list would
+# have re-typed a column and every reader of it for a shape most rows never
+# carry; widening the FRONTMATTER is the whole change, and a bare string keeps
+# reading byte-for-byte as it always did. Deliberately NOT a `SPEC_LISTS` entry:
+# those columns are lists in every row, and a `SPEC_LISTS` `supersedes` would
+# make `wi_convert` re-emit a one-id cell as a one-element list, changing every
+# existing spec file's bytes for nothing.
+LIST_TOLERANT_SCALARS = frozenset({"supersedes"})
 # Directory -> Status. The directory is the WHOLE statement (WI-384): every
 # state owns a folder — including BOTH terminals, `complete/` for work that
 # shipped and `cancelled/` for work that never will — so nothing in the
@@ -305,6 +319,19 @@ def parse_spec_deliverable(relpath, body):
     return body[len(SPEC_DELIVERABLE) : -1]
 
 
+def scalar_cell(key, value):
+    """One frontmatter SCALAR as its registry cell.
+
+    A `LIST_TOLERANT_SCALARS` key written as a TOML list reads as the `;`-joined
+    cell — the same join `SPEC_LISTS` columns take — so the two spellings of
+    `supersedes` (one id as a bare string, several as a list) produce one cell
+    shape and every reader downstream sees `;`-joined ids or nothing. Any other
+    value is `str()`, exactly as it always was."""
+    if key in LIST_TOLERANT_SCALARS and isinstance(value, (list, tuple)):
+        return ";".join(str(v) for v in value)
+    return str(value)
+
+
 def parse_spec_row(text, relpath):
     """`(row, order)` for one spec file — a 19-key row shaped exactly like the
     CSV's. Raises ValueError NAMING the file on any malformation: invalid TOML, a
@@ -318,7 +345,7 @@ def parse_spec_row(text, relpath):
     row["Deliverable"] = parse_spec_deliverable(relpath, body)
     for column, key in SPEC_SCALARS:
         if key in data:
-            row[column] = str(data[key])
+            row[column] = scalar_cell(key, data[key])
     for column, key in SPEC_LISTS:
         if key in data:
             row[column] = ";".join(str(v) for v in data[key])
