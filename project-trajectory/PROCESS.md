@@ -418,8 +418,8 @@ into the `[attestation]` dials and are never stored. Full
 mechanics + the deviation-register pattern:
 [process-options.md "Gate authority levels"](process-options.md#gate-authority-levels).
 **Fixed points at every level:** the owner's final read is the human's; **the
-approval act — the `Status` flip and the `docs/archive/last_approved/` copy that
-anchors it — is an adjudicator's, taken on the serial trunk side, never by the
+approval act — a spine row's `Status` flip and the `docs/archive/last_approved/`
+copy that anchors it — is an adjudicator's, taken on the serial trunk side, never by the
 worker lane that authored the rows** (a lane authors `Drafted` rows and amends
 text; its merge is REFUSED if it approves, and the adjudication minted at that
 merge reads the whole chain and approves — [process-options.md "Who performs the

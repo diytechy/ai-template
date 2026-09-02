@@ -103,14 +103,18 @@ session, on the serial trunk side** — never the worker lane that authored the
 rows: approving means reading the row's whole chain, which one work item does
 not hold, and a lane that re-anchors the record seals whatever text was live in
 its own tree. A lane authors `Drafted` rows and amends cell text; its merge is
-REFUSED if its delta flips a `Status` or writes `docs/archive/last_approved/`,
-and the first-approval adjudication minted at that merge approves what it
-authored. Everything below is therefore the ACCEPTOR's procedure, not an
-author's:
+REFUSED if its delta flips an **SR/LLR/TC** `Status` or writes
+`docs/archive/last_approved/`, and the first-approval adjudication minted at
+that merge approves what it authored. Everything below is therefore the
+ACCEPTOR's procedure, not an author's:
 
 - **Into `DevStg-Reqs`** — a draft requirement is approved: `Status` **`Drafted`
   → `Approved`** on the SR (and an SN leaves its draft state). The approval
-  date is git-derived (the commit that moved it).
+  date is git-derived (the commit that moved it). Both halves are the
+  acceptor's, but only the SR half is MECHANICALLY held: the merge refusal
+  above reads the three spine registries, so the SN flip is enforced by this
+  procedure alone (`acceptance_record.OUTSIDE_THE_APPROVAL_ACT` declares that
+  bound, and PROCESS_OPTIONS.md "Who performs the approval act" states it).
 - **`DevStg-Tests` → `DevStg-Impl`** — the SR is `Approved` and its tests
   pass; the derived rung follows. Note what `Approved` does and does not say: it
   blesses the row's **TEXT** and makes no claim that any test passed — whether

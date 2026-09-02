@@ -890,6 +890,49 @@ not done silently.
 
 <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_adjudicate_brief.py tests/test_acceptance_record.py tests/test_integrate_admission.py tests/test_intake.py tests/test_prompts.py tests/test_module_size_ratchet.py" rev=HEAD-dirty -->
 
+**The doctrine claimed a reach the rung does not have (MAJOR 1).**
+`staged_approval_acts` walks `SPINE_CSVS` — SR/LLR/TC — while
+`baseline_snapshot.SNAPSHOTTED` names SEVEN registries whose `Status` a snapshot
+anchors. Round 5 narrowed the refusal TEXT and the reader's docstring to the
+three; it did not narrow the doctrine, so `PROCESS_OPTIONS.md`'s
+division-of-labour table still read "Flips `Status` | **Never.**" and
+`gate-advance` named the SN flip as part of the DevStg-Reqs approval without
+saying which half is mechanically held.
+
+**The narrow reach is the RULING, so the doctrine moved, not the rung.** The
+plan of record scopes the act to SPINE ROWS in both places it states it —
+§2a's table ("new SR/LLR/TC rows are written **Drafted**") and done-when 1 ("its
+**spine** delta") — and SN's exclusion is older and separately ruled (design
+§B7: needs are not status-gated at all, and wiring them is a parked pass;
+recorded at `baseline_snapshot._claims_approval`). Widening the reader would
+have been this lane legislating past its own plan, on four tiers with three
+different claim vocabularies. So `PROCESS.md` §4 now says "a spine row's
+`Status` flip" (+10 bytes), the `PROCESS_OPTIONS.md` row says "Never on a spine
+row", and `gate-advance` says the merge refusal reads the three spine
+registries and the SN half rests on the procedure alone.
+
+**And the reviewer's antidote is taken, in the form the ruling allows.** The
+defect was constructible because two hand-written literals in two modules,
+hundreds of lines apart, were joined by nothing — a tier could enter
+`SNAPSHOTTED` and reach NO approval reader, silently. The exclusions are now a
+named constant beside the set they exclude from
+(`acceptance_record.OUTSIDE_THE_APPROVAL_ACT`), and the two sets are pinned as
+one CLOSED statement: `SNAPSHOTTED == SPINE_CSVS + OUTSIDE_THE_APPROVAL_ACT`,
+exhaustive and disjoint. A new tier now fails a test that names it and has to be
+placed on one side by a deliberate edit. Mutation-proven both ways: adding a
+tier to `SNAPSHOTTED` fails it, and dropping one declared exclusion fails it.
+
+**The UNCOVERED half the review named is now covered.** No test asserted either
+that the four tiers are refused or that they are deliberately out of scope, so
+the omission read as an oversight from outside the module. A second test drives
+a real git tree in which a lane flips `IF-001` `Drafted -> Approved` and asserts
+`staged_approval_acts` returns `[]` and `lane_approval_refusal` returns `None` —
+the READER's behaviour, not a re-reading of the constant the pin already holds.
+
+Byte-watched: `PROCESS.md` 88,355 -> 88,365, `PROCESS_OPTIONS.md`
+185,555 -> 186,240 (+685, the bound and why it is the ruling's). The
+`gate-advance` skill's three copies are re-synced (`--check-agents` OK).
+
 ### Round-6 rework resume at the current tip
 
 The unattended worker was relaunched with round 6's merge-boundary finding

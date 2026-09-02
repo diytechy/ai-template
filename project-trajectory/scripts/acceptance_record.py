@@ -125,6 +125,31 @@ SPINE_CSVS = (
     ("docs/test/test-cases.toml", "TC-ID"),
 )
 
+# THE OTHER SIDE OF THAT BOUNDARY, DECLARED RATHER THAN LEFT AS AN ABSENCE.
+# `baseline_snapshot.SNAPSHOTTED` names seven registries whose `Status` a
+# snapshot anchors; `SPINE_CSVS` above names the three every reader in this
+# module walks. The remaining four are OUT OF SCOPE OF THE APPROVAL-ACT RUNG,
+# and that is the owner's ruling rather than an oversight: 2026-09-01 scopes the
+# act to SPINE ROWS ("new SR/LLR/TC rows are written Drafted"), so a lane moving
+# an interface, component or frame row's `status` is not performing the act
+# `lane_approval_refusal` refuses. SN is absent for its own older reason, ruled
+# separately and recorded at `baseline_snapshot._claims_approval`: needs are not
+# status-gated at all, and wiring them is a parked pass of its own (design §B7).
+#
+# WHY A CONSTANT AND NOT A COMMENT. The hazard the review named is a tier that
+# joins `SNAPSHOTTED` and reaches NO approval reader — silently, because these
+# two lists sit hundreds of lines apart in different modules. Naming the
+# exclusions makes the two sets a closed statement:
+# `SNAPSHOTTED == SPINE_CSVS + OUTSIDE_THE_APPROVAL_ACT`, pinned by
+# `tests/test_acceptance_record.py`. A new tier therefore cannot be added
+# without landing on one side or the other by a deliberate edit.
+OUTSIDE_THE_APPROVAL_ACT = (
+    "docs/requirements/stakeholder-needs.toml",
+    "docs/requirements/interfaces.toml",
+    "docs/requirements/external.toml",
+    "docs/requirements/components.toml",
+)
+
 # --- the spine carrier -------------------------------------------------------
 # The vocabulary and both readers live in `spine_carrier.py`, imported as a
 # sibling — see that module's docstring for why it is ONE home and how that

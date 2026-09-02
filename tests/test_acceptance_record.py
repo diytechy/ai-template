@@ -24,6 +24,7 @@ import ast
 from conftest import SCRIPTS, load_script
 
 acceptance_record = load_script("acceptance_record")
+baseline_snapshot = load_script("baseline_snapshot")
 check_trajectory = load_script("check_trajectory")
 
 SOURCE = (SCRIPTS / "acceptance_record.py").read_text(encoding="utf-8")
@@ -206,3 +207,82 @@ def test_the_cell_split_tables_still_cover_both_halves():
         approved = acceptance_record.SPINE_APPROVED_CELLS[rel]
         assert not traced & approved, (rel, sorted(traced & approved))
         assert acceptance_record.spine_cell_class(rel, "NoSuchColumn") == "approved"
+
+
+def test_no_snapshotted_tier_can_go_unseen_by_the_approval_rung():
+    """The approval-act reader's registry set and the snapshot's are ONE closed
+    statement (WI-572 REVIEW-A round 7, MAJOR 1).
+
+    `lane_approval_refusal` walks `SPINE_CSVS` — SR/LLR/TC — while
+    `baseline_snapshot.SNAPSHOTTED` names SEVEN registries whose `Status` a
+    snapshot anchors. Both are hand-written literals, in different modules,
+    hundreds of lines apart, and NOTHING joined them: a tier could be added to
+    the snapshot and reach no approval reader at all, silently. The narrowness
+    itself is correct and RULED — the owner's 2026-09-01 ruling scopes the act
+    to spine rows ("new SR/LLR/TC rows are written `Drafted`"), and SN's older
+    exclusion is design §B7's parked pass — so this does not widen the rung. It
+    makes the boundary a statement someone must edit ON PURPOSE.
+
+    A new tier therefore fails HERE, naming itself, and its author has to put it
+    on one side or the other."""
+    snapshotted = set(baseline_snapshot.SNAPSHOTTED)
+    refused = {rel for rel, _ in acceptance_record.SPINE_CSVS}
+    declared_out = set(acceptance_record.OUTSIDE_THE_APPROVAL_ACT)
+
+    # Neither side may name a registry the snapshot does not anchor...
+    assert refused <= snapshotted, sorted(refused - snapshotted)
+    assert declared_out <= snapshotted, sorted(declared_out - snapshotted)
+    # ...the two sides are disjoint (a tier cannot be both refused and exempt)...
+    assert not refused & declared_out, sorted(refused & declared_out)
+    # ...and TOGETHER they are exhaustive, which is the property that makes
+    # "a snapshotted tier no approval reader sees" unconstructible rather than
+    # merely absent.
+    assert refused | declared_out == snapshotted, sorted(
+        snapshotted - (refused | declared_out)
+    )
+
+
+def test_an_off_spine_status_flip_is_not_the_act_this_rung_refuses(tmp_path):
+    """The DELIBERATE half of the boundary above, driven rather than declared.
+
+    The review found no test asserting either that the four non-`SPINE_CSVS`
+    tiers are refused or that they are out of scope, so the omission read as an
+    oversight from the outside. It is the ruling: a lane may move an interface
+    row's `status`, and that is not the approval act on a spine row. Driven
+    against a real git tree so this pins the READER's behaviour, not a re-reading
+    of the constant the test above already pins."""
+    import subprocess
+
+    def git(*args):
+        subprocess.run(
+            ["git", "-C", str(tmp_path)] + list(args),
+            check=True,
+            capture_output=True,
+            stdin=subprocess.DEVNULL,
+        )
+
+    git("init")
+    git("config", "user.email", "loop@example.com")
+    git("config", "user.name", "Loop Test")
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    interfaces = req / "interfaces.toml"
+    interfaces.write_text(
+        '[interface.IF-001]\nowner = "scripts/demo"\nstatus = "Drafted"\n',
+        encoding="utf-8",
+    )
+    git("add", "-A")
+    git("commit", "-q", "-m", "seed")
+
+    # The flip an off-spine tier CAN carry: Drafted -> Approved on its own cell.
+    interfaces.write_text(
+        '[interface.IF-001]\nowner = "scripts/demo"\nstatus = "Approved"\n',
+        encoding="utf-8",
+    )
+    git("add", "-A")
+    git("commit", "-q", "-m", "approve the seam")
+
+    assert acceptance_record.staged_approval_acts(tmp_path, "HEAD~1", "HEAD") == []
+    assert (
+        acceptance_record.lane_approval_refusal(tmp_path, "HEAD~1", "HEAD") is None
+    ), "an off-spine flip is outside the ruled scope of this rung"

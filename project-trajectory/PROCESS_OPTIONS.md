@@ -455,7 +455,7 @@ driving it:
 |---|---|---|
 | Authors spine rows | Yes — new rows are written `Drafted`, chain links, rationale and evidence cells filled. | No. |
 | Amends spine text | Yes — any cell, on any row, `Approved` ones included; the row's `Status` is left alone. | No; it RETURNS a row with findings, never rewrites it. |
-| Flips `Status` | **Never.** A flip in the lane's delta refuses the merge. | Yes, on the rungs the dial releases, in its own reviewed commit. |
+| Flips `Status` | **Never on a spine row.** A flip in the lane's delta refuses the merge. | Yes, on the rungs the dial releases, in its own reviewed commit. |
 | Writes `docs/archive/last_approved/` | **Never.** | Yes — in the same commit as the flip, scoped to the registries the act covers. |
 | Judges a post-approval amendment | No; it records what it changed and why. | Yes — meaning or clarity; on a released rung a *meaning* verdict is followed by its own re-attestation in the same session, on a held rung the row goes to the owner. |
 | Concurrency | Runs beside other lanes; may not hold the spine. | Runs alone, so two acts cannot overlap. |
@@ -466,6 +466,16 @@ driving it:
    into `Approved`/`Founded`, mints a row already claiming one, or writes the
    snapshot directory. It reads the same two-tree spine diff the amendment
    trigger already reads, so a row cannot be invisible to both.
+
+   **"Spine" here is SR/LLR/TC, and the bound is the ruling's, not the rung's
+   reach.** The act moved to the adjudicator is the one on spine rows; a lane
+   moving a `status` in the four other snapshotted registries — needs,
+   interfaces, the frame registry, components — is outside this rule and is not
+   refused. That is stated rather than left as an absence: the reader's
+   registry set and the snapshot's are pinned to each other as one closed
+   statement (`acceptance_record.OUTSIDE_THE_APPROVAL_ACT`), so a tier added to
+   the snapshot must be placed on one side or the other by a deliberate edit
+   and cannot quietly reach no approval reader at all.
 2. That same merge MINTS a first-approval adjudication over the `Drafted` rows
    the lane handed over, on the rungs the dial releases — with each row's whole
    chain in its brief, asking one question: approve, or return with findings. A
