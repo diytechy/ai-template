@@ -30,6 +30,25 @@ round-010-approved tree (`b8d57e9f`), so the successor CONFIRMS them and does no
 re-litigate the flip. `TC-199`/`TC-200` STAY `Drafted`; do not approve them here
 (their `verifies` drift is normal on an unapproved row).
 
+**WI-572 UPDATE (triage, 2026-09-02) — read this before the baseline
+bullets below, which it supersedes.** The owner ruled `OI-78` **STAND**
+(2026-09-01) and ruled that the approval act — every `Status` flip and every
+`docs/archive/last_approved/` write — is the adjudicator's alone, on trunk;
+WI-572 (merged 2026-09-02) now REFUSES at the merge slot any work lane whose
+delta writes the snapshot directory or flips a Status. So on THIS lane: do
+NOT run `intake.py snapshot` in any form, with or without `--approves`, and
+do not touch `docs/archive/last_approved/`. Nothing on the spine needs
+re-sealing anyway — `LLR-203`/`LLR-204` are byte-identical in the snapshot
+and `TC-199`/`TC-200` stay Drafted — and under STAND the off-spine baseline
+stays as it is. This row's remaining scope is therefore: (1) the one clean
+cross-family reviewer round on current trunk confirming the four rows stand
+in their reviewed state (the round file IS the deliverable; record its
+verdict in the Deliverable); (2) rule the two `5175065` BLOCKERs below, each
+by annotating the plan file on trunk or filing a successor row, and say
+which. Any future re-seal of an off-spine registry is an adjudication's act
+on trunk, not this lane's. The bullets that follow are kept as the record of
+what the row asked before these rulings.
+
 **The baseline.** Apply the owner's ruling on the `open_item` above, and only
 after it lands (the mint parks this row `waiting:open-item-pending`):
 - ruling **"stand"** -> regenerate `docs/archive/last_approved/` with `python
