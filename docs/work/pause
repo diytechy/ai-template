@@ -1,0 +1,5 @@
+# Tracked pause (concurrency-restructure §5.6): the dispatcher stops CLAIMING at
+# the next session boundary; the in-flight lane finishes and merges. Unpausing is
+# a reviewed deletion commit of this file.
+reason = "Owner direction 2026-09-02 02:xx UTC: pause at the next good point to fix the Anthropic routing rows - both strong and medium are Opus and should resolve to Opus 5 (the CLI's 'opus' alias resolves to claude-opus-4-8 on this box), with effort high on the strong row and medium on the medium row (today inverted: strong=medium, medium=high). The in-flight copy-scope lane finishes and merges under this pause; the routing edit lands on the drained trunk, then this file is deleted in a reviewed commit."
+since = "2026-09-02"
