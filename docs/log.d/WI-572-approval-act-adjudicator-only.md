@@ -774,3 +774,16 @@ project-trajectory/scripts/check.py --jobs 0`, reports **RESULT: PASS**; its
 trunk-owned `derived-stage` and approval-freshness steps skip by the declared
 branch rule, while every applicable step passes.
 <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check.py --jobs 0" rev=67c58e17-dirty -->
+
+### Round-6 rework resume at the current tip
+
+The unattended worker was relaunched with round 6's merge-boundary finding
+after the repair and its close verification had already landed. It reconciled
+the branch rather than adding a second guard: `67c58e17` removes the blanket
+all-`adjudication` return, derives one approval delta, and checks that delta
+against the claimed first-approval row's recorded `Adjudicates` scope;
+`892e9f0a` records the close harness. At the current tip, the six exact
+merge-admission regressions for a permitted scoped act, empty scope,
+actor-kind-only authority, an unanchored flip, an unrelated flip, and a widened
+snapshot all pass (**6 passed in 2.90 s**). No implementation change was owed.
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_integrate_admission.py::test_a_scoped_adjudication_lane_may_land_its_flip_and_snapshot tests/test_integrate_admission.py::test_a_first_approval_adjudication_with_no_scope_is_refused tests/test_integrate_admission.py::test_an_adjudication_kind_alone_does_not_authorise_a_flip tests/test_integrate_admission.py::test_an_adjudication_cannot_flip_a_row_outside_its_scope tests/test_integrate_admission.py::test_an_adjudication_snapshot_cannot_widen_beyond_its_flips tests/test_integrate_admission.py::test_a_scoped_flip_without_its_snapshot_is_refused" rev=656b641a -->
