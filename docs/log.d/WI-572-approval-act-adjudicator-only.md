@@ -353,3 +353,23 @@ the per-row rulings: any approved row, including the approved portion of a mixed
 `OUTCOME: RETURN` batch, requires the separate approval commit before stopping;
 only an all-RETURN result stops without a registry or snapshot change. The
 rendered-prompt regression pins all four parts of that sequence.
+
+Rework verification at the implementation commit:
+
+- The complete prompt-brief module is green: **42 passed in 5.02 s**.
+  <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_adjudicate_brief.py" rev=99aedcda -->
+- The full suite reads **3260 passed, 2 failed, 24 skipped in 580.39 s**. The
+  failures are exactly the inherited `docs/stage` fingerprint and
+  folder-registry `README.md` reds analysed above; the added regression is the
+  one-test increase over the preceding tip's reading.
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=99aedcda -->
+- The smoke tier reads **1455 passed, 1 failed, 8 skipped in 22.78 s**, with
+  only the same folder-registry red. Its budget enforcer exits 0: **35.3 s
+  against the 60 s ceiling**, explicitly classifying that pytest failure as
+  non-budget.
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=99aedcda -->
+  <!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=99aedcda -->
+- The docs check reports **0 broken links** (one pre-existing orphan warning),
+  and the generated prompt catalogue is fresh at eight prompts.
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=99aedcda -->
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/gen_prompt_catalog.py --check" rev=99aedcda -->
