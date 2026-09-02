@@ -668,3 +668,39 @@ adjudication arm; forcing it to `return True` fails the ordinary-lane and unread
 arms. The unreadable fixture was checked to overwrite a spec that already exists —
 `_claimed_specs` lists exactly `WI-401-widget.md` — so it refuses for the reason
 claimed rather than for a stray file.
+
+### The harness at the round-5 tip
+
+The shared reader cost `integrate.py` 3 SLOC over its 1298 baseline, and the
+ratchet's rule is decompose, don't bump. The overage was not the decomposition
+but two `ruff format` expansions around it, so it compacted away rather than
+being sanctioned — the comprehension binds its `_claimed_specs` call to a local
+so it fits one line, and `_adjudication_lane` tests the normalized kind inside
+its `all()` instead of building a separate generator. Back to **exactly 1298**,
+no baseline edit, names unchanged. The mutation proofs were re-run AFTER the
+compaction, not before.
+
+- Touched modules — `test_integrate_admission`, `test_module_size_ratchet`,
+  `test_adjudicate_brief`, `test_baseline_snapshot`: **137 passed in 28.89 s**.
+- Smoke tier: **1,461 passed, 4 skipped in 21.44 s**, its independent enforcer
+  measuring **23.0 s against the 60 s ceiling**.
+- `check.py --jobs 0`: PASS (the trunk lane's generated-freshness jobs SKIP on a
+  work branch, per concurrency-restructure §5.2).
+- `check_docs.py --root . --stale`: **0 broken links** over 1,216 docs and 1,586
+  intra-repo links (one pre-existing orphan warning).
+- Unfiltered suite: **3,274 passed, 1 failed, 20 skipped in 568.49 s**.
+
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=HEAD -->
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=HEAD -->
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=HEAD -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=HEAD -->
+
+**The one red, and why it is not this row's.** `test_this_repo_s_committed_stage_is_current`
+fails on the `docs/stage` fingerprint. Not asserted from the round-4 characterisation
+— re-established here: a worktree at the inherited tip `fa9c632b`, BEFORE either
+round-5 commit, fails the same test with the same pair (recorded `sha256:a24669d7…`,
+computed `sha256:6fadb64e…`). The computed value is byte-identical on both sides of
+the change, so these edits did not move the fingerprint at all; `docs/stage` is
+generated coordination truth the trunk lane refreshes, which is why `check.py`
+SKIPs `derived-stage` on a work branch. The round-4 second red (the byte-budget
+close measurement) is gone — 3,269/2-failed then, 3,274/1-failed now.

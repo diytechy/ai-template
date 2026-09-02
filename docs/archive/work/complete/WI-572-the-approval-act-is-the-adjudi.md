@@ -41,8 +41,15 @@ and amends cell text; nothing else changed about what a lane may do.
    (`trace.spine_chain`, extracted from `reattest_model` so the judge and the
    owner's surface cannot disagree) and asks one question — approve, or return
    with findings — with the `--approves` argument of the approving commit
-   derived rather than typed. Its verdict grammar is its own. The adjudication
-   lane is exempt from rung 1, and it already runs ALONE
+   derived rather than typed — rendered through
+   `baseline_snapshot.format_approves`, the deterministic inverse of
+   `parse_approves`, so the module that CONSUMES the `;`-joined list is the only
+   one that names the separator; a batch spanning two registries cannot
+   mis-parse into a second registry that is neither authorised nor copied. Its
+   verdict grammar is its own. The adjudication
+   lane is exempt from rung 1 — the exemption `_adjudication_lane` decides, off
+   the same `_claimed_spec_frontmatters` read the bar directive uses so actor
+   identity has one reader — and it already runs ALONE
    (`dispatch._branch_exclusive`), which is the concurrency guarantee the ruling
    points the act at rather than a new mechanism.
 3. **The amendment arm's aftermath is stated and true.** The stale "the flip is
@@ -55,8 +62,12 @@ and amends cell text; nothing else changed about what a lane may do.
    reasons, the division-of-labour table, the three holding mechanisms); OI-45
    (b) narrowed by one sentence; `gate-advance`, `spine-authoring` and
    `worker.template.md` updated.
-5. **Tests** in the modules' existing style: five at the merge slot, four at the
-   reader, four at the trigger, nine at the brief — including the pin that the
+5. **Tests** in the modules' existing style: seven at the merge slot (both arms
+   of the `_adjudication_lane` exemption among them, since a predicate that
+   bypasses every rung when true and makes the arm inert when false is the
+   change's highest-leverage line), four at the
+   reader, four at the trigger, ten at the brief, one at the
+   `format_approves`/`parse_approves` round trip — including the pin that the
    brief's terminal sequence cannot stop before performing an approved row's
    flip-and-snapshot act, and the mutation-proven regression that an act cannot
    reach a row the merge did not hand it. The schema pin now covers the READ
