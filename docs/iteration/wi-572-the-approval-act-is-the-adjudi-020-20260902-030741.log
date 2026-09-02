@@ -1,0 +1,495 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 020
+# date: 2026-09-02 03:26
+# train: wi-572-the-approval-act-is-the-adjudi
+# base: 4d0b972d9019
+# phase: DESIGN-CHECK
+# wi: WI-572
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: ERROR
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 1153
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 10623
+# prompt-template: kit:DESIGN-CHECK
+# prompt-sha: sha256:c3a61db8f36a
+# timeout:
+# heterogeneity:
+# exit-code: 1
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Reading prompt from stdin...
+OpenAI Codex v0.145.0
+--------
+workdir: /Users/diytechy/Documents/ai-template-drive/wi-572-the-approval-act-is-the-adjudi
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 01a06128-e500-7c91-a337-020a890f4f36
+--------
+user
+You are a worker session for a CLAIMED work item (scripts/agent_loop.py --wi, on a branch cut by `integrate.py claim`) — assume no human is watching. You are assigned ONE work item on ONE claimed branch; this assignment is your whole scope. Read AGENTS.md first, then the SpecRef and SR rows below — they are the spec of record.
+
+Assignment:
+- WI: WI-572 — The approval act is the adjudicator's, on trunk: lanes author Drafted rows, a first-approval adjudication flips and snapshots them
+- SR-Refs: — | SpecRef: docs/plans/2026-09-01-approval-act-adjudicator-only.md
+- Branch: wi-572-the-approval-act-is-the-adjudi (its claim is docs/work/active/wi-572-the-approval-act-is-the-adjudi/; integration base 4d0b972d90190a77c2ebd35ea18a3515d73358b5)
+- Hard predecessors (context, already integrated or accepted on this branch):
+  - WI-571 [done] The snapshot copies only what the act authorises: copy_live scoped to the flipped registry and the named --approves refs — `baseline_snapshot.copy_live` is scoped to the act. A refresh of a populated
+snapshot now copies ONLY the registries the act authorises — every registry a
+`--approves` ref names, plus every registry a…
+- Context (advisory registry joins; read the Context refs below before starting):
+  Advisory registry joins (WI-388; never gating):
+  
+  ### Review records of precedent rows
+  - docs/reviews/WI-571-REVIEW-A.md
+- Current branch diff (4d0b972..HEAD — earlier work on this branch, accepted but not yet reviewed/integrated):
+83ffcb7a telemetry: session 019 review scoreboard
+ba43193d telemetry: session wi-572-the-approval-act-is-the-adjudi-019 REVIEW-A COMMITTED
+5f815ea4 review: WI-572 REVIEW-A round 6 - changes requested
+a994a887 telemetry: session wi-572-the-approval-act-is-the-adjudi-018 BUILD COMMITTED
+29a819ae WI-572: close round 5 — bind the record to what shipped
+e9b775cf WI-572: keep the shared reader inside integrate.py's ratchet
+89f244f3 WI-572: give the approves list one owning boundary
+fa9c632b telemetry: session 015 review scoreboard
+cbf10390 telemetry: session wi-572-the-approval-act-is-the-adjudi-015 REVIEW-A COMMITTED
+6f5bde43 review: WI-572 REVIEW-A round 5 - changes requested (3 findings)
+59b67ac7 telemetry: session wi-572-the-approval-act-is-the-adjudi-014 BUILD COMMITTED
+87ac214f WI-572: correct the byte-budget close measurement
+8c036135 telemetry: session wi-572-the-approval-act-is-the-adjudi-013 DESIGN-CHECK COMMITTED
+1a6072e3 WI-572: decompose first_approval_values rather than bump its complexity
+98c7f5fe WI-572: collect the refusal's population on the walk it already makes
+4edb03cd WI-572: write down the migration the new column costs
+9017aba7 WI-572: bind the close record to what round 4 shipped
+d54bae41 WI-572: bound the approval act to the rows the merge handed over
+49b18f0b WI-572: answer four of round 4's five findings
+208f9056 telemetry: session 012 review scoreboard
+8a7332bb telemetry: session wi-572-the-approval-act-is-the-adjudi-012 REVIEW-A COMMITTED
+714c250b review: WI-572 REVIEW-A round 3 - changes requested (5 findings)
+87a3f317 telemetry: session wi-572-the-approval-act-is-the-adjudi-011 BUILD COMMITTED
+76efc1e7 WI-572: bind the rework measurement to its implementation
+9cc58b2d WI-572: route withdrawn drafts back to adjudication
+7ec4544a telemetry: session 010 review scoreboard
+edf7cc0f telemetry: session wi-572-the-approval-act-is-the-adjudi-010 REVIEW-A COMMITTED
+d6cf4d33 review: record WI-572 changes requested
+d7549c58 telemetry: session wi-572-the-approval-act-is-the-adjudi-009 BUILD COMMITTED
+9f3790c3 WI-572: correct the brief's test count for the round-3 regression
+… (27 more lines)
+
+[... 25416 line(s) elided — full stream in out/run-logs/ ...]
+
++
++The tests drive the merge slot, not only the prompt: the permitted fixture lands
++one scoped `SR-001` flip with its system-requirements snapshot; the two adversarial
++fixtures prove an unrelated `SR-001` flip scoped to `SR-002` and an extra
++test-cases snapshot both refuse before trunk moves. Separate pins cover empty
++scope, actor-kind alone, return-only and missing-anchor behavior. The shared
++reader and judgement live in `acceptance_record.py`, below the size threshold;
++the obsolete exemption explanation was deleted and `integrate.py` stays exactly
++at its existing 1,298-SLOC ratchet rather than receiving a bump.
++
++Verification for this round is recorded below after the declared harness runs.
+diff --git a/project-trajectory/scripts/acceptance_record.py b/project-trajectory/scripts/acceptance_record.py
+index f9795e3c6593401b1294357d02c8d28b48e51dfb..766003f436a4f51ab3e41ceb7d6d64498cb8bf59
+--- a/project-trajectory/scripts/acceptance_record.py
++++ b/project-trajectory/scripts/acceptance_record.py
+@@ -519,7 +519,92 @@
+         yield "{} {}".format(_SNAPSHOT_ACT.get(letter, "changed"), parts[-1].strip())
+ 
+ 
+-def lane_approval_refusal(root, base, head):
++def approval_delta(root, base, head):
++    """`(row acts, worded snapshot acts, refusal)` for one merge delta."""
++    acts = staged_approval_acts(root, base, head)
++    out = _git(
++        root, ["diff", "--name-status", "--no-renames", base, head, "--", SNAPSHOT_DIR]
++    )
++    if out is None:
++        return (
++            [],
++            [],
++            (
++                "cannot read {}'s {} delta against {}, so whether this branch wrote "
++                "the approval record is unknowable; nothing was merged".format(
++                    head, SNAPSHOT_DIR, str(base)[:10]
++                )
++            ),
++        )
++    return acts, sorted(_snapshot_acts(out)), None
++
++
++def first_approval_scope(metas):
++    """The typed scope of claimed first-approval rows, or None for another kind."""
++    first = [meta for _name, meta in metas if meta.get("brief") == "first-approval"]
++    if not first:
++        return None
++    values = [meta.get("adjudicates") for meta in first]
++    if any(not isinstance(value, list) for value in values):
++        return frozenset()
++    return frozenset(
++        str(rid).strip() for value in values for rid in value if str(rid).strip()
++    )
++
++
++def adjudication_approval_refusal(scope, delta):
++    """Refuse a first-approval act that exceeds its recorded row scope."""
++    acts, snapshot_files, refusal = delta
++    if refusal:
++        return refusal
++    if not scope:
++        return (
++            "first-approval adjudication declares an EMPTY `Adjudicates` scope; "
++            "the merge cannot know which rows its approval act may reach; nothing "
++            "was merged"
++        )
++    outside = [act for act in acts if act["id"] not in scope]
++    acted_registries = {act["registry"] for act in acts}
++    snapshot_registries = {
++        line.partition(" ")[2][len(SNAPSHOT_DIR) + 1 :]
++        for line in snapshot_files
++        if line.partition(" ")[2] != SNAPSHOT_DIR + "/README.md"
++    }
++    widened = sorted(snapshot_registries - acted_registries)
++    missing = sorted(acted_registries - snapshot_registries)
++    if not outside and not widened and not missing:
++        return None
++    lines = [
++        "  {} is OUTSIDE `Adjudicates` scope ({})".format(
++            act["id"], ";".join(sorted(scope))
++        )
++        for act in outside
++    ]
++    lines += [
++        "  snapshot WIDENED to {} without an approved row".format(r) for r in widened
++    ]
++    lines += [
++        "  {} was approved WITHOUT its anchoring snapshot".format(r) for r in missing
++    ]
++    return (
++        "first-approval adjudication exceeds the approval act recorded on its "
++        "`Adjudicates` row: the merge admits only scoped flips and exactly their "
++        "registry snapshots; nothing was merged:\n{}".format("\n".join(lines))
++    )
++
++
++def merge_approval_refusal(root, base, head, metas, adjudication):
++    """Apply one derived approval delta to its actor's authorization rule."""
++    delta = approval_delta(root, base, head)
++    if adjudication:
++        scope = first_approval_scope(metas)
++        if scope is not None or delta[0]:
++            return adjudication_approval_refusal(scope or frozenset(), delta)
++        return delta[2]
++    return lane_approval_refusal(root, base, head, delta)
++
++
++def lane_approval_refusal(root, base, head, delta=None):
+     """Why a WORK BRANCH's delta may not merge because it performs an APPROVAL
+     ACT — the refusal text, or None when it performs none.
+ 
+@@ -554,18 +639,9 @@
+ 
+     Implements: SR-178, LLR-158
+     """
+-    acts = staged_approval_acts(root, base, head)
+-    out = _git(
+-        root, ["diff", "--name-status", "--no-renames", base, head, "--", SNAPSHOT_DIR]
+-    )
+-    if out is None:
+-        return (
+-            "cannot read {}'s {} delta against {}, so whether this branch wrote "
+-            "the approval record is unknowable; nothing was merged".format(
+-                head, SNAPSHOT_DIR, str(base)[:10]
+-            )
+-        )
+-    snapshot_files = sorted(_snapshot_acts(out))
++    acts, snapshot_files, refusal = delta or approval_delta(root, base, head)
++    if refusal:
++        return refusal
+     if not acts and not snapshot_files:
+         return None
+     lines = [
+diff --git a/project-trajectory/scripts/integrate.py b/project-trajectory/scripts/integrate.py
+index 286200d74faf3492a5c44b026ca3bd0669f94b38..67549c27012f8f6f12f210cc573bed8ae55dfbbe
+--- a/project-trajectory/scripts/integrate.py
++++ b/project-trajectory/scripts/integrate.py
+@@ -1109,7 +1109,7 @@
+         return None
+ 
+ 
+-def _adjudication_lane(root, branch):
++def _adjudication_lane(root, branch, metas=None):
+     """Does EVERY claimed spec on `branch` declare the `adjudication` kind?
+ 
+     `_lane_bar_directives`' `skip` test, asked on its own because the approval
+@@ -1117,7 +1117,7 @@
+     `_claimed_spec_frontmatters`, so actor identity has one reader. UNREADABLE
+     FRONTMATTER ANSWERS FALSE: there it runs the bar; here it makes the branch a
+     work lane whose approval act refuses. Both fail toward more checking."""
+-    metas = _claimed_spec_frontmatters(root, branch)
++    metas = _claimed_spec_frontmatters(root, branch) if metas is None else metas
+     return bool(metas) and all(
+         str(meta.get("safety_class") or "").strip().lower() == "adjudication"
+         for _name, meta in metas
+@@ -1137,57 +1137,33 @@
+     LLRs, the tests), and one work item does not hold that chain. CONCURRENCY:
+     two lanes touching the spine conflict at merge, and the snapshot must not
+     move across a workstream, whereas a serial trunk-side act cannot conflict.
+-
+-    THE SAME SHAPE AS `_minted_id_refusal` BESIDE IT, and for the same reason:
+-    one named refusal, read off git, in front of the one act that would make the
+-    bad state real. Both read the branch's OWN delta - `merge-base(trunk,
+-    branch)` to the tip - so a trunk-side approval sits in the BASE and is
+-    exactly as free as it is today.
+ 
+-    CONSTRUCTION-FIRST, NOT A SECOND DETECTOR. `acceptance_record.
+-    staged_approval_acts` is the mirror of the `staged_spine_amendments` reader
+-    the intake already runs on the merged commit: that one reports rows whose
+-    approved text moved while `Status` stood still and exempts a moved `Status`;
+-    this one reports precisely the exempted set. They share one two-tree walk,
+-    so a row cannot be invisible to both.
+-
+-    WHAT IT COSTS AND DOES NOT COST. A de-approval (`Approved` -> `Drafted`) is
+-    not an act: it blesses nothing. An amendment to an approved row is not an act
+-    either - the lane may make it, and the amendment adjudication the intake
+-    mints at this same merge is what judges it. The honest bound is
+-    `_minted_id_refusal`'s: this defeats the accident and a lane that drifts, not
+-    a lane that means to - a branch could still write the flip through some file
+-    nothing here reads.
+-
+     THE JUDGEMENT ITSELF IS NOT HERE, and that is `LLR-178`'s separation, not
+     tidiness: `acceptance_record.lane_approval_refusal` reads the delta and
+     words the refusal, beside the two-tree walk and the snapshot-mirror rules it
+     shares its material with. What stays in the merge slot is the RUNG — the
+     merge base this branch is judged against, and the placement in the ladder.
+ 
+-    AN ADJUDICATION LANE IS EXEMPT, because it is the actor the ruling names.
+-    The concurrency half the owner asked for is already built and is not
+-    re-implemented here: `dispatch._branch_exclusive` makes any non-`ordinary`
+-    kind run ALONE, so an adjudication holds the station by itself, two acts
+-    cannot overlap, and the snapshot moves only there. The kind is read off
+-    TRUNK's claimed specs — the same one-home read `_lane_bar_directives` and
+-    `dispatch._branch_exclusive` make — so this rung and the no-bar arm cannot
+-    disagree about what an adjudication lane is.
++    An adjudication is the permitted actor, not unbounded authority. A claimed
++    first-approval row's `Adjudicates` cell bounds its flips, and the snapshot
++    may cover exactly the registries those flips changed. The delta is derived
++    once here and handed to either judgement, so actor classification can no
++    longer bypass the material being authorised.
+     """
+-    if _adjudication_lane(root, branch):
+-        return None
+     import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
+ 
++    metas = _claimed_spec_frontmatters(root, branch)
+     head = _head(root)
+     code, base = ac.git(root, "merge-base", head, branch)
+     if code != 0 or not base.strip():
+         # Fail closed: an unread delta is not an empty one.
+-        return (
+-            "cannot read the merge base of trunk {} and {}, so the spine delta "
+-            "the approval-act rung reads is unknowable; nothing was "
+-            "merged:\n{}".format(head[:10], branch, ac._failure_tail(base))
+-        )
+-    return acceptance_record.lane_approval_refusal(root, base.strip(), branch)
++        message = f"cannot read the merge base of trunk {head[:10]} and {branch}, so the spine delta the approval-act rung reads is unknowable; nothing was merged:\n{ac._failure_tail(base)}"
++        return message
++    judge = acceptance_record.merge_approval_refusal
++    if not metas:
++        return judge(root, base.strip(), branch, [], False)
++    actor = _adjudication_lane(root, branch, metas=metas)
++    return judge(root, base.strip(), branch, metas, actor)
+ 
+ 
+ def _last_commit_time(root, ref, *pathspec):
+diff --git a/tests/integrate_fixtures.py b/tests/integrate_fixtures.py
+index 36c8ff9c187718c2f47e0528e1721c06697ff1fe..f776979c694f10d5b941f6f44fe674603bf2d550
+--- a/tests/integrate_fixtures.py
++++ b/tests/integrate_fixtures.py
+@@ -142,6 +142,8 @@
+     deliverable="A widget, shipped.",
+     specref=None,
+     bar=None,
++    brief=None,
++    adjudicates=(),
+ ):
+     """One work-item spec in the format `scripts/wi_convert.py` emits (the
+     tests/test_wi_folder_loaders.py `spec_text` shape).
+@@ -165,6 +167,14 @@
+         lines.append('specref = "{}"'.format(specref))
+     if bar:
+         lines.append('bar = "{}"'.format(bar))
++    if brief:
++        lines.append('brief = "{}"'.format(brief))
++    if adjudicates:
++        lines.append(
++            "adjudicates = [{}]".format(
++                ", ".join('"{}"'.format(rid) for rid in adjudicates)
++            )
++        )
+     text = "+++\n" + "".join(ln + "\n" for ln in lines) + "+++\n"
+     if deliverable:
+         text += "\n## Deliverable\n\n" + deliverable + "\n"
+diff --git a/tests/test_integrate_admission.py b/tests/test_integrate_admission.py
+index 132ad751f84b21c0c1176e0522ba66a045f30fbf..7be40d51bbc6b4f4674fe8bfbadba371e389236c
+--- a/tests/test_integrate_admission.py
++++ b/tests/test_integrate_admission.py
+@@ -352,7 +352,16 @@
+     )
+ 
+ 
+-def _spine_lane(home, *, flip=False, born=False, snapshot=False, safety="ordinary"):
++def _spine_lane(
++    home,
++    *,
++    flip=False,
++    born=False,
++    snapshot=False,
++    safety="ordinary",
++    adjudicates=(),
++    first_approval=True,
++):
+     """A claimed branch that authored a `Drafted` SR — and then, per flag,
+     performed one of the three shapes of approval act on it.
+ 
+@@ -360,7 +369,14 @@
+     the same topology minus one write, rather than a second fixture that happens
+     to look similar (`_mint_repo`'s rule, one section up)."""
+     home.mkdir(parents=True, exist_ok=True)
+-    root = claim_repo(home, safety=safety)
++    root = claim_repo(
++        home,
++        safety=safety,
++        brief=(
++            "first-approval" if safety == "adjudication" and first_approval else None
++        ),
++        adjudicates=adjudicates,
++    )
+     reg = root / "docs" / "requirements"
+     reg.mkdir(parents=True, exist_ok=True)
+     (reg / "system-requirements.csv").write_text(
+@@ -406,13 +422,99 @@
+     assert _rev(root, "HEAD") != _rev(root, "wi-401")  # nothing merged
+ 
+ 
+-def test_an_adjudication_lane_may_land_its_approval_act(tmp_path):
+-    root = _spine_lane(tmp_path / "adjudication", flip=True, safety="adjudication")
++def test_a_scoped_adjudication_lane_may_land_its_flip_and_snapshot(tmp_path):
++    root = _spine_lane(
++        tmp_path / "adjudication",
++        flip=True,
++        snapshot=True,
++        safety="adjudication",
++        adjudicates=("SR-001",),
++    )
+ 
+     assert integ._adjudication_lane(root, "wi-401") is True
+     assert integ._approval_act_refusal(root, "wi-401") is None
+ 
+ 
++def test_a_first_approval_adjudication_with_no_scope_is_refused(tmp_path):
++    root = _spine_lane(tmp_path / "empty-scope", flip=True, safety="adjudication")
++
++    refusal = integ._approval_act_refusal(root, "wi-401")
++    assert refusal is not None
++    assert "EMPTY `Adjudicates` scope" in refusal
++
++
++def test_a_scoped_return_only_adjudication_needs_no_approval_act(tmp_path):
++    root = _spine_lane(
++        tmp_path / "return-only",
++        safety="adjudication",
++        adjudicates=("SR-001",),
++    )
++
++    assert integ._approval_act_refusal(root, "wi-401") is None
++
++
++def test_a_scoped_flip_without_its_snapshot_is_refused(tmp_path):
++    root = _spine_lane(
++        tmp_path / "unanchored",
++        flip=True,
++        safety="adjudication",
++        adjudicates=("SR-001",),
++    )
++
++    refusal = integ._approval_act_refusal(root, "wi-401")
++    assert refusal is not None
++    assert "system-requirements.csv was approved WITHOUT its anchoring snapshot" in refusal
++
++
++def test_an_adjudication_kind_alone_does_not_authorise_a_flip(tmp_path):
++    root = _spine_lane(
++        tmp_path / "actor-only",
++        flip=True,
++        safety="adjudication",
++        first_approval=False,
++    )
++
++    refusal = integ._approval_act_refusal(root, "wi-401")
++    assert refusal is not None
++    assert "EMPTY `Adjudicates` scope" in refusal
++
++
++def test_an_adjudication_cannot_flip_a_row_outside_its_scope(tmp_path):
++    root = _spine_lane(
++        tmp_path / "outside",
++        flip=True,
++        snapshot=True,
++        safety="adjudication",
++        adjudicates=("SR-002",),
++    )
++
++    refusal = integ.integrate_one(root, "wi-401", "smoke")
++    assert refusal is not None
++    assert "SR-001 is OUTSIDE `Adjudicates` scope (SR-002)" in refusal
++    assert _rev(root, "HEAD") != _rev(root, "wi-401")
++
++
++def test_an_adjudication_snapshot_cannot_widen_beyond_its_flips(tmp_path):
++    root = _spine_lane(
++        tmp_path / "wide-snapshot",
++        flip=True,
++        snapshot=True,
++        safety="adjudication",
++        adjudicates=("SR-001",),
++    )
++    _git(root, "checkout", "-q", "wi-401")
++    snap = root / "docs" / "archive" / "last_approved" / "docs" / "test"
++    snap.mkdir(parents=True, exist_ok=True)
++    (snap / "test-cases.toml").write_text("[cases]\n", encoding="utf-8", newline="\n")
++    _commit(root, "WI-401: widen the approval snapshot", when=T_LATER)
++    _git(root, "checkout", "-q", "main")
++
++    refusal = integ.integrate_one(root, "wi-401", "smoke")
++    assert refusal is not None
++    assert "snapshot WIDENED to docs/test/test-cases.toml" in refusal
++    assert _rev(root, "HEAD") != _rev(root, "wi-401")
++
++
+ def test_unreadable_actor_frontmatter_fails_toward_the_approval_refusal(tmp_path):
+     root = _spine_lane(tmp_path / "unreadable", flip=True, safety="adjudication")
+     claimed = root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
+
+2026-09-02T08:26:26.447268Z ERROR codex_models_manager::manager: failed to renew cache TTL: missing field `base_instructions` at line 97 column 5
+ERROR: Selected model is at capacity. Please try a different model.
+ERROR: Selected model is at capacity. Please try a different model.
+2026-09-02T08:26:58.426152Z ERROR codex_core::session: failed to record rollout items: thread 01a06128-e500-7c91-a337-020a890f4f36 not found
+2026-09-02T08:26:58.426172Z ERROR codex_core::session: failed to record rollout items: thread 01a06128-e500-7c91-a337-020a890f4f36 not found
+tokens used
+167,643
