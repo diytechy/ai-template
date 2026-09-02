@@ -12,7 +12,7 @@ priority = 3
 
 ## Deliverable
 
-Restructured into WI-579 (Done-when 1), WI-580 (Done-when 2) and WI-581 (Done-when 3).
+Restructured into WI-579, WI-580, WI-581.
 
 ## Context
 

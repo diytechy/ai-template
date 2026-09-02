@@ -42,9 +42,10 @@ step's regeneration list). One quick lane instead of three.
    same test-and-fixture treatment the agent-loop lock received.
 3. The full suite stays green; no other residue class regresses.
 
-### From WI-560 (Done-when 3, verbatim)
+### From WI-560 (Done-when 3 and 4, verbatim — item 4 is shared with WI-579 and WI-580)
 
 3. The trunk step regenerates the approval brief (`CURRENT.md`) after a
    merge that touched it, the same way the trunk lane owns every other
    generated artifact — a following lane is never redded by staleness it
    did not cause.
+4. Tests drive all three.

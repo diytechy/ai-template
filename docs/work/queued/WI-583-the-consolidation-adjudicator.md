@@ -11,7 +11,7 @@ safety_class = "ordinary"
 
 ## Context
 
-Minted by the owner-directed backlog restructure of 2026-09-02 (plan of record `docs/plans/2026-09-02-backlog-restructure-and-consolidation.md` §2.2; executed out of band as a hand trunk commit series, not by a lane). (No rows absorbed — a new row.) The absorbed rows are archived under `docs/archive/work/restructured/` with their scope text untouched; their Done-when blocks are QUOTED below under their old ids and remain the spec this row must satisfy — decompose, don't paraphrase.
+Minted by the owner-directed backlog restructure of 2026-09-02 (plan of record `docs/plans/2026-09-02-backlog-restructure-and-consolidation.md` §2.2; executed out of band as a hand trunk commit series, not by a lane). A NEW row: it absorbs nothing and quotes nothing; its spec of record is plan §1.
 
 Builds plan §1 in full — read §1.1 through §1.5 and §1.7 before starting; the
 plan is the spec of record and this Context does not restate it. The

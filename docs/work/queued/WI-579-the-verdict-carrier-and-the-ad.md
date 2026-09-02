@@ -83,16 +83,18 @@ adjudication lane merge with NO REVIEW-A file present.
    logged-session restriction, and the migration warn on a scaffold; the
    full suite stays green.
 
-### From WI-560 (Done-when 1, verbatim — 2 went to the briefs row, 3 to the hygiene row)
+### From WI-560 (Done-when 1 and 4, verbatim — 2 went to WI-580, 3 to WI-581; item 4 is shared)
 
 1. ONE shared definition of "the last commit that could invalidate a
    verdict" (excluding `docs/reviews`, `docs/log.d`, `docs/iteration`) is
    used by both the merge slot and the C2 review-owed derivation; the
    double-identical-round class becomes unrepresentable on a scaffold.
+4. Tests drive all three.
 
-### From WI-559 (Done-when 2, verbatim — Done-when 1 and 3's close-bar half went to the briefs row)
+### From WI-559 (Done-when 2 and 3, verbatim — Done-when 1 went to WI-580; item 3 is shared with it)
 
 2. A committing ADJUDICATE session schedules its review round exactly as a
    committing BUILD does, and no exit banner claims a round that was never
    drawn.
-3. Tests drive [...] the adjudicate round scheduling on a scaffold.
+3. Tests drive the false-partial class (built-and-verified lane, long
+   suite) and the adjudicate round scheduling on a scaffold.

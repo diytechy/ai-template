@@ -6,6 +6,7 @@ specref = "docs/archive/work/complete/WI-563-spot-check-the-clean-close-of.md"
 buildtier = "medium"
 priority = 4
 safety_class = "spine"
+needs = ["WI-579", "WI-580"]
 supersedes = "WI-564;WI-565;WI-576"
 +++
 
@@ -66,19 +67,27 @@ no-toolchain Bar and skipped the mandated `--strict` run. Setting
 `[checks] components_check = false` is NOT an acceptable exit — that is
 sanctioning the check to green a step.
 
-### From WI-565 (scope, verbatim)
+### From WI-565 (Context, verbatim)
 
-`intake._SPEC_NEEDS_RE` (intake.py:1344) has no `re.DOTALL`, so
-`_replace_inbound_edges` silently skips a dependent whose `needs` is a
-MULTI-LINE TOML list. `OI-77` RULED (a): read the value the parser has already
-parsed. Riding along, because they are one small pass over the same two files
-and were also left on no queue by the first spot-check pass: (i)
-`intake._OI_ID_RE` (intake.py:304) is dead — `next_oi_id` reads the watermark
-and `trace.live_max_ids`, nothing uses the regex; delete it or use it. (ii)
+Gated on the owner's ruling by construction: the `open_item` cell above makes
+`intake._inject_open_item` mint a `pending` OI at this row's merge and land its
+id in THIS row's `needs`, so the successor parks
+`waiting:open-item-pending` until the ruling lands (OI-73 exit (B) — there is no
+standalone OI exit; the OI is always a dependency of a queued successor).
+Riding along, because they are one small pass over the same two files and were
+also left on no queue by the first spot-check pass: (i) `intake._OI_ID_RE`
+(intake.py:304) is dead — `next_oi_id` reads the watermark and
+`trace.live_max_ids`, nothing uses the regex; delete it or use it. (ii)
 `check_trajectory.validate`'s docstring disagrees with the shipped
 `known_ois=None` coercion at check_trajectory.py:812 (`known_ois = known_ois if
 known_ois is not None else frozenset()`); fix the docstring to state what the
-code does.
+code does. Both are cosmetic and neither needs the ruling — but do them in the
+same commit range so the residual list from the WI-552 review closes out whole.
+
+(Outside the quote: the `open_item` cell the paragraph describes minted `OI-77`,
+which the owner has since RULED (a) — read the value the parser has already
+parsed — so nothing here waits on a ruling any more; the fix itself is the
+`_SPEC_NEEDS_RE` no-DOTALL residual the OI names.)
 
 ### From WI-576 (scope, verbatim)
 

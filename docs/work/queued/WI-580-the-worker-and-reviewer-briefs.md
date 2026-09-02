@@ -51,7 +51,7 @@ diff without being told which rows it covers.
    reviewer brief names its rows; `prompts/CATALOG.md` regenerated
    (`gen_prompt_catalog.py`); full suite green.
 
-### From WI-559 (Done-when 1, verbatim)
+### From WI-559 (Done-when 1 and 3, verbatim — item 2 went to WI-579; item 3 is shared)
 
 1. The close ritual names a bar a worker can complete in ONE turn: the
    commit bar (smoke + budget + docs) at close, with the full unfiltered
@@ -60,12 +60,13 @@ diff without being told which rows it covers.
    close instruction that cannot execute in one turn is treated as the
    stall generator it measurably is.
 3. Tests drive the false-partial class (built-and-verified lane, long
-   suite) [...] on a scaffold.
+   suite) and the adjudicate round scheduling on a scaffold.
 
-### From WI-560 (Done-when 2, verbatim)
+### From WI-560 (Done-when 2 and 4, verbatim — item 4 is shared with WI-579 and WI-581)
 
 2. The worker brief names the approval-brief regeneration for a lane that
    AMENDS an approved cell, not only one that mints or re-statuses.
+4. Tests drive all three.
 
 ### From WI-562 (Done-when 2, verbatim)
 
