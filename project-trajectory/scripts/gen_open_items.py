@@ -543,8 +543,8 @@ ROW_STATE_TAGS = {
     "current": "current content",
     # WIDENED (the OI-61-sitting gap): a `Drafted` row present in the snapshot
     # byte-identical to its current text still owes a first approval — it just
-    # never moved since being copied wholesale by `intake.py snapshot`, which
-    # copies every registry, not only approved rows.
+    # never moved since `intake.py snapshot` copied its registry, which copies
+    # every row of the registries it copies, not only the approved ones.
     "drafted": "Drafted — never approved",
 }
 
@@ -806,9 +806,9 @@ def _offspine_census_block(rows):
     )
     return (
         '<p class="sub offspine-note">The off-spine registries above carry no '
-        "per-row rendering here; <code>intake.py snapshot</code> copies them "
-        "WHOLESALE alongside any spine approval. What changed since the last "
-        "snapshot, so the signer sees what a re-seed will absorb:</p>"
+        "per-row rendering here; since WI-571 <code>intake.py snapshot</code> "
+        "copies one only when its own Status moves or <code>--approves</code> "
+        "names it; a re-SEED still blesses all. What it would absorb:</p>"
         '<ul class="pointers">{}</ul>\n'.format(items)
     )
 

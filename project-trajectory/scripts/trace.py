@@ -3858,8 +3858,9 @@ def approval_check(root, srs, llrs, tcs, out_path):
 
 
 # --- WI-518: the off-spine census ---------------------------------------------
-# `intake.py snapshot` copies all SEVEN `SNAPSHOTTED` registries wholesale, but
-# `reattest_lines` renders one section per SR — the off-spine tiers
+# `intake.py snapshot` may copy any of the SEVEN `SNAPSHOTTED` registries (all
+# of them on a `--seed`; since WI-571 a refresh copies only the ones the act
+# authorises), but `reattest_lines` renders one section per SR — the off-spine tiers
 # (`interfaces.toml`, `external.toml`, `components.toml`) never reach it, so a
 # row changed there since the last snapshot enters the signed baseline with no
 # owner-visible before/after at all (found by the OI-62-sitting adversarial
@@ -3980,9 +3981,9 @@ def offspine_census_lines(root, snapshot=_UNSET):
         "## Off-spine census",
         "",
         "_The off-spine registries above carry no per-row rendering in this"
-        " brief; `intake.py snapshot` copies them WHOLESALE alongside any"
-        " spine approval. What changed since the last snapshot, so the signer"
-        " sees what a re-seed will absorb:_",
+        " brief; since WI-571 `intake.py snapshot` copies one only when its own"
+        " `Status` moves or `--approves` names it, but a re-SEED still blesses"
+        " the whole tree. What it would absorb, changed since the snapshot:_",
         "",
     ] + [
         "- `{rel}` — {changed} changed, {added} added, {removed} removed"

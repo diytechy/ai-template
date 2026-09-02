@@ -8,7 +8,7 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 
 ## Off-spine census
 
-_The off-spine registries above carry no per-row rendering in this brief; `intake.py snapshot` copies them WHOLESALE alongside any spine approval. What changed since the last snapshot, so the signer sees what a re-seed will absorb:_
+_The off-spine registries above carry no per-row rendering in this brief; since WI-571 `intake.py snapshot` copies one only when its own `Status` moves or `--approves` names it, but a re-SEED still blesses the whole tree. What it would absorb, changed since the snapshot:_
 
 - `docs/requirements/interfaces.toml` — 3 changed, 0 added, 1 removed since the snapshot; ruling(s): WI-553, WI-572.
 

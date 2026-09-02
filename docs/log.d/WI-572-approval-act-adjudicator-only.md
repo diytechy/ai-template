@@ -775,6 +775,27 @@ trunk-owned `derived-stage` and approval-freshness steps skip by the declared
 branch rule, while every applicable step passes.
 <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check.py --jobs 0" rev=67c58e17-dirty -->
 
+### REVIEW-A rework, round 7 — IN FLIGHT
+
+Round 023's review returned CHANGES-REQUESTED with five findings against tip
+`6af1e4a2`. Worked in this order; each subsection below lands as its fixes do.
+
+**The stale WHOLESALE sentence, in the two places a HUMAN SIGNER reads it
+(MINOR 5).** Round 4 corrected PROCESS.md §4 from "replaced wholesale at each
+approval" to the scoped statement WI-571 made true, and left the two GENERATORS
+that tell the owner the same fact saying the retired thing: `trace.py`'s
+off-spine census note and `gen_open_items.py`'s dashboard twin both emitted
+"`intake.py snapshot` copies them WHOLESALE alongside any spine approval", and
+the sentence was live in the `docs/ratify/CURRENT.md` this branch regenerates.
+Both now state the scoped rule AND the exception the reader needs — a re-SEED
+still blesses the whole tree, which is what makes the census's own "what a
+re-seed will absorb" tail true. The two nearby COMMENTS carrying the same
+retired claim (`trace.py`'s WI-518 header, `gen_open_items.py`'s `drafted`
+census label) are corrected in the same pass; leaving a comment asserting what
+the string beside it no longer says is the drift this finding is about.
+`docs/ratify/CURRENT.md` regenerated. The markdown edit is SLOC-neutral in
+`trace.py`, which is a ratcheted module.
+
 ### Round-6 rework resume at the current tip
 
 The unattended worker was relaunched with round 6's merge-boundary finding
