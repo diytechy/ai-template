@@ -7,6 +7,21 @@ recorded before either ran. **Nothing here is adjudicated against the live
 layout** — that is the alignment pass, a separate slice and the only role
 permitted to read both sides._
 
+> **STANDING CAVEAT — "recorded before either ran" is the authors' account, not
+> a fact this repository can evidence.** Added 2026-09-02 (WI-569); the text
+> below is unchanged.
+>
+> The brief and this record first appear in the SAME commit, `64e9bf2a`
+> (2026-08-25), so nothing immutably fixed the question before the answers
+> existed. The second defect — the instruction-context contamination that broke
+> the brief's closed five-file input set — is disclosed by the teams themselves
+> in §1 below, which is where a reader should start.
+>
+> Both defects push the convergence figure the same way, so the agreement
+> measured here is an **upper bound**, not a corroboration. The full ruling,
+> and why a sterile re-run was not commissioned, is the caveat on
+> [`2026-08-25-blind-minimal-map-brief.md`](2026-08-25-blind-minimal-map-brief.md).
+
 The two returns, verbatim as they were written:
 
 - **Team A — outputs-backward:**

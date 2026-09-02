@@ -3,8 +3,53 @@
 _The brief two independent agents were given, recorded here BEFORE their returns
 so the question cannot be re-written to fit the answer. The returns are
 [`2026-08-25-blind-minimal-map-derivation.md`](2026-08-25-blind-minimal-map-derivation.md).
-The program that commissioned it: `docs/work/active/wi508-architectural-remap/`.
+The program that commissioned it closed `partial` at
+[`docs/work/partial/WI-508-architectural-remap-program.md`](../work/partial/WI-508-architectural-remap-program.md).
 The requirement it produces evidence for: `SR-163`, decomposed at slice 1._
+
+> **STANDING CAVEAT — the pre-registration above is NOT evidenced by this
+> repository's record, and the blindness was not total.** Added 2026-09-02
+> (WI-569); the text below is unchanged.
+>
+> **The question was not immutably fixed before the answers existed.** This
+> brief and the returns record first appear in the SAME commit, `64e9bf2a`
+> (2026-08-25) — `git log --diff-filter=A -- docs/plans/2026-08-25-blind-minimal-map-brief.md`
+> and the same for `…-derivation.md` both name it. So the sentence "recorded
+> here BEFORE their returns" describes the authors' intent and the order they
+> say they worked in, and nothing in the repository can distinguish that from a
+> brief written to fit answers already in hand. Read every claim below as
+> **asserted, not proven**.
+>
+> **The five-file closed input set was breached.** Both teams received this
+> repository's own instruction context before the brief arrived — the project
+> instruction file, and for Team B a memory index — naming directories and
+> several script filenames. Both disclosed it unprompted; the disclosure is
+> §1 of
+> [`2026-08-25-blind-minimal-map-derivation.md`](2026-08-25-blind-minimal-map-derivation.md),
+> which also records what the teams could establish about its extent.
+>
+> **What this costs.** The convergence between the two returns is the one
+> figure both defects bear on, and it is weakened in the same direction by
+> each: shared prior knowledge of the live layout inflates agreement, and an
+> unfixed question removes the guarantee that agreement was measured against a
+> stable target. Treat the exercise as a **challenge input** — a second reading
+> that was allowed to disagree — and never as independent corroboration of the
+> live map.
+>
+> **Why a sterile re-run was not commissioned.** A re-run cannot repair the
+> first defect: immutability is a property of the 2026-08-25 record, and a new
+> pre-committed brief would evidence a new exercise, not this one. No live
+> requirement, design or test row cites this exercise — its only consumers are
+> the alignment pass, session logs and the closed WI-508 record — and the
+> alignment pass
+> ([`2026-08-25-remap-alignment.md`](2026-08-25-remap-alignment.md)) already
+> discounts raw disagreement on its own grounds, adjudicating each divergence
+> against the registry rather than deferring to either return. So the honest
+> repair is this caveat, which stops the credit, rather than a fresh exercise
+> whose conclusions nothing is waiting on. Ruled at `WI-569`, on the two
+> `BLOCKER`s of
+> [`docs/reviews/wi508-architectural-remap/010-REVIEW-A-5175065.md`](../reviews/wi508-architectural-remap/010-REVIEW-A-5175065.md)
+> that the WI-508 close left on no queue.
 
 ## 1. What is being asked, and why it is asked BLIND
 
