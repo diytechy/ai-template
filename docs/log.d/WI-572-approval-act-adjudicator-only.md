@@ -599,3 +599,30 @@ now records that `read_specs` takes its population from the read side's
   scope sentence), and byte-budget-guard's own row re-stamped and re-trimmed to
   **4,982 against its 5,000 cap** — the first draft of that row put the file at
   5,142, over cap, which is exactly what the guard exists to catch.
+
+### Final worker verification after round 4
+
+The resumed worker drove the five findings at the final implementation tip.
+The focused six-module set is green: **250 passed in 26.76 s**. The smoke tier
+is green: **1,461 passed, 4 skipped in 22.50 s**, and its independent enforcer
+measured **23.0 s against the 60 s ceiling**. The docs check reports **0 broken
+links** (one pre-existing orphan warning).
+
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_adjudicate_brief.py tests/test_integrate_admission.py tests/test_intake.py tests/test_approval_level.py tests/test_wi_convert.py tests/test_wi_loader_sync.py" rev=HEAD -->
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=HEAD -->
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=HEAD -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=HEAD -->
+
+The unfiltered suite read **3,269 passed, 2 failed, 20 skipped in 599.36 s**.
+One failure was the already-characterised trunk-owned `docs/stage` fingerprint:
+this lane amended approved rows, and generated coordination truth is refreshed
+by the trunk step, not a worker. The other exposed a close-record typo in this
+row: all three byte-budget skill copies were really **4,982 bytes**, while their
+self-baseline still said 4,906. The measured value is now 4,982 in all three
+copies (a net-zero edit, leaving 18 bytes of headroom); the focused cap and
+baseline guards are green: **3 passed**. Re-running the stage test alone leaves
+exactly that one expected generated-freshness failure.
+
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=HEAD -->
+<!-- fig: cmd="wc -c project-trajectory/skills/byte-budget-guard/SKILL.md .agents/skills/byte-budget-guard/SKILL.md .claude/skills/byte-budget-guard/SKILL.md" rev=HEAD -->
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_bootstrap.py -k 'byte_caps or size_budget or capped_doc_baselines'" rev=HEAD -->

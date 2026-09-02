@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
 | `CLAUDE.md` | **8,500** | 7,886 | 2026-08-29 | +59: the full-suite wall time re-measured (~10 min quiet, 3–4× loaded; was "~6 min") |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,906 | 2026-09-01 | WI-572 re-stamped both watched rows (the approval act is the adjudicator's) and this row |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,982 | 2026-09-01 | WI-572 re-stamped both watched rows (the approval act is the adjudicator's) and this row |
 
 **`AGENTS.template.md` and this file are parked at their caps** (~1% free
 each); `CLAUDE.md` holds ~8%. Those two are what you hit first, and the DOC is
