@@ -419,7 +419,7 @@ def test_a_row_born_approved_is_read_as_an_approval_act(tmp_path):
     ]
 
 
-def test_a_born_drafted_row_and_a_de_approval_are_not_approval_acts(tmp_path):
+def test_born_and_withdrawn_drafted_rows_reach_first_approval_not_refusal(tmp_path):
     # THE OTHER HALF, which is what makes the rung a rule rather than a ban on
     # touching the spine. A lane may author `Drafted` rows and may WITHDRAW a
     # claim: neither blesses text, so neither owes a snapshot and neither
@@ -439,16 +439,17 @@ def test_a_born_drafted_row_and_a_de_approval_are_not_approval_acts(tmp_path):
     ar = load_script("acceptance_record")
 
     assert ar.staged_approval_acts(tmp_path, "HEAD~1", "HEAD") == []
-    # The AUTHORED row is seen — by the first-approval reader, which is the
-    # surface that carries it to the adjudicator instead. The bare withdrawal
-    # is not: no text moved, so there is no first approval owed that the lane's
-    # own recorded call has not already answered.
+    # Both resulting Drafted rows are seen by the first-approval reader. The
+    # withdrawal blesses nothing and therefore remains absent from the refusal,
+    # but it cannot be treated as approval: the adjudicator must re-approve it.
     drafted_rows = ar.staged_drafted_rows(tmp_path, "HEAD~1", "HEAD")
-    assert [(r["id"], r["act"]) for r in drafted_rows] == [("SR-002", "added")]
+    assert [(r["id"], r["act"], r["changed"]) for r in drafted_rows] == [
+        ("SR-001", "amended", {}),
+        ("SR-002", "added", {}),
+    ]
 
     # ...and a `Drafted` row whose TEXT then moves DOES reach that surface,
-    # which is what makes the silence above a rule about withdrawal rather
-    # than a blind spot about SR-001.
+    # which preserves the ordinary below-approval amendment classification.
     _sr_at(
         tmp_path,
         run_git,

@@ -76,7 +76,7 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     `staged_approval_acts(root, base, head)` returns the rows that CROSSED into
     an approval claim or arrived already making one — precisely the set the
     amendment reader exempts — and `staged_drafted_rows` returns the rows a lane
-    added or amended below approval. `lane_approval_refusal(root, base, head)`
+    added, amended, or moved into `Drafted`. `lane_approval_refusal(root, base, head)`
     is the judgement over the first: the text refusing a work branch that
     performs the approval act, or None. It fails CLOSED on an unreadable
     snapshot delta, the opposite pole from its readers' silent degrade, because
@@ -581,10 +581,11 @@ def staged_drafted_rows(root, base="HEAD", head=None):
     them is "traced-only" relative to a signature.
 
     A row that is `Drafted` on the after side only. A row that LEFT `Drafted`
-    is an approval act (`staged_approval_acts`); a row that ENTERED it from
-    `Approved` is a de-approval, reported here as `amended` only if its text also
-    moved — the withdrawal itself is the authoring lane's recorded call, not a
-    first approval owed.
+    is an approval act (`staged_approval_acts`); every row that ENTERED it is
+    reported here as `amended`, even when only Status moved. The withdrawal
+    itself still blesses nothing and remains absent from `staged_approval_acts`,
+    but the resulting Drafted row now awaits the adjudicator's approval just as
+    an authored Drafted row does.
 
     Returns [] when not applicable; silent no-op on missing git context."""
     out = []
@@ -603,7 +604,8 @@ def staged_drafted_rows(root, base="HEAD", head=None):
             split = split_changed_cells(csv_path, id_col, before, row)
             changed = dict(split["approved"])
             changed.update(split["traced"])
-            if changed:
+            entered_drafted = not _kitspine.is_drafted(before)
+            if changed or entered_drafted:
                 out.append(
                     {
                         "registry": registry,

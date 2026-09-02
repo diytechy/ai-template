@@ -300,6 +300,23 @@ def test_a_drafted_row_mints_one_first_approval_adjudication(tmp_path):
     assert "meaning-or-clarity" not in text
 
 
+def test_a_status_only_withdrawal_mints_first_approval_adjudication(tmp_path):
+    # Approved -> Drafted refuses no merge because it blesses nothing, but the
+    # resulting row is awaiting approval again. The same two-tree reader must
+    # therefore hand it to trigger (a2), even when no content cell moved.
+    root, before, after = amended_repo(
+        tmp_path, lambda r: write_sr(r, status="Drafted")
+    )
+    _released(root)
+    minted, refusal = intake.intake_after_merge(root, before, after, {}, "wi-003")
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    wid, relpath = minted[0]
+    assert queued_rows(root)[wid]["Brief"] == "first-approval"
+    text = (root / relpath).read_text(encoding="utf-8")
+    assert "SR-001 amended" in text
+
+
 def test_a_held_rung_mints_no_first_approval_row(tmp_path):
     # The ruling's own boundary, and the half that keeps this from pre-empting a
     # signature the owner owes: the adjudicator acts only on rungs the dial

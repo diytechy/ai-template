@@ -28,7 +28,8 @@ and amends cell text; nothing else changed about what a lane may do.
    born-`Approved` rows of WI-483, WI-500, WI-501, WI-507.
 2. **A first-approval adjudication arm exists.** Trigger (a2) mints ONE
    `brief = "first-approval"` row per merge over the `Drafted` rows the lane
-   handed over, on the rungs the dial releases; a held rung is not minted and
+   handed over — including a status-only withdrawal into `Drafted` — on the
+   rungs the dial releases; a held rung is not minted and
    surfaces to the owner as before. Its brief renders each row's WHOLE chain
    (`trace.spine_chain`, extracted from `reattest_model` so the judge and the
    owner's surface cannot disagree) and asks one question — approve, or return
@@ -48,7 +49,7 @@ and amends cell text; nothing else changed about what a lane may do.
    (b) narrowed by one sentence; `gate-advance`, `spine-authoring` and
    `worker.template.md` updated.
 5. **Tests** in the modules' existing style: five at the merge slot, four at the
-   reader, three at the trigger, six at the brief — the last of which pins that
+   reader, four at the trigger, six at the brief — the last of which pins that
    the brief's terminal sequence cannot stop before performing an approved
    row's flip-and-snapshot act.
 

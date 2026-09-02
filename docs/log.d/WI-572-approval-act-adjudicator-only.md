@@ -222,17 +222,31 @@ failure scenario actually turns on is the dial, and that is now filtered from
 one home at both ends. The identity-scoping half is named here rather than done
 silently; if the owner wants it, it is a schema row of its own.
 
+### REVIEW-A rework: a withdrawal still owes re-approval
+
+Round 4 found the shared reader's last asymmetric edge: `Approved` → `Drafted`
+was correctly absent from the lane refusal, but a status-only withdrawal was
+also absent from `staged_drafted_rows`. That silently stranded the row even
+though the live re-attestation model correctly said it awaited `approve`.
+
+The shared two-tree reader now classifies every transition into `Drafted` as an
+`amended` Drafted row, with an empty content delta when Status alone moved.
+That record feeds the existing first-approval trigger; the approval-act reader
+is unchanged and still refuses no de-approval. A reader regression pins both
+sides of that split, and a trigger regression pins the resulting
+`brief = "first-approval"` mint.
+
 ### The harness, and the two reds it leaves
 
-Full unfiltered suite, RE-MEASURED at the final tip `78e20e4e` — after the close
-and after the REVIEW-A rework, which is the tree an integrator actually merges:
-**3259 passed, 2 failed, 24 skipped in 573.88 s** (`python -m pytest -q -n
-auto`). Both failures are the two reds analysed below, and neither is this
-row's. The earlier reading in this section — 3257 passed, 1 failed, 24 skipped
-in 557.32 s — was taken BEFORE the close drained the last claim and before the
-rework added its two dial tests; it is kept here as the measurement it was, not
-corrected away. The smoke tier at the same tip: 1455 passed, 1 failed, 8
-skipped in 21.10 s, 23.0 s against the 60 s budget — within.
+Full unfiltered suite, re-measured after the status-only-withdrawal rework:
+**3261 passed, 2 failed, 24 skipped in 576.13 s**. Both failures are the two
+reds analysed below, and neither is this row's. The smoke tier on the same tree:
+1455 passed, 1 failed, 8 skipped in 21.15 s; the independent budget run measured
+20.9 s against the 60 s ceiling — within.
+
+fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=7ec4544a-dirty
+fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=7ec4544a-dirty
+fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=7ec4544a-dirty
 
 The first failure is
 `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`, and
@@ -300,11 +314,6 @@ row, not smuggled into this one.
   substance — a work lane never approves, only an adjudication does, and two
   acts cannot overlap — is delivered by exempting the adjudication lane rather
   than by building a second path.
-- **A bare withdrawal mints nothing.** A row moved `Approved` -> `Drafted` with
-  no text change is not carried to the first-approval trigger: the lane's
-  recorded call already answers it, and minting there would ask an adjudicator
-  to undo a deliberate withdrawal. A withdrawn row whose text then moves DOES
-  reach the surface; both halves are pinned.
 - **One correction outside the row's own scope.** PROCESS.md §4's snapshot
   sentence still said the copy is "replaced wholesale at each approval", which
   WI-571 made false. It is the sentence this row was editing, so leaving a
