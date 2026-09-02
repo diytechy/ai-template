@@ -56398,3 +56398,9 @@ answered yes — `safety_class = "spine"` dispatches exclusive — with the limi
 that exclusivity guards the registries, not the baseline.
 
 Deferred open items: none — the ruling is made and its executing row is queued; no question is left for the owner by this entry.
+
+## 2026-09-01 — Addendum: the owner reads the six MEANING rows as consistent, and asks the approval-act row to state the lane/adjudicator division
+
+The owner read the re-attestation section of `docs/open-items.html` — the six rows the WI-566 amendment adjudication ruled MEANING (LLR-058, LLR-144, LLR-198, TC-138, TC-147, TC-194) — and recorded "meaning appears consistent". The owner also noted that those rows sit above the declared approval threshold (`human_approval_through = "DevStg-Needs"`), so under the ruling made earlier this evening they need not have surfaced to the owner at all: their re-attestation is the adjudicator's act, on trunk. No flip or snapshot is taken now — the supervising session does not perform approval acts, the copy-scope fix has not landed, and the arm that performs them is the queued row's deliverable; the owner's read is on record for that arm to cite. At the owner's request the plan of record for that row gained a section (2a) stating the division of labour between a work lane and the adjudicator — who authors, who amends, who flips, who snapshots, who judges an amendment, what surfaces to the owner, and the concurrency property — so the worker brief, the adjudicator briefs and PROCESS.md say the same thing once.
+
+Deferred open items: none — the owner's read is recorded; nothing new is owed.

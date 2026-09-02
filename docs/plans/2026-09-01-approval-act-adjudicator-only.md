@@ -58,6 +58,29 @@ What the record said before this ruling (established 2026-09-01):
   independent, and both are wanted. This row is serialized behind it because
   both touch `intake.py` / `baseline_snapshot.py`.
 
+## 2a. Division of labour — the work lane versus the adjudicator (owner, 2026-09-01)
+
+The owner asked for this stated plainly, because the record never did, and
+the wi508 lane fell through the gap. The rule the row ships must say, in the
+worker brief, the adjudicator briefs and PROCESS.md, exactly this:
+
+| | The work lane (a WI's worker session) | The adjudicator (a trunk-side, exclusive adjudication session) |
+|---|---|---|
+| Authors spine rows | Yes — new SR/LLR/TC rows are written **Drafted**, with their chain links, rationale and evidence cells filled. | No. |
+| Amends spine text | Yes — any cell, on any row, including Approved rows; the row's Status is left alone. | No; it may RETURN a row with findings, never rewrite it. |
+| Flips Status (Drafted → Approved → Founded) | **Never.** A flip in a lane's delta refuses the merge. | Yes, on the rungs the dial releases, in its own reviewed commit on trunk, after reading the whole chain. |
+| Writes `docs/archive/last_approved/` | **Never.** | Yes — the snapshot is taken in the same commit as the flip, scoped to the registries the act covers (the copy-scope row). |
+| Judges a post-approval amendment | No; it records what it changed and why in its fragment. | Yes — MEANING or CLARITY; on a released rung a MEANING verdict is followed by its own re-attestation (flip + snapshot) in the same session; on a held rung the row goes to the owner's brief. |
+| Surfaces to the owner | Only through the ordinary channels (a `## Dispositions` open item, a fragment's deferral). | Only what the dial holds (today: Needs) and what it cannot rule (an `open_item` it mints with a full brief). Rows above the threshold do NOT surface to the owner; the adjudicator is the approving authority for them, which is why it must hold the whole chain. |
+| Concurrency | Runs in parallel with other lanes; may not hold the spine. | Exclusive on trunk; nothing else claims while it runs, so two acts cannot conflict and the snapshot moves only there. |
+
+Consequence the owner named on reading the six MEANING rows of the WI-566
+amendment adjudication (2026-09-01: "meaning appears consistent"): those
+rows sit above the approval threshold, so they should not have had to wait
+on the owner at all — under this plan they are the first-approval arm's
+first re-attestation case, performed on trunk with the owner's read on
+record, not a signature the owner owes.
+
 ## 3. Done-when
 
 1. **Lanes cannot approve.** A worker branch's merge is REFUSED (fail-closed,
