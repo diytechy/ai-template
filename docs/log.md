@@ -56285,3 +56285,26 @@ own row); the wi508 hold-ban ERROR cleared with the phantom head.
 After the pause was re-armed the owner directed, and the session performed as reviewed trunk commits: (1) the six wi508 2026-08-30 log entries restored verbatim from the branch's own log at `fa3c99c4` (`0e4cbfb1`, 401 insertions, 0 deletions; `check_docs --stale` back to 0 broken — decision 56's "not restored" is superseded); (2) `OI-77` and `OI-78` hand-filled with the owner brief cells the automated mint omitted (`6032ce69`); (3) the typed open-item brief filed as its own row through `intake._mint` against [plans/2026-09-01-typed-open-item-brief.md](plans/2026-09-01-typed-open-item-brief.md) and prioritized to the head of the frontier (`c19db8df`, classified and given its Context at `3034abca`, priority corrected at `8af51523` — the scheduler sorts Priority DESCENDING, so P1 had placed it sixth; the direct `_mint` call also wrote neither `safety_class` nor `## Context`, a mint-shape gap for the same row). The row's design answers the owner's question: the ADJUDICATOR authors the brief in a typed `[open_item]` table and the mint writes it verbatim, refusing a thin one.
 
 Deferred open items: OI-77, OI-78
+
+## 2026-09-01 — the owner rules OI-77: (a), the intake write-back reads the value the parser already parsed
+
+The owner read the hand-filled card (`6032ce69`) in the evening sitting and
+ruled **(a)**: `intake._replace_inbound_edges` re-points a dependent's hard
+`needs` edge from the parsed TOML value (or, minimally, the existing pattern
+under `re.DOTALL`), so the WI-541 strand class becomes unrepresentable
+regardless of how a spec's `needs` list is laid out. The recommendation's
+guard stands with the ruling: the rewrite stays surgical — only the `needs`
+value moves, the rest of the spec byte-identical — with a dependent carrying
+a multi-line `needs` as the acceptance test. The two cosmetic WI-552
+leftovers (the dead `intake._OI_ID_RE`; the `check_trajectory.validate`
+docstring against the `known_ois=None` coercion) ride the same row.
+
+Clarified for the record, because the owner asked: the `needs` in this ruling
+is a work-item spec's **`needs` frontmatter cell** — its hard-predecessor
+edges in the WI graph (`WI-###` and `OI-###` tokens) — not a stakeholder need
+(`SN-###`). No stakeholder-needs row is touched by any option.
+
+The ruling unparks the row that carries it (its `needs` names this open item),
+so the scheduler reads it ready on the next resume.
+
+Deferred open items: none — this entry records a ruling, it raises none.
