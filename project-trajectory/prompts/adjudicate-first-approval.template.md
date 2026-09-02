@@ -83,4 +83,9 @@ Then exactly one machine line:
 
     OUTCOME: APPROVE|RETURN rows=N
 
-`APPROVE` only when EVERY row you were shown is approved. Commit the verdict file (an adjudication is a recorded verdict — its one home), ending that commit with the trailer `WI: {wi}` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open — and stop.
+`APPROVE` only when EVERY row you were shown is approved. Commit the verdict file (an adjudication is a recorded verdict — its one home), ending that commit with the trailer `WI: {wi}` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open.
+
+THEN, AND ONLY AFTER THAT VERDICT IS RECORDED, finish the outcome you ruled:
+
+- If ANY row line says `APPROVE` — an all-approve `OUTCOME: APPROVE` or a mixed batch whose `OUTCOME` is `RETURN` — perform steps 1–3 above for exactly those approved rows. The flip plus scoped snapshot is a separate reviewed commit after the verdict commit. Stop only after that approval commit is recorded.
+- Only when EVERY row line says `RETURN` may you stop without changing a registry or the approval snapshot. The required `## Dispositions` follow-up is already part of the recorded verdict.

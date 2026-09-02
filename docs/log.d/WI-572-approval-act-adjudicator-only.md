@@ -341,3 +341,15 @@ narrowing the owner's approval brief to the held rungs; giving
 `derive_stage --check` twin already has; and teaching `wi_convert`'s folder-home
 walk to skip the work subfolders' `README.md` (a red that predates this row and
 surfaces whenever the claim queue drains).
+
+### REVIEW-A rework: the terminal sequence performs the ruled act
+
+Round 3 found that the first-approval brief's last sentence still carried the
+generic adjudication protocol — commit the verdict and stop — after the body had
+assigned an approving session a second commit containing the flip and scoped
+snapshot. A session could therefore conform to the terminal instruction while
+leaving an `APPROVE` verdict unapplied. The terminal sequence now branches on
+the per-row rulings: any approved row, including the approved portion of a mixed
+`OUTCOME: RETURN` batch, requires the separate approval commit before stopping;
+only an all-RETURN result stops without a registry or snapshot change. The
+rendered-prompt regression pins all four parts of that sequence.

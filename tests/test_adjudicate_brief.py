@@ -824,6 +824,24 @@ def test_the_first_approval_brief_carries_the_WHOLE_CHAIN(tmp_path):
     assert "one reviewed commit" in text
 
 
+def test_the_first_approval_brief_cannot_stop_before_its_approved_act(tmp_path):
+    repo = _first_approval_repo(tmp_path)
+    text, why = ab.compose(
+        repo,
+        {"WI-ID": "WI-301", "Brief": "first-approval"},
+        repo / "docs/reviews/v.md",
+    )
+    assert why is None, why
+    terminal = text.split("THEN, AND ONLY AFTER THAT VERDICT IS RECORDED", 1)[1]
+    assert "If ANY row line says `APPROVE`" in terminal
+    assert "mixed batch whose `OUTCOME` is `RETURN`" in terminal
+    assert "Stop only after that approval commit is recorded" in terminal
+    assert (
+        "Only when EVERY row line says `RETURN` may you stop without changing"
+        in terminal
+    )
+
+
 def test_the_first_approval_brief_REFUSES_once_the_rows_are_ruled(tmp_path):
     # Rule 2, and `red_tc_values`' live-recompute rule applied to this arm: the
     # row is minted at a merge and claimed later, so by composition time another
