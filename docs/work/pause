@@ -1,5 +1,0 @@
-# Tracked pause (concurrency-restructure §5.6): the dispatcher stops CLAIMING at
-# the next session boundary; the in-flight lane finishes and merges. Unpausing is
-# a reviewed deletion commit of this file.
-reason = "Owner direction 2026-09-01 evening (supervised session, decision 56 in docs/decisions-for-review-2026-08-31.md): re-armed while the last adjudication lane finished under it; the loop is stopped and no worktree remains. The session merged four rows (the construction-first reviewer clause, the approval-brief renderer defects, the wi508 partial-close conversion and its disposition adjudication), every verdict rollup compiled by hand and both adjudications corrected under drawn review; the merge minted the spine-reseal successor parked on OI-78. The frontier holds until the owner has read decisions 47-56, ruled OI-78 (STAND vs REVIEW-THEN-STAND on the absorbed off-spine baseline) and OI-77, and decided the six-entry log restoration. Delete this file in a reviewed commit to resume at the generated frontier."
-since = "2026-09-01"
