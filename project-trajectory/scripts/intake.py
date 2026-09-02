@@ -71,15 +71,18 @@ of record in docs/requirements/interfaces.toml).
 Contract IF-090: the trunk-side intake mint, by importer.
     `intake_after_merge(root, before, after, outcomes, branch)` is integrate's
     post-merge arm: it mints one landed merge's forced rows — the amendment
-    adjudications, the close dispositions and the drafts a close names — as ONE
-    bookkeeping commit inside the slot the caller holds, returning them with a
-    refusal slot. `mint_gap_rows(root, lines)` is the dispatcher's
-    empty-frontier arm over a census, and `context_block(root, wi_row)` renders
-    the registry joins a worker prompt embeds — advisory: agent_loop imports it
-    lazily and reads a failure as no join. `adjudication_action` and
-    `flip_verified` are CLI-driven only. ALL-OR-NOTHING: any refusal mints
-    nothing and restores trunk while the merge stands, and deterministic titles
-    make the CLI recovery re-run idempotent by exact-title dedup.
+    adjudications, the FIRST-APPROVAL adjudications over the `Drafted` rows the
+    lane handed over on rungs the dial releases (owner ruling 2026-09-01: a lane
+    authors, an adjudicator approves), the close dispositions and the drafts a
+    close names — as ONE bookkeeping commit inside the slot the caller holds,
+    returning them with a refusal slot. `mint_gap_rows(root, lines)` is the
+    dispatcher's empty-frontier arm over a census, and
+    `context_block(root, wi_row)` renders the registry joins a worker prompt
+    embeds — advisory: agent_loop imports it lazily and reads a failure as no
+    join. `adjudication_action` and `flip_verified` are CLI-driven only.
+    ALL-OR-NOTHING: any refusal mints nothing and restores trunk while the
+    merge stands, and deterministic titles make the CLI recovery re-run
+    idempotent by exact-title dedup.
 """
 
 from __future__ import annotations
@@ -770,12 +773,12 @@ def _released_drafted_rows(root, before, after):
     unmapped tier is one this ruling has not thought about, and the failure
     direction for "who approves" is always the human."""
     docs = Path(root) / "docs"
-    return [
-        rec
-        for rec in acceptance_record.staged_drafted_rows(root, before, after)
-        for rung in [APPROVAL_RUNG.get(spine_carrier.stem(rec["registry"]))]
-        if rung is not None and not ac.human_holds(docs, rung)
-    ]
+    released = []
+    for rec in acceptance_record.staged_drafted_rows(root, before, after):
+        rung = APPROVAL_RUNG.get(spine_carrier.stem(rec["registry"]))
+        if rung is not None and not ac.human_holds(docs, rung):
+            released.append(rec)
+    return released
 
 
 def _first_approval_context(records):

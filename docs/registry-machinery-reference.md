@@ -201,7 +201,7 @@ two scripts disagreeing about the gate.
 |---|---|---|---|
 | `Drafted` | `is_drafted` | **DevStg-Below — drops the repo gate** | Exempt from *child-completeness*: needs no LLR, no TC. SN linkage and all integrity rules still apply. Exempt from `--require-verified`. |
 | `Approved` | `is_approved` | doesn't hold a rung open (`is_drafted` is what does) | The row's TEXT is blessed. It makes NO claim that tests passed: the 2026-08-15 ruling (OI-30 D2) carried onto the stage axis at WI-498 slice 3. **No cell reaches DevStg-Release**, and since WI-500 that is structural rather than vacuous — the rung's one input is `spine_stage`'s `evidence_passed` parameter, fed only by `kitlib.stage.evidence_verdict` over the harness-written `docs/test/evidence` record, and the pin demands that return be guarded by the bare parameter so a row-computed guard is unrepresentable. |
-| `Founded` | `is_founded` | same as `Approved` (settled, never caps) | `Approved` PLUS a demonstration: the artifacts the row calls for EXIST. **COMPUTED, not typed** — the four discharge tests are the SN coverage rung, SR decomposition, `check_doc_refs`' LLR anchor rule and the TC `Evidence` half. Armed for the spine 2026-08-20 (D-9 step 8); no live cell takes it. Nothing WRITES it — whether a tool ever will is D-9 consequence 2's still-open half — but whether an AGENT-authored `Founded` is itself an error is answered: OI-45 (ruled 2026-08-20) sanctions it for spine content past the declared human-approval level (`agent_common.human_holds`). |
+| `Founded` | `is_founded` | same as `Approved` (settled, never caps) | `Approved` PLUS a demonstration: the artifacts the row calls for EXIST. **COMPUTED, not typed** — the four discharge tests are the SN coverage rung, SR decomposition, `check_doc_refs`' LLR anchor rule and the TC `Evidence` half. Armed for the spine 2026-08-20 (D-9 step 8); no live cell takes it. Nothing WRITES it — whether a tool ever will is D-9 consequence 2's still-open half — but whether an AGENT-authored `Founded` is itself an error is answered: OI-45 (ruled 2026-08-20) sanctions it for spine content past the declared human-approval level (`agent_common.human_holds`) — NARROWED 2026-09-01 to an ADJUDICATION session on the serial trunk side: a worker lane's merge is refused if its delta writes any approval claim (`integrate._approval_act_refusal`). |
 | anything else | — | (an integrity finding — see §3.2's closure) | Not inert: reported. |
 
 **There is no value for a post-approval amendment.** A transitional `Modified`
@@ -211,7 +211,9 @@ drift rule had run live beside it through the signing act: an amended row now
 stays `Approved`, and what marks it is the DIFFERENCE from its copy in
 `docs/archive/last_approved/` — a property of two files, for every row rather
 than the ones somebody remembered to mark. Blessing an amendment is a reviewed
-commit that re-reads the changed cells and runs `intake.py snapshot`.
+commit that re-reads the changed cells and runs `intake.py snapshot` — the
+adjudicator's act since 2026-09-01, never the lane's: the lane amends, the
+adjudication rules on the amendment and re-anchors it in the same commit.
 
 ### 3.3 `Phase` — optional phased delivery
 
@@ -751,6 +753,17 @@ brief and four review rounds — for a change that altered no requirement.
 **The residual rule fails safe:** a column in *neither* set is treated as
 **approved**, so a newly-added column can only ever be too loud, never silently
 un-approved. `tests/test_trajectory_staged.py` pins both halves.
+
+**The other half of the same walk** (owner ruling 2026-09-01). That reader
+EXEMPTS a row whose `Status` moved — "a deliberate call this does not
+second-guess". `acceptance_record.staged_approval_acts` reports precisely the
+exempted set: a row crossing INTO `Approved`/`Founded`, or arriving already
+claiming one. On a WORK BRANCH those are refusals, not records — the approval
+act is an adjudicator's, on the serial trunk side — and
+`lane_approval_refusal` words the refusal the merge slot returns. Its sibling
+`staged_drafted_rows` reports the rows the lane authored below approval, which
+`intake` turns into the first-approval adjudication that approves them. All
+four readers share one two-tree walk, so no row is visible to only one.
 
 **Chain-consistency warns — RETIRED** (owner ruling 2026-08-17, the cell
 reading): `modified_chain_advisories` told an author to flip the owning SR

@@ -72,6 +72,16 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     ruling, not this module's. A new row is not an amendment, a row whose
     status moved is a deliberate call this does not second-guess, and any
     missing git context degrades to `[]` rather than raising.
+    THE SAME WALK ANSWERS THE APPROVAL-ACT QUESTIONS (owner ruling 2026-09-01).
+    `staged_approval_acts(root, base, head)` returns the rows that CROSSED into
+    an approval claim or arrived already making one — precisely the set the
+    amendment reader exempts — and `staged_drafted_rows` returns the rows a lane
+    added or amended below approval. `lane_approval_refusal(root, base, head)`
+    is the judgement over the first: the text refusing a work branch that
+    performs the approval act, or None. It fails CLOSED on an unreadable
+    snapshot delta, the opposite pole from its readers' silent degrade, because
+    a refusal is where the conservative direction belongs. All four share
+    `_spine_row_sides`, so no reader can be the only one that sees a row.
 Contract IF-129: the ONE cell-comparison basis.
     `split_changed_cells(registry_path, id_col, before_row, live_row)` returns
     `{"approved": {cell: (before, after)}, "traced": {cell: (before, after)}}`
