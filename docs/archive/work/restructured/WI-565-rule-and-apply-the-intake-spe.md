@@ -3,11 +3,15 @@ id = "WI-565"
 title = "Rule and apply the intake._SPEC_NEEDS_RE no-DOTALL residual, and clear the two cosmetic WI-552 leftovers"
 workstream = "process"
 needs = ["OI-77"]
-specref = "docs/archive/work/complete/WI-563-spot-check-the-clean-close-of.md"
+specref = ""
 buildtier = "quick"
 priority = 3
 safety_class = "ordinary"
 +++
+
+## Deliverable
+
+Restructured into WI-582.
 
 ## Context
 

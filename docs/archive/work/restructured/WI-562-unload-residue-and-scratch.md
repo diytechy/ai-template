@@ -1,7 +1,7 @@
 +++
 id = "WI-562"
 title = "Unload residue and scratch: integrate.lock declared, the worker told where scratch belongs (OI-76 / plan 2.7)"
-specref = "docs/plans/2026-08-31-verdict-record-and-queue-blockers.md"
+specref = ""
 workstream = "process"
 sr_refs = []
 needs = []
@@ -9,6 +9,10 @@ buildtier = "quick"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Restructured into WI-581 (Done-when 1, 3) and WI-580 (Done-when 2).
 
 ## Context
 

@@ -147,7 +147,10 @@ with the spine is one of three questions and the other two remain.
   hand claim can produce; the close then refuses by name (fatal, owner reads).
 - Each absorbed row moves `queued/ -> archive/work/restructured/` with a
   `## Deliverable` of exactly one line: `Restructured into WI-<successor>.`
-  Its scope text is untouched (the same rule as `partial`).
+  Its scope text is untouched (the same rule as `partial`); its `specref`
+  line is CLEARED, as every terminal move clears it (R-F — measured at the
+  first restructure on 2026-09-02, where the strict check errored on all
+  eight rows until it was).
 - `supersedes` becomes a **list** everywhere: `wi_convert` parses a string or
   a list into the `Supersedes` cell (`;`-joined); `_apply_supersede` loops;
   `_replace_inbound_edges` re-points every dependent of every absorbed row to

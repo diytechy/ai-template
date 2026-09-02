@@ -4,10 +4,10 @@ title = "The decomposition debt owner (cont.): three wide modules, check_traject
 workstream = "process"
 specref = "docs/plans/2026-08-25-remap-alignment.md"
 buildtier = "strong"
-priority = 2
+priority = 1
 safety_class = "ordinary"
 supersedes = "WI-521"
-needs = ["WI-552", "WI-553"]
+needs = ["WI-579", "WI-580", "WI-581", "WI-551", "WI-583"]
 +++
 
 ## Context

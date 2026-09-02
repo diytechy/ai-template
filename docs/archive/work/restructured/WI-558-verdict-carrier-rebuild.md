@@ -1,7 +1,7 @@
 +++
 id = "WI-558"
 title = "The verdict carrier rebuilt: the gate computes over logged rounds, the tree-bound trailer, the generated rollup (OI-76)"
-specref = "docs/requirements/open-items.toml#OI-76"
+specref = ""
 workstream = "process"
 sr_refs = []
 needs = []
@@ -9,6 +9,10 @@ buildtier = "strong"
 safety_class = "ordinary"
 priority = 2
 +++
+
+## Deliverable
+
+Restructured into WI-579.
 
 ## Context
 

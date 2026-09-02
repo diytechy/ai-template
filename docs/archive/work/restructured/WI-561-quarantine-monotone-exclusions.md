@@ -1,7 +1,7 @@
 +++
 id = "WI-561"
 title = "The quarantine spares what is monotone or record: the id watermark, docs/reviews, docs/log.d (OI-76 / plan 2.6)"
-specref = "docs/plans/2026-08-31-verdict-record-and-queue-blockers.md"
+specref = ""
 workstream = "process"
 sr_refs = []
 needs = []
@@ -9,6 +9,10 @@ buildtier = "quick"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Restructured into WI-581.
 
 ## Context
 

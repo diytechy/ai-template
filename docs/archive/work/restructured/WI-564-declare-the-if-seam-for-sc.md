@@ -2,11 +2,15 @@
 id = "WI-564"
 title = "Declare the IF-### seam for schedule.py's lazy import of trace, clearing the strict ERROR WI-552 introduced"
 workstream = "process"
-specref = "docs/archive/work/complete/WI-563-spot-check-the-clean-close-of.md"
+specref = ""
 buildtier = "medium"
 priority = 2
 safety_class = "ordinary"
 +++
+
+## Deliverable
+
+Restructured into WI-582.
 
 ## Context
 

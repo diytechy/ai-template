@@ -7,7 +7,7 @@ sr_refs = []
 needs = ["WI-551"]
 buildtier = "medium"
 safety_class = "ordinary"
-priority = 2
+priority = 7
 +++
 
 ## Context

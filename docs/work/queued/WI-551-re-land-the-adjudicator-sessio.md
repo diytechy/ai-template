@@ -3,8 +3,9 @@ id = "WI-551"
 title = "Re-land the adjudicator session-retention layer from its preserved patch, inert at dial 0, DESIGN-CHECK green"
 workstream = "process"
 specref = "docs/archive/work/complete/WI-550-dispose-the-close-recorded-at.md"
+needs = ["WI-579", "WI-580"]
 buildtier = "strong"
-priority = 2
+priority = 7
 safety_class = "ordinary"
 supersedes = "WI-540"
 +++
