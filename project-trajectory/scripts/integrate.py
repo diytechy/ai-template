@@ -1103,10 +1103,8 @@ def _claimed_spec_frontmatters(root, branch):
     """The claimed `(filename, metadata)` pairs, or None if any is unreadable."""
     home = root / ACTIVE / branch
     try:
-        return [
-            (name, _spec_frontmatter(home / name))
-            for _wid, name in _claimed_specs(root, branch)
-        ]
+        claimed = _claimed_specs(root, branch)
+        return [(name, _spec_frontmatter(home / name)) for _wid, name in claimed]
     except (OSError, ValueError):
         return None
 
@@ -1120,11 +1118,10 @@ def _adjudication_lane(root, branch):
     FRONTMATTER ANSWERS FALSE: there it runs the bar; here it makes the branch a
     work lane whose approval act refuses. Both fail toward more checking."""
     metas = _claimed_spec_frontmatters(root, branch)
-    kinds = (
-        str(meta.get("safety_class") or "").strip().lower()
-        for _name, meta in metas or ()
+    return bool(metas) and all(
+        str(meta.get("safety_class") or "").strip().lower() == "adjudication"
+        for _name, meta in metas
     )
-    return bool(metas) and all(kind == "adjudication" for kind in kinds)
 
 
 def _approval_act_refusal(root, branch):
