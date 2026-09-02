@@ -35,10 +35,11 @@ move authorised it. `intake.py snapshot`'s `--approves` help/metavar move to
 two-line CLI edge only (reviewed baseline bump 1177→1179, recorded in the
 ratchet with reason in the fragment).
 
-Tests: `tests/test_baseline_snapshot.py` gains four scope tests (a spine flip
+Tests: `tests/test_baseline_snapshot.py` gains five scope tests (a spine flip
 leaves off-spine snapshot bytes untouched and the census intact; a named ref
-copies exactly its registry; a ref mutes only the registry it names; the seed
-still copies all) and a mirror-green-across-a-scoped-act test; the two existing
+copies exactly its registry; a ref mutes only the registry it names; a
+`Status`-move-only refresh is stamped as a `Status move`; the seed still copies
+all) and a mirror-green-across-a-scoped-act test; the two existing
 tests whose contract changed (a traced-only and a Drafted-only refresh now copy
 NOTHING rather than the whole tree) and the approval-stamp test (exercised via a
 named amendment, since a traced-only refresh now writes nothing) are re-pointed;
@@ -49,8 +50,11 @@ Full-suite result and the pre-existing-failure accounting are in the fragment
 NOT done here (plan §2): `OI-78` is not ruled — rows already absorbed at
 `580df781` stay absorbed until the owner rules; this row stops the NEXT act from
 absorbing more. The queued reseal row `WI-569`'s `## Context` is updated (triage)
-to record that its regeneration now re-seals only the spine rows and leaves the
-off-spine census to its own review. No spine rows were minted or re-statused, so
+to record that, since that row's approval commit moves no `Status` (its
+`LLR-203`/`LLR-204` are already `Approved` and merely confirmed), a bare
+`intake.py snapshot` there now copies ZERO registries — the off-spine census
+survives to its own review, and any registry it means to re-seal must be NAMED
+with `--approves`. No spine rows were minted or re-statused, so
 no approval brief regeneration was owed. Standing constraint honoured: no
 `Status` flip, no `intake.py snapshot` run against this repo's own snapshot —
 the scoped copy was driven on scratch scaffolds and tmp trees only.

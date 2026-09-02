@@ -669,10 +669,12 @@ def _record_approval(base, approves, copied_rels):
             "the snapshot comes from the copied registry files beside it, or "
             "from `git log` over this directory.\n\n"
             "## Refreshes recorded under an explicit approval\n\n"
-            "Each line below is a human's citation of the act that authorised a "
-            "refresh absorbing approved text (`intake.py snapshot --approves "
-            "<ref>`). A refresh that absorbs nothing approved, or that rides a "
-            "`Status` flip, needs no entry.\n\n" + stamped,
+            "Each line below records a refresh that copied a registry under "
+            "authority — a `--approves` ref, or a `Status` move in the copied "
+            "registry (`intake.py snapshot [--approves <REGISTRY=REF>]`) — and "
+            "names, for each registry copied, whether a ref or a Status move "
+            "authorised it. The seed and a refresh that copied nothing (a "
+            "traced-only re-point) write no line.\n\n" + stamped,
             encoding="utf-8",
             newline="\n",
         )
@@ -732,16 +734,19 @@ def _authorised_registries(root, approves, snapshot):
 
 
 def _refresh_targets(root, approves, seed, base):
-    """The registries a REFRESH of a standing snapshot copies, or a raised
+    """`(targets, first_signing)`: the registries a REFRESH of a standing
+    snapshot copies, and whether this refresh is a first signing — or a raised
     refusal when the copy is unauthorised.
 
     The whole tree on a first signing (a `--seed`, an unreadable record being
     repaired, or a scaffold that still holds no registry — the vacuous state
     `unanchored_findings` reads, so `intake.py snapshot --seed` on a bootstrap's
     README-only directory still copies everything); otherwise only the act's
-    authorised scope (`_authorised_registries`). Split from `copy_live` so the
-    scope decision — a self-contained job with its own refusal — does not push
-    the writer's branch count over the C901 bar (WI-571)."""
+    authorised scope (`_authorised_registries`). The `first_signing` flag rides
+    back so `copy_live` stamps the approval only on a genuine refresh, never on
+    the initial blessing. Split from `copy_live` so the scope decision — a
+    self-contained job with its own refusal — does not push the writer's branch
+    count over the C901 bar (WI-571)."""
     try:
         snapshot = load_all(root)
     except SystemExit:
@@ -755,8 +760,8 @@ def _refresh_targets(root, approves, seed, base):
         or not any(spine_carrier.resolve(base / rel) for rel in SNAPSHOTTED)
     )
     if first_signing:
-        return set(SNAPSHOTTED)
-    return _authorised_registries(root, approves, snapshot)
+        return set(SNAPSHOTTED), True
+    return _authorised_registries(root, approves, snapshot), False
 
 
 def copy_live(root, *, seed=False, approves=None):
@@ -814,13 +819,14 @@ def copy_live(root, *, seed=False, approves=None):
             )
         base.mkdir(parents=True, exist_ok=True)
         to_copy = set(SNAPSHOTTED)  # the seed blesses the whole tree, once
+        first_signing = True
     else:
         # The authority gate and the scope decision, keyed on the directory
         # EXISTING rather than on `seed`: creating is seeding and rewriting is
         # refreshing, whatever flag the caller passed. `--seed` against a
         # standing record is a mistake, and a mistake is exactly the thing that
         # must not sail past the check. `_refresh_targets` raises on refusal.
-        to_copy = _refresh_targets(root, approves, seed, base)
+        to_copy, first_signing = _refresh_targets(root, approves, seed, base)
     written = []
     copied_rels = []
     for rel in SNAPSHOTTED:
@@ -846,8 +852,14 @@ def copy_live(root, *, seed=False, approves=None):
         written.append(dest.relative_to(Path(root)).as_posix())
         copied_rels.append(rel)
     written = sorted(written)
-    if approves:
-        _record_approval(base, approves, copied_rels)
+    # Every non-seed refresh that copied a registry is stamped, so the act's
+    # scope is auditable whether a `--approves` ref or a `Status` move authorised
+    # it (WI-571 rework: a Status-move-only refresh copied its registry but wrote
+    # no stamp, leaving that approval unauditable). `approves or {}` makes the
+    # per-registry reason read "Status move" when no ref named it. The seed and a
+    # refresh that copied nothing (a traced-only re-point) write no line.
+    if not first_signing and copied_rels:
+        _record_approval(base, approves or {}, copied_rels)
     return written
 
 

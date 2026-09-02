@@ -38,17 +38,27 @@ after it lands (the mint parks this row `waiting:open-item-pending`):
   and record in the Deliverable that the regeneration RE-SEALS the absorbed
   off-spine rows rather than re-reviewing them;
   - **WI-571 UPDATE (triage, 2026-09-01):** `intake.py snapshot` is now SCOPED
-    to the act (`baseline_snapshot.copy_live`) — a plain run at this row's
-    approval commit copies only the registries a `Status` flip authorises (the
-    `LLR-203`/`LLR-204` spine rows) and leaves the off-spine `interfaces.toml`/
-    `external.toml`/`components.toml` snapshot bytes UNTOUCHED. So a bare
-    regeneration no longer re-seals the absorbed off-spine rows — the off-spine
-    census SURVIVES to its own review instead of being zeroed. If the owner
-    rules **"stand"** on the off-spine baseline, this row must name those
-    registries explicitly to re-seal them: `intake.py snapshot --approves
-    "interfaces.toml=<ref>;external.toml=<ref>;components.toml=<ref>"`. Absent
-    that, "stand" on the spine and "leave the off-spine census standing" is the
-    default a bare `intake.py snapshot` produces;
+    to the act (`baseline_snapshot.copy_live`) — a refresh copies only the
+    registries an approving `Status` MOVE happened in, plus every registry
+    `--approves` names, and leaves every other registry's snapshot bytes
+    UNTOUCHED. **This row's approval commit moves no `Status`:** `LLR-203`/
+    `LLR-204` are ALREADY `Approved` on trunk (the `580df781` flips the WI-568
+    adjudication KEEPS) and this successor only CONFIRMS them, and `TC-199`/
+    `TC-200` stay `Drafted`. So a bare `intake.py snapshot` here copies ZERO
+    registries — no flip authorises the spine copy, and the off-spine
+    `interfaces.toml`/`external.toml`/`components.toml` bytes are untouched. The
+    two consequences:
+    - the off-spine census SURVIVES to its own review instead of being zeroed
+      by a whole-tree copy (the WI-571 fix) — good, and the default a bare run
+      now produces;
+    - the four spine rows are NOT re-copied either, which is correct because
+      they are already sealed byte-identical in `last_approved`, so nothing on
+      the spine needs re-sealing. If the owner rules **"stand"** and this row is
+      to DELIBERATELY re-seal any registry through a snapshot refresh, it must
+      NAME it — `intake.py snapshot --approves "<registry>=<ref>"` — since a
+      bare run authorises no copy. To re-seal the off-spine baseline under
+      "stand": `intake.py snapshot --approves
+      "interfaces.toml=<ref>;external.toml=<ref>;components.toml=<ref>"`;
 - ruling **"review-then-stand"** -> the owner reads the absorbed diff
   (`git diff 6d3d9db4 551d1b2c -- docs/archive/last_approved/docs/requirements/`)
   and amends any rejected row LIVE in the registry through the ordinary

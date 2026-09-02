@@ -316,6 +316,25 @@ def test_a_spine_flip_LEAVES_the_offspine_snapshot_bytes_UNTOUCHED(tmp_path):
     assert not any("interfaces" in w for w in written)
 
 
+def test_a_STATUS_MOVE_refresh_is_STAMPED_as_a_Status_move(tmp_path):
+    """WI-571 rework: a refresh authorised by a `Status` move alone (no
+    `--approves` ref) copied its registry but wrote NO stamp, so that approval
+    act was unauditable in the prose the stamp promises to carry. Now every
+    non-seed refresh that copies a registry is recorded — the seed writes no
+    stamp, so the record here is written by the flip and names the copied
+    registry with `Status move`, not a ref."""
+    root = _seeded(tmp_path)
+    stamp_path = SNAP.snapshot_root(root) / SNAP.README
+    assert not stamp_path.is_file(), "the seed must not write an approval stamp"
+    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')  # the flip
+    written = SNAP.copy_live(root)  # no --approves: a Status move authorises it
+    assert any("system-requirements" in w for w in written)
+    stamp = stamp_path.read_text(encoding="utf-8")
+    assert "system-requirements.toml" in stamp  # the copied registry is named...
+    assert "Status move" in stamp  # ...and its reason is the flip, not a ref
+    assert "Nothing parses it" in stamp  # still prose, design §F8
+
+
 def test_a_named_ref_copies_EXACTLY_its_registry(tmp_path):
     """The `--approves` half of the scope: a ref names its registry, and the
     copy moves that one and nothing else, even with unrelated off-spine drift in

@@ -1,3 +1,26 @@
+## 2026-09-01 — WI-571 rework: review A (61180ab, CHANGES-REQUESTED, 2 MINOR)
+
+Addressed both findings of `docs/reviews/wi-571-the-snapshot-copies-only-what/002-REVIEW-A-61180ab.md`.
+
+- **[MINOR] baseline_snapshot.py — a Status-move-only refresh wrote no stamp.**
+  `copy_live` recorded the approval stamp only `if approves:`, so a refresh
+  authorised by a `Status` move alone copied its registry but left the act
+  unauditable in the prose stamp the new contract promises. FIX: `_refresh_targets`
+  now returns `(targets, first_signing)` and `copy_live` stamps EVERY non-seed
+  refresh that copied a registry, passing `approves or {}` so the per-registry
+  reason reads `Status move` when no ref named it. The seed and a refresh that
+  copied nothing (traced-only re-point) still write no line. README prose and the
+  `_record_approval`/`_refresh_targets` docstrings updated to match; new test
+  `test_a_STATUS_MOVE_refresh_is_STAMPED_as_a_Status_move` drives it red→green.
+- **[MINOR] WI-569 triage claimed a bare snapshot would copy the LLR rows.** The
+  triage note asserted this row's approval commit *flips* `LLR-203`/`LLR-204`, but
+  the same spec states both are already `Approved` (the KEPT `580df781` flip) and
+  the successor only CONFIRMS them, so under the scoped copy a bare `intake.py
+  snapshot` moves no `Status` and copies ZERO registries. FIX: corrected the
+  triage to say a bare run copies nothing (the LLR rows are already sealed
+  byte-identical, so no spine reseal is needed), and to re-seal any registry
+  deliberately the row must NAME it with `--approves`.
+
 ## 2026-09-01 — WI-571: the snapshot copies only what the act authorises
 
 Scoped `baseline_snapshot.copy_live` to the registries an approval act actually
