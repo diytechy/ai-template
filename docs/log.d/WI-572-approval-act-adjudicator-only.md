@@ -244,9 +244,9 @@ reds analysed below, and neither is this row's. The smoke tier on the same tree:
 1455 passed, 1 failed, 8 skipped in 21.15 s; the independent budget run measured
 20.9 s against the 60 s ceiling — within.
 
-fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=7ec4544a-dirty
-fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=7ec4544a-dirty
-fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=7ec4544a-dirty
+fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=9cc58b2d
+fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=9cc58b2d
+fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=9cc58b2d
 
 The first failure is
 `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`, and
