@@ -104,6 +104,7 @@ import agent_common as ac
 import baseline_snapshot
 import prompts
 import spine_carrier
+from kitlib import ladder
 
 # The declared `Brief` cell -> the prompt key its session is composed from.
 BRIEF_PROMPTS = {
@@ -443,13 +444,14 @@ def amendment_values(root, row):
             else " (not yet committed, so no copy stamp)",
         )
     )
-    lines = []
+    lines, tiers = [], set()
     for entry in model:
         for chain_row in entry["rows"]:
             approved = chain_row.get("approved") or frozenset()
             cells = [c for c in chain_row["cells"] if c[0] in approved]
             if not cells:
                 continue
+            tiers.add(chain_row["kind"])
             lines.append(
                 "- {} {} (chain of {})".format(
                     chain_row["kind"], chain_row["id"], entry["id"]
@@ -465,7 +467,61 @@ def amendment_values(root, row):
             "cells — neither is a meaning-or-clarity question, so there is no "
             "amendment to rule on"
         )
-    return {"baseline": baseline, "rows": "\n".join(lines)}, None
+    return {
+        "baseline": baseline,
+        "rows": "\n".join(lines),
+        "aftermath": _aftermath(root, tiers),
+    }, None
+
+
+# The DevStg rung each spine tier's rows are approved INTO — the join that lets
+# the dial (an ordinal on that ladder) answer "is this tier's approval mine or
+# the owner's". `intake.APPROVAL_RUNG` states the same join keyed by registry
+# path; keyed by tier here because that is what a rendered chain row carries.
+_APPROVAL_RUNG_OF = {
+    "SR": ladder.STAGE_REQS,
+    "LLR": ladder.STAGE_LLREQS,
+    "TC": ladder.STAGE_TESTS,
+}
+
+
+def _aftermath(root, tiers):
+    """What a MEANING verdict owes NEXT, derived from the declared gate
+    authority for the tiers actually shown (owner ruling 2026-09-01).
+
+    THIS SLOT REPLACED A SENTENCE THAT HAD GONE FALSE. The template used to end
+    "the flip, if one is owed, is the mechanical tool's act, not yours" — true
+    when written, and false since OI-45 ruled (b) retired that tool
+    (`intake._apply_flips` writes nothing, permanently). A MEANING verdict on a
+    loop-held rung therefore ended at a brief nobody was owed, contradicting the
+    loop-held doctrine itself.
+
+    DERIVED, NOT LEFT TO THE SESSION. The dial is a repo-level declaration the
+    judge would otherwise have to go read and interpret mid-verdict, which is
+    the shape that produces a session confidently doing the owner's act. An
+    unrecognised tier is reported as HELD, the same direction `human_holds`
+    fails."""
+    docs = Path(root) / "docs"
+    held, mine = [], []
+    for tier in sorted(tiers):
+        rung = _APPROVAL_RUNG_OF.get(tier)
+        (held if rung is None or ac.human_holds(docs, rung) else mine).append(tier)
+    parts = []
+    if mine:
+        parts.append(
+            "THE DIAL FOR THIS ROW: the {} tier(s) sit on a rung the declared "
+            "gate authority has RELEASED, so a MEANING verdict on them is "
+            "re-attested BY YOU, in this session, in its own reviewed "
+            "commit.".format("/".join(mine))
+        )
+    if held:
+        parts.append(
+            "THE DIAL FOR THIS ROW: the {} tier(s) sit on a rung the declared "
+            "gate authority still HOLDS for a human, so a MEANING verdict on "
+            "them stops at your verdict and the signature is the owner's — do "
+            "not re-anchor them.".format("/".join(held))
+        )
+    return "\n\n".join(parts)
 
 
 # --- the first-approval brief (owner ruling 2026-09-01) -----------------------

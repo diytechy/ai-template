@@ -29,7 +29,14 @@ import subprocess
 import sys
 
 import pytest
-from conftest import env_gate_skipif, load_script, pin_autocrlf, run_py, SCRIPTS
+from conftest import (
+    env_gate_skipif,
+    load_script,
+    pin_autocrlf,
+    run_py,
+    set_process_key,
+    SCRIPTS,
+)
 
 ab = load_script("adjudicate_brief")
 baseline_snapshot = load_script("baseline_snapshot")
@@ -695,6 +702,46 @@ def test_with_no_snapshot_the_brief_HOLDS_and_says_FIRST_APPROVAL(tmp_path):
     values, why = ab.amendment_values(repo, {"WI-ID": "WI-301", "Brief": "amendment"})
     assert values is None
     assert "FIRST-APPROVAL" in why and "no accepted anchor" in why
+
+
+def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tmp_path):
+    # done-when 3 (owner ruling 2026-09-01). This template used to end "the
+    # flip, if one is owed, is the mechanical tool's act, not yours" — true when
+    # written, and FALSE since OI-45 ruled (b) retired that tool
+    # (intake._apply_flips writes nothing, permanently). So a MEANING verdict on
+    # a loop-held rung ended at a brief nobody was owed, which contradicts the
+    # loop-held doctrine. What replaces it is not a longer sentence but a
+    # DERIVED one: the dial is a repo declaration the judge would otherwise have
+    # to go read mid-verdict, which is the shape that produces a session
+    # confidently performing the owner's act.
+    repo = _amendment_repo(tmp_path)
+    row = {"WI-ID": "WI-301", "Brief": "amendment"}
+
+    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
+    values, why = ab.amendment_values(repo, row)
+    assert why is None, why
+    assert "RELEASED" in values["aftermath"]
+    assert "re-attested BY YOU, in this session" in values["aftermath"]
+
+    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Release")
+    values, why = ab.amendment_values(repo, row)
+    assert why is None, why
+    assert "still HOLDS for a human" in values["aftermath"]
+    assert "the signature is the owner's" in values["aftermath"]
+
+    # ...and the retired sentence never reaches the JUDGE, which is the property
+    # that matters: a brief that says both things is worse than one that says
+    # the wrong thing. It survives in the dispatcher notes — stripped before
+    # sending — as the record of why this slot exists at all.
+    text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
+    assert why is None, why
+    assert "the mechanical tool's act, not yours" not in text
+    assert "the signature is the owner's" in text  # the aftermath landed instead
+    assert re.findall(r"\{[a-z_]+\}", text) == []
+    template = (
+        SCRIPTS.parent / "prompts" / "adjudicate-amendment.template.md"
+    ).read_text(encoding="utf-8")
+    assert "the mechanical tool's act, not yours" in template  # in the NOTES only
 
 
 # --- the first-approval brief (owner ruling 2026-09-01) -----------------------

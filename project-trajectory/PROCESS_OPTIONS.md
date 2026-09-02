@@ -424,6 +424,62 @@ scaffolds the skeleton pre-filled for the chosen level.
 identically at every level — authority is *who accepts*, not what runs. The
 harness is the bar everywhere; a red check is a red check.
 
+### Who performs the approval act
+
+*Referenced from PROCESS.md §4.* The dial above says **which rungs** a human
+still accepts. It never said **who acts** on the rungs it releases, and for a
+single-lane repo the question does not arise — the session that authors a row
+is the only session there is. It arises the moment work runs in parallel lanes,
+and the owner ruled it (2026-09-01):
+
+> The approval act on a spine row — the `Status` flip `Drafted` → `Approved`
+> (and on to `Founded`), and the `docs/archive/last_approved/` copy that anchors
+> it — belongs to an **adjudicator**, performed on the **serial trunk side**,
+> never to the worker lane that authored the row.
+
+Two reasons, and both are properties of the lane rather than of the model
+driving it:
+
+- **Context.** Approving a row means reading its whole chain — the parent
+  requirement, the sibling decomposition rows, the tests that claim to cover
+  it — and deciding the row belongs where it sits. One work item does not hold
+  that chain; it holds its own scope, which is the point of scoping it.
+- **Concurrency.** Two lanes touching the spine conflict at merge, and the
+  approval snapshot must not move across a workstream — a lane that re-anchors
+  the record seals whatever text happened to be live in *its* tree. A
+  trunk-side act, taken while nothing else claims, cannot do either.
+
+**The division of labour, in full:**
+
+| | A worker lane | An adjudication |
+|---|---|---|
+| Authors spine rows | Yes — new rows are written `Drafted`, chain links, rationale and evidence cells filled. | No. |
+| Amends spine text | Yes — any cell, on any row, `Approved` ones included; the row's `Status` is left alone. | No; it RETURNS a row with findings, never rewrites it. |
+| Flips `Status` | **Never.** A flip in the lane's delta refuses the merge. | Yes, on the rungs the dial releases, in its own reviewed commit. |
+| Writes `docs/archive/last_approved/` | **Never.** | Yes — in the same commit as the flip, scoped to the registries the act covers. |
+| Judges a post-approval amendment | No; it records what it changed and why. | Yes — meaning or clarity; on a released rung a *meaning* verdict is followed by its own re-attestation in the same session, on a held rung the row goes to the owner. |
+| Concurrency | Runs beside other lanes; may not hold the spine. | Runs alone, so two acts cannot overlap. |
+
+**How it is held.** Three mechanisms, none of them a new detector:
+
+1. The merge slot REFUSES a worker branch whose spine delta flips a `Status`
+   into `Approved`/`Founded`, mints a row already claiming one, or writes the
+   snapshot directory. It reads the same two-tree spine diff the amendment
+   trigger already reads, so a row cannot be invisible to both.
+2. That same merge MINTS a first-approval adjudication over the `Drafted` rows
+   the lane handed over, on the rungs the dial releases — with each row's whole
+   chain in its brief, asking one question: approve, or return with findings. A
+   rung the dial still holds is not minted; it surfaces to the owner as before.
+3. An adjudication row is not `ordinary`, so the coordinator already runs it as
+   an exclusive lane. The concurrency guarantee is a property the machinery had
+   before this ruling; the ruling is what points the act at it.
+
+**What this is not.** It is not a change to the dial or to which rungs are
+human-held — a held rung still surfaces to the owner exactly as before, and the
+adjudicator acts only where the dial has released. It is not a return of
+mechanical approval: no hook, step or helper writes a `Status` cell. The act is
+a *session's* reviewed commit, and what changed is which session may take it.
+
 ### The three presets
 
 The three words are `--gate-policy` **presets**: each *translates* into the
