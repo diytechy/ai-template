@@ -1,0 +1,39 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 002
+# date: 2026-09-01 22:04
+# train: wi-571-the-snapshot-copies-only-what
+# base: 78bcea280c09
+# phase: REVIEW-A
+# wi: WI-571
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 7e4c6bcd..d74f29f2
+# tokens:
+# cost-usd:
+# wall-secs: 197
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4556
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:d3a94f76f3ed
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Verdict recorded and committed: [002-REVIEW-A-61180ab.md](/Users/diytechy/Documents/ai-template-drive/wi-571-the-snapshot-copies-only-what/docs/reviews/wi-571-the-snapshot-copies-only-what/002-REVIEW-A-61180ab.md)
+
+`VERDICT: CHANGES-REQUESTED findings=2`
+
+Commit: `d74f29f2 review: record WI-571 independent verdict`
+
+The scoped CLI regression passes now and fails on `contract_split` as expected. Required check summary failed only on a pre-existing broken doc link; strict-integrity finished with `integrity=0`.
