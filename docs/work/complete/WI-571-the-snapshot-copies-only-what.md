@@ -47,6 +47,14 @@ named amendment, since a traced-only refresh now writes nothing) are re-pointed;
 Full-suite result and the pre-existing-failure accounting are in the fragment
 `docs/log.d/WI-571-snapshot-copy-scope.md`.
 
+Review-A round 004 found the remaining boundary: a de-approval
+(`Approved` → `Drafted`) is a Status difference but cannot authorise a new
+copy. The authorising predicate is therefore the actual transition into an
+approval claim (or a new row that already claims approval), shared by the
+refresh ledger and scoped-copy target selection; the regression holds a
+de-approved row beside an unrelated approved amendment and proves neither
+permits a registry-wide re-seal.
+
 NOT done here (plan §2): `OI-78` is not ruled — rows already absorbed at
 `580df781` stay absorbed until the owner rules; this row stops the NEXT act from
 absorbing more. The queued reseal row `WI-569`'s `## Context` is updated (triage)
@@ -62,6 +70,12 @@ the scoped copy was driven on scratch scaffolds and tmp trees only.
 ## Context
 
 Filed 2026-09-01 (evening supervised session) from the owner's question on OI-78 and an independent investigation: baseline_snapshot.copy_live mirrors all seven registries on every intake.py snapshot act, so a spine Status flip re-seals whatever off-spine drift is live at that moment (9 of 21 prior snapshot commits did; the wi508 handback merge was not causal). Scope copy_live to the flipped registry plus the registries named by --approves; make --approves a named list; stamp the act's scope; re-read the queued reseal row's stand branch. Read the plan's section 2 before widening - moving the write to the trunk lane is the recorded alternative, not this row.
+
+Review-A round 004 narrows the word “flip” in that scope: only a transition
+into approval authorises copying. A Status difference in the reverse direction
+is a de-approval and must not carry an unrelated approved amendment into the
+snapshot; that transition meaning belongs to the one maturity predicate used by
+the ledger and copy-target decision.
 
 **Standing constraint (owner ruling 2026-09-01, the approval act is the
 adjudicator's):** if this row authors or amends spine rows (SR/LLR/TC), leave

@@ -1,3 +1,27 @@
+## 2026-09-01 — WI-571 rework: Review-A round 004 transition scope
+
+Review-A round 004 found that the first scoped implementation treated every
+Status difference as an authorising flip. This session corrects that at the
+single maturity boundary: only a transition into an approval claim (and a new
+approved row) authorises a copied registry. The regression pairs an
+`Approved` → `Drafted` row with an unrelated approved amendment and proves the
+copy is refused and the snapshot stays untouched. This record is started before
+the correction's broad verification; its final check results are appended below.
+
+Deferred open items: OI-78 remains explicitly unruled; this correction only
+keeps future snapshot acts within their stated authority.
+
+Verification: `tests/test_baseline_snapshot.py`, `test_module_size_ratchet.py`,
+`test_trace_briefs.py`, and `test_intake.py` — **112 passed**. The full
+`.venv/bin/python -m pytest -q -n auto` completed with the already-known 12
+unrelated failures in docs/check-harness/integration/work-registry surfaces;
+the snapshot module is not among them. The smoke tier likewise remained
+`1452 passed, 8 skipped, 1 failed`: the pre-existing drained-worktree
+`test_wi_convert` redirect-stub failure. `check_docs --stale` remains red only
+on the pre-existing broken `docs/log.md` WI-572 link; root coordination truth
+is outside this claimed lane. `check_smoke_budget.py --mode enforce` reran that
+same smoke tier; its timing budget was not breached.
+
 ## 2026-09-01 — WI-571 rework: review A (61180ab, CHANGES-REQUESTED, 2 MINOR)
 
 Addressed both findings of `docs/reviews/wi-571-the-snapshot-copies-only-what/002-REVIEW-A-61180ab.md`.

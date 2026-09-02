@@ -452,6 +452,20 @@ def _claims_approval(row):
     )
 
 
+def _approval_transition(before, after):
+    """True only when an existing row crosses INTO an approval claim.
+
+    This is the maturity boundary that authorises a refresh: a `Drafted` row
+    becoming `Approved` blesses its registry's current text. A Status difference
+    by itself is not authority — in particular `Approved` -> `Drafted` revokes
+    a claim and cannot carry an unrelated approved amendment into the snapshot.
+    Keep the meaning here beside `_claims_approval`, rather than making each
+    refresh caller remember which direction a Status move went (WI-571,
+    Review-A round 004). New approved rows are handled by their absence from the
+    prior snapshot, not by this existing-row predicate."""
+    return not _claims_approval(before) and _claims_approval(after)
+
+
 def load_all(root):
     """Every snapshotted registry, parsed off the snapshot tree.
 
@@ -511,8 +525,9 @@ def refresh_ledger(root, snapshot=None):
     below. `absorbed` is the approved text a copy would silently re-bless: rows
     whose SNAPSHOT copy claims approval (that is the record that would be
     overwritten) whose approved cells have moved. `flips` is the authorising act
-    — a row whose `Status` differs between the record and the tree, which is a
-    human moving a maturity cell in a reviewed commit.
+    — an existing row that crossed into an approval claim in the reviewed
+    commit. A reverse Status move is a de-approval, not authority to re-bless
+    this registry.
 
     A FLIPPED ROW'S OWN AMENDMENT IS NEVER ABSORBED: amend-plus-flip is the
     sanctioned shape of a re-approval (`test_the_amendment_seam_is_BLIND_to_an_
@@ -541,9 +556,7 @@ def refresh_ledger(root, snapshot=None):
             before = before_rows.get(rid) if rid else None
             if before is None:
                 continue
-            if (before.get("Status") or "").strip() != (
-                row.get("Status") or ""
-            ).strip():
+            if _approval_transition(before, row):
                 entry["flips"].append(rid)
                 continue
             if not _claims_approval(before):
@@ -703,11 +716,12 @@ def _authorised_registries(root, approves, snapshot):
     it in the commit and `committed_snapshot_findings` still compares it to live
     at its own writing commit).
 
-    An approving `Status` move is a FLIP (an existing row's `Status` differs
-    between the record and the tree) or a NEW row that arrives already claiming
-    approval — the same authorising act as a flip, a maturity cell set to
-    approved in the reviewed commit this copy rides, and leaving its registry
-    uncopied would strand the row as an `unanchored_findings` ERROR. An amendment
+    An approving `Status` move is a transition INTO an approval claim on an
+    existing row, or a NEW row that arrives already claiming approval — the
+    maturity act that blesses text in the reviewed commit this copy rides, and
+    leaving its registry uncopied would strand the row as an
+    `unanchored_findings` ERROR. A de-approval is not an approving transition:
+    its Status differs but cannot authorise an unrelated amendment. An amendment
     that moved no `Status` is deliberately NOT here: that is the case
     `refresh_refusal` gates, and a `--approves <registry>=<ref>` naming the
     registry is how a human authorises it (which puts the rel in `approves`)."""
@@ -725,9 +739,7 @@ def _authorised_registries(root, approves, snapshot):
                 if _claims_approval(row):  # a new row that arrives approved
                     out.add(rel)
                     break
-            elif (before.get("Status") or "").strip() != (
-                row.get("Status") or ""
-            ).strip():  # an existing row's Status moved — a flip either way
+            elif _approval_transition(before, row):
                 out.add(rel)
                 break
     return out

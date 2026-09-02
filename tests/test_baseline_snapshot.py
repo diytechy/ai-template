@@ -62,6 +62,14 @@ def _seeded(tmp_path):
     return root
 
 
+def _seeded_with_a_drafted_sr(tmp_path):
+    """A standing snapshot with one SR still below approval."""
+    root = _tree(tmp_path)
+    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')
+    SNAP.copy_live(root, seed=True)
+    return root
+
+
 def _rewrite(root, rel, old, new):
     """One substring edit to a live registry, asserted to have actually
     changed something — a fixture that silently matched nothing would make
@@ -79,11 +87,13 @@ def _rewrite(root, rel, old, new):
     path.write_bytes(data.replace(old.encode("utf-8"), new.encode("utf-8"), 1))
 
 
-def _first_row_at(root, status):
+def _first_row_at(root, status, exclude=()):
     """`(id, row)` of the first SR carrying `status`, from the LIVE tree."""
     spine_carrier = load_script("spine_carrier")
     for row in spine_carrier.load(root / SR_REL, "SR-ID", keep_examples=False):
-        if (row.get("Status") or "").strip().lower() == status:
+        if (row.get("Status") or "").strip().lower() == status and row[
+            "SR-ID"
+        ] not in exclude:
             return row["SR-ID"], row
     raise AssertionError("no SR at status " + status + " in the fixture")
 
@@ -224,11 +234,12 @@ def test_an_AMEND_PLUS_FLIP_authorises_the_refresh_with_no_flag(tmp_path):
     """Approval is a human moving a maturity cell in a reviewed commit. When
     the same tree carries one, the copy rides it — that is the sanctioned shape,
     and the seam that mints adjudications is documented blind to it."""
-    root = _seeded(tmp_path)
-    sid, row = _first_row_at(root, "approved")
+    root = _seeded_with_a_drafted_sr(tmp_path)
+    draft_id, _draft = _first_row_at(root, "drafted")
+    _sid, row = _first_row_at(root, "approved", {draft_id})
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
     assert SNAP.refresh_refusal(root) != ""  # ...until a Status cell moves
-    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')
+    _rewrite(root, SR_REL, 'status = "Drafted"', 'status = "Approved"')
     assert SNAP.refresh_refusal(root) == ""
     assert SNAP.copy_live(root)
     assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == (
@@ -297,10 +308,10 @@ def test_a_spine_flip_LEAVES_the_offspine_snapshot_bytes_UNTOUCHED(tmp_path):
     THAT registry and no other. An off-spine registry that merely drifted in the
     same tree is NOT re-sealed, so the drift SURVIVES to its own census instead
     of being zeroed by a whole-tree copy riding a spine approval. No flag."""
-    root = _seeded(tmp_path)
+    root = _seeded_with_a_drafted_sr(tmp_path)
     seed_if = (SNAP.snapshot_root(root) / IF_REL).read_bytes()
     _rewrite(root, IF_REL, _IF_DRIFT_FROM, _IF_DRIFT_TO)  # off-spine drift, live
-    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')  # the flip
+    _rewrite(root, SR_REL, 'status = "Drafted"', 'status = "Approved"')  # the flip
     written = SNAP.copy_live(root)
     # the flipped registry moved...
     assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == (
@@ -323,16 +334,44 @@ def test_a_STATUS_MOVE_refresh_is_STAMPED_as_a_Status_move(tmp_path):
     non-seed refresh that copies a registry is recorded — the seed writes no
     stamp, so the record here is written by the flip and names the copied
     registry with `Status move`, not a ref."""
-    root = _seeded(tmp_path)
+    root = _seeded_with_a_drafted_sr(tmp_path)
     stamp_path = SNAP.snapshot_root(root) / SNAP.README
     assert not stamp_path.is_file(), "the seed must not write an approval stamp"
-    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')  # the flip
+    _rewrite(root, SR_REL, 'status = "Drafted"', 'status = "Approved"')  # the flip
     written = SNAP.copy_live(root)  # no --approves: a Status move authorises it
     assert any("system-requirements" in w for w in written)
     stamp = stamp_path.read_text(encoding="utf-8")
     assert "system-requirements.toml" in stamp  # the copied registry is named...
     assert "Status move" in stamp  # ...and its reason is the flip, not a ref
     assert "Nothing parses it" in stamp  # still prose, design §F8
+
+
+def test_a_DEAPPROVAL_cannot_authorise_an_unrelated_approved_amendment(tmp_path):
+    """A reverse Status move is not an approval act.
+
+    This is the two-row Review-A regression: treating every Status difference
+    as a flip copied the whole SR registry, silently absorbing the second row's
+    approved amendment. The one owner predicate now recognises only a transition
+    into approval, so the amendment remains refused and snapshot bytes stay put.
+    """
+    root = _seeded(tmp_path)
+    before = (SNAP.snapshot_root(root) / SR_REL).read_bytes()
+    deapproved_id, _deapproved = _first_row_at(root, "approved")
+    amended_id, amended = _first_row_at(root, "approved", {deapproved_id})
+    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')
+    _rewrite(root, SR_REL, amended["Title"], amended["Title"] + " (amended)")
+
+    ledger = SNAP.refresh_ledger(root)[SR_REL]
+    assert deapproved_id not in ledger["flips"]
+    assert amended_id in ledger["absorbed"]
+    assert "REFUSED" in SNAP.refresh_refusal(root)
+    try:
+        SNAP.copy_live(root)
+    except SystemExit as exc:
+        assert "REFUSED" in str(exc)
+    else:
+        raise AssertionError("a de-approval authorised an unrelated amendment")
+    assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == before
 
 
 def test_a_named_ref_copies_EXACTLY_its_registry(tmp_path):
