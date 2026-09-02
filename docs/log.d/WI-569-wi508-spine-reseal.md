@@ -146,7 +146,7 @@ remainder is queued as an amendment adjudication that this row's merge mints.
 
 ### Rework — REVIEW-A round 002 (supervisor-drawn, `CHANGES-REQUESTED findings=5`)
 
-Three of the five findings were reworked in-lane. No `status` cell moved, no
+Four of the five findings were reworked in-lane. No `status` cell moved, no
 `intake.py snapshot` ran, nothing under `docs/archive/last_approved/` was
 written; the corrections are `detail`/`title`/prose text only.
 
@@ -183,5 +183,9 @@ written; the corrections are `detail`/`title`/prose text only.
 
 Finding 3 (a backticked path to `docs/reviews/WI-569-REVIEW-A.md`) is discharged
 by the rollup the supervisor compiles over this rework, which makes the citation
-true. Finding 5 asks for one sentence in the Deliverable recording the scope
-extension knowingly; it is not in this rework's scope.
+true. Finding 5 asked that the scope extension be recorded knowingly rather
+than left implicit, and it IS reworked here: the Deliverable now opens with
+"A third act, taken knowingly", naming the amendment as beyond the two arms
+this row was narrowed to, round 002 as the first independent read of the new
+text, and the merge-minted amendment adjudication as the backstop that judges
+it unprejudiced.
