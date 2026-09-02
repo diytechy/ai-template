@@ -30,7 +30,7 @@ row's merge (drafts-not-mints, R1).
 ## Dispositions
 
 ```toml
-title = "LLR-158's declared registry bound is stale: state the shipped APPROVAL_ACT_CSVS partition, then re-anchor the LLR registry"
+title = "LLR-158's declared registry bound is stale: state the shipped APPROVAL_ACT_CSVS partition in the Detail and code_symbol cells"
 workstream = "process"
 safety_class = "spine"
 buildtier = "medium"
@@ -45,7 +45,7 @@ MEANING, so the flip-back arm does not apply; this successor exists because the
 re-attestation the rung released to the loop was WITHHELD, and why it was
 withheld is a build gap rather than a signature gap.
 
-IN SCOPE — one cell's last clause, one `code_symbol` cell, and the anchor.
+IN SCOPE — one cell's last clause and one `code_symbol` cell.
 `LLR-158`'s `Detail` closes with *"every reader here walks `SPINE_CSVS`, the
 three spine registries … the four other registries a snapshot anchors are listed
 in `OUTSIDE_THE_APPROVAL_ACT`"*. The module it owns says otherwise:
@@ -67,13 +67,30 @@ OUT OF SCOPE — the design. `APPROVAL_ACT_CSVS` covering the need tier is the
 it. Nothing in `acceptance_record.py`, `intake.py` or the tests changes; this is
 a requirement-tier correction to make the row true of the code that shipped.
 
-ALSO IN SCOPE — the anchor, which is why the bar is `DevStg-Reqs`. Once the cell
-is true, take the re-attestation this adjudication withheld:
-`python project-trajectory/scripts/intake.py snapshot --approves
-"docs/requirements/low-level-requirements.toml=<this row's id>"` in its own
-reviewed commit, leaving every `Status` cell at `Approved`. `copy_live` mirrors
-whole registry files, so that one act also re-anchors `LLR-136` — whose amended
-text this adjudication verified accurate and would have blessed on its own — and
-`LLR-058`, `LLR-144`, `LLR-198`, the WI-566 MEANING set whose text likewise
-matches the tree. Naming only the LLR registry is deliberate: the SR and TC
-registries hold rows this row did not judge.
+NOT ON THIS LANE — the anchor. This lane corrects the text and then STOPS. It
+does not run `python project-trajectory/scripts/intake.py snapshot` in any
+form and it writes nothing under `docs/archive/last_approved/`. Taking the
+snapshot is never a work lane's act — the approval act (the `Status` flip and
+the anchor that records it) belongs to a trunk-side adjudication session
+(`docs/plans/2026-09-01-approval-act-adjudicator-only.md` §2a) — and
+`lane_approval_refusal` refuses any lane merge whose delta touches
+`SNAPSHOT_DIR`, so taking the anchor here would hard-refuse this very row's
+merge.
+
+WHERE THE RE-ANCHOR HAPPENS INSTEAD — at THIS successor's merge. Correcting an
+Approved row's text stages a `staged_spine_amendments` hit, which mints an
+amendment adjudication at that merge. That trunk-side adjudicator, on a rung
+released to the loop and with the defect this verdict withheld against now
+corrected, performs the re-attestation under the released-rung aftermath arm of
+`project-trajectory/prompts/adjudicate-amendment.template.md`: every row's
+`Status` stays `Approved`, and `python project-trajectory/scripts/intake.py
+snapshot --approves "docs/requirements/low-level-requirements.toml=<that
+adjudication row's id>"` is taken on trunk in its own reviewed commit. Nothing
+about that is owed to this lane, and nothing about it is owed to the owner: the
+LLR rung sits above the approval threshold.
+
+Because `copy_live` mirrors whole registry files, that one act also re-anchors
+`LLR-136` — whose amended text this adjudication verified accurate and would
+have blessed on its own — and `LLR-058`, `LLR-144`, `LLR-198`, the WI-566
+MEANING set whose text likewise matches the tree. Naming only the LLR registry
+there is deliberate: the SR and TC registries hold rows this row did not judge.

@@ -55,8 +55,13 @@ stating a false bound is worse than a drifted one, because the bound is the very
 claim the row exists to make checkable. Anchoring is per-registry
 (`baseline_snapshot.copy_live` mirrors whole registry files), so I cannot bless
 `LLR-136` without also blessing `LLR-158` out of the same file. Both stay
-drifted and keep surfacing on the owner's re-attestation brief; the correction is
-drafted in this spec's `## Dispositions`. No `Status` cell and no registry cell
+drifted, and the drift keeps surfacing — visibly, not silently — in the
+re-attestation section of `docs/ratify/CURRENT.md` and of the generated
+`open-items.html` (`trace.reattest_model` feeding `gen_open_items.py`). That is
+a LOOP-side surface, not the owner's brief: this rung is released, so the
+re-attestation it lists is the adjudicator's own act and no human signature is
+pending on it. The correction, and the re-anchor that follows it, are drafted in
+this spec's `## Dispositions`. No `Status` cell and no registry cell
 was touched by this session.
 
 ## Restatement, excluded from the count (25)
