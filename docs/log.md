@@ -56308,3 +56308,13 @@ The ruling unparks the row that carries it (its `needs` names this open item),
 so the scheduler reads it ready on the next resume.
 
 Deferred open items: none — this entry records a ruling, it raises none.
+
+## 2026-09-01 — Addendum: the off-spine absorption is a general class, not a wi508 one-off — filed as a row and put ahead of the reseal
+
+The owner asked whether the wi508 lane's absorption of trunk's off-spine re-attestation debt into `docs/archive/last_approved/` was a one-off of that lane's disposition. An independent read-only Opus investigation answered: a general class, by construction. `baseline_snapshot.copy_live` iterates all seven registries on every `intake.py snapshot` act (baseline_snapshot.py:679-696; `intake._apply_flips` is a dead arm under OI-45 (b)), so a spine `Status` flip drags the off-spine files along and re-seals whatever drift is live; `refresh_refusal` had nothing to refuse because every interfaces.toml row is Drafted on both sides (snapshot 135 / live 163) and its doctrine covers approval, not the census. The merge was not causal: `git diff 4824c0ba..551d1b2c -- docs/archive/last_approved/` is empty.
+
+fig: 9 of the 21 snapshot commits before `580df781` wrote off-spine files while only spine `Status` moved (ac121647, 4fd20f89, 13593db9, 2b7be11a, 69e4a854, ad2222df, 8848f6fb, 46616726, 34a42f7e) — `git log --format="%h %ad %s" --date=short -- docs/archive/last_approved` cross-tabbed per commit against the off-spine paths and the spine Status diff, at `6000ec9c`.
+
+Filed through `intake._mint` as **WI-571** against [plans/2026-09-01-snapshot-copy-scope.md](plans/2026-09-01-snapshot-copy-scope.md) (`c2a17da7`; construction-first: `copy_live` scoped to the flipped registry plus the registries a `--approves` ref names, `--approves` a named list, the act's scope stamped; the trunk-lane-only write is recorded as the alternative). The queued reseal successor now `needs` it as well as `OI-78`, so its "stand" branch cannot re-run the class before the fix lands. `OI-78` itself is unchanged: the rows absorbed at `580df781` stay absorbed until the owner rules.
+
+Deferred open items: OI-78

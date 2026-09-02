@@ -2,7 +2,7 @@
 id = "WI-569"
 title = "WI-508 spine reseal: one clean reviewer round on current trunk, regenerate last_approved at the approval commit"
 workstream = "process"
-needs = ["OI-78"]
+needs = ["OI-78", "WI-571"]
 specref = "docs/work/complete/WI-568-dispose-the-close-recorded-at.md"
 buildtier = "strong"
 priority = 2
