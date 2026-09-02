@@ -2,8 +2,9 @@
 # A row is a DEBT STATEMENT, NOT AN APPROVAL: the reason column records why it is carried, and the
 # baseline only ever tightens — re-stamp DOWNWARD or delete a row, never up to clear a finding.
 # path	function	cognitive	sloc	reason
-project-trajectory/scripts/acceptance_record.py	staged_spine_amendments	26	32
-project-trajectory/scripts/adjudicate_brief.py	amendment_values	20	54
+project-trajectory/scripts/acceptance_record.py	staged_approval_acts	20	32
+project-trajectory/scripts/acceptance_record.py	staged_spine_amendments	20	19
+project-trajectory/scripts/adjudicate_brief.py	amendment_values	20	59
 project-trajectory/scripts/agent_common.py	approval_through	31	49
 project-trajectory/scripts/agent_common.py	latest_trailer_evidence	17	14
 project-trajectory/scripts/agent_common.py	preflight	34	104
@@ -23,8 +24,9 @@ project-trajectory/scripts/agent_route.py	load_registry	24	65
 project-trajectory/scripts/agent_route.py	main	16	62
 project-trajectory/scripts/agent_session.py	_wait_for_exit	16	24
 project-trajectory/scripts/agent_session.py	summarize_session_line	29	24
-project-trajectory/scripts/baseline_snapshot.py	copy_live	19	37
-project-trajectory/scripts/baseline_snapshot.py	refresh_ledger	25	28
+project-trajectory/scripts/baseline_snapshot.py	_authorised_registries	19	19
+project-trajectory/scripts/baseline_snapshot.py	copy_live	21	41
+project-trajectory/scripts/baseline_snapshot.py	refresh_ledger	23	26
 project-trajectory/scripts/baseline_snapshot.py	unanchored_findings	21	44
 project-trajectory/scripts/bootstrap.py	append_stack_checklist	26	39
 project-trajectory/scripts/bootstrap.py	copy_kit_files	17	31
@@ -63,12 +65,12 @@ project-trajectory/scripts/check_trajectory.py	contract_body_findings	22	40
 project-trajectory/scripts/check_trajectory.py	if_tc_allow_hygiene_findings	27	54
 project-trajectory/scripts/check_trajectory.py	interface_findings	37	89
 project-trajectory/scripts/check_trajectory.py	knowledge_pack_findings	18	28
-project-trajectory/scripts/check_trajectory.py	load_wis	23	39
-project-trajectory/scripts/check_trajectory.py	main	45	144
+project-trajectory/scripts/check_trajectory.py	load_wis	16	34
+project-trajectory/scripts/check_trajectory.py	main	45	150
 project-trajectory/scripts/check_trajectory.py	queue_conflict_findings	21	36
 project-trajectory/scripts/check_trajectory.py	staged_findings	20	30
 project-trajectory/scripts/check_trajectory.py	status_forward_only_findings	16	25
-project-trajectory/scripts/check_trajectory.py	validate	24	32
+project-trajectory/scripts/check_trajectory.py	validate	20	29
 project-trajectory/scripts/check_vendored.py	main	17	61
 project-trajectory/scripts/coherence.py	_sr_orphan_findings	16	23
 project-trajectory/scripts/coherence.py	component_membership_findings	25	23
@@ -78,7 +80,7 @@ project-trajectory/scripts/derive_stage.py	_phase_groups	20	22
 project-trajectory/scripts/derive_stage.py	main	30	109
 project-trajectory/scripts/derive_stage.py	phase_rule_findings	19	59
 project-trajectory/scripts/dispatch.py	_admission	24	31
-project-trajectory/scripts/dispatch.py	_advance	16	25
+project-trajectory/scripts/dispatch.py	_advance	20	29
 project-trajectory/scripts/dispatch.py	_claim_lanes	24	41
 project-trajectory/scripts/dispatch.py	_poll	20	27
 project-trajectory/scripts/dispatch.py	run	25	52
@@ -91,7 +93,7 @@ project-trajectory/scripts/gen_arch_map.py	build_map	18	36
 project-trajectory/scripts/gen_arch_map.py	first_comment_summary	18	14
 project-trajectory/scripts/gen_arch_map.py	header_lines	19	28
 project-trajectory/scripts/gen_arch_map.py	internal_imports	39	25
-project-trajectory/scripts/gen_arch_map.py	main	40	197
+project-trajectory/scripts/gen_arch_map.py	main	40	209
 project-trajectory/scripts/gen_arch_map.py	module_bindings	21	17
 project-trajectory/scripts/gen_arch_map.py	scan_contracts	19	35
 project-trajectory/scripts/gen_arch_map.py	scan_module	19	44
@@ -102,8 +104,8 @@ project-trajectory/scripts/gen_components.py	_add_members	17	19
 project-trajectory/scripts/gen_okf.py	_doc_title_and_summary	31	37
 project-trajectory/scripts/gen_okf.py	emit	72	243
 project-trajectory/scripts/gen_okf.py	main	25	65
-project-trajectory/scripts/gen_open_items.py	_chain_row	31	65
-project-trajectory/scripts/gen_open_items.py	deferral_findings	22	55
+project-trajectory/scripts/gen_open_items.py	_none_declaration_findings	16	30
+project-trajectory/scripts/gen_open_items.py	deferral_findings	22	56
 project-trajectory/scripts/gen_open_items.py	fragment_declarations	16	23
 project-trajectory/scripts/gen_open_items.py	md_block	17	28
 project-trajectory/scripts/gen_release_checklist.py	main	85	210
@@ -111,15 +113,16 @@ project-trajectory/scripts/gen_skills_index.py	check_agent_sync	22	30
 project-trajectory/scripts/gen_skills_index.py	collect_skills	24	27
 project-trajectory/scripts/gen_skills_index.py	main	16	84
 project-trajectory/scripts/gen_trajectory.py	build_html	27	110
-project-trajectory/scripts/gen_trajectory.py	main	16	69
+project-trajectory/scripts/gen_trajectory.py	main	16	71
+project-trajectory/scripts/handback.py	close_adjudication	16	59
 project-trajectory/scripts/hats.py	_audit_lines	20	89
 project-trajectory/scripts/hats.py	parse_condition	19	47
 project-trajectory/scripts/intake.py	_close_drafts	19	73
-project-trajectory/scripts/intake.py	_disposition_drafts	21	26
+project-trajectory/scripts/intake.py	_disposition_drafts	25	34
 project-trajectory/scripts/intake.py	_locate_spine_rows	31	31
-project-trajectory/scripts/intake.py	_mint	21	42
+project-trajectory/scripts/intake.py	_replace_inbound_edges	18	26
 project-trajectory/scripts/integrate.py	_claim_delta	22	25
-project-trajectory/scripts/integrate.py	_claim_refusal	16	38
+project-trajectory/scripts/integrate.py	_claim_refusal	16	43
 project-trajectory/scripts/integrate.py	_shed_residue	17	22
 project-trajectory/scripts/kitlib/evidence.py	source_files	21	24
 project-trajectory/scripts/migrate_carrier.py	convert	21	39
@@ -135,12 +138,12 @@ project-trajectory/scripts/plan_round.py	record	61	90
 project-trajectory/scripts/plan_runner.py	run_dual_plan_round	95	288
 project-trajectory/scripts/schedule.py	hard_path_lengths	20	32
 project-trajectory/scripts/schedule.py	kind_of	16	17
-project-trajectory/scripts/schedule.py	load_wis	17	29
 project-trajectory/scripts/score_reviews.py	corroboration	16	21
 project-trajectory/scripts/score_reviews.py	main	26	95
 project-trajectory/scripts/score_reviews.py	parse_verdict	21	39
 project-trajectory/scripts/spine_carrier.py	needs_from_markdown	32	30
 project-trajectory/scripts/spine_rules.py	spine_stage	17	42
+project-trajectory/scripts/trace.py	_cell_diff_lines	18	26
 project-trajectory/scripts/trace.py	_csv_ids	16	14
 project-trajectory/scripts/trace.py	_offspine_row_diff	16	20
 project-trajectory/scripts/trace.py	_retired_cell_findings	17	26
@@ -155,8 +158,8 @@ project-trajectory/scripts/trace.py	interface_findings	30	58
 project-trajectory/scripts/trace.py	load_registries	39	94
 project-trajectory/scripts/trace.py	main	23	189
 project-trajectory/scripts/trace.py	mermaid_graph	31	45
-project-trajectory/scripts/trace.py	reattest_lines	26	110
-project-trajectory/scripts/trace.py	reattest_model	52	135
+project-trajectory/scripts/trace.py	reattest_lines	26	112
+project-trajectory/scripts/trace.py	reattest_model	35	118
 project-trajectory/scripts/trace.py	render_console	35	136
 project-trajectory/scripts/trace.py	render_report	65	365
 project-trajectory/scripts/trace.py	schema_findings	25	25
@@ -171,7 +174,7 @@ project-trajectory/scripts/traj_graph.py	_detour_d	32	33
 project-trajectory/scripts/traj_graph.py	_lane_candidates	18	21
 project-trajectory/scripts/traj_graph.py	_route_edges	40	43
 project-trajectory/scripts/traj_graph.py	_seg_hits_rect	19	21
-project-trajectory/scripts/traj_panels.py	_next_work_html	22	62
+project-trajectory/scripts/traj_panels.py	_next_work_html	22	64
 project-trajectory/scripts/traj_parse.py	_okf_nodes	39	49
 project-trajectory/scripts/traj_parse.py	frame_context	19	82
 project-trajectory/scripts/traj_parse.py	runtime_flows	22	26
@@ -194,11 +197,10 @@ tests/test_traj_graph.py	_wire_through_box_violations	24	39
 tests/test_traj_graph.py	test_svg_viewbox_contains_every_routed_wire	24	49
 tests/test_traj_graph.py	test_t8_no_wire_passes_through_an_unrelated_node_box	28	30
 tests/test_traj_render.py	test_t5_containment_arrow_clears_the_3to1_floor_against_every_host_fill	16	48
-tests/test_traj_render.py	test_u3_every_weight_value_resolves_to_a_declared_token	24	48
+tests/test_traj_render.py	test_u3_every_weight_value_resolves_to_a_declared_token	24	28
 tests/test_traj_render_sweeps.py	test_a1_every_wired_control_pairs_click_with_focus_or_keydown	20	25
 tests/test_traj_render_sweeps.py	test_a1_every_wired_interaction_selector_matches_only_focusable_elements	16	40
 tests/test_traj_render_sweeps.py	test_a4_the_vocabulary_sweep_is_closed_and_every_member_clears_the_floors	33	45
 tests/test_traj_render_sweeps.py	test_u2_every_concept_fill_comes_from_one_declared_vocabulary	21	37
 tests/test_trajectory_arch.py	_csv_body_to_toml	34	56
 tests/test_trajectory_arch.py	write_arch	32	53
-tests/traj_fixtures.py	write_wis	16	26

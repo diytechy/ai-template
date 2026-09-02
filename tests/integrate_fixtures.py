@@ -142,6 +142,8 @@ def spec_text(
     deliverable="A widget, shipped.",
     specref=None,
     bar=None,
+    brief=None,
+    adjudicates=(),
 ):
     """One work-item spec in the format `scripts/wi_convert.py` emits (the
     tests/test_wi_folder_loaders.py `spec_text` shape).
@@ -165,6 +167,14 @@ def spec_text(
         lines.append('specref = "{}"'.format(specref))
     if bar:
         lines.append('bar = "{}"'.format(bar))
+    if brief:
+        lines.append('brief = "{}"'.format(brief))
+    if adjudicates:
+        lines.append(
+            "adjudicates = [{}]".format(
+                ", ".join('"{}"'.format(rid) for rid in adjudicates)
+            )
+        )
     text = "+++\n" + "".join(ln + "\n" for ln in lines) + "+++\n"
     if deliverable:
         text += "\n## Deliverable\n\n" + deliverable + "\n"

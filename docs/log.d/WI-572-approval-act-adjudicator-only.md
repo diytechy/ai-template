@@ -704,3 +704,58 @@ the change, so these edits did not move the fingerprint at all; `docs/stage` is
 generated coordination truth the trunk lane refreshes, which is why `check.py`
 SKIPs `derived-stage` on a work branch. The round-4 second red (the byte-budget
 close measurement) is gone — 3,269/2-failed then, 3,274/1-failed now.
+
+### REVIEW-A rework, round 6: actor identity is not authorization
+
+Round 6 found the merge boundary still trusted `safety_class = "adjudication"`
+as blanket authorization: `_approval_act_refusal` returned before it read the
+branch's approval acts or the claimed row's `Adjudicates` scope. The brief could
+label a second row outside the act, but a hand edit could still flip that row and
+copy its registry, and the merge admitted both.
+
+The fix removes that early return. `acceptance_record.approval_delta` derives the
+row acts and snapshot writes ONCE; `merge_approval_refusal` hands that same value
+to the ordinary-lane judgement or to the first-approval scope judgement. The
+latter admits only flips whose ids are in `Adjudicates` and exactly the snapshot
+registries those flips changed. It refuses an empty scope, actor-kind-only or
+out-of-scope flips, an approved registry with no anchoring copy, and a copied
+registry with no approved row. A scoped all-RETURN batch remains valid with no
+act, and an amendment adjudication's snapshot-only re-attestation remains valid;
+the correction therefore binds the authority the row actually records without
+inventing a scope the amendment arm does not carry.
+
+The tests drive the merge slot, not only the prompt: the permitted fixture lands
+one scoped `SR-001` flip with its system-requirements snapshot; the two adversarial
+fixtures prove an unrelated `SR-001` flip scoped to `SR-002` and an extra
+test-cases snapshot both refuse before trunk moves. Separate pins cover empty
+scope, actor-kind alone, return-only and missing-anchor behavior. The shared
+reader and judgement live in `acceptance_record.py`, below the size threshold;
+the obsolete exemption explanation was deleted and `integrate.py` stays exactly
+at its existing 1,298-SLOC ratchet rather than receiving a bump.
+
+The exact-equality complexity census had not been re-stamped across this WI's
+earlier accepted implementation and rework. The declared checker therefore
+reported both stale increases and stale decreases across the same branch. Its
+`--restamp` output is committed here: the census now records 202 over-threshold
+functions, including the new `staged_approval_acts` row and the downward
+decompositions this WI already made. This is the branch's delayed reviewed stamp,
+not a change to the threshold or a suppression of the new merge-boundary
+judgement (its functions remain below the threshold).
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_complexity.py --root . --restamp" rev=HEAD-dirty -->
+
+Verification at the rework tree before its resumable commit:
+
+- Focused acceptance-record, merge-admission and module-size modules: **56
+  passed in 15.51 s**.
+- Smoke tier: **1,461 passed, 4 skipped in 21.09 s**; the independent budget
+  run repeated it in **22.07 s** and measured **22.5 s against the 60 s
+  ceiling**.
+- Complexity: **OK, 202 rows unchanged from the re-stamped baseline**.
+- Documentation: **1,217 docs, 1,586 intra-repo links, 0 broken**; the one
+  orphan warning is the pre-existing `docs/test/report.md`.
+
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_module_size_ratchet.py tests/test_integrate_admission.py tests/test_acceptance_record.py" rev=HEAD-dirty -->
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=HEAD-dirty -->
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=HEAD-dirty -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_complexity.py --root . --mode enforce" rev=HEAD-dirty -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=HEAD-dirty -->

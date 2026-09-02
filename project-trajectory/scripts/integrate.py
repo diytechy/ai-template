@@ -1109,7 +1109,7 @@ def _claimed_spec_frontmatters(root, branch):
         return None
 
 
-def _adjudication_lane(root, branch):
+def _adjudication_lane(root, branch, metas=None):
     """Does EVERY claimed spec on `branch` declare the `adjudication` kind?
 
     `_lane_bar_directives`' `skip` test, asked on its own because the approval
@@ -1117,7 +1117,7 @@ def _adjudication_lane(root, branch):
     `_claimed_spec_frontmatters`, so actor identity has one reader. UNREADABLE
     FRONTMATTER ANSWERS FALSE: there it runs the bar; here it makes the branch a
     work lane whose approval act refuses. Both fail toward more checking."""
-    metas = _claimed_spec_frontmatters(root, branch)
+    metas = _claimed_spec_frontmatters(root, branch) if metas is None else metas
     return bool(metas) and all(
         str(meta.get("safety_class") or "").strip().lower() == "adjudication"
         for _name, meta in metas
@@ -1138,56 +1138,32 @@ def _approval_act_refusal(root, branch):
     two lanes touching the spine conflict at merge, and the snapshot must not
     move across a workstream, whereas a serial trunk-side act cannot conflict.
 
-    THE SAME SHAPE AS `_minted_id_refusal` BESIDE IT, and for the same reason:
-    one named refusal, read off git, in front of the one act that would make the
-    bad state real. Both read the branch's OWN delta - `merge-base(trunk,
-    branch)` to the tip - so a trunk-side approval sits in the BASE and is
-    exactly as free as it is today.
-
-    CONSTRUCTION-FIRST, NOT A SECOND DETECTOR. `acceptance_record.
-    staged_approval_acts` is the mirror of the `staged_spine_amendments` reader
-    the intake already runs on the merged commit: that one reports rows whose
-    approved text moved while `Status` stood still and exempts a moved `Status`;
-    this one reports precisely the exempted set. They share one two-tree walk,
-    so a row cannot be invisible to both.
-
-    WHAT IT COSTS AND DOES NOT COST. A de-approval (`Approved` -> `Drafted`) is
-    not an act: it blesses nothing. An amendment to an approved row is not an act
-    either - the lane may make it, and the amendment adjudication the intake
-    mints at this same merge is what judges it. The honest bound is
-    `_minted_id_refusal`'s: this defeats the accident and a lane that drifts, not
-    a lane that means to - a branch could still write the flip through some file
-    nothing here reads.
-
     THE JUDGEMENT ITSELF IS NOT HERE, and that is `LLR-178`'s separation, not
     tidiness: `acceptance_record.lane_approval_refusal` reads the delta and
     words the refusal, beside the two-tree walk and the snapshot-mirror rules it
     shares its material with. What stays in the merge slot is the RUNG — the
     merge base this branch is judged against, and the placement in the ladder.
 
-    AN ADJUDICATION LANE IS EXEMPT, because it is the actor the ruling names.
-    The concurrency half the owner asked for is already built and is not
-    re-implemented here: `dispatch._branch_exclusive` makes any non-`ordinary`
-    kind run ALONE, so an adjudication holds the station by itself, two acts
-    cannot overlap, and the snapshot moves only there. The kind is read off
-    TRUNK's claimed specs — the same one-home read `_lane_bar_directives` and
-    `dispatch._branch_exclusive` make — so this rung and the no-bar arm cannot
-    disagree about what an adjudication lane is.
+    An adjudication is the permitted actor, not unbounded authority. A claimed
+    first-approval row's `Adjudicates` cell bounds its flips, and the snapshot
+    may cover exactly the registries those flips changed. The delta is derived
+    once here and handed to either judgement, so actor classification can no
+    longer bypass the material being authorised.
     """
-    if _adjudication_lane(root, branch):
-        return None
     import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
 
+    metas = _claimed_spec_frontmatters(root, branch)
     head = _head(root)
     code, base = ac.git(root, "merge-base", head, branch)
     if code != 0 or not base.strip():
         # Fail closed: an unread delta is not an empty one.
-        return (
-            "cannot read the merge base of trunk {} and {}, so the spine delta "
-            "the approval-act rung reads is unknowable; nothing was "
-            "merged:\n{}".format(head[:10], branch, ac._failure_tail(base))
-        )
-    return acceptance_record.lane_approval_refusal(root, base.strip(), branch)
+        message = f"cannot read the merge base of trunk {head[:10]} and {branch}, so the spine delta the approval-act rung reads is unknowable; nothing was merged:\n{ac._failure_tail(base)}"
+        return message
+    judge = acceptance_record.merge_approval_refusal
+    if not metas:
+        return judge(root, base.strip(), branch, [], False)
+    actor = _adjudication_lane(root, branch, metas=metas)
+    return judge(root, base.strip(), branch, metas, actor)
 
 
 def _last_commit_time(root, ref, *pathspec):

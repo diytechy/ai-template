@@ -352,7 +352,16 @@ def _sr(status, req="the drafted text"):
     )
 
 
-def _spine_lane(home, *, flip=False, born=False, snapshot=False, safety="ordinary"):
+def _spine_lane(
+    home,
+    *,
+    flip=False,
+    born=False,
+    snapshot=False,
+    safety="ordinary",
+    adjudicates=(),
+    first_approval=True,
+):
     """A claimed branch that authored a `Drafted` SR — and then, per flag,
     performed one of the three shapes of approval act on it.
 
@@ -360,7 +369,14 @@ def _spine_lane(home, *, flip=False, born=False, snapshot=False, safety="ordinar
     the same topology minus one write, rather than a second fixture that happens
     to look similar (`_mint_repo`'s rule, one section up)."""
     home.mkdir(parents=True, exist_ok=True)
-    root = claim_repo(home, safety=safety)
+    root = claim_repo(
+        home,
+        safety=safety,
+        brief=(
+            "first-approval" if safety == "adjudication" and first_approval else None
+        ),
+        adjudicates=adjudicates,
+    )
     reg = root / "docs" / "requirements"
     reg.mkdir(parents=True, exist_ok=True)
     (reg / "system-requirements.csv").write_text(
@@ -406,11 +422,102 @@ def test_a_lane_that_flips_a_status_to_approved_is_refused_at_the_merge_slot(tmp
     assert _rev(root, "HEAD") != _rev(root, "wi-401")  # nothing merged
 
 
-def test_an_adjudication_lane_may_land_its_approval_act(tmp_path):
-    root = _spine_lane(tmp_path / "adjudication", flip=True, safety="adjudication")
+def test_a_scoped_adjudication_lane_may_land_its_flip_and_snapshot(tmp_path):
+    root = _spine_lane(
+        tmp_path / "adjudication",
+        flip=True,
+        snapshot=True,
+        safety="adjudication",
+        adjudicates=("SR-001",),
+    )
 
     assert integ._adjudication_lane(root, "wi-401") is True
     assert integ._approval_act_refusal(root, "wi-401") is None
+    refusal = integ.integrate_one(root, "wi-401", "smoke")
+    assert "no [product] test declaration" in refusal
+    assert "APPROVAL ACT" not in refusal
+
+
+def test_a_first_approval_adjudication_with_no_scope_is_refused(tmp_path):
+    root = _spine_lane(tmp_path / "empty-scope", flip=True, safety="adjudication")
+
+    refusal = integ._approval_act_refusal(root, "wi-401")
+    assert refusal is not None
+    assert "EMPTY `Adjudicates` scope" in refusal
+
+
+def test_a_scoped_return_only_adjudication_needs_no_approval_act(tmp_path):
+    root = _spine_lane(
+        tmp_path / "return-only",
+        safety="adjudication",
+        adjudicates=("SR-001",),
+    )
+
+    assert integ._approval_act_refusal(root, "wi-401") is None
+
+
+def test_a_scoped_flip_without_its_snapshot_is_refused(tmp_path):
+    root = _spine_lane(
+        tmp_path / "unanchored",
+        flip=True,
+        safety="adjudication",
+        adjudicates=("SR-001",),
+    )
+
+    refusal = integ._approval_act_refusal(root, "wi-401")
+    assert refusal is not None
+    assert (
+        "system-requirements.csv was approved WITHOUT its anchoring snapshot" in refusal
+    )
+
+
+def test_an_adjudication_kind_alone_does_not_authorise_a_flip(tmp_path):
+    root = _spine_lane(
+        tmp_path / "actor-only",
+        flip=True,
+        safety="adjudication",
+        first_approval=False,
+    )
+
+    refusal = integ._approval_act_refusal(root, "wi-401")
+    assert refusal is not None
+    assert "EMPTY `Adjudicates` scope" in refusal
+
+
+def test_an_adjudication_cannot_flip_a_row_outside_its_scope(tmp_path):
+    root = _spine_lane(
+        tmp_path / "outside",
+        flip=True,
+        snapshot=True,
+        safety="adjudication",
+        adjudicates=("SR-002",),
+    )
+
+    refusal = integ.integrate_one(root, "wi-401", "smoke")
+    assert refusal is not None
+    assert "SR-001 is OUTSIDE `Adjudicates` scope (SR-002)" in refusal
+    assert _rev(root, "HEAD") != _rev(root, "wi-401")
+
+
+def test_an_adjudication_snapshot_cannot_widen_beyond_its_flips(tmp_path):
+    root = _spine_lane(
+        tmp_path / "wide-snapshot",
+        flip=True,
+        snapshot=True,
+        safety="adjudication",
+        adjudicates=("SR-001",),
+    )
+    _git(root, "checkout", "-q", "wi-401")
+    snap = root / "docs" / "archive" / "last_approved" / "docs" / "test"
+    snap.mkdir(parents=True, exist_ok=True)
+    (snap / "test-cases.toml").write_text("[cases]\n", encoding="utf-8", newline="\n")
+    _commit(root, "WI-401: widen the approval snapshot", when=T_LATER)
+    _git(root, "checkout", "-q", "main")
+
+    refusal = integ.integrate_one(root, "wi-401", "smoke")
+    assert refusal is not None
+    assert "snapshot WIDENED to docs/test/test-cases.toml" in refusal
+    assert _rev(root, "HEAD") != _rev(root, "wi-401")
 
 
 def test_unreadable_actor_frontmatter_fails_toward_the_approval_refusal(tmp_path):

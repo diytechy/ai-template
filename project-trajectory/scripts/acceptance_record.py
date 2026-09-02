@@ -454,10 +454,11 @@ def staged_approval_acts(root, base="HEAD", head=None):
     form of this question.
 
     Owner ruling 2026-09-01 (WI-572): the act this reports is the ADJUDICATOR's,
-    performed on the serial trunk side. Its ONE consumer is `lane_approval_refusal`
-    directly below, which words the refusal `integrate._approval_act_refusal`
-    returns against a worker branch's own delta — this reader does not itself
-    cross the `IF-091` seam, and the seam does not declare that it does.
+    performed on the serial trunk side. `approval_delta` directly below reads it
+    ONCE for `merge_approval_refusal`, which applies either the ordinary-lane ban
+    or the adjudication row's recorded scope at `integrate._approval_act_refusal`
+    — this reader does not itself cross the `IF-091` seam, and the seam does not
+    declare that it does.
 
     Returns [] when not applicable; any missing git context is a silent no-op,
     like `staged_spine_amendments`."""
@@ -519,7 +520,92 @@ def _snapshot_acts(name_status):
         yield "{} {}".format(_SNAPSHOT_ACT.get(letter, "changed"), parts[-1].strip())
 
 
-def lane_approval_refusal(root, base, head):
+def approval_delta(root, base, head):
+    """`(row acts, worded snapshot acts, refusal)` for one merge delta."""
+    acts = staged_approval_acts(root, base, head)
+    out = _git(
+        root, ["diff", "--name-status", "--no-renames", base, head, "--", SNAPSHOT_DIR]
+    )
+    if out is None:
+        return (
+            [],
+            [],
+            (
+                "cannot read {}'s {} delta against {}, so whether this branch wrote "
+                "the approval record is unknowable; nothing was merged".format(
+                    head, SNAPSHOT_DIR, str(base)[:10]
+                )
+            ),
+        )
+    return acts, sorted(_snapshot_acts(out)), None
+
+
+def first_approval_scope(metas):
+    """The typed scope of claimed first-approval rows, or None for another kind."""
+    first = [meta for _name, meta in metas if meta.get("brief") == "first-approval"]
+    if not first:
+        return None
+    values = [meta.get("adjudicates") for meta in first]
+    if any(not isinstance(value, list) for value in values):
+        return frozenset()
+    return frozenset(
+        str(rid).strip() for value in values for rid in value if str(rid).strip()
+    )
+
+
+def adjudication_approval_refusal(scope, delta):
+    """Refuse a first-approval act that exceeds its recorded row scope."""
+    acts, snapshot_files, refusal = delta
+    if refusal:
+        return refusal
+    if not scope:
+        return (
+            "first-approval adjudication declares an EMPTY `Adjudicates` scope; "
+            "the merge cannot know which rows its approval act may reach; nothing "
+            "was merged"
+        )
+    outside = [act for act in acts if act["id"] not in scope]
+    acted_registries = {act["registry"] for act in acts}
+    snapshot_registries = {
+        line.partition(" ")[2][len(SNAPSHOT_DIR) + 1 :]
+        for line in snapshot_files
+        if line.partition(" ")[2] != SNAPSHOT_DIR + "/README.md"
+    }
+    widened = sorted(snapshot_registries - acted_registries)
+    missing = sorted(acted_registries - snapshot_registries)
+    if not outside and not widened and not missing:
+        return None
+    lines = [
+        "  {} is OUTSIDE `Adjudicates` scope ({})".format(
+            act["id"], ";".join(sorted(scope))
+        )
+        for act in outside
+    ]
+    lines += [
+        "  snapshot WIDENED to {} without an approved row".format(r) for r in widened
+    ]
+    lines += [
+        "  {} was approved WITHOUT its anchoring snapshot".format(r) for r in missing
+    ]
+    return (
+        "first-approval adjudication exceeds the approval act recorded on its "
+        "`Adjudicates` row: the merge admits only scoped flips and exactly their "
+        "registry snapshots; nothing was merged:\n{}".format("\n".join(lines))
+    )
+
+
+def merge_approval_refusal(root, base, head, metas, adjudication):
+    """Apply one derived approval delta to its actor's authorization rule."""
+    delta = approval_delta(root, base, head)
+    if adjudication:
+        scope = first_approval_scope(metas)
+        if scope is not None or delta[0]:
+            return adjudication_approval_refusal(scope or frozenset(), delta)
+        return delta[2]
+    return lane_approval_refusal(root, base, head, delta)
+
+
+def lane_approval_refusal(root, base, head, delta=None):
     """Why a WORK BRANCH's delta may not merge because it performs an APPROVAL
     ACT — the refusal text, or None when it performs none.
 
@@ -554,18 +640,9 @@ def lane_approval_refusal(root, base, head):
 
     Implements: SR-178, LLR-158
     """
-    acts = staged_approval_acts(root, base, head)
-    out = _git(
-        root, ["diff", "--name-status", "--no-renames", base, head, "--", SNAPSHOT_DIR]
-    )
-    if out is None:
-        return (
-            "cannot read {}'s {} delta against {}, so whether this branch wrote "
-            "the approval record is unknowable; nothing was merged".format(
-                head, SNAPSHOT_DIR, str(base)[:10]
-            )
-        )
-    snapshot_files = sorted(_snapshot_acts(out))
+    acts, snapshot_files, refusal = delta or approval_delta(root, base, head)
+    if refusal:
+        return refusal
     if not acts and not snapshot_files:
         return None
     lines = [

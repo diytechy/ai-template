@@ -46,10 +46,14 @@ and amends cell text; nothing else changed about what a lane may do.
    `parse_approves`, so the module that CONSUMES the `;`-joined list is the only
    one that names the separator; a batch spanning two registries cannot
    mis-parse into a second registry that is neither authorised nor copied. Its
-   verdict grammar is its own. The adjudication
-   lane is exempt from rung 1 — the exemption `_adjudication_lane` decides, off
-   the same `_claimed_spec_frontmatters` read the bar directive uses so actor
-   identity has one reader — and it already runs ALONE
+   verdict grammar is its own. The adjudication lane is the permitted actor,
+   but not a blanket exemption: the merge slot derives its approval delta once,
+   joins every flip to the claimed row's `Adjudicates` scope, and admits exactly
+   the snapshots of registries holding those flips. An empty scope, an unrelated
+   flip, a missing anchor or a registry-widening copy refuses before merge.
+   `_adjudication_lane` decides the actor off the same
+   `_claimed_spec_frontmatters` read the bar directive uses, and the
+   adjudication already runs ALONE
    (`dispatch._branch_exclusive`), which is the concurrency guarantee the ruling
    points the act at rather than a new mechanism.
 3. **The amendment arm's aftermath is stated and true.** The stale "the flip is
@@ -62,10 +66,11 @@ and amends cell text; nothing else changed about what a lane may do.
    reasons, the division-of-labour table, the three holding mechanisms); OI-45
    (b) narrowed by one sentence; `gate-advance`, `spine-authoring` and
    `worker.template.md` updated.
-5. **Tests** in the modules' existing style: seven at the merge slot (both arms
-   of the `_adjudication_lane` exemption among them, since a predicate that
-   bypasses every rung when true and makes the arm inert when false is the
-   change's highest-leverage line), four at the
+5. **Tests** in the modules' existing style: seven original merge-slot cases
+   (both `_adjudication_lane` actor-classification arms among them) plus six
+   scope cases at that trust boundary (permitted scoped act, empty scope,
+   actor-kind-only flip, return-only batch, unanchored flip and widened
+   snapshot), four at the
    reader, four at the trigger, ten at the brief, one at the
    `format_approves`/`parse_approves` round trip — including the pin that the
    brief's terminal sequence cannot stop before performing an approved row's
