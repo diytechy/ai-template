@@ -1377,6 +1377,76 @@ def test_human_approves_UNMAPPED_is_HELD_fail_safe(tmp_path):
         assert ac.human_approves(docs, unknown) is (not expected), unknown
 
 
+# --- WI-572: the SPINE sibling of the same table, and its two readers ---------
+def test_SPINE_APPROVAL_RUNGS_is_the_spine_sibling_of_THE_DIAL(tmp_path):
+    """Same pin as its off-spine twin above, for the same reason: a typo'd rung
+    would send `human_approves_spine` through `human_holds`' unrecognized arm,
+    which answers True — safe, but silently, so a whole spine tier would read as
+    the owner's forever and no first-approval adjudication would ever be minted
+    for it. Pin the values against the ladder itself.
+
+    KEYED BY REGISTRY STEM, and that is checked here rather than assumed: both
+    readers pass `spine_carrier.stem(<path>)`, so a key carrying a `.toml`
+    suffix would map nothing and fail closed to HELD."""
+    assert set(ac.SPINE_APPROVAL_RUNGS) == {
+        "docs/requirements/system-requirements",
+        "docs/requirements/low-level-requirements",
+        "docs/test/test-cases",
+    }
+    for registry, rung in ac.SPINE_APPROVAL_RUNGS.items():
+        assert rung in ac.LADDER_RUNGS, (registry, rung)
+        assert not registry.endswith((".toml", ".csv")), registry
+    # The rung each tier is approved INTO — the same join `gate-advance` states
+    # in prose ("Into `DevStg-Reqs` — a draft requirement is approved").
+    assert ac.SPINE_APPROVAL_RUNGS["docs/requirements/system-requirements"] == (
+        dg.STAGE_REQS
+    )
+    assert ac.SPINE_APPROVAL_RUNGS["docs/requirements/low-level-requirements"] == (
+        dg.STAGE_LLREQS
+    )
+    assert ac.SPINE_APPROVAL_RUNGS["docs/test/test-cases"] == dg.STAGE_TESTS
+    # ONE HOME. The rung table lived in `intake` (registry-keyed) AND in
+    # `adjudicate_brief` (tier-keyed) for one commit, and the first-approval
+    # brief — which re-resolves its population live, after the mint — was wired
+    # to neither, so it rendered the owner's held rows as an adjudicator's to
+    # flip. Neither copy comes back.
+    assert not hasattr(load_script("intake"), "APPROVAL_RUNG")
+    assert not hasattr(load_script("adjudicate_brief"), "_APPROVAL_RUNG_OF")
+
+
+def test_human_approves_spine_is_DERIVED_and_fails_safe(tmp_path):
+    """The three arms, same as the off-spine predicate's.
+
+    Arm 2 is the load-bearing one: at `DevStg-Reqs` the SR tier is HELD and the
+    LLR/TC tiers below it are RELEASED — the MIXED dial, which is the state that
+    makes "who may approve this row" a per-row question rather than a per-repo
+    one, and the state the first-approval brief got wrong."""
+    srs = "docs/requirements/system-requirements"
+    llrs = "docs/requirements/low-level-requirements"
+    tcs = "docs/test/test-cases"
+
+    # Arm 1 — this repo's shipped default: every rung at or below, all held.
+    docs = _docs(tmp_path, dial=dg.STAGE_RELEASE)
+    for registry in ac.SPINE_APPROVAL_RUNGS:
+        assert ac.human_approves_spine(docs, registry) is True, registry
+
+    # Arm 2 — MIXED, and derived rather than a constant wearing a lookup.
+    mixed = _docs(tmp_path / "mixed", dial=dg.STAGE_REQS)
+    assert ac.human_approves_spine(mixed, srs) is True
+    assert ac.human_approves_spine(mixed, llrs) is False
+    assert ac.human_approves_spine(mixed, tcs) is False
+    below = _docs(tmp_path / "below", dial=BELOW)
+    for registry in ac.SPINE_APPROVAL_RUNGS:
+        assert ac.human_approves_spine(below, registry) is False, registry
+
+    # Arm 3 — UNMAPPED is HELD, at the MOST permissive dial there is. The
+    # suffixed key is in here deliberately: it is the near-miss a caller that
+    # forgot `spine_carrier.stem` would produce, and it must fail toward the
+    # human rather than toward a lookup that happens to work.
+    for unknown in ("docs/requirements/system-requirements.toml", "", None, "SR"):
+        assert ac.human_approves_spine(below, unknown) is True, unknown
+
+
 def test_no_shipped_loop_module_WRITES_an_approval_cell():
     """THE GUARD THAT ACTUALLY BITES TODAY (OI-30 D3's writer-side contract).
 
