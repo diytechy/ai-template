@@ -24,15 +24,17 @@ supervisor prompt at the owner's request). Backward-looking homes:
 status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **RESUME HERE — THE FRONTIER IS PAUSED (tracked `docs/work/pause`,
-  re-armed by owner direction at the 2026-09-01 evening session's end;
-  decision 56).** That session merged four rows (the construction-first
-  reviewer clause, the approval-brief renderer defects, the wi508
-  partial-close conversion and its disposition adjudication) and left one
-  new successor queued behind a pending open item; its account is the log's
-  2026-09-01 supervised-evening entry, and one reviewed deletion of the pause
-  file resumes the generated frontier below. All three codex rows in
-  `docs/agents.toml` now pin reasoning effort to medium (owner directive).
+- **RESUME HERE — THE FRONTIER IS UNPAUSED (the owner directed the resume
+  late on 2026-09-01; `docs/work/pause` deleted in a reviewed commit) and a
+  supervised loop runs the generated frontier below**, whose head is the
+  owner-prioritized kit trio (the snapshot copy scope, the typed open-item
+  brief, the approval act to the adjudicator) ahead of the standing queue.
+  The evening session merged four rows (the construction-first reviewer
+  clause, the approval-brief renderer defects, the wi508 partial-close
+  conversion and its disposition adjudication); its account is the log's
+  2026-09-01 supervised-evening entry and the addenda after it. All three
+  codex rows in `docs/agents.toml` now pin reasoning effort to medium
+  (owner directive). A supervisor re-arms the pause when it stops.
   **For the owner's review:** delegated decisions 47–56 in
   [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md)
   (52–56 are the evening session's: the hand merge + drawn rounds that
