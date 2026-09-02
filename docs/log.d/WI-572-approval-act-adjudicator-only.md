@@ -125,6 +125,54 @@ amendment adjudication trigger (a) raises a row for it at merge. This lane's own
 edit is the first customer of the arm the same lane shipped, which is the
 intended shape and not a special case.
 
+The amend-without-flip guard then fired on `LLR-158`, both arms, and both are
+answered rather than absorbed:
+
+- **The drift arm** — "re-attest in this commit, or the change rides as SNAPSHOT
+  DRIFT until the next sitting". Riding as drift is not a miss here, it is the
+  ruling: the lane may not re-attest its own amendment, and `intake.py snapshot`
+  on this branch is precisely what deliverable 1 refuses. The drift IS the
+  handover.
+- **The `Hat-Refs` arm** — it says an unchanged cell cannot distinguish "re-read
+  and unchanged" from "never re-read", so the answer belongs in the record.
+  DELIBERATE: the cell stays inherited (`LLR-158` declares none and takes
+  SR-178's `TEST-ENGINEER`). The amendment documents more of the SAME mechanism
+  — one walk, four readers — and does not move the row's question, which is
+  still how an amendment is DETECTED. Who may act on what is detected is a
+  governance concern; it lives on the PROCESS surfaces and in `integrate`'s
+  rung, not in this row's cells. Re-read, unchanged, and said so.
+
+### The harness, and the one red it leaves
+
+Full unfiltered suite on this branch: **3257 passed, 1 failed, 24 skipped in
+557.32 s** (`python -m pytest -q -n auto`). The one failure is
+`tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`, and
+it is the DERIVED-ARTIFACT SPLIT, not a defect in the change:
+
+- It passed at `7021e4e1` and fails at `a68cc52a` — i.e. it is the registry
+  amendment above, verified by running that single test in a worktree at each
+  commit, not inferred.
+- `docs/stage` is derived over the SETTLED spine rows, so amending an
+  `Approved` row moves its input digest. Regenerating it in a scratch worktree
+  at `a68cc52a` changes **only** the `fingerprint` and the `# computed … as-of`
+  stamp: `stage`, `stage-ord`, `settled-stage`, `live-stage`, `per-phase`,
+  `per-phase-live` and `drafted` all come back byte-identical. No rung moved.
+- Regenerating it is not this lane's act. `docs/stage` is a declared generated
+  artifact, and every commit that has ever written it is a trunk-side
+  bookkeeping commit (`claim:`, `refresh:`, `log:`, `mint:`). The commit bar
+  agrees and says so out loud: the `derived-stage --check` step SKIPS on a work
+  branch with "generated freshness is the trunk lane's". The trunk lane
+  regenerates after the merge and the red clears with it.
+
+**A finding this row sharpened but does not fix.** That test asserts a
+trunk-side invariant with no work-branch exemption, while its commit-bar twin
+has one. Until now the mismatch was nearly unreachable, because a lane amending
+a settled spine row was rare. This row makes lane-side amendment the NORMAL
+path — a lane amends, an adjudicator approves — so the same red will now greet
+routine lanes. Teaching the test the exemption its `--check` twin already has is
+a real follow-on; it is a change to the harness's own bar and belongs on its own
+row, not smuggled into this one.
+
 ### Deviations from the plan
 
 - **The refusal points at PROCESS.md §4, not at the plan.** The plan's
@@ -174,6 +222,8 @@ The plan's §2a consequence — that the six MEANING rows of the WI-566 amendmen
 adjudication are this arm's first re-attestation case — is a trunk-side act on a
 future adjudication, not something this lane may perform.
 
-Deferred open items: none — the ruling this row executes is already recorded,
-and the owner-brief narrowing above is named here as a candidate follow-on
-rather than a decision owed back.
+Deferred open items: none — the ruling this row executes is already recorded.
+Two candidate follow-ons are NAMED above rather than owed back as decisions:
+narrowing the owner's approval brief to the held rungs, and giving
+`test_this_repo_s_committed_stage_is_current` the work-branch exemption its
+`derive_stage --check` twin already has.
