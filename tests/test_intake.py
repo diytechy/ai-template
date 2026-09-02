@@ -259,6 +259,101 @@ def test_the_amendment_mint_is_idempotent_across_a_rerun(tmp_path):
     assert again == []
 
 
+# --- trigger (a2): the Drafted rows a lane hands over -------------------------
+#
+# Owner ruling 2026-09-01. A work lane authors `Drafted` spine rows and its merge
+# is REFUSED if it approves them, so every merge that adds or amends one leaves
+# text waiting on an approval nobody gave. The mirror of trigger (a), off the
+# same two-tree walk.
+
+
+def _released(root):
+    """Release every spine rung to the loop — the dial state this trigger needs.
+    `DevStg-Needs` is what this repo itself runs: the owner holds Needs and
+    nothing above it."""
+    set_process_key(
+        root, "attestation", "human_approval_through", kit_ladder.STAGE_NEEDS
+    )
+
+
+def test_a_drafted_row_mints_one_first_approval_adjudication(tmp_path):
+    root, before, after = amended_repo(
+        tmp_path, lambda r: write_sr(r, requirement="fresh draft", status="Drafted")
+    )
+    _released(root)
+    minted, refusal = intake.intake_after_merge(root, before, after, {}, "wi-003")
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    wid, relpath = minted[0]
+    row = queued_rows(root)[wid]
+    assert row["SafetyClass"] == "adjudication"
+    # The BRIEF cell is what routes the session (adjudicate_brief.BRIEF_PROMPTS);
+    # deriving it from the SpecRef would be ambiguous, so it is typed.
+    assert row["Brief"] == "first-approval"
+    assert "FIRST APPROVAL" in row["Title"] and "SR-001" in row["Title"]
+    text = (root / relpath).read_text(encoding="utf-8")
+    assert "## Context" in text
+    assert "SR-001 amended" in text
+    assert "read each row's WHOLE CHAIN" in text  # the outcomes, not just the list
+    # ...and the AMENDMENT trigger stayed silent on the same delta: the row left
+    # `Approved`, so no approved text moved behind anyone's back.
+    assert "meaning-or-clarity" not in text
+
+
+def test_a_held_rung_mints_no_first_approval_row(tmp_path):
+    # The ruling's own boundary, and the half that keeps this from pre-empting a
+    # signature the owner owes: the adjudicator acts only on rungs the dial
+    # RELEASES. A held tier still surfaces through the approval brief, exactly
+    # as it does today, and minting here would either duplicate that surface or
+    # invite a session to approve past the human.
+    root, before, after = amended_repo(
+        tmp_path, lambda r: write_sr(r, requirement="fresh draft", status="Drafted")
+    )
+    set_process_key(
+        root, "attestation", "human_approval_through", kit_ladder.STAGE_RELEASE
+    )
+    minted, refusal = intake.intake_after_merge(root, before, after, {}, "wi-003")
+    assert refusal is None, refusal
+    assert minted == []
+    # ...and the SAME delta on a released dial does mint, so the silence above
+    # is the dial and not an inert trigger.
+    _released(root)
+    again, refusal2 = intake.intake_after_merge(root, before, after, {}, "wi-003")
+    assert refusal2 is None, refusal2
+    assert len(again) == 1
+
+
+def test_the_first_approval_mint_is_one_row_and_idempotent(tmp_path):
+    # ONE row per merge however many rows it hands over (the trigger-(a) shape),
+    # and the derived title carries the sha pair, so the CLI recovery re-run
+    # finds it by exact-title dedup and mints nothing twice.
+    def amend(r):
+        # The two shapes a lane produces: an existing row amended below
+        # approval, and a brand-new decomposition row AUTHORED `Drafted`.
+        write_sr(r, requirement="fresh draft", status="Drafted")
+        (r / "docs" / "requirements" / "low-level-requirements.csv").write_text(
+            LLR_HEADER
+            + 'LLR-001,SR-001,Core,src/d.py,f,"the detail","why",TC-001,Approved,'
+            "CMP-001,1\n"
+            + 'LLR-002,SR-001,Extra,src/e.py,g,"the new detail","why",TC-002,'
+            "Drafted,CMP-001,1\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+
+    root, before, after = amended_repo(tmp_path, amend)
+    _released(root)
+    minted, refusal = intake.intake_after_merge(root, before, after, {}, "b")
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    title = queued_rows(root)[minted[0][0]]["Title"]
+    assert "SR-001" in title and "LLR-002" in title
+
+    again, refusal2 = intake.intake_after_merge(root, before, after, {}, "b")
+    assert refusal2 is None, refusal2
+    assert again == []
+
+
 # --- the deterministic id: max+1 over EVERY declared status directory ----------
 
 

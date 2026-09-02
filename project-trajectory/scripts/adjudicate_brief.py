@@ -53,7 +53,7 @@ asks for a `Status` cell to be judged). Deriving it from the TITLE instead is
 the `NEEDS-HUMAN` fold this repo wrote in blood (WI-417): prose that carries
 control flow must be a typed field. So it is a typed field.
 
-THREE OF THE FOUR BRIEFS ARE ROUTED (`ROUTED`); the last has no producer for
+FOUR OF THE FIVE BRIEFS ARE ROUTED (`ROUTED`); the last has no producer for
 its evidence, so a row declaring it is HELD for a human (rule 3) rather than
 built:
 
@@ -108,6 +108,7 @@ import spine_carrier
 # The declared `Brief` cell -> the prompt key its session is composed from.
 BRIEF_PROMPTS = {
     "amendment": prompts.ADJUDICATE_AMENDMENT,
+    "first-approval": prompts.ADJUDICATE_FIRST_APPROVAL,
     "disposition": prompts.ADJUDICATE_DISPOSITION,
     "conflict": prompts.ADJUDICATE_CONFLICT,
     "red-tc": prompts.ADJUDICATE_RED_TC,
@@ -146,6 +147,7 @@ EVIDENCE_CLIP = 80
 # have parsed every adjudication verdict as unreadable.
 VERDICT_GRAMMAR = {
     "amendment": ("VERDICT", ("MEANING", "CLARITY"), ("rows",)),
+    "first-approval": ("OUTCOME", ("APPROVE", "RETURN"), ("rows",)),
     "disposition": ("OUTCOME", ("COMPLETE", "PARTIAL", "CANCELLED"), ("successors",)),
     "conflict": (
         "OUTCOME",
@@ -466,11 +468,124 @@ def amendment_values(root, row):
     return {"baseline": baseline, "rows": "\n".join(lines)}, None
 
 
+# --- the first-approval brief (owner ruling 2026-09-01) -----------------------
+
+
+def first_approval_values(root, row):
+    """`({chain, baseline, registries}, None)` for the spine rows a lane
+    authored `Drafted` and did not approve, or `(None, reason)`.
+
+    THE APPROVAL ACT IS THE ADJUDICATOR'S, on the serial trunk side: a work
+    lane's merge is refused if it flips a `Status` or writes the approval
+    record (`integrate._approval_act_refusal`), so these rows are waiting on a
+    session like the one this brief composes. Two reasons the owner gave.
+    CONTEXT: approving means holding the row's WHOLE chain, which one work item
+    does not — so `{chain}` is the whole chain, not the changed cells.
+    CONCURRENCY: an adjudication lane runs alone, so the act cannot race a
+    second one.
+
+    WHICH ROWS is `trace.reattest_model`'s `approve` half — the same model
+    behind `trace.py --approve` and `open-items.html`, so the judge, the brief
+    and the owner surface cannot show three different pictures of one spine. Its
+    `Drafted` selector is chain-wide (the OI-61-sitting widening), which is
+    exactly the population this ruling hands over: a `Drafted` LLR under an
+    `Approved` SR is a first approval owed, and no drift arm can see it because
+    a row below approval has made no claim to fall from.
+
+    WHAT IS RENDERED is the WHOLE CHAIN of each selected SR, through
+    `trace.spine_chain` — NOT the model's own `rows`. That list carries only the
+    rows that changed or are `Drafted`, which is the right answer to the
+    re-attest brief's question ("what must I re-bless?") and the wrong one to
+    this brief's: the settled parent and the passing sibling test ARE the
+    evidence that a drafted row belongs where it sits. Rendering the model's
+    subset here would have shipped a chain brief with the chain missing —
+    plausible-looking, and exactly rule 2's failure.
+
+    RE-COMPUTED LIVE, never remembered from the mint (`red_tc_values`' rule):
+    the row minted at a merge, and by the time a session claims it another lane
+    may have approved or withdrawn some of those rows. A brief built from the
+    mint's own listing would ask the judge to rule on a world that no longer
+    exists — so an emptied population REFUSES here rather than composing a
+    session whose whole evidence section is stale.
+
+    `{registries}` is the `--approves REGISTRY=REF` argument the approving
+    commit owes, derived from the registries the shown rows actually live in.
+    Building it here rather than leaving it to the session is the difference
+    between an act that records its own scope and one that names whatever the
+    session remembered to type."""
+    import trace as tr
+
+    root = Path(root)
+    reg = tr.load_registries(root / "docs")
+    model = [
+        entry
+        for entry in tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
+        if entry.get("kind") == "approve"
+    ]
+    if not model:
+        return None, (
+            "no spine row awaits a first approval any more — every row is at or "
+            "above `Approved`, so the rows this adjudication was minted for have "
+            "already been ruled on or withdrawn"
+        )
+    llrs_by_sr, tcs_by_ref = tr.chain_buckets(reg.llrs, reg.tcs)
+    lines, registries = [], {}
+    for entry in model:
+        lines.append("- chain of {} — {}".format(entry["id"], entry.get("title") or ""))
+        for kind, rid, full in tr.spine_chain(
+            entry["id"], reg.srs, llrs_by_sr, tcs_by_ref
+        ):
+            drafted = tr.is_drafted(full)
+            lines.append(
+                "  - {} {} [{}]".format(
+                    kind, rid, "AWAITING FIRST APPROVAL" if drafted else "approved"
+                )
+            )
+            for name in sorted(full):
+                value = str(full[name] or "").strip()
+                if value:
+                    lines.append("    - {}: {}".format(name, value))
+            if drafted and _REGISTRY_OF.get(kind):
+                registries[_REGISTRY_OF[kind]] = True
+    wi_id = (row.get("WI-ID") or "").strip()
+    stamp_rev, stamp_date = baseline_snapshot.stamp(root)
+    baseline = (
+        "{}{}. Approving these rows moves it for the registries you flip and "
+        "for no others (WI-571), so an off-spine census computed against it "
+        "survives your act.".format(
+            baseline_snapshot.SNAPSHOT_DIR,
+            ", copied {} (commit {})".format(stamp_date, stamp_rev)
+            if stamp_rev
+            else " does not exist yet — your act is this repo's FIRST signing, "
+            "and `--seed` is what creates it",
+        )
+    )
+    return {
+        "chain": "\n".join(lines),
+        "baseline": baseline,
+        "registries": " ".join(
+            "{}={}".format(rel, wi_id or "this adjudication")
+            for rel in sorted(registries)
+        )
+        or "(no registry — nothing here is Drafted)",
+    }, None
+
+
+# The spine tier a chain row's `kind` names -> the registry it lives in. Read
+# only to build the `--approves` argument, which is per-registry.
+_REGISTRY_OF = {
+    "SR": "docs/requirements/system-requirements.toml",
+    "LLR": "docs/requirements/low-level-requirements.toml",
+    "TC": TC_REGISTRY,
+}
+
+
 # The briefs whose EVERY slot has a real producer today. A key absent here is
 # documented in this module's header with the derivation it is missing; adding
 # one is adding its assembler, never relaxing the fill.
 _ASSEMBLERS = {
     "amendment": amendment_values,
+    "first-approval": first_approval_values,
     "disposition": disposition_values,
     "red-tc": red_tc_values,
 }

@@ -1099,6 +1099,28 @@ def _minted_id_refusal(root, branch, claimed):
     )
 
 
+def _adjudication_lane(root, branch):
+    """Does EVERY claimed spec on `branch` declare the `adjudication` kind?
+
+    `_lane_bar_directives`' `skip` test, asked on its own because the approval
+    rung needs the answer BEFORE the bar question exists. UNREADABLE
+    FRONTMATTER ANSWERS FALSE, and the two callers' opposite defaults are both
+    the conservative one: there an unreadable kind RUNS the bar, here it makes
+    the branch a work lane whose approval act refuses. Both fail toward more
+    checking, which is why they are stated as two rules rather than one flag."""
+    claimed = _claimed_specs(root, branch)
+    if not claimed:
+        return False
+    for _wid, name in claimed:
+        try:
+            meta = _spec_frontmatter(root / ACTIVE / branch / name)
+        except (OSError, ValueError):
+            return False
+        if str(meta.get("safety_class") or "").strip().lower() != "adjudication":
+            return False
+    return True
+
+
 def _approval_act_refusal(root, branch):
     """THE APPROVAL ACT IS NOT A LANE'S (owner ruling 2026-09-01): the merge
     slot's approval refusal - a refusal string, or None.
@@ -1139,7 +1161,18 @@ def _approval_act_refusal(root, branch):
     words the refusal, beside the two-tree walk and the snapshot-mirror rules it
     shares its material with. What stays in the merge slot is the RUNG — the
     merge base this branch is judged against, and the placement in the ladder.
+
+    AN ADJUDICATION LANE IS EXEMPT, because it is the actor the ruling names.
+    The concurrency half the owner asked for is already built and is not
+    re-implemented here: `dispatch._branch_exclusive` makes any non-`ordinary`
+    kind run ALONE, so an adjudication holds the station by itself, two acts
+    cannot overlap, and the snapshot moves only there. The kind is read off
+    TRUNK's claimed specs — the same one-home read `_lane_bar_directives` and
+    `dispatch._branch_exclusive` make — so this rung and the no-bar arm cannot
+    disagree about what an adjudication lane is.
     """
+    if _adjudication_lane(root, branch):
+        return None
     import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
 
     head = _head(root)

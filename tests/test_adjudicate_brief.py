@@ -697,6 +697,117 @@ def test_with_no_snapshot_the_brief_HOLDS_and_says_FIRST_APPROVAL(tmp_path):
     assert "FIRST-APPROVAL" in why and "no accepted anchor" in why
 
 
+# --- the first-approval brief (owner ruling 2026-09-01) -----------------------
+
+
+def _first_approval_repo(tmp_path):
+    """A repo whose lane left a `Drafted` LLR under an `Approved` SR — the exact
+    population the ruling hands to the adjudicator, and the one no drift arm can
+    see: a row below approval has made no claim to fall from."""
+    repo = _spine_repo(tmp_path)
+    baseline_snapshot.copy_live(repo, seed=True)
+    llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
+    llrs.write_text(
+        llrs.read_text(encoding="utf-8").replace("TC-001,Approved,", "TC-001,Drafted,"),
+        encoding="utf-8",
+    )
+    _write_rows(
+        repo,
+        [
+            {
+                "WI-ID": "WI-301",
+                "Title": "adjudicate: LLR-001 - await a FIRST APPROVAL",
+                "SafetyClass": "adjudication",
+                "Brief": "first-approval",
+                "SpecRef": "docs/requirements/low-level-requirements.toml",
+            }
+        ],
+    )
+    return repo
+
+
+def test_the_first_approval_brief_carries_the_WHOLE_CHAIN(tmp_path):
+    # The owner's CONTEXT reason, mechanized: approving a row means holding its
+    # whole chain — the parent SR, the sibling LLRs, the tests — which is the
+    # thing one work item does not hold and is therefore why the act is the
+    # adjudicator's. So the brief must show the chain, not the changed cells.
+    repo = _first_approval_repo(tmp_path)
+    values, why = ab.first_approval_values(
+        repo, {"WI-ID": "WI-301", "Brief": "first-approval"}
+    )
+    assert why is None, why
+    chain = values["chain"]
+    assert "SR-001" in chain and "LLR-001" in chain and "TC-001" in chain
+    # The row awaiting the act is MARKED as such — a chain rendered without
+    # saying which rows are the question reads as a report, not a brief.
+    assert "LLR-001 [AWAITING FIRST APPROVAL]" in chain
+    assert "SR-001 [approved]" in chain
+    # ...and the act's own argument is DERIVED, so the approving commit records
+    # the scope it actually touched rather than whatever the session typed.
+    assert (
+        values["registries"] == "docs/requirements/low-level-requirements.toml=WI-301"
+    )
+    assert baseline_snapshot.SNAPSHOT_DIR in values["baseline"]
+
+    # ...and the whole brief composes with NO hole. Strict fill makes the
+    # template's slots and this assembler's keys ONE contract, so a slot added
+    # to either side without the other refuses instead of shipping a judge a
+    # prompt with `{chain}` still in it.
+    text, why = ab.compose(
+        repo,
+        {"WI-ID": "WI-301", "Brief": "first-approval"},
+        repo / "docs/reviews/v.md",
+    )
+    assert why is None, why
+    assert re.findall(r"\{[a-z_]+\}", text) == []
+    assert "You are an INDEPENDENT adjudicator" in text
+    assert "OUTCOME: APPROVE|RETURN rows=N" in text
+    # The act itself is spelled out, because nothing downstream performs it for
+    # the session: the mechanical writer retired (OI-45 ruled (b)), so the flip
+    # and its anchoring copy are this session's own reviewed commit.
+    assert "python scripts/intake.py snapshot --approves" in text
+    assert "one reviewed commit" in text
+
+
+def test_the_first_approval_brief_REFUSES_once_the_rows_are_ruled(tmp_path):
+    # Rule 2, and `red_tc_values`' live-recompute rule applied to this arm: the
+    # row is minted at a merge and claimed later, so by composition time another
+    # act may have approved or withdrawn every row it was minted for. A brief
+    # built from the mint's remembered listing would ask the judge to rule on a
+    # world that no longer exists; an emptied population refuses instead.
+    repo = _first_approval_repo(tmp_path)
+    llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
+    llrs.write_text(
+        llrs.read_text(encoding="utf-8").replace("TC-001,Drafted,", "TC-001,Approved,"),
+        encoding="utf-8",
+    )
+    baseline_snapshot.copy_live(repo, seed=True)  # the act's own anchor moved too
+    values, why = ab.first_approval_values(
+        repo, {"WI-ID": "WI-301", "Brief": "first-approval"}
+    )
+    assert values is None
+    assert "awaits a first approval" in why, why
+
+
+def test_the_first_approval_brief_is_ROUTED_and_demands_its_own_verdict(tmp_path):
+    # The seam, both halves. The brief has an assembler (so a row declaring it
+    # is DISPATCHED, not held for a human), and its verdict grammar is its own:
+    # the amendment arm's MEANING/CLARITY cannot answer "approve or return", and
+    # a checker still expecting the old enum is exactly the drift the table
+    # prevents.
+    assert "first-approval" in ab.ROUTED
+    assert ab.VERDICT_GRAMMAR["first-approval"] == (
+        "OUTCOME",
+        ("APPROVE", "RETURN"),
+        ("rows",),
+    )
+    verdict = tmp_path / "v.md"
+    verdict.write_text("OUTCOME: MEANING rows=1\n", encoding="utf-8")
+    assert "not one of APPROVE|RETURN" in ab.verdict_refusal("first-approval", verdict)
+    verdict.write_text("OUTCOME: APPROVE rows=2\n", encoding="utf-8")
+    assert ab.verdict_refusal("first-approval", verdict) is None
+
+
 def test_an_adjudication_row_declaring_no_brief_still_builds(tmp_path):
     """The complement, and the reason the hold keys on the DECLARATION rather
     than on `adjudicating()`: a clean-close spot check and a report-less
