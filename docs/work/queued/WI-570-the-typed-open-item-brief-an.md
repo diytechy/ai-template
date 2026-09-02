@@ -20,3 +20,9 @@ recommendation — all required) that `parse_dispositions` /
 `_mint_shape_refusal` refuse when incomplete and the mint writes verbatim; the
 ADJUDICATE template states that the adjudicator authors the brief. Read the
 plan's §2 (what this is NOT) before widening scope.
+
+**Standing constraint (owner ruling 2026-09-01, the approval act is the
+adjudicator's):** if this row authors or amends spine rows (SR/LLR/TC), leave
+them `Drafted`; do NOT flip any `Status`, and do NOT run `intake.py snapshot`
+or write `docs/archive/last_approved/` on this lane. The flip and the
+snapshot are performed on trunk by the adjudication arm once it ships.

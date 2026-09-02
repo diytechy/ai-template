@@ -12,3 +12,10 @@ safety_class = "ordinary"
 ## Context
 
 Filed 2026-09-01 (evening supervised session) from the owner's ruling made in session (docs/log.d/2026-09-01-owner-ruling-approval-act.md, compiled): approval acts on spine rows - the Status flip and the anchoring snapshot - are the adjudicator's alone, on the serial trunk side, for whole-chain context and for concurrency. A lane's merge is refused on any flip, born-Approved row or snapshot write; a first-approval adjudication arm is minted at merge with the whole chain in its brief and flips + snapshots on trunk; the amendment arm's stale mechanical-tool line is replaced by the true aftermath; the doctrine is stated once. Serialized behind the copy-scope row (both touch intake.py and baseline_snapshot.py). Read the plan's section 2 before widening.
+
+**Standing constraint (the ruling this row executes):** if this row authors
+or amends spine rows (SR/LLR/TC), leave them `Drafted`; do NOT flip any
+`Status`, and do NOT run `intake.py snapshot` or write
+`docs/archive/last_approved/` on this lane — drive the new refusal and the
+adjudication arm on a scaffold. The first-approval adjudication this row
+ships is what performs the flip and the snapshot, on trunk.

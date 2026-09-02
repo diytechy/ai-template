@@ -3213,3 +3213,73 @@ recommendation = """(b) REVIEW-THEN-STAND.
 - the guard: amend rejected rows LIVE in the registry through the ordinary amendment path - never by editing the snapshot, which the mirror invariant reds.
 - the sequencing: the reseal is `WI-569`'s own work and must follow the reading; it regenerates rather than copies the branch's snapshot bytes."""
 wi_refs = ["WI-569"]
+
+[open_item.OI-79]
+title = "The origin ref wi508-architectural-remap-HELD-for-owner-verdict: rename or delete now its range is i"
+status = "pending"
+raised = "2026-09-01"
+one_line = "The held wi508 branch was pushed to origin on 2026-08-31 as a backup under a -HELD- suffix OI-70 calls a bypass of the close flow. Its whole 44-commit range (ff29fef8..6ba27110) is now in trunk history via the 979c3e5f handback merge and its record is compiled into the log. Rename it back, delete it, or keep it as a tagged archive? push = \"human\" puts every answer out of the loop's reach."
+decision = """Whether the remote ref `origin/wi508-architectural-remap-HELD-for-owner-verdict` (tip fa3c99c4, the branch's last verdict commit) is renamed, deleted or kept, now that nothing it holds is single-copy.
+
+- Every commit it points at is an ancestor of trunk `contract_split` since the handback merge `979c3e5f` (verify: `git merge-base --is-ancestor fa3c99c4 contract_split`), and the six log entries the conversion had dropped were restored at `0e4cbfb1`.
+- OI-70 ruled hold-by-rename BANNED; the suffix survives only on the remote, which the loop never writes (`push = "human"`).
+- WI-555 round 005 (MINOR) and the WI-568 adjudication both left this as the owner's act."""
+blast_radius = """- migration: none; no adopter sees this repo's remotes.
+- deferring: harmless to the tree; the ref keeps advertising a bypassed hold to anyone listing origin, and `git branch -a | grep -i wi508` keeps returning a name the record says must not exist.
+- downstream: none.
+- reversal: a deleted ref is recoverable from trunk history (the range is merged) and from the reflog on the box that pushed it; a rename is a push either way."""
+options = """- (a) DELETE the remote ref (`git push origin --delete wi508-architectural-remap-HELD-for-owner-verdict`). FOR: nothing single-copy remains; the banned name disappears; trunk history and the compiled log are the record. AGAINST: the branch's own compiled `docs/reviews/WI-508-REVIEW-A.md` and round files live on trunk only through the merge — deleting the ref removes the one place they sit as a branch tip (they remain reachable by sha).
+- (b) RENAME to an archive name (`archive/wi508-architectural-remap-2026-08-30`) with a tag at fa3c99c4. FOR: keeps a human-findable pointer to the nineteen-round record without the banned hold suffix. AGAINST: two pushes and a naming convention the repo does not yet have.
+- (c) KEEP as-is. FOR: zero work. AGAINST: the record says the name is a bypass; every future reader trips on it."""
+recommendation = """(a) DELETE, with one tag first if the owner wants a pointer (`git tag wi508-record-2026-08-30 fa3c99c4 && git push origin wi508-record-2026-08-30`).
+
+- the deciding reason: the range is merged and its record compiled; a ref exists to hold commits that are nowhere else, and these are.
+- the guard: run the ancestor check quoted above before the delete, on the box that pushes.
+- the sequencing: independent of every queued row; any time."""
+wi_refs = ["WI-569"]
+
+[open_item.OI-80]
+title = "OI-72's ruling text says 'four Drafted rows' where two were already Approved when it was written: co"
+status = "pending"
+raised = "2026-09-01"
+one_line = "OI-72 (ruled 2026-08-31) reads the SR-163 cluster as 'the wi508 branch's four Drafted rows stay honest as-is'. LLR-203 and LLR-204 had been Approved on that branch since 2026-08-30 (580df781); only TC-199/TC-200 were Drafted. The phrase misled the WI-555 spec's arm 4 and the first WI-568 adjudication. Correct the ruled row's wording (a ruled row is the owner's text), or leave it with a pointer?"
+decision = """Whether the owner amends the wording of a RULED open item (`OI-72`) so it states the true 2-Approved / 2-Drafted split, and how.
+
+- The ruling's substance is unaffected: it ruled the SR-163 verification SHAPE, not the four rows' Status.
+- The false premise propagated twice (WI-555 Done-when arm 4; the WI-568 adjudication's first verdict) before the WI-568 rounds corrected it — both corrections are on the record.
+- A ruled row's text is the owner's; the kit's rules do not let a lane or a supervisor rewrite a ruling."""
+blast_radius = """- migration: none.
+- deferring: the next reader of OI-72 inherits the same false premise; every downstream document that quotes it (the wi508 partial spec, the WI-568 record) already carries the correction.
+- downstream: none.
+- reversal: a one-line text edit either way."""
+options = """- (a) CORRECT IN PLACE: edit OI-72's `decision`/`one_line` to read 'the two Approved LLRs and the two Drafted TCs stay honest as-is', with a dated parenthetical naming the correction. FOR: the ruled text stops misleading. AGAINST: edits a ruled row's bytes, which the record otherwise treats as fixed once ruled.
+- (b) APPEND A CORRECTION LINE to OI-72 without touching the original sentence. FOR: the original ruling stays byte-identical and the correction is visible beside it. AGAINST: a reader who stops at the first sentence is still misled.
+- (c) LEAVE IT; rely on the WI-568 record. FOR: zero edits. AGAINST: the misreading has already happened twice."""
+recommendation = """(b) APPEND a dated correction line beside the original sentence.
+
+- the deciding reason: it keeps a ruled row's original bytes while putting the true split where the next reader will see it.
+- the guard: the supervisor may apply it on the owner's word in a reviewed trunk commit; no lane touches a ruled row.
+- the sequencing: any time; nothing waits on it."""
+wi_refs = ["WI-569"]
+
+[open_item.OI-81]
+title = "Publication of this repo's work: merge-to-main and push for contract_split and the three older branc"
+status = "pending"
+raised = "2026-09-01"
+one_line = "Standing since 2026-08-31 and never filed: under push = \"human\" only the owner can merge contract_split (the integrator's trunk), dualplan-routing-fix, guardrails-fable-method and ConcurrencyTrainRewrite to main and push them; and the local branch wi416-parked-handback-contract is single-copy (on no remote) and should be deleted only after deciding it is not wanted. Rule the publication cadence and the wi416 disposal."
+decision = """When and how the owner publishes: (1) contract_split -> main (every merge this repo has made since 2026-08 sits on contract_split; main is behind by the whole program); (2) the three older branches, whose relation to contract_split the owner has to judge (each may be superseded, mergeable, or an archive); (3) whether the single-copy `wi416-parked-handback-contract` branch holds anything the record needs before it is deleted.
+
+- OI-44 (ruled 2026-08-20) defers the publication/identity decision to the first act that would publish this repo's history beyond the owner's machines — re-answer OI-44 before a push to a shared remote.
+- The loop never merges to main and never pushes; nothing in the queue changes that."""
+blast_radius = """- migration: none inside this repo; a downstream adopter re-syncs from whatever the owner publishes.
+- deferring: main keeps falling behind; the older branches age against a trunk that has moved hundreds of commits; the wi416 branch stays one disk failure from loss.
+- downstream: RESYNC_PACK.md and the adopting repos read the published kit — publication is the moment their range starts.
+- reversal: a merge to main is a git act the owner can revert; a push to a shared remote is not (OI-44's point)."""
+options = """- (a) PUBLISH NOW: merge contract_split to main, push, then triage the three branches (merge, archive-tag, or delete) and delete wi416 after a read. FOR: the record reaches the remote; the drift stops. AGAINST: OI-44's identity question must be answered first if the remote is shared.
+- (b) PUBLISH AT THE NEXT GATE: hold until the queued repair rows (the verdict carrier, the approval act) land, then publish one coherent state. FOR: main receives a trunk whose loop can run unattended. AGAINST: weeks more drift; wi416 stays single-copy.
+- (c) ARCHIVE THE OLDER THREE AND wi416 NOW (tag + delete after a read), publish contract_split on its own cadence. FOR: removes the single-copy risk immediately and separates it from the publication question. AGAINST: two decisions instead of one."""
+recommendation = """(c) for the branches now, (a) for contract_split once OI-44 is re-answered.
+
+- the deciding reason: the single-copy branch is the only irreversible exposure; everything else is cadence.
+- the guard: read wi416-parked-handback-contract before deleting it (`git log contract_split..wi416-parked-handback-contract --stat`); tag what is kept.
+- the sequencing: OI-44 before any push to a shared remote; the rest at the owner's convenience."""
