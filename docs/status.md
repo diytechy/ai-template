@@ -38,16 +38,17 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   (52–56 are the evening session's: the hand merge + drawn rounds that
   landed the wi508 conversion, its record corrections, the adjudication's
   rework and by-hand close, the loop stopped on a C6 cycle, the re-arm);
-  **`OI-78`** — the off-spine change census the wi508 lane's spine approval
-  zeroed (132 Drafted interface rows reshaped under OI-67 no longer listed
-  as changed since the 2026-08-24 snapshot; no approval granted or lost):
-  STAND or
-  REVIEW-THEN-STAND, the brief on the successor row's spec, recommendation
-  REVIEW-THEN-STAND; `OI-77` (the intake regex DOTALL ruling) — both cards
-  now carry their full brief (hand-filled at the owner's direction; the
-  automated mint had written only the question, and the owner-prioritized
-  row that makes a thin card unrepresentable heads the generated frontier
-  below); the six MEANING rows awaiting the owner's signature on the
+  `OI-77` and `OI-78` are RULED (2026-09-01 evening: (a) and STAND; both
+  cards had been hand-filled first because the automated mint writes only
+  the question — the owner-prioritized rows that fix the mint's shape and
+  the snapshot's copy scope head the generated frontier below); **the
+  owner's next ruling, to word before it is filed:** who performs the
+  approval act on spine rows — the owner's stated intent is the adjudicator
+  alone, on the serial trunk side, for context and for concurrency; the
+  record today keys the act to the rung dial and lets a worker lane flip
+  with a verdict (the wi508 case), the amendment brief defers to a
+  "mechanical tool" OI-45 (b) retired, and four lanes minted born-Approved
+  rows — one ruling, one executing row; the six MEANING rows awaiting the owner's signature on the
   `trace.py --approve modified` re-attestation brief; the origin ref
   `wi508-architectural-remap-HELD-for-owner-verdict` to rename or delete now
   its range is in trunk history; `OI-72`'s "four Drafted rows" wording (two
