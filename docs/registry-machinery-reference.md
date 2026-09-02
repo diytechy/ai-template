@@ -765,6 +765,18 @@ act is an adjudicator's, on the serial trunk side — and
 `intake` turns into the first-approval adjudication that approves them. All
 four readers share one two-tree walk, so no row is visible to only one.
 
+WHICH of those drafted rows an adjudicator may actually flip is the DIAL's
+answer, from one table: `agent_common.SPINE_APPROVAL_RUNGS` names the DevStg
+rung each spine registry's rows are approved into, and `human_approves_spine`
+compares it against `human_approval_through` — unmapped is HELD, the same
+fail-safe its off-spine sibling `human_approves` takes. Both ends read it: the
+mint hands over only released rows, and `adjudicate_brief.
+first_approval_values`, which RE-RESOLVES the population live at composition
+time (the row is claimed long after the merge), re-applies the same filter to
+what it re-resolved. A held row still appears in the rendered chain — it is
+evidence — labelled as the owner's and contributing no registry to the act's
+`--approves` scope.
+
 **Chain-consistency warns — RETIRED** (owner ruling 2026-08-17, the cell
 reading): `modified_chain_advisories` told an author to flip the owning SR
 whenever a child read the retired `Modified` marker, asserting the retired
