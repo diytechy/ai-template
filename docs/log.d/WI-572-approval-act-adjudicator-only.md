@@ -759,3 +759,18 @@ Verification at the rework tree before its resumable commit:
 <!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=HEAD-dirty -->
 <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_complexity.py --root . --mode enforce" rev=HEAD-dirty -->
 <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=HEAD-dirty -->
+
+The unfiltered close suite after the rework commit completed **3,280 passed, 20
+skipped, 1 failed in 576.16 s**. Its sole red is again
+`test_this_repo_s_committed_stage_is_current`, with the same recorded
+`sha256:a24669d7…` versus computed `sha256:6fadb64e…` pair established before
+round 5's changes. This branch neither owns nor edits `docs/stage`; the declared
+work-branch harness skips that trunk-owned generated-freshness assertion and the
+serial trunk step regenerates it after merge.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=67c58e17 -->
+
+The declared work-branch gate harness, `.venv/bin/python
+project-trajectory/scripts/check.py --jobs 0`, reports **RESULT: PASS**; its
+trunk-owned `derived-stage` and approval-freshness steps skip by the declared
+branch rule, while every applicable step passes.
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check.py --jobs 0" rev=67c58e17-dirty -->
