@@ -1,0 +1,5 @@
+# Tracked pause (concurrency-restructure §5.6): the dispatcher stops CLAIMING at
+# the next session boundary; the in-flight lane finishes and merges. Unpausing is
+# a reviewed deletion commit of this file.
+reason = "Owner direction 2026-09-02: the frontier holds while the owner addresses the DISPATCH failure this run exposed in a separate session. The scheduler claimed WI-569 and WI-575 onto one exclusive spine lane and the worker assignment named both, but the session's banner names only the first id, the worker followed the banner, and the second row was left silently undone - caught only because the integrator refuses a lane whose claimed row has no outcome. The lane was finished by hand and merged (WI-569, WI-575); the loop process was stopped and no worktree remains. Delete this file in a reviewed commit to resume at the generated frontier."
+since = "2026-09-02"

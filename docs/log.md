@@ -58053,3 +58053,15 @@ re-anchors the other amended LLR rows riding in the same file.
 
 `docs/ratify/CURRENT.md` was regenerated — a generated surface, not the
 snapshot — because this row amended a spine cell.
+
+## 2026-09-02 — Addendum: the two-row lane finished by hand and merged; the dispatch failure it exposed is owner-owed
+
+The scheduler claimed `WI-569` and `WI-575` onto ONE exclusive spine lane (both `safety_class = "spine"`), and the worker assignment named both: `wi=WI-569;WI-575`. The session banner, however, names only the first id, and the worker followed the banner — it spent 2383 s and 151 turns delivering WI-569, closed it, and never opened WI-575 (the transcript touches that id twice, both incidental: a filename in a directory listing and the claim commit's subject). The weekday blackout opened about three minutes after the session ended, so no second session ran. The only instrument that caught the omission is the integrator refusing a lane whose claimed row carries no outcome. **The owner ruled this a dispatch failure and took it to a separate session**; the construction-first shape named at the time is one row per session, since the exclusive claim already serialises them, rather than a check that the worker covered every assigned id.
+
+The supervisor stopped the loop, performed WI-575 by hand (correcting `LLR-158`'s `detail` and `code_symbol` to the shipped `APPROVAL_ACT_CSVS` partition — the defect `WI-573` withheld its re-anchor for), and drew three rounds through an independent Opus reviewer with a hostile brief. Round 002 (`CHANGES-REQUESTED findings=5`) confirmed every corrected spine claim re-derives true and nothing true regressed, and found three record defects: the WI-569 fragment's `Deferred open items:` line sat below its headings so the close claimed a green it had not produced; the Deliverable asserted in the present tense a cell-for-cell identity its own commit had broken; and `LLR-203`'s cell stated the exclusion-carrier grammar with a hyphen where `bootstrap._mapping_source_exclusions` partitions on a literal spaced em dash, so a row written to its instruction would have excluded nothing. Rounds 003 and 004 verified the corrections and the count of them, ending `APPROVE findings=0`. Merged `0ae37a1f`; the merge minted `WI-578`, the amendment adjudication over the three amended rows, which owns the re-attestation that follows.
+
+**The owner's 2026-09-01 ruling held on its second and third real spine lanes.** Re-driven at every tip: `lane_approval_refusal` returns `None` over base..tip, no `status` cell moved, and nothing under `docs/archive/last_approved/` was written — by a lane that amended three approved rows and by one that corrected a fourth.
+
+fig: smoke tier on trunk at `427e02eb`: 1463 passed / 4 skipped in 23.41 s; `check_smoke_budget.py --mode enforce` 24.6 s vs 60 s — `python -m pytest -q -n auto -m smoke && python scripts/check_smoke_budget.py --mode enforce`, 2026-09-02 17:0x UTC.
+
+Deferred open items: none — the dispatch failure is the owner's own next session, not a row this session may mint.
