@@ -750,8 +750,16 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
 def _first_approval_repo(tmp_path):
     """A repo whose lane left a `Drafted` LLR under an `Approved` SR — the exact
     population the ruling hands to the adjudicator, and the one no drift arm can
-    see: a row below approval has made no claim to fall from."""
+    see: a row below approval has made no claim to fall from.
+
+    THE DIAL IS DECLARED, and it has to be. This arm exists only for rungs the
+    declared gate authority has RELEASED; with no `docs/process.toml` the dial
+    falls back to the shipped `DevStg-Release`, which holds every rung, so an
+    undeclared fixture is not this arm's scenario at all — it is the owner's.
+    That omission is what let the first cut ship a brief with no dial filter and
+    a green test beside it (WI-572 REVIEW-A)."""
     repo = _spine_repo(tmp_path)
+    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
     baseline_snapshot.copy_live(repo, seed=True)
     llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
     llrs.write_text(
@@ -834,6 +842,54 @@ def test_the_first_approval_brief_REFUSES_once_the_rows_are_ruled(tmp_path):
     )
     assert values is None
     assert "awaits a first approval" in why, why
+
+
+def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
+    # WI-572 REVIEW-A, the MAJOR finding. The mint filters the population by the
+    # dial (`intake._released_drafted_rows`); this assembler RE-RESOLVES it live
+    # from `reattest_model`, which is dial-blind by design — and the first cut
+    # did not put the filter back. Under a MIXED dial that is not a cosmetic
+    # gap: the brief rendered a held `Drafted` SR beside a released `Drafted`
+    # LLR, marked both as awaiting the act, and derived a `--approves` argument
+    # naming BOTH registries — a prompt instructing an adjudicator to perform a
+    # signature the owner owes. The filter now lives in ONE table both ends read.
+    repo = _first_approval_repo(tmp_path)
+    srs = repo / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(
+        srs.read_text(encoding="utf-8").replace(
+            ",Approved,P1,core", ",Drafted,P1,core"
+        ),
+        encoding="utf-8",
+    )
+    # `DevStg-Reqs` holds the SR tier for the owner and releases the LLR tier
+    # below it — the exact mixed dial the finding names.
+    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Reqs")
+    row = {"WI-ID": "WI-301", "Brief": "first-approval"}
+    values, why = ab.first_approval_values(repo, row)
+    assert why is None, why
+
+    # Both halves. The held row is SHOWN — it is the chain, and holding the
+    # chain is the whole reason this act is the adjudicator's — but it is shown
+    # as the owner's...
+    assert "SR-001 [AWAITING FIRST APPROVAL - HELD FOR THE OWNER" in values["chain"]
+    assert "LLR-001 [AWAITING FIRST APPROVAL]" in values["chain"]
+    # ...and it contributes NO registry, so the act's own recorded scope cannot
+    # carry it even if the session ignored every word of the prose.
+    assert (
+        values["registries"] == "docs/requirements/low-level-requirements.toml=WI-301"
+    )
+    text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
+    assert why is None, why
+    assert "never a `HELD FOR THE OWNER` one" in text
+
+    # And when the dial holds EVERY rung — the kit's shipped default, so this is
+    # what an adopter who has declared nothing gets — the arm has no question at
+    # all and REFUSES, rather than composing the owner's sitting as a session's
+    # to-do list.
+    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Release")
+    values, why = ab.first_approval_values(repo, row)
+    assert values is None
+    assert "HOLDS for a human" in why, why
 
 
 def test_the_first_approval_brief_is_ROUTED_and_demands_its_own_verdict(tmp_path):

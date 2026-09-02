@@ -106,12 +106,10 @@ except ImportError:  # pragma: no cover - in-process fallback
 # of two git trees, so it needs the FORMAT reader, not the filesystem-bound common
 # one — the parse rule has exactly one home either way.
 try:
-    from kitlib import ladder as kitladder
     from kitlib import stage as kitstage
     from kitlib import spine as _spine
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from kitlib import ladder as kitladder
     from kitlib import stage as kitstage
     from kitlib import spine as _spine
 
@@ -747,19 +745,6 @@ def _amendment_drafts(root, before, after):
 # waiting on an approval nobody has given — read off the same two-tree walk
 # (`acceptance_record.staged_drafted_rows`), one row per merge, same shape.
 #
-# WHICH RUNG A TIER'S APPROVAL HAPPENS AT. The dial (`human_approval_through`)
-# is an ordinal on the DevStg ladder, so deciding whether a tier's approval is
-# loop-held or human-held means naming the rung its rows are approved INTO. That
-# is the same mapping `gate-advance`'s "Approval = a reviewed Status-change
-# commit" states in prose ("Into `DevStg-Reqs` — a draft requirement is
-# approved"); it is spelled once here because this is the only code that asks.
-APPROVAL_RUNG = {
-    "docs/requirements/system-requirements": kitladder.STAGE_REQS,
-    "docs/requirements/low-level-requirements": kitladder.STAGE_LLREQS,
-    "docs/test/test-cases": kitladder.STAGE_TESTS,
-}
-
-
 def _released_drafted_rows(root, before, after):
     """The `Drafted` rows a merged delta added or amended, minus every row whose
     tier the dial still HOLDS for a human.
@@ -769,16 +754,19 @@ def _released_drafted_rows(root, before, after):
     as it does today. Minting an adjudication for it would either duplicate that
     surface or invite a session to pre-empt a signature the owner owes.
 
-    A registry outside `APPROVAL_RUNG` is HELD, the conservative direction — an
-    unmapped tier is one this ruling has not thought about, and the failure
-    direction for "who approves" is always the human."""
+    WHICH ROWS THE DIAL RELEASES is `agent_common.human_approves_spine` and
+    nothing local: the brief this mint hands the adjudicator re-resolves the
+    population LIVE at composition time, so the filter has to be the SAME one at
+    both ends or the brief widens what the mint narrowed. An unmapped registry
+    is HELD there, the conservative direction — an unmapped tier is one this
+    ruling has not thought about, and the failure direction for "who approves"
+    is always the human."""
     docs = Path(root) / "docs"
-    released = []
-    for rec in acceptance_record.staged_drafted_rows(root, before, after):
-        rung = APPROVAL_RUNG.get(spine_carrier.stem(rec["registry"]))
-        if rung is not None and not ac.human_holds(docs, rung):
-            released.append(rec)
-    return released
+    return [
+        rec
+        for rec in acceptance_record.staged_drafted_rows(root, before, after)
+        if not ac.human_approves_spine(docs, spine_carrier.stem(rec["registry"]))
+    ]
 
 
 def _first_approval_context(records):

@@ -56,10 +56,11 @@ irreducible core.
 authored, something must. `intake._first_approval_drafts` (trigger a2) mints ONE
 `brief = "first-approval"` adjudication per merge over the `Drafted` rows the
 delta added or amended — the exact mirror of trigger (a), one section below it.
-`APPROVAL_RUNG` names the DevStg rung each spine tier is approved into so the
-dial can answer whether that tier is loop-held; a rung the dial HOLDS is not
-minted (the owner approves those, through the approval brief, as today), and an
-unmapped tier is held.
+`agent_common.SPINE_APPROVAL_RUNGS` names the DevStg rung each spine tier is
+approved into so the dial can answer whether that tier is loop-held; a rung the
+dial HOLDS is not minted (the owner approves those, through the approval brief,
+as today), and an unmapped tier is held. (That table was `intake.APPROVAL_RUNG`
+until REVIEW-A; see "The dial filter the brief did not have" below.)
 
 `prompts/adjudicate-first-approval.template.md` is the fifth adjudicator brief,
 with `adjudicate_brief.first_approval_values` behind it and its own verdict
@@ -142,6 +143,75 @@ answered rather than absorbed:
   governance concern; it lives on the PROCESS surfaces and in `integrate`'s
   rung, not in this row's cells. Re-read, unchanged, and said so.
 
+### REVIEW-A rework: the dial filter the brief did not have
+
+Round 1 returned CHANGES-REQUESTED with one MAJOR finding, and it was right.
+
+**What was wrong.** `intake._released_drafted_rows` filters the minted
+population by the dial — a rung the owner still holds is not handed to an
+adjudicator. `adjudicate_brief.first_approval_values` then RE-RESOLVES that
+population live at composition time, deliberately (a row minted at a merge is
+claimed later, and `red_tc_values`' rule says brief the world the judge is
+actually in). But it re-resolved it from `trace.reattest_model`, which is
+dial-blind by design, and never put the filter back. Re-computing live had
+quietly become re-computing a WIDER question than the mint asked.
+
+The consequence is not cosmetic. Under a mixed dial — `human_approval_through =
+"DevStg-Reqs"` holds the SR tier and releases the LLR tier below it — the brief
+rendered a held `Drafted` SR beside a released `Drafted` LLR, marked BOTH
+`[AWAITING FIRST APPROVAL]`, and derived a `--approves` argument naming both
+registries. That is a generated prompt instructing an adjudicator to perform a
+signature the owner owes, with the act's own recorded scope carrying it. At the
+kit's shipped default dial (`DevStg-Release`, which holds every rung) every row
+in the brief was the owner's.
+
+**Why the test suite did not catch it.** `_first_approval_repo` declared no
+`docs/process.toml` at all, so its dial fell back to `DevStg-Release` — the
+fixture was not this arm's scenario, it was the owner's, and it went green. The
+fixture now declares `DevStg-Needs` explicitly, which is the honest statement of
+what the arm requires to exist.
+
+**The fix is a deletion, not a guard.** The rung table existed TWICE for one
+commit: `intake.APPROVAL_RUNG` keyed by registry (the mint) and
+`adjudicate_brief._APPROVAL_RUNG_OF` keyed by tier (the amendment aftermath) —
+and the first-approval brief, the third consumer, was wired to neither. Both
+copies are deleted. `agent_common.SPINE_APPROVAL_RUNGS` +
+`human_approves_spine` is the one home, sitting beside the off-spine
+`APPROVAL_RUNGS`/`human_approves` pair it mirrors arm for arm, unmapped-is-HELD
+included. The mint, the amendment aftermath and the first-approval brief now all
+read it; `intake.py` and `adjudicate_brief.py` both shrank. The predicate's
+docstring carries the reader-side contract the off-spine one states for writers:
+*a filter applied only at the mint is a filter the brief does not have.*
+
+Three things follow from putting it in the derivation rather than the prose:
+
+- A held `Drafted` row is still SHOWN — it is part of the chain, and holding the
+  chain is the owner's whole reason this act is the adjudicator's — but labelled
+  `HELD FOR THE OWNER, NOT YOURS TO FLIP`, and it contributes no registry, so a
+  session that ignored every word of the prose still cannot record it in scope.
+- An SR whose chain holds no released `Drafted` row is dropped whole, and if
+  nothing survives the assembler REFUSES, naming the dial. A brief whose every
+  row is the owner's is not this arm's question.
+- The template's opening claim ("the rung they sit at is one the gate authority
+  has released, so no human signature is pending behind you") was TRUE of the
+  mint and false of the brief. It now scopes itself to the `[AWAITING FIRST
+  APPROVAL]` label and says which mechanism makes it true. `{registries}`' empty
+  fallback string went with the refusal that made it unreachable.
+
+**Not taken, and why.** The finding's suggested remedy was to carry the minted
+row identities as typed scope on the adjudication row and re-resolve only those.
+That is not available at the size the fix warrants: `intake._draft_row`
+serializes only `wi_convert.COLUMNS`, and `parse_spec` drops any frontmatter key
+that is not a column — the trap `Supersedes`' own comment records — so a typed
+scope carrier means a NEW REGISTRY COLUMN, which every adopting repo migrates
+to. Against that, the module's stated rule (`red_tc_values`, restated in this
+assembler's docstring) is that a brief re-derives its population rather than
+remembering the mint's, and the adjudication lane is exclusive on trunk, so the
+live population at claim time is the authoritative one. What the finding's
+failure scenario actually turns on is the dial, and that is now filtered from
+one home at both ends. The identity-scoping half is named here rather than done
+silently; if the owner wants it, it is a schema row of its own.
+
 ### The harness, and the one red it leaves
 
 Full unfiltered suite on this branch: **3257 passed, 1 failed, 24 skipped in
@@ -221,7 +291,9 @@ row, not smuggled into this one.
 ### Ratchets re-stamped (each with its reason, in the commit that earned it)
 
 `integrate.py` 1,270 -> 1,298 (two stamps: the rung, then its exemption);
-`intake.py` 1,179 -> 1,255 (trigger a2); `bootstrap.py` 1,652 -> 1,657 (the
+`intake.py` 1,179 -> 1,255 (trigger a2), then RE-STAMPED DOWN to 1,247 at the
+REVIEW-A rework as the rung table left it; `agent_common.py` 1,262 -> 1,272 at
+that rework, where the table landed; `bootstrap.py` 1,652 -> 1,657 (the
 MAPPING row); `trace.py:reattest_model` complexity DOWN 19 -> 13, recorded in
 the same commit as the extraction that earned it. Byte-watched:
 `PROCESS.md` 87,871 -> 88,355, `PROCESS_OPTIONS.md` 181,369 -> 185,060, and

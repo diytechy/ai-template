@@ -104,7 +104,6 @@ import agent_common as ac
 import baseline_snapshot
 import prompts
 import spine_carrier
-from kitlib import ladder
 
 # The declared `Brief` cell -> the prompt key its session is composed from.
 BRIEF_PROMPTS = {
@@ -474,15 +473,33 @@ def amendment_values(root, row):
     }, None
 
 
-# The DevStg rung each spine tier's rows are approved INTO — the join that lets
-# the dial (an ordinal on that ladder) answer "is this tier's approval mine or
-# the owner's". `intake.APPROVAL_RUNG` states the same join keyed by registry
-# path; keyed by tier here because that is what a rendered chain row carries.
-_APPROVAL_RUNG_OF = {
-    "SR": ladder.STAGE_REQS,
-    "LLR": ladder.STAGE_LLREQS,
-    "TC": ladder.STAGE_TESTS,
+# The spine tier a chain row's `kind` names -> the registry it lives in. The
+# ONE join this module owns: a rendered chain row carries its tier, and both
+# questions asked of it downstream — "is this tier's approval mine or the
+# owner's" (`agent_common.human_approves_spine`, keyed by registry stem) and
+# "what `--approves` argument does the act owe" (keyed by registry path) — are
+# registry-keyed. A second, tier-keyed rung table lived here until WI-572's
+# rework; it answered the same question as `agent_common.SPINE_APPROVAL_RUNGS`
+# and was wired into only ONE of the two briefs that needed it.
+_REGISTRY_OF = {
+    "SR": "docs/requirements/system-requirements.toml",
+    "LLR": "docs/requirements/low-level-requirements.toml",
+    "TC": TC_REGISTRY,
 }
+
+
+def _loop_approves(root, kind):
+    """Is a `Drafted` row of spine tier `kind` THIS session's to approve?
+
+    The one place this module turns a rendered chain row's tier into the dial's
+    answer. An unrecognised tier has no registry, so it is HELD — the same
+    direction `human_approves_spine` fails an unmapped one."""
+    registry = _REGISTRY_OF.get(kind)
+    if registry is None:
+        return False
+    return not ac.human_approves_spine(
+        Path(root) / "docs", spine_carrier.stem(registry)
+    )
 
 
 def _aftermath(root, tiers):
@@ -501,11 +518,9 @@ def _aftermath(root, tiers):
     the shape that produces a session confidently doing the owner's act. An
     unrecognised tier is reported as HELD, the same direction `human_holds`
     fails."""
-    docs = Path(root) / "docs"
     held, mine = [], []
     for tier in sorted(tiers):
-        rung = _APPROVAL_RUNG_OF.get(tier)
-        (held if rung is None or ac.human_holds(docs, rung) else mine).append(tier)
+        (mine if _loop_approves(root, tier) else held).append(tier)
     parts = []
     if mine:
         parts.append(
@@ -564,8 +579,27 @@ def first_approval_values(root, row):
     exists — so an emptied population REFUSES here rather than composing a
     session whose whole evidence section is stale.
 
+    AND THE DIAL IS RE-APPLIED TO IT, which is the half the first cut missed
+    (WI-572 REVIEW-A). Re-computing live means re-computing the MINT'S
+    QUESTION, not a wider one: `intake._released_drafted_rows` hands over only
+    the rows on a rung the dial RELEASES, and this assembler re-derived the
+    population from `reattest_model` — which is dial-blind by design — without
+    putting that filter back. At any dial holding a spine rung (every dial above
+    this repo's, including the shipped `DevStg-Release` default) the brief
+    therefore rendered the owner's HELD rows as this session's to approve and
+    derived a `--approves` argument for their registry: a prompt instructing an
+    adjudicator to perform a signature the owner owes. So `human_approves_spine`
+    is consulted PER CHAIN ROW here, from the same table the mint reads.
+
+    A HELD ROW IS STILL SHOWN, and shown as HELD. It is the chain — the whole
+    reason the act is the adjudicator's is that the chain is what a row must be
+    judged against — but it is labelled as not this session's, it contributes no
+    registry, and an SR whose chain holds no released `Drafted` row at all is
+    dropped entirely. If nothing survives, this REFUSES: a brief whose every row
+    is the owner's is not this arm's question.
+
     `{registries}` is the `--approves REGISTRY=REF` argument the approving
-    commit owes, derived from the registries the shown rows actually live in.
+    commit owes, derived from the registries the RELEASED rows live in.
     Building it here rather than leaving it to the session is the difference
     between an act that records its own scope and one that names whatever the
     session remembered to type."""
@@ -587,22 +621,35 @@ def first_approval_values(root, row):
     llrs_by_sr, tcs_by_ref = tr.chain_buckets(reg.llrs, reg.tcs)
     lines, registries = [], {}
     for entry in model:
-        lines.append("- chain of {} — {}".format(entry["id"], entry.get("title") or ""))
+        chain, mine = [], False
+        chain.append("- chain of {} — {}".format(entry["id"], entry.get("title") or ""))
         for kind, rid, full in tr.spine_chain(
             entry["id"], reg.srs, llrs_by_sr, tcs_by_ref
         ):
             drafted = tr.is_drafted(full)
-            lines.append(
-                "  - {} {} [{}]".format(
-                    kind, rid, "AWAITING FIRST APPROVAL" if drafted else "approved"
-                )
+            yours = drafted and _loop_approves(root, kind)
+            chain.append(
+                "  - {} {} [{}]".format(kind, rid, _CHAIN_LABEL[drafted, yours])
             )
             for name in sorted(full):
                 value = str(full[name] or "").strip()
                 if value:
-                    lines.append("    - {}: {}".format(name, value))
-            if drafted and _REGISTRY_OF.get(kind):
+                    chain.append("    - {}: {}".format(name, value))
+            if yours:
+                mine = True
                 registries[_REGISTRY_OF[kind]] = True
+        # An SR whose chain holds no released `Drafted` row is not this
+        # session's question — dropped whole rather than rendered as evidence
+        # for a verdict it cannot be asked to give.
+        if mine:
+            lines += chain
+    if not lines:
+        return None, (
+            "every spine row still awaiting a first approval sits on a rung the "
+            "declared gate authority HOLDS for a human (`human_approval_through` "
+            "= {}), so the signature is the owner's and this arm has nothing to "
+            "rule on".format(ac.approval_through(root / "docs"))
+        )
     wi_id = (row.get("WI-ID") or "").strip()
     stamp_rev, stamp_date = baseline_snapshot.stamp(root)
     baseline = (
@@ -619,20 +666,26 @@ def first_approval_values(root, row):
     return {
         "chain": "\n".join(lines),
         "baseline": baseline,
+        # No empty fallback: `registries` is non-empty exactly when `lines` is,
+        # and an empty `lines` refused above. The placeholder that used to sit
+        # here ("(no registry — nothing here is Drafted)") described a state the
+        # refusal now makes unreachable — and rendering it would have been rule
+        # 2's failure, a `--approves` slot filled with prose.
         "registries": " ".join(
             "{}={}".format(rel, wi_id or "this adjudication")
             for rel in sorted(registries)
-        )
-        or "(no registry — nothing here is Drafted)",
+        ),
     }, None
 
 
-# The spine tier a chain row's `kind` names -> the registry it lives in. Read
-# only to build the `--approves` argument, which is per-registry.
-_REGISTRY_OF = {
-    "SR": "docs/requirements/system-requirements.toml",
-    "LLR": "docs/requirements/low-level-requirements.toml",
-    "TC": TC_REGISTRY,
+# How a rendered chain row is labelled, by `(is Drafted, is this session's)`.
+# The third state is the one the tier-keyed table's absence used to hide: a
+# `Drafted` row on a rung the owner holds is EVIDENCE in the chain and is not
+# the question, and the brief has to say which.
+_CHAIN_LABEL = {
+    (True, True): "AWAITING FIRST APPROVAL",
+    (True, False): "AWAITING FIRST APPROVAL - HELD FOR THE OWNER, NOT YOURS TO FLIP",
+    (False, False): "approved",
 }
 
 
