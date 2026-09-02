@@ -50,10 +50,11 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   adjudication arm minted at merge; the amendment brief's stale
   "mechanical tool" line replaced) — the log's 2026-09-01 approval-act
   ruling entry is the record; the six MEANING rows awaiting the owner's signature on the
-  `trace.py --approve modified` re-attestation brief; the origin ref
-  `wi508-architectural-remap-HELD-for-owner-verdict` to rename or delete now
-  its range is in trunk history; `OI-72`'s "four Drafted rows" wording (two
-  were Approved when it was written); `check_trajectory --strict` carries one
+  `trace.py --approve modified` re-attestation brief (they render in
+  [open-items.html](open-items.html)'s re-attestation section); the three
+  owner-owed acts now filed as pending rows on that same surface —
+  `OI-79` (the origin HELD ref), `OI-80` (`OI-72`'s "four Drafted" wording),
+  `OI-81` (publication + the single-copy wi416 branch); `check_trajectory --strict` carries one
   KNOWN queued ERROR (the schedule→trace seam; its row is queued, and it does
   not red the non-strict bar); nine unfiled kit findings listed in the
   evening log entry (a lane cut before a trunk snapshot move cannot refresh;
