@@ -731,6 +731,34 @@ def _authorised_registries(root, approves, snapshot):
     return out
 
 
+def _refresh_targets(root, approves, seed, base):
+    """The registries a REFRESH of a standing snapshot copies, or a raised
+    refusal when the copy is unauthorised.
+
+    The whole tree on a first signing (a `--seed`, an unreadable record being
+    repaired, or a scaffold that still holds no registry — the vacuous state
+    `unanchored_findings` reads, so `intake.py snapshot --seed` on a bootstrap's
+    README-only directory still copies everything); otherwise only the act's
+    authorised scope (`_authorised_registries`). Split from `copy_live` so the
+    scope decision — a self-contained job with its own refusal — does not push
+    the writer's branch count over the C901 bar (WI-571)."""
+    try:
+        snapshot = load_all(root)
+    except SystemExit:
+        snapshot = None  # unreadable record: copy_live is the repair path
+    refusal = refresh_refusal(root, approves, snapshot)
+    if refusal:
+        raise SystemExit(refusal)
+    first_signing = (
+        seed
+        or snapshot is None
+        or not any(spine_carrier.resolve(base / rel) for rel in SNAPSHOTTED)
+    )
+    if first_signing:
+        return set(SNAPSHOTTED)
+    return _authorised_registries(root, approves, snapshot)
+
+
 def copy_live(root, *, seed=False, approves=None):
     """Mirror the registries an act AUTHORISES into `docs/archive/last_approved/`;
     the sorted list of repo-relative paths written.
@@ -787,33 +815,12 @@ def copy_live(root, *, seed=False, approves=None):
         base.mkdir(parents=True, exist_ok=True)
         to_copy = set(SNAPSHOTTED)  # the seed blesses the whole tree, once
     else:
-        # The authority gate, keyed on the directory EXISTING rather than on
-        # `seed`: creating is seeding and rewriting is refreshing, whatever flag
-        # the caller passed. `--seed` against a standing record is a mistake, and
-        # a mistake is exactly the thing that must not sail past the check.
-        try:
-            snapshot = load_all(root)
-        except SystemExit:
-            snapshot = None  # unreadable record: copy_live is the repair path
-        refusal = refresh_refusal(root, approves, snapshot)
-        if refusal:
-            raise SystemExit(refusal)
-        # The whole tree is blessed on the FIRST signing and re-mirrored to
-        # repair an unreadable record; only a REFRESH of a populated record is
-        # scoped to the act (WI-571). A first signing is a `--seed`, or a
-        # scaffold whose snapshot still holds no registry at all — the same
-        # vacuous state `unanchored_findings` reads, so `intake.py snapshot
-        # --seed` on a bootstrap's README-only directory still copies everything.
-        first_signing = (
-            seed
-            or snapshot is None
-            or not any(spine_carrier.resolve(base / rel) for rel in SNAPSHOTTED)
-        )
-        to_copy = (
-            set(SNAPSHOTTED)
-            if first_signing
-            else _authorised_registries(root, approves, snapshot)
-        )
+        # The authority gate and the scope decision, keyed on the directory
+        # EXISTING rather than on `seed`: creating is seeding and rewriting is
+        # refreshing, whatever flag the caller passed. `--seed` against a
+        # standing record is a mistake, and a mistake is exactly the thing that
+        # must not sail past the check. `_refresh_targets` raises on refusal.
+        to_copy = _refresh_targets(root, approves, seed, base)
     written = []
     copied_rels = []
     for rel in SNAPSHOTTED:

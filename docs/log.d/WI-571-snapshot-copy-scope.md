@@ -31,9 +31,46 @@ plan `docs/plans/2026-09-01-snapshot-copy-scope.md` measures from OI-78).
 
 **CLI (`intake.py`):** `--approves` metavar/help move to `REGISTRY=REF`
 (`;`-joined); `_cmd_snapshot` parses through `baseline_snapshot.parse_approves`.
-Net-zero SLOC in intake (parsing lives in `baseline_snapshot`, which has ample
-headroom under the 1000-SLOC threshold; intake sits exactly on its 1177
-baseline).
+Two-line CLI edge (parse call + the scoped success banner); intake baseline
+1177→1179 in the ratchet, reason recorded there. The scope logic lives in
+`baseline_snapshot` (386 SLOC, ample headroom under the 1000 threshold).
+
+**C901:** `copy_live`'s scope decision was extracted to `_refresh_targets` so
+the writer's branch count stays under the cyclomatic bar (the full-suite run
+caught `copy_live` at 11; the extract drops it well below, no ratchet edit).
+
+**Full suite** (`.venv/bin/python -m pytest -q -n auto`, this box): after the
+extract, `3239 passed, 23 skipped` across the files this WI touches and their
+neighbours; the 11 residual failures in the whole-repo run are pre-existing and
+NOT this WI's — 10 are the ruff-0.16 `I001` skew in the scaffolded demo's
+`src`/`tests` (`bootstrap.py`, the demo generator, is untouched here, so the
+demo lint result is identical on the integration base) and 1 is a broken link
+in `docs/log.md` (`log.d/plans/2026-09-01-approval-act-adjudicator-only.md`,
+WI-572's plan) that is present at base `78bcea28` and lives in root
+coordination truth this branch must not edit. `test_baseline_snapshot.py` (47),
+`test_trace_briefs.py`, `test_module_size_ratchet.py`,
+`test_complexity_ratchet.py`, `test_intake.py` all green.
+
+**Smoke tier** (`-m smoke`, the commit bar): `1452 passed, 8 skipped`, wall
+21.4s vs the 60s budget (`scripts/check_smoke_budget.py --mode enforce` →
+within). ONE pre-existing failure, NOT this WI's:
+`test_wi_convert.py::test_the_live_registry_round_trips_in_whichever_home_is_authoritative`.
+`wi_convert.read_specs` requires every `*.md` inside a status subdirectory of
+`docs/work/` to parse as a spec, but `docs/work/cancelled/README.md` is a
+no-frontmatter redirect stub ("this directory moved — cancelled/ now lives under
+the archive"), so the converter chokes on it whenever the tree is DRAINED (no
+in-flight `active/<branch>/` claim). The base commit `78bcea28` carries this
+WI's own claim, so there the converter takes the `drained-stop` branch and the
+test passes; the FULL-suite run above (on the checkpoint, claim still in flight)
+passed it for the same reason. Closing this row drains the claim and re-exposes
+the pre-existing state — VERIFIED identical at trunk `b8db16fd` (the claim's
+parent, before this WI existed): `active/` empty, `cancelled/README.md` present,
+`wi_convert.to_csv` raises the same "does not start with a +++ frontmatter
+fence" `ConvertError`. Out of scope here (it is the `docs/work/cancelled/`
+coordination tree and the converter's status-subdir README rule, neither this
+WI's product surface); surfaced for the trunk lane / owner rather than fixed
+inline — the redirect stub wants either deletion (cancelled/ is fully archived)
+or a converter exclusion for status-subdir READMEs, which is its own row.
 
 **Tests (`tests/test_baseline_snapshot.py`, `tests/test_trace_briefs.py`):**
 existing `--approves` callers moved to the named-dict form; new red→green tests
