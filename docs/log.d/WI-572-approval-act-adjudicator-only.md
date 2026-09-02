@@ -100,7 +100,8 @@ residue), and `docs/registry-machinery-reference.md` records the other half of
 the amendment walk, plus the narrowing on the `Founded` row's OI-45 citation.
 
 **5. Tests**, all in the modules' existing style: five at the merge slot, four
-at the reader, three at the trigger, five at the brief.
+at the reader, three at the trigger, and — counting the terminal-sequence
+regression added at the round-3 rework below — six at the brief.
 
 **6. The two registry rows this lane's own code moved.** New code under an
 existing row's Module leaves that row's cells stale, and the rule from the

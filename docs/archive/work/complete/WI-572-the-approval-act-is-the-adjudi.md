@@ -48,7 +48,9 @@ and amends cell text; nothing else changed about what a lane may do.
    (b) narrowed by one sentence; `gate-advance`, `spine-authoring` and
    `worker.template.md` updated.
 5. **Tests** in the modules' existing style: five at the merge slot, four at the
-   reader, three at the trigger, five at the brief.
+   reader, three at the trigger, six at the brief — the last of which pins that
+   the brief's terminal sequence cannot stop before performing an approved
+   row's flip-and-snapshot act.
 
 Deviations, the ratchet re-stamps, and the one follow-on this row deliberately
 does not take (narrowing the owner's approval brief to the held rungs) are in
