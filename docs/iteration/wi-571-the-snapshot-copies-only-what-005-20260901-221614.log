@@ -1,0 +1,41 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 005
+# date: 2026-09-01 22:32
+# train: wi-571-the-snapshot-copies-only-what
+# base: 78bcea280c09
+# phase: BUILD
+# wi: WI-571
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 9e3c0ac2..389e8293
+# tokens:
+# cost-usd:
+# wall-secs: 997
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 5883
+# prompt-template: kit:BUILD
+# prompt-sha: sha256:e27675f0aefc
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Implemented and committed the Review-A correction.
+
+- Centralized actual approval transition logic: only below-approval → approved authorizes a scoped copy.
+- De-approval can no longer absorb an unrelated approved amendment.
+- Added the two-row regression and updated old flip fixtures to Drafted→Approved.
+
+Commit: `389e8293` — `WI-571: authorise only approval transitions`
+
+Verification: relevant suite passed (`112 passed`); full/smoke harness retain documented unrelated repository failures.
