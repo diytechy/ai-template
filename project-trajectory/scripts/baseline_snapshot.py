@@ -86,13 +86,18 @@ Contracts: IF-123, IF-124, IF-125, IF-126 — the seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-123: the `last_approved` baseline, write side and whole read side.
-    `copy_live(root, seed=False, approves=None)` mirrors every snapshotted
-    registry byte-for-byte into `docs/archive/last_approved/`, deletes any
-    other-carrier copy of the same stem in the same act, and returns the sorted
+    `copy_live(root, seed=False, approves=None)` mirrors ONLY the registries an
+    act authorises byte-for-byte into `docs/archive/last_approved/` — the seed
+    copies the whole tree once, a refresh copies the registry a `Status` move
+    happened in plus every registry `approves` names, and leaves the rest
+    byte-identical to what they were (WI-571: the whole-tree copy re-sealed
+    off-spine drift on every spine-only approval). It deletes any other-carrier
+    copy of the same stem for a registry it copies, and returns the sorted
     repo-relative paths written. It REFUSES to create the directory without
-    `seed=True`, and refuses to refresh approved text without a `Status` flip in
-    the same registry or an explicit `approves` ref, because the copy it takes
-    is the text a signature blesses. `load_all(root)` parses the snapshot into
+    `seed=True`, and refuses to refresh approved text into a registry without a
+    `Status` flip in that registry or an `approves` ref naming it, because the
+    copy it takes is the text a signature blesses. `approves` is `{registry
+    rel: ref}` (`parse_approves` builds it from a `REGISTRY=REF` CLI value). `load_all(root)` parses the snapshot into
     `{(stem, id column): {id: row}}`, returns None — never `{}` — when there is
     no snapshot, and RAISES on a file that exists and will not parse;
     `rows_for` is the ONE place that None collapses to `{}`. `exists`, `stamp`,
@@ -169,10 +174,16 @@ README = "README.md"
 # question only of rows that CLAIM approval, and a row below approval has made no
 # claim to fall from. So the protection those tiers get is currently ZERO, and it
 # begins — with no code change at all — at their first approval. The copy is
-# taken now precisely so that the day a human moves one of those cells, the
+# taken at the SEED so that the day a human moves one of those cells, the
 # record of what they blessed already exists to compare against. Stated here
 # because "we snapshot the off-spine tiers" reads like live protection, and for
 # one more registry-approval cycle it is not.
+#
+# SCOPED SINCE WI-571: after the seed, an off-spine registry's snapshot copy is
+# refreshed ONLY when a `Status` cell moves in it (a human approval — the exact
+# event this baseline exists to record) or `--approves` names it. A spine-only
+# approval no longer re-copies these files, so it can no longer re-seal
+# whatever off-spine drift happened to be live at that moment.
 SNAPSHOTTED = (
     "docs/requirements/stakeholder-needs.toml",
     "docs/requirements/system-requirements.toml",
@@ -237,6 +248,50 @@ _APPROVAL_CELL_CLAIMED = frozenset(
 _STATE_CELL_CLAIMED = frozenset(
     k for k, v in spine_rules.CMP_MATURITY.items() if v in _CLAIMED_MATURITY
 )
+
+
+def resolve_registry(name):
+    """The `SNAPSHOTTED` rel a `--approves` registry token names — its full
+    repo-relative path, its filename, or its carrier-less stem all resolve to
+    the one rel. Raises with the valid names on anything else: a `--approves`
+    that silently matched nothing would mute no gate while reading as though it
+    had, which is exactly the false authorisation this scoping exists to stop."""
+    want = str(name).strip().replace("\\", "/")
+    for rel in SNAPSHOTTED:
+        p = Path(rel)
+        if want in (rel, p.name, p.stem):
+            return rel
+    raise SystemExit(
+        "baseline_snapshot: --approves names an unknown registry {!r}. Name one "
+        "of: {}".format(name, ", ".join(Path(r).name for r in SNAPSHOTTED))
+    )
+
+
+def parse_approves(spec):
+    """A `--approves` CLI value into `{registry rel: ref}` — the NAMED-list form
+    that lets a ref authorise the ONE registry it names (WI-571).
+
+    The value is `;`-joined `REGISTRY=REF` pairs, the kit's CLI list idiom
+    (`adjudicate --rows`); `None` or empty is `{}`. REGISTRY resolves through
+    `resolve_registry`, and a pair with no `=` or an empty ref RAISES rather than
+    passing a half-formed authorisation. A ref that names no registry cannot
+    exist by construction, which is the whole point: the old bare `--approves
+    <ref>` muted the gate for all seven files at once."""
+    out = {}
+    for item in (spec or "").split(";"):
+        item = item.strip()
+        if not item:
+            continue
+        registry, sep, ref = item.partition("=")
+        ref = ref.strip()
+        if not sep or not ref:
+            raise SystemExit(
+                "baseline_snapshot: --approves takes REGISTRY=REF pair(s) "
+                "(e.g. low-level-requirements.toml=WI-568-sitting); got "
+                "{!r}".format(item)
+            )
+        out[resolve_registry(registry)] = ref
+    return out
 
 
 def snapshot_root(root):
@@ -397,6 +452,20 @@ def _claims_approval(row):
     )
 
 
+def _approval_transition(before, after):
+    """True only when an existing row crosses INTO an approval claim.
+
+    This is the maturity boundary that authorises a refresh: a `Drafted` row
+    becoming `Approved` blesses its registry's current text. A Status difference
+    by itself is not authority — in particular `Approved` -> `Drafted` revokes
+    a claim and cannot carry an unrelated approved amendment into the snapshot.
+    Keep the meaning here beside `_claims_approval`, rather than making each
+    refresh caller remember which direction a Status move went (WI-571,
+    Review-A round 004). New approved rows are handled by their absence from the
+    prior snapshot, not by this existing-row predicate."""
+    return not _claims_approval(before) and _claims_approval(after)
+
+
 def load_all(root):
     """Every snapshotted registry, parsed off the snapshot tree.
 
@@ -456,8 +525,9 @@ def refresh_ledger(root, snapshot=None):
     below. `absorbed` is the approved text a copy would silently re-bless: rows
     whose SNAPSHOT copy claims approval (that is the record that would be
     overwritten) whose approved cells have moved. `flips` is the authorising act
-    — a row whose `Status` differs between the record and the tree, which is a
-    human moving a maturity cell in a reviewed commit.
+    — an existing row that crossed into an approval claim in the reviewed
+    commit. A reverse Status move is a de-approval, not authority to re-bless
+    this registry.
 
     A FLIPPED ROW'S OWN AMENDMENT IS NEVER ABSORBED: amend-plus-flip is the
     sanctioned shape of a re-approval (`test_the_amendment_seam_is_BLIND_to_an_
@@ -486,9 +556,7 @@ def refresh_ledger(root, snapshot=None):
             before = before_rows.get(rid) if rid else None
             if before is None:
                 continue
-            if (before.get("Status") or "").strip() != (
-                row.get("Status") or ""
-            ).strip():
+            if _approval_transition(before, row):
                 entry["flips"].append(rid)
                 continue
             if not _claims_approval(before):
@@ -520,21 +588,24 @@ def refresh_refusal(root, approves=None, snapshot=None):
       2. **A `Status` cell moved in that same registry.** Amend-plus-flip is
          approval: a human moved a maturity cell in the reviewed commit the
          copy rides.
-      3. **`--approves <ref>` names the approval act.** The escape for the shape
-         the ladder genuinely has — an amendment to an Approved row that a
-         sitting ruled without moving its Status (the D-9 ladder's own case, and
-         what the day's 17-cell amendment batch was). The ref is not validated,
-         and could not usefully be: it is a HUMAN's citation of the act, recorded
-         into the snapshot's prose stamp so the record says under whose authority
-         it moved. What the flag buys is that the act is NAMED and deliberate
-         rather than a side effect of a helper that always said yes.
+      3. **`--approves <registry>=<ref>` names the approval act, PER REGISTRY.**
+         The escape for the shape the ladder genuinely has — an amendment to an
+         Approved row that a sitting ruled without moving its Status (the D-9
+         ladder's own case, and what the day's 17-cell amendment batch was). The
+         ref is not validated, and could not usefully be: it is a HUMAN's
+         citation of the act, recorded into the snapshot's prose stamp so the
+         record says under whose authority it moved. What the flag buys is that
+         the act is NAMED and deliberate rather than a side effect of a helper
+         that always said yes. A ref mutes the gate for the ONE registry it
+         names and no other — before WI-571 a single bare `--approves` short-
+         circuited the whole check (`if approves: return ""`), so one ref for one
+         registry silenced the gate for all seven.
 
     Per REGISTRY rather than per row, because that is the granularity of the
     reviewed commit: the sitting rules a registry's rows together, and a
     row-level pairing would demand a flip for each amended row, which is exactly
     the flip the D-9 ladder deleted."""
-    if approves:
-        return ""
+    named = set(approves or ())
     try:
         ledger = refresh_ledger(root, snapshot)
     except SystemExit:
@@ -549,7 +620,7 @@ def refresh_refusal(root, approves=None, snapshot=None):
     blocked = [
         (rel, e)
         for rel, e in sorted(ledger.items())
-        if e["absorbed"] and not e["flips"]
+        if e["absorbed"] and not e["flips"] and rel not in named
     ]
     if not blocked:
         return ""
@@ -568,18 +639,22 @@ def refresh_refusal(root, approves=None, snapshot=None):
         "A snapshot copy IS the approval record, so approved text reaches it only "
         "through an approval act. Three ways forward: flip the row's `Status` in "
         "the same tree (amend-plus-flip is approval); or re-run with "
-        "`intake.py snapshot --approves <ref>` naming the sitting, log fragment "
-        "or commit that ruled these cells (the ref is recorded into the "
-        "snapshot's README stamp); or revert the amendment and leave the drift "
+        "`intake.py snapshot --approves <registry>=<ref>` naming EACH registry "
+        "above and the sitting, log fragment or commit that ruled its cells (the "
+        "ref is recorded into the snapshot's README stamp, and authorises the one "
+        "registry it names); or revert the amendment and leave the drift "
         "standing, which is what the re-attestation brief is for. Traced cells "
         "(Module/CodeSymbol/TestRefs and the ref pointers) are never blocked here."
     )
     return "\n".join(lines)
 
 
-def _record_approval(base, ref, written):
-    """Append the `--approves` ref to the snapshot's prose stamp, creating the
-    stamp when the repo has none.
+def _record_approval(base, approves, copied_rels):
+    """Append this act's SCOPE to the snapshot's prose stamp, creating the stamp
+    when the repo has none: the registries it copied and, for EACH, whether a
+    `--approves` ref named it or a `Status` move authorised it (WI-571 — the
+    stamp records the act's scope, so the next reader sees WHICH registries an
+    approval touched instead of a whole-tree claim).
 
     STILL PROSE, STILL PARSED BY NOTHING (design §F8, repo-lock D-10's
     tripwire) — the line is a sentence a human reads, and no code in the kit
@@ -587,9 +662,17 @@ def _record_approval(base, ref, written):
     field is that a field would be the ledger this mechanism replaced: the
     machine facts stay in the copied files and in git."""
     path = base / README
+    reasons = []
+    for rel in copied_rels:
+        name = Path(rel).name
+        ref = approves.get(rel)
+        reasons.append(
+            "{} (ref: {})".format(name, ref) if ref else "{} (Status move)".format(name)
+        )
     stamped = (
-        "- {} — refreshed under approval ref: **{}** ({} registry file(s)).\n".format(
-            _today(), ref, len(written)
+        "- {} — refresh under approval. Copied: {}. Registries not named by this "
+        "act keep their prior snapshot bytes.\n".format(
+            _today(), "; ".join(reasons) if reasons else "(none)"
         )
     )
     if not path.is_file():
@@ -599,10 +682,12 @@ def _record_approval(base, ref, written):
             "the snapshot comes from the copied registry files beside it, or "
             "from `git log` over this directory.\n\n"
             "## Refreshes recorded under an explicit approval\n\n"
-            "Each line below is a human's citation of the act that authorised a "
-            "refresh absorbing approved text (`intake.py snapshot --approves "
-            "<ref>`). A refresh that absorbs nothing approved, or that rides a "
-            "`Status` flip, needs no entry.\n\n" + stamped,
+            "Each line below records a refresh that copied a registry under "
+            "authority — a `--approves` ref, or a `Status` move in the copied "
+            "registry (`intake.py snapshot [--approves <REGISTRY=REF>]`) — and "
+            "names, for each registry copied, whether a ref or a Status move "
+            "authorised it. The seed and a refresh that copied nothing (a "
+            "traced-only re-point) write no line.\n\n" + stamped,
             encoding="utf-8",
             newline="\n",
         )
@@ -621,16 +706,95 @@ def _today():
     return datetime.date.today().isoformat()
 
 
+def _authorised_registries(root, approves, snapshot):
+    """The `SNAPSHOTTED` rels whose snapshot copy a refresh MAY rewrite: every
+    registry `approves` names, plus every registry an approving `Status` move
+    happened in. Everything else keeps the bytes it already has, so a spine-only
+    approval no longer drags off-spine drift into the record (WI-571) — and both
+    mirror rules stay green because each is pinned to the file it judges (an
+    untouched registry is not "written", so `staged_snapshot_findings` never sees
+    it in the commit and `committed_snapshot_findings` still compares it to live
+    at its own writing commit).
+
+    An approving `Status` move is a transition INTO an approval claim on an
+    existing row, or a NEW row that arrives already claiming approval — the
+    maturity act that blesses text in the reviewed commit this copy rides, and
+    leaving its registry uncopied would strand the row as an
+    `unanchored_findings` ERROR. A de-approval is not an approving transition:
+    its Status differs but cannot authorise an unrelated amendment. An amendment
+    that moved no `Status` is deliberately NOT here: that is the case
+    `refresh_refusal` gates, and a `--approves <registry>=<ref>` naming the
+    registry is how a human authorises it (which puts the rel in `approves`)."""
+    out = set(approves or ())
+    for rel, id_col in SNAPSHOT_TIERS:
+        if rel in out or spine_carrier.resolve(Path(root) / rel) is None:
+            continue
+        before_rows = rows_for(snapshot, rel, id_col)
+        for row in spine_carrier.load(Path(root) / rel, id_col, keep_examples=False):
+            rid = str(row.get(id_col) or "").strip()
+            if not rid:
+                continue
+            before = before_rows.get(rid)
+            if before is None:
+                if _claims_approval(row):  # a new row that arrives approved
+                    out.add(rel)
+                    break
+            elif _approval_transition(before, row):
+                out.add(rel)
+                break
+    return out
+
+
+def _refresh_targets(root, approves, seed, base):
+    """`(targets, first_signing)`: the registries a REFRESH of a standing
+    snapshot copies, and whether this refresh is a first signing — or a raised
+    refusal when the copy is unauthorised.
+
+    The whole tree on a first signing (a `--seed`, an unreadable record being
+    repaired, or a scaffold that still holds no registry — the vacuous state
+    `unanchored_findings` reads, so `intake.py snapshot --seed` on a bootstrap's
+    README-only directory still copies everything); otherwise only the act's
+    authorised scope (`_authorised_registries`). The `first_signing` flag rides
+    back so `copy_live` stamps the approval only on a genuine refresh, never on
+    the initial blessing. Split from `copy_live` so the scope decision — a
+    self-contained job with its own refusal — does not push the writer's branch
+    count over the C901 bar (WI-571)."""
+    try:
+        snapshot = load_all(root)
+    except SystemExit:
+        snapshot = None  # unreadable record: copy_live is the repair path
+    refusal = refresh_refusal(root, approves, snapshot)
+    if refusal:
+        raise SystemExit(refusal)
+    first_signing = (
+        seed
+        or snapshot is None
+        or not any(spine_carrier.resolve(base / rel) for rel in SNAPSHOTTED)
+    )
+    if first_signing:
+        return set(SNAPSHOTTED), True
+    return _authorised_registries(root, approves, snapshot), False
+
+
 def copy_live(root, *, seed=False, approves=None):
-    """Mirror every SNAPSHOTTED registry into `docs/archive/last_approved/`;
+    """Mirror the registries an act AUTHORISES into `docs/archive/last_approved/`;
     the sorted list of repo-relative paths written.
 
-    Byte-for-byte (`shutil.copyfile`), the LIVE carrier only — and any
-    OTHER-carrier file for the same stem is DELETED in the same act, or
-    `spine_carrier.resolve` raises "exists under BOTH carriers" on the very next
-    read of the snapshot. A registry with no live carrier at all is skipped and
-    its stale snapshot copies are removed, so the snapshot never claims a
-    registry the repo has deleted.
+    SCOPED TO THE ACT SINCE WI-571. The seed copies the whole tree once; a
+    refresh copies ONLY the registry a `Status` move happened in plus every
+    registry `approves` names (`_authorised_registries`), and leaves every other
+    registry byte-identical to what it already was. The whole-tree copy this
+    replaced re-sealed whatever off-spine drift was live at the moment of a
+    spine-only approval, silently zeroing the off-spine census the snapshot is
+    the only basis for. An untouched file is not "written", so both mirror rules
+    stay satisfied without touching it.
+
+    Byte-for-byte (`shutil.copyfile`), the LIVE carrier only — and for a registry
+    it copies, any OTHER-carrier file for the same stem is DELETED in the same
+    act, or `spine_carrier.resolve` raises "exists under BOTH carriers" on the
+    very next read of the snapshot. A copied registry with no live carrier is
+    skipped and its stale snapshot copies removed; a registry OUTSIDE the act's
+    scope is not touched at all.
 
     **REFUSES to CREATE the directory unless `seed=True`.** That refusal is the
     bootstrap guard: the FIRST snapshot blesses whatever text it copies, so it
@@ -642,9 +806,9 @@ def copy_live(root, *, seed=False, approves=None):
     **AND REFUSES TO REFRESH ONE WITHOUT AUTHORITY** (`refresh_refusal`, 2026-08-20).
     Creating was guarded and rewriting was not, which made the second act the
     cheap one: after the first signing this function re-blessed any text it was
-    pointed at. A refresh that would absorb APPROVED text now needs either a
-    `Status` flip in the same registry or an explicit `approves` ref, which is
-    recorded into the snapshot's prose stamp. Traced-cell refreshes are
+    pointed at. A refresh that would absorb APPROVED text into a registry now
+    needs either a `Status` flip in that registry or an `approves` ref naming it,
+    which is recorded into the snapshot's prose stamp. Traced-cell refreshes are
     unaffected and need no flag.
 
     **NOTHING SHOULD EVER WIRE THIS INTO A FRESHNESS STEP.** Exactly two callers
@@ -666,16 +830,20 @@ def copy_live(root, *, seed=False, approves=None):
                 "been ruled.".format(base)
             )
         base.mkdir(parents=True, exist_ok=True)
+        to_copy = set(SNAPSHOTTED)  # the seed blesses the whole tree, once
+        first_signing = True
     else:
-        # The authority gate, keyed on the directory EXISTING rather than on
-        # `seed`: creating is seeding and rewriting is refreshing, whatever flag
-        # the caller passed. `--seed` against a standing record is a mistake, and
-        # a mistake is exactly the thing that must not sail past the check.
-        refusal = refresh_refusal(root, approves)
-        if refusal:
-            raise SystemExit(refusal)
+        # The authority gate and the scope decision, keyed on the directory
+        # EXISTING rather than on `seed`: creating is seeding and rewriting is
+        # refreshing, whatever flag the caller passed. `--seed` against a
+        # standing record is a mistake, and a mistake is exactly the thing that
+        # must not sail past the check. `_refresh_targets` raises on refusal.
+        to_copy, first_signing = _refresh_targets(root, approves, seed, base)
     written = []
+    copied_rels = []
     for rel in SNAPSHOTTED:
+        if rel not in to_copy:
+            continue
         suffixes = (
             spine_carrier.NEED_CARRIERS if rel == NEEDS_REL else spine_carrier.CARRIERS
         )
@@ -694,9 +862,16 @@ def copy_live(root, *, seed=False, approves=None):
         dest = dest_dir / live.name
         shutil.copyfile(live, dest)
         written.append(dest.relative_to(Path(root)).as_posix())
+        copied_rels.append(rel)
     written = sorted(written)
-    if approves:
-        _record_approval(base, approves, written)
+    # Every non-seed refresh that copied a registry is stamped, so the act's
+    # scope is auditable whether a `--approves` ref or a `Status` move authorised
+    # it (WI-571 rework: a Status-move-only refresh copied its registry but wrote
+    # no stamp, leaving that approval unauditable). `approves or {}` makes the
+    # per-registry reason read "Status move" when no ref named it. The seed and a
+    # refresh that copied nothing (a traced-only re-point) write no line.
+    if not first_signing and copied_rels:
+        _record_approval(base, approves or {}, copied_rels)
     return written
 
 

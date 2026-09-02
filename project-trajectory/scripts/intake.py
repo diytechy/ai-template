@@ -2081,15 +2081,19 @@ def _cmd_snapshot(args):
     launder exactly the re-blessing those rows owe (repo-lock D-10's sequencing
     rule, with "stamping hashes" swapped for "copying files").
 
-    `--approves <ref>` NAMES THE APPROVAL ACT, and is needed only when the copy
-    would absorb APPROVED text that no `Status` flip in the same registry
-    authorises (`baseline_snapshot.refresh_refusal`, 2026-08-20). It is the
-    door the adversarial round found standing open: creating the record was
-    guarded and rewriting it was not, so a two-commit path — amend an Approved
-    row, then refresh — re-blessed the amendment with every check green. The
-    ref is a human's citation, recorded into the snapshot's prose stamp; nothing
-    validates it, because nothing can. What it buys is that the act is named.
-    Traced-cell refreshes (the common case) still need no flag at all.
+    `--approves <registry>=<ref>` NAMES THE APPROVAL ACT PER REGISTRY, and is
+    needed only for a registry whose copy would absorb APPROVED text that no
+    `Status` flip in it authorises (`baseline_snapshot.refresh_refusal`,
+    2026-08-20). It is the door the adversarial round found standing open:
+    creating the record was guarded and rewriting it was not, so a two-commit
+    path — amend an Approved row, then refresh — re-blessed the amendment with
+    every check green. The ref is a human's citation, recorded into the
+    snapshot's prose stamp; nothing validates it, because nothing can. What it
+    buys is that the act is named — and, since WI-571, that it authorises and
+    copies the ONE registry it names rather than all seven (a bare `--approves`
+    used to mute the gate for the whole tree). The value is `;`-joined
+    `REGISTRY=REF` pairs (`baseline_snapshot.parse_approves`). Traced-cell
+    refreshes (the common case) still need no flag at all.
 
     IT COPIES OFF-SPINE APPROVAL CELLS AND DOES NOT MOVE THEM, which is the
     distinction OI-30 D3 makes and the reason this path needs no
@@ -2105,7 +2109,7 @@ def _cmd_snapshot(args):
     `tests/test_approval_level.py` fails the moment a shipped loop module
     starts writing one."""
     root = Path(args.root).resolve()
-    approves = getattr(args, "approves", None)
+    approves = baseline_snapshot.parse_approves(getattr(args, "approves", None))
     written = baseline_snapshot.copy_live(root, seed=args.seed, approves=approves)
     return _cli_result(
         None,
@@ -2115,7 +2119,9 @@ def _cmd_snapshot(args):
             " (SEEDED — this is the first snapshot; it blesses the text you just ruled)"
             if args.seed
             else "",
-            " (APPROVED BY: {} — recorded in the snapshot's stamp)".format(approves)
+            " (APPROVED BY: {} — recorded in the snapshot's stamp)".format(
+                "; ".join("{}={}".format(Path(r).name, approves[r]) for r in approves)
+            )
             if approves
             else "",
         ),
@@ -2175,11 +2181,11 @@ def main(argv=None):
     snap.add_argument(
         "--approves",
         default=None,
-        metavar="REF",
-        help="NAME THE APPROVAL ACT this refresh rides — a sitting, a log "
-        "fragment, a commit. Required only when the copy would absorb approved "
-        "text that no Status flip authorises; the ref is recorded into the "
-        "snapshot's prose stamp. A traced-cell refresh needs no flag",
+        metavar="REGISTRY=REF",
+        help="NAME THE APPROVAL ACT this refresh rides, PER REGISTRY: `;`-joined "
+        "`<registry>=<ref>` pairs. A ref authorises and copies the ONE registry "
+        "it names, required only for one whose copy would absorb approved text "
+        "no Status flip authorises; the refs land in the snapshot's prose stamp",
     )
     snap.set_defaults(func=_cmd_snapshot)
     args = ap.parse_args(argv)

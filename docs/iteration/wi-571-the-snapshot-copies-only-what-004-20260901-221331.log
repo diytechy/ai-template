@@ -1,0 +1,37 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 004
+# date: 2026-09-01 22:15
+# train: wi-571-the-snapshot-copies-only-what
+# base: 78bcea280c09
+# phase: REVIEW-A
+# wi: WI-571
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: a0c83628..cf4e8252
+# tokens:
+# cost-usd:
+# wall-secs: 146
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4556
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:2b5a3842b838
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Verdict committed: [004-REVIEW-A-0e12c51.md](/Users/diytechy/Documents/ai-template-drive/wi-571-the-snapshot-copies-only-what/docs/reviews/wi-571-the-snapshot-copies-only-what/004-REVIEW-A-0e12c51.md)
+
+`CHANGES-REQUESTED findings=1` — an `Approved → Drafted` transition can authorize copying a registry and silently absorb a separate approved amendment. Commit: `cf4e8252`.
+
+Harness: `check.py --jobs 0` reported `RESULT: FAIL (1 step(s) failed)` due to doc-navigability; `trace.py --strict-integrity` ended with the traceability summary and no integrity failures.
