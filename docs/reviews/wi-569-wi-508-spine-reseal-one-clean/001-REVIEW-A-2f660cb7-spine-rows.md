@@ -63,14 +63,13 @@ call site is `gen_arch_map.py:1952`, inside the backlink report. The row's
 closing sentence predicted the parent's join would ride this grammar and this
 dial. It did not.
 
-**The reviewer's one over-reach, recorded rather than quietly dropped.** Finding
-1 says LLR-203's *title* claims what its detail claims. It does not: the title
-is "The shipped-file inventory and its declared exclusions, carrying no purpose
-reference", and "carrying no purpose reference" was true of the inventory when
-written and is now false of most-but-not-all of it — a weaker defect than the
-detail's flat "no check resolves", and one the title shares with the row's whole
-framing rather than a separate error. The finding stands on its detail and
-rationale anchors, which is where it was accepted.
+**One imprecision in finding 1, recorded rather than quietly dropped — and it
+survives anyway.** The finding bundles LLR-203's *title* with its detail and
+rationale as though the three made the same claim. They do not: the title said
+"carrying no purpose reference", which is weaker and vaguer than the detail's
+flat "no check resolves". But weaker is not true — the inventory does carry
+purpose references now — so the title was corrected with the rest rather than
+defended on the technicality. The finding is accepted on all three anchors.
 
 **What TC-199 and TC-200 stand at: CONFIRMED, no finding.** All seven evidence
 node ids exist and pass (re-driven: `7 passed in 2.80s`), their `verifies` cells

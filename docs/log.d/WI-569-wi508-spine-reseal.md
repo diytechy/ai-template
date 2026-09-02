@@ -1,28 +1,141 @@
 ## 2026-09-02 — WI-569: the WI-508 spine reseal — one clean cross-family round, and the two routed BLOCKERs ruled
 
+**One line:** the round the WI-508 lane never landed was drawn on current trunk
+and came back `CHANGES-REQUESTED findings=2` — `TC-199`/`TC-200` stand,
+`LLR-203`/`LLR-204` did not, because trunk delivered the mechanisms they still
+said did not exist; the false sentences were corrected in-lane and the design
+remainder handed to the amendment adjudication, and the two routed `5175065`
+BLOCKERs were ruled ANNOTATE, no successor.
+
 Worker lane `wi-569-wi-508-spine-reseal-one-clean`, integration base `2f660cb7`.
 Successor to the closed `WI-508`, drafted by the `WI-568` adjudication.
 
-**Scope as it actually stood, not as the row was minted.** The row was minted
-carrying a baseline arm — regenerate `docs/archive/last_approved/` under the
-owner's `OI-78` ruling. Two merged predecessors removed that arm from this
-lane before it started, and the spec's `## Context` records the supersession:
+### Scope as it actually stood, not as the row was minted
+
+The row was minted carrying a baseline arm — regenerate
+`docs/archive/last_approved/` under the owner's `OI-78` ruling. Two merged
+predecessors removed that arm from this lane before it started, and the spec's
+`## Context` already records the supersession:
 
 - `WI-571` scoped `baseline_snapshot.copy_live` to the act, so a bare
   `intake.py snapshot` on a lane that flips no `Status` copies **zero**
   registries — this row flips none.
 - `WI-572` ruled the approval act (every `Status` flip and every
   `docs/archive/last_approved/` write) the adjudicator's alone, on trunk, and
-  wired a merge-slot refusal by name against any work lane whose delta performs
-  one.
+  wired a merge-slot refusal by name against any work lane performing one.
 
-So this lane ran the two arms that remained: **(1)** the one clean cross-family
-reviewer round on current trunk confirming the four rows stand in their
-reviewed state, and **(2)** a ruling on the two `5175065` BLOCKERs the WI-508
-close left on no queue.
+So the lane ran the two arms that remained. Nothing on the spine needed
+re-sealing in any case: all four rows are cell-for-cell identical between the
+round-010-approved tree `b8d57e9f` and trunk `2f660cb7` — compared by parsing
+both `tomllib` and diffing the row dicts, not by eyeballing a `git diff`, since
+a trailing-newline artifact makes the textual comparison lie.
 
-Deferred open items: none — `OI-78` was ruled STAND by the owner on
-2026-09-01 and this lane owes no further decision.
+### Arm 1 — the cross-family round, and what it found
 
-_(Session in progress; verdict and figures land in this fragment and in the
-row's `## Deliverable` at close.)_
+Drawn on `OPENAI-SOL` (gpt-5.6-sol, `-c model_reasoning_effort=medium`), a
+different model family from the author, against a hostile read-only brief that
+named the four rows and the standing-claim rule and told it nothing about what
+had moved on trunk. It found `WI-543`'s mechanisms itself.
+`docs/reviews/wi-569-wi-508-spine-reseal-one-clean/001-REVIEW-A-2f660cb7-spine-rows.md`
+— **`VERDICT: CHANGES-REQUESTED findings=2`**, scored `substance=0.667
+precision=1.00 action=1.00`, tripwires none.
+
+`TC-199`/`TC-200` **stand, no finding**: seven evidence nodes pass, `verifies`
+names the LLR arm and not `SR-163`, `expected` is still true, and TC-199's
+shared-node claim with TC-176 is exact (the intersection of the two `evidence`
+sets is precisely the two package-direction nodes).
+
+`LLR-203`/`LLR-204` **did not stand**. Three LLR-203 assertions are false of the
+tree and one LLR-204 claim is counterfactual; each was falsified by DRIVING:
+
+| the row's claim | driven result |
+| --- | --- |
+| "no cell joins an inventoried file to a requirement id … no check resolves" | 21 of 148 MAPPING rows carry a reference cell; `--mapping-purpose` reports `unresolved_reference — 0` — all 21 resolve SR → live need |
+| "every arm above walks the DESTINATIONS the inventory declares, never the shipped tree" | `bootstrap.delivery_inventory()` walks 213 physical kit sources against 148 MAPPING sources and 31 exclusion rows |
+| "the installer is excluded … in prose … rather than as a row in the exclusion carrier" | it is row 19 of the mechanically parsed `project-trajectory/mapping-source-exclusions` |
+| LLR-204: the grammar and dial "are what the parent's join and its policy would ride" | the join rides `MAPPING_FINDING_POLICY` and the inventory's reference cell; `read_backlink_min`'s only call site is the backlink report |
+
+fig: driven="`gen_arch_map.py --mapping-purpose --root .` at 2f660cb7 (missing_file 0 / stale_entry 0 / unresolved_reference 0 / unmapped_file 152), and `bootstrap.delivery_inventory()` called in-process at the same commit (213 / 148 / 31 / 34)"
+
+**Deviation from spec, stated plainly.** The row asked for a round *"confirming
+the four rows stand"*. It could not confirm them, and a round that must return
+APPROVE is not a round. The lane corrected the false sentences in the rows' own
+cells (`33aee707`) with `Status` untouched at `Approved` — a lane amends cell
+text and never performs the approval act, and
+`acceptance_record.lane_approval_refusal` says in as many words that an
+amendment to an approved row is not one. Verified merge-legal:
+`lane_approval_refusal('.', 2f660cb7, HEAD)` returns `None`.
+
+The DESIGN half of the reviewer's remedy was deliberately **not** taken — which
+row owns `resolve_requirement_reference` / `mapping_purpose_findings` /
+`MAPPING_FINDING_POLICY`, whether LLR-203's `CodeSymbol` widens, where TC-204's
+evidence binds. Those need the whole chain, which one work item does not hold.
+It is not left on no queue, which is the exact defect this row exists to remedy:
+it is stated as the standing NOT-DISCHARGED gap in LLR-203's own cell, and
+`staged_spine_amendments` over `2f660cb7..HEAD` was driven to confirm the
+amendment adjudication minted at this merge really does list both rows.
+
+### Arm 2 — the two routed `5175065` BLOCKERs: ANNOTATE, no successor
+
+Both re-verified before ruling. The brief and the returns record are both first
+added by `64e9bf2a` (`git log --diff-filter=A`), so nothing immutably fixed the
+question before the answers existed; the contamination of the closed five-file
+input set is real, and the teams had already disclosed it themselves at the very
+line the finding anchors to. Standing caveats now open
+`docs/plans/2026-08-25-blind-minimal-map-brief.md` and
+`…-derivation.md`, additively — the original text is unchanged, so the record
+stays the record — and the brief's dangling pointer to the lane's old
+`docs/work/active/` home was repointed to its terminal `partial/` spec.
+
+A sterile re-run was refused on three grounds: it cannot repair the first defect
+at all, since immutability is a property of the 2026-08-25 record and a fresh
+pre-committed brief would evidence a NEW exercise; no live requirement, design
+or test row cites the exercise (grepped `docs/requirements/` and `docs/test/` —
+zero hits), so nothing on the spine waits on a better number; and the alignment
+pass already adjudicates each divergence against the registry rather than
+deferring to either return. The credit was what needed stopping.
+
+### Bar — green, with ONE red stated rather than buried
+
+Commit bar at every commit: `pytest -q -n auto -m smoke` 1459 passed, 8 skipped
+in 23.88 s; smoke budget 21.9 s vs 60 s → within; `check_docs --stale` OK, 1233
+docs / 1595 links / 0 broken; `trace.py --strict-integrity` integrity=0 with no
+new spine finding.
+
+**Full unfiltered suite on the final tree: `1 failed, 3281 passed, 25 skipped in
+576.93s`.** The one failure is
+`tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`, and
+it is REAL and MINE — not the pre-existing trunk red it superficially resembles.
+I checked instead of assuming: the same node **passes at the integration base**
+`2f660cb7` in a detached worktree, so this lane induced it.
+
+What induced it is benign and is the trunk lane's to clear.
+`docs/requirements/low-level-requirements.toml` is a DECLARED derivation input
+(`kitlib/stage.py` `DECLARED_INPUTS`), and the recorded `fingerprint` is a
+SHA-256 over those inputs' bytes — so amending a cell moves the hash by
+construction. **The derived values themselves did not move**: `derive_stage.py
+--check` reports the same `per-phase = 1=DevStg-Impl;3=DevStg-Impl;
+4=DevStg-Impl;5=DevStg-LLReqs` and the same `drafted = 9` that `docs/stage`
+already records. Only the input hash differs.
+
+`docs/stage` was deliberately NOT restamped here. It is a generated artifact,
+this branch may not write one, and `trunk_step.py`'s `derived-stage` step
+regenerates it after the merge — which is exactly why the branch-aware bar
+prints `SKIP derived-stage … generated freshness is the trunk lane's,
+concurrency-restructure §5.2`. Restamping it pre-merge would compute the hash
+over a tree that never exists on trunk and would collide with the trunk step.
+The full suite has no such branch-awareness, so it reds; the node sits in
+`conftest.SLOW_MODULES`, which is why the smoke commit bar never saw it and why
+those greens were honest for what they measure.
+
+The git hooks' `format` step SKIPPED throughout — the hook runs
+`/usr/local/bin/python3`, which has no `ruff`, and this lane worktree has no
+`.venv`. No Python source was changed on this lane, so nothing was left ungraded
+by it.
+
+Byte deltas on budgeted files: none — `AGENTS.template.md` and `PROCESS.md`
+untouched.
+
+Deferred open items: none — `OI-78` was ruled STAND by the owner on 2026-09-01,
+and this lane's remainder is queued as an adjudication rather than owed to the
+owner.
