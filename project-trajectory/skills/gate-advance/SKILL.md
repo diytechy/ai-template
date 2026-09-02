@@ -95,11 +95,28 @@ you **approve artifacts** and regenerate.
 
 Advancing is not a `docs/stage` bump. The acceptor **marks a batch of
 artifacts approved in a reviewed commit** — that commit *is* the sign-off, and
-the derived rung follows from it:
+the derived rung follows from it.
+
+**WHO the acceptor is** (owner ruling 2026-09-01; PROCESS.md §4). On a rung the
+dial still holds, the owner. On a rung it has released, an **adjudication
+session, on the serial trunk side** — never the worker lane that authored the
+rows: approving means reading the row's whole chain, which one work item does
+not hold, and a lane that re-anchors the record seals whatever text was live in
+its own tree. A lane authors `Drafted` rows and amends cell text; its merge is
+REFUSED if its delta flips an **SN/SR/LLR/TC** `Status` or writes
+`docs/archive/last_approved/`, and the first-approval adjudication minted at
+that merge approves what it authored. Everything below is therefore the
+ACCEPTOR's procedure, not an author's:
 
 - **Into `DevStg-Reqs`** — a draft requirement is approved: `Status` **`Drafted`
   → `Approved`** on the SR (and an SN leaves its draft state). The approval
-  date is git-derived (the commit that moved it).
+  date is git-derived (the commit that moved it). Both halves are the
+  acceptor's, and BOTH are mechanically held: the merge refusal above reads all
+  four spine registries, needs included, so a lane flipping an SN row is refused
+  by name (`acceptance_record.APPROVAL_ACT_CSVS`; the off-spine registries stay
+  out under OI-30 D3, and `OUTSIDE_THE_APPROVAL_ACT` declares that bound). The
+  refusal is keyed to a WORK LANE's merge, so the owner's own sitting — an SN
+  flip made by hand in a reviewed commit on trunk — is unaffected.
 - **`DevStg-Tests` → `DevStg-Impl`** — the SR is `Approved` and its tests
   pass; the derived rung follows. Note what `Approved` does and does not say: it
   blesses the row's **TEXT** and makes no claim that any test passed — whether
@@ -122,8 +139,11 @@ the derived rung follows from it:
   the signature now, so without it the record of what was blessed does not
   move. If the amendment invalidated the evidence, that is the harness's
   problem to report and not a Status value. Record the ruling in the log's
-  Decisions, like any approval. Amend and re-copy in the **same commit**
-  (the `--staged` warn enforces it); a row's `Status` answers for its OWN
+  Decisions, like any approval. The amendment itself is the authoring lane's
+  to make; the RE-COPY is the acceptor's (the ruling above), so amend and
+  re-copy in the **same commit** wherever ONE session does both — which is
+  every re-attestation, since a lane that re-copied would be approving. (The
+  `--staged` warn enforces the pairing.) A row's `Status` answers for its OWN
   cells (owner ruling 2026-08-17) — a child LLR/TC amendment never touches
   the owning SR.
 

@@ -356,7 +356,14 @@ BASELINE = {
     # chain — the same question the SR-only test already asked, now asked of
     # every row rather than folded away. One branch, one reason: a Drafted
     # child now owes independently of drift.
-    ("trace.py", "reattest_model"): 19,
+    # RE-STAMPED DOWN 19 -> 13, 2026-09-01, WI-572: the `chain_of` closure left
+    # this function and became the module-level `spine_chain`, paired with
+    # `chain_buckets`. Not tidying — `adjudicate_brief.first_approval_values`
+    # needs the SAME answer to "what is this SR's chain" for the first-approval
+    # brief, and a second copy of that walk is how the judge and the owner's
+    # surface come to disagree about one spine. Recorded DOWN in the same
+    # commit rather than left as headroom, per this file's rule.
+    ("trace.py", "reattest_model"): 13,
     # NEW ENTRY, 2026-08-24, WI-513: `reattest_lines` crossed back over the
     # threshold when its per-row loop gained the `state == "drafted"` arm
     # (a Drafted row with no cell diff against the snapshot still owes, and

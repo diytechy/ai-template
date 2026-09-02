@@ -1207,9 +1207,9 @@ component = "CMP-008"
 
 [interface.IF-091]
 owner = "scripts/acceptance_record"
-requestors = ["scripts/intake"]
+requestors = ["scripts/intake", "scripts/integrate"]
 channel = "call"
-data = "staged_spine_amendments records, plus SPINE_CSVS"
+data = "staged_spine_amendments and staged_drafted_rows records (intake) · the lane_approval_refusal text (integrate) · SPINE_CSVS"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -1218,7 +1218,7 @@ component = "CMP-008"
 owner = "scripts/wi_convert"
 requestors = ["scripts/intake"]
 channel = "call"
-data = "wi_convert.COLUMNS (the 18-column row schema) and write_spec_file; ConvertError is the mint's refusal input"
+data = "wi_convert.COLUMNS (the 19-column row schema) and write_spec_file; ConvertError is the mint's refusal input"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"

@@ -1,0 +1,43 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 014
+# date: 2026-09-02 02:25
+# train: wi-572-the-approval-act-is-the-adjudi
+# base: 4d0b972d9019
+# phase: BUILD
+# wi: WI-572
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: 8c036135..87ac214f
+# tokens:
+# cost-usd:
+# wall-secs: 1026
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 16944
+# prompt-template: kit:BUILD
+# prompt-sha: sha256:825603095c7e
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+WI-572 rework is complete and committed as `87ac214f` with the required `WI: WI-572` trailer.
+
+- All five review findings are addressed.
+- Focused tests: 250 passed.
+- Smoke: 1,461 passed, 4 skipped.
+- Budget: 35.3s / 60s.
+- Docs: 0 broken links.
+- Byte-budget guards: 3 passed; baseline corrected to 4,982 bytes.
+- Full suite: 3,269 passed, 20 skipped; only the expected trunk-owned generated `docs/stage` fingerprint remains after correcting the other failure.
+- WI is closed under `docs/archive/work/complete/`.
+- No tracked working-tree residue; pre-existing untracked `.venv` was untouched.

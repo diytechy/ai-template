@@ -786,6 +786,33 @@ APPROVAL_RUNGS = {
 }
 
 
+# THE SPINE SIBLING OF THE TABLE ABOVE (owner ruling 2026-09-01, WI-572).
+#
+# Same question, same fail-safe, different registries: which DevStg rung is a
+# SPINE row approved INTO, so the dial can answer whether that tier's `Status`
+# flip is the loop's act or the owner's. Keyed by registry STEM
+# (`spine_carrier.stem`) rather than by tier letter because the two callers
+# both hold a registry path and neither holds a tier — and because a stem
+# survives a carrier change, which a `.toml` suffix would not.
+#
+# IT LIVES HERE BECAUSE IT HAS TWO CONSUMERS AND THEY MUST NOT DISAGREE. The
+# mint (`intake._released_drafted_rows`) uses it to decide which Drafted rows a
+# merge hands to an adjudicator; the brief
+# (`adjudicate_brief.first_approval_values`) uses it to decide which of the rows
+# it re-resolves LIVE that adjudicator may actually flip. It was two tables for
+# one commit — a registry-keyed one in `intake` and a tier-keyed one in
+# `adjudicate_brief` — and the brief's copy was consulted only for the
+# amendment arm's aftermath, so the first-approval arm derived its `--approves`
+# argument with no dial filter at all: at any dial holding a spine rung the
+# brief rendered the owner's held rows as this session's to approve. One table
+# with one predicate is what makes that unrepresentable rather than detected.
+SPINE_APPROVAL_RUNGS = {
+    "docs/requirements/system-requirements": _kitladder.STAGE_REQS,
+    "docs/requirements/low-level-requirements": _kitladder.STAGE_LLREQS,
+    "docs/test/test-cases": _kitladder.STAGE_TESTS,
+}
+
+
 def human_holds(docs, stage):
     """Is work at spine `stage` still the HUMAN's to approve?
 
@@ -860,6 +887,34 @@ def human_approves(docs, registry):
     statement of scope: the predicate is enforced where a writer exists, and it
     exists so the next writer cannot be added without meeting it."""
     rung = APPROVAL_RUNGS.get((registry or "").strip().lower())
+    if rung is None:
+        return True
+    return human_holds(docs, rung)
+
+
+def human_approves_spine(docs, registry):
+    """May only a HUMAN flip this SPINE `registry`'s rows `Drafted` ->
+    `Approved`? True means HELD.
+
+    The spine mirror of `human_approves`, and deliberately the same three arms
+    and the same fail-safe: mapped-and-held -> True, mapped-and-released ->
+    False, UNMAPPED -> True. An approval-carrying registry nobody has associated
+    with a rung is one nobody has ruled on, and the only safe answer to that is
+    "the human does".
+
+    `registry` is the registry's STEM as `SPINE_APPROVAL_RUNGS` keys it —
+    `spine_carrier.stem("docs/test/test-cases.toml")`. Callers pass the stem
+    rather than the path so the carrier suffix is normalised in the one module
+    that owns "what a registry path is", not re-derived here.
+
+    THE READER-SIDE CONTRACT, the half `human_approves` states for writers.
+    Anything that tells a session which rows it may approve MUST filter through
+    this — not only the path that mints the row, but every path that later
+    re-resolves the population and renders it. The two are separated by a merge
+    and a claim (`intake._released_drafted_rows` mints; `adjudicate_brief.
+    first_approval_values` re-resolves live at composition time), and a filter
+    applied at only one of them is a filter the brief does not have."""
+    rung = SPINE_APPROVAL_RUNGS.get(str(registry or "").strip())
     if rung is None:
         return True
     return human_holds(docs, rung)

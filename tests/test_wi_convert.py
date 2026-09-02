@@ -33,6 +33,7 @@ the converter rather than at a subprocess's exit code.
 
 import csv
 import re
+import shutil
 
 import pytest
 from conftest import ROOT, load_script
@@ -44,24 +45,53 @@ wi_convert = load_script("wi_convert")
 
 REGISTRY = ROOT / "docs" / "requirements" / "work-items.csv"
 WORK = ROOT / "docs" / "work"
+# The folder home is TWO trees since WI-504 — the active workspace and the
+# terminal-history archive — and the registry is the UNION of them
+# (`kitlib.registry.read_spec_rows`, which every other consumer reads through).
+# The guards below want the whole registry, so they merge both roots; reading
+# only `docs/work/` would measure 24 rows and call the other 546 truncation.
+ARCHIVE_WORK = ROOT / "docs" / "archive" / "work"
+
+
+def _merged_folder_home(scratch):
+    """Both spec roots copied into one tree — the folder home as one registry.
+
+    A copy rather than a two-root reader because `to_csv`/`to_specs` are
+    single-root by contract, and both trees use the identical status directory
+    names, so the union IS a folder home of the same shape."""
+    merged = scratch / "work"
+    for root in (WORK, ARCHIVE_WORK):
+        if root.is_dir():
+            shutil.copytree(root, merged, dirs_exist_ok=True)
+    return merged
 
 
 @pytest.fixture(scope="module")
 def live_csv(tmp_path_factory):
     """The live registry AS a CSV file, whichever home the repo carries: the
-    real CSV while it exists, else a CSV rebuilt from docs/work/ (the home
-    since the Phase 2c flip). The format tests below want realistic data, not
-    an opinion about the home — this keeps their realism across the flip."""
+    real CSV while it exists, else a CSV rebuilt from the spec folder's two
+    roots (the home since the Phase 2c flip). The format tests below want
+    realistic data, not an opinion about the home — this keeps their realism
+    across the flip."""
     if REGISTRY.exists():
         return REGISTRY
     assert WORK.is_dir(), "the registry has no home at all"
-    out = tmp_path_factory.mktemp("live-registry") / "work-items.csv"
+    scratch = tmp_path_factory.mktemp("live-registry")
+    out = scratch / "work-items.csv"
     try:
-        wi_convert.to_csv(WORK, out)
+        wi_convert.to_csv(_merged_folder_home(scratch), out)
     except wi_convert.ConvertError as exc:
         # An in-flight active/<branch>/ claim: conversion is a drained-stop
         # operation (§3.2), so the realistic-data fixture is only definable at
         # a drained registry. The refusal itself is pinned by its own test.
+        #
+        # ONLY that refusal skips. Catching every ConvertError here is what let
+        # a stray non-spec file under a status directory read as "claims in
+        # flight" and turn four of this module's guards dark for the whole of
+        # WI-504's archive split (WI-572 REVIEW-A) — a skip whose reason is a
+        # guess is a skip that hides the thing it names.
+        if "drained-stop" not in str(exc):
+            raise
         pytest.skip("live registry has in-flight claims: {}".format(exc))
     return out
 
@@ -187,7 +217,9 @@ def test_the_live_registry_round_trips_in_whichever_home_is_authoritative(
         "registry has no home at all, which is not a state this repo may be in"
     )
     try:
-        count, findings, _rebuilt = _folder_home_round_trip(WORK, tmp_path)
+        count, findings, _rebuilt = _folder_home_round_trip(
+            _merged_folder_home(tmp_path / "home"), tmp_path
+        )
     except wi_convert.ConvertError as exc:
         # With a claim in flight the round-trip proof is not definable - and
         # the converter must say so BY NAME rather than coerce or crash. That
@@ -613,18 +645,35 @@ def test_a_spec_in_an_unknown_directory_is_refused(tmp_path):
 
 
 def test_columns_are_pinned_to_the_shipped_registry_header():
-    """`wi_convert.COLUMNS` is a fourth hand-maintained copy of the 17-column
-    schema (beside the shipped template, `plan_artifacts.WI_HEADER`, and
-    test_plan_artifacts's fixture line). It is sanctioned F5 duplication (the
-    rule's live home is `tests/test_rule_sync.py`, since D-7/WI-426 deleted the
-    census that used to record it), and the WI-291 precedent is that the
+    """`wi_convert.COLUMNS` is a hand-maintained copy of the schema (beside the
+    shipped template, `plan_artifacts.WI_HEADER`, test_plan_artifacts's fixture
+    line, and `kitlib.registry.WI_COLUMNS`). It is sanctioned F5 duplication
+    (the rule's live home is `tests/test_rule_sync.py`, since D-7/WI-426 deleted
+    the census that used to record it), and the WI-291 precedent is that the
     duplication is fine while the DRIFT is guarded — so it is guarded here,
-    against the same one truth the other three are pinned to."""
+    against the same one truth the others are pinned to."""
     template = ROOT / "project-trajectory" / "registries" / "work-items.template.csv"
     with template.open(encoding="utf-8-sig", newline="") as handle:
         assert next(csv.reader(handle)) == wi_convert.COLUMNS
     # (The live-CSV half of this pin retired with the CSV at the Phase 2c flip;
     # the template is the schema of record for the legacy format.)
+
+    # THE READ SIDE IS THE SAME SCHEMA, and until WI-572 nothing said so. This
+    # module owns the format's WRITE half; `kitlib.registry` owns the read half
+    # that `schedule`, `check_trajectory` and `agent_common` all re-export, and
+    # its contract is that a spec row carries "the SAME keys `csv.DictReader`
+    # used to yield". A column added to one and not the other is written by the
+    # mint and invisible to every consumer — which is precisely how far the
+    # `Adjudicates` cell got before this pin existed.
+    from kitlib import registry
+
+    assert tuple(wi_convert.COLUMNS) == registry.WI_COLUMNS
+    # ...and the FIELD MAPS with them: a column in both tables but in neither
+    # `LIST_FIELDS`/`SPEC_LISTS` round-trips as an empty cell.
+    assert dict(wi_convert.LIST_FIELDS) == dict(registry.SPEC_LISTS)
+    assert dict(wi_convert.SCALAR_FIELDS) == {
+        col: key for col, key in registry.SPEC_SCALARS if col != "Priority"
+    }
 
 
 def test_the_toml_emitter_escapes_what_tomllib_must_read_back():

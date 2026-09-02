@@ -1,0 +1,45 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 021
+# date: 2026-09-02 03:47
+# train: wi-572-the-approval-act-is-the-adjudi
+# base: 4d0b972d9019
+# phase: DESIGN-CHECK
+# wi: WI-572
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: 364d2fd0..892e9f0a
+# tokens:
+# cost-usd:
+# wall-secs: 1234
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 10669
+# prompt-template: kit:DESIGN-CHECK
+# prompt-sha: sha256:a5c5032c558e
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Implemented and committed WI-572 rework.
+
+- Removed blanket adjudication exemption.
+- Bound approval flips to the claimed row’s `Adjudicates` scope.
+- Refused empty/out-of-scope acts, missing anchors, and widened snapshots.
+- Added merge-boundary admission/refusal regressions.
+- Work-branch harness: PASS.
+- Smoke: 1,461 passed, 4 skipped; 35.0s ≤ 60s.
+- Full suite: 3,280 passed, 20 skipped, 1 inherited trunk-owned `docs/stage` freshness failure.
+
+Final commit: `892e9f0a` with `WI: WI-572`.
+
+The pre-existing untracked `.venv/` was preserved and not committed.

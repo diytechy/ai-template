@@ -4299,6 +4299,29 @@ side. `INTERFACES.template.md`, `registries/interfaces.template.toml` and
 `PROCESS.md` §8 say the undeclared owner warns and name the refused-header
 shape; the two template headers state the no-in-tree-endpoint rule.
 
+### The work-item schema gains `Adjudicates` — the scope of an adjudication's act [since d54bae41]
+
+**What changed.** The work-item row schema (`wi_convert.COLUMNS` and its read-side
+twin `kitlib.registry.WI_COLUMNS`) gains a 19th column, `Adjudicates`: the
+`;`-joined registry row ids an adjudication was minted OVER. `intake`'s
+first-approval mint writes it, and `adjudicate_brief` intersects the brief's LIVE
+re-derivation with it, so the approval act cannot reach a row no merge handed it.
+Empty on every row that is not an adjudication.
+
+**Migration: none, if you carry the FOLDER home** — which is the live home since
+Phase 2c. The column is a frontmatter key (`adjudicates`), and a key a spec file
+does not carry reads as an empty cell, which is what every pre-existing row means.
+Nothing to add, nothing to re-scaffold.
+
+**If you still carry the legacy `docs/requirements/work-items.csv`:** add
+`Adjudicates` as the last header cell and a trailing comma on every row.
+`wi_convert.load_csv` REFUSES a header that is not the declared schema, by design
+— a converter that guessed at an unknown shape is how a column gets dropped — so
+the refusal names the mismatch rather than silently losing a cell. This is the
+same one-cell migration the `Supersedes` and `Brief` columns needed and, unlike
+those two, it is written down: **that omission is the reason this entry exists**,
+so if your header predates either of them, add all three at once.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

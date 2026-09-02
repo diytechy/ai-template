@@ -417,7 +417,14 @@ fresh-context LLM reviewer's recorded verdict. The words `attended` /
 into the `[attestation]` dials and are never stored. Full
 mechanics + the deviation-register pattern:
 [process-options.md "Gate authority levels"](process-options.md#gate-authority-levels).
-**Fixed points at every level:** the owner's final read is the human's; no un-run greens; the
+**Fixed points at every level:** the owner's final read is the human's; **the
+approval act — a spine row's `Status` flip and the `docs/archive/last_approved/`
+copy that anchors it — is an adjudicator's, taken on the serial trunk side, never by the
+worker lane that authored the rows** (a lane authors `Drafted` rows and amends
+text; its merge is REFUSED if it approves, and the adjudication minted at that
+merge reads the whole chain and approves — [process-options.md "Who performs the
+approval act"](process-options.md#who-performs-the-approval-act)); no un-run
+greens; the
 harness is still the bar (LLM judgment never waives a red check); approved
 owner decisions are never re-decided by an agent. A coordinator can loop fresh
 driver sessions under any level, stopping where the level requires a human —
@@ -451,8 +458,8 @@ cells and re-copies the record. The baseline those before/after diffs run agains
 **byte-for-byte copy** of the registries at the last approval —
 `docs/archive/last_approved/`, written only by the approval act itself
 (`intake.py snapshot`, in the same commit as the `Status` write; a snapshot
-file must always equal its live counterpart) and replaced wholesale at each
-approval. Amend and re-copy in the **same commit** (a `--staged`
+file must always equal its live counterpart), scoped to the registries that act
+authorises. Amend and re-copy in the **same commit** (a `--staged`
 warn enforces it); a row's `Status` answers for its **own cells** — a child
 (LLR/TC) amendment never touches its parent SR (owner ruling 2026-08-17). A
 child change surfaces through the snapshot-drift arm; chain-completeness is the

@@ -1,0 +1,39 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 007
+# date: 2026-09-02 00:31
+# train: wi-572-the-approval-act-is-the-adjudi
+# base: 4d0b972d9019
+# phase: REVIEW-A
+# wi: WI-572
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 67c037ac..261f4cbb
+# tokens:
+# cost-usd:
+# wall-secs: 248
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4558
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:6bee3ede4af8
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+CHANGES-REQUESTED — 1 major finding recorded and committed.
+
+[007-REVIEW-A-66d0d31.md](/Users/diytechy/Documents/ai-template-drive/wi-572-the-approval-act-is-the-adjudi/docs/reviews/wi-572-the-approval-act-is-the-adjudi/007-REVIEW-A-66d0d31.md)
+
+Commit: `261f4cbb`
+
+The first-approval prompt tells an APPROVE adjudicator to commit only the verdict and stop, contradicting the required status flip plus scoped snapshot act. Harness check passed; strict trace reported `integrity=0`.

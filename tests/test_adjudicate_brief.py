@@ -25,11 +25,19 @@ which is the failure mode.
 import csv
 import io
 import re
+import shlex
 import subprocess
 import sys
 
 import pytest
-from conftest import env_gate_skipif, load_script, pin_autocrlf, run_py, SCRIPTS
+from conftest import (
+    env_gate_skipif,
+    load_script,
+    pin_autocrlf,
+    run_py,
+    set_process_key,
+    SCRIPTS,
+)
 
 ab = load_script("adjudicate_brief")
 baseline_snapshot = load_script("baseline_snapshot")
@@ -695,6 +703,450 @@ def test_with_no_snapshot_the_brief_HOLDS_and_says_FIRST_APPROVAL(tmp_path):
     values, why = ab.amendment_values(repo, {"WI-ID": "WI-301", "Brief": "amendment"})
     assert values is None
     assert "FIRST-APPROVAL" in why and "no accepted anchor" in why
+
+
+def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tmp_path):
+    # done-when 3 (owner ruling 2026-09-01). This template used to end "the
+    # flip, if one is owed, is the mechanical tool's act, not yours" — true when
+    # written, and FALSE since OI-45 ruled (b) retired that tool
+    # (intake._apply_flips writes nothing, permanently). So a MEANING verdict on
+    # a loop-held rung ended at a brief nobody was owed, which contradicts the
+    # loop-held doctrine. What replaces it is not a longer sentence but a
+    # DERIVED one: the dial is a repo declaration the judge would otherwise have
+    # to go read mid-verdict, which is the shape that produces a session
+    # confidently performing the owner's act.
+    repo = _amendment_repo(tmp_path)
+    row = {"WI-ID": "WI-301", "Brief": "amendment"}
+
+    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
+    values, why = ab.amendment_values(repo, row)
+    assert why is None, why
+    assert "RELEASED" in values["aftermath"]
+    assert "re-attested BY YOU, in this session" in values["aftermath"]
+
+    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Release")
+    values, why = ab.amendment_values(repo, row)
+    assert why is None, why
+    assert "still HOLDS for a human" in values["aftermath"]
+    assert "the signature is the owner's" in values["aftermath"]
+
+    # ...and the retired sentence never reaches the JUDGE, which is the property
+    # that matters: a brief that says both things is worse than one that says
+    # the wrong thing. It survives in the dispatcher notes — stripped before
+    # sending — as the record of why this slot exists at all.
+    text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
+    assert why is None, why
+    assert "the mechanical tool's act, not yours" not in text
+    assert "the signature is the owner's" in text  # the aftermath landed instead
+    assert re.findall(r"\{[a-z_]+\}", text) == []
+    template = (
+        SCRIPTS.parent / "prompts" / "adjudicate-amendment.template.md"
+    ).read_text(encoding="utf-8")
+    assert "the mechanical tool's act, not yours" in template  # in the NOTES only
+
+
+# --- the first-approval brief (owner ruling 2026-09-01) -----------------------
+
+
+def _first_approval_repo(tmp_path):
+    """A repo whose lane left a `Drafted` LLR under an `Approved` SR — the exact
+    population the ruling hands to the adjudicator, and the one no drift arm can
+    see: a row below approval has made no claim to fall from.
+
+    THE DIAL IS DECLARED, and it has to be. This arm exists only for rungs the
+    declared gate authority has RELEASED; with no `docs/process.toml` the dial
+    falls back to the shipped `DevStg-Release`, which holds every rung, so an
+    undeclared fixture is not this arm's scenario at all — it is the owner's.
+    That omission is what let the first cut ship a brief with no dial filter and
+    a green test beside it (WI-572 REVIEW-A).
+
+    AND THE SCOPE IS DECLARED, for the same class of reason. The mint writes the
+    rows it handed over into `Adjudicates`; a fixture that omitted the cell would
+    exercise a row `intake` cannot produce, and the assembler now refuses one."""
+    repo = _spine_repo(tmp_path)
+    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
+    baseline_snapshot.copy_live(repo, seed=True)
+    llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
+    llrs.write_text(
+        llrs.read_text(encoding="utf-8").replace("TC-001,Approved,", "TC-001,Drafted,"),
+        encoding="utf-8",
+    )
+    _write_rows(
+        repo,
+        [
+            {
+                "WI-ID": "WI-301",
+                "Title": "adjudicate: LLR-001 - await a FIRST APPROVAL",
+                "SafetyClass": "adjudication",
+                "Brief": "first-approval",
+                "Adjudicates": "LLR-001",
+                "SpecRef": "docs/requirements/low-level-requirements.toml",
+            }
+        ],
+    )
+    return repo
+
+
+# The adjudication row as `intake` mints it — brief AND scope, because the
+# assembler needs both and a bare `{"Brief": ...}` dict is a row this mint
+# cannot produce.
+def _fa_row(**over):
+    row = {"WI-ID": "WI-301", "Brief": "first-approval", "Adjudicates": "LLR-001"}
+    row.update(over)
+    return row
+
+
+def test_the_first_approval_brief_carries_the_WHOLE_CHAIN(tmp_path):
+    # The owner's CONTEXT reason, mechanized: approving a row means holding its
+    # whole chain — the parent SR, the sibling LLRs, the tests — which is the
+    # thing one work item does not hold and is therefore why the act is the
+    # adjudicator's. So the brief must show the chain, not the changed cells.
+    repo = _first_approval_repo(tmp_path)
+    values, why = ab.first_approval_values(repo, _fa_row())
+    assert why is None, why
+    chain = values["chain"]
+    assert "SR-001" in chain and "LLR-001" in chain and "TC-001" in chain
+    # The row awaiting the act is MARKED as such — a chain rendered without
+    # saying which rows are the question reads as a report, not a brief.
+    assert "LLR-001 [AWAITING FIRST APPROVAL]" in chain
+    assert "SR-001 [approved]" in chain
+    # ...and the act's own argument is DERIVED, so the approving commit records
+    # the scope it actually touched rather than whatever the session typed.
+    assert (
+        values["registries"] == "docs/requirements/low-level-requirements.toml=WI-301"
+    )
+    assert baseline_snapshot.SNAPSHOT_DIR in values["baseline"]
+
+    # ...and the whole brief composes with NO hole. Strict fill makes the
+    # template's slots and this assembler's keys ONE contract, so a slot added
+    # to either side without the other refuses instead of shipping a judge a
+    # prompt with `{chain}` still in it.
+    text, why = ab.compose(repo, _fa_row(), repo / "docs/reviews/v.md")
+    assert why is None, why
+    assert re.findall(r"\{[a-z_]+\}", text) == []
+    assert "You are an INDEPENDENT adjudicator" in text
+    assert "OUTCOME: APPROVE|RETURN rows=N" in text
+    # The act itself is spelled out, because nothing downstream performs it for
+    # the session: the mechanical writer retired (OI-45 ruled (b)), so the flip
+    # and its anchoring copy are this session's own reviewed commit.
+    assert "python scripts/intake.py snapshot --approves" in text
+    assert "one reviewed commit" in text
+
+
+def test_the_first_approval_brief_cannot_stop_before_its_approved_act(tmp_path):
+    repo = _first_approval_repo(tmp_path)
+    text, why = ab.compose(repo, _fa_row(), repo / "docs/reviews/v.md")
+    assert why is None, why
+    terminal = text.split("THEN, AND ONLY AFTER THAT VERDICT IS RECORDED", 1)[1]
+    assert "If ANY row line says `APPROVE`" in terminal
+    assert "mixed batch whose `OUTCOME` is `RETURN`" in terminal
+    assert "Stop only after that approval commit is recorded" in terminal
+    assert (
+        "Only when EVERY row line says `RETURN` may you stop without changing"
+        in terminal
+    )
+
+
+def test_the_first_approval_brief_REFUSES_once_the_rows_are_ruled(tmp_path):
+    # Rule 2, and `red_tc_values`' live-recompute rule applied to this arm: the
+    # row is minted at a merge and claimed later, so by composition time another
+    # act may have approved or withdrawn every row it was minted for. A brief
+    # built from the mint's remembered listing would ask the judge to rule on a
+    # world that no longer exists; an emptied population refuses instead.
+    repo = _first_approval_repo(tmp_path)
+    llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
+    llrs.write_text(
+        llrs.read_text(encoding="utf-8").replace("TC-001,Drafted,", "TC-001,Approved,"),
+        encoding="utf-8",
+    )
+    baseline_snapshot.copy_live(repo, seed=True)  # the act's own anchor moved too
+    values, why = ab.first_approval_values(repo, _fa_row())
+    assert values is None
+    assert "still awaiting a first approval" in why, why
+
+
+def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
+    # WI-572 REVIEW-A, the MAJOR finding. The mint filters the population by the
+    # dial (`intake._released_drafted_rows`); this assembler RE-RESOLVES it live
+    # from `reattest_model`, which is dial-blind by design — and the first cut
+    # did not put the filter back. Under a MIXED dial that is not a cosmetic
+    # gap: the brief rendered a held `Drafted` SR beside a released `Drafted`
+    # LLR, marked both as awaiting the act, and derived a `--approves` argument
+    # naming BOTH registries — a prompt instructing an adjudicator to perform a
+    # signature the owner owes. The filter now lives in ONE table both ends read.
+    repo = _first_approval_repo(tmp_path)
+    srs = repo / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(
+        srs.read_text(encoding="utf-8").replace(
+            ",Approved,P1,core", ",Drafted,P1,core"
+        ),
+        encoding="utf-8",
+    )
+    # `DevStg-Reqs` holds the SR tier for the owner and releases the LLR tier
+    # below it — the exact mixed dial the finding names. The scope names BOTH
+    # rows, which is the honest shape of this scenario: the mint filtered by the
+    # dial it saw (`DevStg-Needs`, releasing both), and the owner TIGHTENED it
+    # afterwards. The dial is therefore re-checked at composition as well as at
+    # the mint — a scope check alone would have handed over the SR.
+    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Reqs")
+    row = _fa_row(Adjudicates="SR-001;LLR-001")
+    values, why = ab.first_approval_values(repo, row)
+    assert why is None, why
+
+    # Both halves. The held row is SHOWN — it is the chain, and holding the
+    # chain is the whole reason this act is the adjudicator's — but it is shown
+    # as the owner's...
+    assert "SR-001 [AWAITING FIRST APPROVAL - HELD FOR THE OWNER" in values["chain"]
+    assert "LLR-001 [AWAITING FIRST APPROVAL]" in values["chain"]
+    # ...and it contributes NO registry, so the act's own recorded scope cannot
+    # carry it even if the session ignored every word of the prose.
+    assert (
+        values["registries"] == "docs/requirements/low-level-requirements.toml=WI-301"
+    )
+    text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
+    assert why is None, why
+    assert "never a `HELD FOR THE OWNER` one" in text
+
+    # And when the dial holds EVERY rung — the kit's shipped default, so this is
+    # what an adopter who has declared nothing gets — the arm has no question at
+    # all and REFUSES, rather than composing the owner's sitting as a session's
+    # to-do list.
+    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Release")
+    values, why = ab.first_approval_values(repo, row)
+    assert values is None
+    assert "HOLDS for a human" in why, why
+
+
+def test_the_first_approval_act_formats_a_multi_registry_batch_for_the_cli(tmp_path):
+    repo = _first_approval_repo(tmp_path)
+    srs = repo / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(
+        srs.read_text(encoding="utf-8").replace(
+            ",Approved,P1,core", ",Drafted,P1,core"
+        ),
+        encoding="utf-8",
+    )
+    values, why = ab.first_approval_values(repo, _fa_row(Adjudicates="SR-001;LLR-001"))
+    assert why is None, why
+    assert values["registries"] == (
+        "docs/requirements/low-level-requirements.toml=WI-301;"
+        "docs/requirements/system-requirements.toml=WI-301"
+    )
+    assert baseline_snapshot.parse_approves(values["registries"]) == {
+        "docs/requirements/low-level-requirements.toml": "WI-301",
+        "docs/requirements/system-requirements.toml": "WI-301",
+    }
+
+
+def _two_registry_repo(tmp_path):
+    """`_first_approval_repo` with its SR withdrawn too, so the act spans TWO
+    registries — the batch shape that makes both round-7 findings reachable."""
+    repo = _first_approval_repo(tmp_path)
+    srs = repo / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(
+        srs.read_text(encoding="utf-8").replace(
+            ",Approved,P1,core", ",Drafted,P1,core"
+        ),
+        encoding="utf-8",
+    )
+    return repo
+
+
+def _shell_command_count(line):
+    """How many commands a POSIX shell would read `line` as.
+
+    `shlex` with `punctuation_chars` yields an unquoted `;` as its own token and
+    keeps a quoted one inside its string, which is exactly the distinction under
+    test. `shlex.split` alone cannot serve: it is a lexer, not a parser, and
+    returns the whole `a;b` run as ONE token whether it is quoted or not — so a
+    test written on it would have passed against the defect."""
+    lex = shlex.shlex(line, posix=True, punctuation_chars=True)
+    lex.whitespace_split = True
+    return sum(1 for token in lex if token == ";") + 1
+
+
+def test_the_rendered_snapshot_command_survives_a_shell(tmp_path):
+    # WI-572 REVIEW-A round 7, MAJOR 2. `{registries}` is `;`-joined by
+    # `format_approves` and rendered into a SHELL command line in the template.
+    # Unquoted, a two-registry batch is two commands: the first snapshots one
+    # registry, the second runs `docs/test/test-cases.toml=WI-301` as a program
+    # — so only half the act is anchored and the merge then refuses it. The
+    # template quotes the argument; this pins that the rendered line is ONE
+    # command, which is the property that actually matters.
+    repo = _two_registry_repo(tmp_path)
+    row = _fa_row(Adjudicates="SR-001;LLR-001")
+    text, why = ab.compose(repo, row, tmp_path / "verdict.md")
+    assert why is None, why
+    line = next(ln for ln in text.splitlines() if "intake.py snapshot --approves" in ln)
+    command = line[line.index("`python") + 1 :]
+    command = command[: command.index("`")]
+    # The premise: this batch really does span two registries, so an unquoted
+    # render WOULD split. Without it the assertion below is vacuous.
+    assert ";" in command
+    assert _shell_command_count(command) == 1, command
+    # ...and the same string unquoted is the defect, proving the guard bites.
+    assert _shell_command_count(command.replace('"', "")) == 2
+
+
+def test_a_mixed_batch_can_tell_which_rows_each_approves_token_covers(tmp_path):
+    # WI-572 REVIEW-A round 7, MAJOR 3. `{registries}` is fixed at COMPOSITION
+    # time, but the template blesses a MIXED verdict ("approve the rows that are
+    # ready, return the rest") and the approve/return split exists only after
+    # it. An adjudication that returned one registry's rows in full still ran
+    # the composed command, re-anchoring that registry's unreviewed live text —
+    # and `acceptance_record.adjudication_approval_refusal` then stopped the
+    # merge as WIDENED. The session can only DROP a token if the brief says
+    # which rows it stands for, so the brief derives that mapping.
+    repo = _two_registry_repo(tmp_path)
+    values, why = ab.first_approval_values(repo, _fa_row(Adjudicates="SR-001;LLR-001"))
+    assert why is None, why
+    covers = values["approves_rows"]
+    assert (
+        "`docs/requirements/low-level-requirements.toml=WI-301` covers LLR-001"
+        in covers
+    )
+    assert "`docs/requirements/system-requirements.toml=WI-301` covers SR-001" in covers
+    # EVERY token of the derived argument is accounted for. A mapping that named
+    # only some of them would leave the session guessing on the rest, which is
+    # the state this replaces.
+    for rel in baseline_snapshot.parse_approves(values["registries"]):
+        assert "`{}=".format(rel) in covers, rel
+
+
+def test_a_row_hanging_under_two_SRs_is_named_once_in_its_token(tmp_path):
+    # The dedupe half of MAJOR 3, found by DRIVING the fix against this repo's
+    # live spine rather than against a fixture: `_render_chain` visits a row
+    # ONCE PER SR CHAIN it hangs under, so an LLR with two parents rendered as
+    # `covers LLR-001, LLR-001`. A token that names one row twice reads as two
+    # rows, and the whole point of the mapping is that the session can count
+    # what it returned against what a token covers.
+    repo = _first_approval_repo(tmp_path)
+    req = repo / "docs" / "requirements"
+    srs = req / "system-requirements.csv"
+    # A SECOND approved parent for the same Drafted LLR — the two-chain shape.
+    srs.write_text(
+        srs.read_text(encoding="utf-8")
+        + "SR-002,Adds again,SN-001,The system shall also add.,a second parent,"
+        "the sum is right,Must,Test,Approved,P1,core\n",
+        encoding="utf-8",
+    )
+    llrs = req / "low-level-requirements.csv"
+    llrs.write_text(
+        llrs.read_text(encoding="utf-8").replace(
+            "LLR-001,SR-001,", "LLR-001,SR-001;SR-002,"
+        ),
+        encoding="utf-8",
+    )
+    values, why = ab.first_approval_values(repo, _fa_row())
+    assert why is None, why
+    # The premise: the row really is rendered under BOTH chains, so a walk that
+    # appended per visit would have listed it twice. Without this the assertion
+    # below passes on a one-chain fixture and proves nothing.
+    assert values["chain"].count("chain of SR-") == 2
+    assert values["chain"].count("LLR-001 [AWAITING FIRST APPROVAL]") == 2
+    assert values["approves_rows"].count("LLR-001") == 1
+
+
+def test_the_first_approval_act_cannot_widen_past_the_rows_the_merge_handed_over(
+    tmp_path,
+):
+    # WI-572 REVIEW-A round 4, the MAJOR finding. The assembler re-derives its
+    # population LIVE from `trace.reattest_model`, which walks EVERY SR in the
+    # repo — so with nothing to intersect against, a merge that staged ONE
+    # `Drafted` LLR minted a row whose brief then told its session it held the
+    # approval authority for the whole repo's `Drafted` backlog, and derived a
+    # `--approves` argument naming every registry those rows live in. That
+    # contradicts the doctrine ("over the `Drafted` rows the lane handed over")
+    # and the owner's concurrency reason for moving the act to trunk: the
+    # approval snapshot must not move across a workstream.
+    repo = _first_approval_repo(tmp_path)
+    req = repo / "docs" / "requirements"
+    # Two other lanes' rows, both `Drafted` on released rungs, neither in this
+    # act's scope. LLR-003 sits in the SAME chain this act must render (so the
+    # brief has to label it, not hide it); SR-002's chain is entirely somebody
+    # else's (so the brief must not render it at all).
+    llrs = req / "low-level-requirements.csv"
+    llrs.write_text(
+        llrs.read_text(encoding="utf-8")
+        + "LLR-003,SR-001,carry impl,src/demo.py,carry,carry() handles overflow.,,"
+        "Drafted,,P1\n"
+        + "LLR-002,SR-002,sub impl,src/demo.py,sub,sub() returns a - b.,,Drafted,,P1\n",
+        encoding="utf-8",
+    )
+    srs = req / "system-requirements.csv"
+    srs.write_text(
+        srs.read_text(encoding="utf-8")
+        + "SR-002,Subtracts,SN-001,The system shall subtract.,arithmetic,the "
+        "difference is right,Must,Test,Drafted,P1,core\n",
+        encoding="utf-8",
+    )
+
+    values, why = ab.first_approval_values(repo, _fa_row())
+    assert why is None, why
+    chain = values["chain"]
+    # The scoped row is still the question, and it is the ONLY one.
+    assert "LLR-001 [AWAITING FIRST APPROVAL]\n" in chain + "\n"
+    assert chain.count("[AWAITING FIRST APPROVAL]") == 1, chain
+    # The sibling in the same chain is SHOWN — it is evidence — and labelled with
+    # the reason that is actually true of it. Saying "HELD FOR THE OWNER" here
+    # would tell the session to wait on a signature nobody owes.
+    assert "LLR-003 [AWAITING FIRST APPROVAL - OUTSIDE THIS ACT'S SCOPE" in chain
+    # The unrelated chain is dropped WHOLE: it is not this act's question and it
+    # is not this act's evidence either.
+    for rid in ("SR-002", "LLR-002"):
+        assert rid not in chain, chain
+    # And the act's RECORDED scope carries only the scoped row's registry — the
+    # half a session that ignored every word of the prose still cannot widen.
+    assert (
+        values["registries"] == "docs/requirements/low-level-requirements.toml=WI-301"
+    )
+
+
+def test_an_adjudication_with_no_declared_scope_is_REFUSED_not_widened(tmp_path):
+    # The unstated boundary. An empty `Adjudicates` cell cannot be read as
+    # "every `Drafted` row in the repo" — that IS the widening — so it fails
+    # toward the human (rule 3) and the reason names the cell.
+    repo = _first_approval_repo(tmp_path)
+    values, why = ab.first_approval_values(repo, _fa_row(Adjudicates=""))
+    assert values is None
+    assert "declares no `Adjudicates` scope" in why, why
+    # ...and the caller HOLDS it rather than composing a partial brief.
+    text, why = ab.compose(repo, _fa_row(Adjudicates=""), repo / "docs/reviews/v.md")
+    assert text is None and "Adjudicates" in why
+
+
+def test_a_scope_whose_rows_are_all_settled_REFUSES_by_naming_them(tmp_path):
+    # The second-order harm of the widening: merge B's adjudication, minted
+    # while merge A's was still queued, used to find "no spine row awaits a
+    # first approval any more" — one repo-wide sentence for three different
+    # states. The refusal now names WHICH filter emptied the population, because
+    # "ruled on already" (drop the row), "the owner holds the rung" (sign it)
+    # and "the scope names rows this spine no longer has" (the mint and the tree
+    # disagree) take three different actions.
+    repo = _first_approval_repo(tmp_path)
+    values, why = ab.first_approval_values(repo, _fa_row(Adjudicates="LLR-404"))
+    assert values is None
+    assert "LLR-404" in why, why
+    assert "no longer has a subject" in why, why
+
+
+def test_the_first_approval_brief_is_ROUTED_and_demands_its_own_verdict(tmp_path):
+    # The seam, both halves. The brief has an assembler (so a row declaring it
+    # is DISPATCHED, not held for a human), and its verdict grammar is its own:
+    # the amendment arm's MEANING/CLARITY cannot answer "approve or return", and
+    # a checker still expecting the old enum is exactly the drift the table
+    # prevents.
+    assert "first-approval" in ab.ROUTED
+    assert ab.VERDICT_GRAMMAR["first-approval"] == (
+        "OUTCOME",
+        ("APPROVE", "RETURN"),
+        ("rows",),
+    )
+    verdict = tmp_path / "v.md"
+    verdict.write_text("OUTCOME: MEANING rows=1\n", encoding="utf-8")
+    assert "not one of APPROVE|RETURN" in ab.verdict_refusal("first-approval", verdict)
+    verdict.write_text("OUTCOME: APPROVE rows=2\n", encoding="utf-8")
+    assert ab.verdict_refusal("first-approval", verdict) is None
 
 
 def test_an_adjudication_row_declaring_no_brief_still_builds(tmp_path):

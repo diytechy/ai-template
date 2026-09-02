@@ -88,7 +88,7 @@ Contract IF-078: plan_artifacts files a selected Plan-WI as a spec through this
     that does not read back as what it was given.
 
 Contract IF-092: the unified mint builds its row against COLUMNS, the
-    18-column schema this module owns, and materializes it with
+    19-column schema this module owns, and materializes it with
     `write_spec_file(work_dir, row)` — the format's single writer, so no spec
     can be produced by a path that skips the read-back verification. A row this
     module cannot file raises ConvertError, which is the mint's
@@ -153,6 +153,24 @@ COLUMNS = [
     # same reason `Supersedes` is one — `intake` writes it through
     # `write_spec_file`, which serializes from this table.
     "Brief",
+    # WI-572 SCOPE OF THE ACT. The registry row ids an adjudication was minted
+    # OVER — the population the merge handed it — `;`-joined, and empty on every
+    # row that is not an adjudication and on adjudication briefs whose scope is
+    # not a row set.
+    #
+    # A REAL COLUMN because the alternative is unsound in a way this ruling makes
+    # expensive. `adjudicate_brief` re-derives its population LIVE at composition
+    # time (`red_tc_values`' rule: brief the world the judge is actually in), and
+    # a live re-derivation with no scope to intersect against re-derives a WIDER
+    # question than the mint asked — the first-approval brief handed its session
+    # every `Drafted` row in the repo, across unrelated workstreams, and derived
+    # a `--approves` argument naming all their registries. The owner's
+    # concurrency reason for moving the approval act to trunk is that the
+    # snapshot must not move across a workstream, so the act's scope has to be a
+    # fact the ROW CARRIES rather than one recomputed from the world. Title prose
+    # carrying it is the WI-417 fold; a frontmatter key outside this table is
+    # dropped by `parse_spec` at the one moment it matters.
+    "Adjudicates",
 ]
 
 # Status <-> directory (§2.1; WI-384). One directory per state, both terminals
@@ -199,6 +217,7 @@ SCALAR_FIELDS = (
 LIST_FIELDS = (
     ("SR-Refs", "sr_refs"),
     ("Predecessors", "needs"),
+    ("Adjudicates", "adjudicates"),
 )
 # Columns emitted as TOML integers when — and only when — the round-trip is
 # exact (`str(int(cell)) == cell`). A cell like `01` stays a string rather than
@@ -497,7 +516,7 @@ spec_paths = _kitregistry.spec_files
 # --- file-level operations ---------------------------------------------------
 def load_csv(path):
     """The registry's rows, header-preserving. Refuses a header that is not the
-    declared 18-column schema — a converter that guesses at an unknown shape is
+    declared 19-column schema — a converter that guesses at an unknown shape is
     how a column gets dropped."""
     reader = _kitspine.csv_reader(Path(path).read_text(encoding="utf-8-sig"))
     header = reader.fieldnames or []
@@ -510,7 +529,7 @@ def load_csv(path):
 
 
 def write_csv(path, rows):
-    """Write `rows` back as the 18-column registry: QUOTE_MINIMAL, LF."""
+    """Write `rows` back as the 19-column registry: QUOTE_MINIMAL, LF."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="\n") as handle:
@@ -587,24 +606,30 @@ def _self_verify(target, relpath, row, order):
 
 
 def read_specs(work_dir):
-    """`[(row, order, relpath)]` for every `*.md` under `work_dir`, sorted into
-    registry order: by the explicit `order` key, then by numeric id.
+    """`[(row, order, relpath)]` for every `<status>/WI-*.md` under `work_dir`,
+    sorted into registry order: by the explicit `order` key, then by numeric id.
 
     A spec with no `order` (hand-filed after the conversion) sorts after every
     numbered one, by id — deterministic, and honest that the key exists only to
     reproduce a file whose row order the ids do not describe.
+
+    THE POPULATION IS `spec_paths`', not a second walk of this module's own
+    (WI-572 REVIEW-A). This is the WRITE side of the read rule already
+    re-exported above, and it used to `rglob("*.md")` and then demand that every
+    hit inside a status directory parse as a spec — a strictness the folder home
+    does not actually define. `docs/work/cancelled/README.md` is a tracked,
+    legitimate file under a status directory, so the round-trip raised on it the
+    moment `active/` drained and the `drained-stop` refusal stopped masking it.
+    Walking `WI-*.md` deletes that disagreement rather than excluding one
+    filename: the two sides now derive their population from one function, so a
+    file the reader treats as residue cannot be a file the writer treats as a
+    broken row.
     """
     work_dir = Path(work_dir)
     if not work_dir.is_dir():
         raise ConvertError("{}: no such work directory".format(work_dir))
     parsed = []
-    for path in sorted(work_dir.rglob("*.md")):
-        if path.parent == work_dir:
-            # Status is the directory, so a file at the folder root (the
-            # registry's own README) is not a row — same exclusion spec_files()
-            # applies. Inside a status directory, strictness stands: every *.md
-            # there must parse as a spec.
-            continue
+    for path in spec_paths(work_dir):
         relpath = path.relative_to(work_dir).as_posix()
         row, order = parse_spec(
             path.open(encoding="utf-8", newline="").read(), relpath, where=str(path)

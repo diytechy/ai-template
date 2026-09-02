@@ -66,7 +66,7 @@ worker brief, the adjudicator briefs and PROCESS.md, exactly this:
 
 | | The work lane (a WI's worker session) | The adjudicator (a trunk-side, exclusive adjudication session) |
 |---|---|---|
-| Authors spine rows | Yes — new SR/LLR/TC rows are written **Drafted**, with their chain links, rationale and evidence cells filled. | No. |
+| Authors spine rows | Yes — new SN/SR/LLR/TC rows are written **Drafted**, with their chain links, rationale and evidence cells filled. (The tier list was written SR/LLR/TC; WI-572 REVIEW-A round 028 extended the merge refusal over the SN tier too — a need is a spine row, and it is the rung the dial holds. The off-spine registries stay outside, under OI-30 D3.) | No. |
 | Amends spine text | Yes — any cell, on any row, including Approved rows; the row's Status is left alone. | No; it may RETURN a row with findings, never rewrite it. |
 | Flips Status (Drafted → Approved → Founded) | **Never.** A flip in a lane's delta refuses the merge. | Yes, on the rungs the dial releases, in its own reviewed commit on trunk, after reading the whole chain. |
 | Writes `docs/archive/last_approved/` | **Never.** | Yes — the snapshot is taken in the same commit as the flip, scoped to the registries the act covers (the copy-scope row). |

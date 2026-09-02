@@ -1,0 +1,39 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 003
+# date: 2026-09-01 23:51
+# train: wi-572-the-approval-act-is-the-adjudi
+# base: 4d0b972d9019
+# phase: REVIEW-A
+# wi: WI-572
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 6c076d28..9caf86da
+# tokens:
+# cost-usd:
+# wall-secs: 151
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4558
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:668a337dc78c
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+CHANGES-REQUESTED — committed verdict `9caf86da`.
+
+- [Review verdict](docs/reviews/wi-572-the-approval-act-is-the-adjudi/003-REVIEW-A-b25660e.md): first-approval briefs can include and authorize held-rung rows in a mixed authority dial.
+
+Driven probe confirmed a held SR and released LLR both render, with both registries in `--approves`.
+
+Harness: `check.py --jobs 0` → `RESULT: PASS`; `trace.py --strict-integrity` → `integrity=0`.

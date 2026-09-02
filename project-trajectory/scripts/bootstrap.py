@@ -1761,6 +1761,11 @@ MAPPING = [
         "SR-146",
     ),
     (
+        "prompts/adjudicate-first-approval.template.md",
+        "prompts/adjudicate-first-approval.template.md",
+        "SR-146",
+    ),
+    (
         "prompts/adjudicate-disposition.template.md",
         "prompts/adjudicate-disposition.template.md",
         "SR-146",

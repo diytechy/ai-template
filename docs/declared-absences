@@ -119,6 +119,7 @@ prompts/worker.template.md — see the `prompts/` line above (kit home: project-
 prompts/reviewer.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/reviewer.template.md).
 prompts/critique.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/critique.template.md).
 prompts/adjudicate-amendment.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-amendment.template.md).
+prompts/adjudicate-first-approval.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-first-approval.template.md).
 prompts/adjudicate-disposition.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-disposition.template.md).
 prompts/adjudicate-conflict.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-conflict.template.md).
 prompts/adjudicate-red-tc.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-red-tc.template.md).

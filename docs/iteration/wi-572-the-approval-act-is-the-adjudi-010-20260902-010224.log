@@ -1,0 +1,43 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 010
+# date: 2026-09-02 01:06
+# train: wi-572-the-approval-act-is-the-adjudi
+# base: 4d0b972d9019
+# phase: REVIEW-A
+# wi: WI-572
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: d7549c58..d6cf4d33
+# tokens:
+# cost-usd:
+# wall-secs: 234
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4558
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:fe3900692f09
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+CHANGES-REQUESTED — one MAJOR finding recorded and committed in [010-REVIEW-A-9f3790c.md](/Users/diytechy/Documents/ai-template-drive/wi-572-the-approval-act-is-the-adjudi/docs/reviews/wi-572-the-approval-act-is-the-adjudi/010-REVIEW-A-9f3790c.md).
+
+An `Approved → Drafted` status-only withdrawal strands a released row: `intake_after_merge` minted `[]`, while `trace.reattest_model` still reported `SR-001` awaiting `approve`.
+
+Verification observed:
+
+- Targeted changed-path tests: `3 passed in 1.06s`.
+- `check.py --jobs 0`: `RESULT: PASS`.
+- `trace.py --strict-integrity`: `integrity=0` (with pre-existing advisory provenance finding).
+
+Verdict commit: `d6cf4d33 review: record WI-572 changes requested`.

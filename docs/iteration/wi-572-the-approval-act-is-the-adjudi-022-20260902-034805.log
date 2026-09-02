@@ -1,0 +1,42 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 022
+# date: 2026-09-02 03:52
+# train: wi-572-the-approval-act-is-the-adjudi
+# base: 4d0b972d9019
+# phase: BUILD
+# wi: WI-572
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: 656b641a..6af1e4a2
+# tokens:
+# cost-usd:
+# wall-secs: 239
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 10679
+# prompt-template: kit:BUILD
+# prompt-sha: sha256:769284a7196f
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+WI-572 is complete on the claimed branch.
+
+- Rework was already implemented in `67c58e17`; verified the merge-boundary scope behavior.
+- Six targeted admission regressions passed.
+- Smoke: 1,461 passed, 4 skipped; budget 22.9s / 60s.
+- Documentation: 0 broken links.
+- Final declared harness: `RESULT: PASS`.
+- Recorded and committed as `6af1e4a2` with `WI: WI-572`.
+
+The pre-existing untracked `.venv` was left untouched.

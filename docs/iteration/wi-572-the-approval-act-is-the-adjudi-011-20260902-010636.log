@@ -1,0 +1,47 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 011
+# date: 2026-09-02 01:23
+# train: wi-572-the-approval-act-is-the-adjudi
+# base: 4d0b972d9019
+# phase: BUILD
+# wi: WI-572
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: 7ec4544a..76efc1e7
+# tokens:
+# cost-usd:
+# wall-secs: 991
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 9742
+# prompt-template: kit:BUILD
+# prompt-sha: sha256:2b4ef2311a4b
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Implemented and committed WI-572 rework.
+
+- `Approved → Drafted` status-only withdrawals now reach first-approval adjudication.
+- De-approval remains excluded from lane approval refusal.
+- Added reader and end-to-end intake regressions.
+- Updated the closed WI deliverable and session log.
+
+Verification:
+
+- Affected modules: 84 passed.
+- Full suite: 3261 passed, 2 known inherited failures, 24 skipped.
+- Smoke: 1455 passed, 1 known inherited failure, 8 skipped; 20.9s/60s budget.
+- Ruff and commit hooks passed.
+
+Final commit: `76efc1e7` with `WI: WI-572`. The pre-existing untracked `.venv` symlink was untouched.

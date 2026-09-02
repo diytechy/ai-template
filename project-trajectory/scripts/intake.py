@@ -12,7 +12,7 @@ deterministic — no model anywhere in the path; a detected event becomes a row
 with a **derived** description, so the work is forced into the registry with
 nobody watching.
 
-Three triggers, plus the drafts-not-mints arm:
+Four triggers, plus the drafts-not-mints arm:
 
   (a) **the approved-cell diff on the merged commit** — via
       `acceptance_record.staged_spine_amendments(root, before, after)` (the
@@ -23,6 +23,17 @@ Three triggers, plus the drafts-not-mints arm:
       listing each changed row, cell and before/after — the long form in the
       `## Context` body section, because R-A forbids a filled Deliverable on
       an open row.
+  (a2) **the `Drafted` rows the same merged commit hands over** — via
+      `acceptance_record.staged_drafted_rows`, the other side of (a)'s coin
+      (owner ruling 2026-09-01). A work lane AUTHORS `Drafted` spine rows and
+      never approves them — `integrate._approval_act_refusal` refuses a merge
+      that tries — so every merge that adds or amends one leaves rows waiting on
+      an approval nobody has given. One `first-approval` adjudication row per
+      merge lists them; its session reads each row's whole chain and either
+      approves (the flip plus its anchoring snapshot, in one reviewed commit) or
+      returns with findings through `## Dispositions`. Rows on a rung the dial
+      still HOLDS are not minted here: the owner approves those, through the
+      approval brief, exactly as today.
   (b) **a merged spec carrying `## Handback`** — the DISPOSITION row (ruling
       R3): same `adjudication` kind, rank 1; its only outcomes are cancel /
       defer / re-queue with a drafted follow-up / surface an open item, and it
@@ -60,15 +71,18 @@ of record in docs/requirements/interfaces.toml).
 Contract IF-090: the trunk-side intake mint, by importer.
     `intake_after_merge(root, before, after, outcomes, branch)` is integrate's
     post-merge arm: it mints one landed merge's forced rows — the amendment
-    adjudications, the close dispositions and the drafts a close names — as ONE
-    bookkeeping commit inside the slot the caller holds, returning them with a
-    refusal slot. `mint_gap_rows(root, lines)` is the dispatcher's
-    empty-frontier arm over a census, and `context_block(root, wi_row)` renders
-    the registry joins a worker prompt embeds — advisory: agent_loop imports it
-    lazily and reads a failure as no join. `adjudication_action` and
-    `flip_verified` are CLI-driven only. ALL-OR-NOTHING: any refusal mints
-    nothing and restores trunk while the merge stands, and deterministic titles
-    make the CLI recovery re-run idempotent by exact-title dedup.
+    adjudications, the FIRST-APPROVAL adjudications over the `Drafted` rows the
+    lane handed over on rungs the dial releases (owner ruling 2026-09-01: a lane
+    authors, an adjudicator approves), the close dispositions and the drafts a
+    close names — as ONE bookkeeping commit inside the slot the caller holds,
+    returning them with a refusal slot. `mint_gap_rows(root, lines)` is the
+    dispatcher's empty-frontier arm over a census, and
+    `context_block(root, wi_row)` renders the registry joins a worker prompt
+    embeds — advisory: agent_loop imports it lazily and reads a failure as no
+    join. `adjudication_action` and `flip_verified` are CLI-driven only.
+    ALL-OR-NOTHING: any refusal mints nothing and restores trunk while the
+    merge stands, and deterministic titles make the CLI recovery re-run
+    idempotent by exact-title dedup.
 """
 
 from __future__ import annotations
@@ -718,6 +732,125 @@ def _amendment_drafts(root, before, after):
             "sr_refs": _owning_srs(records),
             "specref": records[0]["registry"],
             "context": _amendment_context(records),
+        }
+    ]
+
+
+# --- trigger (a2): the Drafted rows a lane hands over -------------------------
+#
+# THE OTHER SIDE OF TRIGGER (a)'s COIN (owner ruling 2026-09-01, WI-572). A lane
+# authors `Drafted` spine rows and amends their text; it never approves them. So
+# the same merged commit that mints an amendment adjudication for the rows whose
+# APPROVED text moved mints a FIRST-APPROVAL adjudication for the rows that are
+# waiting on an approval nobody has given — read off the same two-tree walk
+# (`acceptance_record.staged_drafted_rows`), one row per merge, same shape.
+#
+def _released_drafted_rows(root, before, after):
+    """The `Drafted` rows a merged delta added or amended, minus every row whose
+    tier the dial still HOLDS for a human.
+
+    A held rung is not minted here and that is the ruling, not an omission: the
+    owner still approves it, and it surfaces through the approval brief exactly
+    as it does today. Minting an adjudication for it would either duplicate that
+    surface or invite a session to pre-empt a signature the owner owes.
+
+    WHICH ROWS THE DIAL RELEASES is `agent_common.human_approves_spine` and
+    nothing local: the brief this mint hands the adjudicator re-resolves the
+    population LIVE at composition time, so the filter has to be the SAME one at
+    both ends or the brief widens what the mint narrowed. An unmapped registry
+    is HELD there, the conservative direction — an unmapped tier is one this
+    ruling has not thought about, and the failure direction for "who approves"
+    is always the human."""
+    docs = Path(root) / "docs"
+    return [
+        rec
+        for rec in acceptance_record.staged_drafted_rows(root, before, after)
+        if not ac.human_approves_spine(docs, spine_carrier.stem(rec["registry"]))
+    ]
+
+
+def _first_approval_context(records):
+    """The derived listing — each row waiting on a first approval, with what the
+    lane did to it. The CHAIN is not rendered here: `adjudicate_brief`'s
+    assembler builds it live at composition time from `trace.reattest_model`, so
+    the judge rules on the state of the world it is actually in rather than on a
+    snapshot of it taken at mint (`red_tc_values`' rule, applied to this arm)."""
+    lines = [
+        "Derived from `staged_drafted_rows` on the merged commit (§A5.2).",
+        "These spine rows are BELOW approval and no act has blessed them.",
+        "Each line: registry row / what the lane did.",
+        "",
+    ]
+    for rec in records:
+        lines.append(
+            "- {} {} in `{}`{}".format(
+                rec["id"],
+                "authored" if rec["act"] == "added" else "amended",
+                rec["registry"],
+                " ({})".format(", ".join(sorted(rec["changed"])))
+                if rec["changed"]
+                else "",
+            )
+        )
+    lines += [
+        "",
+        "Outcomes (owner ruling 2026-09-01): read each row's WHOLE CHAIN — the",
+        "parent SR, the sibling LLRs, the test cases — and either APPROVE (move",
+        "the rows' `Status` to `Approved` and take the anchoring snapshot,",
+        '`python scripts/intake.py snapshot --approves "<REGISTRY>=<this row>"`,',
+        "in ONE reviewed commit on this lane) or RETURN with findings, drafting",
+        "the follow-up in a `## Dispositions` section of THIS spec — intake mints",
+        "it at this row's merge (drafts-not-mints, R1). The approval act is",
+        "YOURS: a work lane's merge is refused if it performs one.",
+    ]
+    return "\n".join(lines)
+
+
+def _first_approval_drafts(root, before, after):
+    records = _released_drafted_rows(root, before, after)
+    if not records:
+        return []
+    ids = sorted({rec["id"] for rec in records})
+    title = (
+        "adjudicate: {} - spine row(s) authored Drafted on merged trunk {}..{} "
+        "await a FIRST APPROVAL; read the whole chain, then approve (flip + "
+        "snapshot) or return with findings".format(
+            ", ".join(ids), str(before)[:7], str(after)[:7]
+        )
+    )
+    return [
+        {
+            "title": title,
+            "kind": "adjudication",
+            "brief": "first-approval",
+            "workstream": "process",
+            "buildtier": tier_signal(
+                "amendment",
+                rows_touched=len(records),
+                stage_moved=_stage_moved(root, before, after),
+            ),
+            # The SR ids among the rows themselves. Deliberately NOT the
+            # owning SR of a Drafted LLR/TC: `_owning_srs` derives that from a
+            # re-pointed `SR-Refs` cell, and nothing here re-points one — the
+            # chain the judge reads is assembled live in the brief, not
+            # guessed into an advisory cell at mint.
+            "sr_refs": sorted({r["id"] for r in records if r["id"].startswith("SR-")})[
+                :8
+            ],
+            # THE ACT'S SCOPE, and the only durable statement of it. The brief
+            # RE-DERIVES its population live at composition time (a row minted
+            # at a merge is claimed later, and `red_tc_values`' rule says brief
+            # the world the judge is actually in) — so without this cell the
+            # re-derivation asks a WIDER question than the merge asked, and the
+            # session is handed every `Drafted` row in the repo, across
+            # workstreams the owner's concurrency reason says the snapshot must
+            # not move across. Live AND scoped is the intersection of the two.
+            # NOT truncated the way `sr_refs` is: that cell is an advisory join,
+            # this one is the act's boundary, and a boundary with a `[:8]` on it
+            # silently authorises the ninth row or silently strands it.
+            "adjudicates": ids,
+            "specref": records[0]["registry"],
+            "context": _first_approval_context(records),
         }
     ]
 
@@ -1407,6 +1540,10 @@ def _draft_row(wi_id, draft):
     row["SR-Refs"] = ";".join(draft.get("sr_refs") or [])
     row["Predecessors"] = ";".join(draft.get("needs") or [])
     row["Supersedes"] = str(draft.get("supersedes") or "")  # LLR-161 lineage
+    # WI-572: the SCOPE of an adjudication's act, fixed at the mint. A brief
+    # that re-derives its population live intersects against this, so the act
+    # can never widen past the rows the merge handed over.
+    row["Adjudicates"] = ";".join(draft.get("adjudicates") or [])
     if draft.get("priority") is not None:
         row["Priority"] = str(draft["priority"])
     return row
@@ -1608,12 +1745,13 @@ def _bookkeeping_commit(root, subject):
 
 
 def intake_after_merge(root, before, after, outcomes=None, branch=""):
-    """THE MERGE-SLOT ARM: triggers (a), (b) and (d) for one landed merge.
+    """THE MERGE-SLOT ARM: triggers (a), (a2), (b) and (d) for one landed merge.
     `([(wi_id, relpath)], refusal)`. Serial by construction — the caller is
     `integrate.integrate_one`, inside the held slot. All-or-nothing: any
     refusal mints nothing (the merge itself STANDS; recovery is a trunk-side
     fix plus `python intake.py sweep --before {before} --after {after}`)."""
     drafts = _amendment_drafts(root, before, after)
+    drafts += _first_approval_drafts(root, before, after)
     drafts += _close_drafts(root, outcomes)
     disposition, refusal = _disposition_drafts(root, outcomes)
     if refusal:

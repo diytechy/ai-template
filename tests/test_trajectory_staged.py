@@ -359,6 +359,138 @@ def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
     assert "re-attest marker" not in proc.stderr
 
 
+# --- WI-572: the APPROVAL ACT half of the same walk ---------------------------
+#
+# Owner ruling 2026-09-01: the `Status` flip into `Approved`/`Founded` and the
+# `docs/archive/last_approved/` copy that anchors it are the ADJUDICATOR's, on
+# the serial trunk side; a worker lane authors `Drafted` rows and amends text.
+# `staged_spine_amendments` above EXEMPTS a row whose Status moved ("a
+# deliberate call this does not second-guess"); `staged_approval_acts` reports
+# exactly that exempted set, off the same two-tree walk, so the pair covers the
+# delta and neither can be the only reader of a row.
+
+
+def _sr_at(root, run_git, *rows, message=None):
+    """Write the SR registry to `rows` and, when `message` is given, commit it."""
+    (root / "docs" / "requirements" / "system-requirements.csv").write_text(
+        _SPINE_SR_HEADER + "".join(rows), encoding="utf-8"
+    )
+    run_git("add", "-A")
+    if message:
+        run_git("commit", "-m", message)
+
+
+def test_a_status_flip_into_approved_is_read_as_an_approval_act(tmp_path):
+    # The shape the ruling names first, and the one the record actually holds:
+    # a lane moved four spine rows Drafted -> Approved in its own delta
+    # (`580df781`, WI-508 slice 6), and the next review round returned
+    # CHANGES-REQUESTED against exactly those flips. Driven over a COMMIT RANGE,
+    # because that is where the merge slot asks — the branch tip against the
+    # merge base, not the index.
+    run_git = _init_spine_repo(tmp_path)
+    _sr_at(tmp_path, run_git, _sr_row(status="Drafted"), message="author the row")
+    _sr_at(tmp_path, run_git, _sr_row(status="Approved"), message="approve it")
+    ar = load_script("acceptance_record")
+
+    acts = ar.staged_approval_acts(tmp_path, "HEAD~1", "HEAD")
+    assert [(a["id"], a["act"], a["before"], a["after"]) for a in acts] == [
+        ("SR-001", "flip", "Drafted", "Approved")
+    ]
+    # The amendment reader is SILENT on the same delta — that is the exemption
+    # this reader exists to pick up, asserted rather than assumed.
+    assert ar.staged_spine_amendments(tmp_path, "HEAD~1", "HEAD") == []
+
+
+def test_a_row_born_approved_is_read_as_an_approval_act(tmp_path):
+    # The second measured shape: four lanes (WI-483, WI-500, WI-501, WI-507)
+    # minted rows that ARRIVED `Approved`, skipping the approval brief entirely.
+    # There is no Status to have moved, so a flip-only reading would miss every
+    # one of them; the row's absence on the base side IS the act.
+    run_git = _init_spine_repo(tmp_path)
+    born = (
+        'SR-002,New req,SN-001,"fresh","why","ac",,C,Test,Approved,1,,hat.MAINTAINER\n'
+    )
+    _sr_at(tmp_path, run_git, _sr_row(), born, message="mint a born-Approved row")
+    ar = load_script("acceptance_record")
+
+    acts = ar.staged_approval_acts(tmp_path, "HEAD~1", "HEAD")
+    assert [(a["id"], a["act"], a["after"]) for a in acts] == [
+        ("SR-002", "born", "Approved")
+    ]
+
+
+def test_born_and_withdrawn_drafted_rows_reach_first_approval_not_refusal(tmp_path):
+    # THE OTHER HALF, which is what makes the rung a rule rather than a ban on
+    # touching the spine. A lane may author `Drafted` rows and may WITHDRAW a
+    # claim: neither blesses text, so neither owes a snapshot and neither
+    # refuses a merge. A reader that reported these would refuse the very work
+    # the ruling leaves to the lane.
+    run_git = _init_spine_repo(tmp_path)
+    drafted = (
+        'SR-002,New req,SN-001,"fresh","why","ac",,C,Test,Drafted,1,,hat.MAINTAINER\n'
+    )
+    _sr_at(
+        tmp_path,
+        run_git,
+        _sr_row(status="Drafted"),  # SR-001 Approved -> Drafted: a de-approval
+        drafted,  # SR-002 arrives Drafted: authoring, not approving
+        message="author one row, withdraw another",
+    )
+    ar = load_script("acceptance_record")
+
+    assert ar.staged_approval_acts(tmp_path, "HEAD~1", "HEAD") == []
+    # Both resulting Drafted rows are seen by the first-approval reader. The
+    # withdrawal blesses nothing and therefore remains absent from the refusal,
+    # but it cannot be treated as approval: the adjudicator must re-approve it.
+    drafted_rows = ar.staged_drafted_rows(tmp_path, "HEAD~1", "HEAD")
+    assert [(r["id"], r["act"], r["changed"]) for r in drafted_rows] == [
+        ("SR-001", "amended", {}),
+        ("SR-002", "added", {}),
+    ]
+
+    # ...and a `Drafted` row whose TEXT then moves DOES reach that surface,
+    # which preserves the ordinary below-approval amendment classification.
+    _sr_at(
+        tmp_path,
+        run_git,
+        _sr_row("the AMENDED draft text", status="Drafted"),
+        drafted,
+        message="amend the withdrawn row",
+    )
+    amended = ar.staged_drafted_rows(tmp_path, "HEAD~1", "HEAD")
+    assert [(r["id"], r["act"]) for r in amended] == [("SR-001", "amended")]
+    assert "Requirement" in amended[0]["changed"]
+
+
+def test_the_lane_refusal_names_every_act_and_the_snapshot_write(tmp_path):
+    # The refusal a merging lane actually reads. It must be ACTIONABLE — each
+    # row id, which registry, which shape of act, and every snapshot file the
+    # branch wrote — and it must name the rule and the remedy, because a lane
+    # told only "refused" re-runs the same commit.
+    run_git = _init_spine_repo(tmp_path)
+    _sr_at(tmp_path, run_git, _sr_row(status="Drafted"), message="author the row")
+    snap = tmp_path / "docs" / "archive" / "last_approved" / "docs" / "requirements"
+    snap.mkdir(parents=True)
+    (snap / "system-requirements.csv").write_text(
+        _SPINE_SR_HEADER + _sr_row(status="Approved"), encoding="utf-8"
+    )
+    _sr_at(tmp_path, run_git, _sr_row(status="Approved"), message="approve + anchor")
+    ar = load_script("acceptance_record")
+
+    refusal = ar.lane_approval_refusal(tmp_path, "HEAD~1", "HEAD")
+    assert refusal is not None
+    assert "SR-001 flipped Drafted -> Approved" in refusal
+    assert "docs/requirements/system-requirements.csv" in refusal
+    assert (
+        "wrote docs/archive/last_approved/docs/requirements/system-requirements.csv"
+        in refusal
+    )
+    assert "the approval act is the ADJUDICATOR's" in refusal
+    assert "Leave the rows `Drafted`" in refusal  # the remedy, not just the verdict
+    # The green half of the same fixture: the AUTHORING commit is admitted.
+    assert ar.lane_approval_refusal(tmp_path, "HEAD~2", "HEAD~1") is None
+
+
 # --- WI-380: the §A5.1 approved-vs-traced cell split ---------------------------
 #
 # Owner ruling 2026-07-31 (docs/concurrency-v2.md §A5.1): only what is APPROVED

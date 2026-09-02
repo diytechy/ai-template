@@ -3073,6 +3073,43 @@ def _bucket_by_ref(rows, ref_col):
     return index
 
 
+def chain_buckets(llrs, tcs):
+    """`(llrs_by_sr, tcs_by_ref)` — the two indexes `spine_chain` reads.
+
+    Built ONCE by a caller that walks many SRs, because bucketing inside the
+    per-SR call is exactly the quadratic join `_bucket_by_ref` exists to
+    replace."""
+    return _bucket_by_ref(llrs, "SR-Refs"), _bucket_by_ref(tcs, "Verifies")
+
+
+def spine_chain(sr_id, srs, llrs_by_sr, tcs_by_ref):
+    """One SR's WHOLE CHAIN as `[(kind, id, row)]` — the SR itself, its child
+    LLRs in id order, then every TC that verifies the SR or one of those LLRs,
+    deduped and in id order.
+
+    THE ONE ANSWER TO "WHAT IS THIS REQUIREMENT'S CHAIN", public since WI-572
+    rather than a closure inside `reattest_model`. Two readers need it now and
+    they must not disagree: the re-attest model asks it of the live registries
+    and of the snapshot's, and `adjudicate_brief.first_approval_values` asks it
+    to render the chain a first-approval adjudicator reads — the whole chain,
+    not the changed rows, because holding the chain is the owner's stated reason
+    the approval act is the adjudicator's and not the authoring lane's."""
+    out = []
+    sr_row = next((r for r in srs if r.get("SR-ID") == sr_id), None)
+    if sr_row is not None:
+        out.append(("SR", sr_id, sr_row))
+    child_llrs = sorted(llrs_by_sr.get(sr_id, []), key=lambda r: r.get("LLR-ID", ""))
+    for lr in child_llrs:
+        out.append(("LLR", lr["LLR-ID"], lr))
+    seen_tcs = {}
+    for key in [sr_id] + [lr["LLR-ID"] for lr in child_llrs]:
+        for t in tcs_by_ref.get(key, []):
+            seen_tcs.setdefault(t.get("TC-ID"), t)
+    for tid in sorted(k for k in seen_tcs if k):
+        out.append(("TC", tid, seen_tcs[tid]))
+    return out
+
+
 def build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
     """The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for
     rows with no valid parent. Shared by the text outline and the HTML tree.
@@ -3558,26 +3595,8 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
     if snapshot is _UNSET:
         snapshot = baseline_snapshot.load_all(root)
 
-    llrs_by_sr = _bucket_by_ref(llrs, "SR-Refs")
-    tcs_by_ref = _bucket_by_ref(tcs, "Verifies")
-
-    def chain_of(sr_id, chain_srs, chain_llrs_by_sr, chain_tcs_by_ref):
-        out = []
-        sr_row = next((r for r in chain_srs if r.get("SR-ID") == sr_id), None)
-        if sr_row is not None:
-            out.append(("SR", sr_id, sr_row))
-        child_llrs = sorted(
-            chain_llrs_by_sr.get(sr_id, []), key=lambda r: r.get("LLR-ID", "")
-        )
-        seen_tcs = {}
-        for lr in child_llrs:
-            out.append(("LLR", lr["LLR-ID"], lr))
-        for key in [sr_id] + [lr["LLR-ID"] for lr in child_llrs]:
-            for t in chain_tcs_by_ref.get(key, []):
-                seen_tcs.setdefault(t.get("TC-ID"), t)
-        for tid in sorted(k for k in seen_tcs if k):
-            out.append(("TC", tid, seen_tcs[tid]))
-        return out
+    llrs_by_sr, tcs_by_ref = chain_buckets(llrs, tcs)
+    chain_of = spine_chain
 
     def owes(sr):
         if is_drafted(sr):
@@ -3839,8 +3858,9 @@ def approval_check(root, srs, llrs, tcs, out_path):
 
 
 # --- WI-518: the off-spine census ---------------------------------------------
-# `intake.py snapshot` copies all SEVEN `SNAPSHOTTED` registries wholesale, but
-# `reattest_lines` renders one section per SR — the off-spine tiers
+# `intake.py snapshot` may copy any of the SEVEN `SNAPSHOTTED` registries (all
+# of them on a `--seed`; since WI-571 a refresh copies only the ones the act
+# authorises), but `reattest_lines` renders one section per SR — the off-spine tiers
 # (`interfaces.toml`, `external.toml`, `components.toml`) never reach it, so a
 # row changed there since the last snapshot enters the signed baseline with no
 # owner-visible before/after at all (found by the OI-62-sitting adversarial
@@ -3961,9 +3981,9 @@ def offspine_census_lines(root, snapshot=_UNSET):
         "## Off-spine census",
         "",
         "_The off-spine registries above carry no per-row rendering in this"
-        " brief; `intake.py snapshot` copies them WHOLESALE alongside any"
-        " spine approval. What changed since the last snapshot, so the signer"
-        " sees what a re-seed will absorb:_",
+        " brief; since WI-571 `intake.py snapshot` copies one only when its own"
+        " `Status` moves or `--approves` names it, but a re-SEED still blesses"
+        " the whole tree. What it would absorb, changed since the snapshot:_",
         "",
     ] + [
         "- `{rel}` — {changed} changed, {added} added, {removed} removed"

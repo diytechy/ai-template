@@ -98,6 +98,19 @@ def _first_row_at(root, status, exclude=()):
     raise AssertionError("no SR at status " + status + " in the fixture")
 
 
+def test_approves_format_and_parse_share_one_multi_registry_syntax():
+    approves = {
+        "docs/test/test-cases.toml": "WI-572",
+        "docs/requirements/low-level-requirements.toml": "WI-572",
+    }
+    rendered = SNAP.format_approves(approves)
+    assert rendered == (
+        "docs/requirements/low-level-requirements.toml=WI-572;"
+        "docs/test/test-cases.toml=WI-572"
+    )
+    assert SNAP.parse_approves(rendered) == approves
+
+
 # --- vacuity: the only honest empty state -------------------------------------
 
 

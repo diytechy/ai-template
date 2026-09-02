@@ -17,8 +17,23 @@
                    invariant), which is what makes it an anchor that is provably
                    NOT the text under judgement. When no snapshot exists yet the
                    slot says so and the session is a FIRST-APPROVAL adjudication.
+       {aftermath} which branch of the MEANING aftermath this row is actually
+                   in — DERIVED from the declared gate authority
+                   (`human_approval_through` in docs/process.toml) for the tiers
+                   whose rows are shown, so the session is told whether the
+                   re-attestation is its own act or the owner's rather than
+                   working it out from a dial it would have to go read.
        {verdict}   the repo path this session writes its verdict to.
        {wi}        this adjudication row's own id, for the result trailer.
+
+     WHY THE AFTERMATH IS STATED HERE AT ALL. This template used to end "the
+     flip, if one is owed, is the mechanical tool's act, not yours" — true when
+     written, false since OI-45 ruled (b) retired that tool (intake._apply_flips
+     writes NOTHING, permanently). A MEANING verdict on a loop-held rung then
+     ended at a brief nobody was owed, which contradicts the loop-held doctrine
+     itself. The owner's 2026-09-01 ruling settles who acts: the approval act —
+     and re-attestation IS one — belongs to the adjudicator, on the serial trunk
+     side, never to the lane that authored the text.
 
      WHAT IS DELIBERATELY ABSENT: the amending session's own notes, its commit
      message, docs/log.md, and any self-assessment. WI-418 measured what
@@ -59,4 +74,15 @@ Then exactly one machine line:
 
     VERDICT: MEANING|CLARITY rows=N
 
-`CLARITY` only when EVERY row you were shown is clarity. Commit that verdict file (an adjudication is a recorded verdict — its one home), ending that commit with the trailer `WI: {wi}` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open — and stop. Do not edit the registries; the flip, if one is owed, is the mechanical tool's act, not yours.
+`CLARITY` only when EVERY row you were shown is clarity. Commit that verdict file (an adjudication is a recorded verdict — its one home), ending that commit with the trailer `WI: {wi}` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open.
+
+THEN, AND ONLY AFTER THAT VERDICT IS RECORDED, the aftermath. A `CLARITY` verdict owes nothing further: the row's attestation stands and you stop.
+
+A `MEANING` verdict says the text a human blessed no longer imposes the obligation it imposed. The attestation it carries is now a false claim, and the row owes a fresh one:
+
+- If the rung is one the repo's declared gate authority has RELEASED to the loop, the re-attestation is YOURS and this session performs it. Take it in its own reviewed commit, separate from the verdict: leave each row's `Status` at `Approved` and re-anchor the record — `python scripts/intake.py snapshot --approves <REGISTRY>=<this row's id>` — naming only the registries whose rows you ruled on. Without that copy the record of what was blessed does not move, and the row reads as approved text that drifted from its own anchor. If a row's new text is NOT one you would bless, do not re-anchor it: draft the corrective work in a `## Dispositions` section of this row's own spec, which intake mints at this row's merge.
+- If the rung is one the dial still HOLDS for a human, stop at the verdict. The row surfaces on the owner's approval brief and the signature is theirs.
+
+{aftermath}
+
+Do not edit any registry CELL either way. Amending the text is the authoring lane's act, approving it is yours, and rewriting a row you are judging is neither — a row whose findings need answering is RETURNED through `## Dispositions`, never fixed in place by its judge.

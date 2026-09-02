@@ -98,7 +98,7 @@ KIT = Path(__file__).resolve().parent.parent  # the project-trajectory/ folder
 PROMPTS = KIT / "prompts"
 
 # The kit prompts that are NOT dual-plan hats: the session-engine briefs, and
-# the four adjudicator briefs the mechanized loop routes. Key -> filename.
+# the five adjudicator briefs the mechanized loop routes. Key -> filename.
 #
 # A key is also a `--prompt-map` phase key wherever the loop honours an
 # override. `WORKER` deliberately is NOT honoured there (`route_session`: "the
@@ -108,6 +108,7 @@ WORKER = "WORKER"
 REVIEWER = "REVIEWER"
 CRITIQUE = "CRITIQUE"
 ADJUDICATE_AMENDMENT = "ADJUDICATE-AMENDMENT"
+ADJUDICATE_FIRST_APPROVAL = "ADJUDICATE-FIRST-APPROVAL"
 ADJUDICATE_DISPOSITION = "ADJUDICATE-DISPOSITION"
 ADJUDICATE_CONFLICT = "ADJUDICATE-CONFLICT"
 ADJUDICATE_RED_TC = "ADJUDICATE-RED-TC"
@@ -117,6 +118,7 @@ KIT_PROMPTS = {
     REVIEWER: "reviewer.template.md",
     CRITIQUE: "critique.template.md",
     ADJUDICATE_AMENDMENT: "adjudicate-amendment.template.md",
+    ADJUDICATE_FIRST_APPROVAL: "adjudicate-first-approval.template.md",
     ADJUDICATE_DISPOSITION: "adjudicate-disposition.template.md",
     ADJUDICATE_CONFLICT: "adjudicate-conflict.template.md",
     ADJUDICATE_RED_TC: "adjudicate-red-tc.template.md",

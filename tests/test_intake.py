@@ -140,6 +140,21 @@ def write_sr(root, requirement="the original text", status="Approved"):
     )
 
 
+SN_HEADER = "SN-ID,Need,Why,Acceptance,Status\n"
+
+
+def write_sn(root, status="Drafted"):
+    """The need tier's own carrier row — the tier `APPROVAL_ACT_CSVS` added at
+    WI-572 REVIEW-A round 028, and the one the human-approval dial holds."""
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "stakeholder-needs.csv").write_text(
+        SN_HEADER + 'SN-001,"the need","why","ac",{}\n'.format(status),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
 def write_llr(root, sr_refs="SR-001", module="src/d.py"):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
@@ -182,12 +197,16 @@ def queued_rows(root):
     }
 
 
-def amended_repo(tmp_path, amend):
+def amended_repo(tmp_path, amend, seed=None):
     """A repo whose second commit amends the attested spine per `amend`;
-    returns `(root, before_sha, after_sha)`."""
+    returns `(root, before_sha, after_sha)`. `seed`, when given, writes extra
+    rows into the BASE side, so `amend` reads as a change to an existing row
+    rather than as a born one."""
     root = git_repo(tmp_path)
     write_sr(root)
     write_llr(root)
+    if seed is not None:
+        seed(root)
     write_spec(root, "queued", "WI-003", specref="seed.txt")
     _commit(root, "attested baseline", when=T_CODE)
     before = _rev(root)
@@ -256,6 +275,193 @@ def test_the_amendment_mint_is_idempotent_across_a_rerun(tmp_path):
     assert len(first) == 1
     again, refusal = intake.intake_after_merge(root, before, after, {}, "b")
     assert refusal is None, refusal
+    assert again == []
+
+
+# --- trigger (a2): the Drafted rows a lane hands over -------------------------
+#
+# Owner ruling 2026-09-01. A work lane authors `Drafted` spine rows and its merge
+# is REFUSED if it approves them, so every merge that adds or amends one leaves
+# text waiting on an approval nobody gave. The mirror of trigger (a), off the
+# same two-tree walk.
+
+
+def _released(root):
+    """Release every spine rung to the loop — the dial state this trigger needs.
+    `DevStg-Needs` is what this repo itself runs: the owner holds Needs and
+    nothing above it."""
+    set_process_key(
+        root, "attestation", "human_approval_through", kit_ladder.STAGE_NEEDS
+    )
+
+
+def test_a_drafted_row_mints_one_first_approval_adjudication(tmp_path):
+    root, before, after = amended_repo(
+        tmp_path, lambda r: write_sr(r, requirement="fresh draft", status="Drafted")
+    )
+    _released(root)
+    minted, refusal = intake.intake_after_merge(root, before, after, {}, "wi-003")
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    wid, relpath = minted[0]
+    row = queued_rows(root)[wid]
+    assert row["SafetyClass"] == "adjudication"
+    # The BRIEF cell is what routes the session (adjudicate_brief.BRIEF_PROMPTS);
+    # deriving it from the SpecRef would be ambiguous, so it is typed.
+    assert row["Brief"] == "first-approval"
+    # ...and the SCOPE cell beside it, which is what stops the brief's live
+    # re-derivation from asking a wider question than this merge asked
+    # (WI-572 REVIEW-A). Typed for the same reason `Brief` is: the ids are in
+    # the Title too, and prose carrying control flow is the WI-417 fold.
+    assert row["Adjudicates"] == "SR-001"
+    assert "FIRST APPROVAL" in row["Title"] and "SR-001" in row["Title"]
+    text = (root / relpath).read_text(encoding="utf-8")
+    assert "## Context" in text
+    assert "SR-001 amended" in text
+    assert "read each row's WHOLE CHAIN" in text  # the outcomes, not just the list
+    # ...and the AMENDMENT trigger stayed silent on the same delta: the row left
+    # `Approved`, so no approved text moved behind anyone's back.
+    assert "meaning-or-clarity" not in text
+
+
+def test_a_status_only_withdrawal_mints_first_approval_adjudication(tmp_path):
+    # Approved -> Drafted refuses no merge because it blesses nothing, but the
+    # resulting row is awaiting approval again. The same two-tree reader must
+    # therefore hand it to trigger (a2), even when no content cell moved.
+    root, before, after = amended_repo(
+        tmp_path, lambda r: write_sr(r, status="Drafted")
+    )
+    _released(root)
+    minted, refusal = intake.intake_after_merge(root, before, after, {}, "wi-003")
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    wid, relpath = minted[0]
+    assert queued_rows(root)[wid]["Brief"] == "first-approval"
+    text = (root / relpath).read_text(encoding="utf-8")
+    assert "SR-001 amended" in text
+
+
+def test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing(tmp_path):
+    """SN is a SPINE tier, so a WORK LANE flipping `SN-001` Drafted -> Approved
+    is refused BY NAME (WI-572 REVIEW-A round 028).
+
+    Until this round the refusal walked `SPINE_CSVS` — SR/LLR/TC — only, so the
+    one tier the human-approval dial holds for the owner (`DevStg-Needs`, the
+    rung THIS repo runs held) was the one a lane could bless on its way past.
+    That is the worst case of the act the owner's 2026-09-01 ruling moved to the
+    adjudicator, not an exempt one, so `APPROVAL_ACT_CSVS` now adds the need
+    registry. The three OFF-SPINE registries stay out — their approval cells are
+    OI-30 D3's, not this rung's — and the exhaustiveness pin in
+    `tests/test_acceptance_record.py` keeps that boundary a deliberate edit.
+
+    THE REFUSAL IS KEYED TO A WORK LANE'S MERGE, NOT TO THE COMMIT. It is read
+    at `integrate._approval_act_refusal` over the merge delta of a branch the
+    station is landing, and an adjudication lane is exempted within its recorded
+    scope. The owner's own sitting — flipping an SN row by hand in a reviewed
+    commit ON TRUNK — never reaches that slot and is unaffected: there is no
+    lane merge to refuse. This test therefore drives the reader directly, which
+    is the same reading the slot performs, and asserts nothing about a trunk
+    commit's admissibility.
+
+    The second half is the dial's: even released of the refusal, no adjudication
+    is minted over the flip. Two independent reasons, both intended — the rung
+    is HELD here (`human_approval_through = DevStg-Needs`, so the loop may not
+    approve needs at all), and the first-approval mint's universe was left at
+    `SPINE_CSVS` on purpose, because widening the MINT is a separate decision
+    from widening the REFUSAL and this round made only the second."""
+    acceptance_record = load_script("acceptance_record")
+    root, before, after = amended_repo(
+        tmp_path, lambda r: write_sn(r, status="Approved")
+    )
+    # The base side must carry the Drafted row for this to be a FLIP rather than
+    # a born row; `amended_repo` commits its baseline before calling `amend`.
+    assert "stakeholder-needs" in "".join(
+        p for p, _ in acceptance_record.APPROVAL_ACT_CSVS
+    )
+
+    acts = acceptance_record.staged_approval_acts(root, before, after)
+    assert [(a["id"], a["act"]) for a in acts] == [("SN-001", "born")], acts
+    refusal = acceptance_record.lane_approval_refusal(root, before, after)
+    assert refusal and "SN-001" in refusal, refusal
+    assert "stakeholder-needs" in refusal
+    assert "SN/SR/LLR/TC" in refusal
+
+    # ...and the same flip made on a row that EXISTED Drafted reads as a flip.
+    (tmp_path / "flip").mkdir()
+    root2, before2, after2 = amended_repo(
+        tmp_path / "flip",
+        lambda r: write_sn(r, status="Approved"),
+        seed=lambda r: write_sn(r, status="Drafted"),
+    )
+    acts2 = acceptance_record.staged_approval_acts(root2, before2, after2)
+    assert [(a["id"], a["act"], a["before"], a["after"]) for a in acts2] == [
+        ("SN-001", "flip", "Drafted", "Approved")
+    ], acts2
+    assert "SN-001" in (
+        acceptance_record.lane_approval_refusal(root2, before2, after2) or ""
+    )
+
+    # The mint half: held rung, nothing minted. Then released, still nothing —
+    # the mint's universe is `SPINE_CSVS`, unchanged by this round.
+    set_process_key(
+        root2, "attestation", "human_approval_through", kit_ladder.STAGE_NEEDS
+    )
+    minted, mint_refusal = intake.intake_after_merge(root2, before2, after2, {}, "b")
+    assert mint_refusal is None, mint_refusal
+    assert minted == []
+
+
+def test_a_held_rung_mints_no_first_approval_row(tmp_path):
+    # The ruling's own boundary, and the half that keeps this from pre-empting a
+    # signature the owner owes: the adjudicator acts only on rungs the dial
+    # RELEASES. A held tier still surfaces through the approval brief, exactly
+    # as it does today, and minting here would either duplicate that surface or
+    # invite a session to approve past the human.
+    root, before, after = amended_repo(
+        tmp_path, lambda r: write_sr(r, requirement="fresh draft", status="Drafted")
+    )
+    set_process_key(
+        root, "attestation", "human_approval_through", kit_ladder.STAGE_RELEASE
+    )
+    minted, refusal = intake.intake_after_merge(root, before, after, {}, "wi-003")
+    assert refusal is None, refusal
+    assert minted == []
+    # ...and the SAME delta on a released dial does mint, so the silence above
+    # is the dial and not an inert trigger.
+    _released(root)
+    again, refusal2 = intake.intake_after_merge(root, before, after, {}, "wi-003")
+    assert refusal2 is None, refusal2
+    assert len(again) == 1
+
+
+def test_the_first_approval_mint_is_one_row_and_idempotent(tmp_path):
+    # ONE row per merge however many rows it hands over (the trigger-(a) shape),
+    # and the derived title carries the sha pair, so the CLI recovery re-run
+    # finds it by exact-title dedup and mints nothing twice.
+    def amend(r):
+        # The two shapes a lane produces: an existing row amended below
+        # approval, and a brand-new decomposition row AUTHORED `Drafted`.
+        write_sr(r, requirement="fresh draft", status="Drafted")
+        (r / "docs" / "requirements" / "low-level-requirements.csv").write_text(
+            LLR_HEADER
+            + 'LLR-001,SR-001,Core,src/d.py,f,"the detail","why",TC-001,Approved,'
+            "CMP-001,1\n"
+            + 'LLR-002,SR-001,Extra,src/e.py,g,"the new detail","why",TC-002,'
+            "Drafted,CMP-001,1\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+
+    root, before, after = amended_repo(tmp_path, amend)
+    _released(root)
+    minted, refusal = intake.intake_after_merge(root, before, after, {}, "b")
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    title = queued_rows(root)[minted[0][0]]["Title"]
+    assert "SR-001" in title and "LLR-002" in title
+
+    again, refusal2 = intake.intake_after_merge(root, before, after, {}, "b")
+    assert refusal2 is None, refusal2
     assert again == []
 
 

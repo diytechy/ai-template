@@ -15,6 +15,15 @@ says it at. Every mechanized check on the spine is a *detector* — it reports a
 smell after the fact. The tiering itself is a judgement, and this is the question
 list to put to a row **before** it lands.
 
+**Authoring is not approving** (owner ruling 2026-09-01; `docs/process.md` §4).
+A worker lane writes its rows `Drafted` and may amend any cell of any row,
+approved ones included. It never flips a `Status` to `Approved`/`Founded`, never
+writes a row already claiming one, and never writes `docs/archive/last_approved/`
+— that act is an adjudication session's, on the serial trunk side, after reading
+the row's whole chain, and a lane's merge is refused by name if its delta
+performs it. So use the question list to make a row *ready*; the answer to "is
+it approved" comes from elsewhere.
+
 **Authority, not restated here:** `docs/process.md` §3 (one fact one home;
 decompose don't paraphrase; one decision per row, one home per method; one
 `shall`; the eight quality characteristics and the EARS statement pattern; a
@@ -340,7 +349,9 @@ One line each, each one seen in a real spine:
   2026-08-20); EVERY post-approval amendment is the snapshot-drift arm's find
   (`docs/archive/last_approved/`), never the parent signature's, and the
   chain-completeness claim belongs to the derived `Founded` state (D-9).
-  Amend and re-copy in the same commit.
+  The amendment is yours to make; the RE-COPY is the approval act and belongs
+  to the trunk-side adjudication (the ruling above), which takes it in the same
+  commit as its own ruling on the amendment.
 
 ## 6. Cell hygiene — a registry holds living truth
 

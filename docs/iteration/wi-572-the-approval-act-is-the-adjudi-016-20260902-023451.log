@@ -1,0 +1,495 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 016
+# date: 2026-09-02 02:42
+# train: wi-572-the-approval-act-is-the-adjudi
+# base: 4d0b972d9019
+# phase: BUILD
+# wi: WI-572
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: ERROR
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 485
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 16126
+# prompt-template: kit:BUILD
+# prompt-sha: sha256:42561a45c06d
+# timeout:
+# heterogeneity:
+# exit-code: 1
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Reading prompt from stdin...
+2026-09-02T07:34:51.913367Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 97 column 5
+OpenAI Codex v0.145.0
+--------
+workdir: /Users/diytechy/Documents/ai-template-drive/wi-572-the-approval-act-is-the-adjudi
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 01a0610a-cb76-7f82-9b25-0e6a685897ba
+--------
+user
+You are a worker session for a CLAIMED work item (scripts/agent_loop.py --wi, on a branch cut by `integrate.py claim`) — assume no human is watching. You are assigned ONE work item on ONE claimed branch; this assignment is your whole scope. Read AGENTS.md first, then the SpecRef and SR rows below — they are the spec of record.
+
+Assignment:
+- WI: WI-572 — The approval act is the adjudicator's, on trunk: lanes author Drafted rows, a first-approval adjudication flips and snapshots them
+- SR-Refs: — | SpecRef: docs/plans/2026-09-01-approval-act-adjudicator-only.md
+- Branch: wi-572-the-approval-act-is-the-adjudi (its claim is docs/work/active/wi-572-the-approval-act-is-the-adjudi/; integration base 4d0b972d90190a77c2ebd35ea18a3515d73358b5)
+- Hard predecessors (context, already integrated or accepted on this branch):
+  - WI-571 [done] The snapshot copies only what the act authorises: copy_live scoped to the flipped registry and the named --approves refs — `baseline_snapshot.copy_live` is scoped to the act. A refresh of a populated
+snapshot now copies ONLY the registries the act authorises — every registry a
+`--approves` ref names, plus every registry a…
+- Context (advisory registry joins; read the Context refs below before starting):
+  Advisory registry joins (WI-388; never gating):
+  
+  ### Review records of precedent rows
+  - docs/reviews/WI-571-REVIEW-A.md
+- Current branch diff (4d0b972..HEAD — earlier work on this branch, accepted but not yet reviewed/integrated):
+fa9c632b telemetry: session 015 review scoreboard
+cbf10390 telemetry: session wi-572-the-approval-act-is-the-adjudi-015 REVIEW-A COMMITTED
+6f5bde43 review: WI-572 REVIEW-A round 5 - changes requested (3 findings)
+59b67ac7 telemetry: session wi-572-the-approval-act-is-the-adjudi-014 BUILD COMMITTED
+87ac214f WI-572: correct the byte-budget close measurement
+8c036135 telemetry: session wi-572-the-approval-act-is-the-adjudi-013 DESIGN-CHECK COMMITTED
+1a6072e3 WI-572: decompose first_approval_values rather than bump its complexity
+98c7f5fe WI-572: collect the refusal's population on the walk it already makes
+4edb03cd WI-572: write down the migration the new column costs
+9017aba7 WI-572: bind the close record to what round 4 shipped
+d54bae41 WI-572: bound the approval act to the rows the merge handed over
+49b18f0b WI-572: answer four of round 4's five findings
+208f9056 telemetry: session 012 review scoreboard
+8a7332bb telemetry: session wi-572-the-approval-act-is-the-adjudi-012 REVIEW-A COMMITTED
+714c250b review: WI-572 REVIEW-A round 3 - changes requested (5 findings)
+87a3f317 telemetry: session wi-572-the-approval-act-is-the-adjudi-011 BUILD COMMITTED
+76efc1e7 WI-572: bind the rework measurement to its implementation
+9cc58b2d WI-572: route withdrawn drafts back to adjudication
+7ec4544a telemetry: session 010 review scoreboard
+edf7cc0f telemetry: session wi-572-the-approval-act-is-the-adjudi-010 REVIEW-A COMMITTED
+d6cf4d33 review: record WI-572 changes requested
+d7549c58 telemetry: session wi-572-the-approval-act-is-the-adjudi-009 BUILD COMMITTED
+9f3790c3 WI-572: correct the brief's test count for the round-3 regression
+311861bf telemetry: session wi-572-the-approval-act-is-the-adjudi-008 DESIGN-CHECK COMMITTED
+1e6b4d2d WI-572: bind the rework verification to its implementation
+99aedcda WI-572: make the first-approval terminal sequence perform its act
+0baff9c8 telemetry: session 007 review scoreboard
+4504afd7 telemetry: session wi-572-the-approval-act-is-the-adjudi-007 REVIEW-A COMMITTED
+261f4cbb review: record WI-572 changes requested
+67c037ac telemetry: session wi-572-the-approval-act-is-the-adjudi-006 BUILD COMMITTED
+
+[... 8275 line(s) elided — full stream in out/run-logs/ ...]
+
++    `_claimed_spec_frontmatters`, so actor identity has one reader. UNREADABLE
++    FRONTMATTER ANSWERS FALSE: there it runs the bar; here it makes the branch a
++    work lane whose approval act refuses. Both fail toward more checking."""
++    metas = _claimed_spec_frontmatters(root, branch)
++    kinds = (str(meta.get("safety_class") or "").strip().lower() for _name, meta in metas or ())
++    return bool(metas) and all(kind == "adjudication" for kind in kinds)
+ 
+ 
+ def _approval_act_refusal(root, branch):
+@@ -1736,11 +1736,10 @@
+     Implements: SR-174, LLR-154
+     """
+     kinds, bars = [], []
+-    for _wid, name in _claimed_specs(root, branch):
+-        try:
+-            meta = _spec_frontmatter(root / ACTIVE / branch / name)
+-        except (OSError, ValueError):
+-            return False, None, None  # unreadable: run the bar, fail toward it
++    metas = _claimed_spec_frontmatters(root, branch)
++    if metas is None:
++        return False, None, None  # unreadable: run the bar, fail toward it
++    for name, meta in metas:
+         kinds.append(str(meta.get("safety_class") or "").strip().lower())
+         declared = _normalize_bar(meta.get("bar"))
+         if declared and declared not in _BAR_GATES:
+diff --git a/tests/test_adjudicate_brief.py b/tests/test_adjudicate_brief.py
+index 5ac2320cd8760866a18f5264316824dec3ff7b41..dfca2006f965e205fc64d475e94e38ad810f61e2
+--- a/tests/test_adjudicate_brief.py
++++ b/tests/test_adjudicate_brief.py
+@@ -916,6 +916,29 @@
+     assert "HOLDS for a human" in why, why
+ 
+ 
++def test_the_first_approval_act_formats_a_multi_registry_batch_for_the_cli(tmp_path):
++    repo = _first_approval_repo(tmp_path)
++    srs = repo / "docs" / "requirements" / "system-requirements.csv"
++    srs.write_text(
++        srs.read_text(encoding="utf-8").replace(
++            ",Approved,P1,core", ",Drafted,P1,core"
++        ),
++        encoding="utf-8",
++    )
++    values, why = ab.first_approval_values(
++        repo, _fa_row(Adjudicates="SR-001;LLR-001")
++    )
++    assert why is None, why
++    assert values["registries"] == (
++        "docs/requirements/low-level-requirements.toml=WI-301;"
++        "docs/requirements/system-requirements.toml=WI-301"
++    )
++    assert baseline_snapshot.parse_approves(values["registries"]) == {
++        "docs/requirements/low-level-requirements.toml": "WI-301",
++        "docs/requirements/system-requirements.toml": "WI-301",
++    }
++
++
+ def test_the_first_approval_act_cannot_widen_past_the_rows_the_merge_handed_over(
+     tmp_path,
+ ):
+diff --git a/tests/test_baseline_snapshot.py b/tests/test_baseline_snapshot.py
+index 839012b198898c4d1e26252338e9aab02f568db3..d825d9c1368720eb7992b2eff4991354f0347752
+--- a/tests/test_baseline_snapshot.py
++++ b/tests/test_baseline_snapshot.py
+@@ -98,6 +98,19 @@
+     raise AssertionError("no SR at status " + status + " in the fixture")
+ 
+ 
++def test_approves_format_and_parse_share_one_multi_registry_syntax():
++    approves = {
++        "docs/test/test-cases.toml": "WI-572",
++        "docs/requirements/low-level-requirements.toml": "WI-572",
++    }
++    rendered = SNAP.format_approves(approves)
++    assert rendered == (
++        "docs/requirements/low-level-requirements.toml=WI-572;"
++        "docs/test/test-cases.toml=WI-572"
++    )
++    assert SNAP.parse_approves(rendered) == approves
++
++
+ # --- vacuity: the only honest empty state -------------------------------------
+ 
+ 
+diff --git a/tests/test_integrate_admission.py b/tests/test_integrate_admission.py
+index eec73efa83895c2cd9f95b5d09c3e7d1cc038835..132ad751f84b21c0c1176e0522ba66a045f30fbf
+--- a/tests/test_integrate_admission.py
++++ b/tests/test_integrate_admission.py
+@@ -352,7 +352,7 @@
+     )
+ 
+ 
+-def _spine_lane(home, *, flip=False, born=False, snapshot=False):
++def _spine_lane(home, *, flip=False, born=False, snapshot=False, safety="ordinary"):
+     """A claimed branch that authored a `Drafted` SR — and then, per flag,
+     performed one of the three shapes of approval act on it.
+ 
+@@ -360,7 +360,7 @@
+     the same topology minus one write, rather than a second fixture that happens
+     to look similar (`_mint_repo`'s rule, one section up)."""
+     home.mkdir(parents=True, exist_ok=True)
+-    root = claim_repo(home)
++    root = claim_repo(home, safety=safety)
+     reg = root / "docs" / "requirements"
+     reg.mkdir(parents=True, exist_ok=True)
+     (reg / "system-requirements.csv").write_text(
+@@ -397,6 +397,7 @@
+     # returned CHANGES-REQUESTED against exactly those flips.
+     root = _spine_lane(tmp_path / "flip", flip=True)
+ 
++    assert integ._adjudication_lane(root, "wi-401") is False
+     refusal = integ.integrate_one(root, "wi-401", "smoke")
+     assert refusal is not None
+     assert "APPROVAL ACT" in refusal
+@@ -405,6 +406,24 @@
+     assert _rev(root, "HEAD") != _rev(root, "wi-401")  # nothing merged
+ 
+ 
++def test_an_adjudication_lane_may_land_its_approval_act(tmp_path):
++    root = _spine_lane(tmp_path / "adjudication", flip=True, safety="adjudication")
++
++    assert integ._adjudication_lane(root, "wi-401") is True
++    assert integ._approval_act_refusal(root, "wi-401") is None
++
++
++def test_unreadable_actor_frontmatter_fails_toward_the_approval_refusal(tmp_path):
++    root = _spine_lane(tmp_path / "unreadable", flip=True, safety="adjudication")
++    claimed = root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
++    claimed.write_text("not frontmatter\n", encoding="utf-8")
++
++    assert integ._adjudication_lane(root, "wi-401") is False
++    refusal = integ._approval_act_refusal(root, "wi-401")
++    assert refusal is not None
++    assert "SR-001 flipped Drafted -> Approved" in refusal
++
++
+ def test_a_lane_that_mints_a_row_born_approved_is_refused(tmp_path):
+     # The second measured shape, and the one a flip-only rung would miss whole:
+     # four lanes (WI-483, WI-500, WI-501, WI-507) minted rows that ARRIVED
+
+diff --git a/project-trajectory/scripts/acceptance_record.py b/project-trajectory/scripts/acceptance_record.py
+index 6561f254d8d20cc919bafea3f22e080dca1fb76a..f9795e3c6593401b1294357d02c8d28b48e51dfb
+--- a/project-trajectory/scripts/acceptance_record.py
++++ b/project-trajectory/scripts/acceptance_record.py
+@@ -524,14 +524,14 @@
+     ACT — the refusal text, or None when it performs none.
+ 
+     THE ACT IS THE ADJUDICATOR'S, ON TRUNK (owner ruling 2026-09-01). A worker
+-    lane AUTHORS `Drafted` spine rows and AMENDS cell text on any row, including
+-    approved ones. It does not flip a `Status` into `Approved`/`Founded`, does
+-    not mint a row already claiming one, and does not write `SNAPSHOT_DIR`. Two
+-    reasons, both the owner's. CONTEXT: approving a row means reading its whole
+-    chain — the parent SR, the sibling LLRs, the tests — which one work item does
+-    not hold. CONCURRENCY: two lanes touching the spine conflict at merge and the
+-    snapshot must not move across a workstream, whereas a serial trunk-side act
+-    cannot conflict.
++    lane AUTHORS `Drafted` SR/LLR/TC rows and AMENDS cell text on any such row,
++    including approved ones. In those three registries it does not flip a
++    `Status` into `Approved`/`Founded` or mint a row already claiming one; it
++    does not write `SNAPSHOT_DIR`. Two reasons, both the owner's. CONTEXT:
++    approving a row means reading its whole chain — the parent SR, the sibling
++    LLRs, the tests — which one work item does not hold. CONCURRENCY: two lanes
++    touching the spine conflict at merge and the snapshot must not move across
++    a workstream, whereas a serial trunk-side act cannot conflict.
+ 
+     HERE RATHER THAN IN THE MERGE SLOT, on `LLR-178`'s separation — the writer
+     must not also be the judge of its own writes, and by the same token the
+@@ -582,10 +582,11 @@
+     return (
+         "{} performs an APPROVAL ACT in its own delta - and the approval act is "
+         "the ADJUDICATOR's, on the serial trunk side, never a work lane's (owner "
+-        "ruling 2026-09-01; PROCESS.md §4). A lane AUTHORS `Drafted` spine rows "
+-        "and AMENDS cell text; it does not flip a `Status` into "
+-        "`Approved`/`Founded`, does not mint a row already claiming one, and does "
+-        "not write {}/. Approving means reading the row's whole chain, which one "
++        "ruling 2026-09-01; PROCESS.md §4). A lane AUTHORS `Drafted` SR/LLR/TC "
++        "rows and AMENDS their cell text; in those three registries it does not "
++        "flip a `Status` into `Approved`/`Founded` or mint a row already "
++        "claiming one, and it does not write {}/. Approving means reading the "
++        "row's whole chain, which one "
+         "work item does not hold, and a trunk-side act cannot conflict with a "
+         "second lane the way this one can. Leave the rows `Drafted`: the "
+         "first-approval adjudication minted at this merge is what reads the "
+diff --git a/project-trajectory/scripts/adjudicate_brief.py b/project-trajectory/scripts/adjudicate_brief.py
+index ea7debe3330ef105368892345c6c11eb65ec02d3..34e5df6e66b84624b556a677d2ea489f904e0c25
+--- a/project-trajectory/scripts/adjudicate_brief.py
++++ b/project-trajectory/scripts/adjudicate_brief.py
+@@ -763,9 +763,8 @@
+         # here ("(no registry — nothing here is Drafted)") described a state the
+         # refusal now makes unreachable — and rendering it would have been rule
+         # 2's failure, a `--approves` slot filled with prose.
+-        "registries": " ".join(
+-            "{}={}".format(rel, wi_id or "this adjudication")
+-            for rel in sorted(registries)
++        "registries": baseline_snapshot.format_approves(
++            {rel: wi_id or "this adjudication" for rel in registries}
+         ),
+     }, None
+ 
+diff --git a/project-trajectory/scripts/baseline_snapshot.py b/project-trajectory/scripts/baseline_snapshot.py
+index 5ae8ea06822d20958cdf5ae84b62e6e37d154d13..bf9e0cd929721770d4da548535bd19716f3a8872
+--- a/project-trajectory/scripts/baseline_snapshot.py
++++ b/project-trajectory/scripts/baseline_snapshot.py
+@@ -294,6 +294,16 @@
+     return out
+ 
+ 
++def format_approves(approves):
++    """The deterministic CLI inverse of `parse_approves`.
++
++    Producers pass the canonical `{registry rel: ref}` mapping they derived;
++    this boundary owns the kit's `;`-joined list syntax so no caller has to
++    duplicate the delimiter that the parser consumes.
++    """
++    return ";".join("{}={}".format(rel, approves[rel]) for rel in sorted(approves))
++
++
+ def snapshot_root(root):
+     """The snapshot's directory as a path. Does not create it and does not
+     check that it exists — `load_all` and `copy_live` each have their own,
+diff --git a/project-trajectory/scripts/integrate.py b/project-trajectory/scripts/integrate.py
+index fb19d6208e438a70bdd7b9fd1974843ec490c2a5..e37567f479e6d71e395e02350fb19fd194b3d6d9
+--- a/project-trajectory/scripts/integrate.py
++++ b/project-trajectory/scripts/integrate.py
+@@ -1099,26 +1099,26 @@
+     )
+ 
+ 
++def _claimed_spec_frontmatters(root, branch):
++    """The claimed `(filename, metadata)` pairs, or None if any is unreadable."""
++    home = root / ACTIVE / branch
++    try:
++        return [(name, _spec_frontmatter(home / name)) for _wid, name in _claimed_specs(root, branch)]
++    except (OSError, ValueError):
++        return None
++
++
+ def _adjudication_lane(root, branch):
+     """Does EVERY claimed spec on `branch` declare the `adjudication` kind?
+ 
+     `_lane_bar_directives`' `skip` test, asked on its own because the approval
+-    rung needs the answer BEFORE the bar question exists. UNREADABLE
+-    FRONTMATTER ANSWERS FALSE, and the two callers' opposite defaults are both
+-    the conservative one: there an unreadable kind RUNS the bar, here it makes
+-    the branch a work lane whose approval act refuses. Both fail toward more
+-    checking, which is why they are stated as two rules rather than one flag."""
+-    claimed = _claimed_specs(root, branch)
+-    if not claimed:
+-        return False
+-    for _wid, name in claimed:
+-        try:
+-            meta = _spec_frontmatter(root / ACTIVE / branch / name)
+-        except (OSError, ValueError):
+-            return False
+-        if str(meta.get("safety_class") or "").strip().lower() != "adjudication":
+-            return False
+-    return True
++    rung needs the answer BEFORE the bar question exists. Both callers use
++    `_claimed_spec_frontmatters`, so actor identity has one reader. UNREADABLE
++    FRONTMATTER ANSWERS FALSE: there it runs the bar; here it makes the branch a
++    work lane whose approval act refuses. Both fail toward more checking."""
++    metas = _claimed_spec_frontmatters(root, branch)
++    kinds = (str(meta.get("safety_class") or "").strip().lower() for _name, meta in metas or ())
++    return bool(metas) and all(kind == "adjudication" for kind in kinds)
+ 
+ 
+ def _approval_act_refusal(root, branch):
+@@ -1736,11 +1736,10 @@
+     Implements: SR-174, LLR-154
+     """
+     kinds, bars = [], []
+-    for _wid, name in _claimed_specs(root, branch):
+-        try:
+-            meta = _spec_frontmatter(root / ACTIVE / branch / name)
+-        except (OSError, ValueError):
+-            return False, None, None  # unreadable: run the bar, fail toward it
++    metas = _claimed_spec_frontmatters(root, branch)
++    if metas is None:
++        return False, None, None  # unreadable: run the bar, fail toward it
++    for name, meta in metas:
+         kinds.append(str(meta.get("safety_class") or "").strip().lower())
+         declared = _normalize_bar(meta.get("bar"))
+         if declared and declared not in _BAR_GATES:
+diff --git a/tests/test_adjudicate_brief.py b/tests/test_adjudicate_brief.py
+index 5ac2320cd8760866a18f5264316824dec3ff7b41..dfca2006f965e205fc64d475e94e38ad810f61e2
+--- a/tests/test_adjudicate_brief.py
++++ b/tests/test_adjudicate_brief.py
+@@ -916,6 +916,29 @@
+     assert "HOLDS for a human" in why, why
+ 
+ 
++def test_the_first_approval_act_formats_a_multi_registry_batch_for_the_cli(tmp_path):
++    repo = _first_approval_repo(tmp_path)
++    srs = repo / "docs" / "requirements" / "system-requirements.csv"
++    srs.write_text(
++        srs.read_text(encoding="utf-8").replace(
++            ",Approved,P1,core", ",Drafted,P1,core"
++        ),
++        encoding="utf-8",
++    )
++    values, why = ab.first_approval_values(
++        repo, _fa_row(Adjudicates="SR-001;LLR-001")
++    )
++    assert why is None, why
++    assert values["registries"] == (
++        "docs/requirements/low-level-requirements.toml=WI-301;"
++        "docs/requirements/system-requirements.toml=WI-301"
++    )
++    assert baseline_snapshot.parse_approves(values["registries"]) == {
++        "docs/requirements/low-level-requirements.toml": "WI-301",
++        "docs/requirements/system-requirements.toml": "WI-301",
++    }
++
++
+ def test_the_first_approval_act_cannot_widen_past_the_rows_the_merge_handed_over(
+     tmp_path,
+ ):
+diff --git a/tests/test_baseline_snapshot.py b/tests/test_baseline_snapshot.py
+index 839012b198898c4d1e26252338e9aab02f568db3..d825d9c1368720eb7992b2eff4991354f0347752
+--- a/tests/test_baseline_snapshot.py
++++ b/tests/test_baseline_snapshot.py
+@@ -98,6 +98,19 @@
+     raise AssertionError("no SR at status " + status + " in the fixture")
+ 
+ 
++def test_approves_format_and_parse_share_one_multi_registry_syntax():
++    approves = {
++        "docs/test/test-cases.toml": "WI-572",
++        "docs/requirements/low-level-requirements.toml": "WI-572",
++    }
++    rendered = SNAP.format_approves(approves)
++    assert rendered == (
++        "docs/requirements/low-level-requirements.toml=WI-572;"
++        "docs/test/test-cases.toml=WI-572"
++    )
++    assert SNAP.parse_approves(rendered) == approves
++
++
+ # --- vacuity: the only honest empty state -------------------------------------
+ 
+ 
+diff --git a/tests/test_integrate_admission.py b/tests/test_integrate_admission.py
+index eec73efa83895c2cd9f95b5d09c3e7d1cc038835..132ad751f84b21c0c1176e0522ba66a045f30fbf
+--- a/tests/test_integrate_admission.py
++++ b/tests/test_integrate_admission.py
+@@ -352,7 +352,7 @@
+     )
+ 
+ 
+-def _spine_lane(home, *, flip=False, born=False, snapshot=False):
++def _spine_lane(home, *, flip=False, born=False, snapshot=False, safety="ordinary"):
+     """A claimed branch that authored a `Drafted` SR — and then, per flag,
+     performed one of the three shapes of approval act on it.
+ 
+@@ -360,7 +360,7 @@
+     the same topology minus one write, rather than a second fixture that happens
+     to look similar (`_mint_repo`'s rule, one section up)."""
+     home.mkdir(parents=True, exist_ok=True)
+-    root = claim_repo(home)
++    root = claim_repo(home, safety=safety)
+     reg = root / "docs" / "requirements"
+     reg.mkdir(parents=True, exist_ok=True)
+     (reg / "system-requirements.csv").write_text(
+@@ -397,6 +397,7 @@
+     # returned CHANGES-REQUESTED against exactly those flips.
+     root = _spine_lane(tmp_path / "flip", flip=True)
+ 
++    assert integ._adjudication_lane(root, "wi-401") is False
+     refusal = integ.integrate_one(root, "wi-401", "smoke")
+     assert refusal is not None
+     assert "APPROVAL ACT" in refusal
+@@ -405,6 +406,24 @@
+     assert _rev(root, "HEAD") != _rev(root, "wi-401")  # nothing merged
+ 
+ 
++def test_an_adjudication_lane_may_land_its_approval_act(tmp_path):
++    root = _spine_lane(tmp_path / "adjudication", flip=True, safety="adjudication")
++
++    assert integ._adjudication_lane(root, "wi-401") is True
++    assert integ._approval_act_refusal(root, "wi-401") is None
++
++
++def test_unreadable_actor_frontmatter_fails_toward_the_approval_refusal(tmp_path):
++    root = _spine_lane(tmp_path / "unreadable", flip=True, safety="adjudication")
++    claimed = root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
++    claimed.write_text("not frontmatter\n", encoding="utf-8")
++
++    assert integ._adjudication_lane(root, "wi-401") is False
++    refusal = integ._approval_act_refusal(root, "wi-401")
++    assert refusal is not None
++    assert "SR-001 flipped Drafted -> Approved" in refusal
++
++
+ def test_a_lane_that_mints_a_row_born_approved_is_refused(tmp_path):
+     # The second measured shape, and the one a flip-only rung would miss whole:
+     # four lanes (WI-483, WI-500, WI-501, WI-507) minted rows that ARRIVED
+
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 3:01 AM.
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 3:01 AM.
+tokens used
+103,060

@@ -58,8 +58,13 @@ Four operations here; the two lane closes that are NOT a merge (`hand_back`,
              (`branch_outcomes`), REFUSES a branch whose docs/work/ delta mints
              a work-item id outside its claimed set (RULING R1, see
              `_minted_id_refusal` - minting is trunk-side and serial, so a
-             collision two lanes could produce is unrepresentable), requires the
-             policy verdicts the outcome
+             collision two lanes could produce is unrepresentable), REFUSES a
+             branch whose spine delta performs an APPROVAL ACT - a `Status`
+             flipped into `Approved`/`Founded`, a row born claiming one, or a
+             write under docs/archive/last_approved/ (owner ruling 2026-09-01,
+             see `_approval_act_refusal` - a lane authors `Drafted` rows, the
+             adjudicator approves them on trunk after reading the whole chain),
+             requires the policy verdicts the outcome
              owes (RULING-7 keyed off §A3, not off the claim), checks
              the ancestor relation and VERIFIES the `Bar-Green:` attestation
              at the branch tip, then merges --no-ff. A branch that is not
@@ -1094,6 +1099,73 @@ def _minted_id_refusal(root, branch, claimed):
     )
 
 
+def _claimed_spec_frontmatters(root, branch):
+    """The claimed `(filename, metadata)` pairs, or None if any is unreadable."""
+    home = root / ACTIVE / branch
+    try:
+        claimed = _claimed_specs(root, branch)
+        return [(name, _spec_frontmatter(home / name)) for _wid, name in claimed]
+    except (OSError, ValueError):
+        return None
+
+
+def _adjudication_lane(root, branch, metas=None):
+    """Does EVERY claimed spec on `branch` declare the `adjudication` kind?
+
+    `_lane_bar_directives`' `skip` test, asked on its own because the approval
+    rung needs the answer BEFORE the bar question exists. Both callers use
+    `_claimed_spec_frontmatters`, so actor identity has one reader. UNREADABLE
+    FRONTMATTER ANSWERS FALSE: there it runs the bar; here it makes the branch a
+    work lane whose approval act refuses. Both fail toward more checking."""
+    metas = _claimed_spec_frontmatters(root, branch) if metas is None else metas
+    return bool(metas) and all(
+        str(meta.get("safety_class") or "").strip().lower() == "adjudication"
+        for _name, meta in metas
+    )
+
+
+def _approval_act_refusal(root, branch):
+    """THE APPROVAL ACT IS NOT A LANE'S (owner ruling 2026-09-01): the merge
+    slot's approval refusal - a refusal string, or None.
+
+    A WORK BRANCH AUTHORS `Drafted` SPINE ROWS AND AMENDS CELL TEXT; it never
+    performs the approval act. The act is the `Status` flip into
+    `Approved`/`Founded` - or a row that arrives already claiming one - together
+    with the `docs/archive/last_approved/` copy that anchors it, and it belongs
+    to a trunk-side ADJUDICATION session for two reasons the owner gave. CONTEXT:
+    approving a row means reading its whole chain (the parent SR, the sibling
+    LLRs, the tests), and one work item does not hold that chain. CONCURRENCY:
+    two lanes touching the spine conflict at merge, and the snapshot must not
+    move across a workstream, whereas a serial trunk-side act cannot conflict.
+
+    THE JUDGEMENT ITSELF IS NOT HERE, and that is `LLR-178`'s separation, not
+    tidiness: `acceptance_record.lane_approval_refusal` reads the delta and
+    words the refusal, beside the two-tree walk and the snapshot-mirror rules it
+    shares its material with. What stays in the merge slot is the RUNG — the
+    merge base this branch is judged against, and the placement in the ladder.
+
+    An adjudication is the permitted actor, not unbounded authority. A claimed
+    first-approval row's `Adjudicates` cell bounds its flips, and the snapshot
+    may cover exactly the registries those flips changed. The delta is derived
+    once here and handed to either judgement, so actor classification can no
+    longer bypass the material being authorised.
+    """
+    import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
+
+    metas = _claimed_spec_frontmatters(root, branch)
+    head = _head(root)
+    code, base = ac.git(root, "merge-base", head, branch)
+    if code != 0 or not base.strip():
+        # Fail closed: an unread delta is not an empty one.
+        message = f"cannot read the merge base of trunk {head[:10]} and {branch}, so the spine delta the approval-act rung reads is unknowable; nothing was merged:\n{ac._failure_tail(base)}"
+        return message
+    judge = acceptance_record.merge_approval_refusal
+    if not metas:
+        return judge(root, base.strip(), branch, [], False)
+    actor = _adjudication_lane(root, branch, metas=metas)
+    return judge(root, base.strip(), branch, metas, actor)
+
+
 def _last_commit_time(root, ref, *pathspec):
     code, out = ac.git(root, "log", "-1", "--format=%ct", ref, "--", *pathspec)
     if code != 0 or not out.strip():
@@ -1643,11 +1715,10 @@ def _lane_bar_directives(root, branch):
     Implements: SR-174, LLR-154
     """
     kinds, bars = [], []
-    for _wid, name in _claimed_specs(root, branch):
-        try:
-            meta = _spec_frontmatter(root / ACTIVE / branch / name)
-        except (OSError, ValueError):
-            return False, None, None  # unreadable: run the bar, fail toward it
+    metas = _claimed_spec_frontmatters(root, branch)
+    if metas is None:
+        return False, None, None  # unreadable: run the bar, fail toward it
+    for name, meta in metas:
         kinds.append(str(meta.get("safety_class") or "").strip().lower())
         declared = _normalize_bar(meta.get("bar"))
         if declared and declared not in _BAR_GATES:
@@ -2349,6 +2420,9 @@ def _merge_refusal(root, branch, wi_ids):
     if refusal:
         return outcomes, refusal
     refusal = _minted_id_refusal(root, branch, wi_ids)  # RULING R1
+    if refusal:
+        return outcomes, refusal
+    refusal = _approval_act_refusal(root, branch)  # owner ruling 2026-09-01
     if refusal:
         return outcomes, refusal
     refusal = _declared_bar_or_refusal(root)

@@ -1,0 +1,43 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 025
+# date: 2026-09-02 04:49
+# train: wi-572-the-approval-act-is-the-adjudi
+# base: 4d0b972d9019
+# phase: BUILD
+# wi: WI-572
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: NO-COMMIT
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 118
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 19257
+# prompt-template: kit:BUILD
+# prompt-sha: sha256:aafac53df8dd
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+WI-572 was already fully repaired and closed on this branch.
+
+- All five findings were addressed in commits `e2736541` through `9ddcb3b7`.
+- Final close commit: `d5b3e124`, carrying `WI: WI-572`.
+- Spec is archived under `docs/archive/work/complete/`; no active claim spec remains.
+- Fresh focused verification: `181 passed in 30.69s`.
+- Complexity: 201 rows, baseline unchanged.
+- Documentation: 1,218 docs, 1,586 links, 0 broken.
+- Working tree remains clean.
+
+No duplicate implementation or record commit was added.
