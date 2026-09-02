@@ -164,6 +164,25 @@ it is the DERIVED-ARTIFACT SPLIT, not a defect in the change:
   branch with "generated freshness is the trunk lane's". The trunk lane
   regenerates after the merge and the red clears with it.
 
+**A second red appears only AFTER the close, and it is not this row's either.**
+The smoke tier run after the terminal move reds
+`test_wi_convert.py::test_the_live_registry_round_trips_in_whichever_home_is_authoritative`
+on `docs/work/cancelled/README.md: does not start with a +++ frontmatter fence`.
+The test takes one of two branches: with a claim in flight the converter must
+refuse BY NAME (`drained-stop`, `active/`) and that refusal IS the test's claim;
+with `active/` empty it runs the real folder round-trip. Closing WI-572 drained
+the last claim on this branch and moved it onto the second branch, where the
+folder walker does not skip the `README.md` files that sit in the work
+subfolders.
+
+Not introduced here, and checked rather than argued: the identical failure
+reproduces at `9eaeac93` — the trunk commit BEFORE WI-572 was claimed, whose
+`docs/work/active/` does not exist at all. It is a latent defect masked by any
+in-flight claim, so trunk meets it whenever the queue drains. Named here because
+this close is what unmasks it on this branch, and the next session should know
+it inherited the red rather than caused it. Like the `docs/stage` red, it is a
+harness-bar repair on its own row, not a fix to smuggle into this one.
+
 **A finding this row sharpened but does not fix.** That test asserts a
 trunk-side invariant with no work-branch exemption, while its commit-bar twin
 has one. Until now the mismatch was nearly unreachable, because a lane amending
@@ -223,7 +242,9 @@ adjudication are this arm's first re-attestation case — is a trunk-side act on
 future adjudication, not something this lane may perform.
 
 Deferred open items: none — the ruling this row executes is already recorded.
-Two candidate follow-ons are NAMED above rather than owed back as decisions:
-narrowing the owner's approval brief to the held rungs, and giving
+Three candidate follow-ons are NAMED above rather than owed back as decisions:
+narrowing the owner's approval brief to the held rungs; giving
 `test_this_repo_s_committed_stage_is_current` the work-branch exemption its
-`derive_stage --check` twin already has.
+`derive_stage --check` twin already has; and teaching `wi_convert`'s folder-home
+walk to skip the work subfolders' `README.md` (a red that predates this row and
+surfaces whenever the claim queue drains).
