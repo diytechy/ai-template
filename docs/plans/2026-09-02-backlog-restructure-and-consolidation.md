@@ -147,10 +147,12 @@ with the spine is one of three questions and the other two remain.
   hand claim can produce; the close then refuses by name (fatal, owner reads).
 - Each absorbed row moves `queued/ -> archive/work/restructured/` with a
   `## Deliverable` of exactly one line: `Restructured into WI-<successor>.`
-  Its scope text is untouched (the same rule as `partial`); its `specref`
-  line is CLEARED, as every terminal move clears it (R-F — measured at the
-  first restructure on 2026-09-02, where the strict check errored on all
-  eight rows until it was).
+  Its scope text is untouched, `specref` INCLUDED — the same rule as
+  `partial`, and for the same reason R-F's partial carve-out states: the
+  successor's `supersedes` lineage is worth nothing if the thread it continues
+  has already been cut. (First execution, 2026-09-02: the strict check
+  errored R-F on all eight rows because the carve-out named only `partial`;
+  the carve-out now names both. Review round 1 caught the wrong remedy.)
 - `supersedes` becomes a **list** everywhere: `wi_convert` parses a string or
   a list into the `Supersedes` cell (`;`-joined); `_apply_supersede` loops;
   `_replace_inbound_edges` re-points every dependent of every absorbed row to
@@ -255,7 +257,11 @@ Deliverable and their scope text untouched.
 2. `WI-580` (P8).
 3. `WI-551` (P7, needs 579+580) → `WI-541` (P7).
 4. `WI-581` (P6), `WI-570` (P5), `WI-583` (P5, needs 579+570).
-5. `WI-582` (spine, P4) — batched with any `WI-578` follow-ups.
+5. `WI-582` (spine, P4, **needs 579+580**) — batched with any `WI-578`
+   follow-ups still queued. The edge is what makes this position real: a
+   READY spine row ranks 0 in the scheduler's ruled table and stops all
+   admission until it runs, so without it `WI-582` would have run before
+   `WI-579` (measured at first execution; review round 1).
 6. `WI-536`, `539`, `556`, `557` (P2).
 7. `WI-577` when `OI-82` rules.
 8. `WI-545` (P1) last.
@@ -281,9 +287,13 @@ the reasoning:
    inbound edges (`_replace_inbound_edges`, now list-aware).
 5. **Edit the kept rows** (`WI-551`, `541`, `545`) — `needs` and `priority`
    only.
-6. **Verify**: `schedule.py ready --explain` shows the order in §2.3 with
-   `WI-578` at the head; `check_trajectory.py --strict` shows no new ERROR and
-   `queue_conflict_findings` reports no pair among the new rows;
+6. **Verify**: `schedule.py ready --explain` shows `WI-578` as the first
+   READY row and the §2.3 rows in that relative order (the scheduler's total
+   order also lists WAITING rows by rank, which is not admission order);
+   `check_trajectory.py --strict` shows no new ERROR and the shared-spec
+   warning pairs fall from 11 to the 4 that are one ruling each by design
+   (`WI-556/557/579` on OI-76's registry, `WI-580/581` on the 2026-08-31
+   plan);
    `trace.py` integrity green; `python -m pytest -q -n auto` full suite green.
    Paste the outputs into the fragment.
 7. **Regenerate** `PROJECT_STATE.html` and `docs/status.md` per the trunk step;
@@ -343,3 +353,19 @@ review-owed under `when-minting`.
   successor).
 - No `restructured` row appears in any worker brief's cancelled-precedent
   join.
+
+---
+
+## 5. Review round 1 (2026-09-02) — what the plan got wrong
+
+Two adversarial rounds over the first execution (`891a5b24..c16182cb`):
+OpenAI Sol at medium effort through codex (8 findings) and an independent Opus
+session (15 findings), both against one hostile brief. No blocker. The
+corrections that changed THIS document are marked inline above (§1.5 specref,
+§2.3 the WI-582 edge, §2.4 step 6's criteria). The rest — quote fidelity in the
+new rows, the Deliverable grammar and its validator, many-to-many `supersedes`
+re-pointing, a dashboard reader and legend, PROCESS_OPTIONS's vocabulary
+sentences, the RESYNC entry for list-valued `supersedes`, and the log's pair
+count — are recorded with their commits in
+`docs/log.d/2026-09-02-backlog-restructure.md`.
+

@@ -2,7 +2,7 @@
 id = "WI-576"
 title = "Give the committed-stage currency test the work-branch exemption its derive_stage --check twin already has"
 workstream = "process"
-specref = ""
+specref = "docs/archive/work/complete/WI-574-spot-check-the-clean-close-of.md"
 buildtier = "quick"
 priority = 3
 safety_class = "ordinary"

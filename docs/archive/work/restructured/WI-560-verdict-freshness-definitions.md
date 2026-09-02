@@ -1,7 +1,7 @@
 +++
 id = "WI-560"
 title = "One freshness definition for verdicts, and the approval brief's two staleness traps (OI-76 / plan 2.2+2.5)"
-specref = ""
+specref = "docs/plans/2026-08-31-verdict-record-and-queue-blockers.md"
 workstream = "process"
 sr_refs = []
 needs = []

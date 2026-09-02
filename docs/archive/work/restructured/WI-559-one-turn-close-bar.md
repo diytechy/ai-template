@@ -1,7 +1,7 @@
 +++
 id = "WI-559"
 title = "A close a lane can finish: the one-turn close bar, review rounds after ADJUDICATE, honest banners (OI-76 / plan 2.1+2.4)"
-specref = ""
+specref = "docs/plans/2026-08-31-verdict-record-and-queue-blockers.md"
 workstream = "process"
 sr_refs = []
 needs = ["~WI-552"]
