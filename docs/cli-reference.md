@@ -409,7 +409,7 @@ Contracts (interfaces): IF-090
 | `--after` | post-merge trunk sha (trigger a) |
 | `--rows` | spine row id(s), ;-joined (SR-/LLR-/TC-) |
 | `--seed` | CREATE the snapshot directory. For the FIRST snapshot only, in the owner's signing commit, after every pending row has been ruled — seeding earlier blesses text nobody read. Unreachable from every loop module and hook (pinned by tests/test_baseline_snapshot.py) |
-| `--approves` | NAME THE APPROVAL ACT this refresh rides — a sitting, a log fragment, a commit. Required only when the copy would absorb approved text that no Status flip authorises; the ref is recorded into the snapshot's prose stamp. A traced-cell refresh needs no flag |
+| `--approves` | NAME THE APPROVAL ACT this refresh rides, PER REGISTRY: `;`-joined `<registry>=<ref>` pairs. A ref authorises and copies the ONE registry it names, required only for one whose copy would absorb approved text no Status flip authorises; the refs land in the snapshot's prose stamp |
 
 ### `scripts/integrate`
 _integrate.py — the local integrator: the station protocol and its merge slot._
