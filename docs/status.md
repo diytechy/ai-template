@@ -38,8 +38,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   (52–56 are the evening session's: the hand merge + drawn rounds that
   landed the wi508 conversion, its record corrections, the adjudication's
   rework and by-hand close, the loop stopped on a C6 cycle, the re-arm);
-  **`OI-78`** — the off-spine approval baseline absorbed by the wi508
-  handback merge (132 rows now read as approved unseen): STAND or
+  **`OI-78`** — the off-spine change census the wi508 lane's spine approval
+  zeroed (132 Drafted interface rows reshaped under OI-67 no longer listed
+  as changed since the 2026-08-24 snapshot; no approval granted or lost):
+  STAND or
   REVIEW-THEN-STAND, the brief on the successor row's spec, recommendation
   REVIEW-THEN-STAND; `OI-77` (the intake regex DOTALL ruling) — both cards
   now carry their full brief (hand-filled at the owner's direction; the
