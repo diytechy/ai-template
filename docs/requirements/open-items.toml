@@ -3283,3 +3283,10 @@ recommendation = """(c) for the branches now, (a) for contract_split once OI-44 
 - the deciding reason: the single-copy branch is the only irreversible exposure; everything else is cadence.
 - the guard: read wi416-parked-handback-contract before deleting it (`git log contract_split..wi416-parked-handback-contract --stat`); tag what is kept.
 - the sequencing: OI-44 before any push to a shared remote; the rest at the owner's convenience."""
+
+[open_item.OI-82]
+title = "WI-572 moved the first-approval act to the adjudicator and filtered the minted population by the hu…"
+status = "pending"
+raised = "2026-09-02"
+one_line = "WI-572 moved the first-approval act to the adjudicator and filtered the minted population by the human-approval dial at both adjudication ends (intake's mint and adjudicate_brief's composition, through agent_common.human_approves_spine). The plan's §2a table row 'Surfaces to the owner' says rows on a RELEASED rung no longer surface to the owner - but trace.py --approve modified still renders every Drafted chain, held or released, and calls human_approves_spine nowhere. Should the owner's approval brief narrow to the rungs the dial still HOLDS (so a sitting shows only what the owner actually owes a signature on), or keep rendering every Drafted chain (so the owner retains sight of what adjudicators are approving on their behalf)? WI-572 deliberately did not decide this: it changes what the owner sees at a sitting, which is the owner's call and not a side effect of moving who acts."
+wi_refs = ["WI-577"]
