@@ -65,7 +65,16 @@ and amends cell text; nothing else changed about what a lane may do.
    PROCESS_OPTIONS.md "Who performs the approval act" (the ruling, its two
    reasons, the division-of-labour table, the three holding mechanisms); OI-45
    (b) narrowed by one sentence; `gate-advance`, `spine-authoring` and
-   `worker.template.md` updated.
+   `worker.template.md` updated. **And it says only what the rung reaches.**
+   The act is scoped to SPINE rows (SR/LLR/TC), which is the ruling's own scope,
+   so the doctrine names that bound rather than stating an unqualified ban the
+   merge slot does not enforce. The bound is CLOSED, not merely declared:
+   `acceptance_record.OUTSIDE_THE_APPROVAL_ACT` names the four other snapshotted
+   registries, and the two lists are pinned exhaustive and disjoint against
+   `baseline_snapshot.SNAPSHOTTED`, so a tier added to the snapshot must land on
+   one side by a deliberate edit and cannot reach no approval reader at all.
+   The two generators that tell a human signer what a snapshot copies were
+   corrected to WI-571's scoped statement, which PROCESS.md §4 already made.
 5. **Tests** in the modules' existing style: seven original merge-slot cases
    (both `_adjudication_lane` actor-classification arms among them) plus six
    scope cases at that trust boundary (permitted scoped act, empty scope,
@@ -78,6 +87,16 @@ and amends cell text; nothing else changed about what a lane may do.
    reach a row the merge did not hand it. The schema pin now covers the READ
    side's copy of the column list too, and `test_wi_loader_sync` carries the
    scope cell as the third member of its `bar`/`brief` triplet.
+
+The approving commit's own COMMAND LINE is safe to run, which the derived
+argument alone did not make it. The `;`-joined `--approves` value is quoted
+where it is rendered into a shell — unquoted, a two-registry batch was two
+commands, anchoring half the act — pinned by a `shlex` guard that distinguishes
+a quoted `;` from a separator where `shlex.split` cannot. And because
+`{registries}` is fixed at composition while the approve/return split exists
+only after the verdict, the brief now derives WHICH ROWS each token covers, the
+template states the drop rule for a mixed batch, and the merge refusal names a
+remedy per arm.
 
 Two repairs the close itself unmasked rode this row rather than a follow-up,
 because the bar fails where it surfaces: `wi_convert.read_specs` now walks the

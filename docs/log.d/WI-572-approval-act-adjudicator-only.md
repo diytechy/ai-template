@@ -933,6 +933,53 @@ Byte-watched: `PROCESS.md` 88,355 -> 88,365, `PROCESS_OPTIONS.md`
 185,555 -> 186,240 (+685, the bound and why it is the ruling's). The
 `gate-advance` skill's three copies are re-synced (`--check-agents` OK).
 
+**The registry row this round moved, re-pointed in lane.** `LLR-158`
+(`Approved`, amended not flipped, as in rounds 4 and 6) owns
+`acceptance_record.py`. Round 7 added two symbols under it, and one of them
+BOUNDS a claim the row's own `Detail` made: its last sentence read "a row that
+no reader saw is unrepresentable", which is true within `SPINE_CSVS` and is the
+very overstatement MAJOR 1 found in the doctrine. The cell now names the bound,
+`OUTSIDE_THE_APPROVAL_ACT` and the exhaustive-and-disjoint pin that holds it,
+and records that the per-row judgement is stated once in `_approval_act`. Both
+symbols join `code_symbol`. `check_trajectory` exits 0 with only the
+pre-existing warn set (the `schedule -> trace` crossing included); no new warn.
+
+### The harness at the round-7 tip
+
+- Unfiltered suite: **3,285 passed, 1 failed, 20 skipped in 571.28 s** — five
+  more passing than the round-6 tip's 3,280, which is exactly the five
+  regressions this round adds.
+- Smoke tier: **1,463 passed, 4 skipped in 22.73 s**; the independent enforcer
+  measured **36.5 s against the 60 s ceiling** — within.
+- `check.py --jobs 0`: **RESULT: PASS** (the two trunk-owned generated-freshness
+  steps SKIP by the declared work-branch rule).
+- Complexity: **OK - 201 rows over 15, unchanged from baseline**.
+- Docs: **1,218 docs, 1,586 intra-repo links, 0 broken** (the one orphan warning
+  is the pre-existing `docs/test/report.md`).
+
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=9ddcb3b7 -->
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=9ddcb3b7 -->
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=9ddcb3b7 -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check.py --jobs 0" rev=9ddcb3b7 -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_complexity.py --root ." rev=9ddcb3b7 -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=9ddcb3b7 -->
+
+**The one red is the same one every round since round 4 has carried, and it is
+still not this row's.** `test_derive_stage.py::test_this_repo_s_committed_stage_is_current`
+fails on the `docs/stage` fingerprint with the same recorded
+`sha256:a24669d7…` pair established before round 5's changes. `docs/stage` is
+declared generated coordination truth that the trunk lane refreshes after the
+merge, which is why the declared work-branch harness SKIPs its `--check` twin.
+This branch does not edit it.
+
+**This branch is merge-clean under its OWN rung, re-verified at the final tip**
+— not carried forward from round 4's reading, because this round amended a spine
+row. Over `4d0b972d..HEAD`: `staged_approval_acts` returns `[]` and
+`lane_approval_refusal` returns `None` (amending is not approving), while
+`staged_spine_amendments` reports `LLR-136` and `LLR-158` — so the amendment
+adjudication trigger raises a row for this lane's own re-pointing at merge,
+which is the intended shape and not a special case.
+
 ### Round-6 rework resume at the current tip
 
 The unattended worker was relaunched with round 6's merge-boundary finding
