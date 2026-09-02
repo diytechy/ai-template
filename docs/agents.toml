@@ -30,21 +30,21 @@ notes = """newest Claude frontier family - leads gate-bearing kit work (PLAN/DES
 
 [agent.ANTHROPIC-OPUS-STRONG]
 family = "ANTHROPIC"
-model = "opus"
+model = "claude-opus-5"
 version = "4.8"
 tier = "strong"
 cmd_template = """claude -p --model {model} --output-format stream-json --verbose --dangerously-skip-permissions"""
-env = "CLAUDE_CODE_EFFORT_LEVEL=medium"
-notes = """strong tier = Opus (owner directive 2026-07-22: Fable temporarily inaccessible, so Opus takes the strong Anthropic slot, matching the medium ANTHROPIC-OPUS row - one model x two tier-routes, the pair-row model); PLAN/DESIGN-CHECK/CRITIQUE ride here; effort dialed to medium (owner directive 2026-08-02, for the small well-scoped queue; was xhigh from WI-331 2026-07-29) - NOTE this now sits BELOW the medium ANTHROPIC-OPUS row's high, so the effort ladder is inverted against the tier ladder; bump back to high if review quality regresses; auth: run claude once interactively"""
+env = "CLAUDE_CODE_EFFORT_LEVEL=high"
+notes = """strong tier = Opus (owner directive 2026-07-22: Fable temporarily inaccessible, so Opus takes the strong Anthropic slot, matching the medium ANTHROPIC-OPUS row - one model x two tier-routes, the pair-row model); PLAN/DESIGN-CHECK/CRITIQUE ride here; effort dialed to medium (owner directive 2026-08-02, for the small well-scoped queue; was xhigh from WI-331 2026-07-29) - NOTE this now sits BELOW the medium ANTHROPIC-OPUS row's high, so the effort ladder is inverted against the tier ladder; bump back to high if review quality regresses; auth: run claude once interactively Owner directive 2026-09-02: model pinned to claude-opus-5 (the bare `opus` alias resolved to claude-opus-4-8 on this box - probed with `claude -p --model opus`, and 143 session telemetry records agreed); effort HIGH on this row (the 2026-08-02 strong=medium / medium=high inversion is undone: strong=high, medium=medium)."""
 
 [agent.ANTHROPIC-OPUS]
 family = "ANTHROPIC"
-model = "opus"
+model = "claude-opus-5"
 version = "4.8"
 tier = "medium"
 cmd_template = """claude -p --model {model} --output-format stream-json --verbose --dangerously-skip-permissions"""
-env = "CLAUDE_CODE_EFFORT_LEVEL=high"
-notes = """medium tier (owner re-lineup 2026-07-12); BUILD + iteration reviews ride here (BUILD since the 2026-07-12-evening dial turn WI-121; tier-up escalation re-raises to strong); effort re-swept to high at WI-331 (2026-07-29): the WI-110 xhigh dial-up predated the current model generation, and effort is the primary cost/latency lever (the strong row's own xhigh was later dialed to medium by owner directive 2026-08-02, so this row now draws MORE effort than the strong row - see the header note); WI-124 s/turn telemetry is the sensor if BUILD quality regresses; auth: run claude once interactively"""
+env = "CLAUDE_CODE_EFFORT_LEVEL=medium"
+notes = """medium tier (owner re-lineup 2026-07-12); BUILD + iteration reviews ride here (BUILD since the 2026-07-12-evening dial turn WI-121; tier-up escalation re-raises to strong); effort re-swept to high at WI-331 (2026-07-29): the WI-110 xhigh dial-up predated the current model generation, and effort is the primary cost/latency lever (the strong row's own xhigh was later dialed to medium by owner directive 2026-08-02, so this row now draws MORE effort than the strong row - see the header note); WI-124 s/turn telemetry is the sensor if BUILD quality regresses; auth: run claude once interactively Owner directive 2026-09-02: model pinned to claude-opus-5 (the bare `opus` alias resolved to claude-opus-4-8 on this box - probed with `claude -p --model opus`, and 143 session telemetry records agreed); effort MEDIUM on this row (the 2026-08-02 strong=medium / medium=high inversion is undone: strong=high, medium=medium)."""
 
 [agent.ANTHROPIC-SONNET]
 family = "ANTHROPIC"
