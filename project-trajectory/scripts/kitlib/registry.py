@@ -202,7 +202,7 @@ def spec_work_dir(csv_path):
 
 def spec_archive_dir(work_dir):
     """`docs/work`'s archive sibling, `docs/archive/work` (WI-504): terminal
-    history (`complete/`, `cancelled/`, `partial/`) lives there, one directory
+    history (`complete/`, `cancelled/`, `partial/`, `restructured/`) lives there, one directory
     deeper than the active workspace. Derived from `work_dir` the same way
     `spec_work_dir` derives `work_dir` from the CSV path — one fact, not a
     second constant a caller could let drift."""
@@ -215,7 +215,7 @@ def spec_roots(work_dir):
     while WI-504's relocation is honoured everywhere it must be: the active
     workspace (`draft/queued/active/deferred`, and — until a repo's own move
     commit lands — terminal directories not yet relocated) and the archive
-    (`complete/cancelled/partial`, the new terminal home). Order is stable
+    (`complete/cancelled/partial/restructured`, the new terminal home). Order is stable
     (`work_dir` first) so an id or ordering tie breaks the same way it always
     has."""
     work_dir = Path(work_dir)

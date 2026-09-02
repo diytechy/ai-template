@@ -344,6 +344,11 @@ OPEN_STATUSES = ("draft", "queued", "active", "deferred", "blocked")
 # OPEN_STATUSES, out of BACKLOG_STALE_STATUSES, out of the frontier — and it owes
 # a Deliverable, the one line naming the successor that carries its scope.
 TERMINAL_STATUSES = ("done", "cancelled", "partial", "restructured")
+# The terminal states R-F does NOT make clear their `SpecRef` — the two whose
+# work CONTINUES in a successor carrying `supersedes` (see the reason stated in
+# full at `spec_ref_findings`). Both spellings are accepted for these: a set cell
+# keeps its spec alive for the successor's reader, a cleared one asserts nothing.
+_SPECREF_MAY_STAY = ("partial", "restructured")
 # What each terminal state's Deliverable is FOR — the clause R-A quotes when the
 # cell is empty. A table rather than a chain of conditionals so a fifth terminal
 # word cannot be added without saying what its record means. (`partial` is absent
@@ -586,6 +591,11 @@ def load_wis(rows):
                 # legacy CSV without the column reads as "" (DictReader -> None).
                 "deliverable": (r.get("Deliverable") or "").strip(),
                 "specref": (r.get("SpecRef") or "").strip(),
+                # The lineage cell (`;`-joined, one id or several): R-A's
+                # restructured arm reads it BOTH ways — this row's, to say what
+                # it was absorbed into, and the named successor's, to check the
+                # claim is mutual.
+                "supersedes": _split_refs(r.get("Supersedes") or ""),
             }
         )
     return wis, integrity
@@ -2875,6 +2885,64 @@ def specref_findings(root, w):
     ]
 
 
+#: R-A's `restructured` grammar: the WHOLE Deliverable, one line, naming the
+#: successor(s) that absorbed this row's scope and nothing else. The form is
+#: fixed rather than free prose because it is the only machine-readable half of
+#: the lineage that lives on the ABSORBED row — the successor carries
+#: `supersedes`, and this is what makes the pair checkable in both directions.
+_RESTRUCTURED_DELIVERABLE_RE = re.compile(
+    r"Restructured into WI-\d{3,}(?:, WI-\d{3,})*\."
+)
+#: ...and the two findings it can produce, as templates so the arm below reads
+#: as its decision rather than as string assembly.
+_RA_RESTRUCTURED_FORM = (
+    "{}: status=restructured but the Deliverable is {!r} (it must be exactly one "
+    "line, 'Restructured into WI-<successor>.' - several successors "
+    "comma-separated - and nothing else)"
+)
+_RA_RESTRUCTURED_LINEAGE = (
+    "{}: status=restructured names successor {} in its Deliverable, {}"
+)
+
+
+def _restructured_lineage_findings(w, lineage):
+    """R-A's `restructured` arm: the Deliverable's grammar AND its MUTUALITY.
+
+    An absorbed row's whole permanent record is the successor it names, so a
+    Deliverable that reads as prose, or names a row that never claimed it, is
+    a lineage that looks recorded and is not — the exact failure mode `partial`
+    avoids by owing a docs/handbacks/ report instead. Two findings, both R-A
+    (the same incoherent-handoff class: a reader landing on this row is sent
+    somewhere that does not exist or does not agree):
+
+    - the cell is not exactly `Restructured into WI-<id>[, WI-<id>...].`;
+    - a named successor is not a registry row, or its `Supersedes` cell does
+      not name this row back.
+
+    Liveness is deliberately "is a registry row", not "is still open": a
+    successor that later closes `done` must not turn its predecessor's archived
+    record into a red.
+    """
+    text = w["deliverable"].strip()
+    if not _RESTRUCTURED_DELIVERABLE_RE.fullmatch(text):
+        return [("R-A", True, _RA_RESTRUCTURED_FORM.format(w["id"], text))]
+    out = []
+    for succ in re.findall(r"WI-\d+", text):
+        if succ not in lineage:
+            why = "but no such work item exists"
+        elif w["id"] not in lineage[succ]:
+            why = (
+                "but {}'s Supersedes cell ({}) does not name it back - the "
+                "lineage must be mutual".format(
+                    succ, ";".join(lineage[succ]) or "empty"
+                )
+            )
+        else:
+            continue
+        out.append(("R-A", True, _RA_RESTRUCTURED_LINEAGE.format(w["id"], succ, why)))
+    return out
+
+
 def ssot_findings(wis, root):
     """The work-item registry's coherence findings (R-A + R-E) + the
     unknown-status lint, each as `(rule, hard, message)`.
@@ -2890,6 +2958,7 @@ def ssot_findings(wis, root):
     Implements: SR-157, LLR-077
     """
     out = []
+    lineage = {w["id"]: w.get("supersedes") or [] for w in wis}
     for w in wis:
         st = w["status"]
         # (The `status-vocab` and `blocked-ref` rules retired with the CSV home
@@ -2927,6 +2996,8 @@ def ssot_findings(wis, root):
                     ),
                 )
             )
+        elif st == "restructured":
+            out.extend(_restructured_lineage_findings(w, lineage))
         elif st not in TERMINAL_STATUSES and w["deliverable"]:
             out.append(
                 (
@@ -3063,7 +3134,9 @@ def spec_lifecycle_findings(root, wis):
 
       - a **terminal** WI (`done` or `cancelled`, WI-267) whose `SpecRef` is still
         set — the terminal transition clears it (the Deliverable + log carry the
-        backward record; a `cancelled` row's reason lives in its Deliverable);
+        backward record; a `cancelled` row's reason lives in its Deliverable).
+        The two terminals whose work CONTINUES in a successor — `partial` and
+        `restructured` — are carved out and MAY keep the cell (see below);
       - a **live** `docs/specs/` file cited by no *open* WI — archive it to
         `docs/archive/specs/` (close date appended, WI ids noted) or point an
         open WI at it. A shared effort doc therefore archives only when its
@@ -3087,7 +3160,7 @@ def spec_lifecycle_findings(root, wis):
             continue
         if w["status"] in OPEN_STATUSES:
             open_cited.add(spec.split("#", 1)[0].strip())
-        elif w["status"] == "partial":
+        elif w["status"] in _SPECREF_MAY_STAY:
             # LLR-161: a `partial` row's SpecRef STAYS. R-F exists so a closed
             # row stops pointing at a live spec-of-record that a reader would
             # take as current — but partial work continues by MINTING A
@@ -3095,6 +3168,14 @@ def spec_lifecycle_findings(root, wis):
             # nothing if the thread it continues has already been cut. The spec
             # is still the record of what was asked for; only the delivery
             # question is closed.
+            #
+            # `restructured` (2026-09-02 restructure plan §1.6) carries the SAME
+            # reason word for word: an absorbed row continues by a successor
+            # carrying `supersedes`, and cutting the thread costs the same
+            # lineage. So the carve-out is a MAY, not a must — the cell is
+            # accepted either way, exactly as for `partial`: a consolidation
+            # that clears it loses nothing the successor's own SpecRef does not
+            # carry, and one that keeps it keeps the record of what was asked.
             open_cited.add(spec.split("#", 1)[0].strip())
         elif w["status"] in TERMINAL_STATUSES:
             out.append(

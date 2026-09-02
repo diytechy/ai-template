@@ -358,20 +358,20 @@ def test_a_restructured_spec_reads_as_the_fourth_terminal_state(tmp_path):
     filed under the active workspace reads identically (nothing should be
     silently dropped mid-move). All three loaders, because a status one reader
     knows and another does not is how a row falls out of half the machinery."""
-    write_spec(tmp_path, "queued", "WI-001", order=0)
+    write_spec(tmp_path, "queued", "WI-001", order=0, supersedes="WI-002;WI-003")
     write_archived_spec(
         tmp_path,
         "restructured",
         "WI-002",
         order=1,
-        deliverable="Restructured into WI-004.",
+        deliverable="Restructured into WI-001.",
     )
     write_spec(
         tmp_path,
         "restructured",
         "WI-003",
         order=2,
-        deliverable="Restructured into WI-004.",
+        deliverable="Restructured into WI-001.",
     )
     for name, mod in MODULES:
         rows = mod.read_spec_rows(tmp_path / "docs" / "work")
@@ -380,7 +380,7 @@ def test_a_restructured_spec_reads_as_the_fourth_terminal_state(tmp_path):
             ("WI-002", "restructured"),
             ("WI-003", "restructured"),
         ], name
-        assert rows[1]["Deliverable"] == "Restructured into WI-004.", name
+        assert rows[1]["Deliverable"] == "Restructured into WI-001.", name
     # ... and the validator reads it clean: terminal, so the filled Deliverable
     # is REQUIRED (R-A) rather than an open row's forbidden one.
     errors = []
@@ -407,6 +407,117 @@ def test_a_restructured_row_owes_the_line_that_names_its_successor(tmp_path):
     findings = [f for f in ctraj.ssot_findings(wis, tmp_path) if f[0] == "R-A"]
     assert [(rule, hard) for rule, hard, _msg in findings] == [("R-A", True)], findings
     assert "WI-002" in findings[0][2] and "successor" in findings[0][2], findings
+
+
+def test_a_restructured_row_may_keep_its_specref_like_a_partial_one(tmp_path):
+    """R-F's carve-out covers BOTH continuing terminals, not just `partial`.
+
+    R-F clears a terminal row's SpecRef so a closed row stops pointing at a live
+    spec a reader would take as current. `partial` is carved out because partial
+    work continues by MINTING A SUCCESSOR and the successor's `supersedes`
+    lineage is worth nothing if the thread it continues has already been cut —
+    and that reason applies to an absorbed row word for word (the 2026-09-02
+    restructure plan says the move follows "the same rule as `partial`"). So the
+    cell is a MAY: WI-002 keeps it, WI-003 cleared it, and neither is a finding.
+    The `cancelled` control is what proves the rule still bites where it should
+    — otherwise this test would pass on a checker that had stopped reading."""
+    write_spec(tmp_path, "queued", "WI-001", order=0, supersedes="WI-002;WI-003")
+    write_archived_spec(
+        tmp_path,
+        "restructured",
+        "WI-002",
+        order=1,
+        deliverable="Restructured into WI-001.",
+        specref="docs/specs/WI-002.md",
+    )
+    write_archived_spec(
+        tmp_path,
+        "restructured",
+        "WI-003",
+        order=2,
+        deliverable="Restructured into WI-001.",
+    )
+    write_archived_spec(
+        tmp_path,
+        "cancelled",
+        "WI-004",
+        order=3,
+        deliverable="refuted",
+        specref="docs/specs/WI-004.md",
+    )
+    wis, _integrity = ctraj.load_wis(ctraj.read_registry_rows(csv_path(tmp_path)))
+    findings = ctraj.spec_lifecycle_findings(tmp_path, wis)
+    assert [f for f in findings if "WI-002" in f or "WI-003" in f] == [], findings
+    assert len([f for f in findings if "WI-004" in f]) == 1, findings
+
+
+def test_a_restructured_deliverable_owes_the_fixed_successor_grammar(tmp_path):
+    """R-A's `restructured` arm: the line is a LINEAGE RECORD, so it is parsed.
+
+    An absorbed row's whole permanent record is the successor it names — there
+    is no handback report behind it — so free prose in that cell is a lineage
+    that looks recorded and is not. Three drives: the good form (one successor
+    and several), the parenthetical form the first live restructure actually
+    wrote, and a successor whose own `Supersedes` cell does not name the row
+    back (the half nothing checked, so a typo split the pair silently)."""
+    write_spec(tmp_path, "queued", "WI-001", order=0, supersedes="WI-002;WI-003")
+    write_archived_spec(
+        tmp_path,
+        "restructured",
+        "WI-002",
+        order=1,
+        deliverable="Restructured into WI-001.",
+    )
+    write_archived_spec(
+        tmp_path,
+        "restructured",
+        "WI-003",
+        order=2,
+        deliverable="Restructured into WI-001, WI-004.",
+    )
+    write_spec(tmp_path, "queued", "WI-004", order=3)  # a live row, but not mutual
+    write_archived_spec(
+        tmp_path,
+        "restructured",
+        "WI-005",
+        order=4,
+        deliverable="Restructured into WI-001 (Done-when 1) and WI-004.",
+    )
+    wis, _integrity = ctraj.load_wis(ctraj.read_registry_rows(csv_path(tmp_path)))
+    findings = [f for f in ctraj.ssot_findings(wis, tmp_path) if f[0] == "R-A"]
+    assert all(hard for _rule, hard, _msg in findings), findings
+    messages = [msg for _rule, _hard, msg in findings]
+    # WI-002's single successor and WI-003's first are both mutual: clean.
+    assert [m for m in messages if m.startswith("WI-002")] == [], messages
+    # WI-003's SECOND successor is a live row that never claimed it.
+    assert len([m for m in messages if m.startswith("WI-003")]) == 1, messages
+    assert (
+        "does not name it back" in [m for m in messages if m.startswith("WI-003")][0]
+    ), messages
+    # WI-005's parenthetical is refused on grammar alone, before mutuality.
+    wi005 = [m for m in messages if m.startswith("WI-005")]
+    assert len(wi005) == 1 and "exactly one line" in wi005[0], messages
+
+
+def test_a_restructured_row_naming_a_successor_that_does_not_exist_is_reported(
+    tmp_path,
+):
+    """The other half of the same arm: a successor id that is no row at all.
+    Split from the mutuality case because the two fail for different reasons and
+    a reader needs the message to say which — a typo'd id and a live row that
+    disowns you are different repairs."""
+    write_spec(tmp_path, "queued", "WI-001", order=0)
+    write_archived_spec(
+        tmp_path,
+        "restructured",
+        "WI-002",
+        order=1,
+        deliverable="Restructured into WI-404.",
+    )
+    wis, _integrity = ctraj.load_wis(ctraj.read_registry_rows(csv_path(tmp_path)))
+    findings = [f for f in ctraj.ssot_findings(wis, tmp_path) if f[0] == "R-A"]
+    assert len(findings) == 1 and findings[0][1] is True, findings
+    assert "no such work item exists" in findings[0][2], findings
 
 
 def test_a_live_hard_edge_onto_a_restructured_row_is_reported(tmp_path):

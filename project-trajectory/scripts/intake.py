@@ -1536,15 +1536,30 @@ def supersedes_ids(value):
     TOML list. Both spellings arrive here and leave as a list, so nothing
     downstream — the cell, the edge re-point, the refusals — has two shapes to
     handle. An absent or empty value is an empty list, which is what "this row
-    continues nothing" means."""
+    continues nothing" means.
+
+    A STRING is SPLIT, because the writer's own form is a joined one:
+    `_draft_row` stores the cell as `";".join(supersedes_ids(...))`, so a minted
+    spec carries `supersedes = "WI-558;WI-560"` — and a reader that took that
+    back as ONE token would hand `_supersedes_refusal` a value it must reject as
+    "not a WI-### id", which is a writer emitting what its own sibling reader
+    refuses. The writer's form round-trips through the reader; that is the rule.
+
+    Deliberately NOT `kitlib.spine.refs`, the shared multi-ref splitter, though
+    this is otherwise exactly its job: `refs` also splits on WHITESPACE, and a
+    `supersedes` naming free prose ("the other one") would then reach the
+    refusal as three tokens, so the message could no longer echo the author's
+    own value back at them. One separator class costs nothing here and keeps
+    the refusal legible."""
     if value is None:
         return []
     items = value if isinstance(value, (list, tuple)) else [value]
     out = []
     for item in items:
-        token = str(item).strip()
-        if token and token not in out:
-            out.append(token)
+        for token in re.split(r"[;,]", str(item)):
+            token = token.strip()
+            if token and token not in out:
+                out.append(token)
     return out
 
 
@@ -1570,12 +1585,52 @@ def _replace_inbound_edges(root, superseded, successor):
     Soft (`~`) edges are advisory ordering and are left alone; a terminal row's
     own `needs` is history and is never touched. The edit is surgical (only the
     `needs` line) so a dependent's `## Context` and Deliverable are preserved.
+
+    ONE ABSORBED ROW, SEVERAL SUCCESSORS. A consolidation may SPLIT an absorbed
+    row across several successors (the live 2026-09-02 restructure did: WI-560's
+    three Done-when items went to WI-579, WI-580 and WI-581), and `_mint` applies
+    them one at a time. The first pass rewrites the dependent's token to the
+    first successor - and every later pass then finds NOTHING left to rewrite,
+    so the dependent waits on one third of the contract it was waiting for. The
+    repair is to ACCUMULATE: a later successor over the same absorbed set is
+    appended to any open row that already names an earlier one, so the dependent
+    ends holding the UNION of the successors, which is what "wait for the work
+    you were waiting for" means once that work has been split. A row that is
+    itself a successor over the set is not a dependent and is skipped - its edge
+    onto a sibling is ordering, not lineage.
     """
     dead = set(supersedes_ids(superseded))
     if not dead:
         return []
     changed = []
-    work = Path(root) / WORK
+    open_specs = _open_specs(Path(root) / WORK)
+    # The successors minted BEFORE this one over any of the same absorbed rows.
+    siblings = {
+        str(data.get("id") or "").strip()
+        for _path, _rel, _text, data in open_specs
+        if dead.intersection(supersedes_ids(data.get("supersedes")))
+    } - {successor, ""}
+    for path, rel, text, data in open_specs:
+        new_needs = _repointed_needs(data, dead, siblings, successor)
+        if new_needs is None:
+            continue
+        new_line = "needs = " + wi_convert.toml_value(new_needs)
+        new_text, n = _SPEC_NEEDS_RE.subn(new_line, text, count=1)
+        if n:
+            path.write_text(new_text, encoding="utf-8", newline="\n")
+            changed.append(rel)
+    return changed
+
+
+def _open_specs(work):
+    """Every OPEN spec under `work` as `(path, relpath, text, frontmatter)`.
+
+    Read ONCE, because the re-point needs two passes over the same rows (which
+    rows are successors, then which rows depend on one) and a second walk would
+    read the first pass's own writes. A spec that will not read or parse is
+    skipped, not raised on: this runs inside a mint, and one malformed row is
+    the validator's finding, never a reason to abandon the re-point."""
+    out = []
     for path in ac.spec_files(work):
         # `parse_spec_status` reads the STATUS directory as the first path
         # segment, so the relpath is taken against the work dir, not the repo.
@@ -1587,20 +1642,30 @@ def _replace_inbound_edges(root, superseded, successor):
             data, _body = ac.parse_spec_frontmatter(text, rel)
         except (OSError, ValueError, UnicodeDecodeError):
             continue
-        needs = [str(v) for v in (data.get("needs") or [])]
-        if not dead.intersection(needs):
-            continue
-        new_needs = []
+        out.append((path, rel, text, data))
+    return out
+
+
+def _repointed_needs(data, dead, siblings, successor):
+    """One open row's rewritten `needs`, or None when it is not a dependent.
+
+    Two ways to be one, in priority order: it still names an ABSORBED row (the
+    token is replaced), or it already names an EARLIER successor over the same
+    absorbed set (this one is appended — the accumulate arm). Duplicates cannot
+    survive either path. A row that is itself one of those successors is not a
+    dependent: its edge onto a sibling is ordering, not lineage."""
+    needs = [str(v) for v in (data.get("needs") or [])]
+    if dead.intersection(needs):
+        out = []
         for tok in needs:
             repl = successor if tok in dead else tok
-            if repl not in new_needs:
-                new_needs.append(repl)
-        new_line = "needs = " + wi_convert.toml_value(new_needs)
-        new_text, n = _SPEC_NEEDS_RE.subn(new_line, text, count=1)
-        if n:
-            path.write_text(new_text, encoding="utf-8", newline="\n")
-            changed.append(rel)
-    return changed
+            if repl not in out:
+                out.append(repl)
+        return out
+    mine = str(data.get("id") or "").strip()
+    if siblings.intersection(needs) and successor not in needs and mine not in siblings:
+        return needs + [successor]
+    return None
 
 
 def _draft_row(wi_id, draft):

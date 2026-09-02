@@ -871,6 +871,46 @@ def test_a_consolidation_re_points_every_dependent_of_every_absorbed_row(tmp_pat
     assert rows[successor]["Supersedes"] == "WI-005;WI-006;WI-007"
 
 
+def test_one_row_split_across_three_successors_accumulates_on_the_dependent(
+    tmp_path,
+):
+    """The topology the live 2026-09-02 restructure actually minted, which the
+    one-successor guard above cannot see: ONE absorbed row split across THREE
+    successors, applied one at a time by `_mint`.
+
+    The first pass rewrites the dependent's token to the first successor — and
+    the second and third then find nothing left to rewrite, so without the
+    accumulate arm the dependent waits on one third of the contract it was
+    waiting for while the other two thirds sit unblocked. It must end holding
+    the UNION. The two controls are what make that assertion mean something: a
+    dependent of a row nobody absorbed is untouched, and a SUCCESSOR is not a
+    dependent — its own `needs` never collects its siblings."""
+    root = tmp_path
+    write_spec(root, "queued", "WI-005", slug="absorbed", specref="seed.txt", needs=[])
+    write_spec(
+        root, "queued", "WI-010", slug="dependent", specref="seed.txt", needs=["WI-005"]
+    )
+    write_spec(
+        root, "queued", "WI-011", slug="elsewhere", specref="seed.txt", needs=["WI-010"]
+    )
+    for successor in ("WI-101", "WI-102", "WI-103"):
+        write_spec(
+            root,
+            "queued",
+            successor,
+            slug="successor",
+            specref="seed.txt",
+            needs=[],
+            supersedes="WI-005",
+        )
+        intake._apply_supersede(root, {"supersedes": "WI-005"}, successor)
+    rows = queued_rows(root)
+    assert rows["WI-010"]["Predecessors"] == "WI-101;WI-102;WI-103"
+    assert rows["WI-011"]["Predecessors"] == "WI-010"
+    for successor in ("WI-101", "WI-102", "WI-103"):
+        assert rows[successor]["Predecessors"] == "", successor
+
+
 def test_a_one_id_supersedes_string_is_unchanged_by_the_list_form():
     """The string spelling every disposition writes keeps its exact behaviour —
     one id in, one id in the cell, no list bracket anywhere. The two shapes meet
@@ -883,6 +923,16 @@ def test_a_one_id_supersedes_string_is_unchanged_by_the_list_form():
     )
     assert one["Supersedes"] == listed["Supersedes"] == "WI-521"
     assert intake.supersedes_ids("WI-521") == ["WI-521"]
+    # The WRITER's own form round-trips through the reader: `_draft_row` joins
+    # the ids with `;`, and a reader that took that cell back as ONE token would
+    # hand `_supersedes_refusal` a value it must reject as "not a WI-### id".
+    joined = intake._draft_row(
+        "WI-997",
+        {"title": "s", "supersedes": ["WI-558", "WI-559"], "kind": "ordinary"},
+    )["Supersedes"]
+    assert joined == "WI-558;WI-559"
+    assert intake.supersedes_ids(joined) == ["WI-558", "WI-559"]
+    assert intake._supersedes_refusal(joined, "at", {"WI-558", "WI-559"}) is None
     assert intake.supersedes_ids(["WI-1", "WI-2", "WI-1"]) == ["WI-1", "WI-2"]
     assert intake.supersedes_ids(None) == intake.supersedes_ids("") == []
     assert (

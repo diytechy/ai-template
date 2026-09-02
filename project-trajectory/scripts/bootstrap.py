@@ -1907,8 +1907,9 @@ MAPPING = [
     ("work/WI-000.template.md", "docs/work/queued/WI-000-example.md"),
     # ...and the location->status contract, stated INSIDE the registry it governs.
     # The WI-000 exemplar documents the SPEC FORMAT; this README documents the
-    # FOLDER — the seven status directories, and the one rule a reader keeps
-    # re-deriving wrongly: a terminal row (complete/cancelled/partial) STAYS in
+    # FOLDER — the eight status directories, and the one rule a reader keeps
+    # re-deriving wrongly: a terminal row (complete/cancelled/partial/
+    # restructured) STAYS in
     # the registry, because it is still a DAG predecessor and a trace link, so
     # `docs/work/archive/` must never materialize. That is the half `docs/specs/`
     # answers the other way (rule R-F archives a spec-of-record at close), and a

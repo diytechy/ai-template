@@ -55,6 +55,7 @@ from integrate_fixtures import (
 
 # The vocabulary's own home (WI-483): imported as a package, since `load_script`
 # loads one `scripts/*.py` and `scripts/` is already on sys.path by here.
+import kitlib.registry as kit_registry  # noqa: E402  (after the fixture import)
 import kitlib.station as kit_station  # noqa: E402  (after the fixture import)
 
 pytestmark = env_gate_skipif("git")
@@ -169,8 +170,13 @@ def test_a_lane_cannot_close_into_the_restructured_folder(tmp_path):
     # The trunk-side restructured row is inert for this lane's read...
     _close_to(root, "wi-401", "complete", archive=True)
     assert integ.branch_outcomes(root, "wi-401") == ({"WI-401": "merged"}, [])
+    # BOTH sides of the split, so a revert of either one reds this: the STATUS
+    # vocabulary declares the folder...
+    assert kit_registry.SPEC_STATUS_DIRS["restructured"] == "restructured"
+    # ...and the lane-outcome vocabulary deliberately does not.
     assert "restructured" not in integ.OUTCOME_DIRS
     assert "restructured" not in kit_station.CLAIMED_OUTCOMES
+    assert "restructured" not in kit_station.OUTCOME_DIRS
     assert integ.outcome_of({"restructured"}) is None
 
     # ...and a lane that CLOSES into it states nothing, so the merge refuses.

@@ -4322,6 +4322,31 @@ same one-cell migration the `Supersedes` and `Brief` columns needed and, unlike
 those two, it is written down: **that omission is the reason this entry exists**,
 so if your header predates either of them, add all three at once.
 
+### `supersedes` accepts a LIST of ids — and now refuses two shapes it used to mint [since 36395b54]
+
+**What changed.** A successor's `supersedes` may name SEVERAL predecessors, as a
+TOML list, because a consolidation absorbs several rows into one row that carries
+all of them. A bare id string is unchanged in every respect — same cell, same
+bytes in the spec file — and `intake.supersedes_ids` is the one reader of both
+spellings, so the registry cell stays `;`-joined and every dependent of every
+absorbed row is re-pointed in ONE pass.
+
+**Migration: none for the value; TWO NEW REFUSALS to know about.** This entry
+exists for the half that is not additive — the mint is all-or-nothing, so either
+refusal stops the whole intake at a merge rather than minting a bad row:
+
+1. `intake._draft_refusal` now checks the SHAPE of a hand-authored
+   `## Dispositions` block's `supersedes`: every entry must match `WI-<digits>`.
+   A block that carried prose there ("the row above", a title, a bare number)
+   used to mint and simply re-point nothing; it now refuses by name.
+2. `intake._mint_shape_refusal` gained a LIVENESS arm: a `supersedes` naming an
+   id that is no row in the pre-mint registry refuses. A typo'd id used to leave
+   the row it meant to absorb queued beside its own successor, silently.
+
+If your loop stops at a merge with `every entry must be a WI-### id` or `no live
+registry row`, the disposition block is the thing to fix — the refusal names the
+offending token and nothing was minted.
+
 ### A fourth terminal work-item status, `restructured` [since 891a5b24]
 
 **What changed.** The work-item status vocabulary gains a fourth terminal word,
@@ -4338,6 +4363,14 @@ so an absorbed row filed as cancelled would tell its own successor not to build
 it. `partial` says a lane stopped early, and owes a per-close report under
 `docs/handbacks/` plus a minted disposition, neither of which a consolidation
 produces.
+
+Its `## Deliverable` is PARSED, not merely required to be non-empty: R-A refuses
+anything but the exact line above (several successors comma-separated), and every
+successor it names must be a registry row whose own `Supersedes` cell names it
+back — a hard error, like the rest of R-A. Its `SpecRef`, on the other hand, is a
+MAY: R-F carves out both terminals whose work CONTINUES in a successor
+(`partial` and `restructured`), so the cell may stay or be cleared. If you carry
+restructured rows written before this, check the two cells; nothing else changes.
 
 Terminal means terminal: nothing re-claims a restructured row, and no LANE may
 close into one — `kitlib.station.CLAIMED_OUTCOMES` and `integrate.Outcome` are

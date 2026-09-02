@@ -1134,6 +1134,14 @@ _NEXT_WORK_CAP = 6
 # fitting; this only bounds the tail of a registry cell that carries its whole
 # rationale in the Title (measured over 320 rows: median 44, p90 126, max 609).
 _NEXT_WORK_TITLE = 140
+# The dispositions that mean "this row is finished with, however it finished" —
+# read off `schedule._TERMINAL_DISPOSITION` rather than re-listed here, because a
+# fifth terminal word would otherwise leave this card saying "No ready work" over
+# a registry that is in fact fully drained. That is exactly how `partial` and
+# `restructured` were missed by the literal pair this replaces.
+_TERMINAL_DISPOSITIONS = frozenset(
+    disposition for disposition, _code in schedule._TERMINAL_DISPOSITION.values()
+)
 
 
 def _next_work_title(title):
@@ -1184,7 +1192,7 @@ def _next_work_html(root):
     shown = (ready + waiting)[:_NEXT_WORK_CAP]
 
     if not shown:
-        open_left = any(r["disposition"] not in ("done", "cancelled") for r in records)
+        open_left = any(r["disposition"] not in _TERMINAL_DISPOSITIONS for r in records)
         msg = (
             "No ready work — see the When roadmap for open items."
             if open_left

@@ -82,14 +82,16 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/work/draft/.gitkeep",
         "docs/work/active/.gitkeep",
         "docs/work/deferred/.gitkeep",
-        # The three terminal states live under the archive, not the active
+        # The four terminal states live under the archive, not the active
         # workspace (WI-504, OI-55 ruled (a)): docs/work/ holds only rows still
         # in flight. `docs/archive/work/cancelled` beside `.../complete` is
         # what removed the `disposition` attribute that told the two apart;
-        # SR-144's third terminal, `.../partial`, is pinned here so the
-        # shipped folder set cannot quietly lose it again.
+        # SR-144's third terminal, `.../partial`, and the 2026-09-02 plan's
+        # fourth, `.../restructured`, are pinned here so the shipped folder set
+        # cannot quietly lose one again — reverting bootstrap's folder reds this.
         "docs/archive/work/cancelled/.gitkeep",
         "docs/archive/work/partial/.gitkeep",
+        "docs/archive/work/restructured/.gitkeep",
         "docs/archive/work/complete/.gitkeep",
         # The log's fragment drop-box (concurrency-restructure.md §5.1): empty,
         # marker-only — an exemplar here would be compiled into docs/log.md by

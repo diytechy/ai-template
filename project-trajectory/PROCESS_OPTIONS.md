@@ -1800,7 +1800,8 @@ independent tracks meet, which task is in flight, how far along the whole is. A
   intentionally postponed work, `blocked` marks work parked on an external
   dependency, and
   `cancelled` is a **terminal** won't-build row (its reason in `Deliverable`),
-  as is `partial` — could not finish; scope ends here.
+  as are `partial` — could not finish; scope ends here — and `restructured`,
+  absorbed into a successor that carries its scope onward.
 
 A WI is the machine-readable *how* beneath an SR's *what*. Plans and discussion
 retain the *why*; the registry complements rather than replaces that narrative.
@@ -1811,10 +1812,10 @@ Enabling this layer **supersedes the plan/build cadence's `docs/plan.md`**
 **Registry.** The **`docs/work/` spec folder**: one Markdown file per work
 item, **status encoded as its directory, and the directory is the whole
 statement** (`draft/`, `queued/`, `active/<branch>/`, `deferred/`, `complete/`
-for `done`, `cancelled/` for the won't-build terminal, and `partial/` for the
+for `done`, `cancelled/` for the won't-build terminal, `partial/` for the
 third — work that could not finish and whose scope ends there, the remainder
 carried forward by a newly minted WI rather than by re-claiming this one
-(SR-144) — WI-384 gave the second
+(SR-144) — and `restructured/` for the fourth — WI-384 gave the second
 terminal its own folder and with it deleted the `disposition` frontmatter key,
 its validator and both raise paths: an inconsistent state stopped being
 checked-for and became unrepresentable), TOML `+++` frontmatter carrying the metadata
@@ -1827,7 +1828,7 @@ once it holds a real spec, both-present is an integrity error, and
 `scripts/wi_convert.py` migrates a CSV with a round-trip proof. Off-spine and
 optional like `procurement.csv` / `assets.csv`: `trace.py` does not read
 `WI-` ids — the trajectory tooling owns them. `Status ∈
-{draft,queued,active,done,deferred,blocked,cancelled,partial}`; `draft` is the ABSENCE
+{draft,queued,active,done,deferred,blocked,cancelled,partial,restructured}`; `draft` is the ABSENCE
 of a decision (still being figured out) where `deferred` is one (not now) —
 both never-ready, differing only in what they say, and `draft/` is a DECLARED
 directory because specs in an undeclared one are skipped by every reader and so
@@ -1841,8 +1842,11 @@ retired at WI-553/OI-70, and a stopped lane now closes PARTIAL; and `cancelled`
 WI-384) is terminal — a deliberate won't-build, counted separately
 from `done`, never scheduled, its reason in the body. `partial` (SR-144) is the
 **third terminal**: the work could not finish and its scope ends there, so
-nothing re-claims it and the remainder is carried by a new WI. An unknown status
-refuses rather than buckets.
+nothing re-claims it and the remainder is carried by a new WI. `restructured` is
+the **fourth**: a consolidation ABSORBED the row into a successor — neither
+refuted (`cancelled`) nor stopped early (`partial`) — so its scope text stays
+byte-identical, its `Deliverable` is the one line `Restructured into
+WI-<successor>.`, and its inbound hard edges re-point to that successor. An unknown status refuses rather than buckets.
 
 **Validation** — `check_trajectory.py`, wired as the `trajectory` gate step from
 DevStg-Tests. Every `Predecessors` WI id (hard or soft) resolves to a real work
@@ -1861,7 +1865,9 @@ is open and clears at close. `check_trajectory.py` mechanizes three rules over t
 registry (warn-first at the commit floor; `--strict` gates R-E/R-F at DevStg-Tests+):
 
 - **R-A** — a WI's `Deliverable` is non-empty **iff** its `Status` is **terminal**
-  (`done`, `cancelled` or `partial`); an open WI
+  (`done`, `cancelled`, `partial` or `restructured` — the last owing exactly one
+  line, `Restructured into WI-<successor>.`, whose successors must name it back
+  in their own `Supersedes`); an open WI
   (draft/queued/active/deferred/blocked) has an **empty** Deliverable (`done`
   records what shipped, `cancelled` why it never will). `partial` is exempt from
   the non-empty half — its permanent backward record is the immutable per-close
@@ -1877,9 +1883,9 @@ registry (warn-first at the commit floor; `--strict` gates R-E/R-F at DevStg-Tes
 - **R-F** (WI-251; WI-267) — the close side R-E leaves unstated: a **terminal**
   (`done`/`cancelled`) WI's `SpecRef` is **empty**, and every live `docs/specs/`
   file (scaffold README/`-000` exemplars excluded) is cited by ≥1 **open** WI
-  (a `partial` row's `SpecRef` **stays** and counts as a live citation: only the
-  delivery question closed, and the successor's `supersedes` lineage is worth
-  nothing if the thread it continues has been cut) —
+  (a `partial` or `restructured` row's `SpecRef` **may stay** and then counts as a
+  live citation: only the delivery question closed, and the successor's
+  `supersedes` lineage is worth nothing if the thread it continues has been cut) —
   otherwise it belongs in `docs/archive/specs/`. Prose-only close ritual is skipped by
   autonomous agents; whether durable spec content was absorbed *before*
   archiving stays a reviewer-tier judgment (the honest gap).

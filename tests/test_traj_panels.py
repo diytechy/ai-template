@@ -825,6 +825,25 @@ def test_t1_next_work_says_all_done_when_drained(tmp_path):
     assert 'class="nwlist"' not in hero
 
 
+def test_t1_next_work_says_all_done_when_the_last_row_is_restructured(tmp_path):
+    """Drained is drained, however the rows got there. The card's "is anything
+    still open?" read enumerated `done` and `cancelled` only, so `partial` and
+    `restructured` rows counted as OPEN and a fully-closed registry rendered
+    "No ready work — see the When roadmap for open items", pointing a reader at
+    a roadmap with nothing on it. The set is now read off the scheduler's own
+    `_TERMINAL_DISPOSITION` table, so a fifth terminal word cannot re-open it."""
+    wis = (
+        "WI-001,Bootstrap,scripts,SR-001,,done,adder,ordinary\n"
+        "WI-002,Absorbed,docs,SR-002,,restructured,Restructured into WI-001.,ordinary\n"
+        "WI-003,Stopped,docs,SR-002,,partial,stopped early,ordinary\n"
+    )
+    make_repo(tmp_path, wis, header=NW_HEADER)
+    assert gen(tmp_path).returncode == 0
+    hero = _hero_of(tmp_path)
+    assert "All work items are done." in hero
+    assert "No ready work" not in hero
+
+
 # --- WI-319 / SR-054 T4: the next-work card fits its title to the CARD ---------
 # 121-CRITIQUE MINOR: the card spent a fixed 60-character budget whatever width it
 # had, so WI-308 read "…tiering expo…" — cut mid-word at 1680px with the card half
