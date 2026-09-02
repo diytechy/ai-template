@@ -19,9 +19,12 @@ and amends cell text; nothing else changed about what a lane may do.
 1. **Lanes cannot approve.** The merge slot REFUSES a work branch whose spine
    delta flips a `Status`, mints a row born claiming approval, or writes the
    snapshot directory — by name, listing each row, its registry and every file
-   written, with the remedy. Construction-first: `staged_approval_acts` reports
-   exactly the set `staged_spine_amendments` exempts, off one shared two-tree
-   walk (`_spine_row_sides`), so no second detector entered. The judgement is
+   touched — each worded by what the branch DID to it — with the remedy.
+   Construction-first: `staged_approval_acts` reports the set
+   `staged_spine_amendments` exempts MINUS the de-approvals (a withdrawal
+   blesses nothing, and `staged_drafted_rows` raises the re-approval it owes
+   instead), off one shared two-tree walk (`_spine_row_sides`), so no second
+   detector entered. The judgement is
    `acceptance_record.lane_approval_refusal`; `integrate._approval_act_refusal`
    is the rung. Verified against the record: the reader reproduces the
    pre-ruling census exactly — the four flips at `580df781` and the
@@ -30,7 +33,11 @@ and amends cell text; nothing else changed about what a lane may do.
    `brief = "first-approval"` row per merge over the `Drafted` rows the lane
    handed over — including a status-only withdrawal into `Drafted` — on the
    rungs the dial releases; a held rung is not minted and
-   surfaces to the owner as before. Its brief renders each row's WHOLE chain
+   surfaces to the owner as before. Those row ids are RECORDED on the minted
+   row (`Adjudicates`, a new `wi_convert` column) and the brief — which
+   re-derives its population live, because the row is claimed long after the
+   merge — acts only on the intersection, so the act cannot widen past what the
+   merge handed over. Its brief renders each row's WHOLE chain
    (`trace.spine_chain`, extracted from `reattest_model` so the judge and the
    owner's surface cannot disagree) and asks one question — approve, or return
    with findings — with the `--approves` argument of the approving commit
@@ -49,9 +56,19 @@ and amends cell text; nothing else changed about what a lane may do.
    (b) narrowed by one sentence; `gate-advance`, `spine-authoring` and
    `worker.template.md` updated.
 5. **Tests** in the modules' existing style: five at the merge slot, four at the
-   reader, four at the trigger, six at the brief — the last of which pins that
-   the brief's terminal sequence cannot stop before performing an approved
-   row's flip-and-snapshot act.
+   reader, four at the trigger, nine at the brief — including the pin that the
+   brief's terminal sequence cannot stop before performing an approved row's
+   flip-and-snapshot act, and the mutation-proven regression that an act cannot
+   reach a row the merge did not hand it. The schema pin now covers the READ
+   side's copy of the column list too, and `test_wi_loader_sync` carries the
+   scope cell as the third member of its `bar`/`brief` triplet.
+
+Two repairs the close itself unmasked rode this row rather than a follow-up,
+because the bar fails where it surfaces: `wi_convert.read_specs` now walks the
+folder home through the READ side's own `spec_paths` (a tracked `README.md`
+under a status directory was a broken row to the writer and residue to the
+reader), and the four `test_wi_convert.py` guards that a catch-all
+`ConvertError` skip had kept dark since WI-504 run again.
 
 Deviations, the ratchet re-stamps, and the one follow-on this row deliberately
 does not take (narrowing the owner's approval brief to the held rungs) are in
