@@ -75,7 +75,8 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     THE SAME WALK ANSWERS THE APPROVAL-ACT QUESTIONS (owner ruling 2026-09-01).
     `staged_approval_acts(root, base, head)` returns the rows that CROSSED into
     an approval claim or arrived already making one — precisely the set the
-    amendment reader exempts — and `staged_drafted_rows` returns the rows a lane
+    amendment reader exempts, over the WIDER `APPROVAL_ACT_CSVS` universe that
+    adds the SN tier — and `staged_drafted_rows` returns the rows a lane
     added, amended, or moved into `Drafted`. `lane_approval_refusal(root, base, head)`
     is the judgement over the first: the text refusing a work branch that
     performs the approval act, or None. It fails CLOSED on an unreadable
@@ -116,35 +117,52 @@ _git = _kitgit.git_out
 
 
 # The three spine registries the staged amend-without-flip warn (WI-316) watches,
-# each with its id column. The SN tier is not listed: its rows were section-as-state
-# when this was written and now carry their own `status`, but the warn has never
-# been extended to them and doing so is its own decision, not a side effect.
+# each with its id column. The SN tier is not listed HERE: that warn reports a
+# row whose APPROVED TEXT moved while its status stood still, and extending it
+# to needs is still its own decision rather than a side effect. The approval-act
+# readers below are a different question and DO cover SN — `APPROVAL_ACT_CSVS`.
 SPINE_CSVS = (
     ("docs/requirements/system-requirements.toml", "SR-ID"),
     ("docs/requirements/low-level-requirements.toml", "LLR-ID"),
     ("docs/test/test-cases.toml", "TC-ID"),
 )
 
+# THE APPROVAL-ACT RUNG'S OWN SET: the spine three PLUS the need tier
+# (WI-572 REVIEW-A round 028). SN is a SPINE tier — `spine_carrier.SPINE_TABLE`
+# names it, its rows carry the same `status` vocabulary, and the DevStg-Reqs
+# rung the human-approval dial holds for the owner is exactly the SN half — so a
+# lane flipping `SN-###` Drafted -> Approved is the WORST case of the act the
+# owner's 2026-09-01 ruling moved to the adjudicator, not an exempt one. It was
+# excluded only by the older section-as-state reading recorded at
+# `baseline_snapshot._claims_approval`, which the `status` cell retired.
+#
+# A SEPARATE CONSTANT rather than a widened `SPINE_CSVS` because the two
+# questions have different scopes on purpose: `SPINE_CSVS` is the amendment
+# warn's and the intake mint's universe (`intake.py`, `check_trajectory.py`
+# re-export), and silently widening those is the side effect the comment above
+# refuses. Only the refusal walk reads this one.
+APPROVAL_ACT_CSVS = SPINE_CSVS + (
+    ("docs/requirements/stakeholder-needs.toml", "SN-ID"),
+)
+
 # THE OTHER SIDE OF THAT BOUNDARY, DECLARED RATHER THAN LEFT AS AN ABSENCE.
 # `baseline_snapshot.SNAPSHOTTED` names seven registries whose `Status` a
-# snapshot anchors; `SPINE_CSVS` above names the three every reader in this
-# module walks. The remaining four are OUT OF SCOPE OF THE APPROVAL-ACT RUNG,
-# and that is the owner's ruling rather than an oversight: 2026-09-01 scopes the
-# act to SPINE ROWS ("new SR/LLR/TC rows are written Drafted"), so a lane moving
-# an interface, component or frame row's `status` is not performing the act
-# `lane_approval_refusal` refuses. SN is absent for its own older reason, ruled
-# separately and recorded at `baseline_snapshot._claims_approval`: needs are not
-# status-gated at all, and wiring them is a parked pass of its own (design §B7).
+# snapshot anchors; `APPROVAL_ACT_CSVS` above names the four the refusal walks.
+# The remaining three are OUT OF SCOPE OF THE APPROVAL-ACT RUNG, and that is a
+# ruling rather than an oversight: the interface, external-frame and component
+# registries are OFF-SPINE, their approval cells are governed by OI-30 D3, and
+# the 2026-09-01 ruling scopes this rung to SPINE rows — so a lane moving an
+# interface, frame or component row's `status` is not performing the act
+# `lane_approval_refusal` refuses, and widening to them is OI-30's call.
 #
 # WHY A CONSTANT AND NOT A COMMENT. The hazard the review named is a tier that
 # joins `SNAPSHOTTED` and reaches NO approval reader — silently, because these
 # two lists sit hundreds of lines apart in different modules. Naming the
 # exclusions makes the two sets a closed statement:
-# `SNAPSHOTTED == SPINE_CSVS + OUTSIDE_THE_APPROVAL_ACT`, pinned by
+# `SNAPSHOTTED == APPROVAL_ACT_CSVS + OUTSIDE_THE_APPROVAL_ACT`, pinned by
 # `tests/test_acceptance_record.py`. A new tier therefore cannot be added
 # without landing on one side or the other by a deliberate edit.
 OUTSIDE_THE_APPROVAL_ACT = (
-    "docs/requirements/stakeholder-needs.toml",
     "docs/requirements/interfaces.toml",
     "docs/requirements/external.toml",
     "docs/requirements/components.toml",
@@ -401,10 +419,15 @@ def _spine_revs(root, base, head, touches=()):
     return changed, base + ":", new_prefix
 
 
-def _spine_row_sides(root, base, head):
+def _spine_row_sides(root, base, head, registries=SPINE_CSVS):
     """`(registry, id_col, before_rows, after_rows)` per spine registry the two
     trees actually differ in — THE ONE two-tree spine walk, shared by every
     reader below it.
+
+    `registries` is the walk's UNIVERSE and defaults to `SPINE_CSVS`; the
+    approval-act reader passes `APPROVAL_ACT_CSVS`, which adds the SN tier. The
+    parameter exists so the two scopes are one walk with one set of carrier and
+    `--no-renames` rules rather than two walks that could drift.
 
     Extracted at WI-572 rather than copied: that row's lane refusal and its
     first-approval trigger ask two more questions of the SAME diff
@@ -417,12 +440,12 @@ def _spine_row_sides(root, base, head):
         root,
         base,
         head,
-        touches=sorted(c for p, _ in SPINE_CSVS for c in _spine_carriers(p)),
+        touches=sorted(c for p, _ in registries for c in _spine_carriers(p)),
     )
     if revs is None:
         return
     staged_names, old_rev, new_rev = revs
-    for csv_path, id_col in SPINE_CSVS:
+    for csv_path, id_col in registries:
         # The record names the carrier file that ACTUALLY changed, not the
         # constant: the constant carries a suffix, and reporting
         # `system-requirements.toml` for a repo whose staged diff touched
@@ -514,6 +537,13 @@ def staged_approval_acts(root, base="HEAD", head=None):
     `baseline_snapshot._approval_transition`, which asks the live-vs-snapshot
     form of this question.
 
+    ITS UNIVERSE IS `APPROVAL_ACT_CSVS`, the four SPINE registries — SN, SR,
+    LLR, TC — and not `SPINE_CSVS`, which is the amendment warn's three. SN is
+    covered because it is a spine tier carrying the same `status` vocabulary and
+    is the half of DevStg-Reqs the human-approval dial holds, so a lane flipping
+    a need is the worst case of this act rather than an exempt one (round 028).
+    The three OFF-SPINE registries stay out; see `OUTSIDE_THE_APPROVAL_ACT`.
+
     Owner ruling 2026-09-01 (WI-572): the act this reports is the ADJUDICATOR's,
     performed on the serial trunk side. `approval_delta` directly below reads it
     ONCE for `merge_approval_refusal`, which applies either the ordinary-lane ban
@@ -525,7 +555,7 @@ def staged_approval_acts(root, base="HEAD", head=None):
     like `staged_spine_amendments`."""
     out = []
     for registry, _id_col, before_rows, after_rows, _csv in _spine_row_sides(
-        root, base, head
+        root, base, head, APPROVAL_ACT_CSVS
     ):
         for rid, row in after_rows.items():
             act = _approval_act(registry, rid, before_rows.get(rid), row)
@@ -657,10 +687,12 @@ def lane_approval_refusal(root, base, head, delta=None):
     ACT — the refusal text, or None when it performs none.
 
     THE ACT IS THE ADJUDICATOR'S, ON TRUNK (owner ruling 2026-09-01). A worker
-    lane AUTHORS `Drafted` SR/LLR/TC rows and AMENDS cell text on any such row,
-    including approved ones. In those three registries it does not flip a
-    `Status` into `Approved`/`Founded` or mint a row already claiming one; it
-    does not write `SNAPSHOT_DIR`. Two reasons, both the owner's. CONTEXT:
+    lane AUTHORS `Drafted` SN/SR/LLR/TC rows and AMENDS cell text on any such
+    row, including approved ones. In those four spine registries
+    (`APPROVAL_ACT_CSVS`) it does not flip a `Status` into `Approved`/`Founded`
+    or mint a row already claiming one; it does not write `SNAPSHOT_DIR`. The
+    off-spine three (`OUTSIDE_THE_APPROVAL_ACT`) stay outside this rung — their
+    approval cells are OI-30 D3's. Two reasons, both the owner's. CONTEXT:
     approving a row means reading its whole chain — the parent SR, the sibling
     LLRs, the tests — which one work item does not hold. CONCURRENCY: two lanes
     touching the spine conflict at merge and the snapshot must not move across
@@ -706,8 +738,9 @@ def lane_approval_refusal(root, base, head, delta=None):
     return (
         "{} performs an APPROVAL ACT in its own delta - and the approval act is "
         "the ADJUDICATOR's, on the serial trunk side, never a work lane's (owner "
-        "ruling 2026-09-01; PROCESS.md §4). A lane AUTHORS `Drafted` SR/LLR/TC "
-        "rows and AMENDS their cell text; in those three registries it does not "
+        "ruling 2026-09-01; PROCESS.md §4). A lane AUTHORS `Drafted` "
+        "SN/SR/LLR/TC rows and AMENDS their cell text; in those four spine "
+        "registries it does not "
         "flip a `Status` into `Approved`/`Founded` or mint a row already "
         "claiming one, and it does not write {}/. Approving means reading the "
         "row's whole chain, which one "

@@ -992,3 +992,105 @@ merge-admission regressions for a permitted scoped act, empty scope,
 actor-kind-only authority, an unanchored flip, an unrelated flip, and a widened
 snapshot all pass (**6 passed in 2.90 s**). No implementation change was owed.
 <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_integrate_admission.py::test_a_scoped_adjudication_lane_may_land_its_flip_and_snapshot tests/test_integrate_admission.py::test_a_first_approval_adjudication_with_no_scope_is_refused tests/test_integrate_admission.py::test_an_adjudication_kind_alone_does_not_authorise_a_flip tests/test_integrate_admission.py::test_an_adjudication_cannot_flip_a_row_outside_its_scope tests/test_integrate_admission.py::test_an_adjudication_snapshot_cannot_widen_beyond_its_flips tests/test_integrate_admission.py::test_a_scoped_flip_without_its_snapshot_is_refused" rev=656b641a -->
+
+### Round-028 rework: four findings, and the SN tier joins the approval rung
+
+The four round-028 findings are taken as their remedies state.
+
+**MAJOR 1 — the false complexity reason.** `plan_round.py::_advance` reads
+`18 18` at the integration base `4d0b972d` and `18 18` at the tip, and
+`check_complexity.py --root <archive of 4d0b972d>` does NOT name it among its
+FAILs — it names `dispatch.py::_advance 16 -> 20`, whose text the reason had
+been copied from. Re-measured over a fresh `git archive 4d0b972d` tree rather
+than re-read: the row neither moved nor failed at base, so it carries no debt
+this branch absorbed and the reason is DELETED, leaving the eight true ones.
+The review's construction-first note (teach `--restamp` to write the measured
+`before -> after` into the reason it stamps, so prose and row have one producer)
+is a follow-up row, not this diff.
+
+**MAJOR 2 — the archived record under-counted its own amendments.** The Context
+said "two rows" naming `LLR-158` and `IF-091`; driving this row's own reader
+over its own delta, `staged_spine_amendments('.', '4d0b972d', 'HEAD')` returns
+`LLR-136` and `LLR-158`, and the branch also amends `IF-091` — three rows. Both
+sentences now say three and name `LLR-136`. The attestation's conclusion (no
+flip, no snapshot, amendment permitted) was and is true; only the enumeration
+was stale.
+
+**MINOR 3 — the byte stamps.** Re-measured with `wc -c` and re-stamped in all
+three tracked copies of the guard, which are byte-identical:
+`PROCESS.md` 88,355 -> **88,365** (+10, last round's §4 wording; unedited this
+round), `PROCESS_OPTIONS.md` 185,555 -> **186,421** (+866 from the stamp, of
+which +181 is this round's doctrine paragraph). The guard's own capped row went
+4,982 -> **4,831** (-151, headroom 169 under the 5,000 cap) because a re-stamp
+replaces a row's reason rather than nesting the superseded one.
+
+**MINOR 4 — the third WHOLESALE site.** `baseline_snapshot.py`'s `SNAPSHOT_DIR`
+comment now states the scoped rule in `copy_live`'s own words.
+
+**DEVIATION FROM THE PLAN, recorded as one.** The plan's §2a table and the
+doctrine it drove say the act is scoped to **SR/LLR/TC**. That wording is
+narrower than the ruling it implements, and narrower in the one direction that
+matters: `lane_approval_refusal` walked `SPINE_CSVS`, so a lane flipping a
+`docs/requirements/stakeholder-needs.toml` row `Drafted -> Approved` merged
+clean. SN is a SPINE tier — `spine_carrier.SPINE_TABLE` names it, its rows carry
+the same `status` vocabulary — and `DevStg-Reqs` is the rung the human-approval
+dial holds for the owner in this very repo, so a lane blessing a need is the
+WORST case of the act the owner moved to the adjudicator, not an exempt one.
+Its earlier exclusion was the section-as-state reading recorded at
+`baseline_snapshot._claims_approval`, which the `status` cell retired.
+
+The refusal now walks `APPROVAL_ACT_CSVS` — a SEPARATE constant, `SPINE_CSVS`
+plus the need tier, not a widened `SPINE_CSVS`, because the amendment warn and
+the intake mint read that name and silently widening THEM is a different
+decision this round did not take. `_spine_row_sides` gained a `registries`
+parameter so the two scopes stay one walk with one set of carrier and
+`--no-renames` rules. The three OFF-SPINE registries stay out and the doctrine
+now says why: their approval cells are governed by OI-30 D3, out of this row's
+scope. The exhaustiveness pin stays honest by construction —
+`stakeholder-needs.toml` moved from `OUTSIDE_THE_APPROVAL_ACT` into the covered
+set, and `APPROVAL_ACT_CSVS | OUTSIDE_THE_APPROVAL_ACT == SNAPSHOTTED` is still
+exhaustive and disjoint.
+
+Doctrine re-worded at every site that said SR/LLR/TC: `PROCESS_OPTIONS.md`
+mechanism 1 and its division-of-labour row, the `gate-advance` skill in all
+three copies (whose DevStg-Reqs bullet said the SN half rested on the procedure
+alone — it no longer does), the plan's §2a table, and this WI's own record.
+`PROCESS.md` §4 needed no edit: it already says "a spine row's `Status` flip",
+which is now more true rather than less.
+
+**THE OWNER'S OWN SITTING IS UNAFFECTED, verified rather than assumed.** The
+refusal is read at `integrate._approval_act_refusal` over the merge delta of a
+WORK LANE the station is landing; a hand-made SN flip in a reviewed commit on
+trunk never reaches that slot. The new test's docstring says so and the test
+asserts nothing about a trunk commit's admissibility.
+
+New test: `tests/test_intake.py::test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing`
+— a born-`Approved` SN row and a `Drafted -> Approved` SN flip are both reported
+by `staged_approval_acts` and named in the refusal text (`SN-001`,
+`stakeholder-needs`, `SN/SR/LLR/TC`), and no adjudication is minted over the
+flip: the rung is HELD here (`human_approval_through = DevStg-Needs`) and the
+first-approval mint's universe was deliberately left at `SPINE_CSVS`. Both
+reasons are stated in the docstring rather than one being left to imply the
+other. `amended_repo` gained an optional `seed` hook so the flip arm has a
+base-side row to flip.
+
+Instruments at the reworked tip: targeted modules
+`test_acceptance_record / test_integrate_station / test_adjudicate_brief /
+test_intake / test_baseline_snapshot / test_trajectory_staged` **229 passed in
+30.04 s**; `pytest -q -n auto -m smoke` **1463 passed, 4 skipped in 21.09 s**
+with `check_smoke_budget --mode enforce` at **22.5 s vs 60 s -> within**;
+`check_docs --root . --stale` **OK - 1219 doc(s), 1586 intra-repo link(s), 0
+broken**; `check_trajectory` **clean (569 work item(s), 527 done (93%), 21
+cancelled, graph acyclic)**; `trace --strict-integrity` **SN=27 SR=76 LLR=188
+TC=187 orphans=2 integrity=0 … provenance-findings=1 paraphrase-advisories=3**;
+`gen_prompt_catalog --check` **fresh (8 prompts)**; `check_complexity` **OK -
+201 row(s) over 15, unchanged from baseline**; `ruff format --check` **231 files
+already formatted**; `test_bootstrap -k "byte_caps or size_budget or capped_doc"`
+**3 passed**; `test_module_size_ratchet` + `test_bootstrap` **62 passed**;
+`test_dogfood_sync` **38 passed, 1 skipped**. No module crossed its size
+ratchet, so no ratchet row was re-stamped.
+
+**Still merge-clean under its own — now wider — rung.** The round's edits touch
+no spine registry: over `4d0b972d..HEAD` plus this working tree,
+`staged_approval_acts` is `[]`, `lane_approval_refusal` is `None`, and
+`staged_spine_amendments` still reports exactly `LLR-136` and `LLR-158`.

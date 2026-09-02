@@ -131,7 +131,7 @@ project-trajectory/scripts/plan_artifacts.py	parse_plan_wis	16	25
 project-trajectory/scripts/plan_coverage.py	check_plan	44	60
 project-trajectory/scripts/plan_coverage.py	find_cycle	17	28
 project-trajectory/scripts/plan_coverage.py	parse_plan	16	28
-project-trajectory/scripts/plan_round.py	_advance	18	18	16 -> 20; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
+project-trajectory/scripts/plan_round.py	_advance	18	18
 project-trajectory/scripts/plan_round.py	ready_steps	22	35
 project-trajectory/scripts/plan_round.py	record	61	90
 project-trajectory/scripts/plan_runner.py	run_dual_plan_round	95	288

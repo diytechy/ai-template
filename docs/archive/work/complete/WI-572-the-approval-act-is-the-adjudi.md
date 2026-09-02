@@ -66,11 +66,15 @@ and amends cell text; nothing else changed about what a lane may do.
    reasons, the division-of-labour table, the three holding mechanisms); OI-45
    (b) narrowed by one sentence; `gate-advance`, `spine-authoring` and
    `worker.template.md` updated. **And it says only what the rung reaches.**
-   The act is scoped to SPINE rows (SR/LLR/TC), which is the ruling's own scope,
-   so the doctrine names that bound rather than stating an unqualified ban the
-   merge slot does not enforce. The bound is CLOSED, not merely declared:
-   `acceptance_record.OUTSIDE_THE_APPROVAL_ACT` names the four other snapshotted
-   registries, and the two lists are pinned exhaustive and disjoint against
+   The act is scoped to SPINE rows — SN/SR/LLR/TC, all four tiers
+   (`acceptance_record.APPROVAL_ACT_CSVS`; the SN tier joined at REVIEW-A round
+   028, because a need is a spine row and `DevStg-Reqs` is the rung the dial
+   holds) — which is the ruling's own scope, so the doctrine names that bound
+   rather than stating an unqualified ban the merge slot does not enforce. The
+   bound is CLOSED, not merely declared:
+   `acceptance_record.OUTSIDE_THE_APPROVAL_ACT` names the three OFF-SPINE
+   snapshotted registries, whose approval cells are OI-30 D3's, and the two
+   lists are pinned exhaustive and disjoint against
    `baseline_snapshot.SNAPSHOTTED`, so a tier added to the snapshot must land on
    one side by a deliberate edit and cannot reach no approval reader at all.
    The two generators that tell a human signer what a snapshot copies were
@@ -121,10 +125,11 @@ adjudication arm on a scaffold. The first-approval adjudication this row
 ships is what performs the flip and the snapshot, on trunk.
 
 Honoured: this lane moved no `Status` and wrote no snapshot; every arm is driven
-on a scaffold repo built by the tests. It amended two rows its own code made
+on a scaffold repo built by the tests. It amended three rows its own code made
 stale — `LLR-158`'s `code_symbol`/`Detail` (left `Approved`, the drift being the
-signal) and `IF-091`'s requestors (already `Drafted`) — which the constraint
+signal), `LLR-136`'s `Detail` (also left `Approved`; the `wi_convert.read_specs`
+repair) and `IF-091`'s requestors (already `Drafted`) — which the constraint
 permits: a lane amends, an adjudicator approves. Checked against this row's own
 reader rather than assumed — `lane_approval_refusal` returns `None` over the
-branch delta, and `staged_spine_amendments` reports `LLR-158`, so the amendment
-adjudication is raised for it at merge.
+branch delta, and `staged_spine_amendments` reports `LLR-136` and `LLR-158`, so
+the amendment adjudication is raised for them at merge.

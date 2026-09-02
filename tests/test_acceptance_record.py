@@ -213,20 +213,25 @@ def test_no_snapshotted_tier_can_go_unseen_by_the_approval_rung():
     """The approval-act reader's registry set and the snapshot's are ONE closed
     statement (WI-572 REVIEW-A round 7, MAJOR 1).
 
-    `lane_approval_refusal` walks `SPINE_CSVS` — SR/LLR/TC — while
-    `baseline_snapshot.SNAPSHOTTED` names SEVEN registries whose `Status` a
-    snapshot anchors. Both are hand-written literals, in different modules,
-    hundreds of lines apart, and NOTHING joined them: a tier could be added to
-    the snapshot and reach no approval reader at all, silently. The narrowness
-    itself is correct and RULED — the owner's 2026-09-01 ruling scopes the act
-    to spine rows ("new SR/LLR/TC rows are written `Drafted`"), and SN's older
-    exclusion is design §B7's parked pass — so this does not widen the rung. It
+    `lane_approval_refusal` walks `APPROVAL_ACT_CSVS` — the four SPINE tiers,
+    SN/SR/LLR/TC — while `baseline_snapshot.SNAPSHOTTED` names SEVEN registries
+    whose `Status` a snapshot anchors. Both are hand-written literals, in
+    different modules, hundreds of lines apart, and NOTHING joined them: a tier
+    could be added to the snapshot and reach no approval reader at all,
+    silently. The remaining narrowness is RULED — the owner's 2026-09-01 ruling
+    scopes the act to SPINE rows, and the off-spine three carry approval cells
+    governed by OI-30 D3 — so this pin does not decide the rung's width. It
     makes the boundary a statement someone must edit ON PURPOSE.
+
+    ROUND 028 MOVED ONE TIER ACROSS IT, which is the pin working as intended:
+    `stakeholder-needs.toml` left `OUTSIDE_THE_APPROVAL_ACT` for the covered
+    set, because SN is a spine tier and the half of DevStg-Reqs the dial holds
+    for the owner — a lane flipping it is the worst case, not an exempt one.
 
     A new tier therefore fails HERE, naming itself, and its author has to put it
     on one side or the other."""
     snapshotted = set(baseline_snapshot.SNAPSHOTTED)
-    refused = {rel for rel, _ in acceptance_record.SPINE_CSVS}
+    refused = {rel for rel, _ in acceptance_record.APPROVAL_ACT_CSVS}
     declared_out = set(acceptance_record.OUTSIDE_THE_APPROVAL_ACT)
 
     # Neither side may name a registry the snapshot does not anchor...
@@ -245,10 +250,12 @@ def test_no_snapshotted_tier_can_go_unseen_by_the_approval_rung():
 def test_an_off_spine_status_flip_is_not_the_act_this_rung_refuses(tmp_path):
     """The DELIBERATE half of the boundary above, driven rather than declared.
 
-    The review found no test asserting either that the four non-`SPINE_CSVS`
-    tiers are refused or that they are out of scope, so the omission read as an
+    The review found no test asserting either that the off-spine tiers are
+    refused or that they are out of scope, so the omission read as an
     oversight from the outside. It is the ruling: a lane may move an interface
-    row's `status`, and that is not the approval act on a spine row. Driven
+    row's `status`, and that is not the approval act on a spine row. (The SN
+    tier was in this exempt set until round 028 and is now covered — see
+    `tests/test_intake.py::test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing`.) Driven
     against a real git tree so this pins the READER's behaviour, not a re-reading
     of the constant the test above already pins."""
     import subprocess

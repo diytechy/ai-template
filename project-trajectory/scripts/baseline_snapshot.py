@@ -149,9 +149,12 @@ except ImportError:  # pragma: no cover - in-process fallback
     import spine_rules
     import spine_carrier
 
-# The snapshot's root, repo-relative. One generation only: it is REPLACED
-# WHOLESALE at each approval, never migrated in place — git holds the history,
-# and a snapshot edited forward would be a second ledger of what was blessed.
+# The snapshot's root, repo-relative. One generation only, never migrated in
+# place — git holds the history, and a snapshot edited forward would be a second
+# ledger of what was blessed. SCOPED SINCE WI-571: the seed copies the whole
+# tree once, and a refresh REPLACES ONLY the registries the act authorises (the
+# registry a `Status` move happened in plus every registry `approves` names),
+# leaving a registry outside the act's scope untouched — see `copy_live`.
 SNAPSHOT_DIR = "docs/archive/last_approved"
 
 # The prose stamp's filename. Rendered for a human, PARSED BY NOTHING (design
