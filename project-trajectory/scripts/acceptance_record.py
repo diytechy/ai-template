@@ -439,18 +439,25 @@ def staged_approval_acts(root, base="HEAD", head=None):
     THE READING IS THE MIRROR OF `staged_spine_amendments`, deliberately: that
     one reports rows whose approved text moved while Status stood still and
     EXEMPTS a moved Status ("a deliberate call this does not second-guess"); this
-    one reports exactly the exempted set. Together they cover the delta, and the
-    two share `_spine_row_sides` so they cannot disagree about which rows exist.
+    one reports THE EXEMPTED SET MINUS THE DE-APPROVALS. The two share
+    `_spine_row_sides` so they cannot disagree about which rows exist, and the
+    subtraction is stated rather than left to the reader because a mirror
+    claiming to be exact and then carving out a case is two sentences that
+    disagree.
 
-    A DE-APPROVAL IS NOT AN ACT. `Approved` → `Drafted` withdraws a claim; it
-    blesses nothing, so it owes no snapshot and refuses no merge. Same direction
-    as `baseline_snapshot._approval_transition`, which asks the live-vs-snapshot
+    A DE-APPROVAL IS NOT AN ACT, and that is the subtraction. `Approved` →
+    `Drafted` withdraws a claim; it blesses nothing, so it owes no snapshot and
+    refuses no merge. It is not dropped on the floor either — `staged_drafted_rows`
+    reports it as an amended `Drafted` row, so the first-approval mint raises the
+    re-approval it now owes. Same direction as
+    `baseline_snapshot._approval_transition`, which asks the live-vs-snapshot
     form of this question.
 
     Owner ruling 2026-09-01 (WI-572): the act this reports is the ADJUDICATOR's,
-    performed on the serial trunk side. `integrate._approval_act_refusal` reads
-    it off a worker branch's own delta to refuse the merge; `intake` reads it off
-    a landed trunk commit, where it is the sanctioned shape.
+    performed on the serial trunk side. Its ONE consumer is `lane_approval_refusal`
+    directly below, which words the refusal `integrate._approval_act_refusal`
+    returns against a worker branch's own delta — this reader does not itself
+    cross the `IF-091` seam, and the seam does not declare that it does.
 
     Returns [] when not applicable; any missing git context is a silent no-op,
     like `staged_spine_amendments`."""
@@ -491,6 +498,26 @@ def staged_approval_acts(root, base="HEAD", head=None):
     return out
 
 
+# How `git diff --name-status` letters read as the ACT a branch performed on the
+# snapshot. Worded from the letter rather than assumed, because the record is
+# read by a human deciding why their merge stopped, and a branch that DELETES a
+# stale `SNAPSHOT_DIR` file reported as one it "wrote" is a false sentence in the
+# one artifact that explains the stop. An unrecognised letter is still named —
+# the file changed, and which way is the part this does not know.
+_SNAPSHOT_ACT = {"A": "wrote", "M": "rewrote", "D": "deleted"}
+
+
+def _snapshot_acts(name_status):
+    """`["wrote <path>", ...]` for a `--name-status` block: one line per
+    `SNAPSHOT_DIR` file the delta touched, worded by its status letter."""
+    for line in name_status.splitlines():
+        parts = line.split("\t")
+        if len(parts) < 2 or not parts[-1].strip():
+            continue
+        letter = parts[0].strip()[:1]
+        yield "{} {}".format(_SNAPSHOT_ACT.get(letter, "changed"), parts[-1].strip())
+
+
 def lane_approval_refusal(root, base, head):
     """Why a WORK BRANCH's delta may not merge because it performs an APPROVAL
     ACT — the refusal text, or None when it performs none.
@@ -528,7 +555,7 @@ def lane_approval_refusal(root, base, head):
     """
     acts = staged_approval_acts(root, base, head)
     out = _git(
-        root, ["diff", "--name-only", "--no-renames", base, head, "--", SNAPSHOT_DIR]
+        root, ["diff", "--name-status", "--no-renames", base, head, "--", SNAPSHOT_DIR]
     )
     if out is None:
         return (
@@ -537,7 +564,7 @@ def lane_approval_refusal(root, base, head):
                 head, SNAPSHOT_DIR, str(base)[:10]
             )
         )
-    snapshot_files = sorted(n for n in out.splitlines() if n.strip())
+    snapshot_files = sorted(_snapshot_acts(out))
     if not acts and not snapshot_files:
         return None
     lines = [
@@ -550,7 +577,7 @@ def lane_approval_refusal(root, base, head):
         )
         for act in acts
     ]
-    lines += ["  wrote {}".format(name) for name in snapshot_files]
+    lines += ["  {}".format(name) for name in snapshot_files]
     return (
         "{} performs an APPROVAL ACT in its own delta - and the approval act is "
         "the ADJUDICATOR's, on the serial trunk side, never a work lane's (owner "

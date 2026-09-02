@@ -756,9 +756,12 @@ un-approved. `tests/test_trajectory_staged.py` pins both halves.
 
 **The other half of the same walk** (owner ruling 2026-09-01). That reader
 EXEMPTS a row whose `Status` moved — "a deliberate call this does not
-second-guess". `acceptance_record.staged_approval_acts` reports precisely the
-exempted set: a row crossing INTO `Approved`/`Founded`, or arriving already
-claiming one. On a WORK BRANCH those are refusals, not records — the approval
+second-guess". `acceptance_record.staged_approval_acts` reports that
+exempted set MINUS the de-approvals: a row crossing INTO `Approved`/`Founded`,
+or arriving already claiming one. An `Approved` → `Drafted` withdrawal also
+moves `Status`, so the amendment reader exempts it too, but it blesses nothing
+and is reported by `staged_drafted_rows` instead, as the re-approval it now
+owes. On a WORK BRANCH those are refusals, not records — the approval
 act is an adjudicator's, on the serial trunk side — and
 `lane_approval_refusal` words the refusal the merge slot returns. Its sibling
 `staged_drafted_rows` reports the rows the lane authored below approval, which

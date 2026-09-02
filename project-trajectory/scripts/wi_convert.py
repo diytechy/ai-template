@@ -587,24 +587,30 @@ def _self_verify(target, relpath, row, order):
 
 
 def read_specs(work_dir):
-    """`[(row, order, relpath)]` for every `*.md` under `work_dir`, sorted into
-    registry order: by the explicit `order` key, then by numeric id.
+    """`[(row, order, relpath)]` for every `<status>/WI-*.md` under `work_dir`,
+    sorted into registry order: by the explicit `order` key, then by numeric id.
 
     A spec with no `order` (hand-filed after the conversion) sorts after every
     numbered one, by id — deterministic, and honest that the key exists only to
     reproduce a file whose row order the ids do not describe.
+
+    THE POPULATION IS `spec_paths`', not a second walk of this module's own
+    (WI-572 REVIEW-A). This is the WRITE side of the read rule already
+    re-exported above, and it used to `rglob("*.md")` and then demand that every
+    hit inside a status directory parse as a spec — a strictness the folder home
+    does not actually define. `docs/work/cancelled/README.md` is a tracked,
+    legitimate file under a status directory, so the round-trip raised on it the
+    moment `active/` drained and the `drained-stop` refusal stopped masking it.
+    Walking `WI-*.md` deletes that disagreement rather than excluding one
+    filename: the two sides now derive their population from one function, so a
+    file the reader treats as residue cannot be a file the writer treats as a
+    broken row.
     """
     work_dir = Path(work_dir)
     if not work_dir.is_dir():
         raise ConvertError("{}: no such work directory".format(work_dir))
     parsed = []
-    for path in sorted(work_dir.rglob("*.md")):
-        if path.parent == work_dir:
-            # Status is the directory, so a file at the folder root (the
-            # registry's own README) is not a row — same exclusion spec_files()
-            # applies. Inside a status directory, strictness stands: every *.md
-            # there must parse as a spec.
-            continue
+    for path in spec_paths(work_dir):
         relpath = path.relative_to(work_dir).as_posix()
         row, order = parse_spec(
             path.open(encoding="utf-8", newline="").read(), relpath, where=str(path)

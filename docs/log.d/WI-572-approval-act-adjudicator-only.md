@@ -35,13 +35,14 @@ at `fd86e47f`.
 `acceptance_record.staged_approval_acts` reports a `Status` crossing INTO
 `Approved`/`Founded` and a row that arrives already claiming one;
 `lane_approval_refusal` words the refusal, naming each row, its registry, the
-shape of act, and every `docs/archive/last_approved/` file the branch wrote.
+shape of act, and every `docs/archive/last_approved/` file the branch touched —
+each worded by what the branch DID to it (round 4; see below).
 `integrate._approval_act_refusal` is the rung, beside `_minted_id_refusal`
 whose shape it copies exactly — the merge base, and the ladder placement.
 
 Construction-first, as the plan required: `staged_spine_amendments` already
 diffs the merged commit and EXEMPTS a row whose Status moved; the new reader
-reports precisely that exempted set. All three readers (plus
+reports that exempted set MINUS the de-approvals (round 4). All three readers (plus
 `staged_drafted_rows`) now share ONE two-tree walk, `_spine_row_sides`,
 extracted rather than copied. Verified against the record itself: the reader
 reproduces the census above exactly — four flips at `580df781`, and the
@@ -345,12 +346,12 @@ adjudication are this arm's first re-attestation case — is a trunk-side act on
 future adjudication, not something this lane may perform.
 
 Deferred open items: none — the ruling this row executes is already recorded.
-Three candidate follow-ons are NAMED above rather than owed back as decisions:
-narrowing the owner's approval brief to the held rungs; giving
+Two candidate follow-ons are NAMED above rather than owed back as decisions:
+narrowing the owner's approval brief to the held rungs, and giving
 `test_this_repo_s_committed_stage_is_current` the work-branch exemption its
-`derive_stage --check` twin already has; and teaching `wi_convert`'s folder-home
-walk to skip the work subfolders' `README.md` (a red that predates this row and
-surfaces whenever the claim queue drains).
+`derive_stage --check` twin already has. (The third named here through round 3 —
+`wi_convert`'s folder-home walk — was TAKEN in lane at round 4 below, because
+this close is what unmasks it and a red bar fails where it surfaces.)
 
 ### REVIEW-A rework: the terminal sequence performs the ruled act
 
@@ -383,3 +384,74 @@ Rework verification at the implementation commit:
   and the generated prompt catalogue is fresh at eight prompts.
   <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=99aedcda -->
   <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/gen_prompt_catalog.py --check" rev=99aedcda -->
+
+### REVIEW-A rework, round 4: four findings answered, one still in flight
+
+Round 4 returned five findings. The four settled below are landed; the MAJOR on
+the brief's population is the section after this one.
+
+**The folder-home walk, taken in lane rather than deferred (MAJOR 2).** Round 3
+named this a follow-on; round 4 correctly refused the deferral, because the red
+is unmasked BY THIS CLOSE and the per-commit bar fails where it surfaces.
+`wi_convert.read_specs` walked `rglob("*.md")` and then demanded every hit under
+a status directory parse as a spec — a strictness the folder home does not
+define. It now reads through `spec_paths`, the `kitlib.registry.spec_files`
+re-export this module ALREADY carried twenty lines above it: the write side and
+the read side derive their population from one function, so a file the reader
+treats as residue cannot be a file the writer treats as a broken row. That is a
+deletion of a second walk, not an exclusion of one filename.
+
+**And the repair uncovered why nobody had seen it.** With the walk fixed, four
+of `test_wi_convert.py`'s guards went from SKIPPED to failing on stale premises.
+The `live_csv` fixture caught EVERY `ConvertError` and reported it as "live
+registry has in-flight claims" — so the `cancelled/README.md` parse error read
+as a drained-stop refusal, and four guards had been dark since WI-504 split the
+folder home into two roots. Both halves are fixed:
+
+- the skip now fires only on the refusal it names (`"drained-stop" in str(exc)`);
+  anything else RAISES. A skip whose reason is a guess hides the thing it names.
+- the guards measure the registry, which since WI-504 is the UNION of
+  `docs/work/` and `docs/archive/work/` — the same union
+  `kitlib.registry.read_spec_rows` gives every other consumer. `docs/work/` alone
+  is 24 rows, so the "not truncated" guard was reading 546 archived rows as
+  truncation, the cancellation guard was vacuous (21 cancelled rows are all in
+  the archive), and the not-id-sorted premise was unprovable. `_merged_folder_home`
+  copies both roots into one tree — a copy because `to_csv`/`to_specs` are
+  single-root by contract and both trees use identical status directory names,
+  so the union IS a folder home of the same shape.
+
+Mutation-proven both ways at this tip, not assumed: restoring the `*.md` walk
+reds `test_the_live_registry_round_trips_...` and ERRORS the other four (the
+fixture raising instead of skipping is the second half of the repair, driven).
+With the fix: **21 passed, 0 skipped**.
+
+**The refusal names the act it observed, not the act it assumed (MINOR 3).**
+`lane_approval_refusal`'s snapshot arm read `git diff --name-only`, which lists
+DELETIONS beside writes, and rendered every name as `wrote {}`. A branch removing
+a stale `docs/archive/last_approved/` file was refused with a record stating it
+wrote a file it deleted — a false sentence in the one artifact a human opens to
+learn why the merge stopped. It now reads `--name-status` and words each line
+from the letter (`_SNAPSHOT_ACT`: wrote / rewrote / deleted, `changed` for an
+unrecognised letter, because the file did change and which way is the part this
+does not know). A wording correction, so no unrepresentable-form clause is owed.
+
+**Two statements about the mirror, made one (MINOR 5).** `staged_approval_acts`'
+docstring claimed to report "exactly the set `staged_spine_amendments` exempts"
+and then carved out the de-approval four paragraphs later. An `Approved` →
+`Drafted` withdrawal moves `Status`, so the amendment reader exempts it, but it
+blesses nothing, so this reader does not report it. The mirror is now stated as
+the exempted set MINUS the de-approvals, with where the withdrawal DOES surface
+(`staged_drafted_rows`, as the re-approval it owes) named in the same breath —
+in the docstring, in `LLR-158`'s `Detail`, and in
+`docs/registry-machinery-reference.md`, the three places that quoted it.
+
+**A seam that declared a record never crossing it (MINOR 4).** `IF-091`'s `data`
+named "staged_approval_acts records ... (integrate)". Verified rather than
+assumed: `grep` over `project-trajectory/scripts` and `scripts` finds
+`staged_approval_acts` called nowhere outside `acceptance_record` itself — the
+one mention in `integrate.py` is prose in a docstring. The clause is dropped and
+the seam names `lane_approval_refusal` alone. The same false claim was in the
+reader's own docstring, in BOTH halves ("`intake` reads it off a landed trunk
+commit" is false too — intake never calls it), so that sentence is corrected to
+what is true: its one consumer is `lane_approval_refusal` directly below it, and
+this reader does not itself cross the seam.
