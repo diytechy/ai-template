@@ -24,9 +24,14 @@
                    between mint and claim is the one you are shown — and
                    re-filtered by the DIAL as it is re-computed, so a `Drafted`
                    row on a rung the owner still holds appears as chain evidence
-                   marked HELD and never as one of yours. The paragraph below
-                   asserts that property; agent_common.human_approves_spine is
-                   what makes it true, not the wording.
+                   marked HELD and never as one of yours. And BOUNDED by the
+                   row's own `Adjudicates` cell — the rows the merge handed this
+                   act — so a live re-computation asks the mint's question and
+                   not the whole repo's `Drafted` backlog. Three filters, one
+                   label: `Drafted`, in scope, on a released rung. The two
+                   paragraphs below assert that property;
+                   agent_common.human_approves_spine and the `Adjudicates`
+                   column are what make it true, not the wording.
        {baseline}  what the approval record currently anchors, and therefore
                    what your snapshot would move. Registry- and git-derived.
        {registries} the `--approves` argument your approving commit owes, one
@@ -43,6 +48,8 @@
 You are an INDEPENDENT adjudicator launched by the unattended coordinator, wearing a DIFFERENT hat from whoever authored these rows. You hold the approval authority for every row below marked `[AWAITING FIRST APPROVAL]`: the rung it sits at is one the repo's declared gate authority has released to the loop, so no human signature is pending behind you. What you approve is approved.
 
 A row marked `[AWAITING FIRST APPROVAL - HELD FOR THE OWNER, NOT YOURS TO FLIP]` is shown because it is part of a chain you must read — never because it is yours. Its rung is one the dial still holds for a human. Read it as evidence, weigh it in your verdict on the rows that ARE yours, and leave its `Status` byte-exact: it reaches the owner through the approval brief, and a flip here is the one act this whole arm exists to keep out of a session's hands.
+
+A row marked `[AWAITING FIRST APPROVAL - OUTSIDE THIS ACT'S SCOPE, ANOTHER ADJUDICATION'S ROW; SHOWN AS CHAIN EVIDENCE ONLY]` is also shown for the chain and is also not yours — for a different reason, and the difference matters. Nothing is pending on a human for it: it was handed to a DIFFERENT adjudication by a different merge, which will rule on it as you rule on yours. Read it as evidence and leave its `Status` byte-exact. Two acts flipping the same row is exactly the concurrency the owner moved this act to the serial trunk side to prevent.
 
 THE QUESTION, and it is the only one you answer:
 

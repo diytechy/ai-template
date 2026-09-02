@@ -837,6 +837,18 @@ def _first_approval_drafts(root, before, after):
             "sr_refs": sorted({r["id"] for r in records if r["id"].startswith("SR-")})[
                 :8
             ],
+            # THE ACT'S SCOPE, and the only durable statement of it. The brief
+            # RE-DERIVES its population live at composition time (a row minted
+            # at a merge is claimed later, and `red_tc_values`' rule says brief
+            # the world the judge is actually in) — so without this cell the
+            # re-derivation asks a WIDER question than the merge asked, and the
+            # session is handed every `Drafted` row in the repo, across
+            # workstreams the owner's concurrency reason says the snapshot must
+            # not move across. Live AND scoped is the intersection of the two.
+            # NOT truncated the way `sr_refs` is: that cell is an advisory join,
+            # this one is the act's boundary, and a boundary with a `[:8]` on it
+            # silently authorises the ninth row or silently strands it.
+            "adjudicates": ids,
             "specref": records[0]["registry"],
             "context": _first_approval_context(records),
         }
@@ -1528,6 +1540,10 @@ def _draft_row(wi_id, draft):
     row["SR-Refs"] = ";".join(draft.get("sr_refs") or [])
     row["Predecessors"] = ";".join(draft.get("needs") or [])
     row["Supersedes"] = str(draft.get("supersedes") or "")  # LLR-161 lineage
+    # WI-572: the SCOPE of an adjudication's act, fixed at the mint. A brief
+    # that re-derives its population live intersects against this, so the act
+    # can never widen past the rows the merge handed over.
+    row["Adjudicates"] = ";".join(draft.get("adjudicates") or [])
     if draft.get("priority") is not None:
         row["Priority"] = str(draft["priority"])
     return row

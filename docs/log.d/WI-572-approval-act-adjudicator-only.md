@@ -455,3 +455,114 @@ reader's own docstring, in BOTH halves ("`intake` reads it off a landed trunk
 commit" is false too — intake never calls it), so that sentence is corrected to
 what is true: its one consumer is `lane_approval_refusal` directly below it, and
 this reader does not itself cross the seam.
+
+### REVIEW-A rework, round 4: the act's scope is a fact the row carries
+
+Round 4's MAJOR was the one round 1 raised and this row's author DEFERRED, with
+the deferral written into this fragment as a named follow-on. The reviewer was
+right to refuse the deferral twice, and the deferral's own argument was the
+tell: it conceded the widening was real and priced the fix at a schema column.
+The column is the price.
+
+**The defect, measured rather than argued.** `first_approval_values` re-derives
+its population LIVE from `trace.reattest_model` — deliberately, because the row
+is claimed long after the merge that minted it and `red_tc_values`' rule is that
+a brief describes the world the judge is actually in. But `reattest_model` walks
+EVERY SR in the repo, and nothing bounded the re-derivation. Driven here against
+this repo with a synthetic row and no merge context at all, it returned 4 SR
+chains, 11 `[AWAITING FIRST APPROVAL]` rows, ~40k characters, and a `registries`
+slot naming ALL THREE spine registries. The mint that produced the row named ONE
+row in its title and `## Context`.
+
+Two harms, and neither is cosmetic:
+
+- The template tells the session "You hold the approval authority for every row
+  below marked `[AWAITING FIRST APPROVAL]`". So a merge staging one `Drafted`
+  LLR authorised a flip of eleven rows across unrelated workstreams, and moved
+  the approval snapshot for all three registries under one WI. That contradicts
+  the doctrine this same change wrote into PROCESS_OPTIONS.md — the merge mints
+  an adjudication "over the `Drafted` rows the lane handed over" — and the
+  owner's own concurrency reason for moving the act to trunk, which is that the
+  approval snapshot must not move across a workstream.
+- It manufactured owner interrupts. A second merge's adjudication, minted while
+  the first was still queued, found nothing left and composed to `(None,
+  reason)`, which rule 3 turns into a HELD-for-a-human stop. This repo is live
+  for it: `human_approval_through = "DevStg-Needs"` releases all three rungs.
+
+**The fix, and why it costs a schema column.** The scope has to be a fact the
+ROW CARRIES. It cannot be re-derived (the derivation is the thing that widened),
+it cannot ride the title or `## Context` (prose carrying control flow is the
+WI-417 fold this module's own header cites), and it cannot be a frontmatter key
+outside the schema (`parse_spec` drops those — the trap `Supersedes`' comment
+records). So `Adjudicates` joins `wi_convert.COLUMNS` as a `;`-joined list
+column, exactly as `Supersedes` and `Brief` did before it, and for the same
+stated reason. `intake._first_approval_drafts` writes the ids it minted over —
+NOT truncated the way the advisory `sr_refs` cell is, because a boundary with a
+`[:8]` on it silently authorises the ninth row or silently strands it.
+`adjudicate_brief.adjudicates(row)` reads it, and the intersection is taken at
+the CHAIN ROW in one expression:
+
+    yours = drafted and rid in scope and _loop_approves(root, kind)
+
+Three filters, one label — the live model's answer, the mint's question, the
+dial's permission — and `yours` is what mints both the chain label and the
+`--approves` registry. The wider population is not filtered out downstream; no
+code path turns a repo-wide `Drafted` row into a `yours`, so it is never
+constructible. The dial check stays BESIDE the scope check rather than being
+replaced by it: the mint filtered by the dial it saw, and a dial the owner
+tightens afterwards must bind an act it has not yet authorised.
+
+**Three consequences, each of which needed saying somewhere.**
+
+- `_CHAIN_LABEL`'s two-key table became `_chain_label`, three states. A
+  `Drafted` row can fail to be yours because the OWNER holds its rung or because
+  it is ANOTHER act's row, and those take opposite actions — wait for a
+  signature, versus a sibling adjudication will rule on it. One
+  "HELD FOR THE OWNER" line for both would be a true label for the wrong reason,
+  which is still rule 2's failure. The template gained the paragraph for the new
+  label beside the one it already had.
+- The "nothing survives" refusal now names WHICH filter emptied it: ruled on
+  already, held by the dial, or a scope naming rows this spine no longer has.
+  The repo-wide `if not model` early return was DELETED rather than kept beside
+  it — it answered the same question less precisely, and two refusals for one
+  state is two answers to one question.
+- A row declaring NO scope REFUSES. An empty cell is an unstated boundary, and
+  reading it as "everything" is the widening itself, so it fails toward the
+  human.
+
+**The column's real cost, paid rather than hidden.** It is a 19th column, so an
+adopter carrying the legacy CSV home adds a header cell — `load_csv` refuses a
+header that is not the declared schema, by design. `test_dogfood_sync`'s
+schema-widening proof covers it automatically (it derives the optional set from
+the template), so behaviour-neutrality is measured, not asserted. Five
+hand-maintained copies of the header exist; four were pinned to each other and
+the fifth, `kitlib.registry.WI_COLUMNS`, was pinned to NOTHING — which is how far
+the new cell got before anything noticed it was written by the mint and dropped
+by every reader. That pin now exists, and covers the field maps as well as the
+column list: a column in both tables but in neither `LIST_FIELDS`/`SPEC_LISTS`
+round-trips as an empty cell. `test_wi_loader_sync` gained the third member of
+its `bar`/`brief` triplet — and `Adjudicates` is the only `;`-joined cell outside
+the two ref columns, so it is what proves a LIST column survives both homes.
+
+**Tests**: three at the brief (the widening regression, the no-scope refusal, the
+settled-scope refusal naming its rows), one at the mint, one at the loader
+triplet, and the widened schema pin. The widening regression is mutation-proven
+— dropping `rid in scope` reds it and the settled-scope refusal both.
+
+`intake.py` 1247 -> 1249, re-stamped with its reason: two lines, the `_draft_row`
+assignment and the mint's `adjudicates` key.
+
+Registry rows this round moved, re-pointed in lane: `IF-092`'s `data` (18 -> 19
+columns), and `LLR-136` (`Approved`, amended not flipped, like `LLR-158`) which
+now records that `read_specs` takes its population from the read side's
+`spec_paths` and that `COLUMNS` is pinned to its read-side twin.
+
+### The harness at the round-4 tip
+
+- Smoke tier: **1461 passed, 4 skipped in 20.99 s** — GREEN, where the tip this
+  round inherited was `1 failed, 1455 passed`. The budget enforcer reads
+  **23.3 s against the 60 s ceiling**.
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=HEAD -->
+  <!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=HEAD -->
+- The four previously-dark `test_wi_convert.py` guards run and pass: **21
+  passed, 0 skipped**.

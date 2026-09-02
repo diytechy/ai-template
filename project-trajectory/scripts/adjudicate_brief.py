@@ -163,6 +163,23 @@ def declared_brief(row):
     return (row.get("Brief") or "").strip().lower()
 
 
+def adjudicates(row):
+    """The registry row ids this adjudication's act is SCOPED to — the `;`-joined
+    `Adjudicates` cell as a set; empty when the row declares none.
+
+    The typed companion to `declared_brief`, and typed for the same reason:
+    `Brief` says which judgement is asked for, this says over WHAT, and an
+    assembler that re-derives its population live needs both or it re-derives a
+    wider question than the mint asked (WI-572 REVIEW-A). Reading it from the
+    mint's title or `## Context` prose instead is the WI-417 fold — prose
+    carrying control flow — which is why it is a `wi_convert` column."""
+    return {
+        part.strip()
+        for part in (row.get("Adjudicates") or "").split(";")
+        if part.strip()
+    }
+
+
 def verdict_refusal(brief, verdict_path):
     """Why this adjudication's verdict is not acceptable evidence, or None.
 
@@ -555,13 +572,37 @@ def first_approval_values(root, row):
     CONCURRENCY: an adjudication lane runs alone, so the act cannot race a
     second one.
 
-    WHICH ROWS is `trace.reattest_model`'s `approve` half — the same model
-    behind `trace.py --approve` and `open-items.html`, so the judge, the brief
-    and the owner surface cannot show three different pictures of one spine. Its
-    `Drafted` selector is chain-wide (the OI-61-sitting widening), which is
-    exactly the population this ruling hands over: a `Drafted` LLR under an
-    `Approved` SR is a first approval owed, and no drift arm can see it because
-    a row below approval has made no claim to fall from.
+    WHICH ROWS IS THE ROW'S OWN `Adjudicates` SCOPE, INTERSECTED with
+    `trace.reattest_model`'s `approve` half — the same model behind `trace.py
+    --approve` and `open-items.html`, so the judge, the brief and the owner
+    surface cannot show three different pictures of one spine. Its `Drafted`
+    selector is chain-wide (the OI-61-sitting widening), so a `Drafted` LLR
+    under an `Approved` SR is a first approval owed and no drift arm can see it
+    — a row below approval has made no claim to fall from.
+
+    BOTH HALVES ARE LOAD-BEARING, and shipping only the second is the WI-572
+    REVIEW-A finding this arm was rebuilt around. The model is REPO-WIDE: it
+    walks every SR. Re-deriving from it alone gave this brief the whole repo's
+    `Drafted` backlog rather than the rows the merge handed over — the mint
+    named one row in its title and `## Context`, and the template then told the
+    session it held the approval authority for every row shown. Measured here
+    before the fix: 4 SR chains, 11 `[AWAITING FIRST APPROVAL]` rows and all
+    three spine registries in the derived `--approves` argument, from a mint of
+    one row. That contradicts the doctrine this same change wrote (the merge
+    "MINTS a first-approval adjudication over the `Drafted` rows the lane handed
+    over") and the owner's own concurrency reason for moving the act to trunk:
+    the approval snapshot must not move across a workstream. It also
+    manufactured owner interrupts — a second merge's adjudication, minted while
+    the first was still queued, found nothing left and composed to a rule-3 HOLD.
+
+    SO THE SCOPE IS A FACT THE ROW CARRIES (`wi_convert`'s `Adjudicates`
+    column), never one recomputed from the world, and the intersection is taken
+    at the CHAIN ROW: a rendered row is this session's only if it is `Drafted`,
+    IN SCOPE, and on a rung the dial releases. The wider population is not
+    filtered out downstream — it is never constructible, because no code path
+    turns a repo-wide `Drafted` row into a `yours` label. A row declaring NO
+    scope REFUSES: an empty cell is an unstated boundary, and reading it as
+    "everything" is exactly the widening, so it fails toward the human.
 
     WHAT IS RENDERED is the WHOLE CHAIN of each selected SR, through
     `trace.spine_chain` — NOT the model's own `rows`. That list carries only the
@@ -572,31 +613,34 @@ def first_approval_values(root, row):
     subset here would have shipped a chain brief with the chain missing —
     plausible-looking, and exactly rule 2's failure.
 
-    RE-COMPUTED LIVE, never remembered from the mint (`red_tc_values`' rule):
-    the row minted at a merge, and by the time a session claims it another lane
-    may have approved or withdrawn some of those rows. A brief built from the
-    mint's own listing would ask the judge to rule on a world that no longer
-    exists — so an emptied population REFUSES here rather than composing a
-    session whose whole evidence section is stale.
+    STILL RE-COMPUTED LIVE, never simply replayed from the mint
+    (`red_tc_values`' rule): the row was minted at a merge, and by the time a
+    session claims it another lane may have approved or withdrawn some of those
+    rows. A brief replaying the mint's listing would ask the judge to rule on a
+    world that no longer exists — so a scope whose rows are all settled REFUSES
+    here rather than composing a session whose whole evidence section is stale.
+    The scope BOUNDS the question; the live model ANSWERS it.
 
     AND THE DIAL IS RE-APPLIED TO IT, which is the half the first cut missed
-    (WI-572 REVIEW-A). Re-computing live means re-computing the MINT'S
-    QUESTION, not a wider one: `intake._released_drafted_rows` hands over only
-    the rows on a rung the dial RELEASES, and this assembler re-derived the
-    population from `reattest_model` — which is dial-blind by design — without
-    putting that filter back. At any dial holding a spine rung (every dial above
-    this repo's, including the shipped `DevStg-Release` default) the brief
-    therefore rendered the owner's HELD rows as this session's to approve and
-    derived a `--approves` argument for their registry: a prompt instructing an
+    (WI-572 REVIEW-A). `intake._released_drafted_rows` hands over only the rows
+    on a rung the dial RELEASES, and this assembler re-derived the population
+    from `reattest_model` — which is dial-blind by design — without putting that
+    filter back. At any dial holding a spine rung (every dial above this repo's,
+    including the shipped `DevStg-Release` default) the brief therefore rendered
+    the owner's HELD rows as this session's to approve and derived a
+    `--approves` argument for their registry: a prompt instructing an
     adjudicator to perform a signature the owner owes. So `human_approves_spine`
-    is consulted PER CHAIN ROW here, from the same table the mint reads.
+    is consulted PER CHAIN ROW here, from the same table the mint reads. The
+    dial is checked as well as the scope, not instead of it: the mint filtered
+    by the dial AT THE MINT, and a dial the owner tightens afterwards must bind
+    the act it has not yet authorised.
 
-    A HELD ROW IS STILL SHOWN, and shown as HELD. It is the chain — the whole
-    reason the act is the adjudicator's is that the chain is what a row must be
-    judged against — but it is labelled as not this session's, it contributes no
-    registry, and an SR whose chain holds no released `Drafted` row at all is
+    AN OUT-OF-SCOPE OR HELD ROW IS STILL SHOWN, and shown as not yours. It is
+    the chain — the whole reason the act is the adjudicator's is that the chain
+    is what a row must be judged against — but it is labelled, it contributes no
+    registry, and an SR whose chain holds no row of this session's at all is
     dropped entirely. If nothing survives, this REFUSES: a brief whose every row
-    is the owner's is not this arm's question.
+    belongs to the owner or to another act is not this arm's question.
 
     `{registries}` is the `--approves REGISTRY=REF` argument the approving
     commit owes, derived from the registries the RELEASED rows live in.
@@ -606,18 +650,24 @@ def first_approval_values(root, row):
     import trace as tr
 
     root = Path(root)
+    scope = adjudicates(row)
+    if not scope:
+        return None, (
+            "this adjudication row declares no `Adjudicates` scope, so the rows "
+            "the merge handed it are unknown — and an unstated boundary read as "
+            "'every `Drafted` row in the repo' is the widening this cell exists "
+            "to make unrepresentable (WI-572). Re-mint the row, or rule on it by "
+            "hand"
+        )
     reg = tr.load_registries(root / "docs")
     model = [
         entry
         for entry in tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
         if entry.get("kind") == "approve"
     ]
-    if not model:
-        return None, (
-            "no spine row awaits a first approval any more — every row is at or "
-            "above `Approved`, so the rows this adjudication was minted for have "
-            "already been ruled on or withdrawn"
-        )
+    # No early "the model is empty" return: an empty model is one way the
+    # SCOPED population empties, and the refusal below names which of the three
+    # filters did it. Two refusals for one state is two answers to one question.
     llrs_by_sr, tcs_by_ref = tr.chain_buckets(reg.llrs, reg.tcs)
     lines, registries = [], {}
     for entry in model:
@@ -627,9 +677,16 @@ def first_approval_values(root, row):
             entry["id"], reg.srs, llrs_by_sr, tcs_by_ref
         ):
             drafted = tr.is_drafted(full)
-            yours = drafted and _loop_approves(root, kind)
+            # THE INTERSECTION, in one expression: `Drafted` (the live model's
+            # answer), IN SCOPE (the mint's question) and RELEASED (the dial's).
+            # Nothing downstream can promote a row that fails any of the three,
+            # because `yours` is what mints both the label and the registry.
+            in_scope = rid in scope
+            yours = drafted and in_scope and _loop_approves(root, kind)
             chain.append(
-                "  - {} {} [{}]".format(kind, rid, _CHAIN_LABEL[drafted, yours])
+                "  - {} {} [{}]".format(
+                    kind, rid, _chain_label(drafted, in_scope, yours)
+                )
             )
             for name in sorted(full):
                 value = str(full[name] or "").strip()
@@ -638,17 +695,40 @@ def first_approval_values(root, row):
             if yours:
                 mine = True
                 registries[_REGISTRY_OF[kind]] = True
-        # An SR whose chain holds no released `Drafted` row is not this
-        # session's question — dropped whole rather than rendered as evidence
-        # for a verdict it cannot be asked to give.
+        # An SR whose chain holds no row of this session's is not this session's
+        # question — dropped whole rather than rendered as evidence for a
+        # verdict it cannot be asked to give.
         if mine:
             lines += chain
     if not lines:
+        # WHICH of the three filters emptied it, named. "Nothing to rule on" is
+        # a HOLD a human then has to diagnose, and the three causes take
+        # opposite actions: the rows were ruled on already (drop the row), the
+        # owner holds their rung (sign, or move the dial), or the scope names
+        # rows this spine no longer has (the mint and the tree disagree).
+        awaiting = {
+            rid
+            for entry in model
+            for _k, rid, full in tr.spine_chain(
+                entry["id"], reg.srs, llrs_by_sr, tcs_by_ref
+            )
+            if tr.is_drafted(full)
+        }
+        live = sorted(scope & awaiting)
+        if not live:
+            return None, (
+                "none of the {} row(s) this adjudication was minted over ({}) is "
+                "still awaiting a first approval — they have been ruled on, "
+                "withdrawn or renumbered since the mint, so its question no "
+                "longer has a subject".format(len(scope), ", ".join(sorted(scope)))
+            )
         return None, (
-            "every spine row still awaiting a first approval sits on a rung the "
-            "declared gate authority HOLDS for a human (`human_approval_through` "
-            "= {}), so the signature is the owner's and this arm has nothing to "
-            "rule on".format(ac.approval_through(root / "docs"))
+            "every row in this adjudication's scope that still awaits a first "
+            "approval ({}) sits on a rung the declared gate authority HOLDS for "
+            "a human (`human_approval_through` = {}), so the signature is the "
+            "owner's and this arm has nothing to rule on".format(
+                ", ".join(live), ac.approval_through(root / "docs")
+            )
         )
     wi_id = (row.get("WI-ID") or "").strip()
     stamp_rev, stamp_date = baseline_snapshot.stamp(root)
@@ -678,15 +758,27 @@ def first_approval_values(root, row):
     }, None
 
 
-# How a rendered chain row is labelled, by `(is Drafted, is this session's)`.
-# The third state is the one the tier-keyed table's absence used to hide: a
-# `Drafted` row on a rung the owner holds is EVIDENCE in the chain and is not
-# the question, and the brief has to say which.
-_CHAIN_LABEL = {
-    (True, True): "AWAITING FIRST APPROVAL",
-    (True, False): "AWAITING FIRST APPROVAL - HELD FOR THE OWNER, NOT YOURS TO FLIP",
-    (False, False): "approved",
-}
+def _chain_label(drafted, in_scope, yours):
+    """How a rendered chain row is labelled — and WHY it is not this session's
+    when it is not.
+
+    Three states, not two, and the reason is the point. A `Drafted` row can fail
+    to be yours because the OWNER holds its rung, or because it belongs to
+    ANOTHER act's scope, and those are opposite instructions: the first waits
+    for a signature, the second is already somebody's. Collapsing them into one
+    "HELD FOR THE OWNER" line would have told a session to wait on the owner for
+    a row a sibling adjudication is about to rule on — a true label for the
+    wrong reason is still a false brief (rule 2)."""
+    if not drafted:
+        return "approved"
+    if yours:
+        return "AWAITING FIRST APPROVAL"
+    if not in_scope:
+        return (
+            "AWAITING FIRST APPROVAL - OUTSIDE THIS ACT'S SCOPE, ANOTHER "
+            "ADJUDICATION'S ROW; SHOWN AS CHAIN EVIDENCE ONLY"
+        )
+    return "AWAITING FIRST APPROVAL - HELD FOR THE OWNER, NOT YOURS TO FLIP"
 
 
 # The briefs whose EVERY slot has a real producer today. A key absent here is

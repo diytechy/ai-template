@@ -2,7 +2,7 @@
 
 `docs/work/<status>/WI-###-<slug>.md`: one Markdown spec per work item, its
 STATUS encoded as the DIRECTORY (docs/concurrency-restructure.md §2.1, Phase
-2b). The reader emits rows carrying the SAME 18 keys `csv.DictReader` used to
+2b). The reader emits rows carrying the SAME 19 keys `csv.DictReader` used to
 yield for the retired `work-items.csv`, so consumers past `load_wis` never
 learn which home was authoritative. The format's DEFINITION is
 `scripts/wi_convert.py` (`parse_spec` / `status_from_location`), which
@@ -86,6 +86,11 @@ WI_COLUMNS = (
     # `Supersedes` reason above — `intake` writes it through
     # `wi_convert.write_spec_file`, which serializes from this table.
     "Brief",
+    # WI-572 SCOPE OF THE ACT. The registry row ids an adjudication was minted
+    # OVER, `;`-joined — the population the merge handed it, and the bound the
+    # brief's LIVE re-derivation intersects against so the act cannot widen past
+    # what was handed over. Empty on every row that is not an adjudication.
+    "Adjudicates",
 )
 SPEC_SCALARS = (
     ("Title", "title"),
@@ -106,7 +111,11 @@ SPEC_SCALARS = (
     ("Supersedes", "supersedes"),
     ("Brief", "brief"),
 )
-SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
+SPEC_LISTS = (
+    ("SR-Refs", "sr_refs"),
+    ("Predecessors", "needs"),
+    ("Adjudicates", "adjudicates"),
+)
 # Directory -> Status. The directory is the WHOLE statement (WI-384): every
 # state owns a folder — including BOTH terminals, `complete/` for work that
 # shipped and `cancelled/` for work that never will — so nothing in the
@@ -287,7 +296,7 @@ def parse_spec_deliverable(relpath, body):
 
 
 def parse_spec_row(text, relpath):
-    """`(row, order)` for one spec file — an 18-key row shaped exactly like the
+    """`(row, order)` for one spec file — a 19-key row shaped exactly like the
     CSV's. Raises ValueError NAMING the file on any malformation: invalid TOML, a
     missing or non-string `id`, an id the filename disagrees with, a directory
     that is not a status, or a body that is not the single `## Deliverable`

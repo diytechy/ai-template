@@ -780,6 +780,19 @@ what it re-resolved. A held row still appears in the rendered chain — it is
 evidence — labelled as the owner's and contributing no registry to the act's
 `--approves` scope.
 
+WHICH ROWS the act may reach at all is the mint's, carried on the row: the
+`Adjudicates` column holds the ids the merge handed over, and the live
+re-resolution is INTERSECTED with it. Without that intersection the live
+re-derivation asks a wider question than the mint asked — `reattest_model` walks
+every SR in the repo, so a merge staging one `Drafted` row minted a brief
+covering the whole repo's `Drafted` backlog, across workstreams the owner's
+concurrency reason says the snapshot must not move across. Three filters, one
+label: `Drafted`, in scope, on a released rung. A row that is `Drafted` and
+released but belongs to a SIBLING act is shown as chain evidence and labelled
+with that reason rather than as the owner's — the two states take opposite
+actions. A row declaring no scope at all REFUSES: an unstated boundary read as
+"everything" is the widening the cell exists to prevent.
+
 **Chain-consistency warns — RETIRED** (owner ruling 2026-08-17, the cell
 reading): `modified_chain_advisories` told an author to flip the owning SR
 whenever a child read the retired `Modified` marker, asserting the retired

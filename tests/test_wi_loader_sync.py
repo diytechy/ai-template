@@ -81,6 +81,7 @@ def _row(wid, **kw):
         "Bar": "",
         "Supersedes": "",
         "Brief": "",
+        "Adjudicates": "",
         "Deliverable": "",
         "SpecRef": "",
     }
@@ -186,6 +187,7 @@ CONVERTIBLE_ROWS = [
         "Bar": "",
         "Supersedes": "",
         "Brief": "",
+        "Adjudicates": "",
     },
     {
         "WI-ID": "WI-002",
@@ -214,6 +216,12 @@ CONVERTIBLE_ROWS = [
         # in translation" row as `Bar`: it selects which adjudicator brief
         # the row's session is composed from, and nothing else.
         "Brief": "disposition",
+        # WI-572 scope of the act, carried on the same row for the same reason,
+        # and the only `;`-joined cell besides the two ref columns: a list
+        # column absent from one reader's field map round-trips as an EMPTY
+        # cell, which reads as "this act is scoped to nothing" rather than as a
+        # loss.
+        "Adjudicates": "LLR-001;LLR-002",
     },
     {
         "WI-ID": "WI-003",
@@ -236,6 +244,7 @@ CONVERTIBLE_ROWS = [
         "Bar": "",
         "Supersedes": "",
         "Brief": "",
+        "Adjudicates": "",
     },
     {
         "WI-ID": "WI-005",
@@ -258,6 +267,7 @@ CONVERTIBLE_ROWS = [
         "Bar": "",
         "Supersedes": "",
         "Brief": "",
+        "Adjudicates": "",
     },
     {
         "WI-ID": "WI-000",
@@ -280,6 +290,7 @@ CONVERTIBLE_ROWS = [
         "Bar": "",
         "Supersedes": "",
         "Brief": "",
+        "Adjudicates": "",
     },
 ]
 
@@ -378,6 +389,32 @@ def test_the_brief_key_is_carried_by_every_reader(both_homes):
         assert by_id["WI-001"]["Brief"] == ""
     for wi in sched.load_wis(sched.read_spec_rows(work_dir)):
         assert "brief" not in wi
+
+
+def test_the_adjudicates_key_is_carried_by_every_reader(both_homes):
+    """The WI-572 scope cell, the triplet's third member — and the one whose
+    loss is SILENT in the worst direction.
+
+    `Brief` selects which brief a judge is sent; `Adjudicates` bounds what that
+    judge may act on. A reader that dropped it would hand `adjudicate_brief` an
+    empty cell, and an empty cell there is not "no scope" — the assembler
+    REFUSES it precisely because reading it as "everything" is the widening the
+    column exists to prevent. So the failure would be a held row rather than a
+    wrong act, which is the safe direction and still a defect. It is also the
+    only `;`-joined cell outside the two ref columns, so it is the one that
+    proves a LIST column survives both representations.
+
+    Not a scheduling input either, for the `bar`/`brief` reason: what an act may
+    touch cannot change who may run beside it."""
+    csv_path, work_dir = both_homes
+    for rows in (sched.load_rows(csv_path),) + tuple(
+        mod.read_spec_rows(work_dir) for _name, mod in SPEC_READERS
+    ):
+        by_id = {r["WI-ID"]: r for r in rows}
+        assert by_id["WI-002"]["Adjudicates"] == "LLR-001;LLR-002"
+        assert by_id["WI-001"]["Adjudicates"] == ""
+    for wi in sched.load_wis(sched.read_spec_rows(work_dir)):
+        assert "adjudicates" not in wi
 
 
 def test_a_context_section_is_read_past_by_all_three_readers(tmp_path):

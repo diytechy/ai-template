@@ -757,7 +757,11 @@ def _first_approval_repo(tmp_path):
     falls back to the shipped `DevStg-Release`, which holds every rung, so an
     undeclared fixture is not this arm's scenario at all — it is the owner's.
     That omission is what let the first cut ship a brief with no dial filter and
-    a green test beside it (WI-572 REVIEW-A)."""
+    a green test beside it (WI-572 REVIEW-A).
+
+    AND THE SCOPE IS DECLARED, for the same class of reason. The mint writes the
+    rows it handed over into `Adjudicates`; a fixture that omitted the cell would
+    exercise a row `intake` cannot produce, and the assembler now refuses one."""
     repo = _spine_repo(tmp_path)
     set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
     baseline_snapshot.copy_live(repo, seed=True)
@@ -774,11 +778,21 @@ def _first_approval_repo(tmp_path):
                 "Title": "adjudicate: LLR-001 - await a FIRST APPROVAL",
                 "SafetyClass": "adjudication",
                 "Brief": "first-approval",
+                "Adjudicates": "LLR-001",
                 "SpecRef": "docs/requirements/low-level-requirements.toml",
             }
         ],
     )
     return repo
+
+
+# The adjudication row as `intake` mints it — brief AND scope, because the
+# assembler needs both and a bare `{"Brief": ...}` dict is a row this mint
+# cannot produce.
+def _fa_row(**over):
+    row = {"WI-ID": "WI-301", "Brief": "first-approval", "Adjudicates": "LLR-001"}
+    row.update(over)
+    return row
 
 
 def test_the_first_approval_brief_carries_the_WHOLE_CHAIN(tmp_path):
@@ -787,9 +801,7 @@ def test_the_first_approval_brief_carries_the_WHOLE_CHAIN(tmp_path):
     # thing one work item does not hold and is therefore why the act is the
     # adjudicator's. So the brief must show the chain, not the changed cells.
     repo = _first_approval_repo(tmp_path)
-    values, why = ab.first_approval_values(
-        repo, {"WI-ID": "WI-301", "Brief": "first-approval"}
-    )
+    values, why = ab.first_approval_values(repo, _fa_row())
     assert why is None, why
     chain = values["chain"]
     assert "SR-001" in chain and "LLR-001" in chain and "TC-001" in chain
@@ -808,11 +820,7 @@ def test_the_first_approval_brief_carries_the_WHOLE_CHAIN(tmp_path):
     # template's slots and this assembler's keys ONE contract, so a slot added
     # to either side without the other refuses instead of shipping a judge a
     # prompt with `{chain}` still in it.
-    text, why = ab.compose(
-        repo,
-        {"WI-ID": "WI-301", "Brief": "first-approval"},
-        repo / "docs/reviews/v.md",
-    )
+    text, why = ab.compose(repo, _fa_row(), repo / "docs/reviews/v.md")
     assert why is None, why
     assert re.findall(r"\{[a-z_]+\}", text) == []
     assert "You are an INDEPENDENT adjudicator" in text
@@ -826,11 +834,7 @@ def test_the_first_approval_brief_carries_the_WHOLE_CHAIN(tmp_path):
 
 def test_the_first_approval_brief_cannot_stop_before_its_approved_act(tmp_path):
     repo = _first_approval_repo(tmp_path)
-    text, why = ab.compose(
-        repo,
-        {"WI-ID": "WI-301", "Brief": "first-approval"},
-        repo / "docs/reviews/v.md",
-    )
+    text, why = ab.compose(repo, _fa_row(), repo / "docs/reviews/v.md")
     assert why is None, why
     terminal = text.split("THEN, AND ONLY AFTER THAT VERDICT IS RECORDED", 1)[1]
     assert "If ANY row line says `APPROVE`" in terminal
@@ -855,11 +859,9 @@ def test_the_first_approval_brief_REFUSES_once_the_rows_are_ruled(tmp_path):
         encoding="utf-8",
     )
     baseline_snapshot.copy_live(repo, seed=True)  # the act's own anchor moved too
-    values, why = ab.first_approval_values(
-        repo, {"WI-ID": "WI-301", "Brief": "first-approval"}
-    )
+    values, why = ab.first_approval_values(repo, _fa_row())
     assert values is None
-    assert "awaits a first approval" in why, why
+    assert "still awaiting a first approval" in why, why
 
 
 def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
@@ -880,9 +882,13 @@ def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
         encoding="utf-8",
     )
     # `DevStg-Reqs` holds the SR tier for the owner and releases the LLR tier
-    # below it — the exact mixed dial the finding names.
+    # below it — the exact mixed dial the finding names. The scope names BOTH
+    # rows, which is the honest shape of this scenario: the mint filtered by the
+    # dial it saw (`DevStg-Needs`, releasing both), and the owner TIGHTENED it
+    # afterwards. The dial is therefore re-checked at composition as well as at
+    # the mint — a scope check alone would have handed over the SR.
     set_process_key(repo, "attestation", "human_approval_through", "DevStg-Reqs")
-    row = {"WI-ID": "WI-301", "Brief": "first-approval"}
+    row = _fa_row(Adjudicates="SR-001;LLR-001")
     values, why = ab.first_approval_values(repo, row)
     assert why is None, why
 
@@ -908,6 +914,89 @@ def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
     values, why = ab.first_approval_values(repo, row)
     assert values is None
     assert "HOLDS for a human" in why, why
+
+
+def test_the_first_approval_act_cannot_widen_past_the_rows_the_merge_handed_over(
+    tmp_path,
+):
+    # WI-572 REVIEW-A round 4, the MAJOR finding. The assembler re-derives its
+    # population LIVE from `trace.reattest_model`, which walks EVERY SR in the
+    # repo — so with nothing to intersect against, a merge that staged ONE
+    # `Drafted` LLR minted a row whose brief then told its session it held the
+    # approval authority for the whole repo's `Drafted` backlog, and derived a
+    # `--approves` argument naming every registry those rows live in. That
+    # contradicts the doctrine ("over the `Drafted` rows the lane handed over")
+    # and the owner's concurrency reason for moving the act to trunk: the
+    # approval snapshot must not move across a workstream.
+    repo = _first_approval_repo(tmp_path)
+    req = repo / "docs" / "requirements"
+    # Two other lanes' rows, both `Drafted` on released rungs, neither in this
+    # act's scope. LLR-003 sits in the SAME chain this act must render (so the
+    # brief has to label it, not hide it); SR-002's chain is entirely somebody
+    # else's (so the brief must not render it at all).
+    llrs = req / "low-level-requirements.csv"
+    llrs.write_text(
+        llrs.read_text(encoding="utf-8")
+        + "LLR-003,SR-001,carry impl,src/demo.py,carry,carry() handles overflow.,,"
+        "Drafted,,P1\n"
+        + "LLR-002,SR-002,sub impl,src/demo.py,sub,sub() returns a - b.,,Drafted,,P1\n",
+        encoding="utf-8",
+    )
+    srs = req / "system-requirements.csv"
+    srs.write_text(
+        srs.read_text(encoding="utf-8")
+        + "SR-002,Subtracts,SN-001,The system shall subtract.,arithmetic,the "
+        "difference is right,Must,Test,Drafted,P1,core\n",
+        encoding="utf-8",
+    )
+
+    values, why = ab.first_approval_values(repo, _fa_row())
+    assert why is None, why
+    chain = values["chain"]
+    # The scoped row is still the question, and it is the ONLY one.
+    assert "LLR-001 [AWAITING FIRST APPROVAL]\n" in chain + "\n"
+    assert chain.count("[AWAITING FIRST APPROVAL]") == 1, chain
+    # The sibling in the same chain is SHOWN — it is evidence — and labelled with
+    # the reason that is actually true of it. Saying "HELD FOR THE OWNER" here
+    # would tell the session to wait on a signature nobody owes.
+    assert "LLR-003 [AWAITING FIRST APPROVAL - OUTSIDE THIS ACT'S SCOPE" in chain
+    # The unrelated chain is dropped WHOLE: it is not this act's question and it
+    # is not this act's evidence either.
+    for rid in ("SR-002", "LLR-002"):
+        assert rid not in chain, chain
+    # And the act's RECORDED scope carries only the scoped row's registry — the
+    # half a session that ignored every word of the prose still cannot widen.
+    assert (
+        values["registries"] == "docs/requirements/low-level-requirements.toml=WI-301"
+    )
+
+
+def test_an_adjudication_with_no_declared_scope_is_REFUSED_not_widened(tmp_path):
+    # The unstated boundary. An empty `Adjudicates` cell cannot be read as
+    # "every `Drafted` row in the repo" — that IS the widening — so it fails
+    # toward the human (rule 3) and the reason names the cell.
+    repo = _first_approval_repo(tmp_path)
+    values, why = ab.first_approval_values(repo, _fa_row(Adjudicates=""))
+    assert values is None
+    assert "declares no `Adjudicates` scope" in why, why
+    # ...and the caller HOLDS it rather than composing a partial brief.
+    text, why = ab.compose(repo, _fa_row(Adjudicates=""), repo / "docs/reviews/v.md")
+    assert text is None and "Adjudicates" in why
+
+
+def test_a_scope_whose_rows_are_all_settled_REFUSES_by_naming_them(tmp_path):
+    # The second-order harm of the widening: merge B's adjudication, minted
+    # while merge A's was still queued, used to find "no spine row awaits a
+    # first approval any more" — one repo-wide sentence for three different
+    # states. The refusal now names WHICH filter emptied the population, because
+    # "ruled on already" (drop the row), "the owner holds the rung" (sign it)
+    # and "the scope names rows this spine no longer has" (the mint and the tree
+    # disagree) take three different actions.
+    repo = _first_approval_repo(tmp_path)
+    values, why = ab.first_approval_values(repo, _fa_row(Adjudicates="LLR-404"))
+    assert values is None
+    assert "LLR-404" in why, why
+    assert "no longer has a subject" in why, why
 
 
 def test_the_first_approval_brief_is_ROUTED_and_demands_its_own_verdict(tmp_path):

@@ -470,6 +470,13 @@ driving it:
    the lane handed over, on the rungs the dial releases — with each row's whole
    chain in its brief, asking one question: approve, or return with findings. A
    rung the dial still holds is not minted; it surfaces to the owner as before.
+   Those row ids are RECORDED ON THE MINTED ROW, and the brief — which re-derives
+   its population live, because the row is claimed long after the merge — acts
+   only on the intersection. Otherwise "the rows the lane handed over" is a
+   sentence the machinery does not keep: the live model is repo-wide, so one
+   lane's merge would hand its adjudicator every unapproved row in the tree, and
+   the snapshot would move across workstreams the concurrency reason above says
+   it must not.
 3. An adjudication row is not `ordinary`, so the coordinator already runs it as
    an exclusive lane. The concurrency guarantee is a property the machinery had
    before this ruling; the ruling is what points the act at it.

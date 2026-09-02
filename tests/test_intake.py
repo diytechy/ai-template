@@ -290,6 +290,11 @@ def test_a_drafted_row_mints_one_first_approval_adjudication(tmp_path):
     # The BRIEF cell is what routes the session (adjudicate_brief.BRIEF_PROMPTS);
     # deriving it from the SpecRef would be ambiguous, so it is typed.
     assert row["Brief"] == "first-approval"
+    # ...and the SCOPE cell beside it, which is what stops the brief's live
+    # re-derivation from asking a wider question than this merge asked
+    # (WI-572 REVIEW-A). Typed for the same reason `Brief` is: the ids are in
+    # the Title too, and prose carrying control flow is the WI-417 fold.
+    assert row["Adjudicates"] == "SR-001"
     assert "FIRST APPROVAL" in row["Title"] and "SR-001" in row["Title"]
     text = (root / relpath).read_text(encoding="utf-8")
     assert "## Context" in text
