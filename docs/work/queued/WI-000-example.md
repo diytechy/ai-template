@@ -35,8 +35,9 @@ the narrative is the body.
 | `docs/archive/work/complete/WI-###-<slug>.md` | `done` — it shipped |
 | `docs/archive/work/cancelled/WI-###-<slug>.md` | `cancelled` — it never will |
 | `docs/archive/work/partial/WI-###-<slug>.md` | `partial` — a lane stopped early; terminal, and the per-close report under `docs/handbacks/` is the event's identity |
+| `docs/archive/work/restructured/WI-###-<slug>.md` | `restructured` — a consolidation absorbed it into a successor; terminal, scope text byte-identical, Deliverable the one line naming where it went |
 
-The three terminal directories live under `docs/archive/`, one level deeper than
+The four terminal directories live under `docs/archive/`, one level deeper than
 the active workspace (WI-504): a closed row is still live registry data — every
 reader treats `docs/work/` and `docs/archive/work/` as one registry — it has
 just left the frontier an agent scans to find what is still open.

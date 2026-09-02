@@ -339,7 +339,21 @@ OPEN_STATUSES = ("draft", "queued", "active", "deferred", "blocked")
 # `Deliverable` (the shipped record for `done`; the cancellation reason for
 # `cancelled`) and both must clear their `SpecRef` (R-A + R-F below). `cancelled`
 # is deliberately NOT in OPEN_STATUSES / BACKLOG_STALE_STATUSES / the frontier.
-TERMINAL_STATUSES = ("done", "cancelled", "partial")
+# `restructured` (2026-09-02 restructure plan §1.6) is the fourth: a row ABSORBED
+# into a successor. Terminal on every rung the other three are — out of
+# OPEN_STATUSES, out of BACKLOG_STALE_STATUSES, out of the frontier — and it owes
+# a Deliverable, the one line naming the successor that carries its scope.
+TERMINAL_STATUSES = ("done", "cancelled", "partial", "restructured")
+# What each terminal state's Deliverable is FOR — the clause R-A quotes when the
+# cell is empty. A table rather than a chain of conditionals so a fifth terminal
+# word cannot be added without saying what its record means. (`partial` is absent
+# on purpose: its per-close report under docs/handbacks/ IS the record, so R-A
+# exempts it from the cell entirely — see the rule below.)
+_TERMINAL_DELIVERABLE_REASON = {
+    "done": "records what shipped",
+    "cancelled": "records the reason it will not be built",
+    "restructured": "names the successor that absorbed its scope",
+}
 
 # Backlog-staleness (WI-205) applies to genuinely-in-flight WIs: the open set
 # minus `deferred` and `draft` (both re-enter via an owner look — an un-defer, or
@@ -2903,11 +2917,7 @@ def ssot_findings(wis, root):
         # retry reds again (the spec move is bookkeeping and exempt from the
         # revert) and the run dies. Driven at review.
         if st in TERMINAL_STATUSES and not w["deliverable"] and st != "partial":
-            reason = (
-                "records what shipped"
-                if st == "done"
-                else "records the reason it will not be built"
-            )
+            reason = _TERMINAL_DELIVERABLE_REASON[st]
             out.append(
                 (
                     "R-A",
@@ -3434,20 +3444,28 @@ def status_forward_only_findings(root, wis):
 # it would on a cancelled row. `partial` was the WI-541 -> WI-540 strand that
 # waited invisibly and was repaired by hand; extending this finding is the
 # validator net that makes such a strand reported rather than silent.
-_DEAD_PRED_STATES = ("cancelled", "partial")
+# `restructured` joins them (2026-09-02 restructure plan §1.6): an absorbed row
+# never integrates `done` either, so a live hard edge onto one waits forever
+# exactly as it would on a cancelled or partial predecessor. The close that
+# absorbs a row RE-POINTS its inbound edges to the successor, so this finding is
+# the validator net behind that step — a re-point that was skipped or missed a
+# dependent is reported rather than silently stranding the successor.
+_DEAD_PRED_STATES = ("cancelled", "partial", "restructured")
 
 
 def dead_dependency_findings(wis):
     """Surface a live WI that hard-depends on a terminal predecessor (WI-267,
-    extended to `partial` by OI-73).
+    extended to `partial` by OI-73 and to `restructured` by the 2026-09-02
+    restructure plan §1.6).
 
-    A `cancelled` or `partial` WI is terminal — it will never integrate `done`,
-    so an open successor whose hard edge points at it can NEVER become ready. The
-    conservative decision (WI-267 design-decision 3) is to SURFACE the dead edge
-    rather than let a terminal predecessor silently "satisfy" the dependency the
-    way `done` does: the owner must re-home the successor's edge (an OI-70/OI-73
-    close now REPLACES inbound edges at the mint, so a strand minted through that
-    path never reaches here) or cancel it too. The scheduler already refuses to
+    A `cancelled`, `partial` or `restructured` WI is terminal — it will never
+    integrate `done`, so an open successor whose hard edge points at it can
+    NEVER become ready. The conservative decision (WI-267 design-decision 3) is
+    to SURFACE the dead edge rather than let a terminal predecessor silently
+    "satisfy" the dependency the way `done` does: the owner must re-home the
+    successor's edge (an OI-70/OI-73 close now REPLACES inbound edges at the
+    mint, and a consolidation close re-points them the same way, so a strand
+    minted through either path never reaches here) or cancel it too. The scheduler already refuses to
     schedule such a WI (schedule.hard_preds_satisfied requires `done`, not merely
     terminal); this makes the same dead edge visible in the validator. WARN
     plain, ERROR under `--strict`. Soft (`~`) edges are advisory and never gate
@@ -3464,10 +3482,11 @@ def dead_dependency_findings(wis):
         )
         if dead:
             out.append(
-                "{}: open WI hard-depends on terminal WI(s) {} — a "
-                "cancelled/partial predecessor never integrates `done` and so "
-                "never satisfies a hard dependency; re-home the edge or close "
-                "this WI too".format(w["id"], ";".join(dead))
+                "{}: open WI hard-depends on terminal WI(s) {} — a cancelled, "
+                "partial or restructured predecessor never integrates `done` and "
+                "so never satisfies a hard dependency; re-home the edge (an "
+                "absorbed row's successor carries its scope) or close this WI "
+                "too".format(w["id"], ";".join(dead))
             )
     return out
 

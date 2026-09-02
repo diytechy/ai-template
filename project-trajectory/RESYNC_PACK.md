@@ -4322,6 +4322,47 @@ same one-cell migration the `Supersedes` and `Brief` columns needed and, unlike
 those two, it is written down: **that omission is the reason this entry exists**,
 so if your header predates either of them, add all three at once.
 
+### A fourth terminal work-item status, `restructured` [since 891a5b24]
+
+**What changed.** The work-item status vocabulary gains a fourth terminal word,
+`restructured`, with the directory `docs/archive/work/restructured/`. A row lands
+there when a **consolidation** absorbs it into a successor: several overlapping
+queued rows are replaced by one row that carries all of them. Its scope text
+stays byte-identical and its `## Deliverable` is exactly one line,
+`Restructured into WI-<successor>.`
+
+It exists because neither sibling can carry that meaning. `cancelled` says the
+scope was REFUTED, and says it loudly — `intake.context_block` briefs every later
+row on the same SRs with the cancelled precedent "do not re-propose the refuted",
+so an absorbed row filed as cancelled would tell its own successor not to build
+it. `partial` says a lane stopped early, and owes a per-close report under
+`docs/handbacks/` plus a minted disposition, neither of which a consolidation
+produces.
+
+Terminal means terminal: nothing re-claims a restructured row, and no LANE may
+close into one — `kitlib.station.CLAIMED_OUTCOMES` and `integrate.Outcome` are
+deliberately unchanged, so only a consolidation close or a hand trunk commit
+files a row there. Its inbound hard edges are re-pointed to the successor at the
+close; an edge still naming it is reported as a dead one by both the scheduler
+(`waiting:hard-pred-restructured:`) and `check_trajectory.dead_dependency_findings`,
+never silently satisfied.
+
+**Migration: additive — you gain a folder, nothing you hold changes.** No
+existing row, cell or file means anything different. Two optional steps:
+
+1. `mkdir -p docs/archive/work/restructured` and put a `.gitkeep` (or a README)
+   in it, so the folder is tracked — this is what `bootstrap.py` now scaffolds
+   for a new repo. You can also skip it: the folder is created on demand the
+   first time a spec moves there (`spec_move.py` makes the destination's
+   parent).
+2. If your `docs/work/README.md` predates this, its location→status table and
+   its "three terminal states" prose are now one row and one word short. The kit
+   copy (`project-trajectory/work/README.template.md`) carries the updated text;
+   the file is yours to own, so re-copy or hand-edit as you prefer.
+
+Nothing detects a missing folder, because nothing needs to: an absent status
+directory reads as zero rows in that state, which is what it means.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -116,9 +116,9 @@ What it creates in the destination:
     .gitattributes                             <- gitattributes.template (eol=lf hook pin)
     .github/workflows/check.yml                <- ci/check.yml
     src/, tests/, docs/work/{draft,active,deferred}/,
-    docs/archive/work/{partial,cancelled,complete}/
+    docs/archive/work/{partial,cancelled,complete,restructured}/
                                                (empty, with .gitkeep; the terminal
-                                               three live under the archive — WI-504)
+                                               four live under the archive — WI-504)
 
 The agent guide lives once, in `AGENTS.md` (the cross-tool standard). `CLAUDE.md`
 and `GEMINI.md` ship as thin stubs that point back at it, because Claude Code and
@@ -2291,19 +2291,23 @@ GITKEEP_DIRS = [
     "docs/work/draft",
     "docs/work/active",
     "docs/work/deferred",
-    # The three TERMINAL states live under the archive, not the active
+    # The TERMINAL states live under the archive, not the active
     # workspace (WI-504, OI-55 ruled (a)): `docs/work/` holds only rows still
     # in flight, so an agent listing the registry never wades through history
     # to find the frontier. Status stays directory-encoded — `kitlib.registry`
     # reads both `docs/work/` and `docs/archive/work/` as one registry
-    # (`spec_roots`) — only the terminal three moved one directory deeper.
+    # (`spec_roots`) — only the terminal states moved one directory deeper.
     # `docs/archive/work/cancelled` beside `.../complete` is what says a
     # terminal state has two outcomes and the folder names which; SR-144's
     # third terminal, `.../partial`, is what tells a reader "stopped early" is
     # a state the process has a name for.
+    # `.../restructured` is the fourth (2026-09-02 restructure plan §1.6): a row
+    # ABSORBED into a successor by a consolidation judgement, scope text
+    # byte-identical, Deliverable the one line naming where it went.
     "docs/archive/work/partial",
     "docs/archive/work/cancelled",
     "docs/archive/work/complete",
+    "docs/archive/work/restructured",
     # SR-144's per-close reports: one immutable document per non-merged-clean
     # lane close. OUTSIDE docs/work/ deliberately — `spec_files` is an rglob for
     # `WI-*.md` filtered only on "not directly in work_dir", so a report living

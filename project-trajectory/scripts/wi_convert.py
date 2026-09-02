@@ -187,6 +187,12 @@ STATUS_DIRS = {
     # re-claims it and nothing strands; the per-close report under
     # docs/handbacks/ carries what was and was not delivered.
     "partial": "partial",
+    # The FOURTH terminal (2026-09-02 restructure plan §1.6): a row ABSORBED
+    # into a successor by a consolidation judgement. Terminal like the other
+    # three — nothing re-claims it — and distinct from both: not refuted
+    # (`cancelled`) and not stopped early (`partial`), just carried onward under
+    # another id, with its scope text byte-identical and a one-line Deliverable.
+    "restructured": "restructured",
 }
 # The inverse, built from the one table so the two directions cannot disagree.
 DIR_STATUSES = {directory: status for status, directory in STATUS_DIRS.items()}

@@ -163,6 +163,12 @@ REPORTS = "docs/handbacks"
 # words a report's own `claimed_outcome` field may carry. They agree today and
 # nothing requires them to stay identical, since one is a tree fact and the other
 # is a claim.
+#
+# THREE, and the fourth terminal status is deliberately not a fourth outcome:
+# `restructured` (2026-09-02 restructure plan §1.6) is filed by a consolidation
+# judgement on TRUNK, never by a lane closing. A lane that could claim it would
+# be asserting that another row's scope had been absorbed — a judgement it is
+# structurally not holding. `integrate.Outcome` is unchanged for the same reason.
 CLAIMED_OUTCOMES = ("complete", "partial", "cancelled")
 
 # The review tier a close SUGGESTS for its disposition — a TYPED field, which is

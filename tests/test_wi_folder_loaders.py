@@ -347,6 +347,94 @@ def test_terminal_history_reads_from_its_archive_home(tmp_path):
         ], name
 
 
+def test_a_restructured_spec_reads_as_the_fourth_terminal_state(tmp_path):
+    """The 2026-09-02 restructure plan §1.6: `restructured` is a DECLARED status
+    directory, so a row a consolidation absorbed into a successor reads as
+    itself rather than being skipped as an undeclared folder — the invisible-row
+    hazard `draft/`'s declaration exists to close.
+
+    Both roots, because status is the directory NAME and the archive is only its
+    parent: the canonical home is `docs/archive/work/restructured/`, and a spec
+    filed under the active workspace reads identically (nothing should be
+    silently dropped mid-move). All three loaders, because a status one reader
+    knows and another does not is how a row falls out of half the machinery."""
+    write_spec(tmp_path, "queued", "WI-001", order=0)
+    write_archived_spec(
+        tmp_path,
+        "restructured",
+        "WI-002",
+        order=1,
+        deliverable="Restructured into WI-004.",
+    )
+    write_spec(
+        tmp_path,
+        "restructured",
+        "WI-003",
+        order=2,
+        deliverable="Restructured into WI-004.",
+    )
+    for name, mod in MODULES:
+        rows = mod.read_spec_rows(tmp_path / "docs" / "work")
+        assert [(r["WI-ID"], r["Status"]) for r in rows] == [
+            ("WI-001", "queued"),
+            ("WI-002", "restructured"),
+            ("WI-003", "restructured"),
+        ], name
+        assert rows[1]["Deliverable"] == "Restructured into WI-004.", name
+    # ... and the validator reads it clean: terminal, so the filled Deliverable
+    # is REQUIRED (R-A) rather than an open row's forbidden one.
+    errors = []
+    rows = ctraj.read_registry_rows(csv_path(tmp_path), errors)
+    assert errors == []
+    wis, integrity = ctraj.load_wis(rows)
+    assert integrity == []
+    assert "restructured" in ctraj.TERMINAL_STATUSES
+    assert "restructured" not in ctraj.OPEN_STATUSES
+    assert "restructured" not in ctraj.BACKLOG_STALE_STATUSES
+    assert [f for f in ctraj.ssot_findings(wis, tmp_path) if f[0] == "R-A"] == []
+
+
+def test_a_restructured_row_owes_the_line_that_names_its_successor(tmp_path):
+    """The mutation twin of the row above: `restructured` is terminal, and R-A's
+    filled-Deliverable rule bites on it exactly as it does on `done`/`cancelled`.
+    `partial` is the ONE terminal exempt from the cell (its per-close report is
+    the record); an absorbed row has no report, so the one line naming the
+    successor is the only record there is and an empty cell is an ERROR."""
+    write_spec(tmp_path, "queued", "WI-001", order=0)  # the work dir must exist
+    write_archived_spec(tmp_path, "restructured", "WI-002", order=1, deliverable="")
+    rows = ctraj.read_registry_rows(csv_path(tmp_path))
+    wis, _integrity = ctraj.load_wis(rows)
+    findings = [f for f in ctraj.ssot_findings(wis, tmp_path) if f[0] == "R-A"]
+    assert [(rule, hard) for rule, hard, _msg in findings] == [("R-A", True)], findings
+    assert "WI-002" in findings[0][2] and "successor" in findings[0][2], findings
+
+
+def test_a_live_hard_edge_onto_a_restructured_row_is_reported(tmp_path):
+    """The validator NET behind the re-point step (restructure plan §1.5): the
+    close that absorbs a row re-points every inbound hard edge to the successor,
+    and a dependent the re-point missed would otherwise wait forever in silence.
+    Same finding class as an edge onto a `partial` row — the scheduler agrees
+    (`waiting:hard-pred-restructured:`), so neither can call the edge live."""
+    write_archived_spec(
+        tmp_path, "restructured", "WI-001", deliverable="Restructured into WI-003."
+    )
+    write_spec(tmp_path, "queued", "WI-002", needs=["WI-001"], order=1)
+    wis, _integrity = ctraj.load_wis(ctraj.read_registry_rows(csv_path(tmp_path)))
+    findings = ctraj.dead_dependency_findings(wis)
+    assert len(findings) == 1, findings
+    assert findings[0].startswith(
+        "WI-002: open WI hard-depends on terminal WI(s) WI-001"
+    ), findings
+    # The control: re-pointed at the successor, the same registry is clean —
+    # so the finding above is the dead edge talking, not the shape of the tree.
+    write_spec(tmp_path, "queued", "WI-003", order=2)
+    (tmp_path / "docs" / "work" / "queued" / "WI-002-thing.md").write_text(
+        spec_text("WI-002", needs=["WI-003"], order=1), encoding="utf-8", newline="\n"
+    )
+    wis, _integrity = ctraj.load_wis(ctraj.read_registry_rows(csv_path(tmp_path)))
+    assert ctraj.dead_dependency_findings(wis) == []
+
+
 def test_a_leftover_disposition_key_is_inert_not_authoritative(tmp_path):
     """The deleted attribute stays deleted. A spec still carrying the old
     `disposition` key — a downstream repo mid-migration — reads by its FOLDER,

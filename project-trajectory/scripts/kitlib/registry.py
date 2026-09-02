@@ -143,6 +143,15 @@ SPEC_LISTS = (
 # identity. Continuing the work MINTS A SUCCESSOR (carrying `supersedes`),
 # because a closed row is never revived and a scope definition never changes to
 # mean something else.
+# `restructured/` is the FOURTH terminal (2026-09-02 backlog-restructure plan
+# §1.6). A consolidation judgement may ABSORB several queued rows into one
+# successor; the absorbed row is not refuted (`cancelled` would brief every
+# later row on the same SRs that its scope was refuted — `intake.context_block`
+# joins exactly that) and it did not stop early (`partial` owes a per-close
+# report and mints a disposition). It was carried onward: its scope text stays
+# byte-identical, its Deliverable is the one line `Restructured into WI-<n>.`,
+# and its inbound hard edges are re-pointed to the successor at the close. It is
+# TERMINAL — never re-claimed, never revived, and no lane may close into it.
 SPEC_STATUS_DIRS = {
     "draft": "draft",
     "queued": "queued",
@@ -150,6 +159,7 @@ SPEC_STATUS_DIRS = {
     "deferred": "deferred",
     "cancelled": "cancelled",
     "partial": "partial",
+    "restructured": "restructured",
     "complete": "done",
 }
 SPEC_FENCE = "+++"

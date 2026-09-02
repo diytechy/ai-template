@@ -121,6 +121,35 @@ def test_partial_predecessor_is_a_dead_edge_with_its_own_reason():
     assert "waiting:hard-pred-partial:WI-001" in d["reasons"]
 
 
+def test_a_restructured_row_is_terminal_with_the_absorbed_reason_code():
+    # The fourth terminal word (2026-09-02 restructure plan §1.6): a row a
+    # consolidation ABSORBED into a successor is as final as `done` — never
+    # ready, never packed — and carries its own code, because the dead-end reads
+    # differently to an owner: the scope did not die, it moved.
+    wis = sched.load_wis([row("WI-001", status="restructured"), row("WI-002")])
+    d = disposition(wis, "WI-001")
+    assert d["disposition"] == "restructured"
+    assert d["reasons"] == ["restructured:absorbed"]
+    assert ready_ids(wis) == ["WI-002"]
+    scheduled = [wid for rnd in sched.simulate(wis, 4) for wid in rnd]
+    assert "WI-001" not in scheduled, scheduled
+
+
+def test_restructured_predecessor_is_a_dead_edge_with_its_own_reason():
+    # The absorbing close RE-POINTS every inbound hard edge to the successor, so
+    # an edge still naming the absorbed row is a re-point that did not happen.
+    # It must never read as satisfied — the successor would be scheduled against
+    # a predecessor that will never integrate — and the code matches the
+    # validator's `dead_dependency_findings`, which flags the same three states.
+    wis = sched.load_wis(
+        [row("WI-001", status="restructured"), row("WI-002", preds="WI-001")]
+    )
+    assert ready_ids(wis) == []
+    d = disposition(wis, "WI-002")
+    assert d["disposition"] == "waiting"
+    assert "waiting:hard-pred-restructured:WI-001" in d["reasons"]
+
+
 def test_done_predecessor_still_satisfies_a_hard_dependency():
     # Decision 3 (the LIVE-edge direction, the control): a `done` pred DOES
     # satisfy — cancellation is the only terminal that leaves the edge dead.

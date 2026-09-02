@@ -1060,6 +1060,78 @@ def test_the_context_block_renders_from_real_joins_in_failure_cost_order(tmp_pat
     )
 
 
+def test_an_absorbed_row_is_not_briefed_to_its_successor_as_refuted(tmp_path):
+    """The reason the fourth terminal word exists (2026-09-02 restructure plan
+    §1.6). `context_block`'s first section tells a later row on the same SRs
+    "do not re-propose the refuted" and names each CANCELLED precedent with its
+    reason. A consolidation absorbs rows into a successor, so filing an absorbed
+    row as `cancelled` would brief the successor against the very scope it was
+    minted to carry. The join is keyed on `cancelled` alone, and this is the
+    driven proof: same registry, same SRs, one row moved from `cancelled/` to
+    `restructured/` — the precedent section goes away."""
+    root = context_repo(tmp_path)
+    acommon = load_script("agent_common")
+    row = next(
+        r
+        for r in acommon.read_spec_rows(root / "docs" / "work")
+        if r["WI-ID"] == "WI-005"
+    )
+    # The control: as a CANCELLED row, WI-002 is briefed as refuted precedent.
+    text = intake.context_block(root, row, None)
+    assert "do not re-propose the refuted" in text
+    assert "WI-002" in text
+
+    # Re-file the SAME row as restructured — absorbed, not refuted.
+    src = root / "docs" / "work" / "cancelled" / "WI-002-refuted.md"
+    dest = root / "docs" / "archive" / "work" / "restructured" / "WI-002-refuted.md"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(
+        src.read_text(encoding="utf-8").replace(
+            "cancelled: REFUTED - proposed navigation with no driving necessity",
+            "Restructured into WI-005.",
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    src.unlink()
+    rows = acommon.read_spec_rows(root / "docs" / "work")
+    assert {r["WI-ID"]: r["Status"] for r in rows}["WI-002"] == "restructured"
+    text = intake.context_block(root, row, rows)
+    assert "do not re-propose the refuted" not in text, text
+    assert "WI-002 (cancelled)" not in text, text
+
+
+def test_a_restructured_row_mints_no_disposition(tmp_path):
+    """A restructure is not a CLOSE, so it owes no judgement: the verdict that
+    absorbed the row has already been made and already named the successor, and
+    a disposition over it would ask an adjudicator to re-judge a verdict.
+    `_closed_spec`'s directory set is the mechanism — `restructured/` is in no
+    caller's set — and the sweep's folder→outcome map does not name it either,
+    because it is a terminal STATE and not a lane OUTCOME."""
+    root = git_repo(tmp_path)
+    write_sr(root)
+    path = root / "docs" / "archive" / "work" / "restructured" / "WI-005-absorbed.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        spec_text(
+            "WI-005",
+            safety_class="ordinary",
+            body="\n## Deliverable\n\nRestructured into WI-009.\n",
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "the consolidation filed WI-005", when=T_CODE)
+    # The early-close arm cannot see it at all...
+    assert intake._closed_spec(root, "WI-005") is None
+    # ...nor can the clean-close spot check, and the sweep names three folders.
+    assert intake._closed_spec(root, "WI-005", dirs=("complete",)) is None
+    assert "restructured" not in intake.SWEEP_OUTCOMES
+    # ...but the id IS taken: the mint sweeps both roots, so the watermark can
+    # never re-issue a number an absorbed row still holds.
+    assert intake.next_wi_id(root) == "WI-006"
+
+
 def test_the_context_block_is_advisory_never_gating(tmp_path):
     # No registries, no git, a half-empty row: the block answers "" or partial
     # text — never a raise. Advisory means the caller cannot be broken by it.

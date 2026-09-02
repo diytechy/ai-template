@@ -265,6 +265,11 @@ STATUS_BUCKET = {
     # mean differs: cancelled is "never", partial is "not all of it, and a
     # successor may carry the rest".
     "partial": "cancelled",
+    # The fourth terminal shares the same swatch for the same reason — this row
+    # will not advance — and keeps its own glyph: `restructured` means its scope
+    # is being built under a successor's id, which is neither "never" nor "not
+    # all of it".
+    "restructured": "cancelled",
 }
 # The one label the shared swatch may carry: naming the bucket is what stops it
 # reading as "queued" (review M-2's "name it explicitly").
@@ -272,7 +277,8 @@ STATUS_BUCKET_LABEL = {"queued": "not started", "done": "done", "active": "activ
 # A3 (no-info-by-color-alone): a redundant, shape-distinct glyph per STATUS — one
 # per *status*, not per fill, so the four statuses sharing the "not started"
 # swatch stay distinguishable without colour perception at all. ○ open / ✎ being
-# written / ◌ parked (a dotted, un-drawn ring) / ⊘ barred / ⊗ struck-out terminal.
+# written / ◌ parked (a dotted, un-drawn ring) / ⊘ barred / ⊗ struck-out terminal
+# / ◐ half-delivered / ⇥ carried onward into a successor.
 # Implements: SR-052, LLR-113
 STATUS_GLYPH = {
     "done": "✓",
@@ -283,6 +289,7 @@ STATUS_GLYPH = {
     "blocked": "⊘",
     "cancelled": "⊗",
     "partial": "◐",
+    "restructured": "⇥",
 }
 
 

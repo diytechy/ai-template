@@ -218,6 +218,7 @@ RANK_UNCLASSIFIED = 7
 _DONE = "done"
 _CANCELLED = "cancelled"
 _PARTIAL = "partial"
+_RESTRUCTURED = "restructured"
 # The two never-ready OPEN states, which differ only in what they SAY (WI-384):
 # `deferred` is a decision (we are not doing this now), `draft` is the absence of
 # one (still being figured out). Neither is schedulable and neither is terminal,
@@ -457,7 +458,10 @@ def hard_preds_satisfied(wi, status, oi_status=None):
     integrated `done` predecessor; an unknown id (dangling edge — the
     validator's error) or a `cancelled`/`partial` predecessor (WI-267: terminal,
     will never integrate) counts as NOT satisfied. A hard OPEN-ITEM edge
-    (OI-73) is satisfied once its row leaves `pending`, read from `oi_status`.
+    (OI-73) is satisfied once its row leaves `pending`, read from `oi_status`. A
+    `restructured` predecessor is not satisfied either (2026-09-02 restructure
+    plan §1.6): the absorbing close RE-POINTS the edge to the successor, so a
+    surviving edge onto the absorbed row is a re-point that did not happen.
     The scheduler fails closed rather than scheduling on a broken or dead-ended
     graph."""
     oi_status = oi_status or {}
@@ -659,18 +663,28 @@ _TERMINAL_DISPOSITION = {
     # `queued/`-plus-`blockref` shape, which leaned on a blockref to keep the
     # driver from claiming, handing back and re-claiming the same row forever).
     _PARTIAL: ("partial", "partial:terminal-stopped-early"),
+    # The fourth terminal (2026-09-02 restructure plan §1.6): a row ABSORBED into
+    # a successor by a consolidation judgement. Terminal for the same reason the
+    # other two are — nothing re-claims it — but its own code, because the
+    # dead-end reads differently to an owner: the scope did not die, it moved,
+    # and the successor named in the row's one-line Deliverable is where it went.
+    _RESTRUCTURED: ("restructured", "restructured:absorbed"),
 }
 
 
 def _waiting_reasons(wi, status, oi_status=None):
     """Reason codes for a WI held `waiting` on unmet hard predecessors. WI-267
-    design-decision 3, extended to `partial` by OI-73: a cancelled OR partial
+    design-decision 3, extended to `partial` by OI-73 and to `restructured` by
+    the 2026-09-02 restructure plan: a cancelled, partial OR restructured
     predecessor is a DEAD hard edge — it is terminal and will never integrate
     `done`, so the WI can never become ready. Each is surfaced as its own reason
     code (the WI still just waits, never silently satisfied) so the owner sees
-    the will-never-happen dependency — and the two codes match the validator's
-    `dead_dependency_findings`, which flags exactly this pair, so the scheduler
-    and the checker never disagree on whether an edge is dead. An unmet hard
+    the will-never-happen dependency — and the codes match the validator's
+    `dead_dependency_findings`, which flags exactly this SET, so the scheduler
+    and the checker never disagree on whether an edge is dead. `restructured`
+    (2026-09-02 restructure plan §1.6) is the third such state and the third
+    code: an absorbed row's inbound edges are re-pointed to its successor at the
+    close, so an edge still naming it is a missed re-point, not a dead scope. An unmet hard
     OPEN-ITEM edge (OI-73) is its own reason code too — a `pending` open item is
     an unanswered human question, a waiting reason the scheduler had no
     vocabulary for before the typed OI edge existed."""
@@ -678,14 +692,20 @@ def _waiting_reasons(wi, status, oi_status=None):
     unmet = [p for p in wi["preds"] if status.get(p) != _DONE]
     dead_cancelled = [p for p in unmet if status.get(p) == _CANCELLED]
     dead_partial = [p for p in unmet if status.get(p) == _PARTIAL]
+    dead_restructured = [p for p in unmet if status.get(p) == _RESTRUCTURED]
     reasons = []
     if unmet:
         reasons.append("waiting:hard-preds-not-done:%s" % ",".join(unmet))
     oi_unmet = [o for o in wi.get("oi_preds", ()) if not _oi_satisfied(o, oi_status)]
     if oi_unmet:
         reasons.append("waiting:open-item-pending:%s" % ",".join(oi_unmet))
-    # Insert the dead-edge codes last so they lead the list; cancelled stays
-    # ahead of partial only for a stable order, both are equally will-never-happen.
+    # Insert the dead-edge codes last so they lead the list; the order among
+    # cancelled/partial/restructured is fixed only for stability — all three are
+    # equally will-never-integrate.
+    if dead_restructured:
+        reasons.insert(
+            0, "waiting:hard-pred-restructured:%s" % ",".join(dead_restructured)
+        )
     if dead_partial:
         reasons.insert(0, "waiting:hard-pred-partial:%s" % ",".join(dead_partial))
     if dead_cancelled:

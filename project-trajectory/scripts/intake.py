@@ -263,9 +263,12 @@ _WI_FILE_RE = re.compile(r"^WI-(\d+)-.+\.md$")
 # id mint counted it as taken.
 REPORTS = "docs/handbacks"
 _REPORT_FRONT_RE = re.compile(r"\+\+\+\n(.*?)\n\+\+\+", re.S)
-# The folder -> outcome map the by-hand sweep walks. Stated once here rather
-# than inlined per loop; `integrate.OUTCOME_DIRS` is its production twin (the
-# sweep cannot import the integrator — that arrow runs the other way).
+# The folder -> outcome map the by-hand sweep walks. THREE folders, not four:
+# `restructured/` is terminal but is not a lane OUTCOME — no branch closes into
+# it — so a sweep that recovered one would be reconstructing a merge that never
+# happened. Stated once here rather than inlined per loop;
+# `integrate.OUTCOME_DIRS` is its production twin (the sweep cannot import the
+# integrator — that arrow runs the other way).
 SWEEP_OUTCOMES = {"partial": "partial", "cancelled": "cancelled", "complete": "merged"}
 # Clip widths for derived text: one cell value, one census line, one title.
 _CELL_CLIP = 120
@@ -450,6 +453,12 @@ def _context_block(root, wi_row, rows):
     wid = wi_row.get("WI-ID") or ""
     srs = set(_split(wi_row.get("SR-Refs")))
     preds = {p.lstrip("~") for p in _split(wi_row.get("Predecessors"))}
+    # `cancelled` ONLY — never `restructured`. The section this feeds tells a
+    # successor "do not re-propose the refuted", and an absorbed row was not
+    # refuted: it is exactly the scope the reader may well have been minted to
+    # carry. Widening this join to the terminal SET would make the fourth
+    # terminal word brief every successor against its own inheritance, which is
+    # the failure mode the word exists to avoid.
     cancelled = [
         r
         for r in rows
@@ -879,7 +888,13 @@ def _closed_spec(root, wi_id, dirs=("partial", "cancelled")):
     The default is the EARLY-close pair on purpose: the disposition arm must
     not find a `complete/` spec and mint an early-close judgement for a clean
     one. The spot-check arm passes `("complete",)` explicitly, so which
-    directory a caller means is always written down."""
+    directory a caller means is always written down.
+
+    `restructured/` (the fourth terminal) is in NO caller's set, and that
+    exclusion is the point: a restructure is not a close and mints no
+    disposition. The judgement that absorbed the row has already been made and
+    already named the successor; a disposition over it would ask an adjudicator
+    to re-judge a verdict."""
     for status_dir in dirs:
         hits = _terminal_hits(root, status_dir, wi_id + "-*.md")
         for hit in hits:

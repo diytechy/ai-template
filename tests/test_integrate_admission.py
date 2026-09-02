@@ -53,6 +53,10 @@ from integrate_fixtures import (
     write_spec,
 )
 
+# The vocabulary's own home (WI-483): imported as a package, since `load_script`
+# loads one `scripts/*.py` and `scripts/` is already on sys.path by here.
+import kitlib.station as kit_station  # noqa: E402  (after the fixture import)
+
 pytestmark = env_gate_skipif("git")
 
 
@@ -134,6 +138,51 @@ def test_a_close_into_an_OPEN_folder_names_no_outcome_at_all(tmp_path):
         assert unresolved == ["WI-401-widget.md"], directory
         _outcomes, refusal = integ._merge_refusal(root, "wi-401", ["WI-401"])
         assert refusal is not None and "exactly ONE declared state" in refusal
+
+
+def test_a_lane_cannot_close_into_the_restructured_folder(tmp_path):
+    """The fourth terminal STATUS is deliberately not a fourth lane OUTCOME
+    (2026-09-02 restructure plan §1.6). `restructured` is filed by a
+    consolidation judgement on trunk — a lane that could close into it would be
+    asserting that another row's scope had been absorbed, a judgement it is
+    structurally not holding — so `OUTCOME_DIRS`, `Outcome` and
+    `kitlib.station.CLAIMED_OUTCOMES` are all unchanged, and a lane that tries it names
+    no outcome and the merge refuses, exactly as a close into `queued/` does.
+
+    Also drives the other half, which IS a live shape: a restructured spec
+    sitting in the archive on TRUNK — where the consolidation put it — must not
+    disturb an unrelated lane's outcome read. `outcome_of` ignores directories
+    it does not declare rather than raising, and this is what proves it."""
+    root = claim_repo(tmp_path)
+    absorbed = root / "docs" / "archive" / "work" / "restructured" / "WI-402-old.md"
+    absorbed.parent.mkdir(parents=True, exist_ok=True)
+    absorbed.write_text(
+        '+++\nid = "WI-402"\ntitle = "absorbed"\n+++\n'
+        "\n## Deliverable\n\nRestructured into WI-401.\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    _git(root, "add", "-A")
+    _commit(root, "consolidate: WI-402 absorbed into WI-401", when=T_CODE)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+
+    # The trunk-side restructured row is inert for this lane's read...
+    _close_to(root, "wi-401", "complete", archive=True)
+    assert integ.branch_outcomes(root, "wi-401") == ({"WI-401": "merged"}, [])
+    assert "restructured" not in integ.OUTCOME_DIRS
+    assert "restructured" not in kit_station.CLAIMED_OUTCOMES
+    assert integ.outcome_of({"restructured"}) is None
+
+    # ...and a lane that CLOSES into it states nothing, so the merge refuses.
+    home = tmp_path / "lane-close"
+    home.mkdir()
+    other = claim_repo(home)
+    assert integ.claim(other, "WI-401", "wi-401") == 0
+    _close_to(other, "wi-401", "restructured", archive=True)
+    outcomes, unresolved = integ.branch_outcomes(other, "wi-401")
+    assert outcomes == {} and unresolved == ["WI-401-widget.md"]
+    _outcomes, refusal = integ._merge_refusal(other, "wi-401", ["WI-401"])
+    assert refusal is not None and "exactly ONE declared state" in refusal
 
 
 def test_a_claimed_spec_that_landed_TWICE_names_no_outcome_either(tmp_path):

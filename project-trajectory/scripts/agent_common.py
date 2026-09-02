@@ -1626,7 +1626,10 @@ WI_TOKEN_RE = re.compile(r"^WI-\d+$")
 # never pulls a sibling engine). A worker must never build a WI in either state.
 # SR-144 adds `partial`: a worker must refuse an assignment whose spec has
 # already closed early exactly as it refuses one that shipped or was cancelled.
-TERMINAL_STATUSES = ("done", "cancelled", "partial")
+# The 2026-09-02 restructure plan §1.6 adds `restructured` — a row absorbed into
+# a successor. A worker must refuse it for the same reason and more plainly: the
+# scope it names is being built under another id.
+TERMINAL_STATUSES = ("done", "cancelled", "partial", "restructured")
 
 
 def sanitize_train(name):

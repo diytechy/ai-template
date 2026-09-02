@@ -448,6 +448,47 @@ def test_the_move_stages_the_working_tree_content_not_the_stale_index_blob(tmp_p
     assert staged == on_disk
 
 
+def test_a_queued_row_moves_into_the_restructured_archive(tmp_path):
+    """The consolidation close's own move (2026-09-02 restructure plan §1.5):
+    `queued/` -> `docs/archive/work/restructured/`, performed by the ritual like
+    every other state change rather than by a bare `git mv` that strands links.
+
+    Nothing in `spec_move` names a status, and that is the point being pinned —
+    the fourth terminal folder needed no code here, only a declared status word
+    — so this drives the two things that WOULD have needed it: the destination
+    directory is CREATED on demand (an adopter that never scaffolded the folder
+    is not a refusal), and the inbound link from the log follows the row."""
+    repo = tmp_path / "repo"
+    (repo / "docs" / "work" / "queued").mkdir(parents=True)
+    src = repo / "docs" / "work" / "queued" / "WI-558-verdict-carrier.md"
+    src.write_text("# WI-558\n\n- up: [log](../../log.md)\n", encoding="utf-8")
+    (repo / "docs" / "log.md").write_text(
+        "# Log\n\n[the row](work/queued/WI-558-verdict-carrier.md)\n",
+        encoding="utf-8",
+    )
+    dest = "docs/archive/work/restructured/WI-558-verdict-carrier.md"
+    assert not (repo / "docs" / "archive").exists()  # nothing scaffolded it
+
+    touched, err = sm.move_spec(
+        repo,
+        "docs/work/queued/WI-558-verdict-carrier.md",
+        dest,
+        new_text="# WI-558\n\n- up: [log](../../log.md)\n"
+        "\n## Deliverable\n\nRestructured into WI-579.\n",
+    )
+    assert err is None, err
+    assert not src.exists()
+    moved = (repo / dest).read_text(encoding="utf-8")
+    assert "Restructured into WI-579." in moved
+    # The moved file went two directories deeper, so its OWN link was rebased...
+    assert "](../../../log.md)" in moved, moved
+    # ...and the log's link to it followed (the inbound half).
+    assert "archive/work/restructured/WI-558-verdict-carrier.md" in (
+        repo / "docs" / "log.md"
+    ).read_text(encoding="utf-8")
+    assert "docs/log.md" in touched
+
+
 def test_a_trailing_slash_destination_names_the_lane_not_a_file(tmp_path):
     """2026-08-21 review (Sol 8): the WI-448 invocation shape, exactly.
 
