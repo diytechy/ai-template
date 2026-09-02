@@ -41,14 +41,15 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `OI-77` and `OI-78` are RULED (2026-09-01 evening: (a) and STAND; both
   cards had been hand-filled first because the automated mint writes only
   the question — the owner-prioritized rows that fix the mint's shape and
-  the snapshot's copy scope head the generated frontier below); **the
-  owner's next ruling, to word before it is filed:** who performs the
-  approval act on spine rows — the owner's stated intent is the adjudicator
-  alone, on the serial trunk side, for context and for concurrency; the
-  record today keys the act to the rung dial and lets a worker lane flip
-  with a verdict (the wi508 case), the amendment brief defers to a
-  "mechanical tool" OI-45 (b) retired, and four lanes minted born-Approved
-  rows — one ruling, one executing row; the six MEANING rows awaiting the owner's signature on the
+  the snapshot's copy scope head the generated frontier below); **ruled in
+  session and filed (2026-09-01 evening):** the spine approval act — the
+  Status flip and its anchoring snapshot — is the adjudicator's alone, on
+  the serial trunk side, for whole-chain context and for concurrency; the
+  executing row is queued behind the copy-scope row (a lane's merge refused
+  on any flip, born-Approved row or snapshot write; a first-approval
+  adjudication arm minted at merge; the amendment brief's stale
+  "mechanical tool" line replaced) — the log's 2026-09-01 approval-act
+  ruling entry is the record; the six MEANING rows awaiting the owner's signature on the
   `trace.py --approve modified` re-attestation brief; the origin ref
   `wi508-architectural-remap-HELD-for-owner-verdict` to rename or delete now
   its range is in trunk history; `OI-72`'s "four Drafted rows" wording (two
