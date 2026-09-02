@@ -56387,7 +56387,7 @@ held rungs still surface to the owner. The wi508 flips stand (OI-78 STAND;
 WI-568 keep-all).
 
 **Filed** as the row minted against
-[plans/2026-09-01-approval-act-adjudicator-only.md](log.d/plans/2026-09-01-approval-act-adjudicator-only.md):
+[plans/2026-09-01-approval-act-adjudicator-only.md](plans/2026-09-01-approval-act-adjudicator-only.md):
 a lane's merge refused on any flip, born-Approved row or snapshot write; a
 first-approval adjudication arm minted at merge with the whole chain in its
 brief, flipping and snapshotting on trunk; the amendment arm's aftermath
