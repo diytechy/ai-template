@@ -56544,3 +56544,1100 @@ to its own review.
 docs/archive/last_approved` read at `6000ec9c` (the plan §1 provenance): 9 of
 the 21 snapshot commits before `580df781` wrote off-spine files while only spine
 `Status` moved.
+
+## 2026-09-01 — WI-572: the approval act is the adjudicator's, on trunk
+
+**Spec of record:** `../plans/2026-09-01-approval-act-adjudicator-only.md`
+(the owner's ruling, 2026-09-01, recorded in
+`../log.md` from `2026-09-01-owner-ruling-approval-act.md`). Serialized behind
+WI-571 (the copy-scope row); both touch `intake.py` / `baseline_snapshot.py`.
+
+**In one line:** a worker lane may author `Drafted` spine rows and amend cell
+text, but the approval act — the `Status` flip into `Approved`/`Founded` and
+the `docs/archive/last_approved/` copy that anchors it — is the adjudicator's,
+performed on the serial trunk side.
+
+### The baseline this row is measured against
+
+Every commit that moved an `"Approved"` string in a spine registry before the
+ruling, classified by where it happened:
+
+- **1 worker-lane flip** — `580df781` (WI-508 slice 6), whose next review round
+  returned CHANGES-REQUESTED against exactly those flips.
+- **4 lanes minted rows born `Approved`**, skipping the brief entirely —
+  `8848f6fb` (WI-483), `ad2222df` (WI-500), `69e4a854` (WI-501), `0cfb2e6f`
+  (WI-507).
+- The rest were trunk sittings or the pre-ladder rename.
+
+fig: 17 commits, classified by subject; `git log --format='%h|%s'
+-S'"Approved"' fd86e47f -- docs/requirements/system-requirements.toml
+docs/requirements/low-level-requirements.toml docs/test/test-cases.toml
+docs/requirements/system-requirements.csv
+docs/requirements/low-level-requirements.csv docs/test/test-cases.csv`
+at `fd86e47f`.
+
+### Deliverables
+
+**1. A lane's merge is refused when its delta performs an approval act.**
+`acceptance_record.staged_approval_acts` reports a `Status` crossing INTO
+`Approved`/`Founded` and a row that arrives already claiming one;
+`lane_approval_refusal` words the refusal, naming each row, its registry, the
+shape of act, and every `docs/archive/last_approved/` file the branch touched —
+each worded by what the branch DID to it (round 4; see below).
+`integrate._approval_act_refusal` is the rung, beside `_minted_id_refusal`
+whose shape it copies exactly — the merge base, and the ladder placement.
+
+Construction-first, as the plan required: `staged_spine_amendments` already
+diffs the merged commit and EXEMPTS a row whose Status moved; the new reader
+reports that exempted set MINUS the de-approvals (round 4). All three readers (plus
+`staged_drafted_rows`) now share ONE two-tree walk, `_spine_row_sides`,
+extracted rather than copied. Verified against the record itself: the reader
+reproduces the census above exactly — four flips at `580df781`, and the
+born-`Approved` rows of all four lanes.
+
+The judgement lives in `acceptance_record`, not in the merge slot, on LLR-178's
+separation: the coordinator that merges is not the reader that decides what a
+spine delta did. That also kept `integrate.py`'s size bump to a new rung's
+irreducible core.
+
+**2. The first-approval adjudication arm.** If a lane may not approve what it
+authored, something must. `intake._first_approval_drafts` (trigger a2) mints ONE
+`brief = "first-approval"` adjudication per merge over the `Drafted` rows the
+delta added or amended — the exact mirror of trigger (a), one section below it.
+`agent_common.SPINE_APPROVAL_RUNGS` names the DevStg rung each spine tier is
+approved into so the dial can answer whether that tier is loop-held; a rung the
+dial HOLDS is not minted (the owner approves those, through the approval brief,
+as today), and an unmapped tier is held. (That table was `intake.APPROVAL_RUNG`
+until REVIEW-A; see "The dial filter the brief did not have" below.)
+
+`prompts/adjudicate-first-approval.template.md` is the fifth adjudicator brief,
+with `adjudicate_brief.first_approval_values` behind it and its own verdict
+grammar (`OUTCOME: APPROVE|RETURN rows=N`). The brief renders each row's WHOLE
+CHAIN, which is the owner's stated reason the act is the adjudicator's — so
+`trace.reattest_model`'s `chain_of` closure became the public
+`trace.spine_chain` + `chain_buckets`. The model's own `rows` list carries only
+what changed or is `Drafted`: the right answer to the re-attest brief's question
+and exactly the wrong one here, where the settled parent and the passing sibling
+test ARE the evidence.
+
+`integrate._adjudication_lane` exempts the actor the ruling names. The
+concurrency half the owner asked for was **already built** and is not
+re-implemented: an adjudication row is not `ordinary`, so
+`dispatch._branch_exclusive` already runs its lane alone. The ruling is what
+points the act at that guarantee.
+
+**3. The amendment arm's aftermath is stated and true.** The template's closing
+"the flip, if one is owed, is the mechanical tool's act, not yours" went false
+when OI-45 (b) retired that tool, so a MEANING verdict on a loop-held rung ended
+at a brief nobody was owed. Replaced by a DERIVED `{aftermath}` slot
+(`adjudicate_brief._aftermath`), which reads the declared gate authority for the
+tiers actually shown and tells the session whether the re-attestation is its own
+act or the owner's — rather than leaving it to read and interpret a dial
+mid-verdict. `prompts/CATALOG.md` regenerated.
+
+**4. The doctrine says it once.** PROCESS.md §4 gains one clause in its fixed
+points and links to PROCESS_OPTIONS.md "Who performs the approval act" (the
+ruling, its two reasons, the division-of-labour table the owner asked for in
+§2a, and the three holding mechanisms). OI-45 (b) gains the narrowing sentence.
+`gate-advance` names the acceptor its procedure was already addressed to;
+`spine-authoring` opens with "authoring is not approving"; `worker.template.md`
+gains the NEVER clause and its close ritual now says "minted or amended". The
+two reference surfaces follow the mechanism they describe:
+`docs/enforcement-audit.md` gains the rule's row (with its three-fold honest
+residue), and `docs/registry-machinery-reference.md` records the other half of
+the amendment walk, plus the narrowing on the `Founded` row's OI-45 citation.
+
+**5. Tests**, all in the modules' existing style: five at the merge slot, four
+at the reader, four at the trigger, and — counting the terminal-sequence
+regression of round 3 and the three scope regressions of round 4 — nine at the
+brief, plus the widened schema pin and the loader triplet's third member.
+
+**6. The two registry rows this lane's own code moved.** New code under an
+existing row's Module leaves that row's cells stale, and the rule from the
+WI-553 reading is that a lane re-points its own staleness IN-LANE rather than
+deferring it:
+
+- `LLR-158` (`Approved`) — its `code_symbol` named four symbols; the module now
+  carries the shared two-tree walk and three more readers off it, and the row's
+  `Detail` gained the sentence that explains them. Amended, **not flipped**:
+  there is no status for a post-approval amendment, the row stays `Approved`,
+  and the DRIFT against `docs/archive/last_approved/` is the signal.
+- `IF-091` (`Drafted`) — `integrate` is now a second requestor of the seam, so
+  it is named as one. Without it the new import is a cross-component crossing
+  that no interface row declares.
+
+Both warns were **introduced by this branch** and both are gone;
+`check_trajectory` exits 0 with only the pre-existing `schedule -> trace`
+crossing standing. The amendment was checked against this row's OWN mechanism
+rather than assumed safe: `staged_approval_acts` returns `[]` and
+`lane_approval_refusal` returns `None` over `4d0b972d..<staged tree>` — amending
+is not approving — while `staged_spine_amendments` reports `LLR-158`, so the
+amendment adjudication trigger (a) raises a row for it at merge. This lane's own
+edit is the first customer of the arm the same lane shipped, which is the
+intended shape and not a special case.
+
+RE-CHECKED AT THE FINAL TIP, because the reading above was taken at a staged
+tree BEFORE the close, and the close changes an input this rung reads: draining
+`docs/work/active/` empties `_claimed_specs`, so `_adjudication_lane` answers
+False and this branch is judged as the work lane it is, with no exemption. Over
+`4d0b972d..78e20e4e` the answers are unchanged — `staged_approval_acts` `[]`,
+`lane_approval_refusal` `None`, `staged_spine_amendments` still reporting
+`LLR-158`. The branch that added the refusal is merge-clean under it at the tree
+the integrator sees, which is the only tree the claim is worth anything at.
+
+The amend-without-flip guard then fired on `LLR-158`, both arms, and both are
+answered rather than absorbed:
+
+- **The drift arm** — "re-attest in this commit, or the change rides as SNAPSHOT
+  DRIFT until the next sitting". Riding as drift is not a miss here, it is the
+  ruling: the lane may not re-attest its own amendment, and `intake.py snapshot`
+  on this branch is precisely what deliverable 1 refuses. The drift IS the
+  handover.
+- **The `Hat-Refs` arm** — it says an unchanged cell cannot distinguish "re-read
+  and unchanged" from "never re-read", so the answer belongs in the record.
+  DELIBERATE: the cell stays inherited (`LLR-158` declares none and takes
+  SR-178's `TEST-ENGINEER`). The amendment documents more of the SAME mechanism
+  — one walk, four readers — and does not move the row's question, which is
+  still how an amendment is DETECTED. Who may act on what is detected is a
+  governance concern; it lives on the PROCESS surfaces and in `integrate`'s
+  rung, not in this row's cells. Re-read, unchanged, and said so.
+
+### REVIEW-A rework: the dial filter the brief did not have
+
+Round 1 returned CHANGES-REQUESTED with one MAJOR finding, and it was right.
+
+**What was wrong.** `intake._released_drafted_rows` filters the minted
+population by the dial — a rung the owner still holds is not handed to an
+adjudicator. `adjudicate_brief.first_approval_values` then RE-RESOLVES that
+population live at composition time, deliberately (a row minted at a merge is
+claimed later, and `red_tc_values`' rule says brief the world the judge is
+actually in). But it re-resolved it from `trace.reattest_model`, which is
+dial-blind by design, and never put the filter back. Re-computing live had
+quietly become re-computing a WIDER question than the mint asked.
+
+The consequence is not cosmetic. Under a mixed dial — `human_approval_through =
+"DevStg-Reqs"` holds the SR tier and releases the LLR tier below it — the brief
+rendered a held `Drafted` SR beside a released `Drafted` LLR, marked BOTH
+`[AWAITING FIRST APPROVAL]`, and derived a `--approves` argument naming both
+registries. That is a generated prompt instructing an adjudicator to perform a
+signature the owner owes, with the act's own recorded scope carrying it. At the
+kit's shipped default dial (`DevStg-Release`, which holds every rung) every row
+in the brief was the owner's.
+
+**Why the test suite did not catch it.** `_first_approval_repo` declared no
+`docs/process.toml` at all, so its dial fell back to `DevStg-Release` — the
+fixture was not this arm's scenario, it was the owner's, and it went green. The
+fixture now declares `DevStg-Needs` explicitly, which is the honest statement of
+what the arm requires to exist.
+
+**The fix is a deletion, not a guard.** The rung table existed TWICE for one
+commit: `intake.APPROVAL_RUNG` keyed by registry (the mint) and
+`adjudicate_brief._APPROVAL_RUNG_OF` keyed by tier (the amendment aftermath) —
+and the first-approval brief, the third consumer, was wired to neither. Both
+copies are deleted. `agent_common.SPINE_APPROVAL_RUNGS` +
+`human_approves_spine` is the one home, sitting beside the off-spine
+`APPROVAL_RUNGS`/`human_approves` pair it mirrors arm for arm, unmapped-is-HELD
+included. The mint, the amendment aftermath and the first-approval brief now all
+read it; `intake.py` and `adjudicate_brief.py` both shrank. The predicate's
+docstring carries the reader-side contract the off-spine one states for writers:
+*a filter applied only at the mint is a filter the brief does not have.*
+
+Three things follow from putting it in the derivation rather than the prose:
+
+- A held `Drafted` row is still SHOWN — it is part of the chain, and holding the
+  chain is the owner's whole reason this act is the adjudicator's — but labelled
+  `HELD FOR THE OWNER, NOT YOURS TO FLIP`, and it contributes no registry, so a
+  session that ignored every word of the prose still cannot record it in scope.
+- An SR whose chain holds no released `Drafted` row is dropped whole, and if
+  nothing survives the assembler REFUSES, naming the dial. A brief whose every
+  row is the owner's is not this arm's question.
+- The template's opening claim ("the rung they sit at is one the gate authority
+  has released, so no human signature is pending behind you") was TRUE of the
+  mint and false of the brief. It now scopes itself to the `[AWAITING FIRST
+  APPROVAL]` label and says which mechanism makes it true. `{registries}`' empty
+  fallback string went with the refusal that made it unreachable.
+
+**Not taken, and why.** The finding's suggested remedy was to carry the minted
+row identities as typed scope on the adjudication row and re-resolve only those.
+That is not available at the size the fix warrants: `intake._draft_row`
+serializes only `wi_convert.COLUMNS`, and `parse_spec` drops any frontmatter key
+that is not a column — the trap `Supersedes`' own comment records — so a typed
+scope carrier means a NEW REGISTRY COLUMN, which every adopting repo migrates
+to. Against that, the module's stated rule (`red_tc_values`, restated in this
+assembler's docstring) is that a brief re-derives its population rather than
+remembering the mint's, and the adjudication lane is exclusive on trunk, so the
+live population at claim time is the authoritative one. What the finding's
+failure scenario actually turns on is the dial, and that is now filtered from
+one home at both ends. The identity-scoping half is named here rather than done
+silently; if the owner wants it, it is a schema row of its own.
+
+### REVIEW-A rework: a withdrawal still owes re-approval
+
+Round 4 found the shared reader's last asymmetric edge: `Approved` → `Drafted`
+was correctly absent from the lane refusal, but a status-only withdrawal was
+also absent from `staged_drafted_rows`. That silently stranded the row even
+though the live re-attestation model correctly said it awaited `approve`.
+
+The shared two-tree reader now classifies every transition into `Drafted` as an
+`amended` Drafted row, with an empty content delta when Status alone moved.
+That record feeds the existing first-approval trigger; the approval-act reader
+is unchanged and still refuses no de-approval. A reader regression pins both
+sides of that split, and a trigger regression pins the resulting
+`brief = "first-approval"` mint.
+
+### The harness, and the two reds it leaves
+
+Full unfiltered suite, re-measured after the status-only-withdrawal rework:
+**3261 passed, 2 failed, 24 skipped in 576.13 s**. Both failures are the two
+reds analysed below, and neither is this row's. The smoke tier on the same tree:
+1455 passed, 1 failed, 8 skipped in 21.15 s; the independent budget run measured
+20.9 s against the 60 s ceiling — within.
+
+fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=9cc58b2d
+fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=9cc58b2d
+fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=9cc58b2d
+
+The first failure is
+`tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`, and
+it is the DERIVED-ARTIFACT SPLIT, not a defect in the change:
+
+- It passed at `7021e4e1` and fails at `a68cc52a` — i.e. it is the registry
+  amendment above, verified by running that single test in a worktree at each
+  commit, not inferred.
+- `docs/stage` is derived over the SETTLED spine rows, so amending an
+  `Approved` row moves its input digest. Regenerating it in a scratch worktree
+  at `a68cc52a` changes **only** the `fingerprint` and the `# computed … as-of`
+  stamp: `stage`, `stage-ord`, `settled-stage`, `live-stage`, `per-phase`,
+  `per-phase-live` and `drafted` all come back byte-identical. No rung moved.
+  Re-confirmed at the final tip by `derive_stage.py --print`: every derived
+  value above, `phase = 5` included, matches the committed `docs/stage` line for
+  line, and `fingerprint` is the single field that differs.
+- Regenerating it is not this lane's act. `docs/stage` is a declared generated
+  artifact, and every commit that has ever written it is a trunk-side
+  bookkeeping commit (`claim:`, `refresh:`, `log:`, `mint:`). The commit bar
+  agrees and says so out loud: the `derived-stage --check` step SKIPS on a work
+  branch with "generated freshness is the trunk lane's". The trunk lane
+  regenerates after the merge and the red clears with it.
+
+**A second red appears only AFTER the close, and it is not this row's either.**
+The smoke tier run after the terminal move reds
+`test_wi_convert.py::test_the_live_registry_round_trips_in_whichever_home_is_authoritative`
+on `docs/work/cancelled/README.md: does not start with a +++ frontmatter fence`.
+The test takes one of two branches: with a claim in flight the converter must
+refuse BY NAME (`drained-stop`, `active/`) and that refusal IS the test's claim;
+with `active/` empty it runs the real folder round-trip. Closing WI-572 drained
+the last claim on this branch and moved it onto the second branch, where the
+folder walker does not skip the `README.md` files that sit in the work
+subfolders.
+
+Not introduced here, and checked rather than argued: the identical failure
+reproduces at `9eaeac93` — the trunk commit BEFORE WI-572 was claimed, whose
+`docs/work/active/` does not exist at all. It is a latent defect masked by any
+in-flight claim, so trunk meets it whenever the queue drains. Named here because
+this close is what unmasks it on this branch, and the next session should know
+it inherited the red rather than caused it. Like the `docs/stage` red, it is a
+harness-bar repair on its own row, not a fix to smuggle into this one.
+
+**A finding this row sharpened but does not fix.** That test asserts a
+trunk-side invariant with no work-branch exemption, while its commit-bar twin
+has one. Until now the mismatch was nearly unreachable, because a lane amending
+a settled spine row was rare. This row makes lane-side amendment the NORMAL
+path — a lane amends, an adjudicator approves — so the same red will now greet
+routine lanes. Teaching the test the exemption its `--check` twin already has is
+a real follow-on; it is a change to the harness's own bar and belongs on its own
+row, not smuggled into this one.
+
+### Deviations from the plan
+
+- **The refusal points at PROCESS.md §4, not at the plan.** The plan's
+  done-when 1 says the refusal "points at this plan". It is shipped kit code:
+  a downstream repo has no `docs/plans/2026-09-01-...`, and CLAUDE.md's
+  copy-ready rule refuses a token that cites a record the adopter can never
+  read. PROCESS.md §4 ships, and now carries the ruling.
+- **The adjudication runs as an exclusive claimed lane, not as a bare
+  trunk-side session.** The plan says "on the serial trunk side as an exclusive
+  lane". Read literally as "commits directly on trunk", that would be a new
+  execution mode; read against this repo's vocabulary, an adjudication row is
+  already claimed, already runs alone (`dispatch._branch_exclusive`), and
+  already merges through the serial fail-closed queue. So the ruling's
+  substance — a work lane never approves, only an adjudication does, and two
+  acts cannot overlap — is delivered by exempting the adjudication lane rather
+  than by building a second path.
+- **One correction outside the row's own scope.** PROCESS.md §4's snapshot
+  sentence still said the copy is "replaced wholesale at each approval", which
+  WI-571 made false. It is the sentence this row was editing, so leaving a
+  known-false clause in place was worse than the one-clause fix.
+
+### Ratchets re-stamped (each with its reason, in the commit that earned it)
+
+`integrate.py` 1,270 -> 1,298 (two stamps: the rung, then its exemption);
+`intake.py` 1,179 -> 1,255 (trigger a2), then RE-STAMPED DOWN to 1,247 at the
+REVIEW-A rework as the rung table left it; `agent_common.py` 1,262 -> 1,272 at
+that rework, where the table landed; `bootstrap.py` 1,652 -> 1,657 (the
+MAPPING row); `trace.py:reattest_model` complexity DOWN 19 -> 13, recorded in
+the same commit as the extraction that earned it. Byte-watched:
+`PROCESS.md` 87,871 -> 88,355, `PROCESS_OPTIONS.md` 181,369 -> 185,060, and
+byte-budget-guard's own row to 4,906 (cap 5,000).
+
+### Not done here
+
+The plan's §2a table row "Surfaces to the owner" says rows above the threshold
+do NOT surface to the owner. That is the *consequence* of this row, not a
+separate surface change: `trace.py --approve modified` still renders every
+`Drafted` chain, held or released. Narrowing the owner's brief to the held rungs
+alone is a real follow-on and is deliberately not taken here — it would change
+what the owner sees at a sitting, which is the owner's call, not a side effect
+of moving who acts.
+
+The plan's §2a consequence — that the six MEANING rows of the WI-566 amendment
+adjudication are this arm's first re-attestation case — is a trunk-side act on a
+future adjudication, not something this lane may perform.
+
+Deferred open items: none — the ruling this row executes is already recorded.
+Two candidate follow-ons are NAMED above rather than owed back as decisions:
+narrowing the owner's approval brief to the held rungs, and giving
+`test_this_repo_s_committed_stage_is_current` the work-branch exemption its
+`derive_stage --check` twin already has. (The third named here through round 3 —
+`wi_convert`'s folder-home walk — was TAKEN in lane at round 4 below, because
+this close is what unmasks it and a red bar fails where it surfaces.)
+
+### REVIEW-A rework: the terminal sequence performs the ruled act
+
+Round 3 found that the first-approval brief's last sentence still carried the
+generic adjudication protocol — commit the verdict and stop — after the body had
+assigned an approving session a second commit containing the flip and scoped
+snapshot. A session could therefore conform to the terminal instruction while
+leaving an `APPROVE` verdict unapplied. The terminal sequence now branches on
+the per-row rulings: any approved row, including the approved portion of a mixed
+`OUTCOME: RETURN` batch, requires the separate approval commit before stopping;
+only an all-RETURN result stops without a registry or snapshot change. The
+rendered-prompt regression pins all four parts of that sequence.
+
+Rework verification at the implementation commit:
+
+- The complete prompt-brief module is green: **42 passed in 5.02 s**.
+  <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_adjudicate_brief.py" rev=99aedcda -->
+- The full suite reads **3260 passed, 2 failed, 24 skipped in 580.39 s**. The
+  failures are exactly the inherited `docs/stage` fingerprint and
+  folder-registry `README.md` reds analysed above; the added regression is the
+  one-test increase over the preceding tip's reading.
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=99aedcda -->
+- The smoke tier reads **1455 passed, 1 failed, 8 skipped in 22.78 s**, with
+  only the same folder-registry red. Its budget enforcer exits 0: **35.3 s
+  against the 60 s ceiling**, explicitly classifying that pytest failure as
+  non-budget.
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=99aedcda -->
+  <!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=99aedcda -->
+- The docs check reports **0 broken links** (one pre-existing orphan warning),
+  and the generated prompt catalogue is fresh at eight prompts.
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=99aedcda -->
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/gen_prompt_catalog.py --check" rev=99aedcda -->
+
+### REVIEW-A rework, round 4: four findings answered, one still in flight
+
+Round 4 returned five findings. The four settled below are landed; the MAJOR on
+the brief's population is the section after this one.
+
+**The folder-home walk, taken in lane rather than deferred (MAJOR 2).** Round 3
+named this a follow-on; round 4 correctly refused the deferral, because the red
+is unmasked BY THIS CLOSE and the per-commit bar fails where it surfaces.
+`wi_convert.read_specs` walked `rglob("*.md")` and then demanded every hit under
+a status directory parse as a spec — a strictness the folder home does not
+define. It now reads through `spec_paths`, the `kitlib.registry.spec_files`
+re-export this module ALREADY carried twenty lines above it: the write side and
+the read side derive their population from one function, so a file the reader
+treats as residue cannot be a file the writer treats as a broken row. That is a
+deletion of a second walk, not an exclusion of one filename.
+
+**And the repair uncovered why nobody had seen it.** With the walk fixed, four
+of `test_wi_convert.py`'s guards went from SKIPPED to failing on stale premises.
+The `live_csv` fixture caught EVERY `ConvertError` and reported it as "live
+registry has in-flight claims" — so the `cancelled/README.md` parse error read
+as a drained-stop refusal, and four guards had been dark since WI-504 split the
+folder home into two roots. Both halves are fixed:
+
+- the skip now fires only on the refusal it names (`"drained-stop" in str(exc)`);
+  anything else RAISES. A skip whose reason is a guess hides the thing it names.
+- the guards measure the registry, which since WI-504 is the UNION of
+  `docs/work/` and `docs/archive/work/` — the same union
+  `kitlib.registry.read_spec_rows` gives every other consumer. `docs/work/` alone
+  is 24 rows, so the "not truncated" guard was reading 546 archived rows as
+  truncation, the cancellation guard was vacuous (21 cancelled rows are all in
+  the archive), and the not-id-sorted premise was unprovable. `_merged_folder_home`
+  copies both roots into one tree — a copy because `to_csv`/`to_specs` are
+  single-root by contract and both trees use identical status directory names,
+  so the union IS a folder home of the same shape.
+
+Mutation-proven both ways at this tip, not assumed: restoring the `*.md` walk
+reds `test_the_live_registry_round_trips_...` and ERRORS the other four (the
+fixture raising instead of skipping is the second half of the repair, driven).
+With the fix: **21 passed, 0 skipped**.
+
+**The refusal names the act it observed, not the act it assumed (MINOR 3).**
+`lane_approval_refusal`'s snapshot arm read `git diff --name-only`, which lists
+DELETIONS beside writes, and rendered every name as `wrote {}`. A branch removing
+a stale `docs/archive/last_approved/` file was refused with a record stating it
+wrote a file it deleted — a false sentence in the one artifact a human opens to
+learn why the merge stopped. It now reads `--name-status` and words each line
+from the letter (`_SNAPSHOT_ACT`: wrote / rewrote / deleted, `changed` for an
+unrecognised letter, because the file did change and which way is the part this
+does not know). A wording correction, so no unrepresentable-form clause is owed.
+
+**Two statements about the mirror, made one (MINOR 5).** `staged_approval_acts`'
+docstring claimed to report "exactly the set `staged_spine_amendments` exempts"
+and then carved out the de-approval four paragraphs later. An `Approved` →
+`Drafted` withdrawal moves `Status`, so the amendment reader exempts it, but it
+blesses nothing, so this reader does not report it. The mirror is now stated as
+the exempted set MINUS the de-approvals, with where the withdrawal DOES surface
+(`staged_drafted_rows`, as the re-approval it owes) named in the same breath —
+in the docstring, in `LLR-158`'s `Detail`, and in
+`docs/registry-machinery-reference.md`, the three places that quoted it.
+
+**A seam that declared a record never crossing it (MINOR 4).** `IF-091`'s `data`
+named "staged_approval_acts records ... (integrate)". Verified rather than
+assumed: `grep` over `project-trajectory/scripts` and `scripts` finds
+`staged_approval_acts` called nowhere outside `acceptance_record` itself — the
+one mention in `integrate.py` is prose in a docstring. The clause is dropped and
+the seam names `lane_approval_refusal` alone. The same false claim was in the
+reader's own docstring, in BOTH halves ("`intake` reads it off a landed trunk
+commit" is false too — intake never calls it), so that sentence is corrected to
+what is true: its one consumer is `lane_approval_refusal` directly below it, and
+this reader does not itself cross the seam.
+
+### REVIEW-A rework, round 4: the act's scope is a fact the row carries
+
+Round 4's MAJOR was the one round 1 raised and this row's author DEFERRED, with
+the deferral written into this fragment as a named follow-on. The reviewer was
+right to refuse the deferral twice, and the deferral's own argument was the
+tell: it conceded the widening was real and priced the fix at a schema column.
+The column is the price.
+
+**The defect, measured rather than argued.** `first_approval_values` re-derives
+its population LIVE from `trace.reattest_model` — deliberately, because the row
+is claimed long after the merge that minted it and `red_tc_values`' rule is that
+a brief describes the world the judge is actually in. But `reattest_model` walks
+EVERY SR in the repo, and nothing bounded the re-derivation. Driven here against
+this repo with a synthetic row and no merge context at all, it returned 4 SR
+chains, 11 `[AWAITING FIRST APPROVAL]` rows, ~40k characters, and a `registries`
+slot naming ALL THREE spine registries. The mint that produced the row named ONE
+row in its title and `## Context`.
+
+Two harms, and neither is cosmetic:
+
+- The template tells the session "You hold the approval authority for every row
+  below marked `[AWAITING FIRST APPROVAL]`". So a merge staging one `Drafted`
+  LLR authorised a flip of eleven rows across unrelated workstreams, and moved
+  the approval snapshot for all three registries under one WI. That contradicts
+  the doctrine this same change wrote into PROCESS_OPTIONS.md — the merge mints
+  an adjudication "over the `Drafted` rows the lane handed over" — and the
+  owner's own concurrency reason for moving the act to trunk, which is that the
+  approval snapshot must not move across a workstream.
+- It manufactured owner interrupts. A second merge's adjudication, minted while
+  the first was still queued, found nothing left and composed to `(None,
+  reason)`, which rule 3 turns into a HELD-for-a-human stop. This repo is live
+  for it: `human_approval_through = "DevStg-Needs"` releases all three rungs.
+
+**The fix, and why it costs a schema column.** The scope has to be a fact the
+ROW CARRIES. It cannot be re-derived (the derivation is the thing that widened),
+it cannot ride the title or `## Context` (prose carrying control flow is the
+WI-417 fold this module's own header cites), and it cannot be a frontmatter key
+outside the schema (`parse_spec` drops those — the trap `Supersedes`' comment
+records). So `Adjudicates` joins `wi_convert.COLUMNS` as a `;`-joined list
+column, exactly as `Supersedes` and `Brief` did before it, and for the same
+stated reason. `intake._first_approval_drafts` writes the ids it minted over —
+NOT truncated the way the advisory `sr_refs` cell is, because a boundary with a
+`[:8]` on it silently authorises the ninth row or silently strands it.
+`adjudicate_brief.adjudicates(row)` reads it, and the intersection is taken at
+the CHAIN ROW in one expression:
+
+    yours = drafted and rid in scope and _loop_approves(root, kind)
+
+Three filters, one label — the live model's answer, the mint's question, the
+dial's permission — and `yours` is what mints both the chain label and the
+`--approves` registry. The wider population is not filtered out downstream; no
+code path turns a repo-wide `Drafted` row into a `yours`, so it is never
+constructible. The dial check stays BESIDE the scope check rather than being
+replaced by it: the mint filtered by the dial it saw, and a dial the owner
+tightens afterwards must bind an act it has not yet authorised.
+
+**Three consequences, each of which needed saying somewhere.**
+
+- `_CHAIN_LABEL`'s two-key table became `_chain_label`, three states. A
+  `Drafted` row can fail to be yours because the OWNER holds its rung or because
+  it is ANOTHER act's row, and those take opposite actions — wait for a
+  signature, versus a sibling adjudication will rule on it. One
+  "HELD FOR THE OWNER" line for both would be a true label for the wrong reason,
+  which is still rule 2's failure. The template gained the paragraph for the new
+  label beside the one it already had.
+- The "nothing survives" refusal now names WHICH filter emptied it: ruled on
+  already, held by the dial, or a scope naming rows this spine no longer has.
+  The repo-wide `if not model` early return was DELETED rather than kept beside
+  it — it answered the same question less precisely, and two refusals for one
+  state is two answers to one question.
+- A row declaring NO scope REFUSES. An empty cell is an unstated boundary, and
+  reading it as "everything" is the widening itself, so it fails toward the
+  human.
+
+**The column's real cost, paid rather than hidden — and WRITTEN DOWN.** It is a 19th column, so an
+adopter carrying the legacy CSV home adds a header cell — `load_csv` refuses a
+header that is not the declared schema, by design. `test_dogfood_sync`'s
+schema-widening proof covers it automatically (it derives the optional set from
+the template), so behaviour-neutrality is measured, not asserted. Five
+hand-maintained copies of the header exist; four were pinned to each other and
+the fifth, `kitlib.registry.WI_COLUMNS`, was pinned to NOTHING — which is how far
+the new cell got before anything noticed it was written by the mint and dropped
+by every reader. That pin now exists, and covers the field maps as well as the
+column list: a column in both tables but in neither `LIST_FIELDS`/`SPEC_LISTS`
+round-trips as an empty cell. `test_wi_loader_sync` gained the third member of
+its `bar`/`brief` triplet — and `Adjudicates` is the only `;`-joined cell outside
+the two ref columns, so it is what proves a LIST column survives both homes.
+
+`RESYNC_PACK.md` carries the adopter-facing entry, which is a one-cell CSV header
+edit and a no-op for the folder home. Writing it surfaced a SEPARATE, older gap,
+named there rather than fixed here: `Supersedes` and `Brief` added columns to the
+same schema and neither got an entry, so an adopter still on the legacy CSV has
+been three cells behind rather than one. The new entry says so and tells them to
+add all three.
+
+**Tests**: three at the brief (the widening regression, the no-scope refusal, the
+settled-scope refusal naming its rows), one at the mint, one at the loader
+triplet, and the widened schema pin. The widening regression is mutation-proven
+— dropping `rid in scope` reds it and the settled-scope refusal both.
+
+**One decomposition the fix earned.** Folding the awaiting-set collection into
+the existing walk (rather than re-walking every chain to answer "which filter
+emptied the population") pushed `first_approval_values` to C901 11, one over the
+declared 10 — and this repo's rule is that complexity is SIMPLIFIED, not bumped.
+So the per-row judgement came out as `_render_chain`: the three-way
+intersection, the label that says why a row is not yours, and the registry the
+act will name all live there, and the assembler around it is "walk the model,
+keep the chains holding one of mine, refuse if none do". The `--approves` set is
+accumulated THROUGH rather than returned, so it keeps one home; a chain the
+caller then drops contributes nothing to it, because a dropped chain has no
+`yours` row by construction.
+
+**Driven at this tip against this repo, not only against a fixture.** The
+review's own probe — a `first-approval` row with no merge context — now REFUSES
+by naming the missing cell. Given a scope of one real row (`LLR-206`, one of the
+eleven `Drafted` rows this repo currently carries across four SR chains), the
+brief renders **1 chain, 1 `[AWAITING FIRST APPROVAL]` row, 3 siblings labelled
+OUTSIDE THIS ACT'S SCOPE, 9,541 chars, and one registry** — against the
+pre-fix reading of 4 chains, 11 rows, 40,658 chars and all three registries.
+The act reaches what the merge handed it and nothing else.
+
+`intake.py` 1247 -> 1249, re-stamped with its reason: two lines, the `_draft_row`
+assignment and the mint's `adjudicates` key.
+
+Registry rows this round moved, re-pointed in lane: `IF-092`'s `data` (18 -> 19
+columns), and `LLR-136` (`Approved`, amended not flipped, like `LLR-158`) which
+now records that `read_specs` takes its population from the read side's
+`spec_paths` and that `COLUMNS` is pinned to its read-side twin.
+
+### The harness at the round-4 tip
+
+- Smoke tier: **1461 passed, 4 skipped in 20.99 s** — GREEN, where the tip this
+  round inherited was `1 failed, 1455 passed`. The budget enforcer reads
+  **23.3 s against the 60 s ceiling**.
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=HEAD -->
+  <!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=HEAD -->
+- The four previously-dark `test_wi_convert.py` guards run and pass: **21
+  passed, 0 skipped**.
+- Byte-watched: `PROCESS_OPTIONS.md` 185,060 -> 185,555 (+495, mechanism 2's
+  scope sentence), and byte-budget-guard's own row re-stamped and re-trimmed to
+  **4,982 against its 5,000 cap** — the first draft of that row put the file at
+  5,142, over cap, which is exactly what the guard exists to catch.
+
+### Final worker verification after round 4
+
+The resumed worker drove the five findings at the final implementation tip.
+The focused six-module set is green: **250 passed in 26.76 s**. The smoke tier
+is green: **1,461 passed, 4 skipped in 22.50 s**, and its independent enforcer
+measured **23.0 s against the 60 s ceiling**. The docs check reports **0 broken
+links** (one pre-existing orphan warning).
+
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_adjudicate_brief.py tests/test_integrate_admission.py tests/test_intake.py tests/test_approval_level.py tests/test_wi_convert.py tests/test_wi_loader_sync.py" rev=HEAD -->
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=HEAD -->
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=HEAD -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=HEAD -->
+
+The unfiltered suite read **3,269 passed, 2 failed, 20 skipped in 599.36 s**.
+One failure was the already-characterised trunk-owned `docs/stage` fingerprint:
+this lane amended approved rows, and generated coordination truth is refreshed
+by the trunk step, not a worker. The other exposed a close-record typo in this
+row: all three byte-budget skill copies were really **4,982 bytes**, while their
+self-baseline still said 4,906. The measured value is now 4,982 in all three
+copies (a net-zero edit, leaving 18 bytes of headroom); the focused cap and
+baseline guards are green: **3 passed**. Re-running the stage test alone leaves
+exactly that one expected generated-freshness failure.
+
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=HEAD -->
+<!-- fig: cmd="wc -c project-trajectory/skills/byte-budget-guard/SKILL.md .agents/skills/byte-budget-guard/SKILL.md .claude/skills/byte-budget-guard/SKILL.md" rev=HEAD -->
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_bootstrap.py -k 'byte_caps or size_budget or capped_doc_baselines'" rev=HEAD -->
+
+### REVIEW-A rework, round 5: one delimiter, chosen twice
+
+Round 5 returned three findings against tip `87ac214`. The BLOCKER was a
+separator disagreement between two modules that never spoke: `first_approval_values`
+hand-joined its derived `--approves` argument with `" "`, while
+`baseline_snapshot.parse_approves` splits on `;`. A single-registry batch hid it;
+a batch spanning two registries — the NORMAL case, since `_first_approval_drafts`
+mints one row over every `Drafted` row of the merge regardless of registry — either
+died at the CLI (`unrecognized arguments`) or, quoted, SILENTLY mis-parsed so the
+second registry was neither authorised nor copied, while the adjudicator flipped
+both Statuses. That is exactly the approved-but-unanchored state step 2 exists to
+prevent.
+
+The fix takes the reviewer's antidote rather than patching the join: the kit's
+`;`-joined list syntax now has ONE owning boundary. `baseline_snapshot.format_approves`
+is the deterministic inverse of `parse_approves`, and producers pass the canonical
+`{registry rel: ref}` mapping instead of picking a delimiter. No second module gets
+to choose again, so the defect class is closed rather than the instance.
+
+The two MINORs, both answered where the review pointed:
+
+- **The refusal over-claimed its reach.** `staged_approval_acts` walks `SPINE_CSVS`
+  — SR/LLR/TC — but the refusal text and `lane_approval_refusal`'s docstring stated
+  an unqualified rule, so a lane could infer coverage of the SN and interfaces tiers
+  that the rung does not have. Both now name the three registries they actually read.
+  A wording fix: the `SPINE_CSVS` omission stays deliberate and declared.
+- **The exemption was untested.** `_adjudication_lane` is the highest-leverage
+  predicate in the row — True bypasses every rung, False makes the feature inert —
+  and no test drove either arm. Both arms are now pinned beside the merge-slot tests
+  (an `adjudication` lane's flip admitted, an `ordinary` lane's refused, unreadable
+  frontmatter refused). Its two callers now share one reader, `_claimed_spec_frontmatters`,
+  so actor identity is read once rather than by two `safety_class` reads with opposite
+  defaults — the reviewer's available antidote, since the exemption is a genuine trust
+  boundary that some predicate must decide.
+
+**Mutation-proven, not merely green.** Reverting `format_approves` to `" ".join`
+fails both new syntax tests. Forcing `_adjudication_lane` to `return False` fails the
+adjudication arm; forcing it to `return True` fails the ordinary-lane and unreadable
+arms. The unreadable fixture was checked to overwrite a spec that already exists —
+`_claimed_specs` lists exactly `WI-401-widget.md` — so it refuses for the reason
+claimed rather than for a stray file.
+
+### The harness at the round-5 tip
+
+The shared reader cost `integrate.py` 3 SLOC over its 1298 baseline, and the
+ratchet's rule is decompose, don't bump. The overage was not the decomposition
+but two `ruff format` expansions around it, so it compacted away rather than
+being sanctioned — the comprehension binds its `_claimed_specs` call to a local
+so it fits one line, and `_adjudication_lane` tests the normalized kind inside
+its `all()` instead of building a separate generator. Back to **exactly 1298**,
+no baseline edit, names unchanged. The mutation proofs were re-run AFTER the
+compaction, not before.
+
+- Touched modules — `test_integrate_admission`, `test_module_size_ratchet`,
+  `test_adjudicate_brief`, `test_baseline_snapshot`: **137 passed in 28.89 s**.
+- Smoke tier: **1,461 passed, 4 skipped in 21.44 s**, its independent enforcer
+  measuring **23.0 s against the 60 s ceiling**.
+- `check.py --jobs 0`: PASS (the trunk lane's generated-freshness jobs SKIP on a
+  work branch, per concurrency-restructure §5.2).
+- `check_docs.py --root . --stale`: **0 broken links** over 1,216 docs and 1,586
+  intra-repo links (one pre-existing orphan warning).
+- Unfiltered suite: **3,274 passed, 1 failed, 20 skipped in 568.49 s**.
+
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=HEAD -->
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=HEAD -->
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=HEAD -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=HEAD -->
+
+**The one red, and why it is not this row's.** `test_this_repo_s_committed_stage_is_current`
+fails on the `docs/stage` fingerprint. Not asserted from the round-4 characterisation
+— re-established here: a worktree at the inherited tip `fa9c632b`, BEFORE either
+round-5 commit, fails the same test with the same pair (recorded `sha256:a24669d7…`,
+computed `sha256:6fadb64e…`). The computed value is byte-identical on both sides of
+the change, so these edits did not move the fingerprint at all; `docs/stage` is
+generated coordination truth the trunk lane refreshes, which is why `check.py`
+SKIPs `derived-stage` on a work branch. The round-4 second red (the byte-budget
+close measurement) is gone — 3,269/2-failed then, 3,274/1-failed now.
+
+### REVIEW-A rework, round 6: actor identity is not authorization
+
+Round 6 found the merge boundary still trusted `safety_class = "adjudication"`
+as blanket authorization: `_approval_act_refusal` returned before it read the
+branch's approval acts or the claimed row's `Adjudicates` scope. The brief could
+label a second row outside the act, but a hand edit could still flip that row and
+copy its registry, and the merge admitted both.
+
+The fix removes that early return. `acceptance_record.approval_delta` derives the
+row acts and snapshot writes ONCE; `merge_approval_refusal` hands that same value
+to the ordinary-lane judgement or to the first-approval scope judgement. The
+latter admits only flips whose ids are in `Adjudicates` and exactly the snapshot
+registries those flips changed. It refuses an empty scope, actor-kind-only or
+out-of-scope flips, an approved registry with no anchoring copy, and a copied
+registry with no approved row. A scoped all-RETURN batch remains valid with no
+act, and an amendment adjudication's snapshot-only re-attestation remains valid;
+the correction therefore binds the authority the row actually records without
+inventing a scope the amendment arm does not carry.
+
+The tests drive the merge slot, not only the prompt: the permitted fixture lands
+one scoped `SR-001` flip with its system-requirements snapshot; the two adversarial
+fixtures prove an unrelated `SR-001` flip scoped to `SR-002` and an extra
+test-cases snapshot both refuse before trunk moves. Separate pins cover empty
+scope, actor-kind alone, return-only and missing-anchor behavior. The shared
+reader and judgement live in `acceptance_record.py`, below the size threshold;
+the obsolete exemption explanation was deleted and `integrate.py` stays exactly
+at its existing 1,298-SLOC ratchet rather than receiving a bump.
+
+The exact-equality complexity census had not been re-stamped across this WI's
+earlier accepted implementation and rework. The declared checker therefore
+reported both stale increases and stale decreases across the same branch. Its
+`--restamp` output is committed here: the census now records 202 over-threshold
+functions, including the new `staged_approval_acts` row and the downward
+decompositions this WI already made. This is the branch's delayed reviewed stamp,
+not a change to the threshold or a suppression of the new merge-boundary
+judgement (its functions remain below the threshold).
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_complexity.py --root . --restamp" rev=HEAD-dirty -->
+
+Verification at the rework tree before its resumable commit:
+
+- Focused acceptance-record, merge-admission and module-size modules: **56
+  passed in 15.51 s**.
+- Smoke tier: **1,461 passed, 4 skipped in 21.09 s**; the independent budget
+  run repeated it in **22.07 s** and measured **22.5 s against the 60 s
+  ceiling**.
+- Complexity: **OK, 202 rows unchanged from the re-stamped baseline**.
+- Documentation: **1,217 docs, 1,586 intra-repo links, 0 broken**; the one
+  orphan warning is the pre-existing `docs/test/report.md`.
+
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_module_size_ratchet.py tests/test_integrate_admission.py tests/test_acceptance_record.py" rev=HEAD-dirty -->
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=HEAD-dirty -->
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=HEAD-dirty -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_complexity.py --root . --mode enforce" rev=HEAD-dirty -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=HEAD-dirty -->
+
+The unfiltered close suite after the rework commit completed **3,280 passed, 20
+skipped, 1 failed in 576.16 s**. Its sole red is again
+`test_this_repo_s_committed_stage_is_current`, with the same recorded
+`sha256:a24669d7…` versus computed `sha256:6fadb64e…` pair established before
+round 5's changes. This branch neither owns nor edits `docs/stage`; the declared
+work-branch harness skips that trunk-owned generated-freshness assertion and the
+serial trunk step regenerates it after merge.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=67c58e17 -->
+
+The declared work-branch gate harness, `.venv/bin/python
+project-trajectory/scripts/check.py --jobs 0`, reports **RESULT: PASS**; its
+trunk-owned `derived-stage` and approval-freshness steps skip by the declared
+branch rule, while every applicable step passes.
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check.py --jobs 0" rev=67c58e17-dirty -->
+
+### REVIEW-A rework, round 7 — IN FLIGHT
+
+Round 023's review returned CHANGES-REQUESTED with five findings against tip
+`6af1e4a2`. Worked in this order; each subsection below lands as its fixes do.
+
+**The stale WHOLESALE sentence, in the two places a HUMAN SIGNER reads it
+(MINOR 5).** Round 4 corrected PROCESS.md §4 from "replaced wholesale at each
+approval" to the scoped statement WI-571 made true, and left the two GENERATORS
+that tell the owner the same fact saying the retired thing: `trace.py`'s
+off-spine census note and `gen_open_items.py`'s dashboard twin both emitted
+"`intake.py snapshot` copies them WHOLESALE alongside any spine approval", and
+the sentence was live in the `docs/ratify/CURRENT.md` this branch regenerates.
+Both now state the scoped rule AND the exception the reader needs — a re-SEED
+still blesses the whole tree, which is what makes the census's own "what a
+re-seed will absorb" tail true. The two nearby COMMENTS carrying the same
+retired claim (`trace.py`'s WI-518 header, `gen_open_items.py`'s `drafted`
+census label) are corrected in the same pass; leaving a comment asserting what
+the string beside it no longer says is the drift this finding is about.
+`docs/ratify/CURRENT.md` regenerated. The markdown edit is SLOC-neutral in
+`trace.py`, which is a ratcheted module.
+
+**The ratchet's loosening, made a reviewed act (MINOR 4).** Round 6 committed
+`check_complexity --restamp` output wholesale, which absorbed eight UPWARD
+stamps with an empty reason column — against the file's own header rule ("the
+baseline only ever tightens ... the reason column records why it is carried").
+Measured rather than argued, and WIDER than the finding: a worktree at the
+integration base `4d0b972d` — a tree this branch never touched — already FAILS
+`check_complexity` on all eight, so every one is trunk-inherited, not
+introduced here. The five the review named are `intake.py::_disposition_drafts`
+(21 -> 25), `handback.py::close_adjudication`,
+`gen_open_items.py::_none_declaration_findings`,
+`intake.py::_replace_inbound_edges` and `trace.py::_cell_diff_lines`; the three
+it did not are `dispatch.py::_advance` (16 -> 20) and WI-571's two,
+`baseline_snapshot.py::_authorised_registries` and `copy_live` (19 -> 21).
+Each now carries the reason, the base commit it was measured at, and where the
+repair is owed.
+
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_complexity.py --root <worktree at 4d0b972d>" rev=4d0b972d -->
+
+**And the ninth row was this WI's own, so it was SIMPLIFIED rather than
+stamped.** `acceptance_record.py::staged_approval_acts` sat at cognitive 20
+with a blank reason — the same defect one row up, and this branch's to fix. The
+repo's rule is decompose, don't bump, so the per-row judgement came out as
+`_approval_act`: the walk around it is now "visit every row of every changed
+registry" and the two arms (`flip`, `born`) are stated once, side by side,
+which is what makes the mirror its docstring claims checkable. The function
+drops OFF the census entirely (cognitive 20 -> under the 15 threshold) and
+`_approval_act` does not enter it, so the row is deleted rather than
+re-stamped. Behaviour-identical: the reader, merge-slot and intake modules are
+green at **91 passed**, and the census reads **OK - 201 rows, unchanged**.
+
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_acceptance_record.py tests/test_integrate_admission.py tests/test_intake.py" rev=HEAD-dirty -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_complexity.py --root ." rev=HEAD-dirty -->
+
+**The derived `--approves` argument was rendered into a shell UNQUOTED (MAJOR
+2).** Round 5 gave the `;`-joined list one owning boundary
+(`baseline_snapshot.format_approves`) and closed the mis-parse at the CLI. It
+did not close the other end: the template renders that string into
+`` `python scripts/intake.py snapshot --approves {registries}` ``, and `;` is a
+COMMAND SEPARATOR. Reproduced against this repo's own live spine before fixing
+— `--approves docs/requirements/low-level-requirements.toml=WI-599;docs/test/test-cases.toml=WI-599`
+is two commands: the first snapshots one registry, the second tries to RUN
+`docs/test/test-cases.toml=WI-599`. The act then merges as approved-but-half-
+anchored and the merge slot refuses it. This repo carries `Drafted` rows in two
+registries today, so the two-registry batch is the current state, not a
+hypothetical. The template now quotes the argument and says why; `intake.py`'s
+placeholder line takes the same quotes as a net-zero edit (its ratchet says
+compact, not bump — the reasoning lives in the template, which is the surface
+the session actually follows).
+
+The guard is MECHANICAL, not an eyeball. `shlex.split` cannot serve — it is a
+lexer, so it returns `a;b` as one token whether quoted or not, and a test built
+on it would have passed against the defect. `shlex.shlex(...,
+punctuation_chars=True)` yields an unquoted `;` as its own token and keeps a
+quoted one inside its string, so the test asserts the rendered line is ONE shell
+command, and asserts the same line with its quotes stripped is TWO. Unquoting
+the template fails it.
+
+**A MIXED batch could still widen the snapshot (MAJOR 3).** `{registries}` is
+fixed at COMPOSITION time, but the template blesses a mixed verdict ("approve
+the rows that are ready, return the rest") and the approve/return split does not
+exist until the session rules. So an adjudication that RETURNED one registry's
+rows in full still ran the composed command, re-anchoring that registry's
+unreviewed live text — and `adjudication_approval_refusal` then stopped the
+merge as `snapshot WIDENED`, with a message that named neither what it did nor
+what to do.
+
+Answered at both ends, and the guard is kept rather than relaxed: admitting an
+unflipped `--approves` registry would defeat the point of the WIDENED arm, which
+is that a copy blesses whatever drift is live. Instead the session is given what
+it needs to DROP a token. `_render_chain` now accumulates the ROW IDS each
+`--approves` token covers (not merely that the token is owed), the brief renders
+that mapping beside the command, and the template states the drop rule. The
+merge refusal gained a per-arm remedy — WIDENED, WITHOUT ITS ANCHOR, OUTSIDE
+SCOPE each say what to do.
+
+**And driving it found a defect the fixture could not.** Rendered against this
+repo's live spine the mapping read `covers LLR-205, LLR-205`: `_render_chain`
+visits a row ONCE PER SR CHAIN it hangs under, and the accumulator was a list.
+A token naming one row twice reads as two rows, which is exactly the count the
+drop rule turns on. It is a dict-as-ordered-set per registry now. The first
+regression written for this was VACUOUS — `_first_approval_repo`'s LLR has one
+parent, so reverting the fix still passed — so the test builds the two-parent
+shape explicitly and asserts the premise (the row renders under both chains)
+before asserting the dedupe. Mutation-proven at that fixture: reverting to a
+list fails it.
+
+The structural antidote the review named — deriving the authorised set from the
+`Status` flips staged in the same tree, instead of typing the scope ahead of the
+act — is NOT taken here, and the review scoped it out for the same reason: it
+moves the boundary into `intake.py snapshot`, which is a row of its own. Named,
+not done silently.
+
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_adjudicate_brief.py tests/test_acceptance_record.py tests/test_integrate_admission.py tests/test_intake.py tests/test_prompts.py tests/test_module_size_ratchet.py" rev=HEAD-dirty -->
+
+**The doctrine claimed a reach the rung does not have (MAJOR 1).**
+`staged_approval_acts` walks `SPINE_CSVS` — SR/LLR/TC — while
+`baseline_snapshot.SNAPSHOTTED` names SEVEN registries whose `Status` a snapshot
+anchors. Round 5 narrowed the refusal TEXT and the reader's docstring to the
+three; it did not narrow the doctrine, so `PROCESS_OPTIONS.md`'s
+division-of-labour table still read "Flips `Status` | **Never.**" and
+`gate-advance` named the SN flip as part of the DevStg-Reqs approval without
+saying which half is mechanically held.
+
+**The narrow reach is the RULING, so the doctrine moved, not the rung.** The
+plan of record scopes the act to SPINE ROWS in both places it states it —
+§2a's table ("new SR/LLR/TC rows are written **Drafted**") and done-when 1 ("its
+**spine** delta") — and SN's exclusion is older and separately ruled (design
+§B7: needs are not status-gated at all, and wiring them is a parked pass;
+recorded at `baseline_snapshot._claims_approval`). Widening the reader would
+have been this lane legislating past its own plan, on four tiers with three
+different claim vocabularies. So `PROCESS.md` §4 now says "a spine row's
+`Status` flip" (+10 bytes), the `PROCESS_OPTIONS.md` row says "Never on a spine
+row", and `gate-advance` says the merge refusal reads the three spine
+registries and the SN half rests on the procedure alone.
+
+**And the reviewer's antidote is taken, in the form the ruling allows.** The
+defect was constructible because two hand-written literals in two modules,
+hundreds of lines apart, were joined by nothing — a tier could enter
+`SNAPSHOTTED` and reach NO approval reader, silently. The exclusions are now a
+named constant beside the set they exclude from
+(`acceptance_record.OUTSIDE_THE_APPROVAL_ACT`), and the two sets are pinned as
+one CLOSED statement: `SNAPSHOTTED == SPINE_CSVS + OUTSIDE_THE_APPROVAL_ACT`,
+exhaustive and disjoint. A new tier now fails a test that names it and has to be
+placed on one side by a deliberate edit. Mutation-proven both ways: adding a
+tier to `SNAPSHOTTED` fails it, and dropping one declared exclusion fails it.
+
+**The UNCOVERED half the review named is now covered.** No test asserted either
+that the four tiers are refused or that they are deliberately out of scope, so
+the omission read as an oversight from outside the module. A second test drives
+a real git tree in which a lane flips `IF-001` `Drafted -> Approved` and asserts
+`staged_approval_acts` returns `[]` and `lane_approval_refusal` returns `None` —
+the READER's behaviour, not a re-reading of the constant the pin already holds.
+
+Byte-watched: `PROCESS.md` 88,355 -> 88,365, `PROCESS_OPTIONS.md`
+185,555 -> 186,240 (+685, the bound and why it is the ruling's). The
+`gate-advance` skill's three copies are re-synced (`--check-agents` OK).
+
+**The registry row this round moved, re-pointed in lane.** `LLR-158`
+(`Approved`, amended not flipped, as in rounds 4 and 6) owns
+`acceptance_record.py`. Round 7 added two symbols under it, and one of them
+BOUNDS a claim the row's own `Detail` made: its last sentence read "a row that
+no reader saw is unrepresentable", which is true within `SPINE_CSVS` and is the
+very overstatement MAJOR 1 found in the doctrine. The cell now names the bound,
+`OUTSIDE_THE_APPROVAL_ACT` and the exhaustive-and-disjoint pin that holds it,
+and records that the per-row judgement is stated once in `_approval_act`. Both
+symbols join `code_symbol`. `check_trajectory` exits 0 with only the
+pre-existing warn set (the `schedule -> trace` crossing included); no new warn.
+
+### The harness at the round-7 tip
+
+- Unfiltered suite: **3,285 passed, 1 failed, 20 skipped in 571.28 s** — five
+  more passing than the round-6 tip's 3,280, which is exactly the five
+  regressions this round adds.
+- Smoke tier: **1,463 passed, 4 skipped in 22.73 s**; the independent enforcer
+  measured **36.5 s against the 60 s ceiling** — within.
+- `check.py --jobs 0`: **RESULT: PASS** (the two trunk-owned generated-freshness
+  steps SKIP by the declared work-branch rule).
+- Complexity: **OK - 201 rows over 15, unchanged from baseline**.
+- Docs: **1,218 docs, 1,586 intra-repo links, 0 broken** (the one orphan warning
+  is the pre-existing `docs/test/report.md`).
+
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=9ddcb3b7 -->
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=9ddcb3b7 -->
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=9ddcb3b7 -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check.py --jobs 0" rev=9ddcb3b7 -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_complexity.py --root ." rev=9ddcb3b7 -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=9ddcb3b7 -->
+
+**The one red is the same one every round since round 4 has carried, and it is
+still not this row's.** `test_derive_stage.py::test_this_repo_s_committed_stage_is_current`
+fails on the `docs/stage` fingerprint with the same recorded
+`sha256:a24669d7…` pair established before round 5's changes. `docs/stage` is
+declared generated coordination truth that the trunk lane refreshes after the
+merge, which is why the declared work-branch harness SKIPs its `--check` twin.
+This branch does not edit it.
+
+**This branch is merge-clean under its OWN rung, re-verified at the final tip**
+— not carried forward from round 4's reading, because this round amended a spine
+row. Over `4d0b972d..HEAD`: `staged_approval_acts` returns `[]` and
+`lane_approval_refusal` returns `None` (amending is not approving), while
+`staged_spine_amendments` reports `LLR-136` and `LLR-158` — so the amendment
+adjudication trigger raises a row for this lane's own re-pointing at merge,
+which is the intended shape and not a special case.
+
+### Round-6 rework resume at the current tip
+
+The unattended worker was relaunched with round 6's merge-boundary finding
+after the repair and its close verification had already landed. It reconciled
+the branch rather than adding a second guard: `67c58e17` removes the blanket
+all-`adjudication` return, derives one approval delta, and checks that delta
+against the claimed first-approval row's recorded `Adjudicates` scope;
+`892e9f0a` records the close harness. At the current tip, the six exact
+merge-admission regressions for a permitted scoped act, empty scope,
+actor-kind-only authority, an unanchored flip, an unrelated flip, and a widened
+snapshot all pass (**6 passed in 2.90 s**). No implementation change was owed.
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_integrate_admission.py::test_a_scoped_adjudication_lane_may_land_its_flip_and_snapshot tests/test_integrate_admission.py::test_a_first_approval_adjudication_with_no_scope_is_refused tests/test_integrate_admission.py::test_an_adjudication_kind_alone_does_not_authorise_a_flip tests/test_integrate_admission.py::test_an_adjudication_cannot_flip_a_row_outside_its_scope tests/test_integrate_admission.py::test_an_adjudication_snapshot_cannot_widen_beyond_its_flips tests/test_integrate_admission.py::test_a_scoped_flip_without_its_snapshot_is_refused" rev=656b641a -->
+
+### Round-028 rework: four findings, and the SN tier joins the approval rung
+
+The four round-028 findings are taken as their remedies state.
+
+**MAJOR 1 — the false complexity reason.** `plan_round.py::_advance` reads
+`18 18` at the integration base `4d0b972d` and `18 18` at the tip, and
+`check_complexity.py --root <archive of 4d0b972d>` does NOT name it among its
+FAILs — it names `dispatch.py::_advance 16 -> 20`, whose text the reason had
+been copied from. Re-measured over a fresh `git archive 4d0b972d` tree rather
+than re-read: the row neither moved nor failed at base, so it carries no debt
+this branch absorbed and the reason is DELETED, leaving the eight true ones.
+The review's construction-first note (teach `--restamp` to write the measured
+`before -> after` into the reason it stamps, so prose and row have one producer)
+is a follow-up row, not this diff.
+
+**MAJOR 2 — the archived record under-counted its own amendments.** The Context
+said "two rows" naming `LLR-158` and `IF-091`; driving this row's own reader
+over its own delta, `staged_spine_amendments('.', '4d0b972d', 'HEAD')` returns
+`LLR-136` and `LLR-158`, and the branch also amends `IF-091` — three rows. Both
+sentences now say three and name `LLR-136`. The attestation's conclusion (no
+flip, no snapshot, amendment permitted) was and is true; only the enumeration
+was stale.
+
+**MINOR 3 — the byte stamps.** Re-measured with `wc -c` and re-stamped in all
+three tracked copies of the guard, which are byte-identical:
+`PROCESS.md` 88,355 -> **88,365** (+10, last round's §4 wording; unedited this
+round), `PROCESS_OPTIONS.md` 185,555 -> **186,421** (+866 from the stamp, of
+which +181 is this round's doctrine paragraph). The guard's own capped row went
+4,982 -> **4,831** (-151, headroom 169 under the 5,000 cap) because a re-stamp
+replaces a row's reason rather than nesting the superseded one.
+
+**MINOR 4 — the third WHOLESALE site.** `baseline_snapshot.py`'s `SNAPSHOT_DIR`
+comment now states the scoped rule in `copy_live`'s own words.
+
+**DEVIATION FROM THE PLAN, recorded as one.** The plan's §2a table and the
+doctrine it drove say the act is scoped to **SR/LLR/TC**. That wording is
+narrower than the ruling it implements, and narrower in the one direction that
+matters: `lane_approval_refusal` walked `SPINE_CSVS`, so a lane flipping a
+`docs/requirements/stakeholder-needs.toml` row `Drafted -> Approved` merged
+clean. SN is a SPINE tier — `spine_carrier.SPINE_TABLE` names it, its rows carry
+the same `status` vocabulary — and `DevStg-Reqs` is the rung the human-approval
+dial holds for the owner in this very repo, so a lane blessing a need is the
+WORST case of the act the owner moved to the adjudicator, not an exempt one.
+Its earlier exclusion was the section-as-state reading recorded at
+`baseline_snapshot._claims_approval`, which the `status` cell retired.
+
+The refusal now walks `APPROVAL_ACT_CSVS` — a SEPARATE constant, `SPINE_CSVS`
+plus the need tier, not a widened `SPINE_CSVS`, because the amendment warn and
+the intake mint read that name and silently widening THEM is a different
+decision this round did not take. `_spine_row_sides` gained a `registries`
+parameter so the two scopes stay one walk with one set of carrier and
+`--no-renames` rules. The three OFF-SPINE registries stay out and the doctrine
+now says why: their approval cells are governed by OI-30 D3, out of this row's
+scope. The exhaustiveness pin stays honest by construction —
+`stakeholder-needs.toml` moved from `OUTSIDE_THE_APPROVAL_ACT` into the covered
+set, and `APPROVAL_ACT_CSVS | OUTSIDE_THE_APPROVAL_ACT == SNAPSHOTTED` is still
+exhaustive and disjoint.
+
+Doctrine re-worded at every site that said SR/LLR/TC: `PROCESS_OPTIONS.md`
+mechanism 1 and its division-of-labour row, the `gate-advance` skill in all
+three copies (whose DevStg-Reqs bullet said the SN half rested on the procedure
+alone — it no longer does), the plan's §2a table, and this WI's own record.
+`PROCESS.md` §4 needed no edit: it already says "a spine row's `Status` flip",
+which is now more true rather than less.
+
+**THE OWNER'S OWN SITTING IS UNAFFECTED, verified rather than assumed.** The
+refusal is read at `integrate._approval_act_refusal` over the merge delta of a
+WORK LANE the station is landing; a hand-made SN flip in a reviewed commit on
+trunk never reaches that slot. The new test's docstring says so and the test
+asserts nothing about a trunk commit's admissibility.
+
+New test: `tests/test_intake.py::test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing`
+— a born-`Approved` SN row and a `Drafted -> Approved` SN flip are both reported
+by `staged_approval_acts` and named in the refusal text (`SN-001`,
+`stakeholder-needs`, `SN/SR/LLR/TC`), and no adjudication is minted over the
+flip: the rung is HELD here (`human_approval_through = DevStg-Needs`) and the
+first-approval mint's universe was deliberately left at `SPINE_CSVS`. Both
+reasons are stated in the docstring rather than one being left to imply the
+other. `amended_repo` gained an optional `seed` hook so the flip arm has a
+base-side row to flip.
+
+Instruments at the reworked tip: targeted modules
+`test_acceptance_record / test_integrate_station / test_adjudicate_brief /
+test_intake / test_baseline_snapshot / test_trajectory_staged` **229 passed in
+30.04 s**; `pytest -q -n auto -m smoke` **1463 passed, 4 skipped in 21.09 s**
+with `check_smoke_budget --mode enforce` at **22.5 s vs 60 s -> within**;
+`check_docs --root . --stale` **OK - 1219 doc(s), 1586 intra-repo link(s), 0
+broken**; `check_trajectory` **clean (569 work item(s), 527 done (93%), 21
+cancelled, graph acyclic)**; `trace --strict-integrity` **SN=27 SR=76 LLR=188
+TC=187 orphans=2 integrity=0 … provenance-findings=1 paraphrase-advisories=3**;
+`gen_prompt_catalog --check` **fresh (8 prompts)**; `check_complexity` **OK -
+201 row(s) over 15, unchanged from baseline**; `ruff format --check` **231 files
+already formatted**; `test_bootstrap -k "byte_caps or size_budget or capped_doc"`
+**3 passed**; `test_module_size_ratchet` + `test_bootstrap` **62 passed**;
+`test_dogfood_sync` **38 passed, 1 skipped**. No module crossed its size
+ratchet, so no ratchet row was re-stamped.
+
+**Still merge-clean under its own — now wider — rung.** The round's edits touch
+no spine registry: over `4d0b972d..HEAD` plus this working tree,
+`staged_approval_acts` is `[]`, `lane_approval_refusal` is `None`, and
+`staged_spine_amendments` still reports exactly `LLR-136` and `LLR-158`.
