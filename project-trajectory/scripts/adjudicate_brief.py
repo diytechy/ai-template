@@ -669,7 +669,7 @@ def first_approval_values(root, row):
     # SCOPED population empties, and the refusal below names which of the three
     # filters did it. Two refusals for one state is two answers to one question.
     llrs_by_sr, tcs_by_ref = tr.chain_buckets(reg.llrs, reg.tcs)
-    lines, registries = [], {}
+    lines, registries, awaiting = [], {}, set()
     for entry in model:
         chain, mine = [], False
         chain.append("- chain of {} — {}".format(entry["id"], entry.get("title") or ""))
@@ -683,6 +683,11 @@ def first_approval_values(root, row):
             # because `yours` is what mints both the label and the registry.
             in_scope = rid in scope
             yours = drafted and in_scope and _loop_approves(root, kind)
+            if drafted:
+                # Collected on the ONE walk, for the refusal below — a second
+                # pass over the same chains to answer "which filter emptied it"
+                # would be the same walk asked the same question twice.
+                awaiting.add(rid)
             chain.append(
                 "  - {} {} [{}]".format(
                     kind, rid, _chain_label(drafted, in_scope, yours)
@@ -706,14 +711,6 @@ def first_approval_values(root, row):
         # opposite actions: the rows were ruled on already (drop the row), the
         # owner holds their rung (sign, or move the dial), or the scope names
         # rows this spine no longer has (the mint and the tree disagree).
-        awaiting = {
-            rid
-            for entry in model
-            for _k, rid, full in tr.spine_chain(
-                entry["id"], reg.srs, llrs_by_sr, tcs_by_ref
-            )
-            if tr.is_drafted(full)
-        }
         live = sorted(scope & awaiting)
         if not live:
             return None, (
