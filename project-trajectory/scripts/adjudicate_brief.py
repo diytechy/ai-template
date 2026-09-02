@@ -763,9 +763,8 @@ def first_approval_values(root, row):
         # here ("(no registry — nothing here is Drafted)") described a state the
         # refusal now makes unreachable — and rendering it would have been rule
         # 2's failure, a `--approves` slot filled with prose.
-        "registries": " ".join(
-            "{}={}".format(rel, wi_id or "this adjudication")
-            for rel in sorted(registries)
+        "registries": baseline_snapshot.format_approves(
+            {rel: wi_id or "this adjudication" for rel in registries}
         ),
     }, None
 

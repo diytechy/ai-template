@@ -1099,26 +1099,32 @@ def _minted_id_refusal(root, branch, claimed):
     )
 
 
+def _claimed_spec_frontmatters(root, branch):
+    """The claimed `(filename, metadata)` pairs, or None if any is unreadable."""
+    home = root / ACTIVE / branch
+    try:
+        return [
+            (name, _spec_frontmatter(home / name))
+            for _wid, name in _claimed_specs(root, branch)
+        ]
+    except (OSError, ValueError):
+        return None
+
+
 def _adjudication_lane(root, branch):
     """Does EVERY claimed spec on `branch` declare the `adjudication` kind?
 
     `_lane_bar_directives`' `skip` test, asked on its own because the approval
-    rung needs the answer BEFORE the bar question exists. UNREADABLE
-    FRONTMATTER ANSWERS FALSE, and the two callers' opposite defaults are both
-    the conservative one: there an unreadable kind RUNS the bar, here it makes
-    the branch a work lane whose approval act refuses. Both fail toward more
-    checking, which is why they are stated as two rules rather than one flag."""
-    claimed = _claimed_specs(root, branch)
-    if not claimed:
-        return False
-    for _wid, name in claimed:
-        try:
-            meta = _spec_frontmatter(root / ACTIVE / branch / name)
-        except (OSError, ValueError):
-            return False
-        if str(meta.get("safety_class") or "").strip().lower() != "adjudication":
-            return False
-    return True
+    rung needs the answer BEFORE the bar question exists. Both callers use
+    `_claimed_spec_frontmatters`, so actor identity has one reader. UNREADABLE
+    FRONTMATTER ANSWERS FALSE: there it runs the bar; here it makes the branch a
+    work lane whose approval act refuses. Both fail toward more checking."""
+    metas = _claimed_spec_frontmatters(root, branch)
+    kinds = (
+        str(meta.get("safety_class") or "").strip().lower()
+        for _name, meta in metas or ()
+    )
+    return bool(metas) and all(kind == "adjudication" for kind in kinds)
 
 
 def _approval_act_refusal(root, branch):
@@ -1736,11 +1742,10 @@ def _lane_bar_directives(root, branch):
     Implements: SR-174, LLR-154
     """
     kinds, bars = [], []
-    for _wid, name in _claimed_specs(root, branch):
-        try:
-            meta = _spec_frontmatter(root / ACTIVE / branch / name)
-        except (OSError, ValueError):
-            return False, None, None  # unreadable: run the bar, fail toward it
+    metas = _claimed_spec_frontmatters(root, branch)
+    if metas is None:
+        return False, None, None  # unreadable: run the bar, fail toward it
+    for name, meta in metas:
         kinds.append(str(meta.get("safety_class") or "").strip().lower())
         declared = _normalize_bar(meta.get("bar"))
         if declared and declared not in _BAR_GATES:

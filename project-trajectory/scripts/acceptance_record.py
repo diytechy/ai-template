@@ -524,14 +524,14 @@ def lane_approval_refusal(root, base, head):
     ACT — the refusal text, or None when it performs none.
 
     THE ACT IS THE ADJUDICATOR'S, ON TRUNK (owner ruling 2026-09-01). A worker
-    lane AUTHORS `Drafted` spine rows and AMENDS cell text on any row, including
-    approved ones. It does not flip a `Status` into `Approved`/`Founded`, does
-    not mint a row already claiming one, and does not write `SNAPSHOT_DIR`. Two
-    reasons, both the owner's. CONTEXT: approving a row means reading its whole
-    chain — the parent SR, the sibling LLRs, the tests — which one work item does
-    not hold. CONCURRENCY: two lanes touching the spine conflict at merge and the
-    snapshot must not move across a workstream, whereas a serial trunk-side act
-    cannot conflict.
+    lane AUTHORS `Drafted` SR/LLR/TC rows and AMENDS cell text on any such row,
+    including approved ones. In those three registries it does not flip a
+    `Status` into `Approved`/`Founded` or mint a row already claiming one; it
+    does not write `SNAPSHOT_DIR`. Two reasons, both the owner's. CONTEXT:
+    approving a row means reading its whole chain — the parent SR, the sibling
+    LLRs, the tests — which one work item does not hold. CONCURRENCY: two lanes
+    touching the spine conflict at merge and the snapshot must not move across
+    a workstream, whereas a serial trunk-side act cannot conflict.
 
     HERE RATHER THAN IN THE MERGE SLOT, on `LLR-178`'s separation — the writer
     must not also be the judge of its own writes, and by the same token the
@@ -582,10 +582,11 @@ def lane_approval_refusal(root, base, head):
     return (
         "{} performs an APPROVAL ACT in its own delta - and the approval act is "
         "the ADJUDICATOR's, on the serial trunk side, never a work lane's (owner "
-        "ruling 2026-09-01; PROCESS.md §4). A lane AUTHORS `Drafted` spine rows "
-        "and AMENDS cell text; it does not flip a `Status` into "
-        "`Approved`/`Founded`, does not mint a row already claiming one, and does "
-        "not write {}/. Approving means reading the row's whole chain, which one "
+        "ruling 2026-09-01; PROCESS.md §4). A lane AUTHORS `Drafted` SR/LLR/TC "
+        "rows and AMENDS their cell text; in those three registries it does not "
+        "flip a `Status` into `Approved`/`Founded` or mint a row already "
+        "claiming one, and it does not write {}/. Approving means reading the "
+        "row's whole chain, which one "
         "work item does not hold, and a trunk-side act cannot conflict with a "
         "second lane the way this one can. Leave the rows `Drafted`: the "
         "first-approval adjudication minted at this merge is what reads the "

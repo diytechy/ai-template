@@ -294,6 +294,16 @@ def parse_approves(spec):
     return out
 
 
+def format_approves(approves):
+    """The deterministic CLI inverse of `parse_approves`.
+
+    Producers pass the canonical `{registry rel: ref}` mapping they derived;
+    this boundary owns the kit's `;`-joined list syntax so no caller has to
+    duplicate the delimiter that the parser consumes.
+    """
+    return ";".join("{}={}".format(rel, approves[rel]) for rel in sorted(approves))
+
+
 def snapshot_root(root):
     """The snapshot's directory as a path. Does not create it and does not
     check that it exists — `load_all` and `copy_live` each have their own,

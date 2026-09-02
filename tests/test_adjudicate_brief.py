@@ -916,6 +916,27 @@ def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
     assert "HOLDS for a human" in why, why
 
 
+def test_the_first_approval_act_formats_a_multi_registry_batch_for_the_cli(tmp_path):
+    repo = _first_approval_repo(tmp_path)
+    srs = repo / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(
+        srs.read_text(encoding="utf-8").replace(
+            ",Approved,P1,core", ",Drafted,P1,core"
+        ),
+        encoding="utf-8",
+    )
+    values, why = ab.first_approval_values(repo, _fa_row(Adjudicates="SR-001;LLR-001"))
+    assert why is None, why
+    assert values["registries"] == (
+        "docs/requirements/low-level-requirements.toml=WI-301;"
+        "docs/requirements/system-requirements.toml=WI-301"
+    )
+    assert baseline_snapshot.parse_approves(values["registries"]) == {
+        "docs/requirements/low-level-requirements.toml": "WI-301",
+        "docs/requirements/system-requirements.toml": "WI-301",
+    }
+
+
 def test_the_first_approval_act_cannot_widen_past_the_rows_the_merge_handed_over(
     tmp_path,
 ):

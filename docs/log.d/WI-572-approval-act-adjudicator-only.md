@@ -626,3 +626,45 @@ exactly that one expected generated-freshness failure.
 <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=HEAD -->
 <!-- fig: cmd="wc -c project-trajectory/skills/byte-budget-guard/SKILL.md .agents/skills/byte-budget-guard/SKILL.md .claude/skills/byte-budget-guard/SKILL.md" rev=HEAD -->
 <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_bootstrap.py -k 'byte_caps or size_budget or capped_doc_baselines'" rev=HEAD -->
+
+### REVIEW-A rework, round 5: one delimiter, chosen twice
+
+Round 5 returned three findings against tip `87ac214`. The BLOCKER was a
+separator disagreement between two modules that never spoke: `first_approval_values`
+hand-joined its derived `--approves` argument with `" "`, while
+`baseline_snapshot.parse_approves` splits on `;`. A single-registry batch hid it;
+a batch spanning two registries — the NORMAL case, since `_first_approval_drafts`
+mints one row over every `Drafted` row of the merge regardless of registry — either
+died at the CLI (`unrecognized arguments`) or, quoted, SILENTLY mis-parsed so the
+second registry was neither authorised nor copied, while the adjudicator flipped
+both Statuses. That is exactly the approved-but-unanchored state step 2 exists to
+prevent.
+
+The fix takes the reviewer's antidote rather than patching the join: the kit's
+`;`-joined list syntax now has ONE owning boundary. `baseline_snapshot.format_approves`
+is the deterministic inverse of `parse_approves`, and producers pass the canonical
+`{registry rel: ref}` mapping instead of picking a delimiter. No second module gets
+to choose again, so the defect class is closed rather than the instance.
+
+The two MINORs, both answered where the review pointed:
+
+- **The refusal over-claimed its reach.** `staged_approval_acts` walks `SPINE_CSVS`
+  — SR/LLR/TC — but the refusal text and `lane_approval_refusal`'s docstring stated
+  an unqualified rule, so a lane could infer coverage of the SN and interfaces tiers
+  that the rung does not have. Both now name the three registries they actually read.
+  A wording fix: the `SPINE_CSVS` omission stays deliberate and declared.
+- **The exemption was untested.** `_adjudication_lane` is the highest-leverage
+  predicate in the row — True bypasses every rung, False makes the feature inert —
+  and no test drove either arm. Both arms are now pinned beside the merge-slot tests
+  (an `adjudication` lane's flip admitted, an `ordinary` lane's refused, unreadable
+  frontmatter refused). Its two callers now share one reader, `_claimed_spec_frontmatters`,
+  so actor identity is read once rather than by two `safety_class` reads with opposite
+  defaults — the reviewer's available antidote, since the exemption is a genuine trust
+  boundary that some predicate must decide.
+
+**Mutation-proven, not merely green.** Reverting `format_approves` to `" ".join`
+fails both new syntax tests. Forcing `_adjudication_lane` to `return False` fails the
+adjudication arm; forcing it to `return True` fails the ordinary-lane and unreadable
+arms. The unreadable fixture was checked to overwrite a spec that already exists —
+`_claimed_specs` lists exactly `WI-401-widget.md` — so it refuses for the reason
+claimed rather than for a stray file.

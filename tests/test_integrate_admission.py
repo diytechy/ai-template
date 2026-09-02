@@ -352,7 +352,7 @@ def _sr(status, req="the drafted text"):
     )
 
 
-def _spine_lane(home, *, flip=False, born=False, snapshot=False):
+def _spine_lane(home, *, flip=False, born=False, snapshot=False, safety="ordinary"):
     """A claimed branch that authored a `Drafted` SR — and then, per flag,
     performed one of the three shapes of approval act on it.
 
@@ -360,7 +360,7 @@ def _spine_lane(home, *, flip=False, born=False, snapshot=False):
     the same topology minus one write, rather than a second fixture that happens
     to look similar (`_mint_repo`'s rule, one section up)."""
     home.mkdir(parents=True, exist_ok=True)
-    root = claim_repo(home)
+    root = claim_repo(home, safety=safety)
     reg = root / "docs" / "requirements"
     reg.mkdir(parents=True, exist_ok=True)
     (reg / "system-requirements.csv").write_text(
@@ -397,12 +397,31 @@ def test_a_lane_that_flips_a_status_to_approved_is_refused_at_the_merge_slot(tmp
     # returned CHANGES-REQUESTED against exactly those flips.
     root = _spine_lane(tmp_path / "flip", flip=True)
 
+    assert integ._adjudication_lane(root, "wi-401") is False
     refusal = integ.integrate_one(root, "wi-401", "smoke")
     assert refusal is not None
     assert "APPROVAL ACT" in refusal
     assert "SR-001 flipped Drafted -> Approved" in refusal
     assert "Leave the rows `Drafted`" in refusal  # actionable, not just a verdict
     assert _rev(root, "HEAD") != _rev(root, "wi-401")  # nothing merged
+
+
+def test_an_adjudication_lane_may_land_its_approval_act(tmp_path):
+    root = _spine_lane(tmp_path / "adjudication", flip=True, safety="adjudication")
+
+    assert integ._adjudication_lane(root, "wi-401") is True
+    assert integ._approval_act_refusal(root, "wi-401") is None
+
+
+def test_unreadable_actor_frontmatter_fails_toward_the_approval_refusal(tmp_path):
+    root = _spine_lane(tmp_path / "unreadable", flip=True, safety="adjudication")
+    claimed = root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
+    claimed.write_text("not frontmatter\n", encoding="utf-8")
+
+    assert integ._adjudication_lane(root, "wi-401") is False
+    refusal = integ._approval_act_refusal(root, "wi-401")
+    assert refusal is not None
+    assert "SR-001 flipped Drafted -> Approved" in refusal
 
 
 def test_a_lane_that_mints_a_row_born_approved_is_refused(tmp_path):
