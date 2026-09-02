@@ -3,13 +3,96 @@ id = "WI-569"
 title = "WI-508 spine reseal: one clean reviewer round on current trunk, regenerate last_approved at the approval commit"
 workstream = "process"
 needs = ["OI-78", "WI-571", "WI-572"]
-specref = "docs/work/complete/WI-568-dispose-the-close-recorded-at.md"
+specref = ""
 buildtier = "strong"
 priority = 2
 safety_class = "spine"
 planmode = "single"
 supersedes = "WI-508"
 +++
+
+## Deliverable
+
+**A third act, taken knowingly.** The scope this row was narrowed to names two
+arms: draw the round, and rule the two routed BLOCKERs. Amending two `Approved`
+rows is a third, recorded here rather than left implicit because the drawn
+round's subject was the rows as they stood BEFORE that amendment, so its new
+text entered the lane unread by it. It is read now: the lane's own REVIEW-A
+round 002 re-derived every corrected statement against the code, found each one
+true, and found nothing true regressed. The structural backstop is the
+amendment adjudication this row's merge mints over the amended rows, which
+judges the new text on its own and owns the re-attestation that follows — no
+`Status` moved on this lane and nothing under the snapshot was written, so that
+judgement is unprejudiced.
+
+**The round was drawn, and it did NOT confirm the rows.** The one clean
+cross-family reviewer round the WI-508 lane never landed is
+`docs/reviews/wi-569-wi-508-spine-reseal-one-clean/001-REVIEW-A-2f660cb7-spine-rows.md`,
+drawn on current trunk `2f660cb7` on the cross-family strong route `OPENAI-SOL`
+(gpt-5.6-sol, medium effort) against a hostile read-only brief that named the
+four rows and the standing-claim rule and nothing about what had moved on trunk.
+**`VERDICT: CHANGES-REQUESTED findings=2`** — two MAJORs, both against the
+`Approved` LLR rows; scored `substance=0.667 precision=1.00 action=1.00`,
+tripwires none.
+
+- `TC-199` and `TC-200` **STAND, no finding.** All seven evidence node ids exist
+  and pass, their `verifies` cells name the LLR arm rather than `SR-163`, their
+  `expected` cells are still true, and TC-199's claim that two of its nodes are
+  also TC-176's evidence checks out exactly. They stay `Drafted`, as ruled.
+- `LLR-203` and `LLR-204` **DID NOT STAND.** Trunk moved under them: the
+  file-to-requirement join, the independent shipped-tree universe, the
+  mechanically parsed exclusion carrier and the four-class warn-to-gate checker
+  are all delivered, and the two rows still asserted that none of them existed.
+  Three of LLR-203's statements were false of the tree and one of LLR-204's was
+  counterfactual; each was falsified by DRIVING, not by reading, and the round
+  reached the same reading independently.
+
+**What this lane did about it, and what it deliberately did not.** The false
+sentences were corrected in the rows' own cells (`33aee707`). `Status` stayed
+`Approved` on both — the approval act is the adjudicator's, and an amendment to
+an approved row is expressly not one — so the amendment drifts the rows from
+`last_approved` and returns them to the re-attestation brief. The DESIGN half of
+the reviewer's remedy is NOT taken here: which row owns
+`resolve_requirement_reference` / `mapping_purpose_findings` /
+`MAPPING_FINDING_POLICY`, whether LLR-203's `CodeSymbol` widens, and where
+TC-204's evidence binds are chain-reading calls a work lane does not hold the
+chain for. That remainder is not left on no queue — the defect this row exists
+to remedy: it is stated as the standing NOT-DISCHARGED gap in LLR-203's own
+cell, and the amendment adjudication `intake` mints at this merge is confirmed
+to list both rows.
+
+**The two routed `5175065` BLOCKERs: ANNOTATED on trunk, no successor filed** —
+the caveat arm of the choice, not the sterile-re-run arm. Both were re-verified
+before ruling: the brief and the returns record are both first added by
+`64e9bf2a`, so nothing immutably fixed the question before the answers existed;
+and the instruction-context contamination is real, though the teams had already
+disclosed it themselves at the line the finding anchors to. Standing caveats now
+open both plan files, additively — the original text is unchanged, so the record
+stays the record. A re-run was refused on three grounds: it cannot repair the
+first defect at all (immutability is a property of the 2026-08-25 record, and a
+fresh pre-committed brief would evidence a NEW exercise); no live requirement,
+design or test row cites the exercise, so nothing on the spine waits on a better
+number; and the alignment pass already declines to defer to either return.
+
+**NOT DONE, by ruling rather than by omission:** no `docs/archive/last_approved/`
+write and no `Status` flip. The row was minted with a baseline-reseal arm that
+two merged predecessors removed from any work lane before this one started —
+`WI-571` scoped the snapshot to the act, and `WI-572` ruled the whole approval
+act the adjudicator's, on trunk. Nothing on the spine needed re-sealing when
+that was ruled: at the lane base `2f660cb7` all four rows WERE cell-for-cell
+identical to the round-010-approved tree `b8d57e9f`, which is the one claim in
+the row's premise that survived contact. They are no longer, and deliberately —
+this lane's own `33aee707` corrected three false statements on `LLR-203`
+(`title`, `detail`, `rationale`) and one on `LLR-204` (`detail`), so those two
+rows now drift from `b8d57e9f` on exactly those cells, and the re-attestation is
+owed by the amendment adjudication this merge mints rather than by a baseline
+re-seal. `TC-199`/`TC-200` are still identical to `b8d57e9f` at the tip. Driven,
+not read: loading `docs/requirements/low-level-requirements.toml` and
+`docs/test/test-cases.toml` out of each of `b8d57e9f`, `2f660cb7` and `HEAD`
+with `tomllib` and diffing the four rows cell by cell returns IDENTICAL for all
+four at the base, and at the tip `LLR-203 -> ['detail', 'rationale', 'title']`,
+`LLR-204 -> ['detail']`, `TC-199`/`TC-200 -> IDENTICAL`, with `status` unmoved
+on all four (`Approved`/`Approved`/`Drafted`/`Drafted`).
 
 ## Context
 

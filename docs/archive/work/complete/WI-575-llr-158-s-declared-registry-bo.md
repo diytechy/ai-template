@@ -2,12 +2,58 @@
 id = "WI-575"
 title = "LLR-158's declared registry bound is stale: state the shipped APPROVAL_ACT_CSVS partition in the Detail and code_symbol cells"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "medium"
 priority = 2
 safety_class = "spine"
 bar = "DevStg-Reqs"
 +++
+
+## Deliverable
+
+**`LLR-158`'s declared registry bound now states the shipped partition, and
+every statement in it was checked by driving the module rather than reading it.**
+Three false counts, corrected in one clause of the `Detail` cell:
+
+1. *"every reader here walks `SPINE_CSVS`, the three spine registries"* → the
+   walk's universe is a PARAMETER. `staged_spine_amendments` and
+   `staged_drafted_rows` take the `SPINE_CSVS` default (three); `staged_approval_acts`
+   passes `APPROVAL_ACT_CSVS` (four — the three PLUS `stakeholder-needs.toml`),
+   and `lane_approval_refusal` is the judgement over that reader, so it refuses a
+   lane signing a NEED as readily as one signing an LLR.
+2. *"the four other registries a snapshot anchors are listed in
+   `OUTSIDE_THE_APPROVAL_ACT`"* → THREE (interfaces, external, components).
+   `7 − 3 = 4` was the arithmetic the stale clause preserved from before the
+   need tier joined the approval-act set.
+3. *"the two lists are pinned … against `baseline_snapshot.SNAPSHOTTED`"*
+   without naming which two → the pinned identity is stated literally:
+   `SNAPSHOTTED == APPROVAL_ACT_CSVS + OUTSIDE_THE_APPROVAL_ACT`, over
+   `SNAPSHOTTED`'s seven.
+
+The `code_symbol` cell named `OUTSIDE_THE_APPROVAL_ACT` alone of the three
+constants; it now carries `SPINE_CSVS/APPROVAL_ACT_CSVS/OUTSIDE_THE_APPROVAL_ACT`,
+and every symbol in the cell resolves as an attribute of the module the row owns.
+
+**Driven, not read.** Importing `acceptance_record` and `baseline_snapshot` and
+printing the three tuples: `SPINE_CSVS n=3`, `APPROVAL_ACT_CSVS n=4`,
+`OUTSIDE_THE_APPROVAL_ACT n=3`, `SNAPSHOTTED n=7`, and
+`sorted(SNAPSHOTTED) == sorted(APPROVAL_ACT_CSVS paths + OUTSIDE_THE_APPROVAL_ACT)`
+→ `True`; `_spine_row_sides`'s `registries` default is `SPINE_CSVS`, and only
+`staged_approval_acts`'s body names `APPROVAL_ACT_CSVS`.
+
+**NO STATUS MOVED AND NO SNAPSHOT WAS WRITTEN.** `LLR-158` stays `Approved`;
+nothing under `docs/archive/last_approved/` was touched and `intake.py snapshot`
+was not run in any form. Amending an Approved row's text stages a
+`staged_spine_amendments` hit, which mints the amendment adjudication at this
+row's own merge; that trunk-side adjudicator, on a rung released to the loop and
+with the defect that withheld the last re-attestation now corrected, takes the
+re-anchor. Taking it here would have hard-refused this very merge
+(`lane_approval_refusal` refuses any lane delta touching `SNAPSHOT_DIR`), and
+having the lane that authored the corrected text bless its own write is exactly
+the separation the act was moved to the adjudicator for.
+
+Only the one cell pair on the one row changed in the registry. The approval
+brief `docs/ratify/CURRENT.md` was regenerated because a spine cell moved.
 
 ## Context
 
