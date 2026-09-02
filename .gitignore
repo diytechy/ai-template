@@ -26,3 +26,4 @@ out/
 # resolution is committed in package-lock.json so the documented npm ci works.
 scripts/dashboard-shots/node_modules/
 scripts/dashboard-shots/shots/
+.venv
