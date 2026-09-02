@@ -47,7 +47,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
 | `project-trajectory/PROCESS.md` | 88,355 | 2026-09-01 | **+484** FLAGGED: WI-572 (owner ruling 2026-09-01) — the approval act joins §4's fixed points as an adjudicator's, on trunk, never a lane's. Earlier: **+89** OI-67 slice 6 |
-| `project-trajectory/PROCESS_OPTIONS.md` | 185,060 | 2026-09-01 | **+3,691** FLAGGED: WI-572 — "Who performs the approval act", the fuller statement §4's one-liner links to (the ruling, its two reasons, the lane/adjudication division of labour, and the three mechanisms holding it). Earlier: **+43** WI-553 |
+| `project-trajectory/PROCESS_OPTIONS.md` | 185,555 | 2026-09-02 | **+495** FLAGGED: WI-572 rework — mechanism 2 records the handed-over row ids on the minted row, so "the rows the lane handed over" is a sentence the machinery keeps. Earlier: **+3,691** WI-572 — "Who performs the approval act" (the ruling, its reasons, the division of labour, the three mechanisms); **+43** WI-553 |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

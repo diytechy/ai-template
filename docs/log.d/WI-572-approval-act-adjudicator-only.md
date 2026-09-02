@@ -531,7 +531,7 @@ tightens afterwards must bind an act it has not yet authorised.
   reading it as "everything" is the widening itself, so it fails toward the
   human.
 
-**The column's real cost, paid rather than hidden.** It is a 19th column, so an
+**The column's real cost, paid rather than hidden — and WRITTEN DOWN.** It is a 19th column, so an
 adopter carrying the legacy CSV home adds a header cell — `load_csv` refuses a
 header that is not the declared schema, by design. `test_dogfood_sync`'s
 schema-widening proof covers it automatically (it derives the optional set from
@@ -545,10 +545,26 @@ round-trips as an empty cell. `test_wi_loader_sync` gained the third member of
 its `bar`/`brief` triplet — and `Adjudicates` is the only `;`-joined cell outside
 the two ref columns, so it is what proves a LIST column survives both homes.
 
+`RESYNC_PACK.md` carries the adopter-facing entry, which is a one-cell CSV header
+edit and a no-op for the folder home. Writing it surfaced a SEPARATE, older gap,
+named there rather than fixed here: `Supersedes` and `Brief` added columns to the
+same schema and neither got an entry, so an adopter still on the legacy CSV has
+been three cells behind rather than one. The new entry says so and tells them to
+add all three.
+
 **Tests**: three at the brief (the widening regression, the no-scope refusal, the
 settled-scope refusal naming its rows), one at the mint, one at the loader
 triplet, and the widened schema pin. The widening regression is mutation-proven
 — dropping `rid in scope` reds it and the settled-scope refusal both.
+
+**Driven at this tip against this repo, not only against a fixture.** The
+review's own probe — a `first-approval` row with no merge context — now REFUSES
+by naming the missing cell. Given a scope of one real row (`LLR-206`, one of the
+eleven `Drafted` rows this repo currently carries across four SR chains), the
+brief renders **1 chain, 1 `[AWAITING FIRST APPROVAL]` row, 3 siblings labelled
+OUTSIDE THIS ACT'S SCOPE, 9,541 chars, and one registry** — against the
+pre-fix reading of 4 chains, 11 rows, 40,658 chars and all three registries.
+The act reaches what the merge handed it and nothing else.
 
 `intake.py` 1247 -> 1249, re-stamped with its reason: two lines, the `_draft_row`
 assignment and the mint's `adjudicates` key.
@@ -567,3 +583,7 @@ now records that `read_specs` takes its population from the read side's
   <!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=HEAD -->
 - The four previously-dark `test_wi_convert.py` guards run and pass: **21
   passed, 0 skipped**.
+- Byte-watched: `PROCESS_OPTIONS.md` 185,060 -> 185,555 (+495, mechanism 2's
+  scope sentence), and byte-budget-guard's own row re-stamped and re-trimmed to
+  **4,982 against its 5,000 cap** — the first draft of that row put the file at
+  5,142, over cap, which is exactly what the guard exists to catch.

@@ -508,8 +508,9 @@ _SNAPSHOT_ACT = {"A": "wrote", "M": "rewrote", "D": "deleted"}
 
 
 def _snapshot_acts(name_status):
-    """`["wrote <path>", ...]` for a `--name-status` block: one line per
-    `SNAPSHOT_DIR` file the delta touched, worded by its status letter."""
+    """Yields `"<verb> <path>"` for a `--name-status` block: one line per
+    `SNAPSHOT_DIR` file the delta touched, worded by its status letter. A line
+    with no tab-separated path is skipped — an unparseable line is not an act."""
     for line in name_status.splitlines():
         parts = line.split("\t")
         if len(parts) < 2 or not parts[-1].strip():
