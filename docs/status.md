@@ -27,14 +27,16 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 - **RESUME HERE — THE FRONTIER IS UNPAUSED (the owner directed the resume
   late on 2026-09-01; `docs/work/pause` deleted in a reviewed commit) and a
   supervised loop runs the generated frontier below**, whose head is the
-  owner-prioritized kit trio (the snapshot copy scope, the typed open-item
-  brief, the approval act to the adjudicator) ahead of the standing queue.
-  The evening session merged four rows (the construction-first reviewer
-  clause, the approval-brief renderer defects, the wi508 partial-close
-  conversion and its disposition adjudication); its account is the log's
-  2026-09-01 supervised-evening entry and the addenda after it. All three
-  codex rows in `docs/agents.toml` now pin reasoning effort to medium
-  (owner directive). A supervisor re-arms the pause when it stops.
+  rest of the owner-prioritized kit trio (the typed open-item brief, then
+  the approval act to the adjudicator; the snapshot copy scope merged first,
+  2026-09-02) ahead of the standing queue. The evening session merged four
+  rows (the construction-first reviewer clause, the approval-brief renderer
+  defects, the wi508 partial-close conversion and its disposition
+  adjudication); its account is the log's 2026-09-01 supervised-evening
+  entry and the addenda after it. Routing since 2026-09-02: both Anthropic
+  tiers pinned to `claude-opus-5` (effort high/strong, medium/medium) and
+  all three codex rows at medium effort (owner directives). A supervisor
+  re-arms the pause when it stops.
   **For the owner's review:** delegated decisions 47–56 in
   [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md)
   (52–56 are the evening session's: the hand merge + drawn rounds that
