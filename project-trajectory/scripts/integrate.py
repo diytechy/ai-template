@@ -58,8 +58,13 @@ Four operations here; the two lane closes that are NOT a merge (`hand_back`,
              (`branch_outcomes`), REFUSES a branch whose docs/work/ delta mints
              a work-item id outside its claimed set (RULING R1, see
              `_minted_id_refusal` - minting is trunk-side and serial, so a
-             collision two lanes could produce is unrepresentable), requires the
-             policy verdicts the outcome
+             collision two lanes could produce is unrepresentable), REFUSES a
+             branch whose spine delta performs an APPROVAL ACT - a `Status`
+             flipped into `Approved`/`Founded`, a row born claiming one, or a
+             write under docs/archive/last_approved/ (owner ruling 2026-09-01,
+             see `_approval_act_refusal` - a lane authors `Drafted` rows, the
+             adjudicator approves them on trunk after reading the whole chain),
+             requires the policy verdicts the outcome
              owes (RULING-7 keyed off §A3, not off the claim), checks
              the ancestor relation and VERIFIES the `Bar-Green:` attestation
              at the branch tip, then merges --no-ff. A branch that is not
@@ -1092,6 +1097,61 @@ def _minted_id_refusal(root, branch, claimed):
             "\n".join("  {} minted at {}".format(w, p) for w, p in foreign),
         )
     )
+
+
+def _approval_act_refusal(root, branch):
+    """THE APPROVAL ACT IS NOT A LANE'S (owner ruling 2026-09-01): the merge
+    slot's approval refusal - a refusal string, or None.
+
+    A WORK BRANCH AUTHORS `Drafted` SPINE ROWS AND AMENDS CELL TEXT; it never
+    performs the approval act. The act is the `Status` flip into
+    `Approved`/`Founded` - or a row that arrives already claiming one - together
+    with the `docs/archive/last_approved/` copy that anchors it, and it belongs
+    to a trunk-side ADJUDICATION session for two reasons the owner gave. CONTEXT:
+    approving a row means reading its whole chain (the parent SR, the sibling
+    LLRs, the tests), and one work item does not hold that chain. CONCURRENCY:
+    two lanes touching the spine conflict at merge, and the snapshot must not
+    move across a workstream, whereas a serial trunk-side act cannot conflict.
+
+    THE SAME SHAPE AS `_minted_id_refusal` BESIDE IT, and for the same reason:
+    one named refusal, read off git, in front of the one act that would make the
+    bad state real. Both read the branch's OWN delta - `merge-base(trunk,
+    branch)` to the tip - so a trunk-side approval sits in the BASE and is
+    exactly as free as it is today.
+
+    CONSTRUCTION-FIRST, NOT A SECOND DETECTOR. `acceptance_record.
+    staged_approval_acts` is the mirror of the `staged_spine_amendments` reader
+    the intake already runs on the merged commit: that one reports rows whose
+    approved text moved while `Status` stood still and exempts a moved `Status`;
+    this one reports precisely the exempted set. They share one two-tree walk,
+    so a row cannot be invisible to both.
+
+    WHAT IT COSTS AND DOES NOT COST. A de-approval (`Approved` -> `Drafted`) is
+    not an act: it blesses nothing. An amendment to an approved row is not an act
+    either - the lane may make it, and the amendment adjudication the intake
+    mints at this same merge is what judges it. The honest bound is
+    `_minted_id_refusal`'s: this defeats the accident and a lane that drifts, not
+    a lane that means to - a branch could still write the flip through some file
+    nothing here reads.
+
+    THE JUDGEMENT ITSELF IS NOT HERE, and that is `LLR-178`'s separation, not
+    tidiness: `acceptance_record.lane_approval_refusal` reads the delta and
+    words the refusal, beside the two-tree walk and the snapshot-mirror rules it
+    shares its material with. What stays in the merge slot is the RUNG — the
+    merge base this branch is judged against, and the placement in the ladder.
+    """
+    import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
+
+    head = _head(root)
+    code, base = ac.git(root, "merge-base", head, branch)
+    if code != 0 or not base.strip():
+        # Fail closed: an unread delta is not an empty one.
+        return (
+            "cannot read the merge base of trunk {} and {}, so the spine delta "
+            "the approval-act rung reads is unknowable; nothing was "
+            "merged:\n{}".format(head[:10], branch, ac._failure_tail(base))
+        )
+    return acceptance_record.lane_approval_refusal(root, base.strip(), branch)
 
 
 def _last_commit_time(root, ref, *pathspec):
@@ -2349,6 +2409,9 @@ def _merge_refusal(root, branch, wi_ids):
     if refusal:
         return outcomes, refusal
     refusal = _minted_id_refusal(root, branch, wi_ids)  # RULING R1
+    if refusal:
+        return outcomes, refusal
+    refusal = _approval_act_refusal(root, branch)  # owner ruling 2026-09-01
     if refusal:
         return outcomes, refusal
     refusal = _declared_bar_or_refusal(root)

@@ -337,6 +337,129 @@ def test_a_trunk_side_mint_after_the_claim_is_not_the_branchs(tmp_path):
     assert integ._minted_id_refusal(root, "wi-401", ["WI-401"]) is None
 
 
+# --- 2c-bis. the APPROVAL-ACT refusal (owner ruling 2026-09-01) --------------
+
+
+_SR_HEADER = (
+    "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+    "Permutations,Priority,Verification,Status,Phase,Aspect,Hat-Refs\n"
+)
+
+
+def _sr(status, req="the drafted text"):
+    return 'SR-001,Adder,SN-001,"{}","why","ac",,C,Test,{},1,,hat.MAINTAINER\n'.format(
+        req, status
+    )
+
+
+def _spine_lane(home, *, flip=False, born=False, snapshot=False):
+    """A claimed branch that authored a `Drafted` SR — and then, per flag,
+    performed one of the three shapes of approval act on it.
+
+    One builder for every arm so "the same lane that only authored" is literally
+    the same topology minus one write, rather than a second fixture that happens
+    to look similar (`_mint_repo`'s rule, one section up)."""
+    home.mkdir(parents=True, exist_ok=True)
+    root = claim_repo(home)
+    reg = root / "docs" / "requirements"
+    reg.mkdir(parents=True, exist_ok=True)
+    (reg / "system-requirements.csv").write_text(
+        _SR_HEADER + _sr("Drafted"), encoding="utf-8", newline="\n"
+    )
+    _commit(root, "spine: the attested baseline", when=T_BASE)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    _git(root, "checkout", "-q", "wi-401")
+    rows = _SR_HEADER + _sr("Approved" if flip else "Drafted", "the AMENDED text")
+    if born:
+        rows += (
+            'SR-002,New req,SN-001,"fresh","why","ac",,C,Test,Approved,1,,'
+            "hat.MAINTAINER\n"
+        )
+    (reg / "system-requirements.csv").write_text(rows, encoding="utf-8", newline="\n")
+    if snapshot:
+        snap = root / "docs" / "archive" / "last_approved" / "docs" / "requirements"
+        snap.mkdir(parents=True, exist_ok=True)
+        (snap / "system-requirements.csv").write_text(
+            rows, encoding="utf-8", newline="\n"
+        )
+    _commit(root, "WI-401: touch the spine", when=T_CODE)
+    _git(root, "checkout", "-q", "main")
+    _close_to(root, "wi-401", "complete")
+    return root
+
+
+def test_a_lane_that_flips_a_status_to_approved_is_refused_at_the_merge_slot(tmp_path):
+    # Owner ruling 2026-09-01. The act — the flip, and the snapshot that anchors
+    # it — is the ADJUDICATOR's, on the serial trunk side: approving a row means
+    # reading its whole chain, which one work item does not hold, and a
+    # trunk-side act cannot conflict with a second lane. This happened once for
+    # real (WI-508 slice 6, four rows at `580df781`) and the next review round
+    # returned CHANGES-REQUESTED against exactly those flips.
+    root = _spine_lane(tmp_path / "flip", flip=True)
+
+    refusal = integ.integrate_one(root, "wi-401", "smoke")
+    assert refusal is not None
+    assert "APPROVAL ACT" in refusal
+    assert "SR-001 flipped Drafted -> Approved" in refusal
+    assert "Leave the rows `Drafted`" in refusal  # actionable, not just a verdict
+    assert _rev(root, "HEAD") != _rev(root, "wi-401")  # nothing merged
+
+
+def test_a_lane_that_mints_a_row_born_approved_is_refused(tmp_path):
+    # The second measured shape, and the one a flip-only rung would miss whole:
+    # four lanes (WI-483, WI-500, WI-501, WI-507) minted rows that ARRIVED
+    # `Approved`, so no Status ever moved and the approval brief never saw them.
+    root = _spine_lane(tmp_path / "born", born=True)
+
+    refusal = integ.integrate_one(root, "wi-401", "smoke")
+    assert "SR-002 was minted born Approved" in refusal
+    assert _rev(root, "HEAD") != _rev(root, "wi-401")
+
+
+def test_a_lane_that_writes_the_approval_snapshot_is_refused(tmp_path):
+    # The third: the copy under `docs/archive/last_approved/` IS the signature
+    # since the mechanical writer retired (OI-45 ruled (b)), so a lane that
+    # writes it has approved whatever text was live at that moment — which is
+    # how a spine-only act came to re-seal off-spine drift (WI-571). The rung
+    # names the files, because "you wrote the snapshot" is not something a lane
+    # can act on at 3am.
+    root = _spine_lane(tmp_path / "snap", snapshot=True)
+
+    refusal = integ.integrate_one(root, "wi-401", "smoke")
+    assert "wrote docs/archive/last_approved/" in refusal
+    assert _rev(root, "HEAD") != _rev(root, "wi-401")
+
+
+def test_a_lane_that_only_authors_and_amends_drafted_rows_is_admitted(tmp_path):
+    # THE OTHER HALF, and the half that makes this a rule instead of a ban on
+    # touching the spine: authoring `Drafted` rows and amending cell text is
+    # exactly what the ruling leaves to the lane. Driven twice — the rung itself
+    # says None, and the SLOT gets past it to the NEXT refusal (this fixture
+    # declares no `[product] test`), which is what proves the admission is in
+    # situ rather than only in the helper.
+    root = _spine_lane(tmp_path / "clean")
+
+    assert integ._approval_act_refusal(root, "wi-401") is None
+    refusal = integ.integrate_one(root, "wi-401", "smoke")
+    assert "no [product] test declaration" in refusal
+    assert "APPROVAL ACT" not in refusal
+
+
+def test_a_trunk_side_approval_after_the_claim_is_not_the_lanes(tmp_path):
+    # The mirror of the R1 rung's own trunk-side arm, and the property that
+    # keeps the ruling from banning approval outright: the adjudicator's act
+    # happens on trunk, so it sits in the merge BASE and is not in the branch's
+    # delta at all. Free by construction, not by exemption.
+    root = _spine_lane(tmp_path / "trunk")
+    reg = root / "docs" / "requirements" / "system-requirements.csv"
+    reg.write_text(_SR_HEADER + _sr("Approved"), encoding="utf-8", newline="\n")
+    _commit(root, "spine: the adjudicator approves SR-001 on trunk", when=T_LATER)
+
+    # The flip really is on trunk and really is not the branch's.
+    assert "Approved" in reg.read_text(encoding="utf-8")
+    assert integ._approval_act_refusal(root, "wi-401") is None
+
+
 def test_the_mint_is_seen_even_when_git_would_report_it_as_a_rename(tmp_path):
     # Why the diff is read `--no-renames`, driven rather than asserted. Rename
     # detection is free to pair the branch's own close (a DELETE under

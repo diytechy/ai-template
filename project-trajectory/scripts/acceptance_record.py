@@ -86,6 +86,7 @@ Contract IF-129: the ONE cell-comparison basis.
 try:
     import spine_carrier
     from kitlib import git as _kitgit
+    from kitlib import spine as _kitspine
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
     from pathlib import Path
@@ -93,6 +94,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
     from kitlib import git as _kitgit
+    from kitlib import spine as _kitspine
 
 # `git -C <root> <args>` stdout on success, else None (git absent, not a repo,
 # no such object). Every scan below degrades to None so the whole tier is a
@@ -364,6 +366,245 @@ def _spine_revs(root, base, head, touches=()):
     return changed, base + ":", new_prefix
 
 
+def _spine_row_sides(root, base, head):
+    """`(registry, id_col, before_rows, after_rows)` per spine registry the two
+    trees actually differ in — THE ONE two-tree spine walk, shared by every
+    reader below it.
+
+    Extracted at WI-572 rather than copied: that row's lane refusal and its
+    first-approval trigger ask two more questions of the SAME diff
+    `staged_spine_amendments` already reads (which rows FLIPPED, which arrived
+    `Drafted`), and a second walk would be a second place for the
+    `--no-renames`/carrier-resolution/`-000` rules to drift out of agreement.
+    Yields nothing when git cannot answer or nothing relevant moved — the
+    silent-no-op degrade `_spine_revs` owns."""
+    revs = _spine_revs(
+        root,
+        base,
+        head,
+        touches=sorted(c for p, _ in SPINE_CSVS for c in _spine_carriers(p)),
+    )
+    if revs is None:
+        return
+    staged_names, old_rev, new_rev = revs
+    for csv_path, id_col in SPINE_CSVS:
+        # The record names the carrier file that ACTUALLY changed, not the
+        # constant: the constant carries a suffix, and reporting
+        # `system-requirements.toml` for a repo whose staged diff touched
+        # `system-requirements.csv` names a file that does not exist — in a
+        # record an adjudication row quotes back to a human.
+        touched = [c for c in _spine_carriers(csv_path) if c in staged_names]
+        if not touched:
+            continue
+        before_rows = _spine_rows_at(root, old_rev, csv_path, id_col)
+        after_rows = _spine_rows_at(root, new_rev, csv_path, id_col)
+        yield touched[0], id_col, before_rows, after_rows, csv_path
+
+
+def _claims_approval(row):
+    """True when a spine row's `Status` claims approval or above.
+
+    The vocabulary's one home is `kitlib.spine`; this names the PAIR (`Approved`
+    and the computed `Founded` above it) so the approval-act readers below ask
+    one question instead of each restating which rungs count as blessed. Note
+    the deliberate difference from `_APPROVED_TEXT`, three hundred lines up:
+    that set is the amend-without-flip guard's, and excludes `Founded` because a
+    computed rung is not a second attestation of the row's own text. Here the
+    question is "does this cell CLAIM approval", and `Founded` does."""
+    return _kitspine.is_approved(row) or _kitspine.is_founded(row)
+
+
+def staged_approval_acts(root, base="HEAD", head=None):
+    """Every APPROVAL ACT a spine delta performs between two trees:
+
+        [{"registry": <carrier path>, "id": <row id>, "act": "flip" | "born",
+          "before": <status>, "after": <status>}]
+
+    An act is a row crossing INTO an approval claim (`act = "flip"` — `Drafted`
+    → `Approved`/`Founded`) or a row that ARRIVES already claiming one
+    (`act = "born"`, absent on the base side). Both are the same event seen from
+    two directions: text that was never blessed is now blessed, and the
+    `docs/archive/last_approved/` copy that anchors it is owed.
+
+    THE READING IS THE MIRROR OF `staged_spine_amendments`, deliberately: that
+    one reports rows whose approved text moved while Status stood still and
+    EXEMPTS a moved Status ("a deliberate call this does not second-guess"); this
+    one reports exactly the exempted set. Together they cover the delta, and the
+    two share `_spine_row_sides` so they cannot disagree about which rows exist.
+
+    A DE-APPROVAL IS NOT AN ACT. `Approved` → `Drafted` withdraws a claim; it
+    blesses nothing, so it owes no snapshot and refuses no merge. Same direction
+    as `baseline_snapshot._approval_transition`, which asks the live-vs-snapshot
+    form of this question.
+
+    Owner ruling 2026-09-01 (WI-572): the act this reports is the ADJUDICATOR's,
+    performed on the serial trunk side. `integrate._approval_act_refusal` reads
+    it off a worker branch's own delta to refuse the merge; `intake` reads it off
+    a landed trunk commit, where it is the sanctioned shape.
+
+    Returns [] when not applicable; any missing git context is a silent no-op,
+    like `staged_spine_amendments`."""
+    out = []
+    for registry, _id_col, before_rows, after_rows, _csv in _spine_row_sides(
+        root, base, head
+    ):
+        for rid, row in after_rows.items():
+            if not rid:
+                continue
+            before = before_rows.get(rid)
+            if before is None:
+                # A row absent on the base side. `before_rows` is `{}` for a
+                # newly ADDED registry too, which is why the born arm still
+                # answers there: a registry that arrives with approved rows in
+                # it is the same unblessed-text-now-blessed event.
+                if _claims_approval(row):
+                    out.append(
+                        {
+                            "registry": registry,
+                            "id": rid,
+                            "act": "born",
+                            "before": "",
+                            "after": (row.get("Status") or "").strip(),
+                        }
+                    )
+                continue
+            if not _claims_approval(before) and _claims_approval(row):
+                out.append(
+                    {
+                        "registry": registry,
+                        "id": rid,
+                        "act": "flip",
+                        "before": (before.get("Status") or "").strip(),
+                        "after": (row.get("Status") or "").strip(),
+                    }
+                )
+    return out
+
+
+def lane_approval_refusal(root, base, head):
+    """Why a WORK BRANCH's delta may not merge because it performs an APPROVAL
+    ACT — the refusal text, or None when it performs none.
+
+    THE ACT IS THE ADJUDICATOR'S, ON TRUNK (owner ruling 2026-09-01). A worker
+    lane AUTHORS `Drafted` spine rows and AMENDS cell text on any row, including
+    approved ones. It does not flip a `Status` into `Approved`/`Founded`, does
+    not mint a row already claiming one, and does not write `SNAPSHOT_DIR`. Two
+    reasons, both the owner's. CONTEXT: approving a row means reading its whole
+    chain — the parent SR, the sibling LLRs, the tests — which one work item does
+    not hold. CONCURRENCY: two lanes touching the spine conflict at merge and the
+    snapshot must not move across a workstream, whereas a serial trunk-side act
+    cannot conflict.
+
+    HERE RATHER THAN IN THE MERGE SLOT, on `LLR-178`'s separation — the writer
+    must not also be the judge of its own writes, and by the same token the
+    coordinator that merges is not the reader that decides what a spine delta
+    did. `integrate._approval_act_refusal` supplies the merge base and the rung's
+    place in the ladder; the reading and the wording are this module's, beside
+    the two-tree walk and the mirror rules they share their material with.
+
+    A DE-APPROVAL IS NOT AN ACT, and neither is an amendment to an approved row:
+    the lane may make both, and the amendment adjudication the intake mints at
+    this same merge is what judges the second. THE HONEST BOUND is
+    `integrate._minted_id_refusal`'s: this defeats the accident and a lane that
+    drifts, not a lane that means to — a branch could still write a flip through
+    some file nothing here reads.
+
+    Fails closed on an unreadable snapshot delta: an unread diff is not an
+    empty one. `staged_approval_acts`' own degrade is the opposite direction
+    (silence outside a git checkout) and is deliberate — it is a READER, and the
+    refusal that consumes it is where the fail-closed posture belongs.
+
+    Implements: SR-178, LLR-158
+    """
+    acts = staged_approval_acts(root, base, head)
+    out = _git(
+        root, ["diff", "--name-only", "--no-renames", base, head, "--", SNAPSHOT_DIR]
+    )
+    if out is None:
+        return (
+            "cannot read {}'s {} delta against {}, so whether this branch wrote "
+            "the approval record is unknowable; nothing was merged".format(
+                head, SNAPSHOT_DIR, str(base)[:10]
+            )
+        )
+    snapshot_files = sorted(n for n in out.splitlines() if n.strip())
+    if not acts and not snapshot_files:
+        return None
+    lines = [
+        "  {} {} in {}".format(
+            act["id"],
+            "flipped {} -> {}".format(act["before"] or "(absent)", act["after"])
+            if act["act"] == "flip"
+            else "was minted born {}".format(act["after"]),
+            act["registry"],
+        )
+        for act in acts
+    ]
+    lines += ["  wrote {}".format(name) for name in snapshot_files]
+    return (
+        "{} performs an APPROVAL ACT in its own delta - and the approval act is "
+        "the ADJUDICATOR's, on the serial trunk side, never a work lane's (owner "
+        "ruling 2026-09-01; PROCESS.md §4). A lane AUTHORS `Drafted` spine rows "
+        "and AMENDS cell text; it does not flip a `Status` into "
+        "`Approved`/`Founded`, does not mint a row already claiming one, and does "
+        "not write {}/. Approving means reading the row's whole chain, which one "
+        "work item does not hold, and a trunk-side act cannot conflict with a "
+        "second lane the way this one can. Leave the rows `Drafted`: the "
+        "first-approval adjudication minted at this merge is what reads the "
+        "chain, flips and takes the snapshot, on trunk. Nothing was "
+        "merged:\n{}".format(head, SNAPSHOT_DIR, "\n".join(lines))
+    )
+
+
+def staged_drafted_rows(root, base="HEAD", head=None):
+    """Every `Drafted` spine row a delta ADDS or AMENDS between two trees:
+
+        [{"registry": <carrier path>, "id": <row id>, "act": "added" | "amended",
+          "changed": {cell: (before, after)}}]
+
+    The first-approval trigger's input (WI-572): a lane authors `Drafted` rows
+    and amends their text, and what it hands the adjudicator is exactly this set
+    — the rows whose text is now waiting on a first approval nobody has given.
+    `changed` is empty on an `added` row (there is no before side to diff) and
+    carries BOTH §A5.1 halves on an `amended` one, because below approval the
+    split buys nothing: no cell of a `Drafted` row was ever blessed, so none of
+    them is "traced-only" relative to a signature.
+
+    A row that is `Drafted` on the after side only. A row that LEFT `Drafted`
+    is an approval act (`staged_approval_acts`); a row that ENTERED it from
+    `Approved` is a de-approval, reported here as `amended` only if its text also
+    moved — the withdrawal itself is the authoring lane's recorded call, not a
+    first approval owed.
+
+    Returns [] when not applicable; silent no-op on missing git context."""
+    out = []
+    for registry, id_col, before_rows, after_rows, csv_path in _spine_row_sides(
+        root, base, head
+    ):
+        for rid, row in after_rows.items():
+            if not rid or not _kitspine.is_drafted(row):
+                continue
+            before = before_rows.get(rid)
+            if before is None:
+                out.append(
+                    {"registry": registry, "id": rid, "act": "added", "changed": {}}
+                )
+                continue
+            split = split_changed_cells(csv_path, id_col, before, row)
+            changed = dict(split["approved"])
+            changed.update(split["traced"])
+            if changed:
+                out.append(
+                    {
+                        "registry": registry,
+                        "id": rid,
+                        "act": "amended",
+                        "changed": changed,
+                    }
+                )
+    return out
+
+
 def staged_spine_amendments(root, base="HEAD", head=None):
     """The structured amendment set behind the amend-without-flip warn (WI-316,
     narrowed by WI-380) — the seam adjudication (WI-388) consumes.
@@ -393,17 +634,12 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     context is a silent no-op, like staged_findings. A NEW row (id absent on the
     base side) is not an amendment; a row whose Status moved (to `Drafted`,
     `Founded`, anything) made a deliberate call this does not
-    second-guess."""
-    revs = _spine_revs(
-        root,
-        base,
-        head,
-        touches=sorted(c for p, _ in SPINE_CSVS for c in _spine_carriers(p)),
-    )
-    if revs is None:
-        return []
-    staged_names, old_rev, new_rev = revs
+    second-guess — `staged_approval_acts` is the reader for the half of that
+    exemption which BLESSES text, over the same walk.
 
+    THE TWO-TREE WALK IS `_spine_row_sides`, shared since WI-572 rather than
+    inlined here, so this reader and the two approval-act readers above it
+    cannot disagree about which registries and rows the delta contains."""
     # Each row answers for its OWN cells (owner ruling 2026-08-17m): the
     # sanctioned amend path is flipping the AMENDED row itself in the same
     # commit — a Status that moved is exempted below. The retired chain
@@ -413,18 +649,9 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     # whatever its parent does.
 
     out = []
-    for csv_path, id_col in SPINE_CSVS:
-        # The record names the carrier file that ACTUALLY changed, not the
-        # constant: the constant carries a suffix, and reporting
-        # `system-requirements.toml` for a repo whose staged diff touched
-        # `system-requirements.csv` names a file that does not exist — in a
-        # record an adjudication row quotes back to a human.
-        touched = [c for c in _spine_carriers(csv_path) if c in staged_names]
-        if not touched:
-            continue
-        registry = touched[0]
-        head_rows = _spine_rows_at(root, old_rev, csv_path, id_col)
-        staged_rows = _spine_rows_at(root, new_rev, csv_path, id_col)
+    for registry, id_col, head_rows, staged_rows, csv_path in _spine_row_sides(
+        root, base, head
+    ):
         if not head_rows or not staged_rows:
             continue  # first commit / newly added registry — nothing attested yet
         for rid, row in staged_rows.items():
