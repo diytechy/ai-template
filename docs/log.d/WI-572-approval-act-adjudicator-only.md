@@ -796,6 +796,39 @@ the string beside it no longer says is the drift this finding is about.
 `docs/ratify/CURRENT.md` regenerated. The markdown edit is SLOC-neutral in
 `trace.py`, which is a ratcheted module.
 
+**The ratchet's loosening, made a reviewed act (MINOR 4).** Round 6 committed
+`check_complexity --restamp` output wholesale, which absorbed eight UPWARD
+stamps with an empty reason column — against the file's own header rule ("the
+baseline only ever tightens ... the reason column records why it is carried").
+Measured rather than argued, and WIDER than the finding: a worktree at the
+integration base `4d0b972d` — a tree this branch never touched — already FAILS
+`check_complexity` on all eight, so every one is trunk-inherited, not
+introduced here. The five the review named are `intake.py::_disposition_drafts`
+(21 -> 25), `handback.py::close_adjudication`,
+`gen_open_items.py::_none_declaration_findings`,
+`intake.py::_replace_inbound_edges` and `trace.py::_cell_diff_lines`; the three
+it did not are `dispatch.py::_advance` (16 -> 20) and WI-571's two,
+`baseline_snapshot.py::_authorised_registries` and `copy_live` (19 -> 21).
+Each now carries the reason, the base commit it was measured at, and where the
+repair is owed.
+
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_complexity.py --root <worktree at 4d0b972d>" rev=4d0b972d -->
+
+**And the ninth row was this WI's own, so it was SIMPLIFIED rather than
+stamped.** `acceptance_record.py::staged_approval_acts` sat at cognitive 20
+with a blank reason — the same defect one row up, and this branch's to fix. The
+repo's rule is decompose, don't bump, so the per-row judgement came out as
+`_approval_act`: the walk around it is now "visit every row of every changed
+registry" and the two arms (`flip`, `born`) are stated once, side by side,
+which is what makes the mirror its docstring claims checkable. The function
+drops OFF the census entirely (cognitive 20 -> under the 15 threshold) and
+`_approval_act` does not enter it, so the row is deleted rather than
+re-stamped. Behaviour-identical: the reader, merge-slot and intake modules are
+green at **91 passed**, and the census reads **OK - 201 rows, unchanged**.
+
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_acceptance_record.py tests/test_integrate_admission.py tests/test_intake.py" rev=HEAD-dirty -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_complexity.py --root ." rev=HEAD-dirty -->
+
 ### Round-6 rework resume at the current tip
 
 The unattended worker was relaunched with round 6's merge-boundary finding

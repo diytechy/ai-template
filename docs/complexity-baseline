@@ -2,7 +2,6 @@
 # A row is a DEBT STATEMENT, NOT AN APPROVAL: the reason column records why it is carried, and the
 # baseline only ever tightens — re-stamp DOWNWARD or delete a row, never up to clear a finding.
 # path	function	cognitive	sloc	reason
-project-trajectory/scripts/acceptance_record.py	staged_approval_acts	20	32
 project-trajectory/scripts/acceptance_record.py	staged_spine_amendments	20	19
 project-trajectory/scripts/adjudicate_brief.py	amendment_values	20	59
 project-trajectory/scripts/agent_common.py	approval_through	31	49
@@ -24,8 +23,8 @@ project-trajectory/scripts/agent_route.py	load_registry	24	65
 project-trajectory/scripts/agent_route.py	main	16	62
 project-trajectory/scripts/agent_session.py	_wait_for_exit	16	24
 project-trajectory/scripts/agent_session.py	summarize_session_line	29	24
-project-trajectory/scripts/baseline_snapshot.py	_authorised_registries	19	19
-project-trajectory/scripts/baseline_snapshot.py	copy_live	21	41
+project-trajectory/scripts/baseline_snapshot.py	_authorised_registries	19	19	arrived with WI-571 (the scoped snapshot copy) and was never stamped; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
+project-trajectory/scripts/baseline_snapshot.py	copy_live	21	41	19 -> 21 came with WI-571's copy scoping and was never stamped; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/baseline_snapshot.py	refresh_ledger	23	26
 project-trajectory/scripts/baseline_snapshot.py	unanchored_findings	21	44
 project-trajectory/scripts/bootstrap.py	append_stack_checklist	26	39
@@ -80,7 +79,7 @@ project-trajectory/scripts/derive_stage.py	_phase_groups	20	22
 project-trajectory/scripts/derive_stage.py	main	30	109
 project-trajectory/scripts/derive_stage.py	phase_rule_findings	19	59
 project-trajectory/scripts/dispatch.py	_admission	24	31
-project-trajectory/scripts/dispatch.py	_advance	20	29
+project-trajectory/scripts/dispatch.py	_advance	20	29	16 -> 20; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/dispatch.py	_claim_lanes	24	41
 project-trajectory/scripts/dispatch.py	_poll	20	27
 project-trajectory/scripts/dispatch.py	run	25	52
@@ -104,7 +103,7 @@ project-trajectory/scripts/gen_components.py	_add_members	17	19
 project-trajectory/scripts/gen_okf.py	_doc_title_and_summary	31	37
 project-trajectory/scripts/gen_okf.py	emit	72	243
 project-trajectory/scripts/gen_okf.py	main	25	65
-project-trajectory/scripts/gen_open_items.py	_none_declaration_findings	16	30
+project-trajectory/scripts/gen_open_items.py	_none_declaration_findings	16	30	ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/gen_open_items.py	deferral_findings	22	56
 project-trajectory/scripts/gen_open_items.py	fragment_declarations	16	23
 project-trajectory/scripts/gen_open_items.py	md_block	17	28
@@ -114,13 +113,13 @@ project-trajectory/scripts/gen_skills_index.py	collect_skills	24	27
 project-trajectory/scripts/gen_skills_index.py	main	16	84
 project-trajectory/scripts/gen_trajectory.py	build_html	27	110
 project-trajectory/scripts/gen_trajectory.py	main	16	71
-project-trajectory/scripts/handback.py	close_adjudication	16	59
+project-trajectory/scripts/handback.py	close_adjudication	16	59	ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/hats.py	_audit_lines	20	89
 project-trajectory/scripts/hats.py	parse_condition	19	47
 project-trajectory/scripts/intake.py	_close_drafts	19	73
-project-trajectory/scripts/intake.py	_disposition_drafts	25	34
+project-trajectory/scripts/intake.py	_disposition_drafts	25	34	21 -> 25; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/intake.py	_locate_spine_rows	31	31
-project-trajectory/scripts/intake.py	_replace_inbound_edges	18	26
+project-trajectory/scripts/intake.py	_replace_inbound_edges	18	26	ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/integrate.py	_claim_delta	22	25
 project-trajectory/scripts/integrate.py	_claim_refusal	16	43
 project-trajectory/scripts/integrate.py	_shed_residue	17	22
@@ -132,7 +131,7 @@ project-trajectory/scripts/plan_artifacts.py	parse_plan_wis	16	25
 project-trajectory/scripts/plan_coverage.py	check_plan	44	60
 project-trajectory/scripts/plan_coverage.py	find_cycle	17	28
 project-trajectory/scripts/plan_coverage.py	parse_plan	16	28
-project-trajectory/scripts/plan_round.py	_advance	18	18
+project-trajectory/scripts/plan_round.py	_advance	18	18	16 -> 20; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/plan_round.py	ready_steps	22	35
 project-trajectory/scripts/plan_round.py	record	61	90
 project-trajectory/scripts/plan_runner.py	run_dual_plan_round	95	288
@@ -143,7 +142,7 @@ project-trajectory/scripts/score_reviews.py	main	26	95
 project-trajectory/scripts/score_reviews.py	parse_verdict	21	39
 project-trajectory/scripts/spine_carrier.py	needs_from_markdown	32	30
 project-trajectory/scripts/spine_rules.py	spine_stage	17	42
-project-trajectory/scripts/trace.py	_cell_diff_lines	18	26
+project-trajectory/scripts/trace.py	_cell_diff_lines	18	26	ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/trace.py	_csv_ids	16	14
 project-trajectory/scripts/trace.py	_offspine_row_diff	16	20
 project-trajectory/scripts/trace.py	_retired_cell_findings	17	26

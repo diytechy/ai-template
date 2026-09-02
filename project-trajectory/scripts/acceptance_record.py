@@ -424,6 +424,42 @@ def _claims_approval(row):
     return _kitspine.is_approved(row) or _kitspine.is_founded(row)
 
 
+def _approval_act(registry, rid, before, row):
+    """The approval act ONE row performs across the two sides, or None.
+
+    The per-row half of `staged_approval_acts` below, extracted so the walk
+    around it is "visit every row of every changed registry" and the judgement
+    is stated once, in one place, for both shapes. The two arms answer the same
+    question from two directions — text that was never blessed is now blessed —
+    and reading them side by side is how the mirror in that docstring stays
+    checkable.
+
+    An id-less row is not a row (the `-000` template placeholder and a blank
+    key both land here); a de-approval and an unchanged status both fall
+    through to None, which is the subtraction that docstring states."""
+    if not rid:
+        return None
+    if before is None:
+        # A row absent on the base side. `before_rows` is `{}` for a newly
+        # ADDED registry too, which is why the born arm still answers there: a
+        # registry that arrives with approved rows in it is the same
+        # unblessed-text-now-blessed event.
+        if not _claims_approval(row):
+            return None
+        act, was = "born", ""
+    elif not _claims_approval(before) and _claims_approval(row):
+        act, was = "flip", (before.get("Status") or "").strip()
+    else:
+        return None
+    return {
+        "registry": registry,
+        "id": rid,
+        "act": act,
+        "before": was,
+        "after": (row.get("Status") or "").strip(),
+    }
+
+
 def staged_approval_acts(root, base="HEAD", head=None):
     """Every APPROVAL ACT a spine delta performs between two trees:
 
@@ -467,35 +503,9 @@ def staged_approval_acts(root, base="HEAD", head=None):
         root, base, head
     ):
         for rid, row in after_rows.items():
-            if not rid:
-                continue
-            before = before_rows.get(rid)
-            if before is None:
-                # A row absent on the base side. `before_rows` is `{}` for a
-                # newly ADDED registry too, which is why the born arm still
-                # answers there: a registry that arrives with approved rows in
-                # it is the same unblessed-text-now-blessed event.
-                if _claims_approval(row):
-                    out.append(
-                        {
-                            "registry": registry,
-                            "id": rid,
-                            "act": "born",
-                            "before": "",
-                            "after": (row.get("Status") or "").strip(),
-                        }
-                    )
-                continue
-            if not _claims_approval(before) and _claims_approval(row):
-                out.append(
-                    {
-                        "registry": registry,
-                        "id": rid,
-                        "act": "flip",
-                        "before": (before.get("Status") or "").strip(),
-                        "after": (row.get("Status") or "").strip(),
-                    }
-                )
+            act = _approval_act(registry, rid, before_rows.get(rid), row)
+            if act:
+                out.append(act)
     return out
 
 
