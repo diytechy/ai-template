@@ -80,7 +80,8 @@ time comparison, which nothing detects once it is false. Ratchet bumps
 (`agent_common` 1272→1305, `agent_loop` 2519→2578, `integrate` 1298→1382,
 `check` 1163→1177, `bootstrap` 1658→1660, smoke membership 1480→1560) each carry
 their reason at the entry; `_verdict_gate`'s complexity bump was REFUSED and the
-function decomposed instead. Full suite: 3336 passed, 24 skipped, 1 failed —
+function decomposed instead. Rework full suite: 3339 passed, 24 skipped, 1 failed
+in 620.13s at `f418cba1` —
 the failure is `docs/stage` freshness, a trunk-lane artifact a work branch must
 not commit, bisected clean at the integration base. Account, deviations and the
 one out-of-scope finding: `docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md`.

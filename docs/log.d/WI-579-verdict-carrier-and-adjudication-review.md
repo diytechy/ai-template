@@ -168,3 +168,12 @@ count, so REVIEW-A plus REVIEW-B is one cycle and rework starts over — and the
 coordinator derives it from that evidence while the gate refuses a mismatched
 stamp. LLR-207's rationale was rewritten as a living technical reason with the
 historical provenance removed.
+
+Focused verdict-record plus module-size regressions: **34 passed in 4.52s**;
+the consolidation kept `agent_loop.py` and `integrate.py` at their existing
+ratchet ceilings with no bump. Full unfiltered suite at the rework commit:
+**3339 passed, 24 skipped, 1 failed in 620.13s**. The sole failure is the same
+`tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`
+trunk-owned `docs/stage` freshness assertion already diagnosed above; no new
+failure appeared.
+<!-- fig: cmd="python -m pytest -q -n auto" rev=f418cba1 -->
