@@ -1,0 +1,41 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 003
+# date: 2026-09-03 17:00
+# train: wi-586-adjudicate-llr-207-llr-208
+# base: d7ffb41311a4
+# phase: ADJUDICATE
+# wi: WI-586
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: 96d4004e..3c7764c5
+# tokens:
+# cost-usd:
+# wall-secs: 471
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 52746
+# prompt-template: kit:ADJUDICATE
+# prompt-sha: sha256:1e8f72e5f603
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+OUTCOME: RETURN rows=4.
+
+- Returned: LLR-207, TC-205, LLR-208, TC-206.
+- LLR-208/TC-206 additionally lack cited coverage proving `trunk_step.REGEN_STEPS` runs the verdict-rollup regenerator.
+- Verdict: [003-ADJUDICATE-9c563df.md](/Users/diytechy/Documents/ai-template-drive/wi-586-adjudicate-llr-207-llr-208/docs/reviews/wi-586-adjudicate-llr-207-llr-208/003-ADJUDICATE-9c563df.md)
+- Recorded in commit `3c7764c5` with `WI: WI-586`.
+- Both successor drafts parse successfully.
+- No registry statuses or approval snapshots changed.
+- Verification: 4 targeted tests passed; smoke suite 1,520 passed, 8 skipped in 37.02s, within the 60s budget; documentation check found zero broken links.

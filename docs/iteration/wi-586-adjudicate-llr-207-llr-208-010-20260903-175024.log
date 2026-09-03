@@ -1,0 +1,39 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 010
+# date: 2026-09-03 17:55
+# train: wi-586-adjudicate-llr-207-llr-208
+# base: d7ffb41311a4
+# phase: REVIEW-A
+# wi: WI-586
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: cefb903b..fd284109
+# tokens:
+# cost-usd:
+# wall-secs: 305
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4550
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:308fa26fea64
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Verdict recorded: CHANGES-REQUESTED (1 MINOR).
+
+The disposition’s stated `27 passed` mutation population is inaccurate; the cited targets pass at 20. Committed as `fd284109`.
+
+[Review verdict](</Users/diytechy/Documents/ai-template-drive/wi-586-adjudicate-llr-207-llr-208/docs/reviews/wi-586-adjudicate-llr-207-llr-208/010-REVIEW-A-397d4b1.md>)
+
+Verified: `check.py --jobs 0` passed; `trace.py --strict-integrity` reported integrity=0.

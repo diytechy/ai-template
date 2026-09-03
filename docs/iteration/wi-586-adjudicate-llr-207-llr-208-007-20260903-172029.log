@@ -1,0 +1,47 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 007
+# date: 2026-09-03 17:27
+# train: wi-586-adjudicate-llr-207-llr-208
+# base: d7ffb41311a4
+# phase: ADJUDICATE
+# wi: WI-586
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: eecea534..082b9e1b
+# tokens:
+# cost-usd:
+# wall-secs: 444
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 52746
+# prompt-template: kit:ADJUDICATE
+# prompt-sha: sha256:3434396e27e1
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+OUTCOME: RETURN rows=4.
+
+Returned: LLR-207, TC-205, LLR-208, TC-206. Findings cover two mechanism contradictions and four test-coverage/method defects.
+
+Recorded in [007-ADJUDICATE-aeefcb2.md](/Users/diytechy/Documents/ai-template-drive/wi-586-adjudicate-llr-207-llr-208/docs/reviews/wi-586-adjudicate-llr-207-llr-208/007-ADJUDICATE-aeefcb2.md) and committed as `082b9e1b` with `WI: WI-586`.
+
+No registry statuses or approval snapshots changed. Worktree is clean.
+
+Checks:
+
+- Targeted evidence: 181 passed
+- Smoke: 1520 passed, 8 skipped
+- Budget: 38.5s / 60s
+- Documentation: 0 broken links
+- Registry integrity: 0 integrity findings
