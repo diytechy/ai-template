@@ -598,6 +598,27 @@ def test_the_empty_carrier_commits_its_own_paths_and_never_the_index(tmp_path):
         "src/unrelated.py"
     ], "the caller's index must be left exactly as it was found"
 
+    # ...AND WITH NO PATHS AT ALL, which is the arm the round-015 fix did not
+    # reach: it kept the pathspec on both arms of the `dirty` test, but the
+    # pathspec is appended only `if rels`, so `paths=[]` still emitted a
+    # pathspec-less `git commit --allow-empty` — the very shape the finding was
+    # about. Not a hypothetical call: this suite makes it twice, and it is what
+    # a caller with nothing to record but an attestation writes.
+    ac.commit_telemetry(
+        root,
+        "wi-401-003",
+        "REVIEW-A COMMITTED",
+        [],
+        trailer=kv.format_trailer("APPROVE", 1, "0" * 64),
+    )
+    assert not _git(root, "show", "--format=", "--name-only", "HEAD").strip(), (
+        "a carrier with no paths must commit NOTHING — reading the index here "
+        "is the same work-under-a-bookkeeping-label defect, one branch over"
+    )
+    assert _git(root, "diff", "--cached", "--name-only").split() == [
+        "src/unrelated.py"
+    ], "and the index is still left exactly as it was found"
+
 
 def test_a_round_drawn_after_a_refresh_is_visible_to_both_readers(tmp_path):
     # ROUND 015, THE BLOCKER — and the OTHER ORDER of the test above, which is
