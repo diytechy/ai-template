@@ -923,4 +923,38 @@ account above, by a route the fixing session did not use:
   are excluded from the identity fold, not from the checks that read them. A
   green that skips them is a green about a tree nobody merges.
 
+All three hold. The unfiltered suite at `957e0039`, on a worktree with the
+trunk-owned `docs/stage` regenerated in place: **3349 passed, 25 skipped,
+0 failed in 626.95 s** — the same node counts as the two earlier readings, now
+driven over a tree that also carries the records those readings produced.
+<!-- fig: cmd="python -m pytest -q -n auto" rev=957e0039 -->
+
+The `docs/stage` claim was re-derived rather than re-read, by diffing the
+committed artifact against the regenerated one field by field: `drafted` (9 to
+13) and the `fingerprint` that counts it are the ONLY two lines that differ.
+`stage`, `stage-ord`, `stage-of`, `floored`, `settled-stage`, `live-stage`,
+`phase`, `per-phase` and `per-phase-live` are byte-identical. The artifact's
+governing content does not move; its census does, which is the whole shape of
+"caused by this branch and benign".
+
+### What this lane's own mechanism says about this lane
+
+The readers WI-579 built were asked about WI-579, at the closing tip, which is
+the cheapest end-to-end drive available and the one most likely to be skipped:
+
+- `governing_rev(HEAD)` peels back to **`430a7fe8`**, the close. The three
+  commits standing on it — the log entry recording the earlier green, the
+  session telemetry, and this session's own record — are `docs/log.d/` and
+  `docs/iteration/` writes, and the walk steps through each because its
+  non-record identity equals its first parent's. That is round 012's rule doing
+  its job on live traffic: this session cannot buy the lane a round by writing
+  its own account of the lane.
+- `round_entries` at that identity is **empty** and `phases_owed` returns
+  **`['REVIEW-A']`**, with `round_count` 0. Correct, and worth stating plainly:
+  the round-025 rework CHANGED the non-record tree, so the round-025 verdict
+  stopped governing the moment it was answered. Seven logged rounds are on the
+  branch and none of them speaks for this tree. The lane owes a fresh REVIEW-A,
+  and the gate will refuse it until one is drawn — which is the mechanism
+  refusing to let its own author close over it.
+
 
