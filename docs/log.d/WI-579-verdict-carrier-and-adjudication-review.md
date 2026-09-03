@@ -689,3 +689,43 @@ test failed.
 
 No new open item was minted: the failure is the already-recorded generated-stage
 handoff, and the raw-byte collision is closed in WI-579.
+
+**Post-close verification at the lane tip.** The round-019 fix was re-driven
+independently rather than read: at `dbe1075d`, one blob carried at `work\200`
+and at `work\201` — built through `update-index --index-info` so no filesystem
+has to accept the name, which APFS will not — resolves to **two distinct
+identities** through `tree_identity` (`cca21fde…` and `15210ff0…`, against the
+single `078e2579…` the finding reported), the pure `fold_listing` half agrees,
+and the record-path exclusion still drops `docs/reviews/` with the boundary
+applied to path bytes. The finding's second half is discharged too: TC-205
+carries the collision and its `evidence` names
+`test_distinct_invalid_utf8_work_paths_have_distinct_identities`.
+<!-- fig: cmd="update-index --index-info fixture over kitlib.verdict.tree_identity and fold_listing" rev=dbe1075d -->
+
+Commit bar re-driven at the tip: **1507 passed, 8 skipped in 31.44 s**, budget
+enforcement **33.9 s against the 60 s ceiling**, `check_docs --stale` **0
+broken links**. Full unfiltered suite at the tip: **3346 passed, 24 skipped, 1
+failed in 591.43 s** — the same totals as `ff28a937`, with the same sole red.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke && .venv/bin/python scripts/check_smoke_budget.py --mode enforce && .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale && .venv/bin/python -m pytest -q -n auto" rev=dbe1075d -->
+
+**That red is CAUSED by this branch, not inherited, and the distinction is
+worth stating because "trunk-owned" reads like "pre-existing".** Bisected at the
+integration base: `test_this_repo_s_committed_stage_is_current` **passes** at
+`0ecc62bb` in a detached worktree, so this lane's Drafted spine amendments to
+`interfaces.toml`, `low-level-requirements.toml`, `stack.ini` and
+`test-cases.toml` are what move the derived fingerprint. It stays the trunk's to
+discharge rather than this lane's: the branch never touches `docs/stage`
+(`git diff 0ecc62bb..HEAD -- docs/stage` is empty), a worker may not hand-set a
+derived artifact, and `trunk_step.REGEN_STEPS` runs `derive_stage.py` after the
+merge. Ownership, not staleness, is why it is left red.
+<!-- fig: cmd="git worktree add --detach <wt> 0ecc62bb && pytest -q tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current" rev=0ecc62bb -->
+
+One observation for the reviewer, deliberately NOT acted on. `fold_listing`
+separates entries with `b"\n"`, so a work path containing a literal newline can
+in principle spell a second entry and make two different trees fold equal — the
+round-019 defect class, reached by a crafted filename instead of by an ordinary
+rename. It is left alone on purpose: the module's stated bound is that it
+defeats ACCIDENT and not INTENT (`refresh_attestation`, "THE HONEST BOUND",
+under DECISION 3), a newline in a work path is not ordinary work, and changing
+the separator would shift every identity value on a lane that has already
+closed. Recorded here so an adjudicator can rule rather than rediscover.
