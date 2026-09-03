@@ -183,7 +183,7 @@ and executes the `verdict-rollup` row. Driven and reverted: deleting that whole
 tuple — `("verdict-rollup", _has("docs/reviews"), _cmd("gen_verdict_rollup.py"),
 "docs/reviews/ absent")` — leaves the module syntactically valid with zero
 `verdict-rollup` occurrences, and all four cited evidence nodes plus the whole of
-`tests/test_trunk_step.py` pass at `27 passed`. Both cells are false under that
+`tests/test_trunk_step.py` pass at `20 passed`. Both cells are false under that
 mutation and nothing goes red.
 
 Do all three, because two of them are what keep the mint from stranding a row:
