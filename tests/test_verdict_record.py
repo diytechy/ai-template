@@ -1342,6 +1342,20 @@ def test_a_stale_owed_marker_over_served_evidence_redraws_nothing(tmp_path):
     # marker-present with evidence-complete.
     al = _al()
     root = rounds_repo(tmp_path, policy="2")
+    # The train's own BUILD trailer, without which this test's premise is
+    # hollow: `review_owed_by_evidence` scans `base..HEAD` for the assigned
+    # WIs' trailers first, so a fixture that commits no `WI: WI-401` makes it
+    # answer off an EMPTY scan. Written that way, the `== []` below asserted
+    # "both phases served" against evidence the derivation never read — the
+    # round-033 defect reproduced inside the regression written to close it,
+    # and the reason `resume_owed_round` could invert its C2 contract with
+    # this test still green (ROUND 034).
+    _git(root, "checkout", "-q", "wi-401")
+    (root / "src" / "widget.py").write_text(
+        "VALUE = 2\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "WI-401: close\n\nWI: WI-401", when=T_CODE + 50)
+    _git(root, "checkout", "-q", "main")
     add_round(root, 3)
     add_round(root, 4, round_phase="REVIEW-B", when=T_LATER + 100)
     _git(root, "checkout", "-q", "wi-401")
@@ -1351,7 +1365,8 @@ def test_a_stale_owed_marker_over_served_evidence_redraws_nothing(tmp_path):
         routing=types.SimpleNamespace(managed=True, registry={}),
     )
     assert al.review_owed_by_evidence(root, ctx.worker, 2) == [], (
-        "both declared phases were served at this tree — the premise"
+        "both declared phases were served at this tree — the premise, and it "
+        "is now READ: `[]` here is the derivation's answer, not its silence"
     )
     al.write_review_owed(root, ctx.worker, ctx.run.routing, "reviewer outage")
     assert al.read_review_owed(root), "the stale marker survived, as it does"
@@ -1373,3 +1388,59 @@ def test_a_stale_owed_marker_over_served_evidence_redraws_nothing(tmp_path):
     _git(root, "checkout", "-q", "wi-401")
     al.resume_owed_round(root, setup, ctx.run.routing, 2, root / "docs" / "iteration")
     assert ctx.run.routing.review_queue == ["REVIEW-B"]
+
+
+def test_a_resume_that_cannot_read_its_evidence_still_draws_the_parked_round(
+    tmp_path,
+):
+    # ROUND 034, and the other half of round 033 finding 2. Making the evidence
+    # the only trigger exposed the case where there is no evidence to trigger
+    # on: `default_base` merge-bases to HEAD whenever the primary checkout IS
+    # the lane branch (its own docstring names the single-checkout run and the
+    # fixtures), so a RESUMED run of that shape scans an empty `base..HEAD`,
+    # every assigned WI reads unbuilt, and the derivation cannot say. Reading
+    # that silence as "nothing owed" dropped a genuinely parked round and ran
+    # another BUILD — the C2 contract inverted.
+    #
+    # IN-PROCESS, and that is the point. The end-to-end test that caught this
+    # lives in `test_agent_loop_review`, which `conftest.SLOW_MODULES` drops
+    # from the smoke tier — so the inversion sat red on the branch for five
+    # commits under a green commit bar. The guard belongs where the bar runs.
+    al = _al()
+    root = rounds_repo(tmp_path)
+    _git(root, "checkout", "-q", "wi-401")
+    (root / "src" / "widget.py").write_text(
+        "VALUE = 2\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "WI-401: close\n\nWI: WI-401", when=T_CODE + 50)
+
+    # The run that PARKED the round: a real base, evidence it can read, and a
+    # round genuinely owed (no verdict file exists at this tree).
+    parked = _loop_ctx(al, root)
+    assert al.review_owed_by_evidence(root, parked.worker) == ["REVIEW-A"]
+    al.write_review_owed(root, parked.worker, parked.run.routing, "reviewer outage")
+
+    # The RESUMED run, blind: its base is the branch tip, so the range holding
+    # the train's own trailer is empty.
+    blind = dict(parked.worker, base=_rev(root, "wi-401"))
+    assert al.review_owed_by_evidence(root, blind) is None, (
+        "cannot say — the three answers are distinct, and this is not `[]`"
+    )
+    setup = types.SimpleNamespace(
+        worker=blind,
+        routing=types.SimpleNamespace(managed=True, registry={}),
+    )
+    resumed = al.RoutingState(1, 900, set(), 3, {})
+    al.resume_owed_round(root, setup, resumed, 1, root / "docs" / "iteration")
+    assert resumed.review_queue == ["REVIEW-A"], (
+        "the marker's advisory base re-points the SAME derivation at the range "
+        "that holds the trailer; the committed facts still give the answer"
+    )
+
+    # The opposite arm, without which the fix would just be the old OR: with no
+    # marker there is nothing that says a round was ever parked, and a train
+    # whose build evidence is simply not in range yet must draw NOTHING.
+    al.clear_review_owed(root)
+    still_building = al.RoutingState(1, 900, set(), 3, {})
+    al.resume_owed_round(root, setup, still_building, 1, root / "docs" / "iteration")
+    assert still_building.review_queue == []

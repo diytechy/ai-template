@@ -8,8 +8,20 @@ WI-558 DW2 retires the gate's freshness comparison, WI-560 DW1 builds one
 shared freshness definition for the gate *and* the C2 derivation, and WI-559
 DW2 only means something once a round carrier exists.
 
-Deferred open items: none. (The open item this row builds is already ruled;
-nothing here waits on an owner decision.)
+Deferred open items: OI-83, OI-84. (The open item this row BUILDS is already
+ruled. These two are what the rounds surfaced and this row is not the place to
+answer: the coordinator that runs modules it imported at launch, and the
+resumed-run base that goes blind. Both are stated where they were found —
+round 033 and round 034 below.)
+
+This line said `none — nothing here waits on an owner decision` until round
+034, and it had been false since round 033, whose own section ends by handing
+the owner a finding it declines to fix. Position is scope and this is top
+matter, so the one declaration a reader can see spoke for a file that had since
+deferred something — OI-41's founding class, reproduced inside the artifact
+built to catch it. `gen_open_items` ARM 4 cannot reach it (it contradicts a
+`none` that CITES a pending id, and this deferral cited none), which is the
+declared weakness of the arm, met in the wild.
 
 ### What was read before anything was written
 
@@ -1253,3 +1265,98 @@ session that is thinking about the correction, not about the criterion. The
 durable form is the one this section takes: drive the suite at the tip AFTER
 the last tree-changing commit, and record it in `docs/log.d/`, which the fold
 excludes — so the recording cannot stale the reading.
+
+**And the suite was not green.** Driven at `f8a3caf5` on a worktree with
+`docs/stage` regenerated: **1 failed, 3357 passed, 25 skipped in 628.73 s**.
+The red is `test_agent_loop_review.py::test_reviewer_outage_parks_review_owed_
+then_resume_draws_the_round` — the C2 end-to-end contract — and it is not
+environmental. Bisected across the round-033 rework, one test per commit:
+`34758fa8` passed, `02d4d86f` (the reopen, no code) passed, and `7ed5a136`
+— "make the evidence the only trigger" — failed, as did every commit after it.
+The row closed on `a12bfd7f` and self-reviewed twice more on top of a red it
+never re-ran.
+<!-- fig: cmd="python -m pytest -q -n auto (worktree at f8a3caf5, docs/stage regenerated); then pytest -q <the one test> at each of 34758fa8 02d4d86f 7ed5a136 c66942bc a12bfd7f 91c7dfb6" rev=f8a3caf5 -->
+
+### Round 034 — finding 2's fix inverted the contract it was protecting
+
+`review_owed_by_evidence` answers `[]` for two different states. Its first
+guard is the train's own build evidence — `train_evidence(root, worker["base"])`
+over `base..HEAD`, every assigned WI's trailer — and when that scan comes back
+short it returns `[]`, the same value it returns when it read the evidence and
+nothing is owed. Before round 033 that conflation was harmless, because
+`resume_owed_round` proceeded on `fields OR owed` and the marker carried the
+answer across it. Round 033 deleted the marker arm, correctly — and the
+conflation underneath it became load-bearing.
+
+It is reachable on the shipped path, and `default_base`'s own docstring names
+the shape: the base is `merge-base(trunk, HEAD)`, which IS HEAD whenever the
+primary checkout is the lane branch — "a single-checkout attended run, the test
+fixtures". A resumed run of that shape scans an EMPTY range, reads every
+assigned WI as unbuilt, and the derivation answers `[]`. Driven, at the two
+resume ticks of the failing fixture:
+
+```
+resume worker={'train': 't1', 'assigned': ['WI-201'], 'base': 'b54551d7…'} rp=1 owed=[]
+  built=(set(), {})     want=None
+```
+
+So the C2 contract inverted: a lane that had committed its build, failed every
+review draw and exited REVIEW OWED came back and ran **another BUILD**. The
+observed session kinds are `['build','build','review','review','build','review']`
+where the sixth-from-parked position must be `review`.
+
+**Fixed by finishing round 033's own antidote, one level down.** That finding
+split "the caller named nothing" from "the evidence owes nothing" in
+`schedule_review_round`; the identical two-states-one-falsey-value defect was
+left in the function that FEEDS it. `review_owed_by_evidence` now answers three
+things — `None` for *cannot say*, `[]` for *read it, nothing owed*, a list for
+*these phases* — and `resume_owed_round` re-ASKS it at the base the owed-marker
+carries rather than answering on its behalf. The marker still decides nothing:
+it hands over one advisory field, which is exactly what `write_review_owed`'s
+docstring has always claimed for it, and a lane whose evidence is readable
+answers `[]` and never reaches that line. Round 033's stale-marker redraw stays
+closed, and its regression still passes.
+
+#### The regression written to close finding 2 was passing on an empty scan
+
+Making the third answer explicit broke
+`test_a_stale_owed_marker_over_served_evidence_redraws_nothing` on its own
+PREMISE line — `review_owed_by_evidence(...) == []`, commented "both declared
+phases were served at this tree". It was not reading that. `rounds_repo`
+commits `feat: the widget` with no `WI:` trailer, so the fixture never had build
+evidence and the derivation was answering off an empty scan: the premise
+asserted silence and read it as agreement. The round-033 defect, reproduced
+inside the regression written to close it — and the reason the C2 inversion
+could land under a green suite for that test.
+
+The assertion was not weakened. The fixture now commits `WI-401: close` with
+its trailer, so `[]` there is the derivation's ANSWER and not its silence.
+
+#### Where the guard lives
+
+The end-to-end test that caught this is in `test_agent_loop_review`, which
+`conftest.SLOW_MODULES` drops from the smoke tier — so the inversion sat red for
+five commits under a green commit bar, three of which reported that bar in
+their own messages. A new in-process regression goes in
+`tests/test_verdict_record.py` (a smoke module) and drives both arms: the blind
+base with a surviving marker must queue `['REVIEW-A']`, and the blind base with
+NO marker must queue nothing, without which the fix would just be the old OR
+restored. Both were driven against the pre-fix module and both bite — the
+behaviour arm independently of the shape arm.
+
+`agent_loop.py` is re-stamped **UPWARD, 2580 -> 2583**: one condition, one
+binding, one re-ask, re-measured after `ruff format` at each shape, with the
+reason at the ratchet entry.
+
+**Two owner findings, and this session queued them rather than narrating
+them.** `OI-83` is round 033's — a long-lived coordinator executes the modules
+it imported at launch, which is how working code was reported as a BLOCKER.
+`OI-84` is round 034's root cause: this fix closes ONE symptom at its call
+site, and three readers of the same blind range are left standing —
+`worker_exit`'s DONE banner reports nothing built, `schedule_review_round`
+never draws a fresh round on a complete train, and `current_assignment_wi`
+reads every assigned WI as remaining and can re-claim one already built. Fixing
+the base itself is a wider change than this row's remainder and belongs to
+whoever rules OI-84.
+
+Deferred open items: OI-83, OI-84.

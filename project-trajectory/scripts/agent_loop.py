@@ -3410,12 +3410,29 @@ def review_owed_by_evidence(root, worker, required=1):
 
     OFF GIT, every declared phase is OWED: `tree_identity` answers None when git
     cannot say, and a derivation that cannot prove a verdict was served must not
-    assume one was."""
+    assume one was.
+
+    THREE ANSWERS, NOT TWO. `None` means THIS DERIVATION CANNOT SAY — the
+    train's own build trailers are not in `base..HEAD`, so there is no evidence
+    here to read either way; `[]` means read it and nothing is owed; a list
+    names the phases. They were one falsey value, and a caller that reads "the
+    evidence owes nothing" off a scan that never saw the evidence is not
+    reading evidence at all: `default_base` merge-bases to HEAD whenever the
+    primary checkout IS the lane branch (its own docstring says so — a
+    single-checkout attended run), so on a RESUMED run of that shape the range
+    is empty, every assigned WI reads unbuilt, and a genuinely parked round
+    answered "nothing owed" (found by the unfiltered suite at REVIEW-A round
+    034, five commits after the round-033 rework that introduced it).
+
+    This is round 033 finding 2's own antidote applied one level down. That
+    finding split "the caller named nothing" from "the evidence owes nothing"
+    in `schedule_review_round`; the same two-states-one-value defect was left
+    HERE, one call deeper, and closing it there is what made it reachable."""
     if not worker:
         return []
     built, _blocked = train_evidence(root, worker["base"])
     if not all(w in built for w in worker["assigned"]):
-        return []
+        return None
     want = kverdict.governing_identity(root, worker["train"])
     if want is None:
         return kverdict.phases_owed((), required)
@@ -3477,13 +3494,36 @@ def resume_owed_round(root, setup, st, rp_int, iter_dir):
     evidence-complete. That is the same defect `write_review_owed`'s own
     docstring rules out ("the marker is deliberately NOT the durable
     evidence"), and it is closed the same way: the marker contributes its
-    ADVISORY fields and nothing else."""
+    ADVISORY fields and nothing else.
+
+    WHICH INCLUDES ITS `base`, and that is not a relapse. Making the evidence
+    the only trigger exposed the case where there is no evidence to trigger on:
+    `default_base` merge-bases to HEAD when the primary checkout is the lane
+    branch, so a resumed run of that shape scans an EMPTY range and
+    `review_owed_by_evidence` cannot say (it answers None). Answering "nothing
+    owed" for it dropped a genuinely parked round and ran another BUILD — the
+    C2 contract inverted, red on this branch for five commits and invisible to
+    the smoke tier (REVIEW-A round 034). The marker's `base` field re-points
+    the SAME derivation at the range that holds the train's trailers; the
+    committed facts still give the answer, and a lane whose evidence is
+    readable never consults it."""
     if not (setup.routing.managed and rp_int >= 1 and setup.worker):
         return
     owed = review_owed_by_evidence(root, setup.worker, rp_int)
+    fields = read_review_owed(root)
+    if owed is None and fields.get("base"):
+        # The evidence could not be READ at this run's base, and the marker
+        # carries the base of the run that parked the round. So re-ASK the
+        # evidence THERE rather than answering for it. The marker still decides
+        # nothing — it hands over one advisory field, which is all
+        # `write_review_owed` ever claimed for it, and the committed facts give
+        # the same three answers they always would. A lane whose evidence IS
+        # readable never reaches this line (it answers `[]`, never None), so
+        # round 033's stale-marker redraw stays closed.
+        parked = dict(setup.worker, base=fields["base"])
+        owed = review_owed_by_evidence(root, parked, rp_int)
     if not owed:
         return
-    fields = read_review_owed(root)
     st.set_train_range("{}..{}".format(setup.worker["base"], head_sha(root)))
     st.last_impl_family = fields.get("family") or last_build_family(
         iter_dir, setup.routing.registry
