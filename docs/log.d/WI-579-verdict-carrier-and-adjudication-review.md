@@ -1108,3 +1108,15 @@ worktree with `docs/stage` regenerated: **3355 passed, 25 skipped, 0 failed in
 631.64 s** — same counts, and the green is the merge tree's rather than an
 intermediate commit's.
 <!-- fig: cmd="python -m pytest -q -n auto" rev=ddd08d67 -->
+
+### Round 033 — reopened
+
+Review A round 033 returned CHANGES-REQUESTED on four findings (one BLOCKER, one
+MAJOR, two MINOR). The spec returns to `docs/work/active/` with its Deliverable
+parked: `check_trajectory` R-A rejects a filled Deliverable on an open row, and
+a spec sitting in a terminal folder ASSERTS a Done-when this branch does not yet
+meet.
+
+No code changes in the reopen commit — it lands the resumable record ahead of
+the work, so a session reaped mid-rework leaves the reopen behind it rather than
+a closed row it has begun to invalidate.
