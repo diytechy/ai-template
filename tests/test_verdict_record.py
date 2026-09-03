@@ -151,6 +151,17 @@ def test_round_and_session_names_parse_including_the_relaxed_tag():
     )
 
 
+def test_round_count_counts_cycles_not_reviewers():
+    entries = [
+        ("REVIEW-A", 3, "CHANGES-REQUESTED"),
+        ("REVIEW-B", 4, "CHANGES-REQUESTED"),
+        ("REVIEW-A", 5, "APPROVE"),
+        ("REVIEW-B", 6, "APPROVE"),
+    ]
+    assert kv.round_count(entries[:2]) == 1
+    assert kv.round_count(entries) == 2
+
+
 # --- 3. the gate over round evidence ------------------------------------------
 
 
@@ -297,6 +308,27 @@ def test_a_trailer_contradicting_the_rounds_refuses(tmp_path):
     assert "attestation and the evidence disagree" in refusal
 
 
+def test_a_trailer_contradicting_the_governing_round_count_refuses(tmp_path):
+    root = rounds_repo(tmp_path)
+    add_round(root, 3)
+    _git(root, "checkout", "-q", "wi-401")
+    tree = kv.tree_identity(root, "wi-401")
+    _git(
+        root,
+        "commit",
+        "-q",
+        "--allow-empty",
+        "-m",
+        "telemetry: session 004 review scoreboard\n\n"
+        + kv.format_trailer("APPROVE", 0, tree),
+    )
+    _git(root, "checkout", "-q", "main")
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
+    assert refusal is not None
+    assert "APPROVE rounds=0" in refusal
+    assert "APPROVE rounds=1" in refusal
+
+
 # --- 4. the adjudication_review dial ------------------------------------------
 
 
@@ -434,6 +466,30 @@ def test_the_done_banner_states_the_rounds_it_actually_drew(tmp_path):
     assert "approved" not in none
 
 
+def test_the_trailer_count_is_derived_at_the_governing_tree(tmp_path):
+    al = _al()
+    root = rounds_repo(tmp_path)
+    add_round(root, 3)
+    _git(root, "checkout", "-q", "wi-401")
+    worker = {
+        "train": "wi-401",
+        "assigned": ["WI-401"],
+        "base": _rev(root, "main"),
+        "rework": "",
+    }
+    first = kv.parse_trailer(al.review_verdict_trailer(root, "APPROVE", worker))
+    assert first is not None and first[1] == 1
+
+    (root / "src" / "widget.py").write_text(
+        "VALUE = 2\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "feat: rework", when=T_LATER + 100)
+    add_round(root, 5, when=T_LATER + 200)
+    _git(root, "checkout", "-q", "wi-401")
+    second = kv.parse_trailer(al.review_verdict_trailer(root, "APPROVE", worker))
+    assert second is not None and second[1] == 1
+
+
 def test_the_review_owed_derivation_and_the_gate_share_one_definition(tmp_path):
     # WI-560 DW1, driven on the class it exists to kill. The loop's own
     # telemetry and log fragments moved HEAD past a verdict on WI-547 and this
@@ -457,6 +513,11 @@ def test_the_review_owed_derivation_and_the_gate_share_one_definition(tmp_path):
     )
     _commit(root, "WI-401: rework and close\n\nWI: WI-401", when=T_LATER + 100)
     assert al.review_owed_by_evidence(root, worker, reviews) is True
+    add_round(root, 4, session_phase="BUILD")
+    _git(root, "checkout", "-q", "wi-401")
+    assert al.review_owed_by_evidence(root, worker, reviews) is True
+    _git(root, "checkout", "-q", "main")
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is not None
     add_round(root, 5)
     _git(root, "checkout", "-q", "wi-401")
     assert al.review_owed_by_evidence(root, worker, reviews) is False

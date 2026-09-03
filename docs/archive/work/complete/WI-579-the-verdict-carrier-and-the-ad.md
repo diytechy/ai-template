@@ -65,6 +65,16 @@ between them drew two identical rounds on WI-547.
   successors now merges with NO verdict artifact present anywhere — the OI-76
   acceptance becomes measurable on the next unattended run.
 
+Review A rework closed both evidence-boundary gaps. The loop's resume reader now
+uses the same branch-scoped committed-path, logged-session and tree-bound entry
+pipeline as the merge gate, so an approval-shaped file produced by a BUILD
+session cannot suppress the round the gate requires. The trailer's `rounds=N`
+field is now defined and checked as the completed review cycles represented at
+the governing tree (a dual-review cycle counts once, and rework starts the
+tree-scoped count over); both the coordinator writer and gate derive that value
+from the shared evidence. LLR-207's rationale now carries only the standing
+technical reason, without the decision's provenance narrative.
+
 `LLR-140`'s Approved detail cell was re-pointed IN-LANE: it asserted the retired
 time comparison, which nothing detects once it is false. Ratchet bumps
 (`agent_common` 1272→1305, `agent_loop` 2519→2578, `integrate` 1298→1382,

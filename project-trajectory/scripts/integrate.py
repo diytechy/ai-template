@@ -1455,7 +1455,12 @@ def _verdict_gate(root, branch, outcomes):
             "cannot resolve {}'s reviewed tree against the trunk (git could not "
             "answer) - fail closed".format(branch)
         )
-    entries = _governing_entries(root, branch, base.strip(), want)
+    entries = (
+        kverdict.branch_entries(
+            root, branch, base.strip(), want, score_reviews.parse_verdict
+        )
+        or []
+    )
     if not entries:
         for wi in merged:
             refusal = _legacy_rollup_refusal(root, branch, wi, want)
@@ -1463,16 +1468,6 @@ def _verdict_gate(root, branch, outcomes):
                 return refusal
         return None
     return _round_refusal(root, branch, base.strip(), want, entries)
-
-
-def _governing_entries(root, branch, base, want):
-    """The `(phase, ordinal, verdict)` rounds on `branch` that judged the tree
-    `want` — the logged-session join and the identity filter, in that order."""
-    paths = kverdict.branch_paths(root, branch, base) or []
-    rounds = kverdict.logged_rounds(root, branch, paths)
-    return kverdict.round_entries(
-        root, branch, rounds, want, score_reviews.parse_verdict
-    )
 
 
 def _round_refusal(root, branch, base, want, entries):
@@ -1501,11 +1496,12 @@ def _round_refusal(root, branch, base, want, entries):
     # attestation, and a merge slot that saw it and merged anyway would be
     # trusting the summary over the evidence all over again.
     stamped = (kverdict.branch_trailers(root, branch, base) or {}).get(want)
-    if stamped is not None and stamped[0] != "APPROVE":
+    evidence_count = kverdict.round_count(entries)
+    if stamped is not None and stamped != ("APPROVE", evidence_count):
         return (
-            "{}: the Review-Verdict trailer for this tree says {} while the "
-            "round files say APPROVE - the attestation and the evidence "
-            "disagree".format(branch, stamped[0])
+            "{}: the Review-Verdict trailer for this tree says {} rounds={} "
+            "while the round files say APPROVE rounds={} - the attestation "
+            "and the evidence disagree".format(branch, *stamped, evidence_count)
         )
     return None
 

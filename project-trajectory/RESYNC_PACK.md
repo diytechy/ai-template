@@ -4437,7 +4437,9 @@ Two additions ride with it, both optional for you:
   `Bar-Green:` pattern applied to a verdict. It is ADDITIVE and costs you nothing
   until your loop writes one; the gate reads it as a cross-check (a trailer that
   names the tree under judgement and contradicts the rounds refuses) and never as
-  an accept path.
+  an accept path. `N` is the number of completed review cycles represented at
+  that governing tree (a dual REVIEW-A/REVIEW-B cycle still counts once); rework
+  changes the tree and starts that count over.
 - **`gen_verdict_rollup.py`**, which regenerates a human-readable per-review-scope
   rollup into `docs/reviews/rollup/<train>.md`. It is declared in
   `docs/stack.ini [generated]`, gated by `--check`, run by `trunk_step.py --regen`,

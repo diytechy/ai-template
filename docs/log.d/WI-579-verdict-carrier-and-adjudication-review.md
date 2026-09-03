@@ -155,3 +155,16 @@ test modules this row did not touch (`test_agent_loop.py`,
 step here, and they are not this row's to fix.
 
 Deferred open items: none — OI-76 is ruled and this row is its build.
+
+### Review A rework
+
+The three requested corrections were accepted. `review_owed_by_evidence` no
+longer scans whatever filenames happen to be on disk: it uses the same
+branch-owned committed paths, logged REVIEW-session join and tree-bound parsed
+entries as `_verdict_gate`, with a BUILD-session regression asserting both
+readers refuse the false approval. `rounds=<N>` now means completed review
+cycles represented at the governing tree — the maximum per-phase evidence
+count, so REVIEW-A plus REVIEW-B is one cycle and rework starts over — and the
+coordinator derives it from that evidence while the gate refuses a mismatched
+stamp. LLR-207's rationale was rewritten as a living technical reason with the
+historical provenance removed.

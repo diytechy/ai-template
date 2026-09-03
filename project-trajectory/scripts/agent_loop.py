@@ -2511,7 +2511,7 @@ def apply_rework_scope(worker, st, merged):
         worker["rework_wi"] = ""
 
 
-def review_verdict_trailer(root, merged, rounds):
+def review_verdict_trailer(root, merged, worker):
     """The round's `Review-Verdict:` line, or None when there is nothing to
     attest (no merged verdict, or git cannot name the tree).
 
@@ -2526,12 +2526,11 @@ def review_verdict_trailer(root, merged, rounds):
     commit attests nothing the round file did not already claim; what makes this
     one evidence is the same thing that makes the session log evidence — it is
     written by the process that ROUTED the round, after the round completed."""
-    if not merged:
+    if not worker:
         return None
-    tree = kverdict.tree_identity(root, "HEAD")
-    if tree is None:
-        return None
-    return kverdict.format_trailer(merged, rounds, tree)
+    return kverdict.format_branch_trailer(
+        root, "HEAD", worker["base"], merged, score_reviews.parse_verdict
+    )
 
 
 def complete_review_round(ctx, session):
@@ -2579,7 +2578,7 @@ def complete_review_round(ctx, session):
         session,
         "review scoreboard",
         [scoreboard],
-        trailer=review_verdict_trailer(ctx.root, merged, len(st.rounds)),
+        trailer=review_verdict_trailer(ctx.root, merged, ctx.worker),
     )
     print(
         "review round: merged={} margin={:.2f} tripwires={} heterogeneity={} "
@@ -3359,13 +3358,14 @@ def review_owed_by_evidence(root, worker, reviews_dir):
     want = kverdict.tree_identity(root, "HEAD")
     if want is None:
         return True
-    for path in sorted(Path(reviews_dir).glob("*-REVIEW-?-*.md")):
-        parsed = kverdict.round_file(
-            "docs/reviews/{}/{}".format(Path(reviews_dir).name, path.name)
-        )
-        if parsed and kverdict.tree_identity(root, parsed[3]) == want:
-            return False
-    return True
+    entries = kverdict.branch_entries(
+        root,
+        worker["train"],
+        worker["base"],
+        want,
+        score_reviews.parse_verdict,
+    )
+    return not entries
 
 
 def last_build_family(iter_dir, registry):

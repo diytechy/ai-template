@@ -92,6 +92,9 @@ __all__ = [
     "branch_paths",
     "logged_rounds",
     "round_entries",
+    "branch_entries",
+    "round_count",
+    "format_branch_trailer",
     "branch_trailers",
 ]
 
@@ -317,6 +320,43 @@ def round_entries(root, branch, rounds, want, parse):
             continue
         entries.append((phase, ordinal, parse(text).verdict))
     return entries
+
+
+def branch_entries(root, branch, base, want, parse):
+    """Tree-bound entries from logged rounds in `base..branch`, or None when
+    the branch's committed path set cannot be read."""
+    paths = branch_paths(root, branch, base)
+    if paths is None:
+        return None
+    return round_entries(root, branch, logged_rounds(root, branch, paths), want, parse)
+
+
+def round_count(entries):
+    """Completed review cycles represented by the entries for ONE tree.
+
+    A cycle contributes one entry per configured phase (REVIEW-A and, at
+    policy 2, REVIEW-B), so the cycle count is the largest per-phase count —
+    not the raw number of reviewer files. Callers first restrict `entries` to
+    one tree through `round_entries`; rework therefore starts this count over.
+    """
+    per_phase = {}
+    for phase, _ordinal, _verdict in entries:
+        per_phase[phase] = per_phase.get(phase, 0) + 1
+    return max(per_phase.values(), default=0)
+
+
+def format_branch_trailer(root, branch, base, word, parse):
+    """The tree-bound trailer derived from logged branch evidence, or None."""
+    if not word:
+        return None
+    tree = tree_identity(root, branch)
+    if tree is None:
+        return None
+    entries = branch_entries(root, branch, base, tree, parse)
+    if entries is None:
+        return None
+    count = round_count(entries)
+    return format_trailer(word, count, tree) if count else None
 
 
 def branch_trailers(root, branch, base):
