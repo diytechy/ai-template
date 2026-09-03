@@ -58065,3 +58065,373 @@ The supervisor stopped the loop, performed WI-575 by hand (correcting `LLR-158`'
 fig: smoke tier on trunk at `427e02eb`: 1463 passed / 4 skipped in 23.41 s; `check_smoke_budget.py --mode enforce` 24.6 s vs 60 s — `python -m pytest -q -n auto -m smoke && python scripts/check_smoke_budget.py --mode enforce`, 2026-09-02 17:0x UTC.
 
 Deferred open items: none — the dispatch failure is the owner's own next session, not a row this session may mint.
+
+## 2026-09-02 — the restructured terminal state and list-valued supersedes
+
+Steps 1 and 2 of §2.4 of
+[the backlog-restructure plan](plans/2026-09-02-backlog-restructure-and-consolidation.md),
+executed as two hand trunk commits rather than as a lane: they touch the very
+mechanisms the loop has not yet shown trustworthy (the verdict carrier, the
+close, the mint), and the vocabulary has to exist before the restructure that
+uses it. Nothing under `docs/work/` or `docs/archive/work/` was moved here —
+that is a later step, by someone else.
+
+### Step 1 — `restructured`, the fourth terminal word
+
+**Why a fourth word rather than one of the three.** A consolidation absorbs
+several queued rows into one successor. `cancelled` cannot carry that, and the
+reason is mechanical rather than aesthetic: `intake.context_block` joins every
+CANCELLED row on the same SRs into a "Cancelled precedent on the same SRs (do
+not re-propose the refuted)" section of every later worker brief — so an
+absorbed row filed as cancelled would brief its own successor against the very
+scope it was minted to carry. `partial` cannot carry it either: it means a lane
+stopped early, and it owes an immutable per-close report under
+`docs/handbacks/` plus a minted disposition, neither of which a consolidation
+produces. `restructured` says what happened — the scope text stays
+byte-identical, the `## Deliverable` is exactly one line
+`Restructured into WI-<successor>.`, and the row's inbound hard edges are
+re-pointed to the successor at the close. Terminal means terminal: nothing
+re-claims it and no lane closes into it.
+
+**Readers extended.** `kitlib.registry.SPEC_STATUS_DIRS` and
+`wi_convert.STATUS_DIRS` (the status↔directory bijection, both directions);
+`agent_common.TERMINAL_STATUSES` (a worker refuses the assignment);
+`check_trajectory.TERMINAL_STATUSES` (R-A owes the successor line, R-F clears
+the SpecRef, and the status is out of `OPEN_STATUSES` and
+`BACKLOG_STALE_STATUSES`, so the stale-backlog and shared-spec warnings treat
+it as closed) and `_DEAD_PRED_STATES`; `schedule._TERMINAL_DISPOSITION`
+(`restructured:absorbed`) and `_waiting_reasons`
+(`waiting:hard-pred-restructured:`); `bootstrap.py`'s directory manifest, so an
+adopter scaffolds the folder.
+
+**One reader the plan's list missed**, found by grep rather than by the read
+the plan rests on: `traj_render.STATUS_BUCKET` / `STATUS_GLYPH`. Every dashboard
+surface routes through `traj_views._wi_status`, which falls back to `queued` for
+a status the bucket table does not know — so without this the dashboard would
+have labelled an absorbed row *queued*, silently and in the one place a human
+looks. It now shares `cancelled`'s swatch (both mean "this row will not
+advance") and takes its own glyph, `⇥`, because what they mean differs.
+
+**Deliberately NOT extended, each with the reason written down beside the
+constant** — a negative that no check can enforce is worth stating where the
+next author will read it: `kitlib.station.CLAIMED_OUTCOMES` and
+`integrate.Outcome` (a lane that could close into it would be asserting that
+another row's scope had been absorbed, a judgement it is structurally not
+holding); `intake._closed_spec`'s directory sets and `SWEEP_OUTCOMES` (a
+restructure is not a close and mints no disposition); and `context_block`'s
+cancelled join, which is the whole reason the word exists. `next_wi_id` already
+rglobs both roots, so an absorbed row's id can never be re-issued — verified,
+not assumed. `spec_move.py` needed no change at all: it names no status and
+creates the destination's parent, which is what a declared-status-word
+vocabulary is supposed to cost.
+
+**Checked and found to say nothing:** `docs/registry-machinery-reference.md`
+scopes itself out of the work-item registry in its own §Scope, and
+`docs/enforcement-audit.md` has no sentence listing the terminal states. Neither
+needed an edit. `docs/work/README.md` and its shipped twin
+`project-trajectory/work/README.template.md` did, and so did the WI-000 exemplar
+in both copies; `project-trajectory/RESYNC_PACK.md` gains an entry (additive —
+an adopter gains a folder and nothing they hold changes meaning).
+
+### Step 2 — `supersedes` accepts a list
+
+A consolidation's successor continues SEVERAL rows, and `supersedes` was
+single-valued end to end. It now accepts EITHER a bare id string (unchanged in
+every respect — the same cell, the same bytes in the spec file) or a TOML list.
+`intake.supersedes_ids` is the one reader of both spellings; the registry cell
+is `;`-joined; `_apply_supersede` passes the whole set to
+`_replace_inbound_edges`, which re-points every dependent in ONE pass rather
+than one pass per absorbed id — a dependent that hard-needed two absorbed rows
+would otherwise be rewritten twice, with the second write reading its own first
+one. The successor enters a `needs` list at most once however many of its
+predecessors a dependent named.
+
+The tolerance is on the FRONTMATTER, not on the column: `Supersedes` stays a
+scalar cell (`kitlib.registry.LIST_TOLERANT_SCALARS` is the one-key exception
+both the loader and the converter read through), because widening the cell would
+have re-typed a column and every reader of it for a shape most rows never carry,
+and would have made `wi_convert` re-emit every existing one-id row as a
+one-element list — changing bytes for nothing.
+
+**Two refusals, and where each can live.** `_supersedes_refusal` has a shape arm
+(a token that is not a `WI-###` id matches no dependent's `needs`, so the
+re-point is a silent no-op and the lineage cell is a typo nobody reads) and a
+liveness arm (an id that is no live row — for a consolidation that means the
+verdict named a row that does not exist, leaving one of the rows it meant to
+absorb queued beside its own successor). `_draft_refusal` can only run the
+shape arm: it validates a hand-authored `## Dispositions` block before any
+registry is loaded. Liveness runs at `_mint_shape_refusal`, which is the rung
+that holds the pre-mint registry. One existing fixture
+(`test_the_oi_mint_refuses_on_a_non_toml_registry`) had a `supersedes` naming a
+row it never wrote; the new rung pre-empted the refusal that test is about, so
+the fixture now writes the row — the fixture was unrealistic, not the rung.
+
+`adjudicate-disposition.template.md`'s one sentence now says a string or a list
+is accepted. No other prose in that template changed.
+
+### Bar and ratchets
+
+Every ratchet movement is a reviewed bump, reason stamped in the baseline entry
+as well as here: `bootstrap.py` 1657 → 1658 (one manifest row),
+`check_trajectory.py` 2273 → 2275 (the `_TERMINAL_DELIVERABLE_REASON` table
+replacing a two-armed conditional, plus a line on the dead-edge message),
+`intake.py` 1249 → 1286 (the shared parse and the two-armed refusal), and the
+smoke membership ceiling 1467 → 1480 against a measured 1473. The seconds budget
+was not touched and was not close: 21 s against 60.
+
+Guards added: 13. Three in `test_wi_folder_loaders` (a restructured spec loads
+as itself from both roots and reads R-A clean; the empty-Deliverable mutation
+twin; a live hard edge onto an absorbed row is reported, with the re-pointed
+control), two in `test_schedule`, six in `test_intake` (the cancelled-precedent
+join drops the SAME row when it is re-filed as restructured; no disposition is
+minted and the id stays taken; three absorbed rows with two dependents each
+re-point exactly once, including the dependent that named two of them; the
+string form is byte-identical to a one-element list; both refusal arms; the
+frontmatter list reads back as the joined cell through both readers), one in
+`test_integrate_admission` (a trunk-side restructured row is inert for an
+unrelated lane's outcome read, and a lane that closes into the folder names
+nothing and the merge refuses), one in `test_spec_move` (queued → the archive
+folder through the real ritual, links following both ways).
+
+## 2026-09-02 — the backlog restructure: WI-579..583 minted, eight rows archived as restructured, the frontier re-sequenced, two adversarial rounds applied
+
+Executed out of band (owner direction, this date) per
+`docs/plans/2026-09-02-backlog-restructure-and-consolidation.md` §2.4 steps
+3–7, on top of the vocabulary commits `038a16a7` (the `restructured` terminal
+state) and `36395b54` (list-valued `supersedes`) recorded in
+`2026-09-02-restructured-vocabulary.md`.
+
+**Step 3 — the mint (`1c0fb2d6`).** Five drafts through `intake._mint`, the
+same path every mechanical mint takes: ids from the watermark (WI-579..583;
+mark bumped to `WI = 583` by `trace.bump_watermark` in the same commit),
+Context written with the registry joins, `supersedes` lists applied. The
+absorbed rows' Done-when blocks are quoted under their old ids in each
+successor's Context.
+
+**Step 4 — the moves (`c16182cb`).** WI-558, 559, 560, 561, 562, 564, 565,
+576 moved `queued/ -> docs/archive/work/restructured/` with `spec_move.py`
+(links redirected) and a one-line `## Deliverable` naming the successor(s)
+placed before `## Context`. No open row hard-depended on an absorbed id, so
+`_replace_inbound_edges` had nothing to re-point.
+
+**Step 5 — the kept rows.** `WI-551` `needs = ["WI-579", "WI-580"]`,
+`priority = 7`; `WI-541` `priority = 7`; `WI-545` `needs = ["WI-579",
+"WI-580", "WI-581", "WI-551", "WI-583"]`, `priority = 1`.
+
+**Full suite at `c16182cb`** (`python -m pytest -q -n auto`, real tail):
+
+```
+3300 passed, 20 skipped in 582.93s (0:09:42)
+```
+
+### Review round 1 — OpenAI Sol (codex, medium; 8 findings) and Opus (15 findings), one hostile brief; no BLOCKER
+
+**What the first execution got wrong, and the fix commit for each.**
+
+- *The specref remedy was backwards* (Opus MAJOR). The strict check errored
+  R-F on all eight rows, and step 4 cleared `specref` and amended the plan to
+  say so. The R-F `partial` carve-out's own reason — the successor's
+  `supersedes` lineage is worth nothing if the thread it continues has been
+  cut — applies to an absorbed row word for word. `8fa0f0f3` extends the
+  carve-out (`_SPECREF_MAY_STAY = ("partial", "restructured")`); this commit
+  restores the eight rows' original `specref`, so each archived row is again
+  byte-identical to its `891a5b24` text plus the one Deliverable line
+  (verified by `diff` against `git show 891a5b24:…` for all eight). Plan §1.5
+  corrected.
+- *Quote fidelity* (both reviewers). Two `[...]` elisions of WI-559's item 3,
+  WI-560's item 4 ("Tests drive all three") dropped from every successor, and
+  a "From WI-565 (verbatim)" block that was a rewrite. `3edb7e85` quotes all
+  of them in full with headings that say what they hold; the OI-77 ruling is
+  noted outside the quote.
+- *Deliverable grammar* (Sol MAJOR). Three multi-successor Deliverables
+  carried parentheticals and nothing checked the form. `3edb7e85` sets one
+  grammar (`Restructured into WI-a, WI-b.`); `8fa0f0f3` adds
+  `check_trajectory._restructured_lineage_findings` — the line must match
+  `^Restructured into WI-\d{3,}(, WI-\d{3,})*\.$` and every named successor's
+  `Supersedes` must name the row back (ERROR under `--strict`, R-A class).
+- *Many-to-many `supersedes`* (Sol MAJOR). One absorbed row split across
+  three successors re-pointed a dependent to the first successor only.
+  `8fa0f0f3`: a later successor over the same absorbed set is appended to any
+  open row already naming an earlier one, so a dependent accumulates the
+  union; and `supersedes_ids` now reads the `;`-joined cell `_draft_row`
+  writes (Opus MINOR).
+- *The frontier order* (both). Declaring `WI-582` `spine` put it at rank 0,
+  and a READY spine row stops all admission until it runs — so it would have
+  run before `WI-579`, the owner's first priority. `3edb7e85` gives `WI-582`
+  `needs = ["WI-579", "WI-580"]`; plan §2.3 and §2.4 step 6 corrected.
+- *Readers still missed* (both): `traj_panels`'s closed set (done/cancelled
+  only — `partial` was already missing), the dashboard legend (`⇥`, and the
+  pre-existing undocumented `◐`), `PROCESS_OPTIONS.md`'s five vocabulary
+  sentences, two docstrings in `kitlib/registry.py` and one MAPPING comment
+  in `bootstrap.py`, the `test_bootstrap` scaffold folder list, and
+  `test_integrate_admission` reaching none of the changed code — all in
+  `8fa0f0f3`. `RESYNC_PACK.md` gains the missing `36395b54` entry (the two new
+  mint refusals an adopter can hit).
+- *Log honesty* (both). The first fragment said the shared-spec warnings
+  "fell from eight pairs to two"; the rule strips `#anchors`, so the base was
+  **11** pairs (559/560/561/562 → 6, 564/565, 576/577, 556/557/558 → 3) and
+  the result is **4** (556/557, 556/579, 557/579, 580/581), each a group that
+  IS one ruling by design. The scheduler excerpt had columns trimmed; the
+  unabridged output is below. `docs/stack.ini`'s smoke stamp claimed a
+  measurement at clean `891a5b24` that was taken dirty — `0c245f2b`
+  re-measures at `8fa0f0f3` (1476 collected, ceiling 1480).
+- *Not applied*: Sol's MINOR that amending the plan after execution is out of
+  scope. The plan is the plan of record and carries its corrections dated and
+  inline (plan §5); silently leaving it asserting an order the machinery does
+  not produce is the worse record.
+
+**Ratchets in `8fa0f0f3`** (reasons stamped in the baseline entries):
+`check_trajectory.py` 2275 → 2310 (the lineage findings arm and the
+carve-out, after compacting message templates), `intake.py` 1286 → 1305 (the
+two extractions `_open_specs` / `_repointed_needs` that keep
+`_replace_inbound_edges` under C901).
+
+### Verification at this commit, real output
+
+`.venv/bin/python project-trajectory/scripts/schedule.py ready --explain`,
+open rows only, unabridged:
+
+```
+WI-582     waiting   exclusive    rank=0 P4   down=0   path=0   waiting:hard-preds-not-done:WI-579,WI-580
+WI-578     ready     exclusive    rank=1 P0   down=0   path=0   exclusive:adjudication;ready
+WI-579     ready     parallel     rank=6 P9   down=5   path=2   parallel:ordinary;ready
+WI-580     ready     parallel     rank=6 P8   down=4   path=2   parallel:ordinary;ready
+WI-551     waiting   parallel     rank=6 P7   down=2   path=1   waiting:hard-preds-not-done:WI-579,WI-580
+WI-541     waiting   parallel     rank=6 P7   down=0   path=0   waiting:hard-preds-not-done:WI-551
+WI-581     ready     parallel     rank=6 P6   down=1   path=1   parallel:ordinary;ready
+WI-570     ready     parallel     rank=6 P5   down=2   path=2   parallel:ordinary;ready
+WI-583     waiting   parallel     rank=6 P5   down=1   path=1   waiting:hard-preds-not-done:WI-579,WI-570
+WI-577     waiting   parallel     rank=6 P4   down=0   path=0   waiting:open-item-pending:OI-82
+WI-557     ready     parallel     rank=6 P3   down=0   path=0   parallel:ordinary;ready
+WI-536     ready     parallel     rank=6 P2   down=0   path=0   parallel:ordinary;ready
+WI-539     ready     parallel     rank=6 P2   down=0   path=0   parallel:ordinary;ready
+WI-556     ready     parallel     rank=6 P2   down=0   path=0   parallel:ordinary;ready
+WI-545     waiting   parallel     rank=6 P1   down=0   path=0   waiting:hard-preds-not-done:WI-579,WI-580,WI-581,WI-551,WI-583
+```
+
+`WI-578` is the first READY row; `WI-545` is no longer ready (the §2.1
+contradiction); `WI-582` classifies `spine` and waits on 579+580.
+
+`check_trajectory.py --strict`: ONE error, pre-existing and now owned by
+`WI-582` — `cross-component import scripts/schedule (CMP-008) -> scripts/trace
+(CMP-006) has no declared IF-### seam`. Shared-spec pairs: the four named
+above. `trace.py --strict-integrity`: integrity=0, orphans=2 (unchanged).
+`docs/status.md` regenerated; zero absorbed ids remain in it.
+
+**Full suite at the round-1 fix tip `503b2b53`** (real tail):
+
+```
+FAILED tests/test_gen_trajectory.py::test_cancelled_wi_renders_its_own_bucket
+1 failed, 3304 passed, 20 skipped in 615.53s (0:10:15)
+```
+
+The one red is round 1's own regression: the dashboard legend rewrite dropped
+the phrase `cancelled — won't build` that WI-267's test pins. Fixed in round 2.
+
+### Review round 2 — Sol (6 findings) and Opus (8 findings) over `891a5b24..503b2b53`; no BLOCKER; fix commit `dc3c9e68`
+
+Both reviewers first re-verified every round-1 fix — the R-F carve-out
+matrix, the eight rows' byte identity, all eleven verbatim blocks, the
+frontier, the 11 → 4 pair count re-derived from a clean worktree at
+`891a5b24`, the ratchet stamps, the byte budgets — and reported them
+reproduced. Then, what the fixes had opened:
+
+- *A successor re-pointed to itself* (both, MAJOR). Round 1's
+  `_replace_inbound_edges` excluded the minted successor from its sibling set
+  and ran the direct-replacement arm before any exclusion, so a successor
+  whose own `needs` named the absorbed row ended up waiting on itself — a
+  strand no validator reports. Reachable by WI-583's QUEUE-WITH-EDGE arm.
+- *The accumulate arm guessed* (both). It appended a later successor to any
+  open row that named an earlier one, which cannot tell a rewritten dependent
+  from a row naming that successor on purpose, and printed a re-point message
+  for an edge that never existed. `dc3c9e68` replaces the heuristic with what
+  Sol named: the mint knows every draft, so `_apply_supersedes` runs ONCE
+  after all drafts are on disk, inverts absorbed → successor set, and each
+  dependent's absorbed tokens are replaced by the whole set in one write. A
+  row is a non-dependent by its own `supersedes` cell, never by the shape of
+  its `needs`. Tests: three successors + one dependent (union, message names
+  all three); a successor naming the absorbed row is untouched; an unrelated
+  row naming successor 1 gains nothing; overlapping sets dedupe.
+- *Lineage cycles passed* (Sol MAJOR, Opus MINOR): a restructured row naming
+  itself, a duplicated successor, a successor that is itself restructured.
+  `_restructured_successor_refusal` now asks five ordered questions (self,
+  duplicate, exists, not itself restructured, mutual); the mint refuses a
+  draft superseding an already-restructured row at the authoring boundary.
+- *Four rows moved off the armed complexity ratchet unstamped* (Opus MAJOR):
+  `schedule._waiting_reasons`, `intake._mint`, `intake._replace_inbound_edges`
+  (twice, once DOWN — the re-stamp round 1 owed), `check_trajectory.load_wis`.
+  Three repaired by extraction, the fourth re-stamped down;
+  `check_complexity --mode enforce` exits 0 ("200 row(s) over 15, unchanged
+  from baseline").
+- *Authoring grammar* (both, MINOR): a hand-authored `supersedes =
+  "WI-558;WI-559"` was accepted because the registry-cell reader was reused;
+  a string is now exactly one id, several is a TOML list, and the `;` split
+  reads the cell only. The `supersedes_ids` docstring argued for one
+  separator class while the regex had two; now one.
+- *The legend regression* above; `docs/enforcement-audit.md` rows for the new
+  R-A error class and the R-F carve-out; PROCESS_OPTIONS "(surrounding
+  whitespace ignored)" (+111 bytes, watched).
+- *Records* (Opus MINOR): plan §2.4 step 6's replaced criterion is restated
+  AS a replacement with the reason; plan §5 records the rule round 2 stated —
+  amend a description freely and inline, move an acceptance criterion only
+  with the reason in the criterion. Both reviewers judged round 1's declined
+  finding (plan amendments) correctly declined.
+
+Ratchets in `dc3c9e68` (reasons in the baseline entries):
+`check_trajectory.py` 2310 → 2327, `intake.py` 1305 → 1343; smoke
+collection 1477 against the 1480 ceiling.
+
+**Full suite at `dc3c9e68` + this record** (real tail):
+
+```
+3309 passed, 20 skipped in 611.56s (0:10:11)
+```
+
+### Review round 3 — final verification, Sol (2 findings) and Opus (6) over `dc3c9e68`+`4b4afd64`; no BLOCKER; fix commit follows
+
+Both reviewers reproduced every round-2 fix: no self-edge, no unrelated
+rewrite, the union on overlapping sets, the five lineage refusals including a
+three-row cycle, the strict authoring grammar, complexity exit 0, the ratchet
+stamps (2327 / 1343 / 1477), the byte budgets, the legend-only dashboard diff,
+and the collect count (3329) consistent with `3309 passed, 20 skipped`.
+
+- *The non-dependent skip was per ROW over the whole absorbed group* (Opus
+  MAJOR — the one real defect left). A successor that hard-named the row it
+  absorbs KEPT that edge (the test even asserted it), so it would wait on a
+  row this same close archives; and a row that absorbed a DIFFERENT row of the
+  group was exempted from re-pointing tokens it never absorbed. Now decided per
+  token: a token the row absorbs (or any token, for a row that is itself a
+  successor) is DROPPED; every other absorbed token is replaced by the
+  successor set. Tests: the successor's own absorbed token drops while its
+  declared sibling edge stays; the half-sibling is re-pointed for the row it
+  did not absorb.
+- *The re-point message named the whole group* (Sol MINOR, Opus MINOR): it now
+  names only the edges the row held, and a separate line announces drops.
+- *A joined string inside a list bypassed the authoring grammar* (Opus MINOR):
+  every authored string must be one id, inside a list too.
+- *`_apply_supersede` was dead* (Opus MINOR): deleted.
+- *Records* (Opus MINOR ×2): plan §1.5's bullet described the round-1 loop;
+  it now describes the set-based, per-token rule. PROCESS_OPTIONS said a
+  successor must be a "live" row and RESYNC that a reader "always lands on"
+  the live thread, while the audit row disclaimed exactly that liveness; both
+  now say "a distinct registry row, not itself restructured".
+- *Declined with evidence* (Sol MAJOR): "`docs/complexity-baseline` raised
+  `load_wis` SLOC 34 → 35 without a reason". The ratchet compares the
+  COGNITIVE column only (`check_complexity.compare`); `load_wis` was
+  (17, 35) at `503b2b53` and (16, 35) at `dc3c9e68` — the repair round 2
+  claimed is real and the SLOC column was a re-measure of an informational
+  value already at 35. The row now carries a reason saying so, so the next
+  reader does not trip on it.
+
+Ratchets: `intake.py` 1343 → 1357 (reason in the baseline entry; two
+extractions — `_token_targets`, `_announce_repoint` — keep `_repointed_needs`
+and `_apply_supersedes` under the cognitive ratchet, which exits 0). Byte
+budgets: PROCESS_OPTIONS +4 (187,166, watched), the guard skill's three copies
+re-stamped in sync.
+
+**Full suite at this commit** (real tail):
+
+```
+3312 passed, 20 skipped in 617.72s (0:10:17)
+```
+
