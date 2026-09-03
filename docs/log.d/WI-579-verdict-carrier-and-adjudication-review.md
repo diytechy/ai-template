@@ -1070,3 +1070,32 @@ Three reviewed bumps, each with its reason at the entry:
 candidates before one is chosen, where both previously returned on the first file
 they reached). `kitlib/verdict.py` and `gen_verdict_rollup.py` are both under
 THRESHOLD and open no entry.
+
+### The round-030 fixes, re-driven rather than read
+
+A session that inherits a rework record inherits a CLAIM, and the claim "each
+was re-driven against the pre-fix module and reproduces there" is exactly the
+kind that costs nothing to write. It was re-driven here, on a detached worktree
+at `6773a86a` — the reopen commit, before any of the four fixes — carrying only
+the new tests copied in over the pre-fix modules:
+
+- Finding 1: `test_one_session_cannot_serve_a_phase_its_log_does_not_declare`
+  fails with `assert {'REVIEW-A', 'REVIEW-B'} == {'REVIEW-A'}`. One session log
+  really did admit both phases.
+- Finding 2 (the compounding half):
+  `test_the_scheduler_and_the_gate_read_one_spec_copy` fails with
+  `assert ['ordinary'] == ['spine']` — the two homes, answering differently.
+- Finding 4: `test_the_rollup_is_generated_and_its_check_has_two_answers` fails
+  at the flat-layout arm with `assert 0 == 1` — `--check` reporting GREEN over a
+  round file it never rendered.
+- Finding 2's primary half PASSES pre-fix, and must: it was a COVERAGE gap over
+  behaviour that was already right, not a defect. Its value is that
+  `build_bookkeeping`'s `ADJUDICATE` arm can no longer change silently.
+
+The `docs/stage` claim was re-derived at this tip rather than carried forward
+from round 025: running `derive_stage.py` on a worktree at `d60af4be` moves
+`drafted` 9 -> 13 and the fingerprint that counts them, and NOTHING else —
+`stage`, `stage-ord`, `settled-stage`, `live-stage`, `phase`, `per-phase`,
+`per-phase-live` and `floored` are byte-identical. The artifact's governing
+content does not move; only its census does, and `docs/stage` is a declared
+`[generated]` file the trunk lane writes after the merge.
