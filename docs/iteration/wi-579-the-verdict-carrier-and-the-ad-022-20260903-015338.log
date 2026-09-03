@@ -1,0 +1,40 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 022
+# date: 2026-09-03 01:57
+# train: wi-579-the-verdict-carrier-and-the-ad
+# base: 0ecc62bbc55a
+# phase: REVIEW-A
+# wi: WI-579
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 7c4ca529..3a24845a
+# tokens:
+# cost-usd:
+# wall-secs: 244
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4558
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:ddc4d339c6db
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Review recorded and committed: `3a24845a`.
+
+Verdict: **CHANGES-REQUESTED** — 2 findings.
+
+- Major: `review_rounds = 2` accepts a single logged approval.
+- Minor clarity: LLR-207 says decoded entries while implementation correctly preserves raw bytes.
+
+Review: [022-REVIEW-A-6684422.md](/Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad/docs/reviews/wi-579-the-verdict-carrier-and-the-ad/022-REVIEW-A-6684422.md)
