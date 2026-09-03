@@ -87,6 +87,22 @@ def _rewrite(root, rel, old, new):
     path.write_bytes(data.replace(old.encode("utf-8"), new.encode("utf-8"), 1))
 
 
+def _append_new_approved_sr(root, sid):
+    """Add a row to the LIVE SR registry that arrives already `Approved` — the
+    shape that authorises a copy of its registry without any `Status` MOVE,
+    because there is no snapshot copy of it to move from."""
+    path = root / SR_REL
+    row = (
+        '\n[requirement.{}]\ntitle = "A row that arrives already approved"\n'
+        'requirement = "The fixture shall carry a row with no snapshot copy."\n'
+        'rationale = "The new-row arm of the authority question, driven."\n'
+        'acceptance_criteria = "The row is present and claims approval."\n'
+        'priority = "S"\nverification = "Test"\nstatus = "Approved"\nphase = 1\n'
+    ).format(sid)
+    with path.open("ab") as fh:
+        fh.write(row.encode("utf-8"))
+
+
 def _first_row_at(root, status, exclude=()):
     """`(id, row)` of the first SR carrying `status`, from the LIVE tree."""
     spine_carrier = load_script("spine_carrier")
@@ -310,6 +326,7 @@ def test_a_DRAFTED_rows_amendment_is_not_absorption(tmp_path):
 
 IF_REL = "docs/requirements/interfaces.toml"
 LLR_REL = "docs/requirements/low-level-requirements.toml"
+TC_REL = "docs/test/test-cases.toml"
 # A non-`status` cell of the first shipped interface row — off-spine drift that
 # authorises nothing, so a spine-only act must leave its snapshot copy alone.
 _IF_DRIFT_FROM = "printed whole for the harness"
@@ -408,16 +425,143 @@ def test_a_named_ref_copies_EXACTLY_its_registry(tmp_path):
 def test_a_named_ref_mutes_ONLY_the_registry_it_names(tmp_path):
     """The secondary widening the plan names: a bare `--approves` used to short-
     circuit the whole gate (`if approves: return ""`), so one ref for one
-    registry silenced all seven. Now naming the WRONG registry leaves the amended
-    one gated, and naming the right one clears exactly it."""
+    registry silenced all seven. The property that replaced it is about the
+    COPY, not the message: a ref for the wrong registry cannot move the amended
+    one's bytes. WI-584 removed the second half of the old assertion — a refusal
+    NAMING the SR — because the copy it warned about is unreachable: an act
+    scoped to the LLR does not write the SR, so the drift stands untouched, and
+    the refusal was a block on an absorption that could not happen."""
     root = _seeded(tmp_path)
     sid, row = _first_row_at(root, "approved")
+    before_sr = (SNAP.snapshot_root(root) / SR_REL).read_bytes()
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")  # SR absorbs
-    # A ref for a DIFFERENT registry does not mute the SR's gate...
-    refusal = SNAP.refresh_refusal(root, {LLR_REL: "ref"})
-    assert "REFUSED" in refusal and sid in refusal, refusal
-    # ...the ref for the SR itself does, and no other.
+    # A ref for a DIFFERENT registry does not carry the SR's amendment...
+    written = SNAP.copy_live(root, approves={LLR_REL: "ref"})
+    assert not any("system-requirements" in w for w in written), written
+    assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == before_sr
+    assert sid in SNAP.refresh_ledger(root)[SR_REL]["absorbed"]  # drift SURVIVES
+    # ...and the ref for the SR itself is what moves it, and nothing else.
     assert SNAP.refresh_refusal(root, {SR_REL: "ref"}) == ""
+
+
+# --- the gate is scoped to the act, like the writer (WI-584) -------------------
+# WI-571 scoped `copy_live` and left `refresh_refusal` global, so the gate judged
+# registries the refresh would never write. The measured cost was that a
+# per-registry approval could not complete its own act: the refusal listed only
+# registries the caller had not ruled on, under a header saying nothing
+# authorised it. The gate now judges the act's WRITE SET — with one arm kept
+# unscoped, because an act that copies nothing must not exit 0 in silence.
+
+
+def test_a_SCOPED_single_registry_approval_COMPLETES_over_unrelated_drift(tmp_path):
+    """THE ACCEPTANCE WI-584 NAMES, driven end to end: a scoped, authorised,
+    single-registry approval completes while approved text stands drifted in a
+    registry the act does not touch. Before the ruling this exact call was
+    REFUSED, and every row in the refusal was one the caller had not judged."""
+    root = _seeded(tmp_path)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(
+        root, SR_REL, row["Title"], row["Title"] + " (drift the act does not rule)"
+    )
+    _rewrite(root, LLR_REL, 'detail = "', 'detail = "Amended at the sitting. ')
+    before_sr = (SNAP.snapshot_root(root) / SR_REL).read_bytes()
+
+    assert SNAP.refresh_refusal(root, {LLR_REL: "the sitting"}) == ""
+    written = SNAP.copy_live(root, approves={LLR_REL: "the sitting"})
+
+    # the ruled registry is anchored...
+    assert any("low-level-requirements" in w for w in written), written
+    assert (SNAP.snapshot_root(root) / LLR_REL).read_bytes() == (
+        root / LLR_REL
+    ).read_bytes()
+    # ...and the unruled one keeps BOTH its stale bytes and its visible drift,
+    # which is what makes refusing on its behalf pointless.
+    assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == before_sr
+    assert sid in SNAP.refresh_ledger(root)[SR_REL]["absorbed"]
+
+
+def test_an_unrelated_drift_cannot_block_a_FLIP_authorised_act_either(tmp_path):
+    """The same defect on the commoner path, which is why the ruling had to be
+    the general one: no `--approves` at all, just an amend-plus-flip in one
+    registry while another carries drift. The global gate refused this too."""
+    root = _seeded_with_a_drafted_sr(tmp_path)
+    draft_id, _draft = _first_row_at(root, "drafted")
+    _lid, llr_row = _first_row_at(root, "approved", {draft_id})
+    _rewrite(
+        root, IF_REL, _IF_DRIFT_FROM, _IF_DRIFT_TO
+    )  # off-spine, authorises nothing
+    _rewrite(root, TC_REL, 'method = """', 'method = """Amended, unruled. ')  # drift
+    _rewrite(root, SR_REL, llr_row["Title"], llr_row["Title"] + " (amended)")
+    _rewrite(root, SR_REL, 'status = "Drafted"', 'status = "Approved"')  # the flip
+
+    assert SNAP.refresh_refusal(root) == ""
+    written = SNAP.copy_live(root)
+    assert [w for w in written if "system-requirements" in w] and not [
+        w for w in written if "test-cases" in w or "interfaces" in w
+    ], written
+
+
+def test_an_act_that_would_copy_NOTHING_is_REFUSED_rather_than_silent(tmp_path):
+    """THE ARM THAT SURVIVES THE SCOPING. Scoping the gate to the write set
+    would make the laundering scenario a silent no-op — nothing is authorised,
+    so nothing is written, so nothing is judged, exit 0. The drift survives
+    either way (the writer has been scoped since WI-571), but exit 0 is the
+    wrong answer to "you have rewritten blessed text", so an act with an EMPTY
+    write set is judged over the whole ledger, as it always was."""
+    root = _seeded(tmp_path)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (quietly rewritten)")
+    refusal = SNAP.refresh_refusal(root)
+    assert "REFUSED" in refusal and sid in refusal, refusal
+    assert "would copy NOTHING" in refusal, refusal
+
+
+def test_a_registry_WRITTEN_for_another_reason_still_gates_its_amendments(tmp_path):
+    """The residual case the scoped gate must keep catching, and the reason it
+    is not vacuous. A brand-new row arriving already `Approved` puts its registry
+    in the write set — it must, or the row strands as `unanchored_findings` — so
+    the copy WOULD land, carrying an unrelated approved amendment with it. That
+    amendment moved no `Status` and is named by nothing, so it is refused."""
+    root = _seeded(tmp_path)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended, unruled)")
+    before_sr = (SNAP.snapshot_root(root) / SR_REL).read_bytes()
+    _append_new_approved_sr(root, "SR-999")
+
+    # the new row DOES put its registry in the act's write set...
+    assert SR_REL in SNAP._authorised_registries(root, None, SNAP.load_all(root))
+    # ...and that is exactly why the amendment riding along is refused.
+    refusal = SNAP.refresh_refusal(root)
+    assert "REFUSED" in refusal and sid in refusal, refusal
+    assert "DOES authorise" in refusal and "system-requirements.toml" in refusal
+    try:
+        SNAP.copy_live(root)
+    except SystemExit as exc:
+        assert "REFUSED" in str(exc)
+    else:
+        raise AssertionError("an unruled amendment rode a new row's anchor in")
+    assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == before_sr
+
+
+def test_a_RESEED_over_a_standing_record_is_judged_over_the_WHOLE_tree(tmp_path):
+    """`--seed` against a standing record writes all seven registries, so its
+    write set IS the whole tree and the scoped gate is the global one. Scoping
+    must not turn the re-seed into the laundering path the gate closed."""
+    root = _seeded(tmp_path)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
+    _rewrite(root, LLR_REL, 'status = "Drafted"', 'status = "Approved"')  # a real flip
+    # The flip alone would scope a refresh to the LLR and clear the SR's gate...
+    assert SNAP.refresh_refusal(root) == ""
+    # ...but a re-seed would rewrite the SR too, so it is judged and refused.
+    refusal = SNAP.refresh_refusal(root, seed=True)
+    assert "REFUSED" in refusal and sid in refusal, refusal
+    try:
+        SNAP.copy_live(root, seed=True)
+    except SystemExit as exc:
+        assert "REFUSED" in str(exc)
+    else:
+        raise AssertionError("a re-seed absorbed an unauthorised amendment")
 
 
 def test_the_SEED_still_copies_the_WHOLE_tree(tmp_path):
