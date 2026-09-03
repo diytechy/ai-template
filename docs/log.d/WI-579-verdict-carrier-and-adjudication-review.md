@@ -845,17 +845,50 @@ own regression, which that commit added to the suite but never listed).
 holds, because the resume completes the same round rather than starting a
 second one.
 
-### Review A round 025 rework — reopen the close and put registry content in its owning cells
+### Review A round 025 rework — the asserted green, driven; two cells put in their owning homes
 
-The terminal record was reopened because directory status makes every Done-when
-an assertion, while the only recorded unfiltered runs had one stale-stage
-failure. The required green will be driven on a temporary copy with
-`docs/stage` regenerated there; the branch still does not edit the trunk-owned
-generated artifact.
+Round 025 returned CHANGES-REQUESTED on three findings; all three are closed
+here, and the first one was right in a way worth stating plainly. A spec sitting
+in `docs/archive/work/complete/` ASSERTS its Done-when list, and Done-when 5
+says "Full suite green". No run on this branch had ever produced that: every
+recorded unfiltered run carried one failure. Closing on it was the signed-claim
+failure mode the process exists to catch, and the remedy is a measurement rather
+than a rewording — the acceptance criterion was not touched.
 
-LLR-207's Detail and Rationale now state only standing system behavior. The
-review-round chronology and defect narrative remain in this log and the WI
-record, where history belongs. IF-175's Data is a typed seam signature within
-the registry ceiling; its Notes retain the contract explanation.
+**Done-when 5, driven.** Full unfiltered suite at `4332a073`, in a scratch
+worktree whose trunk-owned `docs/stage` was regenerated in place:
+**3349 passed, 25 skipped, 0 failed in 598.87 s**.
+<!-- fig: cmd="python -m pytest -q -n auto" rev=4332a073 -->
 
-Deferred open items: none — the review findings determine the corrections.
+That is the whole red. The single node the branch tree still fails,
+`test_derive_stage.py::test_this_repo_s_committed_stage_is_current`, was driven
+both ways rather than argued: it FAILS on the committed tree and PASSES on the
+regenerated one, run alone at the same commit. The delta is `drafted = 9` to
+`drafted = 13` — this branch's four Drafted spine rows — plus the input
+fingerprint that counts them. Every derived stage field is byte-identical across
+the two trees: `stage`, `stage-ord`, `settled-stage`, `live-stage`, `phase`,
+`per-phase`, `per-phase-live`, `floored`. So the artifact's governing content
+does not move; only its bookkeeping census does.
+
+The provenance, stated in the wording the earlier rounds owed: this red is
+**CAUSED by this branch, benign because `docs/stage` is a declared `[generated]`
+artifact the trunk lane writes after the merge** (concurrency-restructure §5.2),
+which is exactly why a work branch must not commit it, why `git diff
+0ecc62b..HEAD -- docs/stage` is empty, and why `check.py`'s `derived-stage` step
+reports `SKIP work branch ...` here by design. Regenerating it is the merge's
+own next step, and the suite above is that state driven ahead of time.
+
+**LLR-207** carried review-round chronology ("round 022") and defect narrative
+in a living spine Detail cell, which PROCESS.md §3 forbids for normative and
+reason cells. Detail and Rationale now state standing system behavior only, and
+scan clean for `WI-`, `OI-`, `D-<n>`, `round <n>` and date tokens. The account
+they held is not lost — it is in this fragment and the WI record, which is where
+history belongs.
+
+**IF-175's** `Data` was 1034 characters against the registry's declared
+160-character ceiling. It is now a 145-character typed seam signature; the
+contract explanation it had absorbed was already carried by the row's `Notes`,
+so nothing was dropped to fit. `trace.py --strict-integrity` reports
+`interface-findings=0`.
+
+Deferred open items: none — the round-025 findings were the whole scope.
