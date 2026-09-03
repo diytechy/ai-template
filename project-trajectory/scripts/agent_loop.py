@@ -2522,12 +2522,17 @@ def review_verdict_trailer(root, merged, worker):
     """The round's `Review-Verdict:` line, or None when there is nothing to
     attest (no merged verdict, or git cannot name the tree).
 
-    THE TREE IS READ AT HEAD, AFTER THE REVIEWER COMMITTED, and that is correct
-    rather than convenient: `tree_identity` drops `docs/reviews/`, so the round
-    file the reviewer just added does not move the identity — HEAD's non-record
-    tree IS the tree the reviewer read. Reading the reviewed sha instead would
-    give the same answer through a longer route, and would break the moment a
-    reviewer committed anything else.
+    THE TREE IS THE ONE THE TWO READERS KEY ON — `governing_identity` at the
+    lane's BRANCH, the same call `review_owed_by_evidence` and
+    `integrate._verdict_gate` make. It was `tree_identity(root, "HEAD")`, which
+    is right only while no station refresh sits below the tip: the fold drops
+    `docs/reviews/`, so the round file the reviewer just added does not move the
+    identity, but the refresh does, and the peel is what the readers apply to
+    it. Stamping the unpeeled value filed the attestation under a key
+    `integrate._round_refusal` never looks up, so the cross-check silently stood
+    down on exactly the branches that had been refreshed (REVIEW-A round 015).
+    The fail-direction was safe — a trailer is never an accept path — but a
+    third place choosing its own rev is the finding IF-175's contract names.
 
     WHY THE COORDINATOR WRITES IT. A trailer a reviewer could stamp on its own
     commit attests nothing the round file did not already claim; what makes this
@@ -2536,7 +2541,7 @@ def review_verdict_trailer(root, merged, worker):
     if not worker:
         return None
     return kverdict.format_branch_trailer(
-        root, "HEAD", worker["base"], merged, score_reviews.parse_verdict
+        root, worker["train"], worker["base"], merged, score_reviews.parse_verdict
     )
 
 

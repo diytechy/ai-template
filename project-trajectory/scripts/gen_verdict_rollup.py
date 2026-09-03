@@ -11,6 +11,12 @@ review history in one file — under the kit's own rule for that shape:
 **generated, not hand-maintained**. Declared in `docs/stack.ini [generated]`,
 freshness-gated by `--check`, never read by the gate.
 
+IT OWNS `docs/reviews/rollup/` ENTIRELY — it writes the file for every live
+review scope and REMOVES any other `*.md` there in the same pass. A generator
+that only writes can report a state its own remedy cannot clear, which is what
+"generated, not hand-maintained" has to mean for a whole directory rather than
+for one file at a time.
+
 ONE FILE PER TRAIN, NOT PER WI, and that is the review scope rather than a
 convenience. A traincar is ONE review scope (LLR-140): a worker schedules its
 round only once every assigned WI is built, and the round covers the combined
@@ -113,6 +119,22 @@ def targets(root):
     ]
 
 
+def _extra(root, wanted):
+    """Rollups in the tree that no live review scope claims, sorted.
+
+    A retired review scope that keeps its rollup is the same lie as an
+    out-of-date one, so `--check` reports these — and the WRITE path removes
+    them, which is the half that was missing. Reporting a file the regenerator
+    would never touch made the remedy the failure message names unable to clear
+    the failure: `--check` said STALE, `gen_verdict_rollup.py` printed
+    `wrote 0 rollup(s)`, and `--check` said STALE again, forever, on a step that
+    sits on the pre-commit floor and in `trunk_step`'s freshness set (REVIEW-A
+    round 015, driven). Owning the directory makes "extra" cease to be a
+    representable state rather than a reported one."""
+    known = {p for p, _t in wanted}
+    return [p for p in sorted((root / ROLLUP_DIR).glob("*.md")) if p not in known]
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -126,8 +148,8 @@ def main(argv=None):
     wanted = targets(root)
     if args.check:
         # Compared on NORMALIZED line endings: a CRLF checkout is not a stale
-        # rollup. An EXTRA file in the tree is stale too — a retired review
-        # scope that keeps its rollup is the same lie as an out-of-date one.
+        # rollup. An EXTRA file is stale too, and the write path prunes it —
+        # see `_extra` for why both halves have to exist.
         stale = [
             p
             for p, text in wanted
@@ -135,11 +157,7 @@ def main(argv=None):
             or p.read_text(encoding="utf-8", errors="replace").replace("\r\n", "\n")
             != text
         ]
-        home = root / ROLLUP_DIR
-        known = {p for p, _t in wanted}
-        stale += [
-            p for p in sorted(home.glob("*.md")) if p not in known and p not in stale
-        ]
+        stale += [p for p in _extra(root, wanted) if p not in stale]
         if not stale:
             print("gen_verdict_rollup: fresh ({} review scope(s)).".format(len(wanted)))
             return 0
@@ -155,9 +173,14 @@ def main(argv=None):
     for path, text in wanted:
         with path.open("w", encoding="utf-8", newline="\n") as fh:
             fh.write(text)
+    pruned = _extra(root, wanted)
+    for path in pruned:
+        path.unlink()
     print(
-        "gen_verdict_rollup: wrote {} rollup(s) under {}.".format(
-            len(wanted), ROLLUP_DIR
+        "gen_verdict_rollup: wrote {} rollup(s) under {}{}.".format(
+            len(wanted),
+            ROLLUP_DIR,
+            ", pruned {}".format(len(pruned)) if pruned else "",
         )
     )
     return 0

@@ -2539,8 +2539,18 @@ def commit_telemetry(root, session, label, paths, trailer=None):
     msg = "telemetry: session {} {}".format(session, label)
     if trailer:
         msg += "\n\n" + trailer
-    argv = ["commit", "-q", "-m", msg]
-    argv += ["--", *rels] if dirty else ["--allow-empty"]
+    # THE PATH SCOPE SURVIVES BOTH ARMS. `--allow-empty` used to REPLACE the
+    # pathspec, and a `git commit` with no pathspec reads THE INDEX — so a
+    # single unrelated staged file (this function's own `pre_staged` restore
+    # proves a non-empty index here is a state the authors already expect)
+    # landed inside a commit labelled `telemetry:`, carrying a `Review-Verdict:`
+    # attestation on a commit that changed the work tree (REVIEW-A round 015,
+    # driven). The two flags compose: `commit --allow-empty -- <rels>` commits
+    # exactly those paths and permits the result to be empty, so the index is
+    # never a source this path can read, rather than a source it is guarded
+    # against.
+    argv = ["commit", "-q", "-m", msg] + ([] if dirty else ["--allow-empty"])
+    argv += ["--", *rels] if rels else []
     code, out = git(root, *argv)
     if code != 0:
         # "Exactly as before" covers the index too: a veto must not leave the

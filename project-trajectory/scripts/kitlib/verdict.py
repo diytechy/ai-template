@@ -379,9 +379,20 @@ def work_tip(root, branch):
 _MAX_GOVERNING_WALK = 64
 
 
-def governing_rev(root, branch):
-    """The commit whose tree governs a verdict on `branch`: the tip, with
-    refresh commits peeled AND identity-preserving commits walked through.
+def governing_rev(root, branch, rev=None):
+    """The commit whose tree governs a verdict on `branch`: `rev` (default: the
+    tip), with refresh commits peeled AND identity-preserving commits walked
+    through.
+
+    `rev` IS A PARAMETER BECAUSE THE ROUND EVIDENCE ASKS THE SAME QUESTION AT A
+    DIFFERENT COMMIT. `round_entries` must decide which tree a round NAMES, and
+    the only honest answer is the one this function gives for the sha that round
+    read — measuring the reviewed sha raw while the gate measured the tip
+    composed left two rev-choices for one definition, and a round drawn after a
+    station refresh matched neither reader forever (REVIEW-A round 015). The
+    `branch` argument stays separate from `rev` because the peel VERIFIES a
+    refresh commit against the branch it names, which is a property of the
+    branch and not of the commit being measured.
 
     WHY THIS IS NOT `work_tip`. Both peel a refresh, and they must not share an
     implementation, because `work_tip` feeds a `reset --hard` and may only ever
@@ -427,7 +438,7 @@ def governing_rev(root, branch):
     (`is_record_path` against git's display encoding, round 007's finding 3
     pointed the more dangerous way round) all unrepresentable at once, because
     no path is classified here at all."""
-    rev = branch
+    rev = rev or branch
     identity = tree_identity(root, rev)
     for _ in range(_MAX_GOVERNING_WALK):
         attested = refresh_attestation(root, branch, rev)
@@ -445,16 +456,27 @@ def governing_rev(root, branch):
     return _rev(root, rev)
 
 
-def governing_identity(root, branch):
-    """The non-record tree identity a verdict on `branch` must NAME, or None.
+def governing_identity(root, branch, rev=None):
+    """The non-record tree identity a verdict at `rev` on `branch` governs, or
+    None. `rev` defaults to the branch tip: the identity a verdict must NAME.
 
-    THE ONE ANSWER BOTH READERS ARE HANDED (WI-560 Done-when 1). The merge slot
+    THE ONE ANSWER EVERY READER IS HANDED (WI-560 Done-when 1). The merge slot
     asks "may this branch merge?" and the loop asks "does this lane still owe a
     round?"; they are the same question from two sides, and each computing its
     own rev is how they came to disagree across a refresh commit. Composing the
     two halves HERE — the record-path fold and the refresh peel — leaves the
-    callers nothing to choose."""
-    return tree_identity(root, governing_rev(root, branch))
+    callers nothing to choose.
+
+    "EVERY READER" INCLUDES THE ONES THAT ASK ABOUT A COMMIT rather than about
+    the branch — `round_entries` for the sha a round file cites, and
+    `branch_trailers` for the commit an attestation rides. They used to call
+    `tree_identity` directly, which is the same composition with the peel left
+    out, and the two answers part company across exactly one refresh commit:
+    a round drawn AFTER a refresh named the post-refresh tree while the gate
+    governed by the pre-refresh one, so the round was invisible to BOTH readers
+    and no commit on the branch could ever make them agree (REVIEW-A round 015).
+    One function, one rev rule, asked at whichever commit the caller holds."""
+    return tree_identity(root, governing_rev(root, branch, rev))
 
 
 def _rev(root, rev):
@@ -563,10 +585,25 @@ def round_entries(root, branch, rounds, want, parse):
     """The `(phase, ordinal, verdict)` entries `score_reviews.latest_phase_verdicts`
     reads, restricted to the rounds that NAME the tree `want`.
 
-    The tree a round names is the identity of the commit its FILENAME cites —
-    the reviewed head, which the reviewer session did not author. That is the
-    binding; the `Review-Verdict:` trailer is the same name spelled for a
+    The tree a round names is the GOVERNING identity of the commit its FILENAME
+    cites — the reviewed head, which the reviewer session did not author. That
+    is the binding; the `Review-Verdict:` trailer is the same name spelled for a
     machine (see `branch_trailers`), never a second source of truth.
+
+    GOVERNING, not raw: through `governing_identity` and not `tree_identity`,
+    because `want` is composed that way and a binding must be computed by the
+    same definition it is compared against. A reviewer that read the branch
+    right after a station refresh cites the POST-refresh sha, while the gate
+    governs by the peeled PRE-refresh tree — so the raw fold made the two
+    permanently unequal, the round invisible to the merge slot AND to
+    `agent_loop.review_owed_by_evidence`, and the lane re-drew an identical
+    round every tick: the double-identical-round class WI-560 Done-when 1 exists
+    to make unrepresentable, re-entered through the binding rather than through
+    the rev (REVIEW-A round 015). It is reachable on the shipped path because
+    `dispatch._advance` spawns a lane's refresh as soon as its worker is DONE
+    and BEFORE `integrate.integrate` runs, so any slot refusal parks the branch
+    with a refresh commit and no round, and the next launch draws the round on
+    top of it.
 
     `parse` is `score_reviews.parse_verdict`, injected rather than imported so
     this leaf keeps no edge back into the scoring layer."""
@@ -574,7 +611,7 @@ def round_entries(root, branch, rounds, want, parse):
     resolved = {}
     for ordinal, phase, sha, path in rounds:
         if sha not in resolved:
-            resolved[sha] = tree_identity(root, sha)
+            resolved[sha] = governing_identity(root, branch, sha)
         if resolved[sha] != want:
             continue
         text = git_out(root, ["show", "{}:{}".format(branch, path)])
@@ -608,10 +645,18 @@ def round_count(entries):
 
 
 def format_branch_trailer(root, branch, base, word, parse):
-    """The tree-bound trailer derived from logged branch evidence, or None."""
+    """The tree-bound trailer derived from logged branch evidence, or None.
+
+    Stamped at `governing_identity`, the value both readers key on. Naming the
+    branch's RAW tree instead filed the attestation under a key
+    `integrate._round_refusal` never looks up, so on a refreshed branch the
+    cross-check silently stood down instead of cross-checking (REVIEW-A round
+    015). `branch` must therefore be the lane's BRANCH NAME and not `HEAD`: the
+    peel verifies a refresh commit against the branch it names, and `HEAD`
+    matches no refresh subject."""
     if not word:
         return None
-    tree = tree_identity(root, branch)
+    tree = governing_identity(root, branch)
     if tree is None:
         return None
     entries = branch_entries(root, branch, base, tree, parse)
@@ -640,11 +685,14 @@ def branch_trailers(root, branch, base):
     own, so the shape that let a superseded stamp arrive SILENTLY is gone rather
     than guarded.
 
-    VERIFIED means the trailer names the non-record tree identity of the commit
-    that CARRIES it — the `Bar-Green` verification applied to a verdict. The
-    record commit only touches record paths, so its own non-record identity IS
-    the reviewed tree, and a trailer amended onto any other commit names a tree
-    that is not its carrier's.
+    VERIFIED means the trailer names the GOVERNING identity of the commit that
+    CARRIES it — the `Bar-Green` verification applied to a verdict, through the
+    one rev rule rather than beside it. The record commit only touches record
+    paths, so the tree it governs IS the reviewed tree, and a trailer amended
+    onto a commit that changed the work names a tree that is not its carrier's.
+    Verifying with the raw fold instead would reject every honest attestation on
+    a refreshed branch, because the writer must stamp the value the READERS key
+    on and that value is the peeled one.
 
     THIS IS NOT AN ACCEPT PATH, and the distinction is the whole anti-forgery
     story. Anyone with commit access can type a trailer onto their own commit
@@ -667,7 +715,7 @@ def branch_trailers(root, branch, base):
         if parsed is None:
             continue
         word, rounds, tree = parsed
-        if tree_identity(root, sha) != tree:
+        if governing_identity(root, branch, sha) != tree:
             continue  # the words rode onto a tree they do not describe
         by_tree.setdefault(tree, []).append((word, rounds))
     return by_tree

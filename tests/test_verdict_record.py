@@ -557,6 +557,118 @@ def test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel(tmp_path):
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is not None
 
 
+def test_the_empty_carrier_commits_its_own_paths_and_never_the_index(tmp_path):
+    # ROUND 015, FINDING 2. The empty-carrier arm SWAPPED the commit's pathspec
+    # for `--allow-empty`, and a `git commit` with no pathspec reads THE INDEX.
+    # So one unrelated staged file — a state this function's own `pre_staged`
+    # restore already treats as reachable — landed inside a commit labelled
+    # `telemetry:`, carrying a `Review-Verdict:` attestation on a commit that
+    # changed the work tree. Silent wrong content under a bookkeeping label,
+    # and an attestation whose "an empty commit changes no tree" premise was
+    # simply false. The pre-diff form was immune by construction, so the fix is
+    # to keep the path scope on BOTH arms rather than to guard the index.
+    root = rounds_repo(tmp_path)
+    _git(root, "checkout", "-q", "wi-401")
+    scoreboard = root / "docs" / "reviews" / "wi-401" / "scoreboard.txt"
+    scoreboard.parent.mkdir(parents=True, exist_ok=True)
+    scoreboard.write_text("rounds 1\n", encoding="utf-8", newline="\n")
+    _commit(root, "telemetry: the scoreboard, already current", when=T_LATER)
+
+    # UNRELATED work, staged and uncommitted, with the bookkeeping unchanged —
+    # the exact state that produced the finding.
+    (root / "src" / "unrelated.py").write_text(
+        "VALUE = 9\n", encoding="utf-8", newline="\n"
+    )
+    _git(root, "add", "--", "src/unrelated.py")
+    ac.commit_telemetry(
+        root,
+        "wi-401-002",
+        "REVIEW-A COMMITTED",
+        [scoreboard],
+        trailer=kv.format_trailer("APPROVE", 1, "0" * 64),
+    )
+    assert _git(root, "log", "-1", "--format=%s").strip() == (
+        "telemetry: session wi-401-002 REVIEW-A COMMITTED"
+    )
+    assert not _git(root, "show", "--format=", "--name-only", "HEAD").strip(), (
+        "the attestation's carrier must be EMPTY — an unrelated staged file "
+        "swept into it is work landing under a bookkeeping label"
+    )
+    assert _git(root, "diff", "--cached", "--name-only").split() == [
+        "src/unrelated.py"
+    ], "the caller's index must be left exactly as it was found"
+
+
+def test_a_round_drawn_after_a_refresh_is_visible_to_both_readers(tmp_path):
+    # ROUND 015, THE BLOCKER — and the OTHER ORDER of the test above, which is
+    # the whole reason it was invisible. That one refreshes AFTER the round;
+    # this one draws the round AFTER the refresh, which is what the shipped
+    # path actually produces: `dispatch._advance` spawns a lane's refresh as
+    # soon as its worker is DONE and BEFORE `integrate.integrate` runs, so any
+    # slot refusal parks the branch with a refresh commit and no round, and the
+    # next launch's `resume_owed_round` draws the round on top of it.
+    #
+    # The reviewer then reads — and its round file cites — the POST-refresh sha,
+    # while both readers govern by the PEELED pre-refresh tree. Binding the
+    # round with a raw `tree_identity` made those two permanently unequal: no
+    # commit on the branch could make them match short of new work, the gate
+    # refused "no logged review round names its current tree", and the loop
+    # re-owed the round it had just served — an identical round every tick,
+    # which is the double-identical-round class WI-560 DW1 claims to have made
+    # unrepresentable. A round is now bound by the SAME composed definition the
+    # gate governs by.
+    al = _al()
+    root = rounds_repo(tmp_path)
+    _git(root, "checkout", "-q", "wi-401")
+    (root / "src" / "widget.py").write_text(
+        "VALUE = 2\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "WI-401: close\n\nWI: WI-401", when=T_CODE + 50)
+    base = _rev(root, "main")
+    worker = {"train": "wi-401", "assigned": ["WI-401"], "base": base, "rework": ""}
+
+    work = _refresh_commit(root, "wi-401", T_LATER + 100)
+    assert kv.tree_identity(root, "HEAD") != kv.tree_identity(root, work), (
+        "the refresh must really have moved the tree, or this proves nothing"
+    )
+    refresh_sha = _rev(root, "wi-401")
+    _git(root, "checkout", "-q", "main")
+    reviewed = add_round(root, 3)
+    assert reviewed == refresh_sha[:7] != work[:7], (
+        "the fixture must draw the round at the POST-refresh tip — the whole "
+        "finding is that the reviewed sha is not the governing one"
+    )
+
+    _git(root, "checkout", "-q", "wi-401")
+    assert al.review_owed_by_evidence(root, worker) is False, (
+        "a round drawn after the refresh SERVED the lane; re-owing it is the "
+        "double-identical-round class re-entered through the binding"
+    )
+    # ...and the trailer the coordinator stamps for that round lands under the
+    # key the cross-check looks it up by (round 015, finding 5): writer and both
+    # readers name ONE value, so the cross-check cross-checks instead of
+    # silently standing down.
+    want = kv.governing_identity(root, "wi-401")
+    trailer = al.review_verdict_trailer(root, "APPROVE", worker)
+    assert kv.parse_trailer(trailer) == ("APPROVE", 1, want)
+    ac.commit_telemetry(root, "wi-401-004", "REVIEW-A COMMITTED", [], trailer=trailer)
+    assert kv.branch_trailers(root, "wi-401", base).get(want) == [("APPROVE", 1)]
+
+    _git(root, "checkout", "-q", "main")
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
+    # The opposite, without which a binding that peeled everything would pass:
+    # rework after the round still re-owes one.
+    _git(root, "checkout", "-q", "wi-401")
+    (root / "src" / "widget.py").write_text(
+        "VALUE = 3\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "WI-401: rework\n\nWI: WI-401", when=T_LATER + 300)
+    assert al.review_owed_by_evidence(root, worker) is True
+    _git(root, "checkout", "-q", "main")
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is not None
+
+
 # --- 4. the adjudication_review dial ------------------------------------------
 
 
@@ -791,3 +903,22 @@ def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
     add_round(root, 5, text=CHANGES)
     _git(root, "checkout", "-q", "wi-401")
     assert gen.main(["--root", str(root), "--check"]) == 1
+
+    # THE THIRD ANSWER, and the arm that was UNCOVERED while it was broken
+    # (round 015). A retired review scope leaves an EXTRA rollup behind; the
+    # `--check` arm reported it and the write path never removed it, so the
+    # remedy the failure message names could not clear the failure — an
+    # unbreakable red on the pre-commit floor and in `_TRUNK_FRESHNESS_STEPS`,
+    # under a misleading instruction. The generator OWNS the directory now, so
+    # what matters is not that STALE is reported but that regenerating clears
+    # it.
+    assert gen.main(["--root", str(root)]) == 0
+    assert gen.main(["--root", str(root), "--check"]) == 0
+    retired = root / "docs" / "reviews" / "rollup" / "wi-999.md"
+    retired.write_text("# a scope that no longer exists\n", encoding="utf-8")
+    assert gen.main(["--root", str(root), "--check"]) == 1, "an extra is stale"
+    assert gen.main(["--root", str(root)]) == 0
+    assert not retired.exists(), (
+        "the regenerator the failure message names must be able to clear it"
+    )
+    assert gen.main(["--root", str(root), "--check"]) == 0
