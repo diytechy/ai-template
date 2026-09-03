@@ -150,7 +150,8 @@ cadence"). New behavior needs new tests
 - **Order the close against the verdict round.** Under `review_rounds >= 1` the
   merge queue wants a verdict that NAMES the branch's current **non-record**
   tree (`docs/reviews/` + `docs/log.d/` + `docs/iteration/` are excluded;
-  `docs/work/` is not), so anything committed after it buys another round.
+  `docs/work/` is not), so any commit after it that CHANGES that tree buys
+  another round — and one that does not, cannot.
   Close **first** — Deliverable filled, spec moved to its terminal folder, any
   approving Status-change commit — and take the final verdict round **last**;
   never hand-merge trunk, since only the station's `refresh` commit is peeled.

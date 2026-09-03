@@ -418,6 +418,15 @@ paragraph's "read at the work tip" was stale from round 005 in the same way and
 is re-pointed at the governing rev; the archived spec's DW2 restatement carried
 the identical stale phrase and is corrected with it.
 
+Grepping for that claim rather than fixing only the cited line found it a second
+time, in a file this row already edits: the `session-protocol` skill's "Order
+the close against the verdict round" said *"…are excluded; `docs/work/` is not),
+so anything committed after it buys another round"* — the false universal made a
+CONSEQUENCE of the very exclusion that refutes it, one clause later. It now says
+a commit that CHANGES that tree buys another round and one that does not cannot,
+which is the operating rule a lane actually needs at close time. All three
+copies moved together (`--check-agents` clean).
+
 `commit_telemetry`'s docstring now states where the claim is HELD (the walk's
 step condition) instead of asserting it, and names the test that drives its own
 empty carrier. LLR-207, IF-175 and TC-205 all carried "walks THROUGH record-only
