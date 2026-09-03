@@ -1099,3 +1099,12 @@ from round 025: running `derive_stage.py` on a worktree at `d60af4be` moves
 `per-phase-live` and `floored` are byte-identical. The artifact's governing
 content does not move; only its census does, and `docs/stage` is a declared
 `[generated]` file the trunk lane writes after the merge.
+
+**Re-driven at the closing tip, because the close is itself an input change.**
+The reading above is at `d60af4be`, before the close; the close then filled the
+Deliverable and moved the spec into `docs/archive/work/complete/`, so it is a
+different tree from the one the integrator merges. Re-run at `ddd08d67` on a
+worktree with `docs/stage` regenerated: **3355 passed, 25 skipped, 0 failed in
+631.64 s** — same counts, and the green is the merge tree's rather than an
+intermediate commit's.
+<!-- fig: cmd="python -m pytest -q -n auto" rev=ddd08d67 -->
