@@ -26,7 +26,18 @@ fail-direction to declare, and folding that choice in here would hide it.
 
 import subprocess
 
-__all__ = ["git_out"]
+__all__ = ["git_bytes", "git_out"]
+
+
+def _git_stdout(root, args, **kwargs):
+    """Run one read-only git command and preserve its requested stdout type."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(root), *args], capture_output=True, **kwargs
+        )
+    except (OSError, ValueError):
+        return None
+    return proc.stdout if proc.returncode == 0 else None
 
 
 def git_out(root, args, stdin=None):
@@ -53,15 +64,21 @@ def git_out(root, args, stdin=None):
                stdin: str | None — batch input, or nothing
       Outputs: str | None — stdout on success; None on any failure
     """
-    try:
-        proc = subprocess.run(
-            ["git", "-C", str(root), *args],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            input=stdin,
-        )
-    except (OSError, ValueError):
-        return None
-    return proc.stdout if proc.returncode == 0 else None
+    return _git_stdout(
+        root,
+        args,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        input=stdin,
+    )
+
+
+def git_bytes(root, args):
+    """Raw stdout of `git -C <root> <args>`, or None on ANY failure.
+
+    This is the binary counterpart to `git_out` for Git protocols whose bytes
+    carry identity rather than display text. Callers parse their ASCII framing
+    before deciding whether any field may be decoded.
+    """
+    return _git_stdout(root, args)

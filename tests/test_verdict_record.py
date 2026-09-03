@@ -56,9 +56,10 @@ LOG = "# agent-loop session log\n# session: {ordinal:03d}\n# train: {train}\n# p
 
 
 def _listing(*paths):
-    """`git ls-tree -r -z` ENTRIES, already split — the shape `fold_listing`
-    takes, and the shape it takes so no reader ever sees git's quoting."""
-    return ["100644 blob {:040x}\t{}".format(i, p) for i, p in enumerate(paths, 1)]
+    """Raw, split `git ls-tree -r -z` entries — `fold_listing`'s input."""
+    return [
+        "100644 blob {:040x}\t{}".format(i, p).encode() for i, p in enumerate(paths, 1)
+    ]
 
 
 def test_the_identity_ignores_every_record_path():
@@ -82,7 +83,7 @@ def test_the_identity_notices_work_and_notices_docs_work():
     # claims a verdict is ABOUT, and letting them move unseen after an APPROVE
     # is the case the exclusion would have bought.
     base = _listing("src/widget.py", "docs/work/active/wi-401/WI-401-widget.md")
-    changed_code = [entry.replace("00001", "00009") for entry in base]
+    changed_code = [entry.replace(b"00001", b"00009") for entry in base]
     assert kv.fold_listing(base) != kv.fold_listing(changed_code)
     assert kv.fold_listing(base) != kv.fold_listing(_listing("src/widget.py"))
 
@@ -115,6 +116,21 @@ def test_a_record_path_is_excluded_whatever_characters_it_holds(tmp_path):
     (root / "src" / "café.py").write_text("VALUE = 2\n", encoding="utf-8", newline="\n")
     _commit(root, "feat: an accented module", when=T_LATER + 100)
     assert kv.tree_identity(root, "HEAD") != before
+
+
+def test_distinct_invalid_utf8_work_paths_have_distinct_identities(monkeypatch):
+    # ROUND 019: replacement-decoding the complete NUL stream made one blob at
+    # byte-distinct work paths look identical, so a R100 rename could leave a
+    # stale APPROVE governing. Drive the exact collision without asking a
+    # Windows filesystem to represent POSIX's arbitrary filename bytes.
+    meta = b"100644 blob 078e25798f331e5d407065dc9c0725f8ad166332d\t"
+    listings = {"before": meta + b"src/\x80\0", "after": meta + b"src/\x81\0"}
+    assert listings["before"].decode(errors="replace") == listings["after"].decode(
+        errors="replace"
+    ), "the fixture must reproduce the replacement-decoding collision"
+    monkeypatch.setattr(kv, "git_bytes", lambda _root, args: listings[args[-1]])
+
+    assert kv.tree_identity("unused", "before") != kv.tree_identity("unused", "after")
 
 
 # --- 2. the trailer grammar ---------------------------------------------------

@@ -106,7 +106,7 @@ Contract IF-175: the verdict record, as functions two independent readers call
 import hashlib
 import re
 
-from .git import git_out
+from .git import git_bytes, git_out
 from .station import BAR_GREEN
 
 __all__ = [
@@ -200,6 +200,11 @@ def parse_trailer(message):
 
 def is_record_path(path):
     """Is `path` one of the process's records of itself, rather than work?"""
+    if isinstance(path, bytes):
+        norm = path.replace(b"\\", b"/").lstrip(b"./")
+        return any(
+            norm.startswith(prefix.encode("ascii")) for prefix in RECORD_PREFIXES
+        )
     norm = str(path).replace("\\", "/").lstrip("./")
     return any(norm.startswith(prefix) for prefix in RECORD_PREFIXES)
 
@@ -207,16 +212,17 @@ def is_record_path(path):
 def fold_listing(entries):
     """The identity of `git ls-tree -r` ENTRIES, with record paths dropped.
 
-    Each entry is one already-decoded `<mode> <type> <sha>\\t<path>` record. It
-    takes a decoded SEQUENCE rather than git's raw stdout deliberately: without
+    Each entry is one raw `<mode> <type> <sha>\\t<path>` byte record. It takes
+    a split SEQUENCE rather than git's complete stdout deliberately: without
     `-z` git QUOTES any path holding a non-ASCII or special character
     (`"docs/reviews/002-REVIEW-A-abcdef\\303\\251.md"`), the leading quote
     defeats every `RECORD_PREFIXES` test, and a single accented filename under
     `docs/log.d/` folds into the identity and silently stales every governing
     verdict on the branch (REVIEW-A round 007, finding 3, driven both ways).
     Splitting is the caller's job so no reader here ever sees git's DISPLAY
-    encoding — a guard against the quoting would have left the shape that
-    produced the defect in place.
+    encoding. The record-prefix boundary and hash are byte-native: decoding
+    before either one collapses distinct invalid-UTF-8 paths onto the same
+    replacement character (REVIEW-A round 019, driven on `\\200` -> `\\201`).
 
     Pure, so the rule is testable without a repository — which matters because
     this is the one function that decides whether two trees are "the same work".
@@ -228,10 +234,10 @@ def fold_listing(entries):
             continue
         # `<mode> <type> <sha>\t<path>` — split on the TAB, since a path may
         # contain spaces and the fields before it never do.
-        _meta, _tab, path = line.partition("\t")
+        _meta, _tab, path = line.partition(b"\t")
         if not _tab or is_record_path(path):
             continue
-        fold.update(line.encode("utf-8", "surrogateescape"))
+        fold.update(line)
         fold.update(b"\n")
     return fold.hexdigest()
 
@@ -241,20 +247,17 @@ def tree_identity(root, rev):
 
     `--full-tree` so the answer does not depend on the caller's cwd inside the
     repository, and `-z` because it is the ENCODING BOUNDARY: NUL-delimited
-    output is never quoted or escaped, so `fold_listing` is handed raw paths and
+    output is never quoted or escaped, so `fold_listing` is handed raw bytes and
     the record-path test cannot be defeated by a filename (see its docstring).
     A NUL split also survives a path containing a newline, which the line split
-    it replaced could not. The honest residual: `git_out` decodes with
-    `errors="replace"`, so a path that is not valid UTF-8 reaches the fold with
-    replacement characters — the exclusion still holds (its prefix is ASCII) and
-    the digest is still deterministic, but two such paths differing only in
-    undecodable bytes would fold alike."""
+    it replaced could not. No decode sits in this path: path bytes are part of
+    the identity, not display text."""
     if rev is None:
         return None
-    listing = git_out(root, ["ls-tree", "-r", "-z", "--full-tree", rev])
+    listing = git_bytes(root, ["ls-tree", "-r", "-z", "--full-tree", rev])
     if listing is None:
         return None
-    return fold_listing(listing.split("\0"))
+    return fold_listing(listing.split(b"\0"))
 
 
 # --- the rev the identity is measured at --------------------------------------
