@@ -1,0 +1,187 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 008
+# date: 2026-09-02 22:24
+# train: wi-579-the-verdict-carrier-and-the-ad
+# base: 0ecc62bbc55a
+# phase: DESIGN-CHECK
+# wi: WI-579
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: ERROR
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 3
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 15044
+# prompt-template: kit:DESIGN-CHECK
+# prompt-sha: sha256:750c7206e940
+# timeout:
+# heterogeneity:
+# exit-code: 1
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Reading prompt from stdin...
+2026-09-03T03:24:13.015261Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 97 column 5
+OpenAI Codex v0.145.0
+--------
+workdir: /Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 01a0654b-acd0-72a2-86bb-3325a81c5286
+--------
+user
+You are a worker session for a CLAIMED work item (scripts/agent_loop.py --wi, on a branch cut by `integrate.py claim`) — assume no human is watching. You are assigned ONE work item on ONE claimed branch; this assignment is your whole scope. Read AGENTS.md first, then the SpecRef and SR rows below — they are the spec of record.
+
+Assignment:
+- WI: WI-579 — The verdict carrier and the adjudication_review dial: gate over logged rounds, tree-bound trailer, generated rollup
+- SR-Refs: — | SpecRef: docs/requirements/open-items.toml#OI-76
+- Branch: wi-579-the-verdict-carrier-and-the-ad (its claim is docs/work/active/wi-579-the-verdict-carrier-and-the-ad/; integration base 0ecc62bbc55ac0a724550620ba674cb6f32e886e)
+- Current branch diff (0ecc62b..HEAD — earlier work on this branch, accepted but not yet reviewed/integrated):
+abe8e00b telemetry: session 007 review scoreboard
+8b14670b telemetry: session wi-579-the-verdict-carrier-and-the-ad-007 REVIEW-A COMMITTED
+0b2a3120 review: record WI-579 review A round 007 verdict (CHANGES-REQUESTED, 4 findings)
+87a50924 telemetry: session wi-579-the-verdict-carrier-and-the-ad-006 REVIEW-A ERROR
+32bd5096 telemetry: session wi-579-the-verdict-carrier-and-the-ad-005 REVIEW-A ERROR
+73873042 telemetry: session wi-579-the-verdict-carrier-and-the-ad-004 BUILD COMMITTED
+01fe7425 WI-579: re-drive the full suite at the tip
+0b1f3b41 WI-579: drop the reviews_dir the tree-identity rewrite orphaned
+7098ad21 telemetry: session wi-579-the-verdict-carrier-and-the-ad-003 DESIGN-CHECK COMMITTED
+41b84e93 WI-579: record the rework verification
+f418cba1 WI-579: unify verdict evidence after review
+90a57eb7 telemetry: session 002 review scoreboard
+7b0dac6c telemetry: session wi-579-the-verdict-carrier-and-the-ad-002 REVIEW-A COMMITTED
+f9d77e7b review: record WI-579 review A verdict
+39f80127 telemetry: session wi-579-the-verdict-carrier-and-the-ad-001 BUILD COMMITTED
+0c7cb4eb WI-579: close — the verdict carrier, tree identity, and the adjudication_review dial
+5ea28d6a WI-579: the spine rows the new modules owed, and the re-pointed Approved cell
+7c225b66 WI-579: re-drive the smoke figures at a committed revision
+1ad5d465 WI-579: wire the rollup's freshness, and the reviewed ratchet stamps
+237d57a7 WI-579: the RESYNC_PACK entries (DW4)
+529f64da WI-579: drive the new rule from both ends
+6e19da1e WI-579: the verdict record — tree identity, the round evidence, the dial
+97f1b4af WI-579: open the lane record — what the verdict carrier reads today
+M	.agents/skills/session-protocol/SKILL.md
+M	.claude/skills/session-protocol/SKILL.md
+R053	docs/work/active/wi-579-the-verdict-carrier-and-the-ad/WI-579-the-verdict-carrier-and-the-ad.md	docs/archive/work/complete/WI-579-the-verdict-carrier-and-the-ad.md
+M	docs/enforcement-audit.md
+M	docs/id-watermark
+A	docs/iteration/wi-579-the-verdict-carrier-and-the-ad-001-20260902-202136.log
+A	docs/iteration/wi-579-the-verdict-carrier-and-the-ad-002-20260902-212756.log
+A	docs/iteration/wi-579-the-verdict-carrier-and-the-ad-003-20260902-213209.log
+A	docs/iteration/wi-579-the-verdict-carrier-and-the-ad-004-20260902-215319.log
+A	docs/iteration/wi-579-the-verdict-carrier-and-the-ad-005-20260902-221212.log
+A	docs/iteration/wi-579-the-verdict-carrier-and-the-ad-006-20260902-221442.log
+A	docs/iteration/wi-579-the-verdict-carrier-and-the-ad-007-20260902-221458.log
+A	docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md
+M	docs/process.toml
+M	docs/ratify/CURRENT.md
+M	docs/requirements/interfaces.toml
+M	docs/requirements/low-level-requirements.toml
+A	docs/reviews/wi-579-the-verdict-carrier-and-the-ad/002-REVIEW-A-0c7cb4e.md
+A	docs/reviews/wi-579-the-verdict-carrier-and-the-ad/007-REVIEW-A-01fe742-relaxed.md
+A	docs/reviews/wi-579-the-verdict-carrier-and-the-ad/scoreboard.txt
+M	docs/stack.ini
+M	docs/test/test-cases.toml
+M	project-trajectory/PROCESS_OPTIONS.md
+M	project-trajectory/RESYNC_PACK.md
+M	project-trajectory/hooks/pre-commit
+M	project-trajectory/process.toml.template
+M	project-trajectory/scripts/agent_common.py
+M	project-trajectory/scripts/agent_loop.py
+M	project-trajectory/scripts/bootstrap.py
+M	project-trajectory/scripts/check.py
+A	project-trajectory/scripts/gen_verdict_rollup.py
+M	project-trajectory/scripts/integrate.py
+A	project-trajectory/scripts/kitlib/verdict.py
+M	project-trajectory/scripts/trunk_step.py
+M	project-trajectory/skills/session-protocol/SKILL.md
+M	tests/test_check_lane.py
+M	tests/test_generated_freshness_wiring.py
+M	tests/test_integrate_admission.py
+M	tests/test_module_size_ratchet.py
+A	tests/test_verdict_record.py
+- REWORK FINDING (address this before anything else):
+# WI-579 — REVIEW-A round 007 (reviewed `01fe742`, relaxed)
+
+Scope: `git diff contract_split...HEAD` excluding session telemetry, verdict
+records and generated artifacts. Requirement surface read: the archived spec
+`docs/archive/work/complete/WI-579-the-verdict-carrier-and-the-ad.md`
+(Done-when, including the quoted WI-558/559/560 items), `LLR-140`, `LLR-207`,
+`LLR-208`, `IF-046`, `IF-047`, `IF-175`, `TC-205`, `TC-206`,
+`docs/process.toml [attestation]`, `docs/stack.ini`, `RESYNC_PACK.md` and the
+`session-protocol` skill.
+
+## Instruments (run here, once each)
+
+- `python project-trajectory/scripts/check.py --jobs 0` → `RESULT: PASS`
+  (`verdict-rollup` SKIP with its siblings: "work branch
+  'wi-579-the-verdict-carrier-and-the-ad' — generated freshness is the trunk
+  lane's").
+- `python project-trajectory/scripts/trace.py --strict-integrity` →
+  `Traceability: SN=27 SR=76 LLR=190 TC=189 orphans=2 integrity=0 ... Report ->
+  docs/test/report.md`.
+- `python -m pytest -q -n auto -m smoke` → `1500 passed, 8 skipped in 24.27s`
+  (1508 collected against the re-stamped `max-tests = 1560`; 24.4 s wall against
+  the 60 s ceiling — the `docs/stack.ini` re-stamp's figures reproduce on this
+  box).
+- `python -m pytest -q tests/test_verdict_record.py tests/test_integrate_admission.py`
+  → `78 passed in 21.19s`.
+- `python project-trajectory/scripts/gen_verdict_rollup.py --check` → exit 1,
+  listing 43 absent rollups (the correct answer on a work branch; the step
+  stands down there and the trunk step writes them).
+
+## What was driven, not read
+
+The shipped `integrate._verdict_gate`, `integrate._work_tip`,
+`agent_loop.review_owed_by_evidence`, `agent_loop.review_verdict_trailer` and
+`kitlib.verdict.branch_trailers` were exercised on real two-branch git
+fixtures built from `tests/test_verdict_record.rounds_repo`, including a
+genuine `Bar-Green`-attested station refresh commit and a coordinator-stamped
+double round at one governing tree. The pre-fix predicate for
+`review_owed_by_evidence` (`glob("*-REVIEW-?-<head7>*.md")`) was replayed on the
+regression fixture: it answers `owed=True` where the post-fix reader answers
+`False`, so `test_the_review_owed_derivation_and_the_gate_share_one_definition`
+does fail on the pre-fix behaviour.
+
+## Done-when coverage
+
+WI-558 DW1/DW2/DW3/DW4/DW5, WI-559 DW2/DW3 and the dial (`process.toml`,
+template, `enforcement-audit.md`, `RESYNC_PACK.md`) are each covered by a named
+test in TC-205/TC-206 and reproduce here. **WI-560 DW1 ("ONE shared definition
+… used by both the merge slot and the C2 review-owed derivation") is covered
+only for the record-path commit class; the refresh-commit class is UNCOVERED
+and the two readers measurably disagree there** — finding 2.
+
+## Findings
+
+- [MAJOR] project-trajectory/scripts/kitlib/verdict.py:393 -> `branch_trailers` iterates `git log` output, which is NEWEST-FIRST, and assigns `by_tree[tree] = (word, rounds)` unconditionally, so for a tree carrying more than one coordinator attestation the OLDEST trailer is what survives; driven end-to-end, two honest rounds at one governing tree (`review_verdict_trailer` stamping `rounds=1` then `rounds=2`) make the shipped gate return `wi-401: the Review-Verdict trailer for this tree says APPROVE rounds=1 while the round files say APPROVE rounds=2 - the attestation and the evidence disagree`, i.e. a false forgery accusation that parks a legitimately-approved lane at a supervisor stop — the OI-76 failure mode, re-created by the cross-check meant to prevent it, and reachable on any re-drawn round (`latest_phase_verdicts` exists precisely because "a phase was re-run at the same commit") -> take the NEWEST attestation per tree (iterate `reversed(log.split("\x1e"))`, or guard the assignment with `if tree not in by_tree` given the newest record is emitted first) and pin it with a two-trailers-at-one-tree case in `tests/test_verdict_record.py`; the defect cannot be made unrepresentable by construction because the carrier is a git commit history whose order the module does not own — the smallest change that makes the fix unnecessary (the `antidote` skill's question) would be for `branch_trailers` to return the ordered SEQUENCE of attestations rather than a last-write-wins map, so no reader can silently receive a superseded one -> @owner
+- [MAJOR] project-trajectory/scripts/agent_loop.py:3358 -> `review_owed_by_evidence` computes `want = kverdict.tree_identity(root, "HEAD")` while `integrate._verdict_gate` computes it at `_work_tip(root, branch)` — the refresh-peeled work sha — so the "ONE shared definition, two readers" the spec's Done-when 2 (WI-560 DW1) demands is only shared for commits the identity already ignores; driven on a fixture with a genuine `refresh: wi-401 onto trunk` commit carrying a verified `Bar-Green: tree=… work=…` trailer, `id(HEAD)=19f621f3…` vs `id(work_tip)=4fff62ba…`, and the loop answers `owed AFTER refresh: True` while the gate answers `None` (satisfied) at the same instant, so a resumed lane on a refreshed branch (dispatch's `_maybe_refresh`, or the hand refresh dispatch.py:210 names) draws a redundant strong-tier round whose round file the gate will not even read — the double-round class the Deliverable calls "unrepresentable, not policed" -> make the loop read the same peeled tip (call `integrate._work_tip`, or lift the peel into `kitlib.verdict` so the identity has ONE owning boundary that both readers are handed rather than each choosing its own rev) — that is the construction fix, not a guard, and no test in TC-205 places a refresh commit between a round and either reader -> @owner
+- [MINOR] project-trajectory/scripts/kitlib/verdict.py:185 -> `fold_listing` matches `is_record_path` against the raw `git ls-tree` field, but git QUOTES any path holding a non-ASCII or special character (`"docs/reviews/002-REVIEW-A-abcdef\303\251.md"`), so the leading `"` defeats every `startswith(prefix)` test and the record file folds INTO the identity — driven: the same tree with and without one such round file gives `ca98f20ada1329a7` vs `06b5f2263364f628`, meaning a hand-named `docs/log.d/` fragment carrying an accent silently stales every governing verdict on the branch, the exact class `RECORD_PREFIXES` exists to prevent -> pass `-z` (or `-c core.quotePath=false`) in `tree_identity` and unquote in `fold_listing`, with a quoted-record-path case in the pure identity tests; a guard is not the shape here — the smallest change that makes the fix unnecessary (the `antidote` skill's question) is for the fold to consume an already-decoded path list, so no reader ever sees git's display encoding -> @owner
+- [MINOR] project-trajectory/scripts/agent_loop.py:1453 -> the DONE banner renders `"{} review round(s) approved".format(rounds)` from `len(st.rounds)`, which `complete_review_round` appends to for EVERY completed round regardless of its merged verdict, so a lane that took a CHANGES-REQUESTED round, reworked, and then passed reports "2 review round(s) approved" when one was drawn and one approved — the same shape as the claim this very function was changed to stop making ("A banner is a claim about what happened, so it counts"); `st.rounds` is also in-process, so a resumed run that redraws nothing prints "no review round was drawn" for a lane that was reviewed in an earlier run -> say what is counted ("N review round(s) drawn this run; latest verdict APPROVE") rather than asserting an approval count the tally does not carry -> @owner
+
+VERDICT: CHANGES-REQUESTED findings=4
+
+Rules (the branch discipline, docs/concurrency-restructure.md §2.3/§5):
+- Work ONLY the assigned WI. Do not resume from docs/status.md and do not look for docs/next-wi (retired) — the assignment above is authoritative.
+- Run the declared harness (docs/stack.ini) and keep it green; commit coherent progress. End your FINAL commit for this WI with the trailer:
+    WI: WI-579
+- NEVER edit root coordination truth on this branch: docs/status.md, docs/log.md (write your session record as a fragment docs/log.d/<WI-id>-<slug>.md instead; the trunk step compiles it), another branch's docs/work/active/ claims, or generated artifacts (docs/iteration_index.md, dashboards, generated maps). The trunk lane regenerates generated artifacts after each merge (§5.2); the integrator merges this branch only through its fail-closed queue. NEVER PERFORM THE APPROVAL ACT: author spine rows `Drafted` and amend cell text freely, but do not flip a `Status` to `Approved`/`Founded`, do not write a row already claiming one, and do not write `docs/archive/last_approved/` — that act is an adjudicator's, on trunk, after reading the whole chain (PROCESS.md §4), and this branch's merge is REFUSED by name if its delta performs one. The adjudication minted at your merge is what approves what you authored.
+- Standing-state discipline: before spending effort on heavy verification (a full test suite, a broad multi-file sweep, a wide read), START your log.d fragment and land the spec's own `## Context`/`## Deliverable` edits in a commit — so a session killed or reaped mid-verification leaves a resumable record behind it instead of silent, uncommitted residue. This is not a one-shot write at the end: keep both current as the session continues. A relaunched session reads this branch's own diff and the fragment fresh, same as any other committed state — there is no separate hand-off file to produce.
+- CLOSE THE ROW before you stop (C6, the close ritual — a lane whose spec is still in active/ is resumed forever, and three found-nothing-to-do resumes read as a stall): fill the spec's `## Deliverable` body, placed BEFORE `## Context` (a Deliverable after Context parses as EMPTY); clear the spec's `specref` line; if this WI minted or amended spine rows, regenerate the approval brief (`python scripts/trace.py --approve modified --out docs/ratify/CURRENT.md`) so what you authored reaches the surface that approves it; make sure your log fragment's first line is a `## <YYYY-MM-DD> — <title>` heading (never `#` or `###`); then move the spec with `python scripts/spec_move.py` to the terminal folder the outcome names (docs/archive/work/complete/ when it shipped) and end that close commit with the same `WI: WI-579` trailer.
+- If the WI cannot proceed for a non-predecessor reason, commit the evidence you have with the trailers `Blocked-WI: WI-579` and `BlockRef: <OI-N | spec anchor | named external condition>` INSTEAD of the WI trailer, and stop.
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at Sep 6th, 2026 10:40 PM.
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at Sep 6th, 2026 10:40 PM.
