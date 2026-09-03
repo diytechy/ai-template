@@ -57,19 +57,87 @@ claim in all three cells against the tree at this commit:
   `delivery_inventory`, graded by `MAPPING_FINDING_POLICY` — not
   `scan_backlinks`/`read_backlink_min`. The claim holds.
 
-So the new text on all three rows is text I would bless, and the aftermath
-below takes the re-anchor. Blessing `low-level-requirements.toml` also carries
+So the new text on all three rows is text I would bless. Blessing
+`low-level-requirements.toml` would also carry
 the four other Approved rows drifted in that file — `LLR-058`, `LLR-136`,
 `LLR-144`, `LLR-198` — each already ruled MEANING (WI-566 for 058/144/198,
 WI-573 for 136), each re-read against the tree by WI-573, and none amended
 since (`git log 07cbabb..HEAD` on that file shows only the WI-569/WI-575
 corrections to 158/203/204). Their re-attest is OWED on this same released
-rung, so carrying them is the act completing, not scope creep. `LLR-206` is
-`Drafted` on both sides; a Drafted row in the snapshot blesses nothing
+rung, so carrying them would be the act completing, not scope creep. `LLR-206`
+is `Drafted` on both sides; a Drafted row in the snapshot blesses nothing
 (`_APPROVED_TEXT` requires `Approved` on both sides), so its presence in the
 copied file is inert and its first approval remains its own act.
 
-No registry CELL was edited by this session, in either commit.
+### THE RE-ANCHOR IS BLOCKED, and I did not work around it
+
+I ran the act the brief prescribes, naming the one registry I ruled on:
+
+```
+python3 project-trajectory/scripts/intake.py snapshot \
+  --approves "low-level-requirements.toml=LLR-158/LLR-203/LLR-204 (WI-578 adjudication, MEANING rows=3)"
+```
+
+It REFUSED — and every row in the refusal is a row I did not judge:
+
+```
+baseline_snapshot: REFUSED — this refresh would ABSORB approved text into the
+record of what a human blessed, and nothing in this working tree authorises it:
+  docs/requirements/system-requirements.toml SR-024: Rationale
+  … (+12 more row(s))
+  docs/test/test-cases.toml TC-138: Method
+  docs/test/test-cases.toml TC-147: Method
+  docs/test/test-cases.toml TC-194: Method
+```
+
+`low-level-requirements.toml` is NOT in that list: my `--approves` authorised it.
+The refusal is caused entirely by the other two registries. The measured
+ledger (`baseline_snapshot.refresh_ledger`) at this commit:
+
+| registry | absorbed rows | flips |
+|---|---|---|
+| `docs/requirements/system-requirements.toml` | 17 | none |
+| `docs/requirements/low-level-requirements.toml` | 7 | none |
+| `docs/test/test-cases.toml` | 3 | none |
+| interfaces / external / components | 0 | none |
+
+**The mechanism's two halves disagree about scope.** `copy_live` is SCOPED
+since WI-571 — it writes only the registries `--approves` names plus those an
+approving `Status` move happened in (`_authorised_registries`), and "an
+untouched registry is not written". `refresh_refusal` is NOT scoped: it builds
+`blocked` from the WHOLE ledger and refuses if any registry carries
+unauthorised absorbed drift — including registries this refresh would never
+write a byte of. So a scoped, authorised, single-registry approval is refused
+on the state of files it does not touch.
+
+**And the blocking state is permanent, not transient.** The 17 SR rows are
+WI-547's CLARITY verdict, and a CLARITY verdict by rule "owes nothing further:
+the row's attestation stands and you stop" — so nothing is ever going to
+authorise those cells, and their drift stands by design. The 3 TC rows are
+WI-566's MEANING verdict, whose re-attest is owed on a different registry and a
+different row's lane. Under the current gate, the LLR anchor cannot move until
+somebody names registries whose rows they did not rule on.
+
+I will not do that. Naming `system-requirements.toml` and `test-cases.toml` on
+a `--approves` line would record, in the snapshot's own README stamp, that
+WI-578 authorised twenty cells it never judged — which is precisely the false
+claim this rung exists to prevent, and a worse one than the drift it would
+clear. My brief says to name **only** the registries whose rows I ruled on, and
+naming only those is refused.
+
+**So the aftermath is a draft, not an act.** `LLR-158`, `LLR-203` and `LLR-204`
+stay drifted; the drift keeps surfacing in the re-attestation section of
+`docs/ratify/CURRENT.md` and the generated `open-items.html`
+(`trace.reattest_model` -> `gen_open_items.py`) — visibly, not silently, and on
+a LOOP-side surface, since this rung is released and no human signature is
+pending on it. The corrective work is drafted in this spec's `## Dispositions`,
+which intake mints at this row's merge. Note what the draft does NOT presume:
+whether the gate should be scoped to the writer, or the refusal text's "name
+EACH registry above" is the intended contract and the per-registry adjudication
+rung is what needs rethinking, is a ruling I am not the one to make — I record
+the contradiction and the evidence.
+
+No registry CELL was edited by this session, and no snapshot byte moved.
 
 ## Restatement, excluded from the count (26)
 
