@@ -119,6 +119,29 @@ path is classified in the walk at all. The regression drives the carrier through
 PROCESS_OPTIONS.md's normative sentence is qualified to match the rule stated
 beside it: a commit that changes the non-record tree buys another round.
 
+Round 015 found the last place that computed the definition instead of asking
+for it — the BINDINGS. Round 007 moved the rev into the shared definition and
+round 012 made the walk's step condition that definition's own sentence, but
+`round_entries` still bound a round by `tree_identity(reviewed sha)`, and
+`branch_trailers` and the coordinator's `review_verdict_trailer` each chose
+their own rev too. Those agree everywhere except across a refresh, which is the
+one class the peel exists for: a round drawn AFTER a station refresh cites the
+POST-refresh sha and is governed by the PEELED tree, so the two were permanently
+unequal, the round was invisible to BOTH readers, and the lane re-drew an
+identical one every tick — the class WI-560 Done-when 1 claims to make
+unrepresentable, re-entered through the binding rather than through the rev, and
+reachable on the shipped path because a lane's refresh is spawned before the
+merge slot runs. `governing_rev`/`governing_identity` now take the rev as an
+argument and every reader asks through them; the second rev-choice is deleted,
+not compensated for. Two artifacts were reporting states they could not produce
+or clear: `commit_telemetry`'s empty-carrier arm dropped the pathspec and so
+committed THE INDEX under a `telemetry:` label — the attestation's "changes no
+tree" premise simply false — and `gen_verdict_rollup --check` called an EXTRA
+rollup stale while the write path never removed one, an unbreakable red on the
+hook floor under an instruction that could not work. The path scope now survives
+both arms, and the generator OWNS `docs/reviews/rollup/`. TC-206 had ENUMERATED
+the extra arm while no test drove it, which is why it was broken and silent.
+
 `LLR-140`'s Approved detail cell was re-pointed IN-LANE: it asserted the retired
 time comparison, which nothing detects once it is false. Ratchet bumps
 (`agent_common` 1272→1305, `agent_loop` 2519→2578, `integrate` 1298→1382 and

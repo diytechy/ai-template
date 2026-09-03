@@ -1255,9 +1255,12 @@ def _legacy_rollup_refusal(root, branch, wi, want):
     if word != "APPROVE":
         return "{} is not an APPROVE (parsed: {!r})".format(rel, word)
     code, at = ac.git(root, "log", "-1", "--format=%H", branch, "--", rel)
-    named = (
-        kverdict.tree_identity(root, at.strip()) if code == 0 and at.strip() else None
-    )
+    # Through `governing_identity` and not the bare fold, for the reason the
+    # round evidence is: `want` is composed with the refresh peel, so a legacy
+    # rollup committed after a refresh would name the post-refresh tree and
+    # never match, whatever it said. Same comparison, same definition.
+    rev = at.strip() if code == 0 else ""
+    named = kverdict.governing_identity(root, branch, rev) if rev else None
     if named != want:
         return (
             "{} does not name the branch's current tree - a verdict that did "

@@ -477,18 +477,84 @@ tier itself reports and why they are quoted separately rather than averaged.
 ### Round 015 rework — one rev-choice too many, and two artifacts that lied
 
 Review A round 015 returned CHANGES-REQUESTED with five findings, and four of
-them are the SAME defect the last three rounds have been peeling: a rule
-expressed once as a definition and again as a value some other reader got to
-choose. IN PROGRESS in this session; the account below is filled as each is
-driven and closed.
+them are one shape the last three rounds have each peeled a layer off: a rule
+stated once as a definition and again as a value some other reader got to
+choose. Round 007 moved the REV into the shared definition; round 012 made the
+walk's step condition the definition's own sentence; round 015 found that the
+BINDINGS — which tree a round names, which tree an attestation names — were
+still computing that definition themselves, with the peel left out.
 
-1. BLOCKER — `round_entries` binds a round by `tree_identity(reviewed sha)`
-   while the gate governs by `governing_identity`, so a round drawn AFTER a
-   station refresh is invisible to both readers, permanently.
-2. MAJOR — `commit_telemetry`'s empty-carrier arm swaps the pathspec for
-   `--allow-empty` and so commits THE WHOLE INDEX under a `telemetry:` label.
-3. MAJOR — `gen_verdict_rollup --check` reports an EXTRA rollup as stale but
-   the write path never removes one: an unclearable red on the hook floor.
-4. MINOR — TC-206 never drives the EXTRA arm its own method enumerates.
-5. MINOR — `review_verdict_trailer` stamps at `tree_identity(HEAD)`, a third
-   rev-choice, so on a refreshed branch the cross-check silently stands down.
+**The blocker, and why the covered case hid it.** `round_entries` bound a round
+by `tree_identity(reviewed sha)` while `want` is `governing_identity`. Those two
+agree everywhere except across a refresh commit, which is precisely the class
+the peel exists for: a round drawn AFTER a station refresh cites the
+POST-refresh sha and is governed by the PEELED pre-refresh tree, so the two were
+permanently unequal and no commit on the branch could reconcile them. The gate
+refused *"no logged review round names its current tree"*, the loop answered
+`owed=True` at the same tip, and the lane re-drew an identical round every tick
+— the double-identical-round class WI-560 Done-when 1 claims to make
+unrepresentable, re-entered through the binding rather than through the rev.
+`test_a_station_refresh_owes_no_round_and_the_two_readers_agree` covered only
+the round-BEFORE-refresh order and so could never see it, while the shipped path
+produces the other order routinely: `dispatch._advance` spawns a lane's refresh
+as soon as its worker is DONE and BEFORE `integrate.integrate` runs, so any slot
+refusal parks the branch with a refresh commit and no round, and the next
+launch's `resume_owed_round` draws the round on top of it. The fix DELETES the
+second rev-choice: `governing_rev`/`governing_identity` take the rev as an
+argument, and `round_entries` — and `branch_trailers`, and the coordinator's own
+`review_verdict_trailer`, which was the fifth finding — all ask through them.
+One value, named by the writer and both readers.
+
+**Two artifacts that reported a state they could not produce or clear.**
+`commit_telemetry`'s empty-carrier arm swapped the commit's pathspec for
+`--allow-empty`, and a `git commit` with no pathspec reads THE INDEX — so a
+single unrelated staged file landed inside a commit labelled `telemetry:`,
+carrying a `Review-Verdict:` attestation on a commit that changed the work tree.
+The pre-diff form was immune by construction and the two flags compose
+(`commit --allow-empty -- <rels>`), so the path scope now survives both arms and
+the index stops being a source this path can read. And
+`gen_verdict_rollup --check` reported an EXTRA rollup as stale while the write
+path only ever wrote `targets(root)`: STALE, `wrote 0 rollup(s)`, STALE again,
+forever, on a step sitting at the pre-commit floor and in
+`_TRUNK_FRESHNESS_STEPS`, under an instruction that could not work. The
+generator OWNS `docs/reviews/rollup/` now and prunes in the pass that writes —
+"extra" ceases to be representable instead of being reported.
+
+**Each regression watched RED before it was kept**, against the pre-fix source
+restored over the new tests, and red at the finding's own assertion rather than
+merely red: `review_owed_by_evidence(...)` returned `True` where the test
+demands `False`; the carrier's `--name-only HEAD` returned `src/unrelated.py`;
+and `retired.exists()` was still `True` after running the regenerator the
+failure message names. All three green with the fix, 37 -> 40 tests in
+`tests/test_verdict_record.py`.
+<!-- fig: cmd="git checkout HEAD -- <each fixed module> over the new tests, then pytest tests/test_verdict_record.py -k <each>" rev=56aacfef -->
+
+**One more instance, found by grepping for the shape rather than for the
+finding.** After closing the blocker I swept every remaining `tree_identity`
+call site, and the migration-window path in `integrate._legacy_rollup_refusal`
+was a FOURTH reader choosing its own rev: it compared `tree_identity` of the
+commit that last touched the hand-authored rollup against a `want` composed
+with the peel, so a legacy rollup committed after a refresh could never match
+whatever it said. The review did not name it — it is the same defect, one
+function over, on a path that retires with the window — and fixing it in-lane
+rather than filing it is the consolidate rule, since the alternative is
+shipping a known instance of the defect this round exists to close. Routed
+through `governing_identity` like everything else; the assignment collapsed
+from three lines to two, so `integrate.py`'s baseline is re-stamped DOWNWARD
+1352 -> 1351 in the same commit, per that file's own rule.
+
+**No ratchet bump.** `agent_common`'s four-line `argv` build measured +3 SLOC
+over the one-line form it replaced; it was compacted back to two lines rather
+than stamping 1305 -> 1308 for the same logic, which is the rule this file's
+own entries state. `kitlib/verdict.py` and `gen_verdict_rollup.py` grew almost
+entirely in docstrings and stay far under THRESHOLD.
+
+**Spine cells amended where a fix made one false.** The load-bearing one was
+LLR-207's *"verified against the carrying commit's non-record tree"*, which the
+trailer change turned into a false claim about live code — exactly the stale
+negative-claim shape that nothing detects. LLR-207, LLR-208 (the rollup now
+owns its directory), IF-175, TC-205 and TC-206 all amended; every row stays
+`Drafted` and no `Status` was flipped. TC-206's method had ENUMERATED the extra
+arm while no test drove it, which is why the arm was broken and silent; the
+added case asserts the CLEARING and not the reporting, since a report whose own
+remedy cannot clear it is the defect.
