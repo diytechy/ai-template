@@ -740,3 +740,22 @@ unchanged. The regression proves both answers at policy 2: REVIEW-A alone is
 refused by name, then REVIEW-A plus REVIEW-B clears the gate. LLR-207 now says
 what its raw-path regression already proves: `fold_listing` consumes raw byte
 entries and never decodes them.
+
+At `c939d49c`, the focused verdict/admission/scoring and ratchet set passed,
+including the policy-2 regression's refusal with REVIEW-A alone and acceptance
+after REVIEW-B joins at the same governing identity. The smoke tier is **1508
+passed, 8 skipped in 33.77 s**; its enforced rerun is **1508 passed, 8 skipped
+in 46.18 s**, **46.3 s wall against the 60 s ceiling**; `check_docs --stale`
+reports **0 broken links** with the existing orphan warning.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke && .venv/bin/python scripts/check_smoke_budget.py --mode enforce && .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=c939d49c -->
+
+The captured full unfiltered suite is **3347 passed, 24 skipped, 1 failed in
+607.41 s**. The sole red is
+`test_derive_stage.py::test_this_repo_s_committed_stage_is_current`, the same
+branch-caused, trunk-owned generated-stage handoff proven against the
+integration base above; no verdict, admission, scoring, complexity, or module
+size test failed. `docs/stage` remains untouched for `trunk_step` to regenerate
+after merge.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=c939d49c -->
+
+No new open item was minted: both round-022 findings are closed in WI-579.
