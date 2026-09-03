@@ -1360,3 +1360,17 @@ the base itself is a wider change than this row's remainder and belongs to
 whoever rules OI-84.
 
 Deferred open items: OI-83, OI-84.
+
+#### Done-when 5, driven at the tip the integrator merges
+
+Full unfiltered suite at `566b40e6` — the close commit, with `docs/stage`
+regenerated on the worktree: **3359 passed, 25 skipped, 0 failed in 608.65 s**.
+Two more tests than the red run and no failures: the C2 end-to-end contract is
+back, and the new in-process pair covers it inside the smoke tier.
+<!-- fig: cmd="python -m pytest -q -n auto (worktree at 566b40e6, docs/stage regenerated)" rev=566b40e6 -->
+
+Recorded HERE and not in the Deliverable, deliberately. `docs/log.d/` is outside
+the non-record tree identity, so this commit cannot move the tree the reading
+names; a paragraph added to the spec would. That is the whole content of the
+round-033 lesson — its close promised the green "in the follow-up commit", and
+every follow-up that could carry it was also a commit that invalidated it.
