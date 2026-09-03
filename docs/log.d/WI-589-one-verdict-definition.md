@@ -64,9 +64,32 @@ where it belongs, in the sentence saying this addition is a requestor and NOT a
 fourth reader of the verdict. The remedy the disposition asked for is
 unchanged; only its stated ground is.
 
-The `data` cell also now names `REVIEW_PHASES` as a crossing, because after
-part 1 the span crosses this seam as a CONSTANT and not only through
-`declared_phases`, and the notes say which caller asks it that way.
+The notes also record that after part 1 the span crosses this seam as a
+CONSTANT and not only through `declared_phases`, and which caller asks it that
+way. That clause was drafted into the `data` cell first and moved: `data` is
+already 145 of its 160-character ceiling, the addition took it to 177, and
+`trace.py --strict-integrity` duly raised a new advisory saying the definition
+belongs outside that cell. Introducing an advisory to declare a crossing is a
+worse trade than stating it where the row's reasoning already lives — and
+"policy + entries -> owed phases/count" already covers the span as a typed
+crossing.
+
+### Verification of part 1's remedy, driven rather than argued
+
+The old and new clamps were run side by side against a `kitlib/verdict.py`
+declaring a third phase — the edit the duplicate made silently ignorable:
+
+```
+declared_phases(3)         -> ['REVIEW-A', 'REVIEW-B', 'REVIEW-C']
+OLD _clamped_review_rounds -> 2   (literal min(2, ...))
+NEW _clamped_review_rounds -> 3   (len of the one definition)
+OLD scheduler would queue  -> ['REVIEW-A', 'REVIEW-B']
+NEW scheduler would queue  -> ['REVIEW-A', 'REVIEW-B', 'REVIEW-C']
+```
+
+So the defect was real and is closed: the old shape queued two rounds against a
+merge slot demanding three. `NON_BUILD_PHASES` and `draw_session_route`'s
+`is_review` follow the same tuple by construction now.
 
 ### Surfaced, not fixed (separate findings, per the working agreement)
 
@@ -77,6 +100,19 @@ part 1 the span crosses this seam as a CONSTANT and not only through
   every check, and the next one will be too. A detector is buildable (the kit
   already walks imports in `gen_arch_map`/`gen_components`), but it is a new
   mechanism with its own false-positive surface and is outside this row.
+- **The declared `lint` step is RED at the integration base, and has been
+  skipping.** This worktree had no dev toolchain, so `check.py --run-step
+  format` reported the loud "A DECLARED CHECK DID NOT RUN" banner on the first
+  commit of this lane. Installing `requirements-dev.txt` (ruff 0.15.22, pytest
+  9.1.1) turned `format` green — 234 files already formatted — and turned
+  `lint` up RED with three errors, all pre-existing: `tests/test_agent_loop.py`
+  F401 `inspect`, `tests/test_trace_hats.py` F401 `pytest`,
+  `tests/test_trajectory_holdban.py:121` F841 `run_git`. Re-driven against the
+  base commit `794de60d` in a scratch copy — same three — so they are not this
+  lane's, and none of the three files is in its diff. Left alone on the
+  don't-change-unrelated-code rule, but they are worth a row: the hook only
+  runs `format`, so `lint` is gate-scoped, and a gate step nobody has been able
+  to run is a bar that is not being run.
 - **`LLR-207.code_symbol` omits `REVIEW_PHASES` and `TRAILER_LABEL`** although
   `kitlib/verdict.py`'s `__all__` exports both, and part 1 makes the first of
   them a symbol a second module now imports by name. Deliberately NOT touched
