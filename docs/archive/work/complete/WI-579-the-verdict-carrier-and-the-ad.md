@@ -189,6 +189,14 @@ derived fingerprint, and a work branch MUST NOT commit that file — which is wh
 `check.py`'s own `derived-stage` step reports `SKIP work branch ... generated
 freshness is the trunk lane's` and the trunk lane regenerates it after the merge
 (concurrency-restructure §5.2). `git diff 0ecc62b..HEAD -- docs/stage` is empty.
+
+Round 022 closed the merge-boundary count loss: `_verdict_gate` now retains
+the parsed `review_rounds` integer and requires REVIEW-A plus REVIEW-B evidence
+at the governing identity when the dial is 2. Its regression proves one
+APPROVE is refused before the second independent phase is added. LLR-207's
+encoding-boundary prose now matches the shipped interface: `fold_listing`
+takes raw byte entries and never decodes them.
+
 Account, deviations and the one out-of-scope finding:
 `docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md`.
 

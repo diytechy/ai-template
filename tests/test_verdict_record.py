@@ -209,7 +209,7 @@ def test_round_count_counts_cycles_not_reviewers():
 # --- 3. the gate over round evidence ------------------------------------------
 
 
-def rounds_repo(tmp_path):
+def rounds_repo(tmp_path, policy="1"):
     """A trunk with the review dial on, and `wi-401` carrying one code commit.
 
     The TRUNK is left checked out, as it is when the station runs: the gate
@@ -218,7 +218,7 @@ def rounds_repo(tmp_path):
     root = git_repo(tmp_path)
     docs = root / "docs"
     docs.mkdir(exist_ok=True)
-    (docs / "review-policy").write_text("1\n", encoding="utf-8", newline="\n")
+    (docs / "review-policy").write_text(policy + "\n", encoding="utf-8", newline="\n")
     _commit(root, "declare the review policy", when=T_BASE)
     _git(root, "checkout", "-q", "-b", "wi-401")
     (root / "src").mkdir(exist_ok=True)
@@ -230,7 +230,14 @@ def rounds_repo(tmp_path):
     return root
 
 
-def add_round(root, ordinal, text=APPROVE, session_phase="REVIEW-A", when=T_LATER):
+def add_round(
+    root,
+    ordinal,
+    text=APPROVE,
+    session_phase=None,
+    round_phase="REVIEW-A",
+    when=T_LATER,
+):
     """Commit one round on `wi-401`: the coordinator's session log AND the
     reviewer's verdict file, named for the code HEAD it read."""
     _git(root, "checkout", "-q", "wi-401")
@@ -243,7 +250,11 @@ def add_round(root, ordinal, text=APPROVE, session_phase="REVIEW-A", when=T_LATE
     )
     log.parent.mkdir(parents=True, exist_ok=True)
     log.write_text(
-        LOG.format(ordinal=ordinal, train="wi-401", phase=session_phase),
+        LOG.format(
+            ordinal=ordinal,
+            train="wi-401",
+            phase=session_phase or round_phase,
+        ),
         encoding="utf-8",
         newline="\n",
     )
@@ -252,7 +263,7 @@ def add_round(root, ordinal, text=APPROVE, session_phase="REVIEW-A", when=T_LATE
         / "docs"
         / "reviews"
         / "wi-401"
-        / "{:03d}-REVIEW-A-{}.md".format(ordinal, sha)
+        / "{:03d}-{}-{}.md".format(ordinal, round_phase, sha)
     )
     rnd.parent.mkdir(parents=True, exist_ok=True)
     rnd.write_text(text, encoding="utf-8", newline="\n")
@@ -269,6 +280,18 @@ def test_a_logged_reviewer_round_naming_this_tree_clears_the_gate(tmp_path):
     root = rounds_repo(tmp_path)
     add_round(root, 3)
     assert not (root / "docs" / "reviews" / "WI-401-REVIEW-A.md").exists()
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
+
+def test_policy_two_requires_both_independent_verdicts(tmp_path):
+    root = rounds_repo(tmp_path, policy="2")
+    add_round(root, 3)
+
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
+    assert refusal is not None
+    assert "not an APPROVE" in refusal and "REVIEW-B" in refusal
+
+    add_round(root, 4, round_phase="REVIEW-B", when=T_LATER + 100)
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
 

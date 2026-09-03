@@ -1279,11 +1279,12 @@ def _legacy_rollup_refusal(root, branch, wi, want):
 def _verdict_gate(root, branch, outcomes):
     """RULING-7 under OI-76: the dialed verdict, bound to the tree it judged.
 
-    review-policy >= 1 demands, for every WI this branch closes as `merged`, a
-    review round that a LOGGED REVIEWER SESSION produced and whose governing
-    verdict is APPROVE — computed over the branch's own round files, not over a
-    hand-authored rollup. `kitlib.verdict` carries the reading; what is decided
-    here is what the reading MEANS for a merge.
+    review-policy >= 1 demands, for every WI this branch closes as `merged`,
+    the declared number of independent review phases produced by LOGGED
+    REVIEWER SESSIONS, each with a governing APPROVE verdict — computed over
+    the branch's own round files, not over a hand-authored rollup.
+    `kitlib.verdict` carries the reading; what is decided here is what the
+    reading MEANS for a merge.
 
     GOVERNING = TREE IDENTITY (owner ruling 2026-08-31, OI-76). A verdict counts
     only if it names the branch's current NON-RECORD tree — the tree with
@@ -1326,14 +1327,14 @@ def _verdict_gate(root, branch, outcomes):
         return conflicts[0]
     dial = ac.declared_policy(root / "docs", "review-policy", "0")
     try:
-        required = int(dial or "0") >= 1
+        required = int(dial or "0")
     except ValueError:
         # The message still names the LEGACY file: it is the shape an operator
         # can be holding either way, and `declared_policy` renders the TOML int
         # in the same string vocabulary, so a non-integer here means a
         # hand-edited legacy file (a TOML non-int falls back to the default).
         return "docs/review-policy is not an integer: {!r} (fail closed)".format(dial)
-    if not required:
+    if required < 1:
         return None
     merged = [wi for wi in sorted(outcomes) if outcomes[wi] == Outcome.MERGED]
     if not merged:
@@ -1365,23 +1366,23 @@ def _verdict_gate(root, branch, outcomes):
         )
         or []
     )
-    if not entries:
+    if not entries and required == 1:
         for wi in merged:
             refusal = _legacy_rollup_refusal(root, branch, wi, want)
             if refusal:
                 return refusal
         return None
-    return _round_refusal(root, branch, base.strip(), want, entries)
+    return _round_refusal(root, branch, base.strip(), want, entries, required)
 
 
-def _round_refusal(root, branch, base, want, entries):
+def _round_refusal(root, branch, base, want, entries, required):
     """What the governing rounds at `want` MEAN for a merge — a refusal, or None.
 
     Split off `_verdict_gate` so the ladder there stays a ladder: this is the
-    one place that reads a verdict SET rather than a dial, and its three
-    answers (dissent, reroll-until-green, a contradicted attestation) are all
-    about the same set."""
-    latest, flipped = score_reviews.latest_phase_verdicts(entries)
+    one place that reads a verdict SET rather than a dial, and its four
+    answers (missing required phase, dissent, reroll-until-green, a
+    contradicted attestation) are all about the same set."""
+    latest, flipped = score_reviews.latest_phase_verdicts(entries, required)
     dissent = sorted(ph for ph, word in latest.items() if word != "APPROVE")
     if dissent or not latest:
         return "{}: the governing round(s) at this tree are not an APPROVE ({})".format(

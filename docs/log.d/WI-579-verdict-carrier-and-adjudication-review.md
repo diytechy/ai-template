@@ -729,3 +729,14 @@ defeats ACCIDENT and not INTENT (`refresh_attestation`, "THE HONEST BOUND",
 under DECISION 3), a newline in a work path is not ordinary work, and changing
 the separator would shift every identity value on a lane that has already
 closed. Recorded here so an adjudicator can rule rather than rediscover.
+
+**Round 022 — the merge gate now retains the reviewer count.** Review A drove
+the trust-boundary hole directly: with `review_rounds = 2`, one logged
+REVIEW-A APPROVE cleared `_verdict_gate` because the parsed integer had been
+collapsed to a boolean before the evidence was interpreted. The gate now
+carries the integer into `_round_refusal`, requires the corresponding declared
+phases at the governing identity, and leaves the policy-1 migration path
+unchanged. The regression proves both answers at policy 2: REVIEW-A alone is
+refused by name, then REVIEW-A plus REVIEW-B clears the gate. LLR-207 now says
+what its raw-path regression already proves: `fold_listing` consumes raw byte
+entries and never decodes them.
