@@ -96,7 +96,11 @@ Contract IF-123: the `last_approved` baseline, write side and whole read side.
     repo-relative paths written. It REFUSES to create the directory without
     `seed=True`, and refuses to refresh approved text into a registry without a
     `Status` flip in that registry or an `approves` ref naming it, because the
-    copy it takes is the text a signature blesses. `approves` is `{registry
+    copy it takes is the text a signature blesses. That refusal judges THIS
+    ACT'S WRITE SET and not the whole ledger, so a per-registry approval is not
+    blocked by drift in a registry the copy leaves alone; an act whose write set
+    is empty is judged over the whole ledger, so a refresh that would copy
+    nothing in a drifted tree refuses rather than exiting 0 in silence. `approves` is `{registry
     rel: ref}` (`parse_approves` builds it from a `REGISTRY=REF` CLI value). `load_all(root)` parses the snapshot into
     `{(stem, id column): {id: row}}`, returns None — never `{}` — when there is
     no snapshot, and RAISES on a file that exists and will not parse;
@@ -672,6 +676,18 @@ def refresh_refusal(root, approves=None, snapshot=None, *, seed=False):
     )
     if not blocked:
         return ""
+    return _refusal_text(blocked, scope)
+
+
+def _refusal_text(blocked, scope):
+    """The refusal a caller reads: the absorbed rows, what this act DOES
+    authorise, and the three ways forward.
+
+    A sibling of `refresh_refusal` rather than a tail inside it, because the
+    scoped rule gave that function a second decision to make and the rendering
+    was what pushed it over the cognitive bar — the check names decomposing
+    OUTWARD as the first escape, and a message builder is the seam that comes
+    apart cleanly (WI-584)."""
     lines = [
         "baseline_snapshot: REFUSED — this refresh would ABSORB approved text "
         "into the record of what a human blessed, and nothing in this working "
