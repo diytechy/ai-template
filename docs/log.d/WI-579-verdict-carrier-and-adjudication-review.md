@@ -1385,3 +1385,9 @@ caller. It now walks `*.md` recursively; the regression drives stale detection,
 regeneration, deletion, and the subsequent fresh check on a nested output.
 
 Deferred open items: OI-83, OI-84.
+
+Full unfiltered suite at `6d1101db`, on a detached worktree with the trunk-owned
+`docs/stage` regenerated in place: **3359 passed, 25 skipped, 0 failed in
+603.38 s**. The primary work branch remained clean and its generated artifact
+was not edited.
+<!-- fig: cmd="python -m pytest -q -n auto (detached worktree at 6d1101db, docs/stage regenerated)" rev=6d1101db -->
