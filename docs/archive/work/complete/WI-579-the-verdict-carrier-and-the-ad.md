@@ -110,9 +110,9 @@ time comparison, which nothing detects once it is false. Ratchet bumps
 then DOWN to 1352 when the peel left it, `check` 1163→1177, `bootstrap`
 1658→1660, smoke membership 1480→1560) each carry
 their reason at the entry; `_verdict_gate`'s complexity bump was REFUSED and the
-function decomposed instead. Round-007 rework full suite, run at `025a0643`:
-3342 passed, 24 skipped, 1 failed in 614.49s — the failure is `docs/stage`
-freshness, a trunk-lane artifact a work branch must
+function decomposed instead. Round-007 rework full suite, run at the tip
+`cee19210`: 3343 passed, 24 skipped, 1 failed in 615.27s — the failure is
+`docs/stage` freshness, a trunk-lane artifact a work branch must
 not commit, bisected clean at the integration base. Account, deviations and the
 one out-of-scope finding: `docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md`.
 

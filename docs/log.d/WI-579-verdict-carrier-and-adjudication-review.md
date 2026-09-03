@@ -355,3 +355,10 @@ failure being the same trunk-owned `docs/stage` freshness bisected clean at the
 base above. The counts the placeholder guessed happened to be right and the
 seconds were not; that they were close is not what makes a figure honest.
 <!-- fig: cmd="python -m pytest -q -n auto" rev=025a0643 -->
+
+Re-driven after the peel fix, since that is a script change and not a doc one —
+full suite at the tip `cee19210`: **3343 passed, 24 skipped, 1 failed in
+615.27 s**, the one extra pass being the new regression and the one failure the
+same `docs/stage` fingerprint. Smoke at the same tip: 1504 passed / 8 skipped,
+29.5 s against the 60 s ceiling. One box is one data point for the seconds.
+<!-- fig: cmd="python -m pytest -q -n auto" rev=cee19210 -->
