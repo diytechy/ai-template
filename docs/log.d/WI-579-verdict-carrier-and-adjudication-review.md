@@ -296,6 +296,54 @@ never been added to it, so the row under-declared what it drives.
 for a named `note`, which is line-neutral rather than a bump);
 `kitlib/verdict.py` is 227 SLOC and still opens no ratchet entry.
 
+### A fifth defect, found by verifying the fourth
+
+Round 007's finding 2 was fixed by lifting the refresh peel into
+`kitlib/verdict.py` so both readers are handed one rev. Driving that fix rather
+than re-reading it turned up the case it does not cover, and it is the row's own
+failure mode.
+
+`work_tip` peels a refresh sitting **literally on the tip**, and it has to: it
+is shared with the `reset --hard` in `integrate.refresh`, where peeling one
+commit too far destroys committed work — its own docstring says so, from an
+earlier round that measured it. `governing_identity` reused that peel. So the
+moment anything landed *on top of* a refresh commit, the tip stopped being a
+refresh commit, the peel stopped applying, and the identity flipped from the
+pre-refresh work tree to the post-refresh one.
+
+The commit that does this in practice is the coordinator's own **telemetry** —
+`docs/iteration/`, one of the three `RECORD_PREFIXES` the fold exists to ignore.
+It cannot move the identity by itself. It moved it by hiding the refresh:
+
+| state | governing | loop `owed` | gate |
+| --- | --- | --- | --- |
+| round served, no refresh | `4fff62ba…` | False | merges |
+| refresh on the tip (what round 007 tested) | `4fff62ba…` | False | merges |
+| **+ one telemetry commit on top** | `f2bca684…` | **True** | **refuses** |
+
+Both readers agree — on the wrong answer. An honest APPROVE is parked at a
+supervisor stop by the process writing about itself, which is OI-76 in one
+sentence. Round 007's own test lands its refresh last and never commits again,
+so it could not see this.
+<!-- fig: cmd="scratchpad/drive_peel_depth.py — three states on one two-branch git fixture, pre-fix" rev=863e768e -->
+
+The fix does **not** widen `work_tip`; widening a peel that feeds `reset --hard`
+would trade a stale verdict for destroyed work. `governing_rev` is a second,
+read-only walk: peel a verified refresh, walk through a record-only commit,
+stop at the first work commit. Walking through a record commit cannot change the
+answer by itself — the fold drops those paths, so a record commit and its parent
+have the same identity by construction — which is why this is not a new rule
+about what counts, only what lets the existing rule see past the records.
+`_record_only` passes `-z` for the finding-3 reason pointed the other way: a
+quoted non-ASCII path would make a WORK commit read as a record one. A merge
+commit, an empty commit, and the 64-commit bound all STOP the walk, which
+measures at a later rev and so can only ask for more review, never less.
+
+`test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel` pins it with
+its opposite (a work commit above the refresh does re-owe, and does refuse), and
+was verified to bite: reverting `governing_identity` to `work_tip` fails it on
+the identity assertion, `f2bca684…` against the served `4fff62ba…`.
+
 **A figure this session retracted.** Session 010 wrote the round-007 full-suite
 line into the archived spec *ahead of the run* and said so plainly in its own
 log ("I have not yet done and will not claim until I see it"); the run never

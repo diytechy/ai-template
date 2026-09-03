@@ -458,6 +458,76 @@ def test_a_station_refresh_owes_no_round_and_the_two_readers_agree(tmp_path):
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
 
+def _record_commit(root, ordinal, when):
+    """One coordinator telemetry commit — a RECORD path and nothing else."""
+    _git(root, "checkout", "-q", "wi-401")
+    log = (
+        root
+        / "docs"
+        / "iteration"
+        / "wi-401-{:03d}-20260101-000001.log".format(ordinal)
+    )
+    log.parent.mkdir(parents=True, exist_ok=True)
+    log.write_text("# phase: BUILD\n", encoding="utf-8", newline="\n")
+    _commit(root, "telemetry: session wi-401-{:03d} BUILD".format(ordinal), when=when)
+
+
+def test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel(tmp_path):
+    # The peel used to be TIP-ONLY, because it is shared with the `reset --hard`
+    # in `integrate.refresh`, where peeling one commit too far destroys work. So
+    # a telemetry commit landing on top of a refresh made the tip stop being a
+    # refresh commit, the peel stopped applying, and the identity flipped to the
+    # post-refresh tree. The fold already ignores `docs/iteration/`, so the
+    # commit could not move the identity by itself — it moved it by HIDING the
+    # refresh. An APPROVE served before the refresh then named nothing, and both
+    # readers agreed on the wrong answer: the OI-76 failure mode, one commit
+    # further down than the round-007 fix reached.
+    al = _al()
+    root = rounds_repo(tmp_path)
+    _git(root, "checkout", "-q", "wi-401")
+    (root / "src" / "widget.py").write_text(
+        "VALUE = 2\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "WI-401: close\n\nWI: WI-401", when=T_CODE + 50)
+    _git(root, "checkout", "-q", "main")
+    add_round(root, 3)
+    base = _rev(root, "main")
+    worker = {"train": "wi-401", "assigned": ["WI-401"], "base": base, "rework": ""}
+    _git(root, "checkout", "-q", "wi-401")
+    served = kv.governing_identity(root, "wi-401")
+
+    work = _refresh_commit(root, "wi-401", T_LATER + 100)
+    _record_commit(root, 4, T_LATER + 200)
+    assert kv.tree_identity(root, "HEAD") != kv.tree_identity(root, work), (
+        "the refresh must really have moved the tree, or this proves nothing"
+    )
+    gov = kv.governing_rev(root, "wi-401")
+    assert gov != _rev(root, "wi-401"), "the walk must not stop at the tip"
+    assert kv.tree_identity(root, gov) == kv.tree_identity(root, work), (
+        "the governing rev names the PRE-refresh work tree, not the tree the "
+        "telemetry commit left on the tip"
+    )
+    assert kv.governing_identity(root, "wi-401") == served
+    assert al.review_owed_by_evidence(root, worker) is False, (
+        "the coordinator's own telemetry must not re-owe a served round"
+    )
+    _git(root, "checkout", "-q", "main")
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
+    # The opposite, without which the walk could peel everything and pass: a
+    # WORK commit above the refresh is not walked through, and it does re-owe.
+    _git(root, "checkout", "-q", "wi-401")
+    (root / "src" / "widget.py").write_text(
+        "VALUE = 3\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "WI-401: more work\n\nWI: WI-401", when=T_LATER + 300)
+    _record_commit(root, 5, T_LATER + 400)
+    assert kv.governing_identity(root, "wi-401") != served
+    assert al.review_owed_by_evidence(root, worker) is True
+    _git(root, "checkout", "-q", "main")
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is not None
+
+
 # --- 4. the adjudication_review dial ------------------------------------------
 
 

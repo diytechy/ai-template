@@ -90,6 +90,20 @@ into the identity. The DONE banner states rounds DRAWN this run and the latest
 verdict, because the tally it reads holds every completed round whatever its
 outcome.
 
+Verifying finding 2's fix end-to-end found a fifth defect of the same family,
+driven and closed here. The refresh peel was TIP-ONLY, because `work_tip` is
+shared with the `reset --hard` in `integrate.refresh` where peeling one commit
+too far destroys work. So a telemetry commit — a `docs/iteration/` record path,
+which the fold exists to ignore — moved the governing identity anyway, by
+BURYING the refresh under it: the loop answered `owed=True` and the merge slot
+refused "no logged review round names its current tree", both readers agreeing
+on the wrong answer and parking an honest APPROVE at a supervisor stop. That is
+the OI-76 failure mode itself, one commit further down than round 007 reached.
+`governing_rev` now walks through record-only commits to reach the refresh, and
+`work_tip` keeps its tip-only contract untouched — the two shapes of the peel
+are separate because a read-only reader can afford an answer a destructive one
+cannot.
+
 `LLR-140`'s Approved detail cell was re-pointed IN-LANE: it asserted the retired
 time comparison, which nothing detects once it is false. Ratchet bumps
 (`agent_common` 1272→1305, `agent_loop` 2519→2578, `integrate` 1298→1382 and
