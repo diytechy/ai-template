@@ -512,15 +512,15 @@ def test_the_review_owed_derivation_and_the_gate_share_one_definition(tmp_path):
         "VALUE = 2\n", encoding="utf-8", newline="\n"
     )
     _commit(root, "WI-401: rework and close\n\nWI: WI-401", when=T_LATER + 100)
-    assert al.review_owed_by_evidence(root, worker, reviews) is True
+    assert al.review_owed_by_evidence(root, worker) is True
     add_round(root, 4, session_phase="BUILD")
     _git(root, "checkout", "-q", "wi-401")
-    assert al.review_owed_by_evidence(root, worker, reviews) is True
+    assert al.review_owed_by_evidence(root, worker) is True
     _git(root, "checkout", "-q", "main")
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is not None
     add_round(root, 5)
     _git(root, "checkout", "-q", "wi-401")
-    assert al.review_owed_by_evidence(root, worker, reviews) is False
+    assert al.review_owed_by_evidence(root, worker) is False
 
     # THE CLASS ITSELF: record-only commits after the verdict re-owe nothing.
     frag = root / "docs" / "log.d" / "WI-401-widget.md"
@@ -530,7 +530,7 @@ def test_the_review_owed_derivation_and_the_gate_share_one_definition(tmp_path):
         "rounds 1\n", encoding="utf-8", newline="\n"
     )
     _commit(root, "telemetry: session 006 review scoreboard", when=T_LATER + 200)
-    assert al.review_owed_by_evidence(root, worker, reviews) is False
+    assert al.review_owed_by_evidence(root, worker) is False
 
 
 def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):

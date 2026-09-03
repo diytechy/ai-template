@@ -171,7 +171,40 @@ historical provenance removed.
 
 Focused verdict-record plus module-size regressions: **34 passed in 4.52s**;
 the consolidation kept `agent_loop.py` and `integrate.py` at their existing
-ratchet ceilings with no bump. Full unfiltered suite at the rework commit:
+ratchet ceilings with no bump.
+
+### The residue that rework left, and the identity dogfooded
+
+Re-reading the changed signature rather than running another test found one
+piece of residue: `review_owed_by_evidence` still took a `reviews_dir`
+argument. The finding-1 fix replaced the on-disk directory scan with the
+branch-scoped committed-path walk, so nothing read it any more — a parameter
+naming a directory the function no longer opens, on the very function whose
+defect was reading that directory. Dropped, with the now-unused pass-through in
+`resume_owed_round`; the caller keeps its own `reviews_dir` local, which the
+verdict-path and scoreboard slots still use. No behaviour changes, which is why
+it is stated here rather than defended as a fix.
+
+The row's own machinery was then driven over the row's own history, which is
+the only end-to-end check available for a rule about trees:
+
+| commit | what it touched | non-record identity |
+| --- | --- | --- |
+| `0c7cb4eb` close | the work | `e61a3d47…` |
+| `f418cba1` rework | the work | `c3296412…` |
+| `41b84e93` spec + fragment | `docs/archive/work/` + `docs/log.d/` | `6f314694…` |
+| `7098ad21` telemetry | `docs/iteration/` + `docs/reviews/` only | `6f314694…` |
+
+The last line IS the defect class this row exists to kill: a telemetry commit
+moved HEAD and left the identity untouched, so it cannot re-owe a served round.
+The `41b84e93` change is equally correct and worth stating, because it looks
+like a counter-example and is not — a spec file under `docs/archive/work/` is
+work, not a record of it, so editing it genuinely does invalidate a verdict.
+The round on disk names `0c7cb4e`, whose identity no longer matches the tip;
+a fresh round is therefore owed, and the gate says so.
+<!-- fig: cmd="python -c \"import sys; sys.path.insert(0,'project-trajectory/scripts'); from kitlib.verdict import tree_identity as t; [print(r, t('.', r)[:8]) for r in ['0c7cb4eb','f418cba1','41b84e93','7098ad21']]\"" rev=7098ad21 -->
+
+Full unfiltered suite at the rework commit:
 **3339 passed, 24 skipped, 1 failed in 620.13s**. The sole failure is the same
 `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`
 trunk-owned `docs/stage` freshness assertion already diagnosed above; no new

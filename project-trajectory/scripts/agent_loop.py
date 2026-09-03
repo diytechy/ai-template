@@ -3327,7 +3327,7 @@ def read_review_owed(root):
     return fields
 
 
-def review_owed_by_evidence(root, worker, reviews_dir):
+def review_owed_by_evidence(root, worker):
     """COMMITTED evidence that a review round is owed: every assigned WI
     carries its trailer on the branch, and no round verdict names the branch's
     current NON-RECORD TREE. This is what a resumed worker trusts (a worker
@@ -3389,7 +3389,7 @@ def last_build_family(iter_dir, registry):
     return None
 
 
-def resume_owed_round(root, setup, st, rp_int, iter_dir, reviews_dir):
+def resume_owed_round(root, setup, st, rp_int, iter_dir):
     """C2 resume: a parked review-owed lane owes its ROUND, not another
     build. Owed-ness is decided from committed evidence (the marker alone is
     not trusted — its write can fail); the family comes from the marker when
@@ -3398,7 +3398,7 @@ def resume_owed_round(root, setup, st, rp_int, iter_dir, reviews_dir):
     if not (setup.routing.managed and rp_int >= 1 and setup.worker):
         return
     fields = read_review_owed(root)
-    if not fields and not review_owed_by_evidence(root, setup.worker, reviews_dir):
+    if not fields and not review_owed_by_evidence(root, setup.worker):
         return
     st.set_train_range("{}..{}".format(setup.worker["base"], head_sha(root)))
     st.last_impl_family = fields.get("family") or last_build_family(
@@ -4181,7 +4181,7 @@ def main():
     st = build_routing_state(docs, rp_int, setup.routing.managed)
     announce_critique_budget(setup.routing.managed, st)
 
-    resume_owed_round(root, setup, st, rp_int, iter_dir, reviews_dir)
+    resume_owed_round(root, setup, st, rp_int, iter_dir)
 
     # --- WI-076: surface the loop-start dirty tree (ONCE) --------------------
     # start_dirty was snapshotted before the lock (above). A non-empty tree here
