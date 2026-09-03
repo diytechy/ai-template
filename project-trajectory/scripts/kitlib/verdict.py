@@ -577,8 +577,24 @@ def logged_rounds(root, branch, paths):
     A round file with no coordinator session log for its (train, ordinal), or
     one whose log declares a non-review phase, is NOT a round: it is a file
     somebody wrote in the review path. An unreadable log is treated the same
-    way, which is the fail-toward-more-review direction."""
-    reviewer = set()
+    way, which is the fail-toward-more-review direction.
+
+    THE PHASE IS THE LOG'S, NEVER THE FILENAME'S, and that is why the name's
+    `phase` group is not read here at all. A round's phase had TWO sources —
+    the FILENAME a session chooses for itself and the coordinator's committed
+    session log — joined on (train, ordinal) alone, so one logged REVIEW-A
+    session admitted a `REVIEW-B` file written in the same commit and at
+    `review_rounds = 2` the gate cleared on a SINGLE reviewer, which is the
+    whole content of the policy (driven end-to-end: `branch_entries` returned
+    both phases, `round_count` agreed, and the merge was allowed). Deleting the
+    session-chosen source leaves one owning boundary, validated once, after
+    which a file's name cannot claim a phase its session did not serve — the
+    name's remaining job is only to say which round this is and what it read.
+
+    A (train, ordinal) whose logs declare MORE THAN ONE review phase is
+    ambiguous and yields no round: the fail-closed answer, and the reason this
+    reads a set rather than letting the last path scanned win."""
+    declared = {}
     for path in paths:
         key = session_log(path)
         if key is None:
@@ -588,14 +604,16 @@ def logged_rounds(root, branch, paths):
             continue
         header = _PHASE_HEADER_RE.search(blob[:4000])
         if header and header.group(1).strip() in REVIEW_PHASES:
-            reviewer.add(key)
+            declared.setdefault(key, set()).add(header.group(1).strip())
+    reviewer = {key: ph.pop() for key, ph in declared.items() if len(ph) == 1}
     rounds = set()
     for path in paths:
         parsed = round_file(path)
         if parsed is None:
             continue
-        train, ordinal, phase, sha = parsed
-        if (train, ordinal) in reviewer:
+        train, ordinal, _name_phase, sha = parsed
+        phase = reviewer.get((train, ordinal))
+        if phase is not None:
             rounds.add((ordinal, phase, sha, path))
     return sorted(rounds)
 

@@ -980,3 +980,93 @@ The findings, in the order they are being worked:
 4. `gen_verdict_rollup.train_dirs` enumerates review scopes by DIRECTORY, so the
    flat pre-train layout `round_file` supports renders no rollup at all and
    `--check` calls that fresh.
+
+#### Finding 1 — the round's phase had two sources, and the name was one of them
+
+`logged_rounds` joined a round file to its coordinator session log by
+`(train, ordinal)` and then took the round's PHASE from the file's own name,
+testing only that the log's declared phase was *some* member of `REVIEW_PHASES`.
+So one logged REVIEW-A session admitted a `NNN-REVIEW-B-<sha>.md` written beside
+its own, and at `review_rounds = 2` the gate cleared on a single reviewer —
+which is the entire content of the declared count.
+
+The fix deletes the session-chosen source rather than comparing the two: the
+entry carries the LOG's declared phase and `ROUND_FILE_RE`'s `phase` group is no
+longer read as an input anywhere in the join. A file's name can no longer claim a
+phase its session did not serve, because the name is no longer asked. A
+`(train, ordinal)` whose logs declare more than one review phase yields no round
+at all — the fail-closed answer, and the reason the reader accumulates a set
+instead of letting the last path scanned win.
+
+Driven both ways on the suite's own `rounds_repo(policy="2")` fixture, through
+the shipped functions:
+`test_one_session_cannot_serve_a_phase_its_log_does_not_declare` asserts both
+files really are committed behind one session log, then that `branch_entries`
+carries only `REVIEW-A`, that `phases_owed` still names `REVIEW-B`, and that the
+gate refuses by name — and finally that a REVIEW-B whose OWN log declares it
+clears the gate, so the rule is a phase binding and not a ban on a second file.
+Re-driven against the pre-fix module: `assert {'REVIEW-A', 'REVIEW-B'} ==
+{'REVIEW-A'}`.
+
+#### Finding 2 — the shared dial over an unshared input
+
+Two halves. The scheduling arm of `build_bookkeeping` (`outcome == "COMMITTED"
+and phase == "ADJUDICATE"`) had no test anywhere, so WI-559 Done-when 2's "exactly
+as a committing BUILD does" was asserted and not demonstrated, and `always` had
+never been driven through a repository fixture at all. It is now driven at every
+dial value on a closed adjudication lane, asserting the review queue, the
+train-scoped diff range and the recorded judging family — the three things
+"exactly as a BUILD does" has to mean.
+
+The compounding half was real and is the more interesting one: the dial has ONE
+reader, but the `drafts` it consumes came from a `## Dispositions` block each
+side looked up in its OWN home order — the loop `docs/work` first
+(`agent_loop.dispositions_drafted`), the gate `docs/archive/work` first
+(`integrate._branch_spec_text`). A branch momentarily carrying the spec in both
+homes therefore answered the scheduler and the merge gate differently, which is
+the come-apart WI-559 exists to close, re-entered through the shared reader's
+ARGUMENT rather than through the reader. The precedence now has one owner
+(`agent_common.SPEC_HOMES` / `authoritative_spec`, terminal copy first, because
+that is what the closing session did); each caller still reads from where it must
+— the loop globs its working tree, the gate asks `git show` against a branch it
+has not checked out — and hands over its candidates in any order.
+`test_the_scheduler_and_the_gate_read_one_spec_copy` builds exactly that branch,
+with the terminal copy drafting a `spine` successor and a stale `active/` copy an
+`ordinary` one; against the pre-fix modules it reports `['ordinary'] !=
+['spine']`.
+
+#### Finding 3 — the cell that over-claimed its own mechanism
+
+LLR-207's `detail` asserted a join "by train, ordinal and review phase". The
+cell stated the correct rule and the code did not, so finding 1 discharges it;
+the cell is nonetheless restated to say what the shipped join now is — by train
+and ordinal, with the phase taken from the joined log and an ambiguous key
+yielding nothing — because "correct by accident" is not a standing description.
+
+#### Finding 4 — a second notion of what a review scope is
+
+`gen_verdict_rollup.train_dirs` enumerated review scopes by iterating
+DIRECTORIES under `docs/reviews/`, while `kitlib.verdict.round_file` supports
+(and `test_round_and_session_names_parse_including_the_relaxed_tag` pins) the
+flat pre-train layout whose `train` is `""`. An adopter on that layout got no
+rollup at all AND a green `--check`, because the check compares against the same
+empty target set — the module docstring's own "reports a state its own remedy
+cannot clear" shape, in the direction where nothing is reported.
+
+`scopes()` now derives the scope set from `round_file`'s own `train` field over
+every round file found under `docs/reviews/`, which deletes the second notion
+rather than adding a flat-layout case beside it. The flat scope has no directory
+to be named after, so its rollup takes a reserved stem; the one collision that
+leaves — a train directory called by that same name — is REFUSED by name on both
+the check and the write arm, because two scopes sharing one output file leave the
+other permanently stale, which is precisely the unbreakable red this module was
+last reworked to remove.
+
+#### Ratchet
+
+Three reviewed bumps, each with its reason at the entry:
+`agent_common` 1305 -> 1314 (the shared precedence table and selector),
+`agent_loop` 2579 -> 2583 and `integrate` 1351 -> 1354 (each caller collects its
+candidates before one is chosen, where both previously returned on the first file
+they reached). `kitlib/verdict.py` and `gen_verdict_rollup.py` are both under
+THRESHOLD and open no entry.

@@ -1185,14 +1185,20 @@ def _branch_spec_text(root, branch, name):
     Not the trunk's copy under `active/`: the branch has moved the spec to its
     terminal folder and filled it, and the `## Dispositions` this reads were
     written by the session whose verdict is under judgement. Reading the trunk
-    copy would ask what the row was CLAIMED to do rather than what it did."""
-    for prefix in (ARCHIVE_WORK, WORK):
+    copy would ask what the row was CLAIMED to do rather than what it did — and
+    that precedence is `ac.authoritative_spec`'s, shared with the round
+    scheduler (`agent_loop.dispositions_drafted`) so the branch cannot answer
+    one of them with a copy it did not show the other."""
+    found = []
+    for prefix in ac.SPEC_HOMES:
         for path in _branch_tree_paths(root, branch, prefix) or []:
             if path.rsplit("/", 1)[-1] == name:
-                code, text = ac.git(root, "show", "{}:{}".format(branch, path))
-                if code == 0:
-                    return text
-    return None
+                found.append(path)
+    chosen = ac.authoritative_spec(found)
+    if chosen is None:
+        return None
+    code, text = ac.git(root, "show", "{}:{}".format(branch, chosen))
+    return text if code == 0 else None
 
 
 def _verdict_owed(root, branch, metas):

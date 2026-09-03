@@ -2741,9 +2741,12 @@ def dispositions_drafted(root, wi):
     """The `safety_class` of every successor the adjudication `wi` drafts in its
     `## Dispositions`, read from THIS LANE'S OWN TREE.
 
-    Searched across `docs/work/` and `docs/archive/work/` because a session that
-    ran its close ritual has already moved the spec out of `active/`, and the
-    drafts it wrote are exactly what decides whether its verdict earns a round.
+    Searched across `agent_common.SPEC_HOMES` because a session that ran its
+    close ritual has already moved the spec out of `active/`, and the drafts it
+    wrote are exactly what decides whether its verdict earns a round. WHICH copy
+    wins when the branch carries both is `agent_common.authoritative_spec`'s to
+    say, not this function's: the merge slot asks the same question of the same
+    branch, and a second precedence order here would let the two disagree.
 
     An unreadable spec, or one whose `## Dispositions` will not parse, answers
     `["spine"]` — a sentinel that reads as REVIEW OWED. That is the same
@@ -2752,19 +2755,23 @@ def dispositions_drafted(root, wi):
     skipped over an unreadable mint costs the second opinion entirely."""
     import intake  # a sibling reader; deferred so a non-adjudicating run pays nothing
 
-    for home in ("docs/work", "docs/archive/work"):
-        for hit in sorted((Path(root) / home).rglob(wi + "-*.md")):
-            try:
-                text = hit.read_text(encoding="utf-8")
-            except (OSError, UnicodeDecodeError):
-                return ["spine"]
-            drafts, refusal = intake.parse_dispositions(text, hit.name)
-            if refusal:
-                return ["spine"]
-            # `kind`: `parse_dispositions` normalizes the declared
-            # `safety_class` cell into it (see `integrate._verdict_owed`).
-            return [d.get("kind") for d in drafts]
-    return ["spine"]
+    found = {}
+    for home in agent_common.SPEC_HOMES:
+        for hit in (Path(root) / home).rglob(wi + "-*.md"):
+            found[hit.relative_to(Path(root)).as_posix()] = hit
+    chosen = agent_common.authoritative_spec(found)
+    if chosen is None:
+        return ["spine"]
+    try:
+        text = found[chosen].read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return ["spine"]
+    drafts, refusal = intake.parse_dispositions(text, found[chosen].name)
+    if refusal:
+        return ["spine"]
+    # `kind`: `parse_dispositions` normalizes the declared `safety_class` cell
+    # into it (see `integrate._verdict_owed`).
+    return [d.get("kind") for d in drafts]
 
 
 def schedule_adjudication_round(ctx, plan, commits, after, wi_label):

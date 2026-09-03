@@ -238,9 +238,14 @@ def add_round(
     session_phase=None,
     round_phase="REVIEW-A",
     when=T_LATER,
+    extra_phases=(),
 ):
     """Commit one round on `wi-401`: the coordinator's session log AND the
-    reviewer's verdict file, named for the code HEAD it read."""
+    reviewer's verdict file, named for the code HEAD it read.
+
+    `extra_phases` writes FURTHER round files into the same commit behind the
+    same single session log — the shape a session that names its own second
+    phase produces, which is what the log-owns-the-phase join must refuse."""
     _git(root, "checkout", "-q", "wi-401")
     sha = (_rev(root, "wi-401") or "")[:7]
     log = (
@@ -268,6 +273,10 @@ def add_round(
     )
     rnd.parent.mkdir(parents=True, exist_ok=True)
     rnd.write_text(text, encoding="utf-8", newline="\n")
+    for phase in extra_phases:
+        (rnd.parent / "{:03d}-{}-{}.md".format(ordinal, phase, sha)).write_text(
+            text, encoding="utf-8", newline="\n"
+        )
     _commit(root, "review: round {}".format(ordinal), when=when)
     _git(root, "checkout", "-q", "main")
     return sha
@@ -373,6 +382,38 @@ def test_an_implementer_authored_file_in_the_review_path_is_not_a_round(tmp_path
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
     assert "no logged review round" in refusal
+
+
+def test_one_session_cannot_serve_a_phase_its_log_does_not_declare(tmp_path):
+    # THE CROSS-PHASE CLASS, sibling of the implementer-authored round above and
+    # not reached by it: the file's session log DOES declare a review phase, so
+    # the provenance join is satisfied — it just declares a DIFFERENT one. While
+    # the round's phase came from its own FILENAME, one logged REVIEW-A session
+    # could name a `REVIEW-B` file beside its own and clear a policy-2 gate on a
+    # single reviewer, which is the entire content of the declared count.
+    root = rounds_repo(tmp_path, policy="2")
+    sha = add_round(root, 3, extra_phases=["REVIEW-B"])
+    listed = integ.ac.git(root, "ls-tree", "-r", "--name-only", "wi-401", "docs")[1]
+    assert "docs/reviews/wi-401/003-REVIEW-B-{}.md".format(sha) in listed, (
+        "the fixture must really commit both files behind one session log"
+    )
+    assert listed.count("docs/iteration/wi-401-003-") == 1, "one session log"
+
+    # The evidence carries the LOG's phase for both files, so the second one
+    # adds no independent verdict and REVIEW-B is still outstanding.
+    base = _rev(root, "main")
+    want = kv.governing_identity(root, "wi-401")
+    entries = kv.branch_entries(root, "wi-401", base, want, score.parse_verdict)
+    assert {phase for phase, _o, _v in entries} == {"REVIEW-A"}
+    assert kv.phases_owed(entries, 2) == ["REVIEW-B"]
+
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
+    assert refusal is not None and "REVIEW-B" in refusal
+
+    # ...and a REVIEW-B whose OWN session log declares it clears the gate, so
+    # the rule is a phase binding and not a ban on the second file.
+    add_round(root, 4, round_phase="REVIEW-B", when=T_LATER + 100)
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
 
 def test_a_round_that_judged_an_earlier_tree_does_not_count(tmp_path):
@@ -868,7 +909,9 @@ def adjudication_repo(tmp_path, mode, drafts_class="ordinary"):
         newline="\n",
     )
     (root / "docs" / "work" / "active" / "wi-401" / spec.name).unlink()
-    _commit(root, "WI-401: rule and close", when=T_LATER)
+    # The `WI:` completion trailer is what makes the lane BUILT — the round
+    # scheduler reads it through `train_evidence` before it queues anything.
+    _commit(root, "WI-401: rule and close\n\nWI: WI-401", when=T_LATER)
     _git(root, "checkout", "-q", "main")
     return root
 
@@ -884,6 +927,114 @@ def test_an_adjudication_lane_owing_no_round_merges_with_no_verdict_file(
     # verdict artifact of any kind and the gate is satisfied.
     root = adjudication_repo(tmp_path, mode, drafts_class="ordinary")
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
+
+def _adjudication_ctx(root, plan_brief="amendment"):
+    """A LoopContext + plan positioned exactly where `build_bookkeeping` finds a
+    committing ADJUDICATE session: on the lane's own branch, at its close."""
+    import dataclasses
+
+    al = _al()
+    _git(root, "checkout", "-q", "wi-401")
+    fields = {f.name: None for f in dataclasses.fields(al.LoopContext)}
+    run = al.LoopRun(routing=al.RoutingState(1, 900, set(), 3, {}))
+    ctx = dataclasses.replace(
+        al.LoopContext(**fields),
+        root=root,
+        docs=root / "docs",
+        rp_int=1,
+        worker={
+            "train": "wi-401",
+            "assigned": ["WI-401"],
+            "base": _rev(root, "main"),
+            "rework": "",
+        },
+        run=run,
+    )
+    plan = {
+        "phase": "ADJUDICATE",
+        "route_id": "judge",
+        "route_family": "anthropic",
+        "brief": plan_brief,
+    }
+    return al, ctx, plan
+
+
+@pytest.mark.parametrize(
+    "mode,drafts_class,brief,queued",
+    [
+        # never: not even a spine mint buys a round.
+        ("never", "spine", "amendment", False),
+        # when-minting: the drafted successor's class is the whole question.
+        ("when-minting", "ordinary", "amendment", False),
+        ("when-minting", "spine", "amendment", True),
+        # always: the value no repo fixture had ever driven.
+        ("always", "ordinary", "amendment", True),
+    ],
+)
+def test_a_committing_adjudication_schedules_its_round_under_the_dial(
+    tmp_path, mode, drafts_class, brief, queued
+):
+    # WI-559 DW2's SCHEDULING half, driven through the shipped arm rather than
+    # asserted about it. `adjudication_review_owed` and `_verdict_owed` were
+    # each covered; the loop path that consults the dial and then queues the
+    # round — `build_bookkeeping`'s `phase == "ADJUDICATE"` branch — was not, so
+    # "exactly as a committing BUILD does" rested on reading the code.
+    al, ctx, plan = _adjudication_ctx(
+        adjudication_repo(tmp_path, mode, drafts_class=drafts_class), brief
+    )
+    after = _rev(ctx.root, "HEAD")
+    al.build_bookkeeping(ctx, plan, "COMMITTED", 0, ["deadbeef"], after, "WI-401", 0.0)
+
+    st = ctx.run.routing
+    assert st.review_queue == (["REVIEW-A"] if queued else [])
+    # "exactly as a committing BUILD does": the round is scoped to the train
+    # diff and the judging family is recorded as the one a reviewer must avoid.
+    assert st.last_impl_family == ("anthropic" if queued else None)
+    assert (st.impl_range or "") == (
+        "{}..{}".format(ctx.worker["base"], after) if queued else ""
+    )
+
+
+def test_the_scheduler_and_the_gate_read_one_spec_copy(tmp_path):
+    # The dial has ONE reader, but its INPUT did not: the drafts came from a
+    # `## Dispositions` block each side looked up in its own home order — the
+    # loop `docs/work` first, the gate `docs/archive/work` first. A branch
+    # carrying the spec in both homes therefore answered them differently and
+    # reproduced the come-apart WI-559 exists to close. Here the terminal copy
+    # drafts a SPINE successor (a round is owed) and a stale `active/` copy
+    # drafts an ordinary one (none is).
+    al = _al()
+    root = adjudication_repo(tmp_path, "when-minting", drafts_class="spine")
+    _git(root, "checkout", "-q", "wi-401")
+    terminal = next((root / "docs" / "archive" / "work" / "complete").iterdir())
+    stale = root / "docs" / "work" / "active" / "wi-401" / terminal.name
+    stale.parent.mkdir(parents=True, exist_ok=True)
+    stale.write_text(
+        terminal.read_text(encoding="utf-8").replace('"spine"', '"ordinary"'),
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "WI-401: leave a stale active copy behind", when=T_LATER + 50)
+
+    assert al.dispositions_drafted(root, "WI-401") == ["spine"]
+    _git(root, "checkout", "-q", "main")
+    owed, _why = integ._verdict_owed(
+        root, "wi-401", integ._claimed_spec_frontmatters(root, "wi-401")
+    )
+    assert owed is True, "the gate must read the same copy the scheduler read"
+
+    # ...and the shared precedence is the reason, stated where both callers ask.
+    assert (
+        ac.authoritative_spec(
+            [
+                "docs/work/active/wi-401/WI-401-a.md",
+                "docs/archive/work/complete/WI-401-a.md",
+            ]
+        )
+        == "docs/archive/work/complete/WI-401-a.md"
+    )
+    assert ac.authoritative_spec([]) is None
 
 
 def test_a_minting_adjudication_still_owes_its_round(tmp_path):
@@ -1040,6 +1191,32 @@ def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
     # what matters is not that STALE is reported but that regenerating clears
     # it.
     assert gen.main(["--root", str(root)]) == 0
+    assert gen.main(["--root", str(root), "--check"]) == 0
+
+    # THE FLAT PRE-TRAIN LAYOUT, which `round_file` supports and the DIRECTORY
+    # enumeration silently skipped: an adopter on it got an empty rollup
+    # directory AND a green `--check`, because the check compared against the
+    # same empty target set. The scope set is now the round files' own `train`.
+    flat = root / "docs" / "reviews" / "004-REVIEW-A-abc1234.md"
+    flat.write_text(APPROVE, encoding="utf-8", newline="\n")
+    assert gen.main(["--root", str(root), "--check"]) == 1
+    assert gen.main(["--root", str(root)]) == 0
+    flat_rollup = root / "docs" / "reviews" / "rollup" / (gen.FLAT_SCOPE + ".md")
+    assert "004-REVIEW-A-abc1234.md" in flat_rollup.read_text(encoding="utf-8")
+    assert gen.main(["--root", str(root), "--check"]) == 0
+
+    # ...and the one collision that naming leaves is REFUSED, not resolved by a
+    # last-write-wins that would leave the other scope stale forever.
+    clashing = root / "docs" / "reviews" / gen.FLAT_SCOPE / "006-REVIEW-A-abc1234.md"
+    clashing.parent.mkdir(parents=True, exist_ok=True)
+    clashing.write_text(APPROVE, encoding="utf-8", newline="\n")
+    assert gen.main(["--root", str(root), "--check"]) == 1
+    assert gen.main(["--root", str(root)]) == 1
+    clashing.unlink()
+    flat.unlink()
+    assert gen.main(["--root", str(root)]) == 0
+    assert not flat_rollup.exists(), "a retired scope's rollup is pruned"
+
     assert gen.main(["--root", str(root), "--check"]) == 0
     retired = root / "docs" / "reviews" / "rollup" / "wi-999.md"
     retired.write_text("# a scope that no longer exists\n", encoding="utf-8")

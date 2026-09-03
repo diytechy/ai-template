@@ -1052,6 +1052,44 @@ def adjudication_review_owed(docs, brief, drafts):
     )
 
 
+# The two homes a branch may carry a work-item spec in, in the order that
+# decides WHICH COPY GOVERNS when it carries both. ARCHIVE FIRST: a session that
+# ran its close ritual has MOVED the spec to its terminal folder and FILLED it,
+# so the terminal copy is what that session actually did, while an `active/`
+# copy still standing beside it says only what the row was CLAIMED to do.
+SPEC_HOMES = ("docs/archive/work", "docs/work")
+
+
+def _spec_home_rank(path):
+    """`(home precedence, path)` — the key `authoritative_spec` sorts on."""
+    for rank, home in enumerate(SPEC_HOMES):
+        if path.startswith(home + "/"):
+            return (rank, path)
+    return (len(SPEC_HOMES), path)
+
+
+def authoritative_spec(paths):
+    """The one repo-relative spec path that governs among `paths`, or None.
+
+    ONE OWNING BOUNDARY for "which copy of this branch's spec answers for it",
+    because that answer decides a review round. `agent_loop.dispositions_drafted`
+    (does this judgement owe a round?) and `integrate._verdict_owed` (does this
+    merge demand one?) read the same `## Dispositions` block through the same
+    dial — and each used to walk the homes in its OWN order, the loop
+    `docs/work` first and the gate `docs/archive/work` first. A branch
+    momentarily carrying the spec in BOTH homes therefore handed the scheduler
+    and the gate DIFFERENT drafts: the exact come-apart the shared dial exists
+    to prevent, re-entered through the dial's input rather than through the dial.
+
+    The callers legitimately differ in where they read from — the loop globs its
+    own working tree, the gate asks `git show` against a branch it has not
+    checked out — so what is shared here is the PRECEDENCE and not the read.
+    Each caller hands over the candidates it found, in any order, and gets back
+    the one the other would also have chosen."""
+    ranked = sorted((str(p).replace("\\", "/") for p in paths), key=_spec_home_rank)
+    return ranked[0] if ranked else None
+
+
 def keep_nondependent(docs):
     """The orthogonal dial the ordinal cannot carry: may other lanes keep
     running while an approval is queued? Defaults FALSE — a queued
