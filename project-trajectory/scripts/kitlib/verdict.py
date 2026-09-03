@@ -227,7 +227,13 @@ def tree_identity(root, rev):
     `--full-tree` so the answer does not depend on the caller's cwd inside the
     repository, and `-z` because it is the ENCODING BOUNDARY: NUL-delimited
     output is never quoted or escaped, so `fold_listing` is handed raw paths and
-    the record-path test cannot be defeated by a filename (see its docstring)."""
+    the record-path test cannot be defeated by a filename (see its docstring).
+    A NUL split also survives a path containing a newline, which the line split
+    it replaced could not. The honest residual: `git_out` decodes with
+    `errors="replace"`, so a path that is not valid UTF-8 reaches the fold with
+    replacement characters — the exclusion still holds (its prefix is ASCII) and
+    the digest is still deterministic, but two such paths differing only in
+    undecodable bytes would fold alike."""
     if rev is None:
         return None
     listing = git_out(root, ["ls-tree", "-r", "-z", "--full-tree", rev])

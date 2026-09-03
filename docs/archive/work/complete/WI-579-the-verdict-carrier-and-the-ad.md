@@ -14,7 +14,7 @@ supersedes = "WI-558;WI-559;WI-560"
 The merge gate reads the EVIDENCE and the evidence names the tree it judged.
 
 `kitlib/verdict.py` (LLR-207, IF-175) is the verdict record's one home: the
-non-record tree identity — a SHA-256 fold of `git ls-tree -r` with
+non-record tree identity — a SHA-256 fold of `git ls-tree -r -z` with
 `docs/reviews/`, `docs/log.d/` and `docs/iteration/` dropped — the
 `Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex>` trailer
 grammar, the round-file / session-log join, and the branch-scoped readers. Two
@@ -49,7 +49,10 @@ between them drew two identical rounds on WI-547.
 - **WI-558 DW5 / WI-560 DW4 / WI-559 DW3** — `tests/test_verdict_record.py`
   drives each half beside its opposite (TC-205, TC-206).
 - **WI-560 DW1** — ONE definition of "the last commit that could invalidate a
-  verdict", used by the merge slot AND the C2 review-owed derivation. The
+  verdict", used by the merge slot AND the C2 review-owed derivation. That
+  definition names a REV as well as a path set, so the station-refresh peel
+  (`refresh_attestation` / `work_tip`) lives beside the fold and both readers
+  call `governing_identity` rather than each choosing where to measure. The
   double-identical-round class is now unrepresentable, not policed: the commits
   that caused it cannot move the identity either reader compares.
 - **WI-559 DW2** — a committing ADJUDICATE session schedules its round exactly
@@ -75,14 +78,31 @@ tree-scoped count over); both the coordinator writer and gate derive that value
 from the shared evidence. LLR-207's rationale now carries only the standing
 technical reason, without the decision's provenance narrative.
 
+Review A round 007 closed four more, three of them one shape — a rule expressed
+as a value something else got to choose. The identity's REV is now part of the
+shared definition (the peel moved into `kitlib/verdict.py`, so a station refresh
+no longer makes the two readers disagree); `branch_trailers` returns the ordered
+SEQUENCE of attestations per tree, so the newest-first `git log` can no longer
+hand a reader a superseded stamp and have the cross-check accuse an approved
+lane of forgery; and `tree_identity` passes `-z` while `fold_listing` takes
+decoded entries, so a quoted non-ASCII path can no longer fold a record file
+into the identity. The DONE banner states rounds DRAWN this run and the latest
+verdict, because the tally it reads holds every completed round whatever its
+outcome.
+
 `LLR-140`'s Approved detail cell was re-pointed IN-LANE: it asserted the retired
 time comparison, which nothing detects once it is false. Ratchet bumps
-(`agent_common` 1272→1305, `agent_loop` 2519→2578, `integrate` 1298→1382,
-`check` 1163→1177, `bootstrap` 1658→1660, smoke membership 1480→1560) each carry
+(`agent_common` 1272→1305, `agent_loop` 2519→2578, `integrate` 1298→1382 and
+then DOWN to 1352 when the peel left it, `check` 1163→1177, `bootstrap`
+1658→1660, smoke membership 1480→1560) each carry
 their reason at the entry; `_verdict_gate`'s complexity bump was REFUSED and the
-function decomposed instead. Rework full suite: 3339 passed, 24 skipped, 1 failed
-in 620.13s at `f418cba1` —
-the failure is `docs/stage` freshness, a trunk-lane artifact a work branch must
+function decomposed instead. Round-007 rework full suite: NOT YET RUN at the
+rework tip. Session 010 wrote a placeholder figure ahead of its run and said so
+in its own log; the placeholder is replaced by this sentence rather than by a
+number nobody produced, and the real output lands in the following commit. The
+last full suite actually produced was 3339 passed, 24 skipped, 1 failed in
+620.13s at `f418cba1` — the failure is `docs/stage`
+freshness, a trunk-lane artifact a work branch must
 not commit, bisected clean at the integration base. Account, deviations and the
 one out-of-scope finding: `docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md`.
 
