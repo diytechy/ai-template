@@ -2,12 +2,78 @@
 id = "WI-579"
 title = "The verdict carrier and the adjudication_review dial: gate over logged rounds, tree-bound trailer, generated rollup"
 workstream = "process"
-specref = "docs/requirements/open-items.toml#OI-76"
+specref = ""
 buildtier = "strong"
 priority = 9
 safety_class = "ordinary"
 supersedes = "WI-558;WI-559;WI-560"
 +++
+
+## Deliverable
+
+The merge gate reads the EVIDENCE and the evidence names the tree it judged.
+
+`kitlib/verdict.py` (LLR-207, IF-175) is the verdict record's one home: the
+non-record tree identity — a SHA-256 fold of `git ls-tree -r` with
+`docs/reviews/`, `docs/log.d/` and `docs/iteration/` dropped — the
+`Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex>` trailer
+grammar, the round-file / session-log join, and the branch-scoped readers. Two
+callers stand on it and that is the point: `integrate._verdict_gate` (may this
+merge?) and `agent_loop.review_owed_by_evidence` (does this lane still owe a
+round?) asked one question with two rules over two exclusion sets, and the gap
+between them drew two identical rounds on WI-547.
+
+- **WI-558 DW1** — the gate computes over the branch's own round files,
+  restricted to rounds a LOGGED reviewer session produced: a file under
+  `docs/reviews/` is a round only when the coordinator's own committed session
+  log for that (train, ordinal) declares a REVIEW phase. Finding K closed —
+  an implementer cannot author its own approval without also forging the loop's
+  telemetry.
+- **WI-558 DW2** — the machine half rides the round's own record commit as a
+  trailer, written by the COORDINATOR and verified against its carrier's tree
+  (the `Bar-Green` pattern). GOVERNING = TREE IDENTITY: a verdict counts only
+  while it names the branch's current non-record tree, read at the WORK TIP so
+  the station refresh still does not stale an honest APPROVE. The freshness
+  comparison is gone; there is no ordering rule left. The trailer is a
+  CROSS-CHECK and never an accept path — one that contradicts the rounds
+  refuses the merge.
+- **WI-558 DW3** — `gen_verdict_rollup.py` (LLR-208) rebirths the rollup as a
+  GENERATED artifact: `docs/stack.ini [generated]`, `trunk_step.py --regen`, a
+  `check.py verdict-rollup` freshness step on the hook floor and in
+  `_TRUNK_FRESHNESS_STEPS`, and `--check` with two answers. The gate never reads
+  it, and the file says so where a human will see it.
+- **WI-558 DW4** — the migration window: the gate accepts EITHER the round
+  evidence or a legacy hand-authored rollup, judged by the SAME identity rule,
+  warning on stderr whenever the legacy path is what cleared it. Two
+  `RESYNC_PACK.md` entries. The trailer is additive and costs an adopter nothing.
+- **WI-558 DW5 / WI-560 DW4 / WI-559 DW3** — `tests/test_verdict_record.py`
+  drives each half beside its opposite (TC-205, TC-206).
+- **WI-560 DW1** — ONE definition of "the last commit that could invalidate a
+  verdict", used by the merge slot AND the C2 review-owed derivation. The
+  double-identical-round class is now unrepresentable, not policed: the commits
+  that caused it cannot move the identity either reader compares.
+- **WI-559 DW2** — a committing ADJUDICATE session schedules its round exactly
+  as a committing BUILD does, under the dial; the phase stays in
+  `NON_BUILD_PHASES` because a judgement is not a build. No exit banner claims a
+  round that was never drawn — it counts them.
+- **The dial** — `docs/process.toml [attestation] adjudication_review`
+  (`never` / `when-minting` / `always`; template and this repo ship
+  `when-minting`), read through `agent_common.adjudication_review_owed` by BOTH
+  the scheduler and the gate, with a closed vocabulary refused at preflight and
+  a conservative fallback. Its `docs/enforcement-audit.md` row and the
+  `RESYNC_PACK.md` entry ship with it. An adjudication lane drafting ordinary
+  successors now merges with NO verdict artifact present anywhere — the OI-76
+  acceptance becomes measurable on the next unattended run.
+
+`LLR-140`'s Approved detail cell was re-pointed IN-LANE: it asserted the retired
+time comparison, which nothing detects once it is false. Ratchet bumps
+(`agent_common` 1272→1305, `agent_loop` 2519→2578, `integrate` 1298→1382,
+`check` 1163→1177, `bootstrap` 1658→1660, smoke membership 1480→1560) each carry
+their reason at the entry; `_verdict_gate`'s complexity bump was REFUSED and the
+function decomposed instead. Full suite: 3336 passed, 24 skipped, 1 failed —
+the failure is `docs/stage` freshness, a trunk-lane artifact a work branch must
+not commit, bisected clean at the integration base. Account, deviations and the
+one out-of-scope finding: `docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md`.
 
 ## Context
 

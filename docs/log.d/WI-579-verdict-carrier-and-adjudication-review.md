@@ -130,7 +130,24 @@ Smoke tier at the re-stamp: 1505 collected, **1497 passed / 8 skipped**, 25.2 /
 budget is not touched.
 <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=1ad5d465 -->
 
-FULL_SUITE_LINE
+Full unfiltered suite at the row's tip, on a quiet box:
+**3336 passed, 24 skipped, 1 failed in 605.75 s** — and the one failure is
+`tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`,
+which is CAUSED by this row and is the TRUNK LANE'S to clear. `docs/stage` is
+declared `[generated]`; a work branch must never commit it (its whole history
+is trunk-side claim / mint / refresh commits), `check.py`'s `derived-stage`
+step SKIPs on a claimed branch for exactly that reason, and `trunk_step.py
+--regen` re-derives it after the merge. Bisected rather than assumed: the test
+passes at this branch's integration base `0ecc62bb` in a clean worktree, so it
+is this row's spine edits that moved the fingerprint, not an inherited red.
+<!-- fig: cmd="python -m pytest -q -n auto" rev=5ea28d6a -->
+
+**A finding this raised, out of scope and not fixed here.** That test has no
+lane stand-down. `check.py` learned in WI-141 that a work branch must not
+answer for a trunk-owned generated artifact and SKIPs the `derived-stage` step
+with a notice; the pytest assertion beside it did not, so **every spine-touching
+lane's full-suite run reds on it**, and the honest signal is indistinguishable
+from a real staleness. The fix is one guard, not this row's to write.
 
 `ruff format` is clean. `ruff check` reports three pre-existing F401/F841 in
 test modules this row did not touch (`test_agent_loop.py`,
