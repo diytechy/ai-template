@@ -204,9 +204,13 @@ The round on disk names `0c7cb4e`, whose identity no longer matches the tip;
 a fresh round is therefore owed, and the gate says so.
 <!-- fig: cmd="python -c \"import sys; sys.path.insert(0,'project-trajectory/scripts'); from kitlib.verdict import tree_identity as t; [print(r, t('.', r)[:8]) for r in ['0c7cb4eb','f418cba1','41b84e93','7098ad21']]\"" rev=7098ad21 -->
 
-Full unfiltered suite at the rework commit:
-**3339 passed, 24 skipped, 1 failed in 620.13s**. The sole failure is the same
+Full unfiltered suite re-driven at the tip after the signature change, because
+removing a parameter is exactly the edit a grep can miss and `test_agent_loop.py`
+is subprocess-heavy and so sits OUTSIDE the smoke tier that guarded the rest of
+this session: **3339 passed, 24 skipped, 1 failed in 624.14s** — the same counts
+as the rework commit, which is the expected shape for a change that added and
+removed no test. The sole failure is the same
 `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`
 trunk-owned `docs/stage` freshness assertion already diagnosed above; no new
 failure appeared.
-<!-- fig: cmd="python -m pytest -q -n auto" rev=f418cba1 -->
+<!-- fig: cmd="python -m pytest -q -n auto" rev=0b1f3b41 -->
