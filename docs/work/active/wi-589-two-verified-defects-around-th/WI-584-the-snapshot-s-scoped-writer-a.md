@@ -11,6 +11,26 @@ bar = "DevStg-Impl"
 
 ## Context
 
+THE RULING: (a). The gate is scoped to the writer. Grounds, in the row's own
+terms: `copy_live`'s write set IS the authorised set (`_authorised_registries`
+= the registries `--approves` names plus the ones an approving `Status` move
+happened in), so a registry the refusal blocks on but the writer would not
+touch cannot be absorbed by the act being refused — the block protects nothing
+and costs the act. Reading (b) would have to unwind WI-571's scoping, which
+closed a measured laundering path of its own (a spine flip re-sealing off-spine
+drift), and would contradict the ruled per-registry contract the refusal text
+already states ("authorises the one registry it names"). The false block is
+also not confined to `--approves`: a bare no-flag act carrying an approving
+`Status` move in one registry is refused today by drift in another it will
+never write, which is the same defect on the commoner path.
+
+ONE ARM SURVIVES the scoping, and is kept deliberately: when the act's write
+set is EMPTY and approved text has drifted, the refusal still fires. An act
+that copies nothing is a no-op, and a no-op that exits 0 while an Approved
+row's text stands rewritten is the laundering scenario answered with silence.
+That arm is what keeps `test_a_APPROVED_amendment_with_no_flip_and_no_ref_is_
+REFUSED` and the de-approval regression honest under the scoped rule.
+
 Drafted by WI-578 (its ## Dispositions section) and minted at its merge - drafts-not-mints, ruling R1/R3.
 
 VERDICT THIS CONTINUES:
