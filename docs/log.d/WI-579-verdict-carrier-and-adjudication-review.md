@@ -473,3 +473,22 @@ finished the full suite, which is why its seconds sit well above the 29 s the
 tier itself reports and why they are quoted separately rather than averaged.
 `gen_skills_index.py --check-agents` clean over all 16 per-agent copies;
 `ruff format --check` clean on the edited module. One box is one data point.
+
+### Round 015 rework — one rev-choice too many, and two artifacts that lied
+
+Review A round 015 returned CHANGES-REQUESTED with five findings, and four of
+them are the SAME defect the last three rounds have been peeling: a rule
+expressed once as a definition and again as a value some other reader got to
+choose. IN PROGRESS in this session; the account below is filled as each is
+driven and closed.
+
+1. BLOCKER — `round_entries` binds a round by `tree_identity(reviewed sha)`
+   while the gate governs by `governing_identity`, so a round drawn AFTER a
+   station refresh is invisible to both readers, permanently.
+2. MAJOR — `commit_telemetry`'s empty-carrier arm swaps the pathspec for
+   `--allow-empty` and so commits THE WHOLE INDEX under a `telemetry:` label.
+3. MAJOR — `gen_verdict_rollup --check` reports an EXTRA rollup as stale but
+   the write path never removes one: an unclearable red on the hook floor.
+4. MINOR — TC-206 never drives the EXTRA arm its own method enumerates.
+5. MINOR — `review_verdict_trailer` stamps at `tree_identity(HEAD)`, a third
+   rev-choice, so on a refreshed branch the cross-check silently stands down.
