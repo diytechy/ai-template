@@ -1,0 +1,5 @@
+# Tracked pause (concurrency-restructure §5.6): the dispatcher stops CLAIMING at
+# the next session boundary; the in-flight lane finishes and merges. Unpausing is
+# a reviewed deletion commit of this file.
+reason = "Owner direction 2026-09-03: the frontier holds after the WI-579 lane comes home. That lane drew ten CHANGES-REQUESTED review rounds and 38 sessions (10.6 h of session wall) because a loop-held page-human degrades to a DESIGN-CHECK re-arm with no round cap, the implementer-touched-review-path tripwire fires on the lane's own generated rollup every round, and each cycle spends a redundant BUILD session re-running the full suite in-turn. The owner also expects the blackout to gate dispatch admission only, not an in-flight lane's next session (agent_loop.wait_out_blackout sits in the per-session path). Those are ruled and fixed in a supervised session before the frontier resumes. The finished WI-578 lane merges at the drain. Delete this file in a reviewed commit to resume at the generated frontier."
+since = "2026-09-03"
