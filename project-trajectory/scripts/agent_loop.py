@@ -1199,13 +1199,20 @@ class RoutingState:
         — one review scope covers the combined train, not a per-WI slice."""
         self.impl_range = rng
 
-    def schedule_review_round(self):
-        """Queue a fresh review round (REVIEW-A, plus REVIEW-B at policy >= 2)
-        and return the queue list for the caller's dispatch log. Called only
-        when the caller's schedule_review condition holds, as today."""
+    def schedule_review_round(self, phases=None):
+        """Queue a review round — every phase the policy declares (REVIEW-A,
+        plus REVIEW-B at policy >= 2) — and return the queue list for the
+        caller's dispatch log. Called only when the caller's schedule_review
+        condition holds, as today.
+
+        `phases` is a RESUME's owed subset (`review_owed_by_evidence`): the
+        queue is in-memory, so a run that died mid-round leaves phases served
+        on disk that this state knows nothing about, and queuing the full set
+        would redraw one. Naming them completes the same round instead. A fresh
+        round passes nothing and gets the full declared set."""
         self.round_verdicts = []
         self.round_relaxed = False  # C5: a fresh round starts cross-family
-        self.review_queue = ["REVIEW-A"] + (["REVIEW-B"] if self.rp_int >= 2 else [])
+        self.review_queue = list(phases or kverdict.declared_phases(self.rp_int))
         return list(self.review_queue)
 
     def schedule_critique(self, in_scope, limit, exhaustion):
@@ -3339,13 +3346,24 @@ def read_review_owed(root):
     return fields
 
 
-def review_owed_by_evidence(root, worker):
-    """COMMITTED evidence that a review round is owed: every assigned WI
-    carries its trailer on the branch, and no round verdict names the branch's
-    current NON-RECORD TREE. This is what a resumed worker trusts (a worker
-    reads committed facts, never run-state) — the out/review-owed marker only
-    adds advisory fields. A verdict for this tree, of either outcome, means the
-    round was served; a rework commit changes the tree and owes a fresh one.
+def review_owed_by_evidence(root, worker, required=1):
+    """COMMITTED evidence of which review PHASES are owed: the declared phases
+    with no round verdict naming the branch's current NON-RECORD TREE, once
+    every assigned WI carries its trailer on the branch. Empty means none —
+    the falsey answer every caller's `not ...` already read. This is what a
+    resumed worker trusts (a worker reads committed facts, never run-state) —
+    the out/review-owed marker only adds advisory fields. A verdict for a
+    phase, of either outcome, means that phase was served; a rework commit
+    changes the tree and owes the whole set again.
+
+    A PHASE LIST AND NOT A FLAG, because the merge slot demands EVERY declared
+    phase (round 022) and the phase queue is in-memory run state: a run that
+    died between REVIEW-A and REVIEW-B left REVIEW-A served, this derivation
+    answered "nothing owed" on the strength of it, and the lane wedged against
+    a gate refusing the phase nobody would draw. Handing back the missing
+    phases lets `resume_owed_round` redraw exactly those — never a phase
+    already served at this identity, whose redraw the gate would read as a
+    reroll-until-green. `kitlib.verdict.phases_owed` holds the rule.
 
     THE SAME DEFINITION THE MERGE SLOT USES (WI-560 DW1), and it had to become
     so. This asked "does a round file name HEAD's short sha?" while
@@ -3368,17 +3386,17 @@ def review_owed_by_evidence(root, worker):
     (REVIEW-A round 007, finding 2). The branch, not `HEAD`, because the peel
     verifies a refresh commit against the branch it names.
 
-    OFF GIT, a round is OWED: `tree_identity` answers None when git cannot say,
-    and a derivation that cannot prove a verdict was served must not assume one
-    was."""
+    OFF GIT, every declared phase is OWED: `tree_identity` answers None when git
+    cannot say, and a derivation that cannot prove a verdict was served must not
+    assume one was."""
     if not worker:
-        return False
+        return []
     built, _blocked = train_evidence(root, worker["base"])
     if not all(w in built for w in worker["assigned"]):
-        return False
+        return []
     want = kverdict.governing_identity(root, worker["train"])
     if want is None:
-        return True
+        return kverdict.phases_owed((), required)
     entries = kverdict.branch_entries(
         root,
         worker["train"],
@@ -3386,7 +3404,9 @@ def review_owed_by_evidence(root, worker):
         want,
         score_reviews.parse_verdict,
     )
-    return not entries
+    # An unreadable path set answers None, which folds into the same
+    # everything-is-owed direction as an unreadable identity above.
+    return kverdict.phases_owed(entries or (), required)
 
 
 def last_build_family(iter_dir, registry):
@@ -3415,17 +3435,25 @@ def resume_owed_round(root, setup, st, rp_int, iter_dir):
     build. Owed-ness is decided from committed evidence (the marker alone is
     not trusted — its write can fail); the family comes from the marker when
     it survived, else from the build's own session log, so C5's relaxed audit
-    trail survives the restart either way."""
+    trail survives the restart either way.
+
+    It RESUMES the round rather than starting a second one: the evidence names
+    the phases still missing at this identity and only those are queued, so a
+    policy of N is still N reviewer sessions over one tree (LLR-045) however
+    many runs it took to draw them. Redrawing a served phase instead would
+    re-run a reviewer that already spoke here — and if it had DISSENTED, the
+    second draw reads as a reroll-until-green to `integrate._round_refusal`."""
     if not (setup.routing.managed and rp_int >= 1 and setup.worker):
         return
     fields = read_review_owed(root)
-    if not fields and not review_owed_by_evidence(root, setup.worker):
+    owed = review_owed_by_evidence(root, setup.worker, rp_int)
+    if not fields and not owed:
         return
     st.set_train_range("{}..{}".format(setup.worker["base"], head_sha(root)))
     st.last_impl_family = fields.get("family") or last_build_family(
         iter_dir, setup.routing.registry
     )
-    queued_round = st.schedule_review_round()
+    queued_round = st.schedule_review_round(owed)
     print(
         "resume: review owed ({}) — scheduling review round {} over the parked "
         "train diff before any build session".format(

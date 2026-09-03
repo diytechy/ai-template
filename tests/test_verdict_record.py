@@ -41,6 +41,7 @@ from kitlib import verdict as kv  # noqa: E402
 
 ac = load_script("agent_common")
 integ = load_script("integrate")
+score = load_script("score_reviews")
 
 APPROVE = "# Review A\n\nModel: test/reviewer\n\nVERDICT: APPROVE findings=0\n"
 CHANGES = (
@@ -295,6 +296,72 @@ def test_policy_two_requires_both_independent_verdicts(tmp_path):
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
 
+def test_a_half_drawn_round_owes_its_missing_phase_and_only_that(tmp_path):
+    # THE WEDGE the round-022 fix opened, driven from both sides. Making the
+    # gate demand every declared phase left the loop's derivation still reading
+    # "any entry at this tree means the round was served" — and the phase queue
+    # is in-memory, so a run that died between REVIEW-A and REVIEW-B left
+    # exactly that state: nothing scheduled, and a merge refused for a phase
+    # nobody would ever draw. The two readers must agree on what is outstanding.
+    al = _al()
+    root = rounds_repo(tmp_path, policy="2")
+    # The train's WI trailer is what makes the lane BUILT; without it nothing is
+    # owed for a reason that has nothing to do with the verdict.
+    _git(root, "checkout", "-q", "wi-401")
+    (root / "src" / "widget.py").write_text(
+        "VALUE = 2\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "WI-401: close\n\nWI: WI-401", when=T_CODE + 50)
+    _git(root, "checkout", "-q", "main")
+    add_round(root, 3)  # REVIEW-A served; the run dies before REVIEW-B
+    _git(root, "checkout", "-q", "wi-401")
+    base = _rev(root, "main")
+    worker = {"train": "wi-401", "assigned": ["WI-401"], "base": base, "rework": ""}
+    assert al.review_owed_by_evidence(root, worker, 1) == [], (
+        "the fixture must be a lane the POLICY-1 reader considers served, or "
+        "the policy-2 answer below proves nothing about the declared count"
+    )
+
+    # ONLY the missing phase: redrawing the served REVIEW-A would re-run a
+    # reviewer that already spoke at this identity, and a dissent redrawn to an
+    # APPROVE is what `_round_refusal` escalates as a reroll-until-green.
+    assert al.review_owed_by_evidence(root, worker, 2) == ["REVIEW-B"]
+    _git(root, "checkout", "-q", "main")
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is not None
+
+    add_round(root, 4, round_phase="REVIEW-B", when=T_LATER + 100)
+    _git(root, "checkout", "-q", "wi-401")
+    assert al.review_owed_by_evidence(root, worker, 2) == []
+    _git(root, "checkout", "-q", "main")
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
+
+def test_the_declared_phase_span_is_read_the_same_length_by_both_readers():
+    # The pure half: a policy the gate and the scheduler slice to different
+    # lengths is a lane that draws what cannot clear, or refuses what will
+    # never be drawn. Includes the values neither caller can reach today — a
+    # bare `REVIEW_PHASES[:required]` answers -1 with ("REVIEW-A",), slicing
+    # from the END, and an over-dialled 5 with a phase no reviewer is routed to.
+    assert kv.declared_phases(0) == []
+    assert kv.declared_phases(1) == ["REVIEW-A"]
+    assert kv.declared_phases(2) == ["REVIEW-A", "REVIEW-B"]
+    assert kv.declared_phases(5) == ["REVIEW-A", "REVIEW-B"]
+    assert kv.declared_phases(-1) == []
+
+    # phases_owed asks whether a phase was DRAWN, which is a weaker test than
+    # the gate's "produced a parseable APPROVE" — deliberately, and on exactly
+    # one class: a present-but-unparseable verdict is not re-drawn (that is the
+    # double-round class) but does not clear the gate either.
+    unparseable = [("REVIEW-A", 3, "")]
+    assert kv.phases_owed(unparseable, 2) == ["REVIEW-B"]
+    latest, _flipped = score.latest_phase_verdicts(unparseable, 2)
+    assert latest.get("REVIEW-A") == "" and latest.get("REVIEW-B") == "", (
+        "a drawn-but-mangled phase must still be a non-approval at the gate"
+    )
+    assert kv.phases_owed([], 2) == ["REVIEW-A", "REVIEW-B"]
+    assert kv.phases_owed([("REVIEW-A", 3, "APPROVE")], 1) == []
+
+
 def test_an_implementer_authored_file_in_the_review_path_is_not_a_round(tmp_path):
     # THE PLAN'S FINDING K, closed. A BUILD session on WI-538 really did write
     # `010-REVIEW-A-e26ab03.md` — an implementer authoring its own approval.
@@ -482,7 +549,7 @@ def test_a_station_refresh_owes_no_round_and_the_two_readers_agree(tmp_path):
     _git(root, "checkout", "-q", "wi-401")
     base = _rev(root, "main")
     worker = {"train": "wi-401", "assigned": ["WI-401"], "base": base, "rework": ""}
-    assert al.review_owed_by_evidence(root, worker) is False
+    assert al.review_owed_by_evidence(root, worker) == []
 
     work = _refresh_commit(root, "wi-401", T_LATER + 100)
     # The refresh REALLY moved the tree — without this the test would pass on a
@@ -490,7 +557,7 @@ def test_a_station_refresh_owes_no_round_and_the_two_readers_agree(tmp_path):
     assert kv.tree_identity(root, "HEAD") != kv.tree_identity(root, work)
     assert kv.governing_identity(root, "wi-401") == kv.tree_identity(root, work)
 
-    assert al.review_owed_by_evidence(root, worker) is False, (
+    assert al.review_owed_by_evidence(root, worker) == [], (
         "a mechanical refresh must not re-owe a round the lane already served"
     )
     _git(root, "checkout", "-q", "main")
@@ -547,7 +614,7 @@ def test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel(tmp_path):
         "telemetry commit left on the tip"
     )
     assert kv.governing_identity(root, "wi-401") == served
-    assert al.review_owed_by_evidence(root, worker) is False, (
+    assert al.review_owed_by_evidence(root, worker) == [], (
         "the coordinator's own telemetry must not re-owe a served round"
     )
     _git(root, "checkout", "-q", "main")
@@ -578,7 +645,7 @@ def test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel(tmp_path):
         "an empty commit changes no tree, so it cannot move the identity — and "
         "it must not move it by hiding the refresh either"
     )
-    assert al.review_owed_by_evidence(root, worker) is False
+    assert al.review_owed_by_evidence(root, worker) == []
     _git(root, "checkout", "-q", "main")
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
@@ -591,7 +658,7 @@ def test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel(tmp_path):
     _commit(root, "WI-401: more work\n\nWI: WI-401", when=T_LATER + 300)
     _record_commit(root, 5, T_LATER + 400)
     assert kv.governing_identity(root, "wi-401") != served
-    assert al.review_owed_by_evidence(root, worker) is True
+    assert al.review_owed_by_evidence(root, worker) == ["REVIEW-A"]
     _git(root, "checkout", "-q", "main")
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is not None
 
@@ -700,7 +767,7 @@ def test_a_round_drawn_after_a_refresh_is_visible_to_both_readers(tmp_path):
     )
 
     _git(root, "checkout", "-q", "wi-401")
-    assert al.review_owed_by_evidence(root, worker) is False, (
+    assert al.review_owed_by_evidence(root, worker) == [], (
         "a round drawn after the refresh SERVED the lane; re-owing it is the "
         "double-identical-round class re-entered through the binding"
     )
@@ -724,7 +791,7 @@ def test_a_round_drawn_after_a_refresh_is_visible_to_both_readers(tmp_path):
         "VALUE = 3\n", encoding="utf-8", newline="\n"
     )
     _commit(root, "WI-401: rework\n\nWI: WI-401", when=T_LATER + 300)
-    assert al.review_owed_by_evidence(root, worker) is True
+    assert al.review_owed_by_evidence(root, worker) == ["REVIEW-A"]
     _git(root, "checkout", "-q", "main")
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is not None
 
@@ -919,15 +986,15 @@ def test_the_review_owed_derivation_and_the_gate_share_one_definition(tmp_path):
         "VALUE = 2\n", encoding="utf-8", newline="\n"
     )
     _commit(root, "WI-401: rework and close\n\nWI: WI-401", when=T_LATER + 100)
-    assert al.review_owed_by_evidence(root, worker) is True
+    assert al.review_owed_by_evidence(root, worker) == ["REVIEW-A"]
     add_round(root, 4, session_phase="BUILD")
     _git(root, "checkout", "-q", "wi-401")
-    assert al.review_owed_by_evidence(root, worker) is True
+    assert al.review_owed_by_evidence(root, worker) == ["REVIEW-A"]
     _git(root, "checkout", "-q", "main")
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is not None
     add_round(root, 5)
     _git(root, "checkout", "-q", "wi-401")
-    assert al.review_owed_by_evidence(root, worker) is False
+    assert al.review_owed_by_evidence(root, worker) == []
 
     # THE CLASS ITSELF: record-only commits after the verdict re-owe nothing.
     frag = root / "docs" / "log.d" / "WI-401-widget.md"
@@ -937,7 +1004,7 @@ def test_the_review_owed_derivation_and_the_gate_share_one_definition(tmp_path):
         "rounds 1\n", encoding="utf-8", newline="\n"
     )
     _commit(root, "telemetry: session 006 review scoreboard", when=T_LATER + 200)
-    assert al.review_owed_by_evidence(root, worker) is False
+    assert al.review_owed_by_evidence(root, worker) == []
 
 
 def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):

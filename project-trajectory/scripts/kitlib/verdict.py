@@ -19,6 +19,15 @@ with two different rules over two different exclusion sets — which is how one
 lane drew two identical `APPROVE findings=0` rounds because the loop's own
 telemetry commits had moved HEAD past a verdict that was never invalidated.
 
+THE SAME QUESTION HAS A SECOND DIMENSION: not only WHICH tree a verdict names
+but HOW MANY of the declared phases have spoken about it. The two readers
+diverged there too, and later — the gate was taught to require every phase the
+`review_rounds` dial declares while the loop still read "any verdict at this
+tree means the round was served", so a run that died between REVIEW-A and
+REVIEW-B (the phase queue is in-memory) resumed scheduling nothing against a
+gate refusing the missing phase. `declared_phases` is the span both slice;
+`phases_owed` is what a resume still has to draw.
+
 THE IDENTITY, and why it is not a git tree sha. `tree_identity` folds
 `git ls-tree -r <rev>` with the RECORD paths removed — `docs/reviews/`,
 `docs/log.d/`, `docs/iteration/`. Those three are the process writing about
@@ -91,7 +100,12 @@ Contract IF-175: the verdict record, as functions two independent readers call
     `docs/iteration/`
     carry; `branch_paths` / `logged_rounds` / `round_entries` the round evidence
     a branch holds, restricted to rounds a logged reviewer session produced and
-    to the tree under judgement; `branch_trailers` the verified attestations on
+    to the tree under judgement; `declared_phases` / `phases_owed` the phase span
+    a review policy declares and which of those phases a tree has never had
+    DRAWN — the resume's question, weaker than the gate's demand for a parseable
+    APPROVE on exactly the mangled-verdict class and no other, so the two
+    readers share a span without pretending to share a threshold;
+    `branch_trailers` the verified attestations on
     the branch's own commits, in commit order. Pure functions plus thin reads through
     `kitlib.git`, so nothing here writes and nothing imports a sibling service —
     the verdict parser arrives as an ARGUMENT rather than an import, which is
@@ -129,6 +143,8 @@ __all__ = [
     "logged_rounds",
     "round_entries",
     "branch_entries",
+    "declared_phases",
+    "phases_owed",
     "round_count",
     "format_branch_trailer",
     "branch_trailers",
@@ -631,6 +647,53 @@ def branch_entries(root, branch, base, want, parse):
     if paths is None:
         return None
     return round_entries(root, branch, logged_rounds(root, branch, paths), want, parse)
+
+
+def declared_phases(required):
+    """The review phases a policy of `required` declares, in dispatch order.
+
+    THE SPAN BOTH READERS SLICE, and it is here because they must slice it
+    identically: the merge slot demands a verdict for each of these phases and
+    the loop schedules each of them, so a policy the two read to different
+    lengths is a lane that draws what will not clear or refuses what will never
+    be drawn. The clamp is the whole content — a policy above `REVIEW_PHASES`
+    asks for a phase no reviewer can be routed to (`agent_loop.
+    _clamped_review_rounds` clamps the dial to the same span), and a NEGATIVE
+    one slices from the END, so a bare `REVIEW_PHASES[:required]` would answer
+    a policy of -1 with `("REVIEW-A",)` — a wrong answer rather than an empty
+    one. Both callers guard the negative case today; neither should have to."""
+    return list(REVIEW_PHASES[: max(0, required)])
+
+
+def phases_owed(entries, required):
+    """The declared phases with NO entry among `entries` — the phases this tree
+    has never had DRAWN, which is `agent_loop.resume_owed_round`'s question.
+
+    THE WEDGE THIS CLOSES. The merge slot began requiring every declared phase
+    (round 022's finding — `review_rounds = 2` had been collapsed to a boolean,
+    so a lone REVIEW-A cleared the gate) while `review_owed_by_evidence` still
+    read "any entry at this tree means the round was served". A run that died
+    between REVIEW-A and REVIEW-B left exactly that state — the phase queue is
+    in-memory run state and does not survive the run — so the resumed lane
+    scheduled nothing while the gate refused the merge for a phase nobody would
+    ever draw. Answering with the MISSING PHASES rather than a yes/no is what
+    lets the resume redraw only those, which matters as much as the fix: a
+    resume that redrew the whole round would re-run a phase already served at
+    this identity, and if that phase had DISSENTED the redraw would read as a
+    reroll-until-green and be escalated — the gate's own `flipped` rule firing
+    on an honest crash recovery.
+
+    DELIBERATELY NOT THE GATE'S QUESTION, and the divergence is the design.
+    This asks whether a phase was drawn; the gate asks whether it produced a
+    parseable APPROVE (`score_reviews.latest_phase_verdicts`). They must differ
+    on exactly one class — a round whose verdict file is present but UNPARSEABLE
+    — because the two answers there are "do not draw it again" (it was drawn;
+    redrawing it is the double-round class WI-560 DW1 exists to kill) and "do
+    not merge on it" (a mangled meant-to-dissent must page, WI-260 review fix
+    2). What they may NOT differ on is the phase span, which is why both slice
+    `declared_phases`."""
+    served = {phase for phase, _ordinal, _verdict in entries or ()}
+    return [ph for ph in declared_phases(required) if ph not in served]
 
 
 def round_count(entries):

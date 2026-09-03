@@ -759,3 +759,61 @@ after merge.
 <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=c939d49c -->
 
 No new open item was minted: both round-022 findings are closed in WI-579.
+
+**Round 023 — the wedge the round-022 fix opened, found by re-driving it.**
+Round 022's two findings were already closed at `c939d49c`; this session
+verified that fix rather than reading it, and the verification is what found
+the defect. Teaching `integrate._verdict_gate` to demand every phase the
+`review_rounds` dial declares left `agent_loop.review_owed_by_evidence` still
+reading "any verdict at this tree means the round was served" — and the review
+phase queue is in-memory run state, so a run killed between REVIEW-A and
+REVIEW-B leaves exactly that shape on disk. Driven at `4e5a3f8e` on the
+suite's own `rounds_repo` fixture at policy 2, REVIEW-A served: the loop
+answered **`review_owed_by_evidence -> False`** while the gate answered
+**`wi-401: the governing round(s) at this tree are not an APPROVE
+(REVIEW-B)`**. The lane schedules nothing and the merge is refused for a phase
+nobody will ever draw — the two-readers-disagree class this row exists to make
+unrepresentable, re-entered through the COUNT dimension after being closed on
+the WHICH-TREE one. This repo runs `review_rounds = 1` so it was never live
+here; the kit ships 2 as the recommended pairing, so it was live downstream.
+<!-- fig: cmd="policy-2 rounds_repo fixture: agent_loop.review_owed_by_evidence vs integrate._verdict_gate with REVIEW-A only" rev=4e5a3f8e -->
+
+`kitlib.verdict` gains the count dimension the way it already owns the
+identity one. `declared_phases` is the span both readers slice — the clamp is
+its whole content, since a negative policy slices `REVIEW_PHASES` from the END
+and an over-dialled one asks for a phase no reviewer can be routed to.
+`phases_owed` answers with the MISSING phases rather than a yes/no, which is
+what lets the resume redraw only those: redrawing a phase already served at
+this identity would re-run a reviewer that already spoke, and a dissent so
+redrawn reads to `_round_refusal` as a reroll-until-green — the gate's own
+escalation firing on an honest crash recovery.
+
+**One divergence is deliberate and is stated rather than papered over.**
+`phases_owed` asks whether a phase was DRAWN; the gate asks whether it produced
+a parseable APPROVE. They must differ on exactly one class — a verdict file
+present but unparseable — because the two right answers there are "do not draw
+it again" (it was drawn; redrawing is the double-round class) and "do not merge
+on it" (a mangled meant-to-dissent must page). What they may not differ on is
+the phase span, which is why both slice `declared_phases`. The pure regression
+pins both halves.
+
+`LLR-045` ("a declared review policy of N schedules N reviewer sessions") was
+re-driven rather than assumed still true, and it holds: `resume_owed_round`
+RESUMES the round rather than starting a second one, so a policy of N is still
+N reviewer sessions over one tree however many runs it took to draw them. No
+Approved cell needed re-pointing.
+
+**Residual, bounded and NOT acted on.** A resumed round's in-memory
+`round_verdicts` holds only the redrawn phases, so if the already-served phase
+had DISSENTED the loop's own scoring pass sees only the new verdict and
+attempts a merge the gate then refuses by name. That is fail-closed and
+visible — the gate reads the files, not the run state — and seeding the round
+from file evidence would have to invent the dead session's family/model for the
+scoreboard. Recorded so an adjudicator can rule rather than rediscover.
+
+TC-205 gains the two new regressions AND
+`test_policy_two_requires_both_independent_verdicts`, which round 022's own fix
+added to the suite but never listed in the case's `evidence` — the round-022
+commit's omission, closed here.
+
+Deferred open items: none.

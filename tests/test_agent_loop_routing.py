@@ -282,6 +282,17 @@ def test_routingstate_schedule_review_round_by_policy():
     # rp 0: the CALLER's schedule_review (rp_int >= 1) gate means the method is
     # never invoked, so review-policy 0 schedules no round.
 
+    # A RESUME hands in the phases still owed at this tree, and only those are
+    # queued: the queue is in-memory, so a run that died mid-round left phases
+    # served on disk this state knows nothing about, and requeuing a served one
+    # redraws a reviewer that already spoke (an escalation if it dissented).
+    st3 = _rs(rp_int=2)
+    assert st3.schedule_review_round(["REVIEW-B"]) == ["REVIEW-B"]
+    assert st3.review_queue == ["REVIEW-B"]
+    # An EMPTY owed list is not "queue nothing" — the marker path reaches here
+    # with no committed evidence to name, and gets the full declared round.
+    assert st3.schedule_review_round([]) == ["REVIEW-A", "REVIEW-B"]
+
 
 def test_routingstate_record_review_verdict_pops_and_round_ready():
     st = _rs()

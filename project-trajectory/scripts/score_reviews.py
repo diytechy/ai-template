@@ -69,7 +69,7 @@ from pathlib import Path
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
-from kitlib.verdict import REVIEW_PHASES
+from kitlib.verdict import declared_phases
 
 # The finding line: "- [SEVERITY] <anchor> -> issue -> change [-> @owner]".
 # Arrows may be "->" or the unicode arrow; we split on either.
@@ -396,9 +396,14 @@ def latest_phase_verdicts(entries, required=0):
     verdict), ...] parsed from the verdict files at ONE reviewed head; the
     highest ordinal is a phase's LATEST word, so "latest" is well-defined even
     when a phase was re-run at the same commit. Returns ({phase: latest_verdict},
-    {flipped phases}). A phase selected by the `required` policy count but absent from the
-    evidence is returned with an empty verdict, so the policy boundary consumes
-    missing and dissenting evidence through the same fail-closed map. Rules: a
+    {flipped phases}). A phase `required` declares (the span is
+    `kitlib.verdict.declared_phases`, shared with the loop's scheduler so the
+    two cannot read one policy to different lengths) but that has no PARSEABLE
+    latest verdict is returned with an empty one, so the merge boundary consumes
+    missing, mangled and dissenting evidence through the same fail-closed map.
+    That is a stricter test than "was the phase drawn"
+    (`kitlib.verdict.phases_owed`, the resume's question) and deliberately so —
+    see there for the one class they must disagree on. Rules: a
     flipped phase is one whose latest APPROVE
     overwrites an earlier same-head CHANGES-REQUESTED — a reroll-until-green the
     gate must escalate rather than silently honor (repo-review 2026-07-21 L-28
@@ -421,7 +426,7 @@ def latest_phase_verdicts(entries, required=0):
         earlier = [v for _o, v in seq[:-1]]
         if top == "APPROVE" and "CHANGES-REQUESTED" in earlier:
             flipped.add(phase)
-    for phase in REVIEW_PHASES[:required]:
+    for phase in declared_phases(required):
         latest.setdefault(phase, "")
     return latest, flipped
 
