@@ -584,3 +584,22 @@ reported earlier in this session, because the full unfiltered suite was running
 concurrently on the same box; quoted as measured rather than averaged away, and
 the near-ceiling number is the reason to say so. One box is one data point.
 <!-- fig: cmd="python -m pytest -q -n auto -m smoke && python scripts/check_smoke_budget.py --mode enforce" rev=2b4be13c -->
+
+**Round 018 — the empty-carrier fix, on the arm it did not reach.** Round 015's
+MAJOR was closed by keeping the path scope on both arms of the `dirty` test,
+and `test_the_empty_carrier_commits_its_own_paths_and_never_the_index` drives
+it. But the pathspec is appended `if rels else []`, and `rels` empty is exactly
+when the guard evaporates: `commit_telemetry(root, s, l, [], trailer=...)`
+still emits `git commit --allow-empty -m msg` with NO pathspec, which reads THE
+INDEX. Driven on a scratch repo — `src.py` staged, `paths=[]`, trailer set —
+and `git show --name-only HEAD` is `src.py` under the message
+`telemetry: session wi-1-002 REVIEW-A COMMITTED` carrying
+`Review-Verdict: APPROVE`. The same silent-wrong-content class, one branch of
+the same `if` over.
+
+Not a new finding so much as the unfinished half of an accepted one, which is
+why it is closed in-lane rather than filed: `paths=[]` is not a hypothetical
+shape, it is how this repo's own suite calls the function twice
+(`test_verdict_record.py`), and TC-205's method already CLAIMS the property
+("the attestation's carrier is scoped to its own paths") that the empty-`paths`
+arm does not have.
