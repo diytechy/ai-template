@@ -654,6 +654,38 @@ renaming the invalid-UTF-8 work path byte `\200` to `\201` left
 the real work-tree change as `R100`. `git ls-tree -z` supplied distinct bytes,
 but `git_out(..., errors="replace")` decoded the complete stream before the
 NUL/path boundary was parsed, replacing both names with the same Unicode value.
-A stale APPROVE could therefore name both trees. The rework will move the
-tree-listing read to a byte-preserving command boundary and extend TC-205 with
-this exact collision; decoding is not part of a tree identity.
+A stale APPROVE could therefore name both trees.
+
+**The fix is at the command boundary, not on the two observed bytes.**
+`kitlib.git` now exposes `git_bytes` through the same best-effort subprocess
+owner as its text reader. `tree_identity` reads that raw NUL protocol,
+`fold_listing` partitions each entry on the ASCII TAB as bytes, the record-path
+predicate matches its ASCII prefixes against path bytes, and the surviving
+entry is hashed without a decode. Text consumers retain `git_out`; identity
+bytes never enter it. TC-205 drives one unchanged blob at `src/\200` and
+`src/\201`, first asserting that replacement decoding really COLLIDES and then
+that the two `tree_identity` values differ. The fixture is synthetic at the
+Git-protocol boundary so the same test runs on Windows, whose filesystem cannot
+represent POSIX arbitrary filename bytes.
+
+Focused verdict/gate boundary set at `ff28a937`: **129 passed in 34.76 s**.
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_verdict_record.py tests/test_integrate_admission.py tests/test_acceptance_record.py tests/test_check_lane.py tests/test_generated_freshness_wiring.py tests/test_module_size_ratchet.py" rev=ff28a937 -->
+
+Commit bar at the same implementation tree: **1507 passed, 8 skipped in
+31.99 s**; enforcement re-drove it in **32.83 s / 33.0 s wall against the 60 s
+budget**; `check_docs --stale` found **0 broken links** with the existing orphan
+warning.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke && .venv/bin/python scripts/check_smoke_budget.py --mode enforce && .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=ff28a937 -->
+
+Full unfiltered suite at `ff28a937`: **3346 passed, 24 skipped, 1 failed in
+588.60 s**. The sole red remains
+`test_derive_stage.py::test_this_repo_s_committed_stage_is_current`: this
+branch's Drafted spine amendments change the derived fingerprint while
+`docs/stage` is a trunk-owned generated artifact that work branches must not
+edit. The commit hook's own `derived-stage` step confirms the designed branch
+posture by skipping it under concurrency-restructure §5.2; no verdict-boundary
+test failed.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=ff28a937 -->
+
+No new open item was minted: the failure is the already-recorded generated-stage
+handoff, and the raw-byte collision is closed in WI-579.

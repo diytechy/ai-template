@@ -161,6 +161,13 @@ boundary — raw `ls-tree -z` bytes are split on NUL, record prefixes are matche
 as ASCII bytes, and the surviving entries are hashed without decoding — with
 TC-205 extended by the reproduced `\200` to `\201` collision.
 
+At `ff28a937`, the focused verdict/gate boundary set is **129 passed in
+34.76 s** and the smoke tier is **1507 passed, 8 skipped in 31.99 s**, re-driven
+by its enforcer in **32.83 s / 33.0 s wall against 60 s**. The full unfiltered
+suite is **3346 passed, 24 skipped, 1 failed in 588.60 s**; the sole failure is
+the same work-branch `docs/stage` fingerprint red recorded below, while the
+hook's derived-stage step skips that trunk-owned generated artifact by design.
+
 `LLR-140`'s Approved detail cell was re-pointed IN-LANE: it asserted the retired
 time comparison, which nothing detects once it is false. Ratchet bumps
 (`agent_common` 1272→1305, `agent_loop` 2519→2578, `integrate` 1298→1382 and
@@ -170,7 +177,7 @@ their reason at the entry; `_verdict_gate`'s complexity bump was REFUSED and the
 function decomposed instead; `integrate` was re-stamped DOWNWARD 1382 -> 1352
 and again 1352 -> 1351.
 
-Full unfiltered suite at the closing tip `2b4be13c`: **3345 passed, 24 skipped,
+Earlier full unfiltered suite at `2b4be13c`: **3345 passed, 24 skipped,
 1 failed in 612.94 s**. The one failure is
 `test_derive_stage.py::test_this_repo_s_committed_stage_is_current`, and it is
 CAUSED BY THIS BRANCH rather than inherited — the integration base `0ecc62b`
