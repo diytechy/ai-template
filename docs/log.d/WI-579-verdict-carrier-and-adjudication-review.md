@@ -900,4 +900,27 @@ merges. Re-run at `430a7fe8` on a worktree with `docs/stage` regenerated:
 is the merge tree's, not an intermediate commit's.
 <!-- fig: cmd="python -m pytest -q -n auto" rev=430a7fe8 -->
 
-Deferred open items: none — the round-025 findings were the whole scope.
+### The inherited fix, re-driven rather than read
+
+A later session inherits a rework record as a CLAIM, and a claim about a fix is
+the one kind of claim it is cheapest to believe and worst to be wrong about. So
+the three round-025 findings were re-derived from the tree instead of from the
+account above, by a route the fixing session did not use:
+
+- **IF-175 `Data`** — parsed straight out of the TOML: 145 characters against
+  the 160 ceiling, and `trace.py --strict-integrity` reports
+  `interface-findings=0`.
+- **LLR-207** — `detail` and `rationale` scanned for `round <n>`, `WI-<n>`,
+  `OI-<n>`, `defect` and `finding` tokens: none present in either cell. The one
+  provenance FINDING the strict run still reports is `LLR-197` citing `WI-448`,
+  and it is inherited, not this branch's: `git diff 0ecc62b..HEAD` touches
+  exactly two design rows, `LLR-207` and `LLR-208`.
+- **The unfiltered green** — re-driven here at the branch tip rather than taken
+  from the reading at `430a7fe8`. Two commits have landed since that run
+  (`59373fd5`, the log entry recording it, and `c99ad93d`, session telemetry).
+  Both are invisible to the verdict record's tree identity, which is precisely
+  why they are NOT invisible to the suite: `docs/log.d/` and `docs/iteration/`
+  are excluded from the identity fold, not from the checks that read them. A
+  green that skips them is a green about a tree nobody merges.
+
+
