@@ -29,6 +29,19 @@ listing, 64 hex — deliberately NOT 40, because a 40-hex `tree=` beside the
 `Bar-Green: tree=<40 hex>` trailer (which IS a git tree object id) would read as
 the same kind of value and it is not one.
 
+WHAT CANNOT INVALIDATE A VERDICT HAS TWO HALVES, AND ONE OWNER. The record
+PATHS above are the first; the station's REFRESH COMMIT is the second, and it is
+here for the same reason rather than in the merge slot. A refresh merges the
+trunk in and re-runs the compile/regen: it moves the tree without the lane
+having changed its work, so a verdict is governed by the tree at the peeled WORK
+TIP (`work_tip`), not at the branch tip. WI-560 Done-when 1 asks for ONE
+definition of "the last commit that could invalidate a verdict" — that sentence
+covers which commit as much as which paths, so `governing_identity` is the
+single answer BOTH readers are handed. When the peel lived in `integrate` and
+the loop measured at `HEAD` instead, the two readers disagreed across exactly
+one refresh commit and a resumed lane drew a round the gate would not read
+(REVIEW-A round 007, finding 2).
+
 THE TRAILER is the machine half, the `Bar-Green:` pattern applied to a verdict:
 
     Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex>
@@ -56,13 +69,16 @@ in docs/requirements/interfaces.toml).
 
 Contract IF-175: the verdict record, as functions two independent readers call
     to reach ONE answer. `tree_identity` (and its pure half `fold_listing`)
-    gives the non-record tree identity a verdict names; `format_trailer` /
-    `parse_trailer` the `Review-Verdict:` machine half; `round_file` /
-    `session_log` the two name grammars `docs/reviews/` and `docs/iteration/`
+    gives the non-record tree identity a verdict names, and
+    `governing_identity` — over `refresh_attestation` / `work_tip` — gives the
+    rev that identity is measured at, so neither reader chooses its own;
+    `format_trailer` / `parse_trailer` the `Review-Verdict:` machine half;
+    `round_file` / `session_log` the two name grammars `docs/reviews/` and
+    `docs/iteration/`
     carry; `branch_paths` / `logged_rounds` / `round_entries` the round evidence
     a branch holds, restricted to rounds a logged reviewer session produced and
     to the tree under judgement; `branch_trailers` the verified attestations on
-    the branch's own commits. Pure functions plus thin reads through
+    the branch's own commits, in commit order. Pure functions plus thin reads through
     `kitlib.git`, so nothing here writes and nothing imports a sibling service —
     the verdict parser arrives as an ARGUMENT rather than an import, which is
     what keeps this leaf free of an edge back into the scoring layer. Every
@@ -77,6 +93,7 @@ import hashlib
 import re
 
 from .git import git_out
+from .station import BAR_GREEN
 
 __all__ = [
     "RECORD_PREFIXES",
@@ -87,6 +104,10 @@ __all__ = [
     "is_record_path",
     "fold_listing",
     "tree_identity",
+    "refresh_subject",
+    "refresh_attestation",
+    "work_tip",
+    "governing_identity",
     "round_file",
     "session_log",
     "branch_paths",
@@ -168,15 +189,26 @@ def is_record_path(path):
     return any(norm.startswith(prefix) for prefix in RECORD_PREFIXES)
 
 
-def fold_listing(listing):
-    """The identity of a `git ls-tree -r` LISTING, with record paths dropped.
+def fold_listing(entries):
+    """The identity of `git ls-tree -r` ENTRIES, with record paths dropped.
+
+    Each entry is one already-decoded `<mode> <type> <sha>\\t<path>` record. It
+    takes a decoded SEQUENCE rather than git's raw stdout deliberately: without
+    `-z` git QUOTES any path holding a non-ASCII or special character
+    (`"docs/reviews/002-REVIEW-A-abcdef\\303\\251.md"`), the leading quote
+    defeats every `RECORD_PREFIXES` test, and a single accented filename under
+    `docs/log.d/` folds into the identity and silently stales every governing
+    verdict on the branch (REVIEW-A round 007, finding 3, driven both ways).
+    Splitting is the caller's job so no reader here ever sees git's DISPLAY
+    encoding — a guard against the quoting would have left the shape that
+    produced the defect in place.
 
     Pure, so the rule is testable without a repository — which matters because
     this is the one function that decides whether two trees are "the same work".
-    Each surviving line is folded whole (mode, type, blob sha and path), so a
+    Each surviving entry is folded whole (mode, type, blob sha and path), so a
     mode change or a rename is as invalidating as an edit."""
     fold = hashlib.sha256()
-    for line in (listing or "").splitlines():
+    for line in entries or ():
         if not line.strip():
             continue
         # `<mode> <type> <sha>\t<path>` — split on the TAB, since a path may
@@ -193,12 +225,148 @@ def tree_identity(root, rev):
     """The verdict-relevant tree identity of `rev`, or None when git cannot say.
 
     `--full-tree` so the answer does not depend on the caller's cwd inside the
-    repository, and `-z` is deliberately NOT used: the fold reads whole lines and
-    a NUL-delimited listing would need its own splitting rule for no gain."""
-    listing = git_out(root, ["ls-tree", "-r", "--full-tree", rev])
+    repository, and `-z` because it is the ENCODING BOUNDARY: NUL-delimited
+    output is never quoted or escaped, so `fold_listing` is handed raw paths and
+    the record-path test cannot be defeated by a filename (see its docstring)."""
+    if rev is None:
+        return None
+    listing = git_out(root, ["ls-tree", "-r", "-z", "--full-tree", rev])
     if listing is None:
         return None
-    return fold_listing(listing)
+    return fold_listing(listing.split("\0"))
+
+
+# --- the rev the identity is measured at --------------------------------------
+
+
+# The station's refresh attestation, VERIFIED against git. The label comes from
+# `station` so the writer (`integrate.refresh`) and this verifier share one
+# spelling rather than two literals that must agree.
+_ATTEST_RE = re.compile(
+    r"^{}\s+tree=([0-9a-f]{{40}})\s+work=([0-9a-f]{{40}})\s+(\S.*)$".format(BAR_GREEN)
+)
+
+# How far back `work_tip` will peel refresh commits. The disposable-commit rule
+# means at most ONE can ever sit on the tip, so this is a guard against a
+# hand-made pathological history, not an expected depth.
+_MAX_REFRESH_PEEL = 8
+
+
+def refresh_subject(branch):
+    """The refresh commit's subject prefix for `branch` - one home, because the
+    writer and the verifier must agree on it exactly."""
+    return "refresh: {} onto trunk ".format(branch)
+
+
+def refresh_attestation(root, branch, rev=None):
+    """`(work_tip_sha, bar summary)` if `rev` is a GENUINE refresh commit for
+    `branch`, else None. `rev` defaults to the branch tip.
+
+    The bar is attested to a TREE, and this is where that sentence is made
+    true rather than merely written down. A commit message is not evidence: it
+    can be copied, hand-written, amended onto different content, cherry-picked
+    or rebased, and every one of those carries the words onto a tree nobody
+    barred (REVIEW-A round 1, driven both ways - a forged trailer on an
+    ordinary work commit, and `commit --amend` adding a file to a real one).
+
+    So the trailer NAMES what it attests and all three names are verified
+    against git:
+
+        Bar-Green: tree=<40 hex> work=<40 hex> <bar summary>
+
+      * `tree=` must equal the commit's OWN tree. This is the load-bearing one:
+        no edit that changes content can keep it, because the tree sha IS the
+        content. `git write-tree` is what lets the refresh know the value
+        before it commits - the index it barred is the tree it commits.
+      * `work=` must equal the commit's first parent, so the disposable-commit
+        peel below has a stated target rather than a guessed one, and a
+        cherry-pick or rebase (new parent) is rejected.
+      * the SUBJECT must be this branch's own `refresh: <branch> onto trunk`,
+        so a refresh commit merged in from elsewhere is not read as this
+        branch's.
+
+    THE HONEST BOUND: this defeats ACCIDENT, not INTENT. Every accidental
+    carrier refuses - a copied message, an amend, a rebase, a cherry-pick, a
+    trailer quoted in an ordinary commit. But forging one deliberately is FOUR
+    git invocations in the lane worktree and no bar at all: `add -A`, `T=$(git
+    write-tree)`, `P=$(git rev-parse <branch>)`, and the `commit` that carries
+    those two values in the trailer. REVIEW-A round 2 drove exactly that and landed an
+    unbarred file on trunk. The format is printed in every refresh commit, so
+    the cost is reading, not reverse-engineering.
+
+    That is accepted, deliberately. The only structural closure is a bar the
+    slot itself runs and cannot skip, and DECISION 3 (owner ruling 2026-07-31)
+    deleted the merge bar outright: a kept-just-in-case bar is exactly the
+    shape §0's governing principle warns against. So the threat model here is
+    the same one the rest of the coordinator holds - bugs, drift and a lane that
+    goes wrong, not a lane that lies on purpose. A lane is trusted code the
+    operator chose to run. If that ever stops being true, the answer is a
+    slot-side bar and a reopened DECISION 3, not a longer trailer.
+    """
+    rev = rev or branch
+    message = git_out(root, ["log", "-1", "--format=%B", rev]) or ""
+    lines = message.splitlines()
+    if not lines or not lines[0].strip().startswith(refresh_subject(branch)):
+        return None
+    matched = None
+    for line in lines:
+        matched = _ATTEST_RE.match(line.strip())
+        if matched:
+            break
+    if not matched:
+        return None
+    tree, work, summary = matched.group(1), matched.group(2), matched.group(3)
+    if _rev(root, rev + "^{tree}") != tree:
+        return None  # the message rode onto a tree it does not describe
+    if _rev(root, rev + "^1") != work:
+        return None  # ...or onto a different parent than the one it names
+    return work, summary.strip()
+
+
+def work_tip(root, branch):
+    """The branch's last WORK commit as a sha: the tip, with any refresh commit
+    peeled off at the work sha that refresh ITSELF recorded.
+
+    Two callers, one meaning. `integrate.refresh` resets here before it merges
+    (the §A2.1 disposable-commit rule: a retry never stacks a second merge on
+    the first, because docs/log.md is append-compiled and the stack would
+    conflict on the file end). `governing_identity` measures code-time here,
+    because the refresh is MECHANICAL bookkeeping - it rewrites the compiled log
+    and the generated artifacts, and if that counted as code it would stale the
+    honest APPROVE that had to precede it.
+
+    The peel is why `refresh_attestation` had to become a verification rather
+    than a substring test: this function feeds a `reset --hard`, so peeling one
+    commit too far DESTROYS committed work. A work commit whose message merely
+    quoted the trailer used to be peeled, and its file left the branch (REVIEW-A
+    round 1, driven). Now nothing is peeled that does not carry its own tree and
+    parent, which an ordinary commit cannot do by accident.
+    """
+    rev = branch
+    for _ in range(_MAX_REFRESH_PEEL):
+        attested = refresh_attestation(root, branch, rev)
+        if attested is None:
+            return _rev(root, rev)
+        rev = attested[0]
+    return _rev(root, rev)
+
+
+def governing_identity(root, branch):
+    """The non-record tree identity a verdict on `branch` must NAME, or None.
+
+    THE ONE ANSWER BOTH READERS ARE HANDED (WI-560 Done-when 1). The merge slot
+    asks "may this branch merge?" and the loop asks "does this lane still owe a
+    round?"; they are the same question from two sides, and each computing its
+    own rev is how they came to disagree across a refresh commit. Composing the
+    two halves HERE — the record-path fold and the refresh peel — leaves the
+    callers nothing to choose."""
+    return tree_identity(root, work_tip(root, branch))
+
+
+def _rev(root, rev):
+    """`rev` resolved to a full sha, or None."""
+    out = git_out(root, ["rev-parse", "--verify", "--quiet", rev])
+    return out.strip() if out and out.strip() else None
 
 
 # --- the round evidence -------------------------------------------------------
@@ -360,8 +528,23 @@ def format_branch_trailer(root, branch, base, word, parse):
 
 
 def branch_trailers(root, branch, base):
-    """`{reviewed tree: (word, rounds)}` from every VERIFIED `Review-Verdict:`
-    trailer on the branch's own commits, or None when git cannot answer.
+    """`{reviewed tree: [(word, rounds), ...]}` from every VERIFIED
+    `Review-Verdict:` trailer on the branch's own commits, or None when git
+    cannot answer. Each list is in COMMIT ORDER, oldest first, so `[-1]` is the
+    newest attestation for that tree.
+
+    A SEQUENCE, not one attestation per tree, and the type is the fix. One tree
+    carries more than one attestation whenever a round is re-drawn without the
+    work changing — `score_reviews.latest_phase_verdicts` exists precisely
+    because "a phase was re-run at the same commit" — and a last-write-wins map
+    fed from `git log` (which is NEWEST-first) handed its reader the OLDEST
+    stamp. Driven: two honest rounds at one governing tree, stamped `rounds=1`
+    then `rounds=2`, made the merge slot report the evidence and the attestation
+    as disagreeing and park an approved lane at a supervisor stop — the OI-76
+    failure mode, re-created by the cross-check meant to prevent it (REVIEW-A
+    round 007, finding 1). The order of a git history is not this module's to
+    own, so the shape that let a superseded stamp arrive SILENTLY is gone rather
+    than guarded.
 
     VERIFIED means the trailer names the non-record tree identity of the commit
     that CARRIES it — the `Bar-Green` verification applied to a verdict. The
@@ -379,7 +562,9 @@ def branch_trailers(root, branch, base):
     if log is None:
         return None
     by_tree = {}
-    for record in log.split("\x1e"):
+    # `git log` is newest-first; reversed() makes each list oldest-first, which
+    # is the order a reader means by "the latest attestation".
+    for record in reversed(log.split("\x1e")):
         sha, _sep, message = record.partition("\x1f")
         sha = sha.strip()
         if not sha:
@@ -390,5 +575,5 @@ def branch_trailers(root, branch, base):
         word, rounds, tree = parsed
         if tree_identity(root, sha) != tree:
             continue  # the words rode onto a tree they do not describe
-        by_tree[tree] = (word, rounds)
+        by_tree.setdefault(tree, []).append((word, rounds))
     return by_tree

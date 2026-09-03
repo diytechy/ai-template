@@ -1392,7 +1392,7 @@ def classify_outcome(reset_hint, timed_out, state, committed, data, exit_code):
 
 
 def worker_endstate(
-    root, worker, review_open, managed, rp_int, allow_block_exit=True, rounds=0
+    root, worker, review_open, managed, rp_int, allow_block_exit=True, rounds=()
 ):
     """(exit_code, label, detail) when the assignment reached an end state,
     else None — judged ONLY from committed evidence + in-process queues:
@@ -1409,13 +1409,20 @@ def worker_endstate(
     cure it; a block that still stands is honored by the post-session check
     (default True) or the next iteration.
 
-    `rounds` is how many review rounds this run actually COMPLETED, and the
-    banner states it rather than inferring it from the dial. It used to read
-    "review round approved" whenever managed routing ran at policy >= 1 — true
-    of a build, and false of every adjudication, which drew no round at all;
-    three lanes on the 2026-08-31 run exited DONE claiming an approval nobody
-    had given (WI-559 DW2, the plan's finding A). A banner is a claim about what
-    happened, so it counts."""
+    `rounds` is the round records this run actually COMPLETED (`st.rounds`), and
+    the banner states what that tally carries rather than inferring it from the
+    dial. It used to read "review round approved" whenever managed routing ran
+    at policy >= 1 — true of a build, and false of every adjudication, which
+    drew no round at all; three lanes on the 2026-08-31 run exited DONE claiming
+    an approval nobody had given (WI-559 DW2, the plan's finding A). A banner is
+    a claim about what happened, so it counts — and by the same rule it says
+    DRAWN THIS RUN plus the latest verdict, never "N approved": every completed
+    round is appended regardless of its merged verdict, so a lane that took a
+    CHANGES-REQUESTED round, reworked and then passed would have reported two
+    approvals for one (REVIEW-A round 007, finding 4). The tally is in-process,
+    so "this run" is also the honest scope: a resumed run that redraws nothing
+    reports no round, and the branch's committed round files — not this banner —
+    are what the merge slot reads."""
     built, blocked_map = train_evidence(root, worker["base"])
     hit = [w for w in worker["assigned"] if w in blocked_map]
     if hit:
@@ -1444,17 +1451,17 @@ def worker_endstate(
         return None
     if substantive_working_tree_dirty(root):
         return None  # committed evidence only — a dirty tree (owner-only exempt) is not done
+    reviewed = managed and rp_int >= 1
+    note = "; no review round was drawn this run" if reviewed else ""
+    if reviewed and rounds:
+        note = "; {} review round(s) drawn this run, latest verdict {}".format(
+            len(rounds), rounds[-1].get("verdict") or "unrecorded"
+        )
     return (
         EXIT_DONE,
         "DONE",
         "every assigned WI ({}) carries its trailer commit on branch {}{}".format(
-            ";".join(worker["assigned"]),
-            worker["train"],
-            "; {} review round(s) approved".format(rounds)
-            if managed and rp_int >= 1 and rounds
-            else "; no review round was drawn"
-            if managed and rp_int >= 1
-            else "",
+            ";".join(worker["assigned"]), worker["train"], note
         ),
     )
 
@@ -3347,6 +3354,15 @@ def review_owed_by_evidence(root, worker):
     merely unlikely here — it is unrepresentable, because the commits that
     caused it cannot change the identity either reader compares.
 
+    THE REV IS PART OF THAT DEFINITION, which is why this calls
+    `governing_identity(branch)` and not `tree_identity(HEAD)`. A station
+    refresh is bookkeeping the merge slot PEELS, so measuring at HEAD made the
+    two readers disagree across exactly one commit class: on a refreshed branch
+    this answered "owed" while the gate was already satisfied, and the resumed
+    lane drew a strong-tier round whose file the gate would not even read
+    (REVIEW-A round 007, finding 2). The branch, not `HEAD`, because the peel
+    verifies a refresh commit against the branch it names.
+
     OFF GIT, a round is OWED: `tree_identity` answers None when git cannot say,
     and a derivation that cannot prove a verdict was served must not assume one
     was."""
@@ -3355,7 +3371,7 @@ def review_owed_by_evidence(root, worker):
     built, _blocked = train_evidence(root, worker["base"])
     if not all(w in built for w in worker["assigned"]):
         return False
-    want = kverdict.tree_identity(root, "HEAD")
+    want = kverdict.governing_identity(root, worker["train"])
     if want is None:
         return True
     entries = kverdict.branch_entries(
@@ -3513,7 +3529,7 @@ def after_session(ctx, i, outcome, reset_hint, committed, judging=False):
         bool(st.review_queue or st.critique_queue),
         ctx.managed,
         ctx.rp_int,
-        rounds=len(st.rounds),
+        rounds=st.rounds,
     )
     if end:
         return worker_exit_banner(ctx.worker, end)
@@ -3570,7 +3586,7 @@ def run_iteration(ctx, i):
             ctx.managed,
             ctx.rp_int,
             allow_block_exit=(i > 1),
-            rounds=len(st.rounds),
+            rounds=st.rounds,
         )
         if end:
             return worker_exit_banner(worker, end)

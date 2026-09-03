@@ -56,9 +56,9 @@ LOG = "# agent-loop session log\n# session: {ordinal:03d}\n# train: {train}\n# p
 
 
 def _listing(*paths):
-    return "".join(
-        "100644 blob {:040x}\t{}\n".format(i, p) for i, p in enumerate(paths, 1)
-    )
+    """`git ls-tree -r -z` ENTRIES, already split — the shape `fold_listing`
+    takes, and the shape it takes so no reader ever sees git's quoting."""
+    return ["100644 blob {:040x}\t{}".format(i, p) for i, p in enumerate(paths, 1)]
 
 
 def test_the_identity_ignores_every_record_path():
@@ -82,11 +82,39 @@ def test_the_identity_notices_work_and_notices_docs_work():
     # claims a verdict is ABOUT, and letting them move unseen after an APPROVE
     # is the case the exclusion would have bought.
     base = _listing("src/widget.py", "docs/work/active/wi-401/WI-401-widget.md")
-    changed_code = _listing(
-        "src/widget.py", "docs/work/active/wi-401/WI-401-widget.md"
-    ).replace("00001", "00009")
+    changed_code = [entry.replace("00001", "00009") for entry in base]
     assert kv.fold_listing(base) != kv.fold_listing(changed_code)
     assert kv.fold_listing(base) != kv.fold_listing(_listing("src/widget.py"))
+
+
+def test_a_record_path_is_excluded_whatever_characters_it_holds(tmp_path):
+    # ROUND 007, FINDING 3, driven through git rather than asserted about it.
+    # Without `-z`, git QUOTES a path holding a non-ASCII character
+    # (`"docs/log.d/WI-401-café.md"`), the leading quote defeats every
+    # RECORD_PREFIXES test, and one accented log fragment silently stales every
+    # governing verdict on the branch — the exact class the exclusion exists to
+    # prevent. The identity must not move when such a file lands.
+    root = git_repo(tmp_path)
+    (root / "src").mkdir(exist_ok=True)
+    (root / "src" / "widget.py").write_text(
+        "VALUE = 1\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "feat: the widget", when=T_CODE)
+    before = kv.tree_identity(root, "HEAD")
+
+    frag = root / "docs" / "log.d" / "WI-401-café.md"
+    frag.parent.mkdir(parents=True, exist_ok=True)
+    frag.write_text("## 2026-01-01 — café\n", encoding="utf-8", newline="\n")
+    _commit(root, "log: an accented fragment", when=T_LATER)
+    assert "\\303" in _git(root, "ls-tree", "-r", "HEAD"), (
+        "the fixture must actually reproduce git's quoting, or it proves nothing"
+    )
+    assert kv.tree_identity(root, "HEAD") == before
+
+    # ...and the other answer: an accented WORK path still moves it.
+    (root / "src" / "café.py").write_text("VALUE = 2\n", encoding="utf-8", newline="\n")
+    _commit(root, "feat: an accented module", when=T_LATER + 100)
+    assert kv.tree_identity(root, "HEAD") != before
 
 
 # --- 2. the trailer grammar ---------------------------------------------------
@@ -329,6 +357,107 @@ def test_a_trailer_contradicting_the_governing_round_count_refuses(tmp_path):
     assert "APPROVE rounds=1" in refusal
 
 
+def _stamp(root, tree, word, rounds, when):
+    """One coordinator attestation, on the telemetry commit shape that carries
+    it: record-only, so the commit's own non-record identity IS `tree`."""
+    (root / "docs" / "reviews" / "wi-401" / "scoreboard.txt").write_text(
+        "rounds {}\n".format(rounds), encoding="utf-8", newline="\n"
+    )
+    _commit(
+        root,
+        "telemetry: session {:03d} review scoreboard\n\n".format(rounds)
+        + kv.format_trailer(word, rounds, tree),
+        when=when,
+    )
+
+
+def test_the_newest_attestation_at_a_tree_governs_the_cross_check(tmp_path):
+    # ROUND 007, FINDING 1. `git log` is NEWEST-first, so a last-write-wins map
+    # handed the gate the OLDEST stamp: two honest rounds at one governing tree
+    # (`rounds=1`, then `rounds=2`) made the cross-check report the attestation
+    # and the evidence as disagreeing and park an approved lane at a supervisor
+    # stop — the OI-76 failure mode, re-created by the check meant to prevent
+    # it, and reachable on any re-drawn round.
+    root = rounds_repo(tmp_path)
+    add_round(root, 3)
+    _git(root, "checkout", "-q", "wi-401")
+    tree = kv.governing_identity(root, "wi-401")
+    _stamp(root, tree, "APPROVE", 1, T_LATER + 100)
+    _git(root, "checkout", "-q", "main")
+    add_round(root, 5, when=T_LATER + 200)  # a second round, same tree
+    _git(root, "checkout", "-q", "wi-401")
+    assert kv.governing_identity(root, "wi-401") == tree, (
+        "record-only commits must not have moved the tree under judgement"
+    )
+    _stamp(root, tree, "APPROVE", 2, T_LATER + 300)
+    _git(root, "checkout", "-q", "main")
+
+    assert kv.branch_trailers(root, "wi-401", _rev(root, "main"))[tree] == [
+        ("APPROVE", 1),
+        ("APPROVE", 2),
+    ], "the attestations arrive as a sequence, oldest first — not one per tree"
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
+
+def _refresh_commit(root, branch, when):
+    """A GENUINE station refresh commit on `branch`: trunk content folded in,
+    with the `Bar-Green:` trailer naming its own tree and its work parent, which
+    is what `refresh_attestation` verifies. Written by hand rather than through
+    `integrate.refresh` because the lane worktree/bar machinery is not what is
+    under test here — the peel is."""
+    work = _rev(root, branch)
+    (root / "trunk.txt").write_text("from trunk\n", encoding="utf-8", newline="\n")
+    _commit(root, "placeholder", when=when)
+    tree = _rev(root, "HEAD^{tree}")
+    _git(
+        root,
+        "commit",
+        "-q",
+        "--amend",
+        "--no-edit",
+        "-m",
+        "{}0123456789\n\nBar-Green: tree={} work={} bar green".format(
+            kv.refresh_subject(branch), tree, work
+        ),
+    )
+    assert kv.refresh_attestation(root, branch) == (work, "bar green")
+    return work
+
+
+def test_a_station_refresh_owes_no_round_and_the_two_readers_agree(tmp_path):
+    # ROUND 007, FINDING 2. The gate measured the identity at the PEELED work
+    # tip and the loop's derivation at HEAD, so "one definition, two readers"
+    # (WI-560 DW1) held for every commit class except the one the peel exists
+    # for. On a refreshed branch the loop answered "owed" while the gate was
+    # already satisfied, and the resumed lane drew a strong-tier round whose
+    # file the gate would not even read.
+    al = _al()
+    root = rounds_repo(tmp_path)
+    _git(root, "checkout", "-q", "wi-401")
+    (root / "src" / "widget.py").write_text(
+        "VALUE = 2\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "WI-401: close\n\nWI: WI-401", when=T_CODE + 50)
+    _git(root, "checkout", "-q", "main")
+    add_round(root, 3)
+    _git(root, "checkout", "-q", "wi-401")
+    base = _rev(root, "main")
+    worker = {"train": "wi-401", "assigned": ["WI-401"], "base": base, "rework": ""}
+    assert al.review_owed_by_evidence(root, worker) is False
+
+    work = _refresh_commit(root, "wi-401", T_LATER + 100)
+    # The refresh REALLY moved the tree — without this the test would pass on a
+    # peel that did nothing.
+    assert kv.tree_identity(root, "HEAD") != kv.tree_identity(root, work)
+    assert kv.governing_identity(root, "wi-401") == kv.tree_identity(root, work)
+
+    assert al.review_owed_by_evidence(root, worker) is False, (
+        "a mechanical refresh must not re-owe a round the lane already served"
+    )
+    _git(root, "checkout", "-q", "main")
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
+
 # --- 4. the adjudication_review dial ------------------------------------------
 
 
@@ -440,6 +569,11 @@ def test_the_done_banner_states_the_rounds_it_actually_drew(tmp_path):
     # whenever managed routing ran at policy >= 1 — true of a build, false of
     # every adjudication, which drew no round at all. Three lanes on the
     # 2026-08-31 run exited DONE claiming an approval nobody had given.
+    #
+    # ROUND 007, FINDING 4: and it must not claim N APPROVALS either. Every
+    # completed round is appended to the tally whatever its merged verdict, so a
+    # lane that took a CHANGES-REQUESTED round, reworked and then passed drew
+    # two rounds and was approved once. The banner says what the tally carries.
     al = _al()
     root = git_repo(tmp_path)
     base = _rev(root, "HEAD")
@@ -455,14 +589,16 @@ def test_the_done_banner_states_the_rounds_it_actually_drew(tmp_path):
     )
     worker = {"train": "t1", "assigned": ["WI-401"], "base": base, "rework": ""}
 
+    reworked = [{"verdict": "CHANGES-REQUESTED"}, {"verdict": "APPROVE"}]
     _code, _label, drew = al.worker_endstate(
-        str(root), worker, False, True, 1, rounds=2
+        str(root), worker, False, True, 1, rounds=reworked
     )
-    assert "2 review round(s) approved" in drew
+    assert "2 review round(s) drawn this run, latest verdict APPROVE" in drew
+    assert "approved" not in drew, "two rounds were drawn; one of them approved"
     _code, _label, none = al.worker_endstate(
-        str(root), worker, False, True, 1, rounds=0
+        str(root), worker, False, True, 1, rounds=[]
     )
-    assert "no review round was drawn" in none
+    assert "no review round was drawn this run" in none
     assert "approved" not in none
 
 

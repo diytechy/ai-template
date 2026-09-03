@@ -125,7 +125,7 @@ OUTCOME_DIRS = MappingProxyType(
 
 #: The bar's attestation, carried as a git trailer in the refresh commit, NAMING
 #: the tree and the work commit it attests so both can be checked against git.
-#: (`integrate.refresh_attestation` is why the names are the whole point: a
+#: (`verdict.refresh_attestation` is why the names are the whole point: a
 #: message alone rides through amend, rebase and cherry-pick onto trees nobody
 #: barred.) It lives here because the station render draws the label and must
 #: not import the coordinator to learn it.

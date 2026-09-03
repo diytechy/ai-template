@@ -198,21 +198,14 @@ ARCHIVE_WORK = "docs/archive/work"
 # already lives. §5.6's unload GCs a clean one after its merge.
 LANE_WORKTREE_SUFFIX = "-drive"
 
-_ATTEST_RE = re.compile(
-    r"^Bar-Green:\s+tree=([0-9a-f]{40})\s+work=([0-9a-f]{40})\s+(\S.*)$"
-)
-
-
-def _refresh_subject(branch):
-    """The refresh commit's subject prefix for `branch` - one home, because the
-    writer and the verifier must agree on it exactly."""
-    return "refresh: {} onto trunk ".format(branch)
-
-
-# How far back `_work_tip` will peel refresh commits. The disposable-commit rule
-# means at most ONE can ever sit on the tip, so this is a guard against a
-# hand-made pathological history, not an expected depth.
-_MAX_REFRESH_PEEL = 8
+# The refresh commit's attestation, its subject grammar and the work-tip peel
+# live in `kitlib.verdict` (IF-175), not here: "the last commit that could
+# invalidate a verdict" is ONE definition, and the merge slot and the loop's
+# review-owed derivation must both be HANDED it rather than each choosing a rev
+# (REVIEW-A round 007, finding 2). Re-exported under the names this module's own
+# callers and the station tests already use - a pointer, not a second home.
+refresh_attestation = kverdict.refresh_attestation
+_work_tip = kverdict.work_tip
 
 # RULING-6 bookkeeping surfaces: the paths a NON-merge trunk commit may touch
 # during integrator operation. docs/log.md is here because the trunk step
@@ -1186,99 +1179,6 @@ def _rev(root, rev):
     return out.strip() if code == 0 and out.strip() else None
 
 
-def refresh_attestation(root, branch, rev=None):
-    """`(work_tip_sha, bar summary)` if `rev` is a GENUINE refresh commit for
-    `branch`, else None. `rev` defaults to the branch tip.
-
-    The bar is attested to a TREE, and this is where that sentence is made
-    true rather than merely written down. A commit message is not evidence: it
-    can be copied, hand-written, amended onto different content, cherry-picked
-    or rebased, and every one of those carries the words onto a tree nobody
-    barred (REVIEW-A round 1, driven both ways - a forged trailer on an
-    ordinary work commit, and `commit --amend` adding a file to a real one).
-
-    So the trailer NAMES what it attests and all three names are verified
-    against git:
-
-        Bar-Green: tree=<40 hex> work=<40 hex> <bar summary>
-
-      * `tree=` must equal the commit's OWN tree. This is the load-bearing one:
-        no edit that changes content can keep it, because the tree sha IS the
-        content. `git write-tree` is what lets the refresh know the value
-        before it commits - the index it barred is the tree it commits.
-      * `work=` must equal the commit's first parent, so the disposable-commit
-        peel below has a stated target rather than a guessed one, and a
-        cherry-pick or rebase (new parent) is rejected.
-      * the SUBJECT must be this branch's own `refresh: <branch> onto trunk`,
-        so a refresh commit merged in from elsewhere is not read as this
-        branch's.
-
-    THE HONEST BOUND: this defeats ACCIDENT, not INTENT. Every accidental
-    carrier refuses - a copied message, an amend, a rebase, a cherry-pick, a
-    trailer quoted in an ordinary commit. But forging one deliberately is FOUR
-    git invocations in the lane worktree and no bar at all: `add -A`, `T=$(git
-    write-tree)`, `P=$(git rev-parse <branch>)`, and the `commit` that carries
-    those two values in the trailer. REVIEW-A round 2 drove exactly that and landed an
-    unbarred file on trunk. The format is printed in every refresh commit, so
-    the cost is reading, not reverse-engineering.
-
-    That is accepted, deliberately. The only structural closure is a bar the
-    slot itself runs and cannot skip, and DECISION 3 (owner ruling 2026-07-31)
-    deleted the merge bar outright: a kept-just-in-case bar is exactly the
-    shape §0's governing principle warns against. So the threat model here is
-    the same one the rest of this script holds - bugs, drift and a lane that
-    goes wrong, not a lane that lies on purpose. A lane is trusted code the
-    operator chose to run. If that ever stops being true, the answer is a
-    slot-side bar and a reopened DECISION 3, not a longer trailer.
-    """
-    rev = rev or branch
-    message = _commit_message(root, rev)
-    lines = message.splitlines()
-    if not lines or not lines[0].strip().startswith(_refresh_subject(branch)):
-        return None
-    matched = None
-    for line in lines:
-        matched = _ATTEST_RE.match(line.strip())
-        if matched:
-            break
-    if not matched:
-        return None
-    tree, work, summary = matched.group(1), matched.group(2), matched.group(3)
-    if _rev(root, rev + "^{tree}") != tree:
-        return None  # the message rode onto a tree it does not describe
-    if _rev(root, rev + "^1") != work:
-        return None  # ...or onto a different parent than the one it names
-    return work, summary.strip()
-
-
-def _work_tip(root, branch):
-    """The branch's last WORK commit as a sha: the tip, with any refresh commit
-    peeled off at the work sha that refresh ITSELF recorded.
-
-    Two callers, one meaning. `refresh` resets here before it merges (the
-    §A2.1 disposable-commit rule: a retry never stacks a second merge on the
-    first, because docs/log.md is append-compiled and the stack would conflict
-    on the file end). `_verdict_gate` measures code-time here, because the
-    refresh is MECHANICAL bookkeeping - it rewrites the compiled log and the
-    generated artifacts, and if that counted as code it would stale the honest
-    APPROVE that had to precede it.
-
-    The peel is why `refresh_attestation` had to become a verification rather
-    than a substring test: this function feeds a `reset --hard`, so peeling one
-    commit too far DESTROYS committed work. A work commit whose message merely
-    quoted the trailer used to be peeled, and its file left the branch (REVIEW-A
-    round 1, driven). Now nothing is peeled that does not carry its own tree and
-    parent, which an ordinary commit cannot do by accident.
-    """
-    rev = branch
-    for _ in range(_MAX_REFRESH_PEEL):
-        attested = refresh_attestation(root, branch, rev)
-        if attested is None:
-            return _rev(root, rev)
-        rev = attested[0]
-    return _rev(root, rev)
-
-
 def _branch_spec_text(root, branch, name):
     """The claimed spec `name` as the BRANCH holds it, or None.
 
@@ -1442,13 +1342,14 @@ def _verdict_gate(root, branch, outcomes):
         print("integrate: no review verdict owed ({})".format(why_not))
         return None
     # AT THE WORK TIP, not the branch tip — the one thing the identity rule
-    # inherits verbatim from the comparison it replaces. `_work_tip` peels a
-    # VERIFIED refresh commit, and a refresh merges the trunk in: it changes the
-    # tree without the lane having changed its work, so measuring at the tip
-    # would stale the honest APPROVE that had to precede it and RULING-7 would
-    # be unpassable for every WI. Peeling is safe because `refresh_attestation`
-    # verifies the trailer's tree and parent against git.
-    want = kverdict.tree_identity(root, _work_tip(root, branch))
+    # inherits verbatim from the comparison it replaces: a refresh merges the
+    # trunk in, changing the tree without the lane having changed its work, so
+    # measuring at the tip would stale the honest APPROVE that had to precede it
+    # and RULING-7 would be unpassable for every WI. The peel and the fold are
+    # composed in `kitlib.verdict.governing_identity`, which is the SAME call
+    # `agent_loop.review_owed_by_evidence` makes — one definition includes the
+    # rev it is measured at, or the two readers disagree across a refresh.
+    want = kverdict.governing_identity(root, branch)
     code, base = ac.git(root, "merge-base", _head(root) or "HEAD", branch)
     if want is None or code != 0 or not base.strip():
         return (
@@ -1495,7 +1396,15 @@ def _round_refusal(root, branch, base, want, entries):
     # under judgement and contradicts the rounds is a forged or mis-stamped
     # attestation, and a merge slot that saw it and merged anyway would be
     # trusting the summary over the evidence all over again.
-    stamped = (kverdict.branch_trailers(root, branch, base) or {}).get(want)
+    #
+    # THE NEWEST attestation at this tree, which is what the sequence exists to
+    # make explicit. A re-drawn round at one tree stamps a second trailer, and
+    # its predecessor is a superseded tally, not a contradiction - reading it
+    # accused an honestly-approved lane of forgery (REVIEW-A round 007). A
+    # verdict that FLIPPED at one tree is a different thing and is already
+    # refused above, from the evidence, by `flipped`.
+    attested = (kverdict.branch_trailers(root, branch, base) or {}).get(want) or []
+    stamped = attested[-1] if attested else None
     evidence_count = kverdict.round_count(entries)
     if stamped is not None and stamped != ("APPROVE", evidence_count):
         return (
@@ -2416,7 +2325,7 @@ def refresh(root, branch, tier):
         "--allow-empty",
         "-m",
         "{}{}\n\nThe §A2 station refresh: trunk merged in, the §5.1 fragment compile and\n§5.2 regeneration folded on, and the declared bar run on THIS tree. The\ntrailer NAMES what it attests - the tree the bar saw and the work commit it\nsits on - so the merge slot verifies both against git instead of trusting a\nmessage. A --no-ff merge of a branch that contains trunk reproduces this\ntree byte for byte, which is why no second bar is owed at the slot.\n\n{} tree={} work={} {}".format(
-            _refresh_subject(branch),
+            kverdict.refresh_subject(branch),
             trunk[:10],
             BAR_GREEN,
             tree.strip(),

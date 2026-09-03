@@ -8,6 +8,9 @@ WI-558 DW2 retires the gate's freshness comparison, WI-560 DW1 builds one
 shared freshness definition for the gate *and* the C2 derivation, and WI-559
 DW2 only means something once a round carrier exists.
 
+Deferred open items: none. (The open item this row builds is already ruled;
+nothing here waits on an owner decision.)
+
 ### What was read before anything was written
 
 - `integrate._verdict_gate` read `docs/reviews/WI-<n>-REVIEW-A.md` per `merged`
@@ -154,7 +157,8 @@ test modules this row did not touch (`test_agent_loop.py`,
 `test_trace_hats.py`, `test_trajectory_holdban.py`); `lint` is not a declared
 step here, and they are not this row's to fix.
 
-Deferred open items: none — OI-76 is ruled and this row is its build.
+(The fragment's deferral declaration is at the top, where it speaks for the
+whole file.)
 
 ### Review A rework
 
@@ -214,3 +218,80 @@ removed no test. The sole failure is the same
 trunk-owned `docs/stage` freshness assertion already diagnosed above; no new
 failure appeared.
 <!-- fig: cmd="python -m pytest -q -n auto" rev=0b1f3b41 -->
+
+### Review A round 007 rework — the two readers, and two ways a rule can be defeated
+
+Four findings, all accepted. Three were about the same thing from different
+angles: a rule expressed as a value that something ELSE gets to choose.
+
+**The rev is part of "one definition" (finding 2, MAJOR).** The gate measured
+the identity at the peeled work tip and `review_owed_by_evidence` measured it at
+`HEAD`, so WI-560 DW1's "one definition, two readers" held for every commit
+class except the one the peel exists for — a station refresh. Driven on a
+fixture carrying a genuine `Bar-Green`-verified refresh commit, `id(HEAD)`
+and `id(work tip)` differ and the pre-fix loop answered `owed=True` while the
+gate answered satisfied at the same instant: a resumed lane would draw a
+strong-tier round whose file the gate would not even read. The fix is the
+construction one, not a guard. `refresh_subject`, `refresh_attestation` and
+`work_tip` moved OUT of `integrate` into `kitlib/verdict.py`, where
+`governing_identity` composes the peel with the fold, and both readers are now
+HANDED the answer instead of each choosing a rev. `integrate` keeps two
+re-export lines so its own callers and the station tests are untouched; the
+attestation LABEL was already `kitlib.station.BAR_GREEN`, so the writer and the
+verifier now share one literal rather than two that must agree. What cannot
+invalidate a verdict has two halves — the record PATHS and the refresh COMMIT —
+and they now have one owner.
+
+**Newest-wins, expressed as a type (finding 1, MAJOR).** `branch_trailers`
+iterated `git log` (NEWEST-first) into `by_tree[tree] = ...`, so a tree carrying
+two attestations handed its reader the OLDEST. Driven: two honest rounds at one
+governing tree, stamped `rounds=1` then `rounds=2`, made the shipped gate refuse
+with *"the attestation and the evidence disagree"* — a false forgery accusation
+parking an approved lane at a supervisor stop, which is the OI-76 failure mode
+re-created by the cross-check meant to prevent it. It returns the ordered
+SEQUENCE per tree now, oldest first, so no reader can silently receive a
+superseded stamp; the gate takes `[-1]` and says why. A verdict that FLIPPED at
+one tree is a different thing and `flipped` already refuses it, from the
+evidence.
+
+**The identity read git's display encoding (finding 3, MINOR).** `fold_listing`
+matched `RECORD_PREFIXES` against the raw `git ls-tree` field, and git QUOTES a
+path holding a non-ASCII character — `"docs/log.d/WI-401-caf\303\251.md"` —
+so the leading quote defeated every `startswith` and the record file folded INTO
+the identity. One accented log fragment would silently stale every governing
+verdict on the branch. `tree_identity` passes `-z` and `fold_listing` now takes
+an already-decoded sequence of entries, so no reader here ever sees the display
+form. The digest is unchanged for every tree with no quoted path (this repo has
+none: `git ls-tree -r HEAD | grep -c '"'` is 0), so nothing already stamped
+moved.
+
+**The banner counted the wrong thing (finding 4, MINOR).** `st.rounds` collects
+every COMPLETED round whatever its merged verdict, so *"2 review round(s)
+approved"* was the report for a lane that took a CHANGES-REQUESTED round,
+reworked, and passed — the same shape as the claim this function was changed to
+stop making. It now says what the tally carries: `N review round(s) drawn this
+run, latest verdict <word>`, with "this run" stated because the tally is
+in-process and the branch's committed round files, not a banner, are what the
+merge slot reads.
+
+Each pre-fix predicate was replayed on the same fixtures the new tests build,
+so the regressions are known to bite rather than merely pass:
+
+| finding | pre-fix answer | post-fix answer |
+| --- | --- | --- |
+| 3, accented record path | identity moved `39ec685e…` → `b02ac9a2…` | unmoved |
+| 1, two stamps at one tree | `('APPROVE', 1)` vs evidence 2 → refusal | `[('APPROVE',1),('APPROVE',2)]`, merge |
+| 2, after a genuine refresh | loop `owed=True`, gate satisfied | both satisfied |
+<!-- fig: cmd="scratchpad/drive_prefix.py — replays the pre-fix fold, trailer map and HEAD-measured derivation on the new tests' fixtures" rev=working-tree -->
+
+Three tests were added (`test_a_record_path_is_excluded_whatever_characters_it_holds`,
+`test_the_newest_attestation_at_a_tree_governs_the_cross_check`,
+`test_a_station_refresh_owes_no_round_and_the_two_readers_agree`) and TC-205's
+evidence list was completed — three tests from the round-002 rework
+(`round_count`, the round-count contradiction, the derived trailer count) had
+never been added to it, so the row under-declared what it drives.
+
+`integrate.py` was re-stamped DOWNWARD 1382 → 1352 by the move;
+`agent_loop.py` stays at 2578 (the banner rewrite trades the nested conditional
+for a named `note`, which is line-neutral rather than a bump);
+`kitlib/verdict.py` is 227 SLOC and still opens no ratchet entry.
