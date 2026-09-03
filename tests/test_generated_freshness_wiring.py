@@ -51,6 +51,10 @@ WIRED = {
     # thinned `contract` cell points at instead of restating what the providing
     # module already says.
     "interface-reference": "interface-reference",
+    # OI-76: the hand-authored per-WI rollup died as a gate INPUT and was reborn
+    # generated. The gate never reads it; a human does, which is precisely why
+    # it is freshness-gated.
+    "verdictrollup": "verdict-rollup",
 }
 
 # The kinds whose enforcer is NOT a check.py step, each named with its reason.

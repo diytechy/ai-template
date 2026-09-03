@@ -552,13 +552,19 @@ A gate closes only on the verdict of an **independent LLM reviewer**:
   "Derived gate model" describes). CHANGES-REQUESTED → findings route to their
   owner hats; re-review up to `MAX_ROUNDS`, then the Blocked register.
 
-**Verdict freshness, and the ordering it buys back (WI-378).** The queue accepts
-a verdict only while it still describes the tree: `integrate._verdict_gate`
-requires the APPROVE's last commit to be **no older than the branch's last
-non-record commit** (`docs/reviews/` and `docs/log.d/` excluded; the station's
-`refresh` commit peeled off at the work tip it attests, since a mechanical
-re-merge is not a change the reviewer could conclude differently about). So
-**every commit after an APPROVE buys another round** — correctly when it changed
+**Verdict identity, and the ordering it buys back (WI-378; re-keyed by OI-76,
+ruled 2026-08-31).** The queue accepts a verdict only while it still describes
+the tree, and that is now an IDENTITY rather than a comparison:
+`integrate._verdict_gate` requires the verdict to **name the branch's current
+non-record tree** — the tree with `docs/reviews/`, `docs/log.d/` and
+`docs/iteration/` removed, read at the work tip, so the station's `refresh`
+commit is peeled off at the work sha it attests (a mechanical re-merge is not a
+change the reviewer could conclude differently about). There is no ordering rule
+left to get wrong: a commit that changed the work changed the tree, and the
+verdict simply no longer names it — which also retires the case the old
+last-by-commit-time convention could not decide, a re-run round after a
+non-substantive edit silently promoting a stale APPROVE. **The consequence for a
+lane is unchanged: every commit after an APPROVE buys another round** — correctly when it changed
 what ships, *and equally* when it corrected a claim the verdict rested on, so
 "no code changed" is never by itself an argument for skipping the round. Two
 ordering rules make the avoidable part avoidable, and the lane owes both:
@@ -577,8 +583,8 @@ commit as an ancestor (`git log --grep="^integrate: merge"`, filtered with
 to shipping code or a declared doc, one by a hand trunk merge, and three by a
 record edit that followed its own verdict** (a close ceremony, a corrected
 evidence figure, and a `Deliverable` prose fix the verdict itself demanded).
-`docs/work/` is **deliberately not excluded**, and a successor should not
-re-open that: a spec's `safety_class`, `needs` and `Deliverable` are claims the
+`docs/work/` is **deliberately not excluded** from the identity, and a
+successor should not re-open that: a spec's `safety_class`, `needs` and `Deliverable` are claims the
 verdict is *about*, so the 3-in-13 an exclusion would buy back is exactly the
 class a reviewer most needs to re-read. And 3-in-13 is the figure *before* the
 two ordering rules; follow them and they retire two of the thirteen, leaving

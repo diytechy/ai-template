@@ -282,6 +282,13 @@ def test_every_declared_freshness_step_is_skipped(check, tmp_path, monkeypatch):
         # artifact on exactly cli-reference's footing, so it answers to the
         # trunk and a work branch is told, not failed.
         "interface-reference",
+        # OI-76: the per-review-scope verdict rollup. It is the one member whose
+        # SOURCE a work branch necessarily writes — the round files ARE a lane's
+        # committed evidence — which makes the stand-down load-bearing rather
+        # than merely consistent: a branch that answered for this step would
+        # have to commit a rollup naming its own in-flight rounds, and the trunk
+        # would regenerate a different one at the merge.
+        "verdict-rollup",
     }
     for name in check._TRUNK_FRESHNESS_STEPS:
         assert check.run_step(name, (), FAILING, lenient=False)[0] == "SKIP", name

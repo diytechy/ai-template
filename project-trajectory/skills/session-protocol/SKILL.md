@@ -148,14 +148,20 @@ cadence"). New behavior needs new tests
   a `## Deliverable` placed *after* Context parses as EMPTY and the close reds
   (R-A hard error). `## Deliverable` before `## Context`, always.
 - **Order the close against the verdict round.** Under `review_rounds >= 1` the
-  merge queue wants the APPROVE no older than the branch's last **non-record**
-  commit (`docs/reviews/` + `docs/log.d/` are excluded; `docs/work/` is not), so
-  anything committed after it buys another round. Close **first** — Deliverable
-  filled, spec moved to its terminal folder, any approving Status-change commit
-  — and take the final verdict round **last**; never hand-merge trunk, since
-  only the station's `refresh` commit is peeled. A correction the verdict itself
-  demanded still costs a round: that is the gate working, not a defect
-  (process-options.md, "The LLM-gate verdict protocol").
+  merge queue wants a verdict that NAMES the branch's current **non-record**
+  tree (`docs/reviews/` + `docs/log.d/` + `docs/iteration/` are excluded;
+  `docs/work/` is not), so anything committed after it buys another round.
+  Close **first** — Deliverable filled, spec moved to its terminal folder, any
+  approving Status-change commit — and take the final verdict round **last**;
+  never hand-merge trunk, since only the station's `refresh` commit is peeled.
+  A correction the verdict itself demanded still costs a round: that is the gate
+  working, not a defect (process-options.md, "The LLM-gate verdict protocol").
+  **Do not hand-compile `docs/reviews/WI-<n>-REVIEW-A.md`.** Nothing in the kit
+  writes it and the gate no longer asks for it: the round files a logged
+  reviewer session produced ARE the record, and the readable per-scope summary
+  is generated (`gen_verdict_rollup.py`). The legacy path still clears the gate
+  during the migration window and says so on stderr — a WARN there means a lane
+  merged on the fossil, not on its evidence.
 - Update `docs/status.md` to point at what's next; don't leave a stale "next".
 - WI ordering is derived from the registry by `schedule.py` (the DAG +
   `Priority` + gate class), not a hand-curated `docs/next-wi` — that pointer
