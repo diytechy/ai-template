@@ -1,0 +1,44 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 011
+# date: 2026-09-03 18:00
+# train: wi-586-adjudicate-llr-207-llr-208
+# base: d7ffb41311a4
+# phase: DESIGN-CHECK
+# wi: WI-586
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: 0d17dc1e..51fb3e86
+# tokens:
+# cost-usd:
+# wall-secs: 293
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 52746
+# prompt-template: kit:DESIGN-CHECK
+# prompt-sha: sha256:95d9c5c4937b
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+OUTCOME: RETURN rows=4.
+
+Returned: LLR-207, LLR-208, TC-205, and TC-206. Findings and successor drafts are recorded in:
+
+- [Verdict 011](/Users/diytechy/Documents/ai-template-drive/wi-586-adjudicate-llr-207-llr-208/docs/reviews/wi-586-adjudicate-llr-207-llr-208/011-ADJUDICATE-397d4b1.md)
+- [WI-586 dispositions](/Users/diytechy/Documents/ai-template-drive/wi-586-adjudicate-llr-207-llr-208/docs/work/active/wi-586-adjudicate-llr-207-llr-208/WI-586-adjudicate-llr-207-llr-208.md)
+
+Committed as `51fb3e86` with trailer `WI: WI-586`.
+
+All four statuses remain `Drafted`; no registry or approval-snapshot bytes changed.
+
+Validation: 1,520 passed, 8 skipped; smoke 39.0s/60s; documentation check found 0 broken links. The separately run strict trajectory check still reports the pre-declared schedule→trace seam error.
