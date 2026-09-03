@@ -760,20 +760,20 @@ status = "Drafted"
 
 [interface.IF-046]
 owner = "scripts/score_reviews"
-requestors = ["scripts/agent_loop", "scripts/integrate"]
+requestors = ["scripts/agent_loop", "scripts/integrate", "scripts/gen_verdict_rollup", "scripts/kitlib/verdict"]
 channel = "call"
-data = "score_reviews.parse_verdict, substance, merge_verdict, fired_tripwires, record_round; every result advisory"
+data = "score_reviews.parse_verdict, substance, merge_verdict, fired_tripwires, record_round, latest_phase_verdicts; every result advisory. kitlib/verdict does not import this module - it takes the parse function as an ARGUMENT, so the verdict leaf keeps no edge back into scoring; the row names it because the seam is exercised on its behalf by whichever reader supplies the function."
 version = "v1"
 status = "Drafted"
 
 [interface.IF-047]
 owner = "docs/reviews/"
-consumers = ["scripts/score_reviews", "scripts/check_trajectory", "scripts/integrate"]
+consumers = ["scripts/score_reviews", "scripts/check_trajectory", "scripts/integrate", "scripts/kitlib/verdict", "scripts/gen_verdict_rollup"]
 channel = "file"
 data = "VERDICT: APPROVE | CHANGES-REQUESTED findings=N"
 version = "v1"
 status = "Drafted"
-notes = """Low fan-out: three direct content readers - check_trajectory (_latest_critique_verdict), integrate (git-shows the review blob then calls score_reviews.parse_verdict) and score_reviews (this row, read_scoreboard/record_round). agent_loop calls score_reviews.record_round rather than reading a review file itself. A closed, nameable set."""
+notes = """Low fan-out, and the set is still closed and nameable: check_trajectory (_latest_critique_verdict), score_reviews (this row, read_scoreboard/record_round), kitlib/verdict (the round-file NAME grammar and the git-shown blob, on behalf of the merge gate and the loop's review-owed derivation), gen_verdict_rollup (the same files, rendered for a human) and integrate (through kitlib/verdict, plus the legacy hand-authored rollup for the length of its migration window). agent_loop calls score_reviews.record_round rather than reading a review file itself. The directory's content grammar is the VERDICT: line; its NAME grammar - ordinal, phase and reviewed sha - is load-bearing too, and kitlib/verdict is its one home."""
 
 [interface.IF-160]
 owner = "docs/reviews/"
@@ -1068,6 +1068,16 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """No tie-back: the argv comes IN from the adopter's own session (a claim, an audit) or from the dispatcher's lane, and the frame declares no IN crossing for an invocation — driving our integrator is the session's own act, the reasoning the agent-CLI row records; the delivered contract ties on the exit-code row."""
+
+[interface.IF-175]
+owner = "scripts/kitlib/verdict"
+requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/gen_verdict_rollup"]
+channel = "call"
+data = "tree_identity and fold_listing (the non-record tree identity a verdict names), format_trailer/parse_trailer (the Review-Verdict machine half), round_file/session_log (the round and session-log name grammars), branch_paths/logged_rounds/round_entries (the logged-reviewer round evidence on a branch), branch_trailers (the verified attestations); every reader supplies its own fail direction for a None answer"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """The seam exists because two callers ask ONE question from two sides - the merge slot's may-this-merge and the loop's does-this-lane-still-owe-a-round - and answering it twice is what let a lane draw two identical rounds over a verdict nothing had invalidated. So this row is not bookkeeping over an import: it is the declaration that there is exactly one definition, and a second reader of round evidence anywhere else is a finding against this row rather than a new one. The rollup generator is a requestor for the NAME grammar only. Off git every function answers None and this module never says what that means; each requestor declares its own direction, and both declared directions are toward more review."""
 
 [interface.IF-173]
 owner = "scripts/integrate"

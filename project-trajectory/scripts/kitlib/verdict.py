@@ -50,6 +50,27 @@ MEANS (`kitlib.git`'s rule, inherited). `None` is "git had nothing to say"; the
 merge gate reads that as a refusal and the loop's derivation reads it as "assume
 a round is owed" — both fail toward more review, and each says so at its own
 call site.
+
+Contracts: IF-175 — the seam this module declares (process.md §8; row of record
+in docs/requirements/interfaces.toml).
+
+Contract IF-175: the verdict record, as functions two independent readers call
+    to reach ONE answer. `tree_identity` (and its pure half `fold_listing`)
+    gives the non-record tree identity a verdict names; `format_trailer` /
+    `parse_trailer` the `Review-Verdict:` machine half; `round_file` /
+    `session_log` the two name grammars `docs/reviews/` and `docs/iteration/`
+    carry; `branch_paths` / `logged_rounds` / `round_entries` the round evidence
+    a branch holds, restricted to rounds a logged reviewer session produced and
+    to the tree under judgement; `branch_trailers` the verified attestations on
+    the branch's own commits. Pure functions plus thin reads through
+    `kitlib.git`, so nothing here writes and nothing imports a sibling service —
+    the verdict parser arrives as an ARGUMENT rather than an import, which is
+    what keeps this leaf free of an edge back into the scoring layer. Every
+    function answers `None` where git had nothing to say and NEVER decides what
+    that means: the merge slot reads it as a refusal, the loop's review-owed
+    derivation as "assume a round is owed", and both directions are toward more
+    review. The contract this row exists to hold is the SINGULARITY — a second
+    reader of round evidence anywhere else is a finding against this row.
 """
 
 import hashlib
