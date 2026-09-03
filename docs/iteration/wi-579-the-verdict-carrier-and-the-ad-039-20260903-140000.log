@@ -1,0 +1,37 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 039
+# date: 2026-09-03 14:04
+# train: wi-579-the-verdict-carrier-and-the-ad
+# base: 0ecc62bbc55a
+# phase: REVIEW-A
+# wi: WI-579
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: b5718ba7..5ffcd9d8
+# tokens:
+# cost-usd:
+# wall-secs: 272
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4558
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:8cfe70f9c7ae
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Approved with 0 findings.
+
+Verdict committed: `5ffcd9d8 review: record WI-579 round 039 verdict`
+
+Focused verdict suite: 51 passed. Required check harness passed; strict integrity reported `integrity=0`.
