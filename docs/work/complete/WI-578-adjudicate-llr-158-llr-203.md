@@ -2,11 +2,15 @@
 id = "WI-578"
 title = "adjudicate: LLR-158, LLR-203, LLR-204 - approved/routed cell(s) amended on merged trunk 2f660cb..0ae37a1 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
 +++
+
+## Deliverable
+
+Adjudication verdict recorded on the lane; this row is closed MECHANICALLY at its DONE (OI-70/OI-73). Its `## Dispositions` successors mint at this row's own merge (drafts-not-mints), the mint replaces the superseded row's inbound hard edges, and any human-owed answer becomes a `pending` open item the successor depends on. The verdict artifact is under `docs/reviews/`.
 
 ## Context
 
