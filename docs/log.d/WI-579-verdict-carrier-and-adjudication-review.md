@@ -434,3 +434,42 @@ commits" and are re-pointed; TC-205's method now declares both carriers, and the
 evidence list is unchanged because the empty case extends the existing
 regression rather than adding a test id. No ratchet moved: `kitlib/verdict.py`
 lost `_record_only` (7 SLOC) and gained 8 in the walk, and still opens no entry.
+
+### Verifying the round-012 fix, and the universal it left behind in itself
+
+The round-012 rework was accepted from the previous session as CODE, not as a
+claim: the pre-fix walk was restored from `86e0c9c4` over the current tests and
+the new assertion was watched to FAIL —
+`test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel` reds at the
+empty-carrier line (`tests/test_verdict_record.py:538`) with
+`f2bca684…` against the served `4fff62ba…`, the exact pair the finding names,
+and reds THERE and not earlier, which is what proves the empty carrier was a
+defect surviving the round-005 fix rather than the same case restated.
+<!-- fig: cmd="git show 86e0c9c4:…/verdict.py over HEAD's tests, then pytest tests/test_verdict_record.py::test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel" rev=d283699c -->
+
+Driving it that way found the round-012 MINOR's own class one file further in,
+in the sentence the fix rests on. `governing_rev`'s docstring closed with
+*"`governing_rev` can only ever return a rev with the identity the tip already
+had"* — an unqualified universal, and false in exactly the case this module is
+proudest of: on a branch tipped by a genuine refresh, the peel returns the
+PRE-refresh work sha, whose identity differs from the tip's by design. The
+sentence is true of every WALK step and not of the function, so it now says
+that, and states the peel as the one step that does move the identity. Nothing
+executable changed; the claim justifying the walk is what was wrong.
+
+Full unfiltered suite at the tip after the round-012 fix — the first one since
+`cee19210`, and owed because that fix changed `kitlib/verdict.py`'s walk:
+**3343 passed, 24 skipped, 1 failed in 615.06 s**. The counts are identical to
+the pre-round-012 run at `cee19210`, which is the expected shape — the empty
+carrier extends an existing regression rather than adding a test id — and the
+sole failure is the same trunk-owned
+`tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`
+`docs/stage` fingerprint bisected clean at the base above.
+<!-- fig: cmd="python -m pytest -q -n auto" rev=working-tree-at-d283699c-plus-docstring -->
+
+Smoke at the same tree: **1504 passed, 8 skipped in 29.37 s**, budget enforcer
+`45.2s vs 60s -> within` — the enforcer's own re-run, on a box that had just
+finished the full suite, which is why its seconds sit well above the 29 s the
+tier itself reports and why they are quoted separately rather than averaged.
+`gen_skills_index.py --check-agents` clean over all 16 per-agent copies;
+`ruff format --check` clean on the edited module. One box is one data point.

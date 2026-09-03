@@ -406,10 +406,13 @@ def governing_rev(root, branch):
     may be walked through exactly when its non-record identity EQUALS its first
     parent's — which is, in as many words, "a commit that cannot invalidate a
     verdict", the sentence this whole module is built around. Measuring it
-    directly is what makes the walk provably identity-neutral: `governing_rev`
-    can only ever return a rev with the identity the tip already had, so the
-    walk cannot invent an answer, only see PAST commits to a refresh they would
-    otherwise hide.
+    directly is what makes every WALK step provably identity-neutral: stepping
+    can only ever reach a rev carrying the identity it stepped from, so the walk
+    cannot invent an answer, only see PAST commits to a refresh they would
+    otherwise hide. The PEEL is the one step that does move the identity, and
+    deliberately — that is the whole job of a refresh, and it is admitted by
+    verification against git rather than by measurement — so the returned rev
+    carries the tip's identity only on a branch with no refresh under it.
 
     It replaces a predicate that CLASSIFIED THE PATHS a commit touched, and the
     replacement is the fix for round 012's finding 1 rather than a tidy-up. That
