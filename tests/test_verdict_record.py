@@ -20,6 +20,7 @@ asserted alongside its opposite:
 """
 
 import sys
+import types
 
 import pytest
 from conftest import SCRIPTS, load_script
@@ -480,14 +481,11 @@ def test_a_trailer_contradicting_the_rounds_refuses(tmp_path):
     _git(root, "checkout", "-q", "main")
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
-    assert "attestation and the evidence disagree" in refusal
+    assert "attestation claims what the evidence does not" in refusal
 
 
-def test_a_trailer_contradicting_the_governing_round_count_refuses(tmp_path):
-    root = rounds_repo(tmp_path)
-    add_round(root, 3)
-    _git(root, "checkout", "-q", "wi-401")
-    tree = kv.tree_identity(root, "wi-401")
+def _count_stamped(root, tree, rounds):
+    """An attestation naming `tree` with a count the evidence does not carry."""
     _git(
         root,
         "commit",
@@ -495,13 +493,53 @@ def test_a_trailer_contradicting_the_governing_round_count_refuses(tmp_path):
         "--allow-empty",
         "-m",
         "telemetry: session 004 review scoreboard\n\n"
-        + kv.format_trailer("APPROVE", 0, tree),
+        + kv.format_trailer("APPROVE", rounds, tree),
     )
+
+
+def test_a_trailer_OVERSTATING_the_governing_round_count_refuses(tmp_path):
+    root = rounds_repo(tmp_path)
+    add_round(root, 3)
+    _git(root, "checkout", "-q", "wi-401")
+    _count_stamped(root, kv.tree_identity(root, "wi-401"), 2)
     _git(root, "checkout", "-q", "main")
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
-    assert "APPROVE rounds=0" in refusal
+    assert "APPROVE rounds=2" in refusal
     assert "APPROVE rounds=1" in refusal
+
+
+def test_a_trailer_UNDERSTATING_the_governing_round_count_does_not(tmp_path):
+    # ROUND 033, FINDING 4 — the opposite direction, and the asymmetry is the
+    # rule. The cross-check refused any inequality, so a second honest round at
+    # one governing tree whose attestation FAILED TO LAND left the newest stamp
+    # at N-1 against evidence N and the gate accused an approved lane of
+    # forgery: the OI-76 supervisor stop, re-created by the check meant to
+    # prevent it. The writer is `commit_telemetry`, documented best-effort ("a
+    # hook veto ... never fatal"), so a missing stamp is a NORMAL state and
+    # `branch_trailers` says so. Understating cannot buy a merge that the round
+    # files do not already buy; only claiming rounds nobody drew can.
+    root = rounds_repo(tmp_path)
+    add_round(root, 3)
+    _git(root, "checkout", "-q", "wi-401")
+    tree = kv.tree_identity(root, "wi-401")
+    _count_stamped(root, tree, 0)
+    _git(root, "checkout", "-q", "main")
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+    # ...and the WORD is still checked in both directions: an understated count
+    # is forgiven, a dissenting attestation at this tree is not.
+    _git(root, "checkout", "-q", "wi-401")
+    _git(
+        root,
+        "commit",
+        "-q",
+        "--allow-empty",
+        "-m",
+        "telemetry: session 005 review scoreboard\n\n"
+        + kv.format_trailer("CHANGES-REQUESTED", 1, tree),
+    )
+    _git(root, "checkout", "-q", "main")
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is not None
 
 
 def _stamp(root, tree, word, rounds, when):
@@ -929,28 +967,36 @@ def test_an_adjudication_lane_owing_no_round_merges_with_no_verdict_file(
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
 
-def _adjudication_ctx(root, plan_brief="amendment"):
-    """A LoopContext + plan positioned exactly where `build_bookkeeping` finds a
-    committing ADJUDICATE session: on the lane's own branch, at its close."""
+def _loop_ctx(al, root, rp_int=1, **over):
+    """A REAL `LoopContext` on `wi-401`, every field it does not need left None.
+
+    The dataclass rather than a stand-in, so a field this lane adds or renames
+    breaks the fixture instead of being silently absent from it."""
     import dataclasses
 
-    al = _al()
     _git(root, "checkout", "-q", "wi-401")
     fields = {f.name: None for f in dataclasses.fields(al.LoopContext)}
-    run = al.LoopRun(routing=al.RoutingState(1, 900, set(), 3, {}))
-    ctx = dataclasses.replace(
+    return dataclasses.replace(
         al.LoopContext(**fields),
         root=root,
         docs=root / "docs",
-        rp_int=1,
+        rp_int=rp_int,
         worker={
             "train": "wi-401",
             "assigned": ["WI-401"],
             "base": _rev(root, "main"),
             "rework": "",
         },
-        run=run,
+        run=al.LoopRun(routing=al.RoutingState(rp_int, 900, set(), 3, {})),
+        **over,
     )
+
+
+def _adjudication_ctx(root, plan_brief="amendment"):
+    """A LoopContext + plan positioned exactly where `build_bookkeeping` finds a
+    committing ADJUDICATE session: on the lane's own branch, at its close."""
+    al = _al()
+    ctx = _loop_ctx(al, root)
     plan = {
         "phase": "ADJUDICATE",
         "route_id": "judge",
@@ -1226,3 +1272,95 @@ def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
         "the regenerator the failure message names must be able to clear it"
     )
     assert gen.main(["--root", str(root), "--check"]) == 0
+
+
+def test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit(tmp_path):
+    # WI-558 DONE-WHEN 2's WRITER, end to end — the arm no test had ever
+    # reached (ROUND 033, FINDING 1). Every trailer test above calls
+    # `review_verdict_trailer` with a hand-built worker dict and then commits
+    # the string itself, so the whole path between a round COMPLETING and its
+    # attestation LANDING — the merge/score/record ladder, the scoreboard
+    # write, `commit_telemetry`'s pathspec and message assembly — was untested,
+    # and an attestation that never lands is invisible by construction: the
+    # gate's cross-check stands down on absence (it must; the trailer is
+    # additive), so nothing anywhere reports a writer that stopped writing.
+    al = _al()
+    root = rounds_repo(tmp_path)
+    add_round(root, 3)
+    base = _rev(root, "main")
+    reviews = root / "docs" / "reviews" / "wi-401"
+    ctx = _loop_ctx(al, root, scoreboard=reviews / "scoreboard.txt")
+    before = kv.governing_identity(root, "wi-401")
+    ctx.run.routing.round_verdicts = [
+        ("REVIEW-A", score.parse_verdict(APPROVE), "anthropic", "model-a")
+    ]
+
+    assert al.complete_review_round(ctx, "004") is None
+
+    # The round's own record commit carries the machine half, naming the tree
+    # the round judged, and the two readers key on that same value.
+    _code, message = ac.git(root, "log", "-1", "--format=%B", "wi-401")
+    assert kv.parse_trailer(message) == ("APPROVE", 1, before)
+    assert kv.branch_trailers(root, "wi-401", base)[before] == [("APPROVE", 1)]
+    assert kv.governing_identity(root, "wi-401") == before, (
+        "the carrier is a record-path commit; writing the attestation must not "
+        "move the tree the attestation names"
+    )
+    assert ctx.scoreboard.exists(), "the commit's own payload was written too"
+    # ...and the gate reads the pair as agreeing, which is what the whole
+    # cross-check is for.
+    _git(root, "checkout", "-q", "main")
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
+
+def test_a_stale_owed_marker_over_served_evidence_redraws_nothing(tmp_path):
+    # ROUND 033, FINDING 2. `resume_owed_round` proceeded when the marker
+    # existed OR the evidence owed a phase, and `schedule_review_round` then
+    # read the empty owed list as "the caller named nothing" and queued EVERY
+    # declared phase — the duplicate-round class WI-560 Done-when 1 claims to
+    # make unrepresentable, re-entered through an optional argument.
+    #
+    # The state is reachable, not contrived: `clear_review_owed` fires inside
+    # `complete_review_round`, which runs only AFTER the last reviewer session
+    # has committed its verdict file, so a run killed in that window — or a
+    # final reviewer session that commits and then times out — leaves exactly
+    # marker-present with evidence-complete.
+    al = _al()
+    root = rounds_repo(tmp_path, policy="2")
+    add_round(root, 3)
+    add_round(root, 4, round_phase="REVIEW-B", when=T_LATER + 100)
+    _git(root, "checkout", "-q", "wi-401")
+    ctx = _loop_ctx(al, root, rp_int=2)
+    setup = types.SimpleNamespace(
+        worker=ctx.worker,
+        routing=types.SimpleNamespace(managed=True, registry={}),
+    )
+    assert al.review_owed_by_evidence(root, ctx.worker, 2) == [], (
+        "both declared phases were served at this tree — the premise"
+    )
+    al.write_review_owed(root, ctx.worker, ctx.run.routing, "reviewer outage")
+    assert al.read_review_owed(root), "the stale marker survived, as it does"
+
+    al.resume_owed_round(root, setup, ctx.run.routing, 2, root / "docs" / "iteration")
+    assert ctx.run.routing.review_queue == [], (
+        "the evidence decides alone; a surviving marker contributes advisory "
+        "fields and never a round"
+    )
+
+    # The opposite, without which "schedule nothing" would pass vacuously: one
+    # phase genuinely unserved is still resumed, and ONLY that phase.
+    al.resume_owed_round(
+        root,
+        setup,
+        ctx.run.routing,
+        2,
+        root / "docs" / "iteration",
+    )
+    (root / "src" / "widget.py").write_text(
+        "VALUE = 9\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "WI-401: rework\n\nWI: WI-401", when=T_LATER + 200)
+    add_round(root, 6, when=T_LATER + 300)
+    _git(root, "checkout", "-q", "wi-401")
+    al.resume_owed_round(root, setup, ctx.run.routing, 2, root / "docs" / "iteration")
+    assert ctx.run.routing.review_queue == ["REVIEW-B"]

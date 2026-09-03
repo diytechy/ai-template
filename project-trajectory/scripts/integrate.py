@@ -1240,8 +1240,16 @@ def _verdict_owed(root, branch, metas):
 
 
 def _legacy_rollup_refusal(root, branch, wi, want):
-    """THE MIGRATION WINDOW (the plan's §6): a legacy hand-authored
-    `docs/reviews/WI-<n>-REVIEW-A.md` still clears the gate, with a WARN.
+    """THE MIGRATION WINDOW (the plan's §6): at `review-policy = 1`, a legacy
+    hand-authored `docs/reviews/WI-<n>-REVIEW-A.md` still clears the gate, with
+    a WARN.
+
+    AT POLICY 1 ONLY. One hand-authored document is one author's word, and a
+    policy of 2 declares two INDEPENDENT ones; letting this file answer both
+    would be the single-reviewer clearance the round-030 join fix removed from
+    the live path, re-admitted through the deprecated one. The caller applies
+    the narrowing and states it; this docstring is where an adopter reading the
+    window's implementation finds the same sentence.
 
     Returns a refusal string, or None when the legacy rollup carries a fresh
     APPROVE. Adopters hold these files today and their wrappers grep them; the
@@ -1372,6 +1380,14 @@ def _verdict_gate(root, branch, outcomes):
         )
         or []
     )
+    # THE WINDOW IS POLICY-1 ONLY, and the narrowing is a rule rather than an
+    # oversight: a legacy rollup is ONE hand-authored document, so honouring it
+    # at `review-policy = 2` would clear both declared phases on a single
+    # author's word - the "gate cleared on a SINGLE reviewer" class closed at
+    # round 030, re-entered through the deprecated path. An adopter at policy 2
+    # has no window; they draw real rounds. Said here, in `_legacy_rollup_
+    # refusal`, and in the RESYNC_PACK entry that promises the window, so the
+    # shipped narrowing and the promise cannot disagree (REVIEW-A round 033).
     if not entries and required == 1:
         for wi in merged:
             refusal = _legacy_rollup_refusal(root, branch, wi, want)
@@ -1413,14 +1429,25 @@ def _round_refusal(root, branch, base, want, entries, required):
     # accused an honestly-approved lane of forgery (REVIEW-A round 007). A
     # verdict that FLIPPED at one tree is a different thing and is already
     # refused above, from the evidence, by `flipped`.
+    #
+    # A stamp BELOW the evidence is a MISSED stamp, not a contradiction, and
+    # only a differing WORD or a count ABOVE the evidence can be a forgery. The
+    # writer is `agent_common.commit_telemetry`, documented best-effort - "a
+    # hook veto ... never fatal" - so a second honest round at one governing
+    # tree can leave the newest attestation reading rounds=N-1 while the round
+    # files read N. Refusing that pair parked an approved lane at the OI-76
+    # supervisor stop, re-created by the cross-check meant to prevent it, in the
+    # one case `branch_trailers` calls normal (REVIEW-A round 033). An
+    # attestation cannot UNDERSTATE its way into clearing a gate it would not
+    # otherwise clear; the direction that can is claiming rounds nobody drew.
     attested = (kverdict.branch_trailers(root, branch, base) or {}).get(want) or []
     stamped = attested[-1] if attested else None
     evidence_count = kverdict.round_count(entries)
-    if stamped is not None and stamped != ("APPROVE", evidence_count):
+    if stamped is not None and (stamped[0] != "APPROVE" or stamped[1] > evidence_count):
         return (
             "{}: the Review-Verdict trailer for this tree says {} rounds={} "
             "while the round files say APPROVE rounds={} - the attestation "
-            "and the evidence disagree".format(branch, *stamped, evidence_count)
+            "claims what the evidence does not".format(branch, *stamped, evidence_count)
         )
     return None
 

@@ -4445,12 +4445,21 @@ Two additions ride with it, both optional for you:
   `docs/stack.ini [generated]`, gated by `--check`, run by `trunk_step.py --regen`,
   and **never read by the gate**.
 
-**Migration: a window, and you are inside it.** For the length of the window the
-gate accepts EITHER the round-file evidence or a legacy hand-authored
-`docs/reviews/WI-<n>-REVIEW-A.md`, and **warns on stderr** whenever the legacy
-path is what cleared it. The legacy rollup is judged by the same identity rule
-(it names this tree or it does not count), so a rollup that used to clear the
-gate still does. Three steps, in the order that costs least:
+**Migration: a window, and you are inside it if you run `review-policy = 1`.**
+For the length of the window the gate accepts EITHER the round-file evidence or
+a legacy hand-authored `docs/reviews/WI-<n>-REVIEW-A.md`, and **warns on stderr**
+whenever the legacy path is what cleared it. The legacy rollup is judged by the
+same identity rule (it names this tree or it does not count), so a rollup that
+used to clear the gate still does.
+
+**At `review-policy = 2` there is no window**, deliberately: that dial declares
+two INDEPENDENT reviewer phases, and one hand-authored document is one author's
+word — honouring it would clear both phases on a single reviewer. If you run
+policy 2 on legacy rollups today, your first merge after taking this kit refuses
+with *"the governing round(s) at this tree are not an APPROVE (REVIEW-A,
+REVIEW-B)"*: draw the rounds, or sit at policy 1 for the length of the window.
+
+Three steps, in the order that costs least:
 
 1. Do nothing and keep merging. Read your integrator's stderr: every WARN naming
    `LEGACY hand-authored rollup` is a lane that would stop once the window

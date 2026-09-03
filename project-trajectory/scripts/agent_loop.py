@@ -1199,20 +1199,29 @@ class RoutingState:
         — one review scope covers the combined train, not a per-WI slice."""
         self.impl_range = rng
 
-    def schedule_review_round(self, phases=None):
-        """Queue a review round — every phase the policy declares (REVIEW-A,
-        plus REVIEW-B at policy >= 2) — and return the queue list for the
+    def schedule_review_round(self, phases):
+        """Queue `phases` as a review round and return the queue list for the
         caller's dispatch log. Called only when the caller's schedule_review
         condition holds, as today.
 
-        `phases` is a RESUME's owed subset (`review_owed_by_evidence`): the
-        queue is in-memory, so a run that died mid-round leaves phases served
-        on disk that this state knows nothing about, and queuing the full set
-        would redraw one. Naming them completes the same round instead. A fresh
-        round passes nothing and gets the full declared set."""
+        `phases` is EXPLICIT and REQUIRED, which is the whole content of the
+        argument. A fresh round passes `kverdict.declared_phases(self.rp_int)`;
+        a RESUME passes the owed subset `review_owed_by_evidence` named, because
+        the queue is in-memory and a run that died mid-round leaves phases
+        served on disk that this state knows nothing about — queuing the full
+        set would redraw one, and completing the same round is the point.
+
+        It used to default to None and fall back to the declared set, which made
+        "the caller named nothing" and "the evidence owes nothing" ONE falsey
+        value: a resume holding a stale `out/review-owed` marker over complete
+        evidence passed `[]` and got every declared phase redrawn — the
+        duplicate-round class WI-560 Done-when 1 claims to make unrepresentable,
+        re-entered through an optional argument (REVIEW-A round 033). An empty
+        list now means an empty round, so the two states cannot share a value
+        and no caller has to guard the fallback."""
         self.round_verdicts = []
         self.round_relaxed = False  # C5: a fresh round starts cross-family
-        self.review_queue = list(phases or kverdict.declared_phases(self.rp_int))
+        self.review_queue = list(phases)
         return list(self.review_queue)
 
     def schedule_critique(self, in_scope, limit, exhaustion):
@@ -2730,7 +2739,7 @@ def schedule_review_round(ctx, after):
     if not all(w in built_now for w in worker["assigned"]):
         return
     st.set_train_range("{}..{}".format(worker["base"], after))
-    queued = st.schedule_review_round()
+    queued = st.schedule_review_round(kverdict.declared_phases(ctx.rp_int))
     print(
         "dispatch: review-policy {} -> scheduling review round {} "
         "over the whole train diff".format(ctx.rp_int, queued)
@@ -3449,13 +3458,26 @@ def resume_owed_round(root, setup, st, rp_int, iter_dir):
     policy of N is still N reviewer sessions over one tree (LLR-045) however
     many runs it took to draw them. Redrawing a served phase instead would
     re-run a reviewer that already spoke here — and if it had DISSENTED, the
-    second draw reads as a reroll-until-green to `integrate._round_refusal`."""
+    second draw reads as a reroll-until-green to `integrate._round_refusal`.
+
+    THE EVIDENCE DECIDES, ALONE. The marker was an OR-arm here — a resume
+    proceeded when it existed OR the evidence owed something — so a surviving
+    `out/review-owed` over complete evidence scheduled a round anyway, and the
+    empty owed list then meant "caller named nothing" to the scheduler and
+    redrew EVERY declared phase (REVIEW-A round 033). It is reachable on the
+    shipped path: `clear_review_owed` fires inside `complete_review_round`,
+    which runs only after the last reviewer session has already committed its
+    verdict file, so a run killed in that window leaves marker-present with
+    evidence-complete. That is the same defect `write_review_owed`'s own
+    docstring rules out ("the marker is deliberately NOT the durable
+    evidence"), and it is closed the same way: the marker contributes its
+    ADVISORY fields and nothing else."""
     if not (setup.routing.managed and rp_int >= 1 and setup.worker):
         return
-    fields = read_review_owed(root)
     owed = review_owed_by_evidence(root, setup.worker, rp_int)
-    if not fields and not owed:
+    if not owed:
         return
+    fields = read_review_owed(root)
     st.set_train_range("{}..{}".format(setup.worker["base"], head_sha(root)))
     st.last_impl_family = fields.get("family") or last_build_family(
         iter_dir, setup.routing.registry

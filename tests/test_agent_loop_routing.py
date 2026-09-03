@@ -271,14 +271,20 @@ def test_routingstate_schedule_critique_new_scope_resets_same_scope_preserves():
 
 
 def test_routingstate_schedule_review_round_by_policy():
-    # rp 1 queues REVIEW-A only; rp 2 adds REVIEW-B; both clear round_verdicts.
+    # A FRESH round is the declared span, which its caller names explicitly:
+    # rp 1 queues REVIEW-A only, rp 2 adds REVIEW-B, and both clear
+    # round_verdicts.
+    kv = load_script("agent_loop").kverdict
     st1 = _rs(rp_int=1)
     st1.round_verdicts = [("x", object(), "f", "id")]
-    assert st1.schedule_review_round() == ["REVIEW-A"]
+    assert st1.schedule_review_round(kv.declared_phases(1)) == ["REVIEW-A"]
     assert st1.review_queue == ["REVIEW-A"]
     assert st1.round_verdicts == []
     st2 = _rs(rp_int=2)
-    assert st2.schedule_review_round() == ["REVIEW-A", "REVIEW-B"]
+    assert st2.schedule_review_round(kv.declared_phases(2)) == [
+        "REVIEW-A",
+        "REVIEW-B",
+    ]
     # rp 0: the CALLER's schedule_review (rp_int >= 1) gate means the method is
     # never invoked, so review-policy 0 schedules no round.
 
@@ -289,9 +295,16 @@ def test_routingstate_schedule_review_round_by_policy():
     st3 = _rs(rp_int=2)
     assert st3.schedule_review_round(["REVIEW-B"]) == ["REVIEW-B"]
     assert st3.review_queue == ["REVIEW-B"]
-    # An EMPTY owed list is not "queue nothing" — the marker path reaches here
-    # with no committed evidence to name, and gets the full declared round.
-    assert st3.schedule_review_round([]) == ["REVIEW-A", "REVIEW-B"]
+    # AN EMPTY LIST IS AN EMPTY ROUND (round 033, finding 2). It used to fall
+    # back to the full declared set, so "the evidence owes nothing" and "the
+    # caller named nothing" were ONE value and a stale owed-marker redrew every
+    # phase over complete evidence — the duplicate-round class, re-entered
+    # through an optional argument. The parameter is required for the same
+    # reason: there is no longer a value that means "decide for me".
+    assert st3.schedule_review_round([]) == []
+    assert st3.review_queue == []
+    with pytest.raises(TypeError):
+        st3.schedule_review_round()
 
 
 def test_routingstate_record_review_verdict_pops_and_round_ready():
