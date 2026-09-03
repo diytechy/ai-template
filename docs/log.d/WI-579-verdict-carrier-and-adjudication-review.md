@@ -958,3 +958,25 @@ the cheapest end-to-end drive available and the one most likely to be skipped:
   refusing to let its own author close over it.
 
 
+
+### Round 030 — reopened on four findings
+
+Review A round 030 returned CHANGES-REQUESTED on four findings, two of them
+MAJOR and both about a boundary that answers one question in two places. The row
+returns to `docs/work/active/` with its Deliverable parked while they are worked;
+a spec sitting in a terminal folder ASSERTS its Done-when, and Done-when 1 and 3
+are not met while these stand.
+
+The findings, in the order they are being worked:
+
+1. `logged_rounds` took a round's PHASE from the file's own name while joining
+   it to the coordinator log by `(train, ordinal)` alone — so one logged
+   REVIEW-A session admitted a `REVIEW-B` file written beside it, and at
+   `review_rounds = 2` the gate cleared on a single reviewer.
+2. The ADJUDICATE scheduling arm of `build_bookkeeping` is driven by no test,
+   and the `## Dispositions` lookup it depends on is answered independently by
+   the loop (`docs/work` first) and the gate (`docs/archive/work` first).
+3. LLR-207's `detail` asserts the phase join finding 1 shows is absent.
+4. `gen_verdict_rollup.train_dirs` enumerates review scopes by DIRECTORY, so the
+   flat pre-train layout `round_file` supports renders no rollup at all and
+   `--check` calls that fresh.
