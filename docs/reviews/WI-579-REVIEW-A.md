@@ -22,3 +22,5 @@ trunk `319f374a` that followed is the station's own commit and moves no
 work tree.
 
 VERDICT: APPROVE findings=0
+
+(Re-noted 2026-09-03 after the trunk merge of WI-578 and the WI-584 mint; the eleven rounds and the governing line above are unchanged.)
