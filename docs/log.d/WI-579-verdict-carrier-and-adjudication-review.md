@@ -603,3 +603,57 @@ shape, it is how this repo's own suite calls the function twice
 (`test_verdict_record.py`), and TC-205's method already CLAIMS the property
 ("the attestation's carrier is scoped to its own paths") that the empty-`paths`
 arm does not have.
+
+**The fix, and why it is `--only` and not a fourth guard.** The scope was
+appended `if rels else []` — a rule conditional on the SHAPE of its input,
+which is the same thing as no rule on the input shape it does not cover. Stating
+it instead: `--only` rides every arm. With paths it is exactly what
+`-- <paths>` already implied (git-commit(1): "This is the default mode of
+operation of git commit if any paths are given"); with none, the same page
+documents the combination this arm always reaches — "If used together with
+`--allow-empty` paths are also not required, and an empty commit will be
+created" — and `rels` empty always reaches `--allow-empty`, because `dirty` is
+only ever computed from a non-empty `rels`. Re-driven on the scratch repo: the
+carrier is now zero-path and the staged `src.py` is still in the index,
+untouched.
+
+The regression GROWS the existing test rather than sitting beside it, so the
+two arms cannot drift apart the way they just did; asserted red against the
+pre-fix function (`assert not 'src/unrelated.py'`) before it was taken green.
+TC-205's method now names both arms — an enumerated-but-undriven arm is exactly
+round 015's own MINOR, and repeating it here would have been the third time.
+
+**Swept for the same shape rather than only the one instance**, as with the
+round-015 blocker: every `... if <input> else ...` introduced by this branch in
+`project-trajectory/scripts` was re-read. The rest are fail-closed or cosmetic
+(`governing_identity(...) if rev else None`, `format_trailer(...) if count else
+None`, `dispositions_drafted(...) if wi_label else ["spine"]` — which falls
+toward MORE review, and the rollup's `", pruned {}"` suffix). `--only` was the
+only one whose false arm dropped a guarantee.
+
+**Spine:** TC-205's method amended (still `Drafted`; no `Status` flipped, no
+`docs/archive/last_approved/` written) and `docs/ratify/CURRENT.md` regenerated
+at it. `docs/reviews/rollup/` is a declared generated path in `docs/stack.ini`
+(`docs/reviews/rollup/ = verdictrollup`), so the round-015 decision to let the
+generator PRUNE that directory cannot reach a hand-authored file; the legacy
+flat rollup sits above it under `docs/reviews/` and is untouched.
+
+*One edge probed rather than assumed:* `--only` makes the empty carrier a
+PARTIAL commit, and git refuses a partial commit while a merge is in progress.
+Driven on a conflicted merge state, both forms refuse there anyway (the old one
+on unmerged files, exit 128), and `commit_telemetry` is best-effort by
+construction — a non-zero exit prints `telemetry commit skipped` and unstages
+only what it staged. The arm that already carried `-- <rels>` has had this
+property all along, so the change aligns the two arms rather than adding a
+failure class, and no coordinator path writes telemetry mid-merge.
+
+**Round 019 — raw path bytes are part of the verdict identity.** Review A
+reproduced a collision the existing encoding-boundary test did not cover:
+renaming the invalid-UTF-8 work path byte `\200` to `\201` left
+`tree_identity` unchanged when the blob stayed the same, although Git reported
+the real work-tree change as `R100`. `git ls-tree -z` supplied distinct bytes,
+but `git_out(..., errors="replace")` decoded the complete stream before the
+NUL/path boundary was parsed, replacing both names with the same Unicode value.
+A stale APPROVE could therefore name both trees. The rework will move the
+tree-listing read to a byte-preserving command boundary and extend TC-205 with
+this exact collision; decoding is not part of a tree identity.

@@ -2545,15 +2545,16 @@ def commit_telemetry(root, session, label, paths, trailer=None):
     # state the authors already expect) lands inside a commit labelled
     # `telemetry:`, carrying a `Review-Verdict:` attestation on a commit that
     # changed the work tree. Round 015 closed that for `--allow-empty`
-    # REPLACING the pathspec; the pathspec is still appended only `if rels`,
-    # and `rels` empty is exactly when a trailing scope evaporates — driven,
-    # `commit_telemetry(root, s, l, [], trailer=...)` swept a staged `src.py`
-    # into the attestation's carrier. So the scope is stated by `--only`, which
-    # holds on EVERY arm rather than on the arms that happen to carry paths:
-    # with paths it is what `-- <paths>` already implied, and with none
-    # git-commit(1) documents `--only --allow-empty` as creating the empty
-    # commit. `rels` empty always reaches the `--allow-empty` arm, because
-    # `dirty` is only ever computed from a non-empty `rels`.
+    # REPLACING the pathspec, but left the scope itself conditional on `rels` —
+    # and a scope that exists only when its input is non-empty is no scope at
+    # all on the arm that matters: `commit_telemetry(root, s, l, [], trailer=…)`
+    # went on sweeping a staged `src.py` into the attestation's carrier, driven.
+    # So the scope is STATED, by `--only`, and holds on every arm instead of on
+    # the arms that happen to carry paths. With paths that is what `-- <paths>`
+    # already implied; with none, git-commit(1) documents `--only` together with
+    # `--allow-empty` as needing no paths and creating the empty commit — and
+    # empty `rels` always reaches that arm, because `dirty` is only ever
+    # computed from a non-empty `rels`.
     argv = ["commit", "-q", "-m", msg, "--only"] + ([] if dirty else ["--allow-empty"])
     argv += ["--", *rels] if rels else []
     code, out = git(root, *argv)

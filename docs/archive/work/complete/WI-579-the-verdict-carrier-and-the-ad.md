@@ -139,9 +139,27 @@ or clear: `commit_telemetry`'s empty-carrier arm dropped the pathspec and so
 committed THE INDEX under a `telemetry:` label — the attestation's "changes no
 tree" premise simply false — and `gen_verdict_rollup --check` called an EXTRA
 rollup stale while the write path never removed one, an unbreakable red on the
-hook floor under an instruction that could not work. The path scope now survives
-both arms, and the generator OWNS `docs/reviews/rollup/`. TC-206 had ENUMERATED
-the extra arm while no test drove it, which is why it was broken and silent.
+hook floor under an instruction that could not work. The generator now OWNS
+`docs/reviews/rollup/`, and the carrier's path scope is STATED by `--only`
+rather than implied by whether a pathspec is present. That last word is a
+round-018 correction to a round-015 fix: keeping the pathspec on both arms of
+the `dirty` test still appended it only `if rels`, so `paths=[]` — the call
+this repo's own suite makes twice — went on emitting a pathspec-less
+`git commit --allow-empty` and sweeping the index into the attestation's
+carrier, driven. A scope conditional on the shape of its input is the same
+defect as no scope; `--only` holds on every arm, and git-commit(1) documents it
+with `--allow-empty` as creating the empty commit that arm needs. TC-205 and
+TC-206 had each ENUMERATED an arm no test drove — which is precisely why both
+were broken and silent — so each amendment adds the case rather than the claim.
+
+Round 019 found the remaining false claim at the encoding boundary: `-z`
+stopped Git from quoting paths, but the shared text helper replacement-decoded
+the whole `ls-tree` stream before the fold parsed its ASCII record prefix and
+path. Two invalid-UTF-8 work names with one blob could therefore collapse to
+one identity across a real rename. The fix is byte-preserving at the owned
+boundary — raw `ls-tree -z` bytes are split on NUL, record prefixes are matched
+as ASCII bytes, and the surviving entries are hashed without decoding — with
+TC-205 extended by the reproduced `\200` to `\201` collision.
 
 `LLR-140`'s Approved detail cell was re-pointed IN-LANE: it asserted the retired
 time comparison, which nothing detects once it is false. Ratchet bumps
