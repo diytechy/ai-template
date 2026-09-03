@@ -1362,15 +1362,9 @@ def test_a_stale_owed_marker_over_served_evidence_redraws_nothing(tmp_path):
         "fields and never a round"
     )
 
-    # The opposite, without which "schedule nothing" would pass vacuously: one
-    # phase genuinely unserved is still resumed, and ONLY that phase.
-    al.resume_owed_round(
-        root,
-        setup,
-        ctx.run.routing,
-        2,
-        root / "docs" / "iteration",
-    )
+    # The opposite, without which "schedule nothing" would pass vacuously: a
+    # rework re-owes the round, one served phase is redrawn at the new tree,
+    # and the resume queues the other one and ONLY that one.
     (root / "src" / "widget.py").write_text(
         "VALUE = 9\n", encoding="utf-8", newline="\n"
     )

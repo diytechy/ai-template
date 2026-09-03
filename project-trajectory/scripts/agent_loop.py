@@ -2602,7 +2602,7 @@ def complete_review_round(ctx, session):
     # alternative C, the `Bar-Green:` pattern). It is written HERE, by the
     # coordinator, and never by a session — see `review_verdict_trailer`.
     #
-    # A round that derives NO attestation is SAID SO, once, on stdout. The gate
+    # A round that derives NO attestation is SAID SO, once, on stderr. The gate
     # cannot report it: a missing trailer is never a refusal (it is additive,
     # and an adopter's loop may write none), so absence is exactly the state the
     # cross-check must stand down on — which means a writer that quietly stops
