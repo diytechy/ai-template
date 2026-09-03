@@ -4501,7 +4501,7 @@ minting one starts having a round drawn for it. Declare `"always"` in
 implemented rather than merely demanded). The value is refused at preflight if it
 is not one of the three words — a typo is loud, not a silent fallback.
 
-### A committing DESIGN-CHECK arms the review round itself [since the commit that carries this entry]
+### A committing DESIGN-CHECK arms the review round itself [since 87421a12]
 
 **What changed.** After a `CHANGES-REQUESTED` round under a loop-held tier the
 escalation ladder re-arms a `DESIGN-CHECK` session, which runs the worker brief
