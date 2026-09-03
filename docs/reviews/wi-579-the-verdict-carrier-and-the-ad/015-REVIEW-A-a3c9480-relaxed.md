@@ -1,0 +1,41 @@
+# Review A — WI-579 (the verdict carrier and the `adjudication_review` dial)
+
+Model: anthropic/claude-opus-5 (relaxed heterogeneity)
+Scope: `git diff contract_split...HEAD` minus records/generated artifacts.
+
+Instruments, each run once:
+
+- `python project-trajectory/scripts/check.py --jobs 0` — `RESULT: PASS`
+  (`registry-integrity`, `vocabulary`, `need-form`, `privacy`,
+  `doc-navigability`, `skills-index`, `prompt-catalog`, `staged-divergence`,
+  `approval-immutable` PASS; `derived-stage`, `approval-fresh`,
+  `verdict-rollup` SKIP — work-branch stand-down).
+- `python project-trajectory/scripts/trace.py --strict-integrity` —
+  `Traceability: SN=27 SR=76 LLR=190 TC=189 orphans=2 integrity=0 ...
+  interface-findings=0 provenance-findings=1` (the one provenance finding is
+  `LLR-197`, untouched by this diff).
+- `pytest tests/test_verdict_record.py tests/test_integrate_admission.py
+  tests/test_check_lane.py tests/test_generated_freshness_wiring.py -q` —
+  `113 passed in 27.72s`.
+
+Worst failure classes this change admits, hunted in this order: (1) an APPROVE
+that governs work it never judged, or a merge with no verdict — fail-open; (2) an
+honest APPROVE that no reader can ever see — the OI-76 park the row exists to
+kill; (3) content committed silently under a bookkeeping label; (4) a generated
+artifact whose freshness gate cannot be satisfied. Class (1) held under every
+probe I built. Classes (2), (3) and (4) each broke, driven through the shipped
+functions on scaffolds.
+
+- [BLOCKER] project-trajectory/scripts/kitlib/verdict.py:562 (`round_entries`, against `governing_rev`:382) -> A round drawn AFTER a station refresh is invisible to BOTH readers, permanently. `governing_identity` peels the refresh and returns the PRE-refresh work-tree identity, but `round_entries` binds a round by `tree_identity(reviewed sha)` — the POST-refresh tree the reviewer actually read — so the two never match and nothing on the branch can make them match short of a new work commit. Driven on the fixture repo (`rounds_repo` + `_refresh_commit` + `add_round`, in that order): `logged rounds = [(3,'REVIEW-A','fed57bb',…)]`, `entries at want = []`, gate = `"no logged review round on wi-401 names its current tree, and the legacy verdict docs/reviews/WI-401-REVIEW-A.md is absent"`, and `agent_loop.review_owed_by_evidence(...) = True` at the same tip — so the loop re-owes the round it just served and draws an identical one every tick, which is the double-identical-round class WI-560 Done-when 1 claims to make unrepresentable, and the supervisor park Done-when 5's OI-76 acceptance is measured by. Reachable on the shipped path: `dispatch._advance` spawns the lane's refresh as soon as the worker is DONE and the branch is in `finished_branches`, BEFORE `integrate.integrate` runs, so any slot refusal (a failed round draw, an adjudication that owed a round and drew none, any other rung) parks the branch with a refresh commit and no round; the next launch's `resume_owed_round` then draws the round on top of it. `tests/test_a_station_refresh_owes_no_round_and_the_two_readers_agree` only covers the round-BEFORE-refresh order and so does not see it. The concrete change: bind a round through the SAME composed definition the gate governs by — resolve the reviewed sha with `governing_rev`/`governing_identity` rather than raw `tree_identity` in `round_entries` (and add the refresh-then-round order to TC-205's matrix) — which deletes the second rev-choice rather than adding a compensating case, exactly the `antidote` skill's "smallest change that makes this fix unnecessary" -> @owner
+
+- [MAJOR] project-trajectory/scripts/agent_common.py:2543 -> The trailer's empty-carrier arm swaps the commit's pathspec for `--allow-empty`, so `git commit` falls back to THE WHOLE INDEX and sweeps any unrelated staged file into a commit labelled `telemetry:`. Driven on a scratch repo: with `src.py` staged and `out/scoreboard.json` unchanged, `commit_telemetry(root, "wi-1-002", "REVIEW-A COMMITTED", [scoreboard], trailer=...)` produced `telemetry: session wi-1-002 REVIEW-A COMMITTED` whose `--name-only` is `src.py`. The pre-diff form (`commit -m msg -- <rels>`) was immune by construction; the function's own `pre_staged` restore proves a non-empty index at this point is a state the authors already consider reachable. Silent wrong content: work lands under a bookkeeping label, and it lands carrying a `Review-Verdict:` attestation on a commit that changed the work tree. The concrete change: keep the path scope on both arms (`commit --allow-empty -- <rels>`, or `--only`), so the index is never a source the trailer path can read — a deleted code path, not a guard over one -> @owner
+
+- [MAJOR] project-trajectory/scripts/gen_verdict_rollup.py:154 -> `--check` reports an EXTRA `docs/reviews/rollup/<train>.md` as stale (the retired-scope arm, and LLR-208's Detail asserts it), but the write path only ever writes `targets(root)` and never removes an unknown file — so the remedy the failure message names cannot clear the failure. Driven: after retiring a scope, `--check` prints ``STALE — docs/reviews/rollup/wi-401.md. Run `python scripts/gen_verdict_rollup.py` and commit the result.`` (exit 1); running exactly that prints `wrote 0 rollup(s)`; `--check` then prints the identical STALE line and exits 1 again, with `wi-401.md` still present. This step is on the pre-commit floor and in `_TRUNK_FRESHNESS_STEPS`, so the state is an unbreakable red on trunk with a misleading instruction. The concrete change: make the generator OWN `docs/reviews/rollup/` — prune the unknown `*.md` in the same pass that writes the known ones — which makes "extra" cease to be a representable state rather than a reported one; that is the antidote itself, not a guard added over the defect -> @owner
+
+- [MINOR] docs/test/test-cases.toml:2091 (TC-206 `method`) -> The method enumerates `--check`'s answers as absent / fresh / new-round-stale, and LLR-208's Detail claims `--check` "reports an absent file, a diverged one and an EXTRA one" — but no test drives the EXTRA arm, which is precisely the arm that is broken above. UNCOVERED against the row's own claim. The concrete change: add the retired-scope case to `test_the_rollup_is_generated_and_its_check_has_two_answers` (assert STALE, then assert the regenerator clears it), so the Detail sentence and the evidence agree -> @owner
+
+- [MINOR] project-trajectory/scripts/agent_loop.py:2521 (`review_verdict_trailer`) -> The coordinator stamps the trailer at `tree_identity(root, "HEAD")` while both consumers key on `governing_identity`. The docstring's justification ("`tree_identity` drops `docs/reviews/`, so HEAD's non-record tree IS the tree the reviewer read") is true only while no refresh sits below HEAD; on a refreshed branch the attestation is filed under a tree key `_round_refusal` never looks up (`branch_trailers(...).get(want)` is empty), so the cross-check silently stands down instead of cross-checking. Fail-direction is safe — the trailer is never an accept path — but it is a third place that chooses its own rev, which IF-175's notes cell declares a finding against that row ("a second reader of round evidence anywhere else"). For clarity and for the one-definition contract: call `governing_identity(root, worker["train"])` here too, so the writer and the two readers name one value -> @owner
+
+Not findings, checked and cleared: the closed-alphabet `Review-Verdict` regex and last-trailer-wins rule (a quoted trailer does not attest); `branch_trailers`' ordered-sequence fix (newest attestation governs the cross-check); `logged_rounds`' session-log join (an implementer-authored file in the review path is refused — driven by the existing BUILD-phase test); `adjudication_review`'s fallback to `when-minting` rather than `never`, its `PROCESS_KEY_VOCAB` preflight refusal, and `_verdict_owed`'s fail-toward-review on every unreadable step; the `-z` encoding boundary and the pure `fold_listing`; `docs/work/` staying inside the identity; the LLR-140 in-lane re-point (the retired time comparison is gone from the Detail cell); the `docs/id-watermark` basis and the IF-046/IF-047 requestor widenings; status.md's only `WI-579` token sits inside the GENERATED STATUS marker pair, where the forward-only rule stands down.
+
+VERDICT: CHANGES-REQUESTED findings=5
