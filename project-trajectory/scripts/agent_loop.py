@@ -180,6 +180,12 @@ except ImportError:  # pragma: no cover - in-process fallback
     import prompts
     import score_reviews
 
+# The verdict record's one home (OI-76): the non-record tree identity, the
+# `Review-Verdict:` trailer grammar and the round-file/session-log join. Read
+# here for the C2 review-owed derivation and by `integrate._verdict_gate` for
+# the merge slot's — one definition, two readers, which is the whole point.
+from kitlib import verdict as kverdict
+
 # The WI-218 split: the session-launch layer (slice B), the shared coordinator
 # primitives + the dual-plan runner (slice C), and (until Phase 5) the parallel dispatcher/
 # integrator (slice D) live in their own modules. These bindings keep
@@ -1385,7 +1391,9 @@ def classify_outcome(reset_hint, timed_out, state, committed, data, exit_code):
     return outcome, errored
 
 
-def worker_endstate(root, worker, review_open, managed, rp_int, allow_block_exit=True):
+def worker_endstate(
+    root, worker, review_open, managed, rp_int, allow_block_exit=True, rounds=0
+):
     """(exit_code, label, detail) when the assignment reached an end state,
     else None — judged ONLY from committed evidence + in-process queues:
     EXIT_BLOCKED when a Blocked-WI trailer names an assigned WI (the
@@ -1399,7 +1407,15 @@ def worker_endstate(root, worker, review_open, managed, rp_int, allow_block_exit
     (the resumed worker's FIRST session, before it has run) declines to
     short-circuit on a PRE-EXISTING block so the worker gets its one chance to
     cure it; a block that still stands is honored by the post-session check
-    (default True) or the next iteration."""
+    (default True) or the next iteration.
+
+    `rounds` is how many review rounds this run actually COMPLETED, and the
+    banner states it rather than inferring it from the dial. It used to read
+    "review round approved" whenever managed routing ran at policy >= 1 — true
+    of a build, and false of every adjudication, which drew no round at all;
+    three lanes on the 2026-08-31 run exited DONE claiming an approval nobody
+    had given (WI-559 DW2, the plan's finding A). A banner is a claim about what
+    happened, so it counts."""
     built, blocked_map = train_evidence(root, worker["base"])
     hit = [w for w in worker["assigned"] if w in blocked_map]
     if hit:
@@ -1434,7 +1450,11 @@ def worker_endstate(root, worker, review_open, managed, rp_int, allow_block_exit
         "every assigned WI ({}) carries its trailer commit on branch {}{}".format(
             ";".join(worker["assigned"]),
             worker["train"],
-            "; review round approved" if managed and rp_int >= 1 else "",
+            "; {} review round(s) approved".format(rounds)
+            if managed and rp_int >= 1 and rounds
+            else "; no review round was drawn"
+            if managed and rp_int >= 1
+            else "",
         ),
     )
 
@@ -2491,6 +2511,29 @@ def apply_rework_scope(worker, st, merged):
         worker["rework_wi"] = ""
 
 
+def review_verdict_trailer(root, merged, rounds):
+    """The round's `Review-Verdict:` line, or None when there is nothing to
+    attest (no merged verdict, or git cannot name the tree).
+
+    THE TREE IS READ AT HEAD, AFTER THE REVIEWER COMMITTED, and that is correct
+    rather than convenient: `tree_identity` drops `docs/reviews/`, so the round
+    file the reviewer just added does not move the identity — HEAD's non-record
+    tree IS the tree the reviewer read. Reading the reviewed sha instead would
+    give the same answer through a longer route, and would break the moment a
+    reviewer committed anything else.
+
+    WHY THE COORDINATOR WRITES IT. A trailer a reviewer could stamp on its own
+    commit attests nothing the round file did not already claim; what makes this
+    one evidence is the same thing that makes the session log evidence — it is
+    written by the process that ROUTED the round, after the round completed."""
+    if not merged:
+        return None
+    tree = kverdict.tree_identity(root, "HEAD")
+    if tree is None:
+        return None
+    return kverdict.format_trailer(merged, rounds, tree)
+
+
 def complete_review_round(ctx, session):
     """The round is full: merge, score, record, escalate, and apply. Returns an
     int exit code (a page-human) or None."""
@@ -2527,8 +2570,17 @@ def complete_review_round(ctx, session):
         pass
     # The scoreboard is coordinator-written state too — commit it in its own
     # telemetry commit the moment the round records (WI-137), not on the next
-    # session's commit.
-    commit_telemetry(ctx.root, session, "review scoreboard", [scoreboard])
+    # session's commit. That commit also carries the round's MACHINE HALF: the
+    # `Review-Verdict:` trailer naming the tree this round judged (OI-76's
+    # alternative C, the `Bar-Green:` pattern). It is written HERE, by the
+    # coordinator, and never by a session — see `review_verdict_trailer`.
+    commit_telemetry(
+        ctx.root,
+        session,
+        "review scoreboard",
+        [scoreboard],
+        trailer=review_verdict_trailer(ctx.root, merged, len(st.rounds)),
+    )
     print(
         "review round: merged={} margin={:.2f} tripwires={} heterogeneity={} "
         "(advisory scoreboard {})".format(
@@ -2667,6 +2719,72 @@ def schedule_review_round(ctx, after):
     )
 
 
+def dispositions_drafted(root, wi):
+    """The `safety_class` of every successor the adjudication `wi` drafts in its
+    `## Dispositions`, read from THIS LANE'S OWN TREE.
+
+    Searched across `docs/work/` and `docs/archive/work/` because a session that
+    ran its close ritual has already moved the spec out of `active/`, and the
+    drafts it wrote are exactly what decides whether its verdict earns a round.
+
+    An unreadable spec, or one whose `## Dispositions` will not parse, answers
+    `["spine"]` — a sentinel that reads as REVIEW OWED. That is the same
+    fail-direction the merge slot's `_verdict_owed` takes, and it has to be: a
+    round drawn where none was needed costs one session, where a round silently
+    skipped over an unreadable mint costs the second opinion entirely."""
+    import intake  # a sibling reader; deferred so a non-adjudicating run pays nothing
+
+    for home in ("docs/work", "docs/archive/work"):
+        for hit in sorted((Path(root) / home).rglob(wi + "-*.md")):
+            try:
+                text = hit.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                return ["spine"]
+            drafts, refusal = intake.parse_dispositions(text, hit.name)
+            if refusal:
+                return ["spine"]
+            return [d.get("safety_class") for d in drafts]
+    return ["spine"]
+
+
+def schedule_adjudication_round(ctx, plan, commits, after, wi_label):
+    """WI-559 DW2: a committing ADJUDICATE session schedules its review round
+    exactly as a committing BUILD does — WHEN THE DIAL SAYS ONE IS OWED.
+
+    Before this, `ADJUDICATE` sat in `NON_BUILD_PHASES` and no round was ever
+    scheduled after a judgement, while `integrate._verdict_gate` demanded one
+    from every merged WI. Three lanes on the 2026-08-31 run exited DONE
+    reporting "review round approved" with no round drawn, and every
+    adjudication merge was a supervisor stop.
+
+    THE PHASE STAYS IN `NON_BUILD_PHASES` and the DIAL decides (the plan's §3.2):
+    an adjudication is still not a build — it must not take the build tier, the
+    critique scheduling or the `on_committed_build` family bookkeeping's build
+    semantics — so widening that set would have bought the round by asserting
+    something false. `agent_common.adjudication_review_owed` is the reader the
+    merge gate shares, so the round the loop draws and the verdict the gate
+    demands can never come apart."""
+    st = ctx.run.routing
+    if ctx.rp_int < 1 or not ctx.worker:
+        return False
+    drafts = dispositions_drafted(ctx.root, wi_label) if wi_label else ["spine"]
+    if not agent_common.adjudication_review_owed(ctx.docs, plan.get("brief"), drafts):
+        print(
+            "dispatch: adjudication review not owed "
+            "([attestation] adjudication_review = {!r}) -> no round".format(
+                agent_common.adjudication_review(ctx.docs)
+            )
+        )
+        return False
+    # The judge is the implementer for C5's purposes: the round must be drawn
+    # from a family that did not rule, exactly as a build's round must not come
+    # from the family that built. `on_committed_build` is also what gives a
+    # CHANGES-REQUESTED verdict a rework scope to send the work back to.
+    st.on_committed_build(plan["route_family"], wi_label, commits)
+    schedule_review_round(ctx, after)
+    return True
+
+
 def schedule_critique_round(ctx, commits):
     """The critique round is INDEPENDENT of the review dial (WI-068): it fires
     only when this build's WI touches a Critique-verified SR. Vacuous when no
@@ -2724,6 +2842,11 @@ def build_bookkeeping(ctx, plan, outcome, code, commits, after, wi_label, now):
         st.on_committed_build(plan["route_family"], wi_label, commits)
         schedule_review_round(ctx, after)
         schedule_critique_round(ctx, commits)
+    elif outcome == "COMMITTED" and phase == "ADJUDICATE":
+        # A judgement is not a build (it stays out of the set above), but a
+        # committing one owes its round on exactly the same terms — under the
+        # dial that decides whether a second opinion is earned (WI-559 DW2).
+        schedule_adjudication_round(ctx, plan, commits, after, wi_label)
     elif phase == "DESIGN-CHECK":
         # The design-check ruling has run (its verdict is in the commit / log);
         # resume building. Without a tracked run-phase this reset is in-process
@@ -3205,20 +3328,42 @@ def read_review_owed(root):
 
 def review_owed_by_evidence(root, worker, reviews_dir):
     """COMMITTED evidence that a review round is owed: every assigned WI
-    carries its trailer on the branch, and no round verdict names the
-    current HEAD. This is what a resumed worker trusts (a worker reads
-    committed facts, never run-state) — the out/review-owed marker only adds
-    advisory fields. A verdict for HEAD, of either outcome, means the round
-    was served; a rework commit moves HEAD and owes a fresh one."""
+    carries its trailer on the branch, and no round verdict names the branch's
+    current NON-RECORD TREE. This is what a resumed worker trusts (a worker
+    reads committed facts, never run-state) — the out/review-owed marker only
+    adds advisory fields. A verdict for this tree, of either outcome, means the
+    round was served; a rework commit changes the tree and owes a fresh one.
+
+    THE SAME DEFINITION THE MERGE SLOT USES (WI-560 DW1), and it had to become
+    so. This asked "does a round file name HEAD's short sha?" while
+    `integrate._verdict_gate` asked a freshness question over a tree with
+    `docs/reviews` and `docs/log.d` removed — two rules for one question, and
+    the gap between them is a measured defect: on WI-547 the loop's OWN
+    `telemetry:` and `scoreboard` commits moved HEAD past a verdict nothing had
+    invalidated, this derivation re-fired, and two identical `APPROVE
+    findings=0` rounds were drawn. `kitlib.verdict.tree_identity` excludes those
+    record paths for both readers, so the double-identical-round class is not
+    merely unlikely here — it is unrepresentable, because the commits that
+    caused it cannot change the identity either reader compares.
+
+    OFF GIT, a round is OWED: `tree_identity` answers None when git cannot say,
+    and a derivation that cannot prove a verdict was served must not assume one
+    was."""
     if not worker:
         return False
     built, _blocked = train_evidence(root, worker["base"])
     if not all(w in built for w in worker["assigned"]):
         return False
-    head = (head_sha(root) or "")[:7]
-    if not head:
-        return False
-    return not any(Path(reviews_dir).glob("*-REVIEW-?-{}*.md".format(head)))
+    want = kverdict.tree_identity(root, "HEAD")
+    if want is None:
+        return True
+    for path in sorted(Path(reviews_dir).glob("*-REVIEW-?-*.md")):
+        parsed = kverdict.round_file(
+            "docs/reviews/{}/{}".format(Path(reviews_dir).name, path.name)
+        )
+        if parsed and kverdict.tree_identity(root, parsed[3]) == want:
+            return False
+    return True
 
 
 def last_build_family(iter_dir, registry):
@@ -3366,6 +3511,7 @@ def after_session(ctx, i, outcome, reset_hint, committed, judging=False):
         bool(st.review_queue or st.critique_queue),
         ctx.managed,
         ctx.rp_int,
+        rounds=len(st.rounds),
     )
     if end:
         return worker_exit_banner(ctx.worker, end)
@@ -3422,6 +3568,7 @@ def run_iteration(ctx, i):
             ctx.managed,
             ctx.rp_int,
             allow_block_exit=(i > 1),
+            rounds=len(st.rounds),
         )
         if end:
             return worker_exit_banner(worker, end)

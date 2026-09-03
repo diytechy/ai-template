@@ -1989,6 +1989,13 @@ MAPPING = [
     # must-be-whole rule applies — a scaffold missing it ImportErrors on the
     # first stage read, not on some later Release-only path.
     ("scripts/kitlib/evidence.py", "scripts/kitlib/evidence.py"),
+    # WI-579 added `verdict` (OI-76): the verdict record — the non-record tree
+    # identity, the `Review-Verdict:` trailer grammar and the round-file /
+    # session-log join. `integrate.py` (the merge gate) and `agent_loop.py` (the
+    # C2 review-owed derivation) both import it, and both are in this list, so
+    # the must-be-whole rule applies: a scaffold missing it ImportErrors on the
+    # first merge attempt, not on some rare path.
+    ("scripts/kitlib/verdict.py", "scripts/kitlib/verdict.py"),
     # WI-448 slice 3 added `spine`: the spine ROW vocabulary — the Status
     # predicates, the LLR-exemption set, the phase parse, the SN id scrapes and
     # the registry CSV loader — which `trace.py` and `spine_rules.py` each
@@ -2083,6 +2090,11 @@ MAPPING = [
     ("scripts/gen_open_items.py", "scripts/gen_open_items.py"),
     ("scripts/gen_components.py", "scripts/gen_components.py"),
     ("scripts/gen_okf.py", "scripts/gen_okf.py"),
+    # The per-review-scope verdict rollup (OI-76). It ships with `trunk_step.py`
+    # rather than optionally: the trunk step's REGEN_STEPS names it, and a
+    # scaffold whose regen halts at a missing generator leaves every LATER
+    # generated family stale too (regen stops at the first failure).
+    ("scripts/gen_verdict_rollup.py", "scripts/gen_verdict_rollup.py"),
     ("scripts/plan_coverage.py", "scripts/plan_coverage.py"),
     ("scripts/plan_round.py", "scripts/plan_round.py"),
     ("scripts/plan_briefs.py", "scripts/plan_briefs.py"),

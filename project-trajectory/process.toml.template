@@ -138,6 +138,22 @@ keep_nondependent = false
 #   "always" — adjudicate every clean close too
 complete_review = "sample"
 complete_sample_rate = 4
+# Whether an ADJUDICATE lane's verdict gets its own review round — and, in the
+# same breath, whether the merge slot demands one from it. The adjudicator is
+# ALREADY the cross-family judge by routing (the loop's ADJUDICATE arm excludes
+# the builder's family), so a further round is a second fresh session, holding
+# less context, judging the one session that held the whole chain. It earns its
+# strong-tier cost where the verdict CREATES WORK OR MOVES SCOPE, and not
+# otherwise.
+#   "never"        — no round after ADJUDICATE; the gate never asks an
+#                    adjudication lane for a verdict
+#   "when-minting" — a round is scheduled, and demanded, when the verdict drafts
+#                    ANY successor at `spine` or `high-risk`, or when the brief
+#                    is `consolidate`. An amendment that only recommends a flip,
+#                    a red-tc drafting ordinary fix rows, a clean-close spot
+#                    check: no round.
+#   "always"       — every adjudication gets one
+adjudication_review = "when-minting"
 
 [policies]
 # Who may publish (`git push`) this repo — was docs/push-policy.
