@@ -1231,3 +1231,25 @@ the next sitting, as a worker lane's must.
 either behaviour, because the `commit_telemetry` call the new stderr line sits
 beside compacted from seven lines to one in the same hunk. `integrate.py` is
 unchanged in SLOC — its two fixes are a narrowed condition and comments.
+
+### Round 034 — the closing green was promised and never landed
+
+The round-033 rework closed clean, and then two more commits changed the tree
+behind it. `a12bfd7f` (the close) said Done-when 5's unfiltered green would be
+"driven at THIS tip and recorded in the follow-up commit"; the two follow-ups
+that actually landed — `5e354e3e` (the enforcement-audit row's two now-false
+clauses) and `91c7dfb6` (two self-review corrections, one of them in
+`agent_loop.py`) — each recorded the COMMIT bar and nothing else. So the newest
+driven unfiltered green on this branch is still the one at `ddd08d67`, taken at
+the round-030 close, three tree-changing commits ago, while a spec sitting in
+`docs/archive/work/complete/` ASSERTS Done-when 5 at the tip the integrator
+merges.
+
+This is the round-025 finding for the third time in one lane, and the shape is
+worth naming rather than just fixing: the close is an input change, and so is
+every correction the close's own self-review produces. A green scheduled for
+"the follow-up commit" is a green nobody owns — the follow-up is written by a
+session that is thinking about the correction, not about the criterion. The
+durable form is the one this section takes: drive the suite at the tip AFTER
+the last tree-changing commit, and record it in `docs/log.d/`, which the fold
+excludes — so the recording cannot stale the reading.
