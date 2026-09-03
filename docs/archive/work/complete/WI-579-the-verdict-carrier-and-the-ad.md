@@ -30,8 +30,9 @@ between them drew two identical rounds on WI-547.
   an implementer cannot author its own approval without also forging the loop's
   telemetry.
 - **WI-558 DW2** — the machine half rides the round's own record commit as a
-  trailer, written by the COORDINATOR and verified against its carrier's tree
-  (the `Bar-Green` pattern). GOVERNING = TREE IDENTITY: a verdict counts only
+  trailer, written by the COORDINATOR and verified against the identity its
+  carrier GOVERNS (the `Bar-Green` pattern, through the same peel the readers
+  use, so the writer stamps the value they key on). GOVERNING = TREE IDENTITY: a verdict counts only
   while it names the branch's current non-record tree, read at the GOVERNING
   REV so neither the station refresh nor the commit that records the round
   stales an honest APPROVE. The freshness
@@ -148,11 +149,23 @@ time comparison, which nothing detects once it is false. Ratchet bumps
 then DOWN to 1352 when the peel left it, `check` 1163→1177, `bootstrap`
 1658→1660, smoke membership 1480→1560) each carry
 their reason at the entry; `_verdict_gate`'s complexity bump was REFUSED and the
-function decomposed instead. Round-007 rework full suite, run at the tip
-`cee19210`: 3343 passed, 24 skipped, 1 failed in 615.27s — the failure is
-`docs/stage` freshness, a trunk-lane artifact a work branch must
-not commit, bisected clean at the integration base. Account, deviations and the
-one out-of-scope finding: `docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md`.
+function decomposed instead; `integrate` was re-stamped DOWNWARD 1382 -> 1352
+and again 1352 -> 1351.
+
+Full unfiltered suite at the closing tip `2b4be13c`: **3345 passed, 24 skipped,
+1 failed in 612.94 s**. The one failure is
+`test_derive_stage.py::test_this_repo_s_committed_stage_is_current`, and it is
+CAUSED BY THIS BRANCH rather than inherited — the integration base `0ecc62b`
+passes it, driven in a scratch worktree, so the earlier rounds' phrasing
+("bisected clean at the integration base") is retracted as ambiguous where it
+read as an excuse. It is nonetheless the designed outcome: `docs/stage` is a
+`[generated]` trunk-lane artifact, this branch's spine amendments moved the
+derived fingerprint, and a work branch MUST NOT commit that file — which is why
+`check.py`'s own `derived-stage` step reports `SKIP work branch ... generated
+freshness is the trunk lane's` and the trunk lane regenerates it after the merge
+(concurrency-restructure §5.2). `git diff 0ecc62b..HEAD -- docs/stage` is empty.
+Account, deviations and the one out-of-scope finding:
+`docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md`.
 
 ## Context
 

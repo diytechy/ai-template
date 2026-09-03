@@ -558,3 +558,29 @@ owns its directory), IF-175, TC-205 and TC-206 all amended; every row stays
 arm while no test drove it, which is why the arm was broken and silent; the
 added case asserts the CLEARING and not the reporting, since a report whose own
 remedy cannot clear it is the defect.
+
+**Full suite at the closing tip, and an honest correction to how its one red
+has been described.** `2b4be13c`: **3345 passed, 24 skipped, 1 failed in
+612.94 s** — two more passing than the round-012 run, which is the expected
+shape for three added regressions minus none removed.
+<!-- fig: cmd="python -m pytest -q -n auto" rev=2b4be13c -->
+
+The failure is `test_derive_stage.py::test_this_repo_s_committed_stage_is_current`.
+Earlier rounds recorded it as "bisected clean at the integration base", which
+reads as *inherited*; it is not. I drove the base in a scratch worktree and
+`0ecc62b` PASSES the test, so this red is CAUSED by this branch — its spine
+amendments moved the derived stage fingerprint. Benign, and for a stated
+reason rather than a hopeful one: `docs/stage` is declared `[generated]` and is
+the trunk lane's to write, `git diff 0ecc62b..HEAD -- docs/stage` is empty
+because a work branch must not commit it, `check.py`'s `derived-stage` step
+reports `SKIP work branch ... generated freshness is the trunk lane's` on this
+branch by design, and `trunk_step.py --regen` regenerates it after the merge
+(concurrency-restructure §5.2). Caused-but-benign is a different claim from
+inherited, and only one of them is true here.
+
+Smoke at the closing tip: **1506 passed, 8 skipped in 54.29 s**, enforcer
+`59.2s vs 60s -> within`. Both readings sit far above the 32.9 s the same tier
+reported earlier in this session, because the full unfiltered suite was running
+concurrently on the same box; quoted as measured rather than averaged away, and
+the near-ceiling number is the reason to say so. One box is one data point.
+<!-- fig: cmd="python -m pytest -q -n auto -m smoke && python scripts/check_smoke_budget.py --mode enforce" rev=2b4be13c -->
