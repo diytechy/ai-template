@@ -32,7 +32,7 @@ YOURS: a work lane's merge is refused if it performs one.
 ## Dispositions
 
 ```toml
-title = "LLR-207/TC-205 return: two Detail clauses contradict kitlib/verdict.py, and three stated clauses have no test"
+title = "LLR-207/TC-205 return: two Detail clauses contradict kitlib/verdict.py, three stated clauses have no test, and one Method claim misstates its test"
 workstream = "process"
 safety_class = "spine"
 buildtier = "strong"
@@ -48,9 +48,10 @@ governing line `OUTCOME: RETURN rows=4` over `LLR-207`, `LLR-208`, `TC-205`,
 finding below on the tree at that commit. `LLR-208` and `TC-206` were RETURNED
 by that same act, on a ground of their own, and are the SECOND draft's scope
 rather than this one's. `LLR-207` and `TC-205` stay `Drafted` and return
-TOGETHER: two of the five findings are wording that contradicts the module,
-three are stated obligations no cited test discharges, and the requirement and
-test halves of those three are one gap seen from two sides.
+TOGETHER: two of the six findings are wording that contradicts the module,
+three are stated obligations no cited test discharges, and one is a TC Method
+claim that does not match its test. The requirement and test halves of the
+three coverage findings are one gap seen from two sides.
 
 IN SCOPE — two cells and two regressions.
 
