@@ -2508,10 +2508,18 @@ def commit_telemetry(root, session, label, paths, trailer=None):
     `trailer` is the round's `Review-Verdict:` ATTESTATION (OI-76 alternative C,
     the `Bar-Green:` pattern), and it changes one rule: an attestation must land
     even when the bookkeeping it rides did not change, so a trailer commits
-    EMPTY rather than not at all. That is the same trade `Bar-Green` makes — the
-    commit's value is the words, not the diff — and an empty commit changes no
-    tree, so it cannot disturb the very identity the trailer names. Without a
-    trailer the old rule stands unchanged: no empty commits for bookkeeping."""
+    EMPTY rather than not at all. That is the same trade `Bar-Green` makes: the
+    commit's value is the words, not the diff. "An empty commit changes no tree"
+    is only HALF of what makes that free, and the missing half was a defect: the
+    identity is read through `verdict.governing_rev`, whose walk used to step by
+    CLASSIFYING the paths a commit touched — and a zero-path commit is one it
+    could not classify, so it stopped there, and the very commit recording an
+    approval buried the station refresh under it (REVIEW-A round 012, finding
+    1). That walk now steps on identity equality, which makes the claim true of
+    the READER and not only of the tree, and
+    `test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel` drives
+    this function's own empty carrier through it. Without a trailer the old rule
+    stands unchanged: no empty commits for bookkeeping."""
     rels = []
     for p in paths:
         try:

@@ -45,11 +45,14 @@ one refresh commit and a resumed lane drew a round the gate would not read
 THE TWO HALVES INTERACT, which is the part that had to be driven to be believed.
 The peel is written twice on purpose: `work_tip` peels only a refresh sitting
 literally on the tip, because it feeds a `reset --hard` where peeling one commit
-too far destroys committed work, and `governing_rev` walks THROUGH record-only
-commits to reach a refresh they would otherwise hide. While the identity used
-the tip-only peel, a single telemetry commit — a record path, which the fold is
-built to ignore — moved the identity anyway, by burying the refresh under it. A
-read-only question can afford an answer a destructive one cannot.
+too far destroys committed work, and `governing_rev` walks THROUGH any commit
+whose identity equals its parent's to reach a refresh it would otherwise hide.
+While the identity used the tip-only peel, a single telemetry commit — a record
+path, which the fold is built to ignore — moved the identity anyway, by burying
+the refresh under it. A read-only question can afford an answer a destructive
+one cannot. The walk's step condition is the module's own sentence rather than a
+proxy for it ("a commit that cannot invalidate a verdict"), which is why the
+empty attestation carrier `commit_telemetry` writes needs no case of its own.
 
 THE TRAILER is the machine half, the `Bar-Green:` pattern applied to a verdict:
 
@@ -369,40 +372,23 @@ def work_tip(root, branch):
     return _rev(root, rev)
 
 
-def _record_only(root, rev):
-    """Does `rev` change nothing outside `RECORD_PREFIXES`? False when git says
-    nothing, which is the stop-the-walk (fail toward more review) direction.
-
-    `-z` for the same reason `tree_identity` passes it: without it git QUOTES a
-    non-ASCII path and the leading quote defeats `is_record_path`, which would
-    read a WORK commit as a record one — the finding-3 trap, pointed the more
-    dangerous way round. A merge commit yields no paths under `--name-only`
-    and so answers False, and an empty commit answers False too; both stop the
-    walk rather than peel through something this function cannot classify."""
-    out = git_out(root, ["show", "--format=", "--name-only", "-z", rev])
-    if out is None:
-        return False
-    paths = [p for p in out.split("\0") if p.strip()]
-    return bool(paths) and all(is_record_path(p) for p in paths)
-
-
 # How far `governing_rev` will walk. Deeper than `_MAX_REFRESH_PEEL` because
-# what it walks THROUGH is record commits, and a lane accumulates one telemetry
-# commit per session. Hitting the bound stops the walk, which measures at a
-# later rev and so can only ask for MORE review, never less.
+# what it walks THROUGH is identity-preserving commits, and a lane accumulates
+# one telemetry commit per session. Hitting the bound stops the walk, which
+# measures at a later rev and so can only ask for MORE review, never less.
 _MAX_GOVERNING_WALK = 64
 
 
 def governing_rev(root, branch):
     """The commit whose tree governs a verdict on `branch`: the tip, with
-    refresh commits peeled AND record-only commits walked through.
+    refresh commits peeled AND identity-preserving commits walked through.
 
     WHY THIS IS NOT `work_tip`. Both peel a refresh, and they must not share an
     implementation, because `work_tip` feeds a `reset --hard` and may only ever
     peel a refresh sitting literally on the tip — peeling one commit further
     there DESTROYS committed work. This function only ever reads, so it can
     afford the honest question: is there a refresh commit under here that
-    nothing but RECORDS has been stacked on?
+    nothing invalidating has been stacked on?
 
     That gap was a live defect, driven. The fold already ignores
     `RECORD_PREFIXES`, so a telemetry commit cannot move the identity — but a
@@ -416,23 +402,43 @@ def governing_rev(root, branch):
     That is the OI-76 failure mode this row exists to eliminate, surviving one
     commit further down than the round-007 fix reached.
 
-    Walking through a record commit cannot change the answer by itself — the
-    fold drops those paths, so a record commit and its parent have the SAME
-    identity by construction. The walk is therefore not a new rule about what
-    counts; it is what lets the existing rule see past the process writing about
-    itself, which is the one thing this module already says must never matter."""
+    THE STEP CONDITION IS THE DEFINITION ITSELF, not a proxy for it. A commit
+    may be walked through exactly when its non-record identity EQUALS its first
+    parent's — which is, in as many words, "a commit that cannot invalidate a
+    verdict", the sentence this whole module is built around. Measuring it
+    directly is what makes the walk provably identity-neutral: `governing_rev`
+    can only ever return a rev with the identity the tip already had, so the
+    walk cannot invent an answer, only see PAST commits to a refresh they would
+    otherwise hide.
+
+    It replaces a predicate that CLASSIFIED THE PATHS a commit touched, and the
+    replacement is the fix for round 012's finding 1 rather than a tidy-up. That
+    predicate had to answer for every commit shape whose paths it could not
+    read — a merge, an empty commit — and it answered "stop", which reads as
+    "this might have invalidated the verdict" for a commit that provably did
+    not. `agent_common.commit_telemetry` then began writing exactly that shape:
+    a `Review-Verdict:` attestation must land even when the bookkeeping it rides
+    is unchanged, so it commits EMPTY, and the very commit that RECORDS an
+    approval buried the refresh underneath it. Asking the identity question
+    directly makes the empty carrier, the merge commit and the quoted-path trap
+    (`is_record_path` against git's display encoding, round 007's finding 3
+    pointed the more dangerous way round) all unrepresentable at once, because
+    no path is classified here at all."""
     rev = branch
+    identity = tree_identity(root, rev)
     for _ in range(_MAX_GOVERNING_WALK):
         attested = refresh_attestation(root, branch, rev)
         if attested is not None:
             rev = attested[0]
+            identity = tree_identity(root, rev)
             continue
-        if not _record_only(root, rev):
-            break
         parent = _rev(root, rev + "^1")
-        if parent is None:
-            break  # a record-only root commit: there is nothing under it
-        rev = parent
+        if identity is None or parent is None:
+            break  # git had nothing to say, or a root commit: nothing under it
+        parent_identity = tree_identity(root, parent)
+        if parent_identity != identity:
+            break  # this commit changed the work, so it is where the walk ends
+        rev, identity = parent, parent_identity
     return _rev(root, rev)
 
 

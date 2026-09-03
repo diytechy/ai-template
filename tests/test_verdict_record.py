@@ -514,6 +514,35 @@ def test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel(tmp_path):
     _git(root, "checkout", "-q", "main")
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
+    # ...and the OTHER carrier, which is the one the coordinator actually
+    # writes for an attestation (ROUND 012, FINDING 1). `commit_telemetry`
+    # commits EMPTY when a `Review-Verdict:` trailer must land on unchanged
+    # bookkeeping — a zero-path commit, which is precisely what a walk that
+    # CLASSIFIES PATHS cannot classify and so used to stop at, burying the
+    # refresh under it exactly as the non-empty case above once did. Driven
+    # through the producer rather than a hand-made lookalike, so the two stay
+    # tied: if `commit_telemetry` ever stops writing this shape the test says
+    # so instead of quietly testing a shape nothing emits.
+    _git(root, "checkout", "-q", "wi-401")
+    ac.commit_telemetry(
+        root,
+        "wi-401-005",
+        "REVIEW-A COMMITTED",
+        [],
+        trailer=kv.format_trailer("APPROVE", 1, served),
+    )
+    assert not _git(root, "show", "--format=", "--name-only", "HEAD").strip(), (
+        "the fixture must really reproduce the EMPTY carrier, or it proves "
+        "nothing about the shape that produced the finding"
+    )
+    assert kv.governing_identity(root, "wi-401") == served, (
+        "an empty commit changes no tree, so it cannot move the identity — and "
+        "it must not move it by hiding the refresh either"
+    )
+    assert al.review_owed_by_evidence(root, worker) is False
+    _git(root, "checkout", "-q", "main")
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
     # The opposite, without which the walk could peel everything and pass: a
     # WORK commit above the refresh is not walked through, and it does re-owe.
     _git(root, "checkout", "-q", "wi-401")

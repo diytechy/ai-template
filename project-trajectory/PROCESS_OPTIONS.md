@@ -557,14 +557,17 @@ ruled 2026-08-31).** The queue accepts a verdict only while it still describes
 the tree, and that is now an IDENTITY rather than a comparison:
 `integrate._verdict_gate` requires the verdict to **name the branch's current
 non-record tree** — the tree with `docs/reviews/`, `docs/log.d/` and
-`docs/iteration/` removed, read at the work tip, so the station's `refresh`
-commit is peeled off at the work sha it attests (a mechanical re-merge is not a
-change the reviewer could conclude differently about). There is no ordering rule
+`docs/iteration/` removed, read at the **governing rev** — the tip with the
+station's `refresh` commit peeled off at the work sha it attests, and with any
+commit that left that tree untouched stepped through to reach it (a mechanical
+re-merge is not a change the reviewer could conclude differently about, and
+neither is the commit that records the round). There is no ordering rule
 left to get wrong: a commit that changed the work changed the tree, and the
 verdict simply no longer names it — which also retires the case the old
 last-by-commit-time convention could not decide, a re-run round after a
 non-substantive edit silently promoting a stale APPROVE. **The consequence for a
-lane is unchanged: every commit after an APPROVE buys another round** — correctly when it changed
+lane is unchanged: every commit that changes the non-record tree buys another
+round** — correctly when it changed
 what ships, *and equally* when it corrected a claim the verdict rested on, so
 "no code changed" is never by itself an argument for skipping the round. Two
 ordering rules make the avoidable part avoidable, and the lane owes both:

@@ -32,8 +32,9 @@ between them drew two identical rounds on WI-547.
 - **WI-558 DW2** — the machine half rides the round's own record commit as a
   trailer, written by the COORDINATOR and verified against its carrier's tree
   (the `Bar-Green` pattern). GOVERNING = TREE IDENTITY: a verdict counts only
-  while it names the branch's current non-record tree, read at the WORK TIP so
-  the station refresh still does not stale an honest APPROVE. The freshness
+  while it names the branch's current non-record tree, read at the GOVERNING
+  REV so neither the station refresh nor the commit that records the round
+  stales an honest APPROVE. The freshness
   comparison is gone; there is no ordering rule left. The trailer is a
   CROSS-CHECK and never an accept path — one that contradicts the rounds
   refuses the merge.
@@ -99,10 +100,24 @@ BURYING the refresh under it: the loop answered `owed=True` and the merge slot
 refused "no logged review round names its current tree", both readers agreeing
 on the wrong answer and parking an honest APPROVE at a supervisor stop. That is
 the OI-76 failure mode itself, one commit further down than round 007 reached.
-`governing_rev` now walks through record-only commits to reach the refresh, and
-`work_tip` keeps its tip-only contract untouched — the two shapes of the peel
-are separate because a read-only reader can afford an answer a destructive one
-cannot.
+`governing_rev` now walks past that commit to reach the refresh, and `work_tip`
+keeps its tip-only contract untouched — the two shapes of the peel are separate
+because a read-only reader can afford an answer a destructive one cannot.
+
+Round 012 found the same defect one commit SHAPE further on, and closing it
+deleted a rule rather than adding a case. The walk stepped by classifying the
+PATHS a commit touched, so every commit whose paths it could not read — a merge,
+an empty commit — stopped it. `commit_telemetry` writes exactly that shape: a
+`Review-Verdict:` attestation must land even when the bookkeeping it rides is
+unchanged, so it commits EMPTY, and the very commit RECORDING an approval buried
+the refresh underneath it. The step condition is now the module's own defining
+sentence — a commit whose non-record identity EQUALS its first parent's cannot
+invalidate a verdict — measured directly from `tree_identity`. The empty
+carrier, the merge commit and the quoted-path trap stop being cases, because no
+path is classified in the walk at all. The regression drives the carrier through
+`commit_telemetry` itself rather than a hand-made lookalike, and
+PROCESS_OPTIONS.md's normative sentence is qualified to match the rule stated
+beside it: a commit that changes the non-record tree buys another round.
 
 `LLR-140`'s Approved detail cell was re-pointed IN-LANE: it asserted the retired
 time comparison, which nothing detects once it is false. Ratchet bumps

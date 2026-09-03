@@ -362,3 +362,66 @@ full suite at the tip `cee19210`: **3343 passed, 24 skipped, 1 failed in
 same `docs/stage` fingerprint. Smoke at the same tip: 1504 passed / 8 skipped,
 29.5 s against the 60 s ceiling. One box is one data point for the seconds.
 <!-- fig: cmd="python -m pytest -q -n auto" rev=cee19210 -->
+
+### Review A round 012 rework — the walk stopped classifying, and a rule died
+
+Two findings, both accepted. The MAJOR is the fifth defect's own family, one
+commit SHAPE further on, and it is the clearest antidote case this row has had:
+the fix DELETES a predicate rather than adding a case to it.
+
+**The walk classified paths, so it stopped at commits it could not classify.**
+`_record_only` asked "does this commit touch nothing outside `RECORD_PREFIXES`?"
+and answered False for a zero-path commit — a merge, or an EMPTY one — which
+stops `governing_rev` and so buries any refresh underneath. That is not a
+hypothetical shape: `commit_telemetry` was changed IN THIS ROW to commit
+`--allow-empty` whenever a `Review-Verdict:` attestation must land on unchanged
+bookkeeping, so the commit that RECORDS an approval is the commit that hides the
+refresh from it. Round 005's regression used a non-empty telemetry commit and
+never reached it, and `commit_telemetry`'s own docstring asserted the opposite
+in as many words ("an empty commit changes no tree, so it cannot disturb the
+very identity the trailer names") — true of the tree, false of the reader.
+
+Driven before the fix, through the PRODUCER rather than a lookalike: the same
+fixture that pins the non-empty carrier, with `ac.commit_telemetry(root, …,
+[], trailer=…)` stacked on the refresh, asserted zero-path and then measured —
+`governing_identity` gave `f2bca684…` against the served `4fff62ba…`, the
+identical pair the finding-5 table names, i.e. the defect this row exists to
+kill, alive again for the carrier the row itself introduced.
+<!-- fig: cmd="python -m pytest -q tests/test_verdict_record.py::test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel (pre-fix)" rev=caca461a -->
+
+The fix is the step condition, not a guard. A commit may be walked through
+exactly when its non-record identity EQUALS its first parent's — which is, word
+for word, the sentence this module is built around, "a commit that cannot
+invalidate a verdict", and it is already computable from `tree_identity`. So the
+walk is now provably identity-neutral (it can only return a rev carrying the
+identity the tip already had), `_record_only` is GONE with its empty-commit and
+merge-commit special cases, and the round-007 quoted-path trap pointed the other
+way — `is_record_path` against git's display encoding making a WORK commit read
+as a record one — becomes unrepresentable here too, because the walk classifies
+no path at all. Three failure modes closed by removing the code that had them.
+
+Cost, since the walk now folds a tree per step instead of listing paths: on this
+branch's real history `governing_rev` walks past three record commits to
+`86e0c9c4` in **0.16 s** — the same rev the round-012 reviewer reached through
+the old walk, so the change is proven identity-preserving on production history
+as well as on the fixture.
+<!-- fig: cmd="python -c \"...kitlib.verdict.governing_rev('.', 'wi-579-the-verdict-carrier-and-the-ad')\"" rev=caca461a -->
+
+**The MINOR was a normative sentence outliving its own paragraph.**
+PROCESS_OPTIONS.md's bolded *"every commit after an APPROVE buys another round"*
+is false under the rule stated seven lines above it — a commit touching only
+`docs/reviews/`, `docs/log.d/` or `docs/iteration/` buys nothing, which is the
+entire point of `RECORD_PREFIXES` and of the WI-547 class this row closes. An
+adopter reading the bold got the pre-OI-76 rule from the passage that retires
+it. Qualified to "every commit that changes the non-record tree". The same
+paragraph's "read at the work tip" was stale from round 005 in the same way and
+is re-pointed at the governing rev; the archived spec's DW2 restatement carried
+the identical stale phrase and is corrected with it.
+
+`commit_telemetry`'s docstring now states where the claim is HELD (the walk's
+step condition) instead of asserting it, and names the test that drives its own
+empty carrier. LLR-207, IF-175 and TC-205 all carried "walks THROUGH record-only
+commits" and are re-pointed; TC-205's method now declares both carriers, and the
+evidence list is unchanged because the empty case extends the existing
+regression rather than adding a test id. No ratchet moved: `kitlib/verdict.py`
+lost `_record_only` (7 SLOC) and gained 8 in the walk, and still opens no entry.
