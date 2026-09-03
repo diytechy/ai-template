@@ -159,7 +159,7 @@ def _extra(root, wanted):
     round 015, driven). Owning the directory makes "extra" cease to be a
     representable state rather than a reported one."""
     known = {p for p, _t in wanted}
-    return [p for p in sorted((root / ROLLUP_DIR).glob("*.md")) if p not in known]
+    return [p for p in sorted((root / ROLLUP_DIR).rglob("*.md")) if p not in known]
 
 
 def main(argv=None):

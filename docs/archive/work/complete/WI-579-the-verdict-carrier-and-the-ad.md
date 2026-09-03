@@ -412,6 +412,13 @@ answer — the coordinator that executes the modules it imported at launch, and
 the resumed-run base itself, whose three other blind readers this fix leaves
 standing.
 
+Round 036 closed the rollup generator's last ownership gap. `_extra` had
+enumerated only direct `*.md` children despite the generator owning the whole
+`docs/reviews/rollup/` subtree, so a nested stale output survived both
+`--check` and regeneration. The one owned-output enumeration is now recursive;
+the regression proves a nested output is reported, pruned, and leaves the next
+check fresh.
+
 ## Context
 
 Minted by the owner-directed backlog restructure of 2026-09-02 (plan of record `docs/plans/2026-09-02-backlog-restructure-and-consolidation.md` §2.2; executed out of band as a hand trunk commit series, not by a lane). The absorbed rows are archived under `docs/archive/work/restructured/` with their scope text untouched; their Done-when blocks are QUOTED below under their old ids and remain the spec this row must satisfy — decompose, don't paraphrase.

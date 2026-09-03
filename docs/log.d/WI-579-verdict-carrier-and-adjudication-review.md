@@ -1374,3 +1374,14 @@ the non-record tree identity, so this commit cannot move the tree the reading
 names; a paragraph added to the spec would. That is the whole content of the
 round-033 lesson — its close promised the green "in the follow-up commit", and
 every follow-up that could carry it was also a commit that invalidated it.
+
+### Round 036 — recursive ownership of generated rollups
+
+REVIEW-A found one remaining mismatch between the generated-rollup contract and
+its implementation: `_extra` scanned only direct children, so
+`docs/reviews/rollup/nested/stale.md` was invisible to both `--check` and the
+write path. The root cause was the owned-output enumeration itself, not either
+caller. It now walks `*.md` recursively; the regression drives stale detection,
+regeneration, deletion, and the subsequent fresh check on a nested output.
+
+Deferred open items: OI-83, OI-84.

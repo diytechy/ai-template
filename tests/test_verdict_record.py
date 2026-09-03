@@ -1273,6 +1273,17 @@ def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
     )
     assert gen.main(["--root", str(root), "--check"]) == 0
 
+    # Ownership covers the whole output subtree, not only its direct children.
+    # Otherwise a hand-authored or obsolete nested output survives both the
+    # freshness check and the remedy it names.
+    nested = root / "docs" / "reviews" / "rollup" / "nested" / "stale.md"
+    nested.parent.mkdir()
+    nested.write_text("# stale nested output\n", encoding="utf-8")
+    assert gen.main(["--root", str(root), "--check"]) == 1
+    assert gen.main(["--root", str(root)]) == 0
+    assert not nested.exists(), "the generator prunes stale outputs recursively"
+    assert gen.main(["--root", str(root), "--check"]) == 0
+
 
 def test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit(tmp_path, capsys):
     # WI-558 DONE-WHEN 2's WRITER, end to end — the arm no test had ever
