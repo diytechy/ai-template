@@ -1,0 +1,3 @@
+- [MAJOR] project-trajectory/scripts/kitlib/verdict.py:254 -> `git_out` decodes `ls-tree -z` with `errors="replace"`, so distinct invalid-UTF-8 work paths with an identical blob fold to the same identity (reproduced with `"\\200"` renamed to `"\\201"`: both returned `078e25798f331e5d407065dc9c0725f8ad166332d45536d10cc9b7bd27c86973` while Git reported `R100`), allowing a stale APPROVE to clear the merge gate after real work changes -> preserve and hash the raw `ls-tree -z` bytes, parsing path bytes and applying the ASCII record-prefix boundary before any decode; extend TC-205 with this collision -> @owner
+
+VERDICT: CHANGES-REQUESTED findings=1
