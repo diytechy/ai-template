@@ -100,7 +100,9 @@ THE ANCHOR IS NOT THIS ROW'S STEP (REVIEW-A round 002, finding 1). A `spine`
 row is a WORKER LANE, and `acceptance_record.lane_approval_refusal` refuses a
 lane that writes `SNAPSHOT_DIR` — by construction, at merge. So this row's
 whole scope is the ruling on (a)/(b), the `refresh_refusal` change it implies,
-and the test. The re-anchor of `low-level-requirements.toml` is the SUCCESSOR
+and the test. It stays `spine` for one reason (round 003): it changes
+`refresh_refusal`, the gate every approval act consults, so it runs alone and
+first — exclusive and rank 0 — never beside a lane mid-act. The re-anchor of `low-level-requirements.toml` is the SUCCESSOR
 CONDITION: once this row lands and the act is takeable, the trunk-side
 amendment-adjudication rung — the same rung that minted WI-578 — takes it. The
 verdict file records that all seven of that file's drifted Approved rows were
