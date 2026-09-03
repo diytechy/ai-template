@@ -64,7 +64,7 @@ project-trajectory/scripts/check_trajectory.py	contract_body_findings	22	40
 project-trajectory/scripts/check_trajectory.py	if_tc_allow_hygiene_findings	27	54
 project-trajectory/scripts/check_trajectory.py	interface_findings	37	89
 project-trajectory/scripts/check_trajectory.py	knowledge_pack_findings	18	28
-project-trajectory/scripts/check_trajectory.py	load_wis	16	35
+project-trajectory/scripts/check_trajectory.py	load_wis	16	35	sloc column re-measured 34 -> 35 at dc3c9e68 (informational; the ratchet compares cognitive, which 8fa0f0f3 pushed to 17 and dc3c9e68 repaired back to 16)
 project-trajectory/scripts/check_trajectory.py	main	45	150
 project-trajectory/scripts/check_trajectory.py	queue_conflict_findings	21	36
 project-trajectory/scripts/check_trajectory.py	staged_findings	20	30

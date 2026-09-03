@@ -191,3 +191,52 @@ collection 1477 against the 1480 ceiling.
 ```
 3309 passed, 20 skipped in 611.56s (0:10:11)
 ```
+
+### Review round 3 — final verification, Sol (2 findings) and Opus (6) over `dc3c9e68`+`4b4afd64`; no BLOCKER; fix commit follows
+
+Both reviewers reproduced every round-2 fix: no self-edge, no unrelated
+rewrite, the union on overlapping sets, the five lineage refusals including a
+three-row cycle, the strict authoring grammar, complexity exit 0, the ratchet
+stamps (2327 / 1343 / 1477), the byte budgets, the legend-only dashboard diff,
+and the collect count (3329) consistent with `3309 passed, 20 skipped`.
+
+- *The non-dependent skip was per ROW over the whole absorbed group* (Opus
+  MAJOR — the one real defect left). A successor that hard-named the row it
+  absorbs KEPT that edge (the test even asserted it), so it would wait on a
+  row this same close archives; and a row that absorbed a DIFFERENT row of the
+  group was exempted from re-pointing tokens it never absorbed. Now decided per
+  token: a token the row absorbs (or any token, for a row that is itself a
+  successor) is DROPPED; every other absorbed token is replaced by the
+  successor set. Tests: the successor's own absorbed token drops while its
+  declared sibling edge stays; the half-sibling is re-pointed for the row it
+  did not absorb.
+- *The re-point message named the whole group* (Sol MINOR, Opus MINOR): it now
+  names only the edges the row held, and a separate line announces drops.
+- *A joined string inside a list bypassed the authoring grammar* (Opus MINOR):
+  every authored string must be one id, inside a list too.
+- *`_apply_supersede` was dead* (Opus MINOR): deleted.
+- *Records* (Opus MINOR ×2): plan §1.5's bullet described the round-1 loop;
+  it now describes the set-based, per-token rule. PROCESS_OPTIONS said a
+  successor must be a "live" row and RESYNC that a reader "always lands on"
+  the live thread, while the audit row disclaimed exactly that liveness; both
+  now say "a distinct registry row, not itself restructured".
+- *Declined with evidence* (Sol MAJOR): "`docs/complexity-baseline` raised
+  `load_wis` SLOC 34 → 35 without a reason". The ratchet compares the
+  COGNITIVE column only (`check_complexity.compare`); `load_wis` was
+  (17, 35) at `503b2b53` and (16, 35) at `dc3c9e68` — the repair round 2
+  claimed is real and the SLOC column was a re-measure of an informational
+  value already at 35. The row now carries a reason saying so, so the next
+  reader does not trip on it.
+
+Ratchets: `intake.py` 1343 → 1357 (reason in the baseline entry; two
+extractions — `_token_targets`, `_announce_repoint` — keep `_repointed_needs`
+and `_apply_supersedes` under the cognitive ratchet, which exits 0). Byte
+budgets: PROCESS_OPTIONS +4 (187,166, watched), the guard skill's three copies
+re-stamped in sync.
+
+**Full suite at this commit** (real tail):
+
+```
+FULLSUITE_TAIL_R3
+```
+

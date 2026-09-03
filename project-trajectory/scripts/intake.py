@@ -1321,13 +1321,16 @@ def _authored_supersedes_refusal(value, at):
     spelling ("WI-558;WI-559") beside the two the prompt documents, and a
     grammar with an undocumented third form is a grammar nobody can check a
     block against. So a string must be exactly one id; several ids are a list."""
-    if isinstance(value, str) and value.strip():
-        if not _AUTHORED_SUPERSEDES_RE.match(value.strip()):
-            return (
-                "{} declares supersedes {!r} - a string names exactly ONE "
-                "WI-### id; several ids are a TOML list, not a joined string; "
-                "nothing minted".format(at, value)
-            )
+    authored = [value] if isinstance(value, str) else list(value or [])
+    for item in authored:
+        if isinstance(item, str) and item.strip():
+            if not _AUTHORED_SUPERSEDES_RE.match(item.strip()):
+                return (
+                    "{} declares supersedes {!r} - an authored value names "
+                    "exactly ONE WI-### id per string; several ids are a TOML "
+                    "list of single ids, never a joined string; nothing "
+                    "minted".format(at, value)
+                )
     return _supersedes_refusal(value, at)
 
 
@@ -1637,30 +1640,35 @@ def _replace_inbound_edges(root, superseded, successors):
     own `needs` is history and is never touched. The edit is surgical (only the
     `needs` line) so a dependent's `## Context` and Deliverable are preserved.
 
-    WHO IS NOT A DEPENDENT. A row that is itself one of `successors`, or whose
-    own `supersedes` names any of the absorbed rows, is never rewritten: its
-    edge onto a sibling successor is ordering, not lineage, and rewriting it
-    would hand the row an edge onto ITSELF - a wait nothing can ever clear, that
-    no validator reports. That is decided from the row's own `supersedes` cell,
-    never guessed from the shape of its `needs`: "names a sibling successor" is
-    equally true of a row that named it on purpose, and a guess there imposes an
-    unrelated hard dependency and announces a re-point that never happened.
-    Deciding it from the cell is why `_mint` calls this AFTER every draft in the
-    mint is on disk rather than one draft at a time."""
+    WHICH TOKENS MOVE, decided PER TOKEN. An absorbed token in a row's `needs`
+    is REPLACED by the successor list - unless the row is itself one of
+    `successors`, or the row's own `supersedes` names THAT token, in which case
+    the token is DROPPED: a successor never waits on a row it absorbs (the
+    replacement would be an edge onto itself, and keeping the token would be an
+    edge onto a row this same close archives - a wait nothing can ever clear
+    either way). A row that absorbed a DIFFERENT row of the same group is still
+    a dependent for the tokens it did not absorb. All of it is read from the
+    row's own `supersedes` cell, never guessed from the shape of its `needs`:
+    "names a sibling successor" is equally true of a row that named it on
+    purpose. Deciding it from the cell is why `_mint` calls this AFTER every
+    draft in the mint is on disk rather than one draft at a time. Returns
+    `(relpath, replaced, dropped)` per rewritten row, so the caller can announce
+    exactly the edges it moved."""
     dead = set(supersedes_ids(superseded))
     live = supersedes_ids(successors)
     if not dead or not live:
         return []
     changed = []
     for path, rel, text, data in _open_specs(Path(root) / WORK):
-        new_needs = _repointed_needs(data, dead, live)
-        if new_needs is None:
+        rewritten = _repointed_needs(data, dead, live)
+        if rewritten is None:
             continue
+        new_needs, replaced, dropped = rewritten
         new_line = "needs = " + wi_convert.toml_value(new_needs)
         new_text, n = _SPEC_NEEDS_RE.subn(new_line, text, count=1)
         if n:
             path.write_text(new_text, encoding="utf-8", newline="\n")
-            changed.append(rel)
+            changed.append((rel, replaced, dropped))
     return changed
 
 
@@ -1689,26 +1697,32 @@ def _open_specs(work):
 
 
 def _repointed_needs(data, dead, successors):
-    """One open row's rewritten `needs`, or None when it is not a dependent.
+    """One open row's `(needs, replaced, dropped)`, or None when no absorbed
+    id is in its `needs`.
 
-    A dependent is a row that still names an ABSORBED id; each such token is
-    replaced by the WHOLE successor list, in order, de-duplicated against what
-    the row already holds. A row that is itself one of the successors, or that
-    absorbed one of the same rows, is NOT a dependent however its `needs`
-    reads - see `_replace_inbound_edges`."""
+    Each absorbed token is replaced by the WHOLE successor list, in order,
+    de-duplicated against what the row already holds - or DROPPED when the row
+    is one of the successors or absorbed that very token itself; see
+    `_replace_inbound_edges` for why the decision is per token."""
     needs = [str(v) for v in (data.get("needs") or [])]
     if not dead.intersection(needs):
         return None
-    if str(data.get("id") or "").strip() in successors or dead.intersection(
-        supersedes_ids(data.get("supersedes"))
-    ):
-        return None
-    out = []
-    for tok in needs:
-        for repl in successors if tok in dead else [tok]:
-            if repl not in out:
-                out.append(repl)
-    return out
+    absorbs = set(supersedes_ids(data.get("supersedes")))
+    if str(data.get("id") or "").strip() in successors:
+        absorbs |= dead  # a successor never waits on any row of its own group
+    targets = (
+        r for tok in needs for r in _token_targets(tok, dead, absorbs, successors)
+    )
+    moved = [tok for tok in needs if tok in dead]
+    kept = [tok for tok in moved if tok not in absorbs]
+    return list(dict.fromkeys(targets)), kept, [tok for tok in moved if tok in absorbs]
+
+
+def _token_targets(tok, dead, absorbs, successors):
+    """What one `needs` token becomes: itself, the successor list, or nothing."""
+    if tok not in dead:
+        return [tok]
+    return [] if tok in absorbs else successors
 
 
 def _draft_row(wi_id, draft):
@@ -1828,15 +1842,22 @@ def _apply_supersedes(root, minted):
     for dead_id, succs in per_absorbed.items():
         groups.setdefault(tuple(succs), []).append(dead_id)
     for successors, absorbed in groups.items():
-        named, into = ";".join(absorbed), ";".join(successors)
-        for rel_changed in _replace_inbound_edges(root, absorbed, list(successors)):
-            _say("re-pointed {}'s edge(s) {} -> {}".format(rel_changed, named, into))
+        for rel, replaced, dropped in _replace_inbound_edges(
+            root, absorbed, list(successors)
+        ):
+            _announce_repoint(rel, replaced, dropped, ";".join(successors))
 
 
-def _apply_supersede(root, draft, wi_id):
-    """One drafted successor's supersede - the single-draft convenience over
-    `_apply_supersedes`, which is where the rules live."""
-    _apply_supersedes(root, [(wi_id, supersedes_ids(draft.get("supersedes")))])
+def _announce_repoint(rel, replaced, dropped, into):
+    """Name exactly the edges `_repointed_needs` moved on one row - the tokens
+    it held, never the whole absorbed group."""
+    if replaced:
+        _say("re-pointed {}'s edge(s) {} -> {}".format(rel, ";".join(replaced), into))
+    if dropped:
+        _say(
+            "dropped {}'s edge(s) {} - a successor never waits on a row it "
+            "absorbs".format(rel, ";".join(dropped))
+        )
 
 
 def _inject_open_item(root, draft, wi_id):

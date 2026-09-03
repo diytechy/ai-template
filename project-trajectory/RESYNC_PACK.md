@@ -4380,8 +4380,9 @@ surrounding whitespace ignored), and every successor it names must be a DISTINCT
 FORWARD CARRIER — a registry row, not this row itself, named once, not itself
 `restructured`, and naming this row back in its own `Supersedes` cell. The last
 two make a chain (A → B → C) and a cycle (A ↔ B) unrepresentable rather than
-merely unlikely: the absorbing row is the live thread, so a reader following the
-record always lands on it. A hard error, like the rest of R-A. Its `SpecRef`, on the other hand, is a
+merely unlikely: a reader following the record lands on the absorbing row, never
+on another redirect (that row may since have closed `done`, `cancelled` or
+`partial` — liveness is "is a registry row", not "is still open"). A hard error, like the rest of R-A. Its `SpecRef`, on the other hand, is a
 MAY: R-F carves out both terminals whose work CONTINUES in a successor
 (`partial` and `restructured`), so the cell may stay or be cleared. If you carry
 restructured rows written before this, check the two cells; nothing else changes.

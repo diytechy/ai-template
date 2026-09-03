@@ -919,9 +919,13 @@ def test_one_row_split_across_three_successors_repoints_to_all_three(tmp_path, c
     assert rows["WI-010"]["Predecessors"] == "WI-101;WI-102;WI-103"
     assert rows["WI-011"]["Predecessors"] == "WI-010"
     assert rows["WI-012"]["Predecessors"] == "WI-101"
-    assert rows["WI-101"]["Predecessors"] == "WI-005"
-    assert rows["WI-102"]["Predecessors"] == "WI-005"
-    assert rows["WI-103"]["Predecessors"] == "WI-005;WI-101"
+    # A successor never waits on the row it absorbs: the token is DROPPED, not
+    # kept (a hard edge onto a row this close archives is a wait nothing clears)
+    # and not replaced (that would be an edge onto itself). WI-103's edge onto
+    # its sibling WI-101 is ordering it declared, and stays.
+    assert rows["WI-101"]["Predecessors"] == ""
+    assert rows["WI-102"]["Predecessors"] == ""
+    assert rows["WI-103"]["Predecessors"] == "WI-101"
     # ONE message, naming the whole verdict.
     said = [
         line for line in capsys.readouterr().out.splitlines() if "re-pointed" in line
@@ -1938,3 +1942,72 @@ def test_an_unreadable_dial_or_stage_fails_toward_recommend(tmp_path):
     set_process_key(middle, "attestation", "human_approval_through", "four")
     assert ac.approval_through(docs) == kit_ladder.STAGE_RELEASE
     assert ac.human_holds(docs, FIXTURE_STAGE) is True, "a wrong-typed dial holds"
+
+
+def test_a_row_that_absorbed_a_sibling_is_still_re_pointed_for_the_rest(tmp_path):
+    """Round-3 finding: the non-dependent decision is PER TOKEN, not per row.
+    WI-050 absorbed WI-006 and hard-needs WI-005; WI-100 absorbs both. WI-050
+    is not a dependent for WI-006 (dropped) but IS one for WI-005 (re-pointed
+    to WI-100) - left alone, it would wait on a row this close archives."""
+    root = tmp_path
+    for absorbed in ("WI-005", "WI-006"):
+        write_spec(
+            root, "queued", absorbed, slug="absorbed", specref="seed.txt", needs=[]
+        )
+    write_spec(
+        root,
+        "queued",
+        "WI-050",
+        slug="half-sibling",
+        specref="seed.txt",
+        needs=["WI-005", "WI-006"],
+        supersedes="WI-006",
+    )
+    write_spec(
+        root,
+        "queued",
+        "WI-100",
+        slug="successor",
+        specref="seed.txt",
+        needs=[],
+        supersedes="WI-005;WI-006",
+    )
+    intake._apply_supersedes(root, [("WI-100", ["WI-005", "WI-006"])])
+    assert queued_rows(root)["WI-050"]["Predecessors"] == "WI-100"
+
+
+def test_the_re_point_message_names_only_the_edges_the_row_held(tmp_path, capsys):
+    """Round-3 finding: the announcement names the tokens THIS row carried,
+    never the whole absorbed group."""
+    root = tmp_path
+    for absorbed in ("WI-005", "WI-006"):
+        write_spec(
+            root, "queued", absorbed, slug="absorbed", specref="seed.txt", needs=[]
+        )
+    write_spec(
+        root, "queued", "WI-010", slug="dependent", specref="seed.txt", needs=["WI-005"]
+    )
+    write_spec(
+        root,
+        "queued",
+        "WI-101",
+        slug="successor",
+        specref="seed.txt",
+        needs=[],
+        supersedes="WI-005;WI-006",
+    )
+    intake._apply_supersedes(root, [("WI-101", ["WI-005", "WI-006"])])
+    said = [
+        line for line in capsys.readouterr().out.splitlines() if "re-pointed" in line
+    ]
+    assert said == [
+        "intake: re-pointed queued/WI-010-dependent.md's edge(s) WI-005 -> WI-101"
+    ]
+
+
+def test_a_joined_string_inside_a_list_is_refused_at_the_authoring_boundary():
+    """Round-3 finding: the strict authoring grammar applies to every string,
+    inside a list too - `["WI-558;WI-559"]` is the joined spelling in a hat."""
+    refusal = intake._authored_supersedes_refusal(["WI-558;WI-559"], "at")
+    assert refusal and "exactly ONE WI-### id per string" in refusal
+    assert intake._authored_supersedes_refusal(["WI-558", "WI-559"], "at") is None

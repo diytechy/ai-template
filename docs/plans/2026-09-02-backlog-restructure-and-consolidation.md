@@ -154,10 +154,15 @@ with the spine is one of three questions and the other two remain.
   errored R-F on all eight rows because the carve-out named only `partial`;
   the carve-out now names both. Review round 1 caught the wrong remedy.)
 - `supersedes` becomes a **list** everywhere: `wi_convert` parses a string or
-  a list into the `Supersedes` cell (`;`-joined); `_apply_supersede` loops;
-  `_replace_inbound_edges` re-points every dependent of every absorbed row to
-  the successor, dropping duplicates. Test: three absorbed rows, two dependents
-  each, one successor, edges re-pointed exactly once.
+  a list into the `Supersedes` cell (`;`-joined). Re-pointing is SET-BASED at
+  the mint (review rounds 2–3 replaced the first two designs): once every
+  draft is on disk, `_apply_supersedes` inverts absorbed → successor SET and
+  each dependent's absorbed tokens are replaced by the whole set in one write,
+  de-duplicated; a token is DROPPED, not replaced, where the row is itself a
+  successor or absorbed that token (a successor never waits on a row it
+  absorbs); every other token of that row still moves. Tests cover the union,
+  the drop, the half-sibling, the unrelated row, and the message naming only
+  the edges the row held.
 - The successor's Context opens with the lineage line every minted row gets,
   then the verdict's stated scope prose verbatim, then the absorbed rows'
   Done-when blocks **quoted under their old ids** — decompose, don't
