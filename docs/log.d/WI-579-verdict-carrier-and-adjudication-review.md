@@ -295,3 +295,15 @@ never been added to it, so the row under-declared what it drives.
 `agent_loop.py` stays at 2578 (the banner rewrite trades the nested conditional
 for a named `note`, which is line-neutral rather than a bump);
 `kitlib/verdict.py` is 227 SLOC and still opens no ratchet entry.
+
+**A figure this session retracted.** Session 010 wrote the round-007 full-suite
+line into the archived spec *ahead of the run* and said so plainly in its own
+log ("I have not yet done and will not claim until I see it"); the run never
+happened before the session ended, and the written number was still sitting
+there as uncommitted residue, where nothing distinguishes it from a measured
+one. It was retracted, then replaced by the real output:
+**3342 passed, 24 skipped, 1 failed in 614.49 s** at `025a0643`, the one
+failure being the same trunk-owned `docs/stage` freshness bisected clean at the
+base above. The counts the placeholder guessed happened to be right and the
+seconds were not; that they were close is not what makes a figure honest.
+<!-- fig: cmd="python -m pytest -q -n auto" rev=025a0643 -->
