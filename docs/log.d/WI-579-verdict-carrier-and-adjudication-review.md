@@ -891,4 +891,13 @@ contract explanation it had absorbed was already carried by the row's `Notes`,
 so nothing was dropped to fit. `trace.py --strict-integrity` reports
 `interface-findings=0`.
 
+**Re-driven at the closing tip, because the close is itself an input change.**
+The reading above is at `4332a073`, one commit before the close; the close then
+moved the spec into `docs/archive/work/complete/` and rewrote
+`docs/ratify/CURRENT.md`, so it is a different tree from the one the integrator
+merges. Re-run at `430a7fe8` on a worktree with `docs/stage` regenerated:
+**3349 passed, 25 skipped, 0 failed in 625.13 s** — same counts, and the green
+is the merge tree's, not an intermediate commit's.
+<!-- fig: cmd="python -m pytest -q -n auto" rev=430a7fe8 -->
+
 Deferred open items: none — the round-025 findings were the whole scope.
