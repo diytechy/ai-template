@@ -2743,7 +2743,9 @@ def dispositions_drafted(root, wi):
             drafts, refusal = intake.parse_dispositions(text, hit.name)
             if refusal:
                 return ["spine"]
-            return [d.get("safety_class") for d in drafts]
+            # `kind`: `parse_dispositions` normalizes the declared
+            # `safety_class` cell into it (see `integrate._verdict_owed`).
+            return [d.get("kind") for d in drafts]
     return ["spine"]
 
 

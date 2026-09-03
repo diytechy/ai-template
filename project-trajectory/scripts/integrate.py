@@ -1321,7 +1321,11 @@ def _verdict_owed(root, branch, metas):
         drafts, refusal = intake.parse_dispositions(text, name)
         if refusal:
             return True, ""
-        classes = [d.get("safety_class") for d in drafts]
+        # `kind`, not `safety_class`: `parse_dispositions` NORMALIZES the
+        # declared cell into `kind` (defaulting an undeclared one to
+        # `ordinary`), and reading the raw key here would answer None for
+        # every draft and silently waive the round.
+        classes = [d.get("kind") for d in drafts]
         if ac.adjudication_review_owed(docs, meta.get("brief"), classes):
             return True, ""
     return False, "adjudication lane, [attestation] adjudication_review = {!r}".format(
