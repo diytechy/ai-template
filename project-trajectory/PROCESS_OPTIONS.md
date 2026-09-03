@@ -1128,7 +1128,9 @@ behavior**, so a fresh scaffold pays nothing.
   completion, surface the block for approval; **loop-held:** schedule a
   fresh **design-check session** (different provider, strong tier) to rule
   grind-through vs. genuine redesign, document every assumption, and continue —
-  a redesign verdict re-enters the change-intake flow (process.md §5).
+  a redesign verdict re-enters the change-intake flow (process.md §5). A
+  committing design-check arms the next review round itself; no build session
+  runs between them just to re-arm it.
 
 **Session discipline.**
 

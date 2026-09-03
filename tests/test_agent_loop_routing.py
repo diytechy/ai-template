@@ -502,3 +502,39 @@ def test_select_with_probe_cools_an_unreachable_suspect_by_default(tmp_path, cap
     assert route_id is None
     assert st.cooldowns.get("A", 0.0) >= 900.0  # the default cooldown, from now=0
     assert "probe [A]: unreachable, cooled ~900s" in capsys.readouterr().out
+
+
+def test_a_committing_design_check_arms_the_review_round_itself(monkeypatch):
+    """2026-09-03 (measured on WI-579, eleven rounds): a DESIGN-CHECK runs the
+    worker brief with the findings attached, so its commit IS the rework. With
+    the round armed only by a BUILD-phase commit, every cycle spent a second
+    BUILD session (13 of them, 5.1 h) re-verifying that work just to produce
+    the commit that armed the round. A committing design-check now arms the
+    round on the same terms as a committing build, records its family as the
+    one the reviewer must differ from, and still resets the next phase to
+    BUILD; a NON-committing design-check arms nothing."""
+    from types import SimpleNamespace
+
+    al = load_script("agent_loop")
+    st = _rs(rp_int=1)
+    st.next_phase = "DESIGN-CHECK"
+    ctx = SimpleNamespace(
+        run=SimpleNamespace(routing=st),
+        worker={"base": "base0000", "assigned": ["WI-401"], "train": "wi-401"},
+        root=".",
+        rp_int=1,
+    )
+    monkeypatch.setattr(al, "train_evidence", lambda root, base: ({"WI-401"}, {}))
+    monkeypatch.setattr(al, "schedule_critique_round", lambda ctx, commits: None)
+    plan = {"route_id": "x", "phase": "DESIGN-CHECK", "route_family": "OPENAI"}
+
+    al.build_bookkeeping(ctx, plan, "NO-COMMIT", 0, "", "base0000", "WI-401", 0.0)
+    assert st.review_queue == []
+    assert st.next_phase == "BUILD"
+
+    st.next_phase = "DESIGN-CHECK"
+    al.build_bookkeeping(ctx, plan, "COMMITTED", 0, "a..b", "b", "WI-401", 0.0)
+    assert st.review_queue == ["REVIEW-A"]
+    assert st.next_phase == "BUILD"
+    assert st.last_impl_family == "OPENAI"
+    assert st.last_impl_wi == "WI-401"

@@ -4501,6 +4501,27 @@ minting one starts having a round drawn for it. Declare `"always"` in
 implemented rather than merely demanded). The value is refused at preflight if it
 is not one of the three words — a typo is loud, not a silent fallback.
 
+### A committing DESIGN-CHECK arms the review round itself [since the commit that carries this entry]
+
+**What changed.** After a `CHANGES-REQUESTED` round under a loop-held tier the
+escalation ladder re-arms a `DESIGN-CHECK` session, which runs the worker brief
+with the findings attached — so its commit IS the rework. Until now only a
+`BUILD`-phase commit armed the next review round, so every cycle ran a second
+`BUILD` session whose only job was to produce a commit: it re-verified the
+design-check's work and re-ran the full suite inside its turn. Measured on one
+lane (WI-579, 2026-09-03, eleven rounds): 13 such sessions, 5.1 h, against 4.4 h
+of actual rework and 1.2 h of review. `agent_loop.build_bookkeeping`'s
+`DESIGN-CHECK` arm now records the session as the committing build (its family
+is the one the reviewer must differ from) and schedules the round, exactly as
+the `BUILD` arm does. A non-committing design-check still arms nothing and the
+next phase still resets to `BUILD`.
+
+**Migration: behavioural, no file changes.** A loop-held run whose lane took a
+`CHANGES-REQUESTED` verdict now goes design-check → review instead of
+design-check → build → review. If you relied on the extra build session as a
+same-family second look at the design-check's rework, the reviewer round is
+that look. Nothing to edit; re-sync the script.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

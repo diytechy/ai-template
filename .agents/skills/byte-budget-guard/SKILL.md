@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
 | `CLAUDE.md` | **8,500** | 7,886 | 2026-08-29 | +59: the full-suite wall time re-measured (~10 min quiet, 3–4× loaded; was "~6 min") |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,955 | 2026-09-02 | the restructure review re-stamped the PROCESS_OPTIONS row and this one |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,847 | 2026-09-02 | the restructure review re-stamped the PROCESS_OPTIONS row and this one |
 
 **`AGENTS.template.md` and this file are parked at their caps** (~1% free
 each); `CLAUDE.md` holds ~8%. Those two are what you hit first, and the DOC is
@@ -47,7 +47,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
 | `project-trajectory/PROCESS.md` | 88,365 | 2026-09-02 | **+10** WI-572 round-027 rework (§4 wording). Earlier: **+484** WI-572 — the approval act joins §4's fixed points as an adjudicator's, never a lane's; **+89** OI-67 slice 6 |
-| `project-trajectory/PROCESS_OPTIONS.md` | 187,166 | 2026-09-02 | **+4** restructure review round 3: the successor is a distinct registry row, not a "live" one (the audit row already said so). Earlier: **+111** round 2 (whitespace tolerance; distinct, not itself absorbed); **+630** `restructured` joins the lifecycle, the Status enum, R-A's terminal set and R-F's carve-out |
+| `project-trajectory/PROCESS_OPTIONS.md` | 187,932 | 2026-09-03 | **+766** the WI-579 merge (the verdict-carrier and `adjudication_review` prose, +590) and the loop-held design-check sentence (+176). Earlier: **+4** round 3, **+111** round 2, **+630** `restructured` |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

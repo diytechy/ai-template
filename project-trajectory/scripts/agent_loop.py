@@ -346,8 +346,11 @@ DEFAULT_PHASE_TIER = {
 DEFAULT_COOLDOWN_SECONDS = 900
 
 # Phases that are NOT build work, so a commit in them never triggers a review
-# round (a reviewer's own commit, a planner, an integrator, a design-check, a
-# critic writing its verdict).
+# round through the BUILD arm (a reviewer's own commit, a planner, an
+# integrator, a critic writing its verdict). DESIGN-CHECK stays in the set
+# because it is not a build for TIER/routing purposes, but a committing one
+# arms the round through its own arm in `build_bookkeeping` — it did the
+# rework, and a BUILD session that exists only to re-arm the round is waste.
 NON_BUILD_PHASES = frozenset(REVIEW_PHASES) | {
     "PLAN",
     "INTEGRATE",
@@ -2894,6 +2897,19 @@ def build_bookkeeping(ctx, plan, outcome, code, commits, after, wi_label, now):
         # resume building. Without a tracked run-phase this reset is in-process
         # (WI-180) — the agent no longer advances a phase file.
         st.after_design_check()
+        if outcome == "COMMITTED":
+            # A design-check runs the worker brief with the findings attached,
+            # so its commit IS the rework. Measured on WI-579 (2026-09-03,
+            # eleven rounds): with the round armed only by a BUILD-phase
+            # commit, every cycle spent a second session re-verifying the
+            # design-check's work and re-running the full suite in-turn to
+            # produce a commit that armed the round — 13 BUILD sessions, 5.1 h,
+            # against 4.4 h of rework. A committing design-check owes its round
+            # on the same terms as a committing build; the family it ran as
+            # is the one the reviewer must differ from.
+            st.on_committed_build(plan["route_family"], wi_label, commits)
+            schedule_review_round(ctx, after)
+            schedule_critique_round(ctx, commits)
 
 
 def session_bookkeeping(
