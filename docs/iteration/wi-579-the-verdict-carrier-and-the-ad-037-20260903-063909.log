@@ -1,0 +1,40 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 037
+# date: 2026-09-03 06:57
+# train: wi-579-the-verdict-carrier-and-the-ad
+# base: 0ecc62bbc55a
+# phase: DESIGN-CHECK
+# wi: WI-579
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: 8192a91f..73456755
+# tokens:
+# cost-usd:
+# wall-secs: 1114
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 11493
+# prompt-template: kit:DESIGN-CHECK
+# prompt-sha: sha256:25b90f29423a
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Implemented and committed the round-036 rework.
+
+- `_extra` now recursively scans owned `docs/reviews/rollup/**/*.md` outputs.
+- Added regression covering nested stale detection, pruning, and fresh re-check.
+- Updated the closed WI deliverable and session log.
+- Full suite: 3,359 passed, 25 skipped in 603.38s.
+- Commit bar passed; working tree is clean.
+- Final commit: `73456755` with `WI: WI-579` trailer.

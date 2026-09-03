@@ -4411,6 +4411,96 @@ existing row, cell or file means anything different. Two optional steps:
 Nothing detects a missing folder, because nothing needs to: an absent status
 directory reads as zero rows in that state, which is what it means.
 
+### The merge gate reads the ROUND FILES, not a hand-authored rollup [since 6e19da1e]
+
+**What changed.** `integrate._verdict_gate` no longer requires
+`docs/reviews/WI-<n>-REVIEW-A.md`. It computes its predicate over the round
+files your loop already writes — `docs/reviews/<train>/<NNN>-REVIEW-<X>-<sha7>.md`
+— restricted to rounds a **logged reviewer session** produced (the coordinator's
+own committed session log `docs/iteration/<train>-<NNN>-*.log`, whose `# phase:`
+header names a REVIEW phase). An implementer-authored file in the review path is
+therefore not a round, which it used to be able to become.
+
+And the governing rule changed from an ORDERING to an IDENTITY. A verdict counts
+only if it names the branch's current **non-record tree** — the tree with
+`docs/reviews/`, `docs/log.d/` and `docs/iteration/` removed. There is no
+timestamp comparison left: a commit that changed the work changed the tree, so
+the verdict simply no longer names it, and a commit that only recorded the
+process cannot invalidate anything. (`docs/work/` is IN the identity, exactly as
+it was in the retired comparison.) The identity is read at the branch's WORK TIP,
+so a station refresh still does not stale an honest APPROVE.
+
+Two additions ride with it, both optional for you:
+
+- **`Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex>`**, a
+  commit trailer the coordinator writes on the commit that records a round — the
+  `Bar-Green:` pattern applied to a verdict. It is ADDITIVE and costs you nothing
+  until your loop writes one; the gate reads it as a cross-check (a trailer that
+  names the tree under judgement and contradicts the rounds refuses) and never as
+  an accept path. `N` is the number of completed review cycles represented at
+  that governing tree (a dual REVIEW-A/REVIEW-B cycle still counts once); rework
+  changes the tree and starts that count over.
+- **`gen_verdict_rollup.py`**, which regenerates a human-readable per-review-scope
+  rollup into `docs/reviews/rollup/<train>.md`. It is declared in
+  `docs/stack.ini [generated]`, gated by `--check`, run by `trunk_step.py --regen`,
+  and **never read by the gate**.
+
+**Migration: a window, and you are inside it if you run `review-policy = 1`.**
+For the length of the window the gate accepts EITHER the round-file evidence or
+a legacy hand-authored `docs/reviews/WI-<n>-REVIEW-A.md`, and **warns on stderr**
+whenever the legacy path is what cleared it. The legacy rollup is judged by the
+same identity rule (it names this tree or it does not count), so a rollup that
+used to clear the gate still does.
+
+**At `review-policy = 2` there is no window**, deliberately: that dial declares
+two INDEPENDENT reviewer phases, and one hand-authored document is one author's
+word — honouring it would clear both phases on a single reviewer. If you run
+policy 2 on legacy rollups today, your first merge after taking this kit refuses
+with *"the governing round(s) at this tree are not an APPROVE (REVIEW-A,
+REVIEW-B)"*: draw the rounds, or sit at policy 1 for the length of the window.
+
+Three steps, in the order that costs least:
+
+1. Do nothing and keep merging. Read your integrator's stderr: every WARN naming
+   `LEGACY hand-authored rollup` is a lane that would stop once the window
+   closes.
+2. Add the two `[generated]` and `REGEN_STEPS` rows if you carry your own copies
+   of `docs/stack.ini` and `trunk_step.py` — the kit ships both, and an adopter
+   who takes `trunk_step.py` without the `docs/reviews/rollup/` declaration will
+   have a lane commit a generated artifact.
+3. Add `[attestation] adjudication_review` to `docs/process.toml` (see the entry
+   below) if you run adjudication lanes.
+
+The window closes when the kit says so, not on a date; nothing here is removed in
+this change.
+
+### `[attestation] adjudication_review` — whether a judgement gets its own round [since 6e19da1e]
+
+**What changed.** A new dial over the closed alphabet
+`"never" | "when-minting" | "always"`, shipped at `"when-minting"`. It decides
+BOTH whether the loop schedules a review round after a committing `ADJUDICATE`
+session and whether the merge gate demands that lane's verdict — one reader,
+`agent_common.adjudication_review_owed`, so the two cannot come apart.
+
+Before it, `ADJUDICATE` was in `agent_loop.NON_BUILD_PHASES` (no round was ever
+scheduled) while the gate demanded a verdict from every merged WI. If you run
+adjudication lanes on an older kit, every one of their merges is a stop that only
+a human can clear. That is the defect this closes.
+
+`when-minting` demands a round when the verdict drafts ANY successor at `spine`
+or `high-risk`, or when its brief is `consolidate` — the cases where the
+judgement creates exclusive work or moves scope. An amendment that only
+recommends a flip, a red-tc drafting ordinary fix rows, and a clean-close spot
+check get none.
+
+**Migration: additive, with a default that changes behaviour.** An undeclared key
+reads as `"when-minting"`, so taking this kit CHANGES what your adjudication
+lanes are asked for: most stop owing a verdict they could not produce, and a
+minting one starts having a round drawn for it. Declare `"always"` in
+`docs/process.toml [attestation]` if you want the old intent (now actually
+implemented rather than merely demanded). The value is refused at preflight if it
+is not one of the three words — a typo is loud, not a silent fallback.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

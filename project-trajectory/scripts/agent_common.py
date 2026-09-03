@@ -247,6 +247,7 @@ PROCESS_ONLY_KEYS = {
     ("attestation", "final_review"): "str",
     ("attestation", "complete_review"): "str",
     ("attestation", "complete_sample_rate"): "int",
+    ("attestation", "adjudication_review"): "str",
     # The reverse back-link coverage bar (OI-42 ruled (e), WI-486). It sits in
     # `[checks]` beside six BOOLEANS and is an INT, which is exactly why it
     # needs the type check: its reader
@@ -969,6 +970,124 @@ def complete_review(docs):
         if isinstance(n, int) and not isinstance(n, bool) and n > 0:
             rate = n
     return mode, rate
+
+
+# The `adjudication_review` alphabet, named once so the dial reader, the vocab
+# refusal and the tests all spell it the same way.
+ADJUDICATION_REVIEW_MODES = ("never", "when-minting", "always")
+
+# Refused loudly at preflight rather than swallowed, for the reason the vocab
+# table's own header gives: a misspelled `nevr` is a `str`, so the type check
+# cannot see it, and the reader below would fall to `when-minting` — silently
+# giving a repo that asked for NO adjudication round one after every minting
+# verdict, with no diagnostic and no way to tell it from a repo that never set
+# the dial. This one is safe to arm at birth: the dial has no legacy value
+# anywhere, so nothing an adopter already carries can be refused by it.
+PROCESS_KEY_VOCAB[("attestation", "adjudication_review")] = set(
+    ADJUDICATION_REVIEW_MODES
+)
+
+# The successor classes whose drafting earns a second opinion under
+# `when-minting`, and the brief that always does. A verdict that only recommends
+# a flip, or drafts ordinary fix rows, moves no scope and creates no exclusive
+# work — a fresh session with less context judging the one session that held the
+# whole chain buys nothing there.
+_REVIEW_OWED_CLASSES = ("spine", "high-risk")
+_REVIEW_OWED_BRIEFS = ("consolidate",)
+
+
+def adjudication_review(docs):
+    """The `[attestation] adjudication_review` dial as one of
+    `ADJUDICATION_REVIEW_MODES`.
+
+    An unreadable or unrecognized value falls to the shipped `"when-minting"`,
+    not to `"never"`: the failure that matters is silently reviewing NOTHING,
+    the same fail-direction `complete_review` takes for the same reason."""
+    table = process_config(docs).get("attestation")
+    if isinstance(table, dict):
+        declared = table.get("adjudication_review")
+        if isinstance(declared, str) and declared.strip().lower() in (
+            ADJUDICATION_REVIEW_MODES
+        ):
+            return declared.strip().lower()
+    return "when-minting"
+
+
+def adjudication_review_owed(docs, brief, drafts):
+    """Does a committing ADJUDICATE session owe a review round — ONE reader for
+    the round scheduler and the merge gate, so the two cannot disagree.
+
+    THE POSITION (plan `docs/plans/2026-09-02-backlog-restructure-and-
+    consolidation.md` §3, owner direction 2026-09-02). The adjudicator is
+    already the cross-family judge by routing: `agent_loop`'s ADJUDICATE arm
+    excludes the builder's family, so the judgement is a fresh context by
+    construction. A further round is a SECOND fresh session, with less context
+    than the first, judging the one session that held the whole chain — and it
+    earns its strong-tier cost only where the verdict CREATES WORK OR MOVES
+    SCOPE. `when-minting` is that line drawn mechanically: a drafted successor
+    at `spine` or `high-risk` runs exclusive and touches the registries, and a
+    `consolidate` verdict closes rows it was not minted from.
+
+    `brief` is the adjudicator brief this session was composed from ("" for a
+    session that had none) and `drafts` the `safety_class` of each successor its
+    `## Dispositions` block drafts. Both are read from committed facts by the
+    callers, never from run-state, so a resumed loop and the merge slot see the
+    same inputs.
+
+    THE TWO CALLERS AND THEIR SHAPES: the round scheduler asks BEFORE the merge,
+    holding the session's own brief and the drafts it just wrote; the merge gate
+    asks AFTER, holding the brief from the claimed spec and the drafts on the
+    branch. Same question, same answer — which is why the ADJUDICATE phase stays
+    in `NON_BUILD_PHASES` (it is still not a build) and this dial, not the
+    phase set, decides whether a round is drawn."""
+    mode = adjudication_review(docs)
+    if mode == "never":
+        return False
+    if mode == "always":
+        return True
+    if str(brief or "").strip().lower() in _REVIEW_OWED_BRIEFS:
+        return True
+    return any(
+        str(cls or "").strip().lower() in _REVIEW_OWED_CLASSES for cls in (drafts or ())
+    )
+
+
+# The two homes a branch may carry a work-item spec in, in the order that
+# decides WHICH COPY GOVERNS when it carries both. ARCHIVE FIRST: a session that
+# ran its close ritual has MOVED the spec to its terminal folder and FILLED it,
+# so the terminal copy is what that session actually did, while an `active/`
+# copy still standing beside it says only what the row was CLAIMED to do.
+SPEC_HOMES = ("docs/archive/work", "docs/work")
+
+
+def _spec_home_rank(path):
+    """`(home precedence, path)` — the key `authoritative_spec` sorts on."""
+    for rank, home in enumerate(SPEC_HOMES):
+        if path.startswith(home + "/"):
+            return (rank, path)
+    return (len(SPEC_HOMES), path)
+
+
+def authoritative_spec(paths):
+    """The one repo-relative spec path that governs among `paths`, or None.
+
+    ONE OWNING BOUNDARY for "which copy of this branch's spec answers for it",
+    because that answer decides a review round. `agent_loop.dispositions_drafted`
+    (does this judgement owe a round?) and `integrate._verdict_owed` (does this
+    merge demand one?) read the same `## Dispositions` block through the same
+    dial — and each used to walk the homes in its OWN order, the loop
+    `docs/work` first and the gate `docs/archive/work` first. A branch
+    momentarily carrying the spec in BOTH homes therefore handed the scheduler
+    and the gate DIFFERENT drafts: the exact come-apart the shared dial exists
+    to prevent, re-entered through the dial's input rather than through the dial.
+
+    The callers legitimately differ in where they read from — the loop globs its
+    own working tree, the gate asks `git show` against a branch it has not
+    checked out — so what is shared here is the PRECEDENCE and not the read.
+    Each caller hands over the candidates it found, in any order, and gets back
+    the one the other would also have chosen."""
+    ranked = sorted((str(p).replace("\\", "/") for p in paths), key=_spec_home_rank)
+    return ranked[0] if ranked else None
 
 
 def keep_nondependent(docs):
@@ -2414,7 +2533,7 @@ def regenerate_index(docs_dir):
     (docs_dir / "iteration_index.md").write_text(text, encoding="utf-8", newline="\n")
 
 
-def commit_telemetry(root, session, label, paths):
+def commit_telemetry(root, session, label, paths, trailer=None):
     """Commit the coordinator's own bookkeeping in its own `telemetry:` commit,
     right after it is written — so it never rides the next session's work commit
     or dangles in the tree (WI-137, the session-021 defect-shape). Stages only
@@ -2422,23 +2541,61 @@ def commit_telemetry(root, session, label, paths):
     review scoreboard); the reviewer's verdict files commit themselves. Honors
     the hooks and is best-effort: nothing staged, or a hook veto, leaves the
     files in the tree exactly as before — never fatal, so the fix can only help
-    (a walk-away run that today dangles telemetry keeps working either way)."""
+    (a walk-away run that today dangles telemetry keeps working either way).
+
+    `trailer` is the round's `Review-Verdict:` ATTESTATION (OI-76 alternative C,
+    the `Bar-Green:` pattern), and it changes one rule: an attestation must land
+    even when the bookkeeping it rides did not change, so a trailer commits
+    EMPTY rather than not at all. That is the same trade `Bar-Green` makes: the
+    commit's value is the words, not the diff. "An empty commit changes no tree"
+    is only HALF of what makes that free, and the missing half was a defect: the
+    identity is read through `verdict.governing_rev`, whose walk used to step by
+    CLASSIFYING the paths a commit touched — and a zero-path commit is one it
+    could not classify, so it stopped there, and the very commit recording an
+    approval buried the station refresh under it (REVIEW-A round 012, finding
+    1). That walk now steps on identity equality, which makes the claim true of
+    the READER and not only of the tree, and
+    `test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel` drives
+    this function's own empty carrier through it. Without a trailer the old rule
+    stands unchanged: no empty commits for bookkeeping."""
     rels = []
     for p in paths:
         try:
             rels.append(os.path.relpath(str(p), str(root)))
         except ValueError:
             continue  # a path on another drive (Windows) — skip, never crash
-    if not rels:
+    if not rels and not trailer:
         return
-    code, out = git(root, "status", "--porcelain", "--", *rels)
-    if code != 0 or not out.strip():
+    code, out = git(root, "status", "--porcelain", "--", *rels) if rels else (0, "")
+    dirty = code == 0 and bool(out.strip())
+    if not dirty and not trailer:
         return  # unchanged bookkeeping — no empty commit
     code, staged = git(root, "diff", "--cached", "--name-only", "--", *rels)
     pre_staged = set(staged.splitlines()) if code == 0 else set()
-    git(root, "add", "--", *rels)
+    if dirty:
+        git(root, "add", "--", *rels)
     msg = "telemetry: session {} {}".format(session, label)
-    code, out = git(root, "commit", "-q", "-m", msg, "--", *rels)
+    if trailer:
+        msg += "\n\n" + trailer
+    # THE INDEX IS NEVER A SOURCE THIS FUNCTION READS. A `git commit` with no
+    # pathspec commits THE INDEX, so a single unrelated staged file (this
+    # function's own `pre_staged` restore proves a non-empty index here is a
+    # state the authors already expect) lands inside a commit labelled
+    # `telemetry:`, carrying a `Review-Verdict:` attestation on a commit that
+    # changed the work tree. Round 015 closed that for `--allow-empty`
+    # REPLACING the pathspec, but left the scope itself conditional on `rels` —
+    # and a scope that exists only when its input is non-empty is no scope at
+    # all on the arm that matters: `commit_telemetry(root, s, l, [], trailer=…)`
+    # went on sweeping a staged `src.py` into the attestation's carrier, driven.
+    # So the scope is STATED, by `--only`, and holds on every arm instead of on
+    # the arms that happen to carry paths. With paths that is what `-- <paths>`
+    # already implied; with none, git-commit(1) documents `--only` together with
+    # `--allow-empty` as needing no paths and creating the empty commit — and
+    # empty `rels` always reaches that arm, because `dirty` is only ever
+    # computed from a non-empty `rels`.
+    argv = ["commit", "-q", "-m", msg, "--only"] + ([] if dirty else ["--allow-empty"])
+    argv += ["--", *rels] if rels else []
+    code, out = git(root, *argv)
     if code != 0:
         # "Exactly as before" covers the index too: a veto must not leave the
         # bookkeeping staged for the next session's work commit to swallow.

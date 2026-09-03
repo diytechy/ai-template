@@ -1,0 +1,495 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 005
+# date: 2026-09-02 22:14
+# train: wi-579-the-verdict-carrier-and-the-ad
+# base: 0ecc62bbc55a
+# phase: REVIEW-A
+# wi: WI-579
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: ERROR
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 135
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4558
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:ada0f6d98f40
+# timeout:
+# heterogeneity:
+# exit-code: 1
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Reading prompt from stdin...
+2026-09-03T03:12:13.557469Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 97 column 5
+OpenAI Codex v0.145.0
+--------
+workdir: /Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad
+model: gpt-5.6-terra
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 01a06540-b271-7ed1-a6d4-9a3acdec7d53
+--------
+user
+You are an INDEPENDENT reviewer launched by the unattended coordinator (project-trajectory/scripts/agent_loop.py) — a fresh context that did NOT write this code. Assume the implementer was careful but missed something, and hunt for it. Review ONLY (1) the diff of the work under review — the exact reading scope is `git diff contract_split...HEAD -- . ':(exclude)docs/iteration' ':(exclude)docs/reviews' ':(exclude)docs/log.md' ':(exclude)docs/log.d' ':(exclude)PROJECT_STATE.html' ':(exclude)docs/open-items.html' ':(exclude)docs/stage'` (three dots against the CURRENT trunk, so a station refresh never re-feeds you trunk's own merged work; session telemetry, verdict records and generated artifacts are excluded because they are records of the process, not the work) — and (2) the requirement surface it must satisfy: AGENTS.md, project-trajectory/PROCESS.md, the docs/requirements registries, and the docs/specs spec-of-record for the open work item. Grep the registry rows the diff cites; never read a whole registry file or docs/log.md end to end. If this diff adds or changes requirement rows (SN/SR/TC under docs/requirements), also sweep them against the EXISTING registries — the new rows AND the historical rows they touch — for any contradiction, overlap, or attribute/limit conflict, and raise each as a finding (mark it 'for clarity' at MINOR when it is a wording ambiguity sharper SN/SR/TC language would resolve, not a defect). If the diff under review is a DevStg-Reqs/DevStg-Tests approval (a Status-change commit closing a `[phase]-[g*]` gate), the batch-scoped approval hierarchy is a REQUIRED input: generate it with `project-trajectory/scripts/trace.py --approve <phase>` and confirm the approved SN->SR->LLR/TC batch — its Requirement/AC, LLR Detail, TC Method/Expected, and any cited rubric — is coherent and complete before endorsing the gate. Flag status.md prose that contradicts a declared policy file's current value as a finding. Do NOT read or trust the implementer's own session notes or self-assessment — a leaked self-assessment collapses review finding-rates several-fold. Run the harness yourself and quote real output; believe nothing you did not observe — but run each instrument ONCE and quote its SUMMARY (`python project-trajectory/scripts/check.py --jobs 0`: the Check summary block; `python project-trajectory/scripts/trace.py --strict-integrity`: the final line), never the full advisory stream, which spends hundreds of WARN lines of your context on no finding. Drive the diff's REAL shipped code paths — construct the scenario and run the actual function or flow it changes; primitive probes and plausibility reading are supporting evidence, never the verdict's basis. Before hunting, name the worst failure classes THIS change admits (silent wrong content, fail-open, data loss) and hunt those first, severity-ordered. An APPROVE must mean you tried to break it and failed: map each spec Done-when item to its covering test or call it UNCOVERED, and where the diff adds a regression test for a fixed defect, confirm that test fails on the pre-fix behavior. This is an INDEPENDENT parallel review — do not debate another reviewer. Write your verdict to /Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad/docs/reviews/wi-579-the-verdict-carrier-and-the-ad/005-REVIEW-A-01fe742.md in the log.md block format: one `- [BLOCKER|MAJOR|MINOR] <file:line> -> issue -> the concrete change -> @owner` line per finding. When that concrete change ADDS a check, guard, warn, or invariant, the same line must also carry one clause naming why the defect cannot be made UNREPRESENTABLE instead — a stricter type, a deleted code path, or a single owning boundary that validates once and is trusted thereafter (the `antidote` skill's question, "the smallest change that makes this fix unnecessary", which you cite, not restate). Warn-first: this binds the remedy's WORDING, not the verdict — no finding is refused, downgraded, or blocked for want of the clause. It is NOT owed by a MINOR `for clarity` wording finding, nor by validation at a genuine trust boundary; only by a guard that compensates for a REACHABLE bad state the design could have made unreachable. Naming why construction is unavailable is enough — specifying the structural fix is not your job when it exceeds the diff's scope. Then exactly one machine line:
+    VERDICT: APPROVE|CHANGES-REQUESTED findings=N
+Commit that verdict file (a review is a recorded verdict — its one home) and stop. Do not edit the code you are reviewing.
+codex
+I’ll independently review the specified merge-base diff, prioritize silent wrong content/fail-open/data-loss risks, run the required checks once, exercise the changed shipped path, and record a committed verdict without touching implementation code.
+exec
+/bin/zsh -lc "sed -n '1,240p' CLAUDE.md && sed -n '1,240p' .agents/skills/session-protocol/SKILL.md && sed -n '1,240p' .agents/skills/antidote/SKILL.md" in /Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad
+ succeeded in 0ms:
+# CLAUDE.md — Working in this template repo
+
+This repo is a **meta-project**: its product is the reusable kit in
+[`project-trajectory/`](project-trajectory/) that *other* repos copy in to run a
+gated, requirement-traced development process. So work here improves templates
+and scripts, not a downstream application.
+
+> Looking for the agent guide that ships **to** new projects? That's
+> [`project-trajectory/AGENTS.template.md`](project-trajectory/AGENTS.template.md)
+> (scaffolds to `AGENTS.md`, with thin `CLAUDE.md`/`GEMINI.md` stubs pointing at
+> it). Don't confuse the two: this file governs editing the kit; that one governs
+> using the kit.
+
+> **`OWNER_SCRATCHPAD.md` is owner-only** — never read, cite, or act on it. It
+> holds the human owner's free-form notes; the working surfaces are
+> `docs/status.md`, the registries, and `docs/log.md`.
+
+---
+
+## What we're optimizing for
+
+The canonical purpose statement is the `PROJECT-VISION:` tag opening the root
+[README.md](README.md) — the same one-home pattern the kit ships downstream.
+In short: the kit exists to make downstream code **maintainable and
+trustworthy** — readable for humans and agents alike, deeply tested, and
+advanced only through explicit approval gates. Every change here should make
+that easier to achieve in a real project — or get out of the way.
+
+## Principles for editing the kit
+
+- **Dogfood the philosophy.** The templates preach single-source-of-truth,
+  decompose-don't-paraphrase, and generated-not-hand-maintained. Hold the kit to
+  the same bar: don't restate a rule in five files — state it in
+  [`PROCESS.md`](project-trajectory/PROCESS.md) and link to it.
+- **Keep scripts stdlib-preferred and cross-platform; dependencies need a
+  ledger row.** The kit's own scripts run on a clean Python 3.11+ on Windows
+  and POSIX, and today import stdlib only. The rule is "no *unargued*
+  dependencies," not "no dependencies": a genuinely better tool may enter via a
+
+[... 15502 line(s) elided — full stream in out/run-logs/ ...]
+
++data = "tree_identity and fold_listing (the non-record tree identity a verdict names), format_trailer/parse_trailer (the Review-Verdict machine half), round_file/session_log (the round and session-log name grammars), branch_paths/logged_rounds/round_entries (the logged-reviewer round evidence on a branch), branch_trailers (the verified attestations); every reader supplies its own fail direction for a None answer"
++version = "v1"
++status = "Drafted"
++component = "CMP-008"
++notes = """The seam exists because two callers ask ONE question from two sides - the merge slot's may-this-merge and the loop's does-this-lane-still-owe-a-round - and answering it twice is what let a lane draw two identical rounds over a verdict nothing had invalidated. So this row is not bookkeeping over an import: it is the declaration that there is exactly one definition, and a second reader of round evidence anywhere else is a finding against this row rather than a new one. The rollup generator is a requestor for the NAME grammar only. Off git every function answers None and this module never says what that means; each requestor declares its own direction, and both declared directions are toward more review."""
++
+ [interface.IF-173]
+ owner = "scripts/integrate"
+ requestors = ["scripts/dispatch", "scripts/handback", "scripts/lane"]
+ channel = "call"
+ data = "claim, refresh, integrate, finished_branches, branch_outcomes, lane_worktree, the ACTIVE and WORK constants, seven _-prefixed readers"
+ version = "v1"
+ status = "Drafted"
+ component = "CMP-008"
+ 
+ [interface.IF-081]
+ owner = "scripts/trunk_step"
+ consumers = ["scripts/integrate", "scripts/intake", "external:downstream adopter"]
+diff --git a/docs/requirements/low-level-requirements.toml b/docs/requirements/low-level-requirements.toml
+index 04d124c1..909ba779 100644
+--- a/docs/requirements/low-level-requirements.toml
++++ b/docs/requirements/low-level-requirements.toml
+@@ -1370,25 +1370,25 @@ code_symbol = "pause_pending/pending_block"
+ detail = "Renders zero-or-one 'Paused since <since> - <reason>' bullet in the committed-tree-pure pending region from docs/work/pause - declared since verbatim, no clock, the since clause omitted when empty, fail-closed text on malformation pinned equal to the reader's placeholder. The bullet clears when the pause file is deleted; the pending surface is part of the adopted toolkit's generated project-state view (REL-002 output), not a system output."
+ rationale = "An open pause is a visible accruing cost, never a forgotten one."
+ test_refs = "(see TC-136)"
+ status = "Approved"
+ component = "CMP-009"
+ phase = 4
+ 
+ [design.LLR-140]
+ sr_refs = ["SR-156"]
+ title = "Local integrator (claim + queue + audit)"
+ module = "project-trajectory/scripts/integrate.py"
+ code_symbol = "claim/finished_branches/_verdict_gate/integrate_one/audit"
+-detail = "claim: §2.3 steps 1+2 with the refusal ladder (tracked pause via agent_common.tracked_pause, dirty tree, existing branch, unsafe name, non-ordinary safety_class, off-frontier id) before a git mv + trunk commit + branch cut. finished_branches: a claimed branch whose tip holds no spec under active/<branch>/ (the closing move IS the signal). integrate_one: --no-ff --no-commit merge, trunk_step.py folded into the merge commit so it passes its own floor, check.py --jobs 0 at the declared tier on the composed tree read fail-closed (nonzero exit OR any SKIP line refuses), verdict gate per docs/process.toml [policies] review_rounds (legacy docs/review-policy read through the migration window) using score_reviews.parse_verdict with the verdict's last branch commit required no older than the last non-review non-fragment commit, ff-only trunk advance, branch deleted on green, candidate parked on red. audit: git log --first-parent --no-merges over --since..HEAD; paths outside docs/work/, docs/log.d/, docs/log.md and the stack.ini [generated] set flag the commit. A missing stack.ini or an empty [product] test declaration refuses the merge; a red bar parks the candidate and stops the queue rather than composing past it."
++detail = "claim: §2.3 steps 1+2 with the refusal ladder (tracked pause via agent_common.tracked_pause, dirty tree, existing branch, unsafe name, non-ordinary safety_class, off-frontier id) before a git mv + trunk commit + branch cut. finished_branches: a claimed branch whose tip holds no spec under active/<branch>/ (the closing move IS the signal). integrate_one: --no-ff --no-commit merge, trunk_step.py folded into the merge commit so it passes its own floor, check.py --jobs 0 at the declared tier on the composed tree read fail-closed (nonzero exit OR any SKIP line refuses), verdict gate per docs/process.toml [policies] review_rounds (legacy docs/review-policy read through the migration window) computed over the branch's own round files, restricted to rounds a LOGGED reviewer session produced and governed by TREE IDENTITY - a verdict counts only while it names the branch's current non-record tree at the work tip, so there is no ordering rule and no time comparison; whether an adjudication lane owes a verdict at all is docs/process.toml [attestation] adjudication_review, read through the one function the loop's round scheduler also reads. A legacy hand-authored docs/reviews/WI-<n>-REVIEW-A.md still clears the gate under the same identity rule for the length of the migration window, warning on that path. ff-only trunk advance, branch deleted on green, candidate parked on red. audit: git log --first-parent --no-merges over --since..HEAD; paths outside docs/work/, docs/log.d/, docs/log.md and the stack.ini [generated] set flag the commit. A missing stack.ini or an empty [product] test declaration refuses the merge; a red bar parks the candidate and stops the queue rather than composing past it."
+ rationale = """One serial actor, one page; every refusal names its reason; the queue stops at the first red rather than composing past it."""
+ test_refs = "(see TC-132)"
+ status = "Approved"
+ component = "CMP-008"
+ phase = 4
+ 
+ [design.LLR-141]
+ sr_refs = ["SR-006", "SR-170"]
+ title = "Work-branch lane signal + freshness skip"
+ module = "project-trajectory/scripts/check.py"
+ code_symbol = "_claimed_work_branch/steps"
+ detail = """On a claimed work branch the _TRUNK_FRESHNESS_STEPS set SKIPs with a §5.2 notice, exit code untouched; the plan listing still names every step. The claim signal answers in two stages - docs/work/active/<branch>/ on disk (the fast path), else the branch's own committed history (git log -1 -- docs/work/active/<branch>) - so the closing commit that archives the claim, and every commit after it, keep the skip. No git, a failing git, or an empty answer all read as the trunk lane: a false work-branch positive would switch the freshness gates off on the one branch that owns regenerating them."""
+@@ -2169,12 +2169,36 @@ phase = 5
+ 
+ [design.LLR-206]
+ sr_refs = ["SR-183"]
+ title = "Per-function cognitive-complexity and SLOC census against a central TSV baseline, both directions"
+ module = "project-trajectory/scripts/check_complexity.py"
+ code_symbol = "cognitive/census/main"
+ detail = """cognitive() walks one function's body by recursive descent carrying a nesting level (not ast.walk, which loses depth), adding 1 + nesting for each If/For/AsyncFor/While/ExceptHandler/IfExp/Match, 1 flat for a real else, a nesting increment with no base increment for a nested FunctionDef/AsyncFunctionDef/Lambda, one per RUN of like operators inside a BoolOp, and 1 for a recursive call. An elif chain is FLATTENED before descent: the parser nests it inside orelse, so a naive recursion both double-counts and over-nests every ladder. census() walks the declared source paths (excluding __pycache__), keying each function on (relative path, qualified name) so a module move is spelled rather than double-counted, and returns every source-function row plus a per-module public-symbol count that is emitted and never compared. main() selects only rows strictly over the threshold for baseline comparison, reads docs/complexity-baseline as tab-separated rows, compares by exact equality in both directions, prints the three sanctioned remedies on a finding, and honours no per-site suppression token from the scanned source; --report always exits 0, --restamp rewrites the baseline and compares nothing, --mode warn (the default) reports a divergence but still exits 0, and --mode enforce returns nonzero on a divergence in either direction. Standard library only. The shipped downstream template remains REPORT-ONLY: it wires no [step:complexity], so its enforce capability is exercised by this module's own tests until an adopter opts in. This repository has made that separate opt-in: its [step:complexity] in docs/stack.ini is layer=product at DevStg-Impl and runs --mode enforce over project-trajectory/scripts/ and tests/."""
+ rationale = """The counting rules are pinned in this module's own docstring rather than delegated, because a census whose rules live in a third-party tool has a baseline that is a property of that tool's version: an upgrade that began counting a new construct would invalidate every entry at once, with no code having changed. Keying on (path, qualified name) rather than on the bare name is what lets a function move between modules as one re-keyed row instead of appearing twice. The absence of a per-site suppression token is stated here rather than left to the implementation because it is the clause most likely to be added later as a convenience: scattered opt-outs self-replicate as new code copies them, and a central file is the only form of this escape hatch that stays auditable in one read. Landing Drafted because its parent SR-183 is itself Drafted and approving this design is the owner's act."""
+ test_refs = "(see TC-202)"
+ status = "Drafted"
+ component = "CMP-007"
+ phase = 5
++
++[design.LLR-207]
++sr_refs = ["SR-156"]
++title = "The verdict record: what carries a governing verdict, and what binds it to the tree it judged"
++module = "project-trajectory/scripts/kitlib/verdict.py"
++code_symbol = "RECORD_PREFIXES/fold_listing/tree_identity/format_trailer/parse_trailer/round_file/session_log/branch_paths/logged_rounds/round_entries/branch_entries/round_count/format_branch_trailer/branch_trailers"
++detail = """The reading behind the merge seam's verdict rung, sited below both of its readers. tree_identity folds `git ls-tree -r` with the RECORD prefixes dropped - docs/reviews/, docs/log.d/, docs/iteration/ - into a SHA-256 over the surviving entries, which is what makes "the tree a verdict judged" a value two independent readers can compare; the digest is 64 hex deliberately, so it cannot be mistaken for the git tree object id the Bar-Green trailer carries. fold_listing is pure over the listing, so the one rule that decides whether two trees are the same work is exercisable without a repository. logged_rounds is the provenance join: a file under docs/reviews/ is a ROUND only when the coordinator's own committed session log for that (train, ordinal) declares a REVIEW phase, so an implementer-authored file in the review path is not evidence. round_entries restricts the rounds to those whose reviewed commit carries the identity under judgement and hands the phase/ordinal/verdict triples to the latest-per-phase rule the scoring layer already owned; the parse function is INJECTED rather than imported, so this leaf keeps no edge back into scoring. round_count gives `rounds=<N>` its evidence-derived scope: completed review cycles represented at ONE governing tree, computed as the largest per-phase entry count because one cycle may carry REVIEW-A and REVIEW-B; changing the work changes the identity and starts this count over. branch_trailers reads the Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex> machine half off the branch's own commits, verified against the carrying commit's non-record tree exactly as the bar attestation is verified against its own. Off git every reader answers None and says nothing about what that means; the two callers declare opposite-looking fail directions that are the same direction - refuse the merge, assume a round is owed."""
++rationale = """The gate and the loop ask one question from two sides - may this merge, and does this lane still owe a round - so one definition below both readers prevents process-record commits or unlogged files from producing different answers. The trailer is deliberately NOT an accept path and the module says so: anyone with commit access can stamp one on their own commit and the self-verification will pass, because it is their tree - what a session cannot forge is the coordinator's committed session log, so the round evidence decides and the trailer is read as a cross-check that refuses when either its verdict word or its evidence-derived round count contradicts the rounds. Binding by identity rather than by ordering makes staleness the direct question "does this still describe the thing", with no last-one-wins rule that could promote an approval for different work."""
++test_refs = "TC-205"
++status = "Drafted"
++component = "CMP-008"
++phase = 5
++
++[design.LLR-208]
++sr_refs = ["SR-170"]
++title = "The per-review-scope verdict rollup: generated, checked, never an input"
++module = "project-trajectory/scripts/gen_verdict_rollup.py"
++code_symbol = "train_dirs/render/targets/main"
++detail = """One file per review scope under docs/reviews/rollup/<train>.md, compiled from the round files that scope carries: ordinal, phase, reviewed sha, parsed verdict word, finding count and filename, one row each. The scope is the TRAIN and not the work item, because a traincar is one review scope - a worker schedules its round only once every assigned item is built and the round covers the combined train diff, so a per-item rollup would have to invent a slice of a round that does not exist. Declared in the toolchain file's generated section, regenerated by the trunk step, freshness-gated by --check at the commit floor, and standing down on a work branch with the rest of the trunk-owned artifacts - the one member of that set whose SOURCE a branch necessarily writes, since the round files are a lane's own committed evidence. --check reports an absent file, a diverged one and an EXTRA one, on normalized line endings. It names NO governing verdict: governing is tree identity, a question about a branch's current tree that can only be answered against a repository at a moment, so every row here is a fact about a file."""
++rationale = """The hand-authored per-item rollup was the merge gate's only input and nothing in the kit wrote it, so every mechanized lane stopped at a human - and because it paraphrased evidence that already existed, it was also the one artifact in the tree that was neither generated, checked nor declared while the doctrine everywhere else refuses that shape. Splitting the roles is what makes both halves honest: the gate reads the evidence, and the summary a human genuinely wants to read becomes derived state that cannot drift from it. Writing a governing verdict into the file would rebuild the retired artifact under a new name - a checked-in summary that reads as authority and is stale the moment the branch moves - so the file states facts about files and stops."""
++test_refs = "TC-206"
++status = "Drafted"
++component = "CMP-009"
++phase = 5
+diff --git a/docs/test/test-cases.toml b/docs/test/test-cases.toml
+index 5287ba29..4564ba22 100644
+--- a/docs/test/test-cases.toml
++++ b/docs/test/test-cases.toml
+@@ -2067,12 +2067,34 @@ status = "Drafted"
+ phase = 5
+ 
+ [test.TC-204]
+ verifies = ["SR-163"]
+ level = "Integration"
+ method = """The direct test on SR-163: the tolerant reference cell and the four-class checker, proven catching each class on a planted scaffold, and standing green over the real delivered-package universe. THE CELL: bootstrap.mapping_entries() normalizes every MAPPING row to (source, destination, reference), a bare pair surviving as reference None with no flag day, adding and dropping no rows. THE INDEPENDENT UNIVERSE: bootstrap.delivery_inventory() walks every physical kit source and classifies it as a MAPPING source, a reasoned kit-only exclusion, or a conditional materialization; it separately enumerates generator outputs, which inherit their generator source's reference. The real-row end-to-end bite removes process.toml.template -> docs/process.toml from MAPPING in the child process while leaving the source in the package, drives gen_arch_map.main() through --mapping-purpose, and requires a gate-class missing_file report naming the omitted source. THE CHECKER, gen_arch_map.mapping_purpose_findings, driven on one synthetic inventory carrying exactly one defect of each class plus a clean control: a bare pair is reported UNMAPPED; a reference naming no live requirement, or one whose requirement resolves to no live stakeholder need, is reported UNRESOLVED; a declared destination that is absent and unexcluded is reported MISSING; a declared exclusion whose destination has materialized is reported STALE, with the lifecycle marker exempting only a path whose presence is a legal state, and the mapped-present control raising nothing. THE POLICY: unmapped and unresolved are warn-first and missing and stale gate, so a warn-only inventory passes and one gate-class finding fails it. THE STANDING EVIDENCE, over the live package census, MAPPING literal and this repository's real spine: no missing file and no stale exclusion survives (the checker passes), every filled reference resolves SR to a live need, every generated output maps through its generator declaration, and the remaining unmapped warnings expose both unfilled MAPPING rows and unfilled derived/materialized deliveries without a flag day."""
+ tier = "Smoke"
+ expected = "Satisfies SR-163 AcceptanceCriteria: the independently enumerated delivered-package universe is diffed against MAPPING plus reasoned exclusions; an omitted real shipped source and each of the four finding classes are reported under the declared warn-versus-gate policy; and a file's purpose maps through a requirement reference that resolves SR to a live stakeholder need, with a generated output inheriting its generator's mapping"
+ automated = "Yes"
+ evidence = """tests/test_mapping_purpose.py::test_checker_catches_unmapped_file; tests/test_mapping_purpose.py::test_checker_catches_unresolved_reference; tests/test_mapping_purpose.py::test_checker_catches_missing_file; tests/test_mapping_purpose.py::test_checker_catches_stale_entry; tests/test_mapping_purpose.py::test_stale_arm_exempts_the_lifecycle_marker; tests/test_mapping_purpose.py::test_policy_is_warn_first_for_the_reference_classes; tests/test_mapping_purpose.py::test_generated_output_inherits_its_generator_mapping; tests/test_mapping_purpose.py::test_real_mapping_has_no_gate_class_findings; tests/test_mapping_purpose.py::test_every_filled_reference_resolves; tests/test_mapping_purpose.py::test_delivery_census_classifies_every_physical_package_source; tests/test_mapping_purpose_cli.py::test_cli_mapping_purpose_gates_when_real_shipped_row_is_removed"""
+ status = "Drafted"
+ phase = 5
++
++[test.TC-205]
++verifies = ["SR-156", "LLR-207", "IF-175"]
++level = "Unit"
++method = """The verdict record's two halves, each driven beside its opposite so neither reads as a rule with one answer. THE IDENTITY, pure over a synthetic `git ls-tree -r` listing: a listing and the same listing plus a round file, a log fragment and a session log fold EQUAL, while a changed work blob and a changed docs/work/ spec each fold DIFFERENT - so the exclusion is proven to be an exclusion rather than a fold that ignores everything. THE TRAILER GRAMMAR: format/parse round-trip; the LAST trailer in a message governs, so a rework commit quoting the round it answers does not have the quotation read as its own attestation; and three malformed shapes - a verdict word outside the enum, a 40-hex tree, a missing round count - each fail to PARSE rather than parse to something. THE NAME PARSE: a round file with and without the relaxed tag, the pre-train flat layout, a session log, and the legacy hand-authored rollup answering None because it names no reviewed sha. THE GATE, on a two-branch git fixture with the trunk checked out: a logged reviewer round naming the current tree clears it with NO rollup present anywhere; the same file with a BUILD session log behind it does not (the implementer-authored round); a round whose tree was reworked away does not, while a log-fragment and scoreboard commit after a round leaves it governing; a CHANGES-REQUESTED round refuses; and a verified Review-Verdict trailer contradicting the rounds refuses by name. THE DIAL: the three values over a brief-and-drafts matrix, an unrecognized value falling to when-minting rather than to never, and an adjudication lane closing with a successor draft merging with no verdict artifact of any kind under both never and when-minting, while a spine draft still owes its round. THE SHARED DEFINITION: the C2 review-owed derivation answers owed after a rework and served after a fresh round, and record-only commits after the verdict re-owe nothing."""
++tier = "Smoke"
++expected = "Satisfies SR-156: the serial seam's verdict rung is computed from committed evidence a logged reviewer session produced and is bound to the tree it judged, with the merge refused when the evidence is absent, dissenting, re-rolled, or contradicted by its own attestation; and the round the loop draws and the verdict the seam demands are decided by one reader"
++automated = "Yes"
++evidence = """tests/test_verdict_record.py::test_the_identity_ignores_every_record_path; tests/test_verdict_record.py::test_the_identity_notices_work_and_notices_docs_work; tests/test_verdict_record.py::test_the_trailer_round_trips_and_the_last_one_governs; tests/test_verdict_record.py::test_a_malformed_trailer_is_no_trailer; tests/test_verdict_record.py::test_round_and_session_names_parse_including_the_relaxed_tag; tests/test_verdict_record.py::test_a_logged_reviewer_round_naming_this_tree_clears_the_gate; tests/test_verdict_record.py::test_an_implementer_authored_file_in_the_review_path_is_not_a_round; tests/test_verdict_record.py::test_a_round_that_judged_an_earlier_tree_does_not_count; tests/test_verdict_record.py::test_a_record_only_commit_after_the_round_leaves_it_governing; tests/test_verdict_record.py::test_the_governing_round_can_refuse; tests/test_verdict_record.py::test_a_trailer_contradicting_the_rounds_refuses; tests/test_verdict_record.py::test_the_dial_decides_when_an_adjudication_owes_a_round; tests/test_verdict_record.py::test_an_unreadable_dial_falls_to_when_minting_not_to_never; tests/test_verdict_record.py::test_an_adjudication_lane_owing_no_round_merges_with_no_verdict_file; tests/test_verdict_record.py::test_a_minting_adjudication_still_owes_its_round; tests/test_verdict_record.py::test_the_done_banner_states_the_rounds_it_actually_drew; tests/test_verdict_record.py::test_the_review_owed_derivation_and_the_gate_share_one_definition; tests/test_integrate_admission.py::test_an_approve_that_did_not_judge_this_tree_does_not_count; tests/test_integrate_admission.py::test_an_approve_that_names_the_current_tree_passes; tests/test_integrate_admission.py::test_the_legacy_rollup_path_warns_while_it_clears"""
++status = "Drafted"
++phase = 5
++
++[test.TC-206]
++verifies = ["SR-170", "LLR-208"]
++level = "Unit"
++method = """The rollup as DERIVED state, driven on a scaffold carrying one review scope. Regeneration writes docs/reviews/rollup/<train>.md with a row per round file. --check is proven to have BOTH answers rather than one: an absent file reports stale, a freshly written one reports fresh, and a new round arriving in the scope reports stale again. The rendered header is asserted to carry the sentence that keeps the artifact honest about its own standing - that the merge gate does not read this file - since the whole hazard of a checked-in summary is a reader taking it for the authority. The declaration side is held by the generated-artifact wiring guard, which fails any [generated] row with no freshness enforcer, and by the work-branch stand-down set, asserted whole rather than sampled."""
++tier = "Smoke"
++expected = "Satisfies SR-170: the per-review-scope rollup is written by a regenerator the serial merge step runs and never by a work branch, its freshness is gated with two answers, and the artifact states that it is not the gate's input"
++automated = "Yes"
++evidence = """tests/test_verdict_record.py::test_the_rollup_is_generated_and_its_check_has_two_answers; tests/test_generated_freshness_wiring.py::test_every_declared_generated_artifact_has_an_enforcer; tests/test_generated_freshness_wiring.py::test_every_wired_enforcer_is_a_real_step_and_runs_in_the_commit_floor; tests/test_check_lane.py::test_every_declared_freshness_step_is_skipped"""
++status = "Drafted"
++phase = 5
+
+2026-09-03T03:13:52.584564Z ERROR codex_models_manager::manager: failed to renew cache TTL: missing field `base_instructions` at line 97 column 5
+exec
+/bin/zsh -lc "rg -n -C 4 'review_rounds|REVIEW-B|latest_phase_verdicts|def latest_phase_verdicts' project-trajectory/scripts/score_reviews.py project-trajectory/scripts/integrate.py project-trajectory/scripts/agent_loop.py project-trajectory/PROCESS_OPTIONS.md docs/process.toml | head -n 550 && rg -n -C 5 'def latest_phase_verdicts' project-trajectory/scripts/score_reviews.py" in /Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad
+ succeeded in 0ms:
+docs/process.toml-172-#   "agent"           full delegation, still gated by the sync ritual
+docs/process.toml-173-push = "human"
+docs/process.toml-174-# How many independent fresh-context review verdicts a completed work item gets
+docs/process.toml-175-# before the integrator accepts it — was docs/review-policy. 0 | 1 | 2.
+docs/process.toml:176:review_rounds = 1
+docs/process.toml-177-# Run the PII / identity-leak gate — was docs/privacy-check. The always-on
+docs/process.toml-178-# secrets floor below is separate and runs regardless.
+docs/process.toml-179-# KEYED-GREPPABLE: the three git hooks match this exact line shape so a
+docs/process.toml-180-# Python-less box still fails closed (M-42).
+--
+project-trajectory/scripts/score_reviews.py-101-# match on one never catches the other (WI-167).
+project-trajectory/scripts/score_reviews.py-102-REVIEW_POLICY_PATHS = (
+project-trajectory/scripts/score_reviews.py-103-    "docs/reviews/",
+project-trajectory/scripts/score_reviews.py-104-    # SN-028 folded the reviewer dial into docs/process.toml. BOTH stay listed:
+project-trajectory/scripts/score_reviews.py:105:    # the new home is where an implementer would now set `review_rounds = 0` in
+project-trajectory/scripts/score_reviews.py-106-    # the same diff as the work it would stop reviewing, and the legacy path
+project-trajectory/scripts/score_reviews.py-107-    # still exists in un-migrated repos. A tripwire that follows a dial to its
+project-trajectory/scripts/score_reviews.py-108-    # new home a release late is a tripwire that was blind for a release.
+project-trajectory/scripts/score_reviews.py-109-    "docs/process.toml",
+--
+project-trajectory/scripts/score_reviews.py-387-    contradiction = "CHANGES-REQUESTED" in seen and "APPROVE" in seen
+project-trajectory/scripts/score_reviews.py-388-    return merged, contradiction
+project-trajectory/scripts/score_reviews.py-389-
+project-trajectory/scripts/score_reviews.py-390-
+project-trajectory/scripts/score_reviews.py:391:def latest_phase_verdicts(entries):
+project-trajectory/scripts/score_reviews.py-392-    """The deterministic latest-file-per-phase rule the integrator gate reads —
+project-trajectory/scripts/score_reviews.py-393-    extending merge_verdict's any-dissent-blocks discipline (LLR-140) from one
+project-trajectory/scripts/score_reviews.py-394-    parallel round to the reroll dimension. `entries` is [(phase, ordinal,
+project-trajectory/scripts/score_reviews.py-395-    verdict), ...] parsed from the verdict files at ONE reviewed head; the
+--
+project-trajectory/scripts/agent_loop.py-31-  - picks the model per the in-process phase: --model-map
+project-trajectory/scripts/agent_loop.py-32-    "PHASE=model,PHASE=model" (or AGENT_MODEL_MAP), falling back to --model /
+project-trajectory/scripts/agent_loop.py-33-    AGENT_MODEL — and the COMMAND template the same way: --cmd-map /
+project-trajectory/scripts/agent_loop.py-34-    AGENT_CMD_MAP maps a phase to a whole template (first-class cross-provider
+project-trajectory/scripts/agent_loop.py:35:    routing; REVIEW-A/REVIEW-B keys are free-form), falling back to AGENT_CMD.
+project-trajectory/scripts/agent_loop.py-36-    The phase is runtime state (review/critique queues + the build/design-check
+project-trajectory/scripts/agent_loop.py-37-    default), never a tracked docs/run-phase file (retired WI-180). docs/review-
+project-trajectory/scripts/agent_loop.py-38-    policy (the reviewer dial, 0|1|2) is surfaced in the banner; the loop never
+project-trajectory/scripts/agent_loop.py-39-    enforces it — review dispatch is the managed-mode + status.md convention;
+--
+project-trajectory/scripts/agent_loop.py-311-
+project-trajectory/scripts/agent_loop.py-312-_PROMPT_CACHE = {}
+project-trajectory/scripts/agent_loop.py-313-
+project-trajectory/scripts/agent_loop.py-314-# The review-phase names the loop schedules (the in-process phase in {PLAN,
+project-trajectory/scripts/agent_loop.py:315:# BUILD, REVIEW-A, REVIEW-B, INTEGRATE}). A committing non-review session
+project-trajectory/scripts/agent_loop.py-316-# triggers a review round; these phases are the round.
+project-trajectory/scripts/agent_loop.py:317:REVIEW_PHASES = ("REVIEW-A", "REVIEW-B")
+project-trajectory/scripts/agent_loop.py-318-
+project-trajectory/scripts/agent_loop.py-319-# Default phase -> tier when routing from docs/agents.toml (AGENT_TIER_MAP /
+project-trajectory/scripts/agent_loop.py-320-# --tier-map override per phase). Iteration reviewers are cheap-but-heterogeneous
+project-trajectory/scripts/agent_loop.py-321-# (the strong-model floor is a GATE-closure rule, not an iteration-loop one), the
+--
+project-trajectory/scripts/agent_loop.py-324-DEFAULT_PHASE_TIER = {
+project-trajectory/scripts/agent_loop.py-325-    "PLAN": "strong",
+project-trajectory/scripts/agent_loop.py-326-    "BUILD": "medium",
+project-trajectory/scripts/agent_loop.py-327-    "REVIEW-A": "medium",
+project-trajectory/scripts/agent_loop.py:328:    "REVIEW-B": "medium",
+project-trajectory/scripts/agent_loop.py-329-    "DESIGN-CHECK": "strong",
+project-trajectory/scripts/agent_loop.py-330-    # Perceptual judgment is exactly where model capability + multimodal support
+project-trajectory/scripts/agent_loop.py-331-    # matter (WI-068), so a critic routes strong by default (tier-up-never-down).
+project-trajectory/scripts/agent_loop.py-332-    "CRITIQUE": "strong",
+--
+project-trajectory/scripts/agent_loop.py-724-
+project-trajectory/scripts/agent_loop.py-725-
+project-trajectory/scripts/agent_loop.py-726-def session_template(cmd_map, default_template, phase):
+project-trajectory/scripts/agent_loop.py-727-    """The per-phase command template (AGENT_CMD_MAP), else AGENT_CMD — phase
+project-trajectory/scripts/agent_loop.py:728:    keys are free-form, so REVIEW-A/REVIEW-B route providers without any loop
+project-trajectory/scripts/agent_loop.py-729-    change.
+project-trajectory/scripts/agent_loop.py-730-
+project-trajectory/scripts/agent_loop.py-731-    Implements: SR-040, LLR-037
+project-trajectory/scripts/agent_loop.py-732-    """
+--
+project-trajectory/scripts/agent_loop.py-1072-                exclude.add(self.last_impl_family)
+project-trajectory/scripts/agent_loop.py-1073-        if is_review:
+project-trajectory/scripts/agent_loop.py-1074-            for _ph, _v, fam, _mid in self.round_verdicts:
+project-trajectory/scripts/agent_loop.py-1075-                if fam:
+project-trajectory/scripts/agent_loop.py:1076:                    exclude.add(fam)  # REVIEW-B differs from REVIEW-A too
+project-trajectory/scripts/agent_loop.py-1077-        elif phase == "ADJUDICATE":
+project-trajectory/scripts/agent_loop.py-1078-            # SN-026. Both HALVES apply, which is why this is its own arm
+project-trajectory/scripts/agent_loop.py-1079-            # rather than a member of either neighbour's:
+project-trajectory/scripts/agent_loop.py-1080-            #   * it JUDGES, so it takes the heterogeneity rule the reviewers
+--
+project-trajectory/scripts/agent_loop.py-1199-        — one review scope covers the combined train, not a per-WI slice."""
+project-trajectory/scripts/agent_loop.py-1200-        self.impl_range = rng
+project-trajectory/scripts/agent_loop.py-1201-
+project-trajectory/scripts/agent_loop.py-1202-    def schedule_review_round(self):
+project-trajectory/scripts/agent_loop.py:1203:        """Queue a fresh review round (REVIEW-A, plus REVIEW-B at policy >= 2)
+project-trajectory/scripts/agent_loop.py-1204-        and return the queue list for the caller's dispatch log. Called only
+project-trajectory/scripts/agent_loop.py-1205-        when the caller's schedule_review condition holds, as today."""
+project-trajectory/scripts/agent_loop.py-1206-        self.round_verdicts = []
+project-trajectory/scripts/agent_loop.py-1207-        self.round_relaxed = False  # C5: a fresh round starts cross-family
+project-trajectory/scripts/agent_loop.py:1208:        self.review_queue = ["REVIEW-A"] + (["REVIEW-B"] if self.rp_int >= 2 else [])
+project-trajectory/scripts/agent_loop.py-1209-        return list(self.review_queue)
+project-trajectory/scripts/agent_loop.py-1210-
+project-trajectory/scripts/agent_loop.py-1211-    def schedule_critique(self, in_scope, limit, exhaustion):
+project-trajectory/scripts/agent_loop.py-1212-        """Queue a critique round for one build scope. A NEW scope starts a fresh
+--
+project-trajectory/scripts/agent_loop.py-1585-    )
+project-trajectory/scripts/agent_loop.py-1586-    ap.add_argument(
+project-trajectory/scripts/agent_loop.py-1587-        "--cmd-map",
+project-trajectory/scripts/agent_loop.py-1588-        default=os.environ.get("AGENT_CMD_MAP", ""),
+project-trajectory/scripts/agent_loop.py:1589:        help='per-phase agent COMMAND template map "REVIEW-B=gemini -p '
+project-trajectory/scripts/agent_loop.py-1590-        '{prompt},BUILD=claude -p {prompt} --model {model}" matched against '
+project-trajectory/scripts/agent_loop.py-1591-        "the in-process phase, falling back to the single AGENT_CMD template — "
+project-trajectory/scripts/agent_loop.py-1592-        "first-class cross-provider routing (cross-provider "
+project-trajectory/scripts/agent_loop.py-1593-        "dual review is the recommended review-policy 2 pairing). Same "
+--
+project-trajectory/scripts/agent_loop.py-1599-        "--prompt-map",
+project-trajectory/scripts/agent_loop.py-1600-        default=os.environ.get("AGENT_PROMPT_MAP", ""),
+project-trajectory/scripts/agent_loop.py-1601-        help='per-phase prompt-template map "REVIEW-A=docs/prompts/review.md" '
+project-trajectory/scripts/agent_loop.py-1602-        "(same KEY=value syntax as --model-map); each value is a FILE path whose "
+project-trajectory/scripts/agent_loop.py:1603:        "content is that phase's prompt. Reviewer phases (REVIEW-A/REVIEW-B) fall "
+project-trajectory/scripts/agent_loop.py-1604-        "back to the embedded redacted reviewer prompt when unmapped; a {verdict} "
+project-trajectory/scripts/agent_loop.py-1605-        "slot in a reviewer template is filled with the verdict-file path. Every "
+project-trajectory/scripts/agent_loop.py-1606-        "referenced file is preflighted before iteration 1 (default: "
+project-trajectory/scripts/agent_loop.py-1607-        "AGENT_PROMPT_MAP env var)",
+--
+project-trajectory/scripts/agent_loop.py-1707-    # scaffold whose prompts/ dir never landed would run, claim, and only then
+project-trajectory/scripts/agent_loop.py-1708-    # discover it has nothing to send.
+project-trajectory/scripts/agent_loop.py-1709-    failures.extend(prompts.preflight())
+project-trajectory/scripts/agent_loop.py-1710-    # Every per-phase template must be as launchable as the default one — a
+project-trajectory/scripts/agent_loop.py:1711:    # broken REVIEW-B entry must fail before iteration 1, not at the first
+project-trajectory/scripts/agent_loop.py-1712-    # review session mid-run (the preflight contract).
+project-trajectory/scripts/agent_loop.py-1713-    for ph, tmpl in sorted(cmd_map.items()):
+project-trajectory/scripts/agent_loop.py-1714-        try:
+project-trajectory/scripts/agent_loop.py-1715-            exe, installed = launcher_exe(tmpl)
+--
+project-trajectory/scripts/agent_loop.py-2004-        )
+project-trajectory/scripts/agent_loop.py-2005-    print(
+project-trajectory/scripts/agent_loop.py-2006-        "session-hold: {} | push-policy: {} (the coordinator never pushes "
+project-trajectory/scripts/agent_loop.py-2007-        "under 'human') | review-policy: {} (docs/process.toml [policies] "
+project-trajectory/scripts/agent_loop.py:2008:        "review_rounds — the reviewer dial: {})".format(
+project-trajectory/scripts/agent_loop.py-2009-            session_hold,
+project-trajectory/scripts/agent_loop.py-2010-            push_policy,
+project-trajectory/scripts/agent_loop.py-2011-            review_policy,
+project-trajectory/scripts/agent_loop.py-2012-            "LOOP-ENFORCED (managed routing on) — a committing build schedules "
+--
+project-trajectory/scripts/agent_loop.py-3937-        )
+project-trajectory/scripts/agent_loop.py-3938-    if (policies.review or "").strip() not in ("0", "1", "2"):
+project-trajectory/scripts/agent_loop.py-3939-        print(
+project-trajectory/scripts/agent_loop.py-3940-            "agent_loop: WARNING - the reviewer dial {!r} (docs/process.toml "
+project-trajectory/scripts/agent_loop.py:3941:            "[policies] review_rounds) is not 0|1|2; "
+project-trajectory/scripts/agent_loop.py-3942-            "parsed leniently (unparseable -> 1, out-of-range clamped).".format(
+project-trajectory/scripts/agent_loop.py-3943-                policies.review
+project-trajectory/scripts/agent_loop.py-3944-            ),
+project-trajectory/scripts/agent_loop.py-3945-            file=sys.stderr,
+--
+project-trajectory/scripts/agent_loop.py-4019-    )
+project-trajectory/scripts/agent_loop.py-4020-    return live_status_on and _stdout_is_tty() and _enable_windows_vt()
+project-trajectory/scripts/agent_loop.py-4021-
+project-trajectory/scripts/agent_loop.py-4022-
+project-trajectory/scripts/agent_loop.py:4023:def _clamped_review_rounds(review_policy):
+project-trajectory/scripts/agent_loop.py-4024-    """The reviewer dial as an int: unparseable -> 1, out-of-range clamped —
+project-trajectory/scripts/agent_loop.py-4025-    the lenient parse the startup warning announces."""
+project-trajectory/scripts/agent_loop.py-4026-    try:
+project-trajectory/scripts/agent_loop.py-4027-        rp_int = int(review_policy)
+--
+project-trajectory/scripts/agent_loop.py-4176-    )
+project-trajectory/scripts/agent_loop.py-4177-
+project-trajectory/scripts/agent_loop.py-4178-    iter_dir = lane / "iteration"
+project-trajectory/scripts/agent_loop.py-4179-    reviews_dir = docs / "reviews" / setup.worker["train"]
+project-trajectory/scripts/agent_loop.py:4180:    rp_int = _clamped_review_rounds(policies.review)
+project-trajectory/scripts/agent_loop.py-4181-    st = build_routing_state(docs, rp_int, setup.routing.managed)
+project-trajectory/scripts/agent_loop.py-4182-    announce_critique_budget(setup.routing.managed, st)
+project-trajectory/scripts/agent_loop.py-4183-
+project-trajectory/scripts/agent_loop.py-4184-    resume_owed_round(root, setup, st, rp_int, iter_dir)
+--
+project-trajectory/PROCESS_OPTIONS.md-578-Measured 2026-08-01 over the **whole** population the predicate has governed —
+project-trajectory/PROCESS_OPTIONS.md-579-every `integrate: merge` commit having the freshness comparison's introducing
+project-trajectory/PROCESS_OPTIONS.md-580-commit as an ancestor (`git log --grep="^integrate: merge"`, filtered with
+project-trajectory/PROCESS_OPTIONS.md-581-`git merge-base --is-ancestor <that commit> <merge>`; 20 of them, with
+project-trajectory/PROCESS_OPTIONS.md:582:`review_rounds` at `1` throughout): **13 APPROVEs staled — nine by a real change
+project-trajectory/PROCESS_OPTIONS.md-583-to shipping code or a declared doc, one by a hand trunk merge, and three by a
+project-trajectory/PROCESS_OPTIONS.md-584-record edit that followed its own verdict** (a close ceremony, a corrected
+project-trajectory/PROCESS_OPTIONS.md-585-evidence figure, and a `Deliverable` prose fix the verdict itself demanded).
+project-trajectory/PROCESS_OPTIONS.md-586-`docs/work/` is **deliberately not excluded** from the identity, and a
+--
+project-trajectory/PROCESS_OPTIONS.md-907-The cadence needs no coordinator to be useful — an attended human alternating
+project-trajectory/PROCESS_OPTIONS.md-908-"plan on the strong tier, execute on the cheap one" across hands-on sessions is
+project-trajectory/PROCESS_OPTIONS.md-909-the same protocol with a person as the model map.
+project-trajectory/PROCESS_OPTIONS.md-910-
+project-trajectory/PROCESS_OPTIONS.md:911:**The reviewer dial + cross-provider routing (`review_rounds` +
+project-trajectory/PROCESS_OPTIONS.md:912:`AGENT_CMD_MAP`).** `[policies] review_rounds` declares how many independent
+project-trajectory/PROCESS_OPTIONS.md-913-fresh-context review verdicts a completed work item gets before the integrator
+project-trajectory/PROCESS_OPTIONS.md-914-accepts it — **`0 | 1 | 2`, default `1`** (the key's comment block carries the
+project-trajectory/PROCESS_OPTIONS.md-915-full semantics). Floors sit *above* the dial: a gate advance on a
+project-trajectory/PROCESS_OPTIONS.md-916-**loop-held** tier always needs ≥1 recorded verdict, and a WI touching
+--
+project-trajectory/PROCESS_OPTIONS.md-918-duplicate coverage — A = method/risk/corner cases, B = process/trace/prose —
+project-trajectory/PROCESS_OPTIONS.md-919-because two samples of one model share blind spots; for the same reason
+project-trajectory/PROCESS_OPTIONS.md-920-**cross-provider is the recommended `2` pairing**, and `AGENT_CMD_MAP` (or
+project-trajectory/PROCESS_OPTIONS.md-921-`--cmd-map`) makes it first-class: a per-phase *command-template* map in the
+project-trajectory/PROCESS_OPTIONS.md:922:`--model-map` syntax (`AGENT_CMD_MAP="REVIEW-B=gemini -p {prompt}"`), matched
+project-trajectory/PROCESS_OPTIONS.md:923:against the in-process phase — whose keys are free-form, so `REVIEW-A`/`REVIEW-B`
+project-trajectory/PROCESS_OPTIONS.md-924-phases just work — falling back to the single `AGENT_CMD`. (A template that
+project-trajectory/PROCESS_OPTIONS.md-925-itself needs `,`/`;` routes through a thin command wrapper instead.) In
+project-trajectory/PROCESS_OPTIONS.md-926-managed mode the loop **schedules the review round** automatically after a
+project-trajectory/PROCESS_OPTIONS.md-927-committing build (the reviewer dial sets how many); the loop surfaces the dial
+--
+project-trajectory/scripts/integrate.py-1476-    Split off `_verdict_gate` so the ladder there stays a ladder: this is the
+project-trajectory/scripts/integrate.py-1477-    one place that reads a verdict SET rather than a dial, and its three
+project-trajectory/scripts/integrate.py-1478-    answers (dissent, reroll-until-green, a contradicted attestation) are all
+project-trajectory/scripts/integrate.py-1479-    about the same set."""
+project-trajectory/scripts/integrate.py:1480:    latest, flipped = score_reviews.latest_phase_verdicts(entries)
+project-trajectory/scripts/integrate.py-1481-    dissent = sorted(ph for ph, word in latest.items() if word != "APPROVE")
+project-trajectory/scripts/integrate.py-1482-    if dissent or not latest:
+project-trajectory/scripts/integrate.py-1483-        return "{}: the governing round(s) at this tree are not an APPROVE ({})".format(
+project-trajectory/scripts/integrate.py-1484-            branch, ", ".join(dissent) or "no parseable verdict"
+386-    merged = "CHANGES-REQUESTED" if "CHANGES-REQUESTED" in seen else "APPROVE"
+387-    contradiction = "CHANGES-REQUESTED" in seen and "APPROVE" in seen
+388-    return merged, contradiction
+389-
+390-
+391:def latest_phase_verdicts(entries):
+392-    """The deterministic latest-file-per-phase rule the integrator gate reads —
+393-    extending merge_verdict's any-dissent-blocks discipline (LLR-140) from one
+394-    parallel round to the reroll dimension. `entries` is [(phase, ordinal,
+395-    verdict), ...] parsed from the verdict files at ONE reviewed head; the
+396-    highest ordinal is a phase's LATEST word, so "latest" is well-defined even
+
+2026-09-03T03:14:06.754918Z ERROR codex_models_manager::manager: failed to renew cache TTL: missing field `base_instructions` at line 97 column 5
+2026-09-03T03:14:18.413744Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/zsh -lc 'tmp=$(mktemp -d)
+.venv/bin/python - "$tmp" <<'"'PY'
+import importlib.util
+import pathlib
+import sys
+p = pathlib.Path('tests/test_verdict_record.py')
+spec = importlib.util.spec_from_file_location('verdict_tests', p)
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+root = m.rounds_repo(pathlib.Path(sys.argv[1]))
+(root / 'docs' / 'review-policy').unlink()
+(root / 'docs' / 'process.toml').write_text('[policies]\\nreview_rounds = 2\\n', encoding='utf-8')
+m._commit(root, 'set review policy two', when=m.T_LATER)
+m.add_round(root, 3, session_phase='REVIEW-A', when=m.T_LATER + 1)
+print(m.integ._verdict_gate(root, 'wi-401', {'WI-401': 'merged'}))
+PY
+rm -rf \""'$tmp"'`: CreateProcess { message: "Rejected(\"`/bin/zsh -lc 'tmp=$(mktemp -d)\\n.venv/bin/python - \\\"$tmp\\\" <<'\\\"'PY'\\nimport importlib.util\\nimport pathlib\\nimport sys\\np = pathlib.Path('tests/test_verdict_record.py')\\nspec = importlib.util.spec_from_file_location('verdict_tests', p)\\nm = importlib.util.module_from_spec(spec)\\nspec.loader.exec_module(m)\\nroot = m.rounds_repo(pathlib.Path(sys.argv[1]))\\n(root / 'docs' / 'review-policy').unlink()\\n(root / 'docs' / 'process.toml').write_text('[policies]\\\\\\\\nreview_rounds = 2\\\\\\\\n', encoding='utf-8')\\nm._commit(root, 'set review policy two', when=m.T_LATER)\\nm.add_round(root, 3, session_phase='REVIEW-A', when=m.T_LATER + 1)\\nprint(m.integ._verdict_gate(root, 'wi-401', {'WI-401': 'merged'}))\\nPY\\nrm -rf \\\\\\\"\\\"'$tmp\\\"'` rejected: rm -f style commands are not permitted. Use a safer approach\")" }
+2026-09-03T03:14:18.455398Z ERROR codex_models_manager::manager: failed to renew cache TTL: missing field `base_instructions` at line 97 column 5
+exec
+/bin/zsh -lc 'review_probe=$(mktemp -d)
+.venv/bin/python - "$review_probe" <<'"'PY'
+import importlib.util
+import pathlib
+import sys
+p = pathlib.Path('tests/test_verdict_record.py')
+spec = importlib.util.spec_from_file_location('verdict_tests', p)
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+root = m.rounds_repo(pathlib.Path(sys.argv[1]))
+(root / 'docs' / 'review-policy').unlink()
+(root / 'docs' / 'process.toml').write_text('[policies]\\nreview_rounds = 2\\n', encoding='utf-8')
+m._commit(root, 'set review policy two', when=m.T_LATER)
+m.add_round(root, 3, session_phase='REVIEW-A', when=m.T_LATER + 1)
+print(m.integ._verdict_gate(root, 'wi-401', {'WI-401': 'merged'}))
+PY" in /Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad
+ exited 1 in 0ms:
+Traceback (most recent call last):
+  File "<stdin>", line 7, in <module>
+  File "<frozen importlib._bootstrap_external>", line 1023, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad/tests/test_verdict_record.py", line 25, in <module>
+    from conftest import SCRIPTS, load_script
+ImportError: cannot import name 'SCRIPTS' from 'conftest' (/Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad/conftest.py)
+
+2026-09-03T03:14:25.880269Z ERROR codex_models_manager::manager: failed to renew cache TTL: missing field `base_instructions` at line 97 column 5
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at Sep 6th, 2026 10:40 PM.
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at Sep 6th, 2026 10:40 PM.
+tokens used
+119,409

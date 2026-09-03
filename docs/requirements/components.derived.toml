@@ -18,8 +18,8 @@
 
 [derived]
 components = 4
-design_rows = 188
-seam_rows = 162
+design_rows = 190
+seam_rows = 163
 requirements_placed = 72
 requirements_unplaced = 4
 seams_unplaced = 0
@@ -455,6 +455,7 @@ llr_refs = [
   "LLR-188",
   "LLR-189",
   "LLR-196",
+  "LLR-207",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -479,6 +480,7 @@ modules = [
   "project-trajectory/scripts/intake.py",
   "project-trajectory/scripts/integrate.py",
   "project-trajectory/scripts/kitlib/station.py",
+  "project-trajectory/scripts/kitlib/verdict.py",
   "project-trajectory/scripts/lane.py",
   "project-trajectory/scripts/plan_artifacts.py",
   "project-trajectory/scripts/plan_briefs.py",
@@ -513,6 +515,7 @@ seam_internal_refs = [
   "IF-154",
   "IF-155",
   "IF-173",
+  "IF-175",
 ]
 seam_boundary_refs = [
   "IF-010",
@@ -590,12 +593,14 @@ sr_refs = [
   "SR-163",
   "SR-168",
   "SR-169",
+  "SR-170",
 ]
 sr_shared_refs = [
   "SR-049",
   "SR-070",
   "SR-146",
   "SR-163",
+  "SR-170",
 ]
 llr_refs = [
   "LLR-009",
@@ -655,6 +660,7 @@ llr_refs = [
   "LLR-199",
   "LLR-200",
   "LLR-203",
+  "LLR-208",
 ]
 hat_refs = [
   "ACCESSIBILITY",
@@ -683,6 +689,7 @@ modules = [
   "project-trajectory/scripts/gen_release_checklist.py",
   "project-trajectory/scripts/gen_skills_index.py",
   "project-trajectory/scripts/gen_trajectory.py",
+  "project-trajectory/scripts/gen_verdict_rollup.py",
   "project-trajectory/scripts/onboard.template.sh",
   "project-trajectory/scripts/pending.py",
   "project-trajectory/scripts/run_menu.py",
@@ -716,6 +723,8 @@ seam_boundary_refs = [
   "IF-034",
   "IF-035",
   "IF-037",
+  "IF-046",
+  "IF-047",
   "IF-048",
   "IF-049",
   "IF-050",
@@ -752,6 +761,7 @@ seam_boundary_refs = [
   "IF-161",
   "IF-163",
   "IF-164",
+  "IF-175",
 ]
 
 [unplaced]

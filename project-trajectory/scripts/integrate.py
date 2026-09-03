@@ -162,6 +162,7 @@ from pathlib import Path
 import agent_common as ac
 import score_reviews
 import spec_move
+from kitlib import verdict as kverdict
 from kitlib.station import (
     BAR_GREEN,
     OUTCOME_DIRS,
@@ -197,21 +198,14 @@ ARCHIVE_WORK = "docs/archive/work"
 # already lives. §5.6's unload GCs a clean one after its merge.
 LANE_WORKTREE_SUFFIX = "-drive"
 
-_ATTEST_RE = re.compile(
-    r"^Bar-Green:\s+tree=([0-9a-f]{40})\s+work=([0-9a-f]{40})\s+(\S.*)$"
-)
-
-
-def _refresh_subject(branch):
-    """The refresh commit's subject prefix for `branch` - one home, because the
-    writer and the verifier must agree on it exactly."""
-    return "refresh: {} onto trunk ".format(branch)
-
-
-# How far back `_work_tip` will peel refresh commits. The disposable-commit rule
-# means at most ONE can ever sit on the tip, so this is a guard against a
-# hand-made pathological history, not an expected depth.
-_MAX_REFRESH_PEEL = 8
+# The refresh commit's attestation, its subject grammar and the work-tip peel
+# live in `kitlib.verdict` (IF-175), not here: "the last commit that could
+# invalidate a verdict" is ONE definition, and the merge slot and the loop's
+# review-owed derivation must both be HANDED it rather than each choosing a rev
+# (REVIEW-A round 007, finding 2). Re-exported under the names this module's own
+# callers and the station tests already use - a pointer, not a second home.
+refresh_attestation = kverdict.refresh_attestation
+_work_tip = kverdict.work_tip
 
 # RULING-6 bookkeeping surfaces: the paths a NON-merge trunk commit may touch
 # during integrator operation. docs/log.md is here because the trunk step
@@ -1185,156 +1179,158 @@ def _rev(root, rev):
     return out.strip() if code == 0 and out.strip() else None
 
 
-def refresh_attestation(root, branch, rev=None):
-    """`(work_tip_sha, bar summary)` if `rev` is a GENUINE refresh commit for
-    `branch`, else None. `rev` defaults to the branch tip.
+def _branch_spec_text(root, branch, name):
+    """The claimed spec `name` as the BRANCH holds it, or None.
 
-    The bar is attested to a TREE, and this is where that sentence is made
-    true rather than merely written down. A commit message is not evidence: it
-    can be copied, hand-written, amended onto different content, cherry-picked
-    or rebased, and every one of those carries the words onto a tree nobody
-    barred (REVIEW-A round 1, driven both ways - a forged trailer on an
-    ordinary work commit, and `commit --amend` adding a file to a real one).
-
-    So the trailer NAMES what it attests and all three names are verified
-    against git:
-
-        Bar-Green: tree=<40 hex> work=<40 hex> <bar summary>
-
-      * `tree=` must equal the commit's OWN tree. This is the load-bearing one:
-        no edit that changes content can keep it, because the tree sha IS the
-        content. `git write-tree` is what lets the refresh know the value
-        before it commits - the index it barred is the tree it commits.
-      * `work=` must equal the commit's first parent, so the disposable-commit
-        peel below has a stated target rather than a guessed one, and a
-        cherry-pick or rebase (new parent) is rejected.
-      * the SUBJECT must be this branch's own `refresh: <branch> onto trunk`,
-        so a refresh commit merged in from elsewhere is not read as this
-        branch's.
-
-    THE HONEST BOUND: this defeats ACCIDENT, not INTENT. Every accidental
-    carrier refuses - a copied message, an amend, a rebase, a cherry-pick, a
-    trailer quoted in an ordinary commit. But forging one deliberately is FOUR
-    git invocations in the lane worktree and no bar at all: `add -A`, `T=$(git
-    write-tree)`, `P=$(git rev-parse <branch>)`, and the `commit` that carries
-    those two values in the trailer. REVIEW-A round 2 drove exactly that and landed an
-    unbarred file on trunk. The format is printed in every refresh commit, so
-    the cost is reading, not reverse-engineering.
-
-    That is accepted, deliberately. The only structural closure is a bar the
-    slot itself runs and cannot skip, and DECISION 3 (owner ruling 2026-07-31)
-    deleted the merge bar outright: a kept-just-in-case bar is exactly the
-    shape §0's governing principle warns against. So the threat model here is
-    the same one the rest of this script holds - bugs, drift and a lane that
-    goes wrong, not a lane that lies on purpose. A lane is trusted code the
-    operator chose to run. If that ever stops being true, the answer is a
-    slot-side bar and a reopened DECISION 3, not a longer trailer.
-    """
-    rev = rev or branch
-    message = _commit_message(root, rev)
-    lines = message.splitlines()
-    if not lines or not lines[0].strip().startswith(_refresh_subject(branch)):
+    Not the trunk's copy under `active/`: the branch has moved the spec to its
+    terminal folder and filled it, and the `## Dispositions` this reads were
+    written by the session whose verdict is under judgement. Reading the trunk
+    copy would ask what the row was CLAIMED to do rather than what it did — and
+    that precedence is `ac.authoritative_spec`'s, shared with the round
+    scheduler (`agent_loop.dispositions_drafted`) so the branch cannot answer
+    one of them with a copy it did not show the other."""
+    found = []
+    for prefix in ac.SPEC_HOMES:
+        for path in _branch_tree_paths(root, branch, prefix) or []:
+            if path.rsplit("/", 1)[-1] == name:
+                found.append(path)
+    chosen = ac.authoritative_spec(found)
+    if chosen is None:
         return None
-    matched = None
-    for line in lines:
-        matched = _ATTEST_RE.match(line.strip())
-        if matched:
-            break
-    if not matched:
-        return None
-    tree, work, summary = matched.group(1), matched.group(2), matched.group(3)
-    if _rev(root, rev + "^{tree}") != tree:
-        return None  # the message rode onto a tree it does not describe
-    if _rev(root, rev + "^1") != work:
-        return None  # ...or onto a different parent than the one it names
-    return work, summary.strip()
+    code, text = ac.git(root, "show", "{}:{}".format(branch, chosen))
+    return text if code == 0 else None
 
 
-def _work_tip(root, branch):
-    """The branch's last WORK commit as a sha: the tip, with any refresh commit
-    peeled off at the work sha that refresh ITSELF recorded.
+def _verdict_owed(root, branch, metas):
+    """Does this branch owe a review verdict at all — `(owed, why_not)`.
 
-    Two callers, one meaning. `refresh` resets here before it merges (the
-    §A2.1 disposable-commit rule: a retry never stacks a second merge on the
-    first, because docs/log.md is append-compiled and the stack would conflict
-    on the file end). `_verdict_gate` measures code-time here, because the
-    refresh is MECHANICAL bookkeeping - it rewrites the compiled log and the
-    generated artifacts, and if that counted as code it would stale the honest
-    APPROVE that had to precede it.
+    ORDINARY WORK LANES ALWAYS OWE ONE; the question is only ever asked of an
+    ADJUDICATION lane, and it is answered by `[attestation] adjudication_review`
+    through the ONE reader both this gate and the round scheduler consult
+    (`agent_common.adjudication_review_owed`). Before the dial existed the gate
+    demanded a REVIEW-A from a lane whose phase is in `NON_BUILD_PHASES` — so
+    nothing produced one and every adjudication merge was a supervisor stop.
 
-    The peel is why `refresh_attestation` had to become a verification rather
-    than a substring test: this function feeds a `reset --hard`, so peeling one
-    commit too far DESTROYS committed work. A work commit whose message merely
-    quoted the trailer used to be peeled, and its file left the branch (REVIEW-A
-    round 1, driven). Now nothing is peeled that does not carry its own tree and
-    parent, which an ordinary commit cannot do by accident.
-    """
-    rev = branch
-    for _ in range(_MAX_REFRESH_PEEL):
-        attested = refresh_attestation(root, branch, rev)
-        if attested is None:
-            return _rev(root, rev)
-        rev = attested[0]
-    return _rev(root, rev)
+    FAIL TOWARD REVIEW at every unreadable step: an unreadable frontmatter, a
+    spec the branch does not carry, a malformed `## Dispositions`. `owed` is
+    what the caller then has to satisfy, and demanding a verdict nobody drew is
+    a stop a human can read, where waiving one silently is not."""
+    import intake  # a sibling reader; deferred so the cheap rungs stay cheap
+
+    if not _adjudication_lane(root, branch, metas=metas):
+        return True, ""
+    docs = root / "docs"
+    for name, meta in metas or []:
+        text = _branch_spec_text(root, branch, name)
+        if text is None:
+            return True, ""
+        drafts, refusal = intake.parse_dispositions(text, name)
+        if refusal:
+            return True, ""
+        # `kind`, not `safety_class`: `parse_dispositions` NORMALIZES the
+        # declared cell into `kind` (defaulting an undeclared one to
+        # `ordinary`), and reading the raw key here would answer None for
+        # every draft and silently waive the round.
+        classes = [d.get("kind") for d in drafts]
+        if ac.adjudication_review_owed(docs, meta.get("brief"), classes):
+            return True, ""
+    return False, "adjudication lane, [attestation] adjudication_review = {!r}".format(
+        ac.adjudication_review(docs)
+    )
+
+
+def _legacy_rollup_refusal(root, branch, wi, want):
+    """THE MIGRATION WINDOW (the plan's §6): at `review-policy = 1`, a legacy
+    hand-authored `docs/reviews/WI-<n>-REVIEW-A.md` still clears the gate, with
+    a WARN.
+
+    AT POLICY 1 ONLY. One hand-authored document is one author's word, and a
+    policy of 2 declares two INDEPENDENT ones; letting this file answer both
+    would be the single-reviewer clearance the round-030 join fix removed from
+    the live path, re-admitted through the deprecated one. The caller applies
+    the narrowing and states it; this docstring is where an adopter reading the
+    window's implementation finds the same sentence.
+
+    Returns a refusal string, or None when the legacy rollup carries a fresh
+    APPROVE. Adopters hold these files today and their wrappers grep them; the
+    window costs them nothing and the WARN is what makes the deprecation
+    visible on the path that is actually being used. The rollup is judged by the
+    SAME rule as a round — it names this tree or it does not count — so the
+    retired time comparison leaves no second definition behind it."""
+    rel = "docs/reviews/{}-REVIEW-A.md".format(wi)
+    code, text = ac.git(root, "show", "{}:{}".format(branch, rel))
+    if code != 0:
+        return (
+            "no logged review round on {} names its current tree, and the "
+            "legacy verdict {} is absent from {} — draw a round, or (migration "
+            "window) commit the rollup".format(branch, rel, branch)
+        )
+    word = score_reviews.parse_verdict(text).verdict
+    if word != "APPROVE":
+        return "{} is not an APPROVE (parsed: {!r})".format(rel, word)
+    code, at = ac.git(root, "log", "-1", "--format=%H", branch, "--", rel)
+    # Through `governing_identity` and not the bare fold, for the reason the
+    # round evidence is: `want` is composed with the refresh peel, so a legacy
+    # rollup committed after a refresh would name the post-refresh tree and
+    # never match, whatever it said. Same comparison, same definition.
+    rev = at.strip() if code == 0 else ""
+    named = kverdict.governing_identity(root, branch, rev) if rev else None
+    if named != want:
+        return (
+            "{} does not name the branch's current tree - a verdict that did "
+            "not judge this tree does not clear the gate".format(rel)
+        )
+    print(
+        "integrate: WARNING - {} cleared the gate through the LEGACY "
+        "hand-authored rollup (migration window, RESYNC_PACK.md). Nothing in "
+        "the kit writes that file; the round files a logged reviewer session "
+        "produced are the record.".format(rel),
+        file=sys.stderr,
+    )
+    return None
 
 
 def _verdict_gate(root, branch, outcomes):
-    """RULING-7: the dialed verdict artifacts, fresh at the branch's work tip.
+    """RULING-7 under OI-76: the dialed verdict, bound to the tree it judged.
 
-    review-policy >= 1 demands docs/reviews/WI-<n>-REVIEW-A.md per closed WI,
-    carrying an APPROVE machine line, whose last commit on the branch is no
-    older than the last non-review, non-fragment commit - the git-derived
-    replacement for the old sha7-in-filename binding (§5.4 left it open).
+    review-policy >= 1 demands, for every WI this branch closes as `merged`,
+    the declared number of independent review phases produced by LOGGED
+    REVIEWER SESSIONS, each with a governing APPROVE verdict — computed over
+    the branch's own round files, not over a hand-authored rollup.
+    `kitlib.verdict` carries the reading; what is decided here is what the
+    reading MEANS for a merge.
 
-    `docs/work/` is NOT excluded, deliberately, and WI-378 measured the price
-    before leaving it that way. The population is derivable, not chosen - all
-    three steps, so this is re-runnable from what ships:
-
-        # 1. the commit that introduced this comparison
-        git log --reverse -S"_verdict_gate" -- <path to this file>
-        # 2. every integrator merge
-        git log --format="%H %s" --grep="^integrate: merge"
-        # 3. keep the ones the predicate governed
-        git merge-base --is-ancestor <commit from 1> <merge from 2>
-
-    That gave 20 merges as of 2026-08-01, `review-policy` at 1 throughout.
-    Replaying the predicate over all 20 found 13 staled APPROVEs: nine staled by
-    a real change to shipping code or a declared doc, one by a hand trunk merge,
-    and three by a record-only edit that followed its own verdict. Adding
-    `docs/work/` here would buy back those three (23.1%) and nothing else, at
-    the cost of letting a spec's `safety_class`, `needs` and `Deliverable` - the
-    claims the verdict is ABOUT - change after the APPROVE, unseen. One of the
-    three is exactly that: a `Deliverable` prose fix the verdict demanded. The
-    ordering rules that shrink the class - close before the final verdict round,
-    never hand-merge trunk - are in process-options.md, "The LLM-gate verdict
-    protocol"; they are necessary, not sufficient, since a verdict's own finding
-    can demand a record edit no ordering could have placed earlier. Follow them
-    and the case is weaker still: they retire 2 of the 13, leaving 11 of which
-    the exclusion would buy back 2 (18.2%) - and both of those rounds caught a
-    false claim in the record.
-
-    `docs/log.d/` differs on purpose: a log fragment is the narrative of work
-    the verdict already read, carries no key any reader gates on, and is
-    append-compiled on the trunk rather than merged.
+    GOVERNING = TREE IDENTITY (owner ruling 2026-08-31, OI-76). A verdict counts
+    only if it names the branch's current NON-RECORD tree — the tree with
+    `docs/reviews/`, `docs/log.d/` and `docs/iteration/` removed. There is no
+    ordering rule any more and no timestamp comparison: staleness dissolves into
+    identity, because a commit that changed the work changed the tree, and the
+    verdict simply no longer names it. `docs/work/` stays IN the identity,
+    deliberately, and WI-378 measured that price before leaving it that way —
+    excluding it would let a spec's `safety_class`, `needs` and `Deliverable`
+    (the claims the verdict is ABOUT) change after the APPROVE, unseen; the
+    ordering rules that shrink the class ("close before the final verdict
+    round", "never hand-merge trunk") are in process-options.md, "The LLM-gate
+    verdict protocol", and are necessary rather than sufficient.
 
     KEYED OFF THE OUTCOME, NOT OFF THE CLAIM (§A3). Only `merged` asserts the
     work is done, and only an assertion of done owes a verdict; `cancelled` and
-    `handback` assert the opposite - this will never be built, or this is coming
-    back unfinished - so an APPROVE would be an approval of nothing. Reading the
+    `handback` assert the opposite — this will never be built, or this is coming
+    back unfinished — so an APPROVE would be an approval of nothing. Reading the
     requirement off the claim instead would deadlock the commonest handback
     cause on itself: a review escalation is precisely the case where no APPROVE
     exists, and the lane would be unable to return the work it could not get
     approved.
 
-    THE TWO RULES MEET AT ONE POINT, stated so nobody has to re-derive it from
-    the loop: the freshness comparison above only ever runs for an id whose
-    outcome is `merged`, because the others are skipped before reaching it. So
-    WI-378's `docs/work/` reasoning governs exactly the branches that assert
-    done - which is also the only place its ordering rule ("close before the
-    final verdict round") can bite, since the closing MOVE is itself a
-    `docs/work/` change. Neither rule weakens the other: a returned or
-    cancelled spec moves under `docs/work/` too, and owes no verdict for that
-    move to stale.
+    ONE REVIEW SCOPE PER TRAIN (LLR-140), which is why the round evidence is
+    computed once for the branch rather than per WI. A worker schedules its
+    round only when every assigned WI is built, and the round covers the
+    combined train diff; a per-WI slice of that round never existed. The per-WI
+    loop that remains is the MIGRATION WINDOW's, because the legacy rollup was
+    per-WI and an adopter's tree still is.
+
+    AN ADJUDICATION LANE MAY OWE NO VERDICT AT ALL — `_verdict_owed`, the dial,
+    and the reader `agent_loop`'s round scheduler shares with it.
 
     Implements: SR-156, LLR-140
     """
@@ -1345,38 +1341,114 @@ def _verdict_gate(root, branch, outcomes):
         return conflicts[0]
     dial = ac.declared_policy(root / "docs", "review-policy", "0")
     try:
-        required = int(dial or "0") >= 1
+        required = int(dial or "0")
     except ValueError:
         # The message still names the LEGACY file: it is the shape an operator
         # can be holding either way, and `declared_policy` renders the TOML int
         # in the same string vocabulary, so a non-integer here means a
         # hand-edited legacy file (a TOML non-int falls back to the default).
         return "docs/review-policy is not an integer: {!r} (fail closed)".format(dial)
-    if not required:
+    if required < 1:
         return None
-    code_time = _last_commit_time(
-        root,
-        _work_tip(root, branch),
-        ".",
-        ":(exclude)docs/reviews",
-        ":(exclude)docs/log.d",
+    merged = [wi for wi in sorted(outcomes) if outcomes[wi] == Outcome.MERGED]
+    if not merged:
+        return None
+    owed, why_not = _verdict_owed(
+        root, branch, _claimed_spec_frontmatters(root, branch)
     )
-    for wi in sorted(outcomes):
-        if outcomes[wi] != Outcome.MERGED:
-            continue
-        rel = "docs/reviews/{}-REVIEW-A.md".format(wi)
-        code, text = ac.git(root, "show", "{}:{}".format(branch, rel))
-        if code != 0:
-            return "required verdict {} is absent from {}".format(rel, branch)
-        word = score_reviews.parse_verdict(text).verdict
-        if word != "APPROVE":
-            return "{} is not an APPROVE (parsed: {!r})".format(rel, word)
-        vtime = _last_commit_time(root, branch, rel)
-        if vtime is None or (code_time is not None and vtime < code_time):
-            return (
-                "{} predates the branch's last code commit - a stale APPROVE "
-                "does not clear the gate".format(rel)
+    if not owed:
+        print("integrate: no review verdict owed ({})".format(why_not))
+        return None
+    # AT THE WORK TIP, not the branch tip — the one thing the identity rule
+    # inherits verbatim from the comparison it replaces: a refresh merges the
+    # trunk in, changing the tree without the lane having changed its work, so
+    # measuring at the tip would stale the honest APPROVE that had to precede it
+    # and RULING-7 would be unpassable for every WI. The peel and the fold are
+    # composed in `kitlib.verdict.governing_identity`, which is the SAME call
+    # `agent_loop.review_owed_by_evidence` makes — one definition includes the
+    # rev it is measured at, or the two readers disagree across a refresh.
+    want = kverdict.governing_identity(root, branch)
+    code, base = ac.git(root, "merge-base", _head(root) or "HEAD", branch)
+    if want is None or code != 0 or not base.strip():
+        return (
+            "cannot resolve {}'s reviewed tree against the trunk (git could not "
+            "answer) - fail closed".format(branch)
+        )
+    entries = (
+        kverdict.branch_entries(
+            root, branch, base.strip(), want, score_reviews.parse_verdict
+        )
+        or []
+    )
+    # THE WINDOW IS POLICY-1 ONLY, and the narrowing is a rule rather than an
+    # oversight: a legacy rollup is ONE hand-authored document, so honouring it
+    # at `review-policy = 2` would clear both declared phases on a single
+    # author's word - the "gate cleared on a SINGLE reviewer" class closed at
+    # round 030, re-entered through the deprecated path. An adopter at policy 2
+    # has no window; they draw real rounds. Said here, in `_legacy_rollup_
+    # refusal`, and in the RESYNC_PACK entry that promises the window, so the
+    # shipped narrowing and the promise cannot disagree (REVIEW-A round 033).
+    if not entries and required == 1:
+        for wi in merged:
+            refusal = _legacy_rollup_refusal(root, branch, wi, want)
+            if refusal:
+                return refusal
+        return None
+    return _round_refusal(root, branch, base.strip(), want, entries, required)
+
+
+def _round_refusal(root, branch, base, want, entries, required):
+    """What the governing rounds at `want` MEAN for a merge — a refusal, or None.
+
+    Split off `_verdict_gate` so the ladder there stays a ladder: this is the
+    one place that reads a verdict SET rather than a dial, and its four
+    answers (missing required phase, dissent, reroll-until-green, a
+    contradicted attestation) are all about the same set."""
+    latest, flipped = score_reviews.latest_phase_verdicts(entries, required)
+    dissent = sorted(ph for ph, word in latest.items() if word != "APPROVE")
+    if dissent or not latest:
+        return "{}: the governing round(s) at this tree are not an APPROVE ({})".format(
+            branch, ", ".join(dissent) or "no parseable verdict"
+        )
+    if flipped:
+        return (
+            "{}: {} re-ran at this same tree until it approved - a reroll-until-"
+            "green is escalated, never honoured".format(
+                branch, ", ".join(sorted(flipped))
             )
+        )
+    # The machine half, read as a CROSS-CHECK and never as an accept path (see
+    # kitlib.verdict.branch_trailers): a verified trailer that names the tree
+    # under judgement and contradicts the rounds is a forged or mis-stamped
+    # attestation, and a merge slot that saw it and merged anyway would be
+    # trusting the summary over the evidence all over again.
+    #
+    # THE NEWEST attestation at this tree, which is what the sequence exists to
+    # make explicit. A re-drawn round at one tree stamps a second trailer, and
+    # its predecessor is a superseded tally, not a contradiction - reading it
+    # accused an honestly-approved lane of forgery (REVIEW-A round 007). A
+    # verdict that FLIPPED at one tree is a different thing and is already
+    # refused above, from the evidence, by `flipped`.
+    #
+    # A stamp BELOW the evidence is a MISSED stamp, not a contradiction, and
+    # only a differing WORD or a count ABOVE the evidence can be a forgery. The
+    # writer is `agent_common.commit_telemetry`, documented best-effort - "a
+    # hook veto ... never fatal" - so a second honest round at one governing
+    # tree can leave the newest attestation reading rounds=N-1 while the round
+    # files read N. Refusing that pair parked an approved lane at the OI-76
+    # supervisor stop, re-created by the cross-check meant to prevent it, in the
+    # one case `branch_trailers` calls normal (REVIEW-A round 033). An
+    # attestation cannot UNDERSTATE its way into clearing a gate it would not
+    # otherwise clear; the direction that can is claiming rounds nobody drew.
+    attested = (kverdict.branch_trailers(root, branch, base) or {}).get(want) or []
+    stamped = attested[-1] if attested else None
+    evidence_count = kverdict.round_count(entries)
+    if stamped is not None and (stamped[0] != "APPROVE" or stamped[1] > evidence_count):
+        return (
+            "{}: the Review-Verdict trailer for this tree says {} rounds={} "
+            "while the round files say APPROVE rounds={} - the attestation "
+            "claims what the evidence does not".format(branch, *stamped, evidence_count)
+        )
     return None
 
 
@@ -2290,7 +2362,7 @@ def refresh(root, branch, tier):
         "--allow-empty",
         "-m",
         "{}{}\n\nThe §A2 station refresh: trunk merged in, the §5.1 fragment compile and\n§5.2 regeneration folded on, and the declared bar run on THIS tree. The\ntrailer NAMES what it attests - the tree the bar saw and the work commit it\nsits on - so the merge slot verifies both against git instead of trusting a\nmessage. A --no-ff merge of a branch that contains trunk reproduces this\ntree byte for byte, which is why no second bar is owed at the slot.\n\n{} tree={} work={} {}".format(
-            _refresh_subject(branch),
+            kverdict.refresh_subject(branch),
             trunk[:10],
             BAR_GREEN,
             tree.strip(),

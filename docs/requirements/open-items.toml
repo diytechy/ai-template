@@ -3290,3 +3290,17 @@ status = "pending"
 raised = "2026-09-02"
 one_line = "WI-572 moved the first-approval act to the adjudicator and filtered the minted population by the human-approval dial at both adjudication ends (intake's mint and adjudicate_brief's composition, through agent_common.human_approves_spine). The plan's §2a table row 'Surfaces to the owner' says rows on a RELEASED rung no longer surface to the owner - but trace.py --approve modified still renders every Drafted chain, held or released, and calls human_approves_spine nowhere. Should the owner's approval brief narrow to the rungs the dial still HOLDS (so a sitting shows only what the owner actually owes a signature on), or keep rendering every Drafted chain (so the owner retains sight of what adjudicators are approving on their behalf)? WI-572 deliberately did not decide this: it changes what the owner sees at a sitting, which is the owner's call and not a side effect of moving who acts."
 wi_refs = ["WI-577"]
+
+[open_item.OI-83]
+title = "A long-lived coordinator executes the modules it imported at launch, so a lane's own fix to the loo…"
+status = "pending"
+raised = "2026-09-03"
+one_line = "A long-lived coordinator executes the modules it imported at LAUNCH, from whatever checkout its argv named - so a lane's own fix to agent_loop.py cannot take effect in that lane, and a process running for nine hours can be arbitrarily far behind the tree it is building. Nothing detects it. Surfaced by WI-579 REVIEW-A round 033, where working code was reported as a BLOCKER on the strength of a live run that had never loaded it: the writer was sound and the running process predated it. Should the coordinator re-exec (or refuse to continue) when the modules it launched from have moved under it, or is a stated operating rule enough?"
+wi_refs = ["WI-579"]
+
+[open_item.OI-84]
+title = "agent_loop.default_base merge-bases to HEAD when the primary checkout IS the lane branch, so a resu…"
+status = "pending"
+raised = "2026-09-03"
+one_line = "agent_loop.default_base merge-bases to HEAD whenever the primary checkout IS the lane branch (its own docstring names the single-checkout attended run and the test fixtures), so a RESUMED run of that shape scans an EMPTY base..HEAD and every reader of train_evidence goes blind at once. WI-579 round 034 fixed ONE symptom at its call site - resume_owed_round dropped a genuinely parked review round and ran another BUILD instead, the C2 contract inverted - by having review_owed_by_evidence answer None for 'cannot say' and re-asking at the base the owed-marker carries. Three other readers were left: worker_exit's DONE banner reports nothing built, schedule_review_round never draws a fresh round on a complete train, and current_assignment_wi reads every assigned WI as remaining and re-claims one already built. Should the base be made durable for a resumed worker (the claim's integration base, recorded rather than re-derived), or should each reader carry the blindness the way round 034's did?"
+wi_refs = ["WI-579"]

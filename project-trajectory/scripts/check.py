@@ -260,6 +260,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "open-items",
         "component-view",
         "cli-reference",
+        "verdict-rollup",
         "interface-reference",
         "okf",
         "approval-fresh",
@@ -701,6 +702,15 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         [sys.executable, str(catalog_gen), "--check"]
         if catalog_gen.exists()
         else [sys.executable, "-c", "pass"]  # kit-only generator absent: vacuous
+    )
+    rollup_gen = _SCRIPTS / "gen_verdict_rollup.py"
+    verdict_rollup_cmd = (
+        # `--root` is left at its cwd default, like every other generated-
+        # freshness step here (`gen_open_items.py --check`, ...): check.py runs
+        # from the repository root by contract.
+        [sys.executable, str(rollup_gen), "--check"]
+        if rollup_gen.exists()
+        else [sys.executable, "-c", "pass"]  # generator absent: vacuous
     )
     return [
         # --- product checks: language-specific, declared in docs/stack.ini -----
@@ -1153,6 +1163,22 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_NEEDS,
             "process",
         ),
+        # The per-review-scope verdict rollup (OI-76). SN-010 is a universal
+        # over the `[generated]` declaration — an artifact declared generated
+        # with nothing holding it fresh makes the universal false — and this one
+        # earns the gate on its own terms besides: it is a HUMAN'S reading of
+        # whether a lane was reviewed, so a stale one invites exactly the wrong
+        # conclusion about exactly the question the merge gate answers
+        # mechanically. It joins `_TRUNK_FRESHNESS_STEPS` with its siblings: a
+        # work branch never commits one, the trunk step regenerates it after the
+        # merge that brought the round files in.
+        (
+            "verdict-rollup",
+            (),
+            verdict_rollup_cmd,
+            _kitladder.STAGE_NEEDS,
+            "process",
+        ),
         # Staged-vs-worktree divergence (OI-31, ruled option (b) 2026-08-18):
         # every step above asks whether the artifact ON DISK matches its
         # regeneration; this one asks whether the artifact on disk is the one
@@ -1527,7 +1553,7 @@ _COVERAGE_ENV_VARS = (
 # be asked to commit the derived block.
 _TRUNK_FRESHNESS_STEPS = frozenset(
     "derived-stage trajectory-map status-map open-items component-view okf "
-    "approval-fresh cli-reference interface-reference".split()
+    "approval-fresh cli-reference interface-reference verdict-rollup".split()
 )
 
 # `_work_branch` shells out to git; unmemoized it would run once per step. Keyed

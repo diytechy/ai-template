@@ -1,0 +1,39 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 036
+# date: 2026-09-03 06:38
+# train: wi-579-the-verdict-carrier-and-the-ad
+# base: 0ecc62bbc55a
+# phase: REVIEW-A
+# wi: WI-579
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 3d700242..14bfe685
+# tokens:
+# cost-usd:
+# wall-secs: 272
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4558
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:f2860d64cf7d
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+CHANGES-REQUESTED — 1 MINOR finding recorded and committed.
+
+Verdict: [036-REVIEW-A-eb4ee91.md](/Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad/docs/reviews/wi-579-the-verdict-carrier-and-the-ad/036-REVIEW-A-eb4ee91.md)
+
+Commit: `14bfe685 review: WI-579 REVIEW-A round 036`
+
+Validation observed: `check.py --jobs 0` ended `RESULT: PASS`; strict trace ended with `integrity=0`. The shipped rollup flow reproduced the nested-output gap.

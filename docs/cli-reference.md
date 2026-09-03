@@ -387,6 +387,14 @@ Contracts (interfaces): IF-011
 | `--check` | validate + verify freshness without writing (nonzero on stale/invalid). Missing-target posture (C9): a fully-generated output, so a missing file reads as stale — unlike arch-map, whose hand-authored target must exist |
 | `--status` | splice the derived-facts snapshot (spine + derived stage + open-items one-liners) into docs/status.md instead of rendering the dashboard; with --check, byte-compare it for freshness (the WI-200 forward-only guard's successor). Vacuous without the marker pair. The pending-owner-actions projection moved to gen_open_items.py with WI-322 — this still DERIVES it (`pending_block`), that renders it. |
 
+### `scripts/gen_verdict_rollup`
+_Generate the per-review-scope verdict rollups — `docs/reviews/rollup/<train>.md`._
+
+| Option | Help |
+|---|---|
+| `--root` | repository root (default: cwd) |
+| `--check` | exit 1 if any rollup is stale |
+
 ### `scripts/hats`
 _hats.py — the HATS ROSTER reader: which declared expert perspectives apply to_
 

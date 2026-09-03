@@ -1,0 +1,49 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 023
+# date: 2026-09-03 02:37
+# train: wi-579-the-verdict-carrier-and-the-ad
+# base: 0ecc62bbc55a
+# phase: DESIGN-CHECK
+# wi: WI-579
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: 8a94564d..1a9787cd
+# tokens:
+# cost-usd:
+# wall-secs: 2358
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 10760
+# prompt-template: kit:DESIGN-CHECK
+# prompt-sha: sha256:8811ae1cfc57
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+WI-579 rework is complete and committed.
+
+- `review_rounds = 2` now requires governing REVIEW-A and REVIEW-B approvals; one approval is refused.
+- Added the policy-2 regression and preserved the policy-1 legacy path.
+- Corrected LLR-207 to describe raw byte entries with no decoding.
+- Refreshed the approval brief and WI records.
+- Antidote guided reuse of the existing verdict scorer, avoiding complexity/module-size baseline increases.
+
+Verification:
+
+- Smoke: 1508 passed, 8 skipped.
+- Budget: 46.3s / 60s.
+- Docs: 0 broken links.
+- Full: 3347 passed, 24 skipped, 1 expected generated-stage failure owned by trunk regeneration.
+- Worktree clean; protected coordination/generated files untouched.
+
+Commits: `c939d49c`, final `1a9787cd` with `WI: WI-579`.

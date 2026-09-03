@@ -753,11 +753,16 @@ def test_a_changes_requested_verdict_refuses(tmp_path):
     assert "CHANGES-REQUESTED" in refusal
 
 
-def test_an_approve_that_predates_a_later_code_commit_is_stale(tmp_path):
-    # The §5.4 hole this closes: under WI-scoped verdict naming the FILENAME no
-    # longer binds a verdict to a revision, so freshness is git-derived. An
-    # APPROVE from an earlier iteration, with real code committed after it, is
-    # exactly the stale pass that would silently clear the gate.
+def test_an_approve_that_did_not_judge_this_tree_does_not_count(tmp_path):
+    # GOVERNING = TREE IDENTITY (OI-76, ruled 2026-08-31). This used to be a
+    # TIME comparison — "the verdict's commit is no older than the branch's last
+    # non-record commit" — and the ruling dissolved it into an identity: a
+    # verdict names the tree it judged or it does not count. The observable
+    # behaviour on THIS input is unchanged (real code committed after the
+    # APPROVE is the stale pass that must not clear the gate); what changed is
+    # that there is no longer an ordering rule to get wrong, so the case where
+    # the old comparison silently promoted a stale APPROVE — a re-run round
+    # after a trivial edit — cannot arise.
     root = verdict_repo(tmp_path, policy="1")
     write_verdict(root, VERDICT_APPROVE, when=T_VERDICT)
     (root / "src" / "widget.py").write_text(
@@ -767,15 +772,28 @@ def test_an_approve_that_predates_a_later_code_commit_is_stale(tmp_path):
 
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
-    assert "predates the branch's last code commit" in refusal
+    assert "does not name the branch's current tree" in refusal
 
 
-def test_an_approve_committed_after_the_last_code_commit_passes(tmp_path):
-    # The green path of the same rule — asserted alongside the stale case above
-    # so the freshness comparison is proven to have two answers, not one.
+def test_an_approve_that_names_the_current_tree_passes(tmp_path):
+    # The green path of the same rule — asserted alongside the case above so the
+    # identity is proven to have two answers, not one.
     root = verdict_repo(tmp_path, policy="1")
     write_verdict(root, VERDICT_APPROVE, when=T_VERDICT)
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
+
+def test_the_legacy_rollup_path_warns_while_it_clears(tmp_path, capsys):
+    # THE MIGRATION WINDOW (the plan's §6). An adopter holding a hand-authored
+    # rollup keeps merging — and hears about it. The WARN is the whole point of
+    # the window: a deprecation nobody is told about is a deprecation that never
+    # happens, and this is the path an adopter is actually on.
+    root = verdict_repo(tmp_path, policy="1")
+    write_verdict(root, VERDICT_APPROVE, when=T_VERDICT)
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+    err = capsys.readouterr().err
+    assert "LEGACY hand-authored rollup" in err
+    assert "migration window" in err
 
 
 def test_a_later_log_fragment_commit_does_not_stale_a_good_verdict(tmp_path):

@@ -1,0 +1,41 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 002
+# date: 2026-09-02 21:31
+# train: wi-579-the-verdict-carrier-and-the-ad
+# base: 0ecc62bbc55a
+# phase: REVIEW-A
+# wi: WI-579
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 39f80127..f9d77e7b
+# tokens:
+# cost-usd:
+# wall-secs: 235
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4558
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:d9f7c82e2198
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+CHANGES-REQUESTED — 3 findings recorded and committed in [002-REVIEW-A-0c7cb4e.md](/Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad/docs/reviews/wi-579-the-verdict-carrier-and-the-ad/002-REVIEW-A-0c7cb4e.md).
+
+Commit: `f9d77e7b review: record WI-579 review A verdict`
+
+Verified:
+- `check.py --jobs 0`: PASS
+- `trace.py --strict-integrity`: final trace summary produced
+- Focused suite: 75 passed
+- Reproduced the loop/gate evidence disagreement and trailer-count bypass.

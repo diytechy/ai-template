@@ -1,0 +1,48 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 003
+# date: 2026-09-02 21:53
+# train: wi-579-the-verdict-carrier-and-the-ad
+# base: 0ecc62bbc55a
+# phase: DESIGN-CHECK
+# wi: WI-579
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: 90a57eb7..41b84e93
+# tokens:
+# cost-usd:
+# wall-secs: 1255
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 7778
+# prompt-template: kit:DESIGN-CHECK
+# prompt-sha: sha256:fed0d9f811a1
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Completed WI-579 rework and left the branch clean.
+
+- Unified loop and gate evidence through branch-scoped, logged-review entries.
+- Enforced tree-scoped `rounds=N` trailer counts.
+- Added BUILD-session, count-mismatch, dual-review, and rework-reset regressions.
+- Removed provenance from LLR-207’s rationale.
+- Focused tests: 34 passed.
+- Smoke bar: 1500 passed, 8 skipped; 39.4s/60s.
+- Full suite: 3339 passed, 24 skipped, 1 known trunk-owned `docs/stage` freshness failure.
+
+Final commits:
+
+- `f418cba1` — implementation and regressions
+- `41b84e93` — verification record
+
+Both carry `WI: WI-579`.

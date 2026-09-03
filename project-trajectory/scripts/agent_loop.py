@@ -180,6 +180,12 @@ except ImportError:  # pragma: no cover - in-process fallback
     import prompts
     import score_reviews
 
+# The verdict record's one home (OI-76): the non-record tree identity, the
+# `Review-Verdict:` trailer grammar and the round-file/session-log join. Read
+# here for the C2 review-owed derivation and by `integrate._verdict_gate` for
+# the merge slot's — one definition, two readers, which is the whole point.
+from kitlib import verdict as kverdict
+
 # The WI-218 split: the session-launch layer (slice B), the shared coordinator
 # primitives + the dual-plan runner (slice C), and (until Phase 5) the parallel dispatcher/
 # integrator (slice D) live in their own modules. These bindings keep
@@ -1193,13 +1199,29 @@ class RoutingState:
         — one review scope covers the combined train, not a per-WI slice."""
         self.impl_range = rng
 
-    def schedule_review_round(self):
-        """Queue a fresh review round (REVIEW-A, plus REVIEW-B at policy >= 2)
-        and return the queue list for the caller's dispatch log. Called only
-        when the caller's schedule_review condition holds, as today."""
+    def schedule_review_round(self, phases):
+        """Queue `phases` as a review round and return the queue list for the
+        caller's dispatch log. Called only when the caller's schedule_review
+        condition holds, as today.
+
+        `phases` is EXPLICIT and REQUIRED, which is the whole content of the
+        argument. A fresh round passes `kverdict.declared_phases(self.rp_int)`;
+        a RESUME passes the owed subset `review_owed_by_evidence` named, because
+        the queue is in-memory and a run that died mid-round leaves phases
+        served on disk that this state knows nothing about — queuing the full
+        set would redraw one, and completing the same round is the point.
+
+        It used to default to None and fall back to the declared set, which made
+        "the caller named nothing" and "the evidence owes nothing" ONE falsey
+        value: a resume holding a stale `out/review-owed` marker over complete
+        evidence passed `[]` and got every declared phase redrawn — the
+        duplicate-round class WI-560 Done-when 1 claims to make unrepresentable,
+        re-entered through an optional argument (REVIEW-A round 033). An empty
+        list now means an empty round, so the two states cannot share a value
+        and no caller has to guard the fallback."""
         self.round_verdicts = []
         self.round_relaxed = False  # C5: a fresh round starts cross-family
-        self.review_queue = ["REVIEW-A"] + (["REVIEW-B"] if self.rp_int >= 2 else [])
+        self.review_queue = list(phases)
         return list(self.review_queue)
 
     def schedule_critique(self, in_scope, limit, exhaustion):
@@ -1385,7 +1407,9 @@ def classify_outcome(reset_hint, timed_out, state, committed, data, exit_code):
     return outcome, errored
 
 
-def worker_endstate(root, worker, review_open, managed, rp_int, allow_block_exit=True):
+def worker_endstate(
+    root, worker, review_open, managed, rp_int, allow_block_exit=True, rounds=()
+):
     """(exit_code, label, detail) when the assignment reached an end state,
     else None — judged ONLY from committed evidence + in-process queues:
     EXIT_BLOCKED when a Blocked-WI trailer names an assigned WI (the
@@ -1399,7 +1423,22 @@ def worker_endstate(root, worker, review_open, managed, rp_int, allow_block_exit
     (the resumed worker's FIRST session, before it has run) declines to
     short-circuit on a PRE-EXISTING block so the worker gets its one chance to
     cure it; a block that still stands is honored by the post-session check
-    (default True) or the next iteration."""
+    (default True) or the next iteration.
+
+    `rounds` is the round records this run actually COMPLETED (`st.rounds`), and
+    the banner states what that tally carries rather than inferring it from the
+    dial. It used to read "review round approved" whenever managed routing ran
+    at policy >= 1 — true of a build, and false of every adjudication, which
+    drew no round at all; three lanes on the 2026-08-31 run exited DONE claiming
+    an approval nobody had given (WI-559 DW2, the plan's finding A). A banner is
+    a claim about what happened, so it counts — and by the same rule it says
+    DRAWN THIS RUN plus the latest verdict, never "N approved": every completed
+    round is appended regardless of its merged verdict, so a lane that took a
+    CHANGES-REQUESTED round, reworked and then passed would have reported two
+    approvals for one (REVIEW-A round 007, finding 4). The tally is in-process,
+    so "this run" is also the honest scope: a resumed run that redraws nothing
+    reports no round, and the branch's committed round files — not this banner —
+    are what the merge slot reads."""
     built, blocked_map = train_evidence(root, worker["base"])
     hit = [w for w in worker["assigned"] if w in blocked_map]
     if hit:
@@ -1428,13 +1467,17 @@ def worker_endstate(root, worker, review_open, managed, rp_int, allow_block_exit
         return None
     if substantive_working_tree_dirty(root):
         return None  # committed evidence only — a dirty tree (owner-only exempt) is not done
+    reviewed = managed and rp_int >= 1
+    note = "; no review round was drawn this run" if reviewed else ""
+    if reviewed and rounds:
+        note = "; {} review round(s) drawn this run, latest verdict {}".format(
+            len(rounds), rounds[-1].get("verdict") or "unrecorded"
+        )
     return (
         EXIT_DONE,
         "DONE",
         "every assigned WI ({}) carries its trailer commit on branch {}{}".format(
-            ";".join(worker["assigned"]),
-            worker["train"],
-            "; review round approved" if managed and rp_int >= 1 else "",
+            ";".join(worker["assigned"]), worker["train"], note
         ),
     )
 
@@ -2491,6 +2534,33 @@ def apply_rework_scope(worker, st, merged):
         worker["rework_wi"] = ""
 
 
+def review_verdict_trailer(root, merged, worker):
+    """The round's `Review-Verdict:` line, or None when there is nothing to
+    attest (no merged verdict, or git cannot name the tree).
+
+    THE TREE IS THE ONE THE TWO READERS KEY ON — `governing_identity` at the
+    lane's BRANCH, the same call `review_owed_by_evidence` and
+    `integrate._verdict_gate` make. It was `tree_identity(root, "HEAD")`, which
+    is right only while no station refresh sits below the tip: the fold drops
+    `docs/reviews/`, so the round file the reviewer just added does not move the
+    identity, but the refresh does, and the peel is what the readers apply to
+    it. Stamping the unpeeled value filed the attestation under a key
+    `integrate._round_refusal` never looks up, so the cross-check silently stood
+    down on exactly the branches that had been refreshed (REVIEW-A round 015).
+    The fail-direction was safe — a trailer is never an accept path — but a
+    third place choosing its own rev is the finding IF-175's contract names.
+
+    WHY THE COORDINATOR WRITES IT. A trailer a reviewer could stamp on its own
+    commit attests nothing the round file did not already claim; what makes this
+    one evidence is the same thing that makes the session log evidence — it is
+    written by the process that ROUTED the round, after the round completed."""
+    if not worker:
+        return None
+    return kverdict.format_branch_trailer(
+        root, worker["train"], worker["base"], merged, score_reviews.parse_verdict
+    )
+
+
 def complete_review_round(ctx, session):
     """The round is full: merge, score, record, escalate, and apply. Returns an
     int exit code (a page-human) or None."""
@@ -2527,8 +2597,23 @@ def complete_review_round(ctx, session):
         pass
     # The scoreboard is coordinator-written state too — commit it in its own
     # telemetry commit the moment the round records (WI-137), not on the next
-    # session's commit.
-    commit_telemetry(ctx.root, session, "review scoreboard", [scoreboard])
+    # session's commit. That commit also carries the round's MACHINE HALF: the
+    # `Review-Verdict:` trailer naming the tree this round judged (OI-76's
+    # alternative C, the `Bar-Green:` pattern). It is written HERE, by the
+    # coordinator, and never by a session — see `review_verdict_trailer`.
+    #
+    # A round that derives NO attestation is SAID SO, once, on stderr. The gate
+    # cannot report it: a missing trailer is never a refusal (it is additive,
+    # and an adopter's loop may write none), so absence is exactly the state the
+    # cross-check must stand down on — which means a writer that quietly stops
+    # writing is invisible everywhere else in the system. It is not a normal
+    # state here: the reviewer's own round file and the coordinator's session
+    # log are both committed by the time this runs, so a None means the evidence
+    # could not be read at all, which is worth a line and is not worth a stop.
+    trailer = review_verdict_trailer(ctx.root, merged, ctx.worker)
+    if trailer is None:  # a LINE, never a stop: the gate reads the round FILES
+        print("review round: no Review-Verdict attestation derived", file=sys.stderr)
+    commit_telemetry(ctx.root, session, "review scoreboard", [scoreboard], trailer)
     print(
         "review round: merged={} margin={:.2f} tripwires={} heterogeneity={} "
         "(advisory scoreboard {})".format(
@@ -2660,11 +2745,86 @@ def schedule_review_round(ctx, after):
     if not all(w in built_now for w in worker["assigned"]):
         return
     st.set_train_range("{}..{}".format(worker["base"], after))
-    queued = st.schedule_review_round()
+    queued = st.schedule_review_round(kverdict.declared_phases(ctx.rp_int))
     print(
         "dispatch: review-policy {} -> scheduling review round {} "
         "over the whole train diff".format(ctx.rp_int, queued)
     )
+
+
+def dispositions_drafted(root, wi):
+    """The `safety_class` of every successor the adjudication `wi` drafts in its
+    `## Dispositions`, read from THIS LANE'S OWN TREE.
+
+    Searched across `agent_common.SPEC_HOMES` because a session that ran its
+    close ritual has already moved the spec out of `active/`, and the drafts it
+    wrote are exactly what decides whether its verdict earns a round. WHICH copy
+    wins when the branch carries both is `agent_common.authoritative_spec`'s to
+    say, not this function's: the merge slot asks the same question of the same
+    branch, and a second precedence order here would let the two disagree.
+
+    An unreadable spec, or one whose `## Dispositions` will not parse, answers
+    `["spine"]` — a sentinel that reads as REVIEW OWED. That is the same
+    fail-direction the merge slot's `_verdict_owed` takes, and it has to be: a
+    round drawn where none was needed costs one session, where a round silently
+    skipped over an unreadable mint costs the second opinion entirely."""
+    import intake  # a sibling reader; deferred so a non-adjudicating run pays nothing
+
+    found = {}
+    for home in agent_common.SPEC_HOMES:
+        for hit in (Path(root) / home).rglob(wi + "-*.md"):
+            found[hit.relative_to(Path(root)).as_posix()] = hit
+    chosen = agent_common.authoritative_spec(found)
+    if chosen is None:
+        return ["spine"]
+    try:
+        text = found[chosen].read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return ["spine"]
+    drafts, refusal = intake.parse_dispositions(text, found[chosen].name)
+    if refusal:
+        return ["spine"]
+    # `kind`: `parse_dispositions` normalizes the declared `safety_class` cell
+    # into it (see `integrate._verdict_owed`).
+    return [d.get("kind") for d in drafts]
+
+
+def schedule_adjudication_round(ctx, plan, commits, after, wi_label):
+    """WI-559 DW2: a committing ADJUDICATE session schedules its review round
+    exactly as a committing BUILD does — WHEN THE DIAL SAYS ONE IS OWED.
+
+    Before this, `ADJUDICATE` sat in `NON_BUILD_PHASES` and no round was ever
+    scheduled after a judgement, while `integrate._verdict_gate` demanded one
+    from every merged WI. Three lanes on the 2026-08-31 run exited DONE
+    reporting "review round approved" with no round drawn, and every
+    adjudication merge was a supervisor stop.
+
+    THE PHASE STAYS IN `NON_BUILD_PHASES` and the DIAL decides (the plan's §3.2):
+    an adjudication is still not a build — it must not take the build tier, the
+    critique scheduling or the `on_committed_build` family bookkeeping's build
+    semantics — so widening that set would have bought the round by asserting
+    something false. `agent_common.adjudication_review_owed` is the reader the
+    merge gate shares, so the round the loop draws and the verdict the gate
+    demands can never come apart."""
+    st = ctx.run.routing
+    if ctx.rp_int < 1 or not ctx.worker:
+        return False
+    drafts = dispositions_drafted(ctx.root, wi_label) if wi_label else ["spine"]
+    if not agent_common.adjudication_review_owed(ctx.docs, plan.get("brief"), drafts):
+        print(
+            "dispatch: adjudication review not owed "
+            "([attestation] adjudication_review = {!r}) -> no round".format(
+                agent_common.adjudication_review(ctx.docs)
+            )
+        )
+        return False
+    # The judge is the implementer for C5's purposes: the round must be drawn
+    # from a family that did not rule, exactly as a build's round must not come
+    # from the family that built. `on_committed_build` is also what gives a
+    # CHANGES-REQUESTED verdict a rework scope to send the work back to.
+    st.on_committed_build(plan["route_family"], wi_label, commits)
+    schedule_review_round(ctx, after)
+    return True
 
 
 def schedule_critique_round(ctx, commits):
@@ -2724,6 +2884,11 @@ def build_bookkeeping(ctx, plan, outcome, code, commits, after, wi_label, now):
         st.on_committed_build(plan["route_family"], wi_label, commits)
         schedule_review_round(ctx, after)
         schedule_critique_round(ctx, commits)
+    elif outcome == "COMMITTED" and phase == "ADJUDICATE":
+        # A judgement is not a build (it stays out of the set above), but a
+        # committing one owes its round on exactly the same terms — under the
+        # dial that decides whether a second opinion is earned (WI-559 DW2).
+        schedule_adjudication_round(ctx, plan, commits, after, wi_label)
     elif phase == "DESIGN-CHECK":
         # The design-check ruling has run (its verdict is in the commit / log);
         # resume building. Without a tracked run-phase this reset is in-process
@@ -3203,22 +3368,84 @@ def read_review_owed(root):
     return fields
 
 
-def review_owed_by_evidence(root, worker, reviews_dir):
-    """COMMITTED evidence that a review round is owed: every assigned WI
-    carries its trailer on the branch, and no round verdict names the
-    current HEAD. This is what a resumed worker trusts (a worker reads
-    committed facts, never run-state) — the out/review-owed marker only adds
-    advisory fields. A verdict for HEAD, of either outcome, means the round
-    was served; a rework commit moves HEAD and owes a fresh one."""
+def review_owed_by_evidence(root, worker, required=1):
+    """COMMITTED evidence of which review PHASES are owed: the declared phases
+    with no round verdict naming the branch's current NON-RECORD TREE, once
+    every assigned WI carries its trailer on the branch. Empty means none —
+    the falsey answer every caller's `not ...` already read. This is what a
+    resumed worker trusts (a worker reads committed facts, never run-state) —
+    the out/review-owed marker only adds advisory fields. A verdict for a
+    phase, of either outcome, means that phase was served; a rework commit
+    changes the tree and owes the whole set again.
+
+    A PHASE LIST AND NOT A FLAG, because the merge slot demands EVERY declared
+    phase (round 022) and the phase queue is in-memory run state: a run that
+    died between REVIEW-A and REVIEW-B left REVIEW-A served, this derivation
+    answered "nothing owed" on the strength of it, and the lane wedged against
+    a gate refusing the phase nobody would draw. Handing back the missing
+    phases lets `resume_owed_round` redraw exactly those — never a phase
+    already served at this identity, whose redraw the gate would read as a
+    reroll-until-green. `kitlib.verdict.phases_owed` holds the rule.
+
+    THE SAME DEFINITION THE MERGE SLOT USES (WI-560 DW1), and it had to become
+    so. This asked "does a round file name HEAD's short sha?" while
+    `integrate._verdict_gate` asked a freshness question over a tree with
+    `docs/reviews` and `docs/log.d` removed — two rules for one question, and
+    the gap between them is a measured defect: on WI-547 the loop's OWN
+    `telemetry:` and `scoreboard` commits moved HEAD past a verdict nothing had
+    invalidated, this derivation re-fired, and two identical `APPROVE
+    findings=0` rounds were drawn. `kitlib.verdict.tree_identity` excludes those
+    record paths for both readers, so the double-identical-round class is not
+    merely unlikely here — it is unrepresentable, because the commits that
+    caused it cannot change the identity either reader compares.
+
+    THE REV IS PART OF THAT DEFINITION, which is why this calls
+    `governing_identity(branch)` and not `tree_identity(HEAD)`. A station
+    refresh is bookkeeping the merge slot PEELS, so measuring at HEAD made the
+    two readers disagree across exactly one commit class: on a refreshed branch
+    this answered "owed" while the gate was already satisfied, and the resumed
+    lane drew a strong-tier round whose file the gate would not even read
+    (REVIEW-A round 007, finding 2). The branch, not `HEAD`, because the peel
+    verifies a refresh commit against the branch it names.
+
+    OFF GIT, every declared phase is OWED: `tree_identity` answers None when git
+    cannot say, and a derivation that cannot prove a verdict was served must not
+    assume one was.
+
+    THREE ANSWERS, NOT TWO. `None` means THIS DERIVATION CANNOT SAY — the
+    train's own build trailers are not in `base..HEAD`, so there is no evidence
+    here to read either way; `[]` means read it and nothing is owed; a list
+    names the phases. They were one falsey value, and a caller that reads "the
+    evidence owes nothing" off a scan that never saw the evidence is not
+    reading evidence at all: `default_base` merge-bases to HEAD whenever the
+    primary checkout IS the lane branch (its own docstring says so — a
+    single-checkout attended run), so on a RESUMED run of that shape the range
+    is empty, every assigned WI reads unbuilt, and a genuinely parked round
+    answered "nothing owed" (found by the unfiltered suite at REVIEW-A round
+    034, five commits after the round-033 rework that introduced it).
+
+    This is round 033 finding 2's own antidote applied one level down. That
+    finding split "the caller named nothing" from "the evidence owes nothing"
+    in `schedule_review_round`; the same two-states-one-value defect was left
+    HERE, one call deeper, and closing it there is what made it reachable."""
     if not worker:
-        return False
+        return []
     built, _blocked = train_evidence(root, worker["base"])
     if not all(w in built for w in worker["assigned"]):
-        return False
-    head = (head_sha(root) or "")[:7]
-    if not head:
-        return False
-    return not any(Path(reviews_dir).glob("*-REVIEW-?-{}*.md".format(head)))
+        return None
+    want = kverdict.governing_identity(root, worker["train"])
+    if want is None:
+        return kverdict.phases_owed((), required)
+    entries = kverdict.branch_entries(
+        root,
+        worker["train"],
+        worker["base"],
+        want,
+        score_reviews.parse_verdict,
+    )
+    # An unreadable path set answers None, which folds into the same
+    # everything-is-owed direction as an unreadable identity above.
+    return kverdict.phases_owed(entries or (), required)
 
 
 def last_build_family(iter_dir, registry):
@@ -3242,22 +3469,66 @@ def last_build_family(iter_dir, registry):
     return None
 
 
-def resume_owed_round(root, setup, st, rp_int, iter_dir, reviews_dir):
+def resume_owed_round(root, setup, st, rp_int, iter_dir):
     """C2 resume: a parked review-owed lane owes its ROUND, not another
     build. Owed-ness is decided from committed evidence (the marker alone is
     not trusted — its write can fail); the family comes from the marker when
     it survived, else from the build's own session log, so C5's relaxed audit
-    trail survives the restart either way."""
+    trail survives the restart either way.
+
+    It RESUMES the round rather than starting a second one: the evidence names
+    the phases still missing at this identity and only those are queued, so a
+    policy of N is still N reviewer sessions over one tree (LLR-045) however
+    many runs it took to draw them. Redrawing a served phase instead would
+    re-run a reviewer that already spoke here — and if it had DISSENTED, the
+    second draw reads as a reroll-until-green to `integrate._round_refusal`.
+
+    THE EVIDENCE DECIDES, ALONE. The marker was an OR-arm here — a resume
+    proceeded when it existed OR the evidence owed something — so a surviving
+    `out/review-owed` over complete evidence scheduled a round anyway, and the
+    empty owed list then meant "caller named nothing" to the scheduler and
+    redrew EVERY declared phase (REVIEW-A round 033). It is reachable on the
+    shipped path: `clear_review_owed` fires inside `complete_review_round`,
+    which runs only after the last reviewer session has already committed its
+    verdict file, so a run killed in that window leaves marker-present with
+    evidence-complete. That is the same defect `write_review_owed`'s own
+    docstring rules out ("the marker is deliberately NOT the durable
+    evidence"), and it is closed the same way: the marker contributes its
+    ADVISORY fields and nothing else.
+
+    WHICH INCLUDES ITS `base`, and that is not a relapse. Making the evidence
+    the only trigger exposed the case where there is no evidence to trigger on:
+    `default_base` merge-bases to HEAD when the primary checkout is the lane
+    branch, so a resumed run of that shape scans an EMPTY range and
+    `review_owed_by_evidence` cannot say (it answers None). Answering "nothing
+    owed" for it dropped a genuinely parked round and ran another BUILD — the
+    C2 contract inverted, red on this branch for five commits and invisible to
+    the smoke tier (REVIEW-A round 034). The marker's `base` field re-points
+    the SAME derivation at the range that holds the train's trailers; the
+    committed facts still give the answer, and a lane whose evidence is
+    readable never consults it."""
     if not (setup.routing.managed and rp_int >= 1 and setup.worker):
         return
+    owed = review_owed_by_evidence(root, setup.worker, rp_int)
     fields = read_review_owed(root)
-    if not fields and not review_owed_by_evidence(root, setup.worker, reviews_dir):
+    if owed is None and fields.get("base"):
+        # The evidence could not be READ at this run's base, and the marker
+        # carries the base of the run that parked the round. So re-ASK the
+        # evidence THERE rather than answering for it. The marker still decides
+        # nothing — it hands over one advisory field, which is all
+        # `write_review_owed` ever claimed for it, and the committed facts give
+        # the same three answers they always would. A lane whose evidence IS
+        # readable never reaches this line (it answers `[]`, never None), so
+        # round 033's stale-marker redraw stays closed.
+        parked = dict(setup.worker, base=fields["base"])
+        owed = review_owed_by_evidence(root, parked, rp_int)
+    if not owed:
         return
     st.set_train_range("{}..{}".format(setup.worker["base"], head_sha(root)))
     st.last_impl_family = fields.get("family") or last_build_family(
         iter_dir, setup.routing.registry
     )
-    queued_round = st.schedule_review_round()
+    queued_round = st.schedule_review_round(owed)
     print(
         "resume: review owed ({}) — scheduling review round {} over the parked "
         "train diff before any build session".format(
@@ -3366,6 +3637,7 @@ def after_session(ctx, i, outcome, reset_hint, committed, judging=False):
         bool(st.review_queue or st.critique_queue),
         ctx.managed,
         ctx.rp_int,
+        rounds=st.rounds,
     )
     if end:
         return worker_exit_banner(ctx.worker, end)
@@ -3422,6 +3694,7 @@ def run_iteration(ctx, i):
             ctx.managed,
             ctx.rp_int,
             allow_block_exit=(i > 1),
+            rounds=st.rounds,
         )
         if end:
             return worker_exit_banner(worker, end)
@@ -4032,7 +4305,7 @@ def main():
     st = build_routing_state(docs, rp_int, setup.routing.managed)
     announce_critique_budget(setup.routing.managed, st)
 
-    resume_owed_round(root, setup, st, rp_int, iter_dir, reviews_dir)
+    resume_owed_round(root, setup, st, rp_int, iter_dir)
 
     # --- WI-076: surface the loop-start dirty tree (ONCE) --------------------
     # start_dirty was snapshotted before the lock (above). A non-empty tree here

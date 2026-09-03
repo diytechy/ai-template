@@ -579,6 +579,18 @@ REGEN_STEPS = (
         _interface_reference_cmd,
         "docs/interface-reference.md absent or carries no INTERFACE REFERENCE markers",
     ),
+    # OI-76: the per-review-scope verdict rollup. A LEAF like open-items — it
+    # reads the round files and nothing reads it back — so its position is free;
+    # it sits last because it was added last. It regenerates on the TRUNK, after
+    # the merge that brought the round files in, which is why a lane never
+    # commits one: the rounds a lane produces are exactly what the trunk step
+    # then folds into the reading.
+    (
+        "verdict-rollup",
+        _has("docs/reviews"),
+        _cmd("gen_verdict_rollup.py"),
+        "docs/reviews/ absent",
+    ),
 )
 
 

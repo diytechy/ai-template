@@ -1,0 +1,37 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 019
+# date: 2026-09-03 01:12
+# train: wi-579-the-verdict-carrier-and-the-ad
+# base: 0ecc62bbc55a
+# phase: REVIEW-A
+# wi: WI-579
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 6b8354b8..ae8b05ff
+# tokens:
+# cost-usd:
+# wall-secs: 272
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4558
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:14cbf8be3d4e
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+CHANGES-REQUESTED — 1 MAJOR finding recorded and committed in [019-REVIEW-A-6b8354b.md](/Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad/docs/reviews/wi-579-the-verdict-carrier-and-the-ad/019-REVIEW-A-6b8354b.md).
+
+Commit: `ae8b05ff review: record WI-579 round 019 verdict`.
+
+The direct Git probe reproduced a stale-verdict identity collision for distinct invalid-UTF-8 work paths.
