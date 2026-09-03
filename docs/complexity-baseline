@@ -64,7 +64,7 @@ project-trajectory/scripts/check_trajectory.py	contract_body_findings	22	40
 project-trajectory/scripts/check_trajectory.py	if_tc_allow_hygiene_findings	27	54
 project-trajectory/scripts/check_trajectory.py	interface_findings	37	89
 project-trajectory/scripts/check_trajectory.py	knowledge_pack_findings	18	28
-project-trajectory/scripts/check_trajectory.py	load_wis	16	34
+project-trajectory/scripts/check_trajectory.py	load_wis	16	35
 project-trajectory/scripts/check_trajectory.py	main	45	150
 project-trajectory/scripts/check_trajectory.py	queue_conflict_findings	21	36
 project-trajectory/scripts/check_trajectory.py	staged_findings	20	30
@@ -119,7 +119,6 @@ project-trajectory/scripts/hats.py	parse_condition	19	47
 project-trajectory/scripts/intake.py	_close_drafts	19	73
 project-trajectory/scripts/intake.py	_disposition_drafts	25	34	21 -> 25; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/intake.py	_locate_spine_rows	31	31
-project-trajectory/scripts/intake.py	_replace_inbound_edges	18	26	ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/integrate.py	_claim_delta	22	25
 project-trajectory/scripts/integrate.py	_claim_refusal	16	43
 project-trajectory/scripts/integrate.py	_shed_residue	17	22

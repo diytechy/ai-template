@@ -520,6 +520,74 @@ def test_a_restructured_row_naming_a_successor_that_does_not_exist_is_reported(
     assert "no such work item exists" in findings[0][2], findings
 
 
+def test_a_restructured_successor_must_be_a_distinct_forward_carrier(tmp_path):
+    """Existence plus a backlink proves the pair AGREE; it does not prove the
+    reader gets anywhere. Three shapes satisfied both and recorded nothing:
+
+    - WI-002 names ITSELF (and its own `Supersedes` names it back, so mutuality
+      is vacuously true) — a record that points at the record;
+    - WI-003 names one successor TWICE — two carriers where there is one;
+    - WI-004 is absorbed by WI-005, which is ITSELF `restructured`, so a reader
+      following WI-004's permanent record lands on a second archived row. The
+      A -> B -> C chain, and with it the mutual A <-> B cycle, which is this
+      same arm twice.
+
+    The control is WI-006 -> WI-001: a plain, mutual, live successor is clean,
+    so these are the new arms talking and not a checker that reds everything."""
+    write_spec(tmp_path, "queued", "WI-001", order=0, supersedes="WI-006;WI-003;WI-005")
+    write_archived_spec(
+        tmp_path,
+        "restructured",
+        "WI-002",
+        order=1,
+        deliverable="Restructured into WI-002.",
+        supersedes="WI-002",
+    )
+    write_archived_spec(
+        tmp_path,
+        "restructured",
+        "WI-003",
+        order=2,
+        deliverable="Restructured into WI-001, WI-001.",
+    )
+    write_archived_spec(
+        tmp_path,
+        "restructured",
+        "WI-004",
+        order=3,
+        deliverable="Restructured into WI-005.",
+    )
+    write_archived_spec(
+        tmp_path,
+        "restructured",
+        "WI-005",
+        order=4,
+        deliverable="Restructured into WI-001.",
+        supersedes="WI-004",
+    )
+    write_archived_spec(
+        tmp_path,
+        "restructured",
+        "WI-006",
+        order=5,
+        deliverable="Restructured into WI-001.",
+    )
+    wis, _integrity = ctraj.load_wis(ctraj.read_registry_rows(csv_path(tmp_path)))
+    messages = [
+        msg for rule, _hard, msg in ctraj.ssot_findings(wis, tmp_path) if rule == "R-A"
+    ]
+    hits = {
+        wi: [m for m in messages if m.startswith(wi + ":")]
+        for wi in ("WI-002", "WI-003", "WI-004", "WI-006")
+    }
+    assert len(hits["WI-002"]) == 1 and "this row itself" in hits["WI-002"][0], messages
+    assert len(hits["WI-003"]) == 1 and "named 2 times" in hits["WI-003"][0], messages
+    assert len(hits["WI-004"]) == 1 and "itself restructured" in hits["WI-004"][0], (
+        messages
+    )
+    assert hits["WI-006"] == [], messages
+
+
 def test_a_live_hard_edge_onto_a_restructured_row_is_reported(tmp_path):
     """The validator NET behind the re-point step (restructure plan §1.5): the
     close that absorbs a row re-points every inbound hard edge to the successor,

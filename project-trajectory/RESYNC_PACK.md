@@ -4347,6 +4347,16 @@ If your loop stops at a merge with `every entry must be a WI-### id` or `no live
 registry row`, the disposition block is the thing to fix — the refusal names the
 offending token and nothing was minted.
 
+**AMENDED by the round-2 review, same migration (none), two more refusals.**
+(3) A hand-authored `supersedes` STRING must now be exactly one `WI-###` id;
+several ids are a TOML list. The `;`-joined spelling is the WRITER's (it is how
+the registry cell round-trips) and was never a documented authoring form —
+`supersedes = "WI-1;WI-2"` in a `## Dispositions` block now refuses with `a
+string names exactly ONE WI-### id`. (4) A draft may not supersede a row that is
+already `restructured`: lineage does not chain, so name the row that absorbed it
+instead (`naming a row that is ALREADY restructured`). Both refuse before
+anything is written.
+
 ### A fourth terminal work-item status, `restructured` [since 891a5b24]
 
 **What changed.** The work-item status vocabulary gains a fourth terminal word,
@@ -4365,9 +4375,13 @@ it. `partial` says a lane stopped early, and owes a per-close report under
 produces.
 
 Its `## Deliverable` is PARSED, not merely required to be non-empty: R-A refuses
-anything but the exact line above (several successors comma-separated), and every
-successor it names must be a registry row whose own `Supersedes` cell names it
-back — a hard error, like the rest of R-A. Its `SpecRef`, on the other hand, is a
+anything but the exact line above (several successors comma-separated, and
+surrounding whitespace ignored), and every successor it names must be a DISTINCT
+FORWARD CARRIER — a registry row, not this row itself, named once, not itself
+`restructured`, and naming this row back in its own `Supersedes` cell. The last
+two make a chain (A → B → C) and a cycle (A ↔ B) unrepresentable rather than
+merely unlikely: the absorbing row is the live thread, so a reader following the
+record always lands on it. A hard error, like the rest of R-A. Its `SpecRef`, on the other hand, is a
 MAY: R-F carves out both terminals whose work CONTINUES in a successor
 (`partial` and `restructured`), so the cell may stay or be cleared. If you carry
 restructured rows written before this, check the two cells; nothing else changes.

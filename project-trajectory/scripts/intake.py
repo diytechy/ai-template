@@ -1259,20 +1259,24 @@ def parse_dispositions(text, where):
     return drafts, None
 
 
-def _supersedes_refusal(value, at, known_ids=None):
+def _supersedes_refusal(value, at, known_ids=None, absorbed_ids=None):
     """Refuse a `supersedes` that names something the mint cannot re-point.
 
-    Two failures, both silent before the value could be a LIST. A token that is
+    Three failures, all silent before the value could be a LIST. A token that is
     not a `WI-###` id never matches any dependent's `needs`, so the re-point is
     a no-op and the lineage cell is a typo nobody reads. An id that is not a
     LIVE row is worse in the consolidation case: the verdict named a row that
     does not exist, so one of the rows it meant to absorb is still queued and
-    will be dispatched beside its own successor.
+    will be dispatched beside its own successor. And an id that is ALREADY
+    `restructured` was absorbed by somebody else: continuing it would build the
+    A -> B -> C chain the lineage validator refuses to record, where a reader
+    following the absorbed row's permanent record lands on a second archived
+    row instead of on the live thread. The successor to name is B.
 
-    `known_ids` is the registry the mint already holds; pass None where there is
-    none to read (the hand-authored `## Dispositions` block is validated before
-    any registry is loaded) and the liveness half is skipped, the shape half is
-    not."""
+    `known_ids` and `absorbed_ids` are read off the registry the mint already
+    holds; pass None where there is none to read (the hand-authored
+    `## Dispositions` block is validated before any registry is loaded) and that
+    half is skipped, the shape half never is."""
     ids = supersedes_ids(value)
     bad = [tok for tok in ids if not ac.WI_TOKEN_RE.match(tok)]
     if bad:
@@ -1289,7 +1293,42 @@ def _supersedes_refusal(value, at, known_ids=None):
                 "inbound-edge re-point would silently do nothing; nothing "
                 "minted".format(at, missing)
             )
+    if absorbed_ids:
+        chained = [tok for tok in ids if tok in absorbed_ids]
+        if chained:
+            return (
+                "{} declares supersedes {} naming a row that is ALREADY "
+                "restructured - it was absorbed by the successor its own "
+                "Deliverable names, and lineage does not chain; supersede that "
+                "successor instead; nothing minted".format(at, chained)
+            )
     return None
+
+
+#: The AUTHORING spelling of one `supersedes` id: a bare string names exactly
+#: one row. Several ids are a TOML list - never a joined string, which is the
+#: WRITER's form (`_draft_row` joins with `;`) and not an author's.
+_AUTHORED_SUPERSEDES_RE = re.compile(r"^WI-\d+$")
+
+
+def _authored_supersedes_refusal(value, at):
+    """`_supersedes_refusal` at the HAND-AUTHORED boundary, where the grammar
+    is the documented one and not the writer's joined cell.
+
+    `supersedes_ids` splits a string on `;` so that the cell `_draft_row` writes
+    round-trips through the reader that refuses it. That tolerance is for
+    MACHINE-written values only: read here it would silently accept a third
+    spelling ("WI-558;WI-559") beside the two the prompt documents, and a
+    grammar with an undocumented third form is a grammar nobody can check a
+    block against. So a string must be exactly one id; several ids are a list."""
+    if isinstance(value, str) and value.strip():
+        if not _AUTHORED_SUPERSEDES_RE.match(value.strip()):
+            return (
+                "{} declares supersedes {!r} - a string names exactly ONE "
+                "WI-### id; several ids are a TOML list, not a joined string; "
+                "nothing minted".format(at, value)
+            )
+    return _supersedes_refusal(value, at)
 
 
 def _draft_refusal(data, where, index):
@@ -1327,7 +1366,7 @@ def _draft_refusal(data, where, index):
         )
     # Shape only here: this block is read before any registry is, so liveness is
     # the mint's rung (`_mint_shape_refusal`), which holds the rows.
-    return _supersedes_refusal(data.get("supersedes"), at)
+    return _authored_supersedes_refusal(data.get("supersedes"), at)
 
 
 def _disposition_drafts(root, outcomes):
@@ -1545,35 +1584,47 @@ def supersedes_ids(value):
     "not a WI-### id", which is a writer emitting what its own sibling reader
     refuses. The writer's form round-trips through the reader; that is the rule.
 
+    ONE separator, `;`, and it is the WRITER's: this split exists to read a
+    machine-written cell back, never to parse an author's prose. A hand-authored
+    `## Dispositions` block is held to the stricter spelling at its own boundary
+    (`_authored_supersedes_refusal`: a string is exactly one id, several ids are
+    a TOML list), so nothing that reaches here needs a second separator class.
+
     Deliberately NOT `kitlib.spine.refs`, the shared multi-ref splitter, though
     this is otherwise exactly its job: `refs` also splits on WHITESPACE, and a
     `supersedes` naming free prose ("the other one") would then reach the
     refusal as three tokens, so the message could no longer echo the author's
-    own value back at them. One separator class costs nothing here and keeps
-    the refusal legible."""
+    own value back at them."""
     if value is None:
         return []
     items = value if isinstance(value, (list, tuple)) else [value]
     out = []
     for item in items:
-        for token in re.split(r"[;,]", str(item)):
+        for token in str(item).split(";"):
             token = token.strip()
             if token and token not in out:
                 out.append(token)
     return out
 
 
-def _replace_inbound_edges(root, superseded, successor):
+def _replace_inbound_edges(root, superseded, successors):
     """Re-point every OPEN row's HARD `needs` edge on `superseded` to
-    `successor` (OI-73 arm 4). Returns the relpaths changed.
+    `successors` (OI-73 arm 4). Returns the relpaths changed.
 
-    `superseded` is one id or a list of them, read through `supersedes_ids`. A
-    consolidation absorbs SEVERAL rows into one successor, and the several are
-    re-pointed in ONE pass over each dependent rather than one pass per absorbed
-    id: a dependent that hard-needed two of the absorbed rows would otherwise be
-    rewritten twice, and the second write would be reading its own first one.
-    Duplicates cannot survive either way — the successor enters `needs` at most
-    once, however many of its predecessors a dependent named.
+    `superseded` is one id or a list of them, and `successors` likewise, both
+    read through `supersedes_ids`. ONE call carries a WHOLE many-to-many
+    verdict: every row named in `superseded` was absorbed by exactly the rows
+    named in `successors`, so a dependent's absorbed tokens are replaced by the
+    FULL successor list in a single write. That is what makes the split case
+    honest. A consolidation may SPLIT an absorbed row across several successors
+    (the live 2026-09-02 restructure did: WI-560's three Done-when items went to
+    WI-579, WI-580 and WI-581) and the dependent must end holding the UNION,
+    because the work it was waiting for now lives in three places. Re-pointing
+    one successor at a time cannot produce that: the first pass consumes the
+    dependent's token and every later pass finds nothing left to rewrite, so the
+    dependent waits on a third of the contract while the rest sits unblocked.
+    Duplicates cannot survive either way - an id enters `needs` at most once,
+    however many of its predecessors a dependent named.
 
     THE STRAND THIS MAKES UNREPRESENTABLE. A partial/cancelled close leaves the
     closed row terminal, and any live WI that hard-depended on it can never
@@ -1586,32 +1637,23 @@ def _replace_inbound_edges(root, superseded, successor):
     own `needs` is history and is never touched. The edit is surgical (only the
     `needs` line) so a dependent's `## Context` and Deliverable are preserved.
 
-    ONE ABSORBED ROW, SEVERAL SUCCESSORS. A consolidation may SPLIT an absorbed
-    row across several successors (the live 2026-09-02 restructure did: WI-560's
-    three Done-when items went to WI-579, WI-580 and WI-581), and `_mint` applies
-    them one at a time. The first pass rewrites the dependent's token to the
-    first successor - and every later pass then finds NOTHING left to rewrite,
-    so the dependent waits on one third of the contract it was waiting for. The
-    repair is to ACCUMULATE: a later successor over the same absorbed set is
-    appended to any open row that already names an earlier one, so the dependent
-    ends holding the UNION of the successors, which is what "wait for the work
-    you were waiting for" means once that work has been split. A row that is
-    itself a successor over the set is not a dependent and is skipped - its edge
-    onto a sibling is ordering, not lineage.
-    """
+    WHO IS NOT A DEPENDENT. A row that is itself one of `successors`, or whose
+    own `supersedes` names any of the absorbed rows, is never rewritten: its
+    edge onto a sibling successor is ordering, not lineage, and rewriting it
+    would hand the row an edge onto ITSELF - a wait nothing can ever clear, that
+    no validator reports. That is decided from the row's own `supersedes` cell,
+    never guessed from the shape of its `needs`: "names a sibling successor" is
+    equally true of a row that named it on purpose, and a guess there imposes an
+    unrelated hard dependency and announces a re-point that never happened.
+    Deciding it from the cell is why `_mint` calls this AFTER every draft in the
+    mint is on disk rather than one draft at a time."""
     dead = set(supersedes_ids(superseded))
-    if not dead:
+    live = supersedes_ids(successors)
+    if not dead or not live:
         return []
     changed = []
-    open_specs = _open_specs(Path(root) / WORK)
-    # The successors minted BEFORE this one over any of the same absorbed rows.
-    siblings = {
-        str(data.get("id") or "").strip()
-        for _path, _rel, _text, data in open_specs
-        if dead.intersection(supersedes_ids(data.get("supersedes")))
-    } - {successor, ""}
-    for path, rel, text, data in open_specs:
-        new_needs = _repointed_needs(data, dead, siblings, successor)
+    for path, rel, text, data in _open_specs(Path(root) / WORK):
+        new_needs = _repointed_needs(data, dead, live)
         if new_needs is None:
             continue
         new_line = "needs = " + wi_convert.toml_value(new_needs)
@@ -1625,9 +1667,9 @@ def _replace_inbound_edges(root, superseded, successor):
 def _open_specs(work):
     """Every OPEN spec under `work` as `(path, relpath, text, frontmatter)`.
 
-    Read ONCE, because the re-point needs two passes over the same rows (which
-    rows are successors, then which rows depend on one) and a second walk would
-    read the first pass's own writes. A spec that will not read or parse is
+    Read ONCE per re-point, so the pass decides every row against one
+    consistent view of the tree rather than against its own earlier writes. A
+    spec that will not read or parse is
     skipped, not raised on: this runs inside a mint, and one malformed row is
     the validator's finding, never a reason to abandon the re-point."""
     out = []
@@ -1646,26 +1688,27 @@ def _open_specs(work):
     return out
 
 
-def _repointed_needs(data, dead, siblings, successor):
+def _repointed_needs(data, dead, successors):
     """One open row's rewritten `needs`, or None when it is not a dependent.
 
-    Two ways to be one, in priority order: it still names an ABSORBED row (the
-    token is replaced), or it already names an EARLIER successor over the same
-    absorbed set (this one is appended — the accumulate arm). Duplicates cannot
-    survive either path. A row that is itself one of those successors is not a
-    dependent: its edge onto a sibling is ordering, not lineage."""
+    A dependent is a row that still names an ABSORBED id; each such token is
+    replaced by the WHOLE successor list, in order, de-duplicated against what
+    the row already holds. A row that is itself one of the successors, or that
+    absorbed one of the same rows, is NOT a dependent however its `needs`
+    reads - see `_replace_inbound_edges`."""
     needs = [str(v) for v in (data.get("needs") or [])]
-    if dead.intersection(needs):
-        out = []
-        for tok in needs:
-            repl = successor if tok in dead else tok
+    if not dead.intersection(needs):
+        return None
+    if str(data.get("id") or "").strip() in successors or dead.intersection(
+        supersedes_ids(data.get("supersedes"))
+    ):
+        return None
+    out = []
+    for tok in needs:
+        for repl in successors if tok in dead else [tok]:
             if repl not in out:
                 out.append(repl)
-        return out
-    mine = str(data.get("id") or "").strip()
-    if siblings.intersection(needs) and successor not in needs and mine not in siblings:
-        return needs + [successor]
-    return None
+    return out
 
 
 def _draft_row(wi_id, draft):
@@ -1698,7 +1741,7 @@ def _draft_row(wi_id, draft):
     return row
 
 
-def _mint_shape_refusal(draft, subject_verb, known_ids=None):
+def _mint_shape_refusal(draft, subject_verb, known_ids=None, absorbed_ids=None):
     """Refuse a draft this mint would write as an UNSCHEDULABLE row.
 
     THE GAP THIS CLOSES. `_draft_refusal` validates follow-ups a human wrote
@@ -1741,6 +1784,7 @@ def _mint_shape_refusal(draft, subject_verb, known_ids=None):
         draft.get("supersedes"),
         "{}: draft {!r}".format(subject_verb, draft.get("title")),
         known_ids,
+        absorbed_ids,
     )
 
 
@@ -1758,21 +1802,41 @@ def _write_context(path, root, draft, row, registry):
             fh.write("\n## Context\n\n" + context + "\n")
 
 
-def _apply_supersede(root, draft, wi_id):
-    """OI-73 arm 4: a successor carrying `supersedes` REPLACES the superseded
-    row's inbound hard edges, in the SAME commit as the mint, so the WI-541-class
-    strand (a live dependent left waiting on a terminal row) is unrepresentable
-    rather than merely reported by the validator net.
+def _apply_supersedes(root, minted):
+    """OI-73 arm 4 for a WHOLE mint: every successor carrying `supersedes`
+    REPLACES its absorbed rows' inbound hard edges, in the SAME commit as the
+    mint, so the WI-541-class strand (a live dependent left waiting on a
+    terminal row) is unrepresentable rather than merely reported by the
+    validator net. `minted` is `[(wi_id, [absorbed ids]), ...]` in mint order.
 
-    `supersedes` may name SEVERAL rows (the 2026-09-02 restructure plan §1.5):
-    one consolidation absorbs several queued rows into one successor, and every
-    dependent of every absorbed row is re-pointed at that successor."""
-    superseded = supersedes_ids(draft.get("supersedes"))
-    if not superseded:
-        return
-    named = ";".join(superseded)
-    for rel_changed in _replace_inbound_edges(root, superseded, wi_id):
-        _say("re-pointed {}'s edge(s) {} -> {}".format(rel_changed, named, wi_id))
+    `supersedes` may name SEVERAL rows and one absorbed row may be SPLIT across
+    SEVERAL successors (the 2026-09-02 restructure plan §1.5), so the verdict is
+    resolved set-against-set rather than one draft at a time. It is inverted to
+    absorbed-id -> the successors that named it (so a row split across three
+    carries all three), then re-grouped by that successor tuple: each absorbed
+    row sharing one verdict is re-pointed in a single write, and a dependent
+    naming absorbed rows with DIFFERENT verdicts ends holding the union of both,
+    because the second group reads the first group's write and replaces only its
+    own tokens."""
+    per_absorbed = {}
+    for wi_id, absorbed in minted:
+        for dead_id in absorbed:
+            per_absorbed.setdefault(dead_id, [])
+            if wi_id not in per_absorbed[dead_id]:
+                per_absorbed[dead_id].append(wi_id)
+    groups = {}
+    for dead_id, succs in per_absorbed.items():
+        groups.setdefault(tuple(succs), []).append(dead_id)
+    for successors, absorbed in groups.items():
+        named, into = ";".join(absorbed), ";".join(successors)
+        for rel_changed in _replace_inbound_edges(root, absorbed, list(successors)):
+            _say("re-pointed {}'s edge(s) {} -> {}".format(rel_changed, named, into))
+
+
+def _apply_supersede(root, draft, wi_id):
+    """One drafted successor's supersede - the single-draft convenience over
+    `_apply_supersedes`, which is where the rules live."""
+    _apply_supersedes(root, [(wi_id, supersedes_ids(draft.get("supersedes")))])
 
 
 def _inject_open_item(root, draft, wi_id):
@@ -1794,6 +1858,47 @@ def _inject_open_item(root, draft, wi_id):
     return dict(draft, needs=needs), None
 
 
+def _pre_mint_refusal(drafts, subject_verb, registry):
+    """The pre-mint sweep: every draft past `_mint_shape_refusal` with the
+    registry in hand. The FIRST refusal, or None.
+
+    The two id sets are derived here rather than by the shape rung itself
+    because they are properties of the REGISTRY, read once for the whole mint:
+    which ids exist at all, and which of those are already `restructured` (a row
+    somebody else absorbed - continuing it would chain the lineage). Nothing is
+    written until every draft has cleared this, so an all-or-nothing mint owes
+    no restore at this rung."""
+    known_ids = {r["WI-ID"] for r in registry if r.get("WI-ID")}
+    # Status IS the spec's directory name, so the compare needs no normalizing.
+    absorbed_ids = {r["WI-ID"] for r in registry if r.get("Status") == "restructured"}
+    for draft in drafts:
+        refusal = _mint_shape_refusal(draft, subject_verb, known_ids, absorbed_ids)
+        if refusal:
+            return refusal
+    return None
+
+
+def _write_draft(root, draft, registry, subject_verb):
+    """One draft filed as a queued spec: `((wi_id, relpath, absorbed), None)` or
+    `(None, refusal)`. The caller owns the all-or-nothing restore; this writes.
+
+    `absorbed` is the draft's `supersedes` ids, handed back rather than re-read
+    off the written row because the mint's re-point is resolved over the whole
+    verdict once every draft is on disk (`_apply_supersedes`)."""
+    wi_id = next_wi_id(root)
+    draft, oi_refusal = _inject_open_item(root, draft, wi_id)
+    if oi_refusal:
+        return None, "{}: {}".format(subject_verb, oi_refusal)
+    row = _draft_row(wi_id, draft)
+    try:
+        rel = wi_convert.write_spec_file(root / WORK, row)
+    except wi_convert.ConvertError as exc:
+        return None, "the mint could not write {}: {}".format(wi_id, exc)
+    _write_context(root / WORK / rel, root, draft, row, registry)
+    absorbed = supersedes_ids(draft.get("supersedes"))
+    return (wi_id, (Path(WORK) / rel).as_posix(), absorbed), None
+
+
 def _mint(root, drafts, subject_verb):
     """Write every draft as a queued spec, then ONE bookkeeping commit.
     `([(wi_id, relpath)], refusal)`; all-or-nothing — a refusal restores trunk
@@ -1804,29 +1909,26 @@ def _mint(root, drafts, subject_verb):
     drafts = [d for d in drafts if str(d["title"]).strip() not in titles]
     if not drafts:
         return [], None
-    known_ids = {r["WI-ID"] for r in registry if r.get("WI-ID")}
-    for draft in drafts:
-        refusal = _mint_shape_refusal(draft, subject_verb, known_ids)
-        if refusal:
-            return [], refusal
+    refusal = _pre_mint_refusal(drafts, subject_verb, registry)
+    if refusal:
+        return [], refusal
     minted = []
+    lineage = []
     for draft in drafts:
-        wi_id = next_wi_id(root)
-        draft, oi_refusal = _inject_open_item(root, draft, wi_id)
-        if oi_refusal:
+        written, refusal = _write_draft(root, draft, registry, subject_verb)
+        if refusal:
             ac.git(root, "reset", "--hard", "HEAD")
             ac.git(root, "clean", "-fd", "--", WORK)
-            return [], "{}: {}".format(subject_verb, oi_refusal)
-        row = _draft_row(wi_id, draft)
-        try:
-            rel = wi_convert.write_spec_file(root / WORK, row)
-        except wi_convert.ConvertError as exc:
-            ac.git(root, "reset", "--hard", "HEAD")
-            ac.git(root, "clean", "-fd", "--", WORK)
-            return [], "the mint could not write {}: {}".format(wi_id, exc)
-        _write_context(root / WORK / rel, root, draft, row, registry)
-        minted.append((wi_id, (Path(WORK) / rel).as_posix()))
-        _apply_supersede(root, draft, wi_id)
+            return [], refusal
+        wi_id, rel, absorbed = written
+        minted.append((wi_id, rel))
+        lineage.append((wi_id, absorbed))
+    # THE RE-POINT RUNS ONCE, over the WHOLE mint, after every draft is on disk:
+    # a dependent of a row split across several successors must end holding all
+    # of them, and a successor must be recognisable as one (by its own written
+    # `supersedes` cell) so its edge onto a sibling is never rewritten into an
+    # edge onto itself.
+    _apply_supersedes(root, lineage)
     # RAISE THE MARK IN THE SAME COMMIT that files the specs. A mint that
     # allocates an id without recording it leaves the mark behind the tree, and
     # trace.py's integrity pass reads that as "an id was allocated past the

@@ -594,8 +594,11 @@ def load_wis(rows):
                 # The lineage cell (`;`-joined, one id or several): R-A's
                 # restructured arm reads it BOTH ways — this row's, to say what
                 # it was absorbed into, and the named successor's, to check the
-                # claim is mutual.
-                "supersedes": _split_refs(r.get("Supersedes") or ""),
+                # claim is mutual. (No `or ""` guard: `kitlib.spine.refs` already
+                # reads a missing column's None as the empty cell, and the second
+                # copy of that guard is what pushed this function off its
+                # complexity baseline.)
+                "supersedes": _split_refs(r.get("Supersedes")),
             }
         )
     return wis, integrity
@@ -2905,7 +2908,7 @@ _RA_RESTRUCTURED_LINEAGE = (
 )
 
 
-def _restructured_lineage_findings(w, lineage):
+def _restructured_lineage_findings(w, lineage, statuses):
     """R-A's `restructured` arm: the Deliverable's grammar AND its MUTUALITY.
 
     An absorbed row's whole permanent record is the successor it names, so a
@@ -2916,31 +2919,66 @@ def _restructured_lineage_findings(w, lineage):
     somewhere that does not exist or does not agree):
 
     - the cell is not exactly `Restructured into WI-<id>[, WI-<id>...].`;
-    - a named successor is not a registry row, or its `Supersedes` cell does
-      not name this row back.
+    - a named successor is not a DISTINCT FORWARD carrier: not a registry row,
+      or the row itself, or named twice, or itself `restructured`, or its
+      `Supersedes` cell does not name this row back.
 
-    Liveness is deliberately "is a registry row", not "is still open": a
-    successor that later closes `done` must not turn its predecessor's archived
-    record into a red.
+    THE FORWARD-CARRIER ARMS ARE THE POINT, not padding on the mutuality check.
+    Existence plus a backlink proves the pair agree; it does not prove the
+    reader gets anywhere. A row naming ITSELF satisfies both (its own
+    `Supersedes` names it) and is a record that points at the record. A
+    successor named TWICE reads as two carriers where there is one. A successor
+    that is ITSELF `restructured` sends the reader to a second archived row —
+    and mutual pairs (A absorbed by B, B absorbed by A) are exactly that arm
+    twice, so both cycle shapes fall out of these two refusals and lineage can
+    never be a loop or a chain: the absorbing row is the live thread.
+
+    Liveness is otherwise deliberately "is a registry row", not "is still open":
+    a successor that later closes `done` (or `cancelled`, or `partial`) must not
+    turn its predecessor's archived record into a red. `restructured` is the one
+    terminal that is excluded, because it is the one that redirects again.
     """
     text = w["deliverable"].strip()
     if not _RESTRUCTURED_DELIVERABLE_RE.fullmatch(text):
         return [("R-A", True, _RA_RESTRUCTURED_FORM.format(w["id"], text))]
     out = []
-    for succ in re.findall(r"WI-\d+", text):
-        if succ not in lineage:
-            why = "but no such work item exists"
-        elif w["id"] not in lineage[succ]:
-            why = (
-                "but {}'s Supersedes cell ({}) does not name it back - the "
-                "lineage must be mutual".format(
-                    succ, ";".join(lineage[succ]) or "empty"
-                )
+    named = re.findall(r"WI-\d+", text)
+    for succ in dict.fromkeys(named):
+        why = _restructured_successor_refusal(w, succ, named, lineage, statuses)
+        if why:
+            out.append(
+                ("R-A", True, _RA_RESTRUCTURED_LINEAGE.format(w["id"], succ, why))
             )
-        else:
-            continue
-        out.append(("R-A", True, _RA_RESTRUCTURED_LINEAGE.format(w["id"], succ, why)))
     return out
+
+
+def _restructured_successor_refusal(w, succ, named, lineage, statuses):
+    """Why one named successor is not a distinct forward carrier, or None.
+
+    Ordered cheapest-first and self before existence, so the row that names
+    ITSELF is told that rather than being told its own `Supersedes` cell
+    disagrees with itself."""
+    if succ == w["id"]:
+        return (
+            "but that is this row itself - a restructured row's record must "
+            "point FORWARD, at the row that absorbed it"
+        )
+    seen = named.count(succ)
+    if seen > 1:
+        return "but it is named {} times - each successor is named once".format(seen)
+    if succ not in lineage:
+        return "but no such work item exists"
+    if statuses.get(succ) == "restructured":
+        return (
+            "but {} is itself restructured - lineage does not chain, so name "
+            "the row that absorbed {} instead".format(succ, succ)
+        )
+    if w["id"] not in lineage[succ]:
+        return (
+            "but {}'s Supersedes cell ({}) does not name it back - the "
+            "lineage must be mutual".format(succ, ";".join(lineage[succ]) or "empty")
+        )
+    return None
 
 
 def ssot_findings(wis, root):
@@ -2959,6 +2997,7 @@ def ssot_findings(wis, root):
     """
     out = []
     lineage = {w["id"]: w.get("supersedes") or [] for w in wis}
+    statuses = {w["id"]: w["status"] for w in wis}
     for w in wis:
         st = w["status"]
         # (The `status-vocab` and `blocked-ref` rules retired with the CSV home
@@ -2997,7 +3036,7 @@ def ssot_findings(wis, root):
                 )
             )
         elif st == "restructured":
-            out.extend(_restructured_lineage_findings(w, lineage))
+            out.extend(_restructured_lineage_findings(w, lineage, statuses))
         elif st not in TERMINAL_STATUSES and w["deliverable"]:
             out.append(
                 (

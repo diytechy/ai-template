@@ -871,20 +871,23 @@ def test_a_consolidation_re_points_every_dependent_of_every_absorbed_row(tmp_pat
     assert rows[successor]["Supersedes"] == "WI-005;WI-006;WI-007"
 
 
-def test_one_row_split_across_three_successors_accumulates_on_the_dependent(
-    tmp_path,
-):
+def test_one_row_split_across_three_successors_repoints_to_all_three(tmp_path, capsys):
     """The topology the live 2026-09-02 restructure actually minted, which the
     one-successor guard above cannot see: ONE absorbed row split across THREE
-    successors, applied one at a time by `_mint`.
+    successors.
 
-    The first pass rewrites the dependent's token to the first successor — and
-    the second and third then find nothing left to rewrite, so without the
-    accumulate arm the dependent waits on one third of the contract it was
-    waiting for while the other two thirds sit unblocked. It must end holding
-    the UNION. The two controls are what make that assertion mean something: a
-    dependent of a row nobody absorbed is untouched, and a SUCCESSOR is not a
-    dependent — its own `needs` never collects its siblings."""
+    The dependent must end holding the UNION — the work it was waiting for now
+    lives in three places, so waiting on one of them is waiting on a third of
+    the contract while the rest sits unblocked. The verdict is therefore
+    resolved set-against-set, ONE write per dependent, and the message names
+    every successor rather than announcing three separate re-points.
+
+    Three controls make that assertion mean something. A dependent of a row
+    nobody absorbed is untouched. A SUCCESSOR is not a dependent even when its
+    own `needs` hard-names the absorbed row — re-pointing that edge would hand
+    the row a wait on ITSELF that nothing can ever clear and no validator
+    reports. And a row that names a successor for its OWN reasons gains
+    nothing: "names a sibling" is not evidence of a rewritten edge."""
     root = tmp_path
     write_spec(root, "queued", "WI-005", slug="absorbed", specref="seed.txt", needs=[])
     write_spec(
@@ -893,6 +896,10 @@ def test_one_row_split_across_three_successors_accumulates_on_the_dependent(
     write_spec(
         root, "queued", "WI-011", slug="elsewhere", specref="seed.txt", needs=["WI-010"]
     )
+    # Names successor 1 on PURPOSE — it never held an edge on the absorbed row.
+    write_spec(
+        root, "queued", "WI-012", slug="onpurpose", specref="seed.txt", needs=["WI-101"]
+    )
     for successor in ("WI-101", "WI-102", "WI-103"):
         write_spec(
             root,
@@ -900,15 +907,75 @@ def test_one_row_split_across_three_successors_accumulates_on_the_dependent(
             successor,
             slug="successor",
             specref="seed.txt",
-            needs=[],
+            # The successor itself still hard-names what it absorbed, and
+            # WI-103 additionally names an earlier SIBLING.
+            needs=["WI-005"] if successor != "WI-103" else ["WI-005", "WI-101"],
             supersedes="WI-005",
         )
-        intake._apply_supersede(root, {"supersedes": "WI-005"}, successor)
+    intake._apply_supersedes(
+        root, [(succ, ["WI-005"]) for succ in ("WI-101", "WI-102", "WI-103")]
+    )
     rows = queued_rows(root)
     assert rows["WI-010"]["Predecessors"] == "WI-101;WI-102;WI-103"
     assert rows["WI-011"]["Predecessors"] == "WI-010"
-    for successor in ("WI-101", "WI-102", "WI-103"):
-        assert rows[successor]["Predecessors"] == "", successor
+    assert rows["WI-012"]["Predecessors"] == "WI-101"
+    assert rows["WI-101"]["Predecessors"] == "WI-005"
+    assert rows["WI-102"]["Predecessors"] == "WI-005"
+    assert rows["WI-103"]["Predecessors"] == "WI-005;WI-101"
+    # ONE message, naming the whole verdict.
+    said = [
+        line for line in capsys.readouterr().out.splitlines() if "re-pointed" in line
+    ]
+    assert said == [
+        "intake: re-pointed queued/WI-010-dependent.md's edge(s) "
+        "WI-005 -> WI-101;WI-102;WI-103"
+    ]
+
+
+def test_a_dependent_of_two_absorbed_rows_ends_with_the_union(tmp_path):
+    """Overlapping verdicts: WI-005 goes to WI-101+WI-102, WI-006 to
+    WI-102+WI-103, and one dependent names BOTH absorbed rows.
+
+    The two verdicts are different, so they are two writes — and the second
+    reads the first one's file. Each replaces only its OWN absorbed tokens, so
+    the dependent ends holding the union of the two successor sets with WI-102,
+    which is in both, appearing exactly once."""
+    root = tmp_path
+    for absorbed in ("WI-005", "WI-006"):
+        write_spec(
+            root, "queued", absorbed, slug="absorbed", specref="seed.txt", needs=[]
+        )
+    write_spec(
+        root,
+        "queued",
+        "WI-010",
+        slug="dependent",
+        specref="seed.txt",
+        needs=["WI-005", "WI-006"],
+    )
+    for successor, absorbed in (
+        ("WI-101", ["WI-005"]),
+        ("WI-102", ["WI-005", "WI-006"]),
+        ("WI-103", ["WI-006"]),
+    ):
+        write_spec(
+            root,
+            "queued",
+            successor,
+            slug="successor",
+            specref="seed.txt",
+            needs=[],
+            supersedes=";".join(absorbed),
+        )
+    intake._apply_supersedes(
+        root,
+        [
+            ("WI-101", ["WI-005"]),
+            ("WI-102", ["WI-005", "WI-006"]),
+            ("WI-103", ["WI-006"]),
+        ],
+    )
+    assert queued_rows(root)["WI-010"]["Predecessors"] == "WI-101;WI-102;WI-103"
 
 
 def test_a_one_id_supersedes_string_is_unchanged_by_the_list_form():
@@ -983,6 +1050,67 @@ def test_a_supersedes_naming_a_non_wi_token_or_a_dead_row_refuses(tmp_path):
         is None
     )
     assert intake._mint_shape_refusal({"title": "s", "supersedes": ["nope"]}, "x")
+
+
+def test_the_authoring_boundary_refuses_a_joined_supersedes_string():
+    """The hand-authored `## Dispositions` grammar is the DOCUMENTED one: a
+    string names exactly one id, several ids are a TOML list.
+
+    `supersedes_ids` splits on `;` so the cell `_draft_row` WRITES round-trips
+    through the reader that refuses it — a machine tolerance. Read at the
+    authoring boundary it would silently bless a third spelling beside the two
+    `prompts/adjudicate-disposition.template.md` documents, and a grammar with
+    an undocumented form is one nobody can check a block against."""
+    where = "docs/work/complete/WI-020-x.md"
+    joined = intake._draft_refusal(
+        {"title": "s", "supersedes": "WI-558;WI-559"}, where, 1
+    )
+    assert joined is not None and "exactly ONE" in joined and "TOML list" in joined
+    comma = intake._draft_refusal({"title": "s", "supersedes": "WI-1, WI-2"}, where, 1)
+    assert comma is not None and "exactly ONE" in comma
+    # The two documented spellings are untouched.
+    assert (
+        intake._draft_refusal({"title": "s", "supersedes": "WI-558"}, where, 1) is None
+    )
+    assert (
+        intake._draft_refusal(
+            {"title": "s", "supersedes": ["WI-558", "WI-559"]}, where, 1
+        )
+        is None
+    )
+    # And a whole block goes the same way, through the real parser.
+    _drafts, refusal = intake.parse_dispositions(
+        'x\n## Dispositions\n\n```toml\ntitle = "s"\nsupersedes = "WI-558;WI-559"\n```\n',
+        where,
+    )
+    assert refusal is not None and "exactly ONE" in refusal
+
+
+def test_superseding_an_already_restructured_row_refuses_at_the_mint():
+    """Lineage does not CHAIN. A row that is already `restructured` was absorbed
+    by somebody else, and continuing it would build A -> B -> C: a reader
+    following A's permanent record lands on a second archived row instead of on
+    the live thread. The validator refuses to RECORD that shape
+    (`_restructured_lineage_findings`); this is the same rule at the authoring
+    boundary, where the mint holds the registry that can tell."""
+    absorbed = {"WI-005"}
+    chained = intake._mint_shape_refusal(
+        {"title": "s", "supersedes": ["WI-005"]},
+        "intake at merge of wi-020",
+        {"WI-005", "WI-006"},
+        absorbed,
+    )
+    assert chained is not None and "ALREADY restructured" in chained
+    # A live row, and every other terminal, still passes.
+    assert (
+        intake._mint_shape_refusal(
+            {"title": "s", "supersedes": ["WI-006"]},
+            "intake at merge of wi-020",
+            {"WI-005", "WI-006"},
+            absorbed,
+        )
+        is None
+    )
 
 
 def test_a_frontmatter_supersedes_list_reads_back_as_the_joined_cell(tmp_path):

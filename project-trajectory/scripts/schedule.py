@@ -672,6 +672,18 @@ _TERMINAL_DISPOSITION = {
 }
 
 
+#: The DEAD hard-edge states and their reason-code suffixes, in the order the
+#: codes lead a waiting row's reason list. A TABLE and not three arms: the three
+#: differ only in the state they match and the word they print, and each new
+#: dead terminal (`partial` at OI-73, `restructured` at the 2026-09-02
+#: restructure plan) was arriving as a fourth copy of the same three lines.
+_DEAD_PRED_CODES = (
+    (_CANCELLED, "cancelled"),
+    (_PARTIAL, "partial"),
+    (_RESTRUCTURED, "restructured"),
+)
+
+
 def _waiting_reasons(wi, status, oi_status=None):
     """Reason codes for a WI held `waiting` on unmet hard predecessors. WI-267
     design-decision 3, extended to `partial` by OI-73 and to `restructured` by
@@ -690,26 +702,19 @@ def _waiting_reasons(wi, status, oi_status=None):
     vocabulary for before the typed OI edge existed."""
     oi_status = oi_status or {}
     unmet = [p for p in wi["preds"] if status.get(p) != _DONE]
-    dead_cancelled = [p for p in unmet if status.get(p) == _CANCELLED]
-    dead_partial = [p for p in unmet if status.get(p) == _PARTIAL]
-    dead_restructured = [p for p in unmet if status.get(p) == _RESTRUCTURED]
+    # The dead-edge codes LEAD the list, in this table's order — which is fixed
+    # only for stability, since all three states are equally
+    # will-never-integrate.
     reasons = []
+    for dead_state, code in _DEAD_PRED_CODES:
+        dead = [p for p in unmet if status.get(p) == dead_state]
+        if dead:
+            reasons.append("waiting:hard-pred-%s:%s" % (code, ",".join(dead)))
     if unmet:
         reasons.append("waiting:hard-preds-not-done:%s" % ",".join(unmet))
     oi_unmet = [o for o in wi.get("oi_preds", ()) if not _oi_satisfied(o, oi_status)]
     if oi_unmet:
         reasons.append("waiting:open-item-pending:%s" % ",".join(oi_unmet))
-    # Insert the dead-edge codes last so they lead the list; the order among
-    # cancelled/partial/restructured is fixed only for stability — all three are
-    # equally will-never-integrate.
-    if dead_restructured:
-        reasons.insert(
-            0, "waiting:hard-pred-restructured:%s" % ",".join(dead_restructured)
-        )
-    if dead_partial:
-        reasons.insert(0, "waiting:hard-pred-partial:%s" % ",".join(dead_partial))
-    if dead_cancelled:
-        reasons.insert(0, "waiting:hard-pred-cancelled:%s" % ",".join(dead_cancelled))
     # A WI reaches `waiting` only because SOME hard edge is unmet; name the WI
     # arm even when the sole unmet edge is an open item, so the code is never
     # empty (the old single-reason form always emitted this line).

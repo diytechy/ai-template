@@ -606,9 +606,10 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         <span><i style="background:var(--queued)"></i>not started — ○ queued (ready),
           ✎ draft (still being figured out), ◌ deferred (parked by choice),
           ⊘ blocked (has an impediment)</span>
-        <span><i style="background:var(--cancelled)"></i>terminal — ⊗ cancelled (won't build),
-          ◐ partial (stopped early, remainder carried by a successor),
-          ⇥ restructured (absorbed into the successor its Deliverable names)</span>
+        <span><i style="background:var(--cancelled)"></i>terminal —
+          ⊗ cancelled — won't build · ◐ partial — stopped early, remainder
+          carried by a successor · ⇥ restructured — absorbed by the successor
+          its Deliverable names</span>
       </div>
     </section>
 

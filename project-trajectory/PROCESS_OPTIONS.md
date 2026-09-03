@@ -1866,8 +1866,9 @@ registry (warn-first at the commit floor; `--strict` gates R-E/R-F at DevStg-Tes
 
 - **R-A** — a WI's `Deliverable` is non-empty **iff** its `Status` is **terminal**
   (`done`, `cancelled`, `partial` or `restructured` — the last owing exactly one
-  line, `Restructured into WI-<successor>.`, whose successors must name it back
-  in their own `Supersedes`); an open WI
+  line (surrounding whitespace ignored), `Restructured into WI-<successor>.`,
+  whose successors must each be a distinct live row naming it back in their own
+  `Supersedes`, never itself and never itself `restructured`); an open WI
   (draft/queued/active/deferred/blocked) has an **empty** Deliverable (`done`
   records what shipped, `cancelled` why it never will). `partial` is exempt from
   the non-empty half — its permanent backward record is the immutable per-close
