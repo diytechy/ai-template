@@ -38,3 +38,5 @@ reason — addressed in the commit before this rollup: the row changes
 first.
 
 VERDICT: APPROVE findings=1
+
+(Re-noted 2026-09-03 after the trunk merge for the two generated artifacts; the rounds and the governing line above are unchanged.)
