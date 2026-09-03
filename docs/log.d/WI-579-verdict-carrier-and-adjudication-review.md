@@ -844,3 +844,18 @@ own regression, which that commit added to the suite but never listed).
 "a declared review policy of N schedules N reviewer sessions" was re-driven and
 holds, because the resume completes the same round rather than starting a
 second one.
+
+### Review A round 025 rework — reopen the close and put registry content in its owning cells
+
+The terminal record was reopened because directory status makes every Done-when
+an assertion, while the only recorded unfiltered runs had one stale-stage
+failure. The required green will be driven on a temporary copy with
+`docs/stage` regenerated there; the branch still does not edit the trunk-owned
+generated artifact.
+
+LLR-207's Detail and Rationale now state only standing system behavior. The
+review-round chronology and defect narrative remain in this log and the WI
+record, where history belongs. IF-175's Data is a typed seam signature within
+the registry ceiling; its Notes retain the contract explanation.
+
+Deferred open items: none — the review findings determine the corrections.

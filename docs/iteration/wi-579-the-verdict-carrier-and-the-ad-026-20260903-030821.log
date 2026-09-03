@@ -1,0 +1,362 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 026
+# date: 2026-09-03 03:13
+# train: wi-579-the-verdict-carrier-and-the-ad
+# base: 0ecc62bbc55a
+# phase: DESIGN-CHECK
+# wi: WI-579
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: WAITING
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 312
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 10937
+# prompt-template: kit:DESIGN-CHECK
+# prompt-sha: sha256:c3fc85bd0a23
+# timeout:
+# heterogeneity:
+# exit-code: 1
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Reading prompt from stdin...
+OpenAI Codex v0.145.0
+--------
+workdir: /Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 01a0664f-cf7f-7d30-a28c-480b8b62a546
+--------
+user
+You are a worker session for a CLAIMED work item (scripts/agent_loop.py --wi, on a branch cut by `integrate.py claim`) — assume no human is watching. You are assigned ONE work item on ONE claimed branch; this assignment is your whole scope. Read AGENTS.md first, then the SpecRef and SR rows below — they are the spec of record.
+
+Assignment:
+- WI: WI-579 — The verdict carrier and the adjudication_review dial: gate over logged rounds, tree-bound trailer, generated rollup
+- SR-Refs: — | SpecRef: docs/requirements/open-items.toml#OI-76
+- Branch: wi-579-the-verdict-carrier-and-the-ad (its claim is docs/work/active/wi-579-the-verdict-carrier-and-the-ad/; integration base 0ecc62bbc55ac0a724550620ba674cb6f32e886e)
+- Current branch diff (0ecc62b..HEAD — earlier work on this branch, accepted but not yet reviewed/integrated):
+97d65b00 telemetry: session 025 review scoreboard
+70110af1 telemetry: session wi-579-the-verdict-carrier-and-the-ad-025 REVIEW-A COMMITTED
+4239d9d0 review: record WI-579 round 025 verdict
+7ea9f234 telemetry: session wi-579-the-verdict-carrier-and-the-ad-024 BUILD COMMITTED
+6f12243f WI-579: close the round-023 phase-count rework
+2cd28b91 WI-579: make the review-owed derivation answer in phases
+4e5a3f8e telemetry: session wi-579-the-verdict-carrier-and-the-ad-023 DESIGN-CHECK COMMITTED
+1a9787cd WI-579: record the round-022 gate verification
+c939d49c WI-579: enforce the declared independent verdict count
+8a94564d telemetry: session 022 review scoreboard
+c22156c3 telemetry: session wi-579-the-verdict-carrier-and-the-ad-022 REVIEW-A COMMITTED
+3a24845a review: WI-579 REVIEW-A round 022
+7c4ca529 telemetry: session wi-579-the-verdict-carrier-and-the-ad-021 BUILD COMMITTED
+66844228 WI-579: record the post-close verification of the round-019 fix
+dbe1075d telemetry: session wi-579-the-verdict-carrier-and-the-ad-020 DESIGN-CHECK COMMITTED
+71d3acf7 WI-579: close the raw-path identity rework
+ff28a937 WI-579: preserve raw path bytes in verdict identities
+f03f757e WI-579: open the raw-path identity rework record
+ae8b05ff review: record WI-579 round 019 verdict
+6b8354b8 WI-579: state the carrier's path scope once, on every arm
+5ed3e9b8 WI-579: open the round-018 record for the unfinished half of the empty-carrier fix
+db46d493 telemetry: session wi-579-the-verdict-carrier-and-the-ad-017 BUILD NO-COMMIT
+dd4723de telemetry: session wi-579-the-verdict-carrier-and-the-ad-016 DESIGN-CHECK COMMITTED
+48646a04 WI-579: close at the round-015 rework, and retract an ambiguous red
+2b4be13c WI-579: the fourth reader, found by sweeping the shape
+19340e39 WI-579: keep two cells true at the governing identity
+7cf67db4 WI-579: bind a round by the definition the gate governs by
+56aacfef WI-579: open the round-015 rework record
+d399316d telemetry: session 015 review scoreboard
+2c88377f telemetry: session wi-579-the-verdict-carrier-and-the-ad-015 REVIEW-A COMMITTED
+… (42 more lines)
+M	.agents/skills/session-protocol/SKILL.md
+M	.claude/skills/session-protocol/SKILL.md
+A	docs/archive/work/complete/WI-579-the-verdict-carrier-and-the-ad.md
+M	docs/enforcement-audit.md
+M	docs/id-watermark
+A	docs/iteration/wi-579-the-verdict-carrier-and-the-ad-001-20260902-202136.log
+A	docs/iteration/wi-579-the-verdict-carrier-and-the-ad-002-20260902-212756.log
+A	docs/iteration/wi-579-the-verdict-carrier-and-the-ad-003-20260902-213209.log
+A	docs/iteration/wi-579-the-verdict-carrier-and-the-ad-004-20260902-215319.log
+
+[... 3776 line(s) elided — full stream in out/run-logs/ ...]
+
+ channel = "call"
+-data = "tree_identity and fold_listing (the non-record tree identity a verdict names), governing_identity over governing_rev/refresh_attestation (that identity at the rev it is measured at, with a verified station refresh peeled; the rev is an optional argument, so a reader holding a COMMIT - a round's reviewed sha, an attestation's carrier - gets the same composition), refresh_subject/work_tip (the tip-only peel the reset shares), format_trailer/parse_trailer (the Review-Verdict machine half), round_file/session_log (the round and session-log name grammars), branch_paths/logged_rounds/round_entries (the logged-reviewer round evidence on a branch), declared_phases/phases_owed (the phase span a review policy declares, and which of those phases a tree has never had DRAWN - the resume's question, weaker than the gate's produced-a-parseable-APPROVE on exactly the mangled-verdict class and no other), branch_trailers (the verified attestations per tree, in commit order); every reader supplies its own fail direction for a None answer"
++data = "bytes -> tree identity; repo/rev -> governing identity; branch -> logged rounds/trailers; policy + entries -> owed phases/count; text <-> trailer"
+ version = "v1"
+ status = "Drafted"
+ component = "CMP-008"
+diff --git a/docs/requirements/low-level-requirements.toml b/docs/requirements/low-level-requirements.toml
+index 3cb57eff96f8c140a14cb4ee5397f9dcccc95af9..3b7a1e9918749eb9b4d6c509ab0893d04ee8336a
+--- a/docs/requirements/low-level-requirements.toml
++++ b/docs/requirements/low-level-requirements.toml
+@@ -2184,8 +2184,8 @@
+ title = "The verdict record: what carries a governing verdict, and what binds it to the tree it judged"
+ module = "project-trajectory/scripts/kitlib/verdict.py"
+ code_symbol = "RECORD_PREFIXES/fold_listing/tree_identity/refresh_subject/refresh_attestation/work_tip/governing_rev/governing_identity/format_trailer/parse_trailer/round_file/session_log/branch_paths/logged_rounds/round_entries/branch_entries/declared_phases/phases_owed/round_count/format_branch_trailer/branch_trailers"
+-detail = """The reading behind the merge seam's verdict rung, sited below both of its readers. tree_identity folds `git ls-tree -r -z` with the RECORD prefixes dropped - docs/reviews/, docs/log.d/, docs/iteration/ - into a SHA-256 over the surviving entries, which is what makes "the tree a verdict judged" a value two independent readers can compare; the digest is 64 hex deliberately, so it cannot be mistaken for the git tree object id the Bar-Green trailer carries. -z is the ENCODING BOUNDARY and not a formatting choice: git quotes any path holding a non-ASCII or special character, and a quoted path defeats the record-prefix test, so fold_listing takes raw byte entries and never decodes them or sees git's display encoding. What CANNOT invalidate a verdict has two halves and this module owns both: the record PATHS, and the station's refresh COMMIT. refresh_attestation verifies a Bar-Green: tree=<40 hex> work=<40 hex> trailer against the commit's own tree, its first parent and this branch's refresh subject; the peel is then written TWICE, on purpose, because its two callers can afford different answers: work_tip peels only a refresh sitting on the tip, at the work sha the refresh itself recorded, because it feeds a reset --hard where peeling one commit too far destroys committed work; governing_rev walks THROUGH any commit whose non-record identity equals its first parent's, to reach a refresh it would otherwise hide, which a read-only reader can do safely. Merging the two is a defect in either direction, and leaving them merged was one: while the identity used the tip-only peel, a single telemetry commit - a record path the fold exists to ignore - moved the identity by burying the refresh under it, so an approval served before the refresh named a tree nothing governed and both readers agreed on the wrong answer. The walk's step condition is that sentence itself - a commit that cannot invalidate a verdict - and not a proxy for it, because the proxy was the same defect one shape further on: a predicate CLASSIFYING the paths a commit touched must stop at every commit whose paths it cannot read, and an attestation riding unchanged bookkeeping commits EMPTY, so the commit RECORDING an approval buried the refresh. Asking the identity question directly makes the empty carrier, the merge commit and the quoted-path trap unrepresentable together, since no path is classified in the walk at all. governing_identity composes governing_rev with the fold, so the merge slot and the loop's review-owed derivation are HANDED one answer rather than each choosing the rev it measures at; it takes the REV as an optional argument, because the readers that ask about a COMMIT rather than about the branch - the sha a round file cites, and the commit an attestation rides - must be answered by the same composition, and a raw fold there is that composition with the peel left out. Leaving it out was the same defect once more: a round drawn AFTER a refresh names the post-refresh tree while the gate governs by the peeled one, so the two were permanently unequal and no commit on the branch could make them agree - the round invisible to both readers, and an identical one re-drawn every tick. fold_listing is pure over the entries, so the one rule that decides whether two trees are the same work is exercisable without a repository. logged_rounds is the provenance join: a file under docs/reviews/ is a ROUND only when the coordinator's own committed session log for that (train, ordinal) declares a REVIEW phase, so an implementer-authored file in the review path is not evidence. round_entries restricts the rounds to those whose reviewed commit GOVERNS the identity under judgement - through governing_identity at that commit, never the bare fold - and hands the phase/ordinal/verdict triples to the latest-per-phase rule the scoring layer already owned; the parse function is INJECTED rather than imported, so this leaf keeps no edge back into scoring. declared_phases and phases_owed carry the COUNT dimension of the same question the identity carries the WHICH-TREE dimension of, and they are here for the same reason: the merge slot was taught to demand every phase the review_rounds dial declares (round 022 - the parsed count had been collapsed to a boolean, so a lone REVIEW-A cleared a policy of 2) while agent_loop.review_owed_by_evidence still read any verdict at this tree as the round being served, and the review phase queue is in-memory run state. A run that died between REVIEW-A and REVIEW-B therefore left a lane that scheduled nothing and a gate that refused the merge for the phase nobody would draw. declared_phases is the span both readers slice - the clamp is its whole content, since a NEGATIVE policy slices REVIEW_PHASES from the END and an over-dialled one asks for a phase no reviewer can be routed to. phases_owed answers with the MISSING PHASES rather than yes/no, which is what lets the resume redraw only those: redrawing a phase already served at this identity would re-run a reviewer that already spoke, and a dissent so redrawn reads to _round_refusal as a reroll-until-green. It asks whether a phase was DRAWN and not whether it approved, so it is deliberately weaker than the gate's test on exactly one class - a present but UNPARSEABLE verdict, which must not be redrawn (the double-round class) and must not clear the gate either. round_count gives `rounds=<N>` its evidence-derived scope: completed review cycles represented at ONE governing tree, computed as the largest per-phase entry count because one cycle may carry REVIEW-A and REVIEW-B; changing the work changes the identity and starts this count over. branch_trailers reads the Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex> machine half off the branch's own commits, verified against the identity the carrying commit GOVERNS - the same composition again, exactly as the bar attestation is verified against its own tree - and returns per tree the ORDERED SEQUENCE of attestations rather than one: a re-drawn round stamps a second trailer at the same tree, and a map fed from newest-first git log handed its reader the superseded tally. Off git every reader answers None and says nothing about what that means; the two callers declare opposite-looking fail directions that are the same direction - refuse the merge, assume a round is owed."""
+-rationale = """The gate and the loop ask one question from two sides - may this merge, and does this lane still owe a round - so one definition below both readers prevents process-record commits or unlogged files from producing different answers. The trailer is deliberately NOT an accept path and the module says so: anyone with commit access can stamp one on their own commit and the self-verification will pass, because it is their tree - what a session cannot forge is the coordinator's committed session log, so the round evidence decides and the trailer is read as a cross-check that refuses when either its verdict word or its evidence-derived round count contradicts the rounds. Binding by identity rather than by ordering makes staleness the direct question "does this still describe the thing", with no last-one-wins rule that could promote an approval for different work."""
++detail = """tree_identity folds raw NUL-delimited `git ls-tree -r -z` entries after dropping docs/reviews/, docs/log.d/ and docs/iteration/, and returns a 64-hex SHA-256 identity. fold_listing accepts bytes and preserves every path byte so display quoting or decoding cannot merge distinct work trees. refresh_attestation validates a station refresh from its subject, first parent, commit tree and Bar-Green trailer. work_tip peels only a verified refresh at the tip for the reset path; governing_rev is read-only and walks across commits whose non-record identity equals their first parent's until it can peel a verified refresh. governing_identity composes governing_rev and tree_identity for HEAD or an explicit revision, including a round's reviewed commit and a trailer's carrier. logged_rounds joins branch-scoped round files to coordinator session logs by train, ordinal and review phase. round_entries retains only rounds whose reviewed revision governs the identity under judgement and emits phase, ordinal and verdict entries through an injected parser. declared_phases clamps the configured independent-review count to the available review phases. phases_owed returns declared phases with no drawn entry at the governing identity, independent of whether a drawn verdict parses or approves. round_count returns the largest per-phase entry count at one governing identity, so a multi-phase review cycle counts once and changed work starts a new count. format_trailer and parse_trailer carry `Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex>`. branch_trailers verifies each carrier against its governing identity and returns the ordered attestation sequence per tree. Readers treat unavailable repository answers according to their own fail-closed contract."""
++rationale = """The merge gate asks whether a lane may merge while the loop asks which review phase the lane still owes. A shared identity, evidence join, phase span and count keep both answers on the same tree and policy. Logged round evidence is authoritative because its coordinator session establishes reviewer provenance; the self-verifying trailer is only a cross-check and cannot create an approval. Identity binding answers staleness directly and prevents ordering from promoting a verdict for different work. Separate read-only and reset peels protect both contracts: the reader may traverse identity-preserving commits, while the destructive reset path may remove only the verified refresh at its tip."""
+ test_refs = "TC-205"
+ status = "Drafted"
+ component = "CMP-008"
+
+ succeeded in 44302ms:
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [  4%]
+........................................................................ [  9%]
+........................................................................ [ 14%]
+..........................................ss............................ [ 18%]
+........................................................................ [ 23%]
+.................................................s...................... [ 28%]
+........................................................................ [ 33%]
+........................................................................ [ 37%]
+........................................................................ [ 42%]
+...............................s........................................ [ 47%]
+........................................................................ [ 52%]
+........................................................................ [ 56%]
+........................................................................ [ 61%]
+........................................................................ [ 66%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+........................................................................ [ 80%]
+........................................................................ [ 85%]
+........................................................................ [ 90%]
+.............................................sss........................ [ 94%]
+......................................................s................. [ 99%]
+......                                                                   [100%]
+1510 passed, 8 skipped in 44.18s
+
+exec
+/bin/zsh -lc '.venv/bin/python scripts/check_smoke_budget.py --mode enforce' in /Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad
+diff --git a/docs/archive/work/complete/WI-579-the-verdict-carrier-and-the-ad.md b/docs/work/active/wi-579-the-verdict-carrier-and-the-ad/WI-579-the-verdict-carrier-and-the-ad.md
+index 4c8bb6fa0800ffae48e6755a2b66ea9153d78820..91f3e7d95da3c53acf37729211de1fb2a3d02af7
+--- a/docs/archive/work/complete/WI-579-the-verdict-carrier-and-the-ad.md
++++ b/docs/work/active/wi-579-the-verdict-carrier-and-the-ad/WI-579-the-verdict-carrier-and-the-ad.md
+@@ -213,6 +213,11 @@
+ Account, deviations and the two out-of-scope findings:
+ `docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md`.
+ 
++Round 025 review reopened this row because the completed location made Done-when
++5 assert an unfiltered green that had not been produced on current derived
++stage state. The standing registry corrections are landed; closure now waits
++for the full suite on a temporary tree whose `docs/stage` has been regenerated.
++
+ ## Context
+ 
+ Minted by the owner-directed backlog restructure of 2026-09-02 (plan of record `docs/plans/2026-09-02-backlog-restructure-and-consolidation.md` §2.2; executed out of band as a hand trunk commit series, not by a lane). The absorbed rows are archived under `docs/archive/work/restructured/` with their scope text untouched; their Done-when blocks are QUOTED below under their old ids and remain the spec this row must satisfy — decompose, don't paraphrase.
+diff --git a/docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md b/docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md
+index 0651eb987b7cd3b2e7e6fc61318180da01400604..159c8b0c036917d255aada527b432876d0242fa2
+--- a/docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md
++++ b/docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md
+@@ -844,3 +844,18 @@
+ "a declared review policy of N schedules N reviewer sessions" was re-driven and
+ holds, because the resume completes the same round rather than starting a
+ second one.
++
++### Review A round 025 rework — reopen the close and put registry content in its owning cells
++
++The terminal record was reopened because directory status makes every Done-when
++an assertion, while the only recorded unfiltered runs had one stale-stage
++failure. The required green will be driven on a temporary copy with
++`docs/stage` regenerated there; the branch still does not edit the trunk-owned
++generated artifact.
++
++LLR-207's Detail and Rationale now state only standing system behavior. The
++review-round chronology and defect narrative remain in this log and the WI
++record, where history belongs. IF-175's Data is a typed seam signature within
++the registry ceiling; its Notes retain the contract explanation.
++
++Deferred open items: none — the review findings determine the corrections.
+diff --git a/docs/requirements/interfaces.toml b/docs/requirements/interfaces.toml
+index 917f555841c5a476d71b5496f7a1ee566392356a..2a9408770a80ba3f5d52a834dfc3ea23800f7d9d
+--- a/docs/requirements/interfaces.toml
++++ b/docs/requirements/interfaces.toml
+@@ -1073,7 +1073,7 @@
+ owner = "scripts/kitlib/verdict"
+ requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/gen_verdict_rollup"]
+ channel = "call"
+-data = "tree_identity and fold_listing (the non-record tree identity a verdict names), governing_identity over governing_rev/refresh_attestation (that identity at the rev it is measured at, with a verified station refresh peeled; the rev is an optional argument, so a reader holding a COMMIT - a round's reviewed sha, an attestation's carrier - gets the same composition), refresh_subject/work_tip (the tip-only peel the reset shares), format_trailer/parse_trailer (the Review-Verdict machine half), round_file/session_log (the round and session-log name grammars), branch_paths/logged_rounds/round_entries (the logged-reviewer round evidence on a branch), declared_phases/phases_owed (the phase span a review policy declares, and which of those phases a tree has never had DRAWN - the resume's question, weaker than the gate's produced-a-parseable-APPROVE on exactly the mangled-verdict class and no other), branch_trailers (the verified attestations per tree, in commit order); every reader supplies its own fail direction for a None answer"
++data = "bytes -> tree identity; repo/rev -> governing identity; branch -> logged rounds/trailers; policy + entries -> owed phases/count; text <-> trailer"
+ version = "v1"
+ status = "Drafted"
+ component = "CMP-008"
+diff --git a/docs/requirements/low-level-requirements.toml b/docs/requirements/low-level-requirements.toml
+index 3cb57eff96f8c140a14cb4ee5397f9dcccc95af9..3b7a1e9918749eb9b4d6c509ab0893d04ee8336a
+--- a/docs/requirements/low-level-requirements.toml
++++ b/docs/requirements/low-level-requirements.toml
+@@ -2184,8 +2184,8 @@
+ title = "The verdict record: what carries a governing verdict, and what binds it to the tree it judged"
+ module = "project-trajectory/scripts/kitlib/verdict.py"
+ code_symbol = "RECORD_PREFIXES/fold_listing/tree_identity/refresh_subject/refresh_attestation/work_tip/governing_rev/governing_identity/format_trailer/parse_trailer/round_file/session_log/branch_paths/logged_rounds/round_entries/branch_entries/declared_phases/phases_owed/round_count/format_branch_trailer/branch_trailers"
+-detail = """The reading behind the merge seam's verdict rung, sited below both of its readers. tree_identity folds `git ls-tree -r -z` with the RECORD prefixes dropped - docs/reviews/, docs/log.d/, docs/iteration/ - into a SHA-256 over the surviving entries, which is what makes "the tree a verdict judged" a value two independent readers can compare; the digest is 64 hex deliberately, so it cannot be mistaken for the git tree object id the Bar-Green trailer carries. -z is the ENCODING BOUNDARY and not a formatting choice: git quotes any path holding a non-ASCII or special character, and a quoted path defeats the record-prefix test, so fold_listing takes raw byte entries and never decodes them or sees git's display encoding. What CANNOT invalidate a verdict has two halves and this module owns both: the record PATHS, and the station's refresh COMMIT. refresh_attestation verifies a Bar-Green: tree=<40 hex> work=<40 hex> trailer against the commit's own tree, its first parent and this branch's refresh subject; the peel is then written TWICE, on purpose, because its two callers can afford different answers: work_tip peels only a refresh sitting on the tip, at the work sha the refresh itself recorded, because it feeds a reset --hard where peeling one commit too far destroys committed work; governing_rev walks THROUGH any commit whose non-record identity equals its first parent's, to reach a refresh it would otherwise hide, which a read-only reader can do safely. Merging the two is a defect in either direction, and leaving them merged was one: while the identity used the tip-only peel, a single telemetry commit - a record path the fold exists to ignore - moved the identity by burying the refresh under it, so an approval served before the refresh named a tree nothing governed and both readers agreed on the wrong answer. The walk's step condition is that sentence itself - a commit that cannot invalidate a verdict - and not a proxy for it, because the proxy was the same defect one shape further on: a predicate CLASSIFYING the paths a commit touched must stop at every commit whose paths it cannot read, and an attestation riding unchanged bookkeeping commits EMPTY, so the commit RECORDING an approval buried the refresh. Asking the identity question directly makes the empty carrier, the merge commit and the quoted-path trap unrepresentable together, since no path is classified in the walk at all. governing_identity composes governing_rev with the fold, so the merge slot and the loop's review-owed derivation are HANDED one answer rather than each choosing the rev it measures at; it takes the REV as an optional argument, because the readers that ask about a COMMIT rather than about the branch - the sha a round file cites, and the commit an attestation rides - must be answered by the same composition, and a raw fold there is that composition with the peel left out. Leaving it out was the same defect once more: a round drawn AFTER a refresh names the post-refresh tree while the gate governs by the peeled one, so the two were permanently unequal and no commit on the branch could make them agree - the round invisible to both readers, and an identical one re-drawn every tick. fold_listing is pure over the entries, so the one rule that decides whether two trees are the same work is exercisable without a repository. logged_rounds is the provenance join: a file under docs/reviews/ is a ROUND only when the coordinator's own committed session log for that (train, ordinal) declares a REVIEW phase, so an implementer-authored file in the review path is not evidence. round_entries restricts the rounds to those whose reviewed commit GOVERNS the identity under judgement - through governing_identity at that commit, never the bare fold - and hands the phase/ordinal/verdict triples to the latest-per-phase rule the scoring layer already owned; the parse function is INJECTED rather than imported, so this leaf keeps no edge back into scoring. declared_phases and phases_owed carry the COUNT dimension of the same question the identity carries the WHICH-TREE dimension of, and they are here for the same reason: the merge slot was taught to demand every phase the review_rounds dial declares (round 022 - the parsed count had been collapsed to a boolean, so a lone REVIEW-A cleared a policy of 2) while agent_loop.review_owed_by_evidence still read any verdict at this tree as the round being served, and the review phase queue is in-memory run state. A run that died between REVIEW-A and REVIEW-B therefore left a lane that scheduled nothing and a gate that refused the merge for the phase nobody would draw. declared_phases is the span both readers slice - the clamp is its whole content, since a NEGATIVE policy slices REVIEW_PHASES from the END and an over-dialled one asks for a phase no reviewer can be routed to. phases_owed answers with the MISSING PHASES rather than yes/no, which is what lets the resume redraw only those: redrawing a phase already served at this identity would re-run a reviewer that already spoke, and a dissent so redrawn reads to _round_refusal as a reroll-until-green. It asks whether a phase was DRAWN and not whether it approved, so it is deliberately weaker than the gate's test on exactly one class - a present but UNPARSEABLE verdict, which must not be redrawn (the double-round class) and must not clear the gate either. round_count gives `rounds=<N>` its evidence-derived scope: completed review cycles represented at ONE governing tree, computed as the largest per-phase entry count because one cycle may carry REVIEW-A and REVIEW-B; changing the work changes the identity and starts this count over. branch_trailers reads the Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex> machine half off the branch's own commits, verified against the identity the carrying commit GOVERNS - the same composition again, exactly as the bar attestation is verified against its own tree - and returns per tree the ORDERED SEQUENCE of attestations rather than one: a re-drawn round stamps a second trailer at the same tree, and a map fed from newest-first git log handed its reader the superseded tally. Off git every reader answers None and says nothing about what that means; the two callers declare opposite-looking fail directions that are the same direction - refuse the merge, assume a round is owed."""
+-rationale = """The gate and the loop ask one question from two sides - may this merge, and does this lane still owe a round - so one definition below both readers prevents process-record commits or unlogged files from producing different answers. The trailer is deliberately NOT an accept path and the module says so: anyone with commit access can stamp one on their own commit and the self-verification will pass, because it is their tree - what a session cannot forge is the coordinator's committed session log, so the round evidence decides and the trailer is read as a cross-check that refuses when either its verdict word or its evidence-derived round count contradicts the rounds. Binding by identity rather than by ordering makes staleness the direct question "does this still describe the thing", with no last-one-wins rule that could promote an approval for different work."""
++detail = """tree_identity folds raw NUL-delimited `git ls-tree -r -z` entries after dropping docs/reviews/, docs/log.d/ and docs/iteration/, and returns a 64-hex SHA-256 identity. fold_listing accepts bytes and preserves every path byte so display quoting or decoding cannot merge distinct work trees. refresh_attestation validates a station refresh from its subject, first parent, commit tree and Bar-Green trailer. work_tip peels only a verified refresh at the tip for the reset path; governing_rev is read-only and walks across commits whose non-record identity equals their first parent's until it can peel a verified refresh. governing_identity composes governing_rev and tree_identity for HEAD or an explicit revision, including a round's reviewed commit and a trailer's carrier. logged_rounds joins branch-scoped round files to coordinator session logs by train, ordinal and review phase. round_entries retains only rounds whose reviewed revision governs the identity under judgement and emits phase, ordinal and verdict entries through an injected parser. declared_phases clamps the configured independent-review count to the available review phases. phases_owed returns declared phases with no drawn entry at the governing identity, independent of whether a drawn verdict parses or approves. round_count returns the largest per-phase entry count at one governing identity, so a multi-phase review cycle counts once and changed work starts a new count. format_trailer and parse_trailer carry `Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex>`. branch_trailers verifies each carrier against its governing identity and returns the ordered attestation sequence per tree. Readers treat unavailable repository answers according to their own fail-closed contract."""
++rationale = """The merge gate asks whether a lane may merge while the loop asks which review phase the lane still owes. A shared identity, evidence join, phase span and count keep both answers on the same tree and policy. Logged round evidence is authoritative because its coordinator session establishes reviewer provenance; the self-verifying trailer is only a cross-check and cannot create an approval. Identity binding answers staleness directly and prevents ordering from promoting a verdict for different work. Separate read-only and reset peels protect both contracts: the reader may traverse identity-preserving commits, while the destructive reset path may remove only th
+[... byte cap hit — full stream in out/run-logs/ ...]
+is read-only and walks across commits whose non-record identity equals their first parent's until it can peel a verified refresh. governing_identity composes governing_rev and tree_identity for HEAD or an explicit revision, including a round's reviewed commit and a trailer's carrier. logged_rounds joins branch-scoped round files to coordinator session logs by train, ordinal and review phase. round_entries retains only rounds whose reviewed revision governs the identity under judgement and emits phase, ordinal and verdict entries through an injected parser. declared_phases clamps the configured independent-review count to the available review phases. phases_owed returns declared phases with no drawn entry at the governing identity, independent of whether a drawn verdict parses or approves. round_count returns the largest per-phase entry count at one governing identity, so a multi-phase review cycle counts once and changed work starts a new count. format_trailer and parse_trailer carry `Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex>`. branch_trailers verifies each carrier against its governing identity and returns the ordered attestation sequence per tree. Readers treat unavailable repository answers according to their own fail-closed contract."""
++rationale = """The merge gate asks whether a lane may merge while the loop asks which review phase the lane still owes. A shared identity, evidence join, phase span and count keep both answers on the same tree and policy. Logged round evidence is authoritative because its coordinator session establishes reviewer provenance; the self-verifying trailer is only a cross-check and cannot create an approval. Identity binding answers staleness directly and prevents ordering from promoting a verdict for different work. Separate read-only and reset peels protect both contracts: the reader may traverse identity-preserving commits, while the destructive reset path may remove only the verified refresh at its tip."""
+ test_refs = "TC-205"
+ status = "Drafted"
+ component = "CMP-008"
+
+ succeeded in 33754ms:
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [  4%]
+........................................................................ [  9%]
+........................................................................ [ 14%]
+................................ss...................................... [ 18%]
+........................................................................ [ 23%]
+.................................................s...................... [ 28%]
+........................................................................ [ 33%]
+........................................................................ [ 37%]
+........................................................................ [ 42%]
+................................s....................................... [ 47%]
+........................................................................ [ 52%]
+........................................................................ [ 56%]
+........................................................................ [ 61%]
+........................................................................ [ 66%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+........................................................................ [ 80%]
+........................................................................ [ 85%]
+........................................................................ [ 90%]
+............................................sss......................... [ 94%]
+......................................................s................. [ 99%]
+......                                                                   [100%]
+1510 passed, 8 skipped in 33.64s
+timing: /Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad/.venv/bin/python -m pytest -q -n auto -m smoke
+smoke wall-clock budget: 33.8s vs 60s budget -> within
+
+exec
+/bin/zsh -lc "git diff --stat && git diff --check && git status --short && git diff -- docs/requirements/interfaces.toml docs/requirements/low-level-requirements.toml | sed -n '1,240p'" in /Users/diytechy/Documents/ai-template-drive/wi-579-the-verdict-carrier-and-the-ad
+ succeeded in 0ms:
+ .../WI-579-the-verdict-carrier-and-the-ad.md       | 304 ---------------------
+ ...-579-verdict-carrier-and-adjudication-review.md |  15 +
+ docs/requirements/interfaces.toml                  |   2 +-
+ docs/requirements/low-level-requirements.toml      |   4 +-
+ 4 files changed, 18 insertions(+), 307 deletions(-)
+ D docs/archive/work/complete/WI-579-the-verdict-carrier-and-the-ad.md
+ M docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md
+ M docs/requirements/interfaces.toml
+ M docs/requirements/low-level-requirements.toml
+?? docs/work/active/wi-579-the-verdict-carrier-and-the-ad/
+diff --git a/docs/requirements/interfaces.toml b/docs/requirements/interfaces.toml
+index 917f5558..2a940877 100644
+--- a/docs/requirements/interfaces.toml
++++ b/docs/requirements/interfaces.toml
+@@ -1073,7 +1073,7 @@ notes = """No tie-back: the argv comes IN from the adopter's own session (a clai
+ owner = "scripts/kitlib/verdict"
+ requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/gen_verdict_rollup"]
+ channel = "call"
+-data = "tree_identity and fold_listing (the non-record tree identity a verdict names), governing_identity over governing_rev/refresh_attestation (that identity at the rev it is measured at, with a verified station refresh peeled; the rev is an optional argument, so a reader holding a COMMIT - a round's reviewed sha, an attestation's carrier - gets the same composition), refresh_subject/work_tip (the tip-only peel the reset shares), format_trailer/parse_trailer (the Review-Verdict machine half), round_file/session_log (the round and session-log name grammars), branch_paths/logged_rounds/round_entries (the logged-reviewer round evidence on a branch), declared_phases/phases_owed (the phase span a review policy declares, and which of those phases a tree has never had DRAWN - the resume's question, weaker than the gate's produced-a-parseable-APPROVE on exactly the mangled-verdict class and no other), branch_trailers (the verified attestations per tree, in commit order); every reader supplies its own fail direction for a None answer"
++data = "bytes -> tree identity; repo/rev -> governing identity; branch -> logged rounds/trailers; policy + entries -> owed phases/count; text <-> trailer"
+ version = "v1"
+ status = "Drafted"
+ component = "CMP-008"
+diff --git a/docs/requirements/low-level-requirements.toml b/docs/requirements/low-level-requirements.toml
+index 3cb57eff..3b7a1e99 100644
+--- a/docs/requirements/low-level-requirements.toml
++++ b/docs/requirements/low-level-requirements.toml
+@@ -2184,8 +2184,8 @@ sr_refs = ["SR-156"]
+ title = "The verdict record: what carries a governing verdict, and what binds it to the tree it judged"
+ module = "project-trajectory/scripts/kitlib/verdict.py"
+ code_symbol = "RECORD_PREFIXES/fold_listing/tree_identity/refresh_subject/refresh_attestation/work_tip/governing_rev/governing_identity/format_trailer/parse_trailer/round_file/session_log/branch_paths/logged_rounds/round_entries/branch_entries/declared_phases/phases_owed/round_count/format_branch_trailer/branch_trailers"
+-detail = """The reading behind the merge seam's verdict rung, sited below both of its readers. tree_identity folds `git ls-tree -r -z` with the RECORD prefixes dropped - docs/reviews/, docs/log.d/, docs/iteration/ - into a SHA-256 over the surviving entries, which is what makes "the tree a verdict judged" a value two independent readers can compare; the digest is 64 hex deliberately, so it cannot be mistaken for the git tree object id the Bar-Green trailer carries. -z is the ENCODING BOUNDARY and not a formatting choice: git quotes any path holding a non-ASCII or special character, and a quoted path defeats the record-prefix test, so fold_listing takes raw byte entries and never decodes them or sees git's display encoding. What CANNOT invalidate a verdict has two halves and this module owns both: the record PATHS, and the station's refresh COMMIT. refresh_attestation verifies a Bar-Green: tree=<40 hex> work=<40 hex> trailer against the commit's own tree, its first parent and this branch's refresh subject; the peel is then written TWICE, on purpose, because its two callers can afford different answers: work_tip peels only a refresh sitting on the tip, at the work sha the refresh itself recorded, because it feeds a reset --hard where peeling one commit too far destroys committed work; governing_rev walks THROUGH any commit whose non-record identity equals its first parent's, to reach a refresh it would otherwise hide, which a read-only reader can do safely. Merging the two is a defect in either direction, and leaving them merged was one: while the identity used the tip-only peel, a single telemetry commit - a record path the fold exists to ignore - moved the identity by burying the refresh under it, so an approval served before the refresh named a tree nothing governed and both readers agreed on the wrong answer. The walk's step condition is that sentence itself - a commit that cannot invalidate a verdict - and not a proxy for it, because the proxy was the same defect one shape further on: a predicate CLASSIFYING the paths a commit touched must stop at every commit whose paths it cannot read, and an attestation riding unchanged bookkeeping commits EMPTY, so the commit RECORDING an approval buried the refresh. Asking the identity question directly makes the empty carrier, the merge commit and the quoted-path trap unrepresentable together, since no path is classified in the walk at all. governing_identity composes governing_rev with the fold, so the merge slot and the loop's review-owed derivation are HANDED one answer rather than each choosing the rev it measures at; it takes the REV as an optional argument, because the readers that ask about a COMMIT rather than about the branch - the sha a round file cites, and the commit an attestation rides - must be answered by the same composition, and a raw fold there is that composition with the peel left out. Leaving it out was the same defect once more: a round drawn AFTER a refresh names the post-refresh tree while the gate governs by the peeled one, so the two were permanently unequal and no commit on the branch could make them agree - the round invisible to both readers, and an identical one re-drawn every tick. fold_listing is pure over the entries, so the one rule that decides whether two trees are the same work is exercisable without a repository. logged_rounds is the provenance join: a file under docs/reviews/ is a ROUND only when the coordinator's own committed session log for that (train, ordinal) declares a REVIEW phase, so an implementer-authored file in the review path is not evidence. round_entries restricts the rounds to those whose reviewed commit GOVERNS the identity under judgement - through governing_identity at that commit, never the bare fold - and hands the phase/ordinal/verdict triples to the latest-per-phase rule the scoring layer already owned; the parse function is INJECTED rather than imported, so this leaf keeps no edge back into scoring. declared_phases and phases_owed carry the COUNT dimension of the same question the identity carries the WHICH-TREE dimension of, and they are here for the same reason: the merge slot was taught to demand every phase the review_rounds dial declares (round 022 - the parsed count had been collapsed to a boolean, so a lone REVIEW-A cleared a policy of 2) while agent_loop.review_owed_by_evidence still read any verdict at this tree as the round being served, and the review phase queue is in-memory run state. A run that died between REVIEW-A and REVIEW-B therefore left a lane that scheduled nothing and a gate that refused the merge for the phase nobody would draw. declared_phases is the span both readers slice - the clamp is its whole content, since a NEGATIVE policy slices REVIEW_PHASES from the END and an over-dialled one asks for a phase no reviewer can be routed to. phases_owed answers with the MISSING PHASES rather than yes/no, which is what lets the resume redraw only those: redrawing a phase already served at this identity would re-run a reviewer that already spoke, and a dissent so redrawn reads to _round_refusal as a reroll-until-green. It asks whether a phase was DRAWN and not whether it approved, so it is deliberately weaker than the gate's test on exactly one class - a present but UNPARSEABLE verdict, which must not be redrawn (the double-round class) and must not clear the gate either. round_count gives `rounds=<N>` its evidence-derived scope: completed review cycles represented at ONE governing tree, computed as the largest per-phase entry count because one cycle may carry REVIEW-A and REVIEW-B; changing the work changes the identity and starts this count over. branch_trailers reads the Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex> machine half off the branch's own commits, verified against the identity the carrying commit GOVERNS - the same composition again, exactly as the bar attestation is verified against its own tree - and returns per tree the ORDERED SEQUENCE of attestations rather than one: a re-drawn round stamps a second trailer at the same tree, and a map fed from newest-first git log handed its reader the superseded tally. Off git every reader answers None and says nothing about what that means; the two callers declare opposite-looking fail directions that are the same direction - refuse the merge, assume a round is owed."""
+-rationale = """The gate and the loop ask one question from two sides - may this merge, and does this lane still owe a round - so one definition below both readers prevents process-record commits or unlogged files from producing different answers. The trailer is deliberately NOT an accept path and the module says so: anyone with commit access can stamp one on their own commit and the self-verification will pass, because it is their tree - what a session cannot forge is the coordinator's committed session log, so the round evidence decides and the trailer is read as a cross-check that refuses when either its verdict word or its evidence-derived round count contradicts the rounds. Binding by identity rather than by ordering makes staleness the direct question "does this still describe the thing", with no last-one-wins rule that could promote an approval for different work."""
++detail = """tree_identity folds raw NUL-delimited `git ls-tree -r -z` entries after dropping docs/reviews/, docs/log.d/ and docs/iteration/, and returns a 64-hex SHA-256 identity. fold_listing accepts bytes and preserves every path byte so display quoting or decoding cannot merge distinct work trees. refresh_attestation validates a station refresh from its subject, first parent, commit tree and Bar-Green trailer. work_tip peels only a verified refresh at the tip for the reset path; governing_rev is read-only and walks across commits whose non-record identity equals their first parent's until it can peel a verified refresh. governing_identity composes governing_rev and tree_identity for HEAD or an explicit revision, including a round's reviewed commit and a trailer's carrier. logged_rounds joins branch-scoped round files to coordinator session logs by train, ordinal and review phase. round_entries retains only rounds whose reviewed revision governs the identity under judgement and emits phase, ordinal and verdict entries through an injected parser. declared_phases clamps the configured independent-review count to the available review phases. phases_owed returns declared phases with no drawn entry at the governing identity, independent of whether a drawn verdict parses or approves. round_count returns the largest per-phase entry count at one governing identity, so a multi-phase review cycle counts once and changed work starts a new count. format_trailer and parse_trailer carry `Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex>`. branch_trailers verifies each carrier against its governing identity and returns the ordered attestation sequence per tree. Readers treat unavailable repository answers according to their own fail-closed contract."""
++rationale = """The merge gate asks whether a lane may merge while the loop asks which review phase the lane still owes. A shared identity, evidence join, phase span and count keep both answers on the same tree and policy. Logged round evidence is authoritative because its coordinator session establishes reviewer provenance; the self-verifying trailer is only a cross-check and cannot create an approval. Identity binding answers staleness directly and prevents ordering from promoting a verdict for different work. Separate read-only and reset peels protect both contracts: the reader may traverse identity-preserving commits, while the destructive reset path may remove only the verified refresh at its tip."""
+ test_refs = "TC-205"
+ status = "Drafted"
+ component = "CMP-008"
+
+diff --git a/docs/archive/work/complete/WI-579-the-verdict-carrier-and-the-ad.md b/docs/work/active/wi-579-the-verdict-carrier-and-the-ad/WI-579-the-verdict-carrier-and-the-ad.md
+index 4c8bb6fa0800ffae48e6755a2b66ea9153d78820..91f3e7d95da3c53acf37729211de1fb2a3d02af7
+--- a/docs/archive/work/complete/WI-579-the-verdict-carrier-and-the-ad.md
++++ b/docs/work/active/wi-579-the-verdict-carrier-and-the-ad/WI-579-the-verdict-carrier-and-the-ad.md
+@@ -213,6 +213,11 @@
+ Account, deviations and the two out-of-scope findings:
+ `docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md`.
+ 
++Round 025 review reopened this row because the completed location made Done-when
++5 assert an unfiltered green that had not been produced on current derived
++stage state. The standing registry corrections are landed; closure now waits
++for the full suite on a temporary tree whose `docs/stage` has been regenerated.
++
+ ## Context
+ 
+ Minted by the owner-directed backlog restructure of 2026-09-02 (plan of record `docs/plans/2026-09-02-backlog-restructure-and-consolidation.md` §2.2; executed out of band as a hand trunk commit series, not by a lane). The absorbed rows are archived under `docs/archive/work/restructured/` with their scope text untouched; their Done-when blocks are QUOTED below under their old ids and remain the spec this row must satisfy — decompose, don't paraphrase.
+diff --git a/docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md b/docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md
+index 0651eb987b7cd3b2e7e6fc61318180da01400604..159c8b0c036917d255aada527b432876d0242fa2
+--- a/docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md
++++ b/docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md
+@@ -844,3 +844,18 @@
+ "a declared review policy of N schedules N reviewer sessions" was re-driven and
+ holds, because the resume completes the same round rather than starting a
+ second one.
++
++### Review A round 025 rework — reopen the close and put registry content in its owning cells
++
++The terminal record was reopened because directory status makes every Done-when
++an assertion, while the only recorded unfiltered runs had one stale-stage
++failure. The required green will be driven on a temporary copy with
++`docs/stage` regenerated there; the branch still does not edit the trunk-owned
++generated artifact.
++
++LLR-207's Detail and Rationale now state only standing system behavior. The
++review-round chronology and defect narrative remain in this log and the WI
++record, where history belongs. IF-175's Data is a typed seam signature within
++the registry ceiling; its Notes retain the contract explanation.
++
++Deferred open items: none — the review findings determine the corrections.
+diff --git a/docs/requirements/interfaces.toml b/docs/requirements/interfaces.toml
+index 917f555841c5a476d71b5496f7a1ee566392356a..2a9408770a80ba3f5d52a834dfc3ea23800f7d9d
+--- a/docs/requirements/interfaces.toml
++++ b/docs/requirements/interfaces.toml
+@@ -1073,7 +1073,7 @@
+ owner = "scripts/kitlib/verdict"
+ requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/gen_verdict_rollup"]
+ channel = "call"
+-data = "tree_identity and fold_listing (the non-record tree identity a verdict names), governing_identity over governing_rev/refresh_attestation (that identity at the rev it is measured at, with a verified station refresh peeled; the rev is an optional argument, so a reader holding a COMMIT - a round's reviewed sha, an attestation's carrier - gets the same composition), refresh_subject/work_tip (the tip-only peel the reset shares), format_trailer/parse_trailer (the Review-Verdict machine half), round_file/session_log (the round and session-log name grammars), branch_paths/logged_rounds/round_entries (the logged-reviewer round evidence on a branch), declared_phases/phases_owed (the phase span a review policy declares, and which of those phases a tree has never had DRAWN - the resume's question, weaker than the gate's produced-a-parseable-APPROVE on exactly the mangled-verdict class and no other), branch_trailers (the verified attestations per tree, in commit order); every reader supplies its own fail direction for a None answer"
++data = "bytes -> tree identity; repo/rev -> governing identity; branch -> logged rounds/trailers; policy + entries -> owed phases/count; text <-> trailer"
+ version = "v1"
+ status = "Drafted"
+ component = "CMP-008"
+diff --git a/docs/requirements/low-level-requirements.toml b/docs/requirements/low-level-requirements.toml
+index 3cb57eff96f8c140a14cb4ee5397f9dcccc95af9..3b7a1e9918749eb9b4d6c509ab0893d04ee8336a
+--- a/docs/requirements/low-level-requirements.toml
++++ b/docs/requirements/low-level-requirements.toml
+@@ -2184,8 +2184,8 @@
+ title = "The verdict record: what carries a governing verdict, and what binds it to the tree it judged"
+ module = "project-trajectory/scripts/kitlib/verdict.py"
+ code_symbol = "RECORD_PREFIXES/fold_listing/tree_identity/refresh_subject/refresh_attestation/work_tip/governing_rev/governing_identity/format_trailer/parse_trailer/round_file/session_log/branch_paths/logged_rounds/round_entries/branch_entries/declared_phases/phases_owed/round_count/format_branch_trailer/branch_trailers"
+-detail = """The reading behind the merge seam's verdict rung, sited below both of its readers. tree_identity folds `git ls-tree -r -z` with the RECORD prefixes dropped - docs/reviews/, docs/log.d/, docs/iteration/ - into a SHA-256 over the surviving entries, which is what makes "the tree a verdict judged" a value two independent readers can compare; the digest is 64 hex deliberately, so it cannot be mistaken for the git tree object id the Bar-Green trailer carries. -z is the ENCODING BOUNDARY and not a formatting choice: git quotes any path holding a non-ASCII or special character, and a quoted path defeats the record-prefix test, so fold_listing takes raw byte entries and never decodes them or sees git's display encoding. What CANNOT invalidate a verdict has two halves and this module owns both: the record PATHS, and the station's refresh COMMIT. refresh_attestation verifies a Bar-Green: tree=<40 hex> work=<40 hex> trailer against the commit's own tree, its first parent and this branch's refresh subject; the peel is then written TWICE, on purpose, because its two callers can afford different answers: work_tip peels only a refresh sitting on the tip, at the work sha the refresh itself recorded, because it feeds a reset --hard where peeling one commit too far destroys committed work; governing_rev walks THROUGH any commit whose non-record identity equals its first parent's, to reach a refresh it would otherwise hide, which a read-only reader can do safely. Merging the two is a defect in either direction, and leaving them merged was one: while the identity used the tip-only peel, a single telemetry commit - a record path the fold exists to ignore - moved the identity by burying the refresh under it, so an approval served before the refresh named a tree nothing governed and both readers agreed on the wrong answer. The walk's step condition is that sentence itself - a commit that cannot invalidate a verdict - and not a proxy for it, because the proxy was the same defect one shape further on: a predicate CLASSIFYING the paths a commit touched must stop at every commit whose paths it cannot read, and an attestation riding unchanged bookkeeping commits EMPTY, so the commit RECORDING an approval buried the refresh. Asking the identity question directly makes the empty carrier, the merge commit and the quoted-path trap unrepresentable together, since no path is classified in the walk at all. governing_identity composes governing_rev with the fold, so the merge slot and the loop's review-owed derivation are HANDED one answer rather than each choosing the rev it measures at; it takes the REV as an optional argument, because the readers that ask about a COMMIT rather than about the branch - the sha a round file cites, and the commit an attestation rides - must be answered by the same composition, and a raw fold there is that composition with the peel left out. Leaving it out was the same defect once more: a round drawn AFTER a refresh names the post-refresh tree while the gate governs by the peeled one, so the two were permanently unequal and no commit on the branch could make them agree - the round invisible to both readers, and an identical one re-drawn every tick. fold_listing is pure over the entries, so the one rule that decides whether two trees are the same work is exercisable without a repository. logged_rounds is the provenance join: a file under docs/reviews/ is a ROUND only when the coordinator's own committed session log for that (train, ordinal) declares a REVIEW phase, so an implementer-authored file in the review path is not evidence. round_entries restricts the rounds to those whose reviewed commit GOVERNS the identity under judgement - through governing_identity at that commit, never the bare fold - and hands the phase/ordinal/verdict triples to the latest-per-phase rule the scoring layer already owned; the parse function is INJECTED rather than imported, so this leaf keeps no edge back into scoring. declared_phases and phases_owed carry the COUNT dimension of the same question the identity carries the WHICH-TREE dimension of, and they are here for the same reason: the merge slot was taught to demand every phase the review_rounds dial declares (round 022 - the parsed count had been collapsed to a boolean, so a lone REVIEW-A cleared a policy of 2) while agent_loop.review_owed_by_evidence still read any verdict at this tree as the round being served, and the review phase queue is in-memory run state. A run that died between REVIEW-A and REVIEW-B therefore left a lane that scheduled nothing and a gate that refused the merge for the phase nobody would draw. declared_phases is the span both readers slice - the clamp is its whole content, since a NEGATIVE policy slices REVIEW_PHASES from the END and an over-dialled one asks for a phase no reviewer can be routed to. phases_owed answers with the MISSING PHASES rather than yes/no, which is what lets the resume redraw only those: redrawing a phase already served at this identity would re-run a reviewer that already spoke, and a dissent so redrawn reads to _round_refusal as a reroll-until-green. It asks whether a phase was DRAWN and not whether it approved, so it is deliberately weaker than the gate's test on exactly one class - a present but UNPARSEABLE verdict, which must not be redrawn (the double-round class) and must not clear the gate either. round_count gives `rounds=<N>` its evidence-derived scope: completed review cycles represented at ONE governing tree, computed as the largest per-phase entry count because one cycle may carry REVIEW-A and REVIEW-B; changing the work changes the identity and starts this count over. branch_trailers reads the Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex> machine half off the branch's own commits, verified against the identity the carrying commit GOVERNS - the same composition again, exactly as the bar attestation is verified against its own tree - and returns per tree the ORDERED SEQUENCE of attestations rather than one: a re-drawn round stamps a second trailer at the same tree, and a map fed from newest-first git log handed its reader the superseded tally. Off git every reader answers None and says nothing about what that means; the two callers declare opposite-looking fail directions that are the same direction - refuse the merge, assume a round is owed."""
+-rationale = """The gate and the loop ask one question from two sides - may this merge, and does this lane still owe a round - so one definition below both readers prevents process-record commits or unlogged files from producing different answers. The trailer is deliberately NOT an accept path and the module says so: anyone with commit access can stamp one on their own commit and the self-verification will pass, because it is their tree - what a session cannot forge is the coordinator's committed session log, so the round evidence decides and the trailer is read as a cross-check that refuses when either its verdict word or its evidence-derived round count contradicts the rounds. Binding by identity rather than by ordering makes staleness the direct question "does this still describe the thing", with no last-one-wins rule that could promote an approval for different work."""
++detail = """tree_identity folds raw NUL-delimited `git ls-tree -r -z` entries after dropping docs/reviews/, docs/log.d/ and docs/iteration/, and returns a 64-hex SHA-256 identity. fold_listing accepts bytes and preserves every path byte so display quoting or decoding cannot merge distinct work trees. refresh_attestation validates a station refresh from its subject, first parent, commit tree and Bar-Green trailer. work_tip peels only a verified refresh at the tip for the reset path; governing_rev is read-only and walks across commits whose non-record identity equals their first parent's until it can peel a verified refresh. governing_identity composes governing_rev and tree_identity for HEAD or an explicit revision, including a round's reviewed commit and a trailer's carrier. logged_rounds joins branch-scoped round files to coordinator session logs by train, ordinal and review phase. round_entries retains only rounds whose reviewed revision governs the identity under judgement and emits phase, ordinal and verdict entries through an injected parser. declared_phases clamps the configured independent-review count to the available review phases. phases_owed returns declared phases with no drawn entry at the governing identity, independent of whether a drawn verdict parses or approves. round_count returns the largest per-phase entry count at one governing identity, so a multi-phase review cycle counts once and changed work starts a new count. format_trailer and parse_trailer carry `Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex>`. branch_trailers verifies each carrier against its governing identity and returns the ordered attestation sequence per tree. Readers treat unavailable repository answers according to their own fail-closed contract."""
++rationale = """The merge gate asks whether a lane may merge while the loop asks which review phase the lane still owes. A shared identity, evidence join, phase span and count keep both answers on the same tree and policy. Logged round evidence is authoritative because its coordinator session establishes reviewer provenance; the self-verifying trailer is only a cross-check and cannot create an approval. Identity binding answers staleness directly and prevents ordering from promoting a verdict for different work. Separate read-only and reset peels protect both contracts: the reader may traverse identity-preserving commits, while the destructive reset path may remove only the verified refresh at its tip."""
+ test_refs = "TC-205"
+ status = "Drafted"
+ component = "CMP-008"
+
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 6:08 AM.
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 6:08 AM.
+tokens used
+80,624
