@@ -1274,7 +1274,7 @@ def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
     assert gen.main(["--root", str(root), "--check"]) == 0
 
 
-def test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit(tmp_path):
+def test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit(tmp_path, capsys):
     # WI-558 DONE-WHEN 2's WRITER, end to end — the arm no test had ever
     # reached (ROUND 033, FINDING 1). Every trailer test above calls
     # `review_verdict_trailer` with a hand-built worker dict and then commits
@@ -1311,6 +1311,21 @@ def test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit(tmp_path):
     # cross-check is for.
     _git(root, "checkout", "-q", "main")
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+    assert "no Review-Verdict attestation" not in capsys.readouterr().err
+
+    # A round that derives NO attestation SAYS SO. Nothing else in the system
+    # can: a missing trailer is never a refusal (it is additive), so absence is
+    # precisely the state the cross-check must stand down on, and a writer that
+    # quietly stops writing would otherwise be invisible everywhere. Driven with
+    # an evidence range that names nothing, and asserted to be a LINE and not a
+    # stop — the round still records and still commits its scoreboard.
+    blind = _loop_ctx(al, root, scoreboard=reviews / "scoreboard.txt")
+    blind.worker["base"] = _rev(root, "wi-401")
+    blind.run.routing.round_verdicts = [
+        ("REVIEW-A", score.parse_verdict(APPROVE), "anthropic", "model-a")
+    ]
+    assert al.complete_review_round(blind, "005") is None
+    assert "no Review-Verdict attestation" in capsys.readouterr().err
 
 
 def test_a_stale_owed_marker_over_served_evidence_redraws_nothing(tmp_path):

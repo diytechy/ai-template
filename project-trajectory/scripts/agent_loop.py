@@ -2601,13 +2601,19 @@ def complete_review_round(ctx, session):
     # `Review-Verdict:` trailer naming the tree this round judged (OI-76's
     # alternative C, the `Bar-Green:` pattern). It is written HERE, by the
     # coordinator, and never by a session — see `review_verdict_trailer`.
-    commit_telemetry(
-        ctx.root,
-        session,
-        "review scoreboard",
-        [scoreboard],
-        trailer=review_verdict_trailer(ctx.root, merged, ctx.worker),
-    )
+    #
+    # A round that derives NO attestation is SAID SO, once, on stdout. The gate
+    # cannot report it: a missing trailer is never a refusal (it is additive,
+    # and an adopter's loop may write none), so absence is exactly the state the
+    # cross-check must stand down on — which means a writer that quietly stops
+    # writing is invisible everywhere else in the system. It is not a normal
+    # state here: the reviewer's own round file and the coordinator's session
+    # log are both committed by the time this runs, so a None means the evidence
+    # could not be read at all, which is worth a line and is not worth a stop.
+    trailer = review_verdict_trailer(ctx.root, merged, ctx.worker)
+    if trailer is None:  # a LINE, never a stop: the gate reads the round FILES
+        print("review round: no Review-Verdict attestation derived", file=sys.stderr)
+    commit_telemetry(ctx.root, session, "review scoreboard", [scoreboard], trailer)
     print(
         "review round: merged={} margin={:.2f} tripwires={} heterogeneity={} "
         "(advisory scoreboard {})".format(

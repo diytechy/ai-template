@@ -1120,3 +1120,114 @@ meet.
 No code changes in the reopen commit — it lands the resumable record ahead of
 the work, so a session reaped mid-rework leaves the reopen behind it rather than
 a closed row it has begun to invalidate.
+
+### Finding 1 — the writer is sound; the writer was never running
+
+The BLOCKER's observation is exactly right and its diagnosis was not. There
+really are **zero** `Review-Verdict:` trailers in this repository's whole
+history, and four `telemetry: session NNN review scoreboard` commits really do
+prove that `complete_review_round` ran with the trailer wired in. The instructed
+next step — "drive `complete_review_round` end-to-end on a repository fixture,
+isolate why the live call returns None, and fix it" — was taken, and the first
+half answers the second: **driven end to end, the writer works.** On a
+repository fixture the round completes, the attestation lands on the round's own
+record commit, `branch_trailers` reads it back under the key
+`integrate._round_refusal` looks up, the governing tree is unmoved, and the gate
+merges. It was also re-driven against the exact live state: at `9d8e8912` (the
+branch tip when round 033 completed) with the worker dict that session really
+carried, `review_verdict_trailer` returns
+`Review-Verdict: CHANGES-REQUESTED rounds=1 tree=23966223…`.
+
+So why was that value never written? Because **the code that writes it has never
+been on the executing path.** The coordinator driving this lane is
+
+    PID 91055, started Wed Sep 2 20:21:36 2026
+    …/ai-template/project-trajectory/scripts/agent_loop.py --worktree …/wi-579-… --wi WI-579
+
+— it runs the **TRUNK checkout's** `agent_loop.py` against this lane's
+worktree. `contract_split` has no `kitlib/verdict.py` at all and
+`grep -c review_verdict_trailer` on its `agent_loop.py` is **0**. The wiring
+landed here at `6e19da1e`, 20:45:53 — twenty-four minutes after that process
+imported its modules, and on a branch that process does not read. No round this
+lane ever drew could have stamped a trailer, and no amount of debugging the
+lane's own code would have found a defect, because there is none to find. The
+attestations will begin appearing when this branch merges to trunk and the
+coordinator is next restarted.
+
+Two things follow, and both are recorded rather than argued:
+
+- The COVERAGE half of the finding stands on its own and is closed. WI-558
+  Done-when 2's writer had no end-to-end test: every trailer case called
+  `review_verdict_trailer` with a hand-built worker dict and then committed the
+  string itself, so the merge/score/record ladder, the scoreboard write and
+  `commit_telemetry`'s message assembly were untested between them. They are
+  driven now, and the fixture asserts the READ-BACK rather than the string, so
+  writer and reader cannot drift apart.
+- The absence is now SAID. The gate cannot report it — a missing trailer is
+  never a refusal, because the trailer is additive and an adopter's loop may
+  write none (Done-when 4) — so absence is precisely the state the cross-check
+  must stand down on, and a writer that stops writing is otherwise invisible
+  everywhere in the system. `complete_review_round` prints one stderr line when
+  a completed round derives no attestation. It is a line and never a stop, and
+  the test drives both arms.
+
+**A finding for the owner, out of this row's scope.** A long-lived coordinator
+executes the modules it imported at launch, from whatever checkout its argv
+names — so a lane's own fix to the loop cannot take effect in that lane, and a
+process running for nine hours can be arbitrarily far behind the tree it is
+building. Nothing detects it. This is the shape that made a BLOCKER out of
+working code, and it will do so again; it wants a work item, not an inline fix
+here (surfaced as a separate finding per the working agreement).
+
+### The other three findings
+
+**Finding 2 (MAJOR) — the marker was a trigger.** `resume_owed_round`'s guard
+was an OR (`if not fields and not owed: return`), so a surviving
+`out/review-owed` marker proceeded on its own, and `schedule_review_round(owed)`
+then read the empty owed list as "the caller named nothing" and fell back to
+every declared phase. Driven pre-fix: `['REVIEW-A', 'REVIEW-B']` queued over
+evidence that owed neither. The state is reachable on the shipped path —
+`clear_review_owed` fires inside `complete_review_round`, which runs only after
+the last reviewer session has already committed its verdict file, so a run
+killed in that window leaves marker-present with evidence-complete. Closed by
+deleting the second answer, not by guarding it: the evidence decides alone (the
+marker keeps its advisory fields, which is all `write_review_owed`'s own
+docstring ever claimed for it) and the `phases` argument is REQUIRED, so an
+empty list is an empty round and there is no longer a value meaning "decide for
+me".
+
+**Finding 4 (MINOR) — the cross-check was symmetric and should not be.** It
+refused any inequality between the newest attestation and the round files. But
+its writer, `commit_telemetry`, is documented best-effort — "a hook veto …
+never fatal" — so a second honest round at one governing tree can leave the
+stamp reading `rounds=N-1` against evidence `N`, and refusing that pair parks an
+approved lane at the OI-76 supervisor stop, in the one case `branch_trailers`'
+own docstring calls normal. Only a differing WORD, or a count ABOVE the
+evidence, can be a forgery: understating cannot buy a merge the round files do
+not already buy. Driven in both directions, and the word arm re-driven beside
+it so the narrowing is proven to be a narrowing.
+
+**Finding 3 (MINOR) — the shipped narrowing was right and the promise was
+wrong.** The migration window is consulted only at `review-policy = 1`, while
+Done-when 4 and the RESYNC_PACK entry promised it unconditionally. Widening the
+code was rejected: a legacy rollup is ONE hand-authored document, so honouring
+it at policy 2 would clear both declared phases on a single author's word —
+precisely the single-reviewer clearance the round-030 join fix removed from the
+live path, re-admitted through the deprecated one. The prose moves to the code
+instead: the RESYNC entry now scopes the window and tells a policy-2 adopter
+what their first refusal will say, and the reason is stated at the call site, in
+`_legacy_rollup_refusal`, and in LLR-140.
+
+#### Spine and ratchet
+
+`LLR-140`'s Approved Detail carried the unscoped window sentence and no
+statement of the cross-check's asymmetry — the stale-clause shape that becomes
+false without anything detecting it — and both are now stated in the owning
+cell. `LLR-045` gains the queue's naming rule. TC-205 and TC-082 each ADD the
+case rather than the claim. Both Approved amendments ride as snapshot drift to
+the next sitting, as a worker lane's must.
+
+`agent_loop.py` is re-stamped **DOWNWARD, 2583 -> 2580**: no bump was taken for
+either behaviour, because the `commit_telemetry` call the new stderr line sits
+beside compacted from seven lines to one in the same hunk. `integrate.py` is
+unchanged in SLOC — its two fixes are a narrowed condition and comments.
