@@ -123,5 +123,71 @@ contradiction); `WI-582` classifies `spine` and waits on 579+580.
 above. `trace.py --strict-integrity`: integrity=0, orphans=2 (unchanged).
 `docs/status.md` regenerated; zero absorbed ids remain in it.
 
-The full unfiltered suite at the round-1 fix tip is recorded in the follow-up
-entry below once it has run.
+**Full suite at the round-1 fix tip `503b2b53`** (real tail):
+
+```
+FAILED tests/test_gen_trajectory.py::test_cancelled_wi_renders_its_own_bucket
+1 failed, 3304 passed, 20 skipped in 615.53s (0:10:15)
+```
+
+The one red is round 1's own regression: the dashboard legend rewrite dropped
+the phrase `cancelled — won't build` that WI-267's test pins. Fixed in round 2.
+
+### Review round 2 — Sol (6 findings) and Opus (8 findings) over `891a5b24..503b2b53`; no BLOCKER; fix commit `dc3c9e68`
+
+Both reviewers first re-verified every round-1 fix — the R-F carve-out
+matrix, the eight rows' byte identity, all eleven verbatim blocks, the
+frontier, the 11 → 4 pair count re-derived from a clean worktree at
+`891a5b24`, the ratchet stamps, the byte budgets — and reported them
+reproduced. Then, what the fixes had opened:
+
+- *A successor re-pointed to itself* (both, MAJOR). Round 1's
+  `_replace_inbound_edges` excluded the minted successor from its sibling set
+  and ran the direct-replacement arm before any exclusion, so a successor
+  whose own `needs` named the absorbed row ended up waiting on itself — a
+  strand no validator reports. Reachable by WI-583's QUEUE-WITH-EDGE arm.
+- *The accumulate arm guessed* (both). It appended a later successor to any
+  open row that named an earlier one, which cannot tell a rewritten dependent
+  from a row naming that successor on purpose, and printed a re-point message
+  for an edge that never existed. `dc3c9e68` replaces the heuristic with what
+  Sol named: the mint knows every draft, so `_apply_supersedes` runs ONCE
+  after all drafts are on disk, inverts absorbed → successor set, and each
+  dependent's absorbed tokens are replaced by the whole set in one write. A
+  row is a non-dependent by its own `supersedes` cell, never by the shape of
+  its `needs`. Tests: three successors + one dependent (union, message names
+  all three); a successor naming the absorbed row is untouched; an unrelated
+  row naming successor 1 gains nothing; overlapping sets dedupe.
+- *Lineage cycles passed* (Sol MAJOR, Opus MINOR): a restructured row naming
+  itself, a duplicated successor, a successor that is itself restructured.
+  `_restructured_successor_refusal` now asks five ordered questions (self,
+  duplicate, exists, not itself restructured, mutual); the mint refuses a
+  draft superseding an already-restructured row at the authoring boundary.
+- *Four rows moved off the armed complexity ratchet unstamped* (Opus MAJOR):
+  `schedule._waiting_reasons`, `intake._mint`, `intake._replace_inbound_edges`
+  (twice, once DOWN — the re-stamp round 1 owed), `check_trajectory.load_wis`.
+  Three repaired by extraction, the fourth re-stamped down;
+  `check_complexity --mode enforce` exits 0 ("200 row(s) over 15, unchanged
+  from baseline").
+- *Authoring grammar* (both, MINOR): a hand-authored `supersedes =
+  "WI-558;WI-559"` was accepted because the registry-cell reader was reused;
+  a string is now exactly one id, several is a TOML list, and the `;` split
+  reads the cell only. The `supersedes_ids` docstring argued for one
+  separator class while the regex had two; now one.
+- *The legend regression* above; `docs/enforcement-audit.md` rows for the new
+  R-A error class and the R-F carve-out; PROCESS_OPTIONS "(surrounding
+  whitespace ignored)" (+111 bytes, watched).
+- *Records* (Opus MINOR): plan §2.4 step 6's replaced criterion is restated
+  AS a replacement with the reason; plan §5 records the rule round 2 stated —
+  amend a description freely and inline, move an acceptance criterion only
+  with the reason in the criterion. Both reviewers judged round 1's declined
+  finding (plan amendments) correctly declined.
+
+Ratchets in `dc3c9e68` (reasons in the baseline entries):
+`check_trajectory.py` 2310 → 2327, `intake.py` 1305 → 1343; smoke
+collection 1477 against the 1480 ceiling.
+
+**Full suite at `dc3c9e68` + this record** (real tail):
+
+```
+3309 passed, 20 skipped in 611.56s (0:10:11)
+```

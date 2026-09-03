@@ -290,10 +290,14 @@ the reasoning:
 6. **Verify**: `schedule.py ready --explain` shows `WI-578` as the first
    READY row and the §2.3 rows in that relative order (the scheduler's total
    order also lists WAITING rows by rank, which is not admission order);
-   `check_trajectory.py --strict` shows no new ERROR and the shared-spec
-   warning pairs fall from 11 to the 4 that are one ruling each by design
-   (`WI-556/557/579` on OI-76's registry, `WI-580/581` on the 2026-08-31
-   plan);
+   `check_trajectory.py --strict` shows no new ERROR. (The criterion as
+   first written — "`queue_conflict_findings` reports no pair among the new
+   rows" — was WRONG, not merely unmet: `WI-580` and `WI-581` are two rows
+   cut from one plan on purpose, so they share its path and always will. The
+   honest measurement is that the shared-spec pairs fall from 11 to 4, each
+   remaining pair being one ruling by design — `WI-556/557/579` on OI-76's
+   registry, `WI-580/581` on the 2026-08-31 plan. Replaced by review round
+   1, restated as a replacement by round 2.);
    `trace.py` integrity green; `python -m pytest -q -n auto` full suite green.
    Paste the outputs into the fragment.
 7. **Regenerate** `PROJECT_STATE.html` and `docs/status.md` per the trunk step;
@@ -362,7 +366,14 @@ Two adversarial rounds over the first execution (`891a5b24..c16182cb`):
 OpenAI Sol at medium effort through codex (8 findings) and an independent Opus
 session (15 findings), both against one hostile brief. No blocker. The
 corrections that changed THIS document are marked inline above (§1.5 specref,
-§2.3 the WI-582 edge, §2.4 step 6's criteria). The rest — quote fidelity in the
+§2.3 the WI-582 edge, §2.4 step 6's criteria). Two of the corrections were not to a description but to an ACCEPTANCE
+CRITERION (§1.5's specref rule, moved twice; §2.4 step 6's queue-conflict
+clause). Round 2's reviewer put the rule better than the plan had: amend a
+plan's description of what happened freely and inline; move an acceptance
+criterion only with the reason for the move stated IN the criterion, as a
+replacement, never silently — a criterion edited to fit the result it was
+meant to test has stopped being a test. Both are now written that way. The
+rest — quote fidelity in the
 new rows, the Deliverable grammar and its validator, many-to-many `supersedes`
 re-pointing, a dashboard reader and legend, PROCESS_OPTIONS's vocabulary
 sentences, the RESYNC entry for list-valued `supersedes`, and the log's pair
