@@ -33,7 +33,7 @@ row's merge (drafts-not-mints, R1).
 ## Dispositions
 
 ```toml
-title = "The snapshot's scoped writer and its unscoped refusal disagree: a single-registry approval is refused on drift in registries it never writes"
+title = "The snapshot's scoped writer and unscoped refusal disagree on registry scope"
 workstream = "process"
 safety_class = "spine"
 buildtier = "medium"
@@ -96,12 +96,18 @@ message that says why a single-registry act cannot exist (b) — the current
 message claims the caller has authorised nothing, which is false, and that
 alone is worth correcting under either reading.
 
-THEN, AND ONLY THEN, the anchor. Once the act is takeable, re-anchor
-`low-level-requirements.toml`. The verdict file records that all seven of its
-drifted Approved rows were re-driven against the tree and are blessable —
-`LLR-158`/`LLR-203`/`LLR-204` here, `LLR-058`/`LLR-144`/`LLR-198` by WI-566 and
-`LLR-136` by WI-573, none amended since. `LLR-206` is `Drafted` on both sides
-and its first approval stays its own act.
+THE ANCHOR IS NOT THIS ROW'S STEP (REVIEW-A round 002, finding 1). A `spine`
+row is a WORKER LANE, and `acceptance_record.lane_approval_refusal` refuses a
+lane that writes `SNAPSHOT_DIR` — by construction, at merge. So this row's
+whole scope is the ruling on (a)/(b), the `refresh_refusal` change it implies,
+and the test. The re-anchor of `low-level-requirements.toml` is the SUCCESSOR
+CONDITION: once this row lands and the act is takeable, the trunk-side
+amendment-adjudication rung — the same rung that minted WI-578 — takes it. The
+verdict file records that all seven of that file's drifted Approved rows were
+re-driven against the tree and are blessable (`LLR-158`/`LLR-203`/`LLR-204`
+here, `LLR-058`/`LLR-144`/`LLR-198` by WI-566, `LLR-136` by WI-573, none
+amended since); `LLR-206` is `Drafted` on both sides and its first approval
+stays its own act.
 
 OUT OF SCOPE — the three rows' text. Nothing in
 `low-level-requirements.toml` changes: the cells are correct as they stand and
