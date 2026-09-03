@@ -197,7 +197,20 @@ APPROVE is refused before the second independent phase is added. LLR-207's
 encoding-boundary prose now matches the shipped interface: `fold_listing`
 takes raw byte entries and never decodes them.
 
-Account, deviations and the one out-of-scope finding:
+Round 023 closed the wedge that fix opened, found by re-driving it rather than
+reading it. Requiring every declared phase at the gate while
+`review_owed_by_evidence` still read "any verdict at this tree means the round
+was served" left a run killed between REVIEW-A and REVIEW-B — the phase queue is
+in-memory — resuming with nothing scheduled against a gate refusing the phase
+nobody would draw. The count dimension now lives beside the identity one in
+`kitlib/verdict.py`: `declared_phases` is the span both readers slice, and
+`phases_owed` names the phases a tree has never had DRAWN, so
+`resume_owed_round` completes the same round instead of redrawing a served
+phase the gate would read as a reroll-until-green. The gate's stricter test
+stays its own; the two must diverge on the drawn-but-unparseable class and on
+nothing else, and the regression pins that.
+
+Account, deviations and the two out-of-scope findings:
 `docs/log.d/WI-579-verdict-carrier-and-adjudication-review.md`.
 
 ## Context

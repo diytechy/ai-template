@@ -817,3 +817,30 @@ added to the suite but never listed in the case's `evidence` — the round-022
 commit's omission, closed here.
 
 Deferred open items: none.
+
+**Round 023 bars.** At `2cd28b91` the smoke tier is **1510 passed, 8 skipped in
+31.92 s**; its enforced rerun is **1510 passed, 8 skipped in 33.32 s**, **33.4 s
+wall against the 60 s ceiling**; `check_docs --stale` reports **0 broken links**
+over 1255 docs and 1597 links, with the existing orphan warning.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke && .venv/bin/python scripts/check_smoke_budget.py --mode enforce && .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=2cd28b91 -->
+
+The full unfiltered suite at `2cd28b91` is **3349 passed, 24 skipped, 1 failed
+in 616.89 s**. The sole red is again
+`test_derive_stage.py::test_this_repo_s_committed_stage_is_current` — the same
+branch-caused, trunk-owned generated-stage handoff bisected against the
+integration base in the round-019 entry above, with `docs/stage` still untouched
+by this branch for `trunk_step` to regenerate after the merge. No verdict,
+admission, scoring, routing, complexity or module-size test failed.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=2cd28b91 -->
+
+Reviewed ratchet bump this round: `agent_loop.py` 2578→2579 SLOC (+1), the one
+line binding the owed-phase answer so the resume can hand it to the scheduler;
+the rule itself went outward to `kitlib/verdict.py`. Reason at the baseline
+entry. Spine touched, all rows `Drafted` and authored by this branch — LLR-207
+(`declared_phases`/`phases_owed` in CodeSymbol and Detail), IF-175 (the seam's
+data cell), TC-205 (method plus three evidence names, one of them round 022's
+own regression, which that commit added to the suite but never listed).
+`docs/ratify/CURRENT.md` regenerated. No Approved cell was amended: LLR-045's
+"a declared review policy of N schedules N reviewer sessions" was re-driven and
+holds, because the resume completes the same round rather than starting a
+second one.
