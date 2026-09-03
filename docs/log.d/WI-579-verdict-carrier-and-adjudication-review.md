@@ -1391,3 +1391,40 @@ Full unfiltered suite at `6d1101db`, on a detached worktree with the trunk-owned
 603.38 s**. The primary work branch remained clean and its generated artifact
 was not edited.
 <!-- fig: cmd="python -m pytest -q -n auto (detached worktree at 6d1101db, docs/stage regenerated)" rev=6d1101db -->
+
+### Round 036 rework, independently re-driven at the tip
+
+The rework above arrived already committed, so this session verified it rather
+than trusting it — a green recorded in `log.d` is outside the verdict tree
+identity, so re-driving one neither stales itself nor buys a round.
+
+MUTATION-DRIVEN, because an `== 0`/`exit 0` regression can be reading silence
+rather than correctness. Reverting the single character under test
+(`rglob` -> `glob`) makes the new regression FAIL, and it fails with exactly
+the symptom the finding named: `gen_verdict_rollup: fresh (1 review scope(s))`
+printed while a stale nested output sits in the tree. Restored, it passes. The
+assertion therefore bites the mechanism, not the fixture.
+
+SHIPPED FLOW, on this repo rather than a `tmp_path` scaffold: with a planted
+`docs/reviews/rollup/nested/stale.md`, `--check` exits 1 and NAMES the nested
+path; the write path reports `wrote 42 rollup(s) under docs/reviews/rollup,
+pruned 1`; the re-check reports `fresh (42 review scope(s))`. Both halves of
+the ownership claim — report and remedy — reach the same depth, which is the
+property round 036 asked for.
+
+One benign residue, recorded and deliberately NOT fixed: pruning a nested
+output leaves its now-empty directory. It is invisible to `_extra` (which
+enumerates `*.md`), so it cannot wedge `--check` the way the round-015 defect
+did, and git cannot represent an empty directory — so the state can never
+arrive through a checkout, only from a local run that just pruned it. Removing
+it would add a directory-walking remedy for a state the tree cannot carry.
+
+Commit bar re-driven at the true tip `fc6e54fe` (the prior bar was taken at
+`6d1101db`, two record-only commits earlier): smoke **1520 passed, 8 skipped in
+34.17 s**; enforcer **35.6 s against the 60 s budget -> within**;
+`check_docs --stale` **OK over 1259 docs, 1597 links, 0 broken** (1 orphan
+warning, and hints on the trunk-owned `docs/status.md` this lane must not
+edit). Working tree clean: the regeneration residue above was removed, and
+`docs/reviews/rollup/` is trunk-owned (`docs/stack.ini [generated]` =
+`verdictrollup`), so this branch leaves it uncommitted by contract.
+<!-- fig: cmd="python -m pytest -q -n auto -m smoke; python scripts/check_smoke_budget.py --mode enforce; python project-trajectory/scripts/check_docs.py --root . --stale; plus pytest of the rollup regression with rglob reverted to glob" rev=fc6e54fe -->
