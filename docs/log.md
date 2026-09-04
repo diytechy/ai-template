@@ -559,8 +559,7 @@ why (one bullet each; cite ids)._
     at every checkpoint, and the off-spine trace golden regenerated to **zero
     diff**. Both checks are available only because all 138 off-spine rows sat
     in their vocabulary's first state — the plan's timing argument, confirmed.
-    fig: `.venv/bin/python project-trajectory/scripts/derive_gate.py --root .
-    --print` at `810f1c01` vs `HEAD`, diff empty.
+    fig: cmd=".venv/bin/python project-trajectory/scripts/derive_gate.py --root . --print" rev=810f1c01 (vs `HEAD`, diff empty).
   - **Both silent-failure traps HANDLED AND PROVED.** (i) The no-writer guard
     greps for `approval = "approved"`; after the rename that regex would have
     passed VACUOUSLY forever — the exact failure class this change exists to
