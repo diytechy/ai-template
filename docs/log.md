@@ -59898,3 +59898,57 @@ rows past the cognitive-complexity ratchet without a stamp:
 DevStg-Impl, so the lane's bar did not red; `check_complexity --mode enforce`
 on trunk now exits 1 on those two rows. Not this change's; it is the lane's
 debt and is noted here rather than absorbed into a baseline stamp.
+
+## 2026-09-04 — supervised run 2026-09-03/04: two merges, the stranded spine batch, and the trunk greened at the DevStg-Tests tier
+
+Supervising session per [handoff-2026-09-03.md](handoff-2026-09-03.md).
+Unpaused at `c98ba62c`; the loop merged WI-585 (`9dfbc971`, adjudication,
+no round owed under `adjudication_review = "when-minting"`) and WI-586
+(`767d6bdf`, six cross-family rounds — Terra/Opus alternating against
+Opus/Sol adjudicators, every finding verified against real code paths;
+minted WI-587/588/589). WI-586 needed a supervisor-compiled legacy rollup
+because the mechanical close moved its spec after the APPROVE round, staling
+the tree identity the round named.
+
+**The spine batch.** The dispatcher then claimed WI-589;WI-584;WI-587;WI-588
+as one exclusive lane. The lane built all four (eleven sessions, one TIMEOUT
+and two NO-COMMITs where a session backgrounded the full suite and ended its
+turn) and drew one cross-family APPROVE (Terra, findings=0), but stranded on
+four multi-row-lane defects: the per-session walk passed WI-589 on its
+trailer before its close ritual ran; `dispatch._close_done_adjudication`
+died reading a spec already moved to `complete/`; worker preflight refused
+the resumed batch for its own terminal rows; and a fresh loop process exits
+`EXIT_PAUSED` before resuming any parked lane. The supervisor closed WI-589
+by hand (`836ccd94`), compiled one legacy rollup per merged row (the
+migration arm iterates every merged WI; `4d7a92b8`, re-noted `079f4437`),
+and was refused at the refresh: the lane's `bar = "DevStg-Tests"` runs
+`check.py --stage DevStg-Tests`, and that tier was red on the trunk itself.
+
+**The trunk greened, out of band (owner direction 2026-09-04).** Six Opus
+subagents in isolated worktrees, one per disjoint file set, merged
+`7d5f5109`..`a3aa9d0a`: figures provenance (52 markers, plus the log's own
+at `8e3927b3`); the dangling doc references (62 of 65; the last three sit on
+the parked lane and were repointed there at `354af958`); back-link coverage
+87 → 105 of 190 LLR rows; the strict-trace findings (LLR-209 + TC-207 now
+decompose SR-181, whose rule `derive_stage.phase_rule_findings` already
+implemented; LLR-197's citation frame reworded, riding as snapshot drift);
+the schedule → trace seam declared as IF-176 (WI-582 Done-when 1, landed
+early); the three ruff findings; and the four functions over the cognitive
+ceiling decomposed outward (`commit_telemetry` 21 → 12, `worker_endstate`
+18 → 11, `_verdict_gate` 19 → 14, `gen_verdict_rollup.main` 16 → 2; two
+module-size ratchets re-stamped downward). Re-driven at `a3aa9d0a`: lint,
+format, complexity, back-links, figures, strict trace (0 findings) and
+check_trajectory (0 errors) all green; doc-refs reports only the three
+trunk copies under `active/` that vanish at the batch merge.
+<!-- fig: cmd="ruff check; ruff format --check; check_complexity.py --mode enforce; gen_arch_map.py --backlink-coverage --strict-backlinks; check_figures.py --strict; check_doc_refs.py --strict; trace.py --strict …; check_trajectory.py" rev=a3aa9d0a -->
+
+**Left as measured.** The smoke-tier wall clock read 65–125 s on every
+worktree while five suites shared the box (the base commit alone read
+76 s); nothing re-stamped — re-measure quiet. The `.githooks` wrapper falls
+back to system `python3` inside a worktree and SKIPs the ruff format step
+(every agent ran ruff against the venv by hand). Round 011 approved a
+four-row spine train with an empty findings body. The batch-lane fixes ship
+in their own commits with a RESYNC_PACK entry.
+
+Deferred open items: none — every ruling owed is recorded in the
+`docs/work/pause` reason of `104ecb3b`.
