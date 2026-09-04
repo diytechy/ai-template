@@ -1739,3 +1739,13 @@ rationale = """The PROTOCOL is fixed here, never the DISPOSITION: per-class seve
 
 Two clauses are deliberately absent. "Every degrade is named, never silent" is not stated: SR-181's acceptance permits a silent degrade where no prior committed state exists while SN-008 forbids one, so stating it would red an Approved row on the day this one landed. And the closed set is four DISPOSITIONS, not twelve exact tokens: the delivered checkers spell those four with twelve labels, and this row states the contract they already honour, not a rename they do not."""
 notes = """A census of 430 emission sites plus a two-way drive of every shipped checker found the protocol already honoured: 141 of 158 per-finding sites name a location (11 population-level, 6 thin), no advisory anywhere reaches an exit code, and 12 of 14 checkers exit zero on an absent optional input and name it. This row states a delivered property, not new work."""
+
+[interface.IF-176]
+owner = "scripts/trace"
+requestors = ["scripts/schedule"]
+channel = "call"
+data = "open_item_states(root) -> {OI-###: lowercased status}, or None where the repo carries no open-items registry"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """The scheduler reads ONE half of trace: the open-item STATES map, and nothing else. The registry rows are the readiness gate's other predecessor kind - a hard OI edge stays unsatisfied while its row reads `pending` - so the frontier derivation needs the same reading of that file the spine enforcer already owns, and a second parse in the scheduler is the two-readers-disagreeing failure this declaration exists to refuse. The row is directional on purpose: nothing here flows back, the caller treats the answer as read-only vocabulary, and the None-versus-empty distinction the owner draws (absent registry versus every id unresolved) is part of the surface rather than an implementation detail - the caller collapses None to an empty map at its own boundary, which is the non-adopter posture where there are no OI edges to resolve. THE IMPORT IS LAZY AND INSIDE THE FUNCTION, and that is a property of the seam and not a coding tic: the scheduler is a pure library that a generated surface, a dispatcher and the loop all import at load time, while the owner is the heaviest module in the kit's script tree; binding it at module scope would pull the whole enforcer into every one of those import graphs for a map most of their calls never ask for. Deferring it to the call keeps the requestor's load-time graph small and makes the dependency pay only where the readiness gate actually resolves an open-item edge."""
