@@ -394,6 +394,7 @@ _Generate the per-review-scope verdict rollups — `docs/reviews/rollup/<train>.
 |---|---|
 | `--root` | repository root (default: cwd) |
 | `--check` | exit 1 if any rollup is stale |
+| `--trunk-step` | the trunk step's own invocation: the one writer allowed off the trunk branch (the station's refresh runs it inside a lane worktree) |
 
 ### `scripts/hats`
 _hats.py — the HATS ROSTER reader: which declared expert perspectives apply to_

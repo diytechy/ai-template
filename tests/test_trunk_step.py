@@ -342,6 +342,32 @@ def test_regen_really_writes_the_verdict_rollup(tmp_path, capsys):
     assert "001-REVIEW-A-abc1234.md" in rollup.read_text(encoding="utf-8")
 
 
+def test_regen_really_writes_the_approval_brief(tmp_path, capsys):
+    # The live approval brief is a generated artifact (`docs/ratify/ = approve`
+    # in [generated]) whose freshness `check.py`'s `approval-fresh` step gates
+    # on the refresh bar. Measured 2026-09-04 on the WI-590 adjudication lane:
+    # the lane's approval act moved the snapshot, its tip carried a stale brief,
+    # the station's refresh regenerated everything in this table EXCEPT the
+    # brief, and the bar went red on a file only the trunk step could have
+    # refreshed inside the one commit the verdict gate peels. Driven, not read
+    # off the table, for the same reason the rollup test above is.
+    _seed_regen_repo(tmp_path)
+    brief = tmp_path / "docs" / "ratify" / "CURRENT.md"
+    brief.parent.mkdir(parents=True)
+    brief.write_text("STALE-SENTINEL\n", encoding="utf-8", newline="\n")
+
+    assert ts.regen(tmp_path) == 0, capsys.readouterr().err
+    captured = capsys.readouterr()
+    assert "regen — approval-brief ok" in captured.out, captured.out + captured.err
+    text = brief.read_text(encoding="utf-8")
+    assert "STALE-SENTINEL" not in text, (
+        "the trunk step ran without regenerating the approval brief: "
+        + captured.out
+        + captured.err
+    )
+    assert text.strip(), "the regenerated brief is empty"
+
+
 def _seed_regen_repo(root):
     """A git repo where `okf` regenerates green AND EMITS: the `docs/okf/`
     arming directory plus a minimal but non-vacuous four-tier spine (the

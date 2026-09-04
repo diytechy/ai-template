@@ -588,8 +588,25 @@ REGEN_STEPS = (
     (
         "verdict-rollup",
         _has("docs/reviews"),
-        _cmd("gen_verdict_rollup.py"),
+        _cmd("gen_verdict_rollup.py", "--trunk-step"),
         "docs/reviews/ absent",
+    ),
+    # The live approval brief (`docs/ratify/CURRENT.md`, declared `approve` in
+    # docs/stack.ini [generated]). It projects the registry against the
+    # docs/archive/last_approved snapshot, and `check.py`'s `approval-fresh`
+    # step (`trace.py --approve modified --check`) reds the refresh bar the
+    # moment either side moves under it. A LEAF like the rollup — nothing reads
+    # it back — so its position is free. It belongs HERE because the refresh
+    # commit is the one commit the verdict gate peels: an adjudication lane
+    # whose approval act moved the snapshot left the brief stale at its tip
+    # (WI-590, 2026-09-04), and regenerating it on the lane AFTER the round
+    # would have staled the round's tree identity, while the station's refresh
+    # could not regenerate it because this table did not name it.
+    (
+        "approval-brief",
+        _has("docs/ratify/CURRENT.md"),
+        _cmd("trace.py", "--approve", "modified", "--out", "docs/ratify/CURRENT.md"),
+        "docs/ratify/CURRENT.md absent",
     ),
 )
 
