@@ -94,7 +94,7 @@ Approving a need = **moving the table row up** in a reviewed commit. That commit
 column. Parsed by `sn_draft_ids` (a line-scanner that tracks the current heading
 and collects `SN-###` tokens under draft ones). The id *universe* those states
 partition is a **whole-text scrape** (`sn_all_ids`, one home in
-`kitlib/spine.py` since WI-448 slice 3, re-exported by spine_rules and trace):
+`project-trajectory/scripts/kitlib/spine.py` since WI-448 slice 3, re-exported by spine_rules and trace):
 any `SN-###` token anywhere in
 the file counts, tables and prose alike — so an SN id mentioned only in
 approved *prose* and cited by no SR caps the derived gate at DevStg-Below (§8.1) exactly
@@ -449,7 +449,7 @@ is an unanswered need: DevStg-Reqs is not earned, so it caps the raw level at De
 split of labor with `trace.py` is the module pair's usual one — this rung is
 the *gate input*; the itemized `SN … has no SR` listing stays trace.py's orphan
 finding at DevStg-Tests strictness — and both read the **same cited set**
-(`sn_cited_ids`, which since WI-448 slice 3 has ONE home in `kitlib/spine.py`
+(`sn_cited_ids`, which since WI-448 slice 3 has ONE home in `project-trajectory/scripts/kitlib/spine.py`
 that both modules re-export — it was an F5 duplicate pinned equal by
 `test_rule_sync`, and the pin retired with the copy), so the gate
 and the listing cannot contradict on one registry state. The cited set is

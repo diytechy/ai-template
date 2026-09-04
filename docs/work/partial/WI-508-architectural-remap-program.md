@@ -64,7 +64,7 @@ requirements alone, diffed against the live map, and every divergence adjudicate
   approving `TC-199`/`TC-200` as `SR-163` evidence falsely marked the full mapping
   obligation verified. The rework reverted the two TCs to `Drafted` (live and
   snapshot) and fixed a dead `OI-64` link — see
-  `docs/log.d/2026-08-30-wi508-rework-review-a-changes-requested.md`. The census
+  the 2026-08-30 WI-508 rework entry in `docs/log.md`. The census
   instrument's structural-duplication blind spot and the test-tree sensor gap are
   recorded, deliberately not filed.
 
