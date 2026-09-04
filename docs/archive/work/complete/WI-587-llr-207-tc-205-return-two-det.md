@@ -2,12 +2,81 @@
 id = "WI-587"
 title = "LLR-207/TC-205 return: two Detail clauses contradict kitlib/verdict.py, two stated guards have no detector, one TC Method misstates its own fixture, and the CMP-006 note this row falsifies"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "strong"
 priority = 2
 safety_class = "spine"
 bar = "DevStg-Tests"
 +++
+
+## Deliverable
+
+ALL SEVEN findings driven, over three cells and two new regressions.
+`kitlib/verdict.py` is BYTE-IDENTICAL to its pre-lane state (`git diff` over the
+module against the integration base is empty) — the return was about text that
+contradicts the module and guards no fixture drove, and the row asked for no
+behaviour change.
+
+THE TWO `LLR-207.detail` CLAUSES now say what the module does, re-driven against
+it rather than inherited. `governing_identity` reads "the branch tip or an
+explicit revision" and states that the branch argument is a branch NAME, for the
+reason `format_branch_trailer` gives verbatim (`verdict.py:738-740`) — the peel
+verifies a refresh commit against the branch it names, and no refresh subject
+names `HEAD`. `governing_rev`'s "until it can peel" is gone: the peel re-seats
+`rev` and `continue`s (`:465-468`), the walk ends at the first commit whose
+identity differs from its parent's (`:473`) or at the absent-parent /
+`_MAX_GOVERNING_WALK` bounds, and the clause now says a branch with no refresh
+under it still walks — which is the OI-76 fix a literal reading of the old
+sentence would have undone.
+
+THE TWO STATED GUARDS GREW DETECTORS, and both were MUTATION-DRIVEN, because a
+regression that never fails is not one. Each mutation was re-driven AT THE
+CLOSING TIP on a detached `git worktree`, so the run proving the regression could
+leave no residue in the tree being closed:
+- `test_two_logs_at_one_key_declaring_two_phases_serve_no_round` — relaxing the
+  `len(ph) == 1` ambiguity rule (`:608`) to last-wins fails exactly this test and
+  nothing else (`1 failed, 52 passed`).
+- `test_an_attestation_riding_a_commit_that_changed_the_work_is_not_read` —
+  deleting the `governing_identity(...) != tree` carrier guard (`:802-803`) fails
+  exactly this test and nothing else (`1 failed, 52 passed`).
+Both previously left `134 passed` across the three modules the return measured.
+Each fixture asserts its own premises (both logs really committed, the round file
+still present; the forged carrier really moved the governing identity) so the
+empty answer is the RULE and not an empty scan.
+
+THE TWO `TC-205` CELLS. `evidence` now reaches `work_tip` /
+`refresh_attestation`'s refusal arms by citing the five
+`tests/test_integrate_station.py` tests that hold them — all five verified to
+exist — with a `Method` sentence saying which arms those are and why the station
+suite is where they live. `method`'s identity sentence was made true BY THE
+FIXTURE rather than by weakening the sentence: the changed `docs/work/` spec blob
+now really folds DIFFERENT, the pre-existing dropped-entry assertion left beside
+it as the weaker claim.
+
+`CMP-006`'s note re-points to name BOTH modules not owned there — `station.py`
+(LLR-182, IF-093) and `verdict.py` (LLR-207, IF-175) — the sentence THIS row
+falsified by giving `verdict.py` a CMP-008 tag. Re-derived at close by the
+complementary route (enumerating rows by `Module` path, not by component, checked
+against the directory listing): all eleven `kitlib/` modules are claimed by an
+LLR row, and exactly two sit at CMP-008.
+
+AN EIGHTH FINDING, IN THE SAME CELL, ALSO FIXED. The note's parenthetical
+enumerating kitlib's CMP-006 members omitted `evidence.py` (LLR-192) and
+`spine.py` (LLR-197), so a list phrased as complete was not; both are now in it.
+Its causation is NOT finding 7's and the two are kept distinct: there,
+`verdict.py` taking a CMP-008 tag is what made the sentence false, so the row
+that gives the tag owes the fix; here nothing on this lane touches either
+module's membership. It is fixed anyway because this row already amends this
+exact cell, the falsehood sits two sentences from the sentence finding 7
+rewrites with the same subject, and these cells have not changed byte since
+`3c7764c5` — three rereads on identical text is what leaving it invites. The
+cell's two enumerations now partition all eleven `kitlib/` modules with nothing
+left over: nine at CMP-006, two at CMP-008. `check_trajectory` is `clean`.
+
+NOT ON THIS LANE — the approval. `LLR-207` and `TC-205` stay `Drafted`; no
+`docs/archive/last_approved/` write, no `intake.py snapshot`. The adjudication
+this merge mints is what approves them.
+
 
 ## Context
 

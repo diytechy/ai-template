@@ -81,23 +81,36 @@ exactly: `1 failed, 52 passed` in both directions, on
 `assert [('APPROVE', ...'APPROVE', 2)] == [('APPROVE', 1)]` respectively. The
 worktree was removed and `git status` is clean.
 
-SPOTTED, NOT FIXED — one finding in the same `CMP-006` cell, deferred on the
-return's own causation test. The note's parenthetical enumerating kitlib's
-CMP-006 members ("config.py/git.py/registry.py/__init__.py via LLR-181, ladder.py
-via LLR-184, stage.py via LLR-185, secret_classes.py via LLR-205") omits
+AN EIGHTH FINDING, IN THE SAME CELL — spotted while driving finding 7, and FIXED
+rather than deferred. The note's parenthetical enumerating kitlib's CMP-006
+members read "config.py/git.py/registry.py/__init__.py via LLR-181, ladder.py via
+LLR-184, stage.py via LLR-185, secret_classes.py via LLR-205" — omitting
 `evidence.py` (LLR-192) and `spine.py` (LLR-197), both Approved and both CMP-006,
-so the list reads as complete and is not. Unlike finding 7, nothing this row does
-causes it — it was already false before this act and stays false after — so it is
-recorded here rather than fixed inline. The sentence this row DID rewrite is true
-independent of it: `LLR-182`/`LLR-189` and `LLR-207` are the only CMP-008 kitlib
-rows. Re-derived at close by the complementary route — enumerating rows by their
+so a list phrased as complete was not. Both names are now in it, in row order.
+
+The causation is NOT finding 7's, and the record should not blur them: nothing
+this row does makes the parenthetical false — it was false before this act and
+would have stayed false after. It is fixed anyway, on three grounds. This row
+already AMENDS this exact cell, so the fix costs one edit rather than a lane; the
+falsehood is two sentences from the sentence finding 7 rewrites and has the same
+subject (which kitlib modules sit at which component), so a reader of the amended
+cell would hit it immediately; and the spec's own `## Context` records that these
+cells "have not changed byte since `3c7764c5`", which is why three rereads ruled
+on identical text — leaving a known-false clause in a cell being amended invites
+the fourth. The narrower reading (defer anything this act did not cause) is what
+the return faulted in the OTHER direction at finding 7, where a caused error was
+filed as pre-existing; it does not oblige leaving an uncaused one standing in a
+cell already open.
+
+Re-derived at close by the complementary route — enumerating rows by their
 `Module` path rather than by component, and checking the answer against the
-directory listing — every one of the eleven modules in
-`project-trajectory/scripts/kitlib/` is claimed by an LLR row, and exactly two of
-those modules sit at CMP-008: `station.py` (LLR-182 and LLR-189, two rows on one
-module) and `verdict.py` (LLR-207). So the rewritten sentence enumerating MODULES
-is complete, while its parenthetical enumerating CMP-006 ROWS is the one that
-still is not.
+directory listing — all eleven modules in `project-trajectory/scripts/kitlib/`
+are claimed by an LLR row: nine at CMP-006 (LLR-181 over four modules, LLR-184,
+LLR-185, LLR-192, LLR-197, LLR-205) and exactly two at CMP-008, `station.py`
+(LLR-182 and LLR-189, two rows on one module) and `verdict.py` (LLR-207). The
+cell's two enumerations now partition those eleven with nothing left over, which
+is the check the old parenthetical failed. `check_trajectory` is `clean` on the
+amended cell — the added names cost no byte-budget breach.
 
 NOT ON THIS LANE — the approval. `LLR-207` and `TC-205` stay `Drafted`; no
 `docs/archive/last_approved/` write, no `intake.py snapshot`.
