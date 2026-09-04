@@ -2,12 +2,28 @@
 id = "WI-589"
 title = "Two verified defects around the one verdict definition: agent_loop's unpinned REVIEW_PHASES duplicate with its magic clamp, and IF-175's requestor list omitting scripts/score_reviews"
 workstream = "process"
-specref = "docs/requirements/interfaces.toml"
+specref = ""
 buildtier = "strong"
 priority = 3
 safety_class = "spine"
 bar = "DevStg-Tests"
 +++
+
+## Deliverable
+
+Shipped in session 001 of the batch lane (`05f6bb26`, `b8e445ae`; trailer
+`WI: WI-589`). Defect 1: `agent_loop.py`'s byte-identical `REVIEW_PHASES`
+tuple is deleted (not aliased) and its two use sites plus the reviewer-dial
+clamp read `kverdict.REVIEW_PHASES`, so a third phase added to the verdict leaf
+cannot land in one home and be dropped by the other; behaviour is identical at
+today's span of 2. Defect 2: `IF-175.requestors` names `scripts/score_reviews`,
+its notes state which half of the seam it reads (the declared phase span, not
+round evidence), and the span crossing is recorded in the row's notes rather
+than its data cell. Module-size ratchet re-stamped downward 2587 -> 2586. Log
+fragment: `docs/log.d/WI-589-one-verdict-definition.md`. The row's spec was
+closed by the supervising session on 2026-09-03 after the batch's APPROVE
+round: the per-session walk moved past this row on its trailer before the C6
+close ritual ran, leaving the spec in `active/` and the branch unfinished.
 
 ## Context
 
@@ -22,7 +38,7 @@ are queued rather than narrated because a finding recorded only in a file under
 ordinal, phase, sha, verdict word and finding COUNT, never its content.
 
 1. `agent_loop.py:317` declares `REVIEW_PHASES = ("REVIEW-A", "REVIEW-B")`, a
-   byte-identical duplicate of `kitlib/verdict.py:157`, pinned by nothing; and
+   byte-identical duplicate of `project-trajectory/scripts/kitlib/verdict.py:157`, pinned by nothing; and
    `_clamped_review_rounds` (`:4160-4170`) clamps with a magic `min(2, rp_int)`
    whose `2` is that tuple's length restated as a literal. `IF-175`'s own notes
    argue the shared-definition case in as many words — "there is exactly one

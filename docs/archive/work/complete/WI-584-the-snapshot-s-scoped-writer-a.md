@@ -2,14 +2,68 @@
 id = "WI-584"
 title = "The snapshot's scoped writer and unscoped refusal disagree on registry scope"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "medium"
 priority = 2
 safety_class = "spine"
 bar = "DevStg-Impl"
 +++
 
+## Deliverable
+
+RULED (a) and built it. `baseline_snapshot.refresh_refusal` now judges the
+registries THIS ACT WOULD WRITE — `set(SNAPSHOTTED)` under `seed`, otherwise
+`_authorised_registries`, the same function `copy_live` writes from — instead of
+the whole ledger, with ONE arm left unscoped: an act whose write set is empty is
+judged globally, so a refresh that would copy nothing in a tree carrying drifted
+approved text still refuses rather than exiting 0 in silence. `_refresh_targets`
+passes `seed` through; the message now names what the act DOES authorise, in
+place of the header's false "nothing in this working tree authorises it"; the
+rendering moved to a sibling `_refusal_text` because the second decision took
+`refresh_refusal` to cognitive 18 and `check_complexity` went RED on it (cleared
+by the extraction, no baseline bump taken).
+
+THE ACCEPTANCE, driven: the disposition's own command —
+`refresh_refusal('.', {low-level-requirements.toml: <ref>})` — returned `''` at
+this tip, where before it returned a refusal listing seventeen SR rows and four
+TC rows the caller had not judged. Six tests in
+`tests/test_baseline_snapshot.py`, each confirmed RED against the pre-change
+module and green after; one existing test was reworked because it pinned the
+defect (it asserted a refusal naming a registry the act cannot write) and its
+real intent — the pre-WI-571 short-circuit — is now asserted over the COPY,
+which is what could actually launder.
+
+The scoped gate is NOT vacuous: a registry with a brand-new row arriving already
+`Approved` is written without any `Status` MOVE, so an unrelated amendment could
+ride that anchor in. That case is refused, and is its own test.
+
+Full suite: `1 failed, 3366 passed, 24 skipped in 630.54s`. The one failure is
+inherited — `docs/handoff-2026-09-03.md` is orphaned at the integration base too,
+re-driven against a detached worktree of `794de60d`. Smoke tier `1520 passed, 8
+skipped`, 36.3 s against the 60 s budget. No spine cell was minted or amended
+here, so no approval brief is owed. Log: `docs/log.d/WI-584-scoped-refusal.md`.
+
 ## Context
+
+THE RULING: (a). The gate is scoped to the writer. Grounds, in the row's own
+terms: `copy_live`'s write set IS the authorised set (`_authorised_registries`
+= the registries `--approves` names plus the ones an approving `Status` move
+happened in), so a registry the refusal blocks on but the writer would not
+touch cannot be absorbed by the act being refused — the block protects nothing
+and costs the act. Reading (b) would have to unwind WI-571's scoping, which
+closed a measured laundering path of its own (a spine flip re-sealing off-spine
+drift), and would contradict the ruled per-registry contract the refusal text
+already states ("authorises the one registry it names"). The false block is
+also not confined to `--approves`: a bare no-flag act carrying an approving
+`Status` move in one registry is refused today by drift in another it will
+never write, which is the same defect on the commoner path.
+
+ONE ARM SURVIVES the scoping, and is kept deliberately: when the act's write
+set is EMPTY and approved text has drifted, the refusal still fires. An act
+that copies nothing is a no-op, and a no-op that exits 0 while an Approved
+row's text stands rewritten is the laundering scenario answered with silence.
+That arm is what keeps `test_a_APPROVED_amendment_with_no_flip_and_no_ref_is_
+REFUSED` and the de-approval regression honest under the scoped rule.
 
 Drafted by WI-578 (its ## Dispositions section) and minted at its merge - drafts-not-mints, ruling R1/R3.
 

@@ -86,7 +86,13 @@ def test_the_identity_notices_work_and_notices_docs_work():
     # is the case the exclusion would have bought.
     base = _listing("src/widget.py", "docs/work/active/wi-401/WI-401-widget.md")
     changed_code = [entry.replace(b"00001", b"00009") for entry in base]
+    changed_spec = [entry.replace(b"00002", b"00009") for entry in base]
     assert kv.fold_listing(base) != kv.fold_listing(changed_code)
+    assert kv.fold_listing(base) != kv.fold_listing(changed_spec), (
+        "the spec's own blob MOVING is what `docs/work/` being in the identity "
+        "means; the dropped-entry assertion below is a weaker claim a fold that "
+        "merely counted entries would also satisfy"
+    )
     assert kv.fold_listing(base) != kv.fold_listing(_listing("src/widget.py"))
 
 
@@ -417,6 +423,49 @@ def test_one_session_cannot_serve_a_phase_its_log_does_not_declare(tmp_path):
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
 
+def test_two_logs_at_one_key_declaring_two_phases_serve_no_round(tmp_path):
+    # THE OTHER SIDE OF THE JOIN, and the one no fixture reached: the file's
+    # phase comes from the LOG, so a key whose logs disagree has no phase to
+    # give and `logged_rounds` yields nothing rather than letting the last log
+    # scanned win. A relaxed guard reads a REVIEW-B session log that never
+    # judged this round as the round's own phase.
+    root = rounds_repo(tmp_path)
+    sha = add_round(root, 3)
+    base = _rev(root, "main")
+    want = kv.governing_identity(root, "wi-401")
+    served = kv.branch_entries(root, "wi-401", base, want, score.parse_verdict)
+    assert {phase for phase, _o, _v in served} == {"REVIEW-A"}, (
+        "the single-log arm beside it: one log, one phase, one round"
+    )
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
+    # A SECOND session log at the same (train, ordinal), declaring the other
+    # review phase — a record path, so it cannot move the tree under judgement.
+    _git(root, "checkout", "-q", "wi-401")
+    (root / "docs" / "iteration" / "wi-401-003-20260101-010000.log").write_text(
+        LOG.format(ordinal=3, train="wi-401", phase="REVIEW-B"),
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "telemetry: a second session at ordinal 003", when=T_LATER + 100)
+    _git(root, "checkout", "-q", "main")
+
+    listed = integ.ac.git(root, "ls-tree", "-r", "--name-only", "wi-401", "docs")[1]
+    assert listed.count("docs/iteration/wi-401-003-") == 2, (
+        "the fixture must really commit TWO logs at one key"
+    )
+    assert "docs/reviews/wi-401/003-REVIEW-A-{}.md".format(sha) in listed, (
+        "and the round file must still be there, so an empty answer below is "
+        "the ambiguity rule and not an empty scan"
+    )
+    assert kv.governing_identity(root, "wi-401") == want, "record-only commit"
+
+    assert kv.branch_entries(root, "wi-401", base, want, score.parse_verdict) == []
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
+    assert refusal is not None
+    assert "no logged review round" in refusal
+
+
 def test_a_round_that_judged_an_earlier_tree_does_not_count(tmp_path):
     # Identity, not ordering: the round is the LATEST thing on the branch by
     # commit time and still does not count, because the tree it named is gone.
@@ -582,6 +631,49 @@ def test_the_newest_attestation_at_a_tree_governs_the_cross_check(tmp_path):
         ("APPROVE", 2),
     ], "the attestations arrive as a sequence, oldest first — not one per tree"
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
+
+def test_an_attestation_riding_a_commit_that_changed_the_work_is_not_read(tmp_path):
+    # THE ANTI-FORGERY HALF of "the trailer cannot create an approval", which
+    # every other trailer case leaves unexercised by stamping only on carriers
+    # whose identity already matches. The words are copyable: nothing stops a
+    # commit from repeating an attestation that was true one tree ago. What
+    # stops it counting is that the carrier is asked for its OWN governing
+    # identity, so a commit that changed the work describes a tree its words do
+    # not name and is dropped.
+    root = rounds_repo(tmp_path)
+    add_round(root, 3)
+    _git(root, "checkout", "-q", "wi-401")
+    tree = kv.governing_identity(root, "wi-401")
+    _stamp(root, tree, "APPROVE", 1, T_LATER + 100)
+    _git(root, "checkout", "-q", "main")
+    base = _rev(root, "main")
+    assert kv.branch_trailers(root, "wi-401", base)[tree] == [("APPROVE", 1)], (
+        "the arm beside it: on a carrier whose identity IS this tree, read"
+    )
+
+    # The same words, on a commit that moved the work under them.
+    _git(root, "checkout", "-q", "wi-401")
+    (root / "src" / "widget.py").write_text(
+        "VALUE = 2\n", encoding="utf-8", newline="\n"
+    )
+    _commit(
+        root,
+        "feat: the widget, changed under the words\n\n"
+        + kv.format_trailer("APPROVE", 2, tree),
+        when=T_LATER + 200,
+    )
+    moved = kv.governing_identity(root, "wi-401")
+    _git(root, "checkout", "-q", "main")
+    assert moved is not None and moved != tree, (
+        "the fixture must really change the tree its trailer still names"
+    )
+
+    trailers = kv.branch_trailers(root, "wi-401", base)
+    assert trailers[tree] == [("APPROVE", 1)], (
+        "the forged carrier adds nothing at the tree it NAMES..."
+    )
+    assert moved not in trailers, "...and nothing at the tree it actually rode"
 
 
 def _refresh_commit(root, branch, when):

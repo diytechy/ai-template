@@ -312,9 +312,11 @@ def _kit_prompt(key):
 _PROMPT_CACHE = {}
 
 # The review-phase names the loop schedules (the in-process phase in {PLAN,
-# BUILD, REVIEW-A, REVIEW-B, INTEGRATE}). A committing non-review session
-# triggers a review round; these phases are the round.
-REVIEW_PHASES = ("REVIEW-A", "REVIEW-B")
+# BUILD, REVIEW-A, REVIEW-B, INTEGRATE}) are `kverdict.REVIEW_PHASES`, and this
+# module deliberately keeps NO copy of them: IF-175 declares ONE definition of
+# the verdict, and the span the merge slot demands is half of it, so a second
+# tuple here is drift made representable rather than detected (LLR-182). A
+# committing non-review session triggers a review round; those phases are it.
 
 # Default phase -> tier when routing from docs/agents.toml (AGENT_TIER_MAP /
 # --tier-map override per phase). Iteration reviewers are cheap-but-heterogeneous
@@ -351,7 +353,7 @@ DEFAULT_COOLDOWN_SECONDS = 900
 # because it is not a build for TIER/routing purposes, but a committing one
 # arms the round through its own arm in `build_bookkeeping` — it did the
 # rework, and a BUILD session that exists only to re-arm the round is waste.
-NON_BUILD_PHASES = frozenset(REVIEW_PHASES) | {
+NON_BUILD_PHASES = frozenset(kverdict.REVIEW_PHASES) | {
     "PLAN",
     "INTEGRATE",
     "DESIGN-CHECK",
@@ -3284,7 +3286,7 @@ def draw_session_route(
     OWED park — never a NEEDS-HUMAN page the dispatcher would turn into a
     handback of finished work. Returns `(route_id, reason, exit_code)`; a
     non-None exit_code ends the run (the banner is already written)."""
-    is_review = phase in REVIEW_PHASES
+    is_review = phase in kverdict.REVIEW_PHASES
     route_id, reason = select_with_probe(
         ctx, st, phase, tier, exclude, prefer_different, preferred_ids, now
     )
@@ -4165,12 +4167,19 @@ def _live_console(args, docs):
 
 def _clamped_review_rounds(review_policy):
     """The reviewer dial as an int: unparseable -> 1, out-of-range clamped —
-    the lenient parse the startup warning announces."""
+    the lenient parse the startup warning announces.
+
+    The ceiling is `len(kverdict.REVIEW_PHASES)` and never a literal: a dial
+    above the declared span asks for a phase no reviewer can be routed to, so
+    the bound IS that tuple's length, and writing the number instead would let
+    a third phase be added in the verdict leaf and silently ignored here —
+    `kverdict.declared_phases` clamps the same dial to the same span from the
+    other side (IF-175: one definition, sliced identically by both readers)."""
     try:
         rp_int = int(review_policy)
     except ValueError:
         rp_int = 1
-    return max(0, min(2, rp_int))
+    return max(0, min(len(kverdict.REVIEW_PHASES), rp_int))
 
 
 def _int_env(name, default, minimum=None):

@@ -21,7 +21,12 @@ import sys
 import textwrap
 
 import pytest
-from conftest import load_script
+from conftest import SCRIPTS, load_script
+
+if str(SCRIPTS) not in sys.path:  # the kit's script-sibling import idiom
+    sys.path.insert(0, str(SCRIPTS))
+
+from kitlib import verdict as kv  # noqa: E402
 
 
 def _vendor_core(repo, body):
@@ -511,10 +516,29 @@ def test_int_env_falls_back_on_junk_and_below_floor(monkeypatch):
 
 def test_clamped_review_rounds_is_lenient_then_clamped():
     al = load_script("agent_loop")
+    span = len(kv.REVIEW_PHASES)
     assert al._clamped_review_rounds("2") == 2
     assert al._clamped_review_rounds("banana") == 1  # unparseable -> 1
-    assert al._clamped_review_rounds("7") == 2  # out of range -> clamped
+    assert al._clamped_review_rounds("7") == span  # out of range -> clamped
+    # The ceiling is DERIVED, so the case is driven at the span rather than at
+    # the literal 2: a dial one above whatever the verdict leaf declares still
+    # comes back as exactly the declared count.
+    assert al._clamped_review_rounds(str(span + 1)) == span
     assert al._clamped_review_rounds("-3") == 0
+
+
+def test_the_loop_keeps_no_second_copy_of_the_review_phase_span():
+    """IF-175's singularity, pinned where it can actually break. The loop used
+    to declare its own byte-identical `REVIEW_PHASES` and clamp the dial with a
+    literal `2` — that tuple's length restated — so a third review phase added
+    to the verdict leaf would have reached `declared_phases` and been dropped
+    by the clamp, scheduling a round the merge slot would then demand and never
+    see. The three readers must move together, which is only true while there
+    is one definition to move."""
+    al = load_script("agent_loop")
+    assert not hasattr(al, "REVIEW_PHASES")  # the duplicate, made unrepresentable
+    assert set(kv.REVIEW_PHASES) <= al.NON_BUILD_PHASES
+    assert kv.declared_phases(al._clamped_review_rounds("99")) == list(kv.REVIEW_PHASES)
 
 
 def test_is_drive_launch_only_when_no_role_flag():

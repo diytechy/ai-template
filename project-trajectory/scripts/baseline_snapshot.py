@@ -96,7 +96,11 @@ Contract IF-123: the `last_approved` baseline, write side and whole read side.
     repo-relative paths written. It REFUSES to create the directory without
     `seed=True`, and refuses to refresh approved text into a registry without a
     `Status` flip in that registry or an `approves` ref naming it, because the
-    copy it takes is the text a signature blesses. `approves` is `{registry
+    copy it takes is the text a signature blesses. That refusal judges THIS
+    ACT'S WRITE SET and not the whole ledger, so a per-registry approval is not
+    blocked by drift in a registry the copy leaves alone; an act whose write set
+    is empty is judged over the whole ledger, so a refresh that would copy
+    nothing in a drifted tree refuses rather than exiting 0 in silence. `approves` is `{registry
     rel: ref}` (`parse_approves` builds it from a `REGISTRY=REF` CLI value). `load_all(root)` parses the snapshot into
     `{(stem, id column): {id: row}}`, returns None — never `{}` — when there is
     no snapshot, and RAISES on a file that exists and will not parse;
@@ -580,7 +584,7 @@ def refresh_ledger(root, snapshot=None):
     return ledger
 
 
-def refresh_refusal(root, approves=None, snapshot=None):
+def refresh_refusal(root, approves=None, snapshot=None, *, seed=False):
     """The refusal text for an unauthorised refresh, or `""` when the copy is
     authorised — THE AUTHORITY CHECK THE WRITER SHIPPED WITHOUT (adversarial
     round, 2026-08-20: ROUND-OPUS CRITICAL-2 / ROUND-SOL CRITICAL-1).
@@ -617,9 +621,34 @@ def refresh_refusal(root, approves=None, snapshot=None):
     Per REGISTRY rather than per row, because that is the granularity of the
     reviewed commit: the sitting rules a registry's rows together, and a
     row-level pairing would demand a flip for each amended row, which is exactly
-    the flip the D-9 ladder deleted."""
+    the flip the D-9 ladder deleted.
+
+    AND SCOPED TO THE ACT, LIKE THE WRITER (WI-584 ruling (a)). Only registries
+    this act would WRITE are judged. WI-571 scoped `copy_live` and left this
+    gate global, so a per-registry approval was refused by drift in registries
+    the copy would never touch: naming the one registry a sitting ruled listed
+    only the ones it did not, under a header claiming nothing authorised the
+    act. A registry the write set excludes cannot be absorbed by the act being
+    refused, so blocking on it protects nothing — it keeps both its stale bytes
+    and its visible drift either way, which is what the re-attestation brief is
+    for. A blocked registry now reaches the list only by being WRITTEN for
+    another reason (a row arriving already approved anchors its registry) or
+    under `seed`, which rewrites all seven.
+
+    ONE ARM STAYS UNSCOPED, deliberately: when the act would write NOTHING and
+    approved text has drifted, it is still refused. A refresh that copies
+    nothing is a no-op, and a no-op exiting 0 in a tree where an Approved row's
+    text was quietly rewritten is the laundering scenario answered with silence.
+    The drift survives either way — the writer is already scoped — but the
+    caller is told, which is the whole job of this text."""
     named = set(approves or ())
     try:
+        if snapshot is None:
+            # Loaded HERE rather than left to `refresh_ledger`, because the scope
+            # decision below reads it too and a `None` would read every approved
+            # row as newly arrived — which is the widest possible scope, exactly
+            # the direction this function must not fail in.
+            snapshot = load_all(root)
         ledger = refresh_ledger(root, snapshot)
     except SystemExit:
         # AN UNREADABLE RECORD CANNOT BE COMPARED, and `copy_live` is the repair
@@ -630,13 +659,35 @@ def refresh_refusal(root, approves=None, snapshot=None):
         # rules — the staged one in the commit that does it, and the committed
         # one on every strict run afterwards.
         return ""
-    blocked = [
+    unauthorised = [
         (rel, e)
         for rel, e in sorted(ledger.items())
         if e["absorbed"] and not e["flips"] and rel not in named
     ]
+    # The act's write scope, the same set the writer uses. A `seed` over a
+    # standing record really does rewrite all seven, so its scope is total.
+    scope = (
+        set(SNAPSHOTTED) if seed else _authorised_registries(root, approves, snapshot)
+    )
+    # Scoped when the act writes something; whole-ledger when it writes nothing,
+    # so a no-op refresh over drifted approved text is refused rather than silent.
+    blocked = (
+        [pair for pair in unauthorised if pair[0] in scope] if scope else unauthorised
+    )
     if not blocked:
         return ""
+    return _refusal_text(blocked, scope)
+
+
+def _refusal_text(blocked, scope):
+    """The refusal a caller reads: the absorbed rows, what this act DOES
+    authorise, and the three ways forward.
+
+    A sibling of `refresh_refusal` rather than a tail inside it, because the
+    scoped rule gave that function a second decision to make and the rendering
+    was what pushed it over the cognitive bar — the check names decomposing
+    OUTWARD as the first escape, and a message builder is the seam that comes
+    apart cleanly (WI-584)."""
     lines = [
         "baseline_snapshot: REFUSED — this refresh would ABSORB approved text "
         "into the record of what a human blessed, and nothing in this working "
@@ -648,6 +699,18 @@ def refresh_refusal(root, approves=None, snapshot=None):
         extra = len(entry["absorbed"]) - 5
         if extra > 0:
             lines.append("  {} (+{} more row(s))".format(rel, extra))
+    lines.append(
+        "This act would copy NOTHING — no registry is named and no `Status` "
+        "moved — so the drift above simply stands, and this refresh is not what "
+        "clears it."
+        if not scope
+        else "This act DOES authorise {}; the registr(ies) above are written "
+        "anyway (a row in them arrives already claiming approval, or `--seed` "
+        "was passed over a standing record) and these amendments would ride "
+        "along unblessed. Registries OUTSIDE the act's scope are not judged "
+        "here at all: they keep their prior snapshot bytes and their visible "
+        "drift.".format(", ".join(sorted(Path(rel).name for rel in scope)))
+    )
     lines.append(
         "A snapshot copy IS the approval record, so approved text reaches it only "
         "through an approval act. Three ways forward: flip the row's `Status` in "
@@ -771,12 +834,14 @@ def _refresh_targets(root, approves, seed, base):
     back so `copy_live` stamps the approval only on a genuine refresh, never on
     the initial blessing. Split from `copy_live` so the scope decision — a
     self-contained job with its own refusal — does not push the writer's branch
-    count over the C901 bar (WI-571)."""
+    count over the C901 bar (WI-571). `seed` rides into the refusal because a
+    re-seed over a standing record writes all seven registries, and the gate is
+    scoped to what the act writes (WI-584)."""
     try:
         snapshot = load_all(root)
     except SystemExit:
         snapshot = None  # unreadable record: copy_live is the repair path
-    refusal = refresh_refusal(root, approves, snapshot)
+    refusal = refresh_refusal(root, approves, snapshot, seed=seed)
     if refusal:
         raise SystemExit(refusal)
     first_signing = (
@@ -822,7 +887,11 @@ def copy_live(root, *, seed=False, approves=None):
     pointed at. A refresh that would absorb APPROVED text into a registry now
     needs either a `Status` flip in that registry or an `approves` ref naming it,
     which is recorded into the snapshot's prose stamp. Traced-cell refreshes are
-    unaffected and need no flag.
+    unaffected and need no flag. Since WI-584 that gate is scoped to THIS act's
+    write set, so a per-registry approval is no longer refused by drift in a
+    registry the copy leaves alone — with one unscoped arm: an act that would
+    copy nothing in a tree carrying drifted approved text is still refused, so
+    the laundering attempt meets a message and not a silent exit 0.
 
     **NOTHING SHOULD EVER WIRE THIS INTO A FRESHNESS STEP.** Exactly two callers
     are sanctioned: `intake._apply_flips` (the mechanical path, called AFTER the
