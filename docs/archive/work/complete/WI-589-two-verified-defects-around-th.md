@@ -38,7 +38,7 @@ are queued rather than narrated because a finding recorded only in a file under
 ordinal, phase, sha, verdict word and finding COUNT, never its content.
 
 1. `agent_loop.py:317` declares `REVIEW_PHASES = ("REVIEW-A", "REVIEW-B")`, a
-   byte-identical duplicate of `kitlib/verdict.py:157`, pinned by nothing; and
+   byte-identical duplicate of `project-trajectory/scripts/kitlib/verdict.py:157`, pinned by nothing; and
    `_clamped_review_rounds` (`:4160-4170`) clamps with a magic `min(2, rp_int)`
    whose `2` is that tuple's length restated as a literal. `IF-175`'s own notes
    argue the shared-definition case in as many words — "there is exactly one

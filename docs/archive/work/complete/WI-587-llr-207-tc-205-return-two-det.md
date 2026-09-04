@@ -12,7 +12,7 @@ bar = "DevStg-Tests"
 ## Deliverable
 
 ALL SEVEN findings driven, over three cells and two new regressions.
-`kitlib/verdict.py` is BYTE-IDENTICAL to its pre-lane state (`git diff` over the
+`project-trajectory/scripts/kitlib/verdict.py` is BYTE-IDENTICAL to its pre-lane state (`git diff` over the
 module against the integration base is empty) — the return was about text that
 contradicts the module and guards no fixture drove, and the row asked for no
 behaviour change.
@@ -187,7 +187,7 @@ IN SCOPE — three cells, two regressions, one re-point.
    it rather than being deferred. The note reads "kitlib/station.py (LLR-182) is
    the one package module NOT owned here: it stays CMP-008". That was true while
    `LLR-182` was the only kitlib module at CMP-008; `LLR-207` places
-   `kitlib/verdict.py` at CMP-008 too (both confirmed by reading the parsed
+   `project-trajectory/scripts/kitlib/verdict.py` at CMP-008 too (both confirmed by reading the parsed
    registry), so "the one package module" is now false and the shared-kernel
    boundary the note draws no longer describes the tree. Re-point the sentence
    to name both modules. Prior rounds filed this as stale-before-this-act; that
@@ -199,7 +199,7 @@ logged-session join, the declared phase span and the cross-check-not-accept
 reading of the trailer are correct as built. Findings 1 and 2 are wording that
 contradicts the module, not a mechanism to reopen; 3 and 4 add detectors for
 guards that already exist and must not change behaviour; 5-7 correct cells. No
-change to `kitlib/verdict.py`'s behaviour is asked for by this row.
+change to `project-trajectory/scripts/kitlib/verdict.py`'s behaviour is asked for by this row.
 
 NOT ON THIS LANE — the approval. This lane corrects the text, writes the two
 regressions and STOPS: `LLR-207` and `TC-205` stay `Drafted`, nothing under
