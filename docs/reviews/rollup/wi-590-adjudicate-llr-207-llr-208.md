@@ -14,3 +14,7 @@ identity). This is the human's reading of the same evidence.
 | 5 | REVIEW-A | `a1d80c6` | CHANGES-REQUESTED | 1 | `005-REVIEW-A-a1d80c6.md` |
 | 8 | REVIEW-A | `9671078` | CHANGES-REQUESTED | 2 | `008-REVIEW-A-9671078.md` |
 | 10 | REVIEW-A | `6fba20e` | APPROVE | 0 | `010-REVIEW-A-6fba20e.md` |
+| 11 | REVIEW-A | `7b72d2f` | CHANGES-REQUESTED | 2 | `011-REVIEW-A-7b72d2f-supervisor.md` |
+| 12 | REVIEW-A | `5ee77bd` | CHANGES-REQUESTED | 2 | `012-REVIEW-A-5ee77bd-supervisor.md` |
+| 13 | REVIEW-A | `9890841` | CHANGES-REQUESTED | 1 | `013-REVIEW-A-9890841-supervisor.md` |
+| 14 | REVIEW-A | `1715ae7` | APPROVE | 2 | `014-REVIEW-A-1715ae7-supervisor.md` |
