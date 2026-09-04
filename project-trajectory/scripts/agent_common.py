@@ -2574,41 +2574,49 @@ def commit_telemetry(root, session, label, paths, trailer=None):
     pre_staged = set(staged.splitlines()) if code == 0 else set()
     if dirty:
         git(root, "add", "--", *rels)
+    code, out = git(root, *_telemetry_argv(session, label, trailer, dirty, rels))
+    if code != 0:
+        _telemetry_veto(root, session, rels, pre_staged, out)
+
+
+def _telemetry_argv(session, label, trailer, dirty, rels):
+    """The `git commit` argv for one telemetry commit — the message, and the
+    scope the commit is allowed to sweep up.
+
+    THE INDEX IS NEVER A SOURCE THIS COMMIT READS. A `git commit` with no
+    pathspec commits THE INDEX, so a single unrelated staged file (the caller's
+    own `pre_staged` restore proves a non-empty index here is a state the
+    authors already expect) lands inside a commit labelled `telemetry:`,
+    carrying a `Review-Verdict:` attestation on a commit that changed the work
+    tree. Round 015 closed that for `--allow-empty` REPLACING the pathspec, but
+    left the scope itself conditional on `rels` — and a scope that exists only
+    when its input is non-empty is no scope at all on the arm that matters:
+    `commit_telemetry(root, s, l, [], trailer=…)` went on sweeping a staged
+    `src.py` into the attestation's carrier, driven. So the scope is STATED, by
+    `--only`, and holds on every arm instead of on the arms that happen to carry
+    paths. With paths that is what `-- <paths>` already implied; with none,
+    git-commit(1) documents `--only` together with `--allow-empty` as needing no
+    paths and creating the empty commit — and empty `rels` always reaches that
+    arm, because `dirty` is only ever computed from a non-empty `rels`."""
     msg = "telemetry: session {} {}".format(session, label)
     if trailer:
         msg += "\n\n" + trailer
-    # THE INDEX IS NEVER A SOURCE THIS FUNCTION READS. A `git commit` with no
-    # pathspec commits THE INDEX, so a single unrelated staged file (this
-    # function's own `pre_staged` restore proves a non-empty index here is a
-    # state the authors already expect) lands inside a commit labelled
-    # `telemetry:`, carrying a `Review-Verdict:` attestation on a commit that
-    # changed the work tree. Round 015 closed that for `--allow-empty`
-    # REPLACING the pathspec, but left the scope itself conditional on `rels` —
-    # and a scope that exists only when its input is non-empty is no scope at
-    # all on the arm that matters: `commit_telemetry(root, s, l, [], trailer=…)`
-    # went on sweeping a staged `src.py` into the attestation's carrier, driven.
-    # So the scope is STATED, by `--only`, and holds on every arm instead of on
-    # the arms that happen to carry paths. With paths that is what `-- <paths>`
-    # already implied; with none, git-commit(1) documents `--only` together with
-    # `--allow-empty` as needing no paths and creating the empty commit — and
-    # empty `rels` always reaches that arm, because `dirty` is only ever
-    # computed from a non-empty `rels`.
     argv = ["commit", "-q", "-m", msg, "--only"] + ([] if dirty else ["--allow-empty"])
-    argv += ["--", *rels] if rels else []
-    code, out = git(root, *argv)
-    if code != 0:
-        # "Exactly as before" covers the index too: a veto must not leave the
-        # bookkeeping staged for the next session's work commit to swallow.
-        # Unstage only what this add staged; anything already staged stays.
-        fresh = [r for r in rels if r.replace(os.sep, "/") not in pre_staged]
-        if fresh:
-            git(root, "reset", "-q", "--", *fresh)
-        print(
-            "agent_loop: telemetry commit skipped (session {}): {}".format(
-                session, _failure_tail(out) or "hook veto or nothing staged"
-            ),
-            file=sys.stderr,
-        )
+    return argv + (["--", *rels] if rels else [])
+
+
+def _telemetry_veto(root, session, rels, pre_staged, out):
+    """A refused telemetry commit, left exactly as it was found.
+
+    "Exactly as before" covers the index too: a veto must not leave the
+    bookkeeping staged for the next session's work commit to swallow. Unstage
+    only what this run's `add` staged; anything already staged stays."""
+    fresh = [r for r in rels if r.replace(os.sep, "/") not in pre_staged]
+    if fresh:
+        git(root, "reset", "-q", "--", *fresh)
+    why = _failure_tail(out) or "hook veto or nothing staged"
+    msg = "agent_loop: telemetry commit skipped (session {}): {}"
+    print(msg.format(session, why), file=sys.stderr)
 
 
 def next_session_number(iter_dir, train=None):

@@ -162,56 +162,51 @@ def _extra(root, wanted):
     return [p for p in sorted((root / ROLLUP_DIR).rglob("*.md")) if p not in known]
 
 
-def main(argv=None):
-    ap = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    ap.add_argument("--root", default=".", help="repository root (default: cwd)")
-    ap.add_argument(
-        "--check", action="store_true", help="exit 1 if any rollup is stale"
-    )
-    args = ap.parse_args(argv)
-    root = Path(args.root).resolve()
-    wanted = targets(root)
+def _clashing_names(wanted):
+    """Output filenames claimed by more than one review scope, sorted.
+
+    Two scopes, one output file: whichever is written second wins, and
+    `--check` then compares the other against it forever. Named rather than
+    resolved, because the remedy is the adopter's (rename the train directory)
+    and a generator that silently merged two review scopes would be the lie
+    this module exists not to tell."""
     names = [p.name for p, _t in wanted]
-    clash = sorted({n for n in names if names.count(n) > 1})
-    if clash:
-        # Two scopes, one output file: whichever is written second wins, and
-        # `--check` then compares the other against it forever. Named rather
-        # than resolved, because the remedy is the adopter's (rename the train
-        # directory) and a generator that silently merged two review scopes
-        # would be the lie this module exists not to tell.
-        print(
-            "gen_verdict_rollup: REFUSED — review scopes collide on {}; rename "
-            "the train directory (the flat pre-train layout takes {!r}).".format(
-                ", ".join(clash), FLAT_SCOPE
-            ),
-            file=sys.stderr,
-        )
-        return 1
-    if args.check:
-        # Compared on NORMALIZED line endings: a CRLF checkout is not a stale
-        # rollup. An EXTRA file is stale too, and the write path prunes it —
-        # see `_extra` for why both halves have to exist.
-        stale = [
-            p
-            for p, text in wanted
-            if not p.is_file()
-            or p.read_text(encoding="utf-8", errors="replace").replace("\r\n", "\n")
-            != text
-        ]
-        stale += [p for p in _extra(root, wanted) if p not in stale]
-        if not stale:
-            print("gen_verdict_rollup: fresh ({} review scope(s)).".format(len(wanted)))
-            return 0
-        print(
-            "gen_verdict_rollup: STALE — {}. Run `python "
-            "scripts/gen_verdict_rollup.py` and commit the result.".format(
-                ", ".join(_rel(root, p) for p in stale)
-            ),
-            file=sys.stderr,
-        )
-        return 1
+    return sorted({n for n in names if names.count(n) > 1})
+
+
+def _stale(root, wanted):
+    """Rollup paths that do not match what a write pass would leave, sorted.
+
+    Compared on NORMALIZED line endings: a CRLF checkout is not a stale rollup.
+    An EXTRA file is stale too, and the write path prunes it — see `_extra` for
+    why both halves have to exist."""
+    stale = [
+        p
+        for p, text in wanted
+        if not p.is_file()
+        or p.read_text(encoding="utf-8", errors="replace").replace("\r\n", "\n") != text
+    ]
+    return stale + [p for p in _extra(root, wanted) if p not in stale]
+
+
+def _report_stale(root, wanted):
+    """`--check`: 0 when every rollup matches the tree, else 1 and the names."""
+    stale = _stale(root, wanted)
+    if not stale:
+        print("gen_verdict_rollup: fresh ({} review scope(s)).".format(len(wanted)))
+        return 0
+    print(
+        "gen_verdict_rollup: STALE — {}. Run `python "
+        "scripts/gen_verdict_rollup.py` and commit the result.".format(
+            ", ".join(_rel(root, p) for p in stale)
+        ),
+        file=sys.stderr,
+    )
+    return 1
+
+
+def _write_rollups(root, wanted):
+    """Write every live scope's rollup and prune the files no scope claims."""
     (root / ROLLUP_DIR).mkdir(parents=True, exist_ok=True)
     for path, text in wanted:
         with path.open("w", encoding="utf-8", newline="\n") as fh:
@@ -227,6 +222,30 @@ def main(argv=None):
         )
     )
     return 0
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument("--root", default=".", help="repository root (default: cwd)")
+    ap.add_argument(
+        "--check", action="store_true", help="exit 1 if any rollup is stale"
+    )
+    args = ap.parse_args(argv)
+    root = Path(args.root).resolve()
+    wanted = targets(root)
+    clash = _clashing_names(wanted)
+    if clash:
+        print(
+            "gen_verdict_rollup: REFUSED — review scopes collide on {}; rename "
+            "the train directory (the flat pre-train layout takes {!r}).".format(
+                ", ".join(clash), FLAT_SCOPE
+            ),
+            file=sys.stderr,
+        )
+        return 1
+    return _report_stale(root, wanted) if args.check else _write_rollups(root, wanted)
 
 
 if __name__ == "__main__":  # pragma: no cover - CLI
