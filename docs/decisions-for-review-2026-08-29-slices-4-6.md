@@ -76,7 +76,7 @@ crossing's own text does not state.
 ### 4.5 `docs/log.d/` owns a row, and its README is exempt from fragment discovery
 
 **Decided:** `trunk_step.fragment_paths` skips `README.md` by name. The
-alternative — owning the fragment grammar on `scripts/trunk_step` instead of
+alternative — owning the fragment grammar on `scripts/trunk_step` instead of <!-- path-ok: the component registry MODULE LABEL, not a file path -->
 the directory — would put a hand-written medium's definition on its reader,
 against the rule that a hand-edited medium declares in its own header.
 
@@ -130,7 +130,7 @@ may not state it (a strict finding). The body is written as "our reading of":
 what is read or sent, what is assumed, what a failure does.
 
 **The alternative:** the `data` cell (160 characters — too short for a
-definition), or a dedicated `docs/external/` document per party (a second
+definition), or a dedicated `docs/external/` document per party (a second <!-- path-ok: the rejected alternative destination, never built -->
 home, hand-maintained, that no check ties to the code that faces the surface).
 
 **Why:** the far-side module is the one in-tree place a check can hold to the

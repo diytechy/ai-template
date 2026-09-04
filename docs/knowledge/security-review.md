@@ -40,7 +40,7 @@ credits a hook with a refusal it cannot enforce has mis-priced the risk.
   Slack / AWS / `sk-` shapes) plus a toggle-gated PII/privacy layer, across
   staged / message / range / repo modes; it fails **closed** on an unparseable
   `docs/process.toml`, matching the sh hooks. The credential *class* vocabulary
-  has one home, `kitlib/secret_classes.py` — a single table both the floor and
+  has one home, `project-trajectory/scripts/kitlib/secret_classes.py` — a single table both the floor and
   the transcript redactor read, so a class cannot be enforced on commit yet
   slip un-redacted into a committed log (the WI-520 PEM fix). And SR-176 rules
   that a durable finding is recorded by **class and location, never the matched

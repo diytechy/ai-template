@@ -91,6 +91,10 @@ docs/components-check — RETIRED by the 2026-08-11 overturn of WI-423 (owner: a
 docs/okf-export — RETIRED by the 2026-08-11 overturn of WI-423 (owner: absence-as-declaration is confusing); the dial is `[checks] okf_export` in docs/process.toml. Design history, closed WI specs and the checkers' own migration-window fallback legitimately name the legacy file — it is the vocabulary `bootstrap.py --migrate-config` converts, and a repo carrying BOTH homes is refused rather than resolved by precedence.
 docs/live-status — RETIRED by the 2026-08-11 overturn of WI-423 (owner: absence-as-declaration is confusing); the dial is `[checks] live_status` in docs/process.toml. Design history, closed WI specs and the checkers' own migration-window fallback legitimately name the legacy file — it is the vocabulary `bootstrap.py --migrate-config` converts, and a repo carrying BOTH homes is refused rather than resolved by precedence.
 docs/subagent-gate — RETIRED by the 2026-08-11 overturn of WI-423 (owner: absence-as-declaration is confusing); the dial is `[checks] subagent_gate` in docs/process.toml. Design history, closed WI specs and the checkers' own migration-window fallback legitimately name the legacy file — it is the vocabulary `bootstrap.py --migrate-config` converts, and a repo carrying BOTH homes is refused rather than resolved by precedence.
+docs/gate — RETIRED at the stage unification's slice 5 (WI-493, 2026-08-18; docs/log.md "Slice 5 — one vocabulary; docs/gate retires"): the one-word derived-gate file was DELETED with the bar axis it published, and the derived surface is `docs/stage`, written by scripts/derive_stage.py from the artifact states and never hand-set. The design record (spine-restructure-2026-08-08, concurrency-restructure, concurrency-v2), the repo-lock decisions and the spine-approval records legitimately name the retired file — they describe the machinery as it was — and a repo carrying both surfaces is refused rather than resolved by precedence.
+docs/specs/derived-gate-model.md — ARCHIVED 2026-07-20 to docs/archive/specs/derived-gate-model.2026-07-20.md when the derived-gate design spec stopped being spec-of-record (repo-lock §D-11; the deference was re-pointed at the archived copy and at process.md §4 as the ruled authority, owner 2026-08-12). Prose naming the pre-archive path is history and resolves one directory away; the un-archiving spine-restructure §S5 proposed was never performed.
+docs/requirements/stakeholder-needs.md — retired 2026-08-11 at the D-5 carrier cutover (`bb69a622`, "four tiers to TOML, sources deleted"): the SN registry is docs/requirements/stakeholder-needs.toml. Prose naming the .md form before that commit is history and keeps its token; an adopter converts theirs with scripts/migrate_carrier.py.
+docs/guardrails/core.md — the model-keyed guardrails prepend's SOURCE file, absent here because the `[policies] guardrails` dial in docs/process.toml is `off` (dormant, repo-lock §worker-prompt): the matcher and its prepend still ship, so prose naming the destination describes the shipped layer's input, not a promise that THIS repo carries it. Deliberately unmarked, so flipping the dial on and writing the file is the deliberate act that removes this line.
 
 # --- Declared policy files where ABSENT is a legal, documented state ----------
 # Naming one of these in prose is CORRECT: the reader treats absence as the
@@ -102,9 +106,12 @@ docs/run-state — retired at Phase 5 with the dispatcher, its only writer; the 
 docs/pause — the legacy untracked pause marker; retired at Phase 5 (the tracked docs/work/pause is the one home)
 docs/work/pause — LIFECYCLE: present only while a pause is DECLARED; absence = not paused, the documented default
 docs/work/active/ — LIFECYCLE: holds per-branch claim directories only while work is claimed; empty/absent at a drained stop
+docs/work/active/wi508-architectural-remap — LIFECYCLE: one of the per-branch claim directories the line above describes; named in docs/handoff-2026-08-31.md as the claim that lane held, and absent once the lane drained.
+docs/work/active/wi484-concern-refs-component-view — LIFECYCLE: the same, for the WI-484 lane (docs/handoff-2026-08-31.md).
 docs/test/report.md — LIFECYCLE: the traceability matrix trace.py writes on demand (gitignored, never committed — .gitignore "Generated reports"); prose naming it describes the generator's destination, and absence until a run writes it is the documented state
 docs/test/report.html — LIFECYCLE: the html render of the same matrix, written when the bar's check.py passes --html to the trace step at DevStg-Tests/DevStg-Impl (gitignored, never committed — the same .gitignore block); declared tool-residue since WI-407 (measured holding the wi-402 lane at unload, 2026-08-02), and absence until a bar run writes it is the documented state
 docs/test/perf-report.md — LIFECYCLE: the perf comparator's report (scripts/check_perf.py), rewritten by any run that reaches a comparison; this repo emits no docs/test/perf-metrics.json, so every run SKIPs before the write and the absence is the documented state until a product measurement step is wired
+docs/test/evidence — LIFECYCLE: the harness-written test-evidence record (scripts/record_test_evidence.py), the ONE input to the DevStg-Release rung via `kitlib.stage.evidence_verdict`. It is written only on a green harness exit and is bound by value to the tree it was measured on, so its absence — no green recorded against this tree — is the ordinary state, and prose naming it (docs/enforcement-audit.md, docs/registry-machinery-reference.md) describes the writer's destination.
 tools/wi_convert.py — the converter's pre-2c meta-repo home, named as history in the spec; it moved to project-trajectory/scripts/wi_convert.py
 # The dispatcher split (concurrency-v2 SA4.2): drive.py renamed dispatch.py
 # with lane.py extracted; historical records (closed WI specs) and the
@@ -138,3 +145,38 @@ docs/archive/last_approved/README.md — LIFECYCLE: the `last_approved` snapshot
 # to docs/runtime-flows.md; the structure derives live from the registries +
 # source AST into PROJECT_STATE.html. Records citing the old path stay verbatim.
 docs/architecture.md — retired at WI-455; narrative moved to docs/runtime-flows.md, structure derives into PROJECT_STATE.html
+
+# --- Session-log fragments: docs/log.d/ is a STAGING dir, not a home ----------
+# A fragment lives in docs/log.d/ only until the trunk step folds it into
+# docs/log.md, which is why docs/log.d/ is deliberately NOT a record prefix in
+# check_doc_refs.py: it is judged strictly while its author can still edit it.
+# The consequence is that a CITATION written against a fragment outlives the
+# fragment. Each line below names a fragment that was written, compiled, and
+# removed; the record it carried is in docs/log.md, so the citing spec still
+# points at a real record and re-pointing every one of them would edit closed
+# WI specs to say nothing new. A fragment that was NEVER written is rot and is
+# fixed in place instead (three were, at WI-568/WI-571/WI-508).
+docs/log.d/2026-08-22-wi484-hatrefs-backfill.md — compiled into docs/log.md and removed; cited by docs/work/partial/WI-484-concern-refs-component-view.md
+docs/log.d/2026-08-23-wi484-writer.md — compiled into docs/log.md and removed; cited by docs/work/partial/WI-484-concern-refs-component-view.md
+docs/log.d/2026-08-23-wi484-component-view.md — compiled into docs/log.md and removed; cited by docs/work/partial/WI-484-concern-refs-component-view.md
+docs/log.d/2026-08-23-wi511-hats-optional-keys.md — compiled into docs/log.md and removed; cited by docs/work/partial/WI-484-concern-refs-component-view.md
+docs/log.d/2026-08-23-wi484-amend-guard.md — compiled into docs/log.md and removed; cited by docs/work/partial/WI-484-concern-refs-component-view.md
+docs/log.d/2026-08-28-owner-rulings-oi64-oi65.md — compiled into docs/log.md and removed; cited by docs/work/partial/WI-508-architectural-remap-program.md. The ruling's durable home is the `OI-64`/`OI-65` rows in docs/requirements/open-items.toml (executed as `IF-144` via `WI-523`–`WI-526`); the surviving citation here is a plain code span, not a link.
+docs/log.d/2026-08-30-owner-rulings-oi68-oi69.md — compiled into docs/log.md and removed; cited by docs/work/partial/WI-540-adjudicator-retention-layer.md
+docs/log.d/2026-08-31-owner-rulings-oi74-75.md — compiled into docs/log.md and removed; cited by docs/work/queued/WI-557-delegated-decisions-record.md
+
+# --- Synthetic paths inside test fixtures -------------------------------------
+# A fixture that builds a fake git listing names paths that are DATA, not files.
+# Adjudication rows quoting the fixture quote those names verbatim.
+src/widget.py — a synthetic path inside tests/test_verdict_record.py's fake `<mode> <type> <sha>\t<path>` listing fixture, not a file; quoted verbatim by the WI-586/WI-587 adjudication rows that read the fixture. `src/` itself is already declared above (the kit's product is project-trajectory/ + tests/).
+
+# --- A proposed artifact, not yet written -------------------------------------
+prompts/adjudicate-consolidate.template.md — the fifth routed adjudication brief WI-583 proposes; not written yet, and when it ships its home is project-trajectory/prompts/adjudicate-consolidate.template.md like every other entry in the `prompts/` block above, so this line stays correct at the root path either way.
+
+# --- Kit package paths written without their `scripts/` segment ---------------
+# `kitlib/` is a package INSIDE the kit's script dir, so its portable form is
+# `scripts/kitlib/<mod>.py` (which resolves kit-relative) and a bare
+# `kitlib/<mod>.py` resolves nowhere. Live prose is corrected in place; the one
+# entry below is in a DATED APPROVAL BRIEF, which `check.py --approval-immutable`
+# forbids editing once minted — so the fact is declared here instead.
+kitlib/spine.py — the sn_cited_ids one-home module, written package-relative in the immutable dated brief docs/ratify/2026-08-23-spine-approval.md; its real home is project-trajectory/scripts/kitlib/spine.py and the portable spelling is scripts/kitlib/spine.py. This path can never materialize at the repo root: a copy there would be the second home the one-home rule exists to prevent.

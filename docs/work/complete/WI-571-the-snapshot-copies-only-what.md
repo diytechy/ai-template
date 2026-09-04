@@ -44,8 +44,8 @@ tests whose contract changed (a traced-only and a Drafted-only refresh now copy
 NOTHING rather than the whole tree) and the approval-stamp test (exercised via a
 named amendment, since a traced-only refresh now writes nothing) are re-pointed;
 `tests/test_trace_briefs.py`'s two `--approves` callers move to the named form.
-Full-suite result and the pre-existing-failure accounting are in the fragment
-`docs/log.d/WI-571-snapshot-copy-scope.md`.
+Full-suite result and the pre-existing-failure accounting are in the WI-571
+entries in `docs/log.md` (the snapshot-copy-scope fragment, since compiled).
 
 Review-A round 004 found the remaining boundary: a de-approval
 (`Approved` → `Drafted`) is a Status difference but cannot authorise a new

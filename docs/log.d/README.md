@@ -29,7 +29,7 @@ Contract IF-168: what MUTATES this drop-box, and there are exactly two acts.
 
 # `docs/log.d/` — the log fragment drop-box
 
-Session records wait here to be folded into [`../log.md`](../log.md). A work
+Session records wait here to be folded into [`docs/log.md`](../log.md). A work
 branch never edits the log itself: it drops one fragment, and the serial trunk
 step appends every committed fragment in git-derived merge order and deletes it.
 That is what keeps `docs/log.md` off the merge-conflict surface — two branches

@@ -19,7 +19,7 @@ collapses to a one-line pointer with the commit.**
 > executed, which is precisely what drowns a "what's next" surface. The full
 > record of every **executed** decision, the F-1…F-12 reference findings, and
 > this document's own log now live in
-> [`archive/repo-lock-decisions-2026-08.md`](archive/repo-lock-decisions-2026-08.md).
+> [`docs/archive/repo-lock-decisions-2026-08.md`](archive/repo-lock-decisions-2026-08.md).
 > **Every `D-n` heading and every `§N` number survives here as a resolvable
 > pointer** — **21 live source and test files** cite them in prose (re-measured 2026-08-13w)
 > (`repo-lock D-5`, `repo-lock §5's`) where nothing link-checks them, so the
@@ -39,7 +39,7 @@ anything.
 live here as prose, which made this file a second decision queue beside the
 registry — the exact duplication it forbids on its first page. Each is now a
 brief in
-[`requirements/open-items.toml`](requirements/open-items.toml) with its own
+[`docs/requirements/open-items.toml`](requirements/open-items.toml) with its own
 blast radius, options and recommendation, rendered for reading in
 [`open-items.html`](open-items.html) and projected into
 [`status.md`](status.md) automatically. **Read them there; this list is only
@@ -89,7 +89,7 @@ duplicate a surface the generator maintains. → **§5 step 6**
   double-clickable *where the platform allows*. Applied as **SN-033…SN-040 +
   SR-148 + the SN-029 draft amendment** after a codex-sol adversarial round —
   the batch record is
-  [`archive/plans/2026-08-12-sn-intake.md`](archive/plans/2026-08-12-sn-intake.md), which
+  [`docs/archive/plans/2026-08-12-sn-intake.md`](archive/plans/2026-08-12-sn-intake.md), which
   also carries the **two tier disputes**, the **edge-dissolution map** and
   the **hats sketch** as sitting inputs. Attestation stays the sitting's.
   → **§8.3**, **§8.6**
@@ -184,7 +184,7 @@ first shipped, which OI-21 supersedes.**
 question closed.** The owner: *"gate semantics should be retired / archived
 for stage semantics even though it will result in some relatively heavy
 rework."* That adopts
-[`archive/plans/2026-08-11-stage-gate-semantics.md`](archive/plans/2026-08-11-stage-gate-semantics.md):
+[`docs/archive/plans/2026-08-11-stage-gate-semantics.md`](archive/plans/2026-08-11-stage-gate-semantics.md):
 **stages are the tiers of the decomposition; gates are the subset of
 boundaries that require a human to certify** — stage is the *state*, a gate is
 an *event you pass*, `DevStg-Below` is retired (it was "stage 0" in the wrong units),
@@ -209,7 +209,7 @@ review (§8.7):**
   `docs/specs/derived-gate-model.md` was a **design spec** (spec-of-record for
   WI-089…096, WI-116, WI-117), archived **correctly** by the WI-251
   spec-lifecycle sweep under rule R-F to
-  [`archive/specs/derived-gate-model.2026-07-20.md`](archive/specs/derived-gate-model.2026-07-20.md).
+  [`docs/archive/specs/derived-gate-model.2026-07-20.md`](archive/specs/derived-gate-model.2026-07-20.md).
   Nothing is lost. What was never done is repointing the citations — see §5's
   loose ends. Note `PROCESS_OPTIONS.md` calls its own section *"the working
   summary"* and defers to the spec for *"full design + rationale"*, so ruling
@@ -259,7 +259,7 @@ must be re-derived, not trusted.
 ## 2. Decisions — pointers, and the ones still owed
 
 Full reasoning for every executed decision:
-[`archive/repo-lock-decisions-2026-08.md`](archive/repo-lock-decisions-2026-08.md).
+[`docs/archive/repo-lock-decisions-2026-08.md`](archive/repo-lock-decisions-2026-08.md).
 
 ### D-1 — the attestation anchor moves ONTO the spine row; `attestations.csv` is retired
 
@@ -517,7 +517,7 @@ spends the word six times meaning compress-to-essence) · `Grounded`
    returns False and **silently vanishes from the re-attest brief** — the exact
    laundering Q11 exists to prevent. **The migration's first act is to close
    the vocabulary.** Full checklist:
-   [`archive/plans/2026-08-11-status-ladder-migration.md`](archive/plans/2026-08-11-status-ladder-migration.md)
+   [`docs/archive/plans/2026-08-11-status-ladder-migration.md`](archive/plans/2026-08-11-status-ladder-migration.md)
    (measured blast radius: 8 literal sites in scripts, 96 in tests, 8 shipped
    docs).
 
@@ -610,7 +610,7 @@ act and nowhere else.
 
 Q1–Q4 all closed; Q5–Q12 live inside D-3 and D-9. The map and the full
 reasoning are archived —
-[`archive/repo-lock-decisions-2026-08.md`](archive/repo-lock-decisions-2026-08.md).
+[`docs/archive/repo-lock-decisions-2026-08.md`](archive/repo-lock-decisions-2026-08.md).
 **Q3 alone is still open** and is listed under D-1 above.
 
 ## 4. Answers to questions already asked
@@ -638,7 +638,7 @@ else.
 6. **Hold the P0 sitting.** Part 1 is done (2026-08-10: one need attested,
    three ruled mis-levelled and demoted, one reframed — see [`log.md`](log.md)'s
    Decisions). **What remains is the 25-row re-attest brief**
-   ([`ratify/2026-08-08-mechanized-loop.md`](ratify/2026-08-08-mechanized-loop.md)),
+   ([`docs/ratify/2026-08-08-mechanized-loop.md`](ratify/2026-08-08-mechanized-loop.md)),
    and it should be worked **together with the prose batch** in §8.4 — both are
    re-blessing windows, and doing them at once collapses two windows into one.
    **Must precede** the ladder migration (Q11).
@@ -742,7 +742,7 @@ else.
 ## 6. Reference findings
 
 F-1 … F-12, compiled 2026-08-09, are **archived** —
-[`archive/repo-lock-decisions-2026-08.md`](archive/repo-lock-decisions-2026-08.md).
+[`docs/archive/repo-lock-decisions-2026-08.md`](archive/repo-lock-decisions-2026-08.md).
 They are the evidence behind rulings now made. Two are still load-bearing and
 are cited from §0: **F-10** (what the IF `Contract` cell encodes → OI-14) and
 **F-11** (components bind the other rulings). The per-field mechanical detail
@@ -953,7 +953,7 @@ required.
 
 ### 8.4 · The prose legibility rewrite — PREPARED, adversarially reviewed twice
 
-[`archive/plans/2026-08-10-sn-sr-prose-rewrite.md`](archive/plans/2026-08-10-sn-sr-prose-rewrite.md)
+[`docs/archive/plans/2026-08-10-sn-sr-prose-rewrite.md`](archive/plans/2026-08-10-sn-sr-prose-rewrite.md)
 — exact replacement text for all 29 SNs (form (i), qualifiers retained
 verbatim), a 17-SR exact-text batch (13 further rows *dropped* rather than
 shipped as outlines), the §B.0 obligation-coverage matrix, and the edge-case
