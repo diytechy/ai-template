@@ -231,6 +231,11 @@ sanitize_train = agent_common.sanitize_train
 parse_wi_list = agent_common.parse_wi_list
 load_wi_registry = agent_common.load_wi_registry
 train_evidence = agent_common.train_evidence
+# The trunk/base pair went OUTWARD to `agent_common` (2026-09-04): the
+# worker PREFLIGHT there has to ask the same "what did THIS branch build?"
+# question, and a second merge-base rule would be a second answer.
+trunk_name = agent_common.trunk_name
+default_base = agent_common.default_base
 _clip = agent_common._clip
 _read_csv_rows = agent_common._read_csv_rows
 _refs = agent_common._refs
@@ -629,23 +634,6 @@ def scripts_dir(root):
         if (Path(root) / "scripts" / "check.py").is_file()
         else "project-trajectory/scripts"
     )
-
-
-def trunk_name(root, worker=None):
-    """The integration trunk's NAME for the review brief: the branch the
-    PRIMARY checkout is on (`git worktree list --porcelain`, first block — a
-    lane runs in a linked worktree while the primary holds trunk). Falls back
-    to the current branch (a repo with no linked worktrees), then to the
-    worker's base sha — the slot never renders empty."""
-    code, out = git(root, "worktree", "list", "--porcelain")
-    if code == 0 and out.strip():
-        for line in out.split("\n\n", 1)[0].splitlines():
-            if line.startswith("branch refs/heads/"):
-                return line[len("branch refs/heads/") :].strip()
-    _c, cur = git(root, "branch", "--show-current")
-    if cur.strip():
-        return cur.strip()
-    return (worker or {}).get("base", "") or "HEAD"
 
 
 def session_body(root, worker, current_wi, session, sha, reviews_dir, templates):
@@ -1806,24 +1794,6 @@ def map_preflight(
     return failures, prompt_templates
 
 
-def default_base(root):
-    """The integration base a worker assumes when --base is not given: the
-    merge-base of the lane's HEAD with the TRUNK (the primary checkout's
-    branch), else HEAD. It used to be HEAD unconditionally — right for a
-    fresh claim (HEAD IS the claim commit) and wrong for every RESUMED
-    worker, whose base..HEAD evidence then read empty: the built trailers,
-    the owed review round and the resume itself were invisible, which is the
-    "resumed session finds nothing to do" pattern of the 2026-08-30 run
-    (WI-548 round 3). A repo whose primary checkout is the branch itself
-    (a single-checkout attended run, the test fixtures) merges-bases to HEAD
-    and keeps the old behaviour exactly."""
-    trunk = trunk_name(root)
-    code, out = git(root, "merge-base", trunk, "HEAD")
-    if code == 0 and out.strip():
-        return out.strip()
-    return head_sha(root)
-
-
 def build_worker_assignment(args, root):
     """The explicit worker assignment (--wi, on a claimed branch): parse the
     WI list, fail closed on an unresolvable --base, and load the registry +
@@ -2961,9 +2931,44 @@ def wait_out_blackout(lane):
     blackout_wait(wake, blackout_line, resume_at, emit=print, sleep=time.sleep)
 
 
+def claimed_on_branch(root):
+    """The assigned rows this lane has NOT closed: the WI ids whose spec is
+    still in `active/<current branch>/` on the branch's committed tree.
+
+    Only the branch resolution is the loop's; the tree read itself is
+    `integrate.claimed_ids_on_branch`, beside the `finished_branches` that asks
+    the same tree the same question — two answers to "has this row left
+    `active/`?" is exactly how the walk and the integrator came apart. Scoped to
+    `<branch>` because a lane worktree inherits trunk's whole `active/`, other
+    lanes' claims included. An empty answer (a detached HEAD, git silent) leaves
+    the caller's behaviour exactly as it was before this read existed.
+    """
+    import integrate  # a sibling reader; deferred so a non-worker run pays nothing
+
+    code, out = git(root, "symbolic-ref", "--quiet", "--short", "HEAD")
+    branch = out.strip() if code == 0 else ""
+    return (branch and integrate.claimed_ids_on_branch(root, branch)) or set()
+
+
 def current_assignment_wi(root, worker):
-    """The WI this session claims (WI-137): the first assigned WI without
-    committed evidence, else the rework target (else the last assigned).
+    """The WI this session claims (WI-137): the first assigned WI that is not
+    BUILT, else the rework target (else the last assigned).
+
+    BUILT MEANS BOTH HALVES — the committed `WI:` trailer AND the spec gone from
+    `active/<branch>/` on the branch tree. The trailer alone was the whole test
+    until a four-row spine batch measured what that misses (2026-09-03, lane
+    `wi-589-…`): session 001 committed WI-589's build WITH its trailer and ran
+    out of budget before the close ritual, so every later session's walk stepped
+    straight past a row whose spec was still in `active/`. Nothing ever came
+    back to it, and `integrate.finished_branches` — which asks the OTHER half,
+    the tree — never counted the branch finished, so the lane stranded after its
+    review round and a human closed the row by hand. The two readers now ask the
+    same question: a row is done with when its trailer is committed and its spec
+    has left `active/<branch>/`.
+
+    A ONE-ROW LANE IS UNCHANGED, which is why this is safe: with a single
+    assignment the `remaining` list is either `[A]` or empty and both arms
+    answer `A`, so only a batch can observe the difference.
 
     (The §7 continuation re-check retired with session grouping, WI-383 /
     §A6.1. It re-asked, once per successor, whether the classifier still
@@ -2974,7 +2979,8 @@ def current_assignment_wi(root, worker):
     construction: the guard's sole non-refusing case. A check that can only
     ever say yes is not a safeguard.)"""
     built, _blk = train_evidence(root, worker["base"])
-    remaining = [w for w in worker["assigned"] if w not in built]
+    still_open = claimed_on_branch(root)
+    remaining = [w for w in worker["assigned"] if w not in built or w in still_open]
     return (
         remaining[0]
         if remaining

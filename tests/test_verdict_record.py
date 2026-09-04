@@ -38,6 +38,7 @@ from integrate_fixtures import (
 if str(SCRIPTS) not in sys.path:  # the kit's script-sibling import idiom
     sys.path.insert(0, str(SCRIPTS))
 
+from kitlib import station as ks  # noqa: E402
 from kitlib import verdict as kv  # noqa: E402
 
 ac = load_script("agent_common")
@@ -1455,3 +1456,102 @@ def test_a_resume_that_cannot_read_its_evidence_still_draws_the_parked_round(
     still_building = al.RoutingState(1, 900, set(), 3, {})
     al.resume_owed_round(root, setup, still_building, 1, root / "docs" / "iteration")
     assert still_building.review_queue == []
+
+
+# --- the MECHANICAL adjudication close, the second disposable commit -----------
+# Measured 2026-09-03 on WI-586. An adjudication lane cannot obey "close before
+# the final verdict round": the round is drawn while the row is still in
+# `active/`, and `handback.close_adjudication` moves the spec afterwards, at the
+# worker's DONE. `docs/work/` is IN the identity, so that machine-authored move
+# staled the APPROVE that had just judged the row, the merge slot refused "no
+# logged review round names its current tree", and a supervisor hand-compiled a
+# legacy rollup. The close is peeled on exactly the refresh commit's argument.
+
+
+def _claim_commit(root, when=T_CODE + 10):
+    """The lane carrying its claimed adjudication spec in `active/<branch>/` —
+    the tree the round judges."""
+    _git(root, "checkout", "-q", "wi-401")
+    spec = root / "docs" / "work" / "active" / "wi-401" / "WI-401-dispose.md"
+    spec.parent.mkdir(parents=True, exist_ok=True)
+    spec.write_text(
+        '+++\nid = "WI-401"\n+++\n\n## Dispositions\n\nthe judged drafts.\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "adjudicate: the verdict\n\nWI: WI-401", when=when)
+    _git(root, "checkout", "-q", "main")
+
+
+def _mechanical_close(root, when=T_LATER + 200, subject=None, also=None):
+    """The machinery's own close commit: the spec moves `active/` -> `complete/`
+    under the composed subject. `subject`/`also` let a test drive the two
+    verifications (a hand-written subject, a commit that reached outside
+    `docs/work/`)."""
+    _git(root, "checkout", "-q", "wi-401")
+    src = root / "docs" / "work" / "active" / "wi-401" / "WI-401-dispose.md"
+    dst = root / "docs" / "work" / "complete" / "WI-401-dispose.md"
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8", newline="\n")
+    src.unlink()
+    if also:
+        (root / also).write_text("touched\n", encoding="utf-8", newline="\n")
+    _commit(
+        root,
+        (subject or ks.mechanical_close_subject(["WI-401"]))
+        + "\n\nthe machinery archives the judged row.\n\nWI: WI-401",
+        when=when,
+    )
+    _git(root, "checkout", "-q", "main")
+
+
+def test_the_mechanical_close_does_not_stale_the_round_it_follows(tmp_path):
+    root = rounds_repo(tmp_path)
+    _claim_commit(root)
+    add_round(root, 3)
+    judged = _rev(root, "wi-401")
+    # The gate is satisfied at the tree the round actually read.
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
+    _mechanical_close(root)
+    # The close REALLY moved the non-record tree — without this the test would
+    # pass on a peel that had nothing to do.
+    assert kv.tree_identity(root, "wi-401") != kv.tree_identity(root, judged)
+    assert kv.governing_identity(root, "wi-401") == kv.tree_identity(root, judged)
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+    # ...and with NO legacy rollup anywhere: the migration window is not what
+    # cleared it.
+    assert not (root / "docs" / "reviews" / "WI-401-REVIEW-A.md").exists()
+
+    # The station's refresh stacks on top exactly as it does elsewhere, and the
+    # two peels compose.
+    _git(root, "checkout", "-q", "wi-401")
+    work = _refresh_commit(root, "wi-401", T_LATER + 300)
+    assert kv.governing_identity(root, "wi-401") == kv.tree_identity(root, judged)
+    assert kv.tree_identity(root, work) != kv.tree_identity(root, judged)
+    _git(root, "checkout", "-q", "main")
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
+
+def test_only_the_machinerys_own_close_subject_peels(tmp_path):
+    # A hand-written close is an ordinary work commit: it moved the tree and the
+    # round no longer names it. Fails toward MORE review, which is the direction
+    # every unverified step here takes.
+    root = rounds_repo(tmp_path)
+    _claim_commit(root)
+    add_round(root, 3)
+    _mechanical_close(root, subject="close: WI-401 -> complete/")
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
+    assert refusal is not None and "names its current tree" in refusal
+
+
+def test_a_close_that_reached_outside_docs_work_does_not_peel(tmp_path):
+    # The path confinement: a close whose relink (or anything else) touched a
+    # product file changed something a reviewer could conclude differently
+    # about, so it is not disposable.
+    root = rounds_repo(tmp_path)
+    _claim_commit(root)
+    add_round(root, 3)
+    _mechanical_close(root, also="src/widget.py")
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
+    assert refusal is not None and "names its current tree" in refusal

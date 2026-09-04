@@ -131,6 +131,20 @@ OUTCOME_DIRS = MappingProxyType(
 #: not import the coordinator to learn it.
 BAR_GREEN = "Bar-Green:"
 
+#: The MECHANICAL adjudication close's commit subject — `handback` writes it and
+#: `verdict.mechanical_close_peel` verifies it, so the two must not hold two
+#: spellings. It is here for the same reason `BAR_GREEN` is: a vocabulary the
+#: writer and the reader share belongs below both.
+MECHANICAL_CLOSE_PREFIX = "adjudicate: "
+MECHANICAL_CLOSE_SUFFIX = " -> complete/ (mechanical close)"
+
+
+def mechanical_close_subject(wi_ids):
+    """The subject line of the machinery's own adjudication-close commit."""
+    return "{}{}{}".format(
+        MECHANICAL_CLOSE_PREFIX, ", ".join(wi_ids), MECHANICAL_CLOSE_SUFFIX
+    )
+
 
 def outcome_of(status_dirs):
     """The ONE `Outcome` the given status directories name, or `None`.

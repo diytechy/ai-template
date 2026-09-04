@@ -694,3 +694,123 @@ def test_build_worker_assignment_good_base_parses_wi_list(tmp_path):
     assert worker["assigned"] == ["WI-201", "WI-204"]
     assert worker["base"] == base
     assert worker["rework"] == ""
+
+
+# --- the batch walk: a trailer alone is not a closed row ------------------------
+# Measured 2026-09-03 on the four-row spine batch `wi-589-…`: session 001
+# committed WI-589's build WITH its `WI:` trailer and ran out before the close
+# ritual, so `current_assignment_wi` — which asked the trailer alone — stepped
+# past the row for the rest of the lane and nothing ever moved its spec out of
+# `active/<branch>/`. `integrate.finished_branches` asks the tree, so it never
+# counted the branch finished either, and the lane stranded after its review
+# round. The walk now asks BOTH halves, which is the same question the
+# integrator asks.
+
+
+def _batch_repo(tmp_path, branch="wi-batch", wis=("WI-201", "WI-204")):
+    """A lane branch carrying a spec per assigned row in `active/<branch>/`."""
+    repo, base, worker = _train_repo(tmp_path, assigned=wis)
+    _git(repo, "checkout", "-q", "-b", branch)
+    active = repo / "docs" / "work" / "active" / branch
+    active.mkdir(parents=True)
+    for wid in wis:
+        (active / "{}-row.md".format(wid)).write_text(
+            '+++\nid = "{}"\n+++\n\n## Context\n\nwork.\n'.format(wid),
+            encoding="utf-8",
+            newline="\n",
+        )
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "claim " + ";".join(wis))
+    worker["base"] = base
+    return repo, worker, active
+
+
+@env_gate_skipif("git")
+def test_a_built_but_unclosed_row_is_still_the_walks_next_row(tmp_path):
+    al = load_script("agent_loop")
+    repo, worker, _active = _batch_repo(tmp_path)
+    _build_commit(repo, "WI-201", "t1", worker["base"])
+    # The trailer is committed for WI-201, but its spec never left active/ — the
+    # walk must come back to it rather than move on to the untouched WI-204.
+    assert al.current_assignment_wi(str(repo), worker) == "WI-201"
+    # MUTATION NOTE: without the tree half this reads "WI-204" (the defect), so
+    # the assertion is not vacuous — and the trailer half still matters, which
+    # the closed case below drives.
+
+
+@env_gate_skipif("git")
+def test_a_row_with_both_halves_done_lets_the_walk_move_on(tmp_path):
+    al = load_script("agent_loop")
+    repo, worker, active = _batch_repo(tmp_path)
+    _build_commit(repo, "WI-201", "t1", worker["base"])
+    complete = repo / "docs" / "work" / "complete"
+    complete.mkdir(parents=True, exist_ok=True)
+    (active / "WI-201-row.md").rename(complete / "WI-201-row.md")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "close WI-201")
+    assert al.current_assignment_wi(str(repo), worker) == "WI-204"
+
+
+@env_gate_skipif("git")
+def test_a_one_row_lane_answers_its_row_either_way(tmp_path):
+    # The behaviour-preserving half: with a single assignment both arms answer
+    # the same row, so only a batch can observe the new read.
+    al = load_script("agent_loop")
+    repo, worker, _active = _batch_repo(tmp_path, wis=("WI-201",))
+    assert al.current_assignment_wi(str(repo), worker) == "WI-201"
+    _build_commit(repo, "WI-201", "t1", worker["base"])
+    assert al.current_assignment_wi(str(repo), worker) == "WI-201"
+
+
+# --- the resumed BATCH preflight: a row this branch closed is not stale ---------
+# Measured 2026-09-03 on the four-row spine batch `wi-589-…`. The lane closed
+# three of its rows, so the registry read `done` for them — and the resumed
+# worker's preflight refused all three with "a terminal status (done/cancelled);
+# a stale assignment, so the dispatcher must re-derive the frontier", over rows
+# that were terminal precisely BECAUSE this lane made them so. The status alone
+# cannot tell a stale assignment from a partly-finished batch; this branch's own
+# `WI:` trailer can.
+
+
+def _lane_worktree_repo(tmp_path, branch="wi-batch"):
+    """A primary checkout holding the TRUNK plus a linked lane worktree on
+    `branch` — the real topology, and the only one where `merge-base(trunk,
+    HEAD)` is anything but HEAD."""
+    repo, _base = _make_train_repo(tmp_path, wis=("WI-201", "WI-204"))
+    lane_wt = tmp_path / "lane"
+    _git(repo, "worktree", "add", "-q", "-b", branch, str(lane_wt))
+    return repo, lane_wt
+
+
+@env_gate_skipif("git")
+def test_a_row_this_branch_closed_is_not_a_stale_assignment(tmp_path):
+    ac = load_script("agent_common")
+    _repo, lane_wt = _lane_worktree_repo(tmp_path)
+    (lane_wt / "work-WI-201.txt").write_text("built\n", encoding="utf-8")
+    _git(lane_wt, "add", "-A")
+    _git(lane_wt, "commit", "-q", "-m", "build WI-201\n\nWI: WI-201")
+    done = {"Status": "done"}
+    # THE LANE'S OWN CLOSE: terminal, with this branch's trailer -> not stale.
+    assert ac.stale_terminal_assignment(lane_wt, "WI-201", done) is False
+    # TERMINAL ON THE TRUNK: no trailer in this branch's own range -> stale, and
+    # the refusal stands exactly as it did (WI-267's cancel-mid-flight race).
+    assert ac.stale_terminal_assignment(lane_wt, "WI-204", done) is True
+    assert ac.stale_terminal_assignment(lane_wt, "WI-204", {"Status": "cancelled"})
+    # A non-terminal row was never this guard's business.
+    assert (
+        ac.stale_terminal_assignment(lane_wt, "WI-201", {"Status": "queued"}) is False
+    )
+
+
+@env_gate_skipif("git")
+def test_a_single_checkout_worker_keeps_the_terminal_refusal(tmp_path):
+    # The behaviour-preserving half. In an attended single checkout the trunk
+    # IS the branch, so `default_base` merge-bases to HEAD, the evidence range
+    # is empty, and every terminal row still refuses — which is what the
+    # existing done/cancelled preflight tests above assert end to end.
+    ac = load_script("agent_common")
+    repo, _base = _make_train_repo(tmp_path)
+    (repo / "work.txt").write_text("built\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "build WI-201\n\nWI: WI-201")
+    assert ac.stale_terminal_assignment(repo, "WI-201", {"Status": "done"}) is True
