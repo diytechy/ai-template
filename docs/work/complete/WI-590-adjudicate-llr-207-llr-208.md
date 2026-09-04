@@ -43,19 +43,22 @@ buildtier = "strong"
 priority = 2
 specref = "docs/requirements/low-level-requirements.toml"
 bar = "DevStg-Tests"
-needs = ["WI-594"]
 ```
 
 VERDICT THIS CONTINUES:
 `docs/reviews/wi-590-adjudicate-llr-207-llr-208/004-ADJUDICATE-774ef35.md`,
 governing line `OUTCOME: RETURN rows=4`. `LLR-208` and `TC-206` were APPROVED by
 that act; they enter this scope as an AMENDMENT (round 011 MAJOR, below), not
-as a return. ORDERING: `WI-594` (minted at `09193fea` for the out-of-band trunk
-range) adjudicates the same six rows as a first approval; this successor
-`needs` it, so WI-594 rules first — LLR-208/TC-206 it finds already Approved,
-LLR-207/TC-205 it finds returned and Drafted with this row queued as their
-next author — and cannot produce a fourth return on unchanged text while this
-successor is being built.
+as a return. NO OVERLAPPING ADJUDICATION REMAINS: `WI-594` (minted at
+`09193fea` for the out-of-band trunk range) was minted naming these four rows
+as well as LLR-209 and TC-207; round 012 drove its first-approval brief and
+found it would put LLR-207 and TC-205 in front of a fourth adjudicator as
+awaiting first approval, with none of this lane's three returns in the brief.
+WI-594 was therefore NARROWED on the trunk to LLR-209 and TC-207 — the two
+rows only that range authored — so this successor is the one next author of
+LLR-207/TC-205 and the one amender of LLR-208/TC-206, and needs no ordering
+against it. Its merge mints the amendment adjudication over the two Approved
+rows it amends (§A5.2), which is where the approval act is taken.
 
 ROUND 011's MAJOR, the amendment half of this scope. `LLR-208.detail` says
 membership in the trunk regen set "is the only thing that makes the
