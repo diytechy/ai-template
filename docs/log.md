@@ -59952,3 +59952,537 @@ in their own commits with a RESYNC_PACK entry.
 
 Deferred open items: none — every ruling owed is recorded in the
 `docs/work/pause` reason of `104ecb3b`.
+
+## 2026-09-03 — WI-589: the one verdict definition, actually singular (the unpinned `REVIEW_PHASES` duplicate and the undeclared `score_reviews` seam)
+
+Two defects verified while reading the WI-586 chain and queued at its merge
+(the verdict this continues is
+[`../reviews/wi-586-adjudicate-llr-207-llr-208/009-ADJUDICATE-082b9e1.md`](reviews/wi-586-adjudicate-llr-207-llr-208/009-ADJUDICATE-082b9e1.md)).
+Neither was a fault in the four rows adjudicated there, which is why neither
+could be cured by returning them. Both are about `IF-175`'s central claim —
+that there is exactly ONE definition of the verdict — being true in the
+registry and not yet true in the tree.
+
+### 1. The duplicate span and the magic ceiling (`agent_loop.py`)
+
+`agent_loop.py` declared its own `REVIEW_PHASES = ("REVIEW-A", "REVIEW-B")`, a
+byte-identical copy of `kitlib/verdict.py`'s, pinned by nothing, and
+`_clamped_review_rounds` clamped the reviewer dial with `min(2, rp_int)` — that
+tuple's length restated as a literal. **The failure that shape admits, stated
+concretely because a duplicate is only worth deleting if it can bite:** add a
+`REVIEW-C` to the verdict leaf and `kverdict.declared_phases(3)` returns three
+phases while `_clamped_review_rounds("3")` still answers `2`, so the loop
+schedules two rounds against a merge slot demanding three — the lane draws what
+will not clear, which is the exact wedge `declared_phases`' own docstring says
+the shared span exists to prevent ("a policy the two read to different lengths
+is a lane that draws what will not clear or refuses what will never be drawn").
+
+Remedy is the kit's settled one (LLR-182: drift is better made unrepresentable
+than detected). The local tuple is DELETED — not aliased — and its two use
+sites (`NON_BUILD_PHASES`, `draw_session_route`) plus the clamp ceiling read
+`kverdict.REVIEW_PHASES`. The ceiling is now `len(kverdict.REVIEW_PHASES)`, so
+the three readers move together or not at all. Behaviour is unchanged today
+(the span is 2, so every clamp answer is identical) — this buys the future
+edit, not a present bug fix.
+
+Pinned in `tests/test_agent_loop_policy.py`:
+`test_the_loop_keeps_no_second_copy_of_the_review_phase_span` asserts the
+module has no `REVIEW_PHASES` attribute at all (the `not hasattr` shape
+`tests/test_seam_resolution.py` already uses for a retired symbol), that the
+declared span is inside `NON_BUILD_PHASES`, and that an over-dialled policy
+round-trips through the clamp into `declared_phases` as the whole span. The
+existing `test_clamped_review_rounds_is_lenient_then_clamped` keeps its
+literal-`2` case (that IS the shipped span, and a test that only computes
+asserts nothing about today) and gains a `span + 1` case that survives a
+change to the tuple.
+
+`tests/test_module_size_ratchet.py` re-stamped agent_loop.py DOWNWARD
+2587 -> 2586 in the same commit, per that file's rule.
+
+### 2. The undeclared span reader (`IF-175.requestors`)
+
+`scripts/score_reviews.py:72` holds a hard `from kitlib.verdict import
+declared_phases` and calls it in `latest_phase_verdicts`, but no `requestors`
+entry named it. Added.
+
+**On the justification, and a correction taken from the lane's own review.**
+The minting disposition rested this on `IF-175`'s sentence "a second reader of
+round evidence anywhere else is a finding against this row". Round 012 of the
+WI-586 lane
+([`012-REVIEW-A-51fb3e8.md`](reviews/wi-586-adjudicate-llr-207-llr-208/012-REVIEW-A-51fb3e8.md),
+MINOR) is right that the clause does not establish this omission and, read
+carelessly, licenses REMOVING the legitimate import rather than declaring it:
+`score_reviews` reads the phase SPAN, not round evidence. So the row's amended
+notes rest the naming on the completeness rule — an import no `requestors`
+entry carries is an undeclared seam — and keep the round-evidence clause only
+where it belongs, in the sentence saying this addition is a requestor and NOT a
+fourth reader of the verdict. The remedy the disposition asked for is
+unchanged; only its stated ground is.
+
+The notes also record that after part 1 the span crosses this seam as a
+CONSTANT and not only through `declared_phases`, and which caller asks it that
+way. That clause was drafted into the `data` cell first and moved: `data` is
+already 145 of its 160-character ceiling, the addition took it to 177, and
+`trace.py --strict-integrity` duly raised a new advisory saying the definition
+belongs outside that cell. Introducing an advisory to declare a crossing is a
+worse trade than stating it where the row's reasoning already lives — and
+"policy + entries -> owed phases/count" already covers the span as a typed
+crossing.
+
+### Verification of part 1's remedy, driven rather than argued
+
+The old and new clamps were run side by side against a `kitlib/verdict.py`
+declaring a third phase — the edit the duplicate made silently ignorable:
+
+```
+declared_phases(3)         -> ['REVIEW-A', 'REVIEW-B', 'REVIEW-C']
+OLD _clamped_review_rounds -> 2   (literal min(2, ...))
+NEW _clamped_review_rounds -> 3   (len of the one definition)
+OLD scheduler would queue  -> ['REVIEW-A', 'REVIEW-B']
+NEW scheduler would queue  -> ['REVIEW-A', 'REVIEW-B', 'REVIEW-C']
+```
+
+So the defect was real and is closed: the old shape queued two rounds against a
+merge slot demanding three. `NON_BUILD_PHASES` and `draw_session_route`'s
+`is_review` follow the same tuple by construction now.
+
+### Surfaced, not fixed (separate findings, per the working agreement)
+
+- **Nothing detects this class.** `tests/test_seam_resolution.py` checks that a
+  seam row's shape is well-formed — owner resolves, exactly one far side, a
+  closed channel set — and never joins `requestors` to the modules that
+  actually import the owner. So the omission part 2 fixes was invisible to
+  every check, and the next one will be too. A detector is buildable (the kit
+  already walks imports in `gen_arch_map`/`gen_components`), but it is a new
+  mechanism with its own false-positive surface and is outside this row.
+- **The declared `lint` step is RED at the integration base, and has been
+  skipping.** This worktree had no dev toolchain, so `check.py --run-step
+  format` reported the loud "A DECLARED CHECK DID NOT RUN" banner on the first
+  commit of this lane. Installing `requirements-dev.txt` (ruff 0.15.22, pytest
+  9.1.1) turned `format` green — 234 files already formatted — and turned
+  `lint` up RED with three errors, all pre-existing: `tests/test_agent_loop.py`
+  F401 `inspect`, `tests/test_trace_hats.py` F401 `pytest`,
+  `tests/test_trajectory_holdban.py:121` F841 `run_git`. Re-driven against the
+  base commit `794de60d` in a scratch copy — same three — so they are not this
+  lane's, and none of the three files is in its diff. Left alone on the
+  don't-change-unrelated-code rule, but they are worth a row: the hook only
+  runs `format`, so `lint` is gate-scoped, and a gate step nobody has been able
+  to run is a bar that is not being run.
+- **`LLR-207.code_symbol` omits `REVIEW_PHASES` and `TRAILER_LABEL`** although
+  `kitlib/verdict.py`'s `__all__` exports both, and part 1 makes the first of
+  them a symbol a second module now imports by name. Deliberately NOT touched
+  here: `LLR-207`/`TC-205` are `WI-587`'s scope on this same branch, and two
+  sessions editing one cell is the collision the lane discipline exists to
+  avoid.
+
+## 2026-09-03 — WI-584: the snapshot's refusal scoped to the act it gates
+
+WI-578's disposition left two readings open and told this row to pick one on
+the evidence. It picks **(a)**: `refresh_refusal` judges the registries the
+refresh will actually WRITE, not the whole ledger.
+
+### The observable, reproduced at this row's tip first
+
+Before touching anything, the exact command the disposition names, against this
+worktree (`b8e445ae`):
+
+```
+$ refresh_ledger('.')
+docs/requirements/low-level-requirements.toml absorbed=9 flips=[]
+docs/requirements/system-requirements.toml    absorbed=17 flips=[]
+docs/test/test-cases.toml                     absorbed=4 flips=[]
+
+$ refresh_refusal('.', {'docs/requirements/low-level-requirements.toml': 'ref'})
+baseline_snapshot: REFUSED — ... nothing in this working tree authorises it:
+  docs/requirements/system-requirements.toml SR-024: Rationale
+  ... (+12 more) ...
+  docs/test/test-cases.toml TC-082: Method
+  ...
+
+$ _authorised_registries('.', {…llr…: 'ref'}, load_all('.'))
+['docs/requirements/low-level-requirements.toml']
+```
+
+Every row in the refusal is in a registry the write set does not contain. The
+caller named the one registry it ruled on, and the refusal lists only
+registries it did not — while claiming "nothing in this working tree authorises
+it", which is false: the LLR ref authorises exactly what the act would write.
+(The ledger reads 9 absorbed LLR rows, not the 7 the disposition recorded; two
+more drifted between that reading and this tip. Nothing in the ruling turns on
+the count.)
+
+### Why (a) and not (b)
+
+`copy_live`'s write set IS the authority set: `_refresh_targets` returns
+`_authorised_registries(...)`, i.e. the named registries plus those an
+approving `Status` move happened in. So a blocked-but-unwritten registry cannot
+be absorbed by the act being refused — the block protects nothing and costs the
+act. Choosing (b) would mean unwinding WI-571's scoped writer, which itself
+closed a measured path (a spine flip re-sealing off-spine drift into the
+record), and would contradict the per-registry contract the refusal text
+already states in its own third arm ("authorises the one registry it names").
+
+The false block is also not an `--approves` peculiarity, which is the argument
+that settles it. A bare no-flag `intake.py snapshot` carrying an approving
+`Status` move in one registry is refused today by drift in a registry it will
+never write. That is the same defect on the commoner path, and only (a)
+reaches it.
+
+### The arm that survives the scoping
+
+Scoping the gate to the write set makes it vacuous for every act that writes
+something — and would make the laundering scenario (rewrite an Approved row,
+then refresh) a SILENT no-op: write set empty, nothing copied, exit 0. The
+drift would survive, so nothing is laundered, but an exit 0 is the wrong answer
+to "you have rewritten blessed text".
+
+So the gate keeps one unscoped arm: **an act whose write set is empty, in a
+tree where approved text has drifted, is refused.** A refresh that copies
+nothing is not a refresh, and the refusal text is how the caller learns which
+drift stands. This is what keeps
+`test_a_APPROVED_amendment_with_no_flip_and_no_ref_is_REFUSED` and the
+de-approval regression (`test_a_DEAPPROVAL_cannot_authorise_an_unrelated_
+approved_amendment`) firing under the new rule rather than being weakened to
+fit it.
+
+`seed=True` over a standing record keeps the whole-tree scope it always had:
+that act really does write all seven registries, so the global judgement is the
+scoped one.
+
+### What changed, and what it was driven against
+
+`refresh_refusal(root, approves, snapshot, *, seed=False)` now computes the
+act's write set — `set(SNAPSHOTTED)` under `seed`, else
+`_authorised_registries(root, approves, snapshot)`, the same function the writer
+uses — and judges the ledger against it, falling back to the whole ledger when
+that set is EMPTY. `_refresh_targets` passes `seed` through. The message gained
+a sentence naming what the act DOES authorise (or that it authorises nothing),
+because the old header's "nothing in this working tree authorises it" was flatly
+false in the case the row exists to fix. Rendering moved to a sibling
+`_refusal_text`: the second decision pushed `refresh_refusal` to cognitive 18
+and `check_complexity` went RED on it — measured before and after, and the
+other four RED functions in that report (`agent_common.commit_telemetry`,
+`agent_loop.worker_endstate`, `gen_verdict_rollup.main`, `integrate._verdict_gate`)
+are pre-existing and untouched. The extraction cleared it; no baseline bump was
+taken.
+
+`snapshot` is also loaded once inside the function when the caller passes None,
+rather than left to `refresh_ledger`: the scope decision reads it too, and a
+`None` would make `_authorised_registries` read every approved row as newly
+arrived — the widest possible scope, which is the direction this function must
+not fail in.
+
+Five tests, each confirmed RED against the pre-change module (`git checkout
+65f368e7 -- baseline_snapshot.py`, run, restore) and green after:
+
+```
+FAILED test_a_named_ref_mutes_ONLY_the_registry_it_names           (reworked)
+FAILED test_a_SCOPED_single_registry_approval_COMPLETES_over_unrelated_drift
+FAILED test_an_unrelated_drift_cannot_block_a_FLIP_authorised_act_either
+FAILED test_an_act_that_would_copy_NOTHING_is_REFUSED_rather_than_silent
+FAILED test_a_registry_WRITTEN_for_another_reason_still_gates_its_amendments
+FAILED test_a_RESEED_over_a_standing_record_is_judged_over_the_WHOLE_tree
+```
+
+Two of those deserve their caveat stated rather than buried. The `copy_NOTHING`
+test is red on the old module only for its new message assertion — the refusal
+itself already fired there; it pins the surviving arm, it does not claim new
+behaviour. And `RESEED` is red partly because the old signature has no `seed`
+keyword; its behavioural half is the `refresh_refusal(root) == ""` line above
+it, which is a genuine flip.
+
+ONE TEST WAS REWORKED, and the reason matters more than the edit.
+`test_a_named_ref_mutes_ONLY_the_registry_it_names` asserted that a ref for the
+WRONG registry still produced a refusal NAMING the right one — it pinned the
+defect. Its real intent (the pre-WI-571 bug where a bare `--approves`
+short-circuited all seven) is preserved and strengthened: it now asserts over
+the COPY, which is what could actually launder — the SR's snapshot bytes do not
+move and its drift survives in the ledger. The half deleted was a block on an
+absorption that cannot happen.
+
+The scoped gate is NOT vacuous, which is the objection to answer directly. A
+registry enters the write set without a `flips` entry when a brand-new row
+arrives already `Approved` (`_authorised_registries` adds the rel; `flips` is
+about existing rows). That copy would land and carry an unrelated approved
+amendment with it — `test_a_registry_WRITTEN_for_another_reason_still_gates_
+its_amendments` drives exactly that, and it is refused.
+
+### Surfaced, not fixed (separate findings, per the working agreement)
+
+- **`LLR-173` does not name the authority gate at all.** Its `CodeSymbol` reads
+  `copy_live/load_all/rows_for/exists/stamp/is_drifted/drifted_cells/
+  unanchored_findings` — no `refresh_refusal` — and its Detail says "Three
+  refusals are load-bearing" and enumerates the create-refusal, `load_all`'s
+  raise and `rows_for`'s sentinel. The authority gate has been a fourth since
+  2026-08-20 and WI-571 scoped the writer without amending the row either. This
+  is pre-existing and NOT touched here on purpose: the row is `Approved`, and
+  adding LLR drift is the opposite of what a row that exists to unblock the LLR
+  anchor should do. It is a real gap and wants its own row.
+- **The full suite has one inherited RED**, `test_check_docs.py::
+  test_meta_repo_has_zero_unexplained_orphans`: `docs/handoff-2026-09-03.md` is
+  reachable from no entry root. Committed at `f1cc2767`, an ancestor of this
+  lane's base, and re-driven against a detached worktree of the base `794de60d`
+  — the identical single orphan, 730 docs there against 732 here. Not this
+  lane's, and not fixed here: the two available fixes are linking it from a
+  coordination surface this branch may not edit, or adding it to
+  `docs/orphans-allow`, which would quietly overrule an owner's own document.
+- **The declared `lint` step is RED at the integration base** (three
+  pre-existing F401/F841 in `tests/`), already recorded in this branch's WI-589
+  fragment; unchanged by this row.
+
+### Out of scope, and stated so
+
+Nothing in `low-level-requirements.toml` changes here, and this row does not
+take the re-anchor: a `spine` row is a worker lane, and
+`acceptance_record.lane_approval_refusal` refuses a lane that writes
+`SNAPSHOT_DIR`. The anchor is the successor condition the trunk-side
+amendment-adjudication rung takes once this lands.
+
+## 2026-09-03 — WI-587: the verdict row says what the module does, and two stated guards grow detectors
+
+Continuing `docs/reviews/wi-586-adjudicate-llr-207-llr-208/009-ADJUDICATE-082b9e1.md`,
+`OUTCOME: RETURN rows=4`, over the `LLR-207` / `TC-205` half of that return. The
+other half (`LLR-208` / `TC-206`) is WI-588's and is not touched here. Nothing in
+`kitlib/verdict.py`'s behaviour changed: the return was about text that
+contradicts the module and guards no fixture drove. The module is byte-identical
+to its pre-lane state — the two mutations below were applied and reverted, and
+`git diff` over it is empty at this tip.
+
+DONE — the seven findings of the spec's `## Context`, in its order.
+
+1. `LLR-207.detail`, `governing_identity`: "for HEAD or an explicit revision" is
+   now "the branch tip or an explicit revision", and the clause states that the
+   branch argument is a branch NAME. Re-driven against the module, not inherited:
+   the docstring reads "`rev` defaults to the branch tip" (`verdict.py:480`) and
+   `format_branch_trailer` gives the reason verbatim — "the peel verifies a
+   refresh commit against the branch it names, and `HEAD` matches no refresh
+   subject" (`:738-740`).
+2. `LLR-207.detail`, `governing_rev`: "until it can peel" was never the
+   termination condition. Restated as `IF-175` already frames it — the refresh is
+   the walk's PURPOSE, not its terminus. The peel re-seats `rev` and `continue`s
+   (`:465-468`); the walk ends at the first commit whose identity differs from
+   its parent's (`:473`) or at the absent-parent / `_MAX_GOVERNING_WALK` bounds
+   (`:470`, `:398`); a branch with no refresh under it still walks, which is the
+   OI-76 fix a literal reading of the old sentence would have undone.
+3. The multi-log ambiguity rule now has a detector —
+   `test_two_logs_at_one_key_declaring_two_phases_serve_no_round`. Two
+   `docs/iteration/wi-401-003-*.log` files at one `(train, ordinal)` declaring
+   `REVIEW-A` and `REVIEW-B`, with the fixture asserting both are really
+   committed AND that the round file they would otherwise phase is still present
+   — so the empty answer is the ambiguity rule and not an empty scan — yield no
+   round, beside the single-log arm that yields one.
+4. `branch_trailers`' carrier verification now has a detector —
+   `test_an_attestation_riding_a_commit_that_changed_the_work_is_not_read`. The
+   identical attestation words on a commit that CHANGED the work, asserted in the
+   fixture to have really moved the governing identity, are read at neither the
+   tree they NAME nor the tree they rode, beside the record-only carrier of the
+   same words that IS read.
+5. `TC-205.evidence` now reaches `work_tip` / `refresh_attestation`'s refusal
+   arms by citing the five `tests/test_integrate_station.py` tests that hold
+   them, with a `Method` sentence saying which arms those are and why the station
+   suite is where they live (a refresh can be produced there rather than
+   hand-written). All five names verified to exist.
+6. `TC-205.method`'s identity sentence was made true by the FIXTURE rather than
+   by weakening the sentence: `test_the_identity_notices_work_and_notices_docs_work`
+   now asserts a changed `docs/work/` spec blob folds DIFFERENT, which is what
+   the `Method` always claimed. `_listing` numbers blobs `{:040x}`, so the
+   substitution moves the spec entry alone. The pre-existing dropped-entry
+   assertion stays beside it and is the weaker claim — a fold that merely counted
+   entries would satisfy it.
+7. `CMP-006`'s note re-points: `kitlib/station.py` (LLR-182) and
+   `kitlib/verdict.py` (LLR-207) are BOTH the package modules not owned there,
+   each policed by an interface row — IF-093 for the station, IF-175 for the
+   verdict record. Confirmed off the parsed registries: `LLR-207` carries
+   `component = "CMP-008"`, and IF-175's owner is `scripts/kitlib/verdict`.
+
+THE TWO GUARDS WERE MUTATION-DRIVEN, because a regression that never fails is
+not one. Each mutation was applied to `kitlib/verdict.py`, the module suite run,
+and the module restored from a byte copy:
+
+- relaxing `:608` to last-wins (`sorted(ph)[-1] ... if ph`) — the shape that made
+  the guard undetected — fails exactly finding 3's test and nothing else:
+  `assert [('REVIEW-B', 3, 'APPROVE')] == []`, the REVIEW-B log that never judged
+  the round being read as the round's phase. `1 failed, 52 passed`.
+- deleting `:802-803`, the `governing_identity(root, branch, sha) != tree` guard,
+  fails exactly finding 4's test and nothing else: the forged carrier's
+  `('APPROVE', 2)` appears at the tree it names. `1 failed, 52 passed`.
+
+Both previously left `134 passed` across the three modules the return measured.
+Unmutated, `tests/test_verdict_record.py` is `53 passed in 24.99s`.
+
+BOTH MUTATIONS WERE RE-DRIVEN AT THE CLOSING TIP, on a detached `git worktree` of
+`6ffa8056` rather than by editing the live module — so the run that proves the
+regressions could not itself leave residue in the tree being closed, and so the
+claim is the tip's and not an earlier commit's. The worktree baselined
+`53 passed in 47.30s` (slower than the figure above only because the unfiltered
+suite was running beside it), then each mutation reproduced its recorded failure
+exactly: `1 failed, 52 passed` in both directions, on
+`assert [('REVIEW-B', 3, 'APPROVE')] == []` and on
+`assert [('APPROVE', ...'APPROVE', 2)] == [('APPROVE', 1)]` respectively. The
+worktree was removed and `git status` is clean.
+
+AN EIGHTH FINDING, IN THE SAME CELL — spotted while driving finding 7, and FIXED
+rather than deferred. The note's parenthetical enumerating kitlib's CMP-006
+members read "config.py/git.py/registry.py/__init__.py via LLR-181, ladder.py via
+LLR-184, stage.py via LLR-185, secret_classes.py via LLR-205" — omitting
+`evidence.py` (LLR-192) and `spine.py` (LLR-197), both Approved and both CMP-006,
+so a list phrased as complete was not. Both names are now in it, in row order.
+
+The causation is NOT finding 7's, and the record should not blur them: nothing
+this row does makes the parenthetical false — it was false before this act and
+would have stayed false after. It is fixed anyway, on three grounds. This row
+already AMENDS this exact cell, so the fix costs one edit rather than a lane; the
+falsehood is two sentences from the sentence finding 7 rewrites and has the same
+subject (which kitlib modules sit at which component), so a reader of the amended
+cell would hit it immediately; and the spec's own `## Context` records that these
+cells "have not changed byte since `3c7764c5`", which is why three rereads ruled
+on identical text — leaving a known-false clause in a cell being amended invites
+the fourth. The narrower reading (defer anything this act did not cause) is what
+the return faulted in the OTHER direction at finding 7, where a caused error was
+filed as pre-existing; it does not oblige leaving an uncaused one standing in a
+cell already open.
+
+Re-derived at close by the complementary route — enumerating rows by their
+`Module` path rather than by component, and checking the answer against the
+directory listing — all eleven modules in `project-trajectory/scripts/kitlib/`
+are claimed by an LLR row: nine at CMP-006 (LLR-181 over four modules, LLR-184,
+LLR-185, LLR-192, LLR-197, LLR-205) and exactly two at CMP-008, `station.py`
+(LLR-182 and LLR-189, two rows on one module) and `verdict.py` (LLR-207). The
+cell's two enumerations now partition those eleven with nothing left over, which
+is the check the old parenthetical failed. `check_trajectory` is `clean` on the
+amended cell — the added names cost no byte-budget breach.
+
+THE FULL UNFILTERED SUITE, which the close commit deferred and which a session
+reaped mid-run left owing. Driven at the closing tip (`cf1d36a8`):
+`2 failed, 3367 passed, 24 skipped in 632.76s`. NEITHER failure is a green to
+claim, and the two are NOT the same kind of thing, so each was driven to a
+verdict rather than waved through:
+
+- `tests/test_check_docs.py::test_meta_repo_has_zero_unexplained_orphans` —
+  INHERITED, not this lane's. The orphan is `docs/handoff-2026-09-03.md`,
+  committed by `f1cc2767` and absent from this branch's delta
+  (`git diff 794de60..HEAD --name-only` names no handoff doc). Driven at the
+  INTEGRATION BASE on a detached worktree, where it fails identically
+  (`1 failed`, same orphan, 730 docs there against 733 here) — so the base is
+  red on this node before this lane exists. It is an owner-authored doc outside
+  this row's scope; this lane neither fixes nor adopts it.
+- `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current` —
+  CAUSED by this lane and BENIGN, the known close-ritual trap. It PASSES at the
+  integration base, so this branch moved it. Driven BOTH WAYS on a regenerated
+  worktree of the tip: RED before `derive_stage.py`, GREEN after. What moved is
+  only the fingerprint and its as-of sha — `stage = DevStg-LLReqs`,
+  `stage-ord = 4`, `stage-of = 8` and `drafted = 13` are BYTE-IDENTICAL across
+  the regeneration, so no rung and no drafted count changed; the fingerprint
+  tracks the tip commit, and this lane committed.
+
+`docs/stage` is therefore NOT regenerated into this branch. It is a derived
+artifact the trunk lane regenerates after each merge (concurrency-restructure
+§5.2), and committing it here would be stale again at the very next commit —
+the fingerprint embeds the as-of sha, so this row's own trailer commit would
+re-red it. Leaving it is the correct lane behaviour, not an unpaid debt.
+
+Both verification worktrees were removed and `git worktree list` shows only the
+lane; `git status` carries nothing but the loop's own iteration logs.
+
+NOT ON THIS LANE — the approval. `LLR-207` and `TC-205` stay `Drafted`; no
+`docs/archive/last_approved/` write, no `intake.py snapshot`.
+
+## 2026-09-03 — WI-588: the rollup's trunk wiring is driven, and the two cells name it
+
+Continuing `docs/reviews/wi-586-adjudicate-llr-207-llr-208/009-ADJUDICATE-082b9e1.md`,
+`OUTCOME: RETURN rows=4`, over the `LLR-208` / `TC-206` half of that return. The
+`LLR-207` / `TC-205` half was WI-587's and is not touched here. Nothing in
+`gen_verdict_rollup.py` or `trunk_step.py` changed: the return was about a clause
+two registry cells asserted and no fixture drove. `git diff` over both modules is
+empty at this tip — the one mutation below was applied and reverted.
+
+THE GAP, RE-DERIVED RATHER THAN INHERITED. Deleting the whole `verdict-rollup`
+row from `trunk_step.REGEN_STEPS` — the four-field tuple naming the step, its
+`docs/reviews/` guard, its argv and its skip reason — leaves the module
+syntactically valid with **zero** `verdict-rollup` occurrences in it. Under that
+mutation, `TC-206`'s four cited evidence nodes ran `4 passed`, and the whole of
+`tests/test_trunk_step.py` ran `16 passed` — every pre-existing test in the file
+that owns the table. They cannot see it, and each for its own reason: the
+generator's own arm CALLS the generator, the two wiring guards read the
+`[generated]` declaration and the `check.py` step, and the stand-down set is a
+claim about a work branch. None of them asks whether the trunk step runs it.
+
+One correction to the spec's own account while re-driving it: the spec put that
+file at `20 passed`. At this tip it holds 16 tests, so the mutation reading is
+`16 passed`. The finding is unchanged — the file was blind end to end — and the
+count is restated here rather than repeated wrong.
+
+DONE — the spec's three items.
+
+1. THE REGRESSION.
+   `tests/test_trunk_step.py::test_regen_really_writes_the_verdict_rollup` builds
+   a scaffold whose ONLY armed artifact family is `docs/reviews/`, carrying one
+   round file, and runs `trunk_step.regen()` — the path, not the generator. It
+   asserts the executed per-step line naming `verdict-rollup`, that
+   `docs/reviews/rollup/wi-401-lane.md` now exists where the fixture asserted it
+   did not, and that the row it carries is the round file's, so an empty file
+   that merely exists cannot pass it. Exactly one generator runs in that fixture,
+   so the arm costs one subprocess and stays beside the two skip tests above it.
+   Driven both ways at this tip: green on the real module, and under the deletion
+   it fails on the missing step line, naming it.
+2. `TC-206` cites it and states the arm. The `evidence` cell gains the node next
+   to the generator's own; the `method` cell gains the paragraph saying the
+   wiring is DRIVEN and not read back off the table that declares it, why no arm
+   above it can see the wiring, and what the deletion mutation leaves green. The
+   generator, stale/fresh/extra, collision, prune, honesty-sentence and
+   work-branch assertions are untouched, in the cell and in the fixture.
+3. `LLR-208.detail` NAMES the wiring it had only implied. "regenerated by the
+   trunk step" moved out of the declaration list and became its own sentence: the
+   `verdict-rollup` regen row, its `docs/reviews/` arming guard and printed skip,
+   its LEAF position in the dependency order, and — the clause the return was
+   really about — that membership in that set is part of THIS contract rather
+   than an implementation accident, because it is the only thing that makes the
+   exclusive-writer claim above it true. A work branch stands the freshness check
+   down and commits the round files; a trunk step that does not run this
+   generator leaves the artifact written by nobody, and the next commit floor
+   reds on a staleness no lane is permitted to clear.
+
+WHY ALL THREE AND NOT JUST THE TEST. The first-approval mint is delta-driven off
+`acceptance_record.staged_drafted_rows`, which reports only the Drafted rows a
+merge ADDED or AMENDED and never sweeps untouched ones. Editing `TC-206` alone
+would re-present `TC-206` alone, `LLR-208` would keep no queued approver, and
+`acceptance_record.adjudication_approval_refusal` would refuse a later
+adjudication scoped to `TC-206` that tried to flip it anyway. Both cells carry a
+real content edit, so both reach the brief together.
+
+NOT DONE, DELIBERATELY. Both rows stay `Drafted` and `docs/archive/last_approved/`
+is byte-exact: all four rows of that return stay returned, and the approval act
+is the adjudicator's on trunk. `LLR-207` and `TC-205` are WI-587's and were not
+re-opened.
+
+THE HARNESS. Commit bar at the closing tip: smoke `1523 passed, 8 skipped`, and
+`check_smoke_budget.py --mode enforce` -> `34.6s vs 60s budget -> within`. Full
+unfiltered suite: `2 failed, 3368 passed, 24 skipped in 587.29s (0:09:47)`. The
+two reds are the same two WI-587 met, and each was RE-DRIVEN here rather than
+inherited from its adjudication:
+
+- `tests/test_check_docs.py::test_meta_repo_has_zero_unexplained_orphans` —
+  INHERITED, not this lane's. The orphan is `docs/handoff-2026-09-03.md`
+  (`0 broken links, 1 orphan across 734 docs`). Driven at this tip:
+  `git diff 794de60..HEAD --name-only` names no handoff doc, and
+  `git cat-file -e 794de60:docs/handoff-2026-09-03.md` resolves — the file is
+  present at the integration base, committed by `f1cc2767`, before this branch
+  existed. An owner-authored doc outside this row's scope; neither fixed nor
+  adopted here.
+- `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current` —
+  CAUSED by this lane and BENIGN, the known close-ritual trap. Driven BOTH WAYS
+  on a detached worktree of the tip: RED before `derive_stage.py`, GREEN after
+  (`1 passed`). Diffing the file across that regeneration, the ONLY two lines
+  that move are `fingerprint` and its `# computed ... (as-of <sha>)` comment;
+  `stage = DevStg-LLReqs`, `stage-ord = 4`, `stage-of = 8`, `floored = no`,
+  `settled-stage`, `live-stage`, `per-phase`, `per-phase-live` and
+  `drafted = 13` are byte-identical. No rung moved and no row's status moved —
+  which is the expected reading, since this lane amended two `Drafted` cells'
+  TEXT and flipped no `Status`.
+
+`docs/stage` is therefore NOT regenerated into this branch. It is a generated
+artifact the trunk lane re-derives after each merge, a work branch is forbidden
+to commit one, and the fingerprint embeds the as-of sha — so a `docs/stage`
+committed here would be staled again by this row's own close commit. Leaving it
+is the correct lane behaviour, not an unpaid debt. The verification worktree was
+removed and `git worktree list` shows only the lane.
