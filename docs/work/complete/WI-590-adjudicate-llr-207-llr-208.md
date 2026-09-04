@@ -172,4 +172,6 @@ generator writing `docs/reviews/rollup/` on a claimed branch) is closed on the
 TRUNK, not by a draft: `gen_verdict_rollup.py` now refuses a direct write on
 any branch other than the trunk and the trunk step passes `--trunk-step`
 (`tests/test_verdict_record.py::test_a_work_branch_cannot_write_the_rollup_but_the_trunk_step_can`),
-merged into this lane before the round that judges this text.
+landed on the trunk at `7ea3cce7` — it reaches this lane through the
+station's refresh, the one merge the verdict gate peels, so it is not
+hand-merged here.
