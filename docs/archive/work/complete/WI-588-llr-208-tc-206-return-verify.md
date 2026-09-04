@@ -2,12 +2,49 @@
 id = "WI-588"
 title = "LLR-208/TC-206 return: verify that the serial trunk step actually regenerates the verdict rollup, and state that wiring in the cell that claims it"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "strong"
 priority = 2
 safety_class = "spine"
 bar = "DevStg-Tests"
 +++
+
+## Deliverable
+
+All three items shipped; both rows still `Drafted`, and
+`docs/archive/last_approved/` byte-exact.
+
+THE GAP, RE-DRIVEN AT THIS TIP RATHER THAN INHERITED. Deleting the whole
+`verdict-rollup` tuple from `trunk_step.REGEN_STEPS` leaves the module valid with
+zero `verdict-rollup` occurrences; under that mutation `TC-206`'s four cited
+evidence nodes ran `4 passed` and the whole of `tests/test_trunk_step.py` ran
+`16 passed`. (The spec put that file at `20 passed`; it holds 16 tests at this
+tip. The finding — the file was blind end to end — is unchanged.) Applied and
+reverted: `git diff` over `trunk_step.py` and `gen_verdict_rollup.py` is empty.
+
+1. THE REGRESSION —
+   `tests/test_trunk_step.py::test_regen_really_writes_the_verdict_rollup`. It
+   runs `trunk_step.regen()` on a scaffold whose only armed artifact family is
+   `docs/reviews/`, and asserts the executed per-step line naming the step, that
+   `docs/reviews/rollup/<train>.md` appears where the fixture asserted it did
+   not, and that the row it carries is the round file's. The generator is never
+   called directly on this arm, which is what every existing arm does. One
+   subprocess. Red under the deletion, naming the step that stopped running.
+2. `TC-206` cites that node in `evidence` and states the arm in `method` — that
+   the wiring is driven and not read back off the table declaring it, why no
+   existing arm can see it, and what the deletion leaves green. The generator,
+   stale/fresh/extra, collision, prune, honesty-sentence and work-branch
+   assertions are untouched in both the cell and the fixture.
+3. `LLR-208.detail` NAMES the wiring: the `verdict-rollup` regen row, its
+   `docs/reviews/` arming guard and printed skip, its LEAF position in the
+   dependency order, and that membership in the trunk regen set is part of the
+   contract rather than an implementation accident — because it is the only
+   thing making the exclusive-writer clause above it true. Both cells therefore
+   carry a real content edit, so the delta-driven mint presents both rows and
+   `LLR-208` does not strand without a queued approver.
+
+Harness: smoke `1523 passed, 8 skipped`, budget `34.6s vs 60s -> within`; full
+unfiltered suite driven before close (result in `docs/log.d/`).
 
 ## Context
 
