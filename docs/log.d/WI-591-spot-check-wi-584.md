@@ -94,3 +94,52 @@ over the copy. The line is defensible; it is not a defect.
 says the pre-change refusal listed "seventeen SR rows and four TC rows"; the
 `## Context`, authored earlier, reads `test-cases.toml` 3. The registry moved
 between the two readings. Neither number is load-bearing for the ruling.
+
+**Bar — real output, this worktree, 2026-09-04.** Interpreter
+`/Users/diytechy/Documents/ai-template/.venv/bin/python` (Python 3.13.14); this
+worktree has no `.venv` and must not grow one.
+
+    $ python -m pytest -q -n auto -m smoke
+    1528 passed, 8 skipped in 48.51s
+
+    $ python scripts/check_smoke_budget.py --mode enforce
+    1528 passed, 8 skipped in 44.23s
+    timing: .../python -m pytest -q -n auto -m smoke
+    smoke wall-clock budget: 44.4s vs 60s budget -> within
+
+Both halves green, seconds under the `docs/stack.ini` ceiling. This WI ships no
+code — the bar attests that the review changed nothing under it.
+
+**A declared check SKIPPED at the commit hook, so it was run by hand.** The hook
+runs on `/usr/local/bin/python3`, which cannot import ruff, and it printed the
+loud "A DECLARED CHECK DID NOT RUN — this commit was NOT graded by it: format"
+banner. Re-run from the venv (ruff 0.15.22):
+
+    $ python -m ruff check .     -> All checks passed!
+    $ python -m ruff format --check .
+      Would reformat: docs/reviews/2026-08-29-oi67-slice3/slice3-fold.py
+      Would reformat: docs/reviews/2026-08-29-oi67-slice4/slice4-fold.py
+      2 files would be reformatted, 237 files already formatted
+
+Both offenders are PRE-EXISTING and outside this delta: `git log -1` on them is
+`816090cd` (WI-531, OI-67 slice 4), and this branch's delta contains zero `.py`
+files. So the skipped check had nothing of this WI's to grade, and the red it
+would have shown is inherited, not introduced here. Left standing rather than
+fixed inline — an unrelated formatting repair does not belong in a review row's
+close (CLAUDE.md, "don't change unrelated code").
+
+**One process note, against this row's own record.** The `## Deliverable` was
+first written asserting the bar was "recorded in `docs/log.d/…`" while this
+fragment did not yet carry it; the bar had not been run. It has now been run and
+its real output is above, and the Deliverable's claim was corrected to match.
+Worth naming because it is the same class of defect this spot-check faulted in
+WI-584 — a record asserting a thing had been done that had not been done — and a
+review that reproduced it silently would have no standing to report it.
+
+**The close ritual could not follow the standing-state rule literally.** The
+branch discipline asks for the spec's `## Deliverable` to land in a commit
+BEFORE heavy verification; `check_trajectory` rule R-A refuses exactly that
+("status=active (open) but the Deliverable is non-empty"), so the pre-bar commit
+was rejected by the hook. R-A wins and the fill rides in the close commit; this
+committed fragment is what carries the resumable record in the interim. Recorded
+as an observed tension between two live rules, not as a finding against WI-584.
