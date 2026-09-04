@@ -1,0 +1,39 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 003
+# date: 2026-09-04 12:49
+# train: wi-590-adjudicate-llr-207-llr-208
+# base: d6e524070035
+# phase: ADJUDICATE
+# wi: WI-590
+# model: opencode-go/kimi-k3
+# guardrails:
+# outcome: ERROR
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 1
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 56848
+# prompt-template: kit:ADJUDICATE
+# prompt-sha: sha256:a3a361bfc237
+# timeout:
+# heterogeneity:
+# exit-code: 1
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+[91m[1mError: [0m{
+  "name": "UnknownError",
+  "data": {
+    "message": "Unexpected server error. Check server logs for details.",
+    "ref": "err_fdcdb8d1"
+  }
+}

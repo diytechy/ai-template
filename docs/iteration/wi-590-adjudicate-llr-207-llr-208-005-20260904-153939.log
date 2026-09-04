@@ -1,0 +1,43 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 005
+# date: 2026-09-04 15:43
+# train: wi-590-adjudicate-llr-207-llr-208
+# base: d6e524070035
+# phase: REVIEW-A
+# wi: WI-590
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: afa9528e..e9d7139d
+# tokens:
+# cost-usd:
+# wall-secs: 208
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4550
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:c84a4d829fa1
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Changes requested; verdict committed in [005-REVIEW-A-a1d80c6.md](/Users/diytechy/Documents/ai-template-drive/wi-590-adjudicate-llr-207-llr-208/docs/reviews/wi-590-adjudicate-llr-207-llr-208/005-REVIEW-A-a1d80c6.md).
+
+- MAJOR: LLR-208’s “trunk-only writer” claim is unenforced. A claimed branch successfully ran the real rollup generator and created the shared rollup.
+
+Verified:
+
+- `trace.py --strict-integrity`: `integrity=0`
+- `check.py --jobs 0`: `RESULT: PASS`
+- Real generator flow: stale → generated → fresh on a fixture.
+
+Commit: `e9d7139d review: record WI-590 independent verdict`

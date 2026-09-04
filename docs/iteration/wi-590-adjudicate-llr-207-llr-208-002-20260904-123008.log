@@ -1,0 +1,399 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 002
+# date: 2026-09-04 12:48
+# train: wi-590-adjudicate-llr-207-llr-208
+# base: d6e524070035
+# phase: ADJUDICATE
+# wi: WI-590
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: ERROR
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 1055
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 56848
+# prompt-template: kit:ADJUDICATE
+# prompt-sha: sha256:1b2c42ea24df
+# timeout:
+# heterogeneity:
+# exit-code: 1
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Reading prompt from stdin...
+2026-09-04T17:47:39.593015Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 93 column 5
+2026-09-04T17:47:42.698350Z ERROR codex_models_manager::manager: failed to refresh available models: stream disconnected before completion: error sending request for url (https://chatgpt.com/backend-api/codex/models?client_version=0.145.0)
+2026-09-04T17:47:42.813902Z ERROR codex_models_manager::manager: failed to refresh available models: stream disconnected before completion: error sending request for url (https://chatgpt.com/backend-api/codex/models?client_version=0.145.0)
+2026-09-04T17:47:42.966547Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)")))
+OpenAI Codex v0.145.0
+--------
+workdir: /Users/diytechy/Documents/ai-template-drive/wi-590-adjudicate-llr-207-llr-208
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 01a06d88-9561-7740-8bcb-9d2182aedcd7
+--------
+user
+You are an INDEPENDENT adjudicator launched by the unattended coordinator, wearing a DIFFERENT hat from whoever authored these rows. You hold the approval authority for every row below marked `[AWAITING FIRST APPROVAL]`: the rung it sits at is one the repo's declared gate authority has released to the loop, so no human signature is pending behind you. What you approve is approved.
+
+A row marked `[AWAITING FIRST APPROVAL - HELD FOR THE OWNER, NOT YOURS TO FLIP]` is shown because it is part of a chain you must read — never because it is yours. Its rung is one the dial still holds for a human. Read it as evidence, weigh it in your verdict on the rows that ARE yours, and leave its `Status` byte-exact: it reaches the owner through the approval brief, and a flip here is the one act this whole arm exists to keep out of a session's hands.
+
+A row marked `[AWAITING FIRST APPROVAL - OUTSIDE THIS ACT'S SCOPE, ANOTHER ADJUDICATION'S ROW; SHOWN AS CHAIN EVIDENCE ONLY]` is also shown for the chain and is also not yours — for a different reason, and the difference matters. Nothing is pending on a human for it: it was handed to a DIFFERENT adjudication by a different merge, which will rule on it as you rule on yours. Read it as evidence and leave its `Status` byte-exact. Two acts flipping the same row is exactly the concurrency the owner moved this act to the serial trunk side to prevent.
+
+THE QUESTION, and it is the only one you answer:
+
+    Is each of these rows ready to be APPROVED as it stands — or does it go back with findings?
+
+`Approved` blesses the row's TEXT and nothing else. It does NOT claim any test passed; whether they pass is the harness's answer, never a cell's.
+
+--- ROWS AWAITING A FIRST APPROVAL, WITH THEIR CHAINS ---
+- chain of SR-156 — Bounded lanes narrowing to one gated landing
+  - SR SR-156 [approved]
+    - AcceptanceCriteria: A launch with independent ready work runs up to the configured lane ceiling concurrently in isolated working trees, and a single-lane setting preserves the serial semantic; a finished branch reaches the integration branch only through the serial seam with the declared bar green on the composed tree — a red parks the candidate and stops the queue loudly; a declared pause stops claiming and drains in-flight lanes to a merged stop; a lane closed under the terminal-close contract (SR-144's, not restated here) reaches the integration branch through this same serial seam and by no other path; a crash at any lifecycle boundary recovers from version-control history without double-assignment.
+    - Boundary-Refs: B-05
+    - Hat-Refs: INTEGRITY-RECOVERABILITY;UNATTENDED-OPS
+    - Phase: 4
+    - Priority: M
+    - Rationale: Realizes SN-027 WHOLE — ready work fans out across bounded parallel lanes and that fan-out narrows to one serialized gated seam before anything lands, in the need's own words — with SN-008 (the seam is fail-closed) and SN-025 (recovery from version-control history alone). ONE DECISION PER ROW: "serial integration is one delivered contract" is sound for the SEAM, but lane execution, claim authority and the trunk-side mint of work-item identity are not the seam, and a row stating the seam alone leaves SN-027's FIRST half — bounded lanes, isolated working trees, a worker ceiling — stated nowhere. This row therefore states the whole lane LIFECYCLE (claim, run isolated, close, land), which is what closes that hole; the trunk-only authority contract sheds to SR-170. The two fail independently: a perfectly serialized landing that lets a lane commit a regenerated artifact satisfies this row and not that one. Terminal close is SR-144's and is not restated here — one SR per (need, property), and both rows sit under SN-027 — so what this row carries of it is only that a terminal branch still lands through the one serial seam.
+    - Requirement: The delivered loop content shall run ready work on bounded, mutually isolated lanes and narrow every lane back to the integration branch through one serial, fail-closed seam that runs the declared bar on the composed tree — parking a red candidate and stopping the queue loudly, draining claiming to a clean merged stop under a declared pause, and reconstructing claim and queue state from version-control history alone at any crash boundary, never a half-integrated authoritative state.
+    - SN-Refs: SN-027;SN-008;SN-025
+    - SR-ID: SR-156
+    - Status: Approved
+    - Title: Bounded lanes narrowing to one gated landing
+    - Verification: Test
+  - LLR LLR-138 [approved]
+    - CodeSymbol: tracked_pause/pause_reason
+    - Component: CMP-008
+    - Detail: pause_reason reads the ONE tracked home docs/work/pause via tracked_pause (TOML reason/since; malformation fails closed to the pinned loud placeholder). The legacy untracked lane/pause half retired with the dispatcher at Phase 5 - a stray local file is inert, pinned by test. A pause stops claiming only — everything in flight finishes and integrates to a merged stop; pause_reason keeps the unchanged None/''/reason return contract.
+    - LLR-ID: LLR-138
+    - Module: project-trajectory/scripts/agent_common.py
+    - Phase: 4
+    - Rationale: A broken pause file must still pause; two homes during the migration window, one meaning.
+    - SR-Refs: SR-156
+    - Status: Approved
+    - TestRefs: (see TC-131)
+    - Title: Tracked pause reader (dual-home)
+  - LLR LLR-140 [approved]
+    - CodeSymbol: claim/finished_branches/_verdict_gate/integrate_one/audit
+    - Component: CMP-008
+    - Detail: claim: §2.3 steps 1+2 with the refusal ladder (tracked pause via agent_common.tracked_pause, dirty tree, existing branch, unsafe name, non-ordinary safety_class, off-frontier id) before a git mv + trunk commit + branch cut. finished_branches: a claimed branch whose tip holds no spec under active/<branch>/ (the closing move IS the signal). integrate_one: --no-ff --no-commit merge, trunk_step.py folded into the merge commit so it passes its own floor, check.py --jobs 0 at the declared tier on the composed tree read fail-closed (nonzero exit OR any SKIP line refuses), verdict gate per docs/process.toml [policies] review_rounds (legacy docs/review-policy read through the migration window) computed over the branch's own round files, restricted to rounds a LOGGED reviewer session produced and governed by TREE IDENTITY - a verdict counts only while it names the branch's current non-record tree at the work tip, so there is no ordering rule and no time comparison; whether an adjudication lane owes a verdict at all is docs/process.toml [attestation] adjudication_review, read through the one function the loop's round scheduler also reads - over the same input, since which copy of a branch's spec answers for it when both the terminal and the active home carry one is decided by a single declared precedence (terminal first: it is what the closing session did) that both callers ask for rather than each walking the homes in its own order. A legacy hand-authored docs/reviews/WI-<n>-REVIEW-A.md still clears the gate under the same identity rule for the length of the migration window, warning on that path, at a declared count of ONE only - a count of two declares two INDEPENDENT reviewers and one hand-authored document is one author's word, so that count has no window. The trailer is a cross-check over the newest attestation at the tree under judgement, refusing on a differing verdict word or a round count ABOVE the evidence and never on one below it - the attestation's writer is best-effort, so a stamp the evidence outruns is a missed stamp rather than a forgery, and understating cannot buy a merge the round files do not already buy. ff-only trunk advance, branch deleted on green, candidate parked on red. audit: git log --first-parent --no-merges over --since..HEAD; paths outside docs/work/, docs/log.d/, docs/log.md and the stack.ini [generated] set flag the commit. A missing stack.ini or an empty [product] test declaration refuses the merge; a red bar parks the candidate and stops the queue rather than composing past it.
+    - LLR-ID: LLR-140
+    - Module: project-trajectory/scripts/integrate.py
+    - Phase: 4
+    - Rationale: One serial actor, one page; every refusal names its reason; the queue stops at the first red rather than composing past it.
+    - SR-Refs: SR-156
+    - Status: Approved
+    - TestRefs: (see TC-132)
+    - Title: Local integrator (claim + queue + audit)
+  - LLR LLR-145 [approved]
+    - CodeSymbol: move_spec/expected_relink/archive_dest
+    - Component: CMP-008
+    - Detail: move_spec moves a registry/spec file and keeps every markdown link in the repo true as ONE indivisible operation: the moved file's own relative targets are re-relativised against its new directory, every inbound link whose target resolves to the vacated path is redirected (link text untouched, #fragments carried, external/protocol-relative/bare-anchor targets left alone, root-relative targets excused only in the rebase half, line endings preserved via newline=''), and every rewritten file is staged with the move so the ritual lands as one changeset. integrate.claim and handback.close_partial call it for the claim and close moves; the CLI performs the worker's terminal close move and the dated docs/archive/specs/ archival. expected_relink is the pure oracle integrate._abandoned_claim compares byte-for-byte to excuse a crashed claim's own relink writes without widening its conviction to any .md edit.
+    - LLR-ID: LLR-145
+    - Module: project-trajectory/scripts/spec_move.py
+    - Phase: 4
+    - Rationale: A bare move strands both link directions and the break surfaces late, on the composed tree (measured: one probe archival took the broken-link count from 4 to 8 - 3 outbound, 1 inbound). Making move+relink one indivisible operation is a constraint that leaves the two-thirds state unrepresentable, rather than a check that detects it after the parallel work is done.
+    - SR-Refs: SR-156
+    - Status: Approved
+    - TestRefs: (see TC-139)
+    - Title: Link-aware spec-move ritual (move + relink indivisible)
+  - LLR LLR-150 [approved]
+    - CodeSymbol: ensure_worktree/worker_argv/spawn_worker/run_worker/spawn_refresh
+    - Component: CMP-008
+    - Detail: One lane's mechanics extracted from the dispatcher (docs/concurrency-v2.md §A4.2): ensure the lane worktree (integrate.lane_worktree, the one home both the worker and the refresh agree on), build the worker argv with the plain launch's session dials forwarded explicitly, launch the worker subprocess (spawn_worker non-blocking for the lane table and dispatch._launch's own default; run_worker its blocking form - a DECLARED SEAM with no in-kit caller, kept for a synchronous single-lane run, and the shape dispatch._launch's worker= injection substitutes), and run the §A2 station refresh as the lane's OWN subprocess (spawn_refresh - the invoker's integrate.py refresh CLI under the harness interpreter) so N lanes' bars overlap instead of queueing at the dispatcher (§A4.3). Reports outcomes, decides none: the tree signal (specs moved out of active/<branch>/) plus exit codes are the whole protocol - no state file, no back-channel.
+    - LLR-ID: LLR-150
+    - Module: project-trajectory/scripts/lane.py
+    - Phase: 4
+    - Rationale: The §A4.2 split keeps the deciding half (dispatch.py) apart from the running half, so at lanes=1 the dispatcher degenerates to the serial loop and the concurrency is a table size, not a second code path.
+    - SR-Refs: SR-156
+    - Status: Approved
+    - TestRefs: (see TC-144)
+    - Title: Lane mechanics: worktree, worker subprocess, §A2 refresh subprocess
+  - LLR LLR-151 [approved]
+    - CodeSymbol: _dispatch_lock/claim/_claim_refusal/_abandoned_claim
+    - Component: CMP-008
+    - Detail: The §A4.1 authority flip's integrator half (docs/concurrency-v2.md §A4.1): _claim_refusal's safety_class != ordinary arm is DELETED (admission is the dispatcher's decision) and the claim REQUIRES the dispatch lock (agent_common.dispatch_lock_path, out/agent-loop.lock - the lock a live dispatcher holds for its process lifetime), acquired at ONE site (_dispatch_lock, mirroring _slot's one-site discipline for the merge slot's own lock) with the ladder run before it so the clean-trunk rung never refuses over the lock's own file: a hand claim on an idle station works, a hand claim during live lanes is unrepresentable, and the dispatcher's in-process claim passes dispatch_lock_held=True. claim/_claim_refusal/_abandoned_claim/_claim_delta are batch-aware: a spine batch is ONE claim commit moving every batched spec (subject joins the ids; the single-WI subject stays byte-identical), and integrate() takes an optional branches= restriction so the dispatcher merges each lane's branch as its own refresh completes.
+    - LLR-ID: LLR-151
+    - Module: project-trajectory/scripts/integrate.py
+    - Phase: 4
+    - Rationale: A constraint instead of a check: the state the old refusal guarded against (a claim written beside live lanes) is now unrepresentable, and the batch makes N spine changes cost one re-attest window (§A4).
+    - SR-Refs: SR-156
+    - Status: Approved
+    - TestRefs: (see TC-145)
+    - Title: Dispatch-lock claim rung + the spine batch claim
+  - LLR LLR-207 [AWAITING FIRST APPROVAL]
+    - CodeSymbol: RECORD_PREFIXES/fold_listing/tree_identity/refresh_subject/refresh_attestation/work_tip/governing_rev/governing_identity/format_trailer/parse_trailer/round_file/session_log/branch_paths/logged_rounds/round_entries/branch_entries/declared_phases/phases_owed/round_count/format_branch_trailer/branch_trailers
+    - Component: CMP-008
+    - Detail: tree_identity folds raw NUL-delimited `git ls-tree -r -z` entries after dropping docs/reviews/, docs/log.d/ and docs/iteration/, and returns a 64-hex SHA-256 identity. fold_listing accepts bytes and preserves every path byte so display quoting or decoding cannot merge distinct work trees. refresh_attestation validates a station refresh from its subject, first parent, commit tree and Bar-Green trailer. work_tip peels only a verified refresh at the tip for the reset path; governing_rev is read-only and walks across commits whose non-record identity equals their first parent's, peeling any verified refresh it meets to reach one those commits would otherwise hide, and ending at the first commit whose identity differs from its parent's or at its absent-parent and depth bounds - so a branch with no refresh under it still walks. governing_identity composes governing_rev and tree_identity for the branch tip or an explicit revision, including a round's reviewed commit and a trailer's carrier; the branch argument is a branch NAME, because the peel verifies a refresh commit against the branch it names and no refresh subject names HEAD. logged_rounds joins branch-scoped round files to coordinator session logs by train and ordinal, and each round's review phase is the JOINED LOG's declared phase rather than the one its own filename carries, so a file cannot claim a phase its session did not serve; a joined key whose logs declare more than one review phase yields no round. round_entries retains only rounds whose reviewed revision governs the identity under judgement and emits phase, ordinal and verdict entries through an injected parser. declared_phases clamps the configured independent-review count to the available review phases. phases_owed returns declared phases with no drawn entry at the governing identity, independent of whether a drawn verdict parses or approves. round_count returns the largest per-phase entry count at one governing identity, so a multi-phase review cycle counts once and changed work starts a new count. format_trailer and parse_trailer carry `Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex>`. branch_trailers verifies each carrier against its governing identity and returns the ordered attestation sequence per tree. Readers treat unavailable repository answers according to their own fail-closed contract.
+    - LLR-ID: LLR-207
+    - Module: project-trajectory/scripts/kitlib/verdict.py
+    - Phase: 5
+    - Rationale: The merge gate asks whether a lane may merge while the loop asks which review phase the lane still owes. A shared identity, evidence join, phase span and count keep both answers on the same tree and policy. Logged round evidence is authoritative because its coordinator session establishes reviewer provenance; the self-verifying trailer is only a cross-check and cannot create an approval. Identity binding answers staleness directly and prevents ordering from promoting a verdict for different work. Separate read-only and reset peels protect both contracts: the reader may traverse identity-preserving commits, while the destructive reset path may remove only the verified refresh at its tip.
+    - SR-Refs: SR-156
+    - Status: Drafted
+    - TestRefs: TC-205
+    - Title: The verdict record: what carries a governing verdict, and what binds it to the tree it judged
+  - TC TC-131 [approved]
+    - Automated: Yes
+    - Evidence: tests/test_agent_loop_policy.py::test_pause_reason_reads_the_tracked_home; tests/test_agent_loop_policy.py::test_legacy_pause_file_no_longer_pauses
+    - Expected: Satisfies SR-156 AcceptanceCriteria via the LLR-138 detail contract
+    - Level: Unit
+    - Method: Run the pause suites: the tracked home pauses via pause_reason with the unchanged return contract; a stray legacy file is inert; malformation pauses fail-closed with the pinned loud placeholder.
+    - Phase: 4
+    - Status: Approved
+    - TC-ID: TC-131
+    - Tier: Full
+    - Verifies: SR-156;LLR-138
+  - TC TC-132 [approved]
+    - Automated: Yes
+    - Evidence: tests/test_integrate.py; tests/test_integrate_admission.py; tests/test_integrate_station.py
+    - Expected: Satisfies SR-156 AcceptanceCriteria via the LLR-140 detail contract
+    - Level: Unit
+    - Method: Run the integrator suite: each claim refusal fires by name and the green claim moves the spec and cuts the branch; finished-branch detection keys on the tree; the verdict gate refuses absent, CHANGES-REQUESTED and stale-APPROVE verdicts and passes a fresh APPROVE; a missing or empty bar declaration refuses; the window audit flags a non-merge product commit and passes a bookkeeping-only window; one end-to-end claim->work->close->integrate run fast-forwards the trunk to a --no-ff merge commit.
+    - Phase: 4
+    - Status: Approved
+    - TC-ID: TC-132
+    - Tier: Full
+    - Verifies: SR-156;LLR-140
+  - TC TC-139 [approved]
+    - Automated: Yes
+    - Evidence: tests/test_spec_move.py
+    - Expected: Satisfies SR-156 AcceptanceCriteria via the LLR-145 detail contract
+    - Level: Unit
+    - Method: Run the spec_move suite: an archival move redirects inbound links from every depth (text untouched, fragments carried, external URLs and bare anchors left alone), rebases the moved spec's own links one directory deeper, preserves CRLF on both sides, and stages a git mv when the tree is a repo; the REAL check_docs passes over the archived fixture while the MUTATION TWIN - the same move without the rebase - fails it, so the guard reproduces the defect it fixes; a move with rewritten text (the handback shape) still runs the whole ritual; a missing source and an existing destination refuse; the CLI archives to the dated destination and refuses nonzero. The wired call sites are driven in their own suites: integrate.claim runs the ritual inside the one claim commit and a crashed relinked claim still re-cuts while a non-relink .md edit convicts (tests/test_integrate.py); the handback return runs it in reverse (tests/test_handback.py).
+    - Phase: 4
+    - Status: Approved
+    - TC-ID: TC-139
+    - Tier: Full
+    - Verifies: SR-156;LLR-145
+  - TC TC-144 [approved]
+    - Automated: Yes
+    - Evidence: tests/test_dispatch.py
+    - Expected: Satisfies SR-156 AcceptanceCriteria via the LLR-150 detail contract
+    - Level: Integration
+    - Method: Run the dispatch loop suite on real git repos with the real bar: a spine batch claims as one commit and its worker receives both ids together, ordinary work admitted only after the window closes; a NEEDS-HUMAN worker hands back, the lane's refresh runs as its own subprocess and the branch merges; a red refresh quarantines a merges-nothing branch once and stops the run for a done-asserting one; an attended gate row drains and exits 0 with the approvals banner; the empty-frontier ladder hands the gap census to the intake mint (rows minted in one bookkeeping commit, driven by the same run, deduped on the next idle pass) and counts rung-2 cards off the shared pending read; pause/dirty-trunk/stall/crash-resume keep their serial-loop contracts at lanes=1.
+    - Phase: 4
+    - Status: Approved
+    - TC-ID: TC-144
+    - Tier: Full
+    - Verifies: SR-156;LLR-150
+  - TC TC-145 [approved]
+    - Automated: Yes
+    - Evidence: tests/test_integrate.py
+    - Expected: Satisfies SR-156 AcceptanceCriteria via the LLR-151 detail contract
+    - Level: Unit
+    - Method: Run the integrator claim suite: a spine claim succeeds on an idle station (the deleted safety-class arm, red-then-green); a hand claim while another holder has the dispatch lock refuses naming the lock and leaves the queue untouched, while dispatch_lock_held=True proceeds; a spine batch claims as ONE bookkeeping commit whose subject joins the ids and whose specs all land in active/<branch>/; every pre-existing single-WI claim contract (abandoned-claim re-cut, relink oracle, minted-id rung, bookkeeping-commit audit) holds unchanged.
+    - Phase: 4
+    - Status: Approved
+    - TC-ID: TC-145
+    - Tier: Full
+    - Verifies: SR-156;LLR-151
+  - TC TC-205 [AWAITING FIRST APPROVAL]
+    - Automated: Yes
+    - Evidence: tests/test_verdict_record.py::test_the_identity_ignores_every_record_path; tests/test_verdict_record.py::test_the_identity_notices_work_and_notices_docs_work; tests/test_verdict_record.py::test_a_record_path_is_excluded_whatever_characters_it_holds; tests/test_verdict_record.py::test_distinct_invalid_utf8_work_paths_have_distinct_identities; tests/test_verdict_record.py::test_the_trailer_round_trips_and_the_last_one_governs; tests/test_verdict_record.py::test_a_malformed_trailer_is_no_trailer; tests/test_verdict_record.py::test_round_and_session_names_parse_including_the_relaxed_tag; tests/test_verdict_record.py::test_round_count_counts_cycles_not_reviewers; tests/test_verdict_record.py::test_a_logged_reviewer_round_naming_this_tree_clears_the_gate; tests/test_verdict_record.py::test_an_implementer_authored_file_in_the_review_path_is_not_a_round; tests/test_verdict_record.py::test_one_session_cannot_serve_a_phase_its_log_does_not_declare; tests/test_verdict_record.py::test_two_logs_at_one_key_declaring_two_phases_serve_no_round; tests/test_verdict_record.py::test_a_round_that_judged_an_earlier_tree_does_not_count; tests/test_verdict_record.py::test_a_record_only_commit_after_the_round_leaves_it_governing; tests/test_verdict_record.py::test_the_governing_round_can_refuse; tests/test_verdict_record.py::test_a_trailer_contradicting_the_rounds_refuses; tests/test_verdict_record.py::test_a_trailer_OVERSTATING_the_governing_round_count_refuses; tests/test_verdict_record.py::test_a_trailer_UNDERSTATING_the_governing_round_count_does_not; tests/test_verdict_record.py::test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit; tests/test_verdict_record.py::test_a_stale_owed_marker_over_served_evidence_redraws_nothing; tests/test_verdict_record.py::test_the_newest_attestation_at_a_tree_governs_the_cross_check; tests/test_verdict_record.py::test_an_attestation_riding_a_commit_that_changed_the_work_is_not_read; tests/test_verdict_record.py::test_a_station_refresh_owes_no_round_and_the_two_readers_agree; tests/test_verdict_record.py::test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel; tests/test_verdict_record.py::test_the_empty_carrier_commits_its_own_paths_and_never_the_index; tests/test_verdict_record.py::test_a_round_drawn_after_a_refresh_is_visible_to_both_readers; tests/test_verdict_record.py::test_the_dial_decides_when_an_adjudication_owes_a_round; tests/test_verdict_record.py::test_an_unreadable_dial_falls_to_when_minting_not_to_never; tests/test_verdict_record.py::test_an_adjudication_lane_owing_no_round_merges_with_no_verdict_file; tests/test_verdict_record.py::test_a_minting_adjudication_still_owes_its_round; tests/test_verdict_record.py::test_a_committing_adjudication_schedules_its_round_under_the_dial; tests/test_verdict_record.py::test_the_scheduler_and_the_gate_read_one_spec_copy; tests/test_verdict_record.py::test_the_done_banner_states_the_rounds_it_actually_drew; tests/test_verdict_record.py::test_the_trailer_count_is_derived_at_the_governing_tree; tests/test_verdict_record.py::test_the_review_owed_derivation_and_the_gate_share_one_definition; tests/test_verdict_record.py::test_policy_two_requires_both_independent_verdicts; tests/test_verdict_record.py::test_a_half_drawn_round_owes_its_missing_phase_and_only_that; tests/test_verdict_record.py::test_the_declared_phase_span_is_read_the_same_length_by_both_readers; tests/test_integrate_admission.py::test_an_approve_that_did_not_judge_this_tree_does_not_count; tests/test_integrate_admission.py::test_an_approve_that_names_the_current_tree_passes; tests/test_integrate_admission.py::test_the_legacy_rollup_path_warns_while_it_clears; tests/test_integrate_station.py::test_the_refresh_attests_the_bar_to_the_sha_it_produced; tests/test_integrate_station.py::test_a_forged_bar_green_trailer_does_not_make_a_branch_merge_ready; tests/test_integrate_station.py::test_amending_a_refresh_commit_revokes_its_attestation; tests/test_integrate_station.py::test_a_deliberately_forged_attestation_is_a_STATED_limit_not_a_defence; tests/test_integrate_station.py::test_a_work_commit_that_quotes_the_trailer_is_never_peeled_away
+    - Expected: Satisfies SR-156: the serial seam's verdict rung is computed from committed evidence a logged reviewer session produced and is bound to the tree it judged, with the merge refused when the evidence is absent, dissenting, re-rolled, or contradicted by its own attestation; and the round the loop draws and the verdict the seam demands are decided by one reader
+    - Level: Unit
+    - Method: The verdict record's two halves, each driven beside its opposite so neither reads as a rule with one answer. THE IDENTITY, pure over synthetic `git ls-tree -r` entries: a listing and the same listing plus a round file, a log fragment and a session log fold EQUAL, while a changed work blob and a changed docs/work/ spec each fold DIFFERENT - so the exclusion is proven to be an exclusion rather than a fold that ignores everything. THE ENCODING BOUNDARY, driven through git rather than asserted about it: a record path holding a non-ASCII character - the shape git QUOTES, asserted in the fixture so it cannot silently stop reproducing - leaves the identity unmoved, while an accented WORK path moves it; and raw listings with one blob renamed from invalid-UTF-8 path byte 200 to 201 - asserted to COLLIDE under replacement decoding - fold DIFFERENT through tree_identity, so parsing and the ASCII record-prefix boundary occur before any decode. THE TRAILER GRAMMAR: format/parse round-trip; the LAST trailer in a message governs, so a rework commit quoting the round it answers does not have the quotation read as its own attestation; and three malformed shapes - a verdict word outside the enum, a 40-hex tree, a missing round count - each fail to PARSE rather than parse to something. THE NAME PARSE: a round file with and without the relaxed tag, the pre-train flat layout, a session log, and the legacy hand-authored rollup answering None because it names no reviewed sha. THE GATE, on a two-branch git fixture with the trunk checked out: a logged reviewer round naming the current tree clears it with NO rollup present anywhere; the same file with a BUILD session log behind it does not (the implementer-authored round); a SECOND round file committed behind that ONE session log, whose NAME claims the other declared phase, is not a second reviewer - both files are asserted committed and the single log with them, the entries carry the LOG's phase, so at a declared policy of 2 REVIEW-B is still outstanding and the gate refuses by name until a REVIEW-B whose own session log declares it arrives and clears it; TWO session logs at ONE (train, ordinal) declaring DIFFERENT review phases - both asserted committed, with the round file they would otherwise phase asserted still present so the empty answer is the ambiguity rule and not an empty scan - serve NO round at all rather than letting the last log read win, and the gate refuses by name while the single-log arm beside it clears; a round whose tree was reworked away does not, while a log-fragment and scoreboard commit after a round leaves it governing; a CHANGES-REQUESTED round refuses; and a verified Review-Verdict trailer contradicting the rounds refuses by name in its verdict word and in a round count ABOVE the evidence, while a count BELOW it does NOT - both directions driven, because the writer is best-effort and a stamp the evidence outruns is a missed stamp whose refusal parked an approved lane at the very stop the cross-check exists to prevent - and TWO attestations at one governing tree leave the NEWEST governing so a legitimately re-drawn round is not accused of forgery. THE CARRIER IS VERIFIED AND NOT ONLY PARSED, which is what "the trailer cannot create an approval" costs: the identical attestation words on a commit that CHANGED the work under them - asserted in the fixture to have really moved the governing identity - are read at neither the tree they NAME nor the tree they rode, beside the record-only carrier of the same words that IS read, so copying a true attestation onto later work buys nothing. THE WRITER IS DRIVEN END TO END, not only the trailer helper: a completed round is run through the loop's own complete_review_round on a repository fixture and the commit it lands is asserted to CARRY the attestation, to name the governing tree, to be read back by the branch reader under the key the cross-check looks up, to leave that governing tree unmoved, and to satisfy the gate - the whole path between a round completing and its attestation landing, which every other trailer case skipped by committing the string itself, and which nothing anywhere reports when it stops writing because absence is the state the cross-check must stand down on. THE RESUME'S OWED SET IS THE EVIDENCE'S ALONE: with both declared phases served at the governing tree and a stale untracked owed-marker still present - the state a run killed between the last reviewer's commit and the round completing leaves - the resume is asserted to queue NOTHING, and beside it a genuine rework with one phase redrawn is asserted to queue that phase and only it. THE PEEL: a genuine Bar-Green refresh commit, verified against its own tree and parent, moves the branch tip's identity and neither reader's answer - the loop still says no round is owed and the gate still merges - which is the one commit class two separately-chosen revs disagreed on; and the same refresh with a coordinator TELEMETRY commit stacked on top of it - a record path, so the fold ignores it and only the tip-only peel could be defeated by it - still owes no round and still merges. THE TWO PEELS' REFUSAL ARMS are held by tests/test_integrate_station.py, cited beside this module because integrate re-exports these very functions (refresh_attestation, work_tip) and the station suite is where a refresh can be produced rather than hand-written: a genuine refresh attested to the sha it produced; a forged Bar-Green trailer in three shapes, the sharpest being a genuine refresh message copied verbatim onto another commit; an amend that keeps the message while the tree moves, revoking the attestation; the deliberately forged attestation recorded as a STATED limit rather than a defence; and the reset peel's data-loss half - an honest work commit merely QUOTING the trailer is never peeled away, and a genuine refresh above it peels back to exactly that commit. BOTH carriers are driven, not only the convenient one: that non-empty telemetry commit, and then the EMPTY commit agent_common.commit_telemetry writes when a Review-Verdict attestation must land on unchanged bookkeeping - obtained by CALLING that producer rather than by hand, so the two cannot drift apart, and asserted to really be zero-path, because that is the commit shape a walk classifying PATHS could not classify and so stopped at, burying the refresh under the very commit that recorded the approval. A WORK commit above the refresh does re-owe and does refuse, so the walk is proven to step through what cannot invalidate a verdict rather than through everything. BOTH ORDERS of refresh and round, because only one of them was covered and the other was broken: the round drawn AFTER the refresh - the order the shipped path actually produces, since a lane's refresh is spawned as soon as its worker is DONE and before the merge slot runs, so any slot refusal parks a branch with a refresh and no round - cites the POST-refresh sha, asserted in the fixture to be that sha and not the pre-refresh one, and is asserted to serve the lane at both readers and to carry the coordinator's attestation under the key the cross-check looks it up by, while a rework above it still re-owes. THE ATTESTATION'S CARRIER IS SCOPED TO ITS OWN PATHS, on BOTH arms and not only the one that carries a pathspec: with an unrelated work file staged and the bookkeeping unchanged, the commit agent_common.commit_telemetry writes for NAMED paths and the one it writes for NO paths at all - the call this suite itself makes, and the arm where a scope appended only when paths exist evaporates - are each asserted zero-path with the caller's index left exactly as found, so work cannot land under a bookkeeping label nor an attestation ride a commit that changed the tree. THE DIAL: the three values over a brief-and-drafts matrix, an unrecognized value falling to when-minting rather than to never, and an adjudication lane closing with a successor draft merging with no verdict artifact of any kind under both never and when-minting, while a spine draft still owes its round. THE DIAL AT THE SCHEDULER, the half a reader could otherwise only take on trust: a committing ADJUDICATE session is driven through the loop's own bookkeeping arm on a closed-lane repository at every dial value - including the `always` no repository fixture had reached - and the review queue it leaves is asserted together with the train-scoped diff range and the recorded judging family, which is what "exactly as a committing BUILD does" has to mean. Its INPUT is driven beside it: a branch carrying its spec in BOTH homes, the terminal copy drafting a spine successor and a stale active copy an ordinary one, is asserted to answer the scheduler and the merge gate the SAME way, with the shared precedence also driven pure on a two-path list and on the empty one. THE SHARED DEFINITION, in BOTH its dimensions. WHICH TREE: the C2 review-owed derivation answers owed after a rework and served after a fresh round, and record-only commits after the verdict re-owe nothing. HOW MANY PHASES: at a declared policy of 2 a lone logged REVIEW-A APPROVE is REFUSED by name and the gate clears only once a governing REVIEW-B joins it at the same identity; and the half-drawn round a killed run leaves - REVIEW-A served, the in-memory phase queue gone - is answered by both readers together, the derivation naming REVIEW-B and ONLY REVIEW-B while the gate refuses, then both agreeing once it lands, with the same fixture asserted SERVED at policy 1 so the answer is proven to come from the declared count. The phase span is driven pure at the values neither caller reaches - a negative policy, which a bare slice would answer by slicing from the END, and an over-dialled one - and the one class the two readers must disagree on is pinned: a drawn but UNPARSEABLE verdict is not re-drawn and does not clear the gate either.
+    - Phase: 5
+    - Status: Drafted
+    - TC-ID: TC-205
+    - Tier: Smoke
+    - Verifies: SR-156;LLR-207;IF-175
+- chain of SR-170 — Shared authority surfaces are the serial actor's alone
+  - SR SR-170 [approved]
+    - AcceptanceCriteria: The compiled activity log and the generated project-state artifacts are written only by the serial merge step and never committed from a work branch; a work branch that regenerates one is refused or its result is not what lands. Ordering and partial-result behaviour are SR-173's; identity allocation is SR-174's; the harness work-branch freshness skip is SR-006's clause and is not restated here.
+    - Boundary-Refs: B-05
+    - Hat-Refs: INTEGRITY-RECOVERABILITY
+    - Phase: 4
+    - Priority: M
+    - Rationale: ONE DECISION PER ROW: a shared serial actor is a shared MECHANISM, not one decision. This row holds the EXCLUSIVE-WRITER contract alone; ordering-and-all-or-nothing is SR-173's and identity allocation SR-174's, each with its own children. Realizes SN-027's serialization guarantee at the surfaces where a parallel writer would actually corrupt something, with SN-010 (the status surface a human reads regenerates at the seam, never on a lane), SN-008 (a first failure stops loudly rather than half-regenerating) and SN-025 (the surface a session reads is generated, never hand-copied). The serial LANDING (SR-156) and the rule that shared authority surfaces regenerate only there are two contracts that fail independently, since a perfectly serialized landing that still lets a lane commit a regenerated artifact satisfies the landing row and not this one. The three surfaces sit in ONE row rather than three because they share one decision, not three: the serial trunk actor is their sole writer. That decision is already ruled for the identity mint — a work branch never mints a work-item id — and this row is its requirement-tier home, which it did not have. `phase` inherits the parent's 4, matching every child.
+    - Requirement: The delivered loop content shall write the shared records it derives - the compiled activity log and the generated project-state artifacts - only from the serial merge step and only against the merged tree, never from a parallel work branch.
+    - SN-Refs: SN-027;SN-010;SN-008;SN-025
+    - SR-ID: SR-170
+    - Status: Approved
+    - Title: Shared authority surfaces are the serial actor's alone
+    - Verification: Test
+  - LLR LLR-060 [approved]
+    - CodeSymbol: REGEN_STEPS/regen
+    - Component: CMP-008
+    - Detail: next-wi/run-phase are gone from every surface; the status snapshot is generated by gen_trajectory --status and re-derived by the trunk lane (trunk_step --regen) after each merge - never hand-copied, never written on a work branch. (The run-state generation half retired with the dispatcher at Phase 5.) "Every surface" is BOTH directions of SR-148's restored deletion clause, and they discharge in different places: a FRESH scaffold never writes either file (bootstrap.py's MAPPING does not carry them), and a MIGRATED repo deletes them under project-trajectory/RESYNC_PACK.md's upgrade recipe, which names both paths in its "delete local reliance on the retired surfaces" step. The migrated half is the one that can silently fail, because it is the only one where the files exist to be kept.
+    - LLR-ID: LLR-060
+    - Module: project-trajectory/scripts/trunk_step.py
+    - Phase: 4
+    - SR-Refs: SR-148;SR-170
+    - Status: Approved
+    - TestRefs: (see TC-060)
+    - Title: next-wi/run-phase retirement + generated status/run-state
+  - LLR LLR-124 [approved]
+    - CodeSymbol: REGEN_STEPS/regen
+    - Component: CMP-008
+    - Detail: docs/status.md's generated block is maintained by the trunk lane only: trunk_step --regen runs gen_trajectory --status after derive_stage (the derived stage is its input), and the status-map freshness gate byte-compares it on the trunk while work branches skip (SS5.2). (docs/run-state and its four-valued dispatcher outcome retired with the dispatcher at Phase 5.) The snapshot is an adopted-toolkit output surface (REL-002), not a system-under-development output; a work branch never commits the artifact.
+    - LLR-ID: LLR-124
+    - Module: project-trajectory/scripts/trunk_step.py
+    - Phase: 4
+    - Rationale: Split from the retirement row: removing the old pointer and generating the surfaces that replace it are separable, and the second is what keeps the replacement from rotting the same way.
+    - SR-Refs: SR-170
+    - Status: Approved
+    - TestRefs: (see TC)
+    - Title: Generated status + run-state
+  - LLR LLR-137 [approved]
+    - CodeSymbol: compile_log/ordered_fragments/rebase_links
+    - Component: CMP-008
+    - Detail: Compiles docs/log.d/*.md into docs/log.md via plan_artifacts.append_log_summary in (git add-time, filename) order - all fragments validated first (name shape, ## heading, reserved section headings refused, an adding commit required - on HEAD, or on MERGE_HEAD during the integrator's merge composition), relative links rebased from docs/log.d/ to docs/, fragments deleted after append, all-or-nothing on any validation error. Never commits; the caller owns the commit. The artifact-regen half is LLR-142. A fragment-free run is a clean idempotent no-op.
+    - LLR-ID: LLR-137
+    - Module: project-trajectory/scripts/trunk_step.py
+    - Phase: 4
+    - Rationale: One serial actor per §5.5.
+    - SR-Refs: SR-170
+    - Status: Approved
+    - TestRefs: (see TC-130)
+    - Title: Serial trunk step (log compile + regen)
+  - LLR LLR-141 [approved]
+    - CodeSymbol: _claimed_work_branch/steps
+    - Component: CMP-007
+    - Detail: On a claimed work branch the _TRUNK_FRESHNESS_STEPS set SKIPs with a §5.2 notice, exit code untouched; the plan listing still names every step. The claim signal answers in two stages - docs/work/active/<branch>/ on disk (the fast path), else the branch's own committed history (git log -1 -- docs/work/active/<branch>) - so the closing commit that archives the claim, and every commit after it, keep the skip. No git, a failing git, or an empty answer all read as the trunk lane: a false work-branch positive would switch the freshness gates off on the one branch that owns regenerating them.
+    - LLR-ID: LLR-141
+    - Module: project-trajectory/scripts/check.py
+    - Phase: 4
+    - Rationale: A false work-branch positive would relax the trunk's freshness bar, so every ambiguity resolves toward the trunk lane.
+    - SR-Refs: SR-006;SR-170
+    - Status: Approved
+    - TestRefs: (see TC-134)
+    - Title: Work-branch lane signal + freshness skip
+  - LLR LLR-208 [AWAITING FIRST APPROVAL]
+    - CodeSymbol: scopes/render/targets/_extra/main
+    - Component: CMP-009
+    - Detail: One file per review scope under docs/reviews/rollup/<train>.md, compiled from the round files that scope carries: ordinal, phase, reviewed sha, parsed verdict word, finding count and filename, one row each. The scope SET is the train field the round-file name parser itself returns, taken over every round file found under docs/reviews/ - not the directory layout, because a second notion of what a review scope is can disagree with the first: enumerating directories skipped the flat pre-train layout that parser supports, which produced an empty rollup directory AND a --check calling it fresh against the same empty target set. That layout has no directory to be named after, so its rollup takes a reserved stem, and the one name collision that leaves is REFUSED by name on both the check and the write arm rather than resolved by a last write - two scopes sharing one output file leave the other permanently stale. The scope is the TRAIN and not the work item, because a traincar is one review scope - a worker schedules its round only once every assigned item is built and the round covers the combined train diff, so a per-item rollup would have to invent a slice of a round that does not exist. Declared in the toolchain file's generated section, freshness-gated by --check at the commit floor, and standing down on a work branch with the rest of the trunk-owned artifacts - the one member of that set whose SOURCE a branch necessarily writes, since the round files are a lane's own committed evidence. THE WRITER THAT CLOSES THAT CIRCLE IS THE TRUNK STEP'S REGEN SET, named by the id it carries there: the `verdict-rollup` row, armed by the presence of docs/reviews/ and skipped with a printed notice wherever that directory is absent, a LEAF whose position in the dependency order is therefore free. Membership in that set is part of THIS contract and not an implementation accident, because it is the only thing that makes the exclusive-writer clause above true: a work branch stands the freshness check down and commits the round files, so a trunk step that does not run this generator leaves the artifact written by nobody, and the first commit floor that reads it reds on a staleness no lane is permitted to clear. The generator OWNS that directory rather than only writing into it: --check reports an absent file, a diverged one and an EXTRA one - a retired review scope keeping its rollup is the same lie as an out-of-date one - on normalized line endings, and the WRITE path prunes the extra in the pass that writes the rest. Both halves or neither: reporting a file the regenerator would never touch made the remedy the failure message names unable to clear the failure, which on a step sitting at the commit floor and in the trunk freshness set is an unbreakable red under a misleading instruction. It names NO governing verdict: governing is tree identity, a question about a branch's current tree that can only be answered against a repository at a moment, so every row here is a fact about a file.
+    - LLR-ID: LLR-208
+    - Module: project-trajectory/scripts/gen_verdict_rollup.py
+    - Phase: 5
+    - Rationale: The hand-authored per-item rollup was the merge gate's only input and nothing in the kit wrote it, so every mechanized lane stopped at a human - and because it paraphrased evidence that already existed, it was also the one artifact in the tree that was neither generated, checked nor declared while the doctrine everywhere else refuses that shape. Splitting the roles is what makes both halves honest: the gate reads the evidence, and the summary a human genuinely wants to read becomes derived state that cannot drift from it. Writing a governing verdict into the file would rebuild the retired artifact under a new name - a checked-in summary that reads as authority and is stale the moment the branch moves - so the file states facts about files and stops.
+    - SR-Refs: SR-170
+    - Status: Drafted
+    - TestRefs: TC-206
+    - Title: The per-review-scope verdict rollup: generated, checked, never an input
+  - TC TC-060 [approved]
+    - Automated: Yes
+    - Evidence: tests/test_trunk_step.py; tests/test_gen_trajectory.py
+    - Expected: Satisfies SR-148 AcceptanceCriteria, and SR-170 AcceptanceCriteria via the LLR-124 detail contract
+    - Level: Integration
+    - Method: Drive trunk_step --regen and the status-map freshness gate on fixture repos; assert the snapshot regenerates on the trunk, fails fresh when stale, and no next-wi/run-phase surface exists.
+    - Phase: 4
+    - Status: Approved
+    - TC-ID: TC-060
+    - Tier: Full
+    - Verifies: SR-148;LLR-060;SR-170;LLR-124
+  - TC TC-130 [approved]
+    - Automated: Yes
+    - Evidence: tests/test_trunk_step.py::test_fragments_compile_in_git_order_and_are_deleted
+    - Expected: Satisfies SR-170 AcceptanceCriteria via the LLR-137 detail contract
+    - Level: Unit
+    - Method: Run the trunk-step suite: committed fragments compile in git order with links rebased and fragments deleted; an uncommitted, heading-less or reserved-heading fragment blocks the whole batch; a fragment-free run is a clean idempotent no-op.
+    - Phase: 4
+    - Status: Approved
+    - TC-ID: TC-130
+    - Tier: Full
+    - Verifies: SR-170;LLR-137
+  - TC TC-134 [approved]
+    - Automated: Yes
+    - Evidence: tests/test_check_lane.py
+    - Expected: Satisfies the work-branch lane-skip acceptance of SR-006 via the LLR-141 detail contract
+    - Level: Integration
+    - Method: Run the check-harness lane suite: a claimed work branch skips the declared freshness steps with the §5.2 notice and untouched exit code while non-freshness steps still run; the closing commit and its successors keep the skip (history-derived signal); the trunk lane never skips.
+    - Phase: 4
+    - Status: Approved
+    - TC-ID: TC-134
+    - Tier: Full
+    - Verifies: SR-006;LLR-141
+  - TC TC-206 [AWAITING FIRST APPROVAL]
+    - Automated: Yes
+    - Evidence: tests/test_verdict_record.py::test_the_rollup_is_generated_and_its_check_has_two_answers; tests/test_trunk_step.py::test_regen_really_writes_the_verdict_rollup; tests/test_generated_freshness_wiring.py::test_every_declared_generated_artifact_has_an_enforcer; tests/test_generated_freshness_wiring.py::test_every_wired_enforcer_is_a_real_step_and_runs_in_the_commit_floor; tests/test_check_lane.py::test_every_declared_freshness_step_is_skipped
+    - Expected: Satisfies SR-170: the per-review-scope rollup is written by a regenerator the serial merge step runs and never by a work branch, its freshness is gated with two answers, and the artifact states that it is not the gate's input
+    - Level: Unit
+    - Method: The rollup as DERIVED state, driven on a scaffold carrying one review scope. Regeneration writes docs/reviews/rollup/<train>.md with a row per round file. --check is proven to have ALL its answers rather than one: an absent file reports stale, a freshly written one reports fresh, and a new round arriving in the scope reports stale again. THE EXTRA ARM IS DRIVEN AND NOT MERELY ENUMERATED, because it was the arm that was broken while it was uncovered: a rollup for a retired review scope reports stale, and then the regenerator the failure message names is run and asserted to REMOVE it and to leave --check fresh - a report whose own remedy cannot clear it is an unbreakable red, so the assertion is on the clearing and not on the reporting. THE FLAT PRE-TRAIN LAYOUT IS DRIVEN, and it is the arm the directory enumeration silently skipped: a round file sitting directly under docs/reviews/ reports stale, regenerates into the reserved flat stem carrying its row, and reports fresh - where before it produced no target at all and so a green --check over an empty rollup directory. The one name collision the reserved stem leaves - a train directory called by that same name - is asserted REFUSED on both the check and the write arm rather than resolved by a last write, and removing both scopes is asserted to PRUNE the flat rollup, so the refusal is proven clearable by the same remedy the module's other arms name. The rendered header is asserted to carry the sentence that keeps the artifact honest about its own standing - that the merge gate does not read this file - since the whole hazard of a checked-in summary is a reader taking it for the authority. The declaration side is held by the generated-artifact wiring guard, which fails any [generated] row with no freshness enforcer, and by the work-branch stand-down set, asserted whole rather than sampled. THE TRUNK WIRING IS DRIVEN, NOT READ BACK OFF THE TABLE THAT DECLARES IT, because none of the arms above can see it: on a scaffold whose only armed artifact family is docs/reviews/, the trunk step's own regen is RUN - the generator is never called directly on this arm, which is exactly what every other arm here does - and the rollup is asserted to appear under it carrying the round file's row, beside the executed per-step line naming the step. Deleting the `verdict-rollup` regen row leaves the trunk module valid with no occurrence of that step left in it, every arm above still green and the whole of the trunk step's own suite still green; this arm reds and names the step that stopped running.
+    - Phase: 5
+    - Status: Drafted
+    - TC-ID: TC-206
+    - Tier: Smoke
+    - Verifies: SR-170;LLR-208
+--- WHAT THE APPROVAL RECORD CURRENTLY ANCHORS ---
+docs/archive/last_approved, copied 2026-08-30 (commit 4824c0ba). Approving these rows moves it for the registries you flip and for no others (WI-571), so an off-spine census computed against it survives your act.
+--- END ---
+
+Method — read the CHAIN, not the row:
+
+- For each row, state to yourself the obligation it imposes: what a builder must do, what a test must check. A row you cannot restate as an obligation is not ready.
+- Read UPWARD. Does the parent it points at actually call for this? A decomposition row that answers a requirement nobody made is scope, not detail.
+- Read SIDEWAYS. Do the siblings together cover what the parent asks, without overlapping into each other's decisions? One decision per row.
+- Read DOWNWARD. Do the test cases that claim to verify this row verify what it actually says — and does anything it says go unverified?
+- Read the wording as a closed obligation: a "should" that means "must", a threshold with no units, an actor left unnamed, an acceptance condition nobody could observe. Each is a RETURN, not a note.
+- Fail toward `RETURN`. An approval is a standing claim that a competent reader blessed this text; a wrongly-returned row costs one more lane, and a wrongly-approved one is a false claim the record then carries forward.
+
+If the answer is APPROVE, perform the act — it is yours, and nothing downstream does it for you:
+
+1. Move each approved row's `Status` from `Drafted` to `Approved` — only rows marked `[AWAITING FIRST APPROVAL]`, never a `HELD FOR THE OWNER` one — and NOTHING else in the registry. Every other cell of every row stays byte-exact.
+2. Take the anchoring snapshot in the SAME commit: `python scripts/intake.py snapshot --approves "docs/requirements/low-level-requirements.toml=WI-590;docs/test/test-cases.toml=WI-590"`. Without the copy, the record of what you blessed does not move, and the row reads as approved-but-unanchored. KEEP THE QUOTES: the argument joins registries with `;`, which every shell reads as a command separator, so an unquoted batch spanning two registries snapshots only the first and runs the second as a command.
+
+   THAT ARGUMENT IS WRITTEN FOR AN ALL-APPROVE VERDICT. Its `;`-joined tokens cover exactly these rows:
+
+    - `docs/requirements/low-level-requirements.toml=WI-590` covers LLR-207, LLR-208
+    - `docs/test/test-cases.toml=WI-590` covers TC-205, TC-206
+
+   If you RETURNED every row a token covers, DROP that token. Naming a registry you flipped nothing in re-anchors its live text — text this act did not bless — and the merge refuses the whole commit as a snapshot WIDENED without an approved row. Keep a token when at least ONE of its rows is approved: the copy takes the registry whole, and the rows you returned stay `Drafted` inside it, which is what they are.
+3. Commit those two together as one reviewed commit. That commit IS the approval.
+
+If the answer is RETURN, change NO registry cell. Draft the follow-up work in a `## Dispositions` section of this row's own spec — one fenced ```toml block per draft — and intake mints it at this row's merge. Do not file the row yourself; a lane that mints an id is refused at the merge slot.
+
+A MIXED batch is normal: approve the rows that are ready, return the rest, and say which is which. The verdict label answers for the BATCH.
+
+Write your verdict to /Users/diytechy/Documents/ai-template-drive/wi-590-adjudicate-llr-207-llr-208/docs/reviews/wi-590-adjudicate-llr-207-llr-208/002-ADJUDICATE-879d9be.md. One line per row, in the log.md block format:
+
+    - [APPROVE|RETURN] <row-id> -> the obligation it imposes -> what its chain shows -> why it is (not) ready
+
+Then exactly one machine line:
+
+    OUTCOME: APPROVE|RETURN rows=N
+
+`APPROVE` only when EVERY row you were shown is approved. Commit the verdict file (an adjudication is a recorded verdict — its one home), ending that commit with the trailer `WI: WI-590` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open.
+
+THEN, AND ONLY AFTER THAT VERDICT IS RECORDED, finish the outcome you ruled:
+
+- If ANY row line says `APPROVE` — an all-approve `OUTCOME: APPROVE` or a mixed batch whose `OUTCOME` is `RETURN` — perform steps 1–3 above for exactly those approved rows. The flip plus scoped snapshot is a separate reviewed commit after the verdict commit. Stop only after that approval commit is recorded.
+- Only when EVERY row line says `RETURN` may you stop without changing a registry or the approval snapshot. The required `## Dispositions` follow-up is already part of the recorded verdict.
+2026-09-04T17:47:43.129074Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: failed to lookup address information: nodename nor servname provided, or not known, url: wss://chatgpt.com/backend-api/codex/responses
+2026-09-04T17:47:43.221607Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)")))
+2026-09-04T17:47:43.264845Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: failed to lookup address information: nodename nor servname provided, or not known, url: wss://chatgpt.com/backend-api/codex/responses
+2026-09-04T17:47:43.586543Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: failed to lookup address information: nodename nor servname provided, or not known, url: wss://chatgpt.com/backend-api/codex/responses
+ERROR: Reconnecting... 2/5
+2026-09-04T17:47:44.068114Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: failed to lookup address information: nodename nor servname provided, or not known, url: wss://chatgpt.com/backend-api/codex/responses
+ERROR: Reconnecting... 3/5
+2026-09-04T17:47:44.226984Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)")))
+2026-09-04T17:47:44.233271Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)")))
+2026-09-04T17:47:44.488298Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)")))
+2026-09-04T17:47:44.938317Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: failed to lookup address information: nodename nor servname provided, or not known, url: wss://chatgpt.com/backend-api/codex/responses
+ERROR: Reconnecting... 4/5
+2026-09-04T17:47:45.494294Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)")))
+2026-09-04T17:47:46.561315Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: failed to lookup address information: nodename nor servname provided, or not known, url: wss://chatgpt.com/backend-api/codex/responses
+ERROR: Reconnecting... 5/5
+2026-09-04T17:47:50.116000Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: failed to lookup address information: nodename nor servname provided, or not known, url: wss://chatgpt.com/backend-api/codex/responses
+warning: Falling back from WebSockets to HTTPS transport. stream disconnected before completion: failed to lookup address information: nodename nor servname provided, or not known
+ERROR: Reconnecting... 1/5
+ERROR: Reconnecting... 2/5
+ERROR: Reconnecting... 3/5
+ERROR: Reconnecting... 4/5
+ERROR: Reconnecting... 5/5
+ERROR: stream disconnected before completion: error sending request for url (https://chatgpt.com/backend-api/codex/responses)
+ERROR: stream disconnected before completion: error sending request for url (https://chatgpt.com/backend-api/codex/responses)

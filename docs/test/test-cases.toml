@@ -2096,7 +2096,7 @@ tier = "Smoke"
 expected = "Satisfies SR-170: the per-review-scope rollup is written by a regenerator the serial merge step runs and never by a work branch, its freshness is gated with two answers, and the artifact states that it is not the gate's input"
 automated = "Yes"
 evidence = """tests/test_verdict_record.py::test_the_rollup_is_generated_and_its_check_has_two_answers; tests/test_trunk_step.py::test_regen_really_writes_the_verdict_rollup; tests/test_generated_freshness_wiring.py::test_every_declared_generated_artifact_has_an_enforcer; tests/test_generated_freshness_wiring.py::test_every_wired_enforcer_is_a_real_step_and_runs_in_the_commit_floor; tests/test_check_lane.py::test_every_declared_freshness_step_is_skipped"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-207]
