@@ -73,6 +73,19 @@ rewrites with the same subject, and these cells have not changed byte since
 cell's two enumerations now partition all eleven `kitlib/` modules with nothing
 left over: nine at CMP-006, two at CMP-008. `check_trajectory` is `clean`.
 
+THE FULL UNFILTERED SUITE at the closing tip: `2 failed, 3367 passed, 24
+skipped in 632.76s`. Both failures were driven to a verdict, neither is claimed
+green. The orphan-docs failure is INHERITED — it reproduces at the integration
+base on a detached worktree, over `docs/handoff-2026-09-03.md`, a doc this
+branch's delta does not contain. The committed-stage failure is CAUSED and
+benign: it passes at the base, and on a regenerated worktree of the tip it
+drives RED before `derive_stage.py` and GREEN after, with the rung
+(`DevStg-LLReqs`, 4 of 8) and `drafted = 13` byte-identical across the
+regeneration — only the fingerprint and its as-of sha move. `docs/stage` is left
+for the trunk lane's post-merge regeneration (§5.2) rather than committed here,
+since the fingerprint embeds the tip sha and this row's own close commit would
+re-stale it. Details in `docs/log.d/WI-587-verdict-row-corrections.md`.
+
 NOT ON THIS LANE — the approval. `LLR-207` and `TC-205` stay `Drafted`; no
 `docs/archive/last_approved/` write, no `intake.py snapshot`. The adjudication
 this merge mints is what approves them.

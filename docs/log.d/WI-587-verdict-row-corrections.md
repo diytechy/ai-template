@@ -112,5 +112,37 @@ cell's two enumerations now partition those eleven with nothing left over, which
 is the check the old parenthetical failed. `check_trajectory` is `clean` on the
 amended cell — the added names cost no byte-budget breach.
 
+THE FULL UNFILTERED SUITE, which the close commit deferred and which a session
+reaped mid-run left owing. Driven at the closing tip (`cf1d36a8`):
+`2 failed, 3367 passed, 24 skipped in 632.76s`. NEITHER failure is a green to
+claim, and the two are NOT the same kind of thing, so each was driven to a
+verdict rather than waved through:
+
+- `tests/test_check_docs.py::test_meta_repo_has_zero_unexplained_orphans` —
+  INHERITED, not this lane's. The orphan is `docs/handoff-2026-09-03.md`,
+  committed by `f1cc2767` and absent from this branch's delta
+  (`git diff 794de60..HEAD --name-only` names no handoff doc). Driven at the
+  INTEGRATION BASE on a detached worktree, where it fails identically
+  (`1 failed`, same orphan, 730 docs there against 733 here) — so the base is
+  red on this node before this lane exists. It is an owner-authored doc outside
+  this row's scope; this lane neither fixes nor adopts it.
+- `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current` —
+  CAUSED by this lane and BENIGN, the known close-ritual trap. It PASSES at the
+  integration base, so this branch moved it. Driven BOTH WAYS on a regenerated
+  worktree of the tip: RED before `derive_stage.py`, GREEN after. What moved is
+  only the fingerprint and its as-of sha — `stage = DevStg-LLReqs`,
+  `stage-ord = 4`, `stage-of = 8` and `drafted = 13` are BYTE-IDENTICAL across
+  the regeneration, so no rung and no drafted count changed; the fingerprint
+  tracks the tip commit, and this lane committed.
+
+`docs/stage` is therefore NOT regenerated into this branch. It is a derived
+artifact the trunk lane regenerates after each merge (concurrency-restructure
+§5.2), and committing it here would be stale again at the very next commit —
+the fingerprint embeds the as-of sha, so this row's own trailer commit would
+re-red it. Leaving it is the correct lane behaviour, not an unpaid debt.
+
+Both verification worktrees were removed and `git worktree list` shows only the
+lane; `git status` carries nothing but the loop's own iteration logs.
+
 NOT ON THIS LANE — the approval. `LLR-207` and `TC-205` stay `Drafted`; no
 `docs/archive/last_approved/` write, no `intake.py snapshot`.
