@@ -588,7 +588,7 @@ REGEN_STEPS = (
     (
         "verdict-rollup",
         _has("docs/reviews"),
-        _cmd("gen_verdict_rollup.py"),
+        _cmd("gen_verdict_rollup.py", "--trunk-step"),
         "docs/reviews/ absent",
     ),
     # The live approval brief (`docs/ratify/CURRENT.md`, declared `approve` in

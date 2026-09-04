@@ -1378,6 +1378,32 @@ def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
     assert gen.main(["--root", str(root), "--check"]) == 0
 
 
+def test_a_work_branch_cannot_write_the_rollup_but_the_trunk_step_can(tmp_path):
+    # LLR-208's exclusive-writer clause, DRIVEN in the shape that broke it
+    # (WI-590 round 005, 2026-09-04): in a LINKED worktree on a claimed branch
+    # the generator wrote `docs/reviews/rollup/` and returned 0, and the
+    # work-branch freshness stand-down then hid the write. The refusal keys on
+    # the primary checkout's branch (`agent_common.trunk_name`), so a
+    # single-checkout repo — the fixture above, an attended run — is its own
+    # trunk and keeps writing; `--check` never writes and is never refused; the
+    # trunk step's own invocation (`--trunk-step`, which the station's refresh
+    # runs INSIDE the lane worktree) is the one writer allowed off the trunk.
+    gen = load_script("gen_verdict_rollup")
+    root = rounds_repo(tmp_path)
+    add_round(root, 3)
+    lane = tmp_path / "lane"
+    _git(root, "worktree", "add", "-q", str(lane), "wi-401")
+    try:
+        rollup = lane / "docs" / "reviews" / "rollup" / "wi-401.md"
+        assert gen.main(["--root", str(lane)]) == 2
+        assert not rollup.exists(), "a work branch wrote the rollup"
+        assert gen.main(["--root", str(lane), "--check"]) == 1  # absent, unrefused
+        assert gen.main(["--root", str(lane), "--trunk-step"]) == 0
+        assert rollup.exists()
+    finally:
+        _git(root, "worktree", "remove", "--force", str(lane))
+
+
 def test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit(tmp_path, capsys):
     # WI-558 DONE-WHEN 2's WRITER, end to end — the arm no test had ever
     # reached (ROUND 033, FINDING 1). Every trailer test above calls
