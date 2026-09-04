@@ -4586,6 +4586,44 @@ gate for a hand-compiled legacy rollup after its mechanical close now merges on
 the round it actually drew — if you hold such rollups, they stay valid through
 the policy-1 migration window and nothing new needs writing.
 
+### The trunk step regenerates the live approval brief [since dc395734]
+
+**What changed.** `trunk_step.REGEN_STEPS` gains a leaf step,
+`approval-brief` — `trace.py --approve modified --out docs/ratify/CURRENT.md`,
+armed when the brief exists. Measured 2026-09-04 on an adjudication lane
+whose approval act moved the `docs/archive/last_approved` snapshot: its tip
+carried a stale brief, the station's refresh regenerated every other declared
+artifact, and `check.py`'s `approval-fresh` step reddened the refresh bar on a
+file nothing in the table named. Regenerating it on the lane AFTER the
+round would have changed the tree identity the round named; the refresh
+commit is the one commit the verdict gate peels, so the station is where it
+has to happen.
+
+**What to do.** Re-sync `scripts/trunk_step.py`. Nothing to edit: a repo
+without `docs/ratify/CURRENT.md` skips the step, and one with it gets the
+brief refreshed on every trunk step from now on. If your merge slot has ever
+refused a lane on `approval-fresh` alone, that class is closed.
+
+### The verdict rollup is written by the trunk step only [since 7ea3cce7]
+
+**What changed.** `gen_verdict_rollup.py` refuses a direct write (exit 2,
+reason on stderr) when the checkout is on any branch other than the trunk —
+the primary checkout's branch per `agent_common.trunk_name`. `--check` never
+writes and is never refused. `trunk_step.py` passes the new `--trunk-step`
+flag, the one writer allowed off the trunk, because the station's refresh
+runs the trunk step inside the lane worktree. This is LLR-208's
+exclusive-writer clause ("a work branch never writes the rollup") enforced
+rather than stated: measured 2026-09-04, the generator wrote
+`docs/reviews/rollup/` in a claimed lane and returned 0, and the work-branch
+freshness stand-down hid the write. A single-checkout repo is its own trunk,
+so an attended run and every fixture keep writing as before.
+
+**What to do.** Re-sync `scripts/gen_verdict_rollup.py` and
+`scripts/trunk_step.py` together — the flag and its one caller ship as a
+pair. Anything else that invoked the generator directly from a work branch
+(a lane hook, a make target) now gets the refusal and should stop; the merge
+regenerates the rollup.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
