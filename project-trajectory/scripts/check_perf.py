@@ -184,7 +184,10 @@ def evaluate(budgets, metrics, baselines, run_tier, malformed=None):
     the optional {PB-ID: raw value} map of present-but-non-numeric metric
     entries (see load_metrics): such a row is a FAIL when Gate=fail (WARN when
     Gate=warn) — never a silent SKIP (M-41). Only a metric truly absent this
-    run skips."""
+    run skips.
+
+    Implements: SR-006, SR-167, LLR-014
+    """
     results = []
     for row in budgets:
         pid = row["PB-ID"]

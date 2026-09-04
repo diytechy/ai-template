@@ -899,6 +899,7 @@ def _oi_coherence_warns(open_items, text):
     return warns
 
 
+# Implements: SR-158, LLR-012
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(description=__doc__)
