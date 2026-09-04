@@ -483,9 +483,22 @@ def _branch_exclusive(root, branch):
 # claim/return/re-claim loop this row closed, bounded then only by
 # --max-iterations, so it is an owner call rather than a builder's: filed as a
 # finding, not decided here.
+#
+# `EXIT_PREFLIGHT` IS NOT IN THE SET, and that is a 2026-09-04 ruling rather
+# than an omission. A preflight refusal is the worker saying it could not START
+# - a config conflict, an unreadable assignment, a registry the dispatcher
+# derived wrongly - so it is evidence about the LAUNCH, never about the work. A
+# four-row spine batch measured what the old membership cost: the resumed
+# worker's preflight refused three rows the lane had itself closed, and the
+# handback then committed the lane's uncommitted residue as "the work so far,
+# committed as-is (partial close)" and moved rows to the TERMINAL `partial/` -
+# recording an outcome for a failure the lane could not have caused and no
+# human had read. A lane whose worker never started is parked exactly like a
+# CRASHED one: the claim stays in `active/`, the next cycle resumes it, and a
+# worker that keeps refusing trips the stall guard. Nothing is committed on its
+# behalf.
 _WORKER_OUTCOMES = frozenset(
     {
-        ac.EXIT_PREFLIGHT,
         ac.EXIT_BLOCKED,
         ac.EXIT_STALL,
         ac.EXIT_WAITING,
@@ -538,6 +551,16 @@ def _lane_close(root, branch, code):
             "committed and no reviewer could be drawn; the lane stays parked "
             "with its work and the next cycle resumes it to draw the "
             "round.".format(branch, code)
+        )
+        return None
+    if code == ac.EXIT_PREFLIGHT:
+        _say(
+            "worker on {} REFUSED ITS PREFLIGHT (exit {}) - it never started, "
+            "so nothing about the work is known; the claim stays in active/{}/ "
+            "and the next cycle resumes it. Committing this lane's residue as a "
+            "partial close would record an outcome for a failure the lane did "
+            "not cause.".format(branch, code, branch),
+            err=True,
         )
         return None
     if code not in _WORKER_OUTCOMES:

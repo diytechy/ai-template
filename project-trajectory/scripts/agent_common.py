@@ -2227,6 +2227,47 @@ def head_sha(root):
     return out if code == 0 and out else None
 
 
+def trunk_name(root, worker=None):
+    """The integration trunk's NAME: the branch the PRIMARY checkout is on
+    (`git worktree list --porcelain`, first block — a lane runs in a linked
+    worktree while the primary holds trunk). Falls back to the current branch
+    (a repo with no linked worktrees), then to the worker's base sha — the
+    review brief's slot never renders empty.
+
+    HERE RATHER THAN IN `agent_loop` because two readers need it and they must
+    not disagree: the loop composes the review brief and picks a worker's
+    integration base with it, and the worker PREFLIGHT below asks the same
+    question to tell a row THIS branch closed from one that was terminal before
+    the lane began."""
+    code, out = git(root, "worktree", "list", "--porcelain")
+    if code == 0 and out.strip():
+        for line in out.split("\n\n", 1)[0].splitlines():
+            if line.startswith("branch refs/heads/"):
+                return line[len("branch refs/heads/") :].strip()
+    _c, cur = git(root, "branch", "--show-current")
+    if cur.strip():
+        return cur.strip()
+    return (worker or {}).get("base", "") or "HEAD"
+
+
+def default_base(root):
+    """The integration base a worker assumes when --base is not given: the
+    merge-base of the lane's HEAD with the TRUNK (the primary checkout's
+    branch), else HEAD. It used to be HEAD unconditionally — right for a
+    fresh claim (HEAD IS the claim commit) and wrong for every RESUMED
+    worker, whose base..HEAD evidence then read empty: the built trailers,
+    the owed review round and the resume itself were invisible, which is the
+    "resumed session finds nothing to do" pattern of the 2026-08-30 run
+    (WI-548 round 3). A repo whose primary checkout is the branch itself
+    (a single-checkout attended run, the test fixtures) merges-bases to HEAD
+    and keeps the old behaviour exactly."""
+    trunk = trunk_name(root)
+    code, out = git(root, "merge-base", trunk, "HEAD")
+    if code == 0 and out.strip():
+        return out.strip()
+    return head_sha(root)
+
+
 def working_tree_dirty(root):
     """The `git status --porcelain` lines — one per uncommitted path (a rename is
     a single 'R  old -> new' entry, an untracked file a single '?? path' entry),
@@ -2871,7 +2912,7 @@ def preflight(root, template, args):
                         "this branch — a worker never builds an untracked "
                         "WI.".format(wid)
                     )
-                elif (row.get("Status") or "").strip().lower() in TERMINAL_STATUSES:
+                elif stale_terminal_assignment(root, wid, row):
                     # WI-267: a WI CANCELLED mid-assignment is terminal too — a
                     # worker must never build a WON'T-BUILD row. The scheduler
                     # never freshly dispatches a cancelled WI, but an owner can
@@ -2884,6 +2925,34 @@ def preflight(root, template, args):
                         "must re-derive the frontier.".format(wid, status)
                     )
     return failures
+
+
+def stale_terminal_assignment(root, wid, row):
+    """Is `wid`'s TERMINAL registry status a STALE assignment — terminal for
+    some reason other than this branch's own committed `WI:` trailer for it, in
+    `merge-base(trunk, HEAD)..HEAD`?
+
+    THE REFUSAL ABOVE IS ABOUT A STALE ASSIGNMENT, and a batch lane resuming its
+    own work is not one. A four-row spine batch (2026-09-03, lane `wi-589-…`)
+    closes its rows one at a time, so its registry reads `done` for every row it
+    has already finished — and the preflight refused THREE of the four on the
+    resume, with "a stale assignment, so the dispatcher must re-derive the
+    frontier", over rows that were terminal precisely BECAUSE this lane made
+    them so. The status alone cannot tell the two apart; the trailer can, and it
+    is the same evidence channel `train_evidence` gives the walk. A row terminal
+    on the TRUNK carries no trailer in this branch's own range, so it still
+    refuses.
+
+    Fails toward the REFUSAL at every unreadable step (no branch, git silent, an
+    unborn HEAD): a preflight that cannot prove the lane closed the row keeps
+    the guard it had."""
+    if (row.get("Status") or "").strip().lower() not in TERMINAL_STATUSES:
+        return False
+    base = default_base(root)
+    if not base:
+        return True
+    built, _blocked = train_evidence(root, base)
+    return wid not in built
 
 
 def stop_banner(status_path, label, detail=""):

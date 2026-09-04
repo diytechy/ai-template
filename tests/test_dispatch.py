@@ -1064,3 +1064,29 @@ def test_a_review_owed_worker_stays_parked_and_the_next_cycle_resumes_it(
     assert (root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md").is_file()
     assert not (root / "docs" / "handbacks").exists()
     assert "wi-401" in _git(root, "branch", "--format=%(refname:short)")
+
+
+def test_a_preflight_refusal_parks_the_lane_instead_of_committing_its_residue(
+    tmp_path, capfd
+):
+    # 2026-09-04. `EXIT_PREFLIGHT` used to sit in `_WORKER_OUTCOMES`, so a
+    # worker that could not even START was handed back: the lane's uncommitted
+    # residue was committed as "the work so far, committed as-is (partial
+    # close)" and every claimed row moved to the TERMINAL `partial/`. Measured
+    # on a four-row spine batch whose resumed preflight refused three rows the
+    # LANE ITSELF had closed — an outcome recorded for a failure the lane could
+    # not have caused. A preflight refusal is evidence about the launch, not
+    # about the work, so it parks exactly like a crash.
+    root = parked_repo(tmp_path)
+    worker = Recorder(outcomes=(2, 2))
+
+    rc = drv.run(root, drive_args(stall_limit=2), worker=worker)
+    assert rc == 4  # the stall guard bounds it, as it bounds a crash loop
+    err = capfd.readouterr().err
+    assert "REFUSED ITS PREFLIGHT (exit 2)" in err and "STALL" in err
+    assert len(worker.calls) == 2
+    # NOTHING was closed on its behalf: the claim is still in active/, no
+    # `partial/` move, no close report.
+    assert (root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md").is_file()
+    assert not (root / "docs" / "work" / "partial").exists()
+    assert not (root / "docs" / "handbacks").exists()

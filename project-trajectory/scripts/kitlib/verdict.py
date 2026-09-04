@@ -121,7 +121,11 @@ import hashlib
 import re
 
 from .git import git_bytes, git_out
-from .station import BAR_GREEN
+from .station import (
+    BAR_GREEN,
+    MECHANICAL_CLOSE_PREFIX,
+    MECHANICAL_CLOSE_SUFFIX,
+)
 
 __all__ = [
     "RECORD_PREFIXES",
@@ -134,6 +138,7 @@ __all__ = [
     "tree_identity",
     "refresh_subject",
     "refresh_attestation",
+    "mechanical_close_attestation",
     "work_tip",
     "governing_rev",
     "governing_identity",
@@ -363,6 +368,80 @@ def refresh_attestation(root, branch, rev=None):
     return work, summary.strip()
 
 
+# The one non-record tree the MACHINERY itself moves. See
+# `mechanical_close_attestation` for why it is peeled and what bounds that.
+_WORK_PREFIX = b"docs/work/"
+
+
+def mechanical_close_attestation(root, rev):
+    """The first parent of `rev` if `rev` is the machinery's OWN adjudication
+    close (`handback.close_adjudication`), else None.
+
+    THE SECOND DISPOSABLE COMMIT, and it is here for the refresh commit's
+    reason. `docs/work/` is deliberately IN the identity — a spec's
+    `safety_class`, `needs` and `Deliverable` are claims a verdict is ABOUT —
+    and the ordering rule that keeps the price low is "close before the final
+    verdict round". An adjudication lane CANNOT follow that rule: the round is
+    drawn while the row is still in `active/`, and the close is performed
+    afterwards by the machinery, at the worker's DONE. So the very next commit
+    after an APPROVE moved the spec and staled the round that had just judged
+    it — measured 2026-09-03 on WI-586, whose merge slot then refused "no
+    logged review round names its current tree" and needed a hand-compiled
+    legacy rollup (`docs/reviews/WI-586-REVIEW-A.md`).
+
+    WHAT MAKES IT PEELABLE is the same argument the refresh commit makes, not a
+    weaker one. The commit is MACHINE-authored end to end: no agent writes it,
+    its subject is composed by `station.mechanical_close_subject`, and the
+    `## Deliverable` it inserts is a fixed literal
+    (`handback._ADJUDICATION_CLOSE_DELIVERABLE`), so nothing a reviewer could
+    conclude differently about enters the tree. The row's own claims — its
+    `## Dispositions`, which is what the verdict judged — are carried through
+    unchanged.
+
+    VERIFIED AGAINST GIT, not read off the message. The subject must be exactly
+    the composed one; the commit must have exactly ONE parent (a merge is never
+    this); and every path it changed must live under `docs/work/`, which is what
+    stops a close whose inbound-link relink reached into product or requirement
+    files from being peeled. Each check FAILS TOWARD REVIEW: declining to peel
+    measures at a later rev, so the gate asks for MORE review, never less. The
+    honest bound is `refresh_attestation`'s — this defeats accident and drift,
+    not a lane that lies on purpose, which is the threat model the coordinator
+    holds throughout.
+    """
+    message = git_out(root, ["log", "-1", "--format=%B", rev]) or ""
+    lines = message.splitlines()
+    subject = lines[0].strip() if lines else ""
+    if not (
+        subject.startswith(MECHANICAL_CLOSE_PREFIX)
+        and subject.endswith(MECHANICAL_CLOSE_SUFFIX)
+    ):
+        return None
+    parent = _rev(root, rev + "^1")
+    if parent is None or _rev(root, rev + "^2") is not None:
+        return None
+    listing = git_bytes(root, ["diff", "--name-only", "-z", parent, rev])
+    if listing is None:
+        return None
+    paths = [path for path in listing.split(b"\0") if path]
+    if not paths or any(not path.startswith(_WORK_PREFIX) for path in paths):
+        return None
+    return parent
+
+
+def _peel_target(root, branch, rev):
+    """The rev a DISPOSABLE commit at `rev` peels to, or None when `rev` is not
+    one. TWO commits are disposable and this is their one home, so
+    `governing_rev`'s walk asks the question once: the station's REFRESH (which
+    re-merges trunk and regenerates) and the machinery's own ADJUDICATION CLOSE
+    (which archives a judged row terminal). Both are machine-authored, both move
+    the tree without the lane having changed what it is claiming, and both are
+    admitted by verification against git rather than by measurement."""
+    attested = refresh_attestation(root, branch, rev)
+    if attested is not None:
+        return attested[0]
+    return mechanical_close_attestation(root, rev)
+
+
 def work_tip(root, branch):
     """The branch's last WORK commit as a sha: the tip, with any refresh commit
     peeled off at the work sha that refresh ITSELF recorded.
@@ -460,9 +539,9 @@ def governing_rev(root, branch, rev=None):
     rev = rev or branch
     identity = tree_identity(root, rev)
     for _ in range(_MAX_GOVERNING_WALK):
-        attested = refresh_attestation(root, branch, rev)
-        if attested is not None:
-            rev = attested[0]
+        peeled = _peel_target(root, branch, rev)
+        if peeled is not None:
+            rev = peeled
             identity = tree_identity(root, rev)
             continue
         parent = _rev(root, rev + "^1")

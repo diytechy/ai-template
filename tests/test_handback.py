@@ -674,6 +674,82 @@ def test_the_mechanical_close_no_ops_for_a_non_adjudication_lane(tmp_path):
     assert ids is None and refusal is None
 
 
+def batch_repo(tmp_path, branch="wi-401", wids=("WI-401", "WI-402")):
+    """A trunk with a BATCH claimed onto one branch (§A4: one branch, one claim
+    commit moving every batched spec) — the shape every defect below is
+    specific to."""
+    skip_without_env_gates("git")
+    root = tmp_path / "repo"
+    root.mkdir()
+    _git(root.parent, "init", "-q", str(root))
+    pin_autocrlf(root)
+    _git(root, "config", "user.email", "t@example.com")
+    _git(root, "config", "user.name", "T")
+    _git(root, "config", "commit.gpgsign", "false")
+    _git(root, "symbolic-ref", "HEAD", "refs/heads/main")
+    (root / "seed.txt").write_text("seed\n", encoding="utf-8", newline="\n")
+    (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
+    for wid in wids:
+        spec = root / "docs" / "work" / "queued" / "{}-widget.md".format(wid)
+        spec.parent.mkdir(parents=True, exist_ok=True)
+        spec.write_text(spec_text(wid), encoding="utf-8", newline="\n")
+    _commit(root, "seed + batch", when=T_BASE)
+    assert integ.claim(root, list(wids), branch) == 0
+    return root
+
+
+def close_one_row_on_the_lane(root, branch="wi-401", wid="WI-401"):
+    """What a batch lane's own C6 close ritual does to ONE of its rows: the spec
+    moves to `complete/` and the build commit carries the row's `WI:` trailer.
+    The TRUNK's claimed set still lists it — that is the whole point."""
+    wt = lane(root, branch)
+    name = "{}-widget.md".format(wid)
+    src = "docs/work/active/{}/{}".format(branch, name)
+    _touched, refusal = hb.spec_move.move_spec(wt, src, "docs/work/complete/" + name)
+    assert refusal is None, refusal
+    _git(wt, "add", "-A")
+    _git(
+        wt,
+        "commit",
+        "--no-verify",
+        "-m",
+        "close: {} -> complete/\n\nWI: {}".format(wid, wid),
+    )
+    return wt
+
+
+def test_the_mechanical_close_no_ops_when_a_batch_row_already_closed(tmp_path):
+    # THE MEASURED DEFECT (2026-09-03, lane `wi-589-…`, four rows on one
+    # branch). `_close_done_adjudication` calls this for every DONE worker whose
+    # branch is not finished, and the claimed set is read off the TRUNK — which
+    # still lists a row the lane has already moved to `complete/`. Reading that
+    # one as "cannot read the claimed spec" turned a NON-adjudication lane's
+    # ordinary stall candidate into a refusal the dispatcher treats as fatal
+    # (EXIT_PREFLIGHT), and the whole loop exited 2.
+    root = batch_repo(tmp_path)
+    close_one_row_on_the_lane(root, wid="WI-401")
+    # WI-401 is in complete/ on the branch, WI-402 still in active/; neither is
+    # an adjudication row.
+    assert integ.finished_branches(root) == []  # not finished: WI-402 is open
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    assert refusal is None, refusal
+    assert ids is None
+    # MUTATION NOTE: before the skip this returned
+    # (None, "cannot read the claimed spec WI-401-widget.md on wi-401").
+
+
+def test_an_adjudication_batch_still_closes_the_row_that_is_open(tmp_path):
+    # The other side: skipping an already-moved spec must not stop the close
+    # doing its job on the row that IS still claimed.
+    root = adjudication_repo(tmp_path)
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    assert refusal is None, refusal
+    assert ids == ["WI-401"]
+    # A second call has nothing left to close and says so as a NO-OP, never a
+    # refusal — the same sentence the docstring promises.
+    assert hb.close_adjudication(root, "wi-401") == (None, None)
+
+
 # --- the quarantine (the RULED red arm) ---------------------------------------
 
 
@@ -851,3 +927,43 @@ def test_the_git_dependency_is_declared_for_this_module():
     # declared gate (conftest.ENV_GATES) is what makes that skip COUNTED in the
     # terminal summary rather than invisible (WI-326).
     assert shutil.which("git"), "the module-level env gate should have skipped"
+
+
+def test_a_partial_close_skips_a_row_the_lane_already_closed(tmp_path):
+    # The batch shape again, on the OTHER close. The claimed set is the TRUNK's,
+    # so a batch that finished WI-401 and then hit its session ceiling still
+    # lists WI-401 as claimed — and moving it a second time both fails and would
+    # overwrite an outcome the lane itself declared. Only the row still open
+    # closes as partial.
+    root = batch_repo(tmp_path)
+    close_one_row_on_the_lane(root, wid="WI-401")
+    ids, refusal = hb.close_partial(
+        root,
+        "wi-401",
+        "worker exit 7",
+        {"suggested_tier": "strong", "keep_commits": ["abc1234"]},
+    )
+    assert refusal is None, refusal
+    assert ids == ["WI-402"]
+    assert (root / "docs" / "work" / "complete" / "WI-401-widget.md").is_file() is False
+    merge_branch(root)
+    # WI-401 keeps its OWN outcome; WI-402 got the partial one, with its report.
+    assert (root / "docs" / "work" / "complete" / "WI-401-widget.md").is_file()
+    assert (root / "docs" / "work" / "partial" / "WI-402-widget.md").is_file()
+    assert report_path(root, "WI-402", "wi-401").is_file()
+    # ...and no report was written for the row this close did not touch.
+    assert not report_path(root, "WI-401", "wi-401").is_file()
+
+
+def test_a_partial_close_with_every_row_already_terminal_is_a_no_op(tmp_path):
+    root = batch_repo(tmp_path, wids=("WI-401",))
+    close_one_row_on_the_lane(root, wid="WI-401")
+    ids, refusal = hb.close_partial(
+        root,
+        "wi-401",
+        "worker exit 7",
+        {"suggested_tier": "strong", "keep_commits": ["abc1234"]},
+    )
+    assert refusal is None, refusal
+    assert ids == []
+    assert not report_path(root, "WI-401", "wi-401").is_file()

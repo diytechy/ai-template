@@ -6,7 +6,7 @@ project-trajectory/scripts/acceptance_record.py	staged_spine_amendments	20	19
 project-trajectory/scripts/adjudicate_brief.py	amendment_values	20	59
 project-trajectory/scripts/agent_common.py	approval_through	31	49
 project-trajectory/scripts/agent_common.py	latest_trailer_evidence	17	14
-project-trajectory/scripts/agent_common.py	preflight	34	104
+project-trajectory/scripts/agent_common.py	preflight	33	104
 project-trajectory/scripts/agent_common.py	regenerate_index	16	43
 project-trajectory/scripts/agent_loop.py	RoutingState.route_intent	21	24
 project-trajectory/scripts/agent_loop.py	build_worker_assignment	28	65
@@ -113,7 +113,6 @@ project-trajectory/scripts/gen_skills_index.py	collect_skills	24	27
 project-trajectory/scripts/gen_skills_index.py	main	16	84
 project-trajectory/scripts/gen_trajectory.py	build_html	27	110
 project-trajectory/scripts/gen_trajectory.py	main	16	71
-project-trajectory/scripts/handback.py	close_adjudication	16	59	ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/hats.py	_audit_lines	20	89
 project-trajectory/scripts/hats.py	parse_condition	19	47
 project-trajectory/scripts/intake.py	_close_drafts	19	73

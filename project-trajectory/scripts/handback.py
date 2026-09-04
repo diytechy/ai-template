@@ -140,6 +140,7 @@ report_path = station.report_path
 render_report = station.render_report
 read_report = station.read_report
 report_refusal = station.report_refusal
+mechanical_close_subject = station.mechanical_close_subject
 
 # R3's outcome vocabulary, stated ONCE and imported by intake for the
 # disposition row's title. `re-queue` retired with LLR-161: a terminal row is
@@ -318,6 +319,83 @@ def _restore(wt, written, refusal):
     return refusal
 
 
+def open_claimed_specs(wt, branch, specs):
+    """Of the TRUNK's claimed `specs`, the ones still in `active/<branch>/` on
+    the LANE — the rows a close still has a claim over.
+
+    ONE HOME FOR THE BATCH FILTER, because both closes need it and neither may
+    answer it differently. The claimed set is read off the trunk, which lists
+    every row of a §A4 batch; a batch closes its rows one at a time, so by the
+    time the lane reaches a close the earlier rows are already in `complete/` on
+    the branch. Reading one of those as a claim made a four-row lane's DONE a
+    FATAL run exit (measured 2026-09-03, `wi-589-…`: "cannot read the claimed
+    spec", which the dispatcher turns into EXIT_PREFLIGHT and the whole loop
+    exits 2), and would have had the partial close move a row a second time,
+    overwriting an outcome the lane itself declared.
+    """
+    return [
+        (wi_id, name)
+        for wi_id, name in specs
+        if (wt / "{}/{}/{}".format(integrate.ACTIVE, branch, name)).is_file()
+    ]
+
+
+def _existing_report_refusal(wt, branch, specs):
+    """The immutability refusal if any of `specs` already carries a close
+    report, else None.
+
+    IMMUTABLE MEANS IMMUTABLE. The report IS the close event's identity, and an
+    identity that can be overwritten is a mutable proxy again — the exact shape
+    five dedup mechanisms died on. A second close of the same (wi, branch) is
+    not a thing this contract permits (`partial/` is terminal), so meeting one
+    means something upstream is wrong and the honest act is to refuse rather
+    than to rewrite the record of the first close.
+
+    ASKED BEFORE ANY REPORT IS WRITTEN, which is also why it is asked here
+    rather than per-iteration: nothing is on disk yet, so the refusal needs no
+    restore, and a row this close would otherwise SKIP (already terminal on the
+    branch) is still caught — a second close of a row already in `partial/` must
+    refuse, never pass silently as a no-op.
+    """
+    for wi_id, _name in specs:
+        rep_rel = report_path(branch, wi_id)
+        if (wt / rep_rel).exists():
+            return (
+                "a close report already exists at {} - the report is the close "
+                "EVENT's immutable identity, so a second close of {} on {} is "
+                "refused rather than overwriting it".format(rep_rel, wi_id, branch)
+            )
+    return None
+
+
+def _commit_residue_as_is(wt, branch, ids, reason):
+    """Commit whatever the lane left uncommitted, AS IS — a refusal, or None on
+    a clean tree or a good commit.
+
+    The hook is skipped because "as-is" has to mean it: the branch's own §A2
+    refresh regenerates and BARS this tree before anything merges, so a hook
+    refusal here would only trade a merge that is checked for a branch that
+    hangs.
+    """
+    if not ac.working_tree_dirty(wt):
+        return None
+    ac.git(wt, "add", "-A")
+    code, out = ac.git(
+        wt,
+        "commit",
+        "--no-verify",
+        "-m",
+        "{}: the work so far, committed as-is (partial close)\n\n{}".format(
+            ", ".join(ids), reason
+        ),
+    )
+    if code != 0:
+        return "the as-is work commit failed on {}:\n{}".format(
+            branch, ac._failure_tail(out)
+        )
+    return None
+
+
 def close_partial(root, branch, reason, fields=None):
     """Close `branch` on the PARTIAL outcome. `(closed WI ids, None)`, or
     `(None, refusal)`.
@@ -341,22 +419,20 @@ def close_partial(root, branch, reason, fields=None):
     err = err or _no_recursion_refusal(root, branch, specs)
     if err:
         return None, "cannot close {}: {}".format(branch, err)
+    refusal = _existing_report_refusal(wt, branch, specs)
+    if refusal:
+        return None, refusal
+    specs = open_claimed_specs(wt, branch, specs)
+    if not specs:
+        # Every claimed row had already declared its own terminal outcome, so
+        # the branch IS finished and there is nothing to close. The dispatcher's
+        # "specs are already out of active/" arm is the ordinary way here; this
+        # is the same answer for a batch that got there one row at a time.
+        return [], None
     ids = [wi_id for wi_id, _name in specs]
-    if ac.working_tree_dirty(wt):
-        ac.git(wt, "add", "-A")
-        code, out = ac.git(
-            wt,
-            "commit",
-            "--no-verify",
-            "-m",
-            "{}: the work so far, committed as-is (partial close)\n\n{}".format(
-                ", ".join(ids), reason
-            ),
-        )
-        if code != 0:
-            return None, "the as-is work commit failed on {}:\n{}".format(
-                branch, ac._failure_tail(out)
-            )
+    refusal = _commit_residue_as_is(wt, branch, ids, reason)
+    if refusal:
+        return None, refusal
     span = _span(root, branch)
     # Every report THIS CALL has written, so a refusal on spec #3 restores #1
     # and #2 as well. A per-iteration undo only ever cleaned up the current
@@ -368,24 +444,11 @@ def close_partial(root, branch, reason, fields=None):
         rel = "{}/partial/{}".format(integrate.WORK, name)
         src_rel = "{}/{}/{}".format(integrate.ACTIVE, branch, name)
         # The report FIRST: it is the event's identity, and a move without one
-        # is the artifact-less return this contract exists to end.
+        # is the artifact-less return this contract exists to end. Its
+        # immutability rung ran over the whole claimed set above, before
+        # anything was written.
         rep_rel = report_path(branch, wi_id)
         dest = wt / rep_rel
-        # IMMUTABLE MEANS IMMUTABLE. The report IS the close event's identity,
-        # and an identity that can be overwritten is a mutable proxy again —
-        # the exact shape five dedup mechanisms died on. A second close of the
-        # same (wi, branch) is not a thing this contract permits (`partial/` is
-        # terminal), so meeting one means something upstream is wrong and the
-        # honest act is to refuse rather than to rewrite the record of the
-        # first close.
-        if dest.exists():
-            return None, _restore(
-                wt,
-                written,
-                "a close report already exists at {} - the report is the close "
-                "EVENT's immutable identity, so a second close of {} on {} is "
-                "refused rather than overwriting it".format(rep_rel, wi_id, branch),
-            )
         dest.parent.mkdir(parents=True, exist_ok=True)
         with dest.open("w", encoding="utf-8", newline="\n") as fh:
             fh.write(render_report(wi_id, branch, "partial", reason, span, fields))
@@ -461,6 +524,54 @@ def _adjudication_close_text(text, deliverable):
     return "+++\n" + fm + "+++\n" + body
 
 
+def _archive_one_adjudication_row(wt, branch, name):
+    """Move ONE claimed adjudication spec into `complete/` on the lane —
+    `(True, None)` moved, `(False, None)` when the row is not an adjudication
+    row at all, `(False, refusal)` otherwise. Nothing is committed here.
+
+    Split out of `close_adjudication` so that function stays a LOOP with a
+    commit on the end: everything a single row can be judged on — is it this
+    close's business, does its disposition parse, does it owe a successor —
+    is one question about one file, and it is asked here.
+    """
+    import intake  # a sibling reader; deferred so a non-adjudicating run pays nothing
+
+    src_rel = "{}/{}/{}".format(integrate.ACTIVE, branch, name)
+    try:
+        text = (wt / src_rel).read_text(encoding="utf-8")
+        meta = integrate._spec_frontmatter(wt / src_rel)
+    except (OSError, ValueError):
+        return False, "cannot read the claimed spec {} on {}".format(name, branch)
+    if (meta.get("safety_class") or "").strip().lower() != "adjudication":
+        # Not this close's case: a non-adjudication DONE lane that did not move
+        # its specs is the stall candidate the dispatcher already handles, not a
+        # row this mechanical close owns.
+        return False, None
+    # THE REFUSAL INVARIANT, at the close: a partial/cancelled close MUST queue
+    # at least one successor (OI-70/OI-73, no third exit). The signal is
+    # `intake.owes_successor` (the durable title prefix), NOT the `brief` cell —
+    # the `partial` arm carries `brief = "disposition"` but the `cancelled` arm
+    # is brief-LESS by design, so a `brief`-only guard let a cancelled close
+    # queue no successor and archive silently. A clean-close spot check owes
+    # none and is not caught.
+    parsed, drefusal = intake.parse_dispositions(text, src_rel)
+    if drefusal:
+        return False, "cannot close {}: {}".format(branch, drefusal)
+    if intake.owes_successor(meta) and not parsed:
+        return False, (
+            "{} judged a partial/cancelled close but drafted NO successor in "
+            "its ## Dispositions section — such a close must queue at least "
+            "one successor (OI-70/OI-73, no third exit). The run stops for a "
+            "human to draft the continuation".format(name)
+        )
+    new_text = _adjudication_close_text(text, _ADJUDICATION_CLOSE_DELIVERABLE)
+    dest_rel = "{}/complete/{}".format(integrate.WORK, name)
+    _touched, refusal = spec_move.move_spec(wt, src_rel, dest_rel, new_text=new_text)
+    if refusal:
+        return False, "cannot close {}: {}".format(name, refusal)
+    return True, None
+
+
 def close_adjudication(root, branch):
     """Mechanically CLOSE a DONE adjudication row (OI-70/OI-73, Done-when 1).
 
@@ -487,64 +598,35 @@ def close_adjudication(root, branch):
     already recorded (`agent_loop.worker_endstate` gates DONE on it), so the
     verdict's existence is the caller's precondition, not re-proven here.
     """
-    import intake
-
     specs = integrate._claimed_specs(root, branch)
     if not specs:
         return None, "trunk holds no claimed specs for {}".format(branch)
     wt, err = _lane(root, branch)
     if err:
         return None, "cannot close {}: {}".format(branch, err)
+    specs = open_claimed_specs(wt, branch, specs)
+    if not specs:
+        # Every claimed row has already left `active/` on the branch, so there
+        # is nothing for this close to do — the no-op the docstring promises,
+        # never a refusal.
+        return None, None
     closed = []
     for wi_id, name in specs:
-        src_rel = "{}/{}/{}".format(integrate.ACTIVE, branch, name)
-        try:
-            text = (wt / src_rel).read_text(encoding="utf-8")
-            meta = integrate._spec_frontmatter(wt / src_rel)
-        except (OSError, ValueError):
-            return None, "cannot read the claimed spec {} on {}".format(name, branch)
-        if (meta.get("safety_class") or "").strip().lower() != "adjudication":
-            # Not this close's case: a non-adjudication DONE lane that did not
-            # move its specs is the stall candidate the dispatcher already
-            # handles, not a row this mechanical close owns.
-            return None, None
-        # THE REFUSAL INVARIANT, at the close: a partial/cancelled close MUST
-        # queue at least one successor (OI-70/OI-73, no third exit). The signal
-        # is `intake.owes_successor` (the durable title prefix), NOT the `brief`
-        # cell — the `partial` arm carries `brief = "disposition"` but the
-        # `cancelled` arm is brief-LESS by design, so a `brief`-only guard let a
-        # cancelled close queue no successor and archive silently. A clean-close
-        # spot check owes none and is not caught.
-        parsed, drefusal = intake.parse_dispositions(text, src_rel)
-        if drefusal:
-            return None, "cannot close {}: {}".format(branch, drefusal)
-        if intake.owes_successor(meta) and not parsed:
-            return None, (
-                "{} judged a partial/cancelled close but drafted NO successor in "
-                "its ## Dispositions section — such a close must queue at least "
-                "one successor (OI-70/OI-73, no third exit). The run stops for a "
-                "human to draft the continuation".format(name)
-            )
-        new_text = _adjudication_close_text(text, _ADJUDICATION_CLOSE_DELIVERABLE)
-        dest_rel = "{}/complete/{}".format(integrate.WORK, name)
-        _touched, refusal = spec_move.move_spec(
-            wt, src_rel, dest_rel, new_text=new_text
-        )
-        if refusal:
-            return None, "cannot close {}: {}".format(name, refusal)
+        moved, refusal = _archive_one_adjudication_row(wt, branch, name)
+        if refusal or not moved:
+            return None, refusal
         closed.append(wi_id)
     code, out = ac.git(
         wt,
         "commit",
         "--no-verify",
         "-m",
-        "adjudicate: {} -> complete/ (mechanical close)\n\n"
+        station.mechanical_close_subject(closed)
+        + "\n\n"
         "The OI-70/OI-73 adjudication close: the verdict is recorded, so the "
         "machinery archives this row terminal rather than leaving it in active/ "
         "for the dispatcher to resume forever (the C6 loop). Its drafted "
-        "successors mint at this row's merge.\n\nWI: {}".format(
-            ", ".join(closed), ", ".join(closed)
-        ),
+        "successors mint at this row's merge.\n\nWI: {}".format(", ".join(closed)),
     )
     if code != 0:
         return None, "the adjudication-close commit failed on {}:\n{}".format(

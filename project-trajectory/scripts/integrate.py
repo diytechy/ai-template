@@ -892,6 +892,28 @@ def _branch_tree_paths(root, ref, prefix):
     return [ln.strip() for ln in out.splitlines() if ln.strip()]
 
 
+def claimed_ids_on_branch(root, branch):
+    """The WI ids whose spec is STILL in `active/<branch>/` on the BRANCH's own
+    committed tree — the rows that lane has not closed yet.
+
+    `finished_branches` below asks the same tree the same question and takes the
+    all-or-nothing answer; this one names WHICH rows, because a §A4 BATCH closes
+    its rows one at a time and the loop's walk has to know which of its
+    assignment is still open (`agent_loop.current_assignment_wi`). Both read the
+    BRANCH, never the trunk copy — the question is what the branch DID with the
+    row. `None` when git cannot say, which every caller reads as "nothing is
+    known to be open".
+    """
+    left = _branch_tree_paths(root, branch, ACTIVE + "/" + branch)
+    if left is None:
+        return None
+    return {
+        wid
+        for wid in (_spec_id(path.rsplit("/", 1)[-1]) for path in left)
+        if wid is not None
+    }
+
+
 def finished_branches(root):
     """Claimed branches whose tip moved every spec out of active/<branch>/.
 
