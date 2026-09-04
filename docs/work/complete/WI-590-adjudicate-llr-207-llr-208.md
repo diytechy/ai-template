@@ -36,19 +36,43 @@ YOURS: a work lane's merge is refused if it performs one.
 ## Dispositions
 
 ```toml
-title = "LLR-207/TC-205 return: governing_rev peels TWO disposable commit classes and both cells describe one - state the mechanical close in the row that is its only home, and cite the three tests that already prove it"
+title = "LLR-207/TC-205 return and LLR-208/TC-206 amendment: the verdict rows describe every mechanism that now holds them"
 workstream = "process"
 safety_class = "spine"
 buildtier = "strong"
 priority = 2
 specref = "docs/requirements/low-level-requirements.toml"
 bar = "DevStg-Tests"
+needs = ["WI-594"]
 ```
 
 VERDICT THIS CONTINUES:
 `docs/reviews/wi-590-adjudicate-llr-207-llr-208/004-ADJUDICATE-774ef35.md`,
 governing line `OUTCOME: RETURN rows=4`. `LLR-208` and `TC-206` were APPROVED by
-that act and are NOT in this scope. `LLR-207` and `TC-205` return together
+that act; they enter this scope as an AMENDMENT (round 011 MAJOR, below), not
+as a return. ORDERING: `WI-594` (minted at `09193fea` for the out-of-band trunk
+range) adjudicates the same six rows as a first approval; this successor
+`needs` it, so WI-594 rules first — LLR-208/TC-206 it finds already Approved,
+LLR-207/TC-205 it finds returned and Drafted with this row queued as their
+next author — and cannot produce a fourth return on unchanged text while this
+successor is being built.
+
+ROUND 011's MAJOR, the amendment half of this scope. `LLR-208.detail` says
+membership in the trunk regen set "is the only thing that makes the
+exclusive-writer clause above true"; since `7ea3cce7` that is false in the
+tree — `gen_verdict_rollup._off_trunk_refusal` refuses a direct write on any
+branch other than the trunk (exit 2), and `trunk_step` passes `--trunk-step`
+as the one allowed off-trunk caller — so the Approved cell now under-describes
+its own module, and the snapshot copied it whole. Amend `LLR-208.detail` to
+state BOTH mechanisms (the refusal is what enforces the clause; the regen
+membership is what keeps the artifact fresh), add `_off_trunk_refusal` to
+`LLR-208.code_symbol`, and state the refusal arm in `TC-206.method` with
+`tests/test_verdict_record.py::test_a_work_branch_cannot_write_the_rollup_but_the_trunk_step_can`
+cited in `TC-206.evidence`. Those are amendments to Approved cells: intake
+mints their amendment adjudication at this successor's merge (§A5.2), and
+the act stays the adjudicator's.
+
+`LLR-207` and `TC-205` return together
 because the requirement half and the test half of one gap are the same gap seen
 from two sides, and because `staged_drafted_rows` queues an approver only for
 rows a delta actually amends — a successor that edited `TC-205` alone would
@@ -174,4 +198,6 @@ any branch other than the trunk and the trunk step passes `--trunk-step`
 (`tests/test_verdict_record.py::test_a_work_branch_cannot_write_the_rollup_but_the_trunk_step_can`),
 landed on the trunk at `7ea3cce7` — it reaches this lane through the
 station's refresh, the one merge the verdict gate peels, so it is not
-hand-merged here.
+hand-merged here. The registry debt that fix leaves (LLR-208 and TC-206 no
+longer describing their module in full) is the amendment half of the FIRST
+draft above, ordered behind `WI-594`.
