@@ -1428,20 +1428,8 @@ def worker_endstate(
     cure it; a block that still stands is honored by the post-session check
     (default True) or the next iteration.
 
-    `rounds` is the round records this run actually COMPLETED (`st.rounds`), and
-    the banner states what that tally carries rather than inferring it from the
-    dial. It used to read "review round approved" whenever managed routing ran
-    at policy >= 1 — true of a build, and false of every adjudication, which
-    drew no round at all; three lanes on the 2026-08-31 run exited DONE claiming
-    an approval nobody had given (WI-559 DW2, the plan's finding A). A banner is
-    a claim about what happened, so it counts — and by the same rule it says
-    DRAWN THIS RUN plus the latest verdict, never "N approved": every completed
-    round is appended regardless of its merged verdict, so a lane that took a
-    CHANGES-REQUESTED round, reworked and then passed would have reported two
-    approvals for one (REVIEW-A round 007, finding 4). The tally is in-process,
-    so "this run" is also the honest scope: a resumed run that redraws nothing
-    reports no round, and the branch's committed round files — not this banner —
-    are what the merge slot reads."""
+    `rounds` is the round records this run actually COMPLETED (`st.rounds`);
+    what that tally is allowed to CLAIM is `_done_endstate`'s business."""
     built, blocked_map = train_evidence(root, worker["base"])
     hit = [w for w in worker["assigned"] if w in blocked_map]
     if hit:
@@ -1457,8 +1445,7 @@ def worker_endstate(
                 for w in hit
             ),
         )
-    remaining = [w for w in worker["assigned"] if w not in built]
-    if remaining:
+    if any(w not in built for w in worker["assigned"]):
         return None
     if review_open or worker["rework"]:
         return None  # built, but the train's review cycle is still open
@@ -1470,19 +1457,35 @@ def worker_endstate(
         return None
     if substantive_working_tree_dirty(root):
         return None  # committed evidence only — a dirty tree (owner-only exempt) is not done
+    return _done_endstate(worker, managed, rp_int, rounds)
+
+
+def _done_endstate(worker, managed, rp_int, rounds):
+    """The EXIT_DONE triple for an assignment whose every WI carries its
+    trailer — the banner, and what its review tally is allowed to claim.
+
+    The banner states what `rounds` carries rather than inferring it from the
+    dial. It used to read "review round approved" whenever managed routing ran
+    at policy >= 1 — true of a build, and false of every adjudication, which
+    drew no round at all; three lanes on the 2026-08-31 run exited DONE claiming
+    an approval nobody had given (WI-559 DW2, the plan's finding A). A banner is
+    a claim about what happened, so it counts — and by the same rule it says
+    DRAWN THIS RUN plus the latest verdict, never "N approved": every completed
+    round is appended regardless of its merged verdict, so a lane that took a
+    CHANGES-REQUESTED round, reworked and then passed would have reported two
+    approvals for one (REVIEW-A round 007, finding 4). The tally is in-process,
+    so "this run" is also the honest scope: a resumed run that redraws nothing
+    reports no round, and the branch's committed round files — not this banner —
+    are what the merge slot reads."""
     reviewed = managed and rp_int >= 1
     note = "; no review round was drawn this run" if reviewed else ""
     if reviewed and rounds:
         note = "; {} review round(s) drawn this run, latest verdict {}".format(
             len(rounds), rounds[-1].get("verdict") or "unrecorded"
         )
-    return (
-        EXIT_DONE,
-        "DONE",
-        "every assigned WI ({}) carries its trailer commit on branch {}{}".format(
-            ";".join(worker["assigned"]), worker["train"], note
-        ),
-    )
+    detail = "every assigned WI ({}) carries its trailer commit on branch {}{}"
+    ids = ";".join(worker["assigned"])
+    return (EXIT_DONE, "DONE", detail.format(ids, worker["train"], note))
 
 
 def worker_exit_banner(worker, end):
