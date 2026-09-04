@@ -202,5 +202,7 @@ any branch other than the trunk and the trunk step passes `--trunk-step`
 landed on the trunk at `7ea3cce7` — it reaches this lane through the
 station's refresh, the one merge the verdict gate peels, so it is not
 hand-merged here. The registry debt that fix leaves (LLR-208 and TC-206 no
-longer describing their module in full) is the amendment half of the FIRST
-draft above, ordered behind `WI-594`.
+longer describing their module in full) is the amendment half of the spine
+successor this same verdict drafts — "LLR-207/TC-205 return and LLR-208/TC-206
+amendment" — which needs no ordering against any other row: WI-594 was
+narrowed on the trunk to LLR-209 and TC-207.
