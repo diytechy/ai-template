@@ -77,3 +77,5 @@ staled by the refresh (the ::names beside them are correct), and draft 2's
 only).
 
 VERDICT: APPROVE findings=2
+
+(Re-noted 2026-09-04 after the hand refresh onto trunk bfe2bda7 — the generated dashboard resolved to the trunk side and regenerated; the rounds and the governing line above are unchanged.)
