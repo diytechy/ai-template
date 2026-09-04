@@ -4522,6 +4522,70 @@ design-check → build → review. If you relied on the extra build session as a
 same-family second look at the design-check's rework, the reviewer round is
 that look. Nothing to edit; re-sync the script.
 
+### Four batch-lane defects: the walk, the two closes, and the mechanical-close peel [since f4ca1bd5]
+
+**What changed.** Four independent fixes, all specific to a lane carrying a
+MULTI-ROW `--wi 'A;B;C;D'` assignment (the §A4 spine batch). A one-row lane hits
+none of them and observes none of the fixes. Measured 2026-09-03 on one
+four-row lane plus the WI-586 adjudication merge.
+
+1. **The walk asks the tree as well as the trailer.**
+   `agent_loop.current_assignment_wi` counted a row done with once its `WI:`
+   trailer was committed, while `integrate.finished_branches` asks whether the
+   spec has left `active/<branch>/`. A row whose session committed the trailer
+   and ran out before its close ritual satisfied one reader and not the other:
+   the walk stepped past it for the rest of the lane and the branch never
+   counted as finished. A row is now BUILT only when both halves hold, and the
+   tree read is `integrate.claimed_ids_on_branch`, beside `finished_branches`.
+2. **Neither close treats a row the lane already closed as its own.** Both
+   `handback.close_partial` and `handback.close_adjudication` read the claimed
+   set off the TRUNK, which lists every row of a batch. `close_adjudication`
+   read an already-moved spec as "cannot read the claimed spec" — which
+   `dispatch._close_done_adjudication` turns into `EXIT_PREFLIGHT`, ending the
+   whole run over a lane that owed nothing — and `close_partial` would have
+   moved such a row a second time, overwriting the outcome the lane itself
+   declared. `handback.open_claimed_specs` is the one filter both now apply; an
+   empty result is the documented NO-OP, never a refusal. The report-immutability
+   rung moved ABOVE that filter, so a second close of a row already in
+   `partial/` still refuses.
+3. **A row this branch closed is not a stale assignment.** The worker preflight
+   refused any assigned WI whose registry `Status` is terminal. On a
+   partly-finished batch that is every row the lane closed itself, so a resumed
+   worker refused its own work. `agent_common.stale_terminal_assignment` now
+   asks whether the row is terminal for a reason OTHER than this branch's own
+   `WI:` trailer over `merge-base(trunk, HEAD)..HEAD`. `trunk_name` and
+   `default_base` moved from `agent_loop` to `agent_common` for it (re-exported
+   there) rather than growing a second merge-base rule.
+4. **`EXIT_PREFLIGHT` is no longer a lane outcome.** It left
+   `dispatch._WORKER_OUTCOMES`. A preflight refusal is the worker saying it
+   could not START, so it is evidence about the launch and never about the work;
+   handing back on it committed the lane's uncommitted residue as-is and moved
+   rows to the terminal `partial/` over a failure the lane could not have caused.
+   Such a lane now parks exactly like a crashed one — the claim stays in
+   `active/`, the next cycle resumes it, and the stall guard bounds it.
+5. **The mechanical adjudication close is a DISPOSABLE commit.** An adjudication
+   lane cannot obey "close before the final verdict round": the round is drawn
+   while the row is still in `active/`, and `close_adjudication` moves the spec
+   afterwards, at the worker's DONE. Since `docs/work/` is IN the non-record
+   tree identity, that machine-authored move staled the APPROVE that had just
+   judged the row and the merge slot refused. `kitlib.verdict.governing_rev` now
+   peels it, on exactly the refresh commit's argument and with the same
+   verify-against-git discipline: the subject must be the one
+   `kitlib.station.mechanical_close_subject` composes, the commit must have
+   exactly one parent, and every path it changed must be under `docs/work/`.
+   Each check fails toward MORE review.
+
+**Migration: behavioural, no file changes — but read (4) before you re-sync.**
+Nothing in your tree needs editing; take the scripts. Two behaviours change for
+an unattended run. A worker exiting `EXIT_PREFLIGHT` no longer produces a
+`partial/` close and its `docs/handbacks/` report: if your wrappers or a
+dashboard counted those to notice a broken launch, the signal is now the
+dispatcher's `REFUSED ITS PREFLIGHT` line on stderr and, if it persists, the
+stall guard's exit 4. And an adjudication lane that used to stop at the merge
+gate for a hand-compiled legacy rollup after its mechanical close now merges on
+the round it actually drew — if you hold such rollups, they stay valid through
+the policy-1 migration window and nothing new needs writing.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
