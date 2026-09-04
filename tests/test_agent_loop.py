@@ -13,7 +13,6 @@ assignment seam to tests/test_agent_loop_worker.py (its own leg's module).
 """
 
 import datetime
-import inspect
 import os
 import re
 import subprocess

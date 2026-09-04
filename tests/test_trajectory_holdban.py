@@ -118,7 +118,7 @@ def test_off_git_degrades_silently(tmp_path):
 
 
 def test_matching_ref_is_silent(tmp_path):
-    run_git = _init_repo(tmp_path)
+    _init_repo(tmp_path)
     r = run_traj(tmp_path)
     assert "hold-by-rename" not in (r.stdout + r.stderr)
     # And clean at the gate too — the fixture is otherwise --strict-clean.
