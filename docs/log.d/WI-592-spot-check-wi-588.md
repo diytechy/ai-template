@@ -72,6 +72,20 @@ spec's `## Dispositions`.
 
 ### Harness
 
-Full unfiltered suite driven at the close tip; result recorded with the close
-commit. No source file was changed by this WI — the only tree delta is this
-fragment and the spec's own close edits.
+Full unfiltered suite at the close tip: **`3385 passed, 24 skipped in 668.72s`**
+— fully green, no reds to adjudicate. Smoke `1528 passed, 8 skipped`, budget
+`46.1s vs 60s -> within`.
+
+(A first smoke reading of `66.37s` was taken while the full suite was still
+running on the same box and is a contention artifact, not a breach — the `46.1s`
+enforced reading above is the quiet-box one. Recorded so the number is not
+re-derived by the next reader.)
+
+The lane needed a `.venv`: this worktree had none, so `/usr/local/bin/python3`
+could import neither `pytest` nor `ruff` and the first WIP commit's `format`
+step SKIPPED under the "A DECLARED CHECK DID NOT RUN" banner. Rebuilt from
+`requirements-dev.txt` (a real venv, never a symlink to another worktree's) and
+every subsequent run used it.
+
+No source file was changed by this WI — the mutation was reverted, and the only
+tree delta is this fragment plus the spec's own close edits.
