@@ -59,7 +59,7 @@ launcher slot landed in template + live launchers in the same commit
 PLUS the two entries the previous run owed (the check_docs HTML-comment fix,
 opencode `--dir .`).
 
-Verification: full suite 3175 passed, 16 skipped in 861.84s (fig: cmd="python -m pytest -q -n auto" on the lane at 777bbbfe, loaded box); guard suites 107 + 121 passed; scaffold drive: bootstrap from this branch's kit ->
+Verification: full suite 3175 passed, 16 skipped in 861.84s (fig: cmd="python -m pytest -q -n auto" rev=777bbbfe on the lane, loaded box); guard suites 107 + 121 passed; scaffold drive: bootstrap from this branch's kit ->
 one managed `--wi` session end to end (build + review), the brief rendering
 the scaffold-side slot values. Module-size ratchet re-stamped with reasons
 (agent_loop 3622 -> 3924, agent_common 2660 -> 2678, integrate 2626 -> 2646).

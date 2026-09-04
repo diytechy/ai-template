@@ -125,7 +125,7 @@ record, not a signature the owner owes.
 6. **Recorded so the effect is measurable:** the fragment states the flip
    census before this row (1 worker-lane flip, 4 born-Approved lanes, from
    `git log -S'"Approved"'` on the registries at `fd86e47f`) as the baseline,
-   carries `fig:` provenance on it and a file-level `Deferred open items:`
+   carries `fig:` provenance on it and a file-level `Deferred open items:`  <!-- fig-ok: prose about the convention -->
    line.
 
 ## 4. Evidence trail

@@ -212,7 +212,7 @@ says the mirror invariant "lives in `check_trajectory` rather than in
 writes", and its detail says it "joins the failure set at `check_trajectory`'s
 main aggregation". Both stay literally true through the re-export and the
 aggregation, and rewriting an `Approved` cell to tidy a diff is not a session's
-act. `IF-091` (owner `LLR-158`, consumer `scripts/intake`) follows its owner and
+act. `IF-091` (owner `LLR-158`, consumer `scripts/intake`) follows its owner and <!-- path-ok: the interface registry MODULE LABEL quoted from IF-091, not a file path -->
 now declares `acceptance_record -> intake`, which is the live edge —
 verified through `check_trajectory --strict`, which reported the containment
 error before the re-point and the seam error before `intake` was moved, and is

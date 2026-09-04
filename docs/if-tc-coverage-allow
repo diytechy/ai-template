@@ -216,3 +216,4 @@ IF-172 — minted for a kind no row stated (the frontier and simulation listings
 IF-173 — minted for a kind no row stated (integrate's in-process call surface, the reverse of IF-055); covered when a TC cites the dispatcher's or the handback's use of it
 # --- INHERITED, closed by a reasoned entry at the same sitting: -------------
 IF-144 — the reporting protocol stated once (check.py's exit-code row); no single TC cites it because the property is measured across every checker's own tests, and a TC for the protocol census has not been minted; closes when one is
+IF-176 — minted for a cross-component import no row stated (the scheduler's lazy read of trace's open-item states); no TC drives the seam function itself today, the readiness-gate tests exercising the OI edge on an injected states map rather than through the owner; closes when a TC cites load_oi_status resolving a real open-items registry, including the absent-registry answer

@@ -104,11 +104,11 @@ adopter can execute the whole program from.
    `privacy_check` write re-staled `docs/stage` and took the pre-commit floor
    down. NOT changed, because ruled plan §2 names the file in the input set —
    the owner should re-decide it with the corrected cost stated.
-4. **PB-002 needs a real re-measurement.** Its metric and `fig:` provenance name
+4. **PB-002 needs a real re-measurement.** Its metric and `fig:` provenance name  <!-- fig-ok: prose about the convention -->
    `derive_gate.py --check`, pinned to `rev=94489f7a`. The slice-5 sweep had
    rewritten the command and left the revision, falsifying the provenance and
    naming a command that can no longer run; that hunk was REVERTED at the close
-   rather than re-pointed, because a `fig:` line is a claim about how a figure
+   rather than re-pointed, because a `fig:` line is a claim about how a figure  <!-- fig-ok: prose about the convention -->
    was produced. A fresh measurement against `derive_stage.py --check` with a new
    revision stamp is a small row of its own.
 5. **Final verification + the owner handoff**, and the smoke wall-clock question,
@@ -118,7 +118,7 @@ adopter can execute the whole program from.
 committing.** The third reconciled ~121 files of residue against this plan
 before doing new work: the build was kept whole and verified piece by piece,
 three hunks were REVERTED as out of scope (a ruled OI-51 owner record, PB-002's
-`fig:` provenance, and the superseded WI-473 spec — all three cases of a
+`fig:` provenance, and the superseded WI-473 spec — all three cases of a  <!-- fig-ok: prose about the convention -->
 mechanical rename rewriting a record of the PAST), and six defects were
 corrected that only running things could find, including a `KeyError` crash in
 `check_vocab` itself and three failures in `tests/test_pre_commit_hook.py` that

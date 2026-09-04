@@ -35,8 +35,6 @@ confused with "looked at nothing".
 
 from __future__ import annotations
 
-import pytest
-
 from conftest import ROOT, load_script, make_minimal_project, run_py
 
 trace = load_script("trace")

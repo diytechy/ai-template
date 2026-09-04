@@ -79,7 +79,7 @@ than the registry it names.
    nothing else, so the off-spine census survives to its own review. Its
    spec text is updated by this row (a queued spec's `## Context`/scope is
    triage, not a spine act) and the change is stated in the fragment.
-6. Fragment with a file-level `Deferred open items:` line and `fig:`
+6. Fragment with a file-level `Deferred open items:` line and `fig:`  <!-- fig-ok: prose about the convention -->
    provenance on the 9-of-21 history figure (`git log --format=… --
    docs/archive/last_approved` at `6000ec9c`).
 

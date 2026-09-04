@@ -132,7 +132,10 @@ def _is_public(name):
 def find_stubs(tree):
     """Public module-level functions and public methods (one class level deep)
     with a trivial body. Returns dicts {name, lineno, kind}; `name` is the bare
-    function name or `Class.method`."""
+    function name or `Class.method`.
+
+    Implements: SR-006, LLR-016
+    """
     found = []
 
     def consider(func, prefix):

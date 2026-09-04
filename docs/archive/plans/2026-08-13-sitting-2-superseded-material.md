@@ -123,10 +123,7 @@ class, which §1b derives.
   unbounded part makes the whole crossing `variable`. **A property that is 94 %
   one value over the set it is applied to is not typing that set.**
 
-<!-- fig: cmd="python3 - … tomllib.load(interfaces.toml)['interface']; Counter over
-r['signal'], split on outward = counterpart NOT startswith
-('scripts/','docs/','project-trajectory/scripts','coverage'); signal_note = truthy
-count", rev=768b6d3a -->
+<!-- fig: cmd="python3 - … tomllib.load(interfaces.toml)['interface']; Counter over r['signal'], split on outward = counterpart NOT startswith ('scripts/','docs/','project-trajectory/scripts','coverage'); signal_note = truthy count" rev=768b6d3a -->
 
 - **The correction that rode the ruling:** the rung's enforced predicate,
   `derive_gate.boundary_incomplete`, reads **`Stability` only** and never looks at

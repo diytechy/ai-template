@@ -381,7 +381,7 @@ def classify(wi, *, structural=None):
     A quarantined WI answers `(CONCURRENCY_UNCLASSIFIED, RANK_UNCLASSIFIED)`: it
     fails closed for itself and never blocks disjoint classified work.
 
-    Implements: SR-148, LLR-059, LLR-131
+    Implements: SR-148, LLR-059, LLR-089, LLR-131
     """
     declared = (wi.get("safetyclass") or "").strip().lower()
     dual = (wi.get("planmode") or "").strip().lower() == "dual"

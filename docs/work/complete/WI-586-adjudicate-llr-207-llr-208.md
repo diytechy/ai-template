@@ -137,7 +137,7 @@ IN SCOPE — three cells, two regressions, one re-point.
    it rather than being deferred. The note reads "kitlib/station.py (LLR-182) is
    the one package module NOT owned here: it stays CMP-008". That was true while
    `LLR-182` was the only kitlib module at CMP-008; `LLR-207` places
-   `kitlib/verdict.py` at CMP-008 too (both confirmed by reading the parsed
+   `project-trajectory/scripts/kitlib/verdict.py` at CMP-008 too (both confirmed by reading the parsed
    registry), so "the one package module" is now false and the shared-kernel
    boundary the note draws no longer describes the tree. Re-point the sentence
    to name both modules. Prior rounds filed this as stale-before-this-act; that
@@ -149,7 +149,7 @@ logged-session join, the declared phase span and the cross-check-not-accept
 reading of the trailer are correct as built. Findings 1 and 2 are wording that
 contradicts the module, not a mechanism to reopen; 3 and 4 add detectors for
 guards that already exist and must not change behaviour; 5-7 correct cells. No
-change to `kitlib/verdict.py`'s behaviour is asked for by this row.
+change to `project-trajectory/scripts/kitlib/verdict.py`'s behaviour is asked for by this row.
 
 NOT ON THIS LANE — the approval. This lane corrects the text, writes the two
 regressions and STOPS: `LLR-207` and `TC-205` stay `Drafted`, nothing under
@@ -235,7 +235,7 @@ are queued rather than narrated because a finding recorded only in a file under
 ordinal, phase, sha, verdict word and finding COUNT, never its content.
 
 1. `agent_loop.py:317` declares `REVIEW_PHASES = ("REVIEW-A", "REVIEW-B")`, a
-   byte-identical duplicate of `kitlib/verdict.py:157`, pinned by nothing; and
+   byte-identical duplicate of `project-trajectory/scripts/kitlib/verdict.py:157`, pinned by nothing; and
    `_clamped_review_rounds` (`:4160-4170`) clamps with a magic `min(2, rp_int)`
    whose `2` is that tuple's length restated as a literal. `IF-175`'s own notes
    argue the shared-definition case in as many words — "there is exactly one

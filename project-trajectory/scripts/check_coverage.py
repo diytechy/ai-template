@@ -169,7 +169,10 @@ def module_percent(percents, module):
 
 def evaluate(floors, percents):
     """`[(module, floor, measured_or_None, status)]` for each declared floor,
-    status in OK / FAIL (below floor) / MISSING (no report match)."""
+    status in OK / FAIL (below floor) / MISSING (no report match).
+
+    Implements: SR-006, LLR-098
+    """
     results = []
     for module, floor, _lineno in floors:
         measured = module_percent(percents, module)

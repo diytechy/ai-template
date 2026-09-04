@@ -239,7 +239,10 @@ def judge_marker(segment):
 def findings_for(doc, root):
     """`(findings, declared)` for one surface: the flagged marker lines and the
     count of declared figures seen (flagged or not), so the summary can always
-    report how many figures are under the convention at all."""
+    report how many figures are under the convention at all.
+
+    Implements: SR-158, LLR-146
+    """
     out, declared = [], 0
     rel = doc.relative_to(root).as_posix()
     for n, line in authored_lines(doc):

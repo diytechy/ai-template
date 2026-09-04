@@ -73,7 +73,10 @@ substitution is visible in the telemetry rather than only in the launch flags.
 def render():
     """The catalogue's full text. Pure — takes no arguments and touches no
     state beyond reading the shipped templates, so `--check` and the write path
-    cannot disagree about what "current" means."""
+    cannot disagree about what "current" means.
+
+    Implements: SR-146, LLR-164
+    """
     rows = [
         "| `{key}` | [{file}]({file}) | `{digest}` | {slots} |".format(
             key=key,

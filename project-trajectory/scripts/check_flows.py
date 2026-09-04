@@ -145,6 +145,7 @@ def mermaid_blocks(section):
     return re.findall(r"```mermaid\s*\n(.*?)```", section, flags=re.DOTALL)
 
 
+# Implements: SR-158, LLR-013
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(description=__doc__)

@@ -48,7 +48,7 @@ minted at this row's merge performs the act.
 
 WI-552 arm 5 added `import trace as _trace` inside `schedule.load_oi_status`
 (`project-trajectory/scripts/schedule.py:445`), creating a cross-component
-import `scripts/schedule` (CMP-008) -> `scripts/trace` (CMP-006) with no
+import `scripts/schedule` (CMP-008) -> `scripts/trace` (CMP-006) with no <!-- path-ok: CMP module labels quoted from the component registry, not file paths -->
 declared IF-### row. `check_trajectory.py --strict` errors on it (exit 1); the
 same command at `b6e155d3^1` — trunk immediately before the WI-552 merge — is
 ERROR-free, so the red is attributable to that work and not pre-existing.

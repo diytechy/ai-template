@@ -23,7 +23,7 @@ verified by BOOTSTRAPPING A REAL SCAFFOLD, the standing lesson from the
 consolidated name is re-exported from the module that used to define it.
 
 **What shipped, slice by slice** (each has a log fragment carrying its full
-account and its own `fig:` measurement):
+account and its own `fig:` measurement):  <!-- fig-ok: prose about the convention -->
 
 1. **2026-08-20 — the package lands.** `kitlib/{config,git,registry}.py`, four
    `MAPPING` rows, the manifest tested in a real scaffold and driven red on a
@@ -145,7 +145,7 @@ copies), the declared-line reader (5 copies), `_git_out` (3 copies). The two
 `test_rule_sync` equality pins holding the line-reader copies equal are deleted
 with the reasoning recorded in their place.
 
-**Measured** (one command, both revisions; `fig:` marker in
+**Measured** (one command, both revisions; `fig:` marker in  <!-- fig-ok: prose about the convention -->
 `docs/log.d/2026-08-20-program-grind.md`): duplicated function-body groups
 24 -> 17, redundant copies 67 -> 48, redundant lines 757 -> 477.
 
@@ -168,7 +168,7 @@ Manifest completeness re-verified by bootstrapping a REAL scaffold and importing
 all 32 shipped scripts there (`gen_skills_index.py` is kit-authoring, not in
 `MAPPING`; verified in-repo).
 
-**Measured** (the slice-1 command, both revisions; `fig:` marker in
+**Measured** (the slice-1 command, both revisions; `fig:` marker in  <!-- fig-ok: prose about the convention -->
 `docs/log.d/2026-08-22-wi448-utf8-console.md`): duplicated function-body groups
 17 -> 15, redundant copies 47 -> 15, redundant lines 479 -> 194. Every one of
 the 15 residual groups is named in items 3 and 4 below — there is nothing left
@@ -211,7 +211,7 @@ one member that could NOT move — its body delegates to `spine_carrier`, which
 this package may not import — so its duplicate is retired the other way: both
 modules bind the sibling function directly, and the two wrappers disappear.
 
-**Measured** (the slice-1 command, both revisions; `fig:` marker in
+**Measured** (the slice-1 command, both revisions; `fig:` marker in  <!-- fig-ok: prose about the convention -->
 `docs/log.d/2026-08-23-wi448-spine-policy-pair.md`): duplicated function-body
 groups 15 -> 6, redundant copies 15 -> 6, redundant lines 202 -> 76. The
 `[dupes-census]` baseline is re-stamped down to match, and `trace.py`'s
@@ -257,7 +257,7 @@ others spelled it `_MODULE_EXTS`, and the census hashes the body AST including
 the loaded NAME, so three homes scored as two. Not fixed — widening the hash to
 ignore loaded names would group functions that genuinely read different tables.
 
-**Measured** (`check_dupes_census.py`, both revisions; `fig:` marker in
+**Measured** (`check_dupes_census.py`, both revisions; `fig:` marker in  <!-- fig-ok: prose about the convention -->
 `docs/log.d/2026-08-23-wi448-residual-groups.md`): duplicated function-body
 groups 6 -> 0, redundant copies 6 -> 0, redundant lines 76 -> 0. The
 `[dupes-census]` baseline is re-stamped down to `0/0/0` — empty for the first

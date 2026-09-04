@@ -563,8 +563,7 @@ ratchet uses (function-body imports included):
 | `integrate -> intake` | deferred (the post-merge mint) |
 | `intake -> ` *(nothing in the band)* | — |
 
-fig: `import_graph()` from `tests/test_import_layers.py`, restricted to
-`LIFECYCLE`, at `14759fc8`.
+fig: cmd="import_graph() from tests/test_import_layers.py, restricted to LIFECYCLE" rev=14759fc8
 
 That is a strict total order — `dispatch` 0, `handback`/`lane` 1, `integrate` 2,
 `intake` 3 — so **`integrate -> intake` points DOWN, and program shape item 4 is
@@ -627,9 +626,7 @@ the duplication this kit forbids.
 deferral.** Re-measured at `14759fc8`: **649 lines** (was 628 at slice 4),
 **complexity 8**, **350 of the 649 lines are comment** and 299 are code.
 
-fig: `wc -l` + `python -m ruff check --select C901 --config
-"lint.mccabe.max-complexity=1"` over `project-trajectory/scripts/check.py`, plus
-an `ast` span/comment count of the `steps` node, at `14759fc8`.
+fig: cmd="wc -l + python -m ruff check --select C901 --config \"lint.mccabe.max-complexity=1\" over project-trajectory/scripts/check.py, plus an ast span/comment count of the steps node" rev=14759fc8
 
 Four grounds, in order of weight:
 
@@ -665,7 +662,7 @@ named are unsplit and re-measured for the record: `test_integrate.py` **3,520**
 (review: 3,495), `test_trace.py` **2,099** (1,826), `test_trajectory_arch.py`
 **1,927** (1,412), `test_agent_loop.py` **1,640** (1,567).
 
-fig: `wc -l` at `14759fc8`.
+fig: cmd="wc -l" rev=14759fc8
 
 Item 4's own rule — a split rides along with a subsystem decomposition, a
 standalone split slice is explicitly out of scope — held for all seven slices:

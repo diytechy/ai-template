@@ -160,6 +160,7 @@ def content_digest(data):
     return hashlib.sha256(canonical).digest(), True
 
 
+# Implements: SR-022, LLR-022
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(description=__doc__)

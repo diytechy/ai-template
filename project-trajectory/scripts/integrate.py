@@ -1353,9 +1353,8 @@ def _verdict_gate(root, branch, outcomes):
     merged = [wi for wi in sorted(outcomes) if outcomes[wi] == Outcome.MERGED]
     if not merged:
         return None
-    owed, why_not = _verdict_owed(
-        root, branch, _claimed_spec_frontmatters(root, branch)
-    )
+    specs = _claimed_spec_frontmatters(root, branch)
+    owed, why_not = _verdict_owed(root, branch, specs)
     if not owed:
         print("integrate: no review verdict owed ({})".format(why_not))
         return None
@@ -1368,33 +1367,43 @@ def _verdict_gate(root, branch, outcomes):
     # `agent_loop.review_owed_by_evidence` makes — one definition includes the
     # rev it is measured at, or the two readers disagree across a refresh.
     want = kverdict.governing_identity(root, branch)
-    code, base = ac.git(root, "merge-base", _head(root) or "HEAD", branch)
-    if want is None or code != 0 or not base.strip():
+    code, out = ac.git(root, "merge-base", _head(root) or "HEAD", branch)
+    base = out.strip()
+    if want is None or code != 0 or not base:
         return (
             "cannot resolve {}'s reviewed tree against the trunk (git could not "
             "answer) - fail closed".format(branch)
         )
-    entries = (
-        kverdict.branch_entries(
-            root, branch, base.strip(), want, score_reviews.parse_verdict
-        )
-        or []
-    )
-    # THE WINDOW IS POLICY-1 ONLY, and the narrowing is a rule rather than an
-    # oversight: a legacy rollup is ONE hand-authored document, so honouring it
-    # at `review-policy = 2` would clear both declared phases on a single
-    # author's word - the "gate cleared on a SINGLE reviewer" class closed at
-    # round 030, re-entered through the deprecated path. An adopter at policy 2
-    # has no window; they draw real rounds. Said here, in `_legacy_rollup_
-    # refusal`, and in the RESYNC_PACK entry that promises the window, so the
-    # shipped narrowing and the promise cannot disagree (REVIEW-A round 033).
+    parse = score_reviews.parse_verdict
+    entries = kverdict.branch_entries(root, branch, base, want, parse) or []
     if not entries and required == 1:
-        for wi in merged:
-            refusal = _legacy_rollup_refusal(root, branch, wi, want)
-            if refusal:
-                return refusal
-        return None
-    return _round_refusal(root, branch, base.strip(), want, entries, required)
+        return _legacy_window_refusal(root, branch, merged, want)
+    return _round_refusal(root, branch, base, want, entries, required)
+
+
+def _legacy_window_refusal(root, branch, merged, want):
+    """The MIGRATION WINDOW's answer for a branch with no round evidence — the
+    first WI whose legacy rollup refuses the merge, or None if they all pass.
+
+    THE WINDOW IS POLICY-1 ONLY, and the narrowing is a rule rather than an
+    oversight: a legacy rollup is ONE hand-authored document, so honouring it
+    at `review-policy = 2` would clear both declared phases on a single
+    author's word - the "gate cleared on a SINGLE reviewer" class closed at
+    round 030, re-entered through the deprecated path. An adopter at policy 2
+    has no window; they draw real rounds. Said here, in `_legacy_rollup_
+    refusal`, and in the RESYNC_PACK entry that promises the window, so the
+    shipped narrowing and the promise cannot disagree (REVIEW-A round 033).
+    The per-WI loop is the window's own shape, because the legacy rollup was
+    per-WI and an adopter's tree still is; one review scope per train
+    (LLR-140) is why nothing else here is computed per WI.
+
+    Implements: SR-156, LLR-140
+    """
+    for wi in merged:
+        refusal = _legacy_rollup_refusal(root, branch, wi, want)
+        if refusal:
+            return refusal
+    return None
 
 
 def _round_refusal(root, branch, base, want, entries, required):
