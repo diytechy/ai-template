@@ -277,7 +277,10 @@ def load_profile(path=PROFILE_FILE):
     """Parse the declared product toolchain (docs/stack.ini) if present, else
     None. A malformed profile fails LOUDLY — never silently ignored — so a typo
     can't quietly drop the format/lint/test gate. `interpolation=None` keeps the
-    command values literal (a `%` in a command needs no escaping)."""
+    command values literal (a `%` in a command needs no escaping).
+
+    Implements: SR-007, LLR-007, LLR-008
+    """
     if not path.exists():
         return None
     cp = configparser.ConfigParser(interpolation=None)

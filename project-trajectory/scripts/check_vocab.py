@@ -376,7 +376,10 @@ def findings_for(text, rel):
 
 
 def scan(root, list_scope=False):
-    """`(findings, scanned_count)` over the whole tree."""
+    """`(findings, scanned_count)` over the whole tree.
+
+    Implements: SR-149, LLR-169
+    """
     root = Path(root).resolve()
     findings, scanned = [], 0
     for path in sorted(root.rglob("*")):

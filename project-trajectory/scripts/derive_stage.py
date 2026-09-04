@@ -532,6 +532,7 @@ def phase_rule_findings(root):
     return findings
 
 
+# Implements: SR-049, LLR-148
 def main():
     kitconfig.utf8_console()
     ap = argparse.ArgumentParser(

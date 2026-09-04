@@ -82,7 +82,10 @@ def check_agent_sync(source, root):
     legitimate (a scope-matched downstream materializes only some skills), so a
     source skill MISSING from a per-agent dir is NOT reported. Byte comparison
     reads bytes (a CRLF vs LF difference must neither false-drift nor false-pass;
-    the tracked copies are byte-identical as committed)."""
+    the tracked copies are byte-identical as committed).
+
+    Implements: SR-112, LLR-043
+    """
     drifts, orphans, checked = [], [], 0
     if not source.is_dir():
         return drifts, orphans, checked
@@ -200,6 +203,7 @@ def render_index(rows):
     return GENERATED_BANNER + buf.getvalue()
 
 
+# Implements: SR-112, LLR-025
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(description=__doc__)

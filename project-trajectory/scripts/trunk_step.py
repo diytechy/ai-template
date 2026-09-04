@@ -600,7 +600,9 @@ def regen(root, dry_run=False):
     carrying on would pile a second, derived failure on top of the real one.
     Returns an exit code.
 
-    Implements: SR-148, SR-170, LLR-060, LLR-124"""
+    Implements: SR-148, SR-170, LLR-060, LLR-124
+    Implements: SR-173, LLR-142
+    """
     for name, applies, argv, why in REGEN_STEPS:
         if not applies(root):
             print("trunk_step: regen — skipping {} ({}).".format(name, why))

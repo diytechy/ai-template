@@ -327,7 +327,10 @@ def scan(root):
     scannable need cells — an empty file, or real (non-`-000`) rows none of
     which carries a `need` cell. An absent registry is not vacuous (the
     pre-scaffold clean skip), and neither is a `-000`-only scaffold registry:
-    example rows are a blank form, not an emptied tier."""
+    example rows are a blank form, not an emptied tier.
+
+    Implements: SR-150, LLR-170
+    """
     base = Path(root) / NEEDS
     needs = spine_carrier.load_needs(base)
     allow = load_allow(root)
