@@ -70,6 +70,17 @@ and the module restored from a byte copy:
 Both previously left `134 passed` across the three modules the return measured.
 Unmutated, `tests/test_verdict_record.py` is `53 passed in 24.99s`.
 
+BOTH MUTATIONS WERE RE-DRIVEN AT THE CLOSING TIP, on a detached `git worktree` of
+`6ffa8056` rather than by editing the live module — so the run that proves the
+regressions could not itself leave residue in the tree being closed, and so the
+claim is the tip's and not an earlier commit's. The worktree baselined
+`53 passed in 47.30s` (slower than the figure above only because the unfiltered
+suite was running beside it), then each mutation reproduced its recorded failure
+exactly: `1 failed, 52 passed` in both directions, on
+`assert [('REVIEW-B', 3, 'APPROVE')] == []` and on
+`assert [('APPROVE', ...'APPROVE', 2)] == [('APPROVE', 1)]` respectively. The
+worktree was removed and `git status` is clean.
+
 SPOTTED, NOT FIXED — one finding in the same `CMP-006` cell, deferred on the
 return's own causation test. The note's parenthetical enumerating kitlib's
 CMP-006 members ("config.py/git.py/registry.py/__init__.py via LLR-181, ladder.py
@@ -79,7 +90,14 @@ so the list reads as complete and is not. Unlike finding 7, nothing this row doe
 causes it — it was already false before this act and stays false after — so it is
 recorded here rather than fixed inline. The sentence this row DID rewrite is true
 independent of it: `LLR-182`/`LLR-189` and `LLR-207` are the only CMP-008 kitlib
-rows.
+rows. Re-derived at close by the complementary route — enumerating rows by their
+`Module` path rather than by component, and checking the answer against the
+directory listing — every one of the eleven modules in
+`project-trajectory/scripts/kitlib/` is claimed by an LLR row, and exactly two of
+those modules sit at CMP-008: `station.py` (LLR-182 and LLR-189, two rows on one
+module) and `verdict.py` (LLR-207). So the rewritten sentence enumerating MODULES
+is complete, while its parenthetical enumerating CMP-006 ROWS is the one that
+still is not.
 
 NOT ON THIS LANE — the approval. `LLR-207` and `TC-205` stay `Drafted`; no
 `docs/archive/last_approved/` write, no `intake.py snapshot`.
