@@ -1,0 +1,44 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 006
+# date: 2026-09-04 15:47
+# train: wi-590-adjudicate-llr-207-llr-208
+# base: d6e524070035
+# phase: ADJUDICATE
+# wi: WI-590
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: e9cd03f7..9671078a
+# tokens:
+# cost-usd:
+# wall-secs: 252
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 40920
+# prompt-template: kit:ADJUDICATE
+# prompt-sha: sha256:1481fd56ecb0
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+OUTCOME: RETURN rows=2.
+
+- Returned `LLR-207`: omits the mechanical-close peel and its public symbol.
+- Returned `TC-205`: omits the three tests covering that behavior.
+- Registry statuses and `last_approved` snapshot remain unchanged.
+- Existing `## Dispositions` draft already covers the required follow-up.
+
+Verdict: [006-ADJUDICATE-a1d80c6.md](/Users/diytechy/Documents/ai-template-drive/wi-590-adjudicate-llr-207-llr-208/docs/reviews/wi-590-adjudicate-llr-207-llr-208/006-ADJUDICATE-a1d80c6.md)
+
+Committed as `9671078a` with `WI: WI-590`.
+
+Validation: 3 targeted tests passed; smoke bar passed with 1,526 tests and 8 skips in 40.50s; 40.7s ≤ 60s budget; documentation and registry-integrity checks passed. Worktree is clean.
