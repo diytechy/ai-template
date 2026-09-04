@@ -196,8 +196,11 @@ privacy_review = "require"
 #   "off" | "all" | "all except <sub> …" | "<sub> …"
 guardrails = "off"
 # The weekday blackout window, UTC, HH:MM-HH:MM — was docs/blackout. An empty
-# value (or start == end) disables it.
-blackout = "12:00-19:00"
+# value (or start == end) disables it. Owner direction 2026-09-04: disabled
+# (was "12:00-19:00") so the supervised queue drain keeps moving; note the
+# window gates worker SESSIONS, never dispatch admission, so a claim made inside
+# it sits idle for the whole wait. Restore the value to re-arm.
+blackout = ""
 
 [checks]
 # IS THIS CHECK ON — the six dials folded in from their one-word files by the
