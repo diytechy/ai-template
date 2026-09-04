@@ -11,3 +11,5 @@ Sessions 003-009 (003 TIMEOUT, 006 and 007 NO-COMMIT while the full suite ran in
 VERDICT: APPROVE findings=0
 
 (Re-noted 2026-09-04 after the supervisor repointed three `kitlib/verdict.py` doc references in the closed WI-587/WI-589 specs; the rounds and the governing line above are unchanged.)
+
+(Re-noted 2026-09-04 after the hand refresh onto trunk e507b768 — the module-size ratchet row resolved at the measured value, generated artifacts regenerated; the rounds and the governing line above are unchanged.)
