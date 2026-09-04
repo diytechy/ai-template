@@ -31,7 +31,7 @@ converter as one-shot/terminable, against the ruling this row executes.
 **Provenance label (added 2026-08-20, closing review ROUND-OPUS MAJOR-9):**
 "Ran the converter LIVE … round-trip clean, exit 0" is a WORKER SELF-REPORT.
 Its provenance is that worker's session transcript; this repo retains no
-artifact of the run — no scaffold, no log, no `fig:` marker — so it cannot
+artifact of the run — no scaffold, no log, no `fig:` marker — so it cannot  <!-- fig-ok: prose about the convention -->
 be re-read, only re-driven. Labelled rather than marked, deliberately:
 attaching a provenance marker after the fact would manufacture evidence for
 a run the closer did not witness. The claim is plausible and untested here;

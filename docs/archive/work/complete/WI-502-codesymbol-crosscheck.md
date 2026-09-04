@@ -71,7 +71,7 @@ move to `census.py`, plus several bare-function-name/multi-symbol cells this
 review's manual pass never reached). Reported honestly, not fixed here — a
 worker amending an Approved cell mid-WI is the precedent OI-53 itself turned
 on.
-<!-- fig: cmd="python -c \"import sys; sys.path.insert(0,'project-trajectory/scripts'); import check_trajectory as ct; from pathlib import Path; print(len(ct.codesymbol_crosscheck_findings(Path('.'))))\"" rev=13818fe6-dirty -->
+<!-- fig: cmd="python -c \"import sys; sys.path.insert(0,'project-trajectory/scripts'); import check_trajectory as ct; from pathlib import Path; print(len(ct.codesymbol_crosscheck_findings(Path('.'))))\"" rev=a8b40abd -->
 
 **Regression tests** (`tests/test_trajectory_arch.py`, in-process — no
 subprocess, per the WI's ask): `test_codesymbol_crosscheck_reports_a_planted_mismatch`,

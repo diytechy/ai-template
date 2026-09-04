@@ -64,7 +64,7 @@ registry contract wants a brief: a thin card is a state the mint can write.
 5. Recorded so the effect is measurable: the fragment names the two rows
    minted thin before this fix (`OI-77`, `OI-78`) and the commit that
    hand-filled them, states `Deferred open items:` at file level, and carries
-   `fig:` provenance on any driven figure.
+   `fig:` provenance on any driven figure.  <!-- fig-ok: prose about the convention -->
 
 ## 4. Evidence trail
 

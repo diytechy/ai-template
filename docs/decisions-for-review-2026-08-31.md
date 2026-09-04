@@ -43,7 +43,7 @@ the links now point at the same text one directory up.
 ## 2. `check_docs.py` now blanks HTML comments before the inline-code strip (a kit script change, with a test)
 
 **Decided:** a small root-cause change to the shipped checker. A lone backtick
-inside an HTML comment — two `<!-- fig: cmd="grep -c '^### `scripts/' …" -->`
+inside an HTML comment — two `<!-- fig: cmd="grep -c '^### `scripts/' …" -->`  <!-- fig-ok: prose about the convention -->
 markers in the compiled log — was read as an inline-code opener, paired with the
 next backtick thousands of lines on, and hid **226 of the log's 555 headings**
 from the anchor set; every `log.md#anchor` link into that range read as broken.

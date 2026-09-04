@@ -84,7 +84,7 @@ record + the slice-3 fragment section before shaping):
   coverage.json opt-in and deleted per run, no junit/json-report anywhere.
   The carrier is NEW state, and its trust model is the design's heart:
   what makes a committed evidence file believable (producing command +
-  revision binding, the declared-figure/fig: discipline, staleness =
+  revision binding, the declared-figure/fig: discipline, staleness =  <!-- fig-ok: prose about the convention -->
   unreachable again)?
 - Once it exists it joins `kitlib/stage.DECLARED_INPUTS` (the one-list
   edit the input design promised) and `spine_stage`'s Release

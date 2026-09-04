@@ -233,10 +233,7 @@ absorbing rule visible on IF-020: any unbounded part makes the whole crossing
 bytes somewhere inside it. A property that is 94 % one value over the set it is
 applied to is not typing that set.
 
-<!-- fig: cmd="python3 - … tomllib.load(interfaces.toml)['interface']; Counter over
-r['signal'], split on outward = counterpart NOT startswith
-('scripts/','docs/','project-trajectory/scripts','coverage'); signal_note = truthy
-count", rev=768b6d3a -->
+<!-- fig: cmd="python3 - … tomllib.load(interfaces.toml)['interface']; Counter over r['signal'], split on outward = counterpart NOT startswith ('scripts/','docs/','project-trajectory/scripts','coverage'); signal_note = truthy count" rev=768b6d3a -->
 
 **The typing the frame needs instead**, and the honest state of each half: the
 **actor** (a real external party, never a file path — this is the IF-080/081
@@ -502,9 +499,7 @@ only ports** and **57 naming at least one internal module** — not the pack's
 a looser reading), and it moves the re-statement program *up*, not down. The
 per-row census is WI-451 slice 1's job; this figure only sizes it.
 
-<!-- fig: cmd="python3 - <<'EOF' … tomllib over system-requirements.toml, re
-r'\b([A-Za-z_][A-Za-z0-9_]*\.py)\b' over requirement text, ports set as listed",
-rev=4295dea4 -->
+<!-- fig: cmd="python3 - <<'EOF' … tomllib over system-requirements.toml, re r'\b([A-Za-z_][A-Za-z0-9_]*\.py)\b' over requirement text, ports set as listed" rev=4295dea4 -->
 
 ---
 
@@ -531,8 +526,7 @@ LLRs. My main concern is how much duplication might exist between SR and SNs."*
 - **82 of 148 SRs cite more than one SN** — so the graph is not even a tree,
   let alone 1:1. A 1:1 tier would have to *cut* 84 of the 232 edges.
 
-<!-- fig: cmd="python3 - <<'EOF' … collections.Counter over sn_refs; median via
-statistics.median", rev=4295dea4 -->
+<!-- fig: cmd="python3 - <<'EOF' … collections.Counter over sn_refs; median via statistics.median" rev=4295dea4 -->
 
 **Chain 1 — SN-008 → 19 SRs: the SN is one word, the SRs are the mechanism.**
 SN-008 is *"a reader can believe a green: gates are honest, and a green never

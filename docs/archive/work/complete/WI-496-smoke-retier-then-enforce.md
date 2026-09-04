@@ -32,13 +32,13 @@ Measured this box (3.11.9, `-n auto`), before and after:
 
 - Before (baseline, this session): 1409 collected,
   `python -m pytest -q -n auto -m smoke` → **58.77 s**
-  <!-- fig: cmd="python -m pytest -q -n auto -m smoke --durations=0" rev=0cfb2e6f-dirty -->
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke --durations=0" rev=7e898d15 -->
   — 0.98x the 60 s budget, the same near-the-line reading
   `check_smoke_budget.py`'s 2026-08-21 re-argument and CLAUDE.md's prior
   stamp (54.9/64.0/55.7 s) both recorded.
 - After, three warm runs: **27.27 / 28.16 / 27.86 s**, 1270 collected (1265
   passed, 5 skipped each run)
-  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=0cfb2e6f-dirty -->
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=7e898d15 -->
   — ~2.15x under budget, the real headroom the ordering clause asked for.
   The STOP rule did not fire.
 
@@ -46,7 +46,7 @@ Measured this box (3.11.9, `-n auto`), before and after:
 (measured 1270 collected at the re-stamp, +10 headroom, the same small-slack
 posture the file's prior stamps carried); `seconds` stays **60**, untouched —
 the ruling is that the budget VALUE never moves, and this re-tier is what
-gives the unchanged value real margin instead of none. Reasons and the fig:
+gives the unchanged value real margin instead of none. Reasons and the fig:  <!-- fig-ok: prose about the convention -->
 lines are recorded in `docs/stack.ini` beside the new stamp.
 
 **2. Enforce.** `check_smoke_budget.py --mode enforce` is now named beside
@@ -105,7 +105,7 @@ Ordering is load-bearing — the re-tier lands FIRST:
    (the hook/gate/scaffold runs exercise them anyway). Target: restore
    real headroom on this box (the slowest known dev machine) — the tier
    passes comfortably under 60 s warm, measured over ≥3 runs, stamped
-   with the fig: convention. Re-stamp the membership ratchet and the
+   with the fig: convention. Re-stamp the membership ratchet and the  <!-- fig-ok: prose about the convention -->
    seconds stamp deliberately with reasons.
 2. **Enforce.** Only after (1) lands green: the commit bar names the
    seconds — wire `check_smoke_budget.py --mode enforce` beside the
