@@ -390,9 +390,7 @@ only ports** and **57 naming at least one internal module** — not the pack's
 a looser reading), and it moves the re-statement program *up*, not down. The
 per-row census is WI-451 slice 1's job; this figure only sizes it.
 
-<!-- fig: cmd="python3 - <<'EOF' … tomllib over system-requirements.toml, re
-r'\b([A-Za-z_][A-Za-z0-9_]*\.py)\b' over requirement text, ports set as listed",
-rev=4295dea4 -->
+<!-- fig: cmd="python3 - <<'EOF' … tomllib over system-requirements.toml, re r'\b([A-Za-z_][A-Za-z0-9_]*\.py)\b' over requirement text, ports set as listed" rev=4295dea4 -->
 
 ---
 
@@ -422,8 +420,7 @@ LLRs. My main concern is how much duplication might exist between SR and SNs."*
 - **82 of 148 SRs cite more than one SN** — so the graph is not even a tree,
   let alone 1:1. A 1:1 tier would have to *cut* 84 of the 232 edges.
 
-<!-- fig: cmd="python3 - <<'EOF' … collections.Counter over sn_refs; median via
-statistics.median", rev=4295dea4 -->
+<!-- fig: cmd="python3 - <<'EOF' … collections.Counter over sn_refs; median via statistics.median" rev=4295dea4 -->
 
 **Chain 1 — SN-008 → 19 SRs: the SN is one word, the SRs are the mechanism.**
 SN-008 is *"a reader can believe a green: gates are honest, and a green never
@@ -513,9 +510,7 @@ acceptance evidence."* So option 3 costs **zero SN edits** and opens **no SN
 re-attest window**; what remains of decision 7 is purely an **SR-side rule** for
 slice 2.
 
-<!-- fig: cmd="python3 - tomllib over stakeholder-needs.toml; regex for
-[\w./-]+\.(py|toml|md|csv|html|ini|yml|sh|cmd) and docs//scripts/ paths over
-need vs acceptance cells", rev=e32fd9a0 -->
+<!-- fig: cmd="python3 - tomllib over stakeholder-needs.toml; regex for [\w./-]+\.(py|toml|md|csv|html|ini|yml|sh|cmd) and docs//scripts/ paths over need vs acceptance cells" rev=e32fd9a0 -->
 
 **Worked examples for slice 2, from the live registry:**
 

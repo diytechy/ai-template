@@ -25,7 +25,7 @@ c54ddd10 WI-512: thin the 27 CLI contracts to their crossing, and give the
          cell two checks it never had
 ```
 
-fig: `git log --oneline --diff-filter=A -- docs/cli-reference.md` @ c54ddd10
+fig: cmd="git log --oneline --diff-filter=A -- docs/cli-reference.md" rev=c54ddd10
 
 So the precedent did not depend on a pre-existing artifact — it built its
 reference from nothing, as part of one work item. The "unbuilt precondition"
@@ -39,7 +39,7 @@ analogue tells us what building one costs.
 
 `WI-512` in full: **+2,024 / −156 across 36 files.**
 
-fig: `git show --numstat --format="" c54ddd10 | awk '{ins+=$1; del+=$2} END {...}'` @ c54ddd10
+fig: cmd="git show --numstat --format=\"\" c54ddd10 | awk '{ins+=$1; del+=$2} END {...}'" rev=c54ddd10
 
 The mechanism-only subset — what OI-66's five priced items correspond to:
 
@@ -70,8 +70,7 @@ of less.
    contract body. This has no analogue in `WI-512` (the CLI surface was
    harvested from `argparse`, which every script already had).
 
-   fig: `find project-trajectory/scripts -name '*.py' | wc -l` = 78;
-   `grep -rn '^\s*Contracts: IF-' --include='*.py' | wc -l` = 57 @ 2026-08-28
+   fig: cmd="find project-trajectory/scripts -name '*.py' | wc -l (= 78); grep -rn '^\s*Contracts: IF-' --include='*.py' | wc -l (= 57)" rev=8cf9e23d
 
 3. **The harvester is broken and the fix is a precondition, not a nicety.**
    `gen_arch_map.module_contracts` returns `['IF-080']` for `handback.py`,

@@ -67,10 +67,10 @@ with a green suite.
 
 - `pytest -q tests/test_shipped_tier.py tests/test_dependency_ledger.py`:
   **12 passed in 0.32s**.
-  <!-- fig: .venv/bin/python -m pytest -q tests/test_shipped_tier.py tests/test_dependency_ledger.py @ WI-420 -->
+  <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_shipped_tier.py tests/test_dependency_ledger.py" rev=0a487767 -->
 - `trace.py --strict --strict-integrity`: `SN=27 SR=136 LLR=137 TC=135
   orphans=0 integrity=0`, exit 0.
-  <!-- fig: python3 project-trajectory/scripts/trace.py --root . --strict --strict-integrity @ WI-420 -->
+  <!-- fig: cmd="python3 project-trajectory/scripts/trace.py --root . --strict --strict-integrity" rev=0a487767 -->
 
 ## Deviations from spec
 

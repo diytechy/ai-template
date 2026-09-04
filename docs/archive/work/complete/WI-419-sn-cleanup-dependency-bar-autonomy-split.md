@@ -73,19 +73,19 @@ open-items); two new OKF concept files appeared for SN-026/SN-027.
   orphans=0 integrity=0 verified-mechanized=89 verified-demonstrated=27
   components=5 component-findings=0 interfaces=91 interface-findings=0
   form-findings=0` (exit 0).
-  <!-- fig: python3 project-trajectory/scripts/trace.py --root . --strict --strict-integrity @ WI-419 -->
+  <!-- fig: cmd="python3 project-trajectory/scripts/trace.py --root . --strict --strict-integrity" rev=2f0ee1f5 -->
 - `pytest -q -n auto -m smoke`: **667 passed, 2 skipped in 13.65s**.
-  <!-- fig: python3 -m pytest -q -n auto -m smoke @ WI-419 -->
+  <!-- fig: cmd="python3 -m pytest -q -n auto -m smoke" rev=2f0ee1f5 -->
 - Full unfiltered suite (this touches the spine, so the slice bar is the full
   one): **1966 passed, 5 skipped in 339.32s**.
-  <!-- fig: python3 -m pytest -q -n auto @ WI-419 -->
+  <!-- fig: cmd="python3 -m pytest -q -n auto" rev=2f0ee1f5 -->
 - `check_trajectory.py --root . --strict`: exit 0.
-  <!-- fig: python3 project-trajectory/scripts/check_trajectory.py --root . --strict @ WI-419 -->
+  <!-- fig: cmd="python3 project-trajectory/scripts/check_trajectory.py --root . --strict" rev=2f0ee1f5 -->
 - `check_docs.py` at the **declared commit bar** (`--ignore docs/test/report.md
   --ignore "docs/work/*" --stale`): **`OK — 376 doc(s), 1040 intra-repo link(s),
   0 broken`**, and **0 README findings**, so the Must/Should citation floor holds
   for all 27 needs.
-  <!-- fig: python3 project-trajectory/scripts/check_docs.py --root . --ignore docs/test/report.md --ignore "docs/work/*" --stale @ WI-419 -->
+  <!-- fig: cmd="python3 project-trajectory/scripts/check_docs.py --root . --ignore docs/test/report.md --ignore \"docs/work/*\" --stale" rev=2f0ee1f5 -->
   Run bare (without the declared ignores) it reports 4 broken links + 409 orphans;
   all four are in `docs/work/complete/` and are pre-existing — byte-identical on a
   stashed baseline of this branch — so they are not this WI's and were not fixed

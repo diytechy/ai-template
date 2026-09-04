@@ -95,7 +95,7 @@ scaffold's on-disk log, not a synthetic fixture.
 are new entries in the pre-existing CRLF residue list.
 
 - smoke (final, post-restamp): `1278 passed, 5 skipped in 57.60s`
-  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=f3cb9801-dirty -->
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=70b43f50 -->
   (An earlier run against the code commit alone, before the import was
   swapped for a literal, read `1278 passed, 5 skipped in 58.08s` —
   byte-identical count, confirming the swap changed no test collection.)
@@ -112,7 +112,7 @@ are new entries in the pre-existing CRLF residue list.
   is exactly this row's own close.
 - **full unfiltered suite, run to completion in the FOREGROUND**: `2726
   passed, 14 skipped in 500.96s (0:08:20)`, exit 0
-  <!-- fig: cmd="python -m pytest -q -n auto" rev=f3cb9801-dirty -->
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=70b43f50 -->
   2723 (the WI-490 close's own total) → 2726 is exactly this session's three
   net-new tests (the two banner tests plus the filename drift guard); the
   four renamed M-13/D-7 tests each replaced an existing one, so they add no
