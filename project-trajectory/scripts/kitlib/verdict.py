@@ -388,12 +388,19 @@ def _closed_wi_ids(fields):
     unrestricted because `spec_move`'s inbound relink genuinely rewrites other
     rows in place, and a relink only ever modifies.
 
-    The empty close refuses HERE, on the one-source-branch requirement:
-    `branches` only grows in the same arm that appends to `deleted`, so a
-    commit that moved nothing names zero source branches and `len(branches) !=
-    1` turns it away. There is deliberately no separate non-emptiness clause -
-    one that could only fire where this one already had would be untestable by
-    construction.
+    THE EMPTY CLOSE refuses on the one-source-branch requirement, and there is
+    deliberately no non-emptiness clause in front of it: `branches` only grows
+    in the same arm that appends to `deleted`, so a commit that moved nothing
+    names zero source branches and `len(branches) != 1` turns it away, and a
+    disjunct that could only fire where that one already had is dead code by
+    construction - which is what the deleted `not deleted` disjunct was. The
+    empty close's refusal is OVER-DETERMINED even so, measured rather than
+    reasoned: delete the branch requirement too and an empty diff derives no
+    ids at all, whose composed subject (`adjudicate:  -> complete/ ...`) cannot
+    equal the one the commit carries, so the caller's exact-subject comparison
+    refuses it anyway. No clause owns that arm; the one-source-branch clause is
+    pinned instead on the case it DOES own, a close reaching into a second
+    lane's `active/`.
     """
     if len(fields) % 2:
         return None
@@ -443,9 +450,14 @@ def mechanical_close_attestation(root, rev):
     VERIFIED AGAINST GIT, not read off the message. The changed-path stream is
     read with rename detection disabled; it must contain paired deletions from
     one `docs/work/active/<branch>/` and additions of those same spec names to
-    `docs/work/complete/`. Their canonically ordered filename ids are composed
-    through the writer's `mechanical_close_subject`, and the result must equal
-    the subject exactly. The commit must also have exactly ONE parent (a merge
+    `docs/work/complete/`, and NOTHING ELSE may create or destroy — an
+    unrecognised `A` or `D` refuses the whole commit, so unreviewed data loss
+    and unreviewed new content cannot ride the peel (`_closed_wi_ids`). Their
+    filename ids are ordered by `station.mechanical_close_order`, the one key
+    this reader and the writer share so a multi-row batch cannot fail on a
+    sorting the two chose apart, composed through the writer's
+    `mechanical_close_subject`, and the result must equal the subject exactly.
+    The commit must also have exactly ONE parent (a merge
     is never this), and every changed path must live under `docs/work/`, which
     stops a close whose inbound-link relink reached into product or requirement
     files from being peeled. Each check FAILS TOWARD REVIEW: declining to peel
