@@ -198,3 +198,53 @@ budget remained untouched.
 Byte deltas: `CLAUDE.md` 7886 -> 7975 (525 bytes headroom under its 8500-byte
 cap); `project-trajectory/skills/byte-budget-guard/SKILL.md` and each tracked
 copy 4847 -> 4781 (219 bytes headroom under the source's 5000-byte cap).
+
+### Rework pass (session 009) — what the close bar claims, and the one cadence home
+
+REVIEW-A round 008 found five defects, two of them MAJOR and both the same
+shape: a sentence asserting a bar that does not run.
+
+**The close bar's claim.** The brief excused the worker from the full suite
+because "the lane's own refresh runs the full declared bar for you". Driven,
+not read: `integrate._run_bar` calls `check.py --tier all`, and `check.py`'s
+step table declares `format` / `lint` / `tests+coverage` relevant from
+`_kitladder.STAGE_IMPL`, while `docs/stage` here reads `DevStg-Tests` (one rung
+below). `check.py --jobs 0` at this tip returned `RESULT: PASS` over fourteen
+steps — registry-integrity, vocabulary, need-form, privacy, doc-navigability,
+design-flows, trajectory, skills-index, prompt-catalog, staged-divergence,
+approval-immutable, and three work-branch freshness SKIPs — and NOT ONE of them
+a test step. So the sentence excused a worker from the only suite that would
+have run between the smoke commit bar and phase close. The brief now says the
+bar declared for the repo's CURRENT RUNG, names `DevStg-Impl` as where the
+product test step arrives, and sends the reader to `check.py`'s step table
+rather than restating it — the step table stays the one owner of what the bar
+runs. The rung gating is deliberately untouched: ungating `tests+coverage`
+would migrate every adopter and is an owner's call.
+
+**The cadence's second home.** Session 007 removed "before claiming a WI/slice
+done" from `CLAUDE.md` but left the `session-protocol` skill saying "before
+claiming a slice/phase done, at close" — and `CLAUDE.md` points AT that skill
+as the authority for commit bar vs gate bar, so the delegated home contradicted
+its delegator, the shipped brief, and its own next-but-one sentence ("A per-WI
+slice inside a phase ends at the commit bar"). Deleted from all three copies.
+`PROCESS_OPTIONS.md` "Phase cadence" is now the only home; the deletion is the
+antidote, so nothing new polices it.
+
+**The absorbed item.** The previous round narrowed this row's own acceptance
+heading to "items 2 and 3 were discharged by WI-579", but WI-579's heading says
+item 3 is SHARED with WI-580 and its Done-when list never claims it. Heading
+restored verbatim, and the uncovered half is now covered rather than
+reclassified: `test_the_false_partial_class_turns_only_on_the_close_ritual`
+drives the WI-540 class on one scaffold — every trailer committed, every spec
+still in `active/<branch>/`, so `lane_completion` answers `({WI-201, WI-204},
+set())` and `integrate.finished_branches` answers `[]` (the `_lane_close` stall
+arm, not the refresh arm); the spec move alone flips both to done and
+`["wi-batch"]`. The `== []` is not an empty scan — the same call on the same
+scaffold answers `["wi-batch"]` four lines later. Mutation check: restoring the
+pre-WI-580 trailer-alone predicate (`return built, built`) fails it at
+`assert {'WI-201','WI-204'} == set()`.
+
+Also corrected: the byte-accounting prose said `CLAUDE.md` "holds ~8%" against
+a baseline its own edit had moved (7,975 of 8,500 is 6.2%), now `~6%`; and the
+worker brief's opening sentence still named the literal `scripts/agent_loop.py`
+that the same commit had routed through `{scripts}` everywhere else.

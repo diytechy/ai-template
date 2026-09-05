@@ -888,6 +888,48 @@ def test_the_brief_never_calls_an_unclosed_row_built(tmp_path):
     assert "  - WI-204 [built] row WI-204" in block
 
 
+@env_gate_skipif("git")
+def test_the_false_partial_class_turns_only_on_the_close_ritual(tmp_path):
+    """WI-559 Done-when 3, first half — the built-and-verified lane read as a
+    stall (WI-540: three sessions each verified their rework, each ended the
+    turn waiting on a ~11-minute suite, and the FINISHED row closed `partial`).
+
+    Both readers of that state are driven on ONE scaffold, because the class is
+    the gap between them. With every trailer committed and every spec still in
+    `active/<branch>/`, `lane_completion` calls the rows built but not done and
+    `integrate.finished_branches` does not name the branch — so `dispatch`
+    takes the `_lane_close` arm (the stall candidate) over the refresh arm.
+    Moving the specs to a terminal directory, and NOTHING else, flips both
+    reads. The close ritual alone separates a merge from a `partial`, which is
+    why the shipped brief's close bar has to fit inside one turn.
+
+    The `== []` is not an empty scan: the identical call on the identical
+    scaffold answers `["wi-batch"]` four lines later, so the reader is live and
+    the first read is a real negative.
+    """
+    al = load_script("agent_loop")
+    integrate = load_script("integrate")
+    repo, worker, active = _batch_repo(tmp_path)
+    for wid in ("WI-201", "WI-204"):
+        _build_commit(repo, wid, "t1", worker["base"])
+
+    built, done = al.lane_completion(str(repo), worker["base"])
+    assert built == {"WI-201", "WI-204"}  # built AND verified …
+    assert done == set()  # … and not one row closed
+    assert integrate.finished_branches(repo) == []  # -> the stall candidate
+
+    complete = repo / "docs" / "work" / "complete"
+    complete.mkdir(parents=True, exist_ok=True)
+    for wid in ("WI-201", "WI-204"):
+        (active / "{}-row.md".format(wid)).rename(complete / "{}-row.md".format(wid))
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "close the lane")
+
+    built, done = al.lane_completion(str(repo), worker["base"])
+    assert built == done == {"WI-201", "WI-204"}
+    assert integrate.finished_branches(repo) == ["wi-batch"]
+
+
 # --- the resumed BATCH preflight: a row this branch closed is not stale ---------
 # Measured 2026-09-03 on the four-row spine batch `wi-589-…`. The lane closed
 # three of its rows, so the registry read `done` for them — and the resumed

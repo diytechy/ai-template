@@ -34,7 +34,7 @@ before you edit and again before you commit.
 | `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,781 | 2026-09-04 | WI-580 re-stamps the CLAUDE.md row |
 
 **`AGENTS.template.md` and this file are parked at their caps** (~1% free
-each); `CLAUDE.md` holds ~8%. Those two are what you hit first, and the DOC is
+each); `CLAUDE.md` holds ~6%. Those two are what you hit first, and the DOC is
 what gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
 section under Gemini's truncation) and is not to be raised. Adding a sentence
 means cutting one, in the same edit. Each `Baseline` is pinned to its file's
