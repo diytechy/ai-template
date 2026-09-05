@@ -4624,6 +4624,54 @@ pair. Anything else that invoked the generator directly from a work branch
 (a lane hook, a make target) now gets the refusal and should stop; the merge
 regenerates the rollup.
 
+### A MINOR-only refusal routes as an APPROVE [since 68bd9ebd]
+
+**What changed.** `kitlib/verdict.py` gains `effective_verdict(word,
+findings)`: a `CHANGES-REQUESTED` carrying at least one finding, all of them
+`[MINOR]`, is READ as an `APPROVE`. The reviewer's round file is never
+rewritten — its own `VERDICT:` line and its findings stand as written; what
+changes is what the two readers do with them, and both apply the rule or it
+buys nothing. The loop reads it through the new
+`score_reviews.merged_routing_verdict` (which prints `review round:
+CHANGES-REQUESTED with MINOR-only findings routed as APPROVE (N findings
+carried)` when the reading changes the outcome) and the merge slot through
+`kitlib.verdict.round_entries`, so a lane routed as approved is not then
+refused at the slot. A `CHANGES-REQUESTED` naming NO finding stays a refusal:
+a reviewer who blocks without naming anything is a different defect.
+Measured 2026-09-03/04: four rounds refused a lane over a single `[MINOR]`
+each (WI-586 rounds 006 and 010, WI-590 round 013), every refusal costing a
+rework session AND another round.
+
+**What to do.** Re-sync `scripts/kitlib/verdict.py`, `scripts/score_reviews.py`
+and `scripts/agent_loop.py` together — the rule and its two readers ship as a
+set. Nothing to edit and no dial: if you WANT a MINOR to block, raise it as a
+MAJOR, which is what the severity scale already meant. Your existing
+`prompts/reviewer.template.md` needs no change; the kit's own is unchanged
+because nothing in it said a finding of any severity forces a refusal.
+
+### No review round is drawn on a tree a verdict already named [since 68bd9ebd]
+
+**What changed.** `kitlib/verdict.py` gains `tree_already_judged(root, branch,
+base, parse)` — the merge slot's own question (does a logged round already name
+this governing tree?) — and `agent_loop.schedule_review_round` asks it BEFORE
+queueing a round. When the answer is yes it prints `dispatch: no review round
+scheduled — rework changed no non-record path; a round on the same tree would
+be refused as a reroll` and escalates through the existing page ladder instead
+of drawing the round. Measured 2026-09-03: a rework that DECLINED a finding
+committed only its answer under `docs/reviews/`, a record path the identity
+ignores, so the redrawn round approved the very tree the first had refused and
+`integrate._round_refusal` refused the pair as a reroll-until-green — two
+reviewer sessions and a merge attempt for nothing, with no line saying why.
+Unreadable git answers "not shown to be unchanged" and the round is still
+drawn, so a repo the readers cannot see into never wedges its first build.
+
+**What to do.** Re-sync `scripts/kitlib/verdict.py` and `scripts/agent_loop.py`.
+Nothing to edit. `schedule_review_round`, `schedule_adjudication_round` and
+`build_bookkeeping` now return an exit code (or `None`) so the page can end the
+run — if you have forked any of the three, thread the return value through.
+Your loop-held runs degrade to a DESIGN-CHECK exactly as a review escalation
+does; human-held runs stop with a banner naming the cause.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
