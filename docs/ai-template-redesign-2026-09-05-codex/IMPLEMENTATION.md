@@ -62,11 +62,11 @@ flowchart LR
     P9 --> P10[P10 Adopter migration and deletion]
 ```
 
-P9R is an independent rendering slice after P0 and its own applicable contract amendments; it does not wait for the full runner migration. P1A is the gate for enabling changed behavior under the repository’s own requirements; isolated fixtures and read-only adapters can proceed beforehand. P5 is an early stop/go experiment. It must settle whether peeling can be removed before P6 hardens a replacement runtime around the wrong evidence model. P3/P4 can proceed independently of that experiment after P2, but do not run multiple mutating coordinators on the same repo.
+P9R is an independent rendering slice after P0 and its own applicable contract amendments; it does not wait for the full runner migration. P1A is the gate for enabling changed behavior under the repository’s own requirements; isolated fixtures and read-only adapters can proceed beforehand. P0 gates replacement work on measured need; the arrows show dependencies if that option is selected, not automatic authorization to build it. P5 is an early stop/go experiment. It must settle whether peeling can be removed before P6 hardens a replacement runtime around the wrong evidence model. P3/P4 can proceed independently of that experiment after P2, but do not run multiple mutating coordinators on the same repo.
 
 ## 3. Work packages
 
-### P0 — Establish the behavior baseline and retire list
+### P0 — Establish the behavior baseline and the rebuild decision
 
 **Problem:** a rewrite can preserve obsolete mechanisms while accidentally deleting real stakeholder obligations.
 
@@ -74,12 +74,16 @@ P9R is an independent rendering slice after P0 and its own applicable contract a
 
 - Record source revision, CLI/public carrier surface, active/queued work, relevant owner rulings, and currently supported adopter versions. Exclude owner-only material.
 - Inventory all 27 SNs and 76 SRs, then the LLR/TC and test families they govern. Classify core, advanced capability, migration-only, or retirement candidate. Do not approve the classification automatically.
-- Capture representative scenarios from ordinary work, spine changes, adjudication, consolidation, human holds, partial close, interrupted review, and adopter upgrade. Census historical train sizes, starting with WI-584/587/588/589 from the prior investigation. For each, distinguish one shared acceptance decision from separate deliverables and compare one coherent consolidated WI against separate exclusive WIs, counting all resulting integration/review turns. This is decision material to produce, not a census claimed complete by this plan.
+- Capture representative scenarios from ordinary work, spine changes, adjudication, consolidation, human holds, partial close, interrupted review, and adopter upgrade. Census historical train sizes, starting with WI-584/587/588/589 from the prior investigation. For each, distinguish one shared acceptance decision from separate deliverables and compare one coherent consolidated WI against separate exclusive WIs, counting all resulting integration/review turns. Exclusivity provides serialization, not joint approval atomicity: related normative amendments that must be accepted together must fit one coherent WI and acceptance transaction, or retain an explicitly supported joint-approval mechanism until that need is resolved. This is decision material to produce, not a census claimed complete by this plan.
 - Measure fresh-core scaffold footprint, warm smoke/full checks, operator interventions, and session costs where logs actually support attribution. Keep historical numbers labeled historical.
 - Explicitly disposition existing dev-slice/train batching policy and its approved design/tests: one-WI cardinality is a proposed policy change, not a compatible reinterpretation. Obtain that decision before enabling new assignment creation.
+- Establish an early realistic downstream fixture, including user-owned content and a representative non-Python adopter, before pruning the spine. Exercise scaffold, upgrade, and the changed behavior slices on supported platforms; a blank scaffold alone is insufficient.
+- Inventory interface obligations once per surface, with a clause map for each consumer’s required behavior. Imports establish dependencies, not error semantics or acceptance guarantees.
+- Predeclare a control-period workload, observation window, and decision thresholds with the owner before operating a pilot. Two weeks is a candidate window, not sufficient evidence by elapsed time alone. Observe the recently fixed loop under unchanged authority/review settings; report completions, attempts, review rounds per completed WI, interventions per completion and active day, adjudication by purpose, escaped defects, and work mix. Deduplicate retries and distinguish necessary adjudication from harness overhead. Any intake or policy experiment is a separately labeled treatment, not part of an unchanged baseline. Do not unpause or operate the loop as part of this documentation task.
+- Decide whether observed residual failures justify P3–P8 replacement work. Stop those packages if the existing loop meets the agreed needs; P2’s shared-reader/prompt improvements and P9R may still proceed on their own evidence; P2’s new assignment behavior remains conditional on the replacement decision and P1/P1A. If data is inadequate, report the uncertainty and extend the measurement instead of declaring the rewrite necessary.
 - Make a deletion ledger: old responsibility, candidate replacement, acceptance evidence, exact retirement condition. Count added schemas, parsers, states, durable carriers/refs, mutation paths, and operating/recovery procedures as well as deleted code. Unused compatibility code must get an expiry rather than a permanent adapter.
 
-**Done when:** every stakeholder need has a disposition proposal; public compatibility obligations are named; the selected scenarios can be reproduced without live paid agents by scripted adapters. The owner can distinguish behavior retained from behavior proposed for removal.
+**Done when:** the workload, denominators, thresholds, observations, and explicit retain/targeted-repair/rebuild decision are recorded; every stakeholder need has a disposition proposal; public compatibility obligations are named; the selected scenarios can be reproduced without live paid agents by scripted adapters. The owner can distinguish behavior retained from behavior proposed for removal.
 
 **Do not:** clean the backlog, change authority dials, retire tests, or restamp ratchets in this package.
 
@@ -125,7 +129,8 @@ P9R is an independent rendering slice after P0 and its own applicable contract a
 
 **Work:**
 
-- Read current specs and policy using existing parsers where possible; convert once into the domain records.
+- Read current specs and policy using existing parsers where possible; convert once into the domain records. Use typed absent/malformed/valid parsing outcomes, preserving each consumer’s failure policy. Preserve raw text and source spans where editing, masking, BOM, or CRLF behavior requires them; shared syntax does not imply identical failure handling. Characterize existing callers before replacing their parsers.
+- Consolidate prompt filling through a strict catalog that rejects missing slots and preserves the supported stdin delivery boundary. Return typed domain failures from library code and map them to CLI exit codes at the command boundary. Consolidate responsibilities where contracts match; do not introduce one universal result envelope or pursue a fixed module count.
 - Add one-item assignment creation with a durable base, spec digest, and route record.
 - Reject multi-WI assignment creation in the new kernel. Existing active multi-WI lanes must drain through the old runner before switching; do not fabricate new acceptance or split their history.
 - Keep schema and CLI migration translations in this adapter only, with the supported version range declared.
@@ -170,7 +175,7 @@ P9R is an independent rendering slice after P0 and its own applicable contract a
 
 **Deletion enabled:** `_judgement_first`, spine batch assembly, duplicated kind/action ranking in the new dispatcher, and optionally custom critical-path/downstream algorithms if their policy is retired.
 
-### P5 — Prove the exact-tree integration design
+### P5 — Compare and prove the integration design
 
 **Problem:** evidence is hard to trust when close and refresh mutate the reviewed branch.
 
@@ -186,6 +191,7 @@ P9R is an independent rendering slice after P0 and its own applicable contract a
 - Crash-inject before/after candidate creation, review result recording, acceptance commit creation, trunk promotion, outcome/intake bookkeeping, and worktree cleanup.
 - Before measurements, agree a numeric experiment budget relative to the old runner: completion latency/throughput at each tested lane count, maximum human-decision re-prompt count, operator interventions, and serial waiting time. Record the workload and hardware first; never choose the threshold after seeing results.
 - Measure at the configured lane count with single-pass acceptance, repeated material-defect rework, arbitration, long human holds, and follow-up intake adjudication. Use the historical review-round distribution (including its long tail) to select cases; do not equate historical whole-WI wall time to exclusive-turn time. Count every compose/check/review turn and intake judgment, and measure semantic re-adjudication frequency. Add a representative live controlled run only when implementation is approved.
+- Compare a smaller alternative first: move mechanical close before review while retaining the existing governing-identity and refresh-evidence protocol. This may remove close peeling; it does not by itself remove refresh peeling or prove exact composed-tree acceptance. Test changed-base behavior and reviewer provenance explicitly against the same stakeholder obligations, recording any semantic difference before selecting either protocol.
 - Compare the complete replacement protocol surface against the deleted one: receipt schema/parser, retained candidate branches, recovery/export, authority checks, and turn reservation versus peeling, excluded-path rules, and governing-history reconstruction. P5 must show a reviewer-explainable reduction, not merely move the complexity to new files.
 
 **Done when:** wrong-tree acceptance, stale-trunk promotion, missing review provenance, and duplicate terminal outcomes are impossible in the tested transition model; restart from a clean clone reconstructs all committed obligations; the predeclared performance/intervention budgets pass and the protocol comparison demonstrates simplification. An unset budget or unreviewed complexity comparison leaves P5 incomplete.
@@ -223,6 +229,8 @@ P9R is an independent rendering slice after P0 and its own applicable contract a
 - Support one ordinary review; opt-in plan review; rubric-based subjective critique; consolidation review; bounded dispute arbitration. Keep advanced dual-plan strategy behind its capability boundary.
 - Store stable finding IDs, criterion, evidence, severity, disposition, and resolution. Preserve minor suggestions without requiring another build round for stylistic churn.
 - Treat proposed acceptance changes as amendments requiring appropriate authority, never reviewer edits hidden in rework. Explicitly ask whether a workaround exists only to preserve an unsuitable LLR; permit a scoped replacement with preserved parent acceptance and updated tests, rather than treating design approval as immutability.
+- Give the owner a renderer-independent resume view: current activity, blocked decision, next safe action, and evidence/check freshness. Keep human-authored operational Notes for outages, quotas, or stale loaded processes that Git cannot infer. Every generated field needs a source and timestamp or an explicit unknown. Refresh live status on state transitions, pause, and failure without requiring an HTML commit on every tick. Retire a separate handoff only after the owner can resume both a paused and a failed run from this view plus Notes.
+- Record actual check selection, results, and skips separately from the derived development stage. A configured bar passing must not imply the complete suite passed. Preserve legitimate failing-first test-definition stages; any new stage-wide all-green requirement needs an explicit doctrine amendment.
 - Record model/tier/roster ID and session role before launch. Preserve budget use across retries and resumed sessions.
 - Stop recurring arbitration at the declared cap and produce a concise owner brief: contested obligation, evidence, options, recommendation, and affected work.
 
@@ -252,7 +260,7 @@ P9R is an independent rendering slice after P0 and its own applicable contract a
 
 **Scope and ordering:** follow [the rendering package and selection contract](LLR-AND-RENDERING.md#2-isolate-rendering-as-a-package-in-this-repository). This slice may run after P0's boundary/cost inventory and its own required test-cadence/assurance amendments; it need not wait for P8. Amend any conflicting full-suite promise, including SN-007 as applicable, before enabling narrower validation. Existing checks remain in force until then.
 
-**Work:** establish a shared in-memory project snapshot; extract renderer/layout/assets into a package; separate text-status CLI and fixtures; classify core/shared/rendering tests by behavior; implement one small affected-capability selection table with a broad fallback; keep current-output freshness and approved full-run cadence. Use the existing configuration/profile mechanism, not a separate rendering repository or generic test-impact framework.
+**Work:** retain unfiltered CI during the initial extraction; narrower ordinary-change selection starts locally after applicable amendments, and CI narrowing requires demonstrated selection coverage and a separate cadence decision. Establish a shared in-memory project snapshot; extract renderer/layout/assets into a package; separate text-status CLI and fixtures; classify core/shared/rendering tests by behavior; implement one small affected-capability selection table with a broad fallback; keep current-output freshness and approved full-run cadence. Use the existing configuration/profile mechanism, not a separate rendering repository or generic test-impact framework.
 
 **Done when:** core imports and test collection work without the renderer; core-only changes omit the expensive HTML family; rendering/schema/shared-input changes select it; actual data still generates a current, honest surface; selection handles renames/deletions and missing bases; full enabled-capability tests remain green; measured cost and coverage reports distinguish selected runs from full runs.
 
