@@ -915,3 +915,31 @@ Unpause — I confirm it: delete docs/work/pause in a reviewed commit (regenerat
 Watch the new machinery on its live lanes and record what you see: the worker / adjudicator close ritual (does a lane now close its own row? — if not, close it yourself as before: Deliverable before Context, specref cleared, spec_move.py, fragment heading ## <date> — …, regenerate docs/ratify/CURRENT.md when the lane minted spine rows); the C2 REVIEW-OWED park + resume (exit 9, out/review-owed, the resumed worker drawing the round FIRST); the C4 probe lines; any -relaxed verdict; the C6 unload shedding the loop's own out/run-logs/ streams so a merged lane unloads clean. Still expect to compile the WI-level docs/reviews/WI-<n>-REVIEW-A.md from the round files (time-ordered, governing line last) after the loop's rounds APPROVE — the loop does not write it.
 Re-measure the smoke budget on a quiet box before the first commit (python -m pytest -q -n auto -m smoke && python scripts/check_smoke_budget.py --mode enforce; 60 s; the last sitting read 86–124 s under my game load) and record the number.
 Delegation for stops: the same as before — dispose NEEDS-HUMAN stops with the best decision the information supports, through the kit's own mechanisms, and record each with its alternative in docs/decisions-for-review-*.md until WI ### lands to configure the decision record space (continue the numbering). Traps to expect: agent-resume must run from PowerShell by absolute path; a helper that prints a reviewer's stream needs agent_common._utf8_console(); the Bash tool mangles very long heredocs (write big patch scripts with the Write tool). End by writing the session fragment under docs/log.d/ (then trunk_step.py --compile-log on trunk once it is committed), updating RESUME HERE with a "for the owner's review" list, and stopping with the repo drained and quiet.
+
+&*********
+
+Items I want to target, feel free to spin up opus agents to assist in verifying.
+
+1. Does it appear the last set of manual commits closed some of the main issues?  I think most issues were recorded in docs/handoff-2026-09-04.md.  Perhaps no deductions can be made since most of these were by-hand.
+
+2. Based on the commit history, do you think there might be a way to estimate the strength / teir that is required for a worker? Based on scope a how many reworks/reviews occured, what should have been a different strength wi (medium,medium-high, high, etc), might there be a way to automate that?
+
+3. Do you think the following githubs contain capabilities that should be consumed here in some fashion? ==>
+https://github.com/svetdev/cleat
+https://github.com/a-dithya-b/agent-native-cli
+
+4. I wonder now if consolidation should happen at WI close through an adjudicator work item close.  That is, when an item closes, it indicates what new items it think might need to enter the queue, that is the perfect place to merge that into an existing compatible wi that already has potentially synergistic scope.  This would also be the point to check for consistency errors.
+
+I suppose it may be no different from what is already formulated functionally.  It's just consolodation and contradiction checks happen as a dedicated work item.  I could see both the benifit and dedriment of that methodology.
+
+5. I still see completed work items outside of "archive",  is this captured in any WI?  I want archive to contain ALL history, mainly as an emphasis that only the spine really defines living expectations.  What was done in the past is in the past, and should properly rot there instead of other agents / humans taking documentation about historically completed items 4 months ago as truth of how items should work today.
+
+6. I see so many open items and a few issues there.  First, the heading of the open items is only a single row, so long text is cut off.  Second, most of the open items don't seem to have a functional impact.  I don't think I have an opinion on most of them, and likely the recommendations can be followed directly.  Please use your best judgement, and only retain open items that affect the core funcitonality / vision of this project.
+
+7. I still fear this repo has grown ovoerly complex.  At the end of the day it's a relatively simple high level loop:
+- WI-creation (potentially containing contradiction / consolodation from adjudicator during this process.)
+- Scheduling according to WI
+- Displatching according to scheduler.  Note if consolodation is executed before other work items (as a part of WI creation or as a part of the highest priority work item) the dispatcher would only ever need to handle one WI per lane, something that I'm afraid has caused some confusiont / complexity as of late.
+- Controlled reviews / plan sessions with arbitration when necessary.
+
+If you look at how things here have grown, esspecially with the numerous test cases, how would you redesign it to meet the vision and stakeholder needs?  What do you think the current gaps are?  What other tools exist that could be leveraged for objectives that have gotten uniquely developed here?
