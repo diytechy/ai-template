@@ -30,7 +30,7 @@ The pure layer must import neither process launch nor Git mutation code. The run
 | Record | Required information | Authority |
 |---|---|---|
 | WI | ID, intent/acceptance, references, dependencies, priority, tier, execution exclusivity, applicable review strategy | Versioned spec; directory remains WI status during migration |
-| Assignment | Single WI ID, attempt, spec digest, base/claim commit, branch/worktree, route and policy revision | Tracked claim created by coordinator |
+| Assignment | Single WI ID, attempt, spec digest, base/claim commit, branch/worktree, route and claim-time policy revision (provenance, not continuing approval authority) | Tracked claim created by coordinator |
 | Candidate | Assignment, trunk base, candidate commit and complete tree, declared checks and WI close proposal | Frozen versioned candidate |
 | Review result | Subject tree/spec/policy, reviewer provenance, criterion-linked findings, severity, disposition | Controlled reviewer result, persisted by coordinator |
 | Outcome | WI/attempt, complete/partial/cancelled result, evidence and missing scope, follow-up proposals | One terminal close and its receipt/report |
@@ -45,19 +45,22 @@ Specify the tracked claim's exact location in package P1. Preserve existing `doc
 ```mermaid
 flowchart LR
     P0[P0 Baseline and obligation map] --> P1[P1 State and acceptance contracts]
+    P1 --> PA[P1A Narrow requirement amendments]
     P1 --> P2[P2 Single-item compatibility reader]
     P2 --> P3[P3 Authoritative intake]
     P3 --> P4[P4 Scheduler]
     P2 --> P5[P5 Exact-tree integration experiment]
     P4 --> P6[P6 Runner and recovery]
+    P5 --> PA
     P5 --> P6
+    PA --> P6
     P6 --> P7[P7 Review and routing]
     P7 --> P8[P8 End-to-end candidate release]
     P8 --> P9[P9 Requirements and capability migration]
     P9 --> P10[P10 Adopter migration and deletion]
 ```
 
-P5 is an early stop/go experiment. It must settle whether peeling can be removed before P6 hardens a replacement runtime around the wrong evidence model. P3/P4 can proceed independently of that experiment after P2, but do not run multiple mutating coordinators on the same repo.
+P1A is the gate for enabling changed behavior under the repository’s own requirements; isolated fixtures and read-only adapters can proceed beforehand. P5 is an early stop/go experiment. It must settle whether peeling can be removed before P6 hardens a replacement runtime around the wrong evidence model. P3/P4 can proceed independently of that experiment after P2, but do not run multiple mutating coordinators on the same repo.
 
 ## 3. Work packages
 
@@ -69,10 +72,10 @@ P5 is an early stop/go experiment. It must settle whether peeling can be removed
 
 - Record source revision, CLI/public carrier surface, active/queued work, relevant owner rulings, and currently supported adopter versions. Exclude owner-only material.
 - Inventory all 27 SNs and 76 SRs, then the LLR/TC and test families they govern. Classify core, advanced capability, migration-only, or retirement candidate. Do not approve the classification automatically.
-- Capture representative scenarios from ordinary work, spine changes, adjudication, consolidation, human holds, partial close, interrupted review, and adopter upgrade.
+- Capture representative scenarios from ordinary work, spine changes, adjudication, consolidation, human holds, partial close, interrupted review, and adopter upgrade. Census historical train sizes, starting with WI-584/587/588/589 from the prior investigation. For each, distinguish one shared acceptance decision from separate deliverables and compare one coherent consolidated WI against separate exclusive WIs, counting all resulting integration/review turns. This is decision material to produce, not a census claimed complete by this plan.
 - Measure fresh-core scaffold footprint, warm smoke/full checks, operator interventions, and session costs where logs actually support attribution. Keep historical numbers labeled historical.
 - Explicitly disposition existing dev-slice/train batching policy and its approved design/tests: one-WI cardinality is a proposed policy change, not a compatible reinterpretation. Obtain that decision before enabling new assignment creation.
-- Make a deletion ledger: old responsibility, candidate replacement, acceptance evidence, exact retirement condition. Unused compatibility code must get an expiry rather than a permanent adapter.
+- Make a deletion ledger: old responsibility, candidate replacement, acceptance evidence, exact retirement condition. Count added schemas, parsers, states, durable carriers/refs, mutation paths, and operating/recovery procedures as well as deleted code. Unused compatibility code must get an expiry rather than a permanent adapter.
 
 **Done when:** every stakeholder need has a disposition proposal; public compatibility obligations are named; the selected scenarios can be reproduced without live paid agents by scripted adapters. The owner can distinguish behavior retained from behavior proposed for removal.
 
@@ -87,13 +90,30 @@ P5 is an early stop/go experiment. It must settle whether peeling can be removed
 - Specify the domain records above, legal transitions, authority per transition, and one-WI assignment cardinality.
 - Define dependency satisfaction for complete, partial, cancelled, and restructured predecessors. Absorption rewrites live inbound edges; it never declares missing work complete.
 - Define pause as stop admission and drain according to current policy. Distinguish held approval, malformed authority, provider fault, crash, and deliberate partial result.
-- Define proposal staleness using all actual decision inputs. Start conservatively with the whole relevant queue/spec/spine snapshot; optimize invalidation only with evidence.
-- Specify the owner-policy conflict resolution for supervision faults under SN-006 versus approval holds under SN-029. Record it as a policy question if existing rulings do not settle it.
+- Define transaction staleness separately from semantic reuse. Record the snapshot revision for apply-time preconditions; fingerprint the scope/acceptance/dependency/artifact/resource inputs actually adjudicated for judgment reuse. The current four-field digest intentionally avoids nonsemantic churn; preserve that goal while adding omitted normative input. Do not invoke the LLM merely because Deliverable, telemetry, a routing-only tier, or unrelated trunk bytes changed. Classify uncertain inputs conservatively until reviewed; measure over-invalidation in P5/P8.
+- Preserve the settled clauses: SN-006 records limit-enforcement faults and continues; SN-029 sends approval-authority faults toward more human involvement. Ask an owner only about a remaining concrete gray zone, such as failure to determine independence from a pending hold. Do not reopen the whole failure policy.
+- Specify current-trunk policy as the authority at review/promotion, with claim-time policy retained only as execution provenance. Include a mid-flight authority tightening in the acceptance scenarios.
 - Write the small behavioral scenarios and failure tables before kernel code.
 
-**Done when:** a reviewer can walk create → claim → execute → review → integrate and each failure return without reading existing runtime modules; every state has one owning writer and recovery rule. Any unresolved SN-006/SN-029 failure-policy conflict has an owner ruling before P6 implements those transitions; lack of a ruling blocks that dependent implementation, not this proposal.
+**Done when:** a reviewer can walk create → claim → execute → review → integrate and each failure return without reading existing runtime modules; every state has one owning writer and recovery rule. Any unresolved independence-under-hold failure transition has a scoped ruling before P6 implements it; settled SN-006/SN-029 behavior is not blocked on a new general ruling.
 
 **Deletion enabled:** no implementation yet, but multi-ID assignment and inferred base are explicitly absent from the target contract.
+
+### P1A — Amend incompatible contracts before enablement
+
+**Problem:** an owner decision in a plan does not amend the approved rows and tests that still require the old runtime. Deferring all spine edits to P9 would leave P8 operating against conflicting contracts.
+
+**Work:**
+
+- Prepare the smallest reviewed, version-scoped amendment set for one-WI assignment, scheduler-owned admission, intake-owned reconciliation, and whichever partial-close/evidence changes P5/P6 will enable.
+- Inspect SR-148, SR-144, SR-156, SR-170/SR-173, LLR-149/159/182/210 and their actual TC/test links. This is a candidate impact list, not a claim every row needs rewriting. Preserve externally required behavior and distinguish a changed mechanism from a retired obligation.
+- Approve amended artifacts through the current stage/authority mechanism, update acceptance tests in the same scope, and record old→new obligation/evidence mappings. The user’s approval of the redesign is not a substitute for those artifact changes.
+- Scope old-format and old-runner compatibility tests to their supported version; specify the new contract for the new runtime without weakening the common assurance bar. Isolated failing-first prototypes may precede enablement. Do not flip a new runtime on in the live repo while its governing contract is still the old one.
+- Finish any evidence-specific amendment after P5 selects the actual protocol. Bulk retirement and optional packaging remain P9 work.
+
+**Done when:** every behavior changed by enabling P6/P8 has the necessary reviewed requirement/design/test amendment and honest stage state; the old runner’s remaining supported behavior is explicitly version-scoped. No red gate is waived to fit the pilot.
+
+**Deletion enabled:** the specific incompatible old contract/test path may retire at its declared version boundary; no unrelated spine cleanup is required here.
 
 ### P2 — Read the existing kit through one compatibility boundary
 
@@ -118,7 +138,7 @@ P5 is an early stop/go experiment. It must settle whether peeling can be removed
 **Work:**
 
 - Implement a single proposal path for human drafts, gap findings, partial reports, review findings, and worker successor proposals.
-- Produce a reviewable intake mutation plan. Semantic decisions may call the adjudicator; allocation/writes remain deterministic and trunk-owned.
+- Produce a reviewable intake mutation plan. Semantic decisions may call the adjudicator; allocation/writes remain deterministic and trunk-owned. Record affected queued WI IDs derived from requirement/artifact row refs, dependency closure, shared/exclusive resources, and normative scope, plus the adjudicated input snapshot. Missing or ambiguous scope requires a global hold; a filename match or a nonempty ref list cannot by itself prove independence.
 - Support keep, extend an unclaimed WI, add edge, consolidate several unclaimed WIs into one successor, and return for decision.
 - Recheck input fingerprint and queued status immediately before applying. Stage the complete change in an isolated candidate/index; publish one commit or nothing. No partially rewritten dependency graph becomes authoritative.
 - Preserve each absorbed acceptance criterion and source link. Many-to-many legacy supersession must import without dropped obligations or cycles.
@@ -137,7 +157,7 @@ P5 is an early stop/go experiment. It must settle whether peeling can be removed
 **Work:**
 
 - Use a pure immutable snapshot and return selected one-item assignments plus blocked/held reasons.
-- Handle dependency readiness, authority, global/affected reconciliation barriers, exclusive work, pause, and capacity in one function.
+- Handle dependency readiness, authority, global/affected reconciliation barriers, exclusive work, pause, and capacity in one function. A scoped barrier consumes the current intake decision’s explicit affected IDs; if its scoping evidence is absent, ambiguous, or invalidated, hold conservatively rather than guessing independence.
 - Test whether stdlib `graphlib` removes enough cycle/traversal code to justify use. Always impose deterministic priority/ID ordering on its ready set; library iteration order is not product policy.
 - Replay legacy queue snapshots and list every intentional ordering change. No blanket “matches legacy” claim: the proposed priority simplification deliberately changes some ties.
 - Render the same decision result in CLI and dashboard. An executor finding a changed snapshot must recompute, not reorder locally.
@@ -156,12 +176,15 @@ P5 is an early stop/go experiment. It must settle whether peeling can be removed
 - Persist candidate/attempt identity before invoking the reviewer. Use retained ordinary branches under `trajectory/candidates/<attempt>`; preserve worker and trunk ancestry, and append each phase receipt as a same-tree child commit. Rejected and human-held candidates remain reachable until the required evidence is archived. A lost uncommitted result is re-requested; it is never guessed as approval. Specify a full-clone/export recovery procedure that includes candidate branches, and test retention before allowing their deletion.
 - Put the complete minimum acceptance evidence in Git-reachable committed material. For the proposed design, structured receipt plus necessary rationale lives in commit metadata; generated Markdown is a projection. Prototype rejected-review persistence too.
 - Verify message/secret hooks, identity policy, commit signing where configured, and CI check binding. A new commit with the same tree may still need commit-specific checks; do not equate tree equality with every check passing.
-- Verify human artifact attestations still name the approved normative content and acting authority. Content authority is not conferred merely by matching a hash.
+- Verify human artifact attestations still name the approved normative content and acting authority. Keep artifact-content approval distinct from final-tree approval: unrelated trunk motion alone need not invalidate unchanged artifact content, but T approval never transfers to T′. Test both `keep_nondependent` policies, an owner ready to review after a long wait, and current-trunk policy tightening during a running assignment. Content authority is not conferred merely by matching a hash.
+- Recheck trunk B and governing policy before/after compose, checks, review, and at promotion. A coordinator reservation does not exclude human commits; stop stale work at the first observed phase boundary and explain the invalidation to the operator.
 - Publish using a normal checked Git workflow that refuses dirty trunk and unexpected B. Do not update a checked-out branch behind its index, bypass hooks through plumbing, or overwrite unrelated work.
 - Crash-inject before/after candidate creation, review result recording, acceptance commit creation, trunk promotion, outcome/intake bookkeeping, and worktree cleanup.
-- Measure serial-turn wait time with scripted fast and slow reviewers and a representative live controlled run when implementation is approved.
+- Before measurements, agree a numeric experiment budget relative to the old runner: completion latency/throughput at each tested lane count, maximum human-decision re-prompt count, operator interventions, and serial waiting time. Record the workload and hardware first; never choose the threshold after seeing results.
+- Measure at the configured lane count with single-pass acceptance, repeated material-defect rework, arbitration, long human holds, and follow-up intake adjudication. Use the historical review-round distribution (including its long tail) to select cases; do not equate historical whole-WI wall time to exclusive-turn time. Count every compose/check/review turn and intake judgment, and measure semantic re-adjudication frequency. Add a representative live controlled run only when implementation is approved.
+- Compare the complete replacement protocol surface against the deleted one: receipt schema/parser, retained candidate branches, recovery/export, authority checks, and turn reservation versus peeling, excluded-path rules, and governing-history reconstruction. P5 must show a reviewer-explainable reduction, not merely move the complexity to new files.
 
-**Done when:** wrong-tree acceptance, stale-trunk promotion, missing review provenance, and duplicate terminal outcomes are impossible in the tested transition model; restart from a clean clone reconstructs all committed obligations; the measured tradeoff is acceptable.
+**Done when:** wrong-tree acceptance, stale-trunk promotion, missing review provenance, and duplicate terminal outcomes are impossible in the tested transition model; restart from a clean clone reconstructs all committed obligations; the predeclared performance/intervention budgets pass and the protocol comparison demonstrates simplification. An unset budget or unreviewed complexity comparison leaves P5 incomplete.
 
 **Stop/go:** if required evidence cannot be carried simply or review serialization is unacceptable, keep the existing verdict adapter temporarily and revise this design before P6. P6 may proceed only after P5 passes or an explicit retained-adapter contract is reviewed; its evidence assumptions cannot remain unresolved. Do not build a second metadata service or general event store as an unnoticed workaround.
 
@@ -179,7 +202,7 @@ P5 is an early stop/go experiment. It must settle whether peeling can be removed
 - Resume from the recorded base and next owed phase. Ensure the single-checkout/resumed shape cannot turn the evidence range into HEAD..HEAD.
 - Pin the running coordinator code revision. When its implementation changes, stop admission, reach a defined safe boundary, exit, and let the launcher restart. Do not hot-reload an imported module graph.
 - Distinguish durable state from local PID/log conveniences. In a same-machine restart, reconcile running processes; from a fresh clone, no local process is assumed active.
-- Implement deliberate partial close by preserving unfinished code and making a reviewed report-only terminal transaction unless a usable subset independently meets the declared acceptance. Do not merge broken work solely to terminate a lane. Reconcile this change explicitly with SR-144/SR-169 before enabling it.
+- Implement deliberate partial close by preserving unfinished code and making a reviewed report-only terminal transaction unless a usable subset independently meets the declared acceptance. Do not merge broken work solely to terminate a lane. Reconcile this change explicitly with SR-144 (partial outcome), SR-156 (serial lane lifecycle), and LLR-182 (terminal vocabulary) through P1A before enabling it. Check SR-170/SR-173 separately where the candidate-generation design changes shared regeneration; those are distinct obligations.
 
 **Done when:** one and two lanes use the same path; no double assignment, no lost partial artifact, no rerun of completed work, and no busy retry loop on human-held work. Pause and resume work through every state.
 
@@ -191,7 +214,7 @@ P5 is an early stop/go experiment. It must settle whether peeling can be removed
 
 **Work:**
 
-- Use one result schema and shared transition engine, with subject-specific prompts and applicable criteria.
+- Use one provenance/findings/disposition envelope and shared transition engine, with typed subject-specific criteria payloads. Do not create a universal optional-field schema that recreates parser sprawl. Keep prompts and applicable criteria with their subject.
 - Preserve provider-neutral routing, consent, cross-family preference/fallback, and configured review count initially.
 - Support one ordinary review; opt-in plan review; rubric-based subjective critique; consolidation review; bounded dispute arbitration. Keep advanced dual-plan strategy behind its capability boundary.
 - Store stable finding IDs, criterion, evidence, severity, disposition, and resolution. Preserve minor suggestions without requiring another build round for stylistic churn.
@@ -211,6 +234,7 @@ P5 is an early stop/go experiment. It must settle whether peeling can be removed
 
 - Run fresh scaffold scenarios with scripted providers over real Git: two independent WIs, overlap requiring consolidation, ordered separate changes, human-held amendment, conflicting review, partial close, and crash/restart.
 - Verify final status and records from a fresh clone. Compare scheduler display with actual claims.
+- Verify P1A’s governing artifact amendments and the selected P5 protocol have landed before live enablement; a plan approval alone does not clear this prerequisite.
 - Run a controlled sequence of real ordinary WIs and one scope-changing WI only after the owner approves implementation/operation. Keep the current pause until deliberately changed in that implementation session.
 - Report operator interventions, root causes, session counts, token attribution where available, time in build/review/integration, and emitted follow-up work. Distinguish harness failures from product failures.
 
@@ -224,10 +248,10 @@ P5 is an early stop/go experiment. It must settle whether peeling can be removed
 
 **Work:**
 
-- Apply the reviewed P0 disposition map to the spine without silently dropping criteria, historic approvals, or live dependencies. Every retired SR/LLR/TC must map to affected SN acceptance clauses and replacement evidence, or the explicit owner decision retiring that obligation; no approved clause may become unsupported through indirect cleanup.
+- Complete the remaining P0 disposition map after the narrow enabling amendments already landed in P1A; do not defer any contract needed by the pilot until this package. Apply it without silently dropping criteria, historic approvals, or live dependencies. Every retired SR/LLR/TC must map to affected SN acceptance clauses and replacement evidence, or the explicit owner decision retiring that obligation; no approved clause may become unsupported through indirect cleanup.
 - Re-map executable tests to enduring behavioral obligations. Keep a known-defect regression even if its old helper disappears, translated to the new boundary.
 - Move obsolete implementation notes and old compatibility controls to migration/history; remove live normative rows only through the approved spine change.
-- Assemble three capability sets using existing scaffold machinery: manual core; managed loop; advanced planning/architecture/reporting. Use a small declarative capability manifest listing included artifacts, applicable need/requirement IDs, and verification entry points. The exact set boundaries must honor the SN dispositions; accessibility stays with every shipped UI. Adoption tests must prove that each moved promise is available and verified when its capability is enabled, as well as absent from core dependencies when disabled.
+- Assemble three capability sets using existing scaffold machinery: manual core; managed loop; advanced planning/architecture/reporting. Express the capability sets in the existing bootstrap mapping/profile mechanism. Generate their inventory and requirement/check view from that mapping and existing spine links; do not introduce a second authored manifest, registry, or schema. The exact set boundaries must honor the SN dispositions; accessibility stays with every shipped UI. Adoption tests must prove that each moved promise is available and verified when its capability is enabled, as well as absent from core dependencies when disabled.
 - Keep current gate derivation and trace schema in this release. Consider direct SR evidence or stage simplification only in a separately reviewed proposal.
 - Replace master-process runtime prose with the four-step loop and the canonical policy tables. Put detailed operational reference beside the relevant adapter.
 - Run byte-budget checks before and after editing watched docs and report deltas. This report itself is outside those capped files.

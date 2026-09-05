@@ -16,6 +16,8 @@ This proposal separates three decisions that are currently easy to conflate:
 - **What can run together?** The scheduler decides from dependencies and exclusivity.
 - **What is accepted?** A controlled review and integration protocol decides against a frozen candidate and the applicable approval policy.
 
+This plan was amended after a Claude Fable 5 adversarial review at high effort. See [the findings and their dispositions](FABLE-REVIEW-DISPOSITIONS.md); the review does not approve implementation or change repository policy.
+
 Read [the implementation breakdown](IMPLEMENTATION.md) for executable phases, dependencies, exit criteria, migration, and rollback. [Evidence and reuse options](EVIDENCE-AND-TOOLS.md) contains measurements, source references, limitations, and external documentation.
 
 ## 1. What must survive simplification
@@ -34,6 +36,8 @@ The canonical vision promises reusable, maintainable, requirement-traced project
 | Read progress and architecture | SN-010, SN-023, SN-037, SN-038, SN-039, SN-040 | Preserve promised outcomes; distinguish core status from advanced architecture/reporting capabilities |
 
 These are coverage groups, not proposed replacement need IDs. All 27 existing needs must receive an explicit disposition before any retirement. “Optional profile” does not mean an approved need disappears. In particular, boundary/interface coverage and reproducible architecture partitioning are approved promises: narrowing them requires an explicit scope decision, not a refactor.
+
+**Amend conflicting requirements before enabling the new kernel.** P1A in the implementation breakdown lands the reviewed, version-scoped changes for assignment cardinality, admission authority, reconciliation timing, and any changed partial-close/evidence behavior. P8 cannot run under incompatible old requirements and defer their correction to P9. Bulk documentation and requirement consolidation can still wait until P9.
 
 **Keep the existing stage model during the kernel migration.** The eight stages and cumulative approval dial are not the first deletion target. A later owner-reviewed requirements change may simplify their presentation or scope. Do not collapse stages, change human authority, and replace orchestration in the same experiment.
 
@@ -142,11 +146,11 @@ At intake:
 5. Write the complete reviewed mutation in one trunk commit: new/updated specs, absorbed lineage, dependency rewrites, and the decision record. A failed precondition publishes none of it.
 6. Only then may affected WIs appear as eligible to the scheduler.
 
-The current `queue_digest` includes ID, title, dependencies, and safety class but omits Done-when and Context. The new intake fingerprint must cover every actual semantic input used by the decision, including acceptance text and relevant spine revisions. This is a specific freshness gap to investigate, not a claim that every current stale case has been reproduced.
+The current `queue_digest` includes ID, title, dependencies, and safety class but omits Done-when and Context. The four-field choice is deliberate: its docstring avoids repeating a judgment when Deliverable or BuildTier changes without changing the scope question. Preserve that principle. The new semantic fingerprint covers the adjudicated scope and acceptance text, dependencies, requirement/artifact revisions, and execution conflicts; exclude telemetry, generated display text, Deliverable history, and a routing-only tier change unless the decision actually depends on them. Record the exact input revision separately for transaction staleness. A changed semantic input invalidates reuse; a merely newer trunk requires rereading/precondition checks, not automatically another LLM judgment. Start with conservative invalidation where an input has not yet been classified, and measure the resulting re-adjudication frequency. The omission is a freshness gap to investigate, not a claim that every current stale case has been reproduced.
 
 Do not invoke an LLM on every scheduler tick. Reconcile on a new proposal, relevant change, or explicit reconciliation request. Bounded semantic adjudication handles uncertainty; a stalled adjudicator cannot generate an endless series of judges. Unaffected work may continue only under the declared independent-work policy.
 
-Consolidation has a size limit in **coherence**, not a universal line count: one acceptance decision must be able to judge the result. If two subsets can ship independently or demand different authority, sequence them instead. A plan may list several future WIs; it is not a multi-WI assignment.
+Consolidation has a size limit in **coherence**, not a universal line count: one acceptance decision must be able to judge the result. If two subsets can ship independently or demand different authority, sequence them instead. A plan may list several future WIs; it is not a multi-WI assignment. For existing spine trains, the default is to consolidate only rows that share one coherent acceptance decision; otherwise sequence separate exclusive WIs. P0 must show historical train sizes and compare both outcomes—including the extra compose/check/review turns—before the cardinality decision enables a new runner.
 
 ### Scheduling contract
 
@@ -158,21 +162,23 @@ The scheduler consumes an immutable validated snapshot of work, active assignmen
 - The initial priority rule is explicit priority descending, then stable ID, after readiness/authority/exclusivity constraints. Retain downstream/path ranking only if the owner wants it and replay shows a useful difference. This is an explicit scheduling-policy migration, not promised old-order equivalence.
 - The dashboard displays the same decision object that dispatch executes. If its inputs change, dispatch requests a new decision.
 
+The reconciliation decision records an explicit set of affected queued WI IDs against its input snapshot. The adjudicator derives that set from requirement/artifact row references, dependency closure, declared shared/exclusive resources, and the proposal’s normative scope; file lists alone cannot certify independence. New relevant input invalidates that decision. Missing or ambiguous scope falls back to a global hold; merely having some references does not prove that the scope is complete. The scheduler uses this recorded set rather than inventing a semantic classifier.
+
 No extra classifier predicts arbitrary semantic conflicts. Intake handles known overlaps; conservative exclusive execution handles uncertain shared scope; final composed-tree checks and review handle integration effects.
 
 ### Assignment and recovery contract
 
-An Assignment contains one WI ID, an attempt ID, the WI specification digest, claim/base commit, worktree/branch reference, chosen route, policy revision, and the next owed phase. The claim is recorded before a process starts.
+An Assignment contains one WI ID, an attempt ID, the WI specification digest, claim/base commit, worktree/branch reference, chosen route, claim-time policy revision, and the next owed phase. The claim is recorded before a process starts. Claim-time policy records execution provenance; it does not grandfather approval authority. Review and promotion evaluate authority, holds, required evidence, and publication permission against current trunk policy. Recheck them at every phase boundary and immediately before promotion; a tightening applies to in-flight work, and a relaxation is never inferred from the old claim. A proposed policy relaxation inside the candidate cannot authorize its own acceptance; current trunk authority governs approval of that policy change.
 
 A crash is an interrupted attempt, not a partial outcome. Resume from the recorded assignment; if process liveness is uncertain, resolve ownership before launching another worker on it. A deliberate partial close has an immutable report explaining delivered, missing, and preserved work. Never infer either condition solely from prose or branch naming.
 
 Use one shared transition function for the small attempt states: claimed → executing → candidate-ready → reviewing → accepted, with explicit retry/rework and human-blocked outcomes. WI lifecycle remains draft/queued/active/terminal during migration. Assignment execution phase and WI status describe different entities; no dashboard or log gets a separate authoritative status.
 
-Bound retries by a declared session/attempt budget. Temporary provider failure may reroute under existing consent; record the change. Unknown approval authority prevents that approval, while independent work follows the existing continuation policy. An optional telemetry failure is recorded without becoming permission to bypass an approval or launch limit. Clarify the tension between these cases in SN-006/SN-029 before rewriting their failure policy.
+Bound retries by a declared session/attempt budget. Temporary provider failure may reroute under existing consent; record the change. Unknown approval authority prevents that approval, while independent work follows the existing continuation policy. The existing acceptance clauses already require approval-authority faults to resolve toward more human involvement (SN-029), and faults in limit-enforcement machinery to be recorded while operation continues (SN-006). Preserve those clauses; do not add a general failure-policy ruling or treat continuation as authority to approve a held artifact. P1 asks only the unresolved question, if any: how to proceed when the machinery deciding whether other work is independent of a pending hold fails. That specific transition needs a ruling before it is implemented.
 
 ### Controlled plans, reviews, and arbitration
 
-One review result shape serves plans, implementation, consolidation, and subjective artifacts: subject and revision, criteria/rubric, reviewer provenance, findings with stable IDs and severity, disposition, and any requested decision.
+A shared result envelope serves plans, implementation, consolidation, and subjective artifacts; only provenance, findings, and disposition are common. Subject-specific criteria remain typed payloads rather than an expanding set of universal optional fields. The envelope records subject and revision, criteria/rubric, reviewer provenance, findings with stable IDs and severity, disposition, and any requested decision.
 
 Ordinary work gets one independent review under the configured review policy. A plan session is appropriate for uncertain design, scope changes, or explicit requests. Two competing plans and position-swapped arbitration remain an advanced strategy; do not make their eight-session happy path the default for a straightforward WI.
 
@@ -186,10 +192,10 @@ A useful simplification to prototype is to serialize **final candidate preparati
 
 The proposed default sequence is:
 
-1. Reserve the integration turn and read trunk revision B. Other workers continue; trunk mutations and new claims wait during this turn.
+1. Reserve the integration turn and read trunk revision B. Other workers continue; coordinator-controlled trunk mutations and new claims wait during this turn. This reservation cannot lock out a human commit: recheck B before and after every expensive phase, stop a stale attempt early, and retain the final promotion check.
 2. Compose the worker result onto B in a candidate worktree. Resolve conflicts, perform the planned terminal spec move, and generate required normative/checked outputs before review.
 3. Freeze candidate C and its complete Git tree T. Check T, and obtain the final review against T, the WI scope, and policy. Any content change creates another candidate and reruns applicable validation.
-4. Record acceptance provenance in a commit message whose tree remains T; promote only if trunk still equals B. No excluded-path classification or refresh/close peeling is needed to identify T.
+4. Record acceptance provenance in a commit message whose tree remains T; promote only if trunk still equals B and current policy still authorizes this approval. No excluded-path classification or refresh/close peeling is needed to identify T.
 5. Run intake and regenerate human views in the next serialized transaction. These derived views do not decide whether the preceding tree was approved.
 
 Git supports commit metadata independent of a tree. That makes a tree-preserving acceptance receipt technically possible; it is an architectural proposal, not a proven fit for this kit. The prototype must prove commit-hook/CI behavior, complete review evidence retention, human-attestation handling, and recovery across the publication boundary. [Git commit objects](https://git-scm.com/docs/git-commit-tree).
@@ -200,9 +206,11 @@ Receipt authority comes from the controlled reviewer invocation and coordinator 
 
 The receipt must carry sufficient structured result and rationale to recover acceptance from Git alone, not just a path/hash to an untracked log. Full session transcripts can be ancillary, but required evidence cannot disappear. A later generated Markdown view reads the receipt; it is not another verdict authority. Rejected reviews are durably recorded before releasing the turn; they do not mark the candidate accepted.
 
-This trades some concurrency utilization and integration latency for substantially simpler correctness. SN-027 explicitly justifies concurrency structurally rather than promising throughput. Still, measure head-of-line blocking: if a long final review makes the design impractical, reject this prototype and retain the current tree-identity adapter temporarily. Do not quietly recreate peeling or add a metadata database to save an unproven design.
+This trades some concurrency utilization and integration latency for substantially simpler correctness. SN-027 explicitly justifies concurrency structurally rather than promising throughput. The stop/go experiment must count the whole serial cost per completion: every compose/check/review round, rework, arbitration, and intake judgment at the configured lane count. Include single-pass, repeated-rework, and long-tail cases from the historical distribution; do not mislabel entire WI wall time as time spent in the serial turn. Before running, record numeric latency/throughput budgets, workload, hardware, and an acceptable operator-intervention count against the existing runner. Also account for the schemas, retained refs, recovery/export rules, and reservations the new receipt protocol adds against the peeling it deletes. Correctness alone does not establish simplification. Measure head-of-line blocking: if a long final review makes the design impractical, reject this prototype and retain the current tree-identity adapter temporarily. Do not quietly recreate peeling or add a metadata database to save an unproven design.
 
-Human-held final approval does not monopolize the integration turn indefinitely. Store the candidate and its pending decision, release the turn, and re-prepare/revalidate on return if trunk moved. A stale human decision cannot authorize a new tree or changed normative artifact.
+Preserve the configured human-hold behavior. With `keep_nondependent = false`, stop new admission, drain existing work, then prepare the human-held candidate on the settled trunk; the coordinator does not keep promoting unrelated work during that approval. With independent continuation enabled, retain the pending candidate and permit unrelated work while the owner is unavailable, then reserve a final integration turn when the owner takes up the decision. Recompose before asking for final tree approval so the owner is not repeatedly asked to race moving trunk. A human commit can still invalidate the candidate and must be reported.
+
+Distinguish existing artifact approval from final candidate approval: an artifact attestation names its normative content and scope and is rechecked under current authority; unchanged artifact content does not require re-attestation solely because an unrelated trunk commit landed. Final candidate approval names the exact candidate tree T and current required policy. It is never carried to T′ merely because a patch looks identical. Recompose/check/review the new candidate, and reacquire human approval wherever current policy requires it. Do not weaken whole-tree review freshness to solve the waiting problem.
 
 ## 4. Requirements and test redesign
 
@@ -244,7 +252,7 @@ The owner review should decide:
 1. Adopt one WI per lane as a schema invariant, including spine work; consolidation or sequencing happens before claim.
 2. Make authoritative intake reconciliation the eligibility boundary, with one explicit migration reconciliation WI for the existing queue.
 3. Prototype the serialized final-review integration turn and accept its throughput tradeoff only after measurement.
-4. Preserve current gate authority and trace schema for migration; review requirements simplification as a separate change.
+4. Preserve the stage ladder, owner-authority controls, and trace schema; land the narrow P1A requirement amendments before enabling changed runtime behavior. Review bulk requirements simplification separately.
 5. Separate manual core, managed loop, and advanced capabilities without silently retiring stakeholder promises.
 6. Keep the old runner available only as a rollback implementation; permit one mutating runner at a time and remove compatibility paths after a named migration release.
 

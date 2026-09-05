@@ -6,6 +6,10 @@ This was a read-only design investigation of the repository, with new documents 
 
 The working tree initially showed an owner-only scratchpad modification. Its contents were not read or used. The existing separate Claude review directory was not read; this package is an independent review.
 
+## Follow-up adversarial review
+
+On 2026-09-05, Claude Fable 5 reviewed the original proposal at high effort through the CLI against repository revision `0d6f3398`. [Its findings and the applied dispositions](FABLE-REVIEW-DISPOSITIONS.md) record the route, limits, and corrections. The census and initial source map below remain the original `a9bf6cee` observations; they were not remeasured or silently updated to the later revision. The follow-up changes implementation sequencing, current-policy authority, human-hold handling, semantic invalidation, and the criteria for judging the integration experiment.
+
 ## Reproducible census
 
 | Surface | Observation | Interpretation |

@@ -1,0 +1,63 @@
+{
+  "model": "claude-fable-5",
+  "effort": "high",
+  "source_plan": "/Users/diytechy/Documents/ai-template-redesign-2026-09-05-codex",
+  "repo": "/Users/diytechy/Documents/ai-template",
+  "review_repo_revision": "0d6f339876515b13e317f3353859f0cb2b6d4ccc",
+  "input_sha256": {
+    "IMPLEMENTATION.md": "fa4adb2cbf5b80c25bda3dc9d5e7070c04c1c99e37a4e5efafb968b69ef40fc1",
+    "README.md": "5eef10d1155cded07605bb51d1f6def42cef94a14991801bd0ac11146d1fa5b9",
+    "EVIDENCE-AND-TOOLS.md": "0f0366ad61fe56300200d198dc2c4ceba23bdf92e4081e05bc4bdc7b17b426a9"
+  },
+  "session_id": "e1bc8ef3-ea7b-4959-a9dc-2545478898d2",
+  "cli_version": "2.1.207 (Claude Code)",
+  "argv_options": [
+    "-p",
+    "--model",
+    "claude-fable-5",
+    "--effort",
+    "high",
+    "--safe-mode",
+    "--tools",
+    "Read,Grep,Glob",
+    "--allowedTools",
+    "Read,Grep,Glob",
+    "--permission-mode",
+    "dontAsk",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "effort_env": "CLAUDE_CODE_EFFORT_LEVEL=high",
+  "duration_ms": 438243,
+  "total_cost_usd": 4.003825,
+  "modelUsage": {
+    "claude-haiku-4-5-20251001": {
+      "inputTokens": 18936,
+      "outputTokens": 20,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.019036,
+      "contextWindow": 200000,
+      "maxOutputTokens": 32000
+    },
+    "claude-fable-5": {
+      "inputTokens": 23,
+      "outputTokens": 30604,
+      "cacheReadInputTokens": 682739,
+      "cacheCreationInputTokens": 88581,
+      "webSearchRequests": 0,
+      "costUSD": 3.9847889999999997,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000
+    }
+  },
+  "is_error": false,
+  "review_sha256": "9a3deaf15255960548f12336d4eff34b3675f17de5d93b8cafc2a5a6fcf29a66",
+  "revised_sha256": {
+    "README.md": "12e9b293075810fb7651ccba4d1f64d3f2c0b4972500d6ba86e603965400237b",
+    "IMPLEMENTATION.md": "fcb44436c380991774f4f3e528237be7e50e12879c4d1b5dcf69561a30b1a941",
+    "EVIDENCE-AND-TOOLS.md": "cd8ee78dfbd1cb960b1c7ada31a79c298bdc0be9bbe63ac71239277ceb3adef2"
+  }
+}
