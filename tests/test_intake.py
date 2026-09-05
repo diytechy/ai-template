@@ -2011,3 +2011,88 @@ def test_a_joined_string_inside_a_list_is_refused_at_the_authoring_boundary():
     refusal = intake._authored_supersedes_refusal(["WI-558;WI-559"], "at")
     assert refusal and "exactly ONE WI-### id per string" in refusal
     assert intake._authored_supersedes_refusal(["WI-558", "WI-559"], "at") is None
+
+
+# --- the `sweep` CLI: a range sweep is the merge slot's call, not a repo scan --
+#
+# The supervising session's out-of-band range (2026-09-04) could not use this
+# subcommand: a bare sweep also walks the three terminal folders, so on a repo
+# with years of closes under docs/archive/work/* every one of them was
+# reconsidered on top of a two-commit range. The range shape now runs triggers
+# (a)/(a2) and nothing else; `--with-terminal` asks the scan back.
+
+
+def sweep_repo(tmp_path):
+    """`(root, before, after)`: a trunk whose range amends an approved SR, and
+    which ALSO carries - outside that range - a handed-back spec in `partial/`
+    owed a disposition. The two populations a sweep must keep apart."""
+    root, before, after = amended_repo(
+        tmp_path, lambda r: write_sr(r, requirement="the AMENDED text")
+    )
+    write_spec(root, "partial", "WI-005", slug="returned", specref="seed.txt")
+    write_close_report(root, "WI-005", "wi-005", tier="strong")
+    _commit(root, "an early close, landed after the range", when=T_LATER)
+    return root, before, after
+
+
+def _sweep(root, *extra):
+    return intake.main(["--root", str(root), "sweep", *extra])
+
+
+def _minted_specrefs(root):
+    return {r["SpecRef"].replace("\\", "/") for r in queued_rows(root).values()}
+
+
+def _adjudications(root):
+    return [r for r in queued_rows(root).values() if r["SafetyClass"] == "adjudication"]
+
+
+def _subject(root):
+    return _git(root, "log", "-1", "--pretty=%s")
+
+
+def test_a_range_sweep_mints_the_range_and_touches_no_terminal_folder(tmp_path, capsys):
+    root, before, after = sweep_repo(tmp_path)
+    assert _sweep(root, "--before", before, "--after", after) == 0
+    out = capsys.readouterr().out
+    minted = _adjudications(root)
+    # The mint's own per-row line, then the count — no second listing.
+    assert "minted {} at".format(minted[0]["WI-ID"]) in out
+    assert "sweep minted 1 row(s)." in out
+    assert len(minted) == 1, [r["Title"] for r in minted]
+    assert "SR-001" in minted[0]["Title"]
+    # The terminal population is UNJUDGED: no disposition points at the
+    # handed-back spec, which the bare sweep would have minted.
+    assert not any("work/partial/WI-005" in ref for ref in _minted_specrefs(root))
+    # The default mint subject names the range, not a branch.
+    assert "sweep {}..{}".format(before, after) in _subject(root)
+
+
+def test_a_range_sweep_run_twice_mints_nothing_the_second_time(tmp_path, capsys):
+    root, before, after = sweep_repo(tmp_path)
+    assert _sweep(root, "--before", before, "--after", after) == 0
+    capsys.readouterr()
+    assert _sweep(root, "--before", before, "--after", after) == 0
+    assert "nothing to mint." in capsys.readouterr().out
+    assert len(_adjudications(root)) == 1
+
+
+def test_with_terminal_asks_the_terminal_scan_back(tmp_path):
+    root, before, after = sweep_repo(tmp_path)
+    assert _sweep(root, "--before", before, "--after", after, "--with-terminal") == 0
+    assert len(_adjudications(root)) == 2
+    assert any("work/partial/WI-005" in ref for ref in _minted_specrefs(root))
+
+
+def test_a_custom_branch_label_names_the_mint_subject(tmp_path):
+    root, before, after = sweep_repo(tmp_path)
+    argv = ("--before", before, "--after", after, "--branch", "oob-lane")
+    assert _sweep(root, *argv) == 0
+    assert "oob-lane" in _subject(root)
+
+
+def test_a_bare_sweep_still_walks_the_terminal_folders(tmp_path, capsys):
+    root, _before, _after = sweep_repo(tmp_path)
+    assert _sweep(root) == 0
+    assert "sweep minted 1 row(s)." in capsys.readouterr().out
+    assert any("work/partial/WI-005" in ref for ref in _minted_specrefs(root))

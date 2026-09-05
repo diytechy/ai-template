@@ -82,7 +82,7 @@ project-trajectory/scripts/dispatch.py	_admission	24	31
 project-trajectory/scripts/dispatch.py	_advance	20	29	16 -> 20; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/dispatch.py	_claim_lanes	24	41
 project-trajectory/scripts/dispatch.py	_poll	20	27
-project-trajectory/scripts/dispatch.py	run	25	52
+project-trajectory/scripts/dispatch.py	run	21	43	RE-STAMPED DOWNWARD 25 -> 21 (SLOC 52 -> 43) 2026-09-04: the tick's pause arm moved OUT of `run` — under §5.6 a pause forbids the CLAIM and nothing else, so the banner-and-return block at the top of the loop became one read handed to `_admit` (`_paused_exit` owns the run's end). Recorded down in the same commit, per this file's rule. Reason in docs/log.d/2026-09-04-finished-lane-round-and-pause-resume.md
 project-trajectory/scripts/gen_arch_map.py	_contract_bodies	32	55
 project-trajectory/scripts/gen_arch_map.py	_seam_edges	18	15
 project-trajectory/scripts/gen_arch_map.py	build_contract_reference	24	53

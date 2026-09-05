@@ -1922,6 +1922,53 @@ _RESIDUE_STREAM_RE = re.compile(r"^out/run-logs/[^/]+-\d{3}-\d{8}-\d{6}\.log$")
 _RESIDUE_STREAM_DIRS = ("out/run-logs/",)
 _RESIDUE_OUT_FILES = frozenset({"out/review-owed", "out/agent-loop.lock"})
 
+# BUILD RESIDUE: the ignored paths a toolchain rebuilds from a manifest, which
+# never count as dirt at all (2026-09-04). Measured that day: three merged
+# lanes ended `UNLOAD INCOMPLETE ... DIRTY (1 path)` where the one path was the
+# lane's own `.venv/`, the run exited 1 after every merge, and each worktree
+# was removed by hand with --force. A virtualenv is the same class as the
+# caches - reproducible from requirements, sole-copy evidence never - but it is
+# NOT shed here: `git worktree remove` deletes it with the lane (measured: an
+# ignored path does not refuse the removal), and walking a 5,000-file tree to
+# unlink it first would buy nothing. Everything outside this short enumerated
+# list keeps the caveat, an ignored `out/run-logs/` stream included.
+_BUILD_RESIDUE_DIR_NAMES = frozenset(
+    {".venv", "__pycache__", ".pytest_cache", ".ruff_cache"}
+)
+_BUILD_RESIDUE_FILE_PREFIX = ".coverage"
+
+
+def _is_build_residue(rel):
+    """True when repo-relative posix `rel` IS, or sits inside, one of the
+    declared build-residue directories, or is a `.coverage*` datafile.
+
+    Unlike `_is_declared_residue` the LAST segment counts, because the dirt
+    read collapses an ignored directory to one line (`!! .venv/`) and because a
+    lane's `.venv` is routinely a symlink - a path git reports as a file. That
+    widening is safe only in company: this predicate decides whether to LEAVE a
+    path alone, never whether to delete one, and its caller applies it solely
+    to paths git itself reports as IGNORED."""
+    parts = [p for p in rel.split("/") if p]
+    if not parts:
+        return False
+    if any(p in _BUILD_RESIDUE_DIR_NAMES for p in parts):
+        return True
+    return parts[-1].startswith(_BUILD_RESIDUE_FILE_PREFIX)
+
+
+def _is_build_residue_dirt(line):
+    """True for a `git status --porcelain --ignored=matching` line naming
+    IGNORED build residue. Locked twice, like the shed: git must report the
+    path as ignored (`!! `) AND the name must be declared above. A quoted path
+    (git quotes an odd name) matches nothing and stays dirt - the fail
+    direction of this whole file, kept closed. So does the SYNTHETIC line
+    `_worktree_dirt` returns when git could not answer at all, which is prose
+    rather than one path and is excluded by the single-token read."""
+    if not line.startswith("!! "):
+        return False
+    fields = line[3:].split()
+    return len(fields) == 1 and _is_build_residue(fields[0])
+
 
 def _is_declared_residue(rel):
     """True when repo-relative posix path `rel` is DECLARED tool-residue.
@@ -1960,9 +2007,20 @@ def _shed_declared_residue(wt):
     if ignored is None:
         return
     for rel in sorted(ignored):
+        target = wt / rel
+        if _is_build_residue(rel) and os.path.islink(str(target)):
+            # A lane's `.venv` is routinely a SYMLINK into a shared virtualenv
+            # (measured 2026-09-02). Unlink the LINK and never walk through it:
+            # what it points at lives outside the lane and is not ours to
+            # delete. A real `.venv/` directory is not shed at all - it simply
+            # never counts as dirt, and the worktree removal takes it.
+            try:
+                target.unlink()
+            except OSError:
+                continue
+            continue
         if not _is_declared_residue(rel):
             continue
-        target = wt / rel
         try:
             if target.is_file() or target.is_symlink():
                 target.unlink()
@@ -2050,7 +2108,10 @@ def _unload_branch(root, branch):
         # there: a lane dirty ONLY with tool caches unloads clean, a lane
         # holding one real file still refuses below, naming it.
         _shed_declared_residue(holder)
-        dirty = _worktree_dirt(holder)
+        # ...then drop the ignored BUILD residue the shed deliberately leaves
+        # standing (`.venv/` and friends): reproducible from a manifest, so
+        # never the sole copy of anything, and the removal below takes it.
+        dirty = [ln for ln in _worktree_dirt(holder) if not _is_build_residue_dirt(ln)]
     if dirty:
         return False, (
             "UNLOAD INCOMPLETE - branch {} is held by the worker worktree {}, "
@@ -2292,6 +2353,105 @@ def _keep_refused_output(root, branch, detail):
     return "\n(full output kept at {})".format(path)
 
 
+# The ONE declared `[generated]` kind a refresh conflict may NOT resolve by
+# itself. `linecounts` is tests/test_module_size_ratchet.py: a Python test
+# whose baseline rows are measured-and-classified DATA re-stamped BY HAND with
+# a reason (§5.3, and the [generated] comment says exactly that). Both sides of
+# a conflict there therefore carry a reviewed reason, no command re-derives
+# them, and taking the trunk side would silently drop the lane's. Every other
+# kind names a regenerator the trunk step (or the bar's freshness gates) runs
+# moments later, so whichever side the merge leaves in the tree cannot survive
+# to be wrong.
+_HAND_STAMPED_GENERATED_KINDS = frozenset({"linecounts"})
+
+
+def _declared_generated_kind(rel, table):
+    """The declared `[generated]` kind for repo-relative `rel`, or None. A
+    trailing "/" entry is a directory PREFIX, exactly as §5.2 defines it and as
+    check.py `_declared_generated` reads it."""
+    for entry, kind in table.items():
+        if rel.startswith(entry) if entry.endswith("/") else rel == entry:
+            return kind
+    return None
+
+
+def _resolve_generated_conflicts(wt, root):
+    """Take the TRUNK side of every conflicted declared-generated path in the
+    mid-merge lane worktree `wt`; return `(resolved, remaining)` path lists.
+
+    Measured 2026-09-04: three lane refreshes refused with "merging trunk in
+    CONFLICTS" where the ONLY conflicted paths were artifacts both sides had
+    REGENERATED (PROJECT_STATE.html, docs/ratify/CURRENT.md) - a conflict with
+    no content question in it, since `_run_trunk_step` regenerates them over
+    whichever side is in the tree seconds later. The supervisor resolved each
+    one by hand, identically, and the station can do it itself.
+
+    Two locks, both narrow: the path must be DECLARED in docs/stack.ini
+    `[generated]` (the §5.2 trunk-only set - a lane may not commit these at
+    all), and its kind must not be hand-stamped. `--theirs` is the trunk side
+    because the merge runs on the lane. Anything git will not resolve that way
+    (a delete/modify conflict has no "their version" to check out) stays in
+    `remaining`, which refuses the refresh - the fail direction stays closed.
+    """
+    table = _generated_table(root)
+    code, out = ac.git(wt, "diff", "--name-only", "--diff-filter=U")
+    if code != 0:
+        return [], ["(git could not list the conflicted paths)"]
+    resolved, remaining = [], []
+    for rel in sorted(ln.strip() for ln in out.splitlines() if ln.strip()):
+        kind = _declared_generated_kind(rel, table)
+        settled = (
+            kind is not None
+            and kind not in _HAND_STAMPED_GENERATED_KINDS
+            and ac.git(wt, "checkout", "--theirs", "--", rel)[0] == 0
+            and ac.git(wt, "add", "--", rel)[0] == 0
+        )
+        (resolved if settled else remaining).append(rel)
+    return resolved, remaining
+
+
+def _merge_trunk_in(wt, root, branch, trunk):
+    """The refresh's first step: merge `trunk` into the lane worktree `wt`,
+    settling a conflict confined to the DECLARED generated set. Returns
+    `(refusal reason or None, the git output to quote)`.
+
+    A conflict on a declared-generated path is not a content question and the
+    station settles it: take the trunk side and carry on into the trunk step
+    exactly as a clean merge does, since that step regenerates every one of
+    those files from source anyway. Anything else is the ONE place a conflict
+    can still exist, and it is the right place - the lane owns being current
+    with trunk, and the lane worktree is where the person (or agent) who wrote
+    the code is working. The merge slot never sees this: by the time a branch
+    reaches it, trunk is an ancestor and a conflict is unrepresentable.
+
+    The refusal NAMES what was auto-resolved (the caller's undo throws it away
+    with the rest) so the remainder is not read as the whole conflict. `not
+    auto` covers the merge that failed with NO conflicted path at all - a
+    refused merge, "local changes would be overwritten" - where nothing was
+    settled and so nothing may continue.
+    """
+    code, out = ac.git(wt, "merge", "--no-ff", "--no-commit", trunk)
+    if code == 0:
+        return None, out
+    auto, remaining = _resolve_generated_conflicts(wt, root)
+    note = (
+        " (the declared [generated] path(s) {} were auto-resolved to the trunk "
+        "side, since the trunk step regenerates them)".format(", ".join(auto))
+        if auto
+        else ""
+    )
+    if remaining or not auto:
+        return (
+            "merging trunk {} in CONFLICTS{}; resolve it on the branch in {} "
+            "(git merge {}), commit, then refresh again".format(
+                trunk[:10], note, wt, trunk[:10]
+            ),
+            out,
+        )
+    print("integrate: refresh of {} -{}".format(branch, note))
+    return None, out
+
+
 def refresh(root, branch, tier):
     """The §A2 station refresh. Returns `(branch tip sha, None)` or `(None, refusal)`.
 
@@ -2347,20 +2507,9 @@ def refresh(root, branch, tier):
         )
 
     trunk = _head(root)
-    code, out = ac.git(wt, "merge", "--no-ff", "--no-commit", trunk)
-    if code != 0:
-        # The ONE place a conflict can still exist, and it is the right place:
-        # the lane owns being current with trunk, and the lane worktree is
-        # where the person (or agent) who wrote the code is working. The merge
-        # slot never sees this - by the time a branch reaches it, trunk is an
-        # ancestor and a conflict is unrepresentable.
-        return undo(
-            "merging trunk {} in CONFLICTS; resolve it on the branch in {} "
-            "(git merge {}), commit, then refresh again".format(
-                trunk[:10], wt, trunk[:10]
-            ),
-            out,
-        )
+    reason, out = _merge_trunk_in(wt, root, branch, trunk)
+    if reason:
+        return undo(reason, out)
     code, out = _run_trunk_step(wt, root)
     if code != 0:
         return undo("the trunk step failed on the refreshed tree", out)
@@ -2723,13 +2872,19 @@ def _held_summary(root, held):
     return 1
 
 
-def _generated_paths(root):
-    """The stack.ini [generated] keys - the §5.2 declared trunk-only set."""
+def _generated_table(root):
+    """The stack.ini [generated] rows as `{path: kind}` - the §5.2 declared
+    trunk-only set, READ rather than restated (check.py `_generated_census`
+    reads the same section for its own duty).
+
+    A row's value is `<kind> [| <BEGIN> | <END>]`; only the kind is kept,
+    because a marker pair narrows which REGION a regenerator rewrites, not
+    which path is declared."""
     import configparser
 
     ini = root / "docs" / "stack.ini"
     if not ini.exists():
-        return []
+        return {}
     cp = configparser.ConfigParser(interpolation=None)
     # Keys are PATHS: configparser's default optionxform lowercases, which
     # would make PROJECT_STATE.html unmatchable and red the audit on the very
@@ -2737,11 +2892,20 @@ def _generated_paths(root):
     cp.optionxform = str
     try:
         cp.read_string(ini.read_text(encoding="utf-8-sig", errors="replace"))
-    except configparser.Error:
-        return []
+    except (configparser.Error, OSError):
+        return {}
     if not cp.has_section("generated"):
-        return []
-    return [k.strip() for k in cp.options("generated")]
+        return {}
+    return {
+        key.strip(): (value or "").split("|")[0].strip()
+        for key, value in cp.items("generated")
+        if key.strip()
+    }
+
+
+def _generated_paths(root):
+    """The stack.ini [generated] keys - the §5.2 declared trunk-only set."""
+    return list(_generated_table(root))
 
 
 def audit(root, since):

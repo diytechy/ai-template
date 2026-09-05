@@ -4624,6 +4624,169 @@ pair. Anything else that invoked the generator directly from a work branch
 (a lane hook, a make target) now gets the refusal and should stop; the merge
 regenerates the rollup.
 
+### `intake.py sweep --before/--after` is a RANGE sweep, not a repo scan [since 5bf9f28c]
+
+**What changed.** `sweep` used to run the terminal-folder walk on top of
+whatever range it was handed: it built its outcomes map by globbing
+`docs/work/{partial,cancelled,complete}/` **and** their `docs/archive/work/`
+siblings, then passed that map to `intake_after_merge` alongside `--before`
+/`--after`. On a repo with any history that means every close ever archived is
+reconsidered beside a two-commit range, so the subcommand was unusable for its
+one stated job — re-running the intake for a landed merge — and a supervising
+session had to call `intake.intake_after_merge(root, before, after,
+outcomes=None, branch=...)` from a Python snippet instead (measured on this
+kit's own trunk, 2026-09-04, for an out-of-band range that owed two rows).
+
+Given `--before` or `--after`, the sweep now runs triggers (a)/(a2) over
+exactly that range and nothing else — the same call `integrate.integrate_one`
+makes inside the held merge slot, minus the outcomes map no out-of-band range
+has. Two new flags: `--with-terminal` asks the terminal scan back on a range
+sweep, and `--branch <label>` names the mint subject (a range sweep with no
+`--branch` labels itself `sweep <before>..<after>`). A **bare** `sweep` with no
+range is unchanged — `HEAD..HEAD` plus the terminal scan. The ending is a
+count (`_mint` already announces each row it writes) or `nothing to mint.`
+with exit 0; a refusal still prints and exits 1. Idempotence is unchanged and
+unchanged in kind: the mint's exact-title dedup answers a re-run of either
+shape, so a range sweep repeated mints nothing the second time.
+
+**Migration: no file changes.** The kit script is the whole change; re-sync
+`intake.py` and regenerate your CLI reference if you keep one
+(`gen_arch_map.py --src <scripts> --cli-doc <doc>`). Behaviourally, a runbook
+or operating note that reaches for `sweep --before X --after Y` now gets the
+range alone — if you were **relying** on the incidental terminal scan riding
+along with a range (an unlikely dependency, and one that scaled with your
+archive rather than with the range), add `--with-terminal` to that invocation.
+A bare `sweep` needs no edit.
+### The station settles a `[generated]` refresh conflict, and an ignored `.venv/` no longer blocks the unload [since d11250de]
+
+**What changed.** Two independent fixes in `integrate.py`, each measured
+three times on 2026-09-04's queue drain.
+
+*The refresh.* When merging the trunk into a lane CONFLICTS, `refresh` now
+lists the conflicted paths and takes the TRUNK side of every one DECLARED in
+`docs/stack.ini` `[generated]`, then continues into the trunk step exactly as
+a clean merge does — that step regenerates those files from source seconds
+later, so the conflict has no content question in it. Three refreshes that day
+refused with `PROJECT_STATE.html` / `docs/ratify/CURRENT.md` as the only
+conflicted paths, and a supervisor resolved each one by hand, identically. One
+declared kind is held back BY NAME: `linecounts`
+(`tests/test_module_size_ratchet.py`), whose rows are measured data
+re-stamped by hand with a reason, so both sides of a conflict there carry a
+reviewed reason and no command re-derives them. A conflict with anything else
+in it — product code, a delete/modify git cannot take `--theirs` on — still
+refuses with the message it always carried, plus the list of generated paths
+settled first. The `[generated]` declaration is read, not restated:
+`_generated_table` parses it into `{path: kind}` and the RULING-6 audit's
+`_generated_paths` is two lines over it.
+
+*The unload.* §5.6 stops counting ignored BUILD RESIDUE as dirt: `.venv/`,
+`__pycache__/`, `.pytest_cache/`, `.ruff_cache/`, `.coverage*`. Three merged
+lanes that day ended `UNLOAD INCOMPLETE … DIRTY (1 uncommitted or ignored
+path(s))` over the lane's own `.venv/`, exiting 1 after every merge. A real
+virtualenv is NOT shed file by file — `git worktree remove` takes it with the
+lane — but a `.venv` that is a SYMLINK is unlinked under `os.path.islink` and
+never followed, because the shared virtualenv it points at lives outside the
+lane. Everything outside the allowlist keeps the existing caveat verbatim,
+an ignored `out/run-logs/` stream included.
+
+**What to do.** Re-sync `scripts/integrate.py`. Nothing to edit and nothing
+to declare: the auto-resolve reads the `[generated]` section your repo already
+has (a repo that declares none resolves nothing and refuses exactly as
+before), and the residue allowlist is enumerated in the script. If your
+`[generated]` table declares an artifact whose rows are hand-stamped rather
+than regenerated, give it the `linecounts` kind — that kind, not the path, is
+what holds it back.
+### A MINOR-only refusal routes as an APPROVE [since 68bd9ebd]
+
+**What changed.** `kitlib/verdict.py` gains `effective_verdict(word,
+findings)`: a `CHANGES-REQUESTED` carrying at least one finding, all of them
+`[MINOR]`, is READ as an `APPROVE`. The reviewer's round file is never
+rewritten — its own `VERDICT:` line and its findings stand as written; what
+changes is what the two readers do with them, and both apply the rule or it
+buys nothing. The loop reads it through the new
+`score_reviews.merged_routing_verdict` (which prints `review round:
+CHANGES-REQUESTED with MINOR-only findings routed as APPROVE (N findings
+carried)` when the reading changes the outcome) and the merge slot through
+`kitlib.verdict.round_entries`, so a lane routed as approved is not then
+refused at the slot. A `CHANGES-REQUESTED` naming NO finding stays a refusal:
+a reviewer who blocks without naming anything is a different defect.
+Measured 2026-09-03/04: four rounds refused a lane over a single `[MINOR]`
+each (WI-586 rounds 006 and 010, WI-590 round 013), every refusal costing a
+rework session AND another round.
+
+**What to do.** Re-sync `scripts/kitlib/verdict.py`, `scripts/score_reviews.py`
+and `scripts/agent_loop.py` together — the rule and its two readers ship as a
+set. Nothing to edit and no dial: if you WANT a MINOR to block, raise it as a
+MAJOR, which is what the severity scale already meant. Your existing
+`prompts/reviewer.template.md` needs no change; the kit's own is unchanged
+because nothing in it said a finding of any severity forces a refusal.
+
+### No review round is drawn on a tree a verdict already named [since 68bd9ebd]
+
+**What changed.** `kitlib/verdict.py` gains `tree_already_judged(root, branch,
+base, parse)` — the merge slot's own question (does a logged round already name
+this governing tree?) — and `agent_loop.schedule_review_round` asks it BEFORE
+queueing a round. When the answer is yes it prints `dispatch: no review round
+scheduled — rework changed no non-record path; a round on the same tree would
+be refused as a reroll` and escalates through the existing page ladder instead
+of drawing the round. Measured 2026-09-03: a rework that DECLINED a finding
+committed only its answer under `docs/reviews/`, a record path the identity
+ignores, so the redrawn round approved the very tree the first had refused and
+`integrate._round_refusal` refused the pair as a reroll-until-green — two
+reviewer sessions and a merge attempt for nothing, with no line saying why.
+Unreadable git answers "not shown to be unchanged" and the round is still
+drawn, so a repo the readers cannot see into never wedges its first build.
+
+**What to do.** Re-sync `scripts/kitlib/verdict.py` and `scripts/agent_loop.py`.
+Nothing to edit. `schedule_review_round`, `schedule_adjudication_round` and
+`build_bookkeeping` now return an exit code (or `None`) so the page can end the
+run — if you have forked any of the three, thread the return value through.
+Your loop-held runs degrade to a DESIGN-CHECK exactly as a review escalation
+does; human-held runs stop with a banner naming the cause.
+### The coordinator resumes a finished lane that owes a round, and a pause stops only the claim [since 678801c1]
+
+**What changed.** Two arms of `dispatch.py`, both about a lane the run had
+decided was beyond a worker's help.
+
+`_round_owed` + `_parked_branches`: before the merge slot sees a finished
+branch, the coordinator asks whether that branch still owes a review ROUND at
+its current tree, and resumes it as a worker if it does (the existing
+parked-resume path — `dispatch: cycle N - resuming parked branch …` — whose
+worker schedules the owed phases through `agent_loop.resume_owed_round`). Only
+a branch that owes nothing goes to the slot. Measured 2026-09-04 on a lane that
+was DONE and then had its tree moved by a rework of the spec's
+`## Dispositions`: the merge slot refused "no logged review round names its
+current tree" and the run exited with no worker ever resuming to draw it. The
+predicate composes the two readers that already own the question —
+`integrate._verdict_gate` (would the slot refuse at all: the reviewer dial, the
+adjudication waiver, the legacy-rollup migration window) narrowed by
+`kitlib.verdict.phases_owed` at the governing identity (was the phase ever
+DRAWN here) — so a dissent, a reroll-until-green or a contradicted attestation
+still stops the run for a human instead of earning another draw, and a lane
+carrying a legacy rollup still merges on it.
+
+The pause arm: `docs/work/pause` now stops the CLAIM and nothing else, which is
+what §5.6 always said ("pause = stop claiming; everything in flight finishes,
+integrates and archives"). A fresh launch under a pause resumes every parked
+lane and integrates every finished branch exactly as an unpaused run does;
+`EXIT_PAUSED` (8) comes when nothing is left in flight. Before this a fresh
+`agent_loop.py --root .` under a tracked pause exited 8 immediately and
+stranded the very lane the pause promises to finish and merge.
+
+**What to do.** Re-sync `scripts/dispatch.py`. Nothing to edit and no
+migration: both changes are read off state your repo already keeps (the claim
+directories, the branch refs, the round files, the pause). Two behaviours to
+expect. (1) If your repo runs at `review_rounds >= 1`, a finished-but-unmerged
+branch whose tree no round names is now RESUMED rather than refused — budget
+one more worker session for it, and note that a lane which draws no round at
+all is bounded by the iteration budget and the trunk-unmoved stall guard, not
+by a round cap. (2) If your operating notes carry the "delete the pause, launch,
+re-create it" recipe for resuming a lane under a pause, drop it — the launch
+does that itself now. One deliberate ordering change: a pause over a DIRTY
+trunk with nothing in flight reports the dirty-trunk refusal (exit 2) rather
+than the pause banner, because the drain a pause now performs needs a clean
+trunk like every other merge.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -60858,3 +60858,17 @@ every subsequent run used it.
 
 No source file was changed by this WI — the mutation was reverted, and the only
 tree delta is this fragment plus the spec's own close edits.
+
+## 2026-09-04 — supervised queue drain, mid-run handoff
+
+The loop resumed after the trunk greened (entry above) and merged the spine
+batch, WI-590 (seven rounds, four of them supervisor-drawn after the merge
+slot refused a record-only rework as a reroll), WI-591, WI-592, WI-593 and
+WI-594; minted WI-593..598. Three more kit fixes landed with tests and RESYNC
+entries (the batch-lane defects, the approval brief in the trunk step, the
+rollup generator's off-trunk refusal), the blackout dial was disabled by owner
+direction, and WI-594 was narrowed to the two rows only its range authored.
+State, playbook additions and the churn measurement are in
+[handoff-2026-09-04.md](handoff-2026-09-04.md).
+
+Deferred open items: none — the owner questions are listed in the handoff §5.

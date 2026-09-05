@@ -8,7 +8,12 @@ What this module pins is the loop's own contract — the joints, not the parts
   * an unwired agent command refuses BEFORE anything is claimed;
   * an empty frontier drains the queue and exits 0 — success, not an error;
   * a refusing claim rung stops the run loudly (never skipped);
-  * the tracked pause appearing MID-RUN stops the next cycle (exit 8);
+  * the tracked pause stops the CLAIM and nothing else (§5.6): one appearing
+    MID-RUN stops the next claim, a fresh launch under one still resumes the
+    lane in flight and merges it, and exit 8 comes when nothing is left in
+    flight;
+  * a FINISHED branch that still owes a review round is RESUMED as a worker
+    before the merge slot ever sees it (2026-09-04, WI-590);
   * a worker that reports DONE without finishing its branch trips the drive
     loop's own stall guard (the trunk-unmoved counter);
   * a worker that could not finish HANDS BACK (WI-387, §A3) — NEEDS-HUMAN no
@@ -298,26 +303,89 @@ def test_drive_claim_refusal_stops_the_run(tmp_path, capfd):
     assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
 
 
-def test_drive_pause_appearing_mid_run_stops_the_next_cycle(tmp_path, capfd):
-    # §5.6: pause = stop claiming. The check sits at the top of EVERY cycle,
-    # so a pause dropped while a worker ran stops the next claim — with the
-    # pause banner (exit 8), not a claim-rung refusal.
-    root = parked_repo(tmp_path)
+def write_pause(root, reason="owner says stop", since="2026-07-31"):
+    """The tracked §5.6 pause, uncommitted — the caller commits it with
+    whatever else its scenario is writing."""
+    path = root / "docs" / "work" / "pause"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        'reason = "{}"\nsince = "{}"\n'.format(reason, since),
+        encoding="utf-8",
+        newline="\n",
+    )
+    return path
 
-    def drop_pause(r, branch, wi_ids):
-        (r / "docs" / "work" / "pause").write_text(
-            'reason = "owner says stop"\nsince = "2026-07-31"\n',
-            encoding="utf-8",
-            newline="\n",
-        )
+
+def test_drive_pause_appearing_mid_run_stops_the_next_claim(tmp_path, capfd):
+    # §5.6: pause = stop CLAIMING, and ONLY that. The file is re-read at the
+    # top of every tick, so one dropped while a worker ran stops the next
+    # CLAIM — while the lane in flight finishes, refreshes and MERGES, which is
+    # what "drain to a clean, merged stop" means. Exit 8 with the pause banner,
+    # not a claim-rung refusal, and the queued row still queued.
+    root = stub_harness_repo(tmp_path)
+    write_spec(root, "queued", "WI-402", slug="second", specref="seed.txt")
+    _commit(root, "file WI-402 behind WI-401", when=T_CODE)
+    closing = closing_all_worker()
+
+    def worker(r, branch, wi_ids, args):
+        code = closing(r, branch, wi_ids, args)
+        write_pause(r)
         _commit(r, "pause: owner says stop", when=T_LATER)
+        return code
 
-    worker = Recorder(outcomes=(0,), effect=drop_pause)
-    rc = drv.run(root, drive_args(), worker=worker)
+    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
     assert rc == 8
     err = capfd.readouterr().err
     assert "PAUSED" in err and "owner says stop" in err
-    assert len(worker.calls) == 1
+    # The lane in flight finished and MERGED; the next frontier row did not
+    # move at all.
+    assert closing.calls == [("wi-401-widget", ("WI-401",))], closing.calls
+    assert (root / "docs" / "work" / "complete" / "WI-401-widget.md").is_file()
+    assert (root / "docs" / "work" / "queued" / "WI-402-second.md").is_file()
+
+
+def test_a_fresh_launch_under_a_pause_resumes_the_lane_in_flight(tmp_path, capfd):
+    # MEASURED 2026-09-04: a fresh `agent_loop.py --root .` under a tracked
+    # pause exited 8 AT ONCE, with an active claim whose lane was parked
+    # mid-work — the pause stranding the very in-flight lane its own contract
+    # (§5.6, and the pause file's own header) promises to finish and merge.
+    # The claim is the only act a pause stops.
+    root = stub_harness_repo(tmp_path)  # WI-401 queued, and a declared bar
+    write_spec(root, "active/wi-402", "WI-402", slug="parked", specref="seed.txt")
+    write_pause(root)
+    _commit(root, "claim WI-402 + pause: owner says stop", when=T_LATER)
+    _git(root, "branch", "wi-402")
+    worker = closing_all_worker()
+
+    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
+
+    assert rc == 8
+    assert worker.calls == [("wi-402", ("WI-402",))], worker.calls
+    # It finished AND unloaded — the pause never strands finished work.
+    assert (root / "docs" / "work" / "complete" / "WI-402-parked.md").is_file()
+    # ...and still claimed nothing new.
+    assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
+    err = capfd.readouterr().err
+    assert "PAUSED" in err and "nothing left in flight" in err
+
+
+def test_a_pause_with_nothing_in_flight_exits_paused_at_once(tmp_path, capfd):
+    # The other half of the same rule, unchanged: with no lane live, none
+    # parked and nothing finished-but-unmerged, there is nothing to drain and
+    # the run stops on the pause banner without claiming the ready row.
+    root = git_repo(tmp_path)
+    write_spec(root, "queued", "WI-401", specref="seed.txt")
+    write_pause(root)
+    _commit(root, "file WI-401 + pause: owner says stop", when=T_CODE)
+    worker = Recorder()
+
+    rc = drv.run(root, drive_args(), worker=worker)
+
+    assert rc == 8
+    assert worker.calls == []
+    err = capfd.readouterr().err
+    assert "PAUSED" in err and "owner says stop" in err
+    assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
 
 
 def test_drive_resumes_a_parked_branch_and_stalls_on_no_progress(tmp_path, capfd):
@@ -774,7 +842,9 @@ def test_the_spine_batch_admits_first_and_together(tmp_path, capfd):
     assert "queue drained" in out
 
 
-def hand_finished_branch(root, rows=(("WI-777", "residue"),), branch="wi-777"):
+def hand_finished_branch(
+    root, rows=(("WI-777", "residue"),), branch="wi-777", trailers=False
+):
     """A lane finished BETWEEN runs, by hand: trunk still shows its spec(s)
     under active/, while the branch has already moved them to complete/. That
     is what `finished_branches` calls residue at the next tick — finished,
@@ -809,7 +879,15 @@ def hand_finished_branch(root, rows=(("WI-777", "residue"),), branch="wi-777"):
             newline="\n",
         )
         _git(wt, "rm", "-q", "docs/work/active/{}/{}".format(branch, name))
-    _commit(wt, "hand-finished between runs", when=T_LATER)
+    message = "hand-finished between runs"
+    if trailers:
+        # What a REAL close commits: the `WI:` completion trailer that is the
+        # worker's one result channel (`agent_common.train_evidence`), and the
+        # evidence the resumed preflight tells a lane's own closed row from a
+        # stale assignment by. Off by default so the branches that only need
+        # to be residue stay exactly what they were.
+        message += "\n\n" + "".join("WI: {}\n".format(wid) for wid, _s in rows)
+    _commit(wt, message, when=T_LATER)
     return branch
 
 
@@ -861,6 +939,89 @@ def test_residue_settled_at_barrier_open_is_counted_in_the_drained_banner(
     # branches — the batch's second WI, or the residue branch's.
     for wrong in ("2 WI(s)", "3 WI(s)", "4 WI(s)"):
         assert wrong + " integrated this run." not in out, (wrong, out)
+
+
+# --- a FINISHED lane that still owes a review round (2026-09-04, WI-590) ------
+
+
+def _declare_review_policy(root, value):
+    """Declare the reviewer dial in the LEGACY home the stub fixture uses —
+    `stub_harness_repo` writes `docs/review-policy`, and seeding
+    `docs/process.toml` beside it would trip the SN-028 two-homes refusal
+    (`agent_common.config_conflicts`) rather than change the policy."""
+    (root / "docs" / "review-policy").write_text(
+        "{}\n".format(value), encoding="utf-8", newline="\n"
+    )
+
+
+def test_a_finished_branch_that_owes_a_round_is_resumed_not_integrated(tmp_path, capfd):
+    # MEASURED 2026-09-04 ON WI-590. The lane was DONE — every spec out of
+    # active/, mechanically closed — and then its TREE moved (a rework of the
+    # spec's `## Dispositions`). The next launch handed the finished branch
+    # straight to the merge slot, which refused "no logged review round names
+    # its current tree", and the run exited: no worker ever resumed to draw the
+    # owed round, so a supervisor had to draw it by hand. The coordinator must
+    # ASK first — a finished branch that owes a round is resumed as a worker
+    # (the parked-resume path), and only one that owes nothing takes the slot.
+    root = stub_harness_repo(tmp_path)
+    _declare_review_policy(root, 1)
+    _commit(root, "declare review-policy 1", when=T_CODE)
+    hand_finished_branch(root)  # finished, and no round names its tree
+
+    worker = Recorder(outcomes=(0,))
+    rc = drv.run(root, drive_args(stall_limit=2), worker=worker, tier="smoke")
+
+    # RESUMED — on the finished branch, by the parked-resume path's own banner.
+    assert worker.calls == [("wi-777", ("WI-777",))], worker.calls
+    out = capfd.readouterr().out
+    assert "resuming parked branch wi-777" in out, out
+    # ...and NOT integrated on the strength of a round nobody drew: this stub
+    # worker draws none either, so the slot still refuses and the run stops —
+    # the point is that a worker got the chance first.
+    assert rc != 0
+    assert not (root / "docs" / "work" / "complete" / "WI-777-residue.md").is_file()
+    # The claim behind it never happened: an unfinished lane comes home first.
+    assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
+
+
+def test_a_finished_branch_that_owes_nothing_goes_straight_to_the_slot(tmp_path, capfd):
+    # The other side of the same question, and the behaviour that must NOT
+    # change: with the reviewer dial off, nothing is owed at any tree, so the
+    # residue branch is the integrator's — never a worker session spent
+    # re-opening a lane the slot would have taken.
+    root = stub_harness_repo(tmp_path)  # docs/review-policy = 0
+    hand_finished_branch(root)
+    worker = closing_all_worker()
+
+    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
+
+    assert rc == 0
+    assert (root / "docs" / "work" / "complete" / "WI-777-residue.md").is_file()
+    assert all(branch != "wi-777" for branch, _ids in worker.calls), worker.calls
+
+
+def test_the_worker_preflight_accepts_the_resumed_finished_lane(tmp_path):
+    # The far end of the resume: `agent_loop --wi WI-777` on a lane whose rows
+    # the LANE ITSELF already closed. The preflight's terminal-status rung
+    # refuses a STALE assignment, and the 2026-09-04 fix tells the two apart by
+    # the branch's own `WI:` trailer in merge-base(trunk, HEAD)..HEAD — driven
+    # here on the shape the coordinator now hands it, so the resume cannot be
+    # arranged upstream and refused downstream.
+    root = git_repo(tmp_path)
+    hand_finished_branch(root, trailers=True)
+    wt, err = drv.integrate.lane_worktree(root, "wi-777")
+    assert err is None, err
+
+    args = argparse.Namespace(wi="WI-777", train=None, interactive=False)
+    failures = drv.ac.preflight(wt, "stub-agent", args)
+
+    assert not [f for f in failures if "stale assignment" in f], failures
+    assert (
+        drv.ac.stale_terminal_assignment(
+            wt, "WI-777", drv.ac.load_wi_registry(wt)["WI-777"]
+        )
+        is False
+    )
 
 
 def test_attended_approval_row_drains_and_exits_zero_with_the_banner(tmp_path, capfd):

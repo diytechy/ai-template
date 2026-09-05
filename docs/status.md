@@ -24,55 +24,22 @@ supervisor prompt at the owner's request). Backward-looking homes:
 status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **RESUME HERE — THE FRONTIER IS PAUSED (tracked `docs/work/pause`, armed
-  2026-09-02) while the owner addresses the DISPATCH failure this run
-  exposed, in a session of their own.** The failure: the scheduler claims
-  several rows onto one exclusive lane and the worker assignment names them
-  all, but the session banner names only the FIRST id, the worker follows the
-  banner, and the remaining rows are left silently undone — caught only by
-  the integrator refusing a lane whose claimed row has no outcome. The
-  affected lane was finished by hand and merged; the loop is stopped and no
-  worktree remains. The account is the log's 2026-09-02 close-out addendum.
-  Since 2026-09-01 this run merged the construction-first reviewer clause,
-  the approval-brief renderer defects, the wi508 partial-close conversion and
-  its disposition adjudication, the snapshot copy scope, the adjudicator-only
-  approval act, its amendment adjudication and spot-check, and the wi508
-  spine reseal with its registry-bound correction. Routing since 2026-09-02:
-  both Anthropic tiers pinned to `claude-opus-5` (effort high/strong,
-  medium/medium) and all three codex rows at medium effort (owner
-  directives). One reviewed deletion of the pause file resumes the generated
-  frontier below.
-  **For the owner's review:** delegated decisions 47–56 in
-  [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md)
-  (52–56 are the evening session's: the hand merge + drawn rounds that
-  landed the wi508 conversion, its record corrections, the adjudication's
-  rework and by-hand close, the loop stopped on a C6 cycle, the re-arm);
-  `OI-77` and `OI-78` are RULED (2026-09-01 evening: (a) and STAND; both
-  cards had been hand-filled first because the automated mint writes only
-  the question — the owner-prioritized rows that fix the mint's shape and
-  the snapshot's copy scope head the generated frontier below); **ruled in
-  session and filed (2026-09-01 evening):** the spine approval act — the
-  Status flip and its anchoring snapshot — is the adjudicator's alone, on
-  the serial trunk side, for whole-chain context and for concurrency; the
-  executing row is queued behind the copy-scope row (a lane's merge refused
-  on any flip, born-Approved row or snapshot write; a first-approval
-  adjudication arm minted at merge; the amendment brief's stale
-  "mechanical tool" line replaced) — the log's 2026-09-01 approval-act
-  ruling entry is the record; the six MEANING rows awaiting the owner's signature on the
-  `trace.py --approve modified` re-attestation brief (they render in
-  [open-items.html](open-items.html)'s re-attestation section); the three
-  owner-owed acts now filed as pending rows on that same surface —
-  `OI-79` (the origin HELD ref), `OI-80` (`OI-72`'s "four Drafted" wording),
-  `OI-81` (publication + the single-copy wi416 branch); `check_trajectory --strict` carries one
-  KNOWN queued ERROR (the schedule→trace seam; its row is queued, and it does
-  not red the non-strict bar); nine unfiled kit findings listed in the
-  evening log entry (a lane cut before a trunk snapshot move cannot refresh;
-  the thin `open_item` mint; the C6 re-adjudication cycle; the audit flagging
-  intake's own OI mint); and the standing 2026-08-31 items below.
-  Hand-authored prose here names no queued id (the claim-refusal rule); a
-  fresh reader starts at [handoff-2026-08-31.md](handoff-2026-08-31.md) —
-  **read its banner: the 2026-09-01 runs superseded parts of it** — and the
-  log.
+- **RESUME HERE — THE LOOP IS RUNNING (unpaused 2026-09-04; no
+  `docs/work/pause`).** A fresh reader starts at
+  [handoff-2026-09-04.md](handoff-2026-09-04.md) (state, the playbook for
+  holding the loop's hand, the measured review churn and the out-of-band
+  churn program, seven of whose eight items are merged) and its predecessor
+  [handoff-2026-09-03.md](handoff-2026-09-03.md) §2 (rulings not to
+  re-litigate). Since 2026-09-03 the loop plus supervised hand steps merged
+  the two amendment adjudications, the four-row spine batch, the LLR-207/208
+  first-approval adjudication (seven rounds, four supervisor-drawn), the two
+  clean-close spot checks, the LLR-197 amendment and the LLR-209/TC-207
+  first approval; the trunk was greened at the DevStg-Tests tier out of band;
+  the weekday blackout dial is disabled by owner direction (restore the value
+  in `docs/process.toml` to re-arm). The consolidation adjudicator is built
+  on an agent branch awaiting its adversarial rounds before merge.
+  Hand-authored prose here names no queued id (the claim-refusal rule); the
+  generated frontier below is the order.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). `wi416-parked-handback-contract` is still

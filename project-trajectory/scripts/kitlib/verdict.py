@@ -131,6 +131,10 @@ __all__ = [
     "RECORD_PREFIXES",
     "REVIEW_PHASES",
     "TRAILER_LABEL",
+    "MINOR",
+    "UNCHANGED_REWORK",
+    "UNCHANGED_PAGE",
+    "effective_verdict",
     "format_trailer",
     "parse_trailer",
     "is_record_path",
@@ -148,6 +152,7 @@ __all__ = [
     "logged_rounds",
     "round_entries",
     "branch_entries",
+    "tree_already_judged",
     "declared_phases",
     "phases_owed",
     "round_count",
@@ -162,6 +167,18 @@ RECORD_PREFIXES = ("docs/reviews/", "docs/log.d/", "docs/iteration/")
 REVIEW_PHASES = ("REVIEW-A", "REVIEW-B")
 
 TRAILER_LABEL = "Review-Verdict"
+
+# The one severity that cannot, by itself, refuse a lane.
+MINOR = "MINOR"
+
+# What `tree_already_judged` answering True MEANS to whoever asked, in the words
+# the operator reads. Here rather than at the caller so the loop's console line
+# and the merge slot's vocabulary cannot drift apart.
+UNCHANGED_REWORK = (
+    "rework changed no non-record path; a round on the same tree would be "
+    "refused as a reroll"
+)
+UNCHANGED_PAGE = "PAGE-HUMAN — rework left the reviewed tree unchanged"
 
 # The machine half. Anchored per-line (`re.M`) exactly like the `Bar-Green:`
 # reader, and the verdict word is a CLOSED alternation rather than `\S+`: an
@@ -191,6 +208,54 @@ _PHASE_HEADER_RE = re.compile(r"^# phase:[ \t]*(.*)$", re.M)
 
 _REVIEWS = "docs/reviews"
 _ITERATION = "docs/iteration"
+
+
+# --- what a verdict word MEANS once its findings are read ---------------------
+
+
+def effective_verdict(word, findings):
+    """`word`, except that a CHANGES-REQUESTED whose findings are ALL `[MINOR]`
+    routes as an APPROVE.
+
+    WHY THIS EXISTS (measured 2026-09-03/04). Four review rounds refused a lane
+    on a single MINOR finding each (WI-586 rounds 006 and 010, WI-590 round
+    013). Each refusal cost a rework session AND another round — two agent
+    sessions and a full harness re-run — to land a wording nit that no reviewer
+    called a defect. A MINOR is by construction a finding whose remedy the
+    reviewer did not think worth blocking on; spending the block on it inverts
+    the severity scale the brief asks reviewers to use.
+
+    THE RECORD IS NEVER REWRITTEN. This transforms what the READERS do with a
+    verdict, never the round file: the reviewer's `VERDICT:` line stays exactly
+    what the reviewer wrote, the findings stay carried, and a later reader can
+    still see that changes were requested. Only routing and the merge slot read
+    the word through here.
+
+    ONE HOME, BOTH READERS — the same reason the rest of this module exists.
+    `agent_loop.complete_review_round` (route this round) and
+    `round_entries`, which feeds `integrate._round_refusal` (may this branch
+    merge?), must apply it identically: a loop that routed a MINOR-only round as
+    APPROVE while the gate still read the file's own word would send the lane
+    to a merge slot that refuses it, which is the wasted round again with an
+    extra hop.
+
+    ZERO FINDINGS IS NOT MINOR-ONLY. A CHANGES-REQUESTED with no findings at all
+    stays a refusal: a reviewer who blocks without naming anything is a
+    different defect (a garbled or lazy round), and silently promoting it to
+    APPROVE would clear a gate on nobody's judgement. `all()` over an empty
+    sequence is True, so the emptiness is tested first and on purpose.
+
+    A finding is anything carrying a `severity` (a `score_reviews.Finding`);
+    a bare string is read as the severity itself, so a caller holding only the
+    words needs no adapter."""
+    if word != "CHANGES-REQUESTED":
+        return word
+    severities = [
+        str(getattr(f, "severity", f) or "").strip().upper() for f in findings or ()
+    ]
+    if not severities:
+        return word
+    return "APPROVE" if all(sev == MINOR for sev in severities) else word
 
 
 # --- the trailer --------------------------------------------------------------
@@ -789,7 +854,13 @@ def round_entries(root, branch, rounds, want, parse):
         text = git_out(root, ["show", "{}:{}".format(branch, path)])
         if text is None:
             continue
-        entries.append((phase, ordinal, parse(text).verdict))
+        parsed = parse(text)
+        # THROUGH `effective_verdict`, the same call `agent_loop` routes on: a
+        # MINOR-only CHANGES-REQUESTED is an APPROVE for both readers or for
+        # neither (see there). The FILE is untouched — this reads it.
+        entries.append(
+            (phase, ordinal, effective_verdict(parsed.verdict, parsed.findings))
+        )
     return entries
 
 
@@ -800,6 +871,31 @@ def branch_entries(root, branch, base, want, parse):
     if paths is None:
         return None
     return round_entries(root, branch, logged_rounds(root, branch, paths), want, parse)
+
+
+def tree_already_judged(root, branch, base, parse):
+    """Has a logged round ALREADY named the branch's CURRENT governing tree?
+
+    The question `integrate._round_refusal` asks at the merge slot, asked by
+    `agent_loop.schedule_review_round` BEFORE a round is drawn instead of after
+    it is wasted — which is why it lives here beside the readers rather than in
+    either of them.
+
+    WHY (measured 2026-09-03). A rework session that DECLINED a finding
+    committed only its answer under `docs/reviews/` — a record path this module
+    is built to ignore — so `governing_identity` did not move. The loop armed
+    another round, the reviewer approved the very tree it had refused, and the
+    slot read the pair as a reroll-until-green and refused the lane. Two
+    reviewer sessions and a merge attempt bought nothing.
+
+    Unreadable git, or an unreadable path set, answers False: a lane whose
+    evidence cannot be read has not been SHOWN to be unchanged, and refusing to
+    draw a round on git's silence would stop every first build in a repo these
+    readers cannot see into."""
+    want = governing_identity(root, branch)
+    if want is None:
+        return False
+    return bool(branch_entries(root, branch, base, want, parse))
 
 
 def declared_phases(required):

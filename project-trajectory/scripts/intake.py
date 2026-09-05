@@ -2061,33 +2061,55 @@ def mint_gap_rows(root, lines):
 
 
 def _cmd_sweep(args):
-    """Re-run the intake for a landed merge (idempotent by exact-title dedup):
-    trigger (a) over --before/--after when given, plus a scan for handed-back
-    specs owed a disposition and merged adjudication rows owed their drafted
-    follow-ups."""
+    """Re-run the intake for a landed merge (idempotent by exact-title dedup).
+
+    TWO SHAPES, because the two callers want different scopes:
+
+    * **Range sweep** (`--before/--after` given) — triggers (a)/(a2) over
+      exactly that trunk range and NOTHING else: what
+      `integrate.integrate_one` runs in the held slot, minus the outcomes map
+      no out-of-band range has. The terminal-folder scan is SKIPPED, because a
+      repo with years of closes under `docs/archive/work/*` would otherwise
+      have every one of them reconsidered on top of a two-commit range — which
+      is what made this subcommand unusable on a live repo and forced
+      supervising sessions to call `intake_after_merge` from a Python snippet
+      instead (2026-09-04). `--with-terminal` asks the scan back.
+    * **Bare sweep** (no range) — today's behaviour, unchanged: HEAD..HEAD plus
+      the terminal scan for handed-back specs owed a disposition and merged
+      adjudication rows owed their drafted follow-ups.
+
+    THE WI-413 FIX, and the reason that row cancels as superseded rather than
+    being built. The bare sweep used to scan open directories for a
+    `## Handback` section and tokenize the disposition title with the CURRENT
+    head — so a still-marked returned spec re-minted a duplicate disposition
+    on EVERY run. There is no token to get wrong now: a close is a REPORT, an
+    immutable file, and `_close_drafts` titles the disposition with that
+    file's path. Sweeping twice produces the same title twice and the mint's
+    exact-title dedup answers it; a genuinely second close is a second report
+    and so a second row. That dedup is what makes BOTH shapes re-runnable.
+    """
     root = Path(args.root).resolve()
-    outcomes = {}
-    # THE WI-413 FIX, and the reason that row cancels as superseded rather than
-    # being built. The bare sweep used to scan open directories for a
-    # `## Handback` section and tokenize the disposition title with the CURRENT
-    # head — so a still-marked returned spec re-minted a duplicate disposition
-    # on EVERY run. There is no token to get wrong now: a close is a REPORT, an
-    # immutable file, and `_close_drafts` titles the disposition with that
-    # file's path. Sweeping twice produces the same title twice and the mint's
-    # exact-title dedup answers it; a genuinely second close is a second report
-    # and so a second row.
-    # One walk over the three TERMINAL folders, not one loop per outcome: the
+    ranged = bool(args.before or args.after)
+    before, after = args.before or "HEAD", args.after or "HEAD"
+    # ONE walk over the three TERMINAL folders, not one loop per outcome: the
     # only thing that differs is the folder -> outcome name, which
-    # `integrate.OUTCOME_DIRS` already states once.
-    for status_dir, outcome in sorted(SWEEP_OUTCOMES.items()):
-        for path in _terminal_hits(root, status_dir, "WI-*.md"):
-            matched = _WI_FILE_RE.match(path.name)
-            if matched:
-                outcomes["WI-" + matched.group(1)] = outcome
-    before = args.before or "HEAD"
-    after = args.after or "HEAD"
-    minted, refusal = intake_after_merge(root, before, after, outcomes)
-    return _cli_result(refusal, "sweep minted {} row(s).".format(len(minted)))
+    # `integrate.OUTCOME_DIRS` already states once. `None` is the range shape's
+    # answer and is NOT `{}` — it says "this sweep judged no close at all",
+    # which is what keeps triggers (b)/(d) out of an out-of-band range.
+    outcomes = None
+    if args.with_terminal or not ranged:
+        outcomes = {
+            "WI-" + hit.group(1): outcome
+            for status_dir, outcome in sorted(SWEEP_OUTCOMES.items())
+            for path in _terminal_hits(root, status_dir, "WI-*.md")
+            if (hit := _WI_FILE_RE.match(path.name))
+        }
+    branch = args.branch or ("sweep {}..{}".format(before, after) if ranged else "")
+    minted, refusal = intake_after_merge(root, before, after, outcomes, branch)
+    # `_mint` already announced each row it wrote ("intake: minted <id> at
+    # <path>"), so the ending is a COUNT and never a second listing.
+    ok = "sweep minted {} row(s).".format(len(minted)) if minted else "nothing to mint."
+    return _cli_result(refusal, ok)
 
 
 # --- the session-hold arms (ruled decision 2, owner 2026-07-31; §A8) -----------
@@ -2571,6 +2593,8 @@ def main(argv=None):
     )
     sweep.add_argument("--before", help="pre-merge trunk sha (trigger a)")
     sweep.add_argument("--after", help="post-merge trunk sha (trigger a)")
+    sweep.add_argument("--branch", default="", help="mint subject (default: the range)")
+    sweep.add_argument("--with-terminal", action="store_true", help="terminal scan too")
     sweep.set_defaults(func=_cmd_sweep)
     census_cmd = sub.add_parser(
         "census", help="derive the gap census and mint gap-closure rows"
