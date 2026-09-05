@@ -60872,3 +60872,780 @@ State, playbook additions and the churn measurement are in
 [handoff-2026-09-04.md](handoff-2026-09-04.md).
 
 Deferred open items: none — the owner questions are listed in the handoff §5.
+
+## 2026-09-04 — WI-595: LLR-207/TC-205 return and LLR-208/TC-206 amendment
+
+The verdict rows describe every mechanism that now holds them. Two cells
+returned by `docs/reviews/wi-590-adjudicate-llr-207-llr-208/004-ADJUDICATE-774ef35.md`
+(`OUTCOME: RETURN rows=4`), plus round 011's MAJOR against two rows that act
+approved. The initial return named existing mechanisms; review round 005 then
+found that one of those mechanisms was weaker than the returned row claimed,
+so this same WI now carries its boundary hardening and regression too.
+
+### Rework round 2 — forged-middle close subject
+
+Review A round 005 demonstrated that `mechanical_close_attestation` validated
+only the mechanical subject's prefix/suffix shape, not the exact composed WI
+ids claimed by `LLR-207.detail`. Root cause: the one owning verifier never tied
+the untrusted commit message's middle to the `docs/work/` rename it was
+attesting. The owning verifier now derives those ids from paired same-name
+active-to-complete moves in the commit's own no-renames diff and compares the
+subject re-composed by the writer's helper. The real-git regression commits an
+affix-correct forged middle over an otherwise plausible move, asserts
+`mechanical_close_attestation` returns `None`, and asserts the merge gate asks
+for review. TC-205 cites that node, LLR-207 states the strengthened contract,
+and the approval brief was regenerated.
+
+**Re-drove the spec's four claims before editing anything.** All four hold on
+this tree:
+
+- `_peel_target` (`kitlib/verdict.py:431-442`) peels TWO classes, not one —
+  `refresh_attestation` and `mechanical_close_attestation` (`:376-428`).
+- `work_tip` calls `refresh_attestation` DIRECTLY (`:466`), never
+  `_peel_target`, so the reset path peels only the refresh. The asymmetry is
+  deliberate and was invisible in `LLR-207.detail`.
+- `mechanical_close_attestation` is an `__all__` export (`:141`) and
+  `grep -rn 'mechanical_close' docs/requirements/ docs/test/` returns ZERO
+  rows — `LLR-207` is not one of several possible homes for it, it is the only
+  one.
+- `gen_verdict_rollup._off_trunk_refusal` (`:227-249`) refuses a direct write
+  off the trunk with exit 2 (`main`, `:268-272`); `trunk_step.py:591` passes
+  `--trunk-step` as the one allowed off-trunk caller.
+
+### What changed
+
+`LLR-207.detail` — the `governing_rev` clause said the walk peels "any verified
+refresh it meets". Restated to name both disposable classes, the ONE property
+that admits them (machine-authored, and the tree moves without the lane
+changing what it claims), the verification each is admitted by, and the
+fail-toward-review direction. Added the `work_tip` asymmetry explicitly: the
+destructive reset path peels only the refresh.
+
+`LLR-207.code_symbol` — added `mechanical_close_attestation` beside
+`refresh_attestation`. `_peel_target` deliberately left out: private, and the
+two attestation readers are the named surface.
+
+`TC-205.method` / `.evidence` — `THE PEEL` enumerated the refresh arm alone and
+neither cell held the string "mechanical". Added the second class in the same
+idiom the rest of the cell uses — the positive and its refusal arms — and cited
+the three tests that already drove it but that no test case anywhere cited:
+`test_the_mechanical_close_does_not_stale_the_round_it_follows`,
+`test_only_the_machinerys_own_close_subject_peels`,
+`test_a_close_that_reached_outside_docs_work_does_not_peel`. The positive also
+drives the two peels COMPOSING (a refresh stacked on a close), which the cell
+now states. Rework round 2 adds the distinct affix-correct forged-middle
+refusal and its new evidence node.
+
+`TC-205.tier` — re-tiered `Smoke` -> `Full`, and the basis is recorded in
+`Method` so the reading is not left open. Ruled rather than deferred: 8 of the
+row's 50 citations live in `test_integrate_admission` / `test_integrate_station`,
+both in `tests/conftest.py` `SLOW_MODULES` and so excluded from `-m smoke`.
+`Full` is the smallest tier at which the WHOLE cited set runs, `Smoke` claimed
+cheap-gate coverage for a set the cheap gate only partly runs, and sibling
+`TC-132` already reads `Full` while citing the same station module. The Tier
+field and the pytest marker remain a known unreconciled pair
+(`docs/registry-machinery-reference.md` §12.2); this edit does not reconcile
+them, it stops this row from misreporting on the side §12.2 names as the
+harmful one.
+
+`LLR-208.detail` (AMENDMENT to an Approved cell, §A5.2) — the cell said regen-set
+membership "is the only thing that makes the exclusive-writer clause above
+true". False since `7ea3cce7`. Amended to state BOTH mechanisms and keep them
+distinct: `_off_trunk_refusal` is what ENFORCES the clause, regen-set membership
+is what keeps the artifact FRESH. Neither substitutes for the other — a refusal
+with no regenerator leaves the artifact written by nobody, and a regenerator
+with no refusal is the state that shipped the WI-590 round 005 defect.
+
+`LLR-208.code_symbol` — added `_off_trunk_refusal` (the row already names the
+private `_extra`, so this matches its own convention).
+
+`TC-206.method` / `.evidence` — stated the refusal arm and cited
+`tests/test_verdict_record.py::test_a_work_branch_cannot_write_the_rollup_but_the_trunk_step_can`.
+
+### Two decisions the cells cannot record themselves
+
+**`LLR-208.hat_refs` left unset, deliberately.** `check_trajectory` warns that
+an approved Detail moved while Hat-Refs stayed put, and notes that an unchanged
+cell cannot say whether that was a decision. It was: the row carries no
+`hat_refs` and inherits `INTEGRITY-RECOVERABILITY` from `SR-170`, which is
+exactly the lens the amendment writes about — a refusal that stops a silent bad
+write. Setting the cell would OVERRIDE the inheritance rather than add to it, so
+the smallest honest edit is none.
+
+Surfaced as a separate finding, not fixed here: the WI-590 round 005 defect was
+an UNATTENDED lane writing the artifact with the stand-down hiding it, which
+reads as an `UNATTENDED-OPS` concern that `SR-170` does not carry (sibling
+`SR-156` carries both). Whether `SR-170`'s hat set is short is a question about
+the SR, not about this amendment, and widening an Approved row's perspective
+record was not in this return's scope.
+
+**Provenance kept out of the cells.** A first draft of `TC-205.method` named
+`WI-586` as the measured failure; `trace.py --strict-integrity` raised it as a
+spine stand-alone FINDING (`provenance-findings=1`) and it was rewritten to
+state the standing reason instead — the close archiving a judged row stales the
+APPROVE that had just judged it, and an adjudication lane cannot avoid it by
+ordering because its round is drawn while the row is still in `active/`. The
+account lives here; the cell states the system. Same rule applied to
+`LLR-208.detail` and `TC-206.method`, which name the failure shape and no ids.
+
+### The peel's path-set arm is NON-EMPTY, and the cell now says so
+
+A later read of `mechanical_close_attestation` caught the first draft of
+`LLR-207.detail` under-describing the arm it had just added. The cell said the
+close is admitted against "a changed-path set lying wholly under `docs/work/`" —
+a clause the EMPTY set satisfies vacuously. The code does not:
+`if not paths or any(not path.startswith(_WORK_PREFIX) for path in paths)`
+(`kitlib/verdict.py:426`) refuses a zero-path commit outright. The clause now
+reads "a NON-EMPTY changed-path set".
+
+This is not pedantry about a set-theory edge: the zero-path commit is a REAL
+class in this system, and `TC-205.method` already drives it two sections
+earlier — `agent_common.commit_telemetry` writes an empty commit when a
+Review-Verdict attestation must land on unchanged bookkeeping, and the cell
+records that "that is the commit shape a walk classifying PATHS could not
+classify and so stopped at". The `not paths` guard is what keeps the close peel
+from being the walk that classifies it wrongly in the other direction. The
+module DOCSTRING has the same gap ("every path it changed must live under
+`docs/work/`"); the cell is now more precise than the docstring it describes.
+
+FINDING, surfaced not fixed: no test drives the empty-path refusal. `TC-205`
+cites the subject refusal and the reached-outside-`docs/work/` refusal, and the
+`not paths` disjunct is the third arm with no citation. Writing it is a
+regression this return is not scoped for ("no new mechanism and no regression
+to write" — the spec's IN SCOPE fence), and the cell does not claim a test it
+lacks. Recorded here so a successor can take it deliberately rather than
+rediscover it; the same treatment the `SR-170`/`UNATTENDED-OPS` question got.
+
+### Not inherited, not widened
+
+WI-586's findings were re-driven and are all DISCHARGED (the spec's `## Context`
+records the re-drive). NOT taken: the module docstring's contract paragraph and
+`work_tip`'s docstring (`:448-455`), which still claims "`governing_identity`
+measures code-time here" — false since `governing_identity` calls
+`governing_rev`. That is a source-comment defect in a code lane's scope, not a
+spine cell, and this return did not widen into it.
+
+### Bar
+
+`DevStg-Tests`, strong tier.
+
+**Spine checks, at the pre-close tip `57792a3b`.**
+`trace.py --strict-integrity`: `SN=27 SR=76 LLR=191 TC=190 orphans=0
+integrity=0 drafts=11 budget-findings=0 component-findings=0
+interface-findings=0 paraphrase-advisories=3` — no provenance finding, so the
+frame-dropping rework held. `check_trajectory.py`: `clean (595 work item(s),
+544 done (91%), 21 cancelled, graph acyclic)`. Both carry only advisory WARNs
+that reproduce at the integration base.
+
+**Full unfiltered suite** (`pytest -q -n auto`, the venv interpreter at
+`/Users/diytechy/Documents/ai-template/.venv` — this lane is a linked worktree
+and has no `.venv` of its own; it was NOT symlinked one):
+
+    1 failed, 3383 passed, 25 skipped in 646.97s (0:10:46)
+
+The one red is `tests/test_derive_stage.py::
+test_this_repo_s_committed_stage_is_current`, on the fingerprint alone
+(`5ad22a34…` recorded vs `a4bc065e…` derived). It is **CAUSED by this branch
+and benign because every derived field is unchanged** — the six registries are
+`kitlib/stage.py` `DECLARED_INPUTS`, so any cell edit moves the input hash.
+
+Driven BOTH ways rather than argued, since a bare "per-phase matches" reading
+proves less:
+
+- At the integration base `bd431c5b`, in a throwaway `git worktree`, the single
+  node PASSES (`1 passed in 0.04s`). So it is this branch's, not trunk's — the
+  base is clean, therefore the branch caused it.
+- At this tip in a second throwaway worktree, running `derive_stage.py --root .`
+  and re-running the same node PASSES (`1 passed in 0.03s`). Diffing that
+  regenerated `docs/stage` against the committed one, the ONLY lines that move
+  are `fingerprint` and the `# computed … (as-of …)` comment; `stage`,
+  `stage-ord`, `stage-of`, `floored`, `settled-stage`, `live-stage`, `phase`,
+  `per-phase`, `per-phase-live` and `drafted` (11, unmoved — this return minted
+  no new row) are byte-identical.
+
+`docs/stage` was deliberately NOT regenerated on this lane: it is a declared
+generated artifact whose freshness is the trunk lane's
+(concurrency-restructure §5.2), the commit bar's own `derived-stage --check`
+SKIPS on a work branch, and the regenerated bytes above ARE the post-merge
+state. The node is in `conftest.SLOW_MODULES`, so the smoke commit bar never
+sees it.
+
+**Re-run at the CLOSING tip `23cbacfa`**, because the close is itself an input
+change — draining `docs/work/active/` changes what the claim-reading nodes
+answer, so the pre-close numbers are a different tree's:
+
+    1 failed, 3387 passed, 21 skipped in 625.67s (0:10:25)
+
+Same single red, same fingerprint pair, same both-ways provenance. The counts
+MOVED (3383 passed / 25 skipped -> 3387 / 21) and the four are attributed
+rather than assumed: all four are in `tests/test_wi_convert.py`, all four
+skipped pre-close with the reason `live registry has in-flight claims: … an
+in-flight claim (active/wi-595-llr-207-tc-205-return-and-llr) — conversion is
+a drained-stop operation`, and all four PASS once the claim drains —
+`test_the_real_registry_produces_one_spec_per_row`,
+`test_status_becomes_the_directory_and_cancellation_stays_visible`,
+`test_emitted_specs_are_lf_on_every_platform`,
+`test_row_order_survives_a_registry_that_is_not_id_sorted`. Measured by running
+the module with `-rs` at this tip and in a throwaway worktree at the pre-close
+commit `57792a3b`. Nothing regressed; four nodes stopped being masked.
+
+Worth recording because the standing expectation was the opposite: closing the
+LAST active claim was known to RED
+`test_the_live_registry_round_trips_in_whichever_home_is_authoritative` on
+`docs/work/cancelled/README.md: does not start with a +++ frontmatter fence`.
+It does not any more — that node PASSES on this drained tip. The
+`drained-stop` refusal is no longer masking a real defect behind it.
+
+`trace.py --strict-integrity` and `check_trajectory.py` were also re-driven at
+the closing tip: `integrity=0` again, and `clean (595 work item(s), 545 done
+(92%), 21 cancelled, graph acyclic)` — the done count up one and both of this
+row's own WARNs (the stale `SpecRef` clock, and sharing a spec of record with
+WI-598) gone, which is the close registering.
+
+### Rework round 1 — the empty-close finding, taken in the half that holds
+
+Review A (`docs/reviews/wi-595-llr-207-tc-205-return-and-llr/003-REVIEW-A-149698f.md`)
+returned one MAJOR: `LLR-207.detail` newly makes a NON-EMPTY changed-path set an
+admission condition, and `TC-205` cited no test for it. That half is correct —
+the return authored a claim and left it unevidenced, which is exactly the defect
+this WI existed to fix in the other direction. A regression now exists and is
+cited.
+
+The remedy as SPECIFIED — "a real-git empty-close refusal test that asserts the
+merge gate asks for review" — was not written, and the reason is measured rather
+than argued. `_peel_target` is the ONLY caller of `mechanical_close_attestation`
+(grep over `project-trajectory/scripts` and `tests`), and `governing_rev` does
+not merely peel: it also WALKS THROUGH any commit whose non-record identity
+equals its first parent's. An empty commit satisfies that by construction. So
+the empty-path clause cannot change what the gate answers.
+
+Driven, not reasoned. With `if not paths or …` deleted from
+`mechanical_close_attestation` and the whole module re-run:
+
+    1 failed, 57 passed in 58.99s
+
+The single red is the new boundary assertion. On the same fixture — a judged
+round, a REAL mechanical close, then an empty commit carrying the composed
+subject — `kv.governing_identity` still returns the judged tree and
+`integ._verdict_gate` still returns None in BOTH arms. `verdict.py` was restored
+byte-clean (`git diff` empty) and the module re-run: `58 passed in 94.18s`.
+
+So the finding's stated consequence — "would let it preserve an earlier
+approval" — describes both arms equally, and preserving it is the CORRECT
+answer: a commit that changed nothing has invalidated no verdict. A test
+asserting a gate refusal here would pin a behaviour the module does not have and
+should not acquire. The clause is a guard on a public `__all__` export's
+contract, made redundant at the gate by the walk.
+
+What landed:
+
+- `tests/test_verdict_record.py::test_an_empty_close_is_refused_and_the_walk_covers_it_regardless`
+  plus its `_empty_close` helper (`git commit --allow-empty`, since a zero-path
+  diff is the one close shape a file-writing fixture cannot reach). It asserts
+  the refusal AND that the refusal strands nothing — the honest pair.
+- `TC-205.evidence` cites it; `TC-205.method` states the third refusal, where it
+  is observable, and why the gate assertion is deliberately absent.
+- `LLR-207.detail`: "can only ask for more" was overstated in this same spot —
+  on the empty arm the later rev carries the SAME identity, so it asks for
+  exactly as much. Now "can never ask for LESS", with the equality named.
+
+`LLR-207` and `TC-205` were already `Drafted` and stay so; no `Status` was
+flipped and no `docs/archive/last_approved/` written.
+
+### Rework round 2 verification
+
+The forged-middle finding is fixed at the one owning boundary, not papered
+over in a caller. `mechanical_close_attestation` now reads a NUL-delimited
+`--name-status --no-renames` diff, requires paired same-filename moves from one
+active branch into `complete/`, derives their WI ids, and uses
+`station.mechanical_close_subject` to compare the exact canonical subject.
+The former affix-only constants are no longer imported by the verifier.
+
+Evidence driven on the completed tree:
+
+- Focused forged/positive/empty close selection: `3 passed, 56 deselected in
+  9.87s`.
+- Whole verdict-record module: `59 passed in 116.87s`.
+- Full unfiltered suite: `1 failed, 3389 passed, 21 skipped in 1251.23s`; the
+  sole failure is
+  `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`,
+  the worker-lane fingerprint mismatch (`5ad22a…` recorded vs `749e75…` live).
+  No generated artifact was rewritten on this branch; the trunk lane owns that
+  refresh.
+- `trace.py --strict --no-placeholders`: `orphans=0 integrity=0`, exit 0.
+- `check_trajectory.py`: `clean (595 work item(s), 545 done (92%), 21
+  cancelled, graph acyclic)`, exit 0; its existing advisories include WI-598's
+  SpecRef clock because this assigned spine edit necessarily changes the shared
+  low-level-requirements file.
+- `check_docs.py --stale`: 0 broken links, exit 0. Ruff check and format check:
+  clean.
+- Smoke tests passed twice under host contention: `1533 passed, 4 skipped in
+  155.47s`, then the budget enforcer's independent run `1533 passed, 4 skipped
+  in 172.19s`; the latter honestly returned FAIL at `173.0s > 60s`. After the
+  new regression entered the tier, a two-worker capped enforcer run passed all
+  `1534` tests (4 skipped) in `120.15s` and likewise failed its timing contract
+  at `120.4s > 60s`; after the competing smoke runs cleared, six workers
+  improved that to `86.3s`, still over. The final 12-worker retry passed the
+  same `1534` tests (4 skipped) in `58.93s`, and the enforcer reported `59.2s
+  vs 60s budget -> within`. A full suite remained active in the primary
+  checkout throughout. The budget was not re-stamped and no heavy module was
+  re-tiered to hide machine load.
+
+Deviations from the rework finding: none. Byte-budgeted files changed: none.
+Deferred open items: none — round 005's one finding is resolved in this WI.
+
+### Rework round 3 (review A, `007-REVIEW-A-8fc8f44.md`, 5 findings)
+
+All five taken. Two were MAJOR and both are fixed at the one owning trust
+boundary, `verdict._closed_wi_ids`.
+
+**MAJOR 1 — the dead `not deleted` clause.** The reviewer was right that it
+pinned nothing, and re-measurement showed the record's replacement claim would
+have been wrong too. The disjunct is deleted. Then, driving it: deleting the
+`len(branches) != 1` clause ALSO leaves the module at `62 passed` — because an
+empty diff derives NO ids, and `mechanical_close_subject([])` is
+`'adjudicate:  -> complete/ (mechanical close)'`, which the exact-subject
+comparison refuses anyway. So the empty close's refusal is OVER-DETERMINED and
+no clause owns it; the test comment and TC-205 now say exactly that instead of
+naming a second wrong owner. The one-source-branch clause is separately pinned
+by a new arm on the case it genuinely owns — a close reaching into a SECOND
+lane's `active/` — which is the single red when that clause is deleted.
+
+**MAJOR 2 — unpaired `A`/`D` under `docs/work/`.** Reproduced as described.
+`_closed_wi_ids` now refuses any entry that is neither half of a recognised
+move nor an `M` (the relink only ever modifies). Two real-git regressions:
+`test_a_close_that_smuggles_a_new_spec_in_does_not_peel` and
+`test_a_close_that_destroys_an_archived_record_does_not_peel`. Both were driven
+against the pre-fix module and both genuinely fail there (`assert
+'59846fa5…' is None`, `assert 'c681829…' is None`).
+
+**No fail-closed regression.** All nine real historical mechanical closes in
+this repo (`41980b2e 49dc0f0a f0528530 6b066486 e2b3cf8a c1806388 02a92f22
+4d9dba7f 825fc966`) still peel to their parents under the stricter rule.
+
+**MINOR 3 — the two sortings.** Taken as the antidote the finding named rather
+than as a test: `station.mechanical_close_order` is now the ONE key both sides
+sort on, imported by `verdict._closed_wi_ids` and called by
+`handback.close_adjudication`, so they cannot diverge by construction. A
+two-row batch arm is added to TC-205 anyway, and the writer↔verifier loop is
+now closed end to end on a REAL close
+(`test_the_close_the_writer_lands_is_one_the_attestor_peels`), which nothing
+drove before.
+
+**MINOR 4 / MINOR 5** — the stale citation total and `IF-175.notes`, below.
+
+Cells touched by round 3: `LLR-207.detail` (only the move may create or
+destroy; the shared ordering key; the empty close refused by the pairing
+rather than by a clause of its own), `TC-205.method` / `.evidence` (five new
+citations, 56 total, 9 in `SLOW_MODULES` — `test_handback` joins the two
+`test_integrate_*` modules, so `Full` is if anything better founded than
+before), and `IF-175.notes` (the row governs the two peel SHAPES; the
+disposable CLASS list is LLR-207's alone). `IF-175` is `Drafted`, so this is
+authoring and not an amendment of an Approved cell; no `Status` was flipped.
+
+Surfaced rather than fixed, per the working agreement: `station.py`'s
+mechanical-close vocabulary (`MECHANICAL_CLOSE_PREFIX/SUFFIX`,
+`mechanical_close_subject`, and now `mechanical_close_order`) is named by NO
+spine row's `code_symbol` — `LLR-182` covers the outcome enum and `LLR-189`
+the per-close report, and neither reaches it. That gap predates this lane (the
+subject composer entered at round 2 with the same silence); closing it is an
+`LLR-182` amendment and is not this row's to take.
+
+Round 3 evidence, driven on the completed tree:
+
+- Pre-fix probes (a detached worktree at `30cd1051^^^` carrying the NEW tests
+  against the OLD modules). `test_a_close_that_smuggles_a_new_spec_in_does_not_peel`
+  and `test_a_close_that_destroys_an_archived_record_does_not_peel` both fail
+  there — `assert '59846fa5…' is None`, `assert 'c681829…' is None` — so both
+  are real detectors and not assertions of what already held.
+- The one-source-branch clause, deleted from the TIP module in a probe:
+  `1 failed, 62 passed`, the single red being
+  `test_a_close_reaching_into_a_second_lanes_claims_does_not_peel`. Deleting
+  it changes nothing about the EMPTY-close arm, which is the measurement
+  behind the over-determination claim above.
+- Fail-closed check: all nine real historical mechanical closes in this repo
+  still peel to their parents under the stricter rule.
+- `tests/test_verdict_record.py`: `63 passed`. `tests/test_handback.py`:
+  `30 passed`. The four heavy peel/close modules together: `116 passed`.
+- Full unfiltered suite: `1 failed, 3394 passed, 21 skipped in 1026.12s`. The
+  sole red is `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`,
+  the same caused-but-benign `docs/stage` FINGERPRINT node this lane has
+  carried throughout, DRIVEN BOTH WAYS again at round 3's tip: it PASSES at
+  the integration base `bd431c5b`, and it PASSES at this tip on a
+  regenerated-stage worktree where every other derived field is byte-identical
+  — `stage`, `settled-stage`, `live-stage`, `per-phase`, `per-phase-live` and
+  `drafted = 11` all unchanged, only the fingerprint and the as-of stamp move.
+  `docs/stage` is deliberately not regenerated on this lane; `check.py` SKIPs
+  `derived-stage` for that reason and its freshness is the trunk lane's.
+  A FIRST full-suite run was started and KILLED rather than reported: two
+  commits and a `git checkout` probe landed in the working tree while it was
+  running, so its result described no single tree. The reading above is the
+  clean re-run.
+- `check.py --jobs 0`: `RESULT: PASS`. `trace.py --strict-integrity`:
+  `orphans=0 integrity=0`. `check_complexity`: `unchanged from baseline`.
+  Ruff check and format check: clean.
+- `check_dupes_census` WARNs `2 group(s) / 2 redundant copy/copies / 12
+  redundant line(s)` — BYTE-IDENTICAL at the integration base, so it is
+  pre-existing and not this lane's; it is a D-7 advisory, never a gate.
+- Commit bar: `1538 passed, 4 skipped`, enforcer `56.1s vs 60s budget ->
+  within`. FOUR EARLIER ENFORCER READINGS BREACHED and are recorded rather
+  than dropped — `76.6s`, `88.7s`, `98.9s` — measured against identified
+  contention: another session running a full `-n auto` suite in the primary
+  checkout (pid 46922) plus a third worktree agent's suite, on a 6-CPU box.
+  The budget was NOT re-stamped and no module was re-tiered to fit the
+  machine. That the breach is the box and not this change is driven rather
+  than asserted: the INTEGRATION BASE itself breached at `66.0s` in the same
+  window, and a back-to-back paired run gave `BASE 56.83s` against
+  `TIP 57.22s` — a ~0.4s delta, consistent with the four new smoke-tier tests
+  costing `2.49s` run serially and spread over six workers.
+
+## 2026-09-04 — A finished lane may still owe a round, and a pause stops only the claim
+
+Two coordinator defects measured on the same day, both of them a lane that
+could not be reached by the machinery that was supposed to reach it. They land
+together because they are the same shape at two ends of `dispatch.run`'s tick:
+the run decided a lane was beyond a worker's help — once because it was
+finished, once because a pause was present — and in both cases a worker was
+exactly what it needed.
+
+Deferred open items: none — both defects are fixed at the reader that
+held the wrong rule, each with a regression test driven against the pre-fix
+code, and neither fix left an arm for a successor. The round-cap question
+the first raises is already an owner ruling of 2026-09-03 (no cap yet), not
+a remainder of this work.
+
+### 1. A finished lane that owes a round is resumed before it is integrated
+
+Measured on WI-590. The lane was DONE — every spec out of `active/`,
+mechanically closed — and then its TREE moved: a supervisor rework of the
+spec's `## Dispositions`, which is the adjudicator's own proper answer to a
+CHANGES-REQUESTED round and the only rework that can move a record-only lane's
+identity at all. On the next launch the coordinator handed the FINISHED branch
+straight to the merge slot, which refused "no logged review round on
+wi-590-… names its current tree", and the run exited. No worker ever resumed
+to draw the owed round, so the supervisor drew rounds 011–014 by hand and
+compiled a legacy rollup to get the lane merged.
+
+`dispatch._parked_branches` now admits a finished branch that still owes a
+round, and the existing parked-resume path carries it from there: `dispatch:
+cycle N - resuming parked branch …`, whose worker's own resume arm
+(`agent_loop.resume_owed_round`) schedules exactly the owed phases before any
+build session. Only a finished branch that owes nothing goes to the slot.
+
+`_round_owed` is COMPOSED from the two readers that already own the question
+rather than being a third copy of the rule. `integrate._verdict_gate` is the
+authority on whether the slot would refuse at all — it holds the reviewer dial,
+the no-merged-outcome arm, the adjudication waiver and the legacy-rollup
+migration window, so a coordinator that resumed past any of those would spend a
+worker session against a satisfied slot and would break the hand-compiled
+rollup recovery an operator is using this week. `kitlib.verdict.phases_owed` at
+the governing identity is the NARROWING: it answers which declared phases were
+never DRAWN at this tree. A refusal with nothing owed is one of the gate's
+other three answers — a dissent, a reroll-until-green, or a contradicted
+attestation — and none of them is fixed by drawing another round, so each still
+stops the run for a human exactly as before.
+
+The loop is guarded by progress rather than by a cap, which is the same bargain
+every other resume takes: a resumed finished lane whose round returns
+CHANGES-REQUESTED reworks as any lane would (the rework moves the tree, so the
+next round is owed at a NEW identity), one that returns APPROVE owes nothing
+and integrates on the next cycle, and a lane that draws nothing at all is
+bounded by the iteration budget and the trunk-unmoved stall guard.
+Tests: `test_a_finished_branch_that_owes_a_round_is_resumed_not_integrated`
+(driven against the pre-fix line: it claims the frontier row instead and stalls),
+`test_a_finished_branch_that_owes_nothing_goes_straight_to_the_slot`,
+`test_the_worker_preflight_accepts_the_resumed_finished_lane` — the far end,
+where the 2026-09-04 `stale_terminal_assignment` fix already lets a lane's own
+closed rows through, driven here on the shape the coordinator now hands it so
+the resume cannot be arranged upstream and refused downstream.
+
+### 2. A fresh launch under `docs/work/pause` resumes the lanes in flight
+
+Measured the same day: a fresh `agent_loop.py --root .` under a tracked pause
+exited `EXIT_PAUSED` (8) at once, with an active claim whose lane was parked
+mid-work. The pause's own contract says the opposite — §5.6 of
+`docs/concurrency-restructure.md`, and the pause file's header: "pause = stop
+CLAIMING. Everything in flight finishes, integrates and archives… the pause
+never strands finished work on a branch." The operating recipe that grew around
+the defect (delete the pause, launch, re-create it in the next commit) is a
+person hand-simulating the drain the dispatcher owes.
+
+The pause arm moved out of the tick top and into `dispatch._admit`, where the
+one act a pause forbids lives. Under a pause the run now resumes every
+parked lane and integrates every finished branch exactly as an unpaused run
+does, and claims nothing new; `_paused_exit` ends the run with the banner and
+exit 8 once the station is idle and nothing is left in flight. The
+integrator's own refusal is still the one thing that can end a pause with work
+on a branch — §5.6 says so, and that is the gate working rather than the pause
+failing.
+
+One deliberate ordering change: a pause with a DIRTY trunk and nothing in
+flight now reports the dirty-trunk refusal (exit 2) rather than the pause
+banner, because the drain the pause now performs needs a clean trunk like every
+other merge does.
+Tests: `test_drive_pause_appearing_mid_run_stops_the_next_claim` (rewritten —
+it now asserts the in-flight lane finished AND merged while the next frontier
+row stayed queued, which is the property the old test could not see),
+`test_a_fresh_launch_under_a_pause_resumes_the_lane_in_flight`,
+`test_a_pause_with_nothing_in_flight_exits_paused_at_once`.
+
+### Ratchets
+
+`dispatch.run` re-stamps DOWNWARD on the cognitive-complexity baseline (25 ->
+21, SLOC 52 -> 43): the tick's pause banner-and-return block became one read
+handed to `_admit`. `_admit` itself went to 17 with the pause arm and was
+decomposed OUTWARD rather than bumped — `_admit_frontier` now holds the claim
+half (frontier read, §A8 policy answer, enactment) and `_admit` holds the
+station half (free lanes, parked branches, the pause), which is the split the
+two questions were already making. No module-size row moved.
+
+## 2026-09-04 — The station settles [generated] conflicts, and build residue stops refusing the unload
+
+Two defects measured three times each during that day's queue drain, both in
+`integrate.py`, both fixed where the machinery already had the declaration it
+needed. Neither changes what a lane owns; each removes a hand-resolution the
+supervisor performed identically every time.
+
+### 1. A refresh conflict confined to declared generated artifacts
+
+Three lane refreshes refused with "merging trunk … in CONFLICTS" where the ONLY
+conflicted paths were artifacts BOTH sides had regenerated — `PROJECT_STATE.html`
+and `docs/ratify/CURRENT.md` — and the supervisor resolved each identically:
+take the trunk side, re-run the trunk step. There is no content question in that
+conflict, because `_run_trunk_step` regenerates every one of those files from
+source seconds later, over whichever side sits in the tree.
+
+`refresh` now lists the conflicted paths (`git diff --name-only --diff-filter=U`)
+and takes the TRUNK side of every one that is DECLARED in `docs/stack.ini`
+`[generated]`, then falls through into the trunk step exactly as a clean merge
+does. The declaration is READ, never restated: `_generated_table` parses the
+section into `{path: kind}` (a `"/"`-terminated row is a prefix, a marker pair
+keeps only its kind) and `_generated_paths` — the RULING-6 audit's reader — is
+now two lines over it, so there is still one parser in this module.
+
+Two locks hold it narrow. A path must be in the §5.2 trunk-only set, which a
+lane may not commit at all; and its kind must not be hand-stamped. **The one
+kind held back is `linecounts` — `tests/test_module_size_ratchet.py`, this very
+change's other subject.** Its rows are measured-and-classified data re-stamped
+BY HAND with a reason: no command re-derives them, both sides of a conflict
+carry a reviewed reason, and taking trunk's would silently drop the lane's. Any
+path git will not resolve that way (a delete/modify conflict has no "their
+version") stays in the remainder. A remainder — a product-code conflict — still
+refuses with the same message the lane has always seen, plus the list of
+generated paths that were settled first, so the remainder is not read as the
+whole conflict; the undo throws the resolutions away with the rest. A merge that
+failed with NO conflicted path at all (a refused merge) resolves nothing and
+therefore continues nothing.
+Tests: `test_a_conflict_only_on_declared_generated_paths_refreshes_green`,
+`test_a_product_file_conflict_still_refuses_and_names_what_was_resolved`,
+`test_a_hand_stamped_linecounts_conflict_still_refuses`,
+`test_the_generated_table_reads_kinds_and_prefixes_not_a_second_copy`.
+
+### 2. An ignored `.venv/` is not evidence
+
+Three merged lanes ended `UNLOAD INCOMPLETE … DIRTY (1 uncommitted or ignored
+path(s))` where the one path was the lane's own `.venv/`, the run exited 1 with
+`INCOMPLETE - 1 merged branch(es) NOT unloaded` after every merge, and each
+worktree came off by hand with `git worktree remove --force`.
+
+This is the third measured shape of the same lesson, after the 2026-08-01 tool
+caches and the 2026-08-30 loop streams, and it takes the same short enumerated
+answer rather than a glob: `.venv/`, `__pycache__/`, `.pytest_cache/`,
+`.ruff_cache/` and `.coverage*` are BUILD RESIDUE — rebuilt from a manifest,
+sole-copy evidence never — and never count as dirt. Everything else keeps the
+caveat verbatim, an ignored `out/run-logs/` stream included, because a worktree
+can hold files that exist nowhere else.
+
+Where the earlier residue is SHED, this is merely not counted: `git worktree
+remove` deletes an ignored path with the lane (measured — an ignored path does
+not refuse the removal), so walking a five-thousand-file virtualenv to unlink it
+first would buy nothing. The exception is a `.venv` that is a SYMLINK into a
+shared virtualenv, the shape this Mac's lanes carry: the shed unlinks the LINK
+under `os.path.islink` and never walks through it, because what it points at
+lives outside the lane and is not ours to delete. The double lock is unchanged —
+git must report the path as IGNORED and the name must be declared — and the
+synthetic line `_worktree_dirt` returns when git cannot answer at all is prose,
+not a path, so it still reads as dirt.
+Tests: `test_a_merged_lane_holding_only_its_own_venv_unloads`,
+`test_a_stray_ignored_file_beside_the_venv_still_refuses`,
+`test_a_symlinked_venv_unloads_without_following_the_link`,
+`test_the_build_residue_allowlist_is_short_and_named`.
+
+**The module-size ratchet is re-stamped, `integrate.py` 1361 → 1426 SLOC.** The
+reason is recorded at the baseline row: the kit's scripts may not import one
+another, so a helper for a station behaviour has no home short of `kitlib`, and
+roughly half the delta is the recorded WHY — which kind is held back and why a
+symlinked `.venv` is never followed — that a successor would otherwise
+re-litigate. The extractions were compacted before the stamp was taken, and six
+of the lines are a DECOMPOSITION rather than the feature: the merge arm moved
+out to `_merge_trunk_in` because the conflict handling took `refresh` C901
+10 → 11, so the complexity ratchet is untouched by this change.
+
+Deferred open items: none — both defects are closed at their root with tests,
+and neither fix leaves a follow-on: the auto-resolve reads a declaration that
+already exists and the allowlist is enumerated, so a new generated artifact or a
+new cache name is covered (or deliberately not) by the same one row it is
+declared in.
+
+## 2026-09-04 — `intake.py sweep` by range: the recovery door that could not be opened
+
+`sweep` is the documented recovery path for a landed merge whose intake did not
+run — `intake_after_merge`'s own refusal banner names it. It could not be used.
+The subcommand built its outcomes map by walking the three terminal work folders
+(`partial/`, `cancelled/`, `complete/`, unioned with their `docs/archive/work/`
+siblings) and passed that map alongside whatever `--before/--after` it was given,
+so on this repo a two-commit range arrived carrying every close in the project's
+history. Today's supervising session worked around it by calling
+`intake.intake_after_merge(root, "104ecb3b", "d6e52407", outcomes=None,
+branch="supervisor-oob-…")` from a Python snippet — which minted WI-593/594
+correctly, and is exactly the thing a CLI exists to stop people doing.
+
+**The shape now.** A range (`--before` or `--after` given) runs triggers (a)/(a2)
+over that range and nothing else — the same call the merge slot makes, minus the
+outcomes map no out-of-band range has. `--with-terminal` asks the scan back;
+`--branch <label>` names the mint subject, defaulting to `sweep <before>..<after>`.
+A bare `sweep` is untouched: `HEAD..HEAD` plus the scan. The ending prints a count
+(the mint already announces each row it writes) or `nothing to mint.`, exit 0;
+a refusal prints and exits 1.
+
+`None` rather than `{}` is the range shape's outcomes value, and the distinction
+is load-bearing: `{}` would read as "this sweep looked at the closes and found
+none", which is the claim that would have to be true for triggers (b)/(d) to be
+honestly skipped. `None` says the sweep judged no close at all.
+
+**Five tests** in `tests/test_intake.py`, over one fixture (`sweep_repo`) that
+carries both populations — an in-range amendment of an approved SR, and a
+handed-back spec parked in `partial/` with its close report, committed *after*
+the range so the two can be told apart:
+`test_a_range_sweep_mints_the_range_and_touches_no_terminal_folder`,
+`test_a_range_sweep_run_twice_mints_nothing_the_second_time` (the exact-title
+dedup, which is what makes both shapes re-runnable),
+`test_with_terminal_asks_the_terminal_scan_back`,
+`test_a_custom_branch_label_names_the_mint_subject`, and
+`test_a_bare_sweep_still_walks_the_terminal_folders`. Four of the five were
+driven RED against the old arm before the fix (the fifth is the unchanged bare
+sweep, and it stayed green — which is the point of keeping it).
+
+**Reviewed baseline bump: `intake.py` 1357 → 1363 SLOC.** Six lines: the
+`ranged` predicate, the `outcomes = None` / conditional-scan pair, the branch
+label default, and the two argparse rows. Two flags on one subcommand cannot be
+fewer than two argparse rows, and a sibling module for one CLI arm would put the
+mint's own door in another file. The overage was compacted first, not absorbed:
+the terminal walk became a dict comprehension (−3 against the naive shape) and
+the per-row minted listing was dropped rather than duplicate the line `_mint`
+already prints.
+
+**Measured on the commit bar:** smoke tier 1528 passed / 8 skipped in 139 s,
+`tests/test_intake.py` 57 passed, `check_complexity --mode enforce` OK (199 rows
+over 15, unchanged — no bump), `check_docs --stale` OK (1356 docs, 0 broken).
+The smoke **budget** step reads 141 s against its 60 s ceiling — environmental,
+this box was running several sessions at once, and nothing is re-stamped for it.
+`ruff format --check` reds two files under `docs/reviews/2026-08-29-oi67-slice*/`
+which are pre-existing (confirmed by re-running the check on the untouched tree)
+and out of this change's scope.
+
+Deferred open items: none — the CLI arm is the whole of the fix, the
+`intake_after_merge` seam it calls is unchanged, and the operating note that
+called `sweep` structurally unusable (handoff 2026-09-03 §4) is discharged by
+this commit rather than carried forward.
+
+## 2026-09-04 — Two review-churn defects: MINOR-only refusals, and a rework that moved nothing
+
+Both were measured on the 2026-09-03/04 supervised run and are recorded in
+[the handoff's churn section](handoff-2026-09-04.md) (§4). Together they cost
+six review rounds and four rework sessions in one day, none of which changed
+what ships.
+
+### 1. A CHANGES-REQUESTED whose findings are all `[MINOR]` routes as an APPROVE
+
+Four rounds refused a lane over a single `[MINOR]` finding each — WI-586 rounds
+006 and 010, WI-590 round 013. Each refusal bought a rework session AND another
+round (an agent session plus a full harness re-run) to land a wording nit the
+reviewer had not called a defect. A MINOR is by construction the severity a
+reviewer assigns when the remedy is not worth blocking on; spending the block on
+it inverts the scale the brief asks reviewers to use.
+
+`kitlib.verdict.effective_verdict(word, findings)` is the one home for the rule:
+`CHANGES-REQUESTED` + at least one finding + every finding `[MINOR]` reads as
+`APPROVE`; every other word is returned untouched. **The round file is never
+rewritten** — the reviewer's own `VERDICT:` line stays exactly as written and
+the findings stay carried. What changes is what the READERS do with it, and both
+readers had to change together, since a lane the loop routed as APPROVE would
+otherwise still be refused at the merge slot:
+
+- routing — `score_reviews.merged_routing_verdict` reads `merge_verdict`'s
+  output through the rule and prints `review round: CHANGES-REQUESTED with
+  MINOR-only findings routed as APPROVE (N findings carried)` when the reading
+  changes the outcome. The ROUND is the unit, not the reviewer, because the
+  merge has already collapsed them: an APPROVE beside a MINOR-only refusal is a
+  round nobody found a defect in, while a MAJOR anywhere keeps the refusal.
+- the gate — `kitlib.verdict.round_entries`, which feeds
+  `integrate._round_refusal`, parses each round file and yields the effective
+  word, so the slot re-derives the same verdict from the same rule.
+
+**A CHANGES-REQUESTED with NO findings stays a refusal.** A reviewer that blocks
+without naming anything is a different defect, and `all()` over an empty sequence
+would have promoted it silently; the emptiness is tested first and on purpose.
+
+`prompts/reviewer.template.md` is unchanged: no sentence there says a finding of
+any severity forces a refusal, so nothing in it contradicts the new reading.
+
+Tests: `test_effective_verdict_reads_the_findings_not_only_the_word`
+(7 cases incl. the mixed-severity and zero-finding negatives),
+`test_a_minor_only_refusal_clears_the_gate_and_the_file_is_untouched`,
+`test_a_minor_beside_a_major_still_refuses`,
+`test_a_refusal_naming_no_finding_at_all_still_refuses`
+(tests/test_verdict_record.py);
+`test_merged_routing_verdict_promotes_a_minor_only_round_and_says_so`
+(tests/test_score_reviews.py);
+`test_a_minor_only_refusal_routes_as_an_approve`,
+`test_a_minor_beside_a_major_still_requests_changes`,
+`test_a_refusal_with_no_findings_still_requests_changes`
+(tests/test_agent_loop_review.py, the shipped loop end to end).
+
+### 2. No round is drawn on a tree a verdict has already named
+
+A rework session that DECLINED a finding committed only its answer under
+`docs/reviews/` — a record path `kitlib.verdict` is built to ignore — so
+`governing_identity` did not move. The loop armed another round, the reviewer
+approved the very tree the previous round had refused, and
+`integrate._round_refusal` read the pair as a reroll-until-green and refused the
+lane. Two reviewer sessions and a merge attempt bought nothing, and no console
+line said why.
+
+`kitlib.verdict.tree_already_judged(root, branch, base, parse)` asks the merge
+slot's own question — does a logged round already name this governing tree — and
+`agent_loop.schedule_review_round` now asks it BEFORE drawing a round instead of
+after wasting one. When the answer is yes it prints the cause and escalates
+through the existing ladder (`agent_route.failure_action` → `page_consequence` →
+`apply_page_consequence`): a human-held run stops with a banner, a loop-held one
+degrades to DESIGN-CHECK, whose own commit re-arms the round if it moved the
+tree (the owner's 2026-09-03 ruling leaves that degrade uncapped and it is left
+alone). Unreadable git answers "not shown to be unchanged" and the round is
+drawn, so a repo these readers cannot see into never wedges its first build.
+
+Tests: `test_a_record_only_rework_draws_no_round_and_pages` and
+`test_a_rework_that_moves_the_spec_draws_its_round`
+(tests/test_verdict_record.py) — the two answers driven through the shipped
+`build_bookkeeping` arm on a real lane.
+
+### The size budget, paid outward
+
+Both features landed **net negative** on `agent_loop.py` (2575 → 2572 SLOC,
+re-stamped downward) rather than taking a baseline bump. The routed verdict went
+to `score_reviews`, the tree question and its operator sentence to
+`kitlib.verdict` (both far under the module threshold), and three duplicates
+inside the arms being touched became one each: `page_human` (the page prologue
+the review-escalation and critique-budget paths held in duplicate),
+`committed_build_rounds` (the three-call sequence the BUILD and DESIGN-CHECK
+arms held in duplicate), and `absorb_review_verdict`'s twin failure arms — one
+consequence, two messages, now one arm and a `why` string. Every console line
+those consolidations emit is byte-identical to what it replaced.
+
+`schedule_review_round`, `schedule_adjudication_round` and `build_bookkeeping`
+now return an exit code (or None) so the page can end the run; nothing else
+about their contracts moved.
+
+Deferred open items: none — both defects are closed at their root with the
+routing and gate arms driven from the shipped paths, and the reviewer brief
+needed no edit because nothing in it contradicted the new reading.
