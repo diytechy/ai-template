@@ -1,6 +1,8 @@
 # A smaller ai-template: redesign for separate review
 
-**Prepared:** 2026-09-05. **Status:** proposal; no repository changes, requirement rulings, or implementation authorized by this document.
+**Prepared:** 2026-09-05. **Status:** proposal; no runtime implementation, requirement rulings, or gate changes authorized by this document.
+
+**Permanent location:** `docs/ai-template-redesign-2026-09-05-codex/` in this repository, at the owner’s direction. Preserve the plan and review history here.
 
 **Recommendation:** replace the orchestration kernel behind the existing kit, preserve the useful adoption and assurance tools, and migrate by complete behavior slices. Do not rewrite the whole repository or carry every historical mechanism into a new implementation.
 
@@ -47,7 +49,7 @@ These are coverage groups, not proposed replacement need IDs. All 27 existing ne
 
 `schedule.order_key` orders by kind rank, priority, downstream count, path length, and ID. `dispatch._judgement_first` then moves adjudications ahead of spine work and expressly documents the disagreement. This is intentional code, but it means a reader of the scheduler does not yet hold the final answer to “what runs next.”
 
-**Redesign:** one pure scheduling result contains selected assignments and the reason every other WI waits. CLI, dashboard, and dispatcher consume that result. Dispatch may refuse a stale decision or unavailable resource; it never substitutes another priority ordering. [Source](../ai-template/project-trajectory/scripts/dispatch.py), [ordering](../ai-template/project-trajectory/scripts/schedule.py).
+**Redesign:** one pure scheduling result contains selected assignments and the reason every other WI waits. CLI, dashboard, and dispatcher consume that result. Dispatch may refuse a stale decision or unavailable resource; it never substitutes another priority ordering. [Source](../../project-trajectory/scripts/dispatch.py), [ordering](../../project-trajectory/scripts/schedule.py).
 
 ### 2.2 Consolidation is late and mixed into admission
 
@@ -55,7 +57,7 @@ Creation already has a central intake owner, which is valuable. But intake also 
 
 The September 5 report is right that a closing worker cannot safely consolidate the trunk queue from its old lane snapshot. That argument establishes **where authoritative reconciliation must occur**, not that it must remain a separate dispatcher mechanism forever.
 
-**Redesign:** workers submit proposals. The single trunk intake transaction adjudicates them against current queued work before making them eligible. Semantic reconciliation of legacy queued work can run as one explicit exclusive WI, with its own declared scope, review, and terminal outcome. Pure format normalization is a mechanical intake transaction and does not need a semantic adjudication WI. A pending reconciliation prevents admission of the affected work; active assignments are immutable. [Report §4](../ai-template/docs/decisions-for-review-2026-09-05.md), [current trigger](../ai-template/project-trajectory/scripts/dispatch.py).
+**Redesign:** workers submit proposals. The single trunk intake transaction adjudicates them against current queued work before making them eligible. Semantic reconciliation of legacy queued work can run as one explicit exclusive WI, with its own declared scope, review, and terminal outcome. Pure format normalization is a mechanical intake transaction and does not need a semantic adjudication WI. A pending reconciliation prevents admission of the affected work; active assignments are immutable. [Report §4](../../docs/decisions-for-review-2026-09-05.md), [current trigger](../../project-trajectory/scripts/dispatch.py).
 
 ### 2.3 One lane can contain several review/completion units
 
@@ -71,7 +73,7 @@ The September 5 report is right that a closing worker cannot safely consolidate 
 
 The archive writer defect illustrates the coupling: changing a terminal path also requires changing verdict-peel recognition and numerous fixtures. OI-84 shows a related problem: recomputing a resumed lane's base as HEAD can make all evidence readers see an empty range.
 
-**Redesign:** persist the base when claiming; prepare the final candidate before its final review; record the exact candidate tree. Do not reconstruct assignment or acceptance from commit subjects or whichever merge-base happens to be available. Retain evidence identity protection, but simplify the event ordering that makes peeling necessary. [Evidence implementation](../ai-template/project-trajectory/scripts/kitlib/verdict.py), [report §5](../ai-template/docs/decisions-for-review-2026-09-05.md).
+**Redesign:** persist the base when claiming; prepare the final candidate before its final review; record the exact candidate tree. Do not reconstruct assignment or acceptance from commit subjects or whichever merge-base happens to be available. Retain evidence identity protection, but simplify the event ordering that makes peeling necessary. [Evidence implementation](../../project-trajectory/scripts/kitlib/verdict.py), [report §5](../../docs/decisions-for-review-2026-09-05.md).
 
 ### 2.5 Requirements, design, migration history, and backlog overlap
 
@@ -235,6 +237,16 @@ Retain test-first development. The replacement kernel should begin with observab
 
 Required behavior families are enumerated in [IMPLEMENTATION.md](IMPLEMENTATION.md). Test retirement requires a mapping to a surviving obligation/test or an approved deleted behavior. A coverage percentage alone does not justify retirement. Do not convert a red check to opt-in to make the rewrite appear simpler.
 
+### Replace a design when its LLR is the problem
+
+Treat an LLR as the approved current implementation design, not a permanent restriction on future solutions. The existing authoring rules already allow approved text to be amended, but the intake diagram omits a useful third route: the parent obligation remains right while its selected design should change. Add that route to the normal WI/approval process. A worker should propose a justified LLR replacement instead of building an obsolete mechanism into a workaround; preserve parent outcomes, required approval, historical evidence, and behavioral regressions. A changed parent promise still requires a parent amendment.
+
+### Separate HTML rendering and its expensive tests
+
+Extract the HTML surface behind a package boundary in this repository. Core scheduling, registry validation, and text-status generation should not import rendering or layout code. An ordinary core-only change should run core/shared tests without the expensive HTML family. Changes to rendering, its input contract or shared dependencies must select the affected rendering tests; routine data changes still require current-output generation/freshness. Retain full enabled-capability runs at the approved phase/release/periodic cadence.
+
+The detailed replacement workflow, renderer boundary, selection table, and P9R exit criteria are in [the LLR and rendering follow-up](LLR-AND-RENDERING.md). These additions follow the Fable review and do not carry a new Fable verdict.
+
 ## 5. What to reuse and what not to build
 
 Keep Git/worktrees, TOML, the existing harness, bootstrap ownership, useful trace/gate code, and pytest. Consider stdlib `graphlib` for cycle detection and dependency traversal; keep the small policy-specific ordering explicit. Hypothesis is a plausible development-only addition for scheduler and crash-state invariants.
@@ -254,6 +266,8 @@ The owner review should decide:
 3. Prototype the serialized final-review integration turn and accept its throughput tradeoff only after measurement.
 4. Preserve the stage ladder, owner-authority controls, and trace schema; land the narrow P1A requirement amendments before enabling changed runtime behavior. Review bulk requirements simplification separately.
 5. Separate manual core, managed loop, and advanced capabilities without silently retiring stakeholder promises.
-6. Keep the old runner available only as a rollback implementation; permit one mutating runner at a time and remove compatibility paths after a named migration release.
+6. Make justified LLR replacement a normal design-change route, without adding a separate approval layer.
+7. Isolate HTML rendering and select its expensive tests by affected capability rather than running them for every core change.
+8. Keep the old runner available only as a rollback implementation; permit one mutating runner at a time and remove compatibility paths after a named migration release.
 
-These are proposals for the separate review the user requested. No new WIs were minted, no stages changed, and no implementation or publication was performed in preparing this report.
+These are proposals for the separate review the user requested. No new WIs were minted, no stages changed, and no runtime implementation or publication was performed in preparing or updating this report.

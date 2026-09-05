@@ -39,3 +39,8 @@ Also applied Fable's unnumbered schema warning: the shared review envelope carri
 At review time, `docs/ai-template-redesign-2026-09-05-codex/` was absent and Git showed its files deleted. The adjacent copy existed and was byte-identical to the tracked input at repository revision `0d6f3398`. The user was asked which destination to use. With no destination response at the time of applying corrections, the existing adjacent copy was updated; the repository deletions were preserved.
 
 Validation covers local Markdown file targets, internal anchors, balanced fences, input-to-output diff inspection, and a check that repository status was not changed by this task. No implementation tests were run for this proposal-only revision. The original review snapshot and full CLI output remain in the temporary review workspace; the raw final findings and reproducibility metadata are retained here.
+
+
+## Subsequent owner direction and plan amendments
+
+The owner has now moved the package into `docs/ai-template-redesign-2026-09-05-codex/` and directed that it remain here for traceability. The location account above describes the earlier review session only. The current plan adds [replaceable LLR designs and renderer test isolation](LLR-AND-RENDERING.md), integrates them into P1/P1A/P7/P9R, and repairs source links for this location. These later additions have not received a Fable verdict. The original raw review and metadata hashes are preserved as historical evidence rather than rewritten to describe the newer files.

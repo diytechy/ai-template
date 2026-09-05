@@ -10,6 +10,16 @@ The working tree initially showed an owner-only scratchpad modification. Its con
 
 On 2026-09-05, Claude Fable 5 reviewed the original proposal at high effort through the CLI against repository revision `0d6f3398`. [Its findings and the applied dispositions](FABLE-REVIEW-DISPOSITIONS.md) record the route, limits, and corrections. The census and initial source map below remain the original `a9bf6cee` observations; they were not remeasured or silently updated to the later revision. The follow-up changes implementation sequencing, current-policy authority, human-hold handling, semantic invalidation, and the criteria for judging the integration experiment.
 
+## Owner follow-up: design replacement and rendering isolation
+
+The owner subsequently fixed this plan's permanent location inside `docs/ai-template-redesign-2026-09-05-codex/` and raised LLR design lock-in and HTML test cost. [The follow-up proposal](LLR-AND-RENDERING.md) addresses both. Source inspection at `cb7f5ccebdd77b868158e85199c0cd488e1141ad` found:
+
+- The Spine Authoring skill permits amendments to approved text and treats LLRs as solution-specific; PROCESS's change-intake diagram around lines 860–888 nevertheless routes every violated existing SR/LLR to a coverage gap, without asking whether the design should be replaced.
+- `gen_trajectory.py` imports/re-exports rendering, parsing, and text status; `check.py` and `trunk_step.py` invoke the same facade for HTML and `--status`. A physical file split alone does not isolate core dependencies.
+- `tests/conftest.py` already keeps several renderer/trajectory modules outside smoke, while `.github/workflows/test.yml` runs the complete suite. The exact renderer cost and safe test membership were not measured here and remain P0/P9R work.
+
+The source links below were repaired for the in-repository location. Fable's raw review and JSON metadata remain historical and unchanged: their hashes identify the revision after that review, not these later owner-requested additions. No new independent review or implementation-test result is claimed.
+
 ## Reproducible census
 
 | Surface | Observation | Interpretation |
@@ -67,23 +77,23 @@ Paths below are relative to the source repo; line locations refer to the recorde
 
 | Finding | Evidence | Confidence / limit |
 |---|---|---|
-| Maintainability, traceability, test-first and explicit gates are core vision | [README](../ai-template/README.md), lines 3–11 | Direct statement |
-| Small profile and proportionality already exist as doctrine | [PROCESS](../ai-template/project-trajectory/PROCESS.md), lines 25–32 and 254–265 | Doctrine; installed minimal-profile cost still needs measurement |
-| Scheduler and admission have different ordering | [schedule.py](../ai-template/project-trajectory/scripts/schedule.py), `order_key` line 548; [dispatch.py](../ai-template/project-trajectory/scripts/dispatch.py), `_judgement_first` line 368 | Direct code/docstring; intentional override, not an accidental nondeterminism claim |
-| Spine work can form a multi-WI lane | [dispatch.py](../ai-template/project-trajectory/scripts/dispatch.py), `_admission` lines 389–461 | Direct code |
-| Consolidation is called inside admission | [dispatch.py](../ai-template/project-trajectory/scripts/dispatch.py), `_admit` lines 1054–1130 | Direct code |
-| Consolidation reuse fingerprint omits scope body | [consolidate.py](../ai-template/project-trajectory/scripts/consolidate.py), `queue_digest` line 170 | Direct field inspection; end-to-end stale-decision failure not reproduced |
-| Reviewer identity is reconstructed through special commits | [kitlib/verdict.py](../ai-template/project-trajectory/scripts/kitlib/verdict.py), `mechanical_close_attestation` line 490, `work_tip` 566, `governing_rev` 601 | Direct architecture; existing protections should not simply be removed |
-| Mechanical-close path still recognizes old terminal home | [kitlib/verdict.py](../ai-template/project-trajectory/scripts/kitlib/verdict.py), lines 437–441 | Direct constants; September 5 report describes writer/readers migration owed |
-| Current concurrency need does not promise speedup | [stakeholder needs](../ai-template/docs/requirements/stakeholder-needs.toml), SN-027 | Direct need/rationale; default two workers and recovery obligations remain relevant |
-| Plan protocol has a substantial optional session cost | [plan_round.py](../ai-template/project-trajectory/scripts/plan_round.py), opening protocol and budget comments | Eight-session happy path is documented, not measured token cost |
-| Test suite has historical budget/tiers and real integration coverage | [tests/conftest.py](../ai-template/tests/conftest.py), lines 42 onward | Direct configuration; no fresh duration measurement |
-| Missing routed tier, successful-close telemetry and corrupted outcome label | [September 5 investigation](../ai-template/docs/decisions-for-review-2026-09-05.md), §2 | Prior investigation's measurements, not independently re-run here |
-| Stale coordinator and resumed-base questions remain owner decisions | [September 5 investigation](../ai-template/docs/decisions-for-review-2026-09-05.md), §6, OI-83/84 | Recorded open questions; proposed remedies do not constitute rulings |
-| Earlier consolidation plan deliberately retained batching | [September 2 plan](../ai-template/docs/plans/2026-09-02-backlog-restructure-and-consolidation.md), §1.7 | Explains why consolidation alone did not simplify assignment |
-| Dependency exceptions are permitted with an argument | [Dependency ledger](../ai-template/docs/dependencies.md) | Direct governing policy; differs from shorthand “stdlib-only” in some docs |
+| Maintainability, traceability, test-first and explicit gates are core vision | [README](../../README.md), lines 3–11 | Direct statement |
+| Small profile and proportionality already exist as doctrine | [PROCESS](../../project-trajectory/PROCESS.md), lines 25–32 and 254–265 | Doctrine; installed minimal-profile cost still needs measurement |
+| Scheduler and admission have different ordering | [schedule.py](../../project-trajectory/scripts/schedule.py), `order_key` line 548; [dispatch.py](../../project-trajectory/scripts/dispatch.py), `_judgement_first` line 368 | Direct code/docstring; intentional override, not an accidental nondeterminism claim |
+| Spine work can form a multi-WI lane | [dispatch.py](../../project-trajectory/scripts/dispatch.py), `_admission` lines 389–461 | Direct code |
+| Consolidation is called inside admission | [dispatch.py](../../project-trajectory/scripts/dispatch.py), `_admit` lines 1054–1130 | Direct code |
+| Consolidation reuse fingerprint omits scope body | [consolidate.py](../../project-trajectory/scripts/consolidate.py), `queue_digest` line 170 | Direct field inspection; end-to-end stale-decision failure not reproduced |
+| Reviewer identity is reconstructed through special commits | [kitlib/verdict.py](../../project-trajectory/scripts/kitlib/verdict.py), `mechanical_close_attestation` line 490, `work_tip` 566, `governing_rev` 601 | Direct architecture; existing protections should not simply be removed |
+| Mechanical-close path still recognizes old terminal home | [kitlib/verdict.py](../../project-trajectory/scripts/kitlib/verdict.py), lines 437–441 | Direct constants; September 5 report describes writer/readers migration owed |
+| Current concurrency need does not promise speedup | [stakeholder needs](../../docs/requirements/stakeholder-needs.toml), SN-027 | Direct need/rationale; default two workers and recovery obligations remain relevant |
+| Plan protocol has a substantial optional session cost | [plan_round.py](../../project-trajectory/scripts/plan_round.py), opening protocol and budget comments | Eight-session happy path is documented, not measured token cost |
+| Test suite has historical budget/tiers and real integration coverage | [tests/conftest.py](../../tests/conftest.py), lines 42 onward | Direct configuration; no fresh duration measurement |
+| Missing routed tier, successful-close telemetry and corrupted outcome label | [September 5 investigation](../../docs/decisions-for-review-2026-09-05.md), §2 | Prior investigation's measurements, not independently re-run here |
+| Stale coordinator and resumed-base questions remain owner decisions | [September 5 investigation](../../docs/decisions-for-review-2026-09-05.md), §6, OI-83/84 | Recorded open questions; proposed remedies do not constitute rulings |
+| Earlier consolidation plan deliberately retained batching | [September 2 plan](../../docs/plans/2026-09-02-backlog-restructure-and-consolidation.md), §1.7 | Explains why consolidation alone did not simplify assignment |
+| Dependency exceptions are permitted with an argument | [Dependency ledger](../../docs/dependencies.md) | Direct governing policy; differs from shorthand “stdlib-only” in some docs |
 
-**Documentation drift example:** root README's configuration table describes `human_approval_through = DevStg-Release` for this repo, while the actual [process policy](../ai-template/docs/process.toml) says `DevStg-Needs`. The README also presents an older stage description while the generated status reads DevStg-Tests. These are illustrations of duplicated current-state prose, not reasons to change the authoritative dials. A redesign should remove copied values from prose and render them from the actual policy/state.
+**Documentation drift example:** root README's configuration table describes `human_approval_through = DevStg-Release` for this repo, while the actual [process policy](../../docs/process.toml) says `DevStg-Needs`. The README also presents an older stage description while the generated status reads DevStg-Tests. These are illustrations of duplicated current-state prose, not reasons to change the authoritative dials. A redesign should remove copied values from prose and render them from the actual policy/state.
 
 ## External tools
 

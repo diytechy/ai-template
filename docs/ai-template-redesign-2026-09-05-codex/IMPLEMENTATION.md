@@ -45,6 +45,8 @@ Specify the tracked claim's exact location in package P1. Preserve existing `doc
 ```mermaid
 flowchart LR
     P0[P0 Baseline and obligation map] --> P1[P1 State and acceptance contracts]
+    P0 --> PR[P9R HTML boundary and test isolation]
+    PR --> P9
     P1 --> PA[P1A Narrow requirement amendments]
     P1 --> P2[P2 Single-item compatibility reader]
     P2 --> P3[P3 Authoritative intake]
@@ -60,7 +62,7 @@ flowchart LR
     P9 --> P10[P10 Adopter migration and deletion]
 ```
 
-P1A is the gate for enabling changed behavior under the repository’s own requirements; isolated fixtures and read-only adapters can proceed beforehand. P5 is an early stop/go experiment. It must settle whether peeling can be removed before P6 hardens a replacement runtime around the wrong evidence model. P3/P4 can proceed independently of that experiment after P2, but do not run multiple mutating coordinators on the same repo.
+P9R is an independent rendering slice after P0 and its own applicable contract amendments; it does not wait for the full runner migration. P1A is the gate for enabling changed behavior under the repository’s own requirements; isolated fixtures and read-only adapters can proceed beforehand. P5 is an early stop/go experiment. It must settle whether peeling can be removed before P6 hardens a replacement runtime around the wrong evidence model. P3/P4 can proceed independently of that experiment after P2, but do not run multiple mutating coordinators on the same repo.
 
 ## 3. Work packages
 
@@ -93,6 +95,7 @@ P1A is the gate for enabling changed behavior under the repository’s own requi
 - Define transaction staleness separately from semantic reuse. Record the snapshot revision for apply-time preconditions; fingerprint the scope/acceptance/dependency/artifact/resource inputs actually adjudicated for judgment reuse. The current four-field digest intentionally avoids nonsemantic churn; preserve that goal while adding omitted normative input. Do not invoke the LLM merely because Deliverable, telemetry, a routing-only tier, or unrelated trunk bytes changed. Classify uncertain inputs conservatively until reviewed; measure over-invalidation in P5/P8.
 - Preserve the settled clauses: SN-006 records limit-enforcement faults and continues; SN-029 sends approval-authority faults toward more human involvement. Ask an owner only about a remaining concrete gray zone, such as failure to determine independence from a pending hold. Do not reopen the whole failure policy.
 - Specify current-trunk policy as the authority at review/promotion, with claim-time policy retained only as execution provenance. Include a mid-flight authority tightening in the acceptance scenarios.
+- Add the normal intake route for a sound parent obligation with an unsuitable LLR design; specify how one scoped WI replaces the design and evidence under existing approval authority. Use the [replacement workflow](LLR-AND-RENDERING.md#1-llrs-should-constrain-the-selected-implementation-without-freezing-the-design), not a new mandatory registry.
 - Write the small behavioral scenarios and failure tables before kernel code.
 
 **Done when:** a reviewer can walk create → claim → execute → review → integrate and each failure return without reading existing runtime modules; every state has one owning writer and recovery rule. Any unresolved independence-under-hold failure transition has a scoped ruling before P6 implements it; settled SN-006/SN-029 behavior is not blocked on a new general ruling.
@@ -109,6 +112,7 @@ P1A is the gate for enabling changed behavior under the repository’s own requi
 - Inspect SR-148, SR-144, SR-156, SR-170/SR-173, LLR-149/159/182/210 and their actual TC/test links. This is a candidate impact list, not a claim every row needs rewriting. Preserve externally required behavior and distinguish a changed mechanism from a retired obligation.
 - Approve amended artifacts through the current stage/authority mechanism, update acceptance tests in the same scope, and record old→new obligation/evidence mappings. The user’s approval of the redesign is not a substitute for those artifact changes.
 - Scope old-format and old-runner compatibility tests to their supported version; specify the new contract for the new runtime without weakening the common assurance bar. Isolated failing-first prototypes may precede enablement. Do not flip a new runtime on in the live repo while its governing contract is still the old one.
+- Include the change-intake diagram and worker/reviewer brief contract where they incorrectly equate every violated LLR with a coverage gap. Preserve approval authority while permitting justified design replacement.
 - Finish any evidence-specific amendment after P5 selects the actual protocol. Bulk retirement and optional packaging remain P9 work.
 
 **Done when:** every behavior changed by enabling P6/P8 has the necessary reviewed requirement/design/test amendment and honest stage state; the old runner’s remaining supported behavior is explicitly version-scoped. No red gate is waived to fit the pilot.
@@ -218,7 +222,7 @@ P1A is the gate for enabling changed behavior under the repository’s own requi
 - Preserve provider-neutral routing, consent, cross-family preference/fallback, and configured review count initially.
 - Support one ordinary review; opt-in plan review; rubric-based subjective critique; consolidation review; bounded dispute arbitration. Keep advanced dual-plan strategy behind its capability boundary.
 - Store stable finding IDs, criterion, evidence, severity, disposition, and resolution. Preserve minor suggestions without requiring another build round for stylistic churn.
-- Treat proposed acceptance changes as amendments requiring appropriate authority, never reviewer edits hidden in rework.
+- Treat proposed acceptance changes as amendments requiring appropriate authority, never reviewer edits hidden in rework. Explicitly ask whether a workaround exists only to preserve an unsuitable LLR; permit a scoped replacement with preserved parent acceptance and updated tests, rather than treating design approval as immutability.
 - Record model/tier/roster ID and session role before launch. Preserve budget use across retries and resumed sessions.
 - Stop recurring arbitration at the declared cap and produce a concise owner brief: contested obligation, evidence, options, recommendation, and affected work.
 
@@ -242,6 +246,18 @@ P1A is the gate for enabling changed behavior under the repository’s own requi
 
 **Deletion enabled:** replacement becomes the only candidate runtime for the migration release; old runner remains a rollback tool, not a second active service.
 
+### P9R — Isolate HTML rendering and its test family
+
+**Problem:** module splitting has not separated HTML dependencies from text status, shared fixtures, or broad test invocation.
+
+**Scope and ordering:** follow [the rendering package and selection contract](LLR-AND-RENDERING.md#2-isolate-rendering-as-a-package-in-this-repository). This slice may run after P0's boundary/cost inventory and its own required test-cadence/assurance amendments; it need not wait for P8. Amend any conflicting full-suite promise, including SN-007 as applicable, before enabling narrower validation. Existing checks remain in force until then.
+
+**Work:** establish a shared in-memory project snapshot; extract renderer/layout/assets into a package; separate text-status CLI and fixtures; classify core/shared/rendering tests by behavior; implement one small affected-capability selection table with a broad fallback; keep current-output freshness and approved full-run cadence. Use the existing configuration/profile mechanism, not a separate rendering repository or generic test-impact framework.
+
+**Done when:** core imports and test collection work without the renderer; core-only changes omit the expensive HTML family; rendering/schema/shared-input changes select it; actual data still generates a current, honest surface; selection handles renames/deletions and missing bases; full enabled-capability tests remain green; measured cost and coverage reports distinguish selected runs from full runs.
+
+**Deletion enabled:** renderer imports from core/status, fixture coupling, and obsolete facade re-exports after their compatibility window. Test-case retirement still requires the ordinary obligation/evidence mapping.
+
 ### P9 — Consolidate requirements, tests, docs, and capability packaging
 
 **Problem:** a smaller kernel can still inherit the same process burden.
@@ -254,7 +270,7 @@ P1A is the gate for enabling changed behavior under the repository’s own requi
 - Assemble three capability sets using existing scaffold machinery: manual core; managed loop; advanced planning/architecture/reporting. Express the capability sets in the existing bootstrap mapping/profile mechanism. Generate their inventory and requirement/check view from that mapping and existing spine links; do not introduce a second authored manifest, registry, or schema. The exact set boundaries must honor the SN dispositions; accessibility stays with every shipped UI. Adoption tests must prove that each moved promise is available and verified when its capability is enabled, as well as absent from core dependencies when disabled.
 - Keep current gate derivation and trace schema in this release. Consider direct SR evidence or stage simplification only in a separately reviewed proposal.
 - Replace master-process runtime prose with the four-step loop and the canonical policy tables. Put detailed operational reference beside the relevant adapter.
-- Run byte-budget checks before and after editing watched docs and report deltas. This report itself is outside those capped files.
+- Run byte-budget checks before and after editing watched docs and report deltas. These plan documents are not among those capped files.
 
 **Done when:** every removed row/check has an explicit disposition; a minimum scaffold runs without importing/installing advanced capabilities; required capability tests and all mandated repo checks pass.
 
@@ -297,7 +313,7 @@ Test selection strategy:
 1. Small deterministic unit examples for policy boundaries and meaningful failure messages.
 2. Property/state-sequence tests for graph ordering, unique claims, bounded transitions, and idempotent recovery. Hypothesis is optional development tooling, not a shipped dependency.
 3. A limited real-Git suite for the filesystem, hooks, refs, worktrees, and candidate publication boundaries. Mocks cannot establish those guarantees.
-4. Fresh-scaffold and upgrade tests per supported capability/OS contract, not every combinatorial toggle permutation.
+4. Fresh-scaffold and upgrade tests per supported capability/OS contract, not every combinatorial toggle permutation. For HTML, use P9R’s affected-capability selection and the [selection table](LLR-AND-RENDERING.md#run-expensive-rendering-tests-when-the-rendering-capability-can-be-affected); do not omit shared registry/status/approval tests merely because their filename includes trajectory.
 5. Human acceptance of first-use and owner-decision clarity. Almost entirely automated TC coverage cannot establish that the process feels proportionate.
 
 Record before/after suite duration on the same environment. Do not transfer the old smoke membership ratchet mechanically to a changed implementation: review the behavioral bar first, then change any membership baseline with its reason. Existing checks remain mandatory until that change is approved.
