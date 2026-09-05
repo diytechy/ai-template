@@ -3064,7 +3064,7 @@ raised = "2026-08-31"
 one_line = """RULED (the tolerant requirement-reference cell, the four-class checker warn-first, the direct TC proving the checker; WI-543 re-scoped owns SR-163) 2026-08-31 — the owner: the debate over-analyzed it; the expectation is at least one TC tying a template file's production back to a system requirement — even a presence check suffices. Original brief: rule whether SR-163 keeps a directly-tracing TC, is covered only through its LLR arms, or has its Verification class amended - two review rounds of the same reviewer asked for opposite answers"""
 decision = """RULED 2026-08-31 (record docs/log.d/2026-08-31-owner-rulings-oi70-71-72.md): the owner — SR-163 was being over-analyzed; the expectation is at least one test case tying back into the production of a file that is in the template, even a presence check tying the file's reason to a system requirement. The confirmed shape (the owner: "then you would add those SRs, and then a test case would just do a cheap test to verify the SR exists and the file exists effectively, and that is the TC that would tie up to SR-163" — confirmed with the checker/TC split, then "Yes that all sounds good, consider all ruled"): references mostly cite EXISTING SRs, a new SR minted only where a shipped file has no justifying requirement; the CHECKER does the cheap verify (reference resolves, file exists, bare entries named) over the real inventory on every run; the direct TC proves the checker catches each of the four classes on a scaffold, so the checker's green carries the standing every-file-maps claim and the TC claims exactly what it exercises. The shipped default for unmapped stays warn-only.
 
-MEASURED AGAINST THE REQUIREMENT'S OWN TEXT (same session), the direction is buildable without either horn of the dilemma below. SR-163 names FOUR finding classes reported under the DECLARED WARNING-TO-GATING POLICY: missing files, stale inventory entries, unresolved requirement references, unmapped files. Two are delivered (the dogfood walk and the bootstrap checks — TC-199/TC-200's evidence). The other two CANNOT OCCUR YET because the MAPPING inventory carries no requirement-reference cell — exactly the undischarged arm LLR-203 records. Because the warn-to-gate dial is in the SR's own text, the honest minimal build is: (1) add the requirement-reference carrier to the inventory and a checker for all four classes; (2) declare unmapped and unresolved WARN initially; (3) mint the direct TC that drives each class on a scaffold — a file with no mapping is REPORTED, which is the true state, so the TC claims exactly what it exercises. Round 013's false-coverage objection and round 019's direct-TC ask BOTH dissolve, and no derived-TC type is needed for this SR. The authoring pass — filling a reference for every inventory row — becomes a visible warn-count burn-down instead of a precondition, which re-scopes the deferred WI-543 from "author the whole join first" to mechanism + burn-down. The wi508 branch's four Drafted rows stay honest as-is (they verify the delivered arms only).
+MEASURED AGAINST THE REQUIREMENT'S OWN TEXT (same session), the direction is buildable without either horn of the dilemma below. SR-163 names FOUR finding classes reported under the DECLARED WARNING-TO-GATING POLICY: missing files, stale inventory entries, unresolved requirement references, unmapped files. Two are delivered (the dogfood walk and the bootstrap checks — TC-199/TC-200's evidence). The other two CANNOT OCCUR YET because the MAPPING inventory carries no requirement-reference cell — exactly the undischarged arm LLR-203 records. Because the warn-to-gate dial is in the SR's own text, the honest minimal build is: (1) add the requirement-reference carrier to the inventory and a checker for all four classes; (2) declare unmapped and unresolved WARN initially; (3) mint the direct TC that drives each class on a scaffold — a file with no mapping is REPORTED, which is the true state, so the TC claims exactly what it exercises. Round 013's false-coverage objection and round 019's direct-TC ask BOTH dissolve, and no derived-TC type is needed for this SR. The authoring pass — filling a reference for every inventory row — becomes a visible warn-count burn-down instead of a precondition, which re-scopes the deferred WI-543 from "author the whole join first" to mechanism + burn-down. The wi508 branch's four Drafted rows stay honest as-is (they verify the delivered arms only). CORRECTION 2026-09-05 (OI-80, ruled (b) under the owner's delegation for the peripheral queue): "four Drafted rows" was inaccurate when this ruling was written — LLR-203 and LLR-204 had been Approved on that branch since 2026-08-30 (580df781) and only TC-199/TC-200 were Drafted. The ruling's substance is unaffected: it ruled the SR-163 verification SHAPE, not the four rows' Status. The original sentence is left byte-identical above so the ruled text is not rewritten.
 
 A GENERAL RULE THE OWNER RECALLED, found NOWHERE in the repo (searched the rulings, the log and the process masters this session): an LLR can be satisfied by its parent, but an SR cannot be satisfied by its children unless the children span the SR's full dimensional space and are not interdependent. Not load-bearing for SR-163 under the direction above (its children do not span its space today, and the direct TC makes the question moot here), but worth writing into the spine-authoring doctrine as its own act if wanted.
 
@@ -3215,11 +3215,17 @@ recommendation = """(b) REVIEW-THEN-STAND.
 wi_refs = ["WI-569"]
 
 [open_item.OI-79]
-title = "The origin ref wi508-architectural-remap-HELD-for-owner-verdict: rename or delete now its range is i"
-status = "pending"
+title = "Dispose the origin ref wi508-architectural-remap-HELD-for-owner-verdict"
+status = "ruled"
+ruled_date = "2026-09-05"
+ruling_ref = "docs/log.d/2026-09-05-owner-rulings-oi79-oi80-oi81.md"
 raised = "2026-09-01"
-one_line = "The held wi508 branch was pushed to origin on 2026-08-31 as a backup under a -HELD- suffix OI-70 calls a bypass of the close flow. Its whole 44-commit range (ff29fef8..6ba27110) is now in trunk history via the 979c3e5f handback merge and its record is compiled into the log. Rename it back, delete it, or keep it as a tagged archive? push = \"human\" puts every answer out of the loop's reach."
-decision = """Whether the remote ref `origin/wi508-architectural-remap-HELD-for-owner-verdict` (tip fa3c99c4, the branch's last verdict commit) is renamed, deleted or kept, now that nothing it holds is single-copy.
+one_line = "RULED ((a) DELETE, after one tag) 2026-09-05 — the supervising session under the owner's delegation for the peripheral queue (the owner: \"most of the open items don't seem to have a functional impact… likely the recommendations can be followed directly. Please use your best judgement, and only retain open items that affect the core functionality / vision\"): delete the remote ref; nothing it holds is single-copy. The guard was driven this sitting: `git merge-base --is-ancestor fa3c99c4 contract_split` returns 0, so every commit the ref points at is already an ancestor of the trunk. Tag it first if a human-findable pointer to the nineteen-round record is wanted (`git tag wi508-record-2026-08-30 fa3c99c4`). THE DELETE ITSELF IS A PUSH and stays the owner's act under `push = \"human\"` — this ruling decides WHICH act, not who performs it. Original brief: The held wi508 branch was pushed to origin on 2026-08-31 as a backup under a -HELD- suffix OI-70 calls a bypass of the close flow. Its whole 44-commit range (ff29fef8..6ba27110) is now in trunk history via the 979c3e5f handback merge and its record is compiled into the log. Rename it back, delete it, or keep it as a tagged archive? push = \"human\" puts every answer out of the loop's reach."
+decision = """RULED 2026-09-05 (record docs/log.d/2026-09-05-owner-rulings-oi79-oi80-oi81.md): (a) DELETE, after one tag — the row's OWN recommendation, taken under the owner's delegation of the peripheral queue at the 2026-09-05 sitting. delete the remote ref; nothing it holds is single-copy. The guard was driven this sitting: `git merge-base --is-ancestor fa3c99c4 contract_split` returns 0, so every commit the ref points at is already an ancestor of the trunk. Tag it first if a human-findable pointer to the nineteen-round record is wanted (`git tag wi508-record-2026-08-30 fa3c99c4`). THE DELETE ITSELF IS A PUSH and stays the owner's act under `push = "human"` — this ruling decides WHICH act, not who performs it.
+
+The original brief follows.
+
+Whether the remote ref `origin/wi508-architectural-remap-HELD-for-owner-verdict` (tip fa3c99c4, the branch's last verdict commit) is renamed, deleted or kept, now that nothing it holds is single-copy.
 
 - Every commit it points at is an ancestor of trunk `contract_split` since the handback merge `979c3e5f` (verify: `git merge-base --is-ancestor fa3c99c4 contract_split`), and the six log entries the conversion had dropped were restored at `0e4cbfb1`.
 - OI-70 ruled hold-by-rename BANNED; the suffix survives only on the remote, which the loop never writes (`push = "human"`).
@@ -3239,11 +3245,17 @@ recommendation = """(a) DELETE, with one tag first if the owner wants a pointer 
 wi_refs = ["WI-569"]
 
 [open_item.OI-80]
-title = "OI-72's ruling text says 'four Drafted rows' where two were already Approved when it was written: co"
-status = "pending"
+title = "Correct OI-72's 'four Drafted rows' phrase, which was false when written"
+status = "ruled"
+ruled_date = "2026-09-05"
+ruling_ref = "docs/log.d/2026-09-05-owner-rulings-oi79-oi80-oi81.md"
 raised = "2026-09-01"
-one_line = "OI-72 (ruled 2026-08-31) reads the SR-163 cluster as 'the wi508 branch's four Drafted rows stay honest as-is'. LLR-203 and LLR-204 had been Approved on that branch since 2026-08-30 (580df781); only TC-199/TC-200 were Drafted. The phrase misled the WI-555 spec's arm 4 and the first WI-568 adjudication. Correct the ruled row's wording (a ruled row is the owner's text), or leave it with a pointer?"
-decision = """Whether the owner amends the wording of a RULED open item (`OI-72`) so it states the true 2-Approved / 2-Drafted split, and how.
+one_line = "RULED ((b) APPEND a dated correction) 2026-09-05 — the supervising session under the owner's delegation for the peripheral queue (the owner: \"most of the open items don't seem to have a functional impact… likely the recommendations can be followed directly. Please use your best judgement, and only retain open items that affect the core functionality / vision\"): append the correction beside OI-72's original sentence rather than rewriting it. Applied in this same commit: OI-72's `decision` cell now carries a dated CORRECTION clause naming the true 2-Approved / 2-Drafted split, and the original sentence is left byte-identical ahead of it. A ruled row's bytes are the owner's, so the correction adds and never replaces. Original brief: OI-72 (ruled 2026-08-31) reads the SR-163 cluster as 'the wi508 branch's four Drafted rows stay honest as-is'. LLR-203 and LLR-204 had been Approved on that branch since 2026-08-30 (580df781); only TC-199/TC-200 were Drafted. The phrase misled the WI-555 spec's arm 4 and the first WI-568 adjudication. Correct the ruled row's wording (a ruled row is the owner's text), or leave it with a pointer?"
+decision = """RULED 2026-09-05 (record docs/log.d/2026-09-05-owner-rulings-oi79-oi80-oi81.md): (b) APPEND a dated correction — the row's OWN recommendation, taken under the owner's delegation of the peripheral queue at the 2026-09-05 sitting. append the correction beside OI-72's original sentence rather than rewriting it. Applied in this same commit: OI-72's `decision` cell now carries a dated CORRECTION clause naming the true 2-Approved / 2-Drafted split, and the original sentence is left byte-identical ahead of it. A ruled row's bytes are the owner's, so the correction adds and never replaces.
+
+The original brief follows.
+
+Whether the owner amends the wording of a RULED open item (`OI-72`) so it states the true 2-Approved / 2-Drafted split, and how.
 
 - The ruling's substance is unaffected: it ruled the SR-163 verification SHAPE, not the four rows' Status.
 - The false premise propagated twice (WI-555 Done-when arm 4; the WI-568 adjudication's first verdict) before the WI-568 rounds corrected it — both corrections are on the record.
@@ -3263,11 +3275,17 @@ recommendation = """(b) APPEND a dated correction line beside the original sente
 wi_refs = ["WI-569"]
 
 [open_item.OI-81]
-title = "Publication of this repo's work: merge-to-main and push for contract_split and the three older branc"
-status = "pending"
+title = "Publication cadence for contract_split and the four unpublished branches"
+status = "ruled"
+ruled_date = "2026-09-05"
+ruling_ref = "docs/log.d/2026-09-05-owner-rulings-oi79-oi80-oi81.md"
 raised = "2026-09-01"
-one_line = "Standing since 2026-08-31 and never filed: under push = \"human\" only the owner can merge contract_split (the integrator's trunk), dualplan-routing-fix, guardrails-fable-method and ConcurrencyTrainRewrite to main and push them; and the local branch wi416-parked-handback-contract is single-copy (on no remote) and should be deleted only after deciding it is not wanted. Rule the publication cadence and the wi416 disposal."
-decision = """When and how the owner publishes: (1) contract_split -> main (every merge this repo has made since 2026-08 sits on contract_split; main is behind by the whole program); (2) the three older branches, whose relation to contract_split the owner has to judge (each may be superseded, mergeable, or an archive); (3) whether the single-copy `wi416-parked-handback-contract` branch holds anything the record needs before it is deleted.
+one_line = "RULED ((c) for the branches now; (a) for contract_split remains the owner's) 2026-09-05 — the supervising session under the owner's delegation for the peripheral queue (the owner: \"most of the open items don't seem to have a functional impact… likely the recommendations can be followed directly. Please use your best judgement, and only retain open items that affect the core functionality / vision\"): the branch half is ruled, the publication half is not. RULED: the single-copy exposure is disposed now — `wi416-parked-handback-contract` is ONE commit ahead of the trunk (`7372e239`, \"park: WI-416's proposed disposition, mid-flight and NOT ruled\"; 3 files, +344), which is the whole of what exists nowhere else, so it is tagged and then deleted rather than left one disk failure from loss. NOT RULED, and deliberately left pending the owner: merging `contract_split` to `main` and pushing it, which OI-44 gates — that decision is about publishing this repo's history beyond the owner's machines and is not delegable. The three older branches are triaged with it. Original brief: Standing since 2026-08-31 and never filed: under push = \"human\" only the owner can merge contract_split (the integrator's trunk), dualplan-routing-fix, guardrails-fable-method and ConcurrencyTrainRewrite to main and push them; and the local branch wi416-parked-handback-contract is single-copy (on no remote) and should be deleted only after deciding it is not wanted. Rule the publication cadence and the wi416 disposal."
+decision = """RULED 2026-09-05 (record docs/log.d/2026-09-05-owner-rulings-oi79-oi80-oi81.md): (c) for the branches now; (a) for contract_split remains the owner's — the row's OWN recommendation, taken under the owner's delegation of the peripheral queue at the 2026-09-05 sitting. the branch half is ruled, the publication half is not. RULED: the single-copy exposure is disposed now — `wi416-parked-handback-contract` is ONE commit ahead of the trunk (`7372e239`, "park: WI-416's proposed disposition, mid-flight and NOT ruled"; 3 files, +344), which is the whole of what exists nowhere else, so it is tagged and then deleted rather than left one disk failure from loss. NOT RULED, and deliberately left pending the owner: merging `contract_split` to `main` and pushing it, which OI-44 gates — that decision is about publishing this repo's history beyond the owner's machines and is not delegable. The three older branches are triaged with it.
+
+The original brief follows.
+
+When and how the owner publishes: (1) contract_split -> main (every merge this repo has made since 2026-08 sits on contract_split; main is behind by the whole program); (2) the three older branches, whose relation to contract_split the owner has to judge (each may be superseded, mergeable, or an archive); (3) whether the single-copy `wi416-parked-handback-contract` branch holds anything the record needs before it is deleted.
 
 - OI-44 (ruled 2026-08-20) defers the publication/identity decision to the first act that would publish this repo's history beyond the owner's machines — re-answer OI-44 before a push to a shared remote.
 - The loop never merges to main and never pushes; nothing in the queue changes that."""
@@ -3285,22 +3303,72 @@ recommendation = """(c) for the branches now, (a) for contract_split once OI-44 
 - the sequencing: OI-44 before any push to a shared remote; the rest at the owner's convenience."""
 
 [open_item.OI-82]
-title = "WI-572 moved the first-approval act to the adjudicator and filtered the minted population by the hu…"
+title = "Does the owner's approval brief narrow to the rungs the dial still holds?"
 status = "pending"
 raised = "2026-09-02"
 one_line = "WI-572 moved the first-approval act to the adjudicator and filtered the minted population by the human-approval dial at both adjudication ends (intake's mint and adjudicate_brief's composition, through agent_common.human_approves_spine). The plan's §2a table row 'Surfaces to the owner' says rows on a RELEASED rung no longer surface to the owner - but trace.py --approve modified still renders every Drafted chain, held or released, and calls human_approves_spine nowhere. Should the owner's approval brief narrow to the rungs the dial still HOLDS (so a sitting shows only what the owner actually owes a signature on), or keep rendering every Drafted chain (so the owner retains sight of what adjudicators are approving on their behalf)? WI-572 deliberately did not decide this: it changes what the owner sees at a sitting, which is the owner's call and not a side effect of moving who acts."
+decision = """Whether `trace.py --approve modified` (and the `docs/ratify/CURRENT.md` it renders) narrows the owner's approval brief to the spine tiers the human-approval dial still HOLDS, or keeps rendering every Drafted chain including the rungs adjudicators now approve on the owner's behalf.
+
+- WI-572 moved the first-approval act to the adjudicator and filtered the MINTED population by the dial at both adjudication ends, through `agent_common.human_approves_spine`.
+- The plan's §2a table row already asserts that rows on a RELEASED rung no longer surface to the owner. `trace.py` calls `human_approves_spine` nowhere, so that row is unsatisfied prose either way this is ruled.
+- WI-572 deliberately did not decide it: what the owner SEES at a sitting is the owner's call, not a side effect of moving who acts."""
+blast_radius = """- migration: none for adopters — the dial's shipped default holds every tier, so a repo that has released no rung sees no change under either option.
+- deferring: `docs/ratify/CURRENT.md` keeps rendering chains nobody will sign, so the sitting's real ask is buried in delegated rows; WI-577 stays parked `waiting:open-item-pending` and blocks nothing else.
+- downstream: the PROCESS_OPTIONS.md §2a table row stays false until this lands.
+- reversal: a filter predicate at one call site; reversible in one commit either way."""
+options = """- (a) NARROW, with the delegated set still listed. `--approve modified` filters the rendered population through the existing `agent_common.human_approves_spine`, and the released-rung Drafted chains are rendered as a separate collapsed section listing ids only. FOR: the sitting shows exactly what the owner owes a signature on, which is what an approval surface is for; the owner keeps SIGHT of what adjudicators approved without it competing for attention. AGAINST: two populations on one surface is more rendering code than one.
+- (b) NARROW HARD: released rungs do not appear at all. FOR: simplest; the surface means one thing. AGAINST: the owner loses visibility of delegated approvals entirely, and the only way back is reading the registry.
+- (c) KEEP rendering every Drafted chain. FOR: no change; the owner retains full sight. AGAINST: the sitting cannot distinguish what it must sign from what was already approved for it, which is the complaint that raised this."""
+recommendation = """(a) NARROW, with the delegated set listed but set apart.
+
+- the deciding reason: an approval surface's job is to show what needs a signature; sight of delegated acts is a different job and can share the page without sharing the prominence.
+- the guard: read the dial through the EXISTING `agent_common.human_approves_spine`. A third copy of the rung table is precisely what WI-572's round-1 MAJOR was about.
+- the sequencing: WI-577 is drafted and parked on this row; ruling it releases that row onto the frontier, and the PROCESS_OPTIONS.md §2a text lands with it."""
 wi_refs = ["WI-577"]
 
 [open_item.OI-83]
-title = "A long-lived coordinator executes the modules it imported at launch, so a lane's own fix to the loo…"
+title = "A long-lived coordinator runs the modules it imported at launch"
 status = "pending"
 raised = "2026-09-03"
 one_line = "A long-lived coordinator executes the modules it imported at LAUNCH, from whatever checkout its argv named - so a lane's own fix to agent_loop.py cannot take effect in that lane, and a process running for nine hours can be arbitrarily far behind the tree it is building. Nothing detects it. Surfaced by WI-579 REVIEW-A round 033, where working code was reported as a BLOCKER on the strength of a live run that had never loaded it: the writer was sound and the running process predated it. Should the coordinator re-exec (or refuse to continue) when the modules it launched from have moved under it, or is a stated operating rule enough?"
+decision = """Whether a long-lived `agent_loop` coordinator must detect that the kit modules it imported at LAUNCH have moved under it, and stop — or whether a stated operating rule is enough.
+
+- Python binds the imported module objects at launch, so a lane's own fix to `agent_loop.py` cannot take effect in the process building that lane, and a nine-hour run can be arbitrarily far behind the tree it is constructing.
+- Nothing detects it and nothing reports it.
+- It has already produced a false verdict: WI-579 REVIEW-A round 033 reported working code as a BLOCKER on the strength of a live run that had never loaded it. The writer was sound; the running process predated it."""
+blast_radius = """- migration: none — a launch-time digest is new behaviour with no artifact an adopter must add.
+- deferring: every long run keeps producing evidence about a tree it is not executing, and the failure is silent and looks exactly like a real finding, which is the expensive shape.
+- downstream: adopters running the unattended loop inherit the same defect today.
+- reversal: a digest comparison and one exit path; removable in one commit."""
+options = """- (a) DETECT AND EXIT. Record a digest of the kit's script tree at launch, recompare at the top of each tick, and on drift finish the tick cleanly and exit with a distinct code so the launcher relaunches on the new tree. FOR: the process only ever executes a tree it loaded; recovery is automatic under the existing launcher loop; the exit is at a tick boundary, so no lane is interrupted mid-session. AGAINST: a relaunch costs the coordinator's warm state, and a repo whose own lanes edit the kit will relaunch often (which is the honest cost of the thing being detected).
+- (b) RE-EXEC IN PROCESS. Reload the changed modules without exiting. FOR: no relaunch. AGAINST: unsafe across an imported package graph with live objects and open lanes; a partially reloaded module set is a worse state than a stale one, and it is untestable in the ways that matter.
+- (c) STATED OPERATING RULE ONLY: document that a supervisor relaunches after a kit change. FOR: zero code. AGAINST: this is the status quo, and it is what failed on WI-579 round 033 — a rule nothing enforces was not followed by the supervisor who wrote it."""
+recommendation = """(a) DETECT AND EXIT at a tick boundary.
+
+- the deciding reason: the failure is silent and produces false findings, so the remedy has to be mechanical; (c) is what already failed and (b) trades a detectable staleness for an undetectable inconsistency.
+- the guard: the digest covers the kit script tree only, the check runs at the TOP of a tick with no lane mid-session, and the exit code is distinct so a relaunch is distinguishable from a crash in the record.
+- the sequencing: rule with OI-84 — an exit-and-relaunch re-derives the base OI-84 is about, so ruling this first narrows what that one must cover."""
 wi_refs = ["WI-579"]
 
 [open_item.OI-84]
-title = "agent_loop.default_base merge-bases to HEAD when the primary checkout IS the lane branch, so a resu…"
+title = "agent_loop.default_base goes blind on a resumed single-checkout worker"
 status = "pending"
 raised = "2026-09-03"
 one_line = "agent_loop.default_base merge-bases to HEAD whenever the primary checkout IS the lane branch (its own docstring names the single-checkout attended run and the test fixtures), so a RESUMED run of that shape scans an EMPTY base..HEAD and every reader of train_evidence goes blind at once. WI-579 round 034 fixed ONE symptom at its call site - resume_owed_round dropped a genuinely parked review round and ran another BUILD instead, the C2 contract inverted - by having review_owed_by_evidence answer None for 'cannot say' and re-asking at the base the owed-marker carries. Three other readers were left: worker_exit's DONE banner reports nothing built, schedule_review_round never draws a fresh round on a complete train, and current_assignment_wi reads every assigned WI as remaining and re-claims one already built. Should the base be made durable for a resumed worker (the claim's integration base, recorded rather than re-derived), or should each reader carry the blindness the way round 034's did?"
+decision = """Whether a resumed worker gets a DURABLE integration base, or whether each reader of `train_evidence` carries the blindness itself.
+
+- `agent_loop.default_base` merge-bases to HEAD whenever the primary checkout IS the lane branch (its own docstring names the single-checkout attended run, and the test fixtures take that shape), so a RESUMED run of that shape scans an empty `base..HEAD` and every reader goes blind at once.
+- WI-579 round 034 fixed ONE symptom at ONE call site: `resume_owed_round` dropped a genuinely parked review round and ran another BUILD instead, inverting the C2 contract. The fix had `review_owed_by_evidence` answer None for "cannot say" and re-ask at the base the owed-marker carries.
+- Three readers were left: `worker_exit`'s DONE banner reports nothing built, `schedule_review_round` never draws a fresh round on a complete train, and `current_assignment_wi` reads every assigned WI as remaining and re-claims one already built."""
+blast_radius = """- migration: recording the base at claim adds one field to the claim's own record; a claim without it falls back to today's derivation, so no adopter's in-flight lane breaks.
+- deferring: three known readers stay wrong on any resumed single-checkout run, and the re-claim arm silently redoes built work — the most expensive of the three.
+- downstream: adopters running attended single-checkout resumes hit this first, which is the configuration a new adopter is most likely to be in.
+- reversal: one recorded field and one fallback; removable in a commit."""
+options = """- (a) DURABLE BASE. The claim records its integration base (the trunk sha at claim time) and `default_base` reads it, falling back to the merge-base derivation only when it is absent. FOR: one answer shared by all four readers, so a later reader cannot be forgotten the way three were; the value is a FACT recorded when it was knowable rather than re-derived when it is not. AGAINST: one more recorded field, and a stale record is possible if a claim is hand-edited.
+- (b) PER-READER BLINDNESS. Each of the three remaining readers is taught to answer "cannot say" and re-ask, the way round 034's fix did. FOR: no new state; each fix is local and testable. AGAINST: it is the same repair written four times, and the fourth reader added next month gets it wrong again — which is exactly how these three were left behind."""
+recommendation = """(a) DURABLE BASE, with the derivation kept as the fallback.
+
+- the deciding reason: this defect has already been found three readers at a time; a shared fact fixes the class, and per-reader repair fixes only the instances someone remembered to look at.
+- the guard: the fallback must stay, so a claim made before this lands (or by hand) still resolves; and the recorded base is written by the claim, never by the worker.
+- the sequencing: rule with OI-83. Under an exit-and-relaunch policy a resumed run re-derives more often, which reduces but does not remove the need for this."""
 wi_refs = ["WI-579"]

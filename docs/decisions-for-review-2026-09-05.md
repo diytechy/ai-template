@@ -15,9 +15,11 @@ in §6 are recorded in the registry itself when applied.
 
 1. §5 — mint the writer-fix WI (spec drafted below; needs `trace.py --bump-ids`
    and a regen). The 16 stranded specs are already relocated (this commit).
-2. §6 — rule OI-79/80/81 per their own recommendations; hand-fill
-   options/recommendation on OI-82/83/84 (drafted below); fix the OI mint's
-   title clip in `intake._mint_open_item`; regenerate `docs/open-items.html`.
+2. §6 — DONE except the writer fix: OI-79/80/81 ruled, OI-82/83/84 retained
+   with filled briefs, the OI-72 correction applied, the six titles repaired,
+   surfaces regenerated. Still owed: the title clip in
+   `intake._mint_open_item`, and the two git acts the rulings name, which are
+   the owner's under `push = "human"`.
 3. §2 — no estimator WI. One small instrument WI: put the routed tier and the
    `agents.toml` row id in the session-log header. The measured basis is
    Appendix A.
@@ -290,7 +292,13 @@ page and the status projection), and `check.py` runs `gen_open_items.py
 `ruling_ref`; only the status flip is read (by the scheduler and the renderer).
 
 **Dispositions, applying the owner's rule (rule the peripheral ones per their
-own recommendation; retain only what touches core functionality or vision):**
+own recommendation; retain only what touches core functionality or vision).
+ALL OF THIS IS APPLIED** — the three peripheral rows are `ruled` in the
+registry with the record fragment
+[log.d/2026-09-05-owner-rulings-oi79-oi80-oi81.md](log.d/2026-09-05-owner-rulings-oi79-oi80-oi81.md),
+the three core rows are still `pending` with the briefs below written into
+them, and the surfaces are regenerated. The "owner act remaining" column is
+what is genuinely left:
 
 | OI | Class | Disposition | Owner act remaining |
 |---|---|---|---|
@@ -341,18 +349,27 @@ bar, the shipped `check.py` steps are. No gap to close for item 7.
 
 ## What this sitting committed
 
-- The 16 stranded terminal specs relocated into `docs/archive/work/` (§5).
-- This report.
+- The 16 stranded terminal specs relocated into `docs/archive/work/` (§5),
+  commit `1722932a`.
+- This report and the sitting's log fragment.
+- §6 executed: OI-79, OI-80 and OI-81 ruled under the owner's delegation, each
+  taking its own recommendation; OI-82, OI-83 and OI-84 RETAINED as core with
+  their briefs filled out (options and a recommendation each, which are the
+  supervising session's and are NOT rulings); OI-72's dated correction applied
+  per OI-80's ruling; the six clipped titles repaired to real names; the
+  derived surfaces regenerated. The owner surface now shows three cards, all
+  legible.
 
 ## What is left, in order
 
 1. §5 WI-605 mint (spec above): write the file, `python
    project-trajectory/scripts/trace.py --bump-ids`, `python
    project-trajectory/scripts/trunk_step.py --regen`, commit.
-2. §6 rulings and brief fills, the OI-72 correction line, the title fix in
-   `intake._mint_open_item` with its test and RESYNC entry, regen, commit.
-   Record the rulings in one fragment under `docs/log.d/`, named
-   `2026-09-05-owner-rulings-oi79-80-81.md` (heading `## 2026-09-05 — …`).
+2. §6 remainder: the title clip in `intake._mint_open_item` with its test and
+   a RESYNC entry. And the two git acts the rulings name, which stay the
+   owner's under `push = "human"`: delete the `-HELD-` origin ref (tag first
+   if a pointer is wanted), and tag then delete
+   `wi416-parked-handback-contract`. OI-82/83/84 await the owner's answer.
 3. §3 optional WI: `check_escapes.py`.
 4. §4 optional WI: `{open_rows}` in the disposition brief + `EXTEND` outcome.
 5. §2 instrument WI: the routed tier and `agents.toml` row id in the
