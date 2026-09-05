@@ -1,0 +1,41 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 006
+# date: 2026-09-04 20:57
+# train: wi-595-llr-207-tc-205-return-and-llr
+# base: bd431c5b8cd3
+# phase: DESIGN-CHECK
+# wi: WI-595
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: 203dcc9e..8fc8f441
+# tokens:
+# cost-usd:
+# wall-secs: 2792
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 7067
+# prompt-template: kit:DESIGN-CHECK
+# prompt-sha: sha256:7678d8007317
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Implemented and committed WI-595 rework as `8fc8f441`.
+
+- Hardened `mechanical_close_attestation` to derive WI IDs from actual active-to-complete moves and compare the canonical composed subject.
+- Added a real-git forged-middle refusal regression.
+- Updated LLR-207, TC-205, the approval brief, WI deliverable, and session log.
+- Smoke bar: `1534 passed, 4 skipped`; enforced at `54.6s / 60s`.
+- Full suite: `3389 passed, 21 skipped`; sole failure remains the trunk-owned `docs/stage` fingerprint staleness.
+- Traceability: `orphans=0`, `integrity=0`.
+- Working tree is clean; final commit carries `WI: WI-595`.
