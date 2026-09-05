@@ -358,3 +358,20 @@ now closed end to end on a REAL close
 drove before.
 
 **MINOR 4 / MINOR 5** — the stale citation total and `IF-175.notes`, below.
+
+Cells touched by round 3: `LLR-207.detail` (only the move may create or
+destroy; the shared ordering key; the empty close refused by the pairing
+rather than by a clause of its own), `TC-205.method` / `.evidence` (five new
+citations, 56 total, 9 in `SLOW_MODULES` — `test_handback` joins the two
+`test_integrate_*` modules, so `Full` is if anything better founded than
+before), and `IF-175.notes` (the row governs the two peel SHAPES; the
+disposable CLASS list is LLR-207's alone). `IF-175` is `Drafted`, so this is
+authoring and not an amendment of an Approved cell; no `Status` was flipped.
+
+Surfaced rather than fixed, per the working agreement: `station.py`'s
+mechanical-close vocabulary (`MECHANICAL_CLOSE_PREFIX/SUFFIX`,
+`mechanical_close_subject`, and now `mechanical_close_order`) is named by NO
+spine row's `code_symbol` — `LLR-182` covers the outcome enum and `LLR-189`
+the per-close report, and neither reaches it. That gap predates this lane (the
+subject composer entered at round 2 with the same silence); closing it is an
+`LLR-182` amendment and is not this row's to take.

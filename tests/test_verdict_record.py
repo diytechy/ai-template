@@ -1800,9 +1800,9 @@ def test_a_two_row_batch_close_peels_under_one_canonical_order(tmp_path):
 
     ordered = ks.mechanical_close_order((name, wi_id) for wi_id, name in rows)
     assert ordered == ["WI-401", "WI-402"]
-    assert ks.mechanical_close_subject(
-        ordered
-    ) != ks.mechanical_close_subject(list(reversed(ordered)))
+    assert ks.mechanical_close_subject(ordered) != ks.mechanical_close_subject(
+        list(reversed(ordered))
+    )
 
 
 def _empty_close(root, when=T_LATER + 300):

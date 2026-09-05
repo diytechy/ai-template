@@ -46,9 +46,11 @@ RETURNED (`Drafted`, this branch's merge mints their adjudication):
   case is the rework regression; the other three already passed but no test
   case cited them.
 - `TC-205.tier` — `Smoke` -> `Full`, RULED rather than left open, with the
-  basis recorded in `Method`. 8 of the row's 50 citations live in
-  `test_integrate_admission` / `test_integrate_station`, both in
-  `tests/conftest.py` `SLOW_MODULES` and so deselected by `-m smoke`. `Full` is
+  basis recorded in `Method`. The ruling rests on a MEMBERSHIP fact, not on a
+  total, and is stated that way so a later citation cannot stale it: citations
+  of this row live in `test_integrate_admission`, `test_integrate_station` and
+  `test_handback`, all three in `tests/conftest.py` `SLOW_MODULES` and so
+  deselected by `-m smoke` (9 of them as this row closes). `Full` is
   the cheapest tier at which the whole cited set runs; `Smoke` claimed
   commit-floor coverage for a set the commit floor only partly runs, which is
   the direction §12.2 names as the harmful one. Sibling `TC-132` already reads
@@ -124,6 +126,46 @@ writer's helper, and compares it exactly. The real-git forged-middle regression
 proves both the public attestor refusal and the resulting gate refusal;
 LLR-207, TC-205, and the approval brief describe and cite the strengthened
 contract.
+
+REWORK ROUND 3 (review A, `007-REVIEW-A-8fc8f44.md`, five findings) is
+complete; all five are taken and the two MAJORs are fixed at the same owning
+boundary, `verdict._closed_wi_ids`.
+
+- The dead `not deleted` disjunct is DELETED, and re-measuring for its
+  replacement showed the record would have been wrong a second time: removing
+  the `len(branches) != 1` clause ALSO leaves the module fully green, because
+  an empty diff derives no ids and the subject it composes
+  (`adjudicate:  -> complete/ …`) cannot equal the one the commit carries. So
+  the empty close's refusal is OVER-DETERMINED, no clause owns it, and the
+  cell, the test comment and this record now say exactly that instead of
+  naming a second wrong owner. The one-source-branch clause is separately
+  pinned on the case it genuinely does own — a close reaching into a SECOND
+  lane's `active/` — which is the single red when that clause is deleted.
+- Only the MOVE may create or destroy. An `A` or `D` under `docs/work/` that
+  is not half of a recognised move is now a refusal rather than an entry the
+  loop skipped, so a close can no longer carry a smuggled new spec or the
+  deletion of an archived judged row past the gate; `M` stays unrestricted
+  because `spec_move`'s relink only ever modifies. Two real-git regressions,
+  both driven RED against the pre-fix module. NO fail-closed regression: all
+  nine real historical mechanical closes in this repo still peel.
+- The two independently-chosen sortings are taken as the ANTIDOTE the finding
+  named rather than as a test: `station.mechanical_close_order` is now the one
+  key both sides use, so the writer and the attestor cannot diverge by
+  construction. TC-205 gains the two-row batch arm anyway, and the
+  writer↔verifier loop is now closed end to end on a REAL
+  `handback.close_adjudication` close, which nothing drove before.
+- The stale tier total is gone; the ruling is restated on the MEMBERSHIP fact
+  it actually rests on, so a later citation cannot stale it again.
+- `IF-175.notes` now says the two peel SHAPES are its subject and the
+  disposable CLASS list is LLR-207's alone, so one adjudication no longer
+  approves two rows describing the same peel at two widths.
+
+SURFACED, NOT FIXED (a separate finding, per the working agreement): no spine
+row's `code_symbol` names `station.mechanical_close_subject`,
+`MECHANICAL_CLOSE_PREFIX/SUFFIX` or the new `mechanical_close_order` —
+`LLR-182` and `LLR-189` between them describe the rest of that module. The
+mechanical-close vocabulary was already undescribed before this lane; naming
+it is a `LLR-182` amendment and belongs to whoever holds that row.
 
 ## Context
 
