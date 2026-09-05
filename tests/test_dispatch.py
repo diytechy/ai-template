@@ -1251,3 +1251,91 @@ def test_a_preflight_refusal_parks_the_lane_instead_of_committing_its_residue(
     assert (root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md").is_file()
     assert not (root / "docs" / "work" / "partial").exists()
     assert not (root / "docs" / "handbacks").exists()
+
+
+# --- the consolidation census's trigger (the 2026-09-02 restructure plan §1.3)
+
+
+def overlapping_queue_repo(tmp_path):
+    """A drivable repo whose QUEUE holds an overlapping cluster — the state the
+    consolidation census exists to find."""
+    root = census_repo(tmp_path)
+    plans = root / "docs" / "plans"
+    plans.mkdir(parents=True, exist_ok=True)
+    (plans / "one.md").write_text("# one\n", encoding="utf-8", newline="\n")
+    queued = root / "docs" / "work" / "queued"
+    queued.mkdir(parents=True, exist_ok=True)
+    (queued.parent / "README.md").write_text(
+        "# the work registry\n", encoding="utf-8", newline="\n"
+    )
+    for wid, title in (("WI-401", "harden the widget"), ("WI-402", "test the widget")):
+        (queued / "{}-{}.md".format(wid, wid.lower())).write_text(
+            "+++\n"
+            'id = "{}"\n'
+            'title = "{}"\n'
+            'workstream = "process"\n'
+            "sr_refs = []\n"
+            "needs = []\n"
+            'safety_class = "ordinary"\n'
+            'buildtier = "medium"\n'
+            'specref = "docs/plans/one.md"\n'
+            "+++\n"
+            "\n## Context\n\nctx\n"
+            "\n## Done-when\n\n1. Deliver {}.\n".format(wid, title, wid),
+            encoding="utf-8",
+            newline="\n",
+        )
+    _commit(root, "seed an overlapping queue", when=T_CODE)
+    return root
+
+
+def test_the_dispatcher_mints_the_consolidation_row_for_an_overlapping_queue(
+    tmp_path, capfd
+):
+    # Done-when 2's TRIGGER, live. The census was inert for one review round:
+    # `mint_consolidation` existed and nothing called it, so the plan's whole
+    # acceptance path was unreachable from a run. It is called at the top of a
+    # tick — after the parked arm, before the frontier is loaded — so the row it
+    # mints is on the frontier this same tick.
+    root = overlapping_queue_repo(tmp_path)
+    worker = closing_all_worker()
+
+    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
+    assert rc == 0
+    out = capfd.readouterr().out
+    assert "consolidation census - minted" in out, out
+    rows = {
+        r["WI-ID"]: r
+        for r in load_script("agent_common").read_spec_rows(root / "docs" / "work")
+    }
+    minted = [r for r in rows.values() if r["Brief"] == "consolidate"]
+    seeded = [
+        r for r in minted if sorted(r["Adjudicates"].split(";")) == ["WI-401", "WI-402"]
+    ]
+    assert len(seeded) == 1, sorted((r["WI-ID"], r["Adjudicates"]) for r in minted)
+    assert seeded[0]["SafetyClass"] == "adjudication"
+    assert seeded[0]["Priority"] == "9"
+    assert seeded[0]["Digests"]
+    # EXACTLY ONE PER QUEUE STATE, not exactly one per run, and the difference
+    # is the design rather than a leak: this driving run also mints gap-closure
+    # rows, which share the SR registry as their spec of record, so the census
+    # legitimately asks about that new cluster too. What must never happen is a
+    # second row over a state already judged — assert that directly.
+    digests = [r["Digests"] for r in minted]
+    assert len(digests) == len(set(digests)), digests
+
+
+def test_a_consolidation_census_refusal_stops_the_cycle_with_exit_one(
+    tmp_path, capfd, monkeypatch
+):
+    # Same contract as the gap census's mint arm: a mint that cannot complete is
+    # never driven past.
+    root = overlapping_queue_repo(tmp_path)
+    monkeypatch.setattr(
+        drv.intake,
+        "mint_consolidation",
+        lambda *_a, **_k: ([], "the consolidation mint REFUSED (stub)"),
+    )
+    rc = drv.run(root, drive_args(), worker=Recorder(), tier="smoke")
+    assert rc == 1
+    assert "the consolidation mint REFUSED (stub)" in capfd.readouterr().err

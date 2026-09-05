@@ -53,16 +53,21 @@ asks for a `Status` cell to be judged). Deriving it from the TITLE instead is
 the `NEEDS-HUMAN` fold this repo wrote in blood (WI-417): prose that carries
 control flow must be a typed field. So it is a typed field.
 
-FOUR OF THE FIVE BRIEFS ARE ROUTED (`ROUTED`); the last has no producer for
-its evidence, so a row declaring it is HELD for a human (rule 3) rather than
-built:
+ALL FIVE BRIEFS ARE NOW ROUTED (`ROUTED`), which they were not for most of this
+module's life. The two that were unrouted are worth keeping on record, because
+each says something about what "routed" costs:
 
-  * `conflict` — nothing mints a queue-conflict adjudication row at all
-    (`check_trajectory.queue_conflict_findings` is a warn that never becomes a
-    row), so there is no session to brief; and its `{digests}` slot names a
-    scope+spine digest pair no function computes.
-  * `conflict`'s sibling `amendment` USED to be the second one, and it is the
-    capability the `last_approved` snapshot unlocked (D-9 step 4b, owner
+  * `conflict` is RETIRED, not filled. It had a template and a verdict grammar
+    and never had any of the three things that make a brief real: nothing minted
+    a queue-conflict row (`check_trajectory.queue_conflict_findings` is a warn
+    that never became a row), no assembler filled its slots, and nothing read
+    the `needs=` field its grammar demanded — its `{digests}` slot named a
+    scope+spine digest pair no function computed. `consolidate` replaces it: the
+    same three questions, plus the CONSOLIDATE exit and the idle-station census
+    that mints it, so all three gaps close together (the 2026-09-02
+    backlog-restructure plan §1).
+  * `amendment` was the OTHER one, and it is the capability the `last_approved`
+    snapshot unlocked (D-9 step 4b, owner
     directive 2026-08-15). Two things blocked it and the snapshot answers both.
     Its `{rows}` slot named `trace.reattest_model`, which selected rows whose
     Status was `Modified`, while `check_trajectory.staged_spine_amendments` —
@@ -102,6 +107,7 @@ from pathlib import Path
 
 import agent_common as ac
 import baseline_snapshot
+import consolidate as cons
 import prompts
 import spine_carrier
 
@@ -110,7 +116,7 @@ BRIEF_PROMPTS = {
     "amendment": prompts.ADJUDICATE_AMENDMENT,
     "first-approval": prompts.ADJUDICATE_FIRST_APPROVAL,
     "disposition": prompts.ADJUDICATE_DISPOSITION,
-    "conflict": prompts.ADJUDICATE_CONFLICT,
+    "consolidate": prompts.ADJUDICATE_CONSOLIDATE,
     "red-tc": prompts.ADJUDICATE_RED_TC,
 }
 
@@ -149,10 +155,27 @@ VERDICT_GRAMMAR = {
     "amendment": ("VERDICT", ("MEANING", "CLARITY"), ("rows",)),
     "first-approval": ("OUTCOME", ("APPROVE", "RETURN"), ("rows",)),
     "disposition": ("OUTCOME", ("COMPLETE", "PARTIAL", "CANCELLED"), ("successors",)),
-    "conflict": (
+    # The CONSOLIDATION grammar (restructure plan §1.2). Its first three
+    # alternatives are the retired `conflict` grammar verbatim; the fourth is
+    # the exit that brief lacked, and `absorbs` is the counter that makes it
+    # readable — a verdict saying CONSOLIDATE without naming what it absorbed
+    # is a judgement the close cannot enact. BOTH counters are required on
+    # EVERY alternative, `-` being the honest "none": a counter that appears
+    # only on the alternative that uses it lets a session omit it and still
+    # parse, which is the silent half-verdict `verdict_refusal` exists to
+    # refuse.
+    #
+    # BOTH ARE `;`-JOINED LISTS AND BOTH ARE RECONCILED. `absorbs=` restates the
+    # `## Dispositions` draft's `supersedes`, `needs=` the WAITERS of the
+    # `## Consolidation` block's `edges` - and `consolidate.reconcile_refusal`
+    # refuses the close on any divergence. `needs=` was spelled singular here
+    # and in the template while `edges` was already a list, so a conformant
+    # two-edge verdict was refused with no way to write one that passed; the
+    # grammar, the brief and the check are ONE fact now (review round 3).
+    "consolidate": (
         "OUTCOME",
-        ("QUEUE", "QUEUE-WITH-EDGE", "RETURN-TO-DRAFT"),
-        ("needs",),
+        ("QUEUE", "QUEUE-WITH-EDGE", "RETURN-TO-DRAFT", "CONSOLIDATE"),
+        ("needs", "absorbs"),
     ),
     "red-tc": ("OUTCOME", ("DRAFTED", "NEEDS-JUDGEMENT"), ("cases", "drafts")),
 }
@@ -817,12 +840,194 @@ def _chain_label(drafted, in_scope, yours):
     return "AWAITING FIRST APPROVAL - HELD FOR THE OWNER, NOT YOURS TO FLIP"
 
 
+# --- the consolidation brief (the 2026-09-02 restructure plan §1.4) -----------
+
+#: The `{spine}` literal for a cluster that cites no requirement. STATED, never
+#: blank: contradiction with the spine is one of the brief's three questions,
+#: and a blank section reads as "looked, found nothing" when the truth is
+#: "these rows cite nothing to look at". The other two questions still stand,
+#: which is why this composes rather than refusing.
+NO_SPINE = "(the cluster cites no SR/LLR)"
+#: The `{prior}` literal for a repository where no consolidation has closed yet.
+#: Same rule, same reason — the slot asks "what did earlier judgements already
+#: merge", and "nothing yet" is an answer.
+NO_PRIOR = "(no consolidation has absorbed anything in this repository yet)"
+#: Clip on one candidate row's rendered spec, so a cluster of six rows with
+#: multi-page Contexts cannot produce a brief nobody reads.
+CANDIDATE_CLIP = 120
+#: Clip on one `{open_rows}` title. A WI title in this repo is routinely a
+#: multi-thousand-character paragraph, and 140 is the width the validator's own
+#: queue-overlap warn settled on.
+TITLE_CLIP = 140
+#: The statuses `{open_rows}` lists — the ones a row occupies while it is still
+#: somebody's to run.
+OPEN_STATUSES = ("draft", "queued", "active", "deferred")
+
+
+def consolidate_values(root, row):
+    """`({candidate, open_rows, spine, mechanical, digests, prior}, None)` for
+    the queued cluster an idle-station census handed this judge, or
+    `(None, reason)`.
+
+    THE CLUSTER IS THE ROW'S OWN `Adjudicates` CELL, and the population is
+    RE-DERIVED LIVE against it — the two halves `first_approval_values` was
+    rebuilt around, for the same two reasons. The cell BOUNDS the question (a
+    live re-derivation with no scope to intersect asks a wider question than the
+    mint asked), and the live read ANSWERS it (`red_tc_values`' rule: brief the
+    world the judge is actually in, so a cluster whose overlap dissolved between
+    mint and claim refuses rather than briefing a session about a contradiction
+    that no longer exists).
+
+    EVERY ROW OF THE CLUSTER OR NONE. A cluster row that has been claimed,
+    closed or deleted since the mint makes this refuse by name rather than
+    composing a brief over the survivors: the verdict this brief asks for
+    ABSORBS rows, and a judge shown four of five rows would draft a successor
+    whose `supersedes` silently omits one — which the close cannot detect,
+    because the absent row is absent from the verdict too.
+
+    `{digests}` renders BOTH the recorded pair and the pair as it is now. The
+    slot's declared purpose is "so a verdict that has gone stale is detectable
+    rather than assumed fresh", and a recorded pair alone is not detectable —
+    it is a number with nothing to compare against."""
+    root = Path(root)
+    scope = adjudicates(row)
+    if not scope:
+        return None, (
+            "this consolidation declares no `Adjudicates` scope, so the cluster "
+            "the census handed it is unknown — and an unstated boundary read as "
+            "'every queued row' would let one verdict absorb the whole backlog. "
+            "Re-mint the row, or rule on it by hand"
+        )
+    recorded = (row.get("Digests") or "").strip()
+    if not cons.parse_digests(recorded)[0]:
+        return None, (
+            "this consolidation carries no usable `Digests` cell, so the queue "
+            "state it was minted against is unrecorded — the verdict could not "
+            "be told stale from fresh, and the census could not tell that this "
+            "state had been judged"
+        )
+    rows = cons.read_rows(root)
+    by_id = {(r.get("WI-ID") or "").strip(): r for r in rows}
+    gone = sorted(
+        wid for wid in scope if (by_id.get(wid) or {}).get("Status") != cons.QUEUED
+    )
+    if gone:
+        return None, (
+            "{} of the cluster is no longer queued — a consolidation absorbs "
+            "the rows it is shown, so a brief over the survivors would produce "
+            "a verdict that silently drops it".format(", ".join(gone))
+        )
+    candidate, missing = _candidate_specs(root, sorted(scope))
+    if missing:
+        return None, "no readable spec for {}".format(", ".join(missing))
+    findings = [
+        line
+        for first, second, line in cons.pair_findings(root, rows)
+        if first in scope and second in scope
+    ]
+    if not findings:
+        return None, (
+            "the pre-filter now finds no overlap among {} — the cluster this "
+            "row was minted over has dissolved, and there is nothing left to "
+            "judge".format(";".join(sorted(scope)))
+        )
+    spine, _absent = _spine_excerpt(root, _cited_spine(root, scope, by_id))
+    return {
+        "candidate": candidate,
+        "open_rows": _other_open_rows(rows, scope),
+        "spine": spine or NO_SPINE,
+        "mechanical": "\n".join("- " + line for line in findings),
+        "digests": "recorded at the mint: {}\nas the tree is now:    {}".format(
+            recorded, cons.digests(root, rows)
+        ),
+        "prior": _prior_lines(cons, rows),
+    }, None
+
+
+def _candidate_specs(root, ids):
+    """`(rendered, [ids with no readable spec])` — each cluster row's whole
+    spec, frontmatter and body, under a header naming its id.
+
+    THE WHOLE SPEC, not selected cells: the verdict may quote each absorbed
+    row's Done-when into the successor's Context verbatim, and a judge shown a
+    summary would paraphrase. Clipped per row, with the clip STATED."""
+    out, missing = [], []
+    for wid in ids:
+        hit = None
+        for path in ac.spec_files(Path(root) / "docs/work"):
+            if path.name.startswith(wid + "-"):
+                hit = path
+                break
+        text = _read(hit) if hit else None
+        if not text:
+            missing.append(wid)
+            continue
+        out.append(
+            "=== {} ({}) ===\n{}".format(wid, hit.name, _clip(text, CANDIDATE_CLIP))
+        )
+    return "\n\n".join(out), missing
+
+
+def _cited_spine(root, scope, by_id):
+    """The SR ids the cluster cites, plus the LLR ids hanging under them.
+
+    Read off the rows' own `SR-Refs` cells and the LLR registry's `SR-Refs` —
+    the same join `intake._code_map_lines` makes — so `{spine}` shows the
+    requirement text a contradiction would be against, at both tiers."""
+    srs = set()
+    for wid in scope:
+        cell = (by_id.get(wid) or {}).get("SR-Refs") or ""
+        srs |= {tok.strip() for tok in cell.split(";") if tok.strip()}
+    wanted = set(srs)
+    for llr in spine_carrier.load(
+        Path(root) / "docs/requirements/low-level-requirements.toml", "LLR-ID"
+    ):
+        owned = {tok.strip() for tok in (llr.get("SR-Refs") or "").split(";")}
+        if srs & owned and (llr.get("LLR-ID") or "").strip():
+            wanted.add(llr["LLR-ID"].strip())
+    return wanted
+
+
+def _other_open_rows(rows, scope):
+    """Every OPEN row that is NOT in the cluster, as id / title / sr_refs /
+    needs — the "is this already answered, or does it collide with something
+    else" evidence. The cluster itself is `{candidate}` and is not repeated."""
+    lines = []
+    for r in rows:
+        wid = (r.get("WI-ID") or "").strip()
+        if wid in scope or (r.get("Status") or "") not in OPEN_STATUSES:
+            continue
+        title = " ".join(str(r.get("Title") or "(untitled)").split())
+        lines.append(
+            "- {} — {} — sr_refs {} — needs {}".format(
+                wid,
+                title if len(title) <= TITLE_CLIP else title[: TITLE_CLIP - 1] + "…",
+                (r.get("SR-Refs") or "").strip() or "-",
+                (r.get("Predecessors") or "").strip() or "-",
+            )
+        )
+    return "\n".join(sorted(lines))
+
+
+def _prior_lines(cons, rows):
+    """`{prior}`: what every earlier consolidation absorbed, from the REGISTRY
+    (the absorbed rows' own status and lineage) and never from a verdict file —
+    rule 1, a judge's evidence is a record and not a claim."""
+    prior = cons.prior_absorbs(rows)
+    if not prior:
+        return NO_PRIOR
+    return "\n".join(
+        "- {} absorbed {}".format(succ, ";".join(prior[succ])) for succ in sorted(prior)
+    )
+
+
 # The briefs whose EVERY slot has a real producer today. A key absent here is
 # documented in this module's header with the derivation it is missing; adding
 # one is adding its assembler, never relaxing the fill.
 _ASSEMBLERS = {
     "amendment": amendment_values,
     "first-approval": first_approval_values,
+    "consolidate": consolidate_values,
     "disposition": disposition_values,
     "red-tc": red_tc_values,
 }

@@ -86,6 +86,7 @@ import re
 import subprocess
 
 import agent_common as ac
+import consolidate
 import integrate
 import spec_move
 from kitlib import station
@@ -524,7 +525,231 @@ def _adjudication_close_text(text, deliverable):
     return "+++\n" + fm + "+++\n" + body
 
 
-def _archive_one_adjudication_row(wt, branch, name):
+def _consolidation_close(root, wt, branch, src_rel, text, drafts, meta):
+    """The CONSOLIDATION arm of the close (the 2026-09-02 restructure plan
+    §1.5): enact this verdict's outcome on the queue it judged.
+    `(True, None)` enacted, `(False, None)` when the row is not a
+    consolidation, `(False, refusal)` otherwise.
+
+    WHAT THIS ARM DOES AND WHAT IT DELIBERATELY LEAVES TO THE MINT. It enacts
+    everything that needs no id that does not yet exist: `queue-with-edge`
+    writes the hard `needs` edge on the named waiter, `return-to-draft` moves
+    the named rows `queued/ -> draft/` with the verdict's finding quoted into
+    their Context, and `queue` writes nothing. The absorbed rows' move into
+    `archive/work/restructured/` happens at the MINT
+    (`intake._archive_absorbed`), for two reasons that both point the same way:
+    their whole Deliverable is `Restructured into WI-<successor>.` and the
+    successor's id is allocated by `_mint`, which runs at this row's merge; and
+    `intake._supersedes_refusal` refuses a `supersedes` naming an ALREADY
+    `restructured` row, so archiving them here would make the mint refuse its
+    own successor. The rule lives once, in `consolidate`; this is its call site.
+
+    ALL-OR-NOTHING: every refusal is read before the first write
+    (`close_refusal` over the trunk registry), so a half-enacted verdict is not
+    a state this can reach."""
+    record, refusal = consolidate.parse_verdict(text, src_rel)
+    if record is None:
+        # No `## Consolidation` section: not this arm's case. Every other
+        # adjudication brief reads this way, which is what lets one close serve
+        # all five.
+        return False, refusal
+    absorbed = consolidate.absorbed_ids(drafts)
+    # THE TRUNK REGISTRY, not the lane's. The lane was cut before this close
+    # ran, so its copy of `queued/` is a snapshot: a row another lane claimed
+    # in the meantime still reads `queued` there, and the one guard that exists
+    # to catch exactly that race would pass on stale bytes.
+    rows = ac.read_spec_rows(root / integrate.WORK)
+    refusal = consolidate.close_refusal(
+        root,
+        record,
+        absorbed,
+        rows,
+        src_rel,
+        scope=consolidate.scope_of(meta),
+        drafts=drafts,
+        recorded=str(meta.get("digests") or ""),
+    )
+    if refusal:
+        return False, refusal
+    # THE MACHINE LINE AND THE TYPED BLOCK ARE ONE FACT, checked. `absorbs=` and
+    # `needs=` are required on every alternative of this brief's verdict grammar
+    # and NOTHING read them: a verdict file could say `OUTCOME: QUEUE needs=-
+    # absorbs=-` while the block said `consolidate` and three rows were
+    # archived. Rather than keep a second unread carrier (or quietly re-spec the
+    # plan's own grammar), the close reconciles them and refuses on divergence.
+    refusal = _machine_line_refusal(root, wt, branch, record, absorbed, src_rel)
+    if refusal:
+        return False, refusal
+    # PLAN, THEN APPLY. Both loops used to write one target at a time and could
+    # refuse mid-way: a two-edge verdict whose SECOND waiter carried no readable
+    # `needs` line left the first waiter's spec rewritten AND STAGED on the lane,
+    # reported nowhere, to be committed by whatever committed next - even if the
+    # verdict was then withdrawn. That is the half-enacted state this function's
+    # own docstring says is unreachable, so it is now unreachable: every target
+    # is resolved to a readable, rewritable queued spec BEFORE the first write.
+    plan, refusal = _enact_plan(wt, record)
+    if refusal:
+        return False, refusal
+    refusal = _apply_plan(wt, plan)
+    if refusal:
+        return False, refusal
+    print(
+        "handback: consolidation {} -> outcome {} ({} absorbed, {} edge(s), "
+        "{} returned)".format(
+            meta.get("id") or "?",
+            record["outcome"],
+            len(absorbed),
+            len(record["edges"]),
+            len(record["returns"]),
+        )
+    )
+    return True, None
+
+
+def _lane_verdict(root, wt, branch):
+    """The ADJUDICATE verdict file this lane recorded, or None.
+
+    Derived from the branch's own delta against trunk (`git diff --name-only
+    <trunk>...<branch> -- docs/reviews/`), not from a path only `agent_loop`
+    knows: the close is handed `(root, branch)` and nothing else. The newest by
+    name wins, which is the ordering `agent_loop.fresh_verdict_path` builds into
+    the filename (session number, then the implementer's HEAD sha)."""
+    trunk = ac.trunk_name(root)
+    code, out = ac.git(
+        root,
+        "diff",
+        "--name-only",
+        "{}...{}".format(trunk, branch),
+        "--",
+        "docs/reviews",
+    )
+    if code != 0:
+        return None
+    names = sorted(
+        line.strip()
+        for line in out.splitlines()
+        if line.strip().endswith(".md") and "-ADJUDICATE-" in line
+    )
+    for rel in reversed(names):
+        path = wt / rel
+        if path.is_file():
+            return path
+    return None
+
+
+def _machine_line_refusal(root, wt, branch, record, absorbed, where):
+    """Refuse when the verdict file's `OUTCOME:` line and the typed
+    `## Consolidation` block do not describe the same judgement.
+
+    Both are the session's own output, written minutes apart, and the loop reads
+    them for different things — the machine line is what `agent_loop` grades the
+    session DONE on, the block is what the close enacts. Two carriers of one
+    fact that nothing compares is how a session reports one verdict and the
+    machinery performs another; the brief template asserts they cannot disagree,
+    so this is that assertion made true.
+
+    A lane with no readable verdict file is NOT refused here: `close_adjudication`
+    is called only on a worker's EXIT_DONE, where `agent_loop.worker_endstate`
+    has already gated on the verdict, and re-deriving that precondition from a
+    git range would turn a fixture or a hand close into a false refusal."""
+    path = _lane_verdict(root, wt, branch)
+    if path is None:
+        return None
+    parsed = consolidate.parse_machine_line(path.read_text(encoding="utf-8"))
+    if parsed is None:
+        return None
+    return consolidate.reconcile_refusal(parsed, record, absorbed, where)
+
+
+def _queued_spec(wt, wi_id):
+    """`(path, relpath)` of one QUEUED spec on the lane, or `(None, None)`."""
+    queued = wt / integrate.WORK / "queued"
+    for path in sorted(queued.glob(wi_id + "-*.md")) if queued.is_dir() else []:
+        return path, "{}/queued/{}".format(integrate.WORK, path.name)
+    return None, None
+
+
+def _enact_plan(wt, record):
+    """`([(kind, ...)], None)` - every write this verdict owes, resolved and
+    validated - or `([], refusal)` naming the first target that cannot be
+    written. NOTHING is written here.
+
+    The same preflight-then-act shape `consolidate._archive_plan` uses on the
+    absorbed rows, for the same reason and bought by the same class of defect.
+    Order is preserved so the apply half is a straight walk."""
+    plan = []
+    for waiter, blocker in record["edges"]:
+        path, rel = _queued_spec(wt, waiter)
+        if path is None:
+            return [], (
+                "cannot add the {} -> {} edge: {} is not a queued spec on this "
+                "lane; nothing written".format(waiter, blocker, waiter)
+            )
+        text = path.read_text(encoding="utf-8")
+        edged = consolidate.edged_text(text, blocker)
+        if edged is None:
+            return [], (
+                "cannot add the {} -> {} edge: {} carries no readable `needs` "
+                "line; nothing written".format(waiter, blocker, rel)
+            )
+        plan.append(("edge", path, rel, edged, waiter, blocker))
+    for wid in record["returns"]:
+        path, rel = _queued_spec(wt, wid)
+        if path is None:
+            return [], (
+                "cannot return {} to draft: it is not a queued spec on this "
+                "lane; nothing written".format(wid)
+            )
+        new_text = consolidate.returned_text(
+            path.read_text(encoding="utf-8"), record["finding"]
+        )
+        dest = "{}/draft/{}".format(integrate.WORK, path.name)
+        plan.append(("return", path, rel, new_text, dest, wid))
+    return plan, None
+
+
+def _apply_plan(wt, plan):
+    """Enact a validated `_enact_plan`, or RESTORE the lane and refuse.
+
+    The preflight makes a mid-walk refusal unreachable through the causes it
+    checks; the restore is for the ones it cannot (a `spec_move` link rewrite
+    that fails, a filesystem that goes away). `git checkout -- docs/work` plus
+    `git reset -- docs/work` returns both the worktree and the index to the
+    lane's own HEAD, which is exactly the state the close started from: nothing
+    else has written under `docs/work` by this point, because the absorbed rows
+    are archived at the MINT and this row's own spec moves after."""
+    for entry in plan:
+        kind = entry[0]
+        if kind == "edge":
+            _kind, path, rel, edged, waiter, blocker = entry
+            path.write_text(edged, encoding="utf-8", newline="\n")
+            code, out = ac.git(wt, "add", "--", rel)
+            refusal = (
+                None
+                if code == 0
+                else "cannot stage {}:\n{}".format(rel, ac._failure_tail(out))
+            )
+        else:
+            _kind, _path, rel, new_text, dest, wid = entry
+            _touched, refusal = spec_move.move_spec(wt, rel, dest, new_text=new_text)
+            if refusal:
+                refusal = "cannot return {} to draft: {}".format(wid, refusal)
+        if refusal:
+            _restore_lane_work(wt)
+            return (
+                refusal + " (the lane's docs/work was restored; this verdict enacted"
+                " nothing)"
+            )
+    return None
+
+
+def _restore_lane_work(wt):
+    """Put the lane's `docs/work` back to its own HEAD, worktree and index."""
+    ac.git(wt, "checkout", "--", integrate.WORK)
+    ac.git(wt, "reset", "-q", "--", integrate.WORK)
+
+
+def _archive_one_adjudication_row(root, wt, branch, name):
     """Move ONE claimed adjudication spec into `complete/` on the lane —
     `(True, None)` moved, `(False, None)` when the row is not an adjudication
     row at all, `(False, refusal)` otherwise. Nothing is committed here.
@@ -564,6 +789,16 @@ def _archive_one_adjudication_row(wt, branch, name):
             "one successor (OI-70/OI-73, no third exit). The run stops for a "
             "human to draft the continuation".format(name)
         )
+    # THE CONSOLIDATION ARM (restructure plan §1.5), before the row is archived:
+    # it acts on the QUEUE this verdict judged, and the guards it runs read the
+    # trunk registry, so it must happen while the state it validated still
+    # holds. A row with no `## Consolidation` section answers `(False, None)`
+    # and every other brief passes straight through.
+    _enacted, crefusal = _consolidation_close(
+        root, wt, branch, src_rel, text, parsed, meta
+    )
+    if crefusal:
+        return False, "cannot close {}: {}".format(name, crefusal)
     new_text = _adjudication_close_text(text, _ADJUDICATION_CLOSE_DELIVERABLE)
     dest_rel = "{}/complete/{}".format(integrate.WORK, name)
     _touched, refusal = spec_move.move_spec(wt, src_rel, dest_rel, new_text=new_text)
@@ -612,7 +847,7 @@ def close_adjudication(root, branch):
         return None, None
     moved_rows = []
     for wi_id, name in specs:
-        moved, refusal = _archive_one_adjudication_row(wt, branch, name)
+        moved, refusal = _archive_one_adjudication_row(root, wt, branch, name)
         if refusal or not moved:
             return None, refusal
         moved_rows.append((name, wi_id))

@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 191
+design_rows = 192
 seam_rows = 164
 requirements_placed = 73
 requirements_unplaced = 3
@@ -58,6 +58,7 @@ sr_shared_refs = [
   "SR-139",
   "SR-152",
   "SR-155",
+  "SR-157",
   "SR-163",
   "SR-176",
 ]
@@ -384,6 +385,7 @@ sr_refs = [
   "SR-154",
   "SR-155",
   "SR-156",
+  "SR-157",
   "SR-170",
   "SR-171",
   "SR-172",
@@ -397,6 +399,7 @@ sr_shared_refs = [
   "SR-139",
   "SR-146",
   "SR-155",
+  "SR-157",
   "SR-170",
   "SR-176",
 ]
@@ -459,15 +462,18 @@ llr_refs = [
   "LLR-189",
   "LLR-196",
   "LLR-207",
+  "LLR-210",
 ]
 hat_refs = [
   "CONSISTENCY",
   "DATA-PROTECTION",
+  "FIRST-RUN-ADOPTER",
   "INTEGRITY-RECOVERABILITY",
   "LEGAL",
   "MAINTAINER",
   "PERFORMANCE",
   "SECURITY",
+  "TEST-ENGINEER",
   "UNATTENDED-OPS",
 ]
 modules = [
@@ -477,6 +483,7 @@ modules = [
   "project-trajectory/scripts/agent_route.py",
   "project-trajectory/scripts/agent_session.py",
   "project-trajectory/scripts/census.py",
+  "project-trajectory/scripts/consolidate.py",
   "project-trajectory/scripts/dispatch.py",
   "project-trajectory/scripts/handback.py",
   "project-trajectory/scripts/hats.py",

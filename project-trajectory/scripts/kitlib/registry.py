@@ -40,6 +40,9 @@ __all__ = [
     "SPEC_DELIVERABLE",
     "SPEC_HANDBACK",
     "SPEC_CONTEXT",
+    "HEADING_RE",
+    "DONE_WHEN_RE",
+    "done_when_section",
     "spec_work_dir",
     "spec_archive_dir",
     "spec_roots",
@@ -93,6 +96,14 @@ WI_COLUMNS = (
     # brief's LIVE re-derivation intersects against so the act cannot widen past
     # what was handed over. Empty on every row that is not an adjudication.
     "Adjudicates",
+    # THE CONSOLIDATION CENSUS'S RECURSION GUARD (the 2026-09-02 restructure
+    # plan §1.3): `<queue sha>|<spine sha>`, the queue state and spine state the
+    # census saw when it minted this judgement. The census refuses to mint while
+    # a `consolidate` row carrying THIS queue sha is queued, active or ARCHIVED,
+    # so the cell has to survive the close — a guard that stops holding when the
+    # row goes terminal mints the same judgement forever. Empty on every row that
+    # is not a consolidation.
+    "Digests",
 )
 SPEC_SCALARS = (
     ("Title", "title"),
@@ -112,6 +123,7 @@ SPEC_SCALARS = (
     ("Bar", "bar"),
     ("Supersedes", "supersedes"),
     ("Brief", "brief"),
+    ("Digests", "digests"),
 )
 SPEC_LISTS = (
     ("SR-Refs", "sr_refs"),
@@ -191,6 +203,56 @@ SPEC_HANDBACK = "\n## Handback\n"
 # whose body is context-only parses with an empty Deliverable rather than as
 # a malformation.
 SPEC_CONTEXT = "\n## Context\n"
+
+# --- the Done-when SECTION: one home, three readers ---------------------------
+#
+# A markdown ATX heading, and the "is this the Done-when heading" test. The
+# pattern is deliberately TOLERANT: this repo's own live specs spell the heading
+# four ways (`## Done-when` x22, `## Done when` x5, `### Done when` x2,
+# `### Done-when` x1, measured 2026-09-04 over docs/work + docs/archive/work +
+# project-trajectory), and a reader matching only the majority spelling drops
+# the criteria of the other eight and reports them as absent.
+#
+# IT LIVES HERE because three readers want it and a second copy of a tolerant
+# pattern is worse than no tolerance at all: `check_trajectory._done_when_boxes`
+# counts completion boxes inside the section, `consolidate.absorbed_done_when`
+# quotes the section into a consolidation successor, and this module owns the
+# spec body's shape. The narrow copy that prompted the extraction dropped 8 of
+# 30 live headings and then asserted, in a minted row's Context, that the
+# absorbed row "declared no `## Done-when` section" - an affirmative false
+# statement about somebody else's acceptance criteria.
+HEADING_RE = re.compile(r"^(#{1,6})\s+(.*)$")
+DONE_WHEN_RE = re.compile(r"^\s*(?:\d+[.)]\s*)?done[- ]when\b", re.IGNORECASE)
+
+
+def done_when_section(text):
+    """The lines inside a spec body's Done-when section, or `[]` when it has
+    none. The heading line itself is not included.
+
+    SECTION, not "everything until the next heading": a Done-when that
+    subdivides keeps its subsections, while a SIBLING or shallower heading ends
+    it. That distinction is load-bearing and was bought by a real defect -
+    `docs/specs/WI-321.md` carries WI-324's remaining boxes under a sibling
+    `## Split off, deliberately` heading, and folding those in attributed one
+    WI's unfinished work to another.
+
+    Line endings are normalized OFF each line: a CRLF checkout otherwise leaves
+    stray `\r` in text a caller writes back with `newline="\n"`.
+    """
+    out, depth = [], None
+    for raw in (text or "").split("\n"):
+        line = raw.rstrip("\r")
+        heading = HEADING_RE.match(line)
+        if heading:
+            level = len(heading.group(1))
+            if DONE_WHEN_RE.match(heading.group(2)):
+                depth = level
+                continue
+            if depth is not None and level <= depth:
+                break
+        if depth is not None:
+            out.append(line)
+    return out
 
 
 def spec_work_dir(csv_path):

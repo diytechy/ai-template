@@ -171,6 +171,20 @@ COLUMNS = [
     # carrying it is the WI-417 fold; a frontmatter key outside this table is
     # dropped by `parse_spec` at the one moment it matters.
     "Adjudicates",
+    # THE CONSOLIDATION CENSUS'S RECURSION GUARD (the 2026-09-02 restructure
+    # plan §1.3), as a pair of digests: `<queue sha>|<spine sha>` — the queue
+    # sha over the sorted (id, title, needs, safety_class) of every `queued/`
+    # row, the spine sha over the three spine registries. Empty on every row
+    # that is not a consolidation.
+    #
+    # A REAL COLUMN, for a reason the other two adjudication cells share and
+    # this one sharpens: the census refuses to mint while a `consolidate` row
+    # carrying THIS queue sha is queued, active or ARCHIVED, so the guard has to
+    # survive the row going terminal — "a queue state that has been judged is
+    # never judged again". A frontmatter key outside this table is dropped by
+    # `parse_spec`, and a guard that silently stops holding after the close is a
+    # guard that mints the same judgement forever.
+    "Digests",
 ]
 
 # Status <-> directory (§2.1; WI-384). One directory per state, both terminals
@@ -215,6 +229,7 @@ SCALAR_FIELDS = (
     ("Bar", "bar"),
     ("Supersedes", "supersedes"),
     ("Brief", "brief"),
+    ("Digests", "digests"),
 )
 # Columns carried as TOML arrays. Split on ';' WITHOUT stripping, so ';'.join()
 # is an exact inverse for every possible cell — including the `~WI-013` SOFT

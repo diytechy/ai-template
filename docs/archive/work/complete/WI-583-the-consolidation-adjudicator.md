@@ -3,11 +3,52 @@ id = "WI-583"
 title = "The consolidation adjudicator: the consolidate brief, the digest-guarded census, the multi-row close into restructured"
 workstream = "process"
 needs = ["WI-579", "WI-570"]
-specref = "docs/plans/2026-09-02-backlog-restructure-and-consolidation.md#1-the-consolidation-adjudicator"
+specref = ""
 buildtier = "strong"
 priority = 5
 safety_class = "ordinary"
 +++
+
+## Deliverable
+
+Plan §1 built in full, as a hand commit series out of band. The `consolidate`
+brief (`prompts/adjudicate-consolidate.template.md`,
+`adjudicate_brief.VERDICT_GRAMMAR["consolidate"]`, `consolidate_values`), the
+digest-guarded census that mints it (`scripts/consolidate.py`, new; the mint arm
+`intake.mint_consolidation`), the typed `Digests` column in all four schema
+homes, and the close that absorbs several queued rows into one successor
+(`handback._consolidation_close` + `consolidate.archive_absorbed`).
+`adjudicate-conflict` is RETIRED with its prompt key and catalogue row, per
+Done-when 1's "otherwise retire it": it had a template and a grammar and never a
+mint, an assembler or a reader for its `needs=` field.
+
+ONE DEVIATION STANDS, and the second was closed at rework. The absorbed rows'
+move to `restructured/` runs at the MINT and not in the close, because its
+Deliverable names an id `intake._mint` allocates one commit later and because
+`_supersedes_refusal` would otherwise make the mint refuse its own successor —
+the close still performs every guard and every non-minting outcome Done-when 3
+asks for, and two adversarial rounds confirmed that argument true. The census
+IS now called from `dispatch._admit` (it was inert at first close, when that
+module was another lane's); wiring it also exposed a defect neither reviewer
+found — a minted row whose SpecRef did not resolve could never be claimed and
+wedged the frontier — which is why the SpecRef is an existence probe.
+
+AMENDED AT REWORK (2026-09-04), after two independent hostile rounds returned
+11 and 9 findings, all of which held: the close's six all-or-nothing holes, the
+unimplemented Done-when quoting plan §1.5 promised, the parser's type and
+uniqueness gaps and the CRLF-fragile text transforms are all closed, each with
+a mutation-verified test. The account is the second section of
+`docs/log.d/WI-583-consolidation-adjudicator.md`.
+
+Evidence: `tests/test_consolidate.py` (the decision half — digests, the two new
+pre-filter signals, clusters, the three guards, the typed verdict block, the
+text transforms), `tests/test_consolidate_close.py` (the arc on a real
+repository: mint over three queued rows, brief, verdict, close, merge, mint —
+three rows in `restructured/` naming the successor, the successor superseding
+all three, the census silent afterwards), plus the new cases in
+`tests/test_adjudicate_brief.py`, `tests/test_intake.py` and
+`tests/test_wi_convert.py`. `RESYNC_PACK.md` carries the adopter entry and
+`docs/enforcement-audit.md` the two rows for what now enforces this.
 
 ## Context
 

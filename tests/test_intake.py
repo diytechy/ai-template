@@ -2013,6 +2013,49 @@ def test_a_joined_string_inside_a_list_is_refused_at_the_authoring_boundary():
     assert intake._authored_supersedes_refusal(["WI-558", "WI-559"], "at") is None
 
 
+# --- the consolidation cells and their lineage refusal (restructure plan §1.3) --
+
+
+def test_the_mint_writes_the_digests_cell_the_census_computes():
+    """The recursion guard is a CELL. A cell the census computes and the writer
+    drops is a guard that never holds: every idle tick would read "nobody has
+    judged this queue state" and mint the same row again."""
+    row = intake._draft_row(
+        "WI-042",
+        {
+            "title": "adjudicate queue overlap",
+            "kind": "adjudication",
+            "brief": "consolidate",
+            "adjudicates": ["WI-010", "WI-011"],
+            "digests": "aaaa1111bbbb|cccc2222dddd",
+        },
+    )
+    assert row["Digests"] == "aaaa1111bbbb|cccc2222dddd"
+    assert row["Brief"] == "consolidate"
+    assert row["Adjudicates"] == "WI-010;WI-011"
+    # ...and empty on a draft that names none, never a placeholder.
+    assert intake._draft_row("WI-043", {"title": "ordinary"})["Digests"] == ""
+
+
+def test_the_mint_refuses_a_draft_that_absorbs_a_consolidations_own_successor():
+    """`_supersedes_refusal`'s absorbed arm and this one are DIFFERENT failures
+    and neither substitutes: that one refuses CONTINUING a row somebody already
+    absorbed (a lineage chain), this refuses ABSORBING a row an earlier
+    consolidation MINTED — overturning that judgement, which is a
+    RETURN-TO-DRAFT for the owner and never a second machine mint."""
+    registry = [
+        {"WI-ID": "WI-005", "Status": "restructured", "Supersedes": "", "Title": "a"},
+        {"WI-ID": "WI-101", "Status": "queued", "Supersedes": "WI-005", "Title": "b"},
+        {"WI-ID": "WI-102", "Status": "queued", "Supersedes": "", "Title": "c"},
+    ]
+    ok = [{"title": "fine", "supersedes": ["WI-102"]}]
+    assert intake._pre_mint_refusal(ok, "the census", registry) is None
+    bad = [{"title": "overturn", "supersedes": ["WI-101"]}]
+    refusal = intake._pre_mint_refusal(bad, "the census", registry)
+    assert refusal and "WI-101" in refusal and "RETURN-TO-DRAFT" in refusal
+    assert "the census" in refusal
+
+
 # --- the `sweep` CLI: a range sweep is the merge slot's call, not a repo scan --
 #
 # The supervising session's out-of-band range (2026-09-04) could not use this

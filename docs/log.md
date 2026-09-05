@@ -61649,3 +61649,582 @@ about their contracts moved.
 Deferred open items: none — both defects are closed at their root with the
 routing and gate arms driven from the shipped paths, and the reviewer brief
 needed no edit because nothing in it contradicted the new reading.
+
+## 2026-09-05 — the consolidation adjudicator merged; the frontier paused for the owner's sitting
+
+WI-583 was built out of band (churn program item 8, handoff-2026-09-04 §7)
+and merged at `f395907b` after three adversarial rounds (Sol, Opus, Opus on
+the rework) whose 26 findings all held and were fixed with mutation-verified
+tests; the fourth round could not run on the exhausted OpenAI limit. Items 1–7
+of the program merged earlier the same day. Full suite at the tip: 3525
+passed, 24 skipped. The loop merged WI-595 (five cross-family rounds; the
+first lane to be resumed for an owed round by item 5), WI-599 and WI-600
+(LLR-207/TC-205 approved, closing the WI-586 thread); the derived stage rose
+to `DevStg-Tests`. A tracked pause holds the frontier for the owner's review;
+WI-580 finishes under it. Details:
+[handoff-2026-09-04.md](handoff-2026-09-04.md).
+
+Deferred open items: none — the owner questions are listed in the handoff §5.
+
+## 2026-09-04 — WI-583: the consolidation adjudicator
+
+Plan §1 of `docs/plans/2026-09-02-backlog-restructure-and-consolidation.md`,
+built out of band as a hand commit series on `contract_split` (owner direction
+2026-09-04): the `consolidate` brief, the digest-guarded census that mints it,
+and the close that absorbs several queued rows into one successor.
+
+**What landed, plan section by section.**
+
+- **§1.1–§1.2 — the brief.** `prompts/adjudicate-consolidate.template.md` plus
+  `adjudicate_brief.VERDICT_GRAMMAR["consolidate"]`. `adjudicate-conflict` is
+  RETIRED rather than left standing beside its replacement (Done-when 1's
+  "otherwise retire it"): it had a template and a grammar and none of the three
+  things that make a brief real — nothing minted such a row, no assembler filled
+  its slots, and nothing read the `needs=` its grammar demanded. Its three
+  questions survive verbatim in the new template; what is new is the CONSOLIDATE
+  exit and the `{prior}` slot. Both verdict counters are required on every
+  alternative, `-` being the honest "none": a counter that appears only on the
+  alternative that uses it lets a session omit it and still parse.
+- **§1.3 — the census and its guards.** `scripts/consolidate.py` (new). The
+  pre-filter is `check_trajectory.queue_conflict_pairs` — the same three signals
+  the validator has warned on since LLR-160, now produced at PAIR grain so the
+  census reads edges instead of parsing the warn sentences — plus two signals a
+  queue accumulates on its own: rows commissioned by one plan document or one
+  open-item edge, and rows whose SR-Refs reach the same LLR `Module` or whose
+  own Context/Done-when names the same file. Three guards, all on typed cells:
+  no mint beside another judgement; no mint for a queue state a `consolidate`
+  row already carries in its `Digests` cell (in ANY status, terminal included —
+  that arm is what stops the census re-minting forever after its own close); and
+  a row an earlier consolidation minted never seeds a cluster and may never be
+  re-absorbed. Minted `priority = 9`, `buildtier = strong`, with typed
+  `Adjudicates` and `Digests` cells.
+- **§1.4 — the evidence assembler.** `adjudicate_brief.consolidate_values`,
+  all-or-nothing like its four siblings, with two refusals only this brief needs:
+  every row of the cluster or none (the verdict ABSORBS what it is shown, so a
+  judge shown four of five drafts a `supersedes` that silently omits one), and
+  the overlap must still exist at composition time. `{spine}` and `{prior}` have
+  STATED literals rather than blanks.
+- **§1.5 — the close.** A consolidation arm in `handback.close_adjudication`,
+  reading a typed `## Consolidation` TOML block in the judging row's own spec.
+  It writes the hard `needs` edge for QUEUE-WITH-EDGE (the reader the conflict
+  brief promised and never got) and moves `queued/ -> draft/` with the finding
+  quoted into Context for RETURN-TO-DRAFT. The absorbed rows' move into
+  `docs/archive/work/restructured/` is `consolidate.archive_absorbed`, called
+  from `intake._mint` — see the deviation below.
+- **§1.6 — the fourth terminal word.** Already on trunk from the 2026-09-02
+  out-of-band series; built on, not rebuilt.
+- **§1.7 — what stays out.** Honoured as written: no structural-classifier
+  producer for the `structural=` seam in `schedule.kind_of`, and no change to
+  batch admission. Consolidation reads declared classes.
+
+**Deviation from the plan, and why.** §1.5 and WI-583 Done-when 3 place the
+absorbed rows' move to `restructured/` in `handback.close_adjudication`. It runs
+at the MINT instead, and the ordering is forced from both ends: the absorbed
+row's whole Deliverable is `Restructured into WI-<successor>.` and that id is
+allocated by `intake._mint` at the row's MERGE, one commit after the close; and
+`intake._supersedes_refusal`'s `absorbed_ids` arm refuses a draft continuing an
+already-`restructured` row, so archiving at the close would make the mint refuse
+its own successor. Everything the close CAN do at close time it does, including
+the refuse-by-name guard Done-when 3 asks for. The rule has one home
+(`consolidate.py`); `handback` and `intake` are its two call sites.
+
+**Not wired into `dispatch._admit`.** `intake.mint_consolidation(root, busy)` is
+the arm; the call site is four lines at the top of a tick and belongs to another
+lane's module. Nothing else mints a `consolidate` row, so the machinery is inert
+until it is called — which is the honest state to leave it in rather than
+editing a file this session does not own.
+
+**Two spine rows the plan did not name, authored because a HARD test demanded
+them.** `tests/test_traj_views.py::test_meta_component_top_view_smoke` asserts
+`uncontained == []` over this repo's own arch map — deliberately, so that any
+module landing ahead of its spine rows reds rather than needing a renewed
+allowance — and it caught `project-trajectory/scripts/consolidate.py` in the full suite after every
+smoke-tier run was green. So `LLR-210` (module `consolidate.py`, parent SR-157,
+`Component = CMP-008`) and its covering `TC-208` are authored **Drafted**, and
+no `Status` was flipped: authoring is not approving, and the first approval is
+an adjudication session's act on the trunk side. `trace.py --bump-ids` raised
+LLR 209 -> 210 and TC 207 -> 208; the strict-integrity pass reads
+`orphans=0 integrity=0`, drafts 11 -> 13.
+
+**Known residue, reported rather than absorbed.** No `IF-###` row names
+`project-trajectory/scripts/consolidate.py`, so `check_trajectory` still warns `connectivity
+undeclared` for it — warn-only, and declaring the seam is an interface-authoring
+act this row does not scope. The census is also not called from
+`dispatch._admit`; see above.
+
+**Measurements.**
+
+- Smoke tier, `python -m pytest -q -n auto -m smoke`: 1581 passed, 8 skipped in
+  40.67s; budget check `within` (50.9s vs 60s). The tier's membership ceiling
+  was re-stamped 1560 -> 1626 (1564 collected at the re-stamp, ~4% headroom) for
+  `tests/test_consolidate.py` and three call-site pins — all pure functions over
+  hand-built rows, none bootstrapping a scaffold. THE SECONDS BUDGET WAS NOT
+  MOVED: this box read 70.4s on the UNCHANGED tree before any of this work began
+  and 96-185s during it under concurrent sessions, which is an environmental
+  reading and not a tier that grew.
+  fig: cmd="python -m pytest -q -n auto -m smoke" rev=7f8a4a7a
+- Full suite, `python -m pytest -q -n auto`: 3447 passed, 25 skipped
+  in 735.69s (0:12:15), on the tree this close commits. An EARLIER full run on
+  the same code tip reported `1 failed, 3446 passed, 25 skipped` -
+  `test_meta_component_top_view_smoke`, the uncontained-module assertion that
+  bought the two spine rows above. It is recorded because a green that replaced
+  a red is a different fact from a green that was always green.
+  fig: cmd="python -m pytest -q -n auto" rev=d63feaf3+close
+
+**Reviewed ratchet bumps**, each with its reason in the baseline entry:
+`bootstrap.py` +1 (one MAPPING row), `check_trajectory.py` +4 (the
+accumulate-and-pair shape; the naive 3-tuple literal cost +14 to ruff-format
+expansion alone), `intake.py` +14 then +2 (call sites only — the archival cost
++25 written into `intake` and +2 written where it belongs, measured both ways).
+One complexity row RE-KEYED, not bumped: `queue_conflict_findings` -> 
+`queue_conflict_pairs` at the same 21.
+
+Deferred open items: none — every question this row raised was answerable from
+the plan or from the machinery, and the one place the plan and the machinery
+disagreed (§1.5's ordering) is recorded above as a deviation rather than left
+for a ruling.
+
+
+## 2026-09-04 (later) — WI-583 rework: two adversarial rounds
+
+The close as first landed was reviewed hostilely twice, independently: Sol (via
+codex) returned 11 findings, an Opus session on a scratch clone returned 9, and
+the two BLOCKERs agreed. Every finding was RE-DRIVEN on the merged tree before
+it was believed; every one held. This entry records what they found, because the
+pattern is worth more than the patches.
+
+**One shape, six times.** The close called itself all-or-nothing and was not.
+Each hole was a rung that had been *stated* — in a docstring, in the row's own
+Context, in the shipped brief — and not *built*:
+
+| Stated where | What actually happened |
+|---|---|
+| `_context`: "judge those rows and no others"; brief line 15; plan §1.3 | a draft superseding ANY queued row closed, merged and archived it |
+| `Digests`' whole reason for existing | a forged pair enacted a verdict against a moved queue |
+| `archive_absorbed`: "all or nothing" | a claimed row was skipped silently, one line missing out of three |
+| `_consolidation_close`: "a half-enacted verdict is not a state this can reach" | the mint-side lineage refusal fired one commit after the close committed, wedging the queue permanently |
+| the brief template: "the two cannot disagree" | nothing compared the machine line with the typed block |
+| plan §1.2: the session drafts ONE successor | two drafts closed cleanly and split the scope |
+
+Plus the one that was a promise rather than a claim: plan §1.5 / Done-when 4,
+the absorbed rows' Done-when blocks quoted verbatim into the successor. The
+template promises it in so many words, so a judge who followed the brief wrote a
+boundary sentence and nothing else — and the successor a lane then built carried
+no acceptance criteria at all. That is the finding worth remembering: a
+DOCUMENTED behaviour with no implementation is worse than an undocumented gap,
+because the document makes everyone downstream act as though it is there.
+
+**The census is wired** (`dispatch._admit`), which closes Done-when 2 and makes
+plan §4's acceptance path reachable from a run at all.
+
+**Wiring it found a defect neither reviewer did**, and that is the argument for
+wiring over describing. The minted row's SpecRef was a literal
+`docs/work/README.md`; `integrate.claim` REFUSES a SpecRef that does not resolve
+(R-E, WI-370). On a repo without that file the census minted a judgement that
+could never be claimed, `_judgement_first` put it at the head of the frontier,
+and the run exited 1 on every tick afterwards — the queue wedged by the census
+meant to unblock it. It is an ordered existence probe now, and the census
+DECLINES rather than minting an unclaimable row.
+
+**The suite's own blind spot, named.** Both text transforms used `str.partition`
+on `\n+++\n` / `\n## Context\n`, which finds nothing on a CRLF checkout — so on
+Windows every absorbed row would have been skipped silently. The suite could not
+see it because every fixture calls `conftest.pin_autocrlf`, which is exactly
+why that regression test builds its CRLF bytes by hand instead of checking them
+out.
+
+**Mutation-verified, nine for nine.** Each new guard was removed in turn and the
+test written for it went red: the scope bound, the digest drift, the one-draft
+rule, the pre-close lineage refusal, the all-or-nothing archival, the Done-when
+quoting, the machine-line reconciliation, the collection type/uniqueness rules,
+and the CRLF-agnostic transforms. A tenth check found the first version of the
+type/uniqueness test VACUOUS (it passed with the guard removed, because a later
+rung caught the same input with a worse message) and it was rewritten until it
+bit.
+
+**A regression the existing suite caught that no reviewer did:** scoping. The
+first cut archived off the whole mint lineage, which refused every ORDINARY
+disposition mint by name — a disposition successor supersedes an
+already-terminal row. The archival now keys on a `consolidated` flag set from
+the judging row's declared brief.
+
+**Corrections to the record.** `LLR-167`'s Approved `detail` claimed `conflict`
+and `amendment` are "deliberately unrouted" — both falsified by the change that
+fixed the module header. Amended in-lane per the re-pointing rule, no `Status`
+flipped and no snapshot run, so it rides as snapshot drift to the next sitting
+(the two warns on the close commit are that, working). `docs/declared-absences`
+lost the entry naming the DELETED conflict template, which was masking exactly
+the references an adopter would need to fix, and its sibling now reads as
+shipped. `check_doc_refs` is back to its trunk count of 2 dangling.
+
+**Measurements.**
+
+- Merge: `contract_split` at `503d0e7e`, three conflicts (RESYNC_PACK — both
+  sides' entries kept; `test_intake.py` — both additive blocks; the `intake.py`
+  ratchet row — re-stamped at the MEASURED merge-result value, 1379, which
+  happens to equal 1357+16+6 and the entry says so rather than letting the
+  arithmetic pass for a measurement). Smoke straight after the merge, before
+  anything else was touched: 1594 passed, 8 skipped in 72.56s.
+- Smoke at the rework tip: 1615 passed, 8 skipped in 52.48s; budget 63.2 s vs
+  60 s, this box under load and not a tier that grew (it read 49.6 s quiet on
+  the same tier yesterday).
+  fig: cmd="python -m pytest -q -n auto -m smoke" rev=7febfcfe
+- Full suite at the rework tip: 3504 passed, 25 skipped in
+  1056.43s (0:17:36), on the tree the rework commit carries.
+  fig: cmd="python -m pytest -q -n auto" rev=7febfcfe
+
+Ratchet: `intake.py` 1379 -> 1397 (reason in the entry); `_disposition_drafts`
+complexity RE-STAMPED DOWN 25 -> 20 in the same commit, the extraction paying
+for itself; `close_refusal` measured 21 and was decomposed OUTWARD into five
+ordered rungs rather than bumped.
+
+Deferred open items: none — every finding either landed or is stated above as
+warn-only residue with the reason it is not this row's to close.
+
+
+## 2026-09-04 (round 3) — WI-583: what a second look at a fixed thing finds
+
+The rework above was reviewed hostilely again, on the range it produced. All 20
+earlier findings re-drove as closed and all nine mutation tests re-drove as real
+detectors — and six more findings came back, three of them MAJOR. That result is
+the entry worth keeping: **a round that confirms the last round's fixes is not a
+round that finds nothing.** Two of the six were the previous round's own fixes,
+one layer down.
+
+**The half-fix pattern, twice.**
+
+- The close was made all-or-nothing across its ARCHIVAL and left one-at-a-time
+  across its EDGES and RETURNS. A two-edge verdict whose second waiter had no
+  readable `needs` line refused after the first waiter's spec was rewritten and
+  STAGED — the exact class the round before had raised, surviving in the loops
+  nobody re-read because the docstring above them now said the property held.
+  Fixed by giving both loops the preflight the archival already had.
+- `reconcile_refusal` shipped as a hard refusal and the BRIEF that instructs the
+  session was not amended, so a verdict written to the shipped grammar was
+  refused with no way to write a passing one: the machine line spelled
+  `needs=<id or ->` singular while `edges` had always been a list. The
+  enforcement half of a fix landed alone, which is the same shape as a
+  documented behaviour with no implementation — just pointed the other way.
+
+**And the sharpest finding of the previous round, reintroduced one heading-shape
+down.** `_done_when_block` matched only the exact `## Done-when`, while the kit's
+own `check_trajectory._DONE_WHEN_RE` has always accepted `Done when`, any
+heading level and numbered or suffixed forms. Measured over this repo: 22
+`## Done-when`, 5 `## Done when`, 2 `### Done when`, 1 `### Done-when` — so 8 of
+30 live headings were dropped, and the successor's Context then ASSERTED that the
+absorbed row "declared no `## Done-when` section". Writing a new narrow reader
+beside an existing tolerant one is how the 0→A→B rule gets broken in practice:
+not by copying the code, but by not looking for it. `HEADING_RE`,
+`DONE_WHEN_RE` and `done_when_section` now live in `kitlib.registry`, which owns
+the spec body's shape; `check_trajectory` re-exports them under the private names
+its own rules use, so no call site moved.
+
+**One vacuous test, caught by the sweep and not by review.** The CRLF
+normalization test passed with the guard removed: a single-line Done-when block
+is scrubbed by the trailing `.strip()` whatever the reader does. Rewritten to a
+two-line block, where an interior `\r` survives. The mutation sweep is worth
+running even when the tests were written deliberately.
+
+**Record corrections.** The RESYNC entry anchored `[since 1c258508]` described
+wiring that landed at `7febfcfe`, 26 commits later — and the pack's own rule is
+that the anchor is where the change LANDED, with the `downstream-resync` skill
+applying only entries a range contains. An adopter stamped inside that window
+would never have been told the census is now called. Item 4 now says plainly
+that nothing calls it at that commit, and a second entry carries the wiring, the
+SpecRef probe, the transaction and the checked counters. `docs/declared-absences`
+also lost a section heading (`# --- A proposed artifact, not yet written ---`)
+that had gone false for its only row.
+
+**Measurements.**
+
+- Five new guards, mutation-verified five for five: the edge/return preflight
+  (both e2e drives), the tolerant heading, the sibling-heading section end, the
+  CR normalization, and the brief-teaches-the-grammar pin.
+- Touched modules unfiltered: 426 passed.
+- Smoke: 1628 passed, 8 skipped in 65.29s; wall budget 58.6s vs 60s, WITHIN.
+  `max-tests` re-stamped 1626 → 1702 (1636 collected, ~4% headroom): ten
+  pure-function regressions; the two lane-tree drives are slow-tiered.
+  fig: cmd="python -m pytest -q -n auto -m smoke" rev=dd7bc7fd
+- Full suite at the round-3 tip: 3517 passed, 25 skipped in 743.61s (0:12:23).
+  fig: cmd="python -m pytest -q -n auto" rev=dd7bc7fd
+
+No complexity or module-size bump: the close's new preflight is two sibling
+functions, and the Done-when reader moved out rather than growing in place.
+
+Deferred open items: none.
+
+## 2026-09-04 — WI-580 the worker and reviewer briefs: batch assignment block, one-turn close bar, rows under review, scratch home
+
+**Session.** Worker lane `wi-580-the-worker-and-reviewer-briefs`, base
+`1af07567`. One reviewed diff of two shipped prompt templates plus the two
+functions that fill them — the consolidation the row was minted for (three
+absorbed rows, WI-559/560/562, each adding a line or a block to
+`worker.template.md`, plus the batch finding of plan §0).
+
+**What changed.**
+
+1. **`{assignment_block}`, and an opening sentence that is true for a batch**
+   (Done-when 2). `agent_loop.assignment_block` renders EVERY row the lane was
+   claimed with — id, title, SpecRef — each tagged `this session's focus` /
+   `built` / `not started`, and `worker_prompt` gained an `assigned` parameter
+   the `session_body` call site fills from `worker["assigned"]`. The block is
+   **empty for a one-row lane**, so the single-row render is what it was except
+   for the opening sentence, which now names the branch and this session's
+   focus row instead of asserting "ONE work item". The state vocabulary is the
+   walk's own evidence (`train_evidence`), not a fourth opinion about doneness.
+2. **`{wis}` in the reviewer brief** (Done-when 3). `reviewed_rows_block`
+   renders the lane's claimed rows, id + title, so a round can map Done-when
+   items to coverage instead of inferring scope from the diff. Filled by
+   `str.replace` like the C7 slots, so an operator override without the slot
+   renders unchanged; unlike those it renders even with no worker, because a
+   literal `{wis}` in a brief that was actually sent is worse than an honest
+   "not declared" line.
+3. **The one-turn close bar** (Done-when 1, WI-559 item 1 as written). The
+   close ritual now states that the close bar IS the commit bar — fast tier +
+   wall budget + docs staleness, as `docs/stack.ini` declares them — that the
+   full unfiltered suite is the lane REFRESH's job (in the merge slot, outside
+   any session's turn, attested by its `Bar-Green:` trailer), and that ending a
+   turn to await a suite is the measured stall generator that closed WI-540
+   `partial`.
+4. **Amended approved cells stale the approval brief too** (Done-when 4,
+   WI-560 item 2). The regeneration clause now names an amendment of an
+   already-approved cell alongside a mint, with the WI-538/LLR-206 measurement.
+5. **The scratch home** (Done-when 5, WI-562 item 2). One rule bullet: scratch
+   lives outside the worktree, never under `out/` (the unload refuses an
+   undeclared file there by name), never as a stray untracked file.
+
+**LLR-061 amended, and the brief's own new rule exercised on it.** The row's
+`detail` enumerated what the worker prompt is assembled from, and that
+enumeration became incomplete the moment the assignment block existed — the
+stale-clause class this repo keeps finding on `Approved` rows. Amended in-lane
+(text + `code_symbol`, no `Status` touched: the re-attest is the trunk-side
+adjudication's, and `Modified` retired 2026-08-20), and the approval brief
+regenerated at close — which is exactly what Done-when 4's new clause now tells
+the next lane to do. LLR-045 was re-read and left alone: `{wis}` adds a fact to
+the reviewer brief without falsifying any clause of "constructs redacted
+prompt-map briefs", and the C7 slots are not enumerated there either.
+
+**The module-size ratchet: a REVIEWED BUMP, +36 (2572 -> 2608).** Compacted
+first (45 -> 36) per the phantom-overage rule, then bumped rather than
+decomposed, and the reason is which module the code belongs to: both blocks
+read `worker["rows"]`/`worker["assigned"]` and one reads `train_evidence`
+against the lane base — the same three facts `worker_prompt`,
+`reviewer_prompt` and `current_assignment_wi` already read in `agent_loop`, so
+a new sibling module would export the loop's own session state only to import
+it straight back. This cuts against the last two entries, which both ratcheted
+DOWN by moving outward; the standing reduction of this module is owned by
+WI-545, which declares WI-580 among its needs. Full reason in the baseline
+comment (`tests/test_module_size_ratchet.py`).
+
+**A note on "byte-identical".** Done-when 2's byte-identity clause is scoped to
+the assignment mechanism — items 1, 4 and 5 add prose to the same template by
+construction. What the test pins is the mechanism's own claim: for a one-row
+lane `assignment_block` contributes nothing.
+
+**Bar — and which one, because this row is about that.** The commit bar ran and
+the full unfiltered suite ran too, in one turn (it fit; the new clause says to
+run it only then).
+
+<!-- fig: cmd="python -m pytest -q -n auto; python -m pytest -q -n auto -m smoke; python scripts/check_smoke_budget.py --mode enforce (twice); python project-trajectory/scripts/check_docs.py --root . --stale; python -m ruff format/check" rev=e2afbef0 -->
+
+- Full suite: **3429 passed, 25 skipped, 1 failed in 976.8 s**.
+- Smoke tier: **1547 passed, 8 skipped in 93.4 s**; `check_smoke_budget.py
+  --mode enforce` **FAILS** at 94.0 s and again at 97.5 s against the 60 s
+  budget. NOT re-stamped and NOT this row's to re-stamp: this diff adds **zero**
+  tests to the tier — both modules it edits (`test_agent_loop_worker`,
+  `test_agent_loop_review`) are in `conftest.SLOW_MODULES`, and `pytest -m smoke
+  --collect-only` matches none of the new tests — so tier membership did not
+  move. The box did: load average 9.3–10.8 with other lanes running, against a
+  budget measured at 27–28 s on a quiet 24-core box (WI-496). Re-measure on a
+  quiet box before anyone touches the number.
+- `check_docs.py --root . --stale`: OK — 1368 docs, 1602 links, 0 broken.
+  `ruff format` / `ruff check`: clean.
+- The one failure is `test_derive_stage.py::test_this_repo_s_committed_stage_is_current`,
+  and it is CAUSED-but-benign: `docs/requirements/low-level-requirements.toml`
+  is a declared derivation input, so amending LLR-061 moved the fingerprint.
+  Only the fingerprint moved — every derived value in `docs/stage` (`stage`,
+  `settled-stage`, `live-stage`, both per-phase maps, `drafted = 9`) is
+  byte-identical to the committed copy, so no rung and no draft count changed.
+  Left alone deliberately: `docs/stage` is a generated artifact this branch may
+  not hand-set, the harness's own `derived-stage` step SKIPS on a work branch
+  ("generated freshness is the trunk lane's, concurrency-restructure §5.2"),
+  and the trunk step regenerates it after the merge.
+
+**Deferred open items:** none — the two advisory OIs joined to this row (OI-83,
+OI-84) are about the coordinator's own launch/base derivation, not about the
+briefs it composes, and nothing here touched either path.
+
+### Rework pass (session 005) — REVIEW-A MAJOR: runtime close-command path
+
+The worker close ritual inherited literal `scripts/trace.py` and
+`scripts/spec_move.py` commands, which work in a scaffold but not in this
+meta-repo (where the shipped scripts live in `project-trajectory/scripts/`).
+The root cause was not either command: `worker_prompt` omitted the runtime
+scripts-directory slot that `reviewer_prompt` already resolves at its sole
+composition boundary. Added `{scripts}` to the worker template and supplies it
+from `scripts_dir(root)` in `worker_prompt`; both close commands now use it.
+The regression test composes real prompts for the meta-repo and a scaffold,
+and asserts each receives its executable pair of commands. The prompt catalogue
+was regenerated.
+
+Focused verification: the new regression passes (`1 passed in 0.09s`) and
+formatting passes. A fresh temporary lint tool reports 98 pre-existing
+whole-file style findings under its newer default ruleset; none refers to this
+change, so it is not a repair target for WI-580. The declared test environment
+is absent from this checkout (`python` is unavailable and system `python3`
+has no pytest), so the full commit bar cannot be reproduced here; the final
+review round will judge this new non-record tree.
+
+
+### Rework pass (session 003) — REVIEW-A MAJOR: the brief's half-predicate
+
+`assignment_block` derived doneness from the committed `WI:` trailer alone
+while `current_assignment_wi` had already been taught the two-part test (the
+trailer AND the spec gone from `active/<branch>/`, the WI-589 stranding). Two
+derivations of one question, so a batch that committed a trailer and ran out of
+budget before its close ritual rendered that row `[built]` to the very session
+the walk was sending back to it.
+
+- **The fix is a consolidation, not a patch:** `lane_completion(root, base)`
+  returns `(built, done)` and is now the single home of the predicate; the walk
+  asks it (two lines shorter than the copy it dropped) and the brief asks the
+  same call. A row can no longer be `built` in the brief and unfinished to the
+  walk, because there is one set to be in.
+- **A third display state, `started, not closed`,** for the trailer-only rows
+  the honest predicate now makes visible — labelling them `not started` would
+  have replaced a false "done" with a false "untouched" and sent the next
+  session to redo committed work.
+- **Regression test** `test_the_brief_never_calls_an_unclosed_row_built`
+  (tests/test_agent_loop_worker.py): two trailers committed, both specs still
+  in `active/`, and the non-focus row must read `started, not closed`; the same
+  row reads `built` once its spec is moved out. Carries the mutation note — on
+  the trailer-alone predicate the first assertion reads `[built]`.
+- **LLR-061's `detail` amended** to state the predicate the brief reads, not
+  just the vocabulary it prints (the old cell enumerated three states and said
+  nothing about where they came from — the gap that let the defect look
+  conformant); `docs/ratify/CURRENT.md` regenerated.
+- **Baseline:** `agent_loop.py` 2608 -> 2609 SLOC, a reviewed +1 stamped with
+  its reason in `tests/test_module_size_ratchet.py`. Compacted first per the
+  phantom-overage rule (the nested-ternary rendering went to a state map).
+- **Green:** `test_agent_loop_worker.py`, `test_agent_loop_review.py`,
+  `test_module_size_ratchet.py` — 78 passed in 44.5 s; `ruff format` /
+  `ruff check` clean; `check_docs.py --root . --stale` OK (1369 docs, 1602
+  links, 0 broken). The full smoke bar now PASSES enforcement on a quieter box:
+  `pytest -q -n auto -m smoke` 1551 passed / 4 skipped in 61.0 s, and
+  `check_smoke_budget.py --mode enforce` timed its own run at **52.9 s vs the
+  60 s budget -> within** (load average 2.9, against the 9.3–10.8 that produced
+  the 94.0/97.5 s readings above). Same tier membership, quieter box — which is
+  the reading that was owed. The `docs/stage` fingerprint red is the same
+  CAUSED-but-benign one recorded above (LLR-061 amended again), and for the
+  same reason it is the trunk lane's to regenerate.
+
+### Rework pass (session 007) — REVIEW-A blocker and prose reconciliation
+
+The independent round found four record/ritual defects, all in the existing
+mechanisms rather than the brief behavior. The line-count row was not
+re-stamped after the runtime `{scripts}` composition line landed; the
+always-read `CLAUDE.md` still made the full suite a per-WI close obligation
+despite the shipped brief and `PROCESS_OPTIONS.md` assigning mid-phase slices
+the commit bar; the template note counted eleven of its twelve slots; and the
+absorbed WI-559 item 3 had no named discharging row.
+
+The rework re-stamps `agent_loop.py` at 2610 SLOC with a reason covering both
+review fixes, aligns `CLAUDE.md` to the existing phase cadence (commit bar for
+a mid-phase WI, the stage-declared refresh bar in the merge slot, full suite at
+phase close), corrects the slot count, and records that WI-579 discharged
+WI-559 item 3. No new check or defensive path was added: the ratchet already
+made the unstamped line fail closed, and the prose now has one phase-cadence
+rule instead of two contradictory obligations.
+
+Verification: the reviewer's exact focused harness is **79 passed**; the
+focused regression/baseline selection is **6 passed**, and the three
+byte-budget checks are **3 passed**;
+<!-- fig: cmd="python -m pytest tests/test_agent_loop_worker.py tests/test_agent_loop_review.py tests/test_module_size_ratchet.py -q; python -m pytest tests/test_module_size_ratchet.py tests/test_agent_loop_worker.py tests/test_agent_loop_review.py tests/test_bootstrap.py -q -k 'module_sizes_exactly_match or worker_brief_names or reviewer_prompt_names or runtime_scripts_path or byte_caps or size_budget'; python -m pytest tests/test_bootstrap.py -q -k 'byte_caps or size_budget or capped_doc_baselines'; python scripts/check_smoke_budget.py --mode enforce; python project-trajectory/scripts/check.py --jobs 0; python project-trajectory/scripts/trace.py --strict-integrity; python project-trajectory/scripts/check_docs.py --root . --stale" rev=97f0b684 -->
+`check.py --jobs 0` is **PASS** (the three work-branch generated-freshness
+steps skipped by policy); `trace.py --strict-integrity` reports SN=27, SR=76,
+LLR=191, TC=190, orphans=0, integrity=0; `check_docs.py --root . --stale` is
+OK (1371 docs, 1602 links, 0 broken); and the prompt catalogue is fresh. The
+smoke tests are functionally green (**1551 passed, 4 skipped**). Three loaded
+readings were 87.66 s, 81.5 s and 98.9 s against the 60 s wall budget and
+correctly failed enforcement while other checkout work was active; after that
+work cleared, the authoritative enforced run passed at **52.9 s vs 60 s**. The
+budget remained untouched.
+
+Byte deltas: `CLAUDE.md` 7886 -> 7975 (525 bytes headroom under its 8500-byte
+cap); `project-trajectory/skills/byte-budget-guard/SKILL.md` and each tracked
+copy 4847 -> 4781 (219 bytes headroom under the source's 5000-byte cap).
+
+### Rework pass (session 009) — what the close bar claims, and the one cadence home
+
+REVIEW-A round 008 found five defects, two of them MAJOR and both the same
+shape: a sentence asserting a bar that does not run.
+
+**The close bar's claim.** The brief excused the worker from the full suite
+because "the lane's own refresh runs the full declared bar for you". Driven,
+not read: `integrate._run_bar` calls `check.py --tier all`, and `check.py`'s
+step table declares `format` / `lint` / `tests+coverage` relevant from
+`_kitladder.STAGE_IMPL`, while `docs/stage` here reads `DevStg-Tests` (one rung
+below). `check.py --jobs 0` at this tip returned `RESULT: PASS` over fourteen
+steps — registry-integrity, vocabulary, need-form, privacy, doc-navigability,
+design-flows, trajectory, skills-index, prompt-catalog, staged-divergence,
+approval-immutable, and three work-branch freshness SKIPs — and NOT ONE of them
+a test step. So the sentence excused a worker from the only suite that would
+have run between the smoke commit bar and phase close. The brief now says the
+bar declared for the repo's CURRENT RUNG, names `DevStg-Impl` as where the
+product test step arrives, and sends the reader to `check.py`'s step table
+rather than restating it — the step table stays the one owner of what the bar
+runs. The rung gating is deliberately untouched: ungating `tests+coverage`
+would migrate every adopter and is an owner's call.
+
+**The cadence's second home.** Session 007 removed "before claiming a WI/slice
+done" from `CLAUDE.md` but left the `session-protocol` skill saying "before
+claiming a slice/phase done, at close" — and `CLAUDE.md` points AT that skill
+as the authority for commit bar vs gate bar, so the delegated home contradicted
+its delegator, the shipped brief, and its own next-but-one sentence ("A per-WI
+slice inside a phase ends at the commit bar"). Deleted from all three copies.
+`PROCESS_OPTIONS.md` "Phase cadence" is now the only home; the deletion is the
+antidote, so nothing new polices it.
+
+**The absorbed item.** The previous round narrowed this row's own acceptance
+heading to "items 2 and 3 were discharged by WI-579", but WI-579's heading says
+item 3 is SHARED with WI-580 and its Done-when list never claims it. Heading
+restored verbatim, and the uncovered half is now covered rather than
+reclassified: `test_the_false_partial_class_turns_only_on_the_close_ritual`
+drives the WI-540 class on one scaffold — every trailer committed, every spec
+still in `active/<branch>/`, so `lane_completion` answers `({WI-201, WI-204},
+set())` and `integrate.finished_branches` answers `[]` (the `_lane_close` stall
+arm, not the refresh arm); the spec move alone flips both to done and
+`["wi-batch"]`. The `== []` is not an empty scan — the same call on the same
+scaffold answers `["wi-batch"]` four lines later. Mutation check: restoring the
+pre-WI-580 trailer-alone predicate (`return built, built`) fails it at
+`assert {'WI-201','WI-204'} == set()`.
+
+Also corrected: the byte-accounting prose said `CLAUDE.md` "holds ~8%" against
+a baseline its own edit had moved (7,975 of 8,500 is 6.2%), now `~6%`; and the
+worker brief's opening sentence still named the literal `scripts/agent_loop.py`
+that the same commit had routed through `{scripts}` everywhere else.
+
+**Verification (session 009, at the rework tip).** Commit bar, run here:
+smoke **1551 passed, 4 skipped** and `check_smoke_budget.py --mode enforce`
+**51.8 s vs 60 s -> within**; `check.py --jobs 0` **RESULT: PASS** (stage
+DevStg-Tests, tier all — 11 PASS, the three work-branch freshness stand-downs
+SKIP); `trace.py --strict-integrity` SN=27 SR=76 LLR=191 TC=190 orphans=0
+integrity=0; `check_docs.py --root . --stale` **OK** (1372 docs, 1602 links, 0
+broken). The focused selection — `test_agent_loop_worker`,
+`test_agent_loop_review`, `test_module_size_ratchet`, `test_prompts`,
+`test_routing_and_prompts`, `test_dogfood_sync`, `test_bootstrap` — is **235
+passed, 1 skipped**. `ruff format --check` and `ruff check` clean on the two
+touched Python files (the pre-commit hook's `format` step SKIPPED — the hook's
+interpreter is `/usr/local/bin/python3`, which has no ruff — so it was run
+explicitly against the toolchain venv rather than reported as green unrun).
+<!-- fig: cmd="python -m pytest -q -n auto -m smoke; python scripts/check_smoke_budget.py --mode enforce; python project-trajectory/scripts/check.py --jobs 0; python project-trajectory/scripts/trace.py --strict-integrity; python project-trajectory/scripts/check_docs.py --root . --stale; python -m pytest -q -n auto tests/test_agent_loop_worker.py tests/test_agent_loop_review.py tests/test_module_size_ratchet.py tests/test_prompts.py tests/test_routing_and_prompts.py tests/test_dogfood_sync.py tests/test_bootstrap.py; python -m ruff format --check tests/test_agent_loop_worker.py project-trajectory/scripts/agent_loop.py; python -m ruff check tests/test_agent_loop_worker.py project-trajectory/scripts/agent_loop.py" rev=4ef2ede2 -->
+
+Byte deltas: none. `agent_loop.py` is untouched this round (the mutation check
+restored it byte for byte), so the module-size baseline stands at 2610;
+`byte-budget-guard/SKILL.md` stays 4781 — `~8%` and `~6%` are the same width,
+so the correction moved no byte and the pinned baseline is unchanged.
+
+No new guard was added for either MAJOR. The first is a prose correction to a
+sentence that described `check.py`'s step table from outside it; the brief now
+points at that table instead of restating it, so there is nothing left to keep
+in sync. The second is a deletion, which is its own antidote.
