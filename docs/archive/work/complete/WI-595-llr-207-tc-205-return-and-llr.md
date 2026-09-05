@@ -2,12 +2,93 @@
 id = "WI-595"
 title = "LLR-207/TC-205 return and LLR-208/TC-206 amendment: the verdict rows describe every mechanism that now holds them"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "strong"
 priority = 2
 safety_class = "spine"
 bar = "DevStg-Tests"
 +++
+
+## Deliverable
+
+Four cells, no new mechanism and no regression written: every arm described
+below already existed and passed, and only the record was silent. All four of
+the spec's claims were re-driven on this tree before anything was edited, and
+all four hold.
+
+RETURNED (`Drafted`, this branch's merge mints their adjudication):
+
+- `LLR-207.detail` — the `governing_rev` clause said the walk peels "any
+  verified refresh it meets". `_peel_target` has peeled TWO classes since the
+  second disposable-commit class entered the tree. The clause now names both
+  (the station REFRESH, admitted by `refresh_attestation`; the machinery's own
+  ADJUDICATION CLOSE, admitted by `mechanical_close_attestation` against the
+  exact composed subject, a single parent, and a NON-EMPTY changed-path set
+  wholly under `docs/work/` — the non-emptiness is the code's (`if not paths
+  or …`) and a later read caught the first draft stating a clause the empty
+  set satisfies vacuously, which matters because the zero-path commit is a
+  real class this very test case drives elsewhere), the ONE property that
+  admits them rather than two rules — both
+  machine-authored, both moving the tree without the lane changing what it
+  CLAIMS — and the fail-toward-review direction of every arm. The `work_tip`
+  contrast is now explicit instead of implied: `work_tip` calls
+  `refresh_attestation` DIRECTLY rather than through the shared disposable
+  test, so a mechanical close is never removed by the destructive reset path.
+- `LLR-207.code_symbol` — added `mechanical_close_attestation`, an `__all__`
+  export that changes what both readers answer and that `grep` found described
+  by ZERO rows in any requirements registry. `_peel_target` deliberately left
+  out: private, and the two attestation readers are the named surface.
+- `TC-205.method` / `.evidence` — `THE PEEL` enumerated the refresh arm alone.
+  The second class is now stated in the cell's own idiom, the positive and BOTH
+  refusals, and the three already-passing tests that no test case anywhere
+  cited are cited: the positive (which also asserts the close REALLY moved the
+  tree, and drives the two peels COMPOSING), the hand-written-subject refusal,
+  and the reached-outside-`docs/work/` refusal.
+- `TC-205.tier` — `Smoke` -> `Full`, RULED rather than left open, with the
+  basis recorded in `Method`. 8 of the row's 49 citations live in
+  `test_integrate_admission` / `test_integrate_station`, both in
+  `tests/conftest.py` `SLOW_MODULES` and so deselected by `-m smoke`. `Full` is
+  the cheapest tier at which the whole cited set runs; `Smoke` claimed
+  commit-floor coverage for a set the commit floor only partly runs, which is
+  the direction §12.2 names as the harmful one. Sibling `TC-132` already reads
+  `Full` while citing the same station module.
+
+AMENDED (Approved cells; §A5.2 mints their amendment adjudication at merge —
+no `Status` was flipped and no `docs/archive/last_approved/` was written):
+
+- `LLR-208.detail` — the cell said regen-set membership "is the only thing that
+  makes the exclusive-writer clause above true". That stopped being true when
+  the off-trunk refusal shipped, and the snapshot had copied the claim whole.
+  It now states BOTH mechanisms and keeps them distinct, because they hold
+  different halves and neither substitutes for the other:
+  `_off_trunk_refusal` ENFORCES the clause (exit 2 on any branch but the trunk,
+  keyed on the PRIMARY checkout, with `--trunk-step` the one exempt caller
+  because the station's refresh runs the trunk step inside a lane worktree, and
+  `--check` never refused), while regen-set membership keeps the artifact
+  FRESH. The cell records why the refusal is load-bearing and not
+  belt-and-braces: without it the generator returned 0, wrote the directory in
+  a claimed lane, and the work-branch freshness stand-down HID the write.
+- `LLR-208.code_symbol` — added `_off_trunk_refusal` (the row already names the
+  private `_extra`, so this follows its own convention).
+- `TC-206.method` / `.evidence` — stated the refusal arm, including why it had
+  to be driven through a real LINKED worktree (the single-checkout fixtures
+  every other arm uses are their own trunk and keep writing), and cited its
+  detector.
+
+Bar `DevStg-Tests` met: full unfiltered suite `1 failed, 3383 passed, 25
+skipped`, the one red being the `docs/stage` FINGERPRINT node, caused by this
+branch and benign — driven both ways (passes at the integration base, and
+passes at this tip on a regenerated-stage worktree whose every other derived
+field is byte-identical, `drafted` included). `docs/stage` is deliberately not
+regenerated on this lane; its freshness is the trunk lane's. Numbers, the
+both-ways evidence, and the re-run at the closing tip are in
+`docs/log.d/WI-595-llr-207-tc-205-return-and-llr.md`, which also records the
+three decisions the cells cannot carry themselves: `LLR-208.hat_refs` left
+unset deliberately, the `SR-170`/`UNATTENDED-OPS` question surfaced as a
+separate finding rather than fixed inline, and the `mechanical_close_attestation`
+empty-path refusal left UNTESTED and named rather than covered, since a new
+regression is outside this return's fence. Nothing was widened into the
+out-of-scope `work_tip` docstring defect the spec fenced off.
 
 ## Context
 
