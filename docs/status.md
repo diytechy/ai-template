@@ -24,22 +24,22 @@ supervisor prompt at the owner's request). Backward-looking homes:
 status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **RESUME HERE — THE LOOP IS RUNNING (unpaused 2026-09-04; no
-  `docs/work/pause`).** A fresh reader starts at
-  [handoff-2026-09-04.md](handoff-2026-09-04.md) (state, the playbook for
-  holding the loop's hand, the measured review churn and the out-of-band
-  churn program, seven of whose eight items are merged) and its predecessor
-  [handoff-2026-09-03.md](handoff-2026-09-03.md) §2 (rulings not to
-  re-litigate). Since 2026-09-03 the loop plus supervised hand steps merged
-  the two amendment adjudications, the four-row spine batch, the LLR-207/208
-  first-approval adjudication (seven rounds, four supervisor-drawn), the two
-  clean-close spot checks, the LLR-197 amendment and the LLR-209/TC-207
-  first approval; the trunk was greened at the DevStg-Tests tier out of band;
-  the weekday blackout dial is disabled by owner direction (restore the value
-  in `docs/process.toml` to re-arm). The consolidation adjudicator is built
-  on an agent branch awaiting its adversarial rounds before merge.
-  Hand-authored prose here names no queued id (the claim-refusal rule); the
-  generated frontier below is the order.
+- **RESUME HERE — THE FRONTIER IS PAUSED for the owner's review sitting
+  (tracked `docs/work/pause`, 2026-09-04); the loop is stopped with nothing in
+  flight.** A fresh reader starts at
+  [handoff-2026-09-04.md](handoff-2026-09-04.md) — its end-of-run and
+  owner-ruling notes first — then
+  [handoff-2026-09-03.md](handoff-2026-09-03.md) §2. On the trunk for review:
+  the out-of-band churn program (all eight items, the consolidation
+  adjudicator among them, each with tests and a RESYNC entry), the trunk
+  greening at the DevStg-Tests tier, and the loop's merges since the 09-03
+  unpause (two amendment adjudications, the four-row spine batch, the
+  LLR-207/208 first approvals and their successors, the clean-close spot
+  checks, the worker and reviewer briefs). Owner rulings recorded: the
+  weekday blackout disabled (restore the value in `docs/process.toml` to
+  re-arm); the close bar is the row's declared bar. One reviewed deletion of
+  the pause file resumes the generated frontier below. Hand-authored prose
+  here names no queued id (the claim-refusal rule).
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). `wi416-parked-handback-contract` is still
