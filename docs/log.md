@@ -61649,3 +61649,19 @@ about their contracts moved.
 Deferred open items: none — both defects are closed at their root with the
 routing and gate arms driven from the shipped paths, and the reviewer brief
 needed no edit because nothing in it contradicted the new reading.
+
+## 2026-09-05 — the consolidation adjudicator merged; the frontier paused for the owner's sitting
+
+WI-583 was built out of band (churn program item 8, handoff-2026-09-04 §7)
+and merged at `f395907b` after three adversarial rounds (Sol, Opus, Opus on
+the rework) whose 26 findings all held and were fixed with mutation-verified
+tests; the fourth round could not run on the exhausted OpenAI limit. Items 1–7
+of the program merged earlier the same day. Full suite at the tip: 3525
+passed, 24 skipped. The loop merged WI-595 (five cross-family rounds; the
+first lane to be resumed for an owed round by item 5), WI-599 and WI-600
+(LLR-207/TC-205 approved, closing the WI-586 thread); the derived stage rose
+to `DevStg-Tests`. A tracked pause holds the frontier for the owner's review;
+WI-580 finishes under it. Details:
+[handoff-2026-09-04.md](handoff-2026-09-04.md).
+
+Deferred open items: none — the owner questions are listed in the handoff §5.
