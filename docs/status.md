@@ -27,6 +27,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 - **RESUME HERE — THE FRONTIER IS PAUSED for the owner's review sitting
   (tracked `docs/work/pause`, 2026-09-04); the loop is stopped with nothing in
   flight.** A fresh reader starts at
+  [decisions-for-review-2026-09-05.md](decisions-for-review-2026-09-05.md) —
+  the sitting's answers and its **pick-up checklist**, which is the shortest
+  statement of what is owed next — then
   [handoff-2026-09-04.md](handoff-2026-09-04.md) — its end-of-run and
   owner-ruling notes first — then
   [handoff-2026-09-03.md](handoff-2026-09-03.md) §2. On the trunk for review:
