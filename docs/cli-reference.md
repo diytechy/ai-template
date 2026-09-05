@@ -416,6 +416,8 @@ Contracts (interfaces): IF-090
 | `--root` | repo root (default: .) |
 | `--before` | pre-merge trunk sha (trigger a) |
 | `--after` | post-merge trunk sha (trigger a) |
+| `--branch` | mint subject (default: the range) |
+| `--with-terminal` | terminal scan too |
 | `--rows` | spine row id(s), ;-joined (SR-/LLR-/TC-) |
 | `--seed` | CREATE the snapshot directory. For the FIRST snapshot only, in the owner's signing commit, after every pending row has been ruled — seeding earlier blesses text nobody read. Unreachable from every loop module and hook (pinned by tests/test_baseline_snapshot.py) |
 | `--approves` | NAME THE APPROVAL ACT this refresh rides, PER REGISTRY: `;`-joined `<registry>=<ref>` pairs. A ref authorises and copies the ONE registry it names, required only for one whose copy would absorb approved text no Status flip authorises; the refs land in the snapshot's prose stamp |

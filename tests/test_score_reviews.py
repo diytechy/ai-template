@@ -304,3 +304,35 @@ def test_cli_exit_1_on_tripwire(tmp_path):
     )
     assert proc.returncode == 1
     assert "finding-count-mismatch" in proc.stdout
+
+
+def test_merged_routing_verdict_promotes_a_minor_only_round_and_says_so():
+    # The ROUTING arm of `kitlib.verdict.effective_verdict`, at the round level.
+    # `merge_verdict` collapses the reviewers first, so an APPROVE beside a
+    # MINOR-only refusal is a round in which nobody found a defect.
+    said = []
+    minor = score.parse_verdict(
+        "- [MINOR] a.py:1 -> a nit -> reword it\nVERDICT: CHANGES-REQUESTED findings=1"
+    )
+    approve = score.parse_verdict("VERDICT: APPROVE findings=0")
+    routed, contra = score.merged_routing_verdict([approve, minor], emit=said.append)
+    assert routed == "APPROVE" and contra is True
+    assert said == [
+        "review round: CHANGES-REQUESTED with MINOR-only findings routed as "
+        "APPROVE (1 findings carried)"
+    ]
+    # A MAJOR anywhere in the round keeps the refusal, silently.
+    said.clear()
+    major = score.parse_verdict(
+        "- [MAJOR] a.py:1 -> broken -> fix it\nVERDICT: CHANGES-REQUESTED findings=1"
+    )
+    assert score.merged_routing_verdict([minor, major], emit=said.append)[0] == (
+        "CHANGES-REQUESTED"
+    )
+    assert said == []
+    # And a refusal that names nothing is left alone (a different defect).
+    empty = score.parse_verdict("VERDICT: CHANGES-REQUESTED findings=0")
+    assert score.merged_routing_verdict([empty], emit=said.append)[0] == (
+        "CHANGES-REQUESTED"
+    )
+    assert said == []

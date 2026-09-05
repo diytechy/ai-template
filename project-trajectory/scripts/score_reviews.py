@@ -69,7 +69,7 @@ from pathlib import Path
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
-from kitlib.verdict import declared_phases
+from kitlib.verdict import declared_phases, effective_verdict
 
 # The finding line: "- [SEVERITY] <anchor> -> issue -> change [-> @owner]".
 # Arrows may be "->" or the unicode arrow; we split on either.
@@ -387,6 +387,36 @@ def merge_verdict(verdicts):
     merged = "CHANGES-REQUESTED" if "CHANGES-REQUESTED" in seen else "APPROVE"
     contradiction = "CHANGES-REQUESTED" in seen and "APPROVE" in seen
     return merged, contradiction
+
+
+def merged_routing_verdict(verdicts, emit=print):
+    """`(routed, contradiction)` — `merge_verdict` read through
+    `kitlib.verdict.effective_verdict`, saying on `emit` when that reading
+    changed the routing.
+
+    THE ROUND is the unit, not the reviewer, because `merge_verdict` has already
+    collapsed the reviewers: an APPROVE beside a MINOR-only CHANGES-REQUESTED is
+    a round in which nobody found a defect, while a MAJOR anywhere keeps the
+    refusal whoever raised it.
+
+    THE ROUND FILES ARE NOT REWRITTEN. What this returns is what the coordinator
+    ROUTES on — the rework scope, the escalation tally, the `Review-Verdict:`
+    trailer — and the merge slot re-derives the same word from the same rule off
+    the same files (`kitlib.verdict.round_entries`). The reviewer's own
+    `VERDICT:` line stays exactly as written.
+
+    It lives beside `merge_verdict` rather than in the loop because it IS the
+    merge's second half: the loop should ask "what does this round route as?"
+    once, not compose the answer from two calls at every call site."""
+    merged, contradiction = merge_verdict(verdicts)
+    findings = [f for v in verdicts for f in (v.findings or ())]
+    routed = effective_verdict(merged, findings)
+    if routed != merged:
+        emit(
+            "review round: {} with MINOR-only findings routed as {} "
+            "({} findings carried)".format(merged, routed, len(findings))
+        )
+    return routed, contradiction
 
 
 def latest_phase_verdicts(entries, required=0):

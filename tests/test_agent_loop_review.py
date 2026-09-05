@@ -1128,3 +1128,69 @@ def test_default_base_is_the_merge_base_with_the_trunk(tmp_path):
     assert al.default_base(trunk) == seed  # the primary: HEAD, as before
     built, _blocked = al.train_evidence(lane, al.default_base(lane))
     assert "WI-1" in built
+
+
+# --- WI: MINOR-only refusals do not block routing (measured 2026-09-03/04) ----
+#
+# Four rounds refused a lane over a single `[MINOR]` finding each (WI-586 rounds
+# 006 and 010, WI-590 round 013). Each refusal bought a rework session AND
+# another round to land a wording nit the reviewer had not called a defect. The
+# rule lives in `kitlib.verdict.effective_verdict`, and this is its ROUTING arm;
+# the merge-gate arm is driven in tests/test_verdict_record.py.
+
+MINOR_ONLY_BODY = (
+    "- [MINOR] work.txt:1 -> a wording nit -> reword it -> @owner\n"
+    "VERDICT: CHANGES-REQUESTED findings=1\n"
+)
+MINOR_AND_MAJOR_BODY = (
+    "- [MINOR] work.txt:1 -> a wording nit -> reword it -> @owner\n"
+    "- [MAJOR] work.txt:1 -> broken -> fix it -> @owner\n"
+    "VERDICT: CHANGES-REQUESTED findings=2\n"
+)
+EMPTY_REFUSAL_BODY = "VERDICT: CHANGES-REQUESTED findings=0\n"
+
+
+def _one_round(managed_repo, body, iterations="4"):
+    """Run the loop to one completed review round whose verdict file is `body`."""
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    (ctl / "verdict_body.txt").write_text(body, encoding="utf-8")
+    proc = _loop(repo, cmd, "--max-iterations", iterations)
+    return repo, ctl, proc
+
+
+def test_a_minor_only_refusal_routes_as_an_approve(managed_repo):
+    repo, ctl, proc = _one_round(managed_repo, MINOR_ONLY_BODY)
+    assert (
+        "review round: CHANGES-REQUESTED with MINOR-only findings routed as "
+        "APPROVE (1 findings carried)" in proc.stdout
+    ), proc.stdout + proc.stderr
+    assert "review round: merged=APPROVE" in proc.stdout
+    # The consequence that costs the sessions: no rework is scoped, so no
+    # further build session is spent re-running the harness for the nit.
+    assert "REWORK FINDING" not in (ctl / "prompts.txt").read_text(encoding="utf-8")
+    # THE RECORD IS NOT REWRITTEN — the reviewer's own word stands in the file
+    # the gate will re-read at the merge slot.
+    written = [
+        p for p in (repo / "docs" / "reviews").rglob("*.md") if "REVIEW-A" in p.name
+    ]
+    assert written and all(
+        "VERDICT: CHANGES-REQUESTED" in p.read_text(encoding="utf-8") for p in written
+    )
+
+
+def test_a_minor_beside_a_major_still_requests_changes(managed_repo):
+    _repo, ctl, proc = _one_round(managed_repo, MINOR_AND_MAJOR_BODY)
+    assert "MINOR-only findings routed as" not in proc.stdout
+    assert "review round: merged=CHANGES-REQUESTED" in proc.stdout
+    assert "REWORK FINDING" in (ctl / "prompts.txt").read_text(encoding="utf-8")
+
+
+def test_a_refusal_with_no_findings_still_requests_changes(managed_repo):
+    # A reviewer that refuses without naming anything is a DIFFERENT defect and
+    # is deliberately left alone: promoting it would clear the round on nobody's
+    # judgement.
+    _repo, _ctl, proc = _one_round(managed_repo, EMPTY_REFUSAL_BODY)
+    assert "MINOR-only findings routed as" not in proc.stdout
+    assert "review round: merged=CHANGES-REQUESTED" in proc.stdout

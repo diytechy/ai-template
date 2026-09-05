@@ -2376,6 +2376,22 @@ def page_consequence(fa, force_block=False):
     )
 
 
+def page_human(ctx, title, reason, fa=None, force_block=False):
+    """DECIDE + ENACT one page: the two lines every caller of the page ladder
+    had in duplicate (`agent_route.failure_action` -> `page_consequence` ->
+    `apply_page_consequence`, and the `reason | note` detail the banner carries).
+
+    `fa` is passed in by a caller that already resolved the failure action to
+    compose its OWN console line with it (the critique budget arm); when it is
+    not, the ladder is consulted here and its posture printed — so a page says
+    which mode decided it exactly once, whoever asked."""
+    if fa is None:
+        fa = agent_route.failure_action(ctx.human_held, ctx.keep_nondependent)
+        print("route/failure ({}): {}".format(fa["mode"], fa["note"]))
+    cons = page_consequence(fa, force_block=force_block)
+    return apply_page_consequence(ctx, cons, title, reason + " | " + fa["note"])
+
+
 def apply_page_consequence(ctx, cons, title, detail):
     """The EFFECT half of a page: a worker has no lane files, so its exit code
     and the stop banner carry the page. Returns EXIT_NEEDS_HUMAN to end the
@@ -2408,23 +2424,18 @@ def absorb_review_verdict(st, plan, outcome, now):
     route_id = plan["route_id"]
     v = read_verdict(plan["verdict_path"], plan["route_family"])
     if v is None:
-        st.cool(route_id, now)
-        st.note_review_draw_failure()  # C1/C2: a failed draw, not a build stall
-        print(
-            "route: {} review [{}] wrote no verdict ({}); cooled, re-routing".format(
-                route_id, phase, outcome
-            )
-        )
+        why = "wrote no verdict ({})".format(outcome)
+    elif v.verdict is None:
+        why = "verdict file has no parseable VERDICT line"
+    else:
+        st.record_review_verdict(phase, v, plan["route_family"], route_id)
         return
-    if v.verdict is None:
-        st.cool(route_id, now)
-        st.note_review_draw_failure()  # C1/C2: a garbled draw, not a build stall
-        print(
-            "route: {} review [{}] verdict file has no parseable "
-            "VERDICT line; cooled, re-routing".format(route_id, phase)
-        )
-        return
-    st.record_review_verdict(phase, v, plan["route_family"], route_id)
+    # ONE failure arm, because there was only ever one CONSEQUENCE: the two
+    # cases differ in what to SAY, and they had the cool/draw-failure/re-route
+    # in duplicate — a rule kept in two copies is a rule that drifts.
+    st.cool(route_id, now)
+    st.note_review_draw_failure()  # C1/C2: a failed draw, not a build stall
+    print("route: {} review [{}] {}; cooled, re-routing".format(route_id, phase, why))
 
 
 @dataclass(frozen=True)
@@ -2548,7 +2559,11 @@ def complete_review_round(ctx, session):
     # marker so a later resume does not re-schedule a round already served.
     clear_review_owed(ctx.root)
     verdicts = [v for (_ph, v, _p, _m) in st.round_verdicts]
-    merged, contradiction = score_reviews.merge_verdict(verdicts)
+    # ROUTED, not raw: a CHANGES-REQUESTED whose findings are all `[MINOR]`
+    # routes as an APPROVE and says so (score_reviews.merged_routing_verdict ->
+    # kitlib.verdict.effective_verdict). The round FILES are untouched; the
+    # merge slot re-derives the same word from the same rule.
+    merged, contradiction = score_reviews.merged_routing_verdict(verdicts)
     sub = round_substance(st, ctx.root)
     fired = score_reviews.fired_tripwires(
         verdicts, changed_paths=impl_changed_paths(ctx.root, st, ctx.worker["train"])
@@ -2613,14 +2628,7 @@ def complete_review_round(ctx, session):
     st.apply_decision(decision["action"], merged, decision.get("next_primary"))
     if decision["action"] != "page-human":
         return None
-    fa = agent_route.failure_action(ctx.human_held, ctx.keep_nondependent)
-    print("route/failure ({}): {}".format(fa["mode"], fa["note"]))
-    return apply_page_consequence(
-        ctx,
-        page_consequence(fa),
-        "PAGE-HUMAN — review escalation",
-        decision["reason"] + " | " + fa["note"],
-    )
+    return page_human(ctx, "PAGE-HUMAN — review escalation", decision["reason"])
 
 
 def review_bookkeeping(ctx, plan, outcome, session, now):
@@ -2646,13 +2654,14 @@ def critique_budget_page(ctx, pre_rounds):
             fa["mode"], pre_rounds + 1, st.critique_limit, fa["note"]
         )
     )
-    return apply_page_consequence(
+    return page_human(
         ctx,
-        page_consequence(fa, force_block=st.critique_exhaustion == "block"),
         "PAGE-HUMAN — critique budget exhausted",
-        "the critique loop hit its {}-round budget still CHANGES-REQUESTED | {}".format(
-            st.critique_limit, fa["note"]
+        "the critique loop hit its {}-round budget still CHANGES-REQUESTED".format(
+            st.critique_limit
         ),
+        fa,
+        force_block=st.critique_exhaustion == "block",
     )
 
 
@@ -2714,14 +2723,30 @@ def schedule_review_round(ctx, after):
     EVERY assigned WI is built, and the round covers the combined train diff
     base..HEAD — never a per-WI slice of it. An intermediate constituent commit
     is accepted-on-train (locally green and committed), not reviewed; the cycle
-    comes once, at the end."""
+    comes once, at the end.
+
+    NO ROUND IS DRAWN ON A TREE A VERDICT ALREADY NAMED (measured 2026-09-03).
+    A rework that DECLINED a finding committed only its answer under
+    `docs/reviews/` — a record path — so the identity never moved; the redrawn
+    round approved the very tree the first had refused and the merge slot
+    refused the pair as a reroll-until-green. The page uses the existing ladder,
+    so a human-held run stops and a loop-held one degrades to DESIGN-CHECK
+    (owner ruling 2026-09-03 leaves that degrade uncapped); what this arm adds
+    is the CAUSE line, without which an operator re-runs the same rework.
+
+    Returns an int exit code when the run must end, else None."""
     st = ctx.run.routing
     worker = ctx.worker
     if ctx.rp_int < 1:
-        return
+        return None
     built_now, _blk = train_evidence(ctx.root, worker["base"])
     if not all(w in built_now for w in worker["assigned"]):
-        return
+        return None
+    if kverdict.tree_already_judged(
+        ctx.root, worker["train"], worker["base"], score_reviews.parse_verdict
+    ):
+        print("dispatch: no review round scheduled — " + kverdict.UNCHANGED_REWORK)
+        return page_human(ctx, kverdict.UNCHANGED_PAGE, kverdict.UNCHANGED_REWORK)
     st.set_train_range("{}..{}".format(worker["base"], after))
     queued = st.schedule_review_round(kverdict.declared_phases(ctx.rp_int))
     print(
@@ -2783,10 +2808,13 @@ def schedule_adjudication_round(ctx, plan, commits, after, wi_label):
     semantics — so widening that set would have bought the round by asserting
     something false. `agent_common.adjudication_review_owed` is the reader the
     merge gate shares, so the round the loop draws and the verdict the gate
-    demands can never come apart."""
+    demands can never come apart.
+
+    Returns what `schedule_review_round` returns — an int exit code when the run
+    must end, else None (which is also the answer when no round is owed)."""
     st = ctx.run.routing
     if ctx.rp_int < 1 or not ctx.worker:
-        return False
+        return None
     drafts = dispositions_drafted(ctx.root, wi_label) if wi_label else ["spine"]
     if not agent_common.adjudication_review_owed(ctx.docs, plan.get("brief"), drafts):
         print(
@@ -2795,14 +2823,13 @@ def schedule_adjudication_round(ctx, plan, commits, after, wi_label):
                 agent_common.adjudication_review(ctx.docs)
             )
         )
-        return False
+        return None
     # The judge is the implementer for C5's purposes: the round must be drawn
     # from a family that did not rule, exactly as a build's round must not come
     # from the family that built. `on_committed_build` is also what gives a
     # CHANGES-REQUESTED verdict a rework scope to send the work back to.
     st.on_committed_build(plan["route_family"], wi_label, commits)
-    schedule_review_round(ctx, after)
-    return True
+    return schedule_review_round(ctx, after)
 
 
 def schedule_critique_round(ctx, commits):
@@ -2848,9 +2875,26 @@ def report_cooled_model(ctx, route_id, outcome, code):
     )
 
 
+def committed_build_rounds(ctx, plan, commits, after, wi_label):
+    """The rounds a COMMITTING build (or design-check) owes, in one place: the
+    heterogeneity/rework bookkeeping, the review round, the critique round.
+
+    The design-check arm had all three in duplicate — a committing design-check
+    IS the rework, so it owes exactly what a build owes (WI-579, measured
+    2026-09-03) — and a rule kept in two copies is a rule that drifts.
+    Returns `schedule_review_round`'s exit code, or None."""
+    ctx.run.routing.on_committed_build(plan["route_family"], wi_label, commits)
+    paged = schedule_review_round(ctx, after)
+    schedule_critique_round(ctx, commits)
+    return paged
+
+
 def build_bookkeeping(ctx, plan, outcome, code, commits, after, wi_label, now):
     """A non-judging session's consequences: cool a broken model, or schedule
-    what a committing build owes, or clear the design-check flag."""
+    what a committing build owes, or clear the design-check flag.
+
+    Returns an int exit code when a page ends the run (`schedule_review_round`
+    refused to draw a round on an unchanged tree), else None."""
     st = ctx.run.routing
     route_id = plan["route_id"]
     phase = plan["phase"]
@@ -2859,14 +2903,12 @@ def build_bookkeeping(ctx, plan, outcome, code, commits, after, wi_label, now):
         report_cooled_model(ctx, route_id, outcome, code)
         return
     if outcome == "COMMITTED" and phase not in NON_BUILD_PHASES:
-        st.on_committed_build(plan["route_family"], wi_label, commits)
-        schedule_review_round(ctx, after)
-        schedule_critique_round(ctx, commits)
+        return committed_build_rounds(ctx, plan, commits, after, wi_label)
     elif outcome == "COMMITTED" and phase == "ADJUDICATE":
         # A judgement is not a build (it stays out of the set above), but a
         # committing one owes its round on exactly the same terms — under the
         # dial that decides whether a second opinion is earned (WI-559 DW2).
-        schedule_adjudication_round(ctx, plan, commits, after, wi_label)
+        return schedule_adjudication_round(ctx, plan, commits, after, wi_label)
     elif phase == "DESIGN-CHECK":
         # The design-check ruling has run (its verdict is in the commit / log);
         # resume building. Without a tracked run-phase this reset is in-process
@@ -2882,9 +2924,7 @@ def build_bookkeeping(ctx, plan, outcome, code, commits, after, wi_label, now):
             # against 4.4 h of rework. A committing design-check owes its round
             # on the same terms as a committing build; the family it ran as
             # is the one the reviewer must differ from.
-            st.on_committed_build(plan["route_family"], wi_label, commits)
-            schedule_review_round(ctx, after)
-            schedule_critique_round(ctx, commits)
+            return committed_build_rounds(ctx, plan, commits, after, wi_label)
 
 
 def session_bookkeeping(
