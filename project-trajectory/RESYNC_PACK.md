@@ -4743,6 +4743,49 @@ Nothing to edit. `schedule_review_round`, `schedule_adjudication_round` and
 run — if you have forked any of the three, thread the return value through.
 Your loop-held runs degrade to a DESIGN-CHECK exactly as a review escalation
 does; human-held runs stop with a banner naming the cause.
+### The coordinator resumes a finished lane that owes a round, and a pause stops only the claim [since 678801c1]
+
+**What changed.** Two arms of `dispatch.py`, both about a lane the run had
+decided was beyond a worker's help.
+
+`_round_owed` + `_parked_branches`: before the merge slot sees a finished
+branch, the coordinator asks whether that branch still owes a review ROUND at
+its current tree, and resumes it as a worker if it does (the existing
+parked-resume path — `dispatch: cycle N - resuming parked branch …` — whose
+worker schedules the owed phases through `agent_loop.resume_owed_round`). Only
+a branch that owes nothing goes to the slot. Measured 2026-09-04 on a lane that
+was DONE and then had its tree moved by a rework of the spec's
+`## Dispositions`: the merge slot refused "no logged review round names its
+current tree" and the run exited with no worker ever resuming to draw it. The
+predicate composes the two readers that already own the question —
+`integrate._verdict_gate` (would the slot refuse at all: the reviewer dial, the
+adjudication waiver, the legacy-rollup migration window) narrowed by
+`kitlib.verdict.phases_owed` at the governing identity (was the phase ever
+DRAWN here) — so a dissent, a reroll-until-green or a contradicted attestation
+still stops the run for a human instead of earning another draw, and a lane
+carrying a legacy rollup still merges on it.
+
+The pause arm: `docs/work/pause` now stops the CLAIM and nothing else, which is
+what §5.6 always said ("pause = stop claiming; everything in flight finishes,
+integrates and archives"). A fresh launch under a pause resumes every parked
+lane and integrates every finished branch exactly as an unpaused run does;
+`EXIT_PAUSED` (8) comes when nothing is left in flight. Before this a fresh
+`agent_loop.py --root .` under a tracked pause exited 8 immediately and
+stranded the very lane the pause promises to finish and merge.
+
+**What to do.** Re-sync `scripts/dispatch.py`. Nothing to edit and no
+migration: both changes are read off state your repo already keeps (the claim
+directories, the branch refs, the round files, the pause). Two behaviours to
+expect. (1) If your repo runs at `review_rounds >= 1`, a finished-but-unmerged
+branch whose tree no round names is now RESUMED rather than refused — budget
+one more worker session for it, and note that a lane which draws no round at
+all is bounded by the iteration budget and the trunk-unmoved stall guard, not
+by a round cap. (2) If your operating notes carry the "delete the pause, launch,
+re-create it" recipe for resuming a lane under a pause, drop it — the launch
+does that itself now. One deliberate ordering change: a pause over a DIRTY
+trunk with nothing in flight reports the dirty-trunk refusal (exit 2) rather
+than the pause banner, because the drain a pause now performs needs a clean
+trunk like every other merge.
 
 ## 5. Promotion: when this pack stops being prose
 

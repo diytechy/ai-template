@@ -53,7 +53,12 @@ with the refusal's code; the dispatcher never skips past one, never
 force-merges, and NEVER pushes (there is deliberately no flag to ask it to;
 docs/push-policy is honored by construction). A parked claimed branch from an
 interrupted run is resumed (worker relaunched on it) rather than refused, so
-the walk-away loop restarts with the same double-click that started it.
+the walk-away loop restarts with the same double-click that started it — and so
+is a FINISHED branch that still owes a review round at its current tree
+(`_round_owed`), because that round is work only a worker can do and the slot
+refuses the branch until it is drawn. The tracked pause stops the CLAIM and
+nothing else (§5.6): under one the parked lanes still resume and the finished
+branches still merge, and the run ends EXIT_PAUSED once nothing is in flight.
 
 EVERY LANE ENDS IN A MERGE (docs/concurrency-v2.md §A3, WI-387). A worker that
 cannot finish no longer stops the run: the dispatcher reads its exit code, and a
@@ -84,6 +89,8 @@ import intake
 import integrate
 import lane
 import schedule
+import score_reviews
+from kitlib import verdict as kverdict
 
 SCRIPTS = Path(__file__).resolve().parent
 
@@ -106,11 +113,65 @@ def _branch_for(root, wid):
     return "wi-" + stem[len("WI-") :]
 
 
+def _round_owed(root, branch):
+    """Does this FINISHED branch still owe a review ROUND — would the merge
+    slot refuse it precisely because no logged round names its current tree?
+
+    THE COORDINATOR HAS TO ASK BEFORE IT INTEGRATES (measured 2026-09-04 on
+    WI-590). A lane can be DONE — every spec out of active/, mechanically
+    closed — and then have its TREE change: a supervisor rework of the spec's
+    `## Dispositions` is the adjudicator's own proper answer to a
+    CHANGES-REQUESTED round, and it moves the identity every verdict is
+    measured against. The next launch handed the FINISHED branch straight to
+    the merge slot, which refused "no logged review round names its current
+    tree", and the run exited — no worker ever resumed to draw the owed round,
+    so the rounds had to be drawn by hand and a legacy rollup compiled. A
+    branch that owes a round is resumed as a worker instead (see
+    `_parked_branches`, and `agent_loop.resume_owed_round` at the other end);
+    only one that owes nothing goes to the slot.
+
+    COMPOSED FROM THE TWO READERS THAT ALREADY OWN THE QUESTION, never a third
+    copy of the rule. `integrate._verdict_gate` is the authority on whether the
+    slot would refuse at all — it holds the reviewer dial, the no-merged-outcome
+    arm, the adjudication waiver and the legacy-rollup migration window, and a
+    coordinator that resumed past any of those would spend a worker session
+    against a slot that was already satisfied (and break the hand-compiled
+    rollup recovery an operator is using today). `kitlib.verdict.phases_owed`
+    at the governing identity is the NARROWING: it answers which declared
+    phases were never DRAWN at this tree, which is exactly the refusal class a
+    worker can discharge. A refusal with nothing owed is one of the gate's
+    other three answers — a dissent, a reroll-until-green, or a contradicted
+    attestation — and none of them is fixed by drawing another round.
+
+    Fails toward NOT owed at every unreadable step: git that cannot name the
+    tree leaves the gate's own fail-closed refusal to stop the run, where
+    resuming would spend a session on a lane no round could clear.
+    """
+    outcomes, unresolved = integrate.branch_outcomes(root, branch)
+    if unresolved or not integrate._verdict_gate(root, branch, outcomes):
+        return False
+    try:
+        required = int(ac.declared_policy(root / "docs", "review-policy", "0") or "0")
+    except ValueError:
+        return False  # a malformed dial is the gate's fail-closed stop, not a resume
+    want = kverdict.governing_identity(root, branch)
+    code, base = ac.git(root, "merge-base", "HEAD", branch)
+    if want is None or code != 0 or not base.strip():
+        return False
+    entries = kverdict.branch_entries(
+        root, branch, base.strip(), want, score_reviews.parse_verdict
+    )
+    return bool(kverdict.phases_owed(entries or (), required))
+
+
 def _parked_branches(root):
     """Claimed branches from an interrupted run: active/<branch>/ still holds
-    specs AND the branch ref exists. (A finished branch — specs all moved out —
-    is the integrator's to merge, not ours to resume.) Reuses the integrator's
-    own finished-branch read so the two never disagree about "finished"."""
+    specs AND the branch ref exists. A finished branch — specs all moved out —
+    is the integrator's to merge and not ours to resume, UNLESS it still owes a
+    review round at its current tree (`_round_owed`): the round is work only a
+    worker can do, and the merge slot refuses the branch until it is drawn.
+    Reuses the integrator's own finished-branch read so the two never disagree
+    about "finished"."""
     active = root / "docs" / "work" / "active"
     if not active.is_dir():
         return []
@@ -118,7 +179,9 @@ def _parked_branches(root):
     candidates = [
         p.name
         for p in sorted(active.iterdir())
-        if p.is_dir() and p.name not in finished and any(p.glob("WI-*.md"))
+        if p.is_dir()
+        and any(p.glob("WI-*.md"))
+        and (p.name not in finished or _round_owed(root, p.name))
     ]
     return [
         b
@@ -999,10 +1062,18 @@ def _admit(
     lanes_total,
     config_refusal,
     state,
+    paused=None,
 ):
     """One tick's admission, enacted: `(admitted, exit_code)`. The exit code
     is non-None only when the run ends here — the drained queue, the surfaced
-    approvals, a refusal — and only ever with the station idle."""
+    approvals, a refusal — and only ever with the station idle.
+
+    `paused` is the tracked pause's parsed body (None when absent), and it
+    gates exactly ONE of the three things this function does: the CLAIM. §5.6
+    reads "pause = stop claiming; everything in flight finishes, integrates and
+    archives", so a parked lane is still resumed and a finished branch is still
+    drained under one — the run ends `EXIT_PAUSED` only once nothing is left in
+    flight."""
     exclusive_live = any(ln.exclusive for ln in table)
     free = 0 if exclusive_live else max(0, lanes_total - len(table))
     if free == 0:
@@ -1014,6 +1085,52 @@ def _admit(
         return _admit_parked(
             root, table, args, worker, parked, free, config_refusal, state
         )
+    if paused is not None:
+        # Nothing parked and the pause forbids the next claim, so the only work
+        # left is the DRAIN §5.6 promises: "the pause never strands finished
+        # work on a branch." With lanes still out it is not yet ours to take —
+        # they finish first, and their own merges follow on a later tick.
+        if busy:
+            return False, None
+        return False, _paused_exit(root, tier, paused, state)
+    return _admit_frontier(
+        root,
+        table,
+        args,
+        worker,
+        tier,
+        human_held,
+        keep_going,
+        free,
+        busy,
+        config_refusal,
+        state,
+    )
+
+
+def _admit_frontier(
+    root,
+    table,
+    args,
+    worker,
+    tier,
+    human_held,
+    keep_going,
+    free,
+    busy,
+    config_refusal,
+    state,
+):
+    """The CLAIM half of a tick's admission: re-derive the frontier, ask the
+    §A8 policy table what it means, and enact the answer. `(admitted,
+    exit_code)`, on the same contract `_admit` states.
+
+    Split off `_admit` when the pause arm joined it (2026-09-04): what stayed
+    behind is the station's own bookkeeping — how many lanes are free, what is
+    parked, whether a pause forbids the claim — and this is everything that
+    happens once the answer is "claim something new". Two questions, two
+    functions; nothing here reads the station and nothing there reads the
+    frontier."""
     wis = schedule._load(root)
     ready = [
         r
@@ -1059,6 +1176,39 @@ def _admit(
     return _claim_lanes(
         root, table, args, worker, payload, False, config_refusal, state
     )
+
+
+def _paused_exit(root, tier, paused, state):
+    """The pause's own end, station idle and nothing parked: settle whatever
+    finished work is still on a branch, then stop claiming — `EXIT_PAUSED`.
+
+    §5.6 IS A DRAIN, NOT A DOOR SLAM, and reading it as one was a measured
+    defect (2026-09-04): a fresh `agent_loop.py --root .` under a tracked pause
+    exited 8 at once, with an active claim whose lane was parked mid-work, so
+    the pause stranded the very in-flight lane its own contract promises to
+    finish and merge. The claim is the only thing a pause stops; resuming a
+    parked lane and unloading a finished one are what "drain to a clean, merged
+    stop" MEANS, and the run reaches here only once both are done.
+
+    The residue is counted BEFORE the drain, for the reason `_station_exit`
+    gives: after the merge those branches are no longer residue and the number
+    is unrecoverable. A red drain returns the refusal's code instead — the
+    integrator's refusal is the one thing §5.6 says may end a pause with work
+    still on a branch, and it is the gate working, not the pause failing."""
+    residue = _residue_wi_count(root)
+    code = _drain(root, tier)
+    if code != 0:
+        return code
+    state["merged"] += residue
+    _say(
+        "PAUSED - docs/work/pause is present (since {}: {}); {} WI(s) "
+        "integrated before the stop, nothing left in flight. Unpausing is a "
+        "reviewed deletion commit.".format(
+            paused.get("since", ""), paused.get("reason", ""), state["merged"]
+        ),
+        err=True,
+    )
+    return ac.EXIT_PAUSED
 
 
 def _station_exit(root, tier, verb, payload, state):
@@ -1192,20 +1342,13 @@ def run(root, args, worker=None, tier="all"):
     state = {"merged": 0, "stall": 0, "cycles": 0, "fatal": None}
     table = []
     while True:
-        # The pause is checked at the top of every tick so one appearing
+        # The pause is re-read at the top of every tick so one appearing
         # MID-RUN stops the next claim, not just the first (§5.6: pause means
-        # stop claiming; in-flight lanes finish and integrate first).
+        # stop CLAIMING; in-flight lanes finish and integrate first). It is
+        # handed to `_admit`, which is where the one act it forbids lives —
+        # the run's own end under a pause is `_paused_exit`, reached only with
+        # the station idle and nothing parked.
         paused = ac.tracked_pause(root / "docs")
-        if paused is not None and not table:
-            _say(
-                "PAUSED - docs/work/pause is present (since {}: {}); {} WI(s) "
-                "integrated before the stop. Unpausing is a reviewed deletion "
-                "commit.".format(
-                    paused.get("since", ""), paused.get("reason", ""), state["merged"]
-                ),
-                err=True,
-            )
-            return ac.EXIT_PAUSED
         # The claim rung's clean-trunk refusal, hoisted to the tick top so the
         # PARKED-resume path meets it too; with lanes live it only freezes
         # admission (their own merges refuse on dirt by themselves).
@@ -1227,7 +1370,7 @@ def run(root, args, worker=None, tier="all"):
             return state["fatal"]
 
         admitted = False
-        if paused is None and not dirty:
+        if not dirty:
             admitted, code = _admit(
                 root,
                 table,
@@ -1239,6 +1382,7 @@ def run(root, args, worker=None, tier="all"):
                 lanes_total,
                 config_refusal,
                 state,
+                paused,
             )
             if code is not None:
                 return code
