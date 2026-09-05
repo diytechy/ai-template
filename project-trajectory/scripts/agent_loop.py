@@ -443,6 +443,8 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text="", assigned=None)
     """The per-session worker prompt (LLR-061): the WI row + SpecRef +
     predecessor context + the current branch diff + any rework finding, slotted
     into WORKER_PROMPT (`train` is the session tag = the claim branch name).
+    `{scripts}` resolves at this sole composition boundary so the meta-repo and
+    a scaffold use their respective runtime script directories.
     Reads NOTHING from docs/status.md or docs/next-wi — the explicit
     assignment is the whole scope.
 
@@ -527,6 +529,7 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text="", assigned=None)
         specref=(row.get("SpecRef") or "—").strip() or "—",
         train=train,
         base=base,
+        scripts=scripts_dir(root),
         assignment_block=assignment_block(
             root, wi_rows, wi, base, list(assigned) if assigned else [wi]
         ),

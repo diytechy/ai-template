@@ -99,6 +99,27 @@ run it only then).
 OI-84) are about the coordinator's own launch/base derivation, not about the
 briefs it composes, and nothing here touched either path.
 
+### Rework pass (session 005) — REVIEW-A MAJOR: runtime close-command path
+
+The worker close ritual inherited literal `scripts/trace.py` and
+`scripts/spec_move.py` commands, which work in a scaffold but not in this
+meta-repo (where the shipped scripts live in `project-trajectory/scripts/`).
+The root cause was not either command: `worker_prompt` omitted the runtime
+scripts-directory slot that `reviewer_prompt` already resolves at its sole
+composition boundary. Added `{scripts}` to the worker template and supplies it
+from `scripts_dir(root)` in `worker_prompt`; both close commands now use it.
+The regression test composes real prompts for the meta-repo and a scaffold,
+and asserts each receives its executable pair of commands. The prompt catalogue
+was regenerated.
+
+Focused verification: the new regression passes (`1 passed in 0.09s`) and
+formatting passes. A fresh temporary lint tool reports 98 pre-existing
+whole-file style findings under its newer default ruleset; none refers to this
+change, so it is not a repair target for WI-580. The declared test environment
+is absent from this checkout (`python` is unavailable and system `python3`
+has no pytest), so the full commit bar cannot be reproduced here; the final
+review round will judge this new non-record tree.
+
 
 ### Rework pass (session 003) — REVIEW-A MAJOR: the brief's half-predicate
 

@@ -321,6 +321,24 @@ def test_worker_brief_names_the_one_turn_close_bar_scratch_and_amendments(tmp_pa
     assert "Scratch belongs OUTSIDE the worktree" in prompt
 
 
+def test_worker_brief_resolves_close_commands_at_the_runtime_scripts_path(tmp_path):
+    # REVIEW-A rework: the close ritual used the scaffold's literal `scripts/`
+    # command in this meta-repo, which has only `project-trajectory/scripts/`.
+    # The worker composition boundary owns the runtime path, as reviewer_prompt
+    # already does for its slots; no caller can now emit an unusable command.
+    row = {"WI-ID": "WI-005", "Title": "t", "SR-Refs": "", "Predecessors": ""}
+    prompt = agent_loop.worker_prompt(tmp_path, {"WI-005": row}, "WI-005", "w", "0" * 7)
+    assert "python project-trajectory/scripts/trace.py --approve modified" in prompt
+    assert "python project-trajectory/scripts/spec_move.py" in prompt
+
+    scaffold = tmp_path / "scaffold"
+    (scaffold / "scripts").mkdir(parents=True)
+    (scaffold / "scripts" / "check.py").write_text("", encoding="utf-8")
+    prompt = agent_loop.worker_prompt(scaffold, {"WI-005": row}, "WI-005", "w", "0" * 7)
+    assert "python scripts/trace.py --approve modified" in prompt
+    assert "python scripts/spec_move.py" in prompt
+
+
 def test_worker_builds_assignment_and_exits_done(tmp_path):
     repo, base, ctl, fake = _setup(tmp_path)
     proc = _worker(repo, fake, ctl, "--wi", "WI-201", "--train", "t1")
