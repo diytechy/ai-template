@@ -3270,14 +3270,18 @@ def spec_lifecycle_findings(root, wis):
 # `40c92f6` were both corrections of.
 _DONE_BOX_RE = re.compile(r"^\s*[-*]\s+\[[xX]\]")
 _OPEN_BOX_RE = re.compile(r"^\s*[-*]\s+\[ \]")
-_HEADING_RE = re.compile(r"^(#{1,6})\s+(.*)$")
+# THE SHARED HOME (0->A->B): the heading grammar and the Done-when test moved to
+# `kitlib.registry` when `consolidate` became their third reader. Re-exported
+# under the private names this module's own rules already use, so no call site
+# moved and there is exactly one tolerant pattern in the kit.
+_HEADING_RE = _kitregistry.HEADING_RE
 # Checkboxes live under a "Done-when" heading by overwhelming convention (281 of
 # 296 across every live and archived spec; re-derived by
 # test_done_when_holds_the_overwhelming_majority_of_checkboxes rather than
 # trusted here). The rest are migration checklists,
 # which are STEPS rather than completion evidence and must not count — counting
 # them would make a kit-version-bump doc read as an unfinished WI.
-_DONE_WHEN_RE = re.compile(r"^\s*(?:\d+[.)]\s*)?done[- ]when\b", re.IGNORECASE)
+_DONE_WHEN_RE = _kitregistry.DONE_WHEN_RE
 
 
 def _done_when_boxes(text):

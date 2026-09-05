@@ -4683,35 +4683,15 @@ which the census reads for EDGES rather than parsing the warn sentences.
    cell says `conflict` now refuses at composition as an unknown brief and is
    HELD for a human — which is the intended failure, but re-point the cell to
    `consolidate` (or clear it) rather than leaving a row that pages someone.
-4. **The census is WIRED in the kit's own dispatcher** — re-sync
-   `scripts/dispatch.py` with the rest. `_admit` calls
-   `intake.mint_consolidation(root, busy)` at the top of a tick, after the
-   parked-branch arm and before the frontier is loaded, so a row it mints is on
-   the frontier that same tick; a refusal prints to stderr and ends the cycle
-   `(False, 1)`, the same contract the gap census's mint arm holds. If your
-   dispatcher has diverged, the call site is:
-
-       minted, refusal = intake.mint_consolidation(root, busy)
-       if refusal:
-           _say(refusal, err=True)
-           return False, 1
-
-   A repo that removes it is exactly as it was, because nothing else mints a
-   `consolidate` row.
-5. **Expect nothing on an empty queue — but expect SOMETHING on an overlapping
-   one.** The census refuses on an idle station with no overlap, on a station
-   holding any adjudication row, and on any queue state a `consolidate` row has
-   already judged (including one whose row has since gone terminal). If it mints
-   on your first tick it found real overlap, and it will keep finding it: two
-   rows sharing a spec of record is one of the three mechanical signals, so a
-   queue that has legitimately cut several rows from one plan gets a judgement
-   asked about them ONCE per queue state. That is the design; the `Digests` cell
-   is what keeps "once" true.
-6. **The minted row's SpecRef is an existence PROBE**, not a literal —
-   `docs/work/README.md`, then your SR registry. A repo shipping none of them
-   gets NO row rather than an unclaimable one: `integrate.claim` refuses a
-   SpecRef that does not resolve (R-E), and a judgement at the head of the
-   frontier that can never be claimed wedges the run.
+4. **Nothing calls the census at this commit.** The mint arm is
+   `intake.mint_consolidation(root, busy)` and no shipped module invokes it, so
+   the machinery is inert until wired — see the entry below, which is where the
+   wiring landed. A range that stops here gets the brief, the column, the census
+   and the close, and mints nothing.
+5. **Expect nothing on an empty queue.** The census refuses on an idle station
+   with no overlap, on a station holding any adjudication row, and on any queue
+   state a `consolidate` row has already judged — including one whose row has
+   since gone terminal.
 ### `intake.py sweep --before/--after` is a RANGE sweep, not a repo scan [since 5bf9f28c]
 
 **What changed.** `sweep` used to run the terminal-folder walk on top of
@@ -4874,6 +4854,66 @@ does that itself now. One deliberate ordering change: a pause over a DIRTY
 trunk with nothing in flight reports the dirty-trunk refusal (exit 2) rather
 than the pause banner, because the drain a pause now performs needs a clean
 trunk like every other merge.
+
+### The consolidation close becomes a transaction, and the census is wired [since 7febfcfe]
+
+**What changed.** Two independent hostile rounds over the entry above found the
+close enacting a verdict it had not finished validating, and the census
+unreachable from a run. Both are closed here, and the second is why this entry
+exists separately: the wiring is the half an adopter must know about, and it
+landed 26 commits after the entry above was anchored.
+
+- **`dispatch._admit` now calls `intake.mint_consolidation(root, busy)`** at the
+  top of a tick — after the parked-branch arm, before the frontier is loaded, so
+  a row it mints is on the frontier that same tick. A refusal prints to stderr
+  and ends the cycle `(False, 1)`, the contract the gap census's mint arm
+  already held. If your dispatcher has diverged from the kit's, the call site
+  is:
+
+      minted, refusal = intake.mint_consolidation(root, busy)
+      if refusal:
+          _say(refusal, err=True)
+          return False, 1
+
+- **The minted row's SpecRef is an ordered existence PROBE**
+  (`consolidate.SPECREF_PROBES`: `docs/work/README.md`, then your SR registry),
+  not a literal. Wiring the census is what exposed why: `integrate.claim`
+  refuses a SpecRef that does not resolve (R-E, WI-370), so on a repo shipping
+  none of them the census minted a judgement that could never be claimed,
+  `_judgement_first` put it at the head of the frontier, and the run exited 1 on
+  every tick afterwards. A repo with no probe hit now gets NO row.
+- **The close is preflighted end to end.** Every row a verdict would move — the
+  absorbed set, the `queue-with-edge` waiters, the `return-to-draft` targets —
+  is resolved to a readable, rewritable queued spec BEFORE the first write, the
+  verdict is bounded to the row's `Adjudicates` cluster, the recorded `Digests`
+  pair is re-compared against the live tree, and the mint refuses whole (trunk
+  restored) if any absorbed row is no longer archivable.
+- **The successor's Context now carries each absorbed row's Done-when block
+  verbatim** (the shipped brief promised it and nothing implemented it), read
+  through `kitlib.registry.done_when_section` — the one tolerant reader
+  `check_trajectory` also uses, since the heading is spelled four ways across
+  live specs.
+
+**What to do.** Re-sync `scripts/dispatch.py`, `scripts/consolidate.py`,
+`scripts/handback.py`, `scripts/intake.py`, `scripts/check_trajectory.py`,
+`scripts/kitlib/registry.py`, `scripts/adjudicate_brief.py` and
+`prompts/adjudicate-consolidate.template.md` together — they are one change.
+
+1. **If you took the entry above and left the census unwired, it is wired now.**
+   Expect a `consolidate` row on the first idle tick over an overlapping queue,
+   and expect it to keep finding overlap: two rows sharing a spec of record is
+   one of the three mechanical signals, so a queue that legitimately cut several
+   rows from one plan gets a judgement asked about them ONCE per queue state.
+   That is the design; the `Digests` cell is what keeps "once" true. Remove the
+   call to opt out — nothing else mints a `consolidate` row.
+2. **The verdict's machine line is now CHECKED, so re-read the brief.**
+   `absorbs=` must name exactly the ids the `## Dispositions` draft supersedes
+   and `needs=` exactly the waiters the `## Consolidation` `edges` declare, both
+   `;`-joined; the close refuses on divergence. If you have a local copy of the
+   template, take the new one — the old text told a session the counters could
+   not disagree, which is no longer the shape.
+3. **Nothing to migrate in your registries.** The `Digests` column and the
+   `restructured` folder are unchanged from the entry above.
 
 ## 5. Promotion: when this pack stops being prose
 

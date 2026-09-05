@@ -164,6 +164,14 @@ VERDICT_GRAMMAR = {
     # only on the alternative that uses it lets a session omit it and still
     # parse, which is the silent half-verdict `verdict_refusal` exists to
     # refuse.
+    #
+    # BOTH ARE `;`-JOINED LISTS AND BOTH ARE RECONCILED. `absorbs=` restates the
+    # `## Dispositions` draft's `supersedes`, `needs=` the WAITERS of the
+    # `## Consolidation` block's `edges` - and `consolidate.reconcile_refusal`
+    # refuses the close on any divergence. `needs=` was spelled singular here
+    # and in the template while `edges` was already a list, so a conformant
+    # two-edge verdict was refused with no way to write one that passed; the
+    # grammar, the brief and the check are ONE fact now (review round 3).
     "consolidate": (
         "OUTCOME",
         ("QUEUE", "QUEUE-WITH-EDGE", "RETURN-TO-DRAFT", "CONSOLIDATE"),

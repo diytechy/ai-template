@@ -12,6 +12,8 @@ so most of these run on hand-built rows and a bare `tmp_path`. The mint arm's
 end-to-end drive is in `tests/test_consolidate_end_to_end.py`.
 """
 
+import pathlib
+
 import pytest
 from conftest import load_script
 
@@ -851,3 +853,96 @@ def test_the_census_never_mints_a_row_whose_specref_cannot_resolve(tmp_path):
     draft, why = consolidate.census_draft(repo, rows)
     assert draft is None
     assert why and "no candidate spec-of-record resolves" in why
+
+
+@pytest.mark.parametrize(
+    "heading",
+    [
+        "## Done-when",
+        "## Done when",
+        "### Done-when",
+        "### Done when",
+        "## Done-when (acceptance)",
+        "## Done-when:",
+        "## 4. Done-when",
+    ],
+)
+def test_every_live_done_when_heading_shape_is_quoted(heading):
+    """THE ONE TOLERANT READER, not a second copy. `_done_when_block` matched
+    only the exact `## Done-when`, while the kit's canonical
+    `kitlib.registry.DONE_WHEN_RE` (which `check_trajectory` has always used to
+    count completion boxes) accepts `Done when`, any heading level, and a
+    numbered or suffixed form.
+
+    Measured over this repo 2026-09-04: 22 `## Done-when`, 5 `## Done when`,
+    2 `### Done when`, 1 `### Done-when` — so 8 of 30 live headings were
+    dropped, and the successor's Context then ASSERTED that the absorbed row
+    "declared no `## Done-when` section". An affirmative false statement about
+    another row's acceptance criteria is worse than a missing one, because it
+    reads as a checked fact."""
+    body = heading + "\n\n1. Ship the thing.\n"
+    assert consolidate._done_when_block(body) == "1. Ship the thing."
+
+
+def test_the_done_when_section_ends_at_a_sibling_heading_not_the_next_one():
+    """A Done-when that SUBDIVIDES keeps its subsections; a sibling or shallower
+    heading ends it. Load-bearing and bought by a real defect (`docs/specs/
+    WI-321.md` carries another WI's boxes under a sibling heading)."""
+    body = (
+        "## Done-when\n\n1. First.\n"
+        "\n### A sub-point\n\nstill mine\n"
+        "\n## Context\n\nnot mine\n"
+    )
+    got = consolidate._done_when_block(body)
+    assert "1. First." in got and "still mine" in got
+    assert "not mine" not in got
+
+
+def test_the_done_when_block_carries_no_cr_off_a_crlf_checkout():
+    """The block is written back into a successor Context that `wi_convert`
+    emits with `newline="\n"`, so a stray `\r` rides into the minted spec. The
+    reader normalizes line endings off each line, like `_fence_close`."""
+    # TWO lines, deliberately: a single-line block is scrubbed by the trailing
+    # `.strip()` whatever the reader does, so a one-line case cannot tell the
+    # per-line normalization from its absence. An INTERIOR `\r` survives
+    # `.strip()` and rides into the minted spec.
+    got = consolidate._done_when_block(
+        "## Done-when\r\n\r\n1. Ship it.\r\n2. Test it.\r\n"
+    )
+    assert got == "1. Ship it.\n2. Test it."
+    assert "\r" not in got
+
+
+def test_the_needs_counter_carries_every_waiter_not_just_the_first():
+    """The grammar spelled `needs=<id or ->` singular while `edges` was already
+    a list, so a CONFORMANT two-edge verdict was refused with no way to write
+    one that passed — the enforcement half of the one-carrier fix landed and the
+    instruction half did not. The counter is a `;`-joined list now, in the
+    grammar, in the brief and in the check."""
+    rec = _rec("queue-with-edge", edges=[("WI-402", "WI-401"), ("WI-403", "WI-401")])
+    ok = ("QUEUE-WITH-EDGE", {"needs": "WI-402;WI-403", "absorbs": "-"})
+    assert consolidate.reconcile_refusal(ok, rec, [], "at") is None
+    # ...and order does not matter, because it is a SET of waiters.
+    flipped = ("QUEUE-WITH-EDGE", {"needs": "WI-403;WI-402", "absorbs": "-"})
+    assert consolidate.reconcile_refusal(flipped, rec, [], "at") is None
+    # The half-named counter is still refused, which is the point of checking it.
+    half = ("QUEUE-WITH-EDGE", {"needs": "WI-402", "absorbs": "-"})
+    why = consolidate.reconcile_refusal(half, rec, [], "at")
+    assert why and "WI-402;WI-403" in why
+
+
+def test_the_shipped_brief_teaches_the_grammar_the_close_enforces():
+    """The template is the session's ONLY instruction, so a rule the close
+    enforces and the brief does not state is a rule no session can satisfy."""
+    text = (
+        pathlib.Path(consolidate.__file__).resolve().parent.parent
+        / "prompts"
+        / "adjudicate-consolidate.template.md"
+    ).read_text(encoding="utf-8")
+    assert "needs=<id;id;… or ->" in text
+    assert "absorbs=<id;id;… or ->" in text
+    # The two sentences that told a session the counters could not disagree are
+    # gone: they now say the close refuses when they do.
+    assert "cannot disagree" not in text
+    assert "no second copy to disagree with it" not in text
+    assert "close REFUSES if either disagrees" in text

@@ -1284,14 +1284,12 @@ def absorbed_done_when(root, ids):
 
 
 def _done_when_block(body):
-    """One spec body's `## Done-when` section, verbatim, or ""."""
-    lines = (body or "").split("\n")
-    for index, line in enumerate(lines):
-        if line.rstrip("\r").strip().lower() == "## done-when":
-            rest = []
-            for tail in lines[index + 1 :]:
-                if tail.rstrip("\r").startswith("## "):
-                    break
-                rest.append(tail)
-            return "\n".join(rest).strip("\n")
-    return ""
+    """One spec body's Done-when section, verbatim, or "".
+
+    Through `kitlib.registry.done_when_section` and NOT a local match: this
+    repo's live specs spell the heading four ways, and the narrow
+    `== "## done-when"` test this replaces dropped 8 of 30 of them - then said
+    so, in the successor's Context, as "declared no `## Done-when` section".
+    An affirmative false statement about another row's acceptance criteria is
+    worse than a missing one, because it reads as a checked fact."""
+    return "\n".join(kitregistry.done_when_section(body)).strip("\n").strip()

@@ -43,8 +43,17 @@
      an outcome recovered from prose is the `NEEDS-HUMAN` fold (WI-417) —
      control flow must be a typed field. The `absorbs` set is deliberately NOT
      in that block: it is the `supersedes` list of the `## Dispositions` draft,
-     which is the value the mint actually uses, so there is no second copy to
-     disagree with it.
+     which is the value the mint actually uses.
+
+     THE MACHINE LINE'S COUNTERS ARE RECONCILED, not ignored and not a second
+     source. `consolidate.reconcile_refusal` refuses the close when the verdict
+     file's `OUTCOME:` word disagrees with the block's `outcome`, when `absorbs=`
+     does not name exactly the ids the draft supersedes, or when `needs=` does
+     not name exactly the waiters the block's `edges` declare. The typed block
+     and the draft DECIDE; the counters must agree with them or the close stops.
+     Every judging brief owes one machine line (prompts/README.md's authoring
+     rule), so the honest shape is a checked restatement rather than a counter
+     nobody reads.
 -->
 
 You are an INDEPENDENT adjudicator launched by the unattended coordinator. A CLUSTER of work items is sitting in the ready queue, where lanes will claim them one at a time and build them side by side. Before that happens, one question:
@@ -91,10 +100,10 @@ THE OUTCOME AND ITS TARGETS ARE A TYPED BLOCK, not prose the machinery guesses a
     returns = ["WI-402"]              # return-to-draft only: the rows going back to draft/
     finding = "..."                   # return-to-draft only: quoted verbatim into each returned row's Context
 
-Omit the keys an outcome does not use. `outcome = "consolidate"` needs no `edges`/`returns`: the absorbed set is the `supersedes` list of your `## Dispositions` draft, so the two cannot disagree.
+Omit the keys an outcome does not use. `outcome = "consolidate"` needs no `edges`/`returns`: the absorbed set is the `supersedes` list of your `## Dispositions` draft, which is what the machinery acts on.
 
 Write your verdict to {verdict}: one `- [BLOCKER|MAJOR|MINOR] <the other row, SR or WI id> -> the collision -> the concrete change` line per finding. Then exactly one machine line:
 
-    OUTCOME: QUEUE|QUEUE-WITH-EDGE|RETURN-TO-DRAFT|CONSOLIDATE needs=<id or -> absorbs=<id;id;… or ->
+    OUTCOME: QUEUE|QUEUE-WITH-EDGE|RETURN-TO-DRAFT|CONSOLIDATE needs=<id;id;… or -> absorbs=<id;id;… or ->
 
-Both counters are required on every outcome; write `-` where an outcome uses neither. Commit that verdict file — and this session's own spec, carrying your `## Consolidation` block and any `## Dispositions` draft — ending that commit with the trailer `WI: {wi}`. The coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open. YOU DO NOT MOVE YOUR OWN SPEC and you do not touch any candidate row: once your verdict is recorded, the machinery closes this row, enacts your outcome, and mints your draft.
+BOTH COUNTERS ARE REQUIRED ON EVERY OUTCOME AND BOTH ARE CHECKED. Write `-` where an outcome uses neither. `absorbs=` must name exactly the ids your `## Dispositions` draft supersedes, `;`-joined; `needs=` must name exactly the WAITERS your `## Consolidation` `edges` declare (the left-hand id of each), `;`-joined — several, where you declared several. The close REFUSES if either disagrees with the typed block, so this line is a restatement you are held to, not a summary. Commit that verdict file — and this session's own spec, carrying your `## Consolidation` block and any `## Dispositions` draft — ending that commit with the trailer `WI: {wi}`. The coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open. YOU DO NOT MOVE YOUR OWN SPEC and you do not touch any candidate row: once your verdict is recorded, the machinery closes this row, enacts your outcome, and mints your draft.

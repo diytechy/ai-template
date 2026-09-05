@@ -129,6 +129,7 @@ prompts/adjudicate-amendment.template.md — see the `prompts/` line above (kit 
 prompts/adjudicate-first-approval.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-first-approval.template.md).
 prompts/adjudicate-disposition.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-disposition.template.md).
 prompts/adjudicate-red-tc.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-red-tc.template.md).
+prompts/adjudicate-consolidate.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-consolidate.template.md). The fifth routed adjudication brief, SHIPPED by WI-583.
 prompts/dual-plan-planner.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-planner.template.md).
 prompts/dual-plan-critic.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-critic.template.md).
 prompts/dual-plan-arbiter.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-arbiter.template.md).
@@ -169,8 +170,6 @@ docs/log.d/2026-08-31-owner-rulings-oi74-75.md — compiled into docs/log.md and
 # Adjudication rows quoting the fixture quote those names verbatim.
 src/widget.py — a synthetic path inside tests/test_verdict_record.py's fake `<mode> <type> <sha>\t<path>` listing fixture, not a file; quoted verbatim by the WI-586/WI-587 adjudication rows that read the fixture. `src/` itself is already declared above (the kit's product is project-trajectory/ + tests/).
 
-# --- A proposed artifact, not yet written -------------------------------------
-prompts/adjudicate-consolidate.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-consolidate.template.md). The fifth routed adjudication brief, SHIPPED by WI-583.
 
 # --- Kit package paths written without their `scripts/` segment ---------------
 # `kitlib/` is a package INSIDE the kit's script dir, so its portable form is

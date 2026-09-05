@@ -166,6 +166,23 @@ outcome = "consolidate"
 
 MACHINE = "OUTCOME: CONSOLIDATE needs=- absorbs=WI-401;WI-402;WI-403"
 
+#: A queued spec with NO `needs = [...]` frontmatter line, so
+#: `consolidate.edged_text` answers None for it — the refusal the two-edge
+#: preflight test drives.
+NO_NEEDS_SPEC = (
+    "+++\n"
+    'id = "WI-404"\n'
+    'title = "no needs line"\n'
+    'workstream = "process"\n'
+    "sr_refs = []\n"
+    'safety_class = "ordinary"\n'
+    'buildtier = "medium"\n'
+    'specref = "docs/plans/one.md"\n'
+    "+++\n"
+    "\n## Context\n\nctx\n"
+    "\n## Done-when\n\n1. Deliver WI-404.\n"
+)
+
 
 def _record_verdict(root, branch, body, machine=None):
     """What an ADJUDICATE session does on the lane: write its typed blocks into
@@ -510,3 +527,79 @@ def test_a_row_claimed_between_close_and_merge_refuses_the_whole_mint(tmp_path):
     assert rows["WI-401"]["Status"] == "queued"
     assert rows["WI-403"]["Status"] == "queued"
     assert not list((root / "docs" / "archive" / "work" / "restructured").glob("*.md"))
+
+
+def _lane_tree_state(root, branch):
+    """`(worktree status, index+worktree diff)` for the lane's `docs/work` — the
+    two reads that together say "nothing was written and nothing was staged"."""
+    wt, err = integ.lane_worktree(root, branch)
+    assert err is None, err
+    status = subprocess.run(
+        ["git", "-C", str(wt), "status", "--porcelain", "--", "docs/work"],
+        capture_output=True,
+        encoding="utf-8",
+    ).stdout
+    return status
+
+
+def test_a_refused_edge_leaves_the_lane_tree_byte_identical(tmp_path):
+    """THE CLOSE IS ALL-OR-NOTHING ACROSS ITS WRITES, not just its archival.
+    Both enact loops used to write one target at a time: a two-edge verdict
+    whose SECOND waiter carries no readable `needs` line refused after the first
+    waiter's spec had been rewritten AND STAGED on the lane — reported nowhere,
+    and committed by whatever committed next even if the verdict was withdrawn.
+
+    `WI-404` is the fixture's frontmatter-less row: `consolidate.edged_text`
+    answers None on a spec with no `needs =` line, which is the refusal this
+    drives."""
+    root = cluster_repo(
+        tmp_path, extra_rows=[("queued/WI-404-no-needs.md", NO_NEEDS_SPEC)]
+    )
+    _judge_id, branch = _minted_judge(root)
+    before = _lane_tree_state(root, branch)
+    assert before.strip() == "", before
+    _record_verdict(
+        root,
+        branch,
+        '\n## Consolidation\n\n```toml\noutcome = "queue-with-edge"\n'
+        'edges = ["WI-402 needs WI-401", "WI-404 needs WI-401"]\n```\n',
+        machine="OUTCOME: QUEUE-WITH-EDGE needs=WI-402;WI-404 absorbs=-",
+    )
+    ids, refusal = hb.close_adjudication(root, branch)
+    assert ids is None
+    assert refusal and "WI-404" in refusal and "no readable `needs` line" in refusal
+    assert "nothing written" in refusal
+    # THE CLAIM: the first edge was never written, so the lane's docs/work is
+    # exactly where the verdict commit left it.
+    assert _lane_tree_state(root, branch).strip() == "", _lane_tree_state(root, branch)
+    wt, _err = integ.lane_worktree(root, branch)
+    spec = (wt / "docs" / "work" / "queued" / "WI-402-wi-402.md").read_text(
+        encoding="utf-8"
+    )
+    assert "WI-401" not in spec
+
+
+def test_a_refused_return_leaves_the_lane_tree_byte_identical(tmp_path):
+    """The same preflight, over the other loop: a `returns` list whose second
+    target is not a queued spec writes nothing at all."""
+    root = cluster_repo(tmp_path)
+    _judge_id, branch = _minted_judge(root)
+    _record_verdict(
+        root,
+        branch,
+        '\n## Consolidation\n\n```toml\noutcome = "return-to-draft"\n'
+        'returns = ["WI-402", "WI-403"]\nfinding = "re-proposes a refuted scope"\n```\n',
+        machine="OUTCOME: RETURN-TO-DRAFT needs=- absorbs=-",
+    )
+    # WI-403 leaves the queue on the LANE only, after the trunk-side guards read
+    # a still-queued trunk: the preflight is the lane-side rung that catches it.
+    wt, err = integ.lane_worktree(root, branch)
+    assert err is None, err
+    (wt / "docs" / "work" / "queued" / "WI-403-wi-403.md").unlink()
+    _git(wt, "add", "-A")
+    _git(wt, "commit", "--no-verify", "-m", "a hand edit on the lane")
+    ids, refusal = hb.close_adjudication(root, branch)
+    assert ids is None
+    assert refusal and "WI-403" in refusal and "nothing written" in refusal
+    assert _lane_tree_state(root, branch).strip() == ""
+    assert (wt / "docs" / "work" / "queued" / "WI-402-wi-402.md").is_file()

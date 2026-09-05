@@ -580,14 +580,19 @@ def _consolidation_close(root, wt, branch, src_rel, text, drafts, meta):
     refusal = _machine_line_refusal(root, wt, branch, record, absorbed, src_rel)
     if refusal:
         return False, refusal
-    for waiter, blocker in record["edges"]:
-        refusal = _write_edge(wt, waiter, blocker)
-        if refusal:
-            return False, refusal
-    for wid in record["returns"]:
-        refusal = _return_to_draft(wt, wid, record["finding"])
-        if refusal:
-            return False, refusal
+    # PLAN, THEN APPLY. Both loops used to write one target at a time and could
+    # refuse mid-way: a two-edge verdict whose SECOND waiter carried no readable
+    # `needs` line left the first waiter's spec rewritten AND STAGED on the lane,
+    # reported nowhere, to be committed by whatever committed next - even if the
+    # verdict was then withdrawn. That is the half-enacted state this function's
+    # own docstring says is unreachable, so it is now unreachable: every target
+    # is resolved to a readable, rewritable queued spec BEFORE the first write.
+    plan, refusal = _enact_plan(wt, record)
+    if refusal:
+        return False, refusal
+    refusal = _apply_plan(wt, plan)
+    if refusal:
+        return False, refusal
     print(
         "handback: consolidation {} -> outcome {} ({} absorbed, {} edge(s), "
         "{} returned)".format(
@@ -664,48 +669,84 @@ def _queued_spec(wt, wi_id):
     return None, None
 
 
-def _write_edge(wt, waiter, blocker):
-    """QUEUE-WITH-EDGE: the hard `needs` edge the conflict brief promised and
-    never got a reader for. A refusal, or None."""
-    path, rel = _queued_spec(wt, waiter)
-    if path is None:
-        return "cannot add the {} -> {} edge: {} is not a queued spec".format(
-            waiter, blocker, waiter
-        )
-    text = path.read_text(encoding="utf-8")
-    edged = consolidate.edged_text(text, blocker)
-    if edged is None:
-        return (
-            "cannot add the {} -> {} edge: {} carries no readable `needs` line".format(
-                waiter, blocker, rel
+def _enact_plan(wt, record):
+    """`([(kind, ...)], None)` - every write this verdict owes, resolved and
+    validated - or `([], refusal)` naming the first target that cannot be
+    written. NOTHING is written here.
+
+    The same preflight-then-act shape `consolidate._archive_plan` uses on the
+    absorbed rows, for the same reason and bought by the same class of defect.
+    Order is preserved so the apply half is a straight walk."""
+    plan = []
+    for waiter, blocker in record["edges"]:
+        path, rel = _queued_spec(wt, waiter)
+        if path is None:
+            return [], (
+                "cannot add the {} -> {} edge: {} is not a queued spec on this "
+                "lane; nothing written".format(waiter, blocker, waiter)
             )
+        text = path.read_text(encoding="utf-8")
+        edged = consolidate.edged_text(text, blocker)
+        if edged is None:
+            return [], (
+                "cannot add the {} -> {} edge: {} carries no readable `needs` "
+                "line; nothing written".format(waiter, blocker, rel)
+            )
+        plan.append(("edge", path, rel, edged, waiter, blocker))
+    for wid in record["returns"]:
+        path, rel = _queued_spec(wt, wid)
+        if path is None:
+            return [], (
+                "cannot return {} to draft: it is not a queued spec on this "
+                "lane; nothing written".format(wid)
+            )
+        new_text = consolidate.returned_text(
+            path.read_text(encoding="utf-8"), record["finding"]
         )
-    if edged == text:
-        print(
-            "handback: {} already waits on {} - no edge written".format(waiter, blocker)
-        )
-        return None
-    path.write_text(edged, encoding="utf-8", newline="\n")
-    code, out = ac.git(wt, "add", "--", rel)
-    return (
-        None if code == 0 else "cannot stage {}:\n{}".format(rel, ac._failure_tail(out))
-    )
+        dest = "{}/draft/{}".format(integrate.WORK, path.name)
+        plan.append(("return", path, rel, new_text, dest, wid))
+    return plan, None
 
 
-def _return_to_draft(wt, wi_id, finding):
-    """RETURN-TO-DRAFT: `queued/ -> draft/` with the finding quoted into the
-    row's Context. A refusal, or None.
+def _apply_plan(wt, plan):
+    """Enact a validated `_enact_plan`, or RESTORE the lane and refuse.
 
-    Through `spec_move` and not a bare rename, like every other terminal move
-    here: the spec changes directory depth, so its own relative links and every
-    inbound link to it are part of the same indivisible operation."""
-    path, rel = _queued_spec(wt, wi_id)
-    if path is None:
-        return "cannot return {} to draft: it is not a queued spec".format(wi_id)
-    new_text = consolidate.returned_text(path.read_text(encoding="utf-8"), finding)
-    dest = "{}/draft/{}".format(integrate.WORK, path.name)
-    _touched, refusal = spec_move.move_spec(wt, rel, dest, new_text=new_text)
-    return "cannot return {} to draft: {}".format(wi_id, refusal) if refusal else None
+    The preflight makes a mid-walk refusal unreachable through the causes it
+    checks; the restore is for the ones it cannot (a `spec_move` link rewrite
+    that fails, a filesystem that goes away). `git checkout -- docs/work` plus
+    `git reset -- docs/work` returns both the worktree and the index to the
+    lane's own HEAD, which is exactly the state the close started from: nothing
+    else has written under `docs/work` by this point, because the absorbed rows
+    are archived at the MINT and this row's own spec moves after."""
+    for entry in plan:
+        kind = entry[0]
+        if kind == "edge":
+            _kind, path, rel, edged, waiter, blocker = entry
+            path.write_text(edged, encoding="utf-8", newline="\n")
+            code, out = ac.git(wt, "add", "--", rel)
+            refusal = (
+                None
+                if code == 0
+                else "cannot stage {}:\n{}".format(rel, ac._failure_tail(out))
+            )
+        else:
+            _kind, _path, rel, new_text, dest, wid = entry
+            _touched, refusal = spec_move.move_spec(wt, rel, dest, new_text=new_text)
+            if refusal:
+                refusal = "cannot return {} to draft: {}".format(wid, refusal)
+        if refusal:
+            _restore_lane_work(wt)
+            return (
+                refusal + " (the lane's docs/work was restored; this verdict enacted"
+                " nothing)"
+            )
+    return None
+
+
+def _restore_lane_work(wt):
+    """Put the lane's `docs/work` back to its own HEAD, worktree and index."""
+    ac.git(wt, "checkout", "--", integrate.WORK)
+    ac.git(wt, "reset", "-q", "--", integrate.WORK)
 
 
 def _archive_one_adjudication_row(root, wt, branch, name):
