@@ -3101,8 +3101,17 @@ def _clip_title(title):
     return text if len(text) <= _TITLE_CLIP else text[: _TITLE_CLIP - 1] + "…"
 
 
-def queue_conflict_findings(wis):
-    """LLR-160, mechanical half: pairs of OPEN rows that overlap.
+def queue_conflict_pairs(wis):
+    """LLR-160, mechanical half: pairs of OPEN rows that overlap, as
+    `[(first_id, second_id, finding)]` sorted by the id pair then the text.
+
+    THE PAIR IS THE PRODUCT and the sentence is a rendering of it. Both callers
+    need the same three signals and they need them at different grains:
+    `queue_conflict_findings` below wants the lines (a warn a human reads), and
+    `consolidate.clusters` wants the EDGES (which rows a consolidation census
+    should hand one judge). Deriving the second by parsing the first would be
+    the magic-substring fold — control flow recovered from prose — so the pair
+    is returned and the prose is built from it, in that direction.
 
     Three signals, warn-only, each named with both row ids so the message is
     actionable without opening the registry:
@@ -3132,8 +3141,9 @@ def queue_conflict_findings(wis):
             first, second = sorted((a["id"], b["id"]))
             ta, tb = tokens[a["id"]], tokens[b["id"]]
             union = ta | tb
+            texts = []
             if union and len(ta & tb) / len(union) >= _TITLE_SIMILARITY:
-                out.append(
+                texts.append(
                     "{} and {} are both open with near-identical titles - one "
                     "job minted twice? ({!r} / {!r})".format(
                         first,
@@ -3148,19 +3158,27 @@ def queue_conflict_findings(wis):
                 )
             shared_srs = sorted(set(a.get("srs") or ()) & set(b.get("srs") or ()))
             if shared_srs:
-                out.append(
+                texts.append(
                     "{} and {} are both open and both answer {}".format(
                         first, second, ";".join(shared_srs)
                     )
                 )
             spec = (a.get("specref") or "").split("#", 1)[0]
             if spec and spec == (b.get("specref") or "").split("#", 1)[0]:
-                out.append(
+                texts.append(
                     "{} and {} are both open and share one spec of record ({})".format(
                         first, second, spec
                     )
                 )
+            out.extend((first, second, text) for text in texts)
     return sorted(out)
+
+
+def queue_conflict_findings(wis):
+    """`queue_conflict_pairs` rendered as the warn lines — the shape every
+    existing caller (the validator's report, the dashboard) reads. One
+    derivation, two grains: see the pair producer above."""
+    return sorted(text for _first, _second, text in queue_conflict_pairs(wis))
 
 
 def spec_lifecycle_findings(root, wis):

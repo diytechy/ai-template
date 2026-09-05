@@ -181,6 +181,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/handback.py",
         "scripts/intake.py",
         "scripts/census.py",
+        "scripts/consolidate.py",
         "scripts/pending.py",
         "scripts/coherence.py",
         "scripts/acceptance_record.py",

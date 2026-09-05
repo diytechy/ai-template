@@ -66,7 +66,7 @@ project-trajectory/scripts/check_trajectory.py	interface_findings	37	89
 project-trajectory/scripts/check_trajectory.py	knowledge_pack_findings	18	28
 project-trajectory/scripts/check_trajectory.py	load_wis	16	35	sloc column re-measured 34 -> 35 at dc3c9e68 (informational; the ratchet compares cognitive, which 8fa0f0f3 pushed to 17 and dc3c9e68 repaired back to 16)
 project-trajectory/scripts/check_trajectory.py	main	45	150
-project-trajectory/scripts/check_trajectory.py	queue_conflict_findings	21	36
+project-trajectory/scripts/check_trajectory.py	queue_conflict_pairs	21	36	RE-KEYED 2026-09-04 (WI-583): the three-signal loop is unchanged and its complexity with it; only the function it lives in was renamed, when the pair-level producer was split from the rendering wrapper `queue_conflict_findings` so the consolidation census reads EDGES rather than parsing the warn sentences. Not a bump - the same 21, moved.
 project-trajectory/scripts/check_trajectory.py	staged_findings	20	30
 project-trajectory/scripts/check_trajectory.py	status_forward_only_findings	16	25
 project-trajectory/scripts/check_trajectory.py	validate	20	29

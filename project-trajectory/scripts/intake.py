@@ -117,6 +117,7 @@ import acceptance_record
 import agent_common as ac
 import baseline_snapshot
 import census
+import consolidate
 import schedule
 import trace
 import wi_convert
@@ -1750,6 +1751,11 @@ def _draft_row(wi_id, draft):
     # that re-derives its population live intersects against this, so the act
     # can never widen past the rows the merge handed over.
     row["Adjudicates"] = ";".join(draft.get("adjudicates") or [])
+    # The consolidation census's recursion guard (restructure plan §1.3):
+    # `<queue sha>|<spine sha>`. Written by the same one line the other typed
+    # adjudication cells are, because a cell the mint computes and the writer
+    # drops is a guard that never holds.
+    row["Digests"] = str(draft.get("digests") or "")
     if draft.get("priority") is not None:
         row["Priority"] = str(draft["priority"])
     return row
@@ -1896,6 +1902,18 @@ def _pre_mint_refusal(drafts, subject_verb, registry):
         refusal = _mint_shape_refusal(draft, subject_verb, known_ids, absorbed_ids)
         if refusal:
             return refusal
+        # The consolidation's OTHER lineage refusal (restructure plan §1.3),
+        # which is a different failure from the one above and so cannot be
+        # folded into it: `absorbed_ids` refuses CONTINUING a row somebody
+        # already absorbed (a lineage chain), this refuses ABSORBING a row an
+        # earlier consolidation minted (overturning that judgement). The rule
+        # lives in `consolidate` beside the census that has to state it; this is
+        # its call site.
+        refusal = consolidate.reabsorption_refusal(
+            registry, supersedes_ids(draft.get("supersedes"))
+        )
+        if refusal:
+            return "{}: {}".format(subject_verb, refusal)
     return None
 
 
@@ -2055,6 +2073,28 @@ def mint_gap_rows(root, lines):
     concrete gap-closure rows. `([(wi_id, relpath)], refusal)`; an empty
     answer with a non-empty census means every gap already has an open row."""
     return _mint(root, _census_drafts(root, lines), "empty-frontier gap census")
+
+
+def mint_consolidation(root, busy):
+    """THE DISPATCHER'S CONSOLIDATION ARM (the 2026-09-02 restructure plan
+    §1.3): at most ONE `consolidate` adjudication row per tick.
+    `([(wi_id, relpath)], refusal)`.
+
+    `busy` is the station's own answer to "is any lane out", and a busy station
+    is not a refusal and not an error — it is simply not the moment: the
+    judgement this would mint must run alone, and the rows it would judge may be
+    the ones those lanes are holding.
+
+    The DECISION is `consolidate.census_draft` (digests, clusters, guards, all
+    testable with no repository); the EFFECT is `_mint`, which is the one
+    allocator of a WI id. The split is why the arrow between the two modules
+    runs one way — `consolidate` never reaches back here."""
+    if busy:
+        return [], None
+    draft, _reason = consolidate.census_draft(root)
+    if draft is None:
+        return [], None
+    return _mint(root, [draft], "consolidation census")
 
 
 # --- CLI: the recovery / by-hand path ------------------------------------------
