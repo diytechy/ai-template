@@ -71,6 +71,32 @@ private `_extra`, so this matches its own convention).
 `TC-206.method` / `.evidence` — stated the refusal arm and cited
 `tests/test_verdict_record.py::test_a_work_branch_cannot_write_the_rollup_but_the_trunk_step_can`.
 
+### Two decisions the cells cannot record themselves
+
+**`LLR-208.hat_refs` left unset, deliberately.** `check_trajectory` warns that
+an approved Detail moved while Hat-Refs stayed put, and notes that an unchanged
+cell cannot say whether that was a decision. It was: the row carries no
+`hat_refs` and inherits `INTEGRITY-RECOVERABILITY` from `SR-170`, which is
+exactly the lens the amendment writes about — a refusal that stops a silent bad
+write. Setting the cell would OVERRIDE the inheritance rather than add to it, so
+the smallest honest edit is none.
+
+Surfaced as a separate finding, not fixed here: the WI-590 round 005 defect was
+an UNATTENDED lane writing the artifact with the stand-down hiding it, which
+reads as an `UNATTENDED-OPS` concern that `SR-170` does not carry (sibling
+`SR-156` carries both). Whether `SR-170`'s hat set is short is a question about
+the SR, not about this amendment, and widening an Approved row's perspective
+record was not in this return's scope.
+
+**Provenance kept out of the cells.** A first draft of `TC-205.method` named
+`WI-586` as the measured failure; `trace.py --strict-integrity` raised it as a
+spine stand-alone FINDING (`provenance-findings=1`) and it was rewritten to
+state the standing reason instead — the close archiving a judged row stales the
+APPROVE that had just judged it, and an adjudication lane cannot avoid it by
+ordering because its round is drawn while the row is still in `active/`. The
+account lives here; the cell states the system. Same rule applied to
+`LLR-208.detail` and `TC-206.method`, which name the failure shape and no ids.
+
 ### Not inherited, not widened
 
 WI-586's findings were re-driven and are all DISCHARGED (the spec's `## Context`
