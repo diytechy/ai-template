@@ -1,0 +1,5 @@
+# Tracked pause (concurrency-restructure §5.6): the dispatcher stops CLAIMING at
+# the next session boundary; the in-flight lane finishes and merges. Unpausing is
+# a reviewed deletion commit of this file.
+reason = "Owner direction 2026-09-04: hold the frontier so everything merged today can be reviewed on the trunk in one sitting - the out-of-band churn program (handoff-2026-09-04 §7, items 1-7 merged), the consolidation adjudicator (WI-583, merged by hand after its adversarial rounds), and the loop's merges since the unpause (WI-585/586, the WI-589 batch, WI-590..595, WI-599, WI-600). The in-flight WI-580 lane finishes and merges under this pause; no new claim is made. Delete this file in a reviewed commit to resume at the generated frontier."
+since = "2026-09-04"
