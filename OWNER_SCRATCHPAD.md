@@ -918,9 +918,9 @@ Delegation for stops: the same as before — dispose NEEDS-HUMAN stops with the 
 
 &*********
 
-Items I want to target, feel free to spin up opus agents to assist in verifying.
+Items I want to target, feel free to spin up opus agents or another fable agent to assist in verifying.
 
-1. Does it appear the last set of manual commits closed some of the main issues?  I think most issues were recorded in docs/handoff-2026-09-04.md.  Perhaps no deductions can be made since most of these were by-hand.
+1. NA; Already answered.
 
 2. Based on the commit history, do you think there might be a way to estimate the strength / teir that is required for a worker? Based on scope a how many reworks/reviews occured, what should have been a different strength wi (medium,medium-high, high, etc), might there be a way to automate that?
 
@@ -936,10 +936,14 @@ I suppose it may be no different from what is already formulated functionally.  
 
 6. I see so many open items and a few issues there.  First, the heading of the open items is only a single row, so long text is cut off.  Second, most of the open items don't seem to have a functional impact.  I don't think I have an opinion on most of them, and likely the recommendations can be followed directly.  Please use your best judgement, and only retain open items that affect the core funcitonality / vision of this project.
 
-7. I still fear this repo has grown ovoerly complex.  At the end of the day it's a relatively simple high level loop:
+7. Related to the watermarks it looks like you just had to touch by hand (which I may have misread), do you think there need to be some built-in tests that even adopters consume that do some of these checks similar to the spine checks?  Or are those already baked into what goes downstream?
+
+######################
+
+ I fear this repo has grown overly complex.  At the end of the day it's a relatively simple high level loop:
 - WI-creation (potentially containing contradiction / consolodation from adjudicator during this process.)
 - Scheduling according to WI
 - Displatching according to scheduler.  Note if consolodation is executed before other work items (as a part of WI creation or as a part of the highest priority work item) the dispatcher would only ever need to handle one WI per lane, something that I'm afraid has caused some confusiont / complexity as of late.
 - Controlled reviews / plan sessions with arbitration when necessary.
 
-If you look at how things here have grown, esspecially with the numerous test cases, how would you redesign it to meet the vision and stakeholder needs?  What do you think the current gaps are?  What other tools exist that could be leveraged for objectives that have gotten uniquely developed here?
+If you look at how things here have grown, esspecially with the numerous test cases and potentially low level requirements that are not necessary in their current form to close the vision, how would you redesign it to meet the vision and stakeholder needs?  What do you think the current gaps are?  What other tools exist that could be leveraged for objectives that have gotten uniquely developed here?  If you think a rewrite would be cleaner and more consolodated, feel free to create a detailed implimentation breakdown.
