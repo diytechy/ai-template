@@ -372,18 +372,26 @@ def test_the_discriminator_is_the_declared_cell_not_the_specref(tmp_path):
 
 
 def test_the_one_unrouted_brief_refuses_and_names_itself(tmp_path):
-    """`conflict` is left unrouted on purpose (see adjudicate_brief.py's
-    header): nothing mints a queue-conflict row at all, and its `{digests}` slot
-    names a pair no function computes. Wiring it would mean filling a slot with
-    something, which is the failure this whole module is shaped around.
+    """`consolidate` is the fifth brief and is not routed until its assembler
+    lands. It REPLACED `conflict`, which was unrouted for three reasons at once
+    (nothing minted such a row, no assembler filled its slots, nothing read the
+    `needs=` its grammar demanded) — so `conflict` is now not a brief at all,
+    and the compose refusal must say so rather than reporting a missing
+    assembler for a key the kit still ships.
 
-    `amendment` was the second one until D-9 step 4b — see the tests below,
+    `amendment` was the unrouted one until D-9 step 4b — see the tests below,
     which are its positive successors."""
     repo = _repo(tmp_path)
-    text, why = ab.compose(repo, {"WI-ID": "WI-9", "Brief": "conflict"}, repo / "v.md")
+    text, why = ab.compose(
+        repo, {"WI-ID": "WI-9", "Brief": "consolidate"}, repo / "v.md"
+    )
     assert text is None
-    assert "conflict" in why and "no evidence assembler" in why
-    assert "conflict" not in ab.ROUTED
+    assert "consolidate" in why and "no evidence assembler" in why
+    assert "consolidate" not in ab.ROUTED
+    # The retired key is not a brief, not an unrouted one.
+    text, why = ab.compose(repo, {"WI-ID": "WI-9", "Brief": "conflict"}, repo / "v.md")
+    assert text is None and "unknown brief" in why
+    assert "conflict" not in ab.BRIEF_PROMPTS
 
 
 def test_an_absent_or_unknown_brief_refuses_rather_than_guessing(tmp_path):
@@ -1178,14 +1186,17 @@ def test_an_adjudication_row_declaring_no_brief_still_builds(tmp_path):
         ("disposition", "OUTCOME: PARTIAL successors=1"),
         ("red-tc", "OUTCOME: DRAFTED cases=2 drafts=1"),
         ("amendment", "VERDICT: MEANING rows=3"),
-        ("conflict", "OUTCOME: QUEUE-WITH-EDGE needs=WI-009"),
+        ("consolidate", "OUTCOME: QUEUE-WITH-EDGE needs=WI-009 absorbs=-"),
+        ("consolidate", "OUTCOME: CONSOLIDATE needs=- absorbs=WI-1;WI-2"),
     ],
 )
 def test_a_well_formed_typed_line_is_accepted_for_every_brief(tmp_path, brief, line):
     """The grammar lives beside the assemblers because the brief and the verdict
     it demands are ONE contract — a template whose enum moved and a checker that
-    did not is the drift this table prevents. All four are covered, including
-    the two with no assembler: an unrouted brief still has a verdict shape."""
+    did not is the drift this table prevents. All four briefs are covered,
+    including the one with no assembler: an unrouted brief still has a verdict
+    shape. `consolidate` appears twice because both of its counters are
+    required on EVERY alternative, not only on the one that uses them."""
     path = tmp_path / "v.md"
     path.write_text("- [MINOR] a finding -> why -> the change\n" + line + "\n")
     assert ab.verdict_refusal(brief, path) is None

@@ -15,7 +15,7 @@ sessions this loop launches, so it belongs where a diff shows it.**
 | `dual-plan-arbiter.template.md` | the arbiter hat | yes (`DUALPLAN-ARBITER`) |
 | `adjudicate-amendment.template.md` | meaning-vs-clarity on an amended spine row | yes |
 | `adjudicate-disposition.template.md` | a `partial/` or `cancelled/` lane close | yes |
-| `adjudicate-conflict.template.md` | a row about to enter the ready queue | yes |
+| `adjudicate-consolidate.template.md` | a cluster of queued rows the idle census found overlapping | yes |
 | `adjudicate-red-tc.template.md` | unverified test cases found by the idle census | yes |
 
 The worker assignment is deliberately **not** overridable: the assignment is the

@@ -3064,9 +3064,11 @@ def ssot_findings(wis, root):
 # nobody compared the mint against what was already queued.
 #
 # The ADJUDICATOR half of the vetting (does this row's scope contradict the
-# spine, or another queued row's intent?) is a judgement and lives in the
-# `adjudicate-conflict` prompt, run inside the session that minted the row —
-# not here. This is deliberately the cheap half.
+# spine, or another queued row's intent — and are these rows one work item
+# wearing several ids?) is a judgement and lives in the `adjudicate-consolidate`
+# prompt, run in a row the idle-station census mints over the cluster THIS
+# function's findings help select. This is deliberately the cheap half, and it
+# stays warn-only for the same reason: it is a pre-filter feeding a judge.
 
 # Title tokens too common to carry meaning — a shared "the" is not a signal.
 _TITLE_STOPWORDS = frozenset(

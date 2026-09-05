@@ -110,7 +110,13 @@ CRITIQUE = "CRITIQUE"
 ADJUDICATE_AMENDMENT = "ADJUDICATE-AMENDMENT"
 ADJUDICATE_FIRST_APPROVAL = "ADJUDICATE-FIRST-APPROVAL"
 ADJUDICATE_DISPOSITION = "ADJUDICATE-DISPOSITION"
-ADJUDICATE_CONFLICT = "ADJUDICATE-CONFLICT"
+# The CONSOLIDATION brief (the 2026-09-02 backlog-restructure plan §1.1). It
+# REPLACES the retired `ADJUDICATE-CONFLICT`: that template carried the three
+# queue-vetting questions and a verdict grammar, and nothing ever minted a row
+# declaring it, assembled its evidence or read its `needs=` field. The three
+# questions survive here; the fourth exit (CONSOLIDATE) and the census that
+# mints the row are what make them reachable.
+ADJUDICATE_CONSOLIDATE = "ADJUDICATE-CONSOLIDATE"
 ADJUDICATE_RED_TC = "ADJUDICATE-RED-TC"
 
 KIT_PROMPTS = {
@@ -120,7 +126,7 @@ KIT_PROMPTS = {
     ADJUDICATE_AMENDMENT: "adjudicate-amendment.template.md",
     ADJUDICATE_FIRST_APPROVAL: "adjudicate-first-approval.template.md",
     ADJUDICATE_DISPOSITION: "adjudicate-disposition.template.md",
-    ADJUDICATE_CONFLICT: "adjudicate-conflict.template.md",
+    ADJUDICATE_CONSOLIDATE: "adjudicate-consolidate.template.md",
     ADJUDICATE_RED_TC: "adjudicate-red-tc.template.md",
 }
 

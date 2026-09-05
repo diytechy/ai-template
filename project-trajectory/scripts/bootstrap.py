@@ -1771,8 +1771,8 @@ MAPPING = [
         "SR-146",
     ),
     (
-        "prompts/adjudicate-conflict.template.md",
-        "prompts/adjudicate-conflict.template.md",
+        "prompts/adjudicate-consolidate.template.md",
+        "prompts/adjudicate-consolidate.template.md",
         "SR-146",
     ),
     (

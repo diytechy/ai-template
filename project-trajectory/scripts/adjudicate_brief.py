@@ -57,11 +57,16 @@ FOUR OF THE FIVE BRIEFS ARE ROUTED (`ROUTED`); the last has no producer for
 its evidence, so a row declaring it is HELD for a human (rule 3) rather than
 built:
 
-  * `conflict` — nothing mints a queue-conflict adjudication row at all
-    (`check_trajectory.queue_conflict_findings` is a warn that never becomes a
-    row), so there is no session to brief; and its `{digests}` slot names a
-    scope+spine digest pair no function computes.
-  * `conflict`'s sibling `amendment` USED to be the second one, and it is the
+  * `consolidate` — the fifth brief, which REPLACES the retired `conflict`.
+    `conflict` had a template and a verdict grammar and never had any of the
+    three things that make a brief real: nothing minted a queue-conflict row
+    (`check_trajectory.queue_conflict_findings` is a warn that never became a
+    row), no assembler filled its slots, and nothing read the `needs=` field its
+    grammar demanded. Its `{digests}` slot named a scope+spine digest pair no
+    function computed. `consolidate` keeps its three questions, adds the
+    CONSOLIDATE exit, and is minted by a census — so all three are buildable,
+    and this entry moves down to `ROUTED` when its assembler lands.
+  * `consolidate`'s sibling `amendment` USED to be the second one, and it is the
     capability the `last_approved` snapshot unlocked (D-9 step 4b, owner
     directive 2026-08-15). Two things blocked it and the snapshot answers both.
     Its `{rows}` slot named `trace.reattest_model`, which selected rows whose
@@ -110,7 +115,7 @@ BRIEF_PROMPTS = {
     "amendment": prompts.ADJUDICATE_AMENDMENT,
     "first-approval": prompts.ADJUDICATE_FIRST_APPROVAL,
     "disposition": prompts.ADJUDICATE_DISPOSITION,
-    "conflict": prompts.ADJUDICATE_CONFLICT,
+    "consolidate": prompts.ADJUDICATE_CONSOLIDATE,
     "red-tc": prompts.ADJUDICATE_RED_TC,
 }
 
@@ -149,10 +154,19 @@ VERDICT_GRAMMAR = {
     "amendment": ("VERDICT", ("MEANING", "CLARITY"), ("rows",)),
     "first-approval": ("OUTCOME", ("APPROVE", "RETURN"), ("rows",)),
     "disposition": ("OUTCOME", ("COMPLETE", "PARTIAL", "CANCELLED"), ("successors",)),
-    "conflict": (
+    # The CONSOLIDATION grammar (restructure plan §1.2). Its first three
+    # alternatives are the retired `conflict` grammar verbatim; the fourth is
+    # the exit that brief lacked, and `absorbs` is the counter that makes it
+    # readable — a verdict saying CONSOLIDATE without naming what it absorbed
+    # is a judgement the close cannot enact. BOTH counters are required on
+    # EVERY alternative, `-` being the honest "none": a counter that appears
+    # only on the alternative that uses it lets a session omit it and still
+    # parse, which is the silent half-verdict `verdict_refusal` exists to
+    # refuse.
+    "consolidate": (
         "OUTCOME",
-        ("QUEUE", "QUEUE-WITH-EDGE", "RETURN-TO-DRAFT"),
-        ("needs",),
+        ("QUEUE", "QUEUE-WITH-EDGE", "RETURN-TO-DRAFT", "CONSOLIDATE"),
+        ("needs", "absorbs"),
     ),
     "red-tc": ("OUTCOME", ("DRAFTED", "NEEDS-JUDGEMENT"), ("cases", "drafts")),
 }
