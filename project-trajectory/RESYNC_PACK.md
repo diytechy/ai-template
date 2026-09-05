@@ -4624,6 +4624,40 @@ pair. Anything else that invoked the generator directly from a work branch
 (a lane hook, a make target) now gets the refusal and should stop; the merge
 regenerates the rollup.
 
+### `intake.py sweep --before/--after` is a RANGE sweep, not a repo scan [since 5bf9f28c]
+
+**What changed.** `sweep` used to run the terminal-folder walk on top of
+whatever range it was handed: it built its outcomes map by globbing
+`docs/work/{partial,cancelled,complete}/` **and** their `docs/archive/work/`
+siblings, then passed that map to `intake_after_merge` alongside `--before`
+/`--after`. On a repo with any history that means every close ever archived is
+reconsidered beside a two-commit range, so the subcommand was unusable for its
+one stated job — re-running the intake for a landed merge — and a supervising
+session had to call `intake.intake_after_merge(root, before, after,
+outcomes=None, branch=...)` from a Python snippet instead (measured on this
+kit's own trunk, 2026-09-04, for an out-of-band range that owed two rows).
+
+Given `--before` or `--after`, the sweep now runs triggers (a)/(a2) over
+exactly that range and nothing else — the same call `integrate.integrate_one`
+makes inside the held merge slot, minus the outcomes map no out-of-band range
+has. Two new flags: `--with-terminal` asks the terminal scan back on a range
+sweep, and `--branch <label>` names the mint subject (a range sweep with no
+`--branch` labels itself `sweep <before>..<after>`). A **bare** `sweep` with no
+range is unchanged — `HEAD..HEAD` plus the terminal scan. The ending is a
+count (`_mint` already announces each row it writes) or `nothing to mint.`
+with exit 0; a refusal still prints and exits 1. Idempotence is unchanged and
+unchanged in kind: the mint's exact-title dedup answers a re-run of either
+shape, so a range sweep repeated mints nothing the second time.
+
+**Migration: no file changes.** The kit script is the whole change; re-sync
+`intake.py` and regenerate your CLI reference if you keep one
+(`gen_arch_map.py --src <scripts> --cli-doc <doc>`). Behaviourally, a runbook
+or operating note that reaches for `sweep --before X --after Y` now gets the
+range alone — if you were **relying** on the incidental terminal scan riding
+along with a range (an unlikely dependency, and one that scaled with your
+archive rather than with the range), add `--with-terminal` to that invocation.
+A bare `sweep` needs no edit.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
