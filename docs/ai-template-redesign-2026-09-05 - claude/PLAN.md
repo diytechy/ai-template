@@ -40,6 +40,8 @@ now consuming most of the effort the kit exists to save.**
 | Test SLOC vs kit SLOC | 59,966 vs 58,242 — the tests are larger than the product |
 | Process prose | PROCESS.md 1,318 + PROCESS_OPTIONS.md 2,767 + RESYNC_PACK.md 4,950 lines |
 | Harness plan at DevStg-Impl | 34 steps; 13 generated artifacts each with a freshness check |
+| LLR churn since 2026-08-01 | 218 `detail` cells rewritten, 1 row removed; 18 ids ever retired against 192 live — rows are amended in place, not replaced, despite D-4 |
+| Render test bill | about 340 tests / 10k lines for 8,036 SLOC that produce no decision; the suite's three slowest tests (68 s, 38 s, 23 s) are wire-routing geometry and run on every commit |
 | Skills shipped | 31, of which 16 are domain skills (ROS 2, URDF, Gaussian splats, WebGPU, EKF…) with no relation to a process kit |
 | Commits since 2026-06-04 | 3,510 — about 40 a day; kit-script churn Aug–Sep +61,305 / −22,174 lines |
 | WIs merged since 2026-08-15 | 48 by category: 21 builds, 12 dispositions, 10 adjudications, 5 spot-checks — a count of kinds, not a measure of wasted effort (recorded cost: builds about $339, the other three about $304, with batched lanes double-counted) |
@@ -259,7 +261,53 @@ consumer decisions on purpose (error, enable-check, ask-a-human). The fix is
 one parser that returns a typed result — absent, malformed, valid — while each
 consumer keeps its documented decision; not one failure behaviour for all.
 
-### 2.8 Migration tail and shipped sprawl
+### 2.8 Rows are amended, never uprooted — and the machinery makes that the cheap path
+
+The owner's concern (2026-09-05): LLRs mostly describe implementation-level
+decompositions, and agents may be working AROUND a design an LLR describes
+rather than replacing the row when the need changes. The record supports it,
+and it names the cause.
+
+| Measured since 2026-08-01 (`docs/requirements/low-level-requirements.toml`) | |
+|---|---|
+| Commits touching the LLR registry | 126 |
+| `detail` cells rewritten | 218 |
+| LLR rows removed | 1 |
+| LLR ids ever retired over the kit's lifetime (watermark 210, live 192) | 18 |
+
+The owner ruled the opposite policy a month earlier (D-4, 2026-08-09:
+"if something is superseded, it should just get removed"; ids are never
+reused). Practice did not follow the ruling because the machinery prices the
+two moves differently. Amending a row in place keeps its id, its `Approved`
+status frame, its TC, its `Implements:` back-links in code and its allowlist
+entries; it costs one amendment adjudication. Replacing the row means a new
+`Drafted` id, a new TC, re-pointed back-links, the stage dropping, AND the
+same adjudication. Faced with that, an agent — or a human — rewrites the
+`detail` cell to describe the new mechanism in the old row's frame. The 44
+"self-description" rows in appendix A are the residue: six rows whose text
+records their own retirement, eight that say "this now lives in kitlib", one
+that says "the seam described here is not yet extended". Those are rows that
+should have been deleted and were amended instead. The second-order effect is
+the one the owner fears: a row whose `detail` is a paragraph about a specific
+helper reads, to the next worker, as a constraint on how the helper must
+work, and the worker builds around it.
+
+### 2.9 Rendering is the heaviest test bill and the least gate-bearing code
+
+The renderer family (`gen_trajectory`, `traj_*`, `gen_open_items`,
+`gen_arch_map`, `gen_components`, `gen_okf`) is 16 modules and 8,036 SLOC that
+produce no decision (appendix B). Its tests: about 340 test functions and
+roughly 10k lines in the render modules proper (plus another 240 tests for
+`check_trajectory`, which shares the `test_trajectory*` prefix). The three
+slowest tests in the whole suite are render geometry —
+`test_traj_graph.py`'s wire-routing tests at 68 s, 38 s and 23 s, plus a 7 s
+panel render — and `test_traj_graph` is NOT in the smoke tier's slow-module
+exclusion, so those three run on every commit; the per-commit bar clears its
+60 s budget only because xdist spreads them across cores. Every change to the
+scheduler, the tracer or the merge slot pays for the dashboard's tests, and
+nothing about a dashboard render can red a gate.
+
+### 2.10 Migration tail and shipped sprawl
 
 The CSV registry carrier, `wi_convert`, `migrate_carrier`, legacy rollups,
 retired vocabulary aliases and the RESYNC pack (4,950 lines of prose
@@ -506,7 +554,59 @@ Rules that make it small:
   half (the pack's own §5 names the promotion trigger; treat this redesign as
   that trigger).
 
-### 4.6 Where external tools take over
+### 4.6 Replace, don't amend — and make replacement no costlier than amendment
+
+For mechanism-tier rows (LLRs, and the surviving IF rows), the rule becomes
+the one D-4 already states, made cheap enough to follow:
+
+- **A mechanism change replaces the row.** When the mechanism an LLR describes
+  changes, the row is deleted and a new id minted; the `detail` cell of an
+  existing row is edited only for wording that does not change what the row
+  claims. A worker brief states this in one line; `check_trajectory` gets a
+  detector for the residue — a `detail` cell containing "retired", "now lives
+  in", "no longer", "not yet" or a date stamp is a row that was amended when
+  it should have been replaced (warn-first, as every new detector here is).
+- **Price the two moves the same.** Today replacement costs a stage drop plus
+  a Drafted row's approval plus re-pointing, while amendment costs one
+  adjudication. Two mechanisms close the gap without touching SN-029: (a) the
+  new row is minted with `supersedes = <old id>` and the merge-slot intake
+  treats a supersession that keeps the parent SR, the TC set and the
+  back-links as ONE adjudication, the same brief the amendment gets today —
+  the judge sees old text, new text and the diff, and approves or returns; (b)
+  `Implements:` back-links and TC `verifies` cells are re-pointed by the
+  replacement tooling (`spec_move`'s link-aware ritual already does this for
+  WI specs; extend it to spine ids), so a replacement is one command, not a
+  sweep. The stage still drops, as SN-029 requires, and climbs back on the
+  same adjudication.
+- **LLRs describe decisions, not helpers.** The pruned spine (§4.2) keeps an
+  LLR where an adopter could disagree with a design choice. A row whose
+  subject is one function's placement is a docstring, and a worker who finds
+  such a row should be told to delete it, not honour it.
+
+### 4.7 Rendering as a separately tested module
+
+- **Own package, own tests, own step.** `surfaces/` (§4.1) holds the render
+  code; its tests live under `tests/surfaces/` and run as their own harness
+  step, `[step:render-tests]`, not inside `tests+coverage`.
+- **Path-triggered in the merge slot, always-on in CI.** The step declares the
+  paths that can change its result: the render package itself, and its
+  INPUT contracts — the registry readers (`spine/registry.py`) and the
+  registry templates, since a schema change is the one way non-render code
+  can break a render. The merge slot runs the step when the composed diff
+  against trunk touches any declared path, and records "render-tests: not
+  triggered (paths unchanged)" otherwise — a stated selection, never a
+  silent skip, which keeps the honest-harness doctrine intact. CI on push
+  runs it unconditionally, so a wrong trigger list is caught on the next
+  push rather than never.
+- **The geometry tests leave the per-commit bar.** The three wire-routing
+  tests move to the render step's own slow tier; the per-commit smoke bar
+  keeps one render smoke test (the dashboard generates and validates) so the
+  build of the page itself stays covered.
+- **Coverage floor per package.** The render package carries its own coverage
+  floor in `docs/coverage-floors`, so pulling it out of `tests+coverage` does
+  not lower the kit's global number silently.
+
+### 4.8 Where external tools take over
 
 Detail and evidence in appendix C. The short list the redesign should adopt
 or study before building:
@@ -728,6 +828,12 @@ deleted until every clause has a home.
   recommendation required — WI-570's scope).
 - Skills: domain skills move to a sibling repo; the kit ships process skills
   only.
+- Rendering becomes its own package and harness step per §4.7; the three
+  wire-routing tests leave the per-commit bar; `[step:render-tests]` carries
+  a declared path trigger and runs unconditionally in CI.
+- The replace-don't-amend rule (§4.6) lands as one line in the worker brief,
+  a warn-first residue detector, and the `supersedes` single-adjudication
+  path plus id-aware re-pointing.
 - **Done when:** the pre-commit floor runs under ten seconds; every ratchet
   red names the guarantee it protects and how to re-stamp it by a reviewed
   commit; a resume from a paused run AND from a failed run has been driven
@@ -824,7 +930,14 @@ deleted until every clause has a home.
    hook file against part of the refresh/merge code — how much is what the
    prototype measures. Either way the claim, the verdict gate, intake and the
    review protocol stay in the kit — nothing external models those.
-8. Accept or reject the Phase 0 control period and its decision gate. It is
+8. Rule the replace-don't-amend policy for mechanism-tier rows (§4.6): D-4
+   already says superseded rows are removed; the decision is whether a
+   supersession that keeps the parent, the TC set and the back-links is one
+   adjudication (the amendment's price) so the ruling becomes the cheap path.
+9. Rule rendering as a path-triggered harness step (§4.7): the merge slot
+   runs render tests only when the render package or its input contracts
+   changed, recorded as a stated selection; CI on push runs them always.
+10. Accept or reject the Phase 0 control period and its decision gate. It is
    the round-1 reviewer's strongest structural point: the churn fixes already
    landed have not been measured, and a rebuild decided before measuring them
    cannot be evaluated afterwards.
