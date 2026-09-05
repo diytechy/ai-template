@@ -439,6 +439,36 @@ def _row_title(wi_rows, tok):
     ).strip()
 
 
+def _predecessor_lines(wi_rows, row):
+    """The hard-predecessor lines of a worker brief: one `  - <id> [Status]
+    Title — Deliverable…` line per `Predecessors` token that names a live row
+    (a `~` soft-edge prefix is stripped; an unknown id is skipped; a long
+    Deliverable is clipped at 200 characters). Extracted from `worker_prompt`
+    when the assignment block (WI-580) pushed it over the cognitive ceiling —
+    outward, the census's own remedy, never a baseline bump.
+
+    Implements: SR-026, LLR-061
+    """
+    preds = []
+    for tok in re.split(r"[;,\s]+", (row.get("Predecessors") or "").strip()):
+        tok = tok.lstrip("~")
+        p = wi_rows.get(tok) if tok and WI_TOKEN_RE.match(tok) else None
+        if p is None:
+            continue
+        deliverable = (p.get("Deliverable") or "").strip()
+        if len(deliverable) > 200:
+            deliverable = deliverable[:200] + "…"
+        preds.append(
+            "  - {} [{}] {}{}".format(
+                tok,
+                (p.get("Status") or "?").strip(),
+                (p.get("Title") or "").strip(),
+                " — " + deliverable if deliverable else "",
+            )
+        )
+    return preds
+
+
 def worker_prompt(root, wi_rows, wi, train, base, rework_text="", assigned=None):
     """The per-session worker prompt (LLR-061): the WI row + SpecRef +
     predecessor context + the current branch diff + any rework finding, slotted
@@ -456,23 +486,7 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text="", assigned=None)
     """
     row = wi_rows.get(wi, {})
 
-    preds = []
-    for tok in re.split(r"[;,\s]+", (row.get("Predecessors") or "").strip()):
-        tok = tok.lstrip("~")
-        if tok and WI_TOKEN_RE.match(tok):
-            p = wi_rows.get(tok)
-            if p is not None:
-                deliverable = (p.get("Deliverable") or "").strip()
-                if len(deliverable) > 200:
-                    deliverable = deliverable[:200] + "…"
-                preds.append(
-                    "  - {} [{}] {}{}".format(
-                        tok,
-                        (p.get("Status") or "?").strip(),
-                        (p.get("Title") or "").strip(),
-                        " — " + deliverable if deliverable else "",
-                    )
-                )
+    preds = _predecessor_lines(wi_rows, row)
     pred_block = (
         "- Hard predecessors (context, already integrated or accepted on this "
         "branch):\n" + "\n".join(preds) + "\n"

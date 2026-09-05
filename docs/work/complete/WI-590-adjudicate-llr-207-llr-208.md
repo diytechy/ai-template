@@ -98,7 +98,7 @@ IN SCOPE — two cells, no new mechanism, no regression to write.
 1. `LLR-207.detail`, the `governing_rev` clause. It reads "peeling any verified
    refresh it meets to reach one those commits would otherwise hide". The walk
    does not peel refreshes; it peels through `_peel_target`
-   (`kitlib/verdict.py:431-442`), whose docstring is explicit: "TWO commits are
+   (`project-trajectory/scripts/kitlib/verdict.py:431-442`), whose docstring is explicit: "TWO commits are
    disposable and this is their one home, so `governing_rev`'s walk asks the
    question once: the station's REFRESH (which re-merges trunk and regenerates)
    and the machinery's own ADJUDICATION CLOSE (which archives a judged row

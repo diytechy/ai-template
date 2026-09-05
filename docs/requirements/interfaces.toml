@@ -1749,3 +1749,33 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """The scheduler reads ONE half of trace: the open-item STATES map, and nothing else. The registry rows are the readiness gate's other predecessor kind - a hard OI edge stays unsatisfied while its row reads `pending` - so the frontier derivation needs the same reading of that file the spine enforcer already owns, and a second parse in the scheduler is the two-readers-disagreeing failure this declaration exists to refuse. The row is directional on purpose: nothing here flows back, the caller treats the answer as read-only vocabulary, and the None-versus-empty distinction the owner draws (absent registry versus every id unresolved) is part of the surface rather than an implementation detail - the caller collapses None to an empty map at its own boundary, which is the non-adopter posture where there are no OI edges to resolve. THE IMPORT IS LAZY AND INSIDE THE FUNCTION, and that is a property of the seam and not a coding tic: the scheduler is a pure library that a generated surface, a dispatcher and the loop all import at load time, while the owner is the heaviest module in the kit's script tree; binding it at module scope would pull the whole enforcer into every one of those import graphs for a map most of their calls never ask for. Deferring it to the call keeps the requestor's load-time graph small and makes the dependency pay only where the readiness gate actually resolves an open-item edge."""
+
+[interface.IF-177]
+owner = "scripts/check_trajectory"
+requestors = ["scripts/consolidate"]
+channel = "call"
+data = "queue_conflict_pairs(model) -> the (row, row, signal) pairs the queue-conflict detector reports; the consolidation census reads them as its cluster seeds"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """The consolidation census (scripts/consolidate, CMP-008) seeds its clusters from the SAME queue-conflict detector check_trajectory runs at the gate, so a pair the validator would report is the pair the census offers a consolidate adjudicator — one detector, two readers, and the arrow is paid lazily (the import sits inside the census function) because the validator is heavy and only a census tick needs it. Declared 2026-09-05 by the supervising session after check_trajectory's cross-component ERROR at the DevStg-Impl gate; the seam existed since WI-583's merge (f395907b)."""
+
+[interface.IF-178]
+owner = "scripts/spine_carrier"
+requestors = ["scripts/consolidate"]
+channel = "call"
+data = "resolve(root) -> the spine carrier (TOML or CSV) the repo declares; the consolidation digests hash the spine through it"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """The consolidation's spine digest (§1.3 of the 2026-09-02 restructure plan) must hash the SAME registry bytes every other spine reader sees, so it resolves the carrier through spine_carrier rather than guessing a path — the F5 rule against a second copy of the carrier decision. Declared 2026-09-05 by the supervising session after the DevStg-Impl gate's cross-component ERROR; the seam existed since WI-583's merge (f395907b)."""
+
+[interface.IF-179]
+owner = "scripts/agent_common"
+requestors = ["scripts/gen_verdict_rollup"]
+channel = "call"
+data = "git(root, *argv) -> (code, out); trunk_name(root) -> the primary checkout's branch"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """The rollup generator's off-trunk refusal (7ea3cce7, LLR-208's exclusive-writer clause enforced) asks agent_common which branch is the trunk — the one home for that question, shared with the loop's brief composer and the worker preflight — instead of re-deriving it from `git worktree list` a second time. The import is deferred into the refusal so `--check` pays nothing. Declared 2026-09-05 by the supervising session after the DevStg-Impl gate's cross-component ERROR."""

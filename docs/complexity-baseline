@@ -16,7 +16,6 @@ project-trajectory/scripts/agent_loop.py	map_preflight	41	70
 project-trajectory/scripts/agent_loop.py	route_session	37	143	deliberate re-stamp at arming, reason recorded: 35 -> 37 came with the stall-guard row (C4 pre-dispatch probe + C5 relaxed reviewer rung, landed 2026-08-30 while this sensor was report-only; measured 35 at trunk 8ac501de, 37 after); the ratchet holds at 37 and the decomposition is owed to the decomposition debt owner, not paid by raising this number again
 project-trajectory/scripts/agent_loop.py	run_iteration	18	86	deliberate re-stamp at arming, reason recorded: 17 -> 18 came with the stall-guard row (C2 review-owed end state, landed 2026-08-30 while this sensor was report-only; measured 17 at trunk 8ac501de, 18 after); holds at 18, decomposition owed to the decomposition debt owner
 project-trajectory/scripts/agent_loop.py	seconds_until_reset	18	30
-project-trajectory/scripts/agent_loop.py	worker_prompt	30	67
 project-trajectory/scripts/agent_route.py	_rows_from_csv	17	34
 project-trajectory/scripts/agent_route.py	escalate	16	72
 project-trajectory/scripts/agent_route.py	load_registry	24	65
