@@ -16,3 +16,4 @@ Each line below is a human's citation of the act that authorised a refresh absor
 - 2026-08-30 — refreshed under approval ref: **WI-508 close sitting 2026-08-30 — absorbs WI-520's already-merged CMP-006 kitlib listing (secret_classes.py); see docs/log.d/2026-08-30-wi508-slice6-spine-approval-and-close.md** (7 registry file(s)).
 - 2026-09-04 — refresh under approval. Copied: low-level-requirements.toml (ref: WI-590); test-cases.toml (ref: WI-590). Registries not named by this act keep their prior snapshot bytes.
 - 2026-09-04 — refresh under approval. Copied: low-level-requirements.toml (ref: WI-594); test-cases.toml (ref: WI-594). Registries not named by this act keep their prior snapshot bytes.
+- 2026-09-04 — refresh under approval. Copied: low-level-requirements.toml (ref: WI-599); test-cases.toml (ref: WI-599). Registries not named by this act keep their prior snapshot bytes.
