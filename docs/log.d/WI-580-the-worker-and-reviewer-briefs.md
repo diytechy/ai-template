@@ -66,4 +66,36 @@ the assignment mechanism — items 1, 4 and 5 add prose to the same template by
 construction. What the test pins is the mechanism's own claim: for a one-row
 lane `assignment_block` contributes nothing.
 
-**Bar.** (recorded at close)
+**Bar — and which one, because this row is about that.** The commit bar ran and
+the full unfiltered suite ran too, in one turn (it fit; the new clause says to
+run it only then).
+
+<!-- fig: cmd="python -m pytest -q -n auto; python -m pytest -q -n auto -m smoke; python scripts/check_smoke_budget.py --mode enforce (twice); python project-trajectory/scripts/check_docs.py --root . --stale; python -m ruff format/check" rev=e2afbef0 -->
+
+- Full suite: **3429 passed, 25 skipped, 1 failed in 976.8 s**.
+- Smoke tier: **1547 passed, 8 skipped in 93.4 s**; `check_smoke_budget.py
+  --mode enforce` **FAILS** at 94.0 s and again at 97.5 s against the 60 s
+  budget. NOT re-stamped and NOT this row's to re-stamp: this diff adds **zero**
+  tests to the tier — both modules it edits (`test_agent_loop_worker`,
+  `test_agent_loop_review`) are in `conftest.SLOW_MODULES`, and `pytest -m smoke
+  --collect-only` matches none of the new tests — so tier membership did not
+  move. The box did: load average 9.3–10.8 with other lanes running, against a
+  budget measured at 27–28 s on a quiet 24-core box (WI-496). Re-measure on a
+  quiet box before anyone touches the number.
+- `check_docs.py --root . --stale`: OK — 1368 docs, 1602 links, 0 broken.
+  `ruff format` / `ruff check`: clean.
+- The one failure is `test_derive_stage.py::test_this_repo_s_committed_stage_is_current`,
+  and it is CAUSED-but-benign: `docs/requirements/low-level-requirements.toml`
+  is a declared derivation input, so amending LLR-061 moved the fingerprint.
+  Only the fingerprint moved — every derived value in `docs/stage` (`stage`,
+  `settled-stage`, `live-stage`, both per-phase maps, `drafted = 9`) is
+  byte-identical to the committed copy, so no rung and no draft count changed.
+  Left alone deliberately: `docs/stage` is a generated artifact this branch may
+  not hand-set, the harness's own `derived-stage` step SKIPS on a work branch
+  ("generated freshness is the trunk lane's, concurrency-restructure §5.2"),
+  and the trunk step regenerates it after the merge.
+
+**Deferred open items:** none — the two advisory OIs joined to this row (OI-83,
+OI-84) are about the coordinator's own launch/base derivation, not about the
+briefs it composes, and nothing here touched either path.
+

@@ -3,12 +3,41 @@ id = "WI-580"
 title = "The worker and reviewer briefs: batch assignment block, one-turn close bar, rows under review, scratch home"
 workstream = "process"
 needs = ["~WI-579"]
-specref = "docs/plans/2026-08-31-verdict-record-and-queue-blockers.md#2-the-other-things-that-stopped-the-queue"
+specref = ""
 buildtier = "medium"
 priority = 8
 safety_class = "ordinary"
 supersedes = "WI-559;WI-560;WI-562"
 +++
+
+## Deliverable
+
+Both shipped briefs now say what is true of the lane they are sent to.
+
+`worker.template.md` gained a fifth computed block, `{assignment_block}`
+(`agent_loop.assignment_block`): on a lane claimed with more than one row it
+lists EVERY assigned row — id, title, SpecRef — tagged `this session's focus` /
+`built` / `not started` off the same committed-trailer evidence
+`current_assignment_wi` walks on, and on a one-row lane it renders NOTHING, so
+the single-row brief is unchanged by the mechanism. The opening sentence no
+longer asserts "ONE work item", which was false for a batch and is how a
+session took WI-569 without ever learning WI-575 was on its lane; the
+work-only-the-assignment rule follows it. The close ritual now names a bar a
+worker can finish in one turn — the commit bar, with the full unfiltered suite
+left to the lane's refresh inside the merge slot — names an AMENDMENT of an
+already-approved cell alongside a mint as staling the approval brief, and names
+the scratch home.
+
+`reviewer.template.md` gained `{wis}` (`agent_loop.reviewed_rows_block`): the
+rows under review, id + title, so a round maps Done-when items to coverage
+instead of inferring scope from the diff. It renders even with no assignment (a
+sentence saying so, never a literal slot in a sent brief), and an operator
+override without the slot renders unchanged.
+
+`LLR-061` amended in-lane (detail + `code_symbol`, `Status` untouched); the
+module-size baseline for `agent_loop.py` bumped +36 with its reason;
+`prompts/CATALOG.md` regenerated. Five new tests, each driven red on the
+pre-change behaviour.
 
 ## Context
 

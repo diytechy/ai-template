@@ -60,6 +60,23 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
   - before: Realizes SN-002 — dimensional coverage is generated from the SR's declared inputs, not hand-listed. Hat-derived (hat.TEST-ENGINEER): systematic expansion reduces the risk that a dimensional combination is omitted, which is the charter's coverage half. Generation does NOT answer the charter's second half: showing that an enforcer fails when it should is demonstrated by negative or planted-failure tests, and a hand-listed negative case can demonstrate it. Those negative tests remain a separate obligation, not this row's.
   - after: Realizes SN-002 — dimensional coverage is generated from the SR's declared inputs, not hand-listed. Systematic expansion reduces the risk that a dimensional combination is omitted, which is the charter's coverage half. Generation does NOT answer the charter's second half: showing that an enforcer fails when it should is demonstrated by negative or planted-failure tests, and a hand-listed negative case can demonstrate it. Those negative tests remain a separate obligation, not this row's.
 
+## SR-026 — Coordinator resumes headless
+
+> **Requirement.** The delivered coordinator shall resume headless with stdin closed, never blocking on a prompt: a worker resumes from its explicit claimed assignment plus the committed trailer evidence on its branch, and the integrator derives claim and queue state from trunk history alone — the generated status surface never a session input.
+
+> **Rationale.** Realizes SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run. The acceptance is deliberately narrower than it once was: it had carried two obligations the shall never stated - transient-limit backoff and stall abort - and an acceptance cell cannot mint a requirement. Both were MINTED rather than deleted, because each describes live behaviour worth keeping: SR-171 and SR-172. An unattended run blocked on a prompt is indistinguishable from a hung one and holds its lane until a human notices. Keeping a separate serial resume path beside the dispatcher was rejected: two authorities over one decision drift, and the divergence surfaces as a run that resumes differently depending on how it was started.
+
+
+### LLR LLR-061
+_approved — re-attestation owed_
+- **Detail**
+  - before: Replaces internal --track assumptions with explicit --wi/--train/worktree assignment; assembles the worker prompt from AGENTS.md + WI row + SpecRef + predecessor context + train diff + rework finding (never the generated status surface); collision-safe per-assignment logs/review evidence naming the exact reviewed commit; the --track lane machinery is retired outright. The assignment is the branch integrate.py's claim cut, and the session tag defaults to the branch name; the prompt never includes docs/status.md; a worker branch never edits root status, another branch's claims, the root log or generated artifacts; the result channel is committed trailer evidence (WI: / Blocked-WI: + BlockRef:).
+  - after: Replaces internal --track assumptions with explicit --wi/--train/worktree assignment; assembles the worker prompt from AGENTS.md + WI row + SpecRef + predecessor context + train diff + rework finding (never the generated status surface), plus - on a lane claimed with more than one row - every assigned row with its id, title, SpecRef and walk state (built / this session's focus / not started), so a batch session's brief names the whole claim rather than only the row it walked to; collision-safe per-assignment logs/review evidence naming the exact reviewed commit; the --track lane machinery is retired outright. The assignment is the branch integrate.py's claim cut, and the session tag defaults to the branch name; the prompt never includes docs/status.md; a worker branch never edits root status, another branch's claims, the root log or generated artifacts; the result channel is committed trailer evidence (WI: / Blocked-WI: + BlockRef:).
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: build_worker_assignment/worker_prompt
+  - after: build_worker_assignment/worker_prompt/assignment_block
+
 ## SR-033 — Release checklist generation
 
 > **Requirement.** The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate.
