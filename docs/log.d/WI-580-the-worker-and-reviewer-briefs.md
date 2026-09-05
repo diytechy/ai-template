@@ -184,6 +184,7 @@ rule instead of two contradictory obligations.
 Verification: the reviewer's exact focused harness is **79 passed**; the
 focused regression/baseline selection is **6 passed**, and the three
 byte-budget checks are **3 passed**;
+<!-- fig: cmd="python -m pytest tests/test_agent_loop_worker.py tests/test_agent_loop_review.py tests/test_module_size_ratchet.py -q; python -m pytest tests/test_module_size_ratchet.py tests/test_agent_loop_worker.py tests/test_agent_loop_review.py tests/test_bootstrap.py -q -k 'module_sizes_exactly_match or worker_brief_names or reviewer_prompt_names or runtime_scripts_path or byte_caps or size_budget'; python -m pytest tests/test_bootstrap.py -q -k 'byte_caps or size_budget or capped_doc_baselines'; python scripts/check_smoke_budget.py --mode enforce; python project-trajectory/scripts/check.py --jobs 0; python project-trajectory/scripts/trace.py --strict-integrity; python project-trajectory/scripts/check_docs.py --root . --stale" rev=97f0b684 -->
 `check.py --jobs 0` is **PASS** (the three work-branch generated-freshness
 steps skipped by policy); `trace.py --strict-integrity` reports SN=27, SR=76,
 LLR=191, TC=190, orphans=0, integrity=0; `check_docs.py --root . --stale` is
