@@ -76,8 +76,14 @@ moved: the ruling was arm-and-re-base, not retire. The debt owner is still
 import ast
 import pathlib
 
-from check_complexity import module_sloc
-from conftest import SCRIPTS
+from conftest import SCRIPTS, load_script
+
+# Resolved through conftest's loader rather than a bare `from check_complexity
+# import …`: the bare import relied on scripts/ already being on sys.path, which
+# holds in-process only after some earlier module called `load_script` — under
+# xdist a worker that collects this module first raised ModuleNotFoundError
+# (measured 2026-09-04, `pytest -n 2 tests/test_module_size_ratchet.py`).
+module_sloc = load_script("check_complexity").module_sloc
 
 # A module whose SLOC exceeds this must be baselined. RE-BASED 2026-08-30
 # (OI-68 ruled 1c, WI-538) from 1500 RAW lines to 1000 SLOC: the axis moved from
