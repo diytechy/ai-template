@@ -1,0 +1,43 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 007
+# date: 2026-09-05 00:02
+# train: wi-580-the-worker-and-reviewer-briefs
+# base: 1af07567a421
+# phase: BUILD
+# wi: WI-580
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: bf27d476..af187f3f
+# tokens:
+# cost-usd:
+# wall-secs: 1056
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 15599
+# prompt-template: kit:BUILD
+# prompt-sha: sha256:676e9751961f
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+WI-580 rework completed and committed.
+
+- `97f0b684` — fixes all four REVIEW-A findings.
+- `af187f3f` — records verification provenance.
+- Reviewer harness: 79 passed.
+- Smoke: 1,551 passed, 4 skipped.
+- Enforced smoke budget: 53.9s / 60s.
+- `check.py --jobs 0`: PASS.
+- Trace integrity: 0 errors, 0 orphans.
+- Working tree clean.
+- Final commit carries `WI: WI-580`.
