@@ -17,8 +17,11 @@ Both shipped briefs now say what is true of the lane they are sent to.
 `worker.template.md` gained a fifth computed block, `{assignment_block}`
 (`agent_loop.assignment_block`): on a lane claimed with more than one row it
 lists EVERY assigned row — id, title, SpecRef — tagged `this session's focus` /
-`built` / `not started` off the same committed-trailer evidence
-`current_assignment_wi` walks on, and on a one-row lane it renders NOTHING, so
+`built` / `started, not closed` / `not started` off `lane_completion`, the one
+home of the completion predicate `current_assignment_wi` walks on (a committed
+`WI:` trailer AND the spec gone from `active/<branch>/`), so the brief can never
+call a row the walk will return to `built`; on a one-row lane it renders
+NOTHING, so
 the single-row brief is unchanged by the mechanism. The opening sentence no
 longer asserts "ONE work item", which was false for a batch and is how a
 session took WI-569 without ever learning WI-575 was on its lane; the
