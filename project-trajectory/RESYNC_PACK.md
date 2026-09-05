@@ -4657,6 +4657,45 @@ range alone — if you were **relying** on the incidental terminal scan riding
 along with a range (an unlikely dependency, and one that scaled with your
 archive rather than with the range), add `--with-terminal` to that invocation.
 A bare `sweep` needs no edit.
+### The station settles a `[generated]` refresh conflict, and an ignored `.venv/` no longer blocks the unload [since d11250de]
+
+**What changed.** Two independent fixes in `integrate.py`, each measured
+three times on 2026-09-04's queue drain.
+
+*The refresh.* When merging the trunk into a lane CONFLICTS, `refresh` now
+lists the conflicted paths and takes the TRUNK side of every one DECLARED in
+`docs/stack.ini` `[generated]`, then continues into the trunk step exactly as
+a clean merge does — that step regenerates those files from source seconds
+later, so the conflict has no content question in it. Three refreshes that day
+refused with `PROJECT_STATE.html` / `docs/ratify/CURRENT.md` as the only
+conflicted paths, and a supervisor resolved each one by hand, identically. One
+declared kind is held back BY NAME: `linecounts`
+(`tests/test_module_size_ratchet.py`), whose rows are measured data
+re-stamped by hand with a reason, so both sides of a conflict there carry a
+reviewed reason and no command re-derives them. A conflict with anything else
+in it — product code, a delete/modify git cannot take `--theirs` on — still
+refuses with the message it always carried, plus the list of generated paths
+settled first. The `[generated]` declaration is read, not restated:
+`_generated_table` parses it into `{path: kind}` and the RULING-6 audit's
+`_generated_paths` is two lines over it.
+
+*The unload.* §5.6 stops counting ignored BUILD RESIDUE as dirt: `.venv/`,
+`__pycache__/`, `.pytest_cache/`, `.ruff_cache/`, `.coverage*`. Three merged
+lanes that day ended `UNLOAD INCOMPLETE … DIRTY (1 uncommitted or ignored
+path(s))` over the lane's own `.venv/`, exiting 1 after every merge. A real
+virtualenv is NOT shed file by file — `git worktree remove` takes it with the
+lane — but a `.venv` that is a SYMLINK is unlinked under `os.path.islink` and
+never followed, because the shared virtualenv it points at lives outside the
+lane. Everything outside the allowlist keeps the existing caveat verbatim,
+an ignored `out/run-logs/` stream included.
+
+**What to do.** Re-sync `scripts/integrate.py`. Nothing to edit and nothing
+to declare: the auto-resolve reads the `[generated]` section your repo already
+has (a repo that declares none resolves nothing and refuses exactly as
+before), and the residue allowlist is enumerated in the script. If your
+`[generated]` table declares an artifact whose rows are hand-stamped rather
+than regenerated, give it the `linecounts` kind — that kind, not the path, is
+what holds it back.
 
 ## 5. Promotion: when this pack stops being prose
 

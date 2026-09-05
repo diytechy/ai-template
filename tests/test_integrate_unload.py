@@ -601,3 +601,122 @@ def test_a_foreign_file_beside_the_loops_streams_refuses_by_name(tmp_path):
     assert note.read_text(encoding="utf-8") == "the only copy of these notes\n"
     assert worker.exists()
     assert "wi-401" in _branches(repo)
+
+
+# --- ignored BUILD RESIDUE is not dirt (2026-09-04) ---------------------------
+#
+# The third measured refusal shape, after the 2026-08-01 caches and the
+# 2026-08-30 loop streams: three merged lanes of the 2026-09-03/04 run ended
+# `UNLOAD INCOMPLETE ... DIRTY (1 uncommitted or ignored path(s))` where the one
+# path was the lane's own `.venv/`, the run exited 1 after every merge, and each
+# worktree came off by hand with --force. A virtualenv is rebuilt from
+# requirements; it is not evidence. Everything else ignored still is.
+
+
+def venv_lane(tmp_path, link_target=None):
+    """A merged lane worktree holding a `.venv` — a real tree, or a SYMLINK to
+    `link_target` (the shape a lane built by the loop's own setup carries)."""
+    repo = merged_branch_repo(tmp_path, ignore=LANE_IGNORE + ".venv/\n.venv\n")
+    worker = tmp_path / "worker"
+    _git(repo, "worktree", "add", str(worker), "wi-401")
+    if link_target is None:
+        (worker / ".venv" / "bin").mkdir(parents=True)
+        (worker / ".venv" / "bin" / "python").write_text(
+            "#!/bin/sh\n", encoding="utf-8", newline="\n"
+        )
+        (worker / ".venv" / "pyvenv.cfg").write_text(
+            "home = /usr\n", encoding="utf-8", newline="\n"
+        )
+    else:
+        os.symlink(str(link_target), str(worker / ".venv"))
+    return repo, worker
+
+
+def test_a_merged_lane_holding_only_its_own_venv_unloads(tmp_path):
+    # The defect, verbatim: the lane's ONE dirty path is its own ignored
+    # `.venv/`, and today that refused the unload and ended the run. It is
+    # build residue — reproducible from requirements, sole-copy evidence never
+    # — so it never counts as dirt and the worktree removal takes it with the
+    # lane. Nothing is shed by hand: a real virtualenv is thousands of files.
+    repo, worker = venv_lane(tmp_path)
+    assert integ._worktree_dirt(worker), "fixture must start dirty to git"
+
+    unloaded, note = integ._unload_branch(repo, "wi-401")
+    assert unloaded, note
+    assert not worker.exists()
+    assert "wi-401" not in _branches(repo)
+    assert _worktree_count(repo) == 1
+
+
+def test_a_stray_ignored_file_beside_the_venv_still_refuses(tmp_path):
+    # The allowlist is not a widening of the caveat: the same lane plus ONE
+    # ignored file that is NOT build residue — an `out/` stream of a shape the
+    # loop never writes — still refuses, and names the remainder.
+    repo, worker = venv_lane(tmp_path)
+    stray = worker / "out" / "run-logs" / "operator-notes.txt"
+    stray.parent.mkdir(parents=True)
+    stray.write_text("the only copy\n", encoding="utf-8", newline="\n")
+
+    unloaded, note = integ._unload_branch(repo, "wi-401")
+    assert not unloaded
+    assert "UNLOAD INCOMPLETE" in note and "DIRTY" in note
+    assert "out/" in note
+    assert ".venv" not in note, note
+    assert stray.read_text(encoding="utf-8") == "the only copy\n"
+    assert worker.exists() and "wi-401" in _branches(repo)
+
+
+@pytest.mark.skipif(os.name == "nt", reason="symlinks need a privilege on Windows")
+def test_a_symlinked_venv_unloads_without_following_the_link(tmp_path):
+    # The 2026-09-02 shape (the venv-symlink trap): the lane's `.venv` is a
+    # LINK into a shared virtualenv that lives outside the lane. The unload
+    # removes the LINK and never walks through it — the target and its contents
+    # survive byte-for-byte, which is the whole reason `os.path.islink` decides
+    # this rather than `is_dir`.
+    shared = tmp_path / "shared-venv"
+    (shared / "bin").mkdir(parents=True)
+    (shared / "bin" / "python").write_text(
+        "#!/bin/sh\n", encoding="utf-8", newline="\n"
+    )
+    repo, worker = venv_lane(tmp_path, link_target=shared)
+
+    unloaded, note = integ._unload_branch(repo, "wi-401")
+    assert unloaded, note
+    assert not worker.exists()
+    assert "wi-401" not in _branches(repo)
+    assert (shared / "bin" / "python").read_text(encoding="utf-8") == "#!/bin/sh\n"
+
+
+def test_the_build_residue_allowlist_is_short_and_named():
+    # The declaration as data, the way the tool-residue set is pinned above:
+    # what a toolchain rebuilds from a manifest is not dirt; everything that
+    # can hold a sole copy still is. The dirt read collapses an ignored
+    # directory to one line, so the collapsed form must match too.
+    for rel in (
+        ".venv",
+        ".venv/",
+        ".venv/lib/python3.13/site-packages/pytest/__init__.py",
+        "__pycache__/",
+        ".pytest_cache/v/cache/lastfailed",
+        ".ruff_cache/0.8.0/12345",
+        ".coverage",
+        ".coverage.host.1234.567",
+    ):
+        assert integ._is_build_residue(rel), rel
+    for rel in (
+        ".env",
+        "orphan.txt",
+        "out/",
+        "out/run-logs/operator-notes.txt",
+        "docs/test/report.md",
+        "venv/bin/python",
+    ):
+        assert not integ._is_build_residue(rel), rel
+    # Locked twice, like the shed: only a line git reports as IGNORED is
+    # eligible, and the synthetic line `_worktree_dirt` returns when git could
+    # not answer at all is prose, not a path — it must stay dirt.
+    assert integ._is_build_residue_dirt("!! .venv/")
+    assert not integ._is_build_residue_dirt("?? .venv/")
+    assert not integ._is_build_residue_dirt(
+        "!! git status could not read this worktree (treated as dirty): .venv/"
+    )

@@ -1127,3 +1127,127 @@ def test_bar_step_count_is_by_distinct_name_not_by_echoed_line():
     # (no name field) cannot crash the read.
     mixed = jobs_n + "  FAIL  dupes  exit 1 (0.1s)\n  SKIP  okf  absent\nPASS\n"
     assert len(integ._passed_steps(mixed)) == 3
+
+
+# 5b.6 — the refresh settles a conflict on the DECLARED generated set (2026-09-04)
+
+
+def _conflicting_generated(root, wt, rel, kind=None):
+    """Give `rel` two different bodies — the lane's, then the trunk's — from a
+    common base, so merging trunk into the lane CONFLICTS on exactly that path.
+    `kind` declares it in stack.ini `[generated]` first when it is not already."""
+    if kind:
+        ini = root / "docs" / "stack.ini"
+        ini.write_text(
+            ini.read_text(encoding="utf-8") + "{} = {}\n".format(rel, kind),
+            encoding="utf-8",
+            newline="\n",
+        )
+        _commit(root, "chore: declare {} generated".format(rel), when=T_CODE)
+        _git(wt, "merge", "-q", "--no-edit", "main")
+    (wt / rel).parent.mkdir(parents=True, exist_ok=True)
+    (wt / rel).write_text("base\n", encoding="utf-8", newline="\n")
+    _commit(wt, "WI-401: the base of the contested artifact", when=T_CODE)
+    _git(root, "merge", "-q", "--no-edit", "wi-401")
+    (wt / rel).write_text("the lane's regeneration\n", encoding="utf-8", newline="\n")
+    _commit(wt, "WI-401: the lane regenerated it", when=T_VERDICT)
+    (root / rel).write_text(
+        "the trunk's regeneration\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "docs: the trunk regenerated it", when=T_LATER)
+
+
+def test_a_conflict_only_on_declared_generated_paths_refreshes_green(tmp_path):
+    # Measured 2026-09-04: three lane refreshes refused with "merging trunk in
+    # CONFLICTS" where the ONLY conflicted path was an artifact BOTH sides had
+    # regenerated (PROJECT_STATE.html, docs/ratify/CURRENT.md), and a
+    # supervisor resolved each one identically by hand. There is no content
+    # question in that conflict — the trunk step regenerates the file from
+    # source seconds later — so the station takes the trunk side and carries on.
+    root = station_repo(tmp_path)
+    wt = _lane(root, "wi-401")
+    _conflicting_generated(root, wt, "PROJECT_STATE.html")
+
+    sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    # A real merge of trunk, barred and attested — the ordinary refresh outcome.
+    assert integ.trunk_is_ancestor(root, "wi-401")
+    assert integ.refresh_attestation(root, "wi-401", sha)
+    assert _order(wt)[0] == "trunk_step"
+    # The trunk's side is what the trunk step then regenerated over.
+    assert "the lane's regeneration" not in (wt / "PROJECT_STATE.html").read_text(
+        encoding="utf-8"
+    )
+
+
+def test_a_product_file_conflict_still_refuses_and_names_what_was_resolved(tmp_path):
+    # The allowlist is not a loosening: a conflict with ONE undeclared path in
+    # it is still the lane's, the branch is still reset to its work commit, and
+    # the refusal now names the generated paths it settled first — so the
+    # remainder is not read as the whole conflict.
+    root = station_repo(tmp_path)
+    wt = _lane(root, "wi-401")
+    _conflicting_generated(root, wt, "PROJECT_STATE.html")
+    (wt / "contested.txt").write_text("branch side\n", encoding="utf-8", newline="\n")
+    _commit(wt, "WI-401: the branch's take on product code", when=T_VERDICT)
+    (root / "contested.txt").write_text("trunk side\n", encoding="utf-8", newline="\n")
+    _commit(root, "docs: the trunk's take on product code", when=T_LATER)
+    work_tip = _rev(root, "wi-401")
+
+    sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert sha is None
+    assert "CONFLICTS" in refusal and str(wt) in refusal
+    assert "PROJECT_STATE.html" in refusal and "auto-resolved" in refusal
+    assert _rev(root, "wi-401") == work_tip
+    assert _git(wt, "status", "--porcelain").strip() == ""
+    assert integ.ac.git(wt, "rev-parse", "--verify", "--quiet", "MERGE_HEAD")[0] != 0
+
+
+def test_a_hand_stamped_linecounts_conflict_still_refuses(tmp_path):
+    # The one declared kind held back, and why: `linecounts`
+    # (tests/test_module_size_ratchet.py) is measured-and-classified data
+    # re-stamped BY HAND with a reason (§5.3). No command re-derives it, both
+    # sides carry a reviewed reason, and taking trunk's would silently drop the
+    # lane's — so it refuses like product code, with nothing auto-resolved.
+    root = station_repo(tmp_path)
+    wt = _lane(root, "wi-401")
+    _conflicting_generated(
+        root, wt, "tests/test_module_size_ratchet.py", kind="linecounts"
+    )
+    work_tip = _rev(root, "wi-401")
+
+    sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert sha is None
+    # git's own conflict output names the file; what must be absent is any
+    # claim that the station settled it.
+    assert "CONFLICTS" in refusal and "auto-resolved" not in refusal
+    assert _rev(root, "wi-401") == work_tip
+    assert (wt / "tests" / "test_module_size_ratchet.py").read_text(
+        encoding="utf-8"
+    ) == "the lane's regeneration\n"
+
+
+def test_the_generated_table_reads_kinds_and_prefixes_not_a_second_copy(tmp_path):
+    # The declaration is READ, never restated: kinds come from stack.ini, a
+    # marker-pair row keeps only its kind, and a "/"-terminated row is a PREFIX.
+    root = station_repo(tmp_path)
+    ini = root / "docs" / "stack.ini"
+    ini.write_text(
+        ini.read_text(encoding="utf-8")
+        + "docs/ratify/ = approve\n"
+        + "docs/status.md = status | <!-- BEGIN --> | <!-- END -->\n"
+        + "tests/test_module_size_ratchet.py = linecounts\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    table = integ._generated_table(root)
+    assert table["PROJECT_STATE.html"] == "trajectory"
+    assert table["docs/status.md"] == "status"
+    assert sorted(integ._generated_paths(root)) == sorted(table)
+    assert integ._declared_generated_kind("docs/ratify/CURRENT.md", table) == "approve"
+    assert integ._declared_generated_kind("docs/ratify.md", table) is None
+    assert integ._declared_generated_kind("widget.txt", table) is None
+    assert (
+        integ._declared_generated_kind("tests/test_module_size_ratchet.py", table)
+        in integ._HAND_STAMPED_GENERATED_KINDS
+    )
