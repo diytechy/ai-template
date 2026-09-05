@@ -248,3 +248,28 @@ Also corrected: the byte-accounting prose said `CLAUDE.md` "holds ~8%" against
 a baseline its own edit had moved (7,975 of 8,500 is 6.2%), now `~6%`; and the
 worker brief's opening sentence still named the literal `scripts/agent_loop.py`
 that the same commit had routed through `{scripts}` everywhere else.
+
+**Verification (session 009, at the rework tip).** Commit bar, run here:
+smoke **1551 passed, 4 skipped** and `check_smoke_budget.py --mode enforce`
+**51.8 s vs 60 s -> within**; `check.py --jobs 0` **RESULT: PASS** (stage
+DevStg-Tests, tier all — 11 PASS, the three work-branch freshness stand-downs
+SKIP); `trace.py --strict-integrity` SN=27 SR=76 LLR=191 TC=190 orphans=0
+integrity=0; `check_docs.py --root . --stale` **OK** (1372 docs, 1602 links, 0
+broken). The focused selection — `test_agent_loop_worker`,
+`test_agent_loop_review`, `test_module_size_ratchet`, `test_prompts`,
+`test_routing_and_prompts`, `test_dogfood_sync`, `test_bootstrap` — is **235
+passed, 1 skipped**. `ruff format --check` and `ruff check` clean on the two
+touched Python files (the pre-commit hook's `format` step SKIPPED — the hook's
+interpreter is `/usr/local/bin/python3`, which has no ruff — so it was run
+explicitly against the toolchain venv rather than reported as green unrun).
+<!-- fig: cmd="python -m pytest -q -n auto -m smoke; python scripts/check_smoke_budget.py --mode enforce; python project-trajectory/scripts/check.py --jobs 0; python project-trajectory/scripts/trace.py --strict-integrity; python project-trajectory/scripts/check_docs.py --root . --stale; python -m pytest -q -n auto tests/test_agent_loop_worker.py tests/test_agent_loop_review.py tests/test_module_size_ratchet.py tests/test_prompts.py tests/test_routing_and_prompts.py tests/test_dogfood_sync.py tests/test_bootstrap.py; python -m ruff format --check tests/test_agent_loop_worker.py project-trajectory/scripts/agent_loop.py; python -m ruff check tests/test_agent_loop_worker.py project-trajectory/scripts/agent_loop.py" rev=4ef2ede2 -->
+
+Byte deltas: none. `agent_loop.py` is untouched this round (the mutation check
+restored it byte for byte), so the module-size baseline stands at 2610;
+`byte-budget-guard/SKILL.md` stays 4781 — `~8%` and `~6%` are the same width,
+so the correction moved no byte and the pinned baseline is unchanged.
+
+No new guard was added for either MAJOR. The first is a prose correction to a
+sentence that described `check.py`'s step table from outside it; the brief now
+points at that table instead of restating it, so there is nothing left to keep
+in sync. The second is a deletion, which is its own antidote.
