@@ -1,0 +1,2 @@
+- [MAJOR] project-trajectory/prompts/worker.template.md:47 -> the new approved-cell-amendment close path tells this meta-repo's worker to run `python scripts/trace.py`, but this checkout has no `scripts/trace.py` (the shipped command is `project-trajectory/scripts/trace.py`), so the mandated approval-brief regeneration fails before producing the freshness record -> add a `{scripts}`-style runtime path slot to the worker template and resolve it at the single prompt-composition boundary, then use it for the close commands -> @owner
+VERDICT: CHANGES-REQUESTED findings=1
