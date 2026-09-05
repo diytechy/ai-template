@@ -1,0 +1,39 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 005
+# date: 2026-09-04 23:34
+# train: wi-580-the-worker-and-reviewer-briefs
+# base: 1af07567a421
+# phase: BUILD
+# wi: WI-580
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 49bf6035..69209a90
+# tokens:
+# cost-usd:
+# wall-secs: 242
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 7584
+# prompt-template: kit:BUILD
+# prompt-sha: sha256:c2bac166009f
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Implemented and committed the REVIEW-A fix.
+
+- Worker close commands now use the runtime `{scripts}` slot, resolving to `project-trajectory/scripts` here and `scripts` in scaffolded repos.
+- Added meta-repo/scaffold regression coverage and regenerated the prompt catalog.
+- Commit: `69209a90` (`WI: WI-580`).
+
+Verified: new regression passes; catalog freshness, Python syntax, diff checks, registry/trajectory hooks pass. The declared ruff check could not run because the checkout’s default Python lacks ruff; this is recorded in the WI log fragment.
