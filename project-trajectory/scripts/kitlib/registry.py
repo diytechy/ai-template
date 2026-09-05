@@ -93,6 +93,14 @@ WI_COLUMNS = (
     # brief's LIVE re-derivation intersects against so the act cannot widen past
     # what was handed over. Empty on every row that is not an adjudication.
     "Adjudicates",
+    # THE CONSOLIDATION CENSUS'S RECURSION GUARD (the 2026-09-02 restructure
+    # plan §1.3): `<queue sha>|<spine sha>`, the queue state and spine state the
+    # census saw when it minted this judgement. The census refuses to mint while
+    # a `consolidate` row carrying THIS queue sha is queued, active or ARCHIVED,
+    # so the cell has to survive the close — a guard that stops holding when the
+    # row goes terminal mints the same judgement forever. Empty on every row that
+    # is not a consolidation.
+    "Digests",
 )
 SPEC_SCALARS = (
     ("Title", "title"),
@@ -112,6 +120,7 @@ SPEC_SCALARS = (
     ("Bar", "bar"),
     ("Supersedes", "supersedes"),
     ("Brief", "brief"),
+    ("Digests", "digests"),
 )
 SPEC_LISTS = (
     ("SR-Refs", "sr_refs"),
