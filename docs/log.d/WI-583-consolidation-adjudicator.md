@@ -212,3 +212,75 @@ ordered rungs rather than bumped.
 
 Deferred open items: none — every finding either landed or is stated above as
 warn-only residue with the reason it is not this row's to close.
+
+
+## 2026-09-04 (round 3) — WI-583: what a second look at a fixed thing finds
+
+The rework above was reviewed hostilely again, on the range it produced. All 20
+earlier findings re-drove as closed and all nine mutation tests re-drove as real
+detectors — and six more findings came back, three of them MAJOR. That result is
+the entry worth keeping: **a round that confirms the last round's fixes is not a
+round that finds nothing.** Two of the six were the previous round's own fixes,
+one layer down.
+
+**The half-fix pattern, twice.**
+
+- The close was made all-or-nothing across its ARCHIVAL and left one-at-a-time
+  across its EDGES and RETURNS. A two-edge verdict whose second waiter had no
+  readable `needs` line refused after the first waiter's spec was rewritten and
+  STAGED — the exact class the round before had raised, surviving in the loops
+  nobody re-read because the docstring above them now said the property held.
+  Fixed by giving both loops the preflight the archival already had.
+- `reconcile_refusal` shipped as a hard refusal and the BRIEF that instructs the
+  session was not amended, so a verdict written to the shipped grammar was
+  refused with no way to write a passing one: the machine line spelled
+  `needs=<id or ->` singular while `edges` had always been a list. The
+  enforcement half of a fix landed alone, which is the same shape as a
+  documented behaviour with no implementation — just pointed the other way.
+
+**And the sharpest finding of the previous round, reintroduced one heading-shape
+down.** `_done_when_block` matched only the exact `## Done-when`, while the kit's
+own `check_trajectory._DONE_WHEN_RE` has always accepted `Done when`, any
+heading level and numbered or suffixed forms. Measured over this repo: 22
+`## Done-when`, 5 `## Done when`, 2 `### Done when`, 1 `### Done-when` — so 8 of
+30 live headings were dropped, and the successor's Context then ASSERTED that the
+absorbed row "declared no `## Done-when` section". Writing a new narrow reader
+beside an existing tolerant one is how the 0→A→B rule gets broken in practice:
+not by copying the code, but by not looking for it. `HEADING_RE`,
+`DONE_WHEN_RE` and `done_when_section` now live in `kitlib.registry`, which owns
+the spec body's shape; `check_trajectory` re-exports them under the private names
+its own rules use, so no call site moved.
+
+**One vacuous test, caught by the sweep and not by review.** The CRLF
+normalization test passed with the guard removed: a single-line Done-when block
+is scrubbed by the trailing `.strip()` whatever the reader does. Rewritten to a
+two-line block, where an interior `\r` survives. The mutation sweep is worth
+running even when the tests were written deliberately.
+
+**Record corrections.** The RESYNC entry anchored `[since 1c258508]` described
+wiring that landed at `7febfcfe`, 26 commits later — and the pack's own rule is
+that the anchor is where the change LANDED, with the `downstream-resync` skill
+applying only entries a range contains. An adopter stamped inside that window
+would never have been told the census is now called. Item 4 now says plainly
+that nothing calls it at that commit, and a second entry carries the wiring, the
+SpecRef probe, the transaction and the checked counters. `docs/declared-absences`
+also lost a section heading (`# --- A proposed artifact, not yet written ---`)
+that had gone false for its only row.
+
+**Measurements.**
+
+- Five new guards, mutation-verified five for five: the edge/return preflight
+  (both e2e drives), the tolerant heading, the sibling-heading section end, the
+  CR normalization, and the brief-teaches-the-grammar pin.
+- Touched modules unfiltered: 426 passed.
+- Smoke: 1628 passed, 8 skipped in 65.29s; wall budget 58.6s vs 60s, WITHIN.
+  `max-tests` re-stamped 1626 → 1702 (1636 collected, ~4% headroom): ten
+  pure-function regressions; the two lane-tree drives are slow-tiered.
+  fig: cmd="python -m pytest -q -n auto -m smoke" rev=dd7bc7fd
+- Full suite at the round-3 tip: 3517 passed, 25 skipped in 743.61s (0:12:23).
+  fig: cmd="python -m pytest -q -n auto" rev=dd7bc7fd
+
+No complexity or module-size bump: the close's new preflight is two sibling
+functions, and the Done-when reader moved out rather than growing in place.
+
+Deferred open items: none.
