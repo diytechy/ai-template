@@ -22,14 +22,23 @@ homes, and the close that absorbs several queued rows into one successor
 Done-when 1's "otherwise retire it": it had a template and a grammar and never a
 mint, an assembler or a reader for its `needs=` field.
 
-TWO THINGS THIS ROW DID NOT DO, both stated rather than absorbed. The absorbed
-rows' move to `restructured/` runs at the MINT and not in the close, because its
+ONE DEVIATION STANDS, and the second was closed at rework. The absorbed rows'
+move to `restructured/` runs at the MINT and not in the close, because its
 Deliverable names an id `intake._mint` allocates one commit later and because
 `_supersedes_refusal` would otherwise make the mint refuse its own successor —
 the close still performs every guard and every non-minting outcome Done-when 3
-asks for. And the census is not called from `dispatch._admit`: that call site is
-four lines in a module another lane holds, so the machinery ships inert, with
-the call site described in `docs/log.d/WI-583-consolidation-adjudicator.md`.
+asks for, and two adversarial rounds confirmed that argument true. The census
+IS now called from `dispatch._admit` (it was inert at first close, when that
+module was another lane's); wiring it also exposed a defect neither reviewer
+found — a minted row whose SpecRef did not resolve could never be claimed and
+wedged the frontier — which is why the SpecRef is an existence probe.
+
+AMENDED AT REWORK (2026-09-04), after two independent hostile rounds returned
+11 and 9 findings, all of which held: the close's six all-or-nothing holes, the
+unimplemented Done-when quoting plan §1.5 promised, the parser's type and
+uniqueness gaps and the CRLF-fragile text transforms are all closed, each with
+a mutation-verified test. The account is the second section of
+`docs/log.d/WI-583-consolidation-adjudicator.md`.
 
 Evidence: `tests/test_consolidate.py` (the decision half — digests, the two new
 pre-filter signals, clusters, the three guards, the typed verdict block, the

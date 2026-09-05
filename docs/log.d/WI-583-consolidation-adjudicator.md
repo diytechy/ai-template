@@ -115,3 +115,100 @@ Deferred open items: none — every question this row raised was answerable from
 the plan or from the machinery, and the one place the plan and the machinery
 disagreed (§1.5's ordering) is recorded above as a deviation rather than left
 for a ruling.
+
+
+## 2026-09-04 (later) — WI-583 rework: two adversarial rounds
+
+The close as first landed was reviewed hostilely twice, independently: Sol (via
+codex) returned 11 findings, an Opus session on a scratch clone returned 9, and
+the two BLOCKERs agreed. Every finding was RE-DRIVEN on the merged tree before
+it was believed; every one held. This entry records what they found, because the
+pattern is worth more than the patches.
+
+**One shape, six times.** The close called itself all-or-nothing and was not.
+Each hole was a rung that had been *stated* — in a docstring, in the row's own
+Context, in the shipped brief — and not *built*:
+
+| Stated where | What actually happened |
+|---|---|
+| `_context`: "judge those rows and no others"; brief line 15; plan §1.3 | a draft superseding ANY queued row closed, merged and archived it |
+| `Digests`' whole reason for existing | a forged pair enacted a verdict against a moved queue |
+| `archive_absorbed`: "all or nothing" | a claimed row was skipped silently, one line missing out of three |
+| `_consolidation_close`: "a half-enacted verdict is not a state this can reach" | the mint-side lineage refusal fired one commit after the close committed, wedging the queue permanently |
+| the brief template: "the two cannot disagree" | nothing compared the machine line with the typed block |
+| plan §1.2: the session drafts ONE successor | two drafts closed cleanly and split the scope |
+
+Plus the one that was a promise rather than a claim: plan §1.5 / Done-when 4,
+the absorbed rows' Done-when blocks quoted verbatim into the successor. The
+template promises it in so many words, so a judge who followed the brief wrote a
+boundary sentence and nothing else — and the successor a lane then built carried
+no acceptance criteria at all. That is the finding worth remembering: a
+DOCUMENTED behaviour with no implementation is worse than an undocumented gap,
+because the document makes everyone downstream act as though it is there.
+
+**The census is wired** (`dispatch._admit`), which closes Done-when 2 and makes
+plan §4's acceptance path reachable from a run at all.
+
+**Wiring it found a defect neither reviewer did**, and that is the argument for
+wiring over describing. The minted row's SpecRef was a literal
+`docs/work/README.md`; `integrate.claim` REFUSES a SpecRef that does not resolve
+(R-E, WI-370). On a repo without that file the census minted a judgement that
+could never be claimed, `_judgement_first` put it at the head of the frontier,
+and the run exited 1 on every tick afterwards — the queue wedged by the census
+meant to unblock it. It is an ordered existence probe now, and the census
+DECLINES rather than minting an unclaimable row.
+
+**The suite's own blind spot, named.** Both text transforms used `str.partition`
+on `\n+++\n` / `\n## Context\n`, which finds nothing on a CRLF checkout — so on
+Windows every absorbed row would have been skipped silently. The suite could not
+see it because every fixture calls `conftest.pin_autocrlf`, which is exactly
+why that regression test builds its CRLF bytes by hand instead of checking them
+out.
+
+**Mutation-verified, nine for nine.** Each new guard was removed in turn and the
+test written for it went red: the scope bound, the digest drift, the one-draft
+rule, the pre-close lineage refusal, the all-or-nothing archival, the Done-when
+quoting, the machine-line reconciliation, the collection type/uniqueness rules,
+and the CRLF-agnostic transforms. A tenth check found the first version of the
+type/uniqueness test VACUOUS (it passed with the guard removed, because a later
+rung caught the same input with a worse message) and it was rewritten until it
+bit.
+
+**A regression the existing suite caught that no reviewer did:** scoping. The
+first cut archived off the whole mint lineage, which refused every ORDINARY
+disposition mint by name — a disposition successor supersedes an
+already-terminal row. The archival now keys on a `consolidated` flag set from
+the judging row's declared brief.
+
+**Corrections to the record.** `LLR-167`'s Approved `detail` claimed `conflict`
+and `amendment` are "deliberately unrouted" — both falsified by the change that
+fixed the module header. Amended in-lane per the re-pointing rule, no `Status`
+flipped and no snapshot run, so it rides as snapshot drift to the next sitting
+(the two warns on the close commit are that, working). `docs/declared-absences`
+lost the entry naming the DELETED conflict template, which was masking exactly
+the references an adopter would need to fix, and its sibling now reads as
+shipped. `check_doc_refs` is back to its trunk count of 2 dangling.
+
+**Measurements.**
+
+- Merge: `contract_split` at `503d0e7e`, three conflicts (RESYNC_PACK — both
+  sides' entries kept; `test_intake.py` — both additive blocks; the `intake.py`
+  ratchet row — re-stamped at the MEASURED merge-result value, 1379, which
+  happens to equal 1357+16+6 and the entry says so rather than letting the
+  arithmetic pass for a measurement). Smoke straight after the merge, before
+  anything else was touched: 1594 passed, 8 skipped in 72.56s.
+- Smoke at the rework tip: 1615 passed, 8 skipped in 52.48s; budget 63.2 s vs
+  60 s, this box under load and not a tier that grew (it read 49.6 s quiet on
+  the same tier yesterday).
+  fig: cmd="python -m pytest -q -n auto -m smoke" rev=7febfcfe
+- Full suite at the rework tip: 3504 passed, 25 skipped in
+  1056.43s (0:17:36), on the tree the rework commit carries.
+  fig: cmd="python -m pytest -q -n auto" rev=7febfcfe
+
+Ratchet: `intake.py` 1379 -> 1397 (reason in the entry); `_disposition_drafts`
+complexity RE-STAMPED DOWN 25 -> 20 in the same commit, the extraction paying
+for itself; `close_refusal` measured 21 and was decomposed OUTWARD into five
+ordered rungs rather than bumped.
+
+Deferred open items: none — every finding either landed or is stated above as
+warn-only residue with the reason it is not this row's to close.
