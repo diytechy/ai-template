@@ -1,0 +1,5 @@
+## 2026-09-04 — Independent review, WI-595
+
+- [MAJOR] docs/requirements/low-level-requirements.toml:2187 -> the new LLR says `mechanical_close_attestation` verifies the exact composed close subject and that every admitted close is machine-authored, but the actual verifier only accepts any subject with `adjudicate: ` prefix and ` -> complete/ (mechanical close)` suffix; an independent real-git close with `adjudicate: NOT-A-COMPOSED-WI-ID -> complete/ (mechanical close)` plus only `docs/work/` changes returned its parent, so a hand-authored work change can be peeled and preserve an approval -> either accurately state the prefix/suffix-shaped, non-adversarial contract or harden the one verifier to derive and compare the moved WI ids with the composed subject and prove that forged middle is refused -> @software-engineer; construction cannot make arbitrary external Git commit messages unrepresentable, so `mechanical_close_attestation` is the single owning trust boundary that must validate them once (antidote).
+
+VERDICT: CHANGES-REQUESTED findings=1
