@@ -371,27 +371,27 @@ def test_the_discriminator_is_the_declared_cell_not_the_specref(tmp_path):
     assert other is None and "amendment" in why
 
 
-def test_the_one_unrouted_brief_refuses_and_names_itself(tmp_path):
-    """`consolidate` is the fifth brief and is not routed until its assembler
-    lands. It REPLACED `conflict`, which was unrouted for three reasons at once
-    (nothing minted such a row, no assembler filled its slots, nothing read the
-    `needs=` its grammar demanded) — so `conflict` is now not a brief at all,
-    and the compose refusal must say so rather than reporting a missing
-    assembler for a key the kit still ships.
+def test_every_shipped_brief_is_routed_and_the_retired_one_is_gone(tmp_path):
+    """There is no unrouted brief any more, and that is a claim worth pinning
+    both ways.
 
-    `amendment` was the unrouted one until D-9 step 4b — see the tests below,
-    which are its positive successors."""
+    `conflict` was unrouted for THREE reasons at once — nothing minted such a
+    row, no assembler filled its slots, and nothing read the `needs=` its own
+    grammar demanded — so it was retired rather than filled, and `consolidate`
+    carries its three questions plus the exit it lacked. A row declaring the
+    retired key must therefore refuse as an UNKNOWN brief, not as one whose
+    assembler is missing: the kit no longer ships it at all.
+
+    `amendment` was the other unrouted one until D-9 step 4b — see the tests
+    below, which are its positive successors."""
     repo = _repo(tmp_path)
-    text, why = ab.compose(
-        repo, {"WI-ID": "WI-9", "Brief": "consolidate"}, repo / "v.md"
-    )
-    assert text is None
-    assert "consolidate" in why and "no evidence assembler" in why
-    assert "consolidate" not in ab.ROUTED
-    # The retired key is not a brief, not an unrouted one.
+    assert set(ab.ROUTED) == set(ab.BRIEF_PROMPTS)
     text, why = ab.compose(repo, {"WI-ID": "WI-9", "Brief": "conflict"}, repo / "v.md")
     assert text is None and "unknown brief" in why
     assert "conflict" not in ab.BRIEF_PROMPTS
+    # ...and the no-brief refusal is still reachable, so the rule-3 HOLD does
+    # not quietly become dead code.
+    assert ab.compose(repo, {"WI-ID": "WI-9"}, repo / "v.md")[1]
 
 
 def test_an_absent_or_unknown_brief_refuses_rather_than_guessing(tmp_path):
@@ -425,16 +425,24 @@ def test_no_mint_can_declare_a_brief_the_kit_does_not_ship():
     Deliberately NOT asserted: that every mint site declares one. Two arms
     (the report-less cancellation, the clean-close spot check) declare none on
     purpose, because the kit ships no brief for them and a false declaration
-    would page a human for routine work."""
-    source = (intake.__file__ or "").strip()
-    assert source
-    with open(source, encoding="utf-8") as handle:
-        text = handle.read()
-    declared = set(re.findall(r'"brief":\s*"([^"]*)"', text))
+    would page a human for routine work.
+
+    BOTH MINT SOURCES ARE SCANNED, not just `intake`: the consolidation census
+    lives in its own module (its decision half is testable with no repository)
+    and declares `consolidate` there, so a guard reading `intake.py` alone would
+    have gone vacuous for the newest brief on the day it landed."""
+    declared = set()
+    for module in (intake, load_script("consolidate")):
+        source = (module.__file__ or "").strip()
+        assert source
+        with open(source, encoding="utf-8") as handle:
+            text = handle.read()
+        declared |= set(re.findall(r'"brief":\s*"([^"]*)"', text))
+        declared |= set(re.findall(r'^BRIEF = "([^"]*)"', text, re.M))
     assert declared, "no brief declarations found — guard vacuous"
     assert declared <= set(ab.BRIEF_PROMPTS), sorted(declared - set(ab.BRIEF_PROMPTS))
-    # The two the kit can actually serve must still be declared somewhere, or
-    # the routed briefs would have no producer of rows at all.
+    # Every brief the kit can actually serve must be declared somewhere, or the
+    # routed briefs would have no producer of rows at all.
     assert set(ab.ROUTED) <= declared
 
 
@@ -1258,3 +1266,195 @@ def test_a_malformed_outcome_line_does_not_complete(tmp_path):
     proc, _prompts = _session(tmp_path, repo, "WI-301", "OUTCOME: PROBABLY-FINE")
     assert proc.returncode != agent_loop.EXIT_DONE, proc.stdout
     assert "not complete" in proc.stdout and "not one of" in proc.stdout
+
+
+# --- the consolidation brief (the 2026-09-02 restructure plan §1.4) -----------
+
+
+def _consolidate_repo(tmp_path, extra=(), digests=None, scope="WI-401;WI-402"):
+    """A repo whose queue holds an overlapping pair and the `consolidate` row an
+    idle-station census minted over it."""
+    consolidate = load_script("consolidate")
+    repo = _repo(tmp_path)
+    req = repo / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (req / "system-requirements.csv").write_text(SPINE_SRS, encoding="utf-8")
+    (req / "low-level-requirements.csv").write_text(SPINE_LLRS, encoding="utf-8")
+    (repo / "docs" / "test").mkdir(parents=True)
+    (repo / "docs" / "test" / "test-cases.csv").write_text(SPINE_TCS, encoding="utf-8")
+    rows = [
+        {
+            "WI-ID": "WI-401",
+            "Title": "harden the adder",
+            "SR-Refs": "SR-001",
+            "SpecRef": "docs/plans/adder.md",
+        },
+        {
+            "WI-ID": "WI-402",
+            "Title": "rewrite the adder tests",
+            "SR-Refs": "SR-001",
+            "SpecRef": "docs/plans/adder.md",
+        },
+        {"WI-ID": "WI-410", "Title": "something unrelated"},
+    ] + list(extra)
+    _write_rows(repo, rows)
+    live = consolidate.read_rows(repo)
+    cell = consolidate.digests(repo, live) if digests is None else digests
+    _write_rows(
+        repo,
+        [
+            {
+                "WI-ID": "WI-420",
+                "Title": "adjudicate queue overlap",
+                "SafetyClass": "adjudication",
+                "Brief": "consolidate",
+                "SpecRef": "docs/work/README.md",
+                "Adjudicates": scope,
+                "Digests": cell,
+                "Priority": "9",
+            }
+        ],
+    )
+    return repo, {
+        r["WI-ID"]: r
+        for r in load_script("agent_common").read_spec_rows(repo / "docs" / "work")
+    }
+
+
+def test_the_consolidate_brief_composes_every_slot_from_the_registry(tmp_path):
+    repo, rows = _consolidate_repo(tmp_path)
+    values, why = ab.consolidate_values(repo, rows["WI-420"])
+    assert why is None, why
+    assert set(values) == {
+        "candidate",
+        "open_rows",
+        "spine",
+        "mechanical",
+        "digests",
+        "prior",
+    }
+    # The cluster is rendered WHOLE — the verdict quotes each absorbed row's
+    # Done-when into the successor verbatim, and a judge shown a summary
+    # paraphrases.
+    assert "=== WI-401" in values["candidate"] and "=== WI-402" in values["candidate"]
+    # ...and the rows that are NOT the cluster are the other evidence, once.
+    assert "- WI-410" in values["open_rows"]
+    assert "WI-401" not in values["open_rows"]
+    # The spine the cluster cites, at both tiers.
+    assert "SR-001" in values["spine"] and "LLR-001" in values["spine"]
+    assert "shall add two numbers" in values["spine"]
+    # The pre-filter's findings, re-derived live rather than replayed.
+    assert "share one spec of record" in values["mechanical"]
+    # BOTH digest pairs: a recorded pair alone is a number with nothing to
+    # compare against, and the slot exists to make staleness detectable.
+    assert "recorded at the mint" in values["digests"]
+    assert "as the tree is now" in values["digests"]
+    assert values["prior"] == ab.NO_PRIOR
+    text, why = ab.compose(repo, rows["WI-420"], repo / "docs/reviews/v.md")
+    assert why is None, why
+    assert "INDEPENDENT adjudicator" in text and "CONSOLIDATE" in text
+    assert "consolidate" in ab.ROUTED
+
+
+def test_a_cluster_citing_no_spine_still_composes_with_the_literal(tmp_path):
+    """Plan §1.4: `{spine}` is then the literal, STATED and never blank —
+    contradiction with the spine is one of three questions and the other two
+    remain, so this composes rather than refusing."""
+    repo, rows = _consolidate_repo(
+        tmp_path,
+        extra=[
+            {"WI-ID": "WI-403", "Title": "one plan row", "SpecRef": "docs/plans/x.md"},
+            {
+                "WI-ID": "WI-404",
+                "Title": "other plan row",
+                "SpecRef": "docs/plans/x.md",
+            },
+        ],
+        scope="WI-403;WI-404",
+    )
+    values, why = ab.consolidate_values(repo, rows["WI-420"])
+    assert why is None, why
+    assert values["spine"] == ab.NO_SPINE
+    assert "share one spec of record" in values["mechanical"]
+
+
+def test_a_consolidation_declaring_no_scope_refuses(tmp_path):
+    """An unstated boundary read as "every queued row" would let one verdict
+    absorb the whole backlog — the same widening `Adjudicates` closed for the
+    first-approval brief."""
+    repo, rows = _consolidate_repo(tmp_path, scope="")
+    values, why = ab.consolidate_values(repo, rows["WI-420"])
+    assert values is None and "declares no `Adjudicates` scope" in why
+
+
+def test_a_consolidation_with_no_digests_cell_refuses(tmp_path):
+    """Without the pair, the verdict cannot be told stale from fresh and the
+    census cannot tell that this queue state has been judged — so the row is
+    HELD for a human rather than briefed."""
+    repo, rows = _consolidate_repo(tmp_path, digests="")
+    values, why = ab.consolidate_values(repo, rows["WI-420"])
+    assert values is None and "no usable `Digests` cell" in why
+
+
+def test_a_cluster_row_that_left_the_queue_refuses_by_name(tmp_path):
+    """EVERY row of the cluster or none. A consolidation ABSORBS the rows it is
+    shown, so a brief over the survivors produces a verdict whose `supersedes`
+    silently omits one — which the close cannot detect, because the absent row
+    is absent from the verdict too."""
+    repo, rows = _consolidate_repo(tmp_path)
+    spec = repo / "docs" / "work" / "queued" / "WI-402-rewrite-the-adder-tests.md"
+    assert spec.is_file(), sorted(p.name for p in spec.parent.iterdir())
+    spec.unlink()
+    values, why = ab.consolidate_values(repo, rows["WI-420"])
+    assert values is None and "WI-402" in why and "no longer queued" in why
+
+
+def test_a_cluster_whose_overlap_dissolved_refuses_rather_than_briefing(tmp_path):
+    """`red_tc_values`' rule, one brief over: the census is RE-RUN at
+    composition time, so a judge rules on the state of the world it is actually
+    in. A cluster whose overlap is gone would otherwise brief a session about a
+    contradiction that no longer exists."""
+    repo, rows = _consolidate_repo(tmp_path)
+    work = repo / "docs" / "work" / "queued"
+    for name, spec_line in (
+        ("WI-401-harden-the-adder.md", 'specref = "docs/plans/one.md"'),
+        ("WI-402-rewrite-the-adder-tests.md", 'specref = "docs/plans/two.md"'),
+    ):
+        path = work / name
+        text = path.read_text(encoding="utf-8")
+        text = re.sub(r"(?m)^specref = .*$", spec_line, text)
+        text = re.sub(r"(?m)^sr_refs = .*$", "sr_refs = []", text)
+        path.write_text(text, encoding="utf-8")
+    values, why = ab.consolidate_values(repo, rows["WI-420"])
+    assert values is None and "dissolved" in why
+
+
+def test_prior_names_what_earlier_consolidations_absorbed(tmp_path):
+    """`{prior}` is read from the REGISTRY — the absorbed rows' own status and
+    lineage — and never from a verdict file: rule 1, a judge's evidence is a
+    record and not a claim."""
+    repo, rows = _consolidate_repo(
+        tmp_path,
+        extra=[
+            {
+                "WI-ID": "WI-390",
+                "Title": "absorbed a",
+                "Status": "restructured",
+                "Supersedes": "WI-395",
+            },
+            {
+                "WI-ID": "WI-391",
+                "Title": "absorbed b",
+                "Status": "restructured",
+                "Supersedes": "WI-395",
+            },
+            {
+                "WI-ID": "WI-395",
+                "Title": "the successor",
+                "Supersedes": "WI-390;WI-391",
+            },
+        ],
+    )
+    values, why = ab.consolidate_values(repo, rows["WI-420"])
+    assert why is None, why
+    assert values["prior"] == "- WI-395 absorbed WI-390;WI-391"
