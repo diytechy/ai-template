@@ -4,7 +4,7 @@
 
 **Permanent location:** `docs/ai-template-redesign-2026-09-05-codex/` in this repository, at the owner’s direction. Preserve the plan and review history here.
 
-**Recommendation:** replace the orchestration kernel behind the existing kit, preserve the useful adoption and assurance tools, and migrate by complete behavior slices. Do not rewrite the whole repository or carry every historical mechanism into a new implementation.
+**Recommendation:** first measure the recently fixed loop and simplify shared boundaries. Replace the orchestration kernel only where that evidence shows unresolved stakeholder needs justify it; preserve useful adoption and assurance tools and migrate by complete behavior slices. A rewrite is a conditional option, not the success criterion. See the [Claude plan comparison and incorporated changes](CROSS-REFERENCE-CLAUDE.md).
 
 Your four-step loop is the right organizing model:
 
@@ -257,7 +257,7 @@ Do not add a learned worker-tier estimator, a new generic plugin framework, an e
 
 ## 6. Review decisions and recommendation
 
-I recommend a **replacement kernel with staged migration**, not either a whole-kit rewrite or another decomposition-only WI that redistributes the same behavior among more files.
+I recommend **measurement and shared-boundary simplification first, with a staged replacement kernel conditional on P0’s decision gate**. If the corrected current loop meets the agreed outcomes, stop the replacement work and retain only independently justified simplifications. The packages below describe the replacement option, not an obligation to execute every package.
 
 The owner review should decide:
 
