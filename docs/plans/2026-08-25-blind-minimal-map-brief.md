@@ -4,7 +4,7 @@ _The brief two independent agents were given, recorded here BEFORE their returns
 so the question cannot be re-written to fit the answer. The returns are
 [`2026-08-25-blind-minimal-map-derivation.md`](2026-08-25-blind-minimal-map-derivation.md).
 The program that commissioned it closed `partial` at
-[`docs/work/partial/WI-508-architectural-remap-program.md`](../work/partial/WI-508-architectural-remap-program.md).
+[`docs/work/partial/WI-508-architectural-remap-program.md`](../archive/work/partial/WI-508-architectural-remap-program.md).
 The requirement it produces evidence for: `SR-163`, decomposed at slice 1._
 
 > **STANDING CAVEAT — the pre-registration above is NOT evidenced by this

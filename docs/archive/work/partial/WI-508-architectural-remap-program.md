@@ -228,13 +228,13 @@ approval act is claimed and none was needed.
 
 **Watermarks** `LLR` 202 → 204, `TC` 198 → 200, via `trace.py
 --bump-ids`. Record:
-[../../../log.d/2026-08-25-wi508-slice1-sr163-decomposition.md](../../log.md#2026-08-25--wi-508-slice-1-the-row-re-validated-the-lane-claimed-and--decomposed).
+[../../../log.d/2026-08-25-wi508-slice1-sr163-decomposition.md](../../../log.md#2026-08-25--wi-508-slice-1-the-row-re-validated-the-lane-claimed-and--decomposed).
 
 ### SLICE 2 LANDED 2026-08-25 — the blind derivation ran, on two axes
 
 **The brief was written and recorded BEFORE either agent ran**, so the question
 cannot be re-written to fit the answer:
-[../../../plans/2026-08-25-blind-minimal-map-brief.md](../../plans/2026-08-25-blind-minimal-map-brief.md).
+[../../../plans/2026-08-25-blind-minimal-map-brief.md](../../../plans/2026-08-25-blind-minimal-map-brief.md).
 Two agents derived the minimal module map from a **five-file input set** — the
 purpose statement, the needs, the requirements, the depth-0 frame and the hat
 roster — with the design tier, the component and interface registries, the
@@ -244,10 +244,10 @@ you little: **A worked backwards from the declared boundary outputs**, **B
 clustered obligations by shared signal and failure mode**.
 
 Returns, verbatim and durable:
-[a](../../plans/2026-08-25-blind-derivation-a-outputs.md) (24 modules) ·
-[b](../../plans/2026-08-25-blind-derivation-b-obligations.md) (23 modules) ·
+[a](../../../plans/2026-08-25-blind-derivation-a-outputs.md) (24 modules) ·
+[b](../../../plans/2026-08-25-blind-derivation-b-obligations.md) (23 modules) ·
 the record, the measured agreement and the disclosures:
-[../../../plans/2026-08-25-blind-minimal-map-derivation.md](../../plans/2026-08-25-blind-minimal-map-derivation.md).
+[../../../plans/2026-08-25-blind-minimal-map-derivation.md](../../../plans/2026-08-25-blind-minimal-map-derivation.md).
 
 **Agreement, measured rather than eyeballed.** Both returned complete forward
 assignments (75 SRs, no id twice), so the two maps are comparable as partitions:
@@ -292,12 +292,12 @@ keep the requirement-level findings out of the module-work pile.
 
 **Deferred to the owner: nothing new.** The derivation commissions no act; it is
 one half of a diff. Record:
-[../../../log.d/2026-08-25-wi508-slice2-blind-derivation.md](../../log.md#2026-08-25--wi-508-slice-2-the-blind-derivation-runs-on-two-axes-and-both-teams-disclose-the-same-breach).
+[../../../log.d/2026-08-25-wi508-slice2-blind-derivation.md](../../../log.md#2026-08-25--wi-508-slice-2-the-blind-derivation-runs-on-two-axes-and-both-teams-disclose-the-same-breach).
 
 ### SLICES 3 AND 4 LANDED 2026-08-25 — the alignment, one WI filed, one question to the owner
 
 Full record:
-[../../../plans/2026-08-25-remap-alignment.md](../../plans/2026-08-25-remap-alignment.md).
+[../../../plans/2026-08-25-remap-alignment.md](../../../plans/2026-08-25-remap-alignment.md).
 
 **The live side was read the way the registry defines it** — an LLR row's
 `module` cell joined through its `sr_refs` — so `SR` → `{modules}` is a join
@@ -386,7 +386,7 @@ pointer; M-06's four test monoliths. `OI-64` awaits a ruling.
 
 ### SLICE 5 LANDED 2026-08-25 — the survey is complete and the inherited debt has a live owner
 
-Record: [../../../plans/2026-08-25-remap-alignment.md](../../plans/2026-08-25-remap-alignment.md)
+Record: [../../../plans/2026-08-25-remap-alignment.md](../../../plans/2026-08-25-remap-alignment.md)
 §§8–10.
 
 **ALL EIGHTEEN dispersion families now carry a disposition** (four in slice 3,
@@ -467,7 +467,7 @@ and has delegated this in session; the lane's branch ref was re-cut at trunk
 HEAD on 2026-08-30 so the dispatcher resumes it as a parked lane.
 
 Record:
-[../../../log.d/2026-08-25-wi508-slice5-families-and-debt-routing.md](../../log.md#2026-08-25--wi-508-slice-5-the-dispersion-survey-completes-one-more-row-is-earned-and-the-inherited-debt-gets-an-owner-that-outlives-this-program).
+[../../../log.d/2026-08-25-wi508-slice5-families-and-debt-routing.md](../../../log.md#2026-08-25--wi-508-slice-5-the-dispersion-survey-completes-one-more-row-is-earned-and-the-inherited-debt-gets-an-owner-that-outlives-this-program).
 
 ### SLICE 6 LANDED 2026-08-30 — the four rows blessed, the row closed
 
@@ -493,4 +493,4 @@ owing.
 **Closed.** Nothing agent-executable remained; the ratchet pointer already lives on
 `WI-521` (slice 5), so the close re-points nothing. The spec moves to
 `docs/work/complete/`. Record:
-[../../../log.d/2026-08-30-wi508-slice6-spine-approval-and-close.md](../../log.md#2026-08-30--wi-508-slice-6-the-four-spine-rows-blessed-the-row-closed).
+[../../../log.d/2026-08-30-wi508-slice6-spine-approval-and-close.md](../../../log.md#2026-08-30--wi-508-slice-6-the-four-spine-rows-blessed-the-row-closed).
