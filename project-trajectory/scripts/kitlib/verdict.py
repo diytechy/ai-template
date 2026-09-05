@@ -123,8 +123,7 @@ import re
 from .git import git_bytes, git_out
 from .station import (
     BAR_GREEN,
-    MECHANICAL_CLOSE_PREFIX,
-    MECHANICAL_CLOSE_SUFFIX,
+    mechanical_close_subject,
 )
 
 __all__ = [
@@ -371,6 +370,33 @@ def refresh_attestation(root, branch, rev=None):
 # The one non-record tree the MACHINERY itself moves. See
 # `mechanical_close_attestation` for why it is peeled and what bounds that.
 _WORK_PREFIX = b"docs/work/"
+_ACTIVE_SPEC = re.compile(rb"^docs/work/active/([^/]+)/((WI-[0-9]+)-[^/]+[.]md)$")
+_COMPLETE_SPEC = re.compile(rb"^docs/work/complete/(WI-[0-9]+-[^/]+[.]md)$")
+
+
+def _closed_wi_ids(fields):
+    """The canonically ordered ids moved from active/ to complete/, or None."""
+    if len(fields) % 2:
+        return None
+    deleted, added, branches = [], [], set()
+    for status, path in zip(fields[::2], fields[1::2]):
+        if not path.startswith(_WORK_PREFIX):
+            return None
+        active = _ACTIVE_SPEC.match(path) if status == b"D" else None
+        complete = _COMPLETE_SPEC.match(path) if status == b"A" else None
+        if active:
+            branches.add(active.group(1))
+            deleted.append((active.group(2), active.group(3).decode("ascii")))
+        elif complete:
+            added.append(complete.group(1))
+    deleted.sort()
+    if (
+        not deleted
+        or len(branches) != 1
+        or [name for name, _ in deleted] != sorted(added)
+    ):
+        return None
+    return [wi_id for _name, wi_id in deleted]
 
 
 def mechanical_close_attestation(root, rev):
@@ -398,9 +424,13 @@ def mechanical_close_attestation(root, rev):
     `## Dispositions`, which is what the verdict judged — are carried through
     unchanged.
 
-    VERIFIED AGAINST GIT, not read off the message. The subject must be exactly
-    the composed one; the commit must have exactly ONE parent (a merge is never
-    this); and every path it changed must live under `docs/work/`, which is what
+    VERIFIED AGAINST GIT, not read off the message. The changed-path stream is
+    read with rename detection disabled; it must contain paired deletions from
+    one `docs/work/active/<branch>/` and additions of those same spec names to
+    `docs/work/complete/`. Their canonically ordered filename ids are composed
+    through the writer's `mechanical_close_subject`, and the result must equal
+    the subject exactly. The commit must also have exactly ONE parent (a merge
+    is never this), and every changed path must live under `docs/work/`, which
     stops a close whose inbound-link relink reached into product or requirement
     files from being peeled. Each check FAILS TOWARD REVIEW: declining to peel
     measures at a later rev, so the gate asks for MORE review, never less. The
@@ -411,19 +441,17 @@ def mechanical_close_attestation(root, rev):
     message = git_out(root, ["log", "-1", "--format=%B", rev]) or ""
     lines = message.splitlines()
     subject = lines[0].strip() if lines else ""
-    if not (
-        subject.startswith(MECHANICAL_CLOSE_PREFIX)
-        and subject.endswith(MECHANICAL_CLOSE_SUFFIX)
-    ):
-        return None
     parent = _rev(root, rev + "^1")
     if parent is None or _rev(root, rev + "^2") is not None:
         return None
-    listing = git_bytes(root, ["diff", "--name-only", "-z", parent, rev])
+    listing = git_bytes(
+        root, ["diff", "--name-status", "--no-renames", "-z", parent, rev]
+    )
     if listing is None:
         return None
-    paths = [path for path in listing.split(b"\0") if path]
-    if not paths or any(not path.startswith(_WORK_PREFIX) for path in paths):
+    fields = [field for field in listing.split(b"\0") if field]
+    wi_ids = _closed_wi_ids(fields)
+    if wi_ids is None or subject != mechanical_close_subject(wi_ids):
         return None
     return parent
 

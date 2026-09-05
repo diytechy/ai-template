@@ -39,13 +39,14 @@ RETURNED (`Drafted`, this branch's merge mints their adjudication):
   by ZERO rows in any requirements registry. `_peel_target` deliberately left
   out: private, and the two attestation readers are the named surface.
 - `TC-205.method` / `.evidence` — `THE PEEL` enumerated the refresh arm alone.
-  The second class is now stated in the cell's own idiom, the positive and BOTH
-  refusals, and the three already-passing tests that no test case anywhere
-  cited are cited: the positive (which also asserts the close REALLY moved the
-  tree, and drives the two peels COMPOSING), the hand-written-subject refusal,
-  and the reached-outside-`docs/work/` refusal.
+  The second class is now stated in the cell's own idiom: the positive, the
+  hand-written-subject refusal, the forged-middle refusal, and the
+  reached-outside-`docs/work/` refusal. The positive also asserts the close
+  REALLY moved the tree and drives the two peels COMPOSING. The forged-middle
+  case is the rework regression; the other three already passed but no test
+  case cited them.
 - `TC-205.tier` — `Smoke` -> `Full`, RULED rather than left open, with the
-  basis recorded in `Method`. 8 of the row's 49 citations live in
+  basis recorded in `Method`. 8 of the row's 50 citations live in
   `test_integrate_admission` / `test_integrate_station`, both in
   `tests/conftest.py` `SLOW_MODULES` and so deselected by `-m smoke`. `Full` is
   the cheapest tier at which the whole cited set runs; `Smoke` claimed
@@ -110,6 +111,19 @@ public export's contract, not a gate defence, and the arm is asserted at
 together with the fact that it strands nothing. `LLR-207.detail`'s
 "can only ask for more" was overstated in the same place and is now
 "can never ask for LESS", with the empty arm's equality named.
+
+REWORK ROUND 2 (review A, `005-REVIEW-A-5fd59ee.md`, one MAJOR) is complete.
+The reviewer demonstrated that `mechanical_close_attestation`
+accepted any non-empty, `docs/work/`-confined single-parent commit whose
+subject merely had the mechanical-close prefix and suffix, although the row
+claimed the subject was verified against the exact WI ids composed by the close
+producer. The single owning boundary now reads the commit's no-renames diff,
+requires paired same-name moves from one active branch to complete/, derives
+the canonically ordered filename ids, re-composes the subject through the
+writer's helper, and compares it exactly. The real-git forged-middle regression
+proves both the public attestor refusal and the resulting gate refusal;
+LLR-207, TC-205, and the approval brief describe and cite the strengthened
+contract.
 
 ## Context
 
@@ -222,3 +236,15 @@ belongs to a code lane rather than to this spine return.
 
 NOT ON THIS LANE: this disposition is a DRAFT. Intake mints it at this row's
 merge; the lane does not file it.
+
+ROUND 005's MAJOR, addressed here. The reviewer constructed a
+single-parent commit confined to `docs/work/` with subject
+`adjudicate: NOT-A-COMPOSED-WI-ID -> complete/ (mechanical close)` and observed
+`mechanical_close_attestation` return its parent. The implementation checked
+only the subject's outer affixes, not the exact composed middle claimed by
+`LLR-207.detail`. Construction cannot authenticate arbitrary external Git
+messages; this verifier is therefore the one owning trust boundary and must
+derive the moved WI ids from the diff, compare the canonical subject once, and
+refuse the forged middle. That boundary, row text, and TC evidence now move as
+one change; `test_a_forged_mechanical_close_middle_does_not_peel` is the
+real-git detector.

@@ -3,8 +3,23 @@
 The verdict rows describe every mechanism that now holds them. Two cells
 returned by `docs/reviews/wi-590-adjudicate-llr-207-llr-208/004-ADJUDICATE-774ef35.md`
 (`OUTCOME: RETURN rows=4`), plus round 011's MAJOR against two rows that act
-approved. No new mechanism and no regression to write: every arm named below
-already exists, passes, and was simply absent from the record.
+approved. The initial return named existing mechanisms; review round 005 then
+found that one of those mechanisms was weaker than the returned row claimed,
+so this same WI now carries its boundary hardening and regression too.
+
+### Rework round 2 — forged-middle close subject
+
+Review A round 005 demonstrated that `mechanical_close_attestation` validated
+only the mechanical subject's prefix/suffix shape, not the exact composed WI
+ids claimed by `LLR-207.detail`. Root cause: the one owning verifier never tied
+the untrusted commit message's middle to the `docs/work/` rename it was
+attesting. The owning verifier now derives those ids from paired same-name
+active-to-complete moves in the commit's own no-renames diff and compares the
+subject re-composed by the writer's helper. The real-git regression commits an
+affix-correct forged middle over an otherwise plausible move, asserts
+`mechanical_close_attestation` returns `None`, and asserts the merge gate asks
+for review. TC-205 cites that node, LLR-207 states the strengthened contract,
+and the approval brief was regenerated.
 
 **Re-drove the spec's four claims before editing anything.** All four hold on
 this tree:
@@ -37,17 +52,18 @@ two attestation readers are the named surface.
 
 `TC-205.method` / `.evidence` — `THE PEEL` enumerated the refresh arm alone and
 neither cell held the string "mechanical". Added the second class in the same
-idiom the rest of the cell uses — the positive and BOTH refusals — and cited
-the three tests that already drive it and that no test case anywhere cited:
+idiom the rest of the cell uses — the positive and its refusal arms — and cited
+the three tests that already drove it but that no test case anywhere cited:
 `test_the_mechanical_close_does_not_stale_the_round_it_follows`,
 `test_only_the_machinerys_own_close_subject_peels`,
 `test_a_close_that_reached_outside_docs_work_does_not_peel`. The positive also
 drives the two peels COMPOSING (a refresh stacked on a close), which the cell
-now states.
+now states. Rework round 2 adds the distinct affix-correct forged-middle
+refusal and its new evidence node.
 
 `TC-205.tier` — re-tiered `Smoke` -> `Full`, and the basis is recorded in
 `Method` so the reading is not left open. Ruled rather than deferred: 8 of the
-row's 49 citations live in `test_integrate_admission` / `test_integrate_station`,
+row's 50 citations live in `test_integrate_admission` / `test_integrate_station`,
 both in `tests/conftest.py` `SLOW_MODULES` and so excluded from `-m smoke`.
 `Full` is the smallest tier at which the WHOLE cited set runs, `Smoke` claimed
 cheap-gate coverage for a set the cheap gate only partly runs, and sibling
@@ -260,3 +276,45 @@ What landed:
 
 `LLR-207` and `TC-205` were already `Drafted` and stay so; no `Status` was
 flipped and no `docs/archive/last_approved/` written.
+
+### Rework round 2 verification
+
+The forged-middle finding is fixed at the one owning boundary, not papered
+over in a caller. `mechanical_close_attestation` now reads a NUL-delimited
+`--name-status --no-renames` diff, requires paired same-filename moves from one
+active branch into `complete/`, derives their WI ids, and uses
+`station.mechanical_close_subject` to compare the exact canonical subject.
+The former affix-only constants are no longer imported by the verifier.
+
+Evidence driven on the completed tree:
+
+- Focused forged/positive/empty close selection: `3 passed, 56 deselected in
+  9.87s`.
+- Whole verdict-record module: `59 passed in 116.87s`.
+- Full unfiltered suite: `1 failed, 3389 passed, 21 skipped in 1251.23s`; the
+  sole failure is
+  `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`,
+  the worker-lane fingerprint mismatch (`5ad22a…` recorded vs `749e75…` live).
+  No generated artifact was rewritten on this branch; the trunk lane owns that
+  refresh.
+- `trace.py --strict --no-placeholders`: `orphans=0 integrity=0`, exit 0.
+- `check_trajectory.py`: `clean (595 work item(s), 545 done (92%), 21
+  cancelled, graph acyclic)`, exit 0; its existing advisories include WI-598's
+  SpecRef clock because this assigned spine edit necessarily changes the shared
+  low-level-requirements file.
+- `check_docs.py --stale`: 0 broken links, exit 0. Ruff check and format check:
+  clean.
+- Smoke tests passed twice under host contention: `1533 passed, 4 skipped in
+  155.47s`, then the budget enforcer's independent run `1533 passed, 4 skipped
+  in 172.19s`; the latter honestly returned FAIL at `173.0s > 60s`. After the
+  new regression entered the tier, a two-worker capped enforcer run passed all
+  `1534` tests (4 skipped) in `120.15s` and likewise failed its timing contract
+  at `120.4s > 60s`; after the competing smoke runs cleared, six workers
+  improved that to `86.3s`, still over. The final 12-worker retry passed the
+  same `1534` tests (4 skipped) in `58.93s`, and the enforcer reported `59.2s
+  vs 60s budget -> within`. A full suite remained active in the primary
+  checkout throughout. The budget was not re-stamped and no heavy module was
+  re-tiered to hide machine load.
+
+Deviations from the rework finding: none. Byte-budgeted files changed: none.
+Deferred open items: none — round 005's one finding is resolved in this WI.

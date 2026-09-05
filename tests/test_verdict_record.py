@@ -1663,6 +1663,21 @@ def test_only_the_machinerys_own_close_subject_peels(tmp_path):
     assert refusal is not None and "names its current tree" in refusal
 
 
+def test_a_forged_mechanical_close_middle_does_not_peel(tmp_path):
+    # The outer vocabulary is public and therefore forgeable. The owning
+    # attestor binds its middle to the WI id the real active/ -> complete/ move
+    # carries, so affix-shaped prose cannot turn an ordinary work commit into a
+    # disposable machinery close.
+    root = rounds_repo(tmp_path)
+    _claim_commit(root)
+    add_round(root, 3)
+    _mechanical_close(root, subject=ks.mechanical_close_subject(["NOT-A-WI-ID"]))
+    forged = _rev(root, "wi-401")
+    assert kv.mechanical_close_attestation(root, forged) is None
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
+    assert refusal is not None and "names its current tree" in refusal
+
+
 def test_a_close_that_reached_outside_docs_work_does_not_peel(tmp_path):
     # The path confinement: a close whose relink (or anything else) touched a
     # product file changed something a reviewer could conclude differently
