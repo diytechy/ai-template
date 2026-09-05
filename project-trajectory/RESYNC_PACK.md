@@ -4624,6 +4624,76 @@ pair. Anything else that invoked the generator directly from a work branch
 (a lane hook, a make target) now gets the refusal and should stop; the merge
 regenerates the rollup.
 
+### The CONSOLIDATION adjudicator — a fifth brief, a new column, and one retired template [since 1c258508]
+
+**What changed.** The queue can now be judged for overlap, and the judgement can
+absorb several rows into one. Five pieces, and the fifth is a deletion:
+
+- **`prompts/adjudicate-conflict.template.md` is RETIRED**, with its
+  `ADJUDICATE-CONFLICT` prompt key and its catalogue row. It shipped a template
+  and a verdict grammar and never had any of the three things that make a brief
+  real: nothing minted a queue-conflict row, no assembler filled its slots, and
+  nothing read the `needs=` its own grammar demanded.
+- **`prompts/adjudicate-consolidate.template.md` replaces it**, carrying its
+  three questions (contradiction with the spine, scope overlap, already
+  answered) plus a fourth outcome it lacked. `adjudicate_brief.VERDICT_GRAMMAR`
+  gains `consolidate`: `OUTCOME: QUEUE|QUEUE-WITH-EDGE|RETURN-TO-DRAFT|
+  CONSOLIDATE needs=<id or -> absorbs=<id;id;… or ->`, both counters required on
+  every alternative.
+- **`scripts/consolidate.py` is a new module** — the census that decides which
+  queued rows are one work item wearing several ids, and the three guards that
+  stop the question being asked twice. `intake.py` imports it UNGUARDED, so a
+  scaffold missing it ImportErrors on the first mint.
+- **A new registry column, `Digests`** (`<queue sha>|<spine sha>`), in
+  `wi_convert.COLUMNS` + `SCALAR_FIELDS`, `kitlib.registry.WI_COLUMNS` +
+  `SPEC_SCALARS`, `plan_artifacts.WI_HEADER` and
+  `registries/work-items.template.csv`. Empty on every row that is not a
+  consolidation.
+- **`handback.close_adjudication` gains a consolidation arm**, reading a typed
+  `## Consolidation` TOML block in the judging row's own spec:
+  `queue-with-edge` writes the hard `needs` edge (the reader the conflict brief
+  promised and never got), `return-to-draft` moves `queued/ -> draft/` with the
+  verdict's finding quoted into Context, `consolidate` hands the absorbed set to
+  the mint. `intake._mint` then moves every absorbed row into
+  `docs/archive/work/restructured/` with `Restructured into WI-<successor>.` as
+  its whole Deliverable — at the MINT and not at the close, because that line
+  names an id `_mint` allocates and because `_supersedes_refusal` refuses a
+  draft continuing an already-`restructured` row.
+
+`check_trajectory.queue_conflict_findings` keeps its signature and its output;
+it is now the rendering of a new pair-level producer, `queue_conflict_pairs`,
+which the census reads for EDGES rather than parsing the warn sentences.
+
+**What to do.**
+
+1. **Re-sync the kit-owned files as a set** — `scripts/consolidate.py` (new),
+   `scripts/intake.py`, `scripts/handback.py`, `scripts/adjudicate_brief.py`,
+   `scripts/check_trajectory.py`, `scripts/wi_convert.py`,
+   `scripts/kitlib/registry.py`, `scripts/plan_artifacts.py`,
+   `scripts/prompts.py`, `scripts/bootstrap.py`, and the two prompt templates
+   (add `adjudicate-consolidate.template.md`, delete
+   `adjudicate-conflict.template.md`). They are one change: `intake` imports
+   `consolidate` at module scope, and the column has to land in all four schema
+   homes or the mint writes a cell every reader drops.
+2. **Add the `Digests` column to your own work-item registry header**, if you
+   carry the legacy CSV form. The spec-folder form needs no migration: an
+   absent frontmatter key reads as an empty cell, and every existing row is
+   correct with one.
+3. **Delete any local reference to the `conflict` brief.** A row whose `Brief`
+   cell says `conflict` now refuses at composition as an unknown brief and is
+   HELD for a human — which is the intended failure, but re-point the cell to
+   `consolidate` (or clear it) rather than leaving a row that pages someone.
+4. **Wire the census into your dispatcher, or do not.** The mint arm is
+   `intake.mint_consolidation(root, busy)`; a repo that never calls it is
+   exactly as it was, because nothing else mints a `consolidate` row. Where the
+   kit's own `dispatch._admit` calls it, the call site is four lines at the top
+   of a tick, after the parked-branch arm and before the frontier is loaded:
+   mint, print the refusal to stderr and exit non-zero if there is one.
+5. **Expect nothing on an empty queue.** The census refuses on an idle station
+   with no overlap, on a station holding any adjudication row, and on any queue
+   state a `consolidate` row has already judged — including one whose row has
+   since gone terminal. If it mints on your first tick, it found real overlap.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
