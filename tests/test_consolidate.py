@@ -400,3 +400,170 @@ def test_a_busy_station_is_not_the_moment_and_not_an_error(tmp_path):
     intake = load_script("intake")
     assert intake.mint_consolidation(tmp_path, busy=True) == ([], None)
     assert not hasattr(consolidate, "census_mint")
+
+
+# --- the close's typed verdict block (restructure plan §1.5) -------------------
+
+
+def _spec(body, needs="[]"):
+    return (
+        "+++\n"
+        'id = "WI-401"\n'
+        'title = "a row"\n'
+        "needs = {}\n"
+        'specref = "docs/plans/a.md"\n'
+        "+++\n" + body
+    ).format(needs)
+
+
+def _verdict(block):
+    return "\n## Consolidation\n\n```toml\n" + block + "```\n"
+
+
+def test_a_row_with_no_consolidation_section_is_not_this_arms_case():
+    """`(None, None)` — not a refusal. Every other adjudication brief reads this
+    way, which is what lets ONE close serve all five."""
+    assert consolidate.parse_verdict(_spec("\n## Context\n\nx\n"), "at") == (None, None)
+
+
+def test_the_verdict_block_is_parsed_into_a_typed_record():
+    record, why = consolidate.parse_verdict(
+        _spec(
+            _verdict('outcome = "queue-with-edge"\nedges = ["WI-402 needs WI-401"]\n')
+        ),
+        "at",
+    )
+    assert why is None, why
+    assert record["outcome"] == "queue-with-edge"
+    assert record["edges"] == [("WI-402", "WI-401")]
+    assert record["returns"] == [] and record["finding"] == ""
+
+
+@pytest.mark.parametrize(
+    "block,expect",
+    [
+        ('outcome = "looks-fine"\n', "not one of"),
+        ("outcome = [1]\n", "not one of"),
+        ('outcome = "queue"\ntypo = 1\n', "unknown key(s)"),
+        ('outcome = "queue"\nedges = ["WI-1 needs WI-2"\n', "not valid TOML"),
+        (
+            'outcome = "queue-with-edge"\nedges = ["WI-402 blocks WI-401"]\n',
+            "is not `<WI-###> needs <WI-###>`",
+        ),
+        (
+            'outcome = "queue-with-edge"\nedges = ["WI-402 needs WI-402"]\n',
+            "wait on itself",
+        ),
+        ('outcome = "queue-with-edge"\n', "names no `edges`"),
+        ('outcome = "return-to-draft"\n', "names no `returns`"),
+        (
+            'outcome = "return-to-draft"\nreturns = ["WI-402"]\n',
+            "carries no `finding`",
+        ),
+        (
+            'outcome = "queue"\nreturns = ["WI-402"]\n',
+            "carries `returns`, which it does not enact",
+        ),
+    ],
+)
+def test_a_malformed_verdict_block_refuses_and_never_defaults(block, expect):
+    """Reading a malformed block as `queue` would silently discard a judgement
+    that closes rows — so every arm names what is wrong instead. Both DIRECTIONS
+    of the shape rule are here: an outcome that names nothing to enact, and an
+    outcome carrying targets it would quietly ignore."""
+    record, why = consolidate.parse_verdict(_spec(_verdict(block)), "at")
+    assert record is None, record
+    assert expect in why, why
+
+
+def test_two_blocks_under_one_heading_refuse():
+    text = _spec(
+        '\n## Consolidation\n\n```toml\noutcome = "queue"\n```\n\n'
+        '```toml\noutcome = "return-to-draft"\n```\n'
+    )
+    record, why = consolidate.parse_verdict(text, "at")
+    assert record is None and "one verdict, one block" in why
+
+
+def test_the_close_refuses_a_row_that_left_the_queue_by_name():
+    """The census guard makes a claimed cluster row a race only a hand claim can
+    produce (plan §1.5). When it happens the close refuses BY NAME rather than
+    archiving work a lane is in the middle of building."""
+    rows = [_row("WI-401"), _row("WI-402", Status="active")]
+    record = {"outcome": "consolidate", "edges": [], "returns": [], "finding": ""}
+    why = consolidate.close_refusal(record, ["WI-401", "WI-402"], rows, "at")
+    assert why and "WI-402" in why and "no longer queued" in why
+    assert "WI-401" not in why
+    assert consolidate.close_refusal(record, ["WI-401"], rows, "at") is None
+
+
+def test_the_outcome_and_the_absorbed_set_must_agree_both_ways():
+    rows = [_row("WI-401")]
+    consolidating = {
+        "outcome": "consolidate",
+        "edges": [],
+        "returns": [],
+        "finding": "",
+    }
+    why = consolidate.close_refusal(consolidating, [], rows, "at")
+    assert why and "absorbs no row is not one" in why
+    queueing = {"outcome": "queue", "edges": [], "returns": [], "finding": ""}
+    why = consolidate.close_refusal(queueing, ["WI-401"], rows, "at")
+    assert why and "only a CONSOLIDATE verdict absorbs rows" in why
+
+
+def test_the_absorbed_set_has_exactly_one_carrier():
+    """It is the drafts' `supersedes` and nothing else — the value the mint
+    actually uses. A second copy in the verdict block could disagree with it."""
+    drafts = [
+        {"supersedes": ["WI-401", "WI-402"]},
+        {"supersedes": "WI-402;WI-403"},
+        {"title": "no lineage"},
+    ]
+    assert consolidate.absorbed_ids(drafts) == ["WI-401", "WI-402", "WI-403"]
+    assert consolidate.absorbed_ids([]) == []
+
+
+# --- the pure text transforms --------------------------------------------------
+
+
+def test_an_absorbed_rows_scope_text_is_byte_identical_and_specref_kept():
+    """The same rule `partial` follows, for the reason R-F's carve-out states:
+    the successor's lineage is worth nothing if the thread it continues has
+    already been cut. The ONLY edit is the one-line Deliverable, and it sits
+    BEFORE `## Context` — after it, `parse_spec_deliverable` clips the body and
+    the cell reads EMPTY (R-A hard error)."""
+    original = _spec("\n## Context\n\nThe original scope, untouched.\n")
+    moved = consolidate.restructured_text(original, "WI-500")
+    assert moved.index("## Deliverable") < moved.index("## Context")
+    assert moved.count("Restructured into WI-500.") == 1
+    assert 'specref = "docs/plans/a.md"' in moved
+    assert "The original scope, untouched." in moved
+    # ...and nothing else moved: the frontmatter is byte-identical.
+    assert moved.split("+++")[1] == original.split("+++")[1]
+
+
+def test_a_returned_rows_finding_is_quoted_verbatim_into_its_context():
+    """Quoted, not summarised: a row bounced back with no named referent is a
+    row that gets re-queued unchanged, which is the loop this outcome breaks."""
+    text = _spec("\n## Context\n\nThe original context.\n")
+    out = consolidate.returned_text(text, "WI-402 re-proposes what WI-390 refuted.")
+    assert "> WI-402 re-proposes what WI-390 refuted." in out
+    assert "The original context." in out
+    # A row with no Context yet gains one rather than losing the finding.
+    bare = consolidate.returned_text(_spec(""), "the reason")
+    assert "## Context" in bare and "> the reason" in bare
+
+
+def test_the_edge_write_is_surgical_and_idempotent():
+    text = _spec("\n## Context\n\nkeep me\n", needs='["WI-300"]')
+    edged = consolidate.edged_text(text, "WI-401")
+    assert 'needs = ["WI-300", "WI-401"]' in edged
+    assert "keep me" in edged
+    # Already waiting — hard or soft — comes back UNCHANGED, so the caller
+    # reports a no-op instead of committing one.
+    assert consolidate.edged_text(edged, "WI-401") == edged
+    soft = _spec("", needs='["~WI-401"]')
+    assert consolidate.edged_text(soft, "WI-401") == soft
+    # A row with no readable needs line is a refusal, not a silent skip.
+    assert consolidate.edged_text('+++\nid = "WI-1"\n+++\n', "WI-401") is None

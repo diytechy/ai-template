@@ -75,6 +75,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import tomllib
 from pathlib import Path
 
 import agent_common as ac
@@ -565,3 +566,309 @@ def _context(ids, findings, cell):
         findings="\n".join("> " + line for _a, _b, line in findings),
         cell=cell,
     )
+
+
+# --- the close (the 2026-09-02 restructure plan §1.5) --------------------------
+
+#: The heading the verdict's TYPED outcome block lives under, in the
+#: adjudication row's OWN spec. Not in the verdict file, for two reasons:
+#: `handback.close_adjudication` is handed `(root, branch)` and nothing else, so
+#: it reads the lane's tree rather than a path only `agent_loop` knows; and an
+#: outcome recovered from prose is the `NEEDS-HUMAN` fold (WI-417).
+VERDICT_SECTION = "## Consolidation"
+#: The enum, lower-cased — the same four alternatives as
+#: `adjudicate_brief.VERDICT_GRAMMAR["consolidate"]`, which is where the session
+#: is told them.
+OUTCOMES = ("queue", "queue-with-edge", "return-to-draft", "consolidate")
+#: The keys the block may carry. An unknown key is a REFUSAL and never a skip,
+#: for the reason `intake._DRAFT_KEYS` states: a silently dropped cell on a
+#: judgement enacted with nobody watching is the loss this machinery exists to
+#: prevent.
+VERDICT_KEYS = frozenset({"outcome", "edges", "returns", "finding"})
+_FENCE_RE = re.compile(r"```toml\s*\n(.*?)```", re.S)
+#: One `queue-with-edge` edge: the waiter, then the row it must wait on.
+_EDGE_RE = re.compile(r"^(WI-\d+)\s+needs\s+(WI-\d+)$")
+#: The frontmatter `needs = [...]` line, rewritten surgically so the rest of a
+#: spec is untouched (`intake._SPEC_NEEDS_RE`'s shape, and its reason).
+_NEEDS_RE = re.compile(r"(?m)^needs\s*=\s*\[.*?\]\s*$")
+#: The WHOLE Deliverable of an absorbed row — `check_trajectory`'s R-A grammar
+#: for `restructured`: one line, naming the successor and nothing else.
+DELIVERABLE = "Restructured into {}."
+
+
+def parse_verdict(text, where):
+    """`(record, refusal)` — the `## Consolidation` block's typed outcome.
+
+    `(None, None)` when the section is absent, which is how every NON-consolidation
+    adjudication row reads: the caller uses that to tell "not my case" from "my
+    case, malformed". Everything else is a refusal and never a default — reading
+    a malformed block as `queue` would silently discard a judgement that closes
+    rows."""
+    _head, sep, tail = text.partition("\n" + VERDICT_SECTION)
+    if not sep:
+        return None, None
+    blocks = _FENCE_RE.findall(tail.split("\n## ", 1)[0])
+    if len(blocks) != 1:
+        return None, "{}: {} carries {} toml block(s) - one verdict, one block".format(
+            where, VERDICT_SECTION, len(blocks)
+        )
+    try:
+        data = tomllib.loads(blocks[0])
+    except tomllib.TOMLDecodeError as exc:
+        return None, "{}: the {} block is not valid TOML ({})".format(
+            where, VERDICT_SECTION, exc
+        )
+    unknown = sorted(set(data) - VERDICT_KEYS)
+    if unknown:
+        return None, "{}: the {} block carries unknown key(s) {}".format(
+            where, VERDICT_SECTION, unknown
+        )
+    outcome = str(data.get("outcome") or "").strip().lower()
+    if outcome not in OUTCOMES:
+        return None, "{}: outcome {!r} is not one of {}".format(
+            where, data.get("outcome"), "|".join(OUTCOMES)
+        )
+    edges, refusal = _parse_edges(data.get("edges"), where)
+    if refusal:
+        return None, refusal
+    record = {
+        "outcome": outcome,
+        "edges": edges,
+        "returns": [
+            str(item).strip() for item in data.get("returns") or [] if str(item).strip()
+        ],
+        "finding": str(data.get("finding") or "").strip(),
+    }
+    refusal = _shape_refusal(record, where)
+    # A shape refusal returns NO record, like every other arm: a caller handed
+    # both would have to remember not to use the one it was given, and "parsed
+    # but do not act on it" is not a state worth being able to represent.
+    return (None, refusal) if refusal else (record, None)
+
+
+def _parse_edges(items, where):
+    """`([(waiter, blocker)], None)` or `(None, refusal)` for the `edges` list."""
+    out = []
+    for item in items or []:
+        matched = _EDGE_RE.match(" ".join(str(item).split()))
+        if matched is None:
+            return None, (
+                "{}: edge {!r} is not `<WI-###> needs <WI-###>` - the waiter "
+                "first, then the row it must wait on".format(where, item)
+            )
+        if matched.group(1) == matched.group(2):
+            return None, "{}: edge {!r} makes a row wait on itself".format(where, item)
+        out.append((matched.group(1), matched.group(2)))
+    return out, None
+
+
+def _shape_refusal(record, where):
+    """What each outcome OWES, and what it may not carry.
+
+    Both directions, because each is silent on its own: a `return-to-draft`
+    naming no row enacts nothing while reporting a judgement, and a `queue`
+    carrying `returns` has those rows quietly ignored — the verdict said one
+    thing and the close did another."""
+    outcome = record["outcome"]
+    owed = {"queue-with-edge": "edges", "return-to-draft": "returns"}.get(outcome)
+    if owed and not record[owed]:
+        return "{}: outcome {} names no `{}` - it would enact nothing".format(
+            where, outcome, owed
+        )
+    if outcome == "return-to-draft" and not record["finding"]:
+        return (
+            "{}: return-to-draft carries no `finding` - a refusal without a "
+            "named reason is not actionable and will simply be re-queued".format(where)
+        )
+    for key in ("edges", "returns"):
+        if key != owed and record[key]:
+            return "{}: outcome {} carries `{}`, which it does not enact".format(
+                where, outcome, key
+            )
+    return None
+
+
+def absorbed_ids(drafts):
+    """The rows a verdict's `## Dispositions` drafts ABSORB — the union of their
+    `supersedes` values, ordered and de-duplicated.
+
+    THE ONE CARRIER of the absorbed set, deliberately: the `## Consolidation`
+    block does NOT repeat it, because the mint reads `supersedes` and a second
+    copy could disagree with the value that actually acts."""
+    out = []
+    for draft in drafts or []:
+        value = draft.get("supersedes")
+        items = value if isinstance(value, (list, tuple)) else [value]
+        for item in items:
+            for token in str(item or "").split(";"):
+                token = token.strip()
+                if token and token not in out:
+                    out.append(token)
+    return out
+
+
+def close_refusal(record, absorbed, rows, where):
+    """Why this verdict may not be enacted, or None. Read ONCE, before any file
+    moves, so the close is all-or-nothing.
+
+    THE ROWS IT ACTS ON MUST STILL BE `queued`. The census guard makes a claimed
+    cluster row a race only a hand claim can produce (plan §1.5) — and when it
+    happens the close refuses BY NAME rather than archiving work a lane is in
+    the middle of building.
+
+    The absorbed set and the outcome must AGREE, both ways: a `consolidate` that
+    supersedes nothing is not one, and any other outcome whose draft supersedes
+    rows would archive them while the verdict said to leave them alone."""
+    status = {
+        (r.get("WI-ID") or "").strip(): (r.get("Status") or "").strip() for r in rows
+    }
+    if record["outcome"] == "consolidate" and not absorbed:
+        return (
+            "{}: outcome consolidate but the ## Dispositions draft supersedes "
+            "nothing - a consolidation that absorbs no row is not one".format(where)
+        )
+    if record["outcome"] != "consolidate" and absorbed:
+        return (
+            "{}: outcome {} but the ## Dispositions draft supersedes {} - only "
+            "a CONSOLIDATE verdict absorbs rows".format(
+                where, record["outcome"], ";".join(sorted(absorbed))
+            )
+        )
+    named = set(absorbed) | set(record["returns"])
+    for waiter, blocker in record["edges"]:
+        named |= {waiter, blocker}
+    off = sorted(wid for wid in named if status.get(wid) != QUEUED)
+    if off:
+        return (
+            "{}: {} named by this verdict {} no longer queued - a consolidation "
+            "acts on the queue it judged, and a row a lane has claimed is not "
+            "its to move".format(where, ";".join(off), "is" if len(off) == 1 else "are")
+        )
+    return None
+
+
+# --- the pure text transforms the callers write back --------------------------
+
+
+def restructured_text(text, successor):
+    """An absorbed row's spec, rewritten for `archive/work/restructured/`; None
+    when the frontmatter fence is absent.
+
+    Its SCOPE TEXT IS BYTE-IDENTICAL and `specref` is KEPT — the same rule
+    `partial` follows, for the reason R-F's carve-out states: the successor's
+    lineage is worth nothing if the thread it continues has already been cut.
+    The only edit is the Deliverable, which is exactly one line, before
+    `## Context` (a Deliverable placed after it parses as EMPTY and reds R-A)."""
+    fence = "\n+++\n"
+    head, sep, body = text.partition(fence)
+    if not sep:
+        return None
+    return (
+        head
+        + sep
+        + "\n## Deliverable\n\n"
+        + DELIVERABLE.format(successor)
+        # TWO newlines, and the second is load-bearing: `parse_spec_deliverable`
+        # clips the body at `\n## Context\n`, so a Deliverable running straight
+        # into that heading leaves the section unterminated and the whole spec
+        # reads as a malformation - the row then DROPS OUT of the registry, and
+        # every reader of it reports the absorbed row as missing rather than
+        # restructured.
+        + "\n\n"
+        + body.lstrip("\n")
+    )
+
+
+def returned_text(text, finding):
+    """A RETURN-TO-DRAFT row's spec with the verdict's finding quoted into its
+    `## Context` — verbatim, under a line saying where it came from.
+
+    Quoted rather than summarised for the plan's own reason (decompose, don't
+    paraphrase) and for a practical one: a row bounced back with no named
+    referent is a row that gets re-queued unchanged, which is the loop this
+    outcome exists to break."""
+    note = (
+        "Returned to `draft/` by a consolidation judgement (the 2026-09-02 "
+        "backlog-restructure plan §1.5). The finding, verbatim:\n\n"
+        + "\n".join("> " + line for line in (finding or "").splitlines() or [""])
+        + "\n"
+    )
+    head, sep, tail = text.partition("\n## Context\n")
+    if sep:
+        return head + sep + "\n" + note + tail
+    return text.rstrip("\n") + "\n\n## Context\n\n" + note
+
+
+def edged_text(text, blocker):
+    """A QUEUE-WITH-EDGE row's spec with `blocker` added to its hard `needs`;
+    None when the row carries no readable `needs` line.
+
+    A surgical rewrite of the ONE frontmatter line, like
+    `intake._replace_inbound_edges`, so the row's Context and Deliverable are
+    untouched. Idempotent: a row that already waits on the blocker (hard, or
+    softly with the `~` prefix) comes back unchanged, and the caller reports a
+    no-op rather than committing one."""
+    matched = _NEEDS_RE.search(text)
+    if matched is None:
+        return None
+    try:
+        current = [str(v) for v in tomllib.loads(matched.group(0)).get("needs") or []]
+    except tomllib.TOMLDecodeError:
+        return None
+    if blocker in current or ("~" + blocker) in current:
+        return text
+    rendered = ", ".join('"{}"'.format(tok) for tok in current + [blocker])
+    return (
+        text[: matched.start()] + "needs = [" + rendered + "]" + text[matched.end() :]
+    )
+
+
+def archive_absorbed(root, minted):
+    """THE CONSOLIDATION'S OTHER HALF (the 2026-09-02 restructure plan §1.5):
+    move every ABSORBED row from `queued/` into `archive/work/restructured/`,
+    with `Restructured into WI-<successor>.` as its whole Deliverable and its
+    scope text byte-identical. `[(absorbed id, successor id, dest relpath)]`,
+    in mint order, so the caller announces exactly what moved.
+
+    `minted` is `intake._mint`'s `[(wi_id, [absorbed ids])]` — the whole verdict,
+    resolved at once, for the same reason the edge re-point is.
+
+    IT RUNS AT THE MINT AND NOT AT THE CLOSE, and the ordering is forced from
+    both ends. The Deliverable NAMES THE SUCCESSOR, whose id `_write_draft`
+    allocates during the mint — the close runs on the lane before the merge and
+    cannot know it. And `intake._supersedes_refusal`'s `absorbed_ids` arm
+    refuses a draft continuing an ALREADY `restructured` row (lineage does not
+    chain), so archiving these rows at the close would make the mint refuse its
+    own successor. It runs AFTER the edge re-point for the third half of the
+    same argument: `_open_specs` skips a terminal row, so a dependent's edge has
+    to move while the absorbed row is still open.
+
+    A row that is not where the close left it is SKIPPED rather than raised on.
+    `handback._consolidation_close` already refused by name for anything not
+    `queued`, so reaching here with one missing means a hand edit landed between
+    the close and the merge — and the mint's all-or-nothing restore is the wrong
+    tool for a human's change."""
+    moved = []
+    for successor, absorbed in minted:
+        for dead_id in absorbed:
+            dest = _absorbed_move(root, successor, dead_id)
+            if dest:
+                moved.append((dead_id, successor, dest))
+    return moved
+
+
+def _absorbed_move(root, successor, dead_id):
+    """One absorbed row's move, or "" when it is not a readable queued spec."""
+    import spec_move
+
+    queued = Path(root) / WORK / "queued"
+    hits = sorted(queued.glob(dead_id + "-*.md")) if queued.is_dir() else []
+    if not hits:
+        return ""
+    src = "{}/queued/{}".format(WORK, hits[0].name)
+    dest = "{}/restructured/{}".format(ARCHIVE_WORK, hits[0].name)
+    new_text = restructured_text(hits[0].read_text(encoding="utf-8"), successor)
+    if new_text is None:
+        return ""
+    _touched, refusal = spec_move.move_spec(root, src, dest, new_text=new_text)
+    return "" if refusal else dest

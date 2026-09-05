@@ -86,6 +86,7 @@ import re
 import subprocess
 
 import agent_common as ac
+import consolidate
 import integrate
 import spec_move
 from kitlib import station
@@ -524,7 +525,117 @@ def _adjudication_close_text(text, deliverable):
     return "+++\n" + fm + "+++\n" + body
 
 
-def _archive_one_adjudication_row(wt, branch, name):
+def _consolidation_close(root, wt, src_rel, text, drafts, wi_id):
+    """The CONSOLIDATION arm of the close (the 2026-09-02 restructure plan
+    §1.5): enact this verdict's outcome on the queue it judged.
+    `(True, None)` enacted, `(False, None)` when the row is not a
+    consolidation, `(False, refusal)` otherwise.
+
+    WHAT THIS ARM DOES AND WHAT IT DELIBERATELY LEAVES TO THE MINT. It enacts
+    everything that needs no id that does not yet exist: `queue-with-edge`
+    writes the hard `needs` edge on the named waiter, `return-to-draft` moves
+    the named rows `queued/ -> draft/` with the verdict's finding quoted into
+    their Context, and `queue` writes nothing. The absorbed rows' move into
+    `archive/work/restructured/` happens at the MINT
+    (`intake._archive_absorbed`), for two reasons that both point the same way:
+    their whole Deliverable is `Restructured into WI-<successor>.` and the
+    successor's id is allocated by `_mint`, which runs at this row's merge; and
+    `intake._supersedes_refusal` refuses a `supersedes` naming an ALREADY
+    `restructured` row, so archiving them here would make the mint refuse its
+    own successor. The rule lives once, in `consolidate`; this is its call site.
+
+    ALL-OR-NOTHING: every refusal is read before the first write
+    (`close_refusal` over the trunk registry), so a half-enacted verdict is not
+    a state this can reach."""
+    record, refusal = consolidate.parse_verdict(text, src_rel)
+    if record is None:
+        # No `## Consolidation` section: not this arm's case. Every other
+        # adjudication brief reads this way, which is what lets one close serve
+        # all five.
+        return False, refusal
+    absorbed = consolidate.absorbed_ids(drafts)
+    # THE TRUNK REGISTRY, not the lane's. The lane was cut before this close
+    # ran, so its copy of `queued/` is a snapshot: a row another lane claimed
+    # in the meantime still reads `queued` there, and the one guard that exists
+    # to catch exactly that race would pass on stale bytes.
+    rows = ac.read_spec_rows(root / integrate.WORK)
+    refusal = consolidate.close_refusal(record, absorbed, rows, src_rel)
+    if refusal:
+        return False, refusal
+    for waiter, blocker in record["edges"]:
+        refusal = _write_edge(wt, waiter, blocker)
+        if refusal:
+            return False, refusal
+    for wid in record["returns"]:
+        refusal = _return_to_draft(wt, wid, record["finding"])
+        if refusal:
+            return False, refusal
+    print(
+        "handback: consolidation {} -> outcome {} ({} absorbed, {} edge(s), "
+        "{} returned)".format(
+            wi_id,
+            record["outcome"],
+            len(absorbed),
+            len(record["edges"]),
+            len(record["returns"]),
+        )
+    )
+    return True, None
+
+
+def _queued_spec(wt, wi_id):
+    """`(path, relpath)` of one QUEUED spec on the lane, or `(None, None)`."""
+    queued = wt / integrate.WORK / "queued"
+    for path in sorted(queued.glob(wi_id + "-*.md")) if queued.is_dir() else []:
+        return path, "{}/queued/{}".format(integrate.WORK, path.name)
+    return None, None
+
+
+def _write_edge(wt, waiter, blocker):
+    """QUEUE-WITH-EDGE: the hard `needs` edge the conflict brief promised and
+    never got a reader for. A refusal, or None."""
+    path, rel = _queued_spec(wt, waiter)
+    if path is None:
+        return "cannot add the {} -> {} edge: {} is not a queued spec".format(
+            waiter, blocker, waiter
+        )
+    text = path.read_text(encoding="utf-8")
+    edged = consolidate.edged_text(text, blocker)
+    if edged is None:
+        return (
+            "cannot add the {} -> {} edge: {} carries no readable `needs` line".format(
+                waiter, blocker, rel
+            )
+        )
+    if edged == text:
+        print(
+            "handback: {} already waits on {} - no edge written".format(waiter, blocker)
+        )
+        return None
+    path.write_text(edged, encoding="utf-8", newline="\n")
+    code, out = ac.git(wt, "add", "--", rel)
+    return (
+        None if code == 0 else "cannot stage {}:\n{}".format(rel, ac._failure_tail(out))
+    )
+
+
+def _return_to_draft(wt, wi_id, finding):
+    """RETURN-TO-DRAFT: `queued/ -> draft/` with the finding quoted into the
+    row's Context. A refusal, or None.
+
+    Through `spec_move` and not a bare rename, like every other terminal move
+    here: the spec changes directory depth, so its own relative links and every
+    inbound link to it are part of the same indivisible operation."""
+    path, rel = _queued_spec(wt, wi_id)
+    if path is None:
+        return "cannot return {} to draft: it is not a queued spec".format(wi_id)
+    new_text = consolidate.returned_text(path.read_text(encoding="utf-8"), finding)
+    dest = "{}/draft/{}".format(integrate.WORK, path.name)
+    _touched, refusal = spec_move.move_spec(wt, rel, dest, new_text=new_text)
+    return "cannot return {} to draft: {}".format(wi_id, refusal) if refusal else None
+
+
+def _archive_one_adjudication_row(root, wt, branch, name):
     """Move ONE claimed adjudication spec into `complete/` on the lane —
     `(True, None)` moved, `(False, None)` when the row is not an adjudication
     row at all, `(False, refusal)` otherwise. Nothing is committed here.
@@ -564,6 +675,16 @@ def _archive_one_adjudication_row(wt, branch, name):
             "one successor (OI-70/OI-73, no third exit). The run stops for a "
             "human to draft the continuation".format(name)
         )
+    # THE CONSOLIDATION ARM (restructure plan §1.5), before the row is archived:
+    # it acts on the QUEUE this verdict judged, and the guards it runs read the
+    # trunk registry, so it must happen while the state it validated still
+    # holds. A row with no `## Consolidation` section answers `(False, None)`
+    # and every other brief passes straight through.
+    _enacted, crefusal = _consolidation_close(
+        root, wt, src_rel, text, parsed, meta.get("id") or name
+    )
+    if crefusal:
+        return False, "cannot close {}: {}".format(name, crefusal)
     new_text = _adjudication_close_text(text, _ADJUDICATION_CLOSE_DELIVERABLE)
     dest_rel = "{}/complete/{}".format(integrate.WORK, name)
     _touched, refusal = spec_move.move_spec(wt, src_rel, dest_rel, new_text=new_text)
@@ -612,7 +733,7 @@ def close_adjudication(root, branch):
         return None, None
     closed = []
     for wi_id, name in specs:
-        moved, refusal = _archive_one_adjudication_row(wt, branch, name)
+        moved, refusal = _archive_one_adjudication_row(root, wt, branch, name)
         if refusal or not moved:
             return None, refusal
         closed.append(wi_id)

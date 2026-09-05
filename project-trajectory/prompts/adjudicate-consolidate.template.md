@@ -35,6 +35,16 @@
        {prior}       the absorb sets of every ARCHIVED consolidate row.
        {verdict}     the repo path this session writes its verdict to.
        {wi}          this adjudication row's own id, for the result trailer.
+
+     THE TYPED CARRIER. The outcome and its targets ride in a `## Consolidation`
+     TOML block in the ROW'S OWN SPEC, not in the verdict file, for two reasons.
+     `handback.close_adjudication` is handed `(root, branch)` and nothing else,
+     so it can read the lane's tree and not a path only `agent_loop` knows; and
+     an outcome recovered from prose is the `NEEDS-HUMAN` fold (WI-417) —
+     control flow must be a typed field. The `absorbs` set is deliberately NOT
+     in that block: it is the `supersedes` list of the `## Dispositions` draft,
+     which is the value the mint actually uses, so there is no second copy to
+     disagree with it.
 -->
 
 You are an INDEPENDENT adjudicator launched by the unattended coordinator. A CLUSTER of work items is sitting in the ready queue, where lanes will claim them one at a time and build them side by side. Before that happens, one question:
@@ -70,12 +80,21 @@ Then choose ONE outcome:
 - `queue` — no conflict; every row in the cluster stays exactly as it is.
 - `queue-with-edge` — no contradiction, but two of them must not run concurrently. NAME the row that must wait, and the machinery adds the hard `needs` edge to it.
 - `return-to-draft` — a contradiction, an already-answered scope, or a re-litigation of an earlier consolidation. NAME what it contradicts, with the row, SR or WI id. A refusal without a named referent is not actionable and will simply be re-queued.
-- `consolidate` — these rows are one work item. Draft ONE successor in a `## Dispositions` section of your verdict, in a ```toml fence, with `supersedes = ["WI-a", "WI-b", …]` naming EVERY absorbed row as a TOML list of single ids. Every absorbed row moves to `docs/archive/work/restructured/` at the close with `Restructured into WI-<successor>.` as its whole Deliverable, its scope text untouched, and its inbound hard edges re-pointed onto the successor.
+- `consolidate` — these rows are one work item. Draft ONE successor (do not create it; the machinery mints your draft at this row's own merge) as a fenced `toml` block under a `## Dispositions` heading in **THIS SESSION'S OWN SPEC** — never in the verdict file — written as TOP-LEVEL `key = value` lines (no `[table]` header), carrying at minimum `title` (at most 120 characters), `workstream`, `buildtier`, and `supersedes = ["WI-a", "WI-b", …]` naming EVERY absorbed row as a TOML list of single ids. Every absorbed row then moves to `docs/archive/work/restructured/` with `Restructured into WI-<successor>.` as its whole Deliverable, its scope text untouched, and its inbound hard edges re-pointed onto the successor.
 
-If you consolidate, the successor's Context is written for you from your verdict: your stated scope prose verbatim, then each absorbed row's Done-when block quoted under its old id. So state the scope — the boundary, and what is deliberately excluded — and do NOT paraphrase the absorbed rows' Done-when text; it is the spec the successor must still satisfy and it is carried across verbatim.
+If you consolidate, the successor's Context is written for you: your stated scope prose (the text you write beside the draft block) verbatim, then each absorbed row's Done-when block quoted under its old id. So state the scope — the boundary, and what is deliberately excluded — and do NOT paraphrase the absorbed rows' Done-when text; it is the spec the successor must still satisfy and it is carried across verbatim.
 
-Write your verdict to {verdict}: one `- [BLOCKER|MAJOR|MINOR] <the other row, SR or WI id> -> the collision -> the concrete change` line per finding, then the `## Dispositions` draft if you consolidated. Then exactly one machine line:
+THE OUTCOME AND ITS TARGETS ARE A TYPED BLOCK, not prose the machinery guesses at. In this session's own spec, add a `## Consolidation` heading with one fenced `toml` block:
+
+    outcome = "queue" | "queue-with-edge" | "return-to-draft" | "consolidate"
+    edges = ["WI-402 needs WI-401"]   # queue-with-edge only: the waiter, then the row it must wait on
+    returns = ["WI-402"]              # return-to-draft only: the rows going back to draft/
+    finding = "..."                   # return-to-draft only: quoted verbatim into each returned row's Context
+
+Omit the keys an outcome does not use. `outcome = "consolidate"` needs no `edges`/`returns`: the absorbed set is the `supersedes` list of your `## Dispositions` draft, so the two cannot disagree.
+
+Write your verdict to {verdict}: one `- [BLOCKER|MAJOR|MINOR] <the other row, SR or WI id> -> the collision -> the concrete change` line per finding. Then exactly one machine line:
 
     OUTCOME: QUEUE|QUEUE-WITH-EDGE|RETURN-TO-DRAFT|CONSOLIDATE needs=<id or -> absorbs=<id;id;… or ->
 
-Commit that verdict file, ending that commit with the trailer `WI: {wi}` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open — and stop. Do not edit any candidate row and do not move any file; the close does that from your verdict.
+Both counters are required on every outcome; write `-` where an outcome uses neither. Commit that verdict file — and this session's own spec, carrying your `## Consolidation` block and any `## Dispositions` draft — ending that commit with the trailer `WI: {wi}`. The coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open. YOU DO NOT MOVE YOUR OWN SPEC and you do not touch any candidate row: once your verdict is recorded, the machinery closes this row, enacts your outcome, and mints your draft.

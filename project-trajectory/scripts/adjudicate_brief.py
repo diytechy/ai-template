@@ -107,6 +107,7 @@ from pathlib import Path
 
 import agent_common as ac
 import baseline_snapshot
+import consolidate as cons
 import prompts
 import spine_carrier
 
@@ -880,8 +881,6 @@ def consolidate_values(root, row):
     slot's declared purpose is "so a verdict that has gone stale is detectable
     rather than assumed fresh", and a recorded pair alone is not detectable —
     it is a number with nothing to compare against."""
-    import consolidate as cons
-
     root = Path(root)
     scope = adjudicates(row)
     if not scope:

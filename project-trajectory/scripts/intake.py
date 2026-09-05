@@ -1968,6 +1968,13 @@ def _mint(root, drafts, subject_verb):
     # `supersedes` cell) so its edge onto a sibling is never rewritten into an
     # edge onto itself.
     _apply_supersedes(root, lineage)
+    # ...and THEN the absorbed rows go terminal (restructure plan §1.5). The
+    # order is forced: the re-point above needs them still OPEN (`_open_specs`
+    # skips a terminal row), and their Deliverable names a successor whose id
+    # was allocated in the loop above. No-op for every mint that absorbs
+    # nothing, which is every mint but a consolidation's.
+    for dead_id, successor, dest in consolidate.archive_absorbed(root, lineage):
+        _say("restructured {} into {} at {}".format(dead_id, successor, dest))
     # RAISE THE MARK IN THE SAME COMMIT that files the specs. A mint that
     # allocates an id without recording it leaves the mark behind the tree, and
     # trace.py's integrity pass reads that as "an id was allocated past the
