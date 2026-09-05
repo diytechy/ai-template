@@ -401,31 +401,38 @@ def assignment_block(root, wi_rows, wi, base, assigned):
     doneness: `this session's focus` is whatever `current_assignment_wi`
     returned, and the rest split on the SAME committed-trailer evidence that
     walk reads (`train_evidence`). A row that is `built` here is one the walk
-    has already stepped past."""
+    has already stepped past.
+
+    Implements: SR-026, LLR-061
+    """
     if len(assigned) < 2:
         return ""
     built, _blocked = train_evidence(root, base)
-    lines = []
-    for tok in assigned:
-        r = wi_rows.get(tok, {})
-        state = (
-            "this session's focus"
-            if tok == wi
-            else ("built" if tok in built else "not started")
-        )
-        lines.append(
-            "  - {} [{}] {} — SpecRef: {}".format(
-                tok,
-                state,
-                (r.get("Title") or "(row missing from the registry)").strip(),
-                (r.get("SpecRef") or "—").strip() or "—",
-            )
-        )
     return (
         "- The WHOLE assignment ({} rows claimed on this lane, one row per "
         "session — a sibling row is this lane's later work, not another "
-        "lane's):\n".format(len(assigned)) + "\n".join(lines) + "\n"
+        "lane's):\n".format(len(assigned))
+        + "".join(
+            "  - {} [{}] {} — SpecRef: {}\n".format(
+                tok,
+                "this session's focus"
+                if tok == wi
+                else ("built" if tok in built else "not started"),
+                _row_title(wi_rows, tok),
+                (wi_rows.get(tok, {}).get("SpecRef") or "—").strip() or "—",
+            )
+            for tok in assigned
+        )
     )
+
+
+def _row_title(wi_rows, tok):
+    """A WI's Title for a prompt block, with the placeholder both blocks show
+    for a row the registry does not carry — an empty cell there would read as a
+    row with no scope rather than as a row the reader cannot look up."""
+    return (
+        wi_rows.get(tok, {}).get("Title") or "(row missing from the registry)"
+    ).strip()
 
 
 def worker_prompt(root, wi_rows, wi, train, base, rework_text="", assigned=None):
@@ -686,16 +693,11 @@ def reviewed_rows_block(worker):
     attended round, or a caller that has no assignment to name) the block says
     so in one line rather than rendering an empty bullet list, which would read
     as "this diff covers nothing"."""
-    rows = (worker or {}).get("rows") or {}
     assigned = [w for w in (worker or {}).get("assigned") or [] if w]
     if not assigned:
         return "  - (not declared for this round — infer the scope from the diff)"
-    return "\n".join(
-        "  - {} — {}".format(
-            w, (rows.get(w, {}).get("Title") or "(row missing from the registry)").strip()
-        )
-        for w in assigned
-    )
+    rows = (worker or {}).get("rows") or {}
+    return "\n".join("  - {} — {}".format(w, _row_title(rows, w)) for w in assigned)
 
 
 def process_doc_path(root):
