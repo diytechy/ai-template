@@ -375,3 +375,51 @@ spine row's `code_symbol` — `LLR-182` covers the outcome enum and `LLR-189`
 the per-close report, and neither reaches it. That gap predates this lane (the
 subject composer entered at round 2 with the same silence); closing it is an
 `LLR-182` amendment and is not this row's to take.
+
+Round 3 evidence, driven on the completed tree:
+
+- Pre-fix probes (a detached worktree at `30cd1051^^^` carrying the NEW tests
+  against the OLD modules). `test_a_close_that_smuggles_a_new_spec_in_does_not_peel`
+  and `test_a_close_that_destroys_an_archived_record_does_not_peel` both fail
+  there — `assert '59846fa5…' is None`, `assert 'c681829…' is None` — so both
+  are real detectors and not assertions of what already held.
+- The one-source-branch clause, deleted from the TIP module in a probe:
+  `1 failed, 62 passed`, the single red being
+  `test_a_close_reaching_into_a_second_lanes_claims_does_not_peel`. Deleting
+  it changes nothing about the EMPTY-close arm, which is the measurement
+  behind the over-determination claim above.
+- Fail-closed check: all nine real historical mechanical closes in this repo
+  still peel to their parents under the stricter rule.
+- `tests/test_verdict_record.py`: `63 passed`. `tests/test_handback.py`:
+  `30 passed`. The four heavy peel/close modules together: `116 passed`.
+- Full unfiltered suite: `1 failed, 3394 passed, 21 skipped in 1026.12s`. The
+  sole red is `tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current`,
+  the same caused-but-benign `docs/stage` FINGERPRINT node this lane has
+  carried throughout, DRIVEN BOTH WAYS again at round 3's tip: it PASSES at
+  the integration base `bd431c5b`, and it PASSES at this tip on a
+  regenerated-stage worktree where every other derived field is byte-identical
+  — `stage`, `settled-stage`, `live-stage`, `per-phase`, `per-phase-live` and
+  `drafted = 11` all unchanged, only the fingerprint and the as-of stamp move.
+  `docs/stage` is deliberately not regenerated on this lane; `check.py` SKIPs
+  `derived-stage` for that reason and its freshness is the trunk lane's.
+  A FIRST full-suite run was started and KILLED rather than reported: two
+  commits and a `git checkout` probe landed in the working tree while it was
+  running, so its result described no single tree. The reading above is the
+  clean re-run.
+- `check.py --jobs 0`: `RESULT: PASS`. `trace.py --strict-integrity`:
+  `orphans=0 integrity=0`. `check_complexity`: `unchanged from baseline`.
+  Ruff check and format check: clean.
+- `check_dupes_census` WARNs `2 group(s) / 2 redundant copy/copies / 12
+  redundant line(s)` — BYTE-IDENTICAL at the integration base, so it is
+  pre-existing and not this lane's; it is a D-7 advisory, never a gate.
+- Commit bar: `1538 passed, 4 skipped`, enforcer `56.1s vs 60s budget ->
+  within`. FOUR EARLIER ENFORCER READINGS BREACHED and are recorded rather
+  than dropped — `76.6s`, `88.7s`, `98.9s` — measured against identified
+  contention: another session running a full `-n auto` suite in the primary
+  checkout (pid 46922) plus a third worktree agent's suite, on a 6-CPU box.
+  The budget was NOT re-stamped and no module was re-tiered to fit the
+  machine. That the breach is the box and not this change is driven rather
+  than asserted: the INTEGRATION BASE itself breached at `66.0s` in the same
+  window, and a back-to-back paired run gave `BASE 56.83s` against
+  `TIP 57.22s` — a ~0.4s delta, consistent with the four new smoke-tier tests
+  costing `2.49s` run serially and spread over six workers.

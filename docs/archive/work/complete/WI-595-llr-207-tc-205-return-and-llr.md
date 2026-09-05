@@ -160,6 +160,17 @@ boundary, `verdict._closed_wi_ids`.
   disposable CLASS list is LLR-207's alone, so one adjudication no longer
   approves two rows describing the same peel at two widths.
 
+Bar `DevStg-Tests` re-met at round 3's tip: full unfiltered suite `1 failed,
+3394 passed, 21 skipped`, the one red being the same `docs/stage` FINGERPRINT
+node, driven both ways again (passes at the integration base; passes at this
+tip on a regenerated-stage worktree whose every other derived field —
+`drafted = 11` included — is byte-identical). Commit bar `1538 passed, 4
+skipped` with the enforcer `56.1s vs 60s -> within`; three earlier enforcer
+readings breached under measured contention from two other sessions' suites,
+and are recorded in the log fragment rather than dropped, together with the
+paired base-vs-tip run (`56.83s` / `57.22s`) that shows this lane's delta is
+~0.4s. The budget was not re-stamped and nothing was re-tiered to fit the box.
+
 SURFACED, NOT FIXED (a separate finding, per the working agreement): no spine
 row's `code_symbol` names `station.mechanical_close_subject`,
 `MECHANICAL_CLOSE_PREFIX/SUFFIX` or the new `mechanical_close_order` —
