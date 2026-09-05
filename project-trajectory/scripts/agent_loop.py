@@ -382,12 +382,62 @@ NON_BUILD_PHASES = frozenset(kverdict.REVIEW_PHASES) | {
 # concept; docs/ is the one coordination surface and the integrator owns it.)
 
 
-def worker_prompt(root, wi_rows, wi, train, base, rework_text=""):
+def assignment_block(root, wi_rows, wi, base, assigned):
+    """The WI-580 batch block: EVERY row this lane was claimed with, each with
+    its evidence state, or `""` for the ordinary one-row lane.
+
+    The dispatcher admits a spine batch as ONE lane (`--wi 'A;B'`, §A4) and
+    `current_assignment_wi` walks it a row per session — but the brief rendered
+    the walked row alone, under an opening sentence that called it the whole
+    scope. Measured 2026-09-02 on `wi-569-…`: the human saw `wi=WI-569;WI-575`
+    in the launch banner and the session that took WI-569 never learned WI-575
+    was on its lane.
+
+    THE ONE-ROW LANE RENDERS NOTHING, which is what keeps this safe to add: the
+    `- WI:`/`- SR-Refs:`/`- Branch:` lines already carry every fact this block
+    would repeat, so only a batch can observe the difference.
+
+    The state vocabulary is the walk's own, not a fourth opinion about
+    doneness: `this session's focus` is whatever `current_assignment_wi`
+    returned, and the rest split on the SAME committed-trailer evidence that
+    walk reads (`train_evidence`). A row that is `built` here is one the walk
+    has already stepped past."""
+    if len(assigned) < 2:
+        return ""
+    built, _blocked = train_evidence(root, base)
+    lines = []
+    for tok in assigned:
+        r = wi_rows.get(tok, {})
+        state = (
+            "this session's focus"
+            if tok == wi
+            else ("built" if tok in built else "not started")
+        )
+        lines.append(
+            "  - {} [{}] {} — SpecRef: {}".format(
+                tok,
+                state,
+                (r.get("Title") or "(row missing from the registry)").strip(),
+                (r.get("SpecRef") or "—").strip() or "—",
+            )
+        )
+    return (
+        "- The WHOLE assignment ({} rows claimed on this lane, one row per "
+        "session — a sibling row is this lane's later work, not another "
+        "lane's):\n".format(len(assigned)) + "\n".join(lines) + "\n"
+    )
+
+
+def worker_prompt(root, wi_rows, wi, train, base, rework_text="", assigned=None):
     """The per-session worker prompt (LLR-061): the WI row + SpecRef +
     predecessor context + the current branch diff + any rework finding, slotted
     into WORKER_PROMPT (`train` is the session tag = the claim branch name).
     Reads NOTHING from docs/status.md or docs/next-wi — the explicit
     assignment is the whole scope.
+
+    `assigned` is the lane's WHOLE claim (WI-580); `wi` is the row this session
+    walked to. Defaulting it to `[wi]` keeps every in-process caller that only
+    knows one row rendering exactly what it rendered before.
 
     Implements: SR-026, LLR-061
     """
@@ -466,6 +516,9 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text=""):
         specref=(row.get("SpecRef") or "—").strip() or "—",
         train=train,
         base=base,
+        assignment_block=assignment_block(
+            root, wi_rows, wi, base, list(assigned) if assigned else [wi]
+        ),
         pred_block=pred_block,
         context_block=context_block,
         diff_block=diff_block,
@@ -602,15 +655,47 @@ def reviewer_prompt(prompt_templates, phase, verdict_path, root=None, worker=Non
     unchanged, and a caller without a root (a bare template read) leaves them
     unrendered rather than guessing.
 
+    WI-580 adds `{wis}` — the rows under review, id + title. The brief named no
+    work item at all, so a round had to infer its scope from the diff before it
+    could map a spec's Done-when items to coverage. Unlike the three C7 slots
+    this one renders even with no worker (an attended round), because the
+    honest fallback is a sentence saying the scope was not declared; leaving a
+    literal `{wis}` in a brief that was actually SENT would be worse than
+    either. An override file without the slot still renders unchanged —
+    `str.replace` on an absent needle is a no-op.
+
     Implements: SR-154, LLR-045
     """
     base = prompt_templates.get(phase, _kit_prompt(prompts.REVIEWER))
-    text = base.replace("{verdict}", str(verdict_path))
+    text = base.replace("{verdict}", str(verdict_path)).replace(
+        "{wis}", reviewed_rows_block(worker)
+    )
     if root is not None:
         text = text.replace("{process_doc}", process_doc_path(root))
         text = text.replace("{trunk}", trunk_name(root, worker))
         text = text.replace("{scripts}", scripts_dir(root))
     return text
+
+
+def reviewed_rows_block(worker):
+    """The `{wis}` block: the claimed rows a review round covers, `  - <id> —
+    <title>` a line, in assignment order.
+
+    A round reviews the LANE, so every assigned row is in scope — not just the
+    row whatever session happened to trigger the round. With no worker (an
+    attended round, or a caller that has no assignment to name) the block says
+    so in one line rather than rendering an empty bullet list, which would read
+    as "this diff covers nothing"."""
+    rows = (worker or {}).get("rows") or {}
+    assigned = [w for w in (worker or {}).get("assigned") or [] if w]
+    if not assigned:
+        return "  - (not declared for this round — infer the scope from the diff)"
+    return "\n".join(
+        "  - {} — {}".format(
+            w, (rows.get(w, {}).get("Title") or "(row missing from the registry)").strip()
+        )
+        for w in assigned
+    )
 
 
 def process_doc_path(root):
@@ -685,6 +770,7 @@ def session_body(root, worker, current_wi, session, sha, reviews_dir, templates)
             worker["train"],
             worker["base"],
             worker["rework"],
+            worker["assigned"],
         ),
         None,
         None,
