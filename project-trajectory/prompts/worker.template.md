@@ -3,7 +3,7 @@
      THE WORKER ASSIGNMENT (SR-060, WI-181). Sent to the BUILD session of a
      claimed work item. Slots are SINGLE-BRACE `{name}` and the fill is
      `str.format`, NOT the `{{NAME}}` strict fill the dual-plan hats use — this
-     prompt is filled from eleven computed values, several of which are whole
+     prompt is filled from twelve computed values, several of which are whole
      blocks, and the two idioms are kept apart deliberately (see
      prompts/README.md, "Two slot syntaxes, and why").
 

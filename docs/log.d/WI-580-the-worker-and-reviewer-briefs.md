@@ -162,3 +162,38 @@ the walk was sending back to it.
   the reading that was owed. The `docs/stage` fingerprint red is the same
   CAUSED-but-benign one recorded above (LLR-061 amended again), and for the
   same reason it is the trunk lane's to regenerate.
+
+### Rework pass (session 007) — REVIEW-A blocker and prose reconciliation
+
+The independent round found four record/ritual defects, all in the existing
+mechanisms rather than the brief behavior. The line-count row was not
+re-stamped after the runtime `{scripts}` composition line landed; the
+always-read `CLAUDE.md` still made the full suite a per-WI close obligation
+despite the shipped brief and `PROCESS_OPTIONS.md` assigning mid-phase slices
+the commit bar; the template note counted eleven of its twelve slots; and the
+absorbed WI-559 item 3 had no named discharging row.
+
+The rework re-stamps `agent_loop.py` at 2610 SLOC with a reason covering both
+review fixes, aligns `CLAUDE.md` to the existing phase cadence (commit bar for
+a mid-phase WI, the stage-declared refresh bar in the merge slot, full suite at
+phase close), corrects the slot count, and records that WI-579 discharged
+WI-559 item 3. No new check or defensive path was added: the ratchet already
+made the unstamped line fail closed, and the prose now has one phase-cadence
+rule instead of two contradictory obligations.
+
+Verification: the reviewer's exact focused harness is **79 passed**; the
+focused regression/baseline selection is **6 passed**, and the three
+byte-budget checks are **3 passed**;
+`check.py --jobs 0` is **PASS** (the three work-branch generated-freshness
+steps skipped by policy); `trace.py --strict-integrity` reports SN=27, SR=76,
+LLR=191, TC=190, orphans=0, integrity=0; `check_docs.py --root . --stale` is
+OK (1371 docs, 1602 links, 0 broken); and the prompt catalogue is fresh. The
+smoke tests are functionally green (**1551 passed, 4 skipped**). Three loaded
+readings were 87.66 s, 81.5 s and 98.9 s against the 60 s wall budget and
+correctly failed enforcement while other checkout work was active; after that
+work cleared, the authoritative enforced run passed at **52.9 s vs 60 s**. The
+budget remained untouched.
+
+Byte deltas: `CLAUDE.md` 7886 -> 7975 (525 bytes headroom under its 8500-byte
+cap); `project-trajectory/skills/byte-budget-guard/SKILL.md` and each tracked
+copy 4847 -> 4781 (219 bytes headroom under the source's 5000-byte cap).

@@ -26,10 +26,11 @@ the single-row brief is unchanged by the mechanism. The opening sentence no
 longer asserts "ONE work item", which was false for a batch and is how a
 session took WI-569 without ever learning WI-575 was on its lane; the
 work-only-the-assignment rule follows it. The close ritual now names a bar a
-worker can finish in one turn — the commit bar, with the full unfiltered suite
-left to the lane's refresh inside the merge slot — names an AMENDMENT of an
-already-approved cell alongside a mint as staling the approval brief, and names
-the scratch home.
+worker can finish in one turn — the commit bar, with the lane refresh running
+the full bar declared for its current stage inside the merge slot and the
+unfiltered suite reserved for phase close — names an AMENDMENT of an
+already-approved cell alongside a mint as staling the approval brief, and
+names the scratch home.
 
 `reviewer.template.md` gained `{wis}` (`agent_loop.reviewed_rows_block`): the
 rows under review, id + title, so a round maps Done-when items to coverage
@@ -41,6 +42,11 @@ override without the slot renders unchanged.
 module-size baseline for `agent_loop.py` bumped +36 with its reason;
 `prompts/CATALOG.md` regenerated. Five new tests, each driven red on the
 pre-change behaviour.
+
+Review rework reconciled the contributor guide with the brief's one-turn close
+bar, re-stamped the worker-composition line in the module-size baseline, and
+corrected the worker template's computed-slot count. The absorbed WI-559 item 3
+belongs to WI-579, as its hard predecessor; WI-580 absorbs item 1 only.
 
 ## Context
 
@@ -83,7 +89,7 @@ diff without being told which rows it covers.
    reviewer brief names its rows; `prompts/CATALOG.md` regenerated
    (`gen_prompt_catalog.py`); full suite green.
 
-### From WI-559 (Done-when 1 and 3, verbatim — item 2 went to WI-579; item 3 is shared)
+### From WI-559 (Done-when 1 and 3, verbatim — items 2 and 3 were discharged by WI-579; WI-580 absorbs item 1)
 
 1. The close ritual names a bar a worker can complete in ONE turn: the
    commit bar (smoke + budget + docs) at close, with the full unfiltered

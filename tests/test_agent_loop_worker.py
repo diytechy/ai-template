@@ -306,7 +306,8 @@ def test_worker_brief_names_the_one_turn_close_bar_scratch_and_amendments(tmp_pa
     # WI-580 Done-when 1 / 4 / 5 (WI-559 item 1, WI-560 item 2, WI-562 item 2):
     # three clauses the shipped brief must carry, asserted on the RENDERED
     # prompt so an edit that drops one from the template fails here.
-    #   1. the close bar fits in one turn — the full suite is the refresh's job
+    #   1. the close bar fits in one turn — refresh runs the stage-declared bar
+    #      in the merge slot and the full suite belongs to phase close
     #      (WI-540 lost three sessions ending their turn to await an ~11-minute
     #      suite against a 10-minute cap, and a finished row closed `partial`);
     #   2. an AMENDMENT of an approved cell stales the approval brief exactly

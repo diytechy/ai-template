@@ -65,9 +65,11 @@ that easier to achieve in a real project — or get out of the way.
   modules out of the tier (`tests/conftest.py` `SLOW_MODULES`) — the prior
   reading (54.9/64.0/55.7 s, one past the ceiling) is why enforcement waited
   for the re-tier. One box is one data point and the budget is not moved to
-  fit it. Run the **full** unfiltered suite (`python -m pytest -q -n auto`,
-  ~10 min on a quiet box, 3–4× that while other sessions load it) before
-  claiming a WI/slice done, at phase close, and after a broad script change — it bootstraps a temp scaffold and exercises every script
+  fit it. A mid-phase WI/slice ends at that commit bar. Run the **full**
+  unfiltered suite (`python -m pytest -q -n auto`, ~10 min on a quiet box,
+  3–4× that while other sessions load it) once at phase close; the lane refresh
+  runs the full bar declared for its current stage in the merge slot. The
+  unfiltered suite bootstraps a temp scaffold and exercises every script
   end-to-end. Paste the real output; never report a green you didn't produce.
   (Commit bar vs gate bar, and what the smoke tier drops: the
   `session-protocol` skill §3.)
