@@ -1673,3 +1673,160 @@ def test_a_close_that_reached_outside_docs_work_does_not_peel(tmp_path):
     _mechanical_close(root, also="src/widget.py")
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None and "names its current tree" in refusal
+
+
+# --- the MINOR-only rule, and the round no unchanged tree earns ---------------
+#
+# Two 2026-09-03/04 measurements, one for each half. Four review rounds refused
+# a lane over a single `[MINOR]` finding each (WI-586 rounds 006 and 010, WI-590
+# round 013), every refusal costing a rework session AND another round; and a
+# rework that DECLINED a finding committed only its `docs/reviews/` answer, so
+# the tree identity never moved, the next round approved the same tree, and the
+# merge slot refused the pair as a reroll-until-green.
+
+MINOR_ONLY = (
+    "# Review A\n\nModel: test/reviewer\n\n"
+    "- [MINOR] src/widget.py:1 -> a wording nit -> reword it -> @owner\n\n"
+    "VERDICT: CHANGES-REQUESTED findings=1\n"
+)
+MINOR_AND_MAJOR = (
+    "# Review A\n\nModel: test/reviewer\n\n"
+    "- [MINOR] src/widget.py:1 -> a wording nit -> reword it -> @owner\n"
+    "- [MAJOR] src/widget.py:1 -> wrong -> fix it -> @owner\n\n"
+    "VERDICT: CHANGES-REQUESTED findings=2\n"
+)
+NO_FINDINGS_REFUSAL = (
+    "# Review A\n\nModel: test/reviewer\n\nVERDICT: CHANGES-REQUESTED findings=0\n"
+)
+
+
+@pytest.mark.parametrize(
+    "word,severities,expected",
+    [
+        # The rule itself.
+        ("CHANGES-REQUESTED", ["MINOR"], "APPROVE"),
+        ("CHANGES-REQUESTED", ["MINOR", "MINOR"], "APPROVE"),
+        # Mixed severity: one non-MINOR anywhere keeps the refusal.
+        ("CHANGES-REQUESTED", ["MINOR", "MAJOR"], "CHANGES-REQUESTED"),
+        ("CHANGES-REQUESTED", ["BLOCKER"], "CHANGES-REQUESTED"),
+        # A refusal naming NOTHING is a different defect and stays a refusal —
+        # `all()` over an empty sequence would otherwise promote it silently.
+        ("CHANGES-REQUESTED", [], "CHANGES-REQUESTED"),
+        # Every other word is returned untouched, unparseable ones included.
+        ("APPROVE", ["MINOR"], "APPROVE"),
+        (None, ["MINOR"], None),
+    ],
+)
+def test_effective_verdict_reads_the_findings_not_only_the_word(
+    word, severities, expected
+):
+    assert kv.effective_verdict(word, severities) == expected
+
+
+def test_a_minor_only_refusal_clears_the_gate_and_the_file_is_untouched(tmp_path):
+    # The GATE arm of the rule (`round_entries` -> `_round_refusal`). Without it
+    # a lane the loop routed as APPROVE would still be refused at the merge slot
+    # — the same wasted round with one extra hop.
+    root = rounds_repo(tmp_path)
+    sha = add_round(root, 3, text=MINOR_ONLY)
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+    # THE RECORD STAYS WHAT THE REVIEWER WROTE: the rule transforms what the
+    # readers DO with a verdict, never the round file.
+    path = "docs/reviews/wi-401/003-REVIEW-A-{}.md".format(sha)
+    assert "VERDICT: CHANGES-REQUESTED findings=1" in _git(
+        root, "show", "wi-401:" + path
+    )
+
+
+def test_a_minor_beside_a_major_still_refuses(tmp_path):
+    root = rounds_repo(tmp_path)
+    add_round(root, 3, text=MINOR_AND_MAJOR)
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
+    assert refusal is not None and "not an APPROVE" in refusal
+
+
+def test_a_refusal_naming_no_finding_at_all_still_refuses(tmp_path):
+    root = rounds_repo(tmp_path)
+    add_round(root, 3, text=NO_FINDINGS_REFUSAL)
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
+    assert refusal is not None and "not an APPROVE" in refusal
+
+
+def _built_lane_with_a_round(tmp_path, text=CHANGES):
+    """`wi-401` BUILT (its `WI:` trailer committed) and carrying one logged
+    round at the tree that trailer left — the state a rework session starts in.
+    """
+    root = rounds_repo(tmp_path)
+    _git(root, "checkout", "-q", "wi-401")
+    (root / "src" / "widget.py").write_text(
+        "VALUE = 2\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "WI-401: the widget\n\nWI: WI-401", when=T_CODE + 5)
+    _git(root, "checkout", "-q", "main")
+    add_round(root, 3, text=text)
+    return root
+
+
+def _rework(root, path, body, when=T_LATER + 50):
+    """One rework commit on `wi-401`; returns its sha (the loop's `after`)."""
+    _git(root, "checkout", "-q", "wi-401")
+    target = root / path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(body, encoding="utf-8", newline="\n")
+    _commit(root, "rework: answer the finding", when=when)
+    after = _rev(root, "wi-401")
+    _git(root, "checkout", "-q", "main")
+    return after
+
+
+def _drive_committing_build(root, after):
+    """`build_bookkeeping` at exactly the point a committing rework reaches it.
+    Returns (agent_loop module, LoopContext, its return value)."""
+    al = _al()
+    ctx = _loop_ctx(al, root)
+    plan = {"phase": "BUILD", "route_id": "b", "route_family": "anthropic"}
+    code = al.build_bookkeeping(
+        ctx, plan, "COMMITTED", 0, ["deadbeef"], after, "WI-401", 0.0
+    )
+    return al, ctx, code
+
+
+def test_a_record_only_rework_draws_no_round_and_pages(tmp_path, capsys):
+    # The measured 2026-09-03 waste: the rework DECLINED the finding and
+    # committed only its answer under `docs/reviews/` — a record path the
+    # identity is built to ignore — so a second round would have judged the very
+    # tree the first one already judged, and `_round_refusal` would have read
+    # the pair as a reroll-until-green.
+    root = _built_lane_with_a_round(tmp_path)
+    after = _rework(
+        root, "docs/reviews/wi-401/dispositions.md", "The finding is declined.\n"
+    )
+    _al_mod, ctx, code = _drive_committing_build(root, after)
+
+    st = ctx.run.routing
+    assert st.review_queue == []  # no round drawn on the unchanged tree
+    out = capsys.readouterr().out
+    assert "rework changed no non-record path" in out
+    assert "a round on the same tree would be refused as a reroll" in out
+    # The existing ladder, at a loop-held hold: the run does not stop, the next
+    # session is the DESIGN-CHECK the page degrades to (owner ruling
+    # 2026-09-03 leaves that degrade uncapped).
+    assert code is None
+    assert st.next_phase == "DESIGN-CHECK"
+
+
+def test_a_rework_that_moves_the_spec_draws_its_round(tmp_path, capsys):
+    # The other answer, and the one that must not regress: a rework touching a
+    # NON-record path moves the identity, so the round is owed and drawn exactly
+    # as before. `docs/work/` is deliberately inside the identity (WI-378).
+    root = _built_lane_with_a_round(tmp_path)
+    after = _rework(
+        root, "docs/work/active/wi-401/WI-401-widget.md", "# WI-401\n\nreworked\n"
+    )
+    _al_mod, ctx, code = _drive_committing_build(root, after)
+
+    st = ctx.run.routing
+    assert st.review_queue == ["REVIEW-A"]
+    assert code is None
+    assert "scheduling review round" in capsys.readouterr().out
+    assert st.next_phase != "DESIGN-CHECK"
