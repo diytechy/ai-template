@@ -525,7 +525,7 @@ def _adjudication_close_text(text, deliverable):
     return "+++\n" + fm + "+++\n" + body
 
 
-def _consolidation_close(root, wt, src_rel, text, drafts, wi_id):
+def _consolidation_close(root, wt, branch, src_rel, text, drafts, meta):
     """The CONSOLIDATION arm of the close (the 2026-09-02 restructure plan
     §1.5): enact this verdict's outcome on the queue it judged.
     `(True, None)` enacted, `(False, None)` when the row is not a
@@ -559,7 +559,25 @@ def _consolidation_close(root, wt, src_rel, text, drafts, wi_id):
     # in the meantime still reads `queued` there, and the one guard that exists
     # to catch exactly that race would pass on stale bytes.
     rows = ac.read_spec_rows(root / integrate.WORK)
-    refusal = consolidate.close_refusal(record, absorbed, rows, src_rel)
+    refusal = consolidate.close_refusal(
+        root,
+        record,
+        absorbed,
+        rows,
+        src_rel,
+        scope=consolidate.scope_of(meta),
+        drafts=drafts,
+        recorded=str(meta.get("digests") or ""),
+    )
+    if refusal:
+        return False, refusal
+    # THE MACHINE LINE AND THE TYPED BLOCK ARE ONE FACT, checked. `absorbs=` and
+    # `needs=` are required on every alternative of this brief's verdict grammar
+    # and NOTHING read them: a verdict file could say `OUTCOME: QUEUE needs=-
+    # absorbs=-` while the block said `consolidate` and three rows were
+    # archived. Rather than keep a second unread carrier (or quietly re-spec the
+    # plan's own grammar), the close reconciles them and refuses on divergence.
+    refusal = _machine_line_refusal(root, wt, branch, record, absorbed, src_rel)
     if refusal:
         return False, refusal
     for waiter, blocker in record["edges"]:
@@ -573,7 +591,7 @@ def _consolidation_close(root, wt, src_rel, text, drafts, wi_id):
     print(
         "handback: consolidation {} -> outcome {} ({} absorbed, {} edge(s), "
         "{} returned)".format(
-            wi_id,
+            meta.get("id") or "?",
             record["outcome"],
             len(absorbed),
             len(record["edges"]),
@@ -581,6 +599,61 @@ def _consolidation_close(root, wt, src_rel, text, drafts, wi_id):
         )
     )
     return True, None
+
+
+def _lane_verdict(root, wt, branch):
+    """The ADJUDICATE verdict file this lane recorded, or None.
+
+    Derived from the branch's own delta against trunk (`git diff --name-only
+    <trunk>...<branch> -- docs/reviews/`), not from a path only `agent_loop`
+    knows: the close is handed `(root, branch)` and nothing else. The newest by
+    name wins, which is the ordering `agent_loop.fresh_verdict_path` builds into
+    the filename (session number, then the implementer's HEAD sha)."""
+    trunk = ac.trunk_name(root)
+    code, out = ac.git(
+        root,
+        "diff",
+        "--name-only",
+        "{}...{}".format(trunk, branch),
+        "--",
+        "docs/reviews",
+    )
+    if code != 0:
+        return None
+    names = sorted(
+        line.strip()
+        for line in out.splitlines()
+        if line.strip().endswith(".md") and "-ADJUDICATE-" in line
+    )
+    for rel in reversed(names):
+        path = wt / rel
+        if path.is_file():
+            return path
+    return None
+
+
+def _machine_line_refusal(root, wt, branch, record, absorbed, where):
+    """Refuse when the verdict file's `OUTCOME:` line and the typed
+    `## Consolidation` block do not describe the same judgement.
+
+    Both are the session's own output, written minutes apart, and the loop reads
+    them for different things — the machine line is what `agent_loop` grades the
+    session DONE on, the block is what the close enacts. Two carriers of one
+    fact that nothing compares is how a session reports one verdict and the
+    machinery performs another; the brief template asserts they cannot disagree,
+    so this is that assertion made true.
+
+    A lane with no readable verdict file is NOT refused here: `close_adjudication`
+    is called only on a worker's EXIT_DONE, where `agent_loop.worker_endstate`
+    has already gated on the verdict, and re-deriving that precondition from a
+    git range would turn a fixture or a hand close into a false refusal."""
+    path = _lane_verdict(root, wt, branch)
+    if path is None:
+        return None
+    parsed = consolidate.parse_machine_line(path.read_text(encoding="utf-8"))
+    if parsed is None:
+        return None
+    return consolidate.reconcile_refusal(parsed, record, absorbed, where)
 
 
 def _queued_spec(wt, wi_id):
@@ -681,7 +754,7 @@ def _archive_one_adjudication_row(root, wt, branch, name):
     # holds. A row with no `## Consolidation` section answers `(False, None)`
     # and every other brief passes straight through.
     _enacted, crefusal = _consolidation_close(
-        root, wt, src_rel, text, parsed, meta.get("id") or name
+        root, wt, branch, src_rel, text, parsed, meta
     )
     if crefusal:
         return False, "cannot close {}: {}".format(name, crefusal)

@@ -4683,16 +4683,35 @@ which the census reads for EDGES rather than parsing the warn sentences.
    cell says `conflict` now refuses at composition as an unknown brief and is
    HELD for a human — which is the intended failure, but re-point the cell to
    `consolidate` (or clear it) rather than leaving a row that pages someone.
-4. **Wire the census into your dispatcher, or do not.** The mint arm is
-   `intake.mint_consolidation(root, busy)`; a repo that never calls it is
-   exactly as it was, because nothing else mints a `consolidate` row. Where the
-   kit's own `dispatch._admit` calls it, the call site is four lines at the top
-   of a tick, after the parked-branch arm and before the frontier is loaded:
-   mint, print the refusal to stderr and exit non-zero if there is one.
-5. **Expect nothing on an empty queue.** The census refuses on an idle station
-   with no overlap, on a station holding any adjudication row, and on any queue
-   state a `consolidate` row has already judged — including one whose row has
-   since gone terminal. If it mints on your first tick, it found real overlap.
+4. **The census is WIRED in the kit's own dispatcher** — re-sync
+   `scripts/dispatch.py` with the rest. `_admit` calls
+   `intake.mint_consolidation(root, busy)` at the top of a tick, after the
+   parked-branch arm and before the frontier is loaded, so a row it mints is on
+   the frontier that same tick; a refusal prints to stderr and ends the cycle
+   `(False, 1)`, the same contract the gap census's mint arm holds. If your
+   dispatcher has diverged, the call site is:
+
+       minted, refusal = intake.mint_consolidation(root, busy)
+       if refusal:
+           _say(refusal, err=True)
+           return False, 1
+
+   A repo that removes it is exactly as it was, because nothing else mints a
+   `consolidate` row.
+5. **Expect nothing on an empty queue — but expect SOMETHING on an overlapping
+   one.** The census refuses on an idle station with no overlap, on a station
+   holding any adjudication row, and on any queue state a `consolidate` row has
+   already judged (including one whose row has since gone terminal). If it mints
+   on your first tick it found real overlap, and it will keep finding it: two
+   rows sharing a spec of record is one of the three mechanical signals, so a
+   queue that has legitimately cut several rows from one plan gets a judgement
+   asked about them ONCE per queue state. That is the design; the `Digests` cell
+   is what keeps "once" true.
+6. **The minted row's SpecRef is an existence PROBE**, not a literal —
+   `docs/work/README.md`, then your SR registry. A repo shipping none of them
+   gets NO row rather than an unclaimable one: `integrate.claim` refuses a
+   SpecRef that does not resolve (R-E), and a judgement at the head of the
+   frontier that can never be claimed wedges the run.
 ### `intake.py sweep --before/--after` is a RANGE sweep, not a repo scan [since 5bf9f28c]
 
 **What changed.** `sweep` used to run the terminal-folder walk on top of

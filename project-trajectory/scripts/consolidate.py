@@ -79,7 +79,9 @@ import tomllib
 from pathlib import Path
 
 import agent_common as ac
+import spec_move
 import spine_carrier
+from kitlib import registry as kitregistry
 
 WORK = "docs/work"
 #: Terminal history's home since WI-504 — the archive half of the one registry
@@ -87,11 +89,25 @@ WORK = "docs/work"
 ARCHIVE_WORK = "docs/archive/work"
 #: The `Brief` cell the census mints, and the one the guards look for.
 BRIEF = "consolidate"
-#: The spec-of-record a minted row points at. The queue IS the subject, so the
-#: forward bridge (R-E) resolves to the document that defines what the queue's
-#: statuses mean — not to a plan, which would make every consolidation share a
-#: spec with whatever plan happened to be open.
-SPECREF = "docs/work/README.md"
+#: The spec-of-record a minted row points at, as ORDERED EXISTENCE PROBES —
+#: first one that resolves to a FILE wins. The queue IS the subject, so the
+#: forward bridge (R-E) resolves to the document defining what the queue's
+#: statuses mean; the SR registry is the fallback every repo with a spine has,
+#: and is the same fallback `intake._census_specref` takes.
+#:
+#: PROBES AND NOT A LITERAL, because `integrate.claim` REFUSES a row whose
+#: SpecRef does not resolve to an in-repo file (R-E, WI-370). A hard
+#: `docs/work/README.md` on a repo that does not ship it mints a judgement that
+#: can never be claimed, `_judgement_first` puts it at the head of the frontier,
+#: and the run exits 1 on every tick from then on — the queue wedged by the
+#: census that was supposed to unblock it. Measured the moment the census was
+#: wired into `dispatch._admit` (2026-09-04), on a fixture repo with no
+#: `docs/work/README.md`.
+SPECREF_PROBES = (
+    "docs/work/README.md",
+    "docs/requirements/system-requirements.toml",
+    "docs/requirements/system-requirements.csv",
+)
 #: `priority = 9` (plan §1.3 clause 4): the frontier sorts `Priority` desc inside
 #: a rank, and `dispatch._judgement_first` already puts judgements first, so this
 #: needs no rank-table change to run ahead of the rows it is judging.
@@ -525,6 +541,15 @@ def census_draft(root, rows=None):
     ids, findings = clusters(root, rows)
     if not ids:
         return None, "no queued rows overlap - there is nothing to consolidate"
+    specref = _specref(root)
+    if not specref:
+        return None, (
+            "no candidate spec-of-record resolves in this repo ({}) - a row "
+            "minted with an unresolvable SpecRef is refused at claim (R-E) and "
+            "would sit at the head of the frontier forever".format(
+                ", ".join(SPECREF_PROBES)
+            )
+        )
     cell = queue_sha + DIGEST_SEP + spine_digest(root)
     return {
         # DETERMINISTIC FOR THE QUEUE STATE, like every other derived title, so
@@ -535,12 +560,20 @@ def census_draft(root, rows=None):
         "brief": BRIEF,
         "workstream": "process",
         "buildtier": BUILDTIER,
-        "specref": SPECREF,
+        "specref": specref,
         "priority": PRIORITY,
         "adjudicates": ids,
         "digests": cell,
         "context": _context(ids, findings, cell),
     }, None
+
+
+def _specref(root):
+    """The first `SPECREF_PROBES` entry that is a file in this repo, or ""."""
+    for rel in SPECREF_PROBES:
+        if (Path(root) / rel).is_file():
+            return rel
+    return ""
 
 
 def _context(ids, findings, cell):
@@ -628,15 +661,20 @@ def parse_verdict(text, where):
         return None, "{}: outcome {!r} is not one of {}".format(
             where, data.get("outcome"), "|".join(OUTCOMES)
         )
+    for key in ("edges", "returns"):
+        refusal = _list_refusal(data.get(key), key, where)
+        if refusal:
+            return None, refusal
     edges, refusal = _parse_edges(data.get("edges"), where)
+    if refusal:
+        return None, refusal
+    returns, refusal = _parse_returns(data.get("returns"), where)
     if refusal:
         return None, refusal
     record = {
         "outcome": outcome,
         "edges": edges,
-        "returns": [
-            str(item).strip() for item in data.get("returns") or [] if str(item).strip()
-        ],
+        "returns": returns,
         "finding": str(data.get("finding") or "").strip(),
     }
     refusal = _shape_refusal(record, where)
@@ -646,9 +684,66 @@ def parse_verdict(text, where):
     return (None, refusal) if refusal else (record, None)
 
 
+def _list_refusal(value, key, where):
+    """Refuse anything but a list of strings for a collection key.
+
+    TYPED, not coerced, and the two failures this closes were both silent.
+    `returns = 1` reached a `for` loop and RAISED an uncaught `TypeError` out of
+    a parser whose whole contract is `(record, refusal)` — a crash where a named
+    refusal was promised. `returns = "WI-401"` iterated the STRING and parsed as
+    six single-character targets, so a verdict naming one row enacted six
+    nonexistent ones. TOML makes the author's intent unambiguous here, so
+    reading a bare string as a one-element list would be tolerance nobody asked
+    for; the authored grammar is a list, and the refusal says so."""
+    if value is None:
+        return None
+    if not isinstance(value, list):
+        return (
+            "{}: `{}` is {!r} - a TOML LIST of `WI-###` strings, always, even "
+            'for one entry ({} = ["WI-401"])'.format(where, key, value, key)
+        )
+    bad = [item for item in value if not isinstance(item, str)]
+    if bad:
+        return "{}: `{}` holds non-string entr(ies) {!r}".format(where, key, bad)
+    return None
+
+
+def _duplicate_refusal(seen, item, key, where):
+    """Refuse a target named twice.
+
+    A duplicate is not harmless: the close walks the list and MOVES each target,
+    so the second pass finds the row already gone and fails half-way through a
+    close that advertises itself as all-or-nothing. Refusing at the parse is the
+    cheaper end of the same rule."""
+    if item in seen:
+        return "{}: `{}` names {} twice - one target, one entry".format(
+            where, key, item if isinstance(item, str) else repr(item)
+        )
+    seen.add(item)
+    return None
+
+
+def _parse_returns(items, where):
+    """`([ids], None)` or `(None, refusal)` for the `returns` list."""
+    out, seen = [], set()
+    for item in items or []:
+        token = item.strip()
+        if not token:
+            continue
+        if not ac.WI_TOKEN_RE.match(token):
+            return None, "{}: `returns` entry {!r} is not a WI-### id".format(
+                where, item
+            )
+        refusal = _duplicate_refusal(seen, token, "returns", where)
+        if refusal:
+            return None, refusal
+        out.append(token)
+    return out, None
+
+
 def _parse_edges(items, where):
     """`([(waiter, blocker)], None)` or `(None, refusal)` for the `edges` list."""
-    out = []
+    out, seen = [], set()
     for item in items or []:
         matched = _EDGE_RE.match(" ".join(str(item).split()))
         if matched is None:
@@ -658,7 +753,11 @@ def _parse_edges(items, where):
             )
         if matched.group(1) == matched.group(2):
             return None, "{}: edge {!r} makes a row wait on itself".format(where, item)
-        out.append((matched.group(1), matched.group(2)))
+        pair = (matched.group(1), matched.group(2))
+        refusal = _duplicate_refusal(seen, pair, "edges", where)
+        if refusal:
+            return None, refusal
+        out.append(pair)
     return out, None
 
 
@@ -707,42 +806,252 @@ def absorbed_ids(drafts):
     return out
 
 
-def close_refusal(record, absorbed, rows, where):
-    """Why this verdict may not be enacted, or None. Read ONCE, before any file
-    moves, so the close is all-or-nothing.
+#: The verdict file's one machine line, as `adjudicate_brief.VERDICT_GRAMMAR`
+#: declares it for this brief: the label, then the two counters.
+_MACHINE_RE = re.compile(r"^\s*OUTCOME:\s*(?P<label>[A-Z-]+)(?P<rest>.*)$", re.M)
+_COUNTER_RE = re.compile(r"\b(needs|absorbs)\s*=\s*(\S+)")
 
-    THE ROWS IT ACTS ON MUST STILL BE `queued`. The census guard makes a claimed
-    cluster row a race only a hand claim can produce (plan §1.5) — and when it
-    happens the close refuses BY NAME rather than archiving work a lane is in
-    the middle of building.
 
-    The absorbed set and the outcome must AGREE, both ways: a `consolidate` that
-    supersedes nothing is not one, and any other outcome whose draft supersedes
-    rows would archive them while the verdict said to leave them alone."""
-    status = {
-        (r.get("WI-ID") or "").strip(): (r.get("Status") or "").strip() for r in rows
+def scope_of(meta):
+    """A closing row's `Adjudicates` cluster as a set, from spec frontmatter.
+
+    Tolerant of both spellings the format produces — `wi_convert` writes the
+    COLUMN `;`-joined and `parse_spec` reads the frontmatter key back as a TOML
+    list — because this reader is handed whichever the caller happens to hold,
+    and a scope silently read as empty is the widening the cell exists to
+    prevent."""
+    value = meta.get("adjudicates") if hasattr(meta, "get") else None
+    items = value if isinstance(value, (list, tuple)) else [value]
+    return {
+        token.strip()
+        for item in items
+        for token in str(item or "").split(";")
+        if token.strip()
     }
-    if record["outcome"] == "consolidate" and not absorbed:
+
+
+def parse_machine_line(text):
+    """`(label, {counter: value})` for the verdict file's `OUTCOME:` line, or
+    None when it carries none.
+
+    None is not a refusal: `agent_loop.worker_endstate` has already gated the
+    session's DONE on this line, so re-deriving that precondition here would
+    turn a hand close or a fixture into a false refusal. What this exists for is
+    the case where the line IS there and says something else."""
+    matched = _MACHINE_RE.search(text or "")
+    if matched is None:
+        return None
+    counters = {
+        key: value for key, value in _COUNTER_RE.findall(matched.group("rest") or "")
+    }
+    return matched.group("label").strip(), counters
+
+
+def _counter_ids(value):
+    """A counter's value as a set of ids; `-` (the declared "none") is empty."""
+    if not value or value.strip() == "-":
+        return set()
+    return {token.strip() for token in value.split(";") if token.strip()}
+
+
+def reconcile_refusal(machine, record, absorbed, where):
+    """Refuse when the verdict file and the typed block describe different
+    judgements. The two are ONE fact and this is what makes that true.
+
+    Checked in the order a reader would ask: is it the same OUTCOME, does
+    `absorbs=` name the same rows the drafts supersede, does `needs=` name the
+    same rows the edges make wait. A counter the grammar requires and nothing
+    compares is a second carrier, and a second carrier of one fact is how a
+    session reports one verdict while the machinery performs another."""
+    label, counters = machine
+    if label.lower() != record["outcome"]:
+        return (
+            "{}: the verdict file says `OUTCOME: {}` but the ## Consolidation "
+            "block says outcome = {!r} - one judgement, one answer".format(
+                where, label, record["outcome"]
+            )
+        )
+    said = _counter_ids(counters.get("absorbs"))
+    if said != set(absorbed):
+        return (
+            "{}: the verdict file says `absorbs={}` but the ## Dispositions "
+            "draft supersedes {} - the counter and the lineage cell are one "
+            "fact".format(
+                where,
+                counters.get("absorbs") or "(absent)",
+                ";".join(sorted(absorbed)) or "nothing",
+            )
+        )
+    waiters = {waiter for waiter, _blocker in record["edges"]}
+    said = _counter_ids(counters.get("needs"))
+    if said != waiters:
+        return (
+            "{}: the verdict file says `needs={}` but the ## Consolidation "
+            "block edges make {} wait - the counter and the block are one "
+            "fact".format(
+                where,
+                counters.get("needs") or "(absent)",
+                ";".join(sorted(waiters)) or "nobody",
+            )
+        )
+    return None
+
+
+def close_refusal(root, record, absorbed, rows, where, *, scope, drafts, recorded):
+    """Why this verdict may not be enacted, or None. Read ONCE, before the close
+    writes anything, so a half-enacted verdict is unrepresentable.
+
+    SIX REFUSALS, and every one of them was a hole an adversarial round drove a
+    real verdict through:
+
+    1. **The outcome and the absorbed set agree, both ways.** A `consolidate`
+       that supersedes nothing is not one; any other outcome whose draft
+       supersedes rows would archive them while the verdict said to leave them
+       alone.
+    2. **EXACTLY ONE successor for a consolidation.** Plan §1.2 says the session
+       drafts ONE; two drafts each superseding part of the cluster used to close
+       cleanly, minting two rows that split the scope with nothing recording the
+       split.
+    3. **Every row this verdict touches is inside the row's `Adjudicates`
+       scope.** The scope cell was decorative on this path: a draft superseding
+       a row the census never clustered closed, merged and archived it. The
+       first-approval sibling has enforced exactly this bound since WI-572
+       (`is OUTSIDE `Adjudicates` scope`), and for the same reason — a live
+       re-derivation with no scope to intersect asks a wider question than the
+       mint asked.
+    4. **The recorded `Digests` still describe the tree.** The pair is recorded
+       at the mint precisely so a stale verdict is detectable, and nothing
+       compared it: a forged or simply out-of-date cell enacted a verdict
+       against a queue that had moved underneath it.
+    5. **Every row it touches is still `queued`.** The census guard makes a
+       claimed cluster row a race only a hand claim can produce (plan §1.5), and
+       when it happens the close refuses BY NAME rather than archiving work a
+       lane is building.
+    6. **The lineage the mint will refuse is refused HERE.** `reabsorption_refusal`
+       used to run only inside `_pre_mint_refusal`, one commit after the close
+       had committed and the merge had stood — so a verdict absorbing an earlier
+       consolidation's successor closed, merged, minted NOTHING, and left the
+       queue byte-identical to the state its own `Digests` cell had recorded.
+       `_judged_refusal` then answered "already judged" forever and the cluster
+       was un-consolidatable without a hand edit. A refusal that can be evaluated
+       before the close must be evaluated before the close.
+
+    `scope` is the closing row's `Adjudicates` set, `drafts` its parsed
+    `## Dispositions` blocks, `recorded` its `Digests` cell."""
+    # ORDER IS THE MESSAGE. The specific causes run first: a row this verdict
+    # names that a lane has claimed is reported BY NAME, before the drift rung
+    # notices that the queue digest moved — which it also did, because that
+    # claim is what moved it. "WI-402 is no longer queued" is actionable;
+    # "the queue has moved" is the same fact with the row filed off.
+    for rung in (_outcome_refusal, _scope_refusal, _queued_refusal, _drift_rung):
+        refusal = rung(root, record, absorbed, rows, where, scope, drafts, recorded)
+        if refusal:
+            return refusal
+    return reabsorption_refusal(rows, absorbed)
+
+
+def _touched(record, absorbed):
+    """Every row id this verdict would move: absorbed, returned, or edged."""
+    named = set(absorbed) | set(record["returns"])
+    for waiter, blocker in record["edges"]:
+        named |= {waiter, blocker}
+    return named
+
+
+def _outcome_refusal(_root, record, absorbed, _rows, where, _scope, drafts, _recorded):
+    """Rungs 1-2: the outcome and the absorbed set agree, and a consolidation
+    drafts EXACTLY ONE successor."""
+    consolidating = record["outcome"] == "consolidate"
+    if consolidating and not absorbed:
         return (
             "{}: outcome consolidate but the ## Dispositions draft supersedes "
             "nothing - a consolidation that absorbs no row is not one".format(where)
         )
-    if record["outcome"] != "consolidate" and absorbed:
+    if not consolidating and absorbed:
         return (
             "{}: outcome {} but the ## Dispositions draft supersedes {} - only "
             "a CONSOLIDATE verdict absorbs rows".format(
                 where, record["outcome"], ";".join(sorted(absorbed))
             )
         )
-    named = set(absorbed) | set(record["returns"])
-    for waiter, blocker in record["edges"]:
-        named |= {waiter, blocker}
-    off = sorted(wid for wid in named if status.get(wid) != QUEUED)
-    if off:
+    if consolidating and len(drafts or []) != 1:
         return (
-            "{}: {} named by this verdict {} no longer queued - a consolidation "
-            "acts on the queue it judged, and a row a lane has claimed is not "
-            "its to move".format(where, ";".join(off), "is" if len(off) == 1 else "are")
+            "{}: outcome consolidate drafted {} successor(s) - a consolidation "
+            "replaces its cluster with ONE row (plan §1.2), and several drafts "
+            "split the absorbed scope with nothing recording the "
+            "split".format(where, len(drafts or []))
+        )
+    return None
+
+
+def _scope_refusal(_root, record, absorbed, _rows, where, scope, _drafts, _recorded):
+    """Rung 3: every row this verdict touches is inside the row's cluster."""
+    outside = sorted(_touched(record, absorbed) - set(scope or ()))
+    if not outside:
+        return None
+    return (
+        "{}: {} OUTSIDE this row's `Adjudicates` scope ({}) - a consolidation "
+        "acts on the cluster the census handed it and on no other row; an "
+        "unstated boundary read as 'every queued row' is the widening the cell "
+        "exists to prevent".format(
+            where, ";".join(outside), ";".join(sorted(scope or ())) or "empty"
+        )
+    )
+
+
+def _drift_rung(root, _record, _absorbed, rows, where, _scope, _drafts, recorded):
+    """Rung 4, as the uniform five-argument shape the driver walks."""
+    return _drift_refusal(root, rows, recorded, where)
+
+
+def _queued_refusal(_root, record, absorbed, rows, where, _scope, _drafts, _recorded):
+    """Rung 5: every row it touches is still `queued`."""
+    status = {
+        (r.get("WI-ID") or "").strip(): (r.get("Status") or "").strip() for r in rows
+    }
+    off = sorted(wid for wid in _touched(record, absorbed) if status.get(wid) != QUEUED)
+    if not off:
+        return None
+    return (
+        "{}: {} named by this verdict {} no longer queued - a consolidation "
+        "acts on the queue it judged, and a row a lane has claimed is not its "
+        "to move".format(where, ";".join(off), "is" if len(off) == 1 else "are")
+    )
+
+
+def _drift_refusal(root, rows, recorded, where):
+    """Refuse a verdict whose recorded `Digests` no longer describe the tree.
+
+    BOTH HALVES are compared and they fail differently, so the message says
+    which. A moved QUEUE means the population this verdict judged is not the one
+    it would act on; a moved SPINE means the requirements a contradiction was
+    judged against have changed. An absent or malformed cell is its own refusal:
+    the pair is what makes staleness detectable, so a verdict carrying none is
+    not verifiable and must not be enacted.
+
+    The judging row itself is `active` while the close runs, so it is out of the
+    queued set and the digest it recorded at the mint still holds — drift here
+    means something ELSE moved."""
+    want_queue, want_spine = parse_digests(recorded)
+    if not want_queue:
+        return (
+            "{}: the closing row carries no usable `Digests` cell, so the queue "
+            "state its verdict judged is unrecorded and staleness is not "
+            "detectable - the close will not enact an unverifiable "
+            "verdict".format(where)
+        )
+    live_queue, live_spine = queue_digest(rows), spine_digest(root)
+    if live_queue != want_queue:
+        return (
+            "{}: the QUEUE has moved since this verdict was minted (recorded "
+            "{}, now {}) - the rows it judged are not the rows it would act "
+            "on".format(where, want_queue, live_queue)
+        )
+    if live_spine != want_spine:
+        return (
+            "{}: the SPINE has moved since this verdict was minted (recorded "
+            "{}, now {}) - contradiction with the spine is one of the three "
+            "questions it answered".format(where, want_spine, live_spine)
         )
     return None
 
@@ -759,13 +1068,15 @@ def restructured_text(text, successor):
     lineage is worth nothing if the thread it continues has already been cut.
     The only edit is the Deliverable, which is exactly one line, before
     `## Context` (a Deliverable placed after it parses as EMPTY and reds R-A)."""
-    fence = "\n+++\n"
-    head, sep, body = text.partition(fence)
-    if not sep:
+    lines = text.split("\n")
+    close = _fence_close(lines)
+    if close is None:
         return None
+    head = "\n".join(lines[: close + 1])
+    body = "\n".join(lines[close + 1 :])
     return (
         head
-        + sep
+        + "\n"
         + "\n## Deliverable\n\n"
         + DELIVERABLE.format(successor)
         # TWO newlines, and the second is load-bearing: `parse_spec_deliverable`
@@ -777,6 +1088,24 @@ def restructured_text(text, successor):
         + "\n\n"
         + body.lstrip("\n")
     )
+
+
+def _fence_close(lines):
+    """The index of a spec's CLOSING `+++` line, or None.
+
+    LINE-WISE against the shared fence constant, exactly as
+    `kitlib.registry.parse_spec_frontmatter` does, and that is the whole point:
+    a `text.partition("\n+++\n")` finds nothing on a CRLF checkout (Windows with
+    `core.autocrlf=true`), so `restructured_text` returned None and the absorbed
+    row was skipped — on EVERY absorbed row, on that platform, with no message.
+    The suite could not see it because every fixture calls `conftest.pin_autocrlf`."""
+    stripped = [ln.rstrip("\r") for ln in lines]
+    if not stripped or stripped[0] != kitregistry.SPEC_FENCE:
+        return None
+    for index in range(1, len(stripped)):
+        if stripped[index] == kitregistry.SPEC_FENCE:
+            return index
+    return None
 
 
 def returned_text(text, finding):
@@ -793,9 +1122,18 @@ def returned_text(text, finding):
         + "\n".join("> " + line for line in (finding or "").splitlines() or [""])
         + "\n"
     )
-    head, sep, tail = text.partition("\n## Context\n")
-    if sep:
-        return head + sep + "\n" + note + tail
+    lines = text.split("\n")
+    for index, line in enumerate(lines):
+        if line.rstrip("\r") == "## Context":
+            # Line-wise for `_fence_close`'s reason: a CRLF checkout matched no
+            # `\n## Context\n` and the return appended a SECOND `## Context`
+            # heading to the spec.
+            return (
+                "\n".join(lines[: index + 1])
+                + "\n\n"
+                + note
+                + "\n".join(lines[index + 1 :])
+            )
     return text.rstrip("\n") + "\n\n## Context\n\n" + note
 
 
@@ -827,11 +1165,19 @@ def archive_absorbed(root, minted):
     """THE CONSOLIDATION'S OTHER HALF (the 2026-09-02 restructure plan §1.5):
     move every ABSORBED row from `queued/` into `archive/work/restructured/`,
     with `Restructured into WI-<successor>.` as its whole Deliverable and its
-    scope text byte-identical. `[(absorbed id, successor id, dest relpath)]`,
-    in mint order, so the caller announces exactly what moved.
+    scope text byte-identical.
+    `([(absorbed id, successor id, dest relpath)], None)` or `([], refusal)`.
 
-    `minted` is `intake._mint`'s `[(wi_id, [absorbed ids])]` — the whole verdict,
-    resolved at once, for the same reason the edge re-point is.
+    ALL OR NOTHING, PREFLIGHTED. Every absorbed row is resolved to a readable
+    queued spec BEFORE the first move, and a single unresolvable one refuses the
+    whole call with the id named. The earlier shape skipped silently and let the
+    mint commit anyway: claiming one cluster row in the window between the close
+    and the merge produced two `restructured` lines instead of three, no message
+    about the third, and a successor whose `Supersedes` cell named a row that
+    was still `active` on its own lane — two live rows covering one scope, with
+    the ABSENCE of one line among three as the only signal. The identical race
+    is refused BY NAME at the close, so the design guarded it loudly in one
+    place and silently in the other.
 
     IT RUNS AT THE MINT AND NOT AT THE CLOSE, and the ordering is forced from
     both ends. The Deliverable NAMES THE SUCCESSOR, whose id `_write_draft`
@@ -841,34 +1187,111 @@ def archive_absorbed(root, minted):
     chain), so archiving these rows at the close would make the mint refuse its
     own successor. It runs AFTER the edge re-point for the third half of the
     same argument: `_open_specs` skips a terminal row, so a dependent's edge has
-    to move while the absorbed row is still open.
-
-    A row that is not where the close left it is SKIPPED rather than raised on.
-    `handback._consolidation_close` already refused by name for anything not
-    `queued`, so reaching here with one missing means a hand edit landed between
-    the close and the merge — and the mint's all-or-nothing restore is the wrong
-    tool for a human's change."""
+    to move while the absorbed row is still open."""
+    plan, refusal = _archive_plan(root, minted)
+    if refusal:
+        return [], refusal
     moved = []
+    for successor, dead_id, src, dest, new_text in plan:
+        _touched, refusal = spec_move.move_spec(root, src, dest, new_text=new_text)
+        if refusal:
+            return moved, (
+                "the consolidation close could not archive {} into {}: {}".format(
+                    dead_id, successor, refusal
+                )
+            )
+        moved.append((dead_id, successor, dest))
+    return moved, None
+
+
+def _archive_plan(root, minted):
+    """`([(successor, dead_id, src, dest, new_text)], None)` for every absorbed
+    row, or `([], refusal)` naming the first that cannot be moved.
+
+    The whole preflight, before any write: the row is a queued spec, it is
+    readable, and its frontmatter fence parses so the Deliverable can be
+    rewritten. `minted` is `intake._mint`'s `[(wi_id, [absorbed ids])]` — the
+    whole verdict, resolved at once, for the same reason the edge re-point is."""
+    queued = Path(root) / WORK / "queued"
+    plan = []
     for successor, absorbed in minted:
         for dead_id in absorbed:
-            dest = _absorbed_move(root, successor, dead_id)
-            if dest:
-                moved.append((dead_id, successor, dest))
-    return moved
+            hits = sorted(queued.glob(dead_id + "-*.md")) if queued.is_dir() else []
+            if not hits:
+                return [], (
+                    "the consolidation close cannot archive {}: it is no longer "
+                    "a queued spec (claimed or moved between the close and this "
+                    "merge). Nothing archived; the mint is refused whole rather "
+                    "than leaving {}'s lineage cell naming a row it did not "
+                    "absorb".format(dead_id, successor)
+                )
+            try:
+                text = hits[0].read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError) as exc:
+                return [], "the consolidation close cannot read {}: {}".format(
+                    hits[0].name, exc
+                )
+            new_text = restructured_text(text, successor)
+            if new_text is None:
+                return [], (
+                    "the consolidation close cannot rewrite {}: it carries no "
+                    "closed `+++` frontmatter fence".format(hits[0].name)
+                )
+            plan.append(
+                (
+                    successor,
+                    dead_id,
+                    "{}/queued/{}".format(WORK, hits[0].name),
+                    "{}/restructured/{}".format(ARCHIVE_WORK, hits[0].name),
+                    new_text,
+                )
+            )
+    return plan, None
 
 
-def _absorbed_move(root, successor, dead_id):
-    """One absorbed row's move, or "" when it is not a readable queued spec."""
-    import spec_move
+def absorbed_done_when(root, ids):
+    """Each absorbed row's `## Done-when` block, verbatim, under its old id —
+    the successor Context's second half (plan §1.5, Done-when 4).
 
-    queued = Path(root) / WORK / "queued"
-    hits = sorted(queued.glob(dead_id + "-*.md")) if queued.is_dir() else []
-    if not hits:
+    QUOTED AND NOT SUMMARISED, because it is the SPEC the successor must still
+    satisfy: "decompose, don't paraphrase". Without it the shipped brief's own
+    promise ("each absorbed row's Done-when block quoted under its old id … do
+    NOT paraphrase") was false, so a judge who followed the brief wrote a
+    boundary sentence and nothing else, and the successor a lane then built
+    carried no acceptance criteria at all.
+
+    Read while the absorbed rows are still in `queued/` — this runs at the mint,
+    before `archive_absorbed` moves them. A row whose block cannot be read is
+    STATED as such rather than skipped: a missing criterion that leaves no trace
+    is the failure this whole section is about."""
+    bodies = spec_bodies(root)
+    out = []
+    for dead_id in ids:
+        block = _done_when_block(bodies.get(dead_id))
+        out.append(
+            "### {} (absorbed) — its Done-when, verbatim\n\n{}".format(
+                dead_id,
+                block or "(this row's spec declared no `## Done-when` section)",
+            )
+        )
+    if not out:
         return ""
-    src = "{}/queued/{}".format(WORK, hits[0].name)
-    dest = "{}/restructured/{}".format(ARCHIVE_WORK, hits[0].name)
-    new_text = restructured_text(hits[0].read_text(encoding="utf-8"), successor)
-    if new_text is None:
-        return ""
-    _touched, refusal = spec_move.move_spec(root, src, dest, new_text=new_text)
-    return "" if refusal else dest
+    return (
+        "The absorbed rows' acceptance criteria, carried across UNCHANGED. This "
+        "is the spec this row must still satisfy — the ids are historical, the "
+        "obligations are not:\n\n" + "\n\n".join(out)
+    )
+
+
+def _done_when_block(body):
+    """One spec body's `## Done-when` section, verbatim, or ""."""
+    lines = (body or "").split("\n")
+    for index, line in enumerate(lines):
+        if line.rstrip("\r").strip().lower() == "## done-when":
+            rest = []
+            for tail in lines[index + 1 :]:
+                if tail.rstrip("\r").startswith("## "):
+                    break
+                rest.append(tail)
+            return "\n".join(rest).strip("\n")
+    return ""

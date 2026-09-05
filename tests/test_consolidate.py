@@ -464,6 +464,36 @@ def test_the_verdict_block_is_parsed_into_a_typed_record():
             'outcome = "queue"\nreturns = ["WI-402"]\n',
             "carries `returns`, which it does not enact",
         ),
+        # TYPED, not coerced. `returns = 1` reached a `for` loop and RAISED an
+        # uncaught TypeError out of a parser whose whole contract is
+        # `(record, refusal)`; `returns = "WI-401"` iterated the STRING and
+        # parsed as six single-character targets, so a verdict naming one row
+        # enacted six nonexistent ones.
+        ('outcome = "queue-with-edge"\nedges = 1\n', "a TOML LIST"),
+        ('outcome = "return-to-draft"\nreturns = 1\nfinding = "x"\n', "a TOML LIST"),
+        (
+            'outcome = "return-to-draft"\nreturns = "WI-401"\nfinding = "x"\n',
+            "a TOML LIST",
+        ),
+        (
+            'outcome = "return-to-draft"\nreturns = [1]\nfinding = "x"\n',
+            "non-string entr",
+        ),
+        # A DUPLICATE is not harmless: the close walks the list and MOVES each
+        # target, so the second pass finds the row already gone and fails
+        # half-way through a close that advertises itself as all-or-nothing.
+        (
+            'outcome = "return-to-draft"\nreturns = ["WI-401", "WI-401"]\nfinding = "x"\n',
+            "names WI-401 twice",
+        ),
+        (
+            'outcome = "queue-with-edge"\nedges = ["WI-1 needs WI-2", "WI-1 needs WI-2"]\n',
+            "twice",
+        ),
+        (
+            'outcome = "return-to-draft"\nreturns = ["nonsense"]\nfinding = "x"\n',
+            "is not a WI-### id",
+        ),
     ],
 )
 def test_a_malformed_verdict_block_refuses_and_never_defaults(block, expect):
@@ -485,31 +515,221 @@ def test_two_blocks_under_one_heading_refuse():
     assert record is None and "one verdict, one block" in why
 
 
-def test_the_close_refuses_a_row_that_left_the_queue_by_name():
+def _rec(outcome="consolidate", **kw):
+    record = {"outcome": outcome, "edges": [], "returns": [], "finding": ""}
+    record.update(kw)
+    return record
+
+
+def _close(tmp_path, rows, record, absorbed, *, scope=None, drafts=None, recorded=None):
+    """`close_refusal` over a real tree, with the cluster and the digest pair
+    defaulting to the ones the census itself would have recorded — so a test
+    that is about ONE rung is not tripped by another.
+
+    Only the WRITABLE rows are materialised: `active/` has no status directory
+    of its own (a claimed spec lives under `active/<branch>/`), so a fixture row
+    modelling a claimed one is handed to the guard rather than written."""
+    repo = _repo(
+        tmp_path, [r for r in rows if r.get("Status") in wi_convert.STATUS_DIRS]
+    )
+    if recorded is None:
+        recorded = consolidate.digests(repo, rows)
+    if scope is None:
+        scope = {(r.get("WI-ID") or "") for r in rows if r.get("Status") == "queued"}
+    if drafts is None:
+        drafts = [{"supersedes": list(absorbed)}] if absorbed else []
+    return consolidate.close_refusal(
+        repo,
+        record,
+        absorbed,
+        rows,
+        "at",
+        scope=scope,
+        drafts=drafts,
+        recorded=recorded,
+    )
+
+
+def test_the_close_refuses_a_row_that_left_the_queue_by_name(tmp_path):
     """The census guard makes a claimed cluster row a race only a hand claim can
     produce (plan §1.5). When it happens the close refuses BY NAME rather than
-    archiving work a lane is in the middle of building."""
+    archiving work a lane is in the middle of building.
+
+    ORDER IS THE MESSAGE: claiming a row also moves the queue digest, so the
+    drift rung would fire on the same fixture. The by-name rung runs first
+    because "WI-402 is no longer queued" is actionable and "the queue has moved"
+    is the same fact with the row filed off."""
     rows = [_row("WI-401"), _row("WI-402", Status="active")]
-    record = {"outcome": "consolidate", "edges": [], "returns": [], "finding": ""}
-    why = consolidate.close_refusal(record, ["WI-401", "WI-402"], rows, "at")
+    why = _close(
+        tmp_path,
+        rows,
+        _rec(),
+        ["WI-401", "WI-402"],
+        scope={"WI-401", "WI-402"},
+    )
     assert why and "WI-402" in why and "no longer queued" in why
     assert "WI-401" not in why
-    assert consolidate.close_refusal(record, ["WI-401"], rows, "at") is None
 
 
-def test_the_outcome_and_the_absorbed_set_must_agree_both_ways():
+def test_the_outcome_and_the_absorbed_set_must_agree_both_ways(tmp_path):
     rows = [_row("WI-401")]
-    consolidating = {
-        "outcome": "consolidate",
-        "edges": [],
-        "returns": [],
-        "finding": "",
-    }
-    why = consolidate.close_refusal(consolidating, [], rows, "at")
+    why = _close(tmp_path, rows, _rec(), [])
     assert why and "absorbs no row is not one" in why
-    queueing = {"outcome": "queue", "edges": [], "returns": [], "finding": ""}
-    why = consolidate.close_refusal(queueing, ["WI-401"], rows, "at")
+    why = _close(tmp_path, rows, _rec("queue"), ["WI-401"])
     assert why and "only a CONSOLIDATE verdict absorbs rows" in why
+
+
+def test_a_consolidation_drafting_two_successors_is_refused(tmp_path):
+    """Plan §1.2: the session drafts ONE successor. Two drafts each superseding
+    part of the cluster used to close cleanly and mint two rows that split the
+    scope, with nothing recording the split."""
+    rows = [_row("WI-401"), _row("WI-402")]
+    why = _close(
+        tmp_path,
+        rows,
+        _rec(),
+        ["WI-401", "WI-402"],
+        drafts=[{"supersedes": ["WI-401"]}, {"supersedes": ["WI-402"]}],
+    )
+    assert why and "drafted 2 successor(s)" in why and "ONE row" in why
+    assert _close(tmp_path, rows, _rec(), ["WI-401", "WI-402"]) is None
+
+
+def test_the_close_refuses_a_row_outside_the_adjudicates_cluster(tmp_path):
+    """THE SCOPE CELL IS BINDING, not decorative. A draft superseding a row the
+    census never clustered used to close, merge and archive it — the row's own
+    Context says "judge those rows and no others", the brief template says it,
+    and plan §1.3 clause 2 says it, while nothing enforced it. The
+    first-approval sibling has bounded its act this way since WI-572."""
+    rows = [_row("WI-401"), _row("WI-402"), _row("WI-409")]
+    why = _close(
+        tmp_path,
+        rows,
+        _rec(),
+        ["WI-401", "WI-402", "WI-409"],
+        scope={"WI-401", "WI-402"},
+    )
+    assert why and "WI-409" in why and "OUTSIDE this row's `Adjudicates` scope" in why
+    assert "WI-401" not in why.split("scope (")[0]
+    # ...and the bound covers every id the verdict MOVES, not only the absorbed.
+    why = _close(
+        tmp_path,
+        rows,
+        _rec("return-to-draft", returns=["WI-409"], finding="x"),
+        [],
+        scope={"WI-401", "WI-402"},
+    )
+    assert why and "WI-409" in why and "OUTSIDE" in why
+    why = _close(
+        tmp_path,
+        rows,
+        _rec("queue-with-edge", edges=[("WI-402", "WI-409")]),
+        [],
+        scope={"WI-401", "WI-402"},
+    )
+    assert why and "WI-409" in why and "OUTSIDE" in why
+
+
+def test_the_close_refuses_a_verdict_whose_digests_have_drifted(tmp_path):
+    """The pair is recorded at the mint precisely so a stale verdict is
+    detectable, and nothing compared it: a forged or simply out-of-date cell
+    enacted a verdict against a queue that had moved underneath it."""
+    rows = [_row("WI-401"), _row("WI-402")]
+    absorbed = ["WI-401", "WI-402"]
+    assert _close(tmp_path, rows, _rec(), absorbed) is None
+    why = _close(tmp_path, rows, _rec(), absorbed, recorded="deadbeefdead|cafebabecafe")
+    assert why and "QUEUE has moved" in why and "deadbeefdead" in why
+    # The spine half fails differently, and the message says which.
+    repo = _repo(tmp_path, rows)
+    live_queue = consolidate.queue_digest(rows)
+    why = _close(
+        tmp_path, rows, _rec(), absorbed, recorded=live_queue + "|cafebabecafe"
+    )
+    assert why and "SPINE has moved" in why
+    # A missing cell is its own refusal: an unverifiable verdict is not enacted.
+    why = _close(tmp_path, rows, _rec(), absorbed, recorded="")
+    assert why and "no usable `Digests` cell" in why
+    assert repo.is_dir()
+
+
+def test_the_close_refuses_the_lineage_the_mint_would_have_refused(tmp_path):
+    """The close/mint split was NOT all-or-nothing: `reabsorption_refusal` ran
+    only inside `_pre_mint_refusal`, one commit after the close had committed
+    and the merge had stood. A verdict absorbing an earlier consolidation's
+    successor closed, merged, minted NOTHING, and left the queue byte-identical
+    to the state its own `Digests` cell recorded — so `_judged_refusal` answered
+    "already judged" forever and the cluster was un-consolidatable by hand.
+    A refusal evaluable before the close is now evaluated before the close."""
+    rows = [
+        _row("WI-390", Status="restructured"),
+        _row("WI-412", Supersedes="WI-390"),
+        _row("WI-401"),
+    ]
+    why = _close(
+        tmp_path,
+        rows,
+        _rec(),
+        ["WI-401", "WI-412"],
+        scope={"WI-401", "WI-412"},
+    )
+    assert why and "WI-412" in why and "RETURN-TO-DRAFT" in why
+
+
+def test_the_verdict_files_machine_line_and_the_typed_block_are_one_fact():
+    """`absorbs=` and `needs=` are required on every alternative of this brief's
+    grammar and NOTHING read them: a verdict file could say `OUTCOME: QUEUE
+    needs=- absorbs=-` while the block said `consolidate` and three rows were
+    archived. The counters are now reconciled with the block and the drafts."""
+    line = "- [MINOR] a finding\nOUTCOME: CONSOLIDATE needs=- absorbs=WI-401;WI-402\n"
+    machine = consolidate.parse_machine_line(line)
+    assert machine == ("CONSOLIDATE", {"needs": "-", "absorbs": "WI-401;WI-402"})
+    rec = _rec()
+    assert (
+        consolidate.reconcile_refusal(machine, rec, ["WI-402", "WI-401"], "at") is None
+    )
+    why = consolidate.reconcile_refusal(machine, rec, ["WI-401"], "at")
+    assert why and "absorbs=" in why and "one fact" in why
+    why = consolidate.reconcile_refusal(
+        ("QUEUE", {"needs": "-", "absorbs": "-"}), rec, [], "at"
+    )
+    assert why and "OUTCOME: QUEUE" in why and "outcome = 'consolidate'" in why
+    # The `needs=` counter is reconciled against the edges the same way.
+    edged = _rec("queue-with-edge", edges=[("WI-402", "WI-401")])
+    ok = ("QUEUE-WITH-EDGE", {"needs": "WI-402", "absorbs": "-"})
+    assert consolidate.reconcile_refusal(ok, edged, [], "at") is None
+    why = consolidate.reconcile_refusal(
+        ("QUEUE-WITH-EDGE", {"needs": "WI-999", "absorbs": "-"}), edged, [], "at"
+    )
+    assert why and "needs=WI-999" in why
+    # A verdict file with no machine line is not this rung's business: the
+    # session's DONE was already gated on it by `agent_loop.worker_endstate`.
+    assert consolidate.parse_machine_line("no line here") is None
+
+
+def test_the_absorbed_done_when_blocks_are_quoted_verbatim(tmp_path):
+    """Plan §1.5 / Done-when 4. The shipped brief PROMISES this, so a judge who
+    follows it writes a boundary sentence and nothing else — without the
+    quoting, the successor a lane then builds carries no acceptance criteria."""
+    rows = [_row("WI-401"), _row("WI-402")]
+    repo = _repo(tmp_path, rows)
+    work = repo / "docs" / "work" / "queued"
+    for path, body in zip(
+        sorted(work.iterdir()), ("Ship the adder.", "Test the adder.")
+    ):
+        path.write_text(
+            path.read_text(encoding="utf-8")
+            + "\n## Context\n\nctx\n\n## Done-when\n\n1. {}\n".format(body),
+            encoding="utf-8",
+            newline="\n",
+        )
+    quoted = consolidate.absorbed_done_when(repo, ["WI-401", "WI-402"])
+    assert "WI-401 (absorbed)" in quoted and "WI-402 (absorbed)" in quoted
+    assert "1. Ship the adder." in quoted and "1. Test the adder." in quoted
+    assert "ctx" not in quoted  # the Done-when block, not the whole body
+    # A row with no Done-when section is STATED, never silently dropped.
+    stated = consolidate.absorbed_done_when(repo, ["WI-409"])
+    assert "WI-409 (absorbed)" in stated and "declared no `## Done-when`" in stated
+    assert consolidate.absorbed_done_when(repo, []) == ""
 
 
 def test_the_absorbed_set_has_exactly_one_carrier():
@@ -567,3 +787,67 @@ def test_the_edge_write_is_surgical_and_idempotent():
     assert consolidate.edged_text(soft, "WI-401") == soft
     # A row with no readable needs line is a refusal, not a silent skip.
     assert consolidate.edged_text('+++\nid = "WI-1"\n+++\n', "WI-401") is None
+
+
+def test_the_text_transforms_survive_a_crlf_checkout():
+    """LINE-WISE against the shared fence constant, like the canonical reader.
+
+    A `text.partition("\\n+++\\n")` finds nothing on a CRLF checkout (Windows with
+    `core.autocrlf=true`), so `restructured_text` returned None and
+    `_absorbed_move` skipped the row silently — on EVERY absorbed row, on that
+    platform — and `returned_text` appended a SECOND `## Context` heading. The
+    suite could not see it because every fixture calls `conftest.pin_autocrlf`,
+    which is exactly why this case is built by hand rather than checked out."""
+    crlf = (
+        "+++\r\n"
+        'id = "WI-401"\r\n'
+        'specref = "docs/plans/a.md"\r\n'
+        "+++\r\n"
+        "\r\n## Context\r\n\r\nThe original scope.\r\n"
+    )
+    moved = consolidate.restructured_text(crlf, "WI-500")
+    assert moved is not None
+    assert "Restructured into WI-500." in moved
+    assert "The original scope." in moved
+    assert moved.index("## Deliverable") < moved.index("## Context")
+    returned = consolidate.returned_text(crlf, "the finding")
+    assert returned.count("## Context") == 1
+    assert "> the finding" in returned
+    # ...and LF is unchanged by the same reader.
+    lf = crlf.replace("\r\n", "\n")
+    assert consolidate.restructured_text(lf, "WI-500") is not None
+    assert consolidate.returned_text(lf, "the finding").count("## Context") == 1
+
+
+def test_the_census_never_mints_a_row_whose_specref_cannot_resolve(tmp_path):
+    """`integrate.claim` REFUSES a row whose SpecRef does not resolve to an
+    in-repo file (R-E, WI-370). A hard `docs/work/README.md` on a repo that does
+    not ship it mints a judgement that can never be claimed — and because
+    `_judgement_first` puts a judgement at the head of the frontier, the run
+    exits 1 on every tick from then on, the queue wedged by the census that was
+    meant to unblock it.
+
+    Measured the moment the census was wired into `dispatch._admit`, on a
+    fixture repo with no `docs/work/README.md`. The probes are ordered, and the
+    census DECLINES rather than minting an unclaimable row when none resolves."""
+    rows = [
+        _row("WI-401", SpecRef="docs/plans/a.md"),
+        _row("WI-402", SpecRef="docs/plans/a.md"),
+    ]
+    repo = _repo(tmp_path, rows)
+    # `_repo` writes the SR registry, which is the fallback probe.
+    assert consolidate._specref(repo) == "docs/requirements/system-requirements.toml"
+    draft, why = consolidate.census_draft(repo, rows)
+    assert why is None, why
+    assert (repo / draft["specref"]).is_file()
+    # The first probe wins where the repo ships it.
+    (repo / "docs" / "work" / "README.md").write_text(
+        "# the work registry\n", encoding="utf-8", newline="\n"
+    )
+    assert consolidate.census_draft(repo, rows)[0]["specref"] == "docs/work/README.md"
+    # ...and with NO probe resolving, the census declines by name.
+    (repo / "docs" / "work" / "README.md").unlink()
+    (repo / "docs" / "requirements" / "system-requirements.toml").unlink()
+    draft, why = consolidate.census_draft(repo, rows)
+    assert draft is None
+    assert why and "no candidate spec-of-record resolves" in why

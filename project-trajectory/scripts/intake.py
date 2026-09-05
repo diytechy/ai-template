@@ -1416,15 +1416,46 @@ def _disposition_drafts(root, outcomes):
                     "section and re-run `python intake.py sweep`".format(relpath)
                 )
             for draft in parsed:
-                draft.setdefault("specref", relpath)
-                draft.setdefault("workstream", meta.get("workstream") or "process")
-                draft.setdefault("buildtier", "medium")
-                draft["context"] = (
-                    "Drafted by {} (its ## Dispositions section) and minted at "
-                    "its merge - drafts-not-mints, ruling R1/R3.".format(wi_id)
-                ) + ("\n\n" + draft["scope"] if draft.get("scope") else "")
-                drafts.append(draft)
+                drafts.append(_disposition_draft(root, draft, meta, wi_id, relpath))
     return drafts, None
+
+
+def _disposition_draft(root, draft, meta, wi_id, relpath):
+    """One drafted successor, with its defaults and its derived `## Context`.
+
+    THE CONSOLIDATION HALF is the second paragraph, and it is plan §1.5 /
+    Done-when 4: the successor's Context carries each absorbed row's Done-when
+    block QUOTED under its old id. Not decoration — the shipped brief PROMISES
+    it ("do NOT paraphrase"), so a judge who follows the brief writes a boundary
+    sentence and nothing else, and without this the successor a lane then builds
+    carries no acceptance criteria at all. Read HERE, because the absorbed rows
+    are still in `queued/`; `_mint` archives them a few frames later.
+
+    Split out of `_disposition_drafts` so that stays a walk over merged rows
+    with one call in its inner loop: composing one draft is a question about one
+    draft, and it is asked here."""
+    draft.setdefault("specref", relpath)
+    draft.setdefault("workstream", meta.get("workstream") or "process")
+    draft.setdefault("buildtier", "medium")
+    context = (
+        "Drafted by {} (its ## Dispositions section) and minted at its merge - "
+        "drafts-not-mints, ruling R1/R3.".format(wi_id)
+    ) + ("\n\n" + draft["scope"] if draft.get("scope") else "")
+    if (meta.get("brief") or "").strip().lower() == consolidate.BRIEF:
+        # THE ONE FLAG that tells the mint this successor ABSORBS rather than
+        # continues, read off the judging row's declared brief. It decides two
+        # things at once: whether the absorbed Done-when blocks are quoted, and
+        # whether `_mint` archives the superseded rows. A disposition successor
+        # supersedes a row that is already terminal and must not be archived
+        # again.
+        draft["consolidated"] = True
+        quoted = consolidate.absorbed_done_when(
+            root, supersedes_ids(draft.get("supersedes"))
+        )
+        if quoted:
+            context += "\n\n" + quoted
+    draft["context"] = context
+    return draft
 
 
 # --- trigger (c): the gap census ----------------------------------------------
@@ -1953,6 +1984,13 @@ def _mint(root, drafts, subject_verb):
         return [], refusal
     minted = []
     lineage = []
+    # ...and the CONSOLIDATION subset of it. Every successor's lineage is
+    # re-pointed; only a consolidation's is ARCHIVED, because only a
+    # consolidation absorbs a row that is still `queued`. A disposition
+    # successor supersedes a row that closed `partial` or `cancelled` — already
+    # terminal, already out of `queued/` — so archiving off the whole lineage
+    # refused every ordinary disposition mint by name.
+    absorbing = []
     for draft in drafts:
         written, refusal = _write_draft(root, draft, registry, subject_verb)
         if refusal:
@@ -1962,6 +2000,8 @@ def _mint(root, drafts, subject_verb):
         wi_id, rel, absorbed = written
         minted.append((wi_id, rel))
         lineage.append((wi_id, absorbed))
+        if draft.get("consolidated"):
+            absorbing.append((wi_id, absorbed))
     # THE RE-POINT RUNS ONCE, over the WHOLE mint, after every draft is on disk:
     # a dependent of a row split across several successors must end holding all
     # of them, and a successor must be recognisable as one (by its own written
@@ -1973,7 +2013,16 @@ def _mint(root, drafts, subject_verb):
     # skips a terminal row), and their Deliverable names a successor whose id
     # was allocated in the loop above. No-op for every mint that absorbs
     # nothing, which is every mint but a consolidation's.
-    for dead_id, successor, dest in consolidate.archive_absorbed(root, lineage):
+    moved, refusal = consolidate.archive_absorbed(root, absorbing)
+    if refusal:
+        # ALL OR NOTHING, and the restore is why this refusal can be late: an
+        # absorbed row that cannot be archived would leave the successor's
+        # lineage cell naming a row it did not absorb, so the whole mint is
+        # rolled back rather than committed half-done.
+        ac.git(root, "reset", "--hard", "HEAD")
+        ac.git(root, "clean", "-fd", "--", WORK)
+        return [], refusal
+    for dead_id, successor, dest in moved:
         _say("restructured {} into {} at {}".format(dead_id, successor, dest))
     # RAISE THE MARK IN THE SAME COMMIT that files the specs. A mint that
     # allocates an id without recording it leaves the mark behind the tree, and

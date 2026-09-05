@@ -70,7 +70,7 @@ editing a file this session does not own.
 them.** `tests/test_traj_views.py::test_meta_component_top_view_smoke` asserts
 `uncontained == []` over this repo's own arch map — deliberately, so that any
 module landing ahead of its spine rows reds rather than needing a renewed
-allowance — and it caught `scripts/consolidate` in the full suite after every
+allowance — and it caught `project-trajectory/scripts/consolidate.py` in the full suite after every
 smoke-tier run was green. So `LLR-210` (module `consolidate.py`, parent SR-157,
 `Component = CMP-008`) and its covering `TC-208` are authored **Drafted**, and
 no `Status` was flipped: authoring is not approving, and the first approval is
@@ -79,7 +79,7 @@ LLR 209 -> 210 and TC 207 -> 208; the strict-integrity pass reads
 `orphans=0 integrity=0`, drafts 11 -> 13.
 
 **Known residue, reported rather than absorbed.** No `IF-###` row names
-`scripts/consolidate`, so `check_trajectory` still warns `connectivity
+`project-trajectory/scripts/consolidate.py`, so `check_trajectory` still warns `connectivity
 undeclared` for it — warn-only, and declaring the seam is an interface-authoring
 act this row does not scope. The census is also not called from
 `dispatch._admit`; see above.

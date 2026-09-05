@@ -164,10 +164,17 @@ outcome = "consolidate"
 ```
 """
 
+MACHINE = "OUTCOME: CONSOLIDATE needs=- absorbs=WI-401;WI-402;WI-403"
 
-def _record_verdict(root, branch, body):
+
+def _record_verdict(root, branch, body, machine=None):
     """What an ADJUDICATE session does on the lane: write its typed blocks into
-    its OWN spec and commit with the result trailer."""
+    its OWN spec, write the VERDICT FILE under `docs/reviews/` carrying the
+    machine line, and commit with the result trailer.
+
+    The verdict file is part of the fixture because the close reconciles it: the
+    `OUTCOME:`/`absorbs=` counters and the typed `## Consolidation` block are one
+    fact, and a fixture that wrote only the block could not see them disagree."""
     wt, err = integ.lane_worktree(root, branch)
     assert err is None, err
     active = wt / "docs" / "work" / "active" / branch
@@ -175,6 +182,16 @@ def _record_verdict(root, branch, body):
     spec.write_text(
         spec.read_text(encoding="utf-8") + body, encoding="utf-8", newline="\n"
     )
+    if machine is not None:
+        reviews = wt / "docs" / "reviews"
+        reviews.mkdir(parents=True, exist_ok=True)
+        (reviews / "001-ADJUDICATE-abc1234.md").write_text(
+            "- [MINOR] the cluster is one row -> overlap -> consolidate\n"
+            + machine
+            + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
     _git(wt, "add", "-A")
     _git(wt, "commit", "--no-verify", "-m", "adjudicate: the verdict\n\nWI: recorded")
     return wt
@@ -238,7 +255,7 @@ def test_a_consolidate_verdict_absorbs_its_cluster_end_to_end(tmp_path):
     judge_id = minted[0][0]
     branch = judge_id.lower()
     assert integ.claim(root, judge_id, branch) == 0
-    _record_verdict(root, branch, DISPOSITIONS + VERDICT)
+    _record_verdict(root, branch, DISPOSITIONS + VERDICT, machine=MACHINE)
 
     ids, refusal = hb.close_adjudication(root, branch)
     assert refusal is None, refusal
@@ -294,7 +311,7 @@ def test_the_close_refuses_by_name_when_an_absorbed_row_was_claimed(tmp_path):
     branch = judge_id.lower()
     assert integ.claim(root, judge_id, branch) == 0
     assert integ.claim(root, "WI-402", "wi-402") == 0
-    _record_verdict(root, branch, DISPOSITIONS + VERDICT)
+    _record_verdict(root, branch, DISPOSITIONS + VERDICT, machine=MACHINE)
     ids, refusal = hb.close_adjudication(root, branch)
     assert ids is None
     assert refusal and "WI-402" in refusal and "no longer queued" in refusal
@@ -345,3 +362,151 @@ def test_return_to_draft_moves_the_row_back_with_the_finding_quoted(tmp_path):
     text = spec.read_text(encoding="utf-8")
     assert "> WI-403 re-proposes what WI-390 already refuted." in text
     assert "The WI-403 context." in text  # its own scope survives the return
+
+
+# --- the transaction invariants, driven end to end (review rounds 1-2) --------
+
+
+def _minted_judge(root):
+    minted, refusal = intake.mint_consolidation(root, busy=False)
+    assert refusal is None, refusal
+    judge_id = minted[0][0]
+    branch = judge_id.lower()
+    assert integ.claim(root, judge_id, branch) == 0
+    return judge_id, branch
+
+
+def test_the_successor_context_quotes_every_absorbed_done_when_verbatim(tmp_path):
+    """Plan §1.5 / Done-when 4, end to end. The shipped brief PROMISES this, so
+    a judge who follows it writes a boundary sentence and nothing else — and
+    without the quoting the successor a lane then builds carries NO acceptance
+    criteria at all. The e2e used to assert only the scope prose, which is
+    exactly the half that was implemented."""
+    root = cluster_repo(tmp_path)
+    judge_id, branch = _minted_judge(root)
+    _record_verdict(root, branch, DISPOSITIONS + VERDICT, machine=MACHINE)
+    ids, refusal = hb.close_adjudication(root, branch)
+    assert refusal is None, refusal
+    before = _git(root, "rev-parse", "HEAD").strip()
+    after = _merge(root, branch)
+    successors, refusal = intake.intake_after_merge(
+        root, before, after, {judge_id: "merged"}, branch
+    )
+    assert refusal is None, refusal
+    successor = successors[0][0]
+    text = sorted((root / "docs" / "work" / "queued").glob(successor + "-*.md"))[
+        0
+    ].read_text(encoding="utf-8")
+    assert "one row for the widget" in text.lower()  # the scope prose
+    for wid in ("WI-401", "WI-402", "WI-403"):
+        assert "{} (absorbed)".format(wid) in text, wid
+        assert "Deliver {}.".format(wid) in text, wid  # the Done-when, verbatim
+
+
+def test_a_verdict_absorbing_a_row_outside_the_cluster_is_refused_at_the_close(
+    tmp_path,
+):
+    """THE BOUND THAT WAS DECORATIVE. `WI-409` is the fixture's explicitly
+    excluded row; a draft superseding it used to close, merge and archive it."""
+    root = cluster_repo(tmp_path)
+    _judge_id, branch = _minted_judge(root)
+    wide = DISPOSITIONS.replace(
+        '["WI-401", "WI-402", "WI-403"]', '["WI-401", "WI-402", "WI-403", "WI-409"]'
+    )
+    _record_verdict(
+        root,
+        branch,
+        wide + VERDICT,
+        machine="OUTCOME: CONSOLIDATE needs=- absorbs=WI-401;WI-402;WI-403;WI-409",
+    )
+    ids, refusal = hb.close_adjudication(root, branch)
+    assert ids is None
+    assert refusal and "WI-409" in refusal and "OUTSIDE" in refusal
+    assert _rows(root)["WI-409"]["Status"] == "queued"
+
+
+def test_a_verdict_whose_machine_line_disagrees_with_its_block_is_refused(tmp_path):
+    """Two carriers of one fact that nothing compares is how a session reports
+    one verdict and the machinery performs another."""
+    root = cluster_repo(tmp_path)
+    _judge_id, branch = _minted_judge(root)
+    _record_verdict(
+        root,
+        branch,
+        DISPOSITIONS + VERDICT,
+        machine="OUTCOME: QUEUE needs=- absorbs=-",
+    )
+    ids, refusal = hb.close_adjudication(root, branch)
+    assert ids is None
+    assert refusal and "OUTCOME: QUEUE" in refusal and "one judgement" in refusal
+    for wid in ("WI-401", "WI-402", "WI-403"):
+        assert _rows(root)[wid]["Status"] == "queued", wid
+
+
+def test_a_stale_digests_cell_refuses_the_close(tmp_path):
+    """The queue moved after the verdict was minted, so the rows it judged are
+    not the rows it would act on."""
+    root = cluster_repo(tmp_path)
+    _judge_id, branch = _minted_judge(root)
+    # A new queued row lands on trunk between the mint and the close.
+    (root / "docs" / "work" / "queued" / "WI-407-late.md").write_text(
+        _spec("WI-407", "arrived late", specref="docs/plans/other.md"),
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "a row lands after the census ran")
+    _record_verdict(root, branch, DISPOSITIONS + VERDICT, machine=MACHINE)
+    ids, refusal = hb.close_adjudication(root, branch)
+    assert ids is None
+    assert refusal and "QUEUE has moved" in refusal
+
+
+def test_two_drafted_successors_refuse_the_close(tmp_path):
+    """A consolidation replaces its cluster with ONE row; two drafts split the
+    absorbed scope with nothing recording the split."""
+    root = cluster_repo(tmp_path)
+    _judge_id, branch = _minted_judge(root)
+    split = (
+        DISPOSITIONS
+        + """
+```toml
+title = "The widget, the other half"
+workstream = "process"
+buildtier = "medium"
+supersedes = ["WI-403"]
+```
+
+Scope: the second half.
+"""
+    )
+    _record_verdict(root, branch, split + VERDICT, machine=MACHINE)
+    ids, refusal = hb.close_adjudication(root, branch)
+    assert ids is None
+    assert refusal and "drafted 2 successor(s)" in refusal
+
+
+def test_a_row_claimed_between_close_and_merge_refuses_the_whole_mint(tmp_path):
+    """`archive_absorbed` used to SKIP it: two `restructured` lines instead of
+    three, no message about the third, and a successor whose `Supersedes` named
+    a row still `active` on its own lane — two live rows covering one scope,
+    with the ABSENCE of one line among three as the only signal."""
+    root = cluster_repo(tmp_path)
+    judge_id, branch = _minted_judge(root)
+    _record_verdict(root, branch, DISPOSITIONS + VERDICT, machine=MACHINE)
+    ids, refusal = hb.close_adjudication(root, branch)
+    assert refusal is None, refusal
+    before = _git(root, "rev-parse", "HEAD").strip()
+    after = _merge(root, branch)
+    # The race the close cannot see: a hand claim lands after it committed.
+    assert integ.claim(root, "WI-402", "wi-402") == 0
+    after = _git(root, "rev-parse", "HEAD").strip()
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {judge_id: "merged"}, branch
+    )
+    assert minted == []
+    assert refusal and "WI-402" in refusal and "no longer a queued spec" in refusal
+    rows = _rows(root)
+    # NOTHING half-archived: the other two are still queued, no successor exists.
+    assert rows["WI-401"]["Status"] == "queued"
+    assert rows["WI-403"]["Status"] == "queued"
+    assert not list((root / "docs" / "archive" / "work" / "restructured").glob("*.md"))

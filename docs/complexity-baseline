@@ -116,7 +116,7 @@ project-trajectory/scripts/gen_trajectory.py	main	16	71
 project-trajectory/scripts/hats.py	_audit_lines	20	89
 project-trajectory/scripts/hats.py	parse_condition	19	47
 project-trajectory/scripts/intake.py	_close_drafts	19	73
-project-trajectory/scripts/intake.py	_disposition_drafts	25	34	21 -> 25; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
+project-trajectory/scripts/intake.py	_disposition_drafts	20	34	RE-STAMPED DOWN 2026-09-04 (WI-583 rework): composing one drafted successor moved out to the sibling `_disposition_draft`, which is where the consolidation's absorbed-Done-when quoting (plan section 1.5) lands - decomposed OUTWARD rather than bumped, and recorded down in the same commit per this file's rule. 21 -> 25; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/intake.py	_locate_spine_rows	31	31
 project-trajectory/scripts/integrate.py	_claim_delta	22	25
 project-trajectory/scripts/integrate.py	_claim_refusal	16	43

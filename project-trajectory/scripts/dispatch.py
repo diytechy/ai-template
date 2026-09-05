@@ -1085,6 +1085,28 @@ def _admit(
         return _admit_parked(
             root, table, args, worker, parked, free, config_refusal, state
         )
+    # THE CONSOLIDATION CENSUS (the 2026-09-02 restructure plan §1.3): at most
+    # ONE `consolidate` adjudication row per tick, minted only from an idle
+    # station over a queue state no consolidation has judged. Sited HERE — after
+    # the parked arm, before the pause arm and before the frontier is loaded —
+    # for three reasons that all point at this line. It must see `busy` (a
+    # judgement runs alone, and the rows it would judge may be the ones the live
+    # lanes hold); a row minted here is on the frontier `_admit_frontier`
+    # re-derives on this same tick, so the census costs no cycle; and a pause
+    # means STOP CLAIMING, which minting a row is not, but there is no point
+    # minting work a paused station will not claim, so it sits above that arm
+    # only because `mint_consolidation` answers `([], None)` on a busy station
+    # and the pause arm below returns before any claim either way.
+    minted, refusal = intake.mint_consolidation(root, busy)
+    if refusal:
+        _say(refusal, err=True)
+        return False, 1
+    if minted:
+        _say(
+            "consolidation census - minted {} over an overlapping queue: {}".format(
+                len(minted), ", ".join(w for w, _rel in minted)
+            )
+        )
     if paused is not None:
         # Nothing parked and the pause forbids the next claim, so the only work
         # left is the DRAIN §5.6 promises: "the pause never strands finished
