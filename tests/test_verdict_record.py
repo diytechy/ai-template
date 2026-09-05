@@ -1673,3 +1673,48 @@ def test_a_close_that_reached_outside_docs_work_does_not_peel(tmp_path):
     _mechanical_close(root, also="src/widget.py")
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None and "names its current tree" in refusal
+
+
+def _empty_close(root, when=T_LATER + 300):
+    """The composed close subject on a commit that moved NOTHING. Real git, via
+    `--allow-empty`, because an empty diff is the one close shape a fixture
+    cannot reach by writing files."""
+    import os
+
+    env = dict(os.environ)
+    stamp = "@{} +0000".format(when)
+    env["GIT_AUTHOR_DATE"] = stamp
+    env["GIT_COMMITTER_DATE"] = stamp
+    _git(root, "checkout", "-q", "wi-401")
+    _git(
+        root,
+        "commit",
+        "-q",
+        "--allow-empty",
+        "-m",
+        ks.mechanical_close_subject(["WI-401"])
+        + "\n\nthe machinery archives the judged row.\n\nWI: WI-401",
+        env=env,
+    )
+    rev = _rev(root, "wi-401")
+    _git(root, "checkout", "-q", "main")
+    return rev
+
+
+def test_an_empty_close_is_refused_and_the_walk_covers_it_regardless(tmp_path):
+    root = rounds_repo(tmp_path)
+    _claim_commit(root)
+    add_round(root, 3)
+    judged = _rev(root, "wi-401")
+    _mechanical_close(root)
+    assert kv.governing_identity(root, "wi-401") == kv.tree_identity(root, judged)
+
+    empty = _empty_close(root)
+    # THE BOUNDARY. Subject and single parent both match, so the non-empty path
+    # set is the only clause that can refuse this one.
+    assert kv.mechanical_close_attestation(root, empty) is None
+    # AND THE REFUSAL STRANDS NOTHING, which is why it is safe to make it: an
+    # empty commit preserves the identity by construction, so `governing_rev`'s
+    # walk-through step reaches the real close underneath either way.
+    assert kv.governing_identity(root, "wi-401") == kv.tree_identity(root, judged)
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None

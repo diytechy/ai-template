@@ -210,3 +210,53 @@ the closing tip: `integrity=0` again, and `clean (595 work item(s), 545 done
 (92%), 21 cancelled, graph acyclic)` — the done count up one and both of this
 row's own WARNs (the stale `SpecRef` clock, and sharing a spec of record with
 WI-598) gone, which is the close registering.
+
+### Rework round 1 — the empty-close finding, taken in the half that holds
+
+Review A (`docs/reviews/wi-595-llr-207-tc-205-return-and-llr/003-REVIEW-A-149698f.md`)
+returned one MAJOR: `LLR-207.detail` newly makes a NON-EMPTY changed-path set an
+admission condition, and `TC-205` cited no test for it. That half is correct —
+the return authored a claim and left it unevidenced, which is exactly the defect
+this WI existed to fix in the other direction. A regression now exists and is
+cited.
+
+The remedy as SPECIFIED — "a real-git empty-close refusal test that asserts the
+merge gate asks for review" — was not written, and the reason is measured rather
+than argued. `_peel_target` is the ONLY caller of `mechanical_close_attestation`
+(grep over `project-trajectory/scripts` and `tests`), and `governing_rev` does
+not merely peel: it also WALKS THROUGH any commit whose non-record identity
+equals its first parent's. An empty commit satisfies that by construction. So
+the empty-path clause cannot change what the gate answers.
+
+Driven, not reasoned. With `if not paths or …` deleted from
+`mechanical_close_attestation` and the whole module re-run:
+
+    1 failed, 57 passed in 58.99s
+
+The single red is the new boundary assertion. On the same fixture — a judged
+round, a REAL mechanical close, then an empty commit carrying the composed
+subject — `kv.governing_identity` still returns the judged tree and
+`integ._verdict_gate` still returns None in BOTH arms. `verdict.py` was restored
+byte-clean (`git diff` empty) and the module re-run: `58 passed in 94.18s`.
+
+So the finding's stated consequence — "would let it preserve an earlier
+approval" — describes both arms equally, and preserving it is the CORRECT
+answer: a commit that changed nothing has invalidated no verdict. A test
+asserting a gate refusal here would pin a behaviour the module does not have and
+should not acquire. The clause is a guard on a public `__all__` export's
+contract, made redundant at the gate by the walk.
+
+What landed:
+
+- `tests/test_verdict_record.py::test_an_empty_close_is_refused_and_the_walk_covers_it_regardless`
+  plus its `_empty_close` helper (`git commit --allow-empty`, since a zero-path
+  diff is the one close shape a file-writing fixture cannot reach). It asserts
+  the refusal AND that the refusal strands nothing — the honest pair.
+- `TC-205.evidence` cites it; `TC-205.method` states the third refusal, where it
+  is observable, and why the gate assertion is deliberately absent.
+- `LLR-207.detail`: "can only ask for more" was overstated in this same spot —
+  on the empty arm the later rev carries the SAME identity, so it asks for
+  exactly as much. Now "can never ask for LESS", with the equality named.
+
+`LLR-207` and `TC-205` were already `Drafted` and stay so; no `Status` was
+flipped and no `docs/archive/last_approved/` written.

@@ -84,11 +84,32 @@ regenerated on this lane; its freshness is the trunk lane's. Numbers, the
 both-ways evidence, and the re-run at the closing tip are in
 `docs/log.d/WI-595-llr-207-tc-205-return-and-llr.md`, which also records the
 three decisions the cells cannot carry themselves: `LLR-208.hat_refs` left
-unset deliberately, the `SR-170`/`UNATTENDED-OPS` question surfaced as a
-separate finding rather than fixed inline, and the `mechanical_close_attestation`
-empty-path refusal left UNTESTED and named rather than covered, since a new
-regression is outside this return's fence. Nothing was widened into the
+unset deliberately, and the `SR-170`/`UNATTENDED-OPS` question surfaced as a
+separate finding rather than fixed inline. Nothing was widened into the
 out-of-scope `work_tip` docstring defect the spec fenced off.
+
+REWORK ROUND 1 (review A, `003-REVIEW-A-149698f.md`, one MAJOR). The finding
+was right that the return had left its own new claim unevidenced and wrong
+about what evidencing it would show, so it is taken in the half that holds.
+A regression now exists and is cited —
+`test_an_empty_close_is_refused_and_the_walk_covers_it_regardless`, real git
+via `--allow-empty`, since a zero-path diff is the one close shape a
+file-writing fixture cannot reach. The remedy AS SPECIFIED ("assert the merge
+gate asks for review") was not written, because it asserts a behaviour the
+module does not have: MEASURED by deleting the `not paths or` clause and
+re-running the module — `1 failed, 57 passed`, the single red being the new
+boundary assertion, with `governing_identity` and `_verdict_gate` giving
+IDENTICAL answers on that fixture in both arms. An empty commit is
+identity-preserving by construction, so `governing_rev`'s walk-through step
+reaches the real close underneath whether or not the peel admits the empty
+one; the finding's "would let it preserve an earlier approval" describes both
+arms equally, and preserving it is CORRECT, because a commit that changed
+nothing has invalidated no verdict. The clause is therefore a guard on a
+public export's contract, not a gate defence, and the arm is asserted at
+`mechanical_close_attestation` — where it is the only thing that can refuse —
+together with the fact that it strands nothing. `LLR-207.detail`'s
+"can only ask for more" was overstated in the same place and is now
+"can never ask for LESS", with the empty arm's equality named.
 
 ## Context
 
