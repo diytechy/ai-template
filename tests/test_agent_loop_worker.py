@@ -836,6 +836,39 @@ def test_a_one_row_lane_answers_its_row_either_way(tmp_path):
     assert al.current_assignment_wi(str(repo), worker) == "WI-201"
 
 
+@env_gate_skipif("git")
+def test_the_brief_never_calls_an_unclosed_row_built(tmp_path):
+    # WI-580 review A (MAJOR): the brief block derived doneness from the
+    # trailer ALONE while the walk asked both halves, so a batch that committed
+    # a trailer for a row and never ran its close ritual told the next session
+    # that row was `built` — the same silent-completion miss the walk's two-part
+    # test exists to prevent. Both readers now go through `lane_completion`.
+    al = load_script("agent_loop")
+    repo, worker, active = _batch_repo(tmp_path)
+    _build_commit(repo, "WI-201", "t1", worker["base"])
+    _build_commit(repo, "WI-204", "t1", worker["base"])
+    rows = {w: {"WI-ID": w, "Title": "row " + w} for w in ("WI-201", "WI-204")}
+    focus = al.current_assignment_wi(str(repo), worker)
+    assert focus == "WI-201"  # neither spec left active/, so the walk holds
+    block = al.assignment_block(
+        str(repo), rows, focus, worker["base"], worker["assigned"]
+    )
+    # MUTATION NOTE: on the trailer-alone predicate this line read `[built]`.
+    assert "  - WI-204 [started, not closed] row WI-204" in block
+    assert "[built]" not in block
+    # And the closed half still reads `built`, so the new state is not a
+    # blanket downgrade of every trailer-bearing row.
+    complete = repo / "docs" / "work" / "complete"
+    complete.mkdir(parents=True, exist_ok=True)
+    (active / "WI-204-row.md").rename(complete / "WI-204-row.md")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "close WI-204")
+    block = al.assignment_block(
+        str(repo), rows, focus, worker["base"], worker["assigned"]
+    )
+    assert "  - WI-204 [built] row WI-204" in block
+
+
 # --- the resumed BATCH preflight: a row this branch closed is not stale ---------
 # Measured 2026-09-03 on the four-row spine batch `wi-589-…`. The lane closed
 # three of its rows, so the registry read `done` for them — and the resumed

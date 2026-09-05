@@ -99,3 +99,45 @@ run it only then).
 OI-84) are about the coordinator's own launch/base derivation, not about the
 briefs it composes, and nothing here touched either path.
 
+
+### Rework pass (session 003) — REVIEW-A MAJOR: the brief's half-predicate
+
+`assignment_block` derived doneness from the committed `WI:` trailer alone
+while `current_assignment_wi` had already been taught the two-part test (the
+trailer AND the spec gone from `active/<branch>/`, the WI-589 stranding). Two
+derivations of one question, so a batch that committed a trailer and ran out of
+budget before its close ritual rendered that row `[built]` to the very session
+the walk was sending back to it.
+
+- **The fix is a consolidation, not a patch:** `lane_completion(root, base)`
+  returns `(built, done)` and is now the single home of the predicate; the walk
+  asks it (two lines shorter than the copy it dropped) and the brief asks the
+  same call. A row can no longer be `built` in the brief and unfinished to the
+  walk, because there is one set to be in.
+- **A third display state, `started, not closed`,** for the trailer-only rows
+  the honest predicate now makes visible — labelling them `not started` would
+  have replaced a false "done" with a false "untouched" and sent the next
+  session to redo committed work.
+- **Regression test** `test_the_brief_never_calls_an_unclosed_row_built`
+  (tests/test_agent_loop_worker.py): two trailers committed, both specs still
+  in `active/`, and the non-focus row must read `started, not closed`; the same
+  row reads `built` once its spec is moved out. Carries the mutation note — on
+  the trailer-alone predicate the first assertion reads `[built]`.
+- **LLR-061's `detail` amended** to state the predicate the brief reads, not
+  just the vocabulary it prints (the old cell enumerated three states and said
+  nothing about where they came from — the gap that let the defect look
+  conformant); `docs/ratify/CURRENT.md` regenerated.
+- **Baseline:** `agent_loop.py` 2608 -> 2609 SLOC, a reviewed +1 stamped with
+  its reason in `tests/test_module_size_ratchet.py`. Compacted first per the
+  phantom-overage rule (the nested-ternary rendering went to a state map).
+- **Green:** `test_agent_loop_worker.py`, `test_agent_loop_review.py`,
+  `test_module_size_ratchet.py` — 78 passed in 44.5 s; `ruff format` /
+  `ruff check` clean; `check_docs.py --root . --stale` OK (1369 docs, 1602
+  links, 0 broken). The full smoke bar now PASSES enforcement on a quieter box:
+  `pytest -q -n auto -m smoke` 1551 passed / 4 skipped in 61.0 s, and
+  `check_smoke_budget.py --mode enforce` timed its own run at **52.9 s vs the
+  60 s budget -> within** (load average 2.9, against the 9.3–10.8 that produced
+  the 94.0/97.5 s readings above). Same tier membership, quieter box — which is
+  the reading that was owed. The `docs/stage` fingerprint red is the same
+  CAUSED-but-benign one recorded above (LLR-061 amended again), and for the
+  same reason it is the trunk lane's to regenerate.

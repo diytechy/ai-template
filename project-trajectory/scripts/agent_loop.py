@@ -399,15 +399,21 @@ def assignment_block(root, wi_rows, wi, base, assigned):
 
     The state vocabulary is the walk's own, not a fourth opinion about
     doneness: `this session's focus` is whatever `current_assignment_wi`
-    returned, and the rest split on the SAME committed-trailer evidence that
-    walk reads (`train_evidence`). A row that is `built` here is one the walk
-    has already stepped past.
+    returned, and the rest split on the SAME two-part predicate that walk reads
+    (`lane_completion`). A row that is `built` here is one the walk has already
+    stepped past — trailer committed AND spec out of `active/<branch>/`. A row
+    with only the trailer reads `started, not closed`, because that is a row
+    the walk WILL come back to and telling its next session `built` is the
+    silent-completion miss this block was measured against.
 
     Implements: SR-026, LLR-061
     """
     if len(assigned) < 2:
         return ""
-    built, _blocked = train_evidence(root, base)
+    built, done = lane_completion(root, base)
+    # `done` wins over `built` where a row is both — the trailer-only rows are
+    # what is left, and a row in neither set was never touched.
+    state = dict.fromkeys(built, "started, not closed") | dict.fromkeys(done, "built")
     return (
         "- The WHOLE assignment ({} rows claimed on this lane, one row per "
         "session — a sibling row is this lane's later work, not another "
@@ -415,9 +421,7 @@ def assignment_block(root, wi_rows, wi, base, assigned):
         + "".join(
             "  - {} [{}] {} — SpecRef: {}\n".format(
                 tok,
-                "this session's focus"
-                if tok == wi
-                else ("built" if tok in built else "not started"),
+                "this session's focus" if tok == wi else state.get(tok, "not started"),
                 _row_title(wi_rows, tok),
                 (wi_rows.get(tok, {}).get("SpecRef") or "—").strip() or "—",
             )
@@ -3083,6 +3087,23 @@ def claimed_on_branch(root):
     return (branch and integrate.claimed_ids_on_branch(root, branch)) or set()
 
 
+def lane_completion(root, base):
+    """`(built, done)` for a lane, the ONE completion predicate its two readers
+    share: `built` is the rows carrying a committed `WI:` trailer, `done` the
+    rows a session is finished with — trailer AND spec gone from
+    `active/<branch>/`.
+
+    Both facts in one read because both readers need the distinction and
+    neither may invent its own (WI-580 review A): the walk
+    (`current_assignment_wi`) and the brief (`assignment_block`) had each
+    derived doneness separately, and the brief's half-predicate labelled a row
+    `built` on its trailer alone — so a batch with a trailer committed but the
+    close ritual unrun told the next session its still-active row was complete,
+    the exact miss `current_assignment_wi`'s two-part test exists to prevent."""
+    built, _blocked = train_evidence(root, base)
+    return built, built - claimed_on_branch(root)
+
+
 def current_assignment_wi(root, worker):
     """The WI this session claims (WI-137): the first assigned WI that is not
     BUILT, else the rework target (else the last assigned).
@@ -3111,9 +3132,8 @@ def current_assignment_wi(root, worker):
     dispatcher admits deliberately (§A4), whose constituents are homogeneous by
     construction: the guard's sole non-refusing case. A check that can only
     ever say yes is not a safeguard.)"""
-    built, _blk = train_evidence(root, worker["base"])
-    still_open = claimed_on_branch(root)
-    remaining = [w for w in worker["assigned"] if w not in built or w in still_open]
+    _built, done = lane_completion(root, worker["base"])
+    remaining = [w for w in worker["assigned"] if w not in done]
     return (
         remaining[0]
         if remaining
