@@ -2214,3 +2214,15 @@ test_refs = "TC-207"
 status = "Approved"
 component = "CMP-006"
 phase = 5
+
+[design.LLR-210]
+sr_refs = ["SR-157"]
+title = "The consolidation census: which queued rows are one work item, and the memory that stops the question being re-asked"
+module = "project-trajectory/scripts/consolidate.py"
+code_symbol = "census_draft/queue_digest/spine_digest/clusters/parse_verdict/close_refusal/archive_absorbed"
+detail = """The queue-overlap pre-filter's judgement half, as a producer of one adjudication row rather than a warn. `clusters` selects the candidate set from `check_trajectory.queue_conflict_pairs` — the same three signals reported at PAIR grain so a caller reads edges instead of parsing warn sentences — widened by two signals the pair producer cannot carry: rows commissioned by one plan document or one open-item edge, and rows whose SR-Refs reach the same design-row `Module` or whose own body names the same source file. `census_draft` returns the row that cluster would mint, carrying its scope in the typed `Adjudicates` cell and its recursion guard in the typed `Digests` cell (a queue sha over the sorted id/title/needs/safety_class of the ready queue, and a spine sha over the three spine registries). Three refusals, all over typed cells: none while another judgement is queued or active; none for a queue sha a consolidation row already carries in ANY status, terminal included; and a row an earlier consolidation minted neither seeds a cluster nor may be re-absorbed. `parse_verdict` and `close_refusal` read the verdict's typed outcome block and refuse by name for any row it moves that is not queued; `restructured_text`, `returned_text` and `edged_text` are the pure transforms the two call sites write back, and `archive_absorbed` performs the absorbed rows' move to the fourth terminal folder at the mint, where the successor's id exists."""
+rationale = """A census fires on a STATE rather than an event, so it re-asks its question on every idle tick unless something remembers — and each ask is a strong-tier judge session, which makes the memory the load-bearing part of the design rather than an optimisation. The memory is a registry cell and not a runtime one so that it survives the judging row going terminal: an active-only guard reads "nobody has judged this" the moment the consolidation closes, and mints the identical row forever. The module is separate from the mint for two reasons that point the same way: the decision half is testable with no repository at all, and the one allocator of a work-item id must stay the one allocator, so the arrow between the two modules runs one way and the effect lives with the allocator."""
+test_refs = "TC-208"
+status = "Drafted"
+component = "CMP-008"
+phase = 5

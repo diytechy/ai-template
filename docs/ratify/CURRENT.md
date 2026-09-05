@@ -238,6 +238,43 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Status**: Drafted
 - **Phase**: 5
 
+## SR-157 — Spine and work-registry rules red the harness verdict
+
+> **Requirement.** The delivered harness shall report every declared spine and work-registry rule violation — broken joins, integrity and schema faults, leftover placeholders, requirement-form findings and work-item coherence contradictions — naming the at-fault row and cell, gating the declared failure set at the declared gate while advisory classes never change the exit code.
+
+> **Rationale.** Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (queue-overlap visibility). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Deliberate pair (census F6): the PB-format invariant itself is SR-015's; this row's decomposition carries the checker. Fan-out re-stamp: the delivered contract is one — a named, row-and-cell-attributed finding at a declared severity, gating or advisory — while the rule inventory it ranges over is open by this row's own acceptance ("a rule added at one of those sites is in this row's scope by default"), so the child count tracks the number of declared rules rather than the number of decisions this row makes, and would climb back through any bound a split bought.
+
+
+### LLR LLR-160
+- **CodeSymbol**
+  - before: queue_conflict_findings/_title_tokens
+  - after: queue_conflict_pairs/queue_conflict_findings/_title_tokens
+
+### LLR LLR-210 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-210
+- **SR-Refs**: SR-157
+- **Title**: The consolidation census: which queued rows are one work item, and the memory that stops the question being re-asked
+- **Module**: project-trajectory/scripts/consolidate.py
+- **CodeSymbol**: census_draft/queue_digest/spine_digest/clusters/parse_verdict/close_refusal/archive_absorbed
+- **Detail**: The queue-overlap pre-filter's judgement half, as a producer of one adjudication row rather than a warn. `clusters` selects the candidate set from `check_trajectory.queue_conflict_pairs` — the same three signals reported at PAIR grain so a caller reads edges instead of parsing warn sentences — widened by two signals the pair producer cannot carry: rows commissioned by one plan document or one open-item edge, and rows whose SR-Refs reach the same design-row `Module` or whose own body names the same source file. `census_draft` returns the row that cluster would mint, carrying its scope in the typed `Adjudicates` cell and its recursion guard in the typed `Digests` cell (a queue sha over the sorted id/title/needs/safety_class of the ready queue, and a spine sha over the three spine registries). Three refusals, all over typed cells: none while another judgement is queued or active; none for a queue sha a consolidation row already carries in ANY status, terminal included; and a row an earlier consolidation minted neither seeds a cluster nor may be re-absorbed. `parse_verdict` and `close_refusal` read the verdict's typed outcome block and refuse by name for any row it moves that is not queued; `restructured_text`, `returned_text` and `edged_text` are the pure transforms the two call sites write back, and `archive_absorbed` performs the absorbed rows' move to the fourth terminal folder at the mint, where the successor's id exists.
+- **Rationale**: A census fires on a STATE rather than an event, so it re-asks its question on every idle tick unless something remembers — and each ask is a strong-tier judge session, which makes the memory the load-bearing part of the design rather than an optimisation. The memory is a registry cell and not a runtime one so that it survives the judging row going terminal: an active-only guard reads "nobody has judged this" the moment the consolidation closes, and mints the identical row forever. The module is separate from the mint for two reasons that point the same way: the decision half is testable with no repository at all, and the one allocator of a work-item id must stay the one allocator, so the arrow between the two modules runs one way and the effect lives with the allocator.
+- **TestRefs**: TC-208
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 5
+
+### TC TC-208 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-208
+- **Verifies**: SR-157;LLR-210
+- **Level**: Integration
+- **Method**: Two claims, because the row makes two. THE SELECTION, driven on hand-built rows with no repository: the queue digest moves for each of the four fields that change the question and stands still for the two that do not; a malformed digest cell reads as no recorded digest; each of the two new signals fires where the pair producer is blind and the module signal does not fire on a bare module name; two disjoint overlapping pairs make ONE candidate set. THE MEMORY AND THE CLOSE, driven on a real repository: a queue with an overlapping cluster mints exactly one row and the same queue again mints nothing; a station holding any judgement mints nothing; a queue state a consolidation already judged mints nothing even after that row goes terminal; a verdict absorbing three rows lands all three in the fourth terminal folder with the one-line Deliverable naming the successor and their scope text unchanged, the successor superseding all three, and the census silent afterwards; a cluster row claimed between mint and close refuses the close BY NAME; queue-with-edge writes the hard needs edge and return-to-draft moves the row back with the finding quoted.
+- **Tier**: Smoke
+- **Expected**: Satisfies the acceptance folded into LLR-210 (parent SR-157)
+- **Automated**: Yes
+- **Evidence**: tests/test_consolidate.py::test_the_queue_digest_covers_the_four_fields_that_change_the_question; tests/test_consolidate.py::test_a_malformed_digests_cell_reads_as_no_recorded_digest; tests/test_consolidate.py::test_a_shared_open_item_edge_is_a_commissioning_signal; tests/test_consolidate.py::test_the_module_signal_reads_both_the_llr_join_and_the_row_prose; tests/test_consolidate.py::test_the_module_signal_does_not_fire_on_a_bare_module_name; tests/test_consolidate.py::test_two_disjoint_overlapping_pairs_make_one_candidate_set; tests/test_consolidate.py::test_no_row_is_minted_beside_another_judgement; tests/test_consolidate.py::test_a_queue_state_that_has_been_judged_is_never_judged_again; tests/test_consolidate.py::test_a_consolidations_own_successor_does_not_seed_the_next_census; tests/test_consolidate.py::test_re_absorbing_a_row_a_consolidation_minted_is_refused_by_name; tests/test_consolidate.py::test_a_malformed_verdict_block_refuses_and_never_defaults; tests/test_consolidate.py::test_the_close_refuses_a_row_that_left_the_queue_by_name; tests/test_consolidate.py::test_an_absorbed_rows_scope_text_is_byte_identical_and_specref_kept; tests/test_consolidate_close.py::test_the_census_mints_one_row_and_refuses_a_second_while_it_is_pending; tests/test_consolidate_close.py::test_a_consolidate_verdict_absorbs_its_cluster_end_to_end; tests/test_consolidate_close.py::test_the_close_refuses_by_name_when_an_absorbed_row_was_claimed; tests/test_consolidate_close.py::test_queue_with_ed… [127 more chars — read the registry row]
+- **Status**: Drafted
+- **Phase**: 5
+
 ## SR-163 — Every shipped file maps to a stakeholder outcome
 
 > **Requirement.** Every file the delivered package ships shall map, through the declared shipped-file inventory and its recorded exclusions, to at least one system requirement whose references resolve to a stakeholder need — generated outputs mapping through their generator — with missing files, stale inventory entries, unresolved references and unmapped files reported under the declared warning-to-gating policy.
