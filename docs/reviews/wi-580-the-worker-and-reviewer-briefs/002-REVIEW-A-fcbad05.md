@@ -1,0 +1,2 @@
+- [MAJOR] project-trajectory/scripts/agent_loop.py:410 -> `assignment_block` labels any prior trailer-bearing row `built`, but `current_assignment_wi` defines built as both the trailer and removal from `active/<branch>/`; a batch with two trailer commits and both specs still active renders the second unclosed row as `[built]`, silently telling the worker it is complete -> derive the block's state from the same two-part completion predicate/`current_assignment_wi` uses, so an active spec cannot render as built -> @software-engineer
+VERDICT: CHANGES-REQUESTED findings=1

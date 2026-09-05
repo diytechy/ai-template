@@ -247,6 +247,99 @@ def test_worker_prompt_carries_the_context_block_computed_fresh(tmp_path):
     assert "Context refs" not in prompt2
 
 
+def test_worker_prompt_single_row_carries_no_assignment_block(tmp_path):
+    # WI-580 Done-when 2, the byte-identity half: `{assignment_block}` renders
+    # EMPTY for a one-row lane, so the single-row brief is what it was — the
+    # `- WI:`/`- SR-Refs:`/`- Branch:` lines already say everything the block
+    # would repeat. Driven through the real function, and through the block
+    # helper directly so the emptiness is the mechanism's, not a coincidence of
+    # this fixture's registry.
+    row = {
+        "WI-ID": "WI-005",
+        "Title": "the assignment",
+        "SR-Refs": "SR-001",
+        "Predecessors": "",
+        "SpecRef": "seed.txt",
+    }
+    rows = {"WI-005": row}
+    assert (
+        agent_loop.assignment_block(tmp_path, rows, "WI-005", "0" * 7, ["WI-005"]) == ""
+    )
+    prompt = agent_loop.worker_prompt(tmp_path, rows, "WI-005", "wi-005", "0" * 7)
+    assert "WHOLE assignment" not in prompt
+    # An explicit one-element assignment renders the same bytes as the default.
+    assert prompt == agent_loop.worker_prompt(
+        tmp_path, rows, "WI-005", "wi-005", "0" * 7, assigned=["WI-005"]
+    )
+    # The opening sentence no longer claims ONE work item (it was false for a
+    # batch, which is how a session lost a sibling row — plan §0).
+    assert "assigned ONE work item" not in prompt
+    assert "this session's focus" in prompt
+
+
+def test_worker_batch_prompt_names_every_assigned_row_and_its_state(tmp_path):
+    # WI-580 Done-when 2: a two-id assignment lists BOTH rows with id, title
+    # and SpecRef, and the evidence state moves with the walk — session 001
+    # sees `this session's focus` / `not started`, session 002 sees the first
+    # row as `built` off its committed trailer. Measured defect (2026-09-02,
+    # lane `wi-569-…`): the human saw `wi=WI-569;WI-575` in the banner and the
+    # session that took WI-569 never learned WI-575 was on its lane.
+    repo, base, ctl, fake = _setup(tmp_path, wis=("WI-201", "WI-204"))
+    proc = _worker(repo, fake, ctl, "--wi", "WI-201;WI-204", "--train", "t1")
+    assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
+    prompts = (ctl / "prompts.txt").read_text(encoding="utf-8")
+    first, second = prompts.split("=== session ===\n")[1:3]
+
+    assert "- The WHOLE assignment (2 rows claimed on this lane" in first
+    assert (
+        "  - WI-201 [this session's focus] Scoped work for WI-201 — "
+        "SpecRef: docs/specs/thing.md" in first
+    )
+    assert "  - WI-204 [not started] Scoped work for WI-204 — SpecRef:" in first
+    # Session 002 took WI-204; WI-201's committed `WI:` trailer is the same
+    # evidence `current_assignment_wi` walked past it on.
+    assert "  - WI-201 [built] Scoped work for WI-201 — SpecRef:" in second
+    assert "  - WI-204 [this session's focus] Scoped work for WI-204" in second
+
+
+def test_worker_brief_names_the_one_turn_close_bar_scratch_and_amendments(tmp_path):
+    # WI-580 Done-when 1 / 4 / 5 (WI-559 item 1, WI-560 item 2, WI-562 item 2):
+    # three clauses the shipped brief must carry, asserted on the RENDERED
+    # prompt so an edit that drops one from the template fails here.
+    #   1. the close bar fits in one turn — refresh runs the stage-declared bar
+    #      in the merge slot and the full suite belongs to phase close
+    #      (WI-540 lost three sessions ending their turn to await an ~11-minute
+    #      suite against a 10-minute cap, and a finished row closed `partial`);
+    #   2. an AMENDMENT of an approved cell stales the approval brief exactly
+    #      as a mint does (WI-538 / LLR-206, an `approval-fresh` red);
+    #   3. scratch has a home, so the lane unload stops refusing it by name.
+    row = {"WI-ID": "WI-005", "Title": "t", "SR-Refs": "", "Predecessors": ""}
+    prompt = agent_loop.worker_prompt(tmp_path, {"WI-005": row}, "WI-005", "w", "0" * 7)
+    assert "THE CLOSE BAR IS THE COMMIT BAR, and it must fit in ONE turn" in prompt
+    assert "You do NOT owe the full unfiltered suite at close" in prompt
+    assert "NEVER end a turn waiting on one" in prompt
+    assert "AMENDED THE TEXT OF AN ALREADY-APPROVED CELL" in prompt
+    assert "Scratch belongs OUTSIDE the worktree" in prompt
+
+
+def test_worker_brief_resolves_close_commands_at_the_runtime_scripts_path(tmp_path):
+    # REVIEW-A rework: the close ritual used the scaffold's literal `scripts/`
+    # command in this meta-repo, which has only `project-trajectory/scripts/`.
+    # The worker composition boundary owns the runtime path, as reviewer_prompt
+    # already does for its slots; no caller can now emit an unusable command.
+    row = {"WI-ID": "WI-005", "Title": "t", "SR-Refs": "", "Predecessors": ""}
+    prompt = agent_loop.worker_prompt(tmp_path, {"WI-005": row}, "WI-005", "w", "0" * 7)
+    assert "python project-trajectory/scripts/trace.py --approve modified" in prompt
+    assert "python project-trajectory/scripts/spec_move.py" in prompt
+
+    scaffold = tmp_path / "scaffold"
+    (scaffold / "scripts").mkdir(parents=True)
+    (scaffold / "scripts" / "check.py").write_text("", encoding="utf-8")
+    prompt = agent_loop.worker_prompt(scaffold, {"WI-005": row}, "WI-005", "w", "0" * 7)
+    assert "python scripts/trace.py --approve modified" in prompt
+    assert "python scripts/spec_move.py" in prompt
+
+
 def test_worker_builds_assignment_and_exits_done(tmp_path):
     repo, base, ctl, fake = _setup(tmp_path)
     proc = _worker(repo, fake, ctl, "--wi", "WI-201", "--train", "t1")
@@ -760,6 +853,81 @@ def test_a_one_row_lane_answers_its_row_either_way(tmp_path):
     assert al.current_assignment_wi(str(repo), worker) == "WI-201"
     _build_commit(repo, "WI-201", "t1", worker["base"])
     assert al.current_assignment_wi(str(repo), worker) == "WI-201"
+
+
+@env_gate_skipif("git")
+def test_the_brief_never_calls_an_unclosed_row_built(tmp_path):
+    # WI-580 review A (MAJOR): the brief block derived doneness from the
+    # trailer ALONE while the walk asked both halves, so a batch that committed
+    # a trailer for a row and never ran its close ritual told the next session
+    # that row was `built` — the same silent-completion miss the walk's two-part
+    # test exists to prevent. Both readers now go through `lane_completion`.
+    al = load_script("agent_loop")
+    repo, worker, active = _batch_repo(tmp_path)
+    _build_commit(repo, "WI-201", "t1", worker["base"])
+    _build_commit(repo, "WI-204", "t1", worker["base"])
+    rows = {w: {"WI-ID": w, "Title": "row " + w} for w in ("WI-201", "WI-204")}
+    focus = al.current_assignment_wi(str(repo), worker)
+    assert focus == "WI-201"  # neither spec left active/, so the walk holds
+    block = al.assignment_block(
+        str(repo), rows, focus, worker["base"], worker["assigned"]
+    )
+    # MUTATION NOTE: on the trailer-alone predicate this line read `[built]`.
+    assert "  - WI-204 [started, not closed] row WI-204" in block
+    assert "[built]" not in block
+    # And the closed half still reads `built`, so the new state is not a
+    # blanket downgrade of every trailer-bearing row.
+    complete = repo / "docs" / "work" / "complete"
+    complete.mkdir(parents=True, exist_ok=True)
+    (active / "WI-204-row.md").rename(complete / "WI-204-row.md")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "close WI-204")
+    block = al.assignment_block(
+        str(repo), rows, focus, worker["base"], worker["assigned"]
+    )
+    assert "  - WI-204 [built] row WI-204" in block
+
+
+@env_gate_skipif("git")
+def test_the_false_partial_class_turns_only_on_the_close_ritual(tmp_path):
+    """WI-559 Done-when 3, first half — the built-and-verified lane read as a
+    stall (WI-540: three sessions each verified their rework, each ended the
+    turn waiting on a ~11-minute suite, and the FINISHED row closed `partial`).
+
+    Both readers of that state are driven on ONE scaffold, because the class is
+    the gap between them. With every trailer committed and every spec still in
+    `active/<branch>/`, `lane_completion` calls the rows built but not done and
+    `integrate.finished_branches` does not name the branch — so `dispatch`
+    takes the `_lane_close` arm (the stall candidate) over the refresh arm.
+    Moving the specs to a terminal directory, and NOTHING else, flips both
+    reads. The close ritual alone separates a merge from a `partial`, which is
+    why the shipped brief's close bar has to fit inside one turn.
+
+    The `== []` is not an empty scan: the identical call on the identical
+    scaffold answers `["wi-batch"]` four lines later, so the reader is live and
+    the first read is a real negative.
+    """
+    al = load_script("agent_loop")
+    integrate = load_script("integrate")
+    repo, worker, active = _batch_repo(tmp_path)
+    for wid in ("WI-201", "WI-204"):
+        _build_commit(repo, wid, "t1", worker["base"])
+
+    built, done = al.lane_completion(str(repo), worker["base"])
+    assert built == {"WI-201", "WI-204"}  # built AND verified …
+    assert done == set()  # … and not one row closed
+    assert integrate.finished_branches(repo) == []  # -> the stall candidate
+
+    complete = repo / "docs" / "work" / "complete"
+    complete.mkdir(parents=True, exist_ok=True)
+    for wid in ("WI-201", "WI-204"):
+        (active / "{}-row.md".format(wid)).rename(complete / "{}-row.md".format(wid))
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "close the lane")
+
+    built, done = al.lane_completion(str(repo), worker["base"])
+    assert built == done == {"WI-201", "WI-204"}
+    assert integrate.finished_branches(repo) == ["wi-batch"]
 
 
 # --- the resumed BATCH preflight: a row this branch closed is not stale ---------

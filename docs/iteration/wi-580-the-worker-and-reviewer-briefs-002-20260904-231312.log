@@ -1,0 +1,38 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 002
+# date: 2026-09-04 23:17
+# train: wi-580-the-worker-and-reviewer-briefs
+# base: 1af07567a421
+# phase: REVIEW-A
+# wi: WI-580
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 935812d0..c748f734
+# tokens:
+# cost-usd:
+# wall-secs: 258
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4558
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:70b4f308b74b
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+CHANGES-REQUESTED — 1 major finding recorded and committed.
+
+[Review verdict](</Users/diytechy/Documents/ai-template-drive/wi-580-the-worker-and-reviewer-briefs/docs/reviews/wi-580-the-worker-and-reviewer-briefs/002-REVIEW-A-fcbad05.md>)  
+Commit: `c748f734`
+
+Verified the defect on a real temporary batch lane: an active, unclosed row rendered as `[built]`. Harness result: PASS; strict integrity final line reported `integrity=0`.

@@ -30,11 +30,11 @@ before you edit and again before you commit.
 | File | Hard cap | Baseline | Stamped | Latest change |
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
-| `CLAUDE.md` | **8,500** | 7,886 | 2026-08-29 | +59: the full-suite wall time re-measured (~10 min quiet, 3–4× loaded; was "~6 min") |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,847 | 2026-09-02 | the restructure review re-stamped the PROCESS_OPTIONS row and this one |
+| `CLAUDE.md` | **8,500** | 7,975 | 2026-09-04 | +89: WI-580 aligns mid-phase close with the phase cadence |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,781 | 2026-09-04 | WI-580 re-stamps the CLAUDE.md row |
 
 **`AGENTS.template.md` and this file are parked at their caps** (~1% free
-each); `CLAUDE.md` holds ~8%. Those two are what you hit first, and the DOC is
+each); `CLAUDE.md` holds ~6%. Those two are what you hit first, and the DOC is
 what gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
 section under Gemini's truncation) and is not to be raised. Adding a sentence
 means cutting one, in the same edit. Each `Baseline` is pinned to its file's

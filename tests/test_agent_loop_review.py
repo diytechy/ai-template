@@ -1016,6 +1016,43 @@ def test_reviewer_prompt_renders_trunk_and_process_doc_slots(managed_repo):
     assert "python project-trajectory/scripts/check.py --jobs 0" in rev_block
 
 
+def test_reviewer_prompt_names_the_rows_under_review(managed_repo):
+    # WI-580 Done-when 3: the brief named NO work item, so a round had to infer
+    # its scope from the diff before it could map a spec's Done-when items to
+    # coverage. `{wis}` names the lane's claimed rows, id + title.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "done_after").write_text("2", encoding="utf-8")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    prompts = (ctl / "prompts.txt").read_text(encoding="utf-8")
+    rev_block = prompts.split("=== revb ===\n", 1)[1].split("\n=== ", 1)[0]
+    assert "{wis}" not in rev_block
+    assert "The work item(s) under review are:" in rev_block
+    assert "  - WI-201 — Scoped work for WI-201" in rev_block
+    # Naming the rows must not narrow the READING scope, which is still the
+    # diff — the redaction and the three-dot range are untouched.
+    assert "git diff llm/train/t1...HEAD" in rev_block
+    assert "stays the diff itself" in rev_block
+
+
+def test_reviewer_prompt_without_an_assignment_says_so(managed_repo):
+    # The `{wis}` fallback: with no worker (an attended round, or an operator
+    # override composed without an assignment) the slot renders an honest
+    # sentence, never a literal `{wis}` in a brief that is actually SENT and
+    # never an empty bullet reading "this diff covers nothing".
+    repo, _ctl, _cmd = managed_repo
+    text = agent_loop.reviewer_prompt({}, "REVIEW-A", "v.md", root=repo, worker=None)
+    assert "{wis}" not in text
+    assert "(not declared for this round — infer the scope from the diff)" in text
+    # An operator override carrying none of the slots still renders unchanged.
+    override = "review the diff. Write your verdict to {verdict} and stop.\n"
+    out = agent_loop.reviewer_prompt(
+        {"REVIEW-A": override}, "REVIEW-A", "v.md", root=repo, worker=None
+    )
+    assert out == "review the diff. Write your verdict to v.md and stop.\n"
+
+
 def test_review_owed_resume_keeps_the_relaxed_audit_trail(managed_repo, tmp_path):
     # Round 2 finding: a REVIEW OWED restart used to reconstruct only the
     # train range and the queue, so the resumed draw forgot the build's
