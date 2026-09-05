@@ -1,0 +1,35 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 010
+# date: 2026-09-04 22:19
+# train: wi-595-llr-207-tc-205-return-and-llr
+# base: 503d0e7ec0f7
+# phase: REVIEW-A
+# wi: WI-595
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 914f9783..c9a9e9de
+# tokens:
+# cost-usd:
+# wall-secs: 243
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4556
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:571a4acdd9f3
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+APPROVE, 0 findings. Verdict committed as `c9a9e9de`.
+
+[Review record](docs/reviews/wi-595-llr-207-tc-205-return-and-llr/010-REVIEW-A-914f978.md)

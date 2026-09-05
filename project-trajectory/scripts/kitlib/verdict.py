@@ -123,8 +123,8 @@ import re
 from .git import git_bytes, git_out
 from .station import (
     BAR_GREEN,
-    MECHANICAL_CLOSE_PREFIX,
-    MECHANICAL_CLOSE_SUFFIX,
+    mechanical_close_order,
+    mechanical_close_subject,
 )
 
 __all__ = [
@@ -436,6 +436,55 @@ def refresh_attestation(root, branch, rev=None):
 # The one non-record tree the MACHINERY itself moves. See
 # `mechanical_close_attestation` for why it is peeled and what bounds that.
 _WORK_PREFIX = b"docs/work/"
+_ACTIVE_SPEC = re.compile(rb"^docs/work/active/([^/]+)/((WI-[0-9]+)-[^/]+[.]md)$")
+_COMPLETE_SPEC = re.compile(rb"^docs/work/complete/(WI-[0-9]+-[^/]+[.]md)$")
+
+
+def _closed_wi_ids(fields):
+    """The canonically ordered ids moved from active/ to complete/, or None.
+
+    ONLY THE MOVE ITSELF MAY CREATE OR DESTROY. An `A` or `D` entry this
+    function does not RECOGNISE is a refusal, not an entry it skips: while they
+    were skipped, one close deleted the pre-existing terminal record
+    `docs/work/complete/WI-300-terminal.md` and added a brand-new
+    `docs/work/queued/WI-999-smuggled.md` and STILL peeled, so a judged row's
+    destruction and a new spec's injection were both measured at the parent and
+    never judged (REVIEW-A round 3, driven on a real repository). `M` stays
+    unrestricted because `spec_move`'s inbound relink genuinely rewrites other
+    rows in place, and a relink only ever modifies.
+
+    THE EMPTY CLOSE refuses on the one-source-branch requirement, and there is
+    deliberately no non-emptiness clause in front of it: `branches` only grows
+    in the same arm that appends to `deleted`, so a commit that moved nothing
+    names zero source branches and `len(branches) != 1` turns it away, and a
+    disjunct that could only fire where that one already had is dead code by
+    construction - which is what the deleted `not deleted` disjunct was. The
+    empty close's refusal is OVER-DETERMINED even so, measured rather than
+    reasoned: delete the branch requirement too and an empty diff derives no
+    ids at all, whose composed subject (`adjudicate:  -> complete/ ...`) cannot
+    equal the one the commit carries, so the caller's exact-subject comparison
+    refuses it anyway. No clause owns that arm; the one-source-branch clause is
+    pinned instead on the case it DOES own, a close reaching into a second
+    lane's `active/`.
+    """
+    if len(fields) % 2:
+        return None
+    deleted, added, branches = [], [], set()
+    for status, path in zip(fields[::2], fields[1::2]):
+        if not path.startswith(_WORK_PREFIX):
+            return None
+        active = _ACTIVE_SPEC.match(path) if status == b"D" else None
+        complete = _COMPLETE_SPEC.match(path) if status == b"A" else None
+        if active:
+            branches.add(active.group(1))
+            deleted.append((active.group(2), active.group(3).decode("ascii")))
+        elif complete:
+            added.append(complete.group(1))
+        elif status != b"M":
+            return None
+    if len(branches) != 1 or sorted(name for name, _ in deleted) != sorted(added):
+        return None
+    return mechanical_close_order(deleted)
 
 
 def mechanical_close_attestation(root, rev):
@@ -463,9 +512,18 @@ def mechanical_close_attestation(root, rev):
     `## Dispositions`, which is what the verdict judged — are carried through
     unchanged.
 
-    VERIFIED AGAINST GIT, not read off the message. The subject must be exactly
-    the composed one; the commit must have exactly ONE parent (a merge is never
-    this); and every path it changed must live under `docs/work/`, which is what
+    VERIFIED AGAINST GIT, not read off the message. The changed-path stream is
+    read with rename detection disabled; it must contain paired deletions from
+    one `docs/work/active/<branch>/` and additions of those same spec names to
+    `docs/work/complete/`, and NOTHING ELSE may create or destroy — an
+    unrecognised `A` or `D` refuses the whole commit, so unreviewed data loss
+    and unreviewed new content cannot ride the peel (`_closed_wi_ids`). Their
+    filename ids are ordered by `station.mechanical_close_order`, the one key
+    this reader and the writer share so a multi-row batch cannot fail on a
+    sorting the two chose apart, composed through the writer's
+    `mechanical_close_subject`, and the result must equal the subject exactly.
+    The commit must also have exactly ONE parent (a merge
+    is never this), and every changed path must live under `docs/work/`, which
     stops a close whose inbound-link relink reached into product or requirement
     files from being peeled. Each check FAILS TOWARD REVIEW: declining to peel
     measures at a later rev, so the gate asks for MORE review, never less. The
@@ -476,19 +534,17 @@ def mechanical_close_attestation(root, rev):
     message = git_out(root, ["log", "-1", "--format=%B", rev]) or ""
     lines = message.splitlines()
     subject = lines[0].strip() if lines else ""
-    if not (
-        subject.startswith(MECHANICAL_CLOSE_PREFIX)
-        and subject.endswith(MECHANICAL_CLOSE_SUFFIX)
-    ):
-        return None
     parent = _rev(root, rev + "^1")
     if parent is None or _rev(root, rev + "^2") is not None:
         return None
-    listing = git_bytes(root, ["diff", "--name-only", "-z", parent, rev])
+    listing = git_bytes(
+        root, ["diff", "--name-status", "--no-renames", "-z", parent, rev]
+    )
     if listing is None:
         return None
-    paths = [path for path in listing.split(b"\0") if path]
-    if not paths or any(not path.startswith(_WORK_PREFIX) for path in paths):
+    fields = [field for field in listing.split(b"\0") if field]
+    wi_ids = _closed_wi_ids(fields)
+    if wi_ids is None or subject != mechanical_close_subject(wi_ids):
         return None
     return parent
 

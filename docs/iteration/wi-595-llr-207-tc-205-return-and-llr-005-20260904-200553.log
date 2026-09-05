@@ -1,0 +1,41 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 005
+# date: 2026-09-04 20:10
+# train: wi-595-llr-207-tc-205-return-and-llr
+# base: bd431c5b8cd3
+# phase: REVIEW-A
+# wi: WI-595
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 5e95069c..777d0c43
+# tokens:
+# cost-usd:
+# wall-secs: 260
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 4556
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:2579246eafbc
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Changes requested: one MAJOR fail-open mismatch recorded and committed in [005-REVIEW-A-5fd59ee.md](/Users/diytechy/Documents/ai-template-drive/wi-595-llr-207-tc-205-return-and-llr/docs/reviews/wi-595-llr-207-tc-205-return-and-llr/005-REVIEW-A-5fd59ee.md).
+
+Commit: `777d0c43 review: record WI-595 independent verdict`
+
+Verified:
+- Real forged close subject was accepted by `mechanical_close_attestation`.
+- Changed real-git scenarios: `5 passed`.
+- `check.py --jobs 0`: `RESULT: PASS`.
+- `trace.py --strict-integrity`: `integrity=0`, `orphans=0`.
