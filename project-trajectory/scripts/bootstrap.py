@@ -1771,8 +1771,8 @@ MAPPING = [
         "SR-146",
     ),
     (
-        "prompts/adjudicate-conflict.template.md",
-        "prompts/adjudicate-conflict.template.md",
+        "prompts/adjudicate-consolidate.template.md",
+        "prompts/adjudicate-consolidate.template.md",
         "SR-146",
     ),
     (
@@ -2215,6 +2215,11 @@ MAPPING = [
     # adjudicate_brief.py all import it, and the first two unguarded, so a
     # scaffold without it cannot run the walk-away loop.
     ("scripts/census.py", "scripts/census.py"),
+    # The CONSOLIDATION census (the 2026-09-02 restructure plan §1.3): the
+    # decision half of "which queued rows are one work item wearing several
+    # ids". `intake.py` imports it unguarded for its lineage refusal and its
+    # mint arm, so a scaffold without it cannot run the mint at all.
+    ("scripts/consolidate.py", "scripts/consolidate.py"),
     # The pending-owner-action read model (WI-483 slice 3): the other half of
     # the same question the census asks — what the OWNER owes, rather than what
     # the registries lack. It used to live in traj_status.py, which made the

@@ -793,6 +793,34 @@ with that reason rather than as the owner's — the two states take opposite
 actions. A row declaring no scope at all REFUSES: an unstated boundary read as
 "everything" is the widening the cell exists to prevent.
 
+### The `Digests` cell — the consolidation census's memory
+
+A `consolidate` adjudication row carries `Digests = "<queue sha>|<spine sha>"`:
+the queue sha over the sorted `(id, title, needs, safety_class)` of every
+`queued/` row, and the spine sha over the three spine registries as they were
+when the census asked its question. Empty on every row that is not a
+consolidation.
+
+It is a REAL COLUMN, and the reason is sharper than the one `Supersedes`,
+`Brief` and `Adjudicates` share. A census fires on a STATE rather than an event,
+so it re-asks the same question on every idle tick unless something remembers —
+and the memory has to outlive the row: `consolidate._judged_refusal` refuses a
+mint while a `consolidate` row carrying THIS queue sha is queued, active **or
+archived**. A frontmatter key outside `wi_convert.COLUMNS` is dropped by
+`parse_spec`, and a guard that silently stops holding after the close mints the
+same judgement forever.
+
+Four fields and not the whole row, deliberately: what a consolidation decides is
+driven by what each row IS (title), what it WAITS on (needs) and how it must be
+SCHEDULED (safety_class). A row whose Deliverable or BuildTier moved is the same
+queue question, and hashing those would re-arm the census on an edit that
+changes no answer.
+
+The brief renders BOTH the recorded pair and the pair as the tree stands
+(`adjudicate_brief.consolidate_values`), because a recorded digest on its own is
+a number with nothing to compare against — the slot exists so a stale verdict is
+detectable rather than assumed fresh.
+
 **Chain-consistency warns — RETIRED** (owner ruling 2026-08-17, the cell
 reading): `modified_chain_advisories` told an author to flip the owning SR
 whenever a child read the retired `Modified` marker, asserting the retired

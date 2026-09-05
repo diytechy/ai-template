@@ -82,6 +82,7 @@ def _row(wid, **kw):
         "Supersedes": "",
         "Brief": "",
         "Adjudicates": "",
+        "Digests": "",
         "Deliverable": "",
         "SpecRef": "",
     }
@@ -188,6 +189,7 @@ CONVERTIBLE_ROWS = [
         "Supersedes": "",
         "Brief": "",
         "Adjudicates": "",
+        "Digests": "",
     },
     {
         "WI-ID": "WI-002",
@@ -222,6 +224,7 @@ CONVERTIBLE_ROWS = [
         # cell, which reads as "this act is scoped to nothing" rather than as a
         # loss.
         "Adjudicates": "LLR-001;LLR-002",
+        "Digests": "",
     },
     {
         "WI-ID": "WI-003",
@@ -245,6 +248,7 @@ CONVERTIBLE_ROWS = [
         "Supersedes": "",
         "Brief": "",
         "Adjudicates": "",
+        "Digests": "",
     },
     {
         "WI-ID": "WI-005",
@@ -268,6 +272,7 @@ CONVERTIBLE_ROWS = [
         "Supersedes": "",
         "Brief": "",
         "Adjudicates": "",
+        "Digests": "",
     },
     {
         "WI-ID": "WI-000",
@@ -291,6 +296,7 @@ CONVERTIBLE_ROWS = [
         "Supersedes": "",
         "Brief": "",
         "Adjudicates": "",
+        "Digests": "",
     },
 ]
 

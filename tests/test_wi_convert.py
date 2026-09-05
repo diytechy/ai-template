@@ -676,6 +676,46 @@ def test_columns_are_pinned_to_the_shipped_registry_header():
     }
 
 
+def test_the_digests_cell_round_trips_through_the_spec_form(tmp_path):
+    """The consolidation census's recursion guard is a CELL, so it has to
+    survive the write/read round trip that every other adjudication cell does.
+
+    Pinned on its own because of what the guard is FOR (the 2026-09-02
+    restructure plan §1.3): the census refuses to mint while a `consolidate`
+    row carrying this queue sha is queued, active or ARCHIVED. A cell that the
+    writer serialized and the reader dropped would read as "no row has judged
+    this queue state" on every tick, and the census would mint the same
+    judgement forever — the exact non-recursion the cell exists to provide."""
+    from kitlib import registry
+
+    row = dict.fromkeys(wi_convert.COLUMNS, "")
+    row.update(
+        {
+            "WI-ID": "WI-042",
+            "Title": "consolidate the queue",
+            "Status": "queued",
+            "SafetyClass": "adjudication",
+            "Brief": "consolidate",
+            "Adjudicates": "WI-010;WI-011",
+            "Digests": "aaaa1111bbbb|cccc2222dddd",
+        }
+    )
+    work = tmp_path / "work"
+    rel = wi_convert.write_spec_file(work, row)
+    assert 'digests = "aaaa1111bbbb|cccc2222dddd"' in (work / rel).read_text(
+        encoding="utf-8"
+    )
+    back = registry.read_spec_rows(work)
+    assert [r["Digests"] for r in back] == ["aaaa1111bbbb|cccc2222dddd"]
+    # And a row that is not a consolidation carries an empty cell, not a dash.
+    row2 = dict.fromkeys(wi_convert.COLUMNS, "")
+    row2.update({"WI-ID": "WI-043", "Title": "ordinary", "Status": "queued"})
+    wi_convert.write_spec_file(work, row2)
+    assert {r["WI-ID"]: r["Digests"] for r in registry.read_spec_rows(work)}[
+        "WI-043"
+    ] == ""
+
+
 def test_the_toml_emitter_escapes_what_tomllib_must_read_back():
     """Direct unit cover for the hand-rolled serializer, including a control
     character no registry cell contains today — the escaper must be correct for

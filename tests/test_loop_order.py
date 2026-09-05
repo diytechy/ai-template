@@ -420,7 +420,7 @@ def test_queue_conflicts_NEVER_join_the_exit_code(tmp_path, monkeypatch):
     # Overlap between two open rows is frequently correct — two rows may
     # legitimately answer one SR from different sides — and a checker that
     # cannot tell that apart from a duplicate must not block on the difference.
-    # The judgement half lives in the `adjudicate-conflict` prompt, not here.
+    # The judgement half lives in the `adjudicate-consolidate` prompt, not here.
     rows = [
         _open("WI-001", "Alpha", srs=["SR-1"]),
         _open("WI-002", "Alpha", srs=["SR-1"]),

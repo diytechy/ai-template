@@ -99,6 +99,7 @@ WI_HEADER = [
     "Supersedes",
     "Brief",
     "Adjudicates",
+    "Digests",
 ]
 
 # A round directory: `DP-<digits>-<slug>` under docs/plans/.

@@ -117,6 +117,7 @@ import acceptance_record
 import agent_common as ac
 import baseline_snapshot
 import census
+import consolidate
 import schedule
 import trace
 import wi_convert
@@ -1415,15 +1416,46 @@ def _disposition_drafts(root, outcomes):
                     "section and re-run `python intake.py sweep`".format(relpath)
                 )
             for draft in parsed:
-                draft.setdefault("specref", relpath)
-                draft.setdefault("workstream", meta.get("workstream") or "process")
-                draft.setdefault("buildtier", "medium")
-                draft["context"] = (
-                    "Drafted by {} (its ## Dispositions section) and minted at "
-                    "its merge - drafts-not-mints, ruling R1/R3.".format(wi_id)
-                ) + ("\n\n" + draft["scope"] if draft.get("scope") else "")
-                drafts.append(draft)
+                drafts.append(_disposition_draft(root, draft, meta, wi_id, relpath))
     return drafts, None
+
+
+def _disposition_draft(root, draft, meta, wi_id, relpath):
+    """One drafted successor, with its defaults and its derived `## Context`.
+
+    THE CONSOLIDATION HALF is the second paragraph, and it is plan §1.5 /
+    Done-when 4: the successor's Context carries each absorbed row's Done-when
+    block QUOTED under its old id. Not decoration — the shipped brief PROMISES
+    it ("do NOT paraphrase"), so a judge who follows the brief writes a boundary
+    sentence and nothing else, and without this the successor a lane then builds
+    carries no acceptance criteria at all. Read HERE, because the absorbed rows
+    are still in `queued/`; `_mint` archives them a few frames later.
+
+    Split out of `_disposition_drafts` so that stays a walk over merged rows
+    with one call in its inner loop: composing one draft is a question about one
+    draft, and it is asked here."""
+    draft.setdefault("specref", relpath)
+    draft.setdefault("workstream", meta.get("workstream") or "process")
+    draft.setdefault("buildtier", "medium")
+    context = (
+        "Drafted by {} (its ## Dispositions section) and minted at its merge - "
+        "drafts-not-mints, ruling R1/R3.".format(wi_id)
+    ) + ("\n\n" + draft["scope"] if draft.get("scope") else "")
+    if (meta.get("brief") or "").strip().lower() == consolidate.BRIEF:
+        # THE ONE FLAG that tells the mint this successor ABSORBS rather than
+        # continues, read off the judging row's declared brief. It decides two
+        # things at once: whether the absorbed Done-when blocks are quoted, and
+        # whether `_mint` archives the superseded rows. A disposition successor
+        # supersedes a row that is already terminal and must not be archived
+        # again.
+        draft["consolidated"] = True
+        quoted = consolidate.absorbed_done_when(
+            root, supersedes_ids(draft.get("supersedes"))
+        )
+        if quoted:
+            context += "\n\n" + quoted
+    draft["context"] = context
+    return draft
 
 
 # --- trigger (c): the gap census ----------------------------------------------
@@ -1750,6 +1782,11 @@ def _draft_row(wi_id, draft):
     # that re-derives its population live intersects against this, so the act
     # can never widen past the rows the merge handed over.
     row["Adjudicates"] = ";".join(draft.get("adjudicates") or [])
+    # The consolidation census's recursion guard (restructure plan §1.3):
+    # `<queue sha>|<spine sha>`. Written by the same one line the other typed
+    # adjudication cells are, because a cell the mint computes and the writer
+    # drops is a guard that never holds.
+    row["Digests"] = str(draft.get("digests") or "")
     if draft.get("priority") is not None:
         row["Priority"] = str(draft["priority"])
     return row
@@ -1896,6 +1933,18 @@ def _pre_mint_refusal(drafts, subject_verb, registry):
         refusal = _mint_shape_refusal(draft, subject_verb, known_ids, absorbed_ids)
         if refusal:
             return refusal
+        # The consolidation's OTHER lineage refusal (restructure plan §1.3),
+        # which is a different failure from the one above and so cannot be
+        # folded into it: `absorbed_ids` refuses CONTINUING a row somebody
+        # already absorbed (a lineage chain), this refuses ABSORBING a row an
+        # earlier consolidation minted (overturning that judgement). The rule
+        # lives in `consolidate` beside the census that has to state it; this is
+        # its call site.
+        refusal = consolidate.reabsorption_refusal(
+            registry, supersedes_ids(draft.get("supersedes"))
+        )
+        if refusal:
+            return "{}: {}".format(subject_verb, refusal)
     return None
 
 
@@ -1935,6 +1984,13 @@ def _mint(root, drafts, subject_verb):
         return [], refusal
     minted = []
     lineage = []
+    # ...and the CONSOLIDATION subset of it. Every successor's lineage is
+    # re-pointed; only a consolidation's is ARCHIVED, because only a
+    # consolidation absorbs a row that is still `queued`. A disposition
+    # successor supersedes a row that closed `partial` or `cancelled` — already
+    # terminal, already out of `queued/` — so archiving off the whole lineage
+    # refused every ordinary disposition mint by name.
+    absorbing = []
     for draft in drafts:
         written, refusal = _write_draft(root, draft, registry, subject_verb)
         if refusal:
@@ -1944,12 +2000,30 @@ def _mint(root, drafts, subject_verb):
         wi_id, rel, absorbed = written
         minted.append((wi_id, rel))
         lineage.append((wi_id, absorbed))
+        if draft.get("consolidated"):
+            absorbing.append((wi_id, absorbed))
     # THE RE-POINT RUNS ONCE, over the WHOLE mint, after every draft is on disk:
     # a dependent of a row split across several successors must end holding all
     # of them, and a successor must be recognisable as one (by its own written
     # `supersedes` cell) so its edge onto a sibling is never rewritten into an
     # edge onto itself.
     _apply_supersedes(root, lineage)
+    # ...and THEN the absorbed rows go terminal (restructure plan §1.5). The
+    # order is forced: the re-point above needs them still OPEN (`_open_specs`
+    # skips a terminal row), and their Deliverable names a successor whose id
+    # was allocated in the loop above. No-op for every mint that absorbs
+    # nothing, which is every mint but a consolidation's.
+    moved, refusal = consolidate.archive_absorbed(root, absorbing)
+    if refusal:
+        # ALL OR NOTHING, and the restore is why this refusal can be late: an
+        # absorbed row that cannot be archived would leave the successor's
+        # lineage cell naming a row it did not absorb, so the whole mint is
+        # rolled back rather than committed half-done.
+        ac.git(root, "reset", "--hard", "HEAD")
+        ac.git(root, "clean", "-fd", "--", WORK)
+        return [], refusal
+    for dead_id, successor, dest in moved:
+        _say("restructured {} into {} at {}".format(dead_id, successor, dest))
     # RAISE THE MARK IN THE SAME COMMIT that files the specs. A mint that
     # allocates an id without recording it leaves the mark behind the tree, and
     # trace.py's integrity pass reads that as "an id was allocated past the
@@ -2055,6 +2129,28 @@ def mint_gap_rows(root, lines):
     concrete gap-closure rows. `([(wi_id, relpath)], refusal)`; an empty
     answer with a non-empty census means every gap already has an open row."""
     return _mint(root, _census_drafts(root, lines), "empty-frontier gap census")
+
+
+def mint_consolidation(root, busy):
+    """THE DISPATCHER'S CONSOLIDATION ARM (the 2026-09-02 restructure plan
+    §1.3): at most ONE `consolidate` adjudication row per tick.
+    `([(wi_id, relpath)], refusal)`.
+
+    `busy` is the station's own answer to "is any lane out", and a busy station
+    is not a refusal and not an error — it is simply not the moment: the
+    judgement this would mint must run alone, and the rows it would judge may be
+    the ones those lanes are holding.
+
+    The DECISION is `consolidate.census_draft` (digests, clusters, guards, all
+    testable with no repository); the EFFECT is `_mint`, which is the one
+    allocator of a WI id. The split is why the arrow between the two modules
+    runs one way — `consolidate` never reaches back here."""
+    if busy:
+        return [], None
+    draft, _reason = consolidate.census_draft(root)
+    if draft is None:
+        return [], None
+    return _mint(root, [draft], "consolidation census")
 
 
 # --- CLI: the recovery / by-hand path ------------------------------------------
