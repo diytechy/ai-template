@@ -336,7 +336,9 @@ These are gaps against P1–P5, not against the current implementation.
    which tier a session ran at (the two Anthropic tiers are one model). Per-WI
    cost is unrecoverable for batched lanes. `est_tokens` is declared and set
    by nothing. The owner asked "should this have been a stronger worker" and
-   the data cannot say.
+   the data cannot say. The record to write once per session (the codex plan's
+   list, adopted): WI id, attempt, role, provider and model, roster row, tier,
+   policy revision, timestamps, review outcome, terminal result.
 4. **A review threshold.** CHANGES-REQUESTED must require a MAJOR or BLOCKER;
    a rework must move the non-record tree; adjudication reviews must judge
    scope and driven claims, not wording. Items 1–2 of the churn program
@@ -396,6 +398,13 @@ code), `loop/merge.py` (claim, refresh, merge slot, handback — absorbing
 `hats`, `gen_verdict_rollup` and the five `plan_*` modules), and
 `surfaces/render.py` (one generator with pluggable views, replacing sixteen
 modules).
+
+**Three capability sets, expressed where the scaffold already declares
+files.** The codex plan's framing (cross-reference §2.8): a manual core, the
+managed loop, and advanced planning/architecture/reporting are three sets in
+the existing bootstrap mapping — no second manifest or schema — and the
+adoption tests prove each promise is available and verified when its set is
+enabled and absent from the core's imports when it is not.
 
 **Three conventions, adopted before any merge of modules**, because they are
 where a reader currently holds eight contracts to follow one call: one result
@@ -464,8 +473,29 @@ on missing slots, with every template in one catalogue); one registry read
   it rather than leaving a stale verdict standing. What intake retires is the
   idle-tick census as a separate row-minting mechanism and most disposition
   drafting.
-- **Frontier** is what `schedule.py` already is: needs edges, priority,
-  exclusivity, class barriers. Keep. Delete the batch admission.
+- **The intake record is precise about what it judged.** Following the codex
+  plan and its Fable review (cross-reference §2.4): the decision records the
+  affected queued IDs it derived from structured references — requirement rows,
+  dependency closure, declared shared or exclusive resources, the proposal's
+  normative scope — and a missing or ambiguous scope means a global hold, not
+  a guess at independence; transaction staleness (the snapshot revision, for
+  apply-time preconditions) is kept separate from semantic reuse (a
+  fingerprint over the adjudicated scope and acceptance text, deliberately
+  excluding Deliverable, telemetry and routing-only tier changes, which is the
+  existing four-field `queue_digest` rationale kept); repeated proposals from
+  one source event are deduplicated against the accepted decision so a
+  dismissed finding cannot mint work forever; and the legacy queue is
+  reconciled ONCE by an explicit exclusive WI, after which intake reconciles
+  new or changed proposals only, never every idle tick.
+- **The scheduler is the sole admission authority.** Today `schedule.order_key`
+  and `dispatch._judgement_first` give two answers to "what runs next" and the
+  dashboard shows the first while the dispatcher executes the second (codex
+  plan README §2.1). One pure scheduling result — the selected assignments plus
+  the reason every other row waits — is consumed identically by the CLI
+  (`next --explain`), the dashboard and the dispatcher; the dispatcher may
+  refuse a stale decision or an unavailable resource, never re-order. Needs
+  edges, priority, exclusivity and class barriers stay; batch admission and
+  the dispatcher-side override go.
 - **Spot checks and post-merge adjudications** survive only for rows that
   amended a promise-tier requirement, and they are sampled by a declared
   rate, not minted per merge.
@@ -519,6 +549,37 @@ Rules that make it small:
   drawn when a WI carries `planmode = "dual"`.
 - **Escalation stays fixed-policy** (the doc already says no learned router;
   the 09-05 analysis confirms there is no signal to learn from).
+- **Authority is evaluated against current trunk policy, not the claim.**
+  The claim records the policy revision as execution provenance only;
+  approval authority, holds and required evidence are re-evaluated at every
+  phase boundary and at promotion, so a mid-flight tightening of
+  `human_approval_through` applies to in-flight work and a relaxation is never
+  inferred from an old claim (codex plan, Fable F-04).
+- **Human holds drain, they do not race.** Under `keep_nondependent = false`
+  a held candidate stops new admission and waits for active work to drain,
+  then is prepared on the settled trunk so the owner is never asked to
+  re-approve against a trunk that moved. Artifact attestation names normative
+  content and survives unrelated trunk motion; candidate approval names the
+  exact tree and is never carried to a different one (codex plan, Fable F-02).
+- **One review envelope, typed payloads.** Plans, implementation reviews,
+  consolidation judgements and subjective critiques share only provenance,
+  findings with stable ids and severity, and disposition; their criteria stay
+  subject-specific payloads, not one universal optional-field schema.
+  Arbitration of a disputed finding gets one attempt against the same
+  candidate before it becomes a human decision.
+- **A bounded experiment, not the default: the exact-tree integration turn.**
+  The codex plan proposes serialising final candidate preparation, checks,
+  final review and promotion in one reserved turn on a frozen composed tree
+  with a same-tree acceptance receipt, which would remove the refresh peel as
+  well as the close peel (cross-reference §2.1). It costs every lane's
+  independence during the turn, and the repo's review-round distribution
+  (about 3.2 per build, up to 12) means the serial section is rounds ×
+  (compose + check + review). Phase 3 runs it as a stop/go experiment under
+  codex's own conditions — a latency budget predeclared at the configured lane
+  count against the historical round distribution, and a ledger counting the
+  receipt schema, candidate-branch retention and recovery export added
+  against the peeling deleted. Pass, and it replaces the governing identity;
+  fail, and the design above stands.
 
 ### 4.5 The harness and the surfaces, cut to the ladder
 
@@ -559,10 +620,15 @@ Rules that make it small:
 For mechanism-tier rows (LLRs, and the surviving IF rows), the rule becomes
 the one D-4 already states, made cheap enough to follow:
 
-- **A mechanism change replaces the row.** When the mechanism an LLR describes
-  changes, the row is deleted and a new id minted; the `detail` cell of an
-  existing row is edited only for wording that does not change what the row
-  claims. A worker brief states this in one line; `check_trajectory` gets a
+- **A mechanism change rewrites the design, and the id follows the
+  responsibility.** When the mechanism an LLR describes changes, its `detail`
+  is rewritten wholesale to describe the new design — never patched around
+  the old text — and the row keeps its id while it still names the same
+  design responsibility (the codex plan's position, cross-reference §2.6;
+  this plan's first draft minted a new id on every change, which is what made
+  replacement expensive). A successor id is minted only when obligations
+  split, combine or disappear, with `supersedes` lineage; ids are never reused
+  for a different meaning (D-4). A worker brief states this in one line; `check_trajectory` gets a
   detector for the residue — a `detail` cell containing "retired", "now lives
   in", "no longer", "not yet" or a date stamp is a row that was amended when
   it should have been replaced (warn-first, as every new detector here is).
@@ -573,10 +639,11 @@ the one D-4 already states, made cheap enough to follow:
   treats a supersession that keeps the parent SR, the TC set and the
   back-links as ONE adjudication, the same brief the amendment gets today —
   the judge sees old text, new text and the diff, and approves or returns; (b)
-  `Implements:` back-links and TC `verifies` cells are re-pointed by the
-  replacement tooling (`spec_move`'s link-aware ritual already does this for
-  WI specs; extend it to spine ids), so a replacement is one command, not a
-  sweep. The stage still drops, as SN-029 requires, and climbs back on the
+  where a successor id IS minted, `Implements:` back-links and TC `verifies`
+  cells are re-pointed by the replacement tooling (`spec_move`'s link-aware
+  ritual already does this for WI specs; extend it to spine ids), so a
+  replacement is one command, not a sweep. Keeping the id in the common case
+  makes (b) the exception rather than the rule. The stage still drops, as SN-029 requires, and climbs back on the
   same adjudication.
 - **LLRs describe decisions, not helpers.** The pruned spine (§4.2) keeps an
   LLR where an adopter could disagree with a design choice. A row whose
@@ -598,6 +665,21 @@ the one D-4 already states, made cheap enough to follow:
   silent skip, which keeps the honest-harness doctrine intact. CI on push
   runs it unconditionally, so a wrong trigger list is caught on the next
   push rather than never.
+- **Selection by affected capability, with a broad fallback** (the codex
+  plan's table, cross-reference §2.7): a core change proven independent of the
+  renderer and its snapshot inputs runs core tests only; routine registry
+  value changes run one generation-and-freshness check plus a cheap renderer
+  boundary smoke; emitter, layout, style, template, asset or fixture changes
+  run the full rendering family; snapshot-schema, shared-parser, vocabulary
+  or shared-fixture changes run the shared contracts plus the affected
+  rendering suite; test-selection changes, broad refactors, unknown impact or
+  an unavailable comparison base run the broad suite and say why; phase close,
+  release and a declared periodic run always run everything. Selection
+  compares the whole change against its recorded base (renames and deletions
+  included), local and CI use the same result, and a required check is never
+  left pending by a workflow-level path skip. **Precondition:** SN-007's
+  full-suite acceptance is amended, as a reviewed change, before any narrowing
+  is enabled; until then the existing full run stands.
 - **The geometry tests leave the per-commit bar.** The three wire-routing
   tests move to the render step's own slow tier; the per-commit smoke bar
   keeps one render smoke test (the dashboard generates and validates) so the
@@ -728,8 +810,14 @@ structure, vendored-source drift, the launcher's exit codes and EOF safety,
 the kitlib completeness check, the complexity ratchet itself). So nothing is
 deleted until every clause has a home.
 
-- Produce a **clause-level retained / moved / retired manifest** for every
-  LLR, IF and TC row: for each normative clause, where it lives afterwards
+- Produce a **clause-level disposition manifest** for every LLR, IF and TC
+  row, using six dispositions (the codex plan's vocabulary, adopted): keep
+  (enduring observable contract); consolidate (same obligation stated once,
+  every acceptance condition preserved); move to design decision (internal
+  organisation, reviewable without pretending it is a stakeholder outcome);
+  move to optional capability (still promised when enabled); migration-only
+  (with an explicit retirement release); retire (owner-approved, successor
+  mapping where applicable). For each row's clauses: for each normative clause, where it lives afterwards
   (a surviving row, a module docstring plus a named test, or retired with the
   reason), and which TC or pytest test carries it. This is also the
   reproducible classification manifest appendix A lacks.
@@ -788,6 +876,17 @@ deleted until every clause has a home.
   week's proposals.
 - One terminal home (`archive/work/`), integrity error on a spec anywhere
   else — this is the WI drafted in `decisions-for-review-2026-09-05.md` §5.
+- **Amend the approved contracts that mandate the old runtime BEFORE Phase 3
+  enables any changed behaviour** (the codex plan's P1A, added here after
+  the cross-reference; this plan's own reviewer missed it). SR-148 approves
+  the current admission partition, LLR-149 the multi-WI batch, SR-144 and
+  SR-156 the partial close and lane lifecycle, SR-157/LLR-210/TC-208 the
+  census consolidation, LLR-159/LLR-182 the admission and terminal vocabulary.
+  A new runner enabled against those rows either fails the gates or runs
+  outside them. The amendment set is the smallest reviewed, version-scoped
+  change to those rows and their TCs, approved through the stage mechanism,
+  with old-format and old-runner tests scoped to their supported version. No
+  red gate is waived to fit the pilot.
 - **Done when:** a proposal that duplicates a queued row is refused or
   extends it at intake, driven on a scaffold and on the live queue; the
   adjudication share of merges over the following two weeks is under 20%.
@@ -864,7 +963,7 @@ deleted until every clause has a home.
 | Harness steps at top stage | 34 | ~14 |
 | Generated artifacts | 13 | 4 |
 | Process prose | ~9k lines | ~1.5k |
-| Supervised effort | | ~36 days plus a two-week control period and a two-week soak (review round 1 raised the spine work from 4 to 8–10 days and added the control period) |
+| Supervised effort | | ~36 days plus a two-week control period and a two-week soak — **indicative only**; re-estimate after the Phase 1a manifest and the Phase 3 exact-tree experiment exist (the codex plan declines to estimate before those, and is right that the number is not credible until then) |
 
 ---
 
@@ -937,7 +1036,11 @@ deleted until every clause has a home.
 9. Rule rendering as a path-triggered harness step (§4.7): the merge slot
    runs render tests only when the render package or its input contracts
    changed, recorded as a stated selection; CI on push runs them always.
-10. Accept or reject the Phase 0 control period and its decision gate. It is
+10. Accept or reject the Phase 0 control period and its decision gate.
+11. Run the exact-tree integration-turn experiment (the codex plan's P5) in
+    Phase 3, or skip it and keep the governing-identity design as the end
+    state. The experiment is cheap to define and expensive to run; its budget
+    must be declared before it starts. It is
    the round-1 reviewer's strongest structural point: the churn fixes already
    landed have not been measured, and a rebuild decided before measuring them
    cannot be evaluated afterwards.
@@ -962,3 +1065,16 @@ per-finding dispositions are kept beside the plan:
   with a decision gate before any loop rebuild; corrected figures (batch
   code is about 100 code-only SLOC, not 383; the loop's closure is 46
   modules by static reachability; "27 of 48" is a category count).
+- Round 2 (cross-reference against the owner's independent codex plan,
+  2026-09-05, branch `redesign-crossref-2026-09-05`):
+  [comparison and dispositions](review-02-crossref-codex-plan.md). The two
+  plans converge on the loop shape, one WI per lane, intake before
+  eligibility, the LLR replacement route and rendering isolation. Ten codex
+  elements adopted — amend-the-contracts-before-enabling (a defect this plan
+  shared and its reviewer missed), the scheduler as sole admission authority,
+  intake affected-scope and staleness rules, current-policy authority and
+  human-hold drain, the review envelope, capability sets in the bootstrap
+  mapping, the telemetry record, the six-way disposition vocabulary, the
+  rendering selection table with the SN-007 precondition, and the codex id
+  policy for LLR replacement. The exact-tree integration turn is taken as a
+  bounded experiment, not the default.
