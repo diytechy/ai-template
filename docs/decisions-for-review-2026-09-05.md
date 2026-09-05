@@ -347,6 +347,22 @@ bar, the shipped `check.py` steps are. No gap to close for item 7.
 
 ---
 
+## 8. The redesign question — two plans filed for separate review
+
+The owner's follow-up question of the same day (is the kit overly complex; how
+would it be redesigned to meet the vision) produced two independent plans, kept
+in the repo for traceability under two sibling folders:
+
+- [the Claude plan](ai-template-redesign-2026-09-05%20-%20claude/PLAN.md) with
+  its three evidence appendices (spine census, module map, external tools) and
+  the adversarial-review records that follow it;
+- the owner's parallel codex plan under `docs/ai-template-redesign-2026-09-05-codex/`.
+
+Both folders are review records: they name proposed modules and other
+projects' files that do not exist in this repo, so the doc-refs step reads them
+as a record surface (`--record-prefix docs/ai-template-redesign-`), the same
+class as `docs/plans/`.
+
 ## What this sitting committed
 
 - The 16 stranded terminal specs relocated into `docs/archive/work/` (§5),

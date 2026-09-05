@@ -40,8 +40,12 @@ spine consistent (16.1%), checks (10.9%), merges (6.8%), scaffolds (4.3%) and
 migrates (3.0%). The render stage is the largest and produces zero decisions.
 
 **Import closure.** From the seven loop modules (`dispatch`, `agent_loop`,
-`lane`, `integrate`, `handback`, `intake`, `schedule`) the transitive import
-closure is **45 of 82 modules, 25,376 SLOC, 65% of the kit** — it drags in
+`lane`, `integrate`, `handback`, `intake`, `schedule`) the transitive STATIC
+import closure, deferred imports included, is **46 of 82 modules, 25,490 SLOC,
+65% of the kit's SLOC** (the round-1 reviewer's independent traversal; the
+first draft said 45 / 25,376, missing `kitlib/evidence.py`). This is possible
+dependency, not measured load — `check_trajectory.doc_anchors` tolerates a
+missing `check_docs` — and it drags in
 `trace`, `check_trajectory`, `check_docs`, `gen_arch_map`, `coherence`,
 `hats`, all five `plan_*` modules and `wi_convert`. The loop cannot run
 without loading two-thirds of the kit.
@@ -80,9 +84,14 @@ declared lifecycle band.
 as every ready spine row together in one branch and one session. Everything
 else is already one WI per lane.
 
-**Code that exists only because a lane may hold more than one WI — about 383
-SLOC (1.0% of the kit) plus about 360 test lines.** Fully batch-only, each
-with a docstring saying a one-row lane cannot observe it:
+**Code that exists only because a lane may hold more than one WI — about 100
+code-only SLOC (0.25% of the kit) plus about 360 test lines.** (Corrected in
+review round 1: the figures below are docstring-INCLUSIVE and summed to 314;
+recounted by AST excluding docstrings the same fourteen functions are 97 SLOC,
+and the "about 69" of partly-batch code was never enumerated finely enough to
+reproduce. The first draft quoted 314 + 69 ≈ 383 against a docstring-free
+denominator.) Fully batch-only, each with a docstring saying a one-row lane
+cannot observe it (docstring-inclusive line counts):
 `agent_loop.assignment_block` (40), `agent_loop.current_assignment_wi` (32),
 `agent_loop.lane_completion` (14), `agent_loop.claimed_on_branch` (15),
 `agent_common.stale_terminal_assignment` (24), `agent_common.train_evidence`
@@ -112,8 +121,11 @@ defects a one-row lane cannot hit. Defect (4), the close staling its own round,
 also bit the single-row WI-586; defect (6), `EXIT_PAUSED` before a parked lane
 resumes, is cardinality-independent.
 
-**Verdict.** One WI per lane removes ~383 SLOC, ~360 test lines and four of
-six stranding defects. The property given up — N spine amendments land in N
+**Verdict.** One WI per lane removes about 100 code-only SLOC, ~360 test
+lines and four of six stranding defects. Note that the two verdict helpers
+(`mechanical_close_attestation`, `_closed_wi_ids`) also exist because the
+single-row WI-586 lane staled its own round, so they are removed by
+close-before-round (PLAN §4.4), not by cardinality. The property given up — N spine amendments land in N
 re-attest windows instead of one — is worth less than the failure modes it
 bought while the spine is this size, and the loss shrinks further once the
 spine stops describing the kit's plumbing (appendix A). The owner's suspicion

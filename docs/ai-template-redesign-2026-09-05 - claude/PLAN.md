@@ -29,9 +29,9 @@ now consuming most of the effort the kit exists to save.**
 | What | Measured at `a9bf6cee` |
 |---|---|
 | Kit scripts | 82 modules, 76,337 lines; 38,995 SLOC of code once docstrings and comments are excluded (about half the source is prose) — all stdlib |
-| Kit tests | 154 files, 87,679 lines, 3,255 test functions; 164,016 lines of Python in total |
+| Kit tests | 154 files, 87,679 lines, about 3,255 test functions (3,254 by AST; one is fixture text); 164,016 lines of Python in total |
 | Mass by stage (appendix B) | rendering 20.6% · spine tracing 16.1% · the owner's four loop stages together 37.8% · checks 10.9% · merge 6.8% · scaffold 4.3% · migration 3.0% |
-| Coupling | the seven loop modules' import closure is 45 of 82 modules, 65% of the kit |
+| Coupling | the seven loop modules' static import closure (deferred imports included) is 46 of 82 modules, 25,490 SLOC, 65% of the kit's SLOC — a possible-dependency measure, not a measured startup cost |
 | Duplication | the `+++` frontmatter fence parsed 7 different ways · `process.toml` parsed raw in 4 places with 3 failure defaults · 7 prompt-composition mechanisms · 8 result/refusal conventions · 57 CLI verbs · 198 accepted complexity-debt rows |
 | Spine | 27 SN · 76 SR · 192 LLR · 191 TC · 167 IF seams |
 | Of the 192 LLRs (appendix A) | 47 vision-bearing · 63 loop mechanism · 44 self-description · 38 dashboard rendering |
@@ -42,16 +42,20 @@ now consuming most of the effort the kit exists to save.**
 | Harness plan at DevStg-Impl | 34 steps; 13 generated artifacts each with a freshness check |
 | Skills shipped | 31, of which 16 are domain skills (ROS 2, URDF, Gaussian splats, WebGPU, EKF…) with no relation to a process kit |
 | Commits since 2026-06-04 | 3,510 — about 40 a day; kit-script churn Aug–Sep +61,305 / −22,174 lines |
-| WIs merged since 2026-08-15 | 48, of which 27 were adjudications, dispositions or spot-checks ABOUT the process, 21 were builds |
+| WIs merged since 2026-08-15 | 48 by category: 21 builds, 12 dispositions, 10 adjudications, 5 spot-checks — a count of kinds, not a measure of wasted effort (recorded cost: builds about $339, the other three about $304, with batched lanes double-counted) |
 
 Three facts drive the recommendation:
 
 1. **The loop feeds on itself.** More than half the work items the loop
-   completes are judgements about its own previous work (amendment
-   adjudications, disposition drafts, clean-close spot checks). Each mints
-   successors. The 2026-09-04 handoff measured twenty review rounds in one day
-   of which four were single-MINOR refusals and two were record-only reworks.
-   This is the machinery generating work for the machinery.
+   completes, by count, are judgements about its own previous work (amendment
+   adjudications, disposition drafts, clean-close spot checks), and each mints
+   successors. That is a category count, not a measured waste fraction — the
+   recorded cost of the 27 is comparable to the 21 builds, not larger. What is
+   measured is the review churn: the 2026-09-04 handoff counted twenty rounds
+   in one day of which four were single-MINOR refusals and two were
+   record-only reworks. Fixes for exactly that landed on 09-04 and 09-05 and
+   have not yet been measured, which is why §5 now starts with a control
+   period rather than a rebuild.
 2. **The honesty devices have become the maintenance burden.** Ratchets
    (module size, complexity, smoke budget, coverage floors), allowlists
    (IF-TC coverage, orphans, provenance, kernel modules, declared absences),
@@ -101,11 +105,14 @@ of them or be opt-in and cheap to ignore (SN-012, the proportionality need).
 Two observations about this table matter for the redesign:
 
 - **P4 is opt-in in the needs (priority S), but it is where the churn lives
-  and it cannot be switched off.** The four loop stages are 38% of the code
-  directly, yet their import closure is 65% of the kit: the loop loads the
-  tracer, the trajectory checker, the doc checker, the architecture map and
-  the dual-plan machinery to run at all. The needs call the loop a layer that
-  "costs a repo that doesn't use it nothing." Structurally it is not a layer.
+  and it is not separable today.** The four loop stages are 38% of the code
+  directly, and by static reachability (deferred imports included) the loop
+  can reach 46 of 82 modules, 65% of the kit's SLOC — the tracer, the
+  trajectory checker, the architecture map and the dual-plan machinery. That
+  is possible dependency, not measured load (`check_trajectory` tolerates a
+  missing `check_docs`, for one), but it means nothing enforces the boundary
+  the needs describe when they call the loop a layer that "costs a repo that
+  doesn't use it nothing."
 - **The heavy needs are not the founding ones.** By fractional LLR mass the
   top four are SN-023 (dashboard, 21.5), SN-012 (right-sizing, 16.5), SN-006
   (unattended, 16.1) and SN-024 (perceptual acceptance, 15.8); traceability
@@ -130,7 +137,7 @@ touches approved text mints an amendment adjudication; every early close mints
 a disposition; every fourth clean close mints a spot check; every overlapping
 pair of queued rows mints a consolidation. Each of those is a WI, claims a
 lane, draws review rounds, and often mints more. Of 48 merges since 2026-08-15,
-27 were this class. The frontier at the time of writing holds nineteen queued
+27 were this class by count (a category count, not a cost share — §0). The frontier at the time of writing holds nineteen queued
 rows of which nine are adjudications of earlier adjudications.
 
 The owner's instinct — "consolidation and contradiction checks at WI creation"
@@ -147,18 +154,27 @@ about why — not throughput (that knob, the "traincar", was killed after 19
 reservations produced 0 gate-verified merges) but **atomicity of the human
 re-attestation window**: one window over the whole spine means an amendment
 cannot land half-attested. Appendix B sizes what that bought and cost. The
-batch-only code is about 383 SLOC, 1% of the kit, plus about 360 test lines.
+batch-only code is about 100 code-only SLOC (314 with docstrings, which is the
+figure appendix B first quoted against a docstring-free denominator; corrected
+in review round 1), a quarter of one percent of the kit, plus about 360 test
+lines. Two of the fourteen functions — the verdict peel for the mechanical
+close — also exist because the single-row WI-586 lane staled its own round, so
+they go for a different reason (close-before-round, §4.4), not because of
+cardinality.
 It caused four of the six stranding defects measured on 2026-09-03: a walk
 that skipped a built-but-unclosed row and stranded the lane for ten sessions,
 a close that read a spec already moved and exited the whole loop, a preflight
 that refused three of four rows because the lane itself had closed them, and
 a legacy rollup compiled once per row. Telemetry attributes one lane's cost to
 four rows, and a reviewer judged four rows with one empty findings body
-(round 010). One WI per lane removes the class. The atomicity given up is
-worth less than the failures it bought while the spine is this size, and it
-matters less still once the spine stops describing the kit's plumbing (2.3);
-the component-scoped replacement is already designed in `concurrency-v2.md`
-§A4.4 should a spine ever grow large enough to need it. **The owner's
+(round 010). One WI per lane removes the class. What the batch protected — a shared
+premise and the amendment that depends on it approving in ONE window — is
+recovered by a rule, not by scheduling: related spine amendments are authored
+as ONE work item (a WI may amend several rows), so atomic approval is
+preserved per WI, and `exclusive` only serialises execution. What is genuinely
+lost is atomicity across amendments an author chose to split, and the
+component-scoped design in `concurrency-v2.md` §A4.4 is the recovery if a
+spine ever grows large enough to need it. **The owner's
 suspicion is right about causation and wrong about magnitude:** batches are
 not where the complexity mass lives (appendix B §B.7).
 
@@ -235,7 +251,13 @@ functions with seven different failure behaviours, and one of them documents
 keeping itself in sync by hand. `process.toml`, the "one home for every dial",
 is read raw in four places with three different defaults on failure. None of
 this is a requirement, a need or a gate. It is what happens when 82 modules
-grow in a flat namespace with a leaf `kitlib` that holds 4% of the code.
+grow in a flat namespace with a leaf `kitlib` that holds 4% of the code. Two
+cautions the review round added: the seven fence parsers do different jobs
+(one masks metadata, one preserves editable text, one needs fence positions on
+a CRLF checkout), and the four `process.toml` readers encode different
+consumer decisions on purpose (error, enable-check, ask-a-human). The fix is
+one parser that returns a typed result — absent, malformed, valid — while each
+consumer keeps its documented decision; not one failure behaviour for all.
 
 ### 2.8 Migration tail and shipped sprawl
 
@@ -344,14 +366,26 @@ on missing slots, with every template in one catalogue); one registry read
   contracts, the LLM CLI contract, the harness plan. Intra-kit function
   seams are documented in module docstrings and derived into the
   architecture map, not held as requirement rows. Expected: 167 → the 52
-  boundary-crossing rows plus the 19 kit-to-repo-file rows, then merged where
-  they describe one surface — about 50. Zero `call`-channel rows.
+  boundary-crossing rows plus the 19 kit-to-repo-file rows, then one row per
+  SURFACE for the intra-kit seams that carry a contract an import cannot
+  express (error semantics, required cells, fail-closed defaults — review
+  round 1 sampled five and all five did) with their consumer guarantees kept
+  as contract tests — about 60. The target is one declaration per surface,
+  not zero `call` rows.
 - **One approval mechanism.** `Status` on the row plus the byte-for-byte
   baseline snapshot. Delete the parallel attestation ledgers and the
-  ratification helpers that the D-1/D-9 program already ruled dead.
-- **Stage derivation stays**, but an amendment to a mechanism-tier row (LLR)
-  does not drop the stage below DevStg-Tests. Amending a promise (SN/SR) does.
-  This is the single change that stops refactors from re-litigating the gate.
+  approval-ledger helpers that the D-1/D-9 program already ruled dead.
+- **Stage derivation stays, unchanged.** An earlier draft proposed that an
+  LLR amendment could not drop the stage below DevStg-Tests; review round 1
+  showed that contradicts SN-029's acceptance text ("an AMENDED requirement
+  drops the derived stage exactly as a newly introduced one does") and would
+  hide a human-held amendment while the approval dial covers the LLR tier.
+  The honest lever is the distinction the kit already draws: a relocation
+  edit to a traced cell (`Module`, `CodeSymbol`, `TestRefs`) never drops the
+  stage, a normative-cell edit does. Refactors stop re-litigating the gate
+  because the pruned spine (above) no longer holds a normative row per
+  helper — not because the gate is clamped. If the owner wants more than
+  that, the route is an explicit amendment to SN-029 (§7).
 - **Test cases verify outcomes.** A TC says what an adopter observes. The
   checker's own unit tests are pytest, tagged to the TC they support, and
   not rows.
@@ -370,9 +404,17 @@ on missing slots, with every template in one catalogue); one registry read
   first and is cheap; an LLM adjudication is drawn only when the pre-filter
   finds something, and it judges the PROPOSAL, not a merged row. A proposal
   that extends an existing queued row appends a Done-when to it instead of
-  minting. This is the owner's "consolidation at WI creation," and it
-  replaces: the post-merge amendment adjudication for non-spine rows, the
-  idle-tick consolidation census, the digest guards, and most disposition
+  minting. This is the owner's "consolidation at WI creation." It is the EARLY
+  filter and the one place overlap is judged; it does not replace the check
+  that only a merge can make. A proposal is judged on intended scope against
+  the queue of that moment; what it actually amends, and what the trunk looks
+  like when it lands, are known only at merge. So: the post-merge validation
+  of actually-changed approved cells against the snapshot stays for every
+  approved row (promise or mechanism tier); the queue relation is rechecked on
+  the composed trunk in the merge slot; and the intake record carries the
+  queue digest it judged, so a later merge that moves the digest invalidates
+  it rather than leaving a stale verdict standing. What intake retires is the
+  idle-tick census as a separate row-minting mechanism and most disposition
   drafting.
 - **Frontier** is what `schedule.py` already is: needs edges, priority,
   exclusivity, class barriers. Keep. Delete the batch admission.
@@ -383,30 +425,40 @@ on missing slots, with every template in one catalogue); one registry read
 ### 4.4 The loop, as a state machine one reader can hold
 
 ```
-   ready WI ──claim──▶ LANE(worktree, branch, one WI)
+   ready WI ──claim──▶ LANE(worktree, branch, one WI; the claim records its integration base)
                           │ build session (worker brief = spec + spine context + diff)
                           ▼
-                       REVIEW round r (second family; verdict file: APPROVE | CHANGES(MAJOR+) | BLOCKED)
-                          │ CHANGES → rework session (must move the tree) → r+1, escalate tier at r=3, page at r=5
+                       CLOSE (by the worker, before any round): spec → archive/work/<terminal>/,
+                       Deliverable written, proposals drafted
                           ▼
-                       MERGE SLOT (serial): rebase onto trunk, run the stage bar INCLUDING tests, ff-merge
+                       REVIEW round r on the closed tree (second family; verdict file:
+                       APPROVE | CHANGES(MAJOR+) | BLOCKED; the round names the governing identity)
+                          │ CHANGES → rework session (must move the non-record tree) → r+1,
+                          │           escalate tier at r=3, page at r=5
+                          ▼
+                       MERGE SLOT (serial): refresh onto trunk (the peelable refresh commit),
+                       run the stage bar INCLUDING tests, ff-merge, regenerate, telemetry row
                           │ fail → back to lane with the red as a finding
                           ▼
-                       CLOSE: spec → archive/work/<terminal>/, Deliverable written, telemetry row appended
-                          │
-                       INTAKE of the close's proposals (4.3), then next tick
+                       INTAKE of the close's proposals (4.3) and the post-merge cell check, then next tick
 ```
 
 Rules that make it small:
 
-- **One WI per lane, always.** The `exclusive` key and a class barrier
-  (spine rows one at a time) give the serialisation the batch gave.
+- **One WI per lane, always.** Related spine amendments are authored as one
+  WI, which is what preserves atomic approval; the `exclusive` key and a class
+  barrier (spine rows one at a time) give the serialisation the batch gave.
 - **The verdict is a file with a grammar, and the grammar has a threshold.**
   CHANGES-REQUESTED needs a MAJOR. A rework that changes only records is not
-  a rework. A round is drawn on a tree, and the tree identity is the commit —
-  no peel rules for machine-authored commits, because the machine closes
-  BEFORE the final round rather than after (close, then draw the round on the
-  closed tree; the merge slot verifies the round names the tip).
+  a rework. A round is drawn on the kit's existing **governing identity** —
+  the tree with the record paths (`docs/reviews/`, `docs/log.d/`,
+  `docs/iteration/`) removed and the station's refresh commit peeled
+  (`kitlib/verdict.py`) — so a round file can name the tree it judged without
+  moving it, and a refresh after review does not stale it. That identity and
+  that one peel stay. What goes is the SECOND peel, for machine-authored
+  close commits, because the worker closes BEFORE the final round rather than
+  the machinery closing after it; the merge slot verifies the round names the
+  governing identity of the tree it is about to merge.
 - **The coordinator is stateless between ticks** except for git. Every tick
   re-derives the frontier, the lane table and the merge queue from the tree
   (which `finished_branches()` already does). It records the digest of its
@@ -425,18 +477,27 @@ Rules that make it small:
 - **One harness (`check.py`) over one `stack.ini`.** Steps per stage. The
   stage bar at DevStg-Tests and above ALWAYS runs the tests (gap 1).
 - **Ratchets: three, not seven.** Coverage floor, complexity ceiling, and
-  test wall-clock — each with a baseline file whose rows are one line, and a
-  documented rule that a breach on an untouched commit re-baselines
-  automatically with the measured value and a log line (a laptop under load
-  is not a regression). Module-size, IF-TC allowlist, backlink floor, dupes
-  census, figures markers, status byte budget: delete or demote to a report
-  the dashboard shows.
+  test wall-clock — each with a baseline file whose rows are one line and a
+  one-line reason, re-stamped only by an explicit reviewed commit (the kit's
+  never-green-by-list-edit rule stands; an earlier draft's automatic
+  re-baseline on untouched commits was a laundering path and is withdrawn).
+  The wall-clock budget is measured as the median of three controlled runs,
+  and a breach on an untouched commit is REPORTED as environment noise with
+  the three readings — never re-stamped by the machine. Module-size, IF-TC
+  allowlist, backlink floor, dupes census, figures markers, status byte
+  budget: delete or demote to a report the dashboard shows.
 - **Generated artifacts: four.** Dashboard, open-items page, stage file,
   approval brief. Each regenerated by the merge slot, never a commit-time
   freshness step for a reader-facing document. `status.md` becomes a
-  generated page with one hand-authored `## Notes` block; the daily handoff
-  becomes unnecessary because the dashboard's "Resume" panel is derived from
-  the tree (pause state, frontier, lanes, last merges, owed decisions).
+  generated page with one hand-authored `## Notes` block, and that block is
+  the authored operational channel — provider outages, quota resets, which
+  code a long-running coordinator loaded — which no tree-derived field can
+  infer. The dashboard's "Resume" panel derives the rest (pause state,
+  frontier, lanes, last merges, owed decisions), regenerates at every tick end
+  and on pause rather than only at merge, and every field names its source,
+  its freshness and what it shows when unknown. The daily handoff is retired
+  only after a resume from a paused and a failed run has been driven from the
+  panel plus the Notes block alone.
 - **The log**: keep fragments compiled at merge. Cap the compiled log by
   rotating yearly into the archive.
 - **Docs**: one PROCESS.md under 800 lines with the opt-in layers as
@@ -456,13 +517,18 @@ or study before building:
   packaged it as desktop apps, TUIs or CLIs; the three projects that model
   the kit's whole stack are single-author, abandoned or sunsetting.
   **Worktrunk** (MIT/Apache, ~6,800 stars, released weekly, Windows via
-  Winget, no daemon, state as real git) implements exactly the station the kit
-  hand-built: `wt merge` commits, rebases onto the target, runs blocking
-  pre-merge hooks declared in a TOML file, fast-forward merges and cleans up.
-  Shelling out to it would replace the refresh/merge half of `lane` and
-  `integrate` while the claim, the verdict gate and intake stay in the kit.
-  It is a `system`-tier dependency an adopter installs, not a shipped-check
-  dependency. Claude Code's own `isolation: worktree` covers lane creation
+  Winget, no daemon, state as real git) implements the same SEQUENCE as the
+  station the kit hand-built: `wt merge` commits, rebases onto the target,
+  runs blocking pre-merge hooks declared in a TOML file, fast-forward merges
+  and cleans up. Two documented behaviours cut against the kit: its default
+  squash and rebase rewrite the history that carries the kit's commit-bound
+  review evidence, and a conflict leaves an open rebase where the kit's
+  refresh restores the last work commit. An adapter would run
+  `--no-commit --no-rebase`, which leaves the preparation with the kit, and
+  must be prototyped against the station contract — evidence preservation,
+  tested-tree identity, trunk races, regeneration order, recoverable failure —
+  before any saving is claimed. It is a `system`-tier dependency an adopter
+  installs, not a shipped-check dependency. Claude Code's own `isolation: worktree` covers lane creation
   for one vendor only.
 - **Requirements-in-git tools exist and none fits the constraints.** Doorstop
   (LGPL, 16 deps) is the only one that binds approval to content — a
@@ -474,8 +540,8 @@ or study before building:
   duplicate) and sphinx-needs' declarative schema validation; emit ReqIF as a
   free export.
 - **Agent-native issue trackers do not keep plain text in git.** Beads moved
-  to Dolt (issue changes never appear in a PR diff); gastown inherits that and
-  needs a daemon fleet. The plain-text ones (ticket, Backlog.md, ticket-rs)
+  to Dolt (canonical changes sit outside source-branch diffs unless exported
+  and committed); gastown inherits that and needs a daemon fleet. The plain-text ones (ticket, Backlog.md, ticket-rs)
   are bash, Node or unlocatable. Status-as-directory stays; copy their
   `ready` semantics and nothing else. GitHub Issues, whose dependencies are
   now GA, is a viable one-way mirror for human visibility.
@@ -535,36 +601,82 @@ Phase 0.
 - Stop the loop minting work about itself while the rebuild runs: set
   `complete_review = "off"`, `adjudication_review = "when-minting"` stays,
   and pause the consolidation census. Record the dial changes.
+- **Then a two-week CONTROL PERIOD (added in review round 1).** The churn
+  fixes of 2026-09-04/05 (MINOR-only verdicts do not block; identity-unchanged
+  reworks page; the adjudication reviewer brief) have never been measured, and
+  the smallest intake improvement — the `{open_rows}` slot and an `EXTEND`
+  outcome on the disposition brief, drafted in
+  `docs/decisions-for-review-2026-09-05.md` §4 — is a few days' work. Land
+  that, run the loop as it stands on the real backlog for two weeks, and
+  record per merge: rounds, CHANGES-REQUESTED count, supervisor interventions,
+  adjudication share, escaped defects. **Decision gate:** if the control
+  period alone brings rounds per merge under 2.0, adjudication share under
+  20% and supervisor interventions under one a day, Phases 3 and 4 are
+  re-scoped to the harness cuts only and the loop is NOT rebuilt. The
+  spine prune (Phase 1) proceeds either way; it is justified by appendix A,
+  not by churn.
 - **Done when:** the baseline table is committed; the four fixes have tests;
-  the frontier holds only build rows.
+  the frontier holds only build rows; the control-period table is committed
+  and the gate decision is recorded as an owner ruling.
 
-### Phase 1 — Spine prune (4 days, human-heavy)
+### Phase 1a — Preservation mapping (4–5 days, human-heavy)
 
-- Classify every LLR and IF row using appendix A's classes. For each
-  self-description row: delete it and move its content to the owning module's
-  docstring (`Implements:` back-links keep the derived map honest). For each
-  intra-kit IF row: same. Target: LLR 192 → about 70 (the 47 vision-bearing
-  rows plus a minimal loop layer of about 20, with the dashboard's 22
-  per-rubric-anchor rows collapsed to two); IF 167 → about 50; TC 191 → about
-  90 (the deleted TCs become plain pytest tests tagged to the surviving row).
-  Delete the duplicate LLR-005/LLR-015 pair as the first cut.
-- Change stage derivation so an LLR amendment cannot drop the stage below
-  DevStg-Tests. One rule, one test.
-- Delete the IF-TC coverage allowlist and its hygiene check; the surviving
-  30 seams each get a real contract test or a `VerifiedBy`.
-- Re-snapshot the baseline once, as a signed owner act.
-- **Done when:** `trace.py` is green with orphans=0 and no allowlist; the
-  stage is DevStg-Tests and stays there through a kit refactor commit that
-  moves a helper between modules (the test of 2.3).
+Review round 1's BLOCKER 4 established that appendix A's class (c) means
+"the ROW is self-description", not "the BEHAVIOUR is dispensable": of ten
+sampled rows, five carry contracts an adopter would miss (the flow-doc
+structure, vendored-source drift, the launcher's exit codes and EOF safety,
+the kitlib completeness check, the complexity ratchet itself). So nothing is
+deleted until every clause has a home.
+
+- Produce a **clause-level retained / moved / retired manifest** for every
+  LLR, IF and TC row: for each normative clause, where it lives afterwards
+  (a surviving row, a module docstring plus a named test, or retired with the
+  reason), and which TC or pytest test carries it. This is also the
+  reproducible classification manifest appendix A lacks.
+- Merge the LLR-005/LLR-015 duplicate into one row that keeps LLR-005's
+  additional obligations. For the intra-kit IF rows, one row per surface,
+  with each consumer's guarantee (error semantics, required cells,
+  fail-closed defaults) carried as a contract test.
+- Stand up the adopter fixture from Phase 5 EARLY, in its minimal form, so
+  the prune has an external oracle.
+- **Done when:** the manifest is committed and reviewed; every retained clause
+  names its test; the fixture is green before any row moves.
+
+### Phase 1b — Spine prune (4–5 days)
+
+- Execute the manifest. Targets: LLR 192 → about 70 (the 47 vision-bearing
+  rows plus a minimal loop layer of about 20, the dashboard's 22
+  per-rubric-anchor rows collapsed to two); IF 167 → about 60; TC 191 →
+  about 90 (retired TCs become pytest tests tagged to the surviving row).
+- Stage derivation is NOT changed (review round 1, BLOCKER 1). If the owner
+  wants refactors to stop dropping the stage, that is an explicit amendment
+  to SN-029 taken in §7, not a clamp.
+- Delete the IF-TC coverage allowlist and its hygiene check; every surviving
+  seam gets a real contract test or a `VerifiedBy`.
+- Keep the pre-prune baseline snapshot as the comparison oracle until the
+  manifest has been checked against it; re-seed the snapshot once, afterwards,
+  as a signed owner act.
+- **Rollback trigger and rehearsal:** the prune lands as a small number of
+  reviewed commits behind a tag; a red on the fixture or a manifest clause
+  with no home reverts to the tag. Rehearse the revert once before the first
+  real commit.
+- **Done when:** `trace.py` is green with orphans=0 and no allowlist; every
+  manifest clause resolves; the fixture passes its own gates; a kit refactor
+  commit that moves a helper between modules touches no normative cell and
+  therefore leaves the stage where it was (the test of 2.3).
 
 ### Phase 2 — Queue with intake judgement (5 days)
 
-- First, the three conventions from §4.1 as a mechanical sweep: one
-  frontmatter parser (seven today), one `process.toml` reader (four today),
-  one result type and no `sys.exit` outside `main()` (78 library-code sites
-  today), one prompt fill (the worker, reviewer and critique prompts move onto
-  `prompts.fill`). Each is a find-and-replace with tests, and each removes a
-  class of drift before the merges below begin.
+- First, the three conventions from §4.1: one frontmatter parser returning
+  a typed result (absent / malformed / valid) that the seven current sites
+  consume for their different jobs (masking, text preservation, fence
+  positions on CRLF); one `process.toml` reader with the same typed result
+  while the four consumers keep their documented decisions (error,
+  enable-check, ask-a-human); one result type and no `sys.exit` outside
+  `main()` (78 library-code sites today); one prompt fill (the worker,
+  reviewer and critique prompts move onto `prompts.fill`). Each site's
+  failure direction is characterised (malformed fence, BOM, CRLF, missing key,
+  security default) BEFORE it is replaced — this is not a find-and-replace.
 - Introduce the `proposed/` directory and the intake step
   (`queue/intake.py`): mechanical pre-filter, typed record on the row
   (`intake = {verdict, overlaps, contradicts, judged_at}`), optional LLM
@@ -591,14 +703,20 @@ Phase 0.
   half, `agent_route`, `agent_session`, `kitlib/verdict`, `kitlib/station`,
   `score_reviews`, `gen_verdict_rollup`, `acceptance_record`, `pending`,
   `plan_*` (about 12k SLOC today across the dispatch, merge, review and
-  arbitrate stages; target 4–5k).
+  arbitrate stages; target 5–6k).
 - Close-before-round ordering removes the verdict peel and the legacy
   rollup path. Batch admission and `mechanical_close_order` are not ported.
 - Run both loops against the kit's backlog for two weeks in alternation;
   the new loop must merge every class of row the old one merges, with fewer
   rounds per merge and no supervisor-drawn rounds.
+- Runs only if Phase 0's decision gate said so.
+- **Rollback trigger:** the old loop stays runnable behind a flag until the
+  soak ends; any class of row the new loop cannot merge, or any supervisor
+  intervention the old loop would not have needed, stops the soak and reverts
+  the flag.
 - **Done when:** the old loop's modules are deleted; the run log shows two
-  weeks with no hand intervention beyond the pause file and rulings.
+  weeks with no hand intervention beyond the pause file and rulings; the
+  retained tests from Phase 1a all pass against the new loop.
 
 ### Phase 4 — Harness and surfaces (4 days)
 
@@ -610,9 +728,11 @@ Phase 0.
   recommendation required — WI-570's scope).
 - Skills: domain skills move to a sibling repo; the kit ships process skills
   only.
-- **Done when:** the pre-commit floor runs under ten seconds; a routine
-  script change reds at most one ratchet; a fresh reader resumes from the
-  dashboard without a handoff.
+- **Done when:** the pre-commit floor runs under ten seconds; every ratchet
+  red names the guarantee it protects and how to re-stamp it by a reviewed
+  commit; a resume from a paused run AND from a failed run has been driven
+  from the Resume panel plus the Notes block alone, after which the handoff
+  document is retired.
 
 ### Phase 5 — Scaffold, docs, and the adopter test (4 days)
 
@@ -634,11 +754,11 @@ Phase 0.
 | Loop import closure | 65% of the kit | the `loop` package and what is below it |
 | Tests | 3,255 / ~10 min | ~700 / under 3 min full, under 30 s smoke |
 | Result / prompt / registry conventions | 8 / 7 / 7 | 1 / 1 / 1 |
-| LLR / IF / TC | 192 / 167 / 191 | ~70 / ~50 / ~90 |
+| LLR / IF / TC | 192 / 167 / 191 | ~70 / ~60 / ~90 |
 | Harness steps at top stage | 34 | ~14 |
 | Generated artifacts | 13 | 4 |
 | Process prose | ~9k lines | ~1.5k |
-| Supervised effort | | ~27 days plus two two-week soak periods |
+| Supervised effort | | ~36 days plus a two-week control period and a two-week soak (review round 1 raised the spine work from 4 to 8–10 days and added the control period) |
 
 ---
 
@@ -663,6 +783,15 @@ Phase 0.
 - **Risk: the loop's soak finds classes of row the new loop cannot merge.**
   Two weeks in alternation is the cheapest honest test; extend rather than
   shortcut it.
+- **Risk: the prune retires a behaviour with its row.** Review round 1 found
+  five of ten sampled "self-description" rows carrying adopter-visible
+  contracts. The Phase 1a manifest and the early fixture exist for this; if
+  either is skipped, the prune should not run.
+- **Risk: the plan's own measurements.** Two figures in the first draft were
+  wrong in the plan's favour (batch SLOC counted with docstrings; "27 of 48"
+  read as effort). They are corrected in this version and the corrections are
+  recorded in `review-01-dispositions.md`; treat any remaining single-source
+  number as a claim to re-derive before it drives a decision.
 
 ---
 
@@ -675,15 +804,48 @@ Phase 0.
    acceptance — retire, or keep as an opt-in layer with its 39 LLRs moved out
    of the core registry). Rule SN-023's acceptance clause down to "one file a
    reviewer can open."
-2. Rule that an LLR amendment does not drop the stage below DevStg-Tests.
+2. Decide whether SN-029's acceptance ("an amended requirement drops the
+   derived stage exactly as a newly introduced one does") should be amended
+   so that a mechanism-tier (LLR) amendment on a stage already past
+   DevStg-Tests is adjudicated without dropping the stage — or left as it is,
+   with the pruned spine doing the work. Review round 1 showed the plan's
+   first draft would have clamped the stage in contradiction of that text;
+   only an explicit amendment to the need is honest.
 3. Rule one WI per lane and the retirement of batch admission.
 4. Rule the intake point (`proposed/` + judgement) as the one place
    contradiction and consolidation are asked.
 5. Choose the ratchet set (three proposed) and the auto-re-baseline rule.
 6. Decide the fate of the sixteen domain skills.
 7. Decide whether Phase 3's merge station is rebuilt in the kit or delegated
-   to Worktrunk as a system-tier dependency (appendix C §C.1). The trade: one
-   external binary and a TOML hook file against roughly 1,500 SLOC of
-   refresh/merge code the kit would otherwise keep maintaining. Either way the
-   claim, the verdict gate, intake and the review protocol stay in the kit —
-   nothing external models those.
+   to Worktrunk as a system-tier dependency (appendix C §C.1), after a
+   prototype against the station contract (evidence preservation under
+   `--no-commit --no-rebase`, tested-tree identity, trunk races, regeneration
+   order, recoverable failure). The trade is one external binary and a TOML
+   hook file against part of the refresh/merge code — how much is what the
+   prototype measures. Either way the claim, the verdict gate, intake and the
+   review protocol stay in the kit — nothing external models those.
+8. Accept or reject the Phase 0 control period and its decision gate. It is
+   the round-1 reviewer's strongest structural point: the churn fixes already
+   landed have not been measured, and a rebuild decided before measuring them
+   cannot be evaluated afterwards.
+
+---
+
+## 8. Review record
+
+This plan is under adversarial review by a second model family, on the kit's
+own cross-family doctrine. Each round's brief, findings and the author's
+per-finding dispositions are kept beside the plan:
+
+- Round 1 (codex, `gpt-6-astra`, effort high, 2026-09-05):
+  [brief](review-01-brief-codex-astra.md) ·
+  [findings](review-01-codex-astra-findings.md) ·
+  [dispositions](review-01-dispositions.md). Verdict: diagnosis partly,
+  target partly, breakdown not executable. Four BLOCKERs and ten MAJORs;
+  every finding accepted in full or in part, none rejected. The material
+  changes: the stage clamp withdrawn (contradicted SN-029); automatic
+  ratchet re-baselining withdrawn (a laundering path); a clause-level
+  preservation manifest before any row is retired; a two-week control period
+  with a decision gate before any loop rebuild; corrected figures (batch
+  code is about 100 code-only SLOC, not 383; the loop's closure is 46
+  modules by static reachability; "27 of 48" is a category count).

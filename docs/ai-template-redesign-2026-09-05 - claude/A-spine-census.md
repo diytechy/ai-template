@@ -59,6 +59,15 @@ late SNs (SN-033..040) carry ten LLRs between them but 67 IF memberships.
 
 ## A.2 LLR classification (192 rows, read from the `detail` cell)
 
+> **Framing note added after review round 1.** Class (c) says the ROW is
+> self-description — it records a retirement, a relocation, a migration or a
+> repo convention. It does not say the BEHAVIOUR behind the row is dispensable.
+> A ten-row sample by the round-1 reviewer found five (LLR-013, LLR-022,
+> LLR-047, LLR-181, LLR-206) carrying contracts an adopter would miss if the
+> code went with the row. The plan therefore retires rows only through a
+> clause-level retained / moved / retired manifest (PLAN Phase 1a), and this
+> census is the input to that manifest, not a deletion list.
+
 | Class | Count | % | Kit SLOC in modules where the class dominates |
 |---|---:|---:|---:|
 | (a) VISION-BEARING | 47 | 24% | 14,929 |
