@@ -123,6 +123,7 @@ import re
 from .git import git_bytes, git_out
 from .station import (
     BAR_GREEN,
+    mechanical_close_order,
     mechanical_close_subject,
 )
 
@@ -375,7 +376,25 @@ _COMPLETE_SPEC = re.compile(rb"^docs/work/complete/(WI-[0-9]+-[^/]+[.]md)$")
 
 
 def _closed_wi_ids(fields):
-    """The canonically ordered ids moved from active/ to complete/, or None."""
+    """The canonically ordered ids moved from active/ to complete/, or None.
+
+    ONLY THE MOVE ITSELF MAY CREATE OR DESTROY. An `A` or `D` entry this
+    function does not RECOGNISE is a refusal, not an entry it skips: while they
+    were skipped, one close deleted the pre-existing terminal record
+    `docs/work/complete/WI-300-terminal.md` and added a brand-new
+    `docs/work/queued/WI-999-smuggled.md` and STILL peeled, so a judged row's
+    destruction and a new spec's injection were both measured at the parent and
+    never judged (REVIEW-A round 3, driven on a real repository). `M` stays
+    unrestricted because `spec_move`'s inbound relink genuinely rewrites other
+    rows in place, and a relink only ever modifies.
+
+    The empty close refuses HERE, on the one-source-branch requirement:
+    `branches` only grows in the same arm that appends to `deleted`, so a
+    commit that moved nothing names zero source branches and `len(branches) !=
+    1` turns it away. There is deliberately no separate non-emptiness clause -
+    one that could only fire where this one already had would be untestable by
+    construction.
+    """
     if len(fields) % 2:
         return None
     deleted, added, branches = [], [], set()
@@ -389,14 +408,11 @@ def _closed_wi_ids(fields):
             deleted.append((active.group(2), active.group(3).decode("ascii")))
         elif complete:
             added.append(complete.group(1))
-    deleted.sort()
-    if (
-        not deleted
-        or len(branches) != 1
-        or [name for name, _ in deleted] != sorted(added)
-    ):
+        elif status != b"M":
+            return None
+    if len(branches) != 1 or sorted(name for name, _ in deleted) != sorted(added):
         return None
-    return [wi_id for _name, wi_id in deleted]
+    return mechanical_close_order(deleted)
 
 
 def mechanical_close_attestation(root, rev):

@@ -318,3 +318,43 @@ Evidence driven on the completed tree:
 
 Deviations from the rework finding: none. Byte-budgeted files changed: none.
 Deferred open items: none — round 005's one finding is resolved in this WI.
+
+### Rework round 3 (review A, `007-REVIEW-A-8fc8f44.md`, 5 findings)
+
+All five taken. Two were MAJOR and both are fixed at the one owning trust
+boundary, `verdict._closed_wi_ids`.
+
+**MAJOR 1 — the dead `not deleted` clause.** The reviewer was right that it
+pinned nothing, and re-measurement showed the record's replacement claim would
+have been wrong too. The disjunct is deleted. Then, driving it: deleting the
+`len(branches) != 1` clause ALSO leaves the module at `62 passed` — because an
+empty diff derives NO ids, and `mechanical_close_subject([])` is
+`'adjudicate:  -> complete/ (mechanical close)'`, which the exact-subject
+comparison refuses anyway. So the empty close's refusal is OVER-DETERMINED and
+no clause owns it; the test comment and TC-205 now say exactly that instead of
+naming a second wrong owner. The one-source-branch clause is separately pinned
+by a new arm on the case it genuinely owns — a close reaching into a SECOND
+lane's `active/` — which is the single red when that clause is deleted.
+
+**MAJOR 2 — unpaired `A`/`D` under `docs/work/`.** Reproduced as described.
+`_closed_wi_ids` now refuses any entry that is neither half of a recognised
+move nor an `M` (the relink only ever modifies). Two real-git regressions:
+`test_a_close_that_smuggles_a_new_spec_in_does_not_peel` and
+`test_a_close_that_destroys_an_archived_record_does_not_peel`. Both were driven
+against the pre-fix module and both genuinely fail there (`assert
+'59846fa5…' is None`, `assert 'c681829…' is None`).
+
+**No fail-closed regression.** All nine real historical mechanical closes in
+this repo (`41980b2e 49dc0f0a f0528530 6b066486 e2b3cf8a c1806388 02a92f22
+4d9dba7f 825fc966`) still peel to their parents under the stricter rule.
+
+**MINOR 3 — the two sortings.** Taken as the antidote the finding named rather
+than as a test: `station.mechanical_close_order` is now the ONE key both sides
+sort on, imported by `verdict._closed_wi_ids` and called by
+`handback.close_adjudication`, so they cannot diverge by construction. A
+two-row batch arm is added to TC-205 anyway, and the writer↔verifier loop is
+now closed end to end on a REAL close
+(`test_the_close_the_writer_lands_is_one_the_attestor_peels`), which nothing
+drove before.
+
+**MINOR 4 / MINOR 5** — the stale citation total and `IF-175.notes`, below.

@@ -610,12 +610,16 @@ def close_adjudication(root, branch):
         # is nothing for this close to do — the no-op the docstring promises,
         # never a refusal.
         return None, None
-    closed = []
+    moved_rows = []
     for wi_id, name in specs:
         moved, refusal = _archive_one_adjudication_row(wt, branch, name)
         if refusal or not moved:
             return None, refusal
-        closed.append(wi_id)
+        moved_rows.append((name, wi_id))
+    # THROUGH THE SHARED ORDER, not this loop's. On a multi-row close the
+    # attestor re-composes this subject from the diff, and it can only sort on
+    # what the diff carries - see `station.mechanical_close_order`.
+    closed = station.mechanical_close_order(moved_rows)
     code, out = ac.git(
         wt,
         "commit",

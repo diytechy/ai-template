@@ -146,6 +146,32 @@ def mechanical_close_subject(wi_ids):
     )
 
 
+def mechanical_close_order(pairs):
+    """The canonical WI-id order of a mechanical close, from `(spec filename, WI
+    id)` pairs.
+
+    ONE ORDER FROM ONE KEY, and it lives beside the subject composer for the
+    composer's reason: on a MULTI-row close the writer's subject and the
+    subject `verdict._closed_wi_ids` re-composes from the diff must agree, or
+    the close stops peeling and every batch lane re-opens the staled-APPROVE
+    failure the peel exists to close. Two independently-chosen sortings agreed
+    by luck; this makes them one. The key is the spec FILENAME's bytes, the
+    only thing both sides read off the same tree - the writer holds the trunk's
+    claimed filenames, the attestor holds the deleted paths of the diff - so
+    the writer passes `str` names and the attestor `bytes` ones and both encode
+    to the same key.
+    """
+    return [
+        wi_id
+        for _name, wi_id in sorted(pairs, key=lambda pair: _close_sort_key(pair[0]))
+    ]
+
+
+def _close_sort_key(name):
+    """A spec filename as the bytes both close subject composers sort on."""
+    return name.encode("utf-8") if isinstance(name, str) else name
+
+
 def outcome_of(status_dirs):
     """The ONE `Outcome` the given status directories name, or `None`.
 

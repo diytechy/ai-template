@@ -32,8 +32,20 @@ reverted nothing, or a "blocked" assertion that would pass on an unblocked row.
 
 import shutil
 import subprocess
+import sys
 
-from conftest import env_gate_skipif, load_script, pin_autocrlf, skip_without_env_gates
+from conftest import (
+    SCRIPTS,
+    env_gate_skipif,
+    load_script,
+    pin_autocrlf,
+    skip_without_env_gates,
+)
+
+if str(SCRIPTS) not in sys.path:  # the kit's script-sibling import idiom
+    sys.path.insert(0, str(SCRIPTS))
+
+from kitlib import verdict as kv  # noqa: E402
 
 pytestmark = env_gate_skipif("git")
 
@@ -608,6 +620,24 @@ def test_the_mechanical_adjudication_close_archives_terminal_and_finishes(tmp_pa
     # Every registry reader parses the closed adjudication spec.
     rows = {r["WI-ID"]: r for r in acommon.read_spec_rows(root / "docs" / "work")}
     assert rows["WI-401"]["Status"] == "done"
+
+
+def test_the_close_the_writer_lands_is_one_the_attestor_peels(tmp_path):
+    # THE WRITER↔VERIFIER LOOP, closed on a REAL close rather than a
+    # hand-composed one. `verdict.mechanical_close_attestation` re-derives this
+    # subject from the diff and compares it exactly, so the two sides share an
+    # ordering (`station.mechanical_close_order`) AND a spelling; if either
+    # drifts, every adjudication close silently stops peeling and re-opens the
+    # staled-APPROVE failure the peel exists to close. The peel test suite
+    # composes its own fixtures, so nothing else drives the producer here.
+    root = adjudication_repo(tmp_path)
+    before = _git(root, "rev-parse", "wi-401").strip()
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    assert refusal is None, refusal
+    assert ids == ["WI-401"]
+    landed = _git(root, "rev-parse", "wi-401").strip()
+    assert landed != before  # the close really committed
+    assert kv.mechanical_close_attestation(root, landed) == before
 
 
 def test_the_mechanical_close_mints_the_drafted_successor_at_merge(tmp_path):
