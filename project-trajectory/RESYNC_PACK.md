@@ -2515,6 +2515,42 @@ record that conclusion with its reason. Text status retains its existing CLI
 while avoiding renderer imports; full HTML and test cadence remain in force.
 No new dependency, runtime cutover, capability removal or approval is implied.
 
+### Launchers relaunch on restart, the worker base rule, and registry-row SpecRefs [since f16e39ff]
+
+Take `agent_common.py`, `agent_session.py`, `check_trajectory.py`,
+`kitlib/spine.py` and both launcher templates together; stop running
+coordinators first, as the two preceding entries describe.
+
+- **Restart behavior, revised:** the shipped launchers now relaunch the
+  coordinator when it exits 11, bounded at 50 relaunches, so a walk-away run
+  survives an integration that touched the kit's own scripts. The coordinator
+  still stops admission, drains and preserves branches exactly as before; the
+  relaunch lives one level up. Re-take `agent-resume.sh` / `agent-resume.cmd`
+  from the templates (or copy the `engine()` loop / `:again` block into a
+  custom wrapper, keeping exit 11 as a restart request). The preceding entry's
+  "no automatic relaunch" sentence is superseded.
+- **Worker base rule:** a lane in a linked worktree keeps `merge-base(trunk,
+  HEAD)` as its evidence base; the durable claim commit is used only when the
+  primary checkout itself sits on the lane branch. If you scripted around the
+  claim-first rule of the preceding entry (e.g. `--base` overrides after a
+  trunk merge into a lane), drop the workaround.
+- **Code-drift scan:** non-regular `*.py` entries (an editor's dangling lock
+  symlink, a directory named `x.py`) no longer crash kit entry points at
+  import; a failed launch capture prints one warning and disables the restart
+  check for that process instead of restarting on every poll.
+- **R-E SpecRefs on TOML registries:** a `#fragment` on a registry carrier
+  (`docs/requirements/*.toml`, `docs/test/test-cases.toml`) must be a bare row
+  id (`#SN-12`); the table-path spelling (`#need.SN-12`) is now a finding that
+  names the accepted form, and an unknown id is a finding. WARN at the commit
+  bar, ERROR under `--strict`. Fix any such SpecRef in `docs/work/` before the
+  next strict gate; the dual-plan composer already refused them at draw time.
+- **Session records:** a `KeyboardInterrupt` in an attached interactive
+  sitting persists its `call_` log with `outcome: INTERRUPTED`, filled
+  `wall-secs`/`ended-at` and `usage-status: unavailable`, then re-raises.
+
+No registry conversion, dependency, policy dial or approval is part of this
+entry.
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which
