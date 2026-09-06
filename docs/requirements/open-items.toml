@@ -3328,10 +3328,12 @@ wi_refs = ["WI-577"]
 
 [open_item.OI-83]
 title = "A long-lived coordinator runs the modules it imported at launch"
-status = "pending"
+status = "ruled"
 raised = "2026-09-03"
 one_line = "A long-lived coordinator executes the modules it imported at LAUNCH, from whatever checkout its argv named - so a lane's own fix to agent_loop.py cannot take effect in that lane, and a process running for nine hours can be arbitrarily far behind the tree it is building. Nothing detects it. Surfaced by WI-579 REVIEW-A round 033, where working code was reported as a BLOCKER on the strength of a live run that had never loaded it: the writer was sound and the running process predated it. Should the coordinator re-exec (or refuse to continue) when the modules it launched from have moved under it, or is a stated operating rule enough?"
-decision = """Whether a long-lived `agent_loop` coordinator must detect that the kit modules it imported at LAUNCH have moved under it, and stop — or whether a stated operating rule is enough.
+decision = """RULED 2026-09-06 under the owner's 2026-09-05 authorization to execute the accepted redesign plan: detect script drift and stop at a safe boundary (option a), with an explicit operator restart rather than a new automatic launcher retry. Exit 11 preserves finished-session evidence and active claims; the dispatcher drains existing children without starting new acceptance work. No hot reload. Implementation and review: docs/ai-template-redesign-2026-09-05-codex/EXECUTION-RECORD.md. Original question follows.
+
+Whether a long-lived `agent_loop` coordinator must detect that the kit modules it imported at LAUNCH have moved under it, and stop — or whether a stated operating rule is enough.
 
 - Python binds the imported module objects at launch, so a lane's own fix to `agent_loop.py` cannot take effect in the process building that lane, and a nine-hour run can be arbitrarily far behind the tree it is constructing.
 - Nothing detects it and nothing reports it.
@@ -3350,12 +3352,17 @@ recommendation = """(a) DETECT AND EXIT at a tick boundary.
 - the sequencing: rule with OI-84 — an exit-and-relaunch re-derives the base OI-84 is about, so ruling this first narrows what that one must cover."""
 wi_refs = ["WI-579"]
 
+ruled_date = "2026-09-06"
+ruling_ref = "docs/ai-template-redesign-2026-09-05-codex/EXECUTION-RECORD.md"
+
 [open_item.OI-84]
 title = "agent_loop.default_base goes blind on a resumed single-checkout worker"
-status = "pending"
+status = "ruled"
 raised = "2026-09-03"
 one_line = "agent_loop.default_base merge-bases to HEAD whenever the primary checkout IS the lane branch (its own docstring names the single-checkout attended run and the test fixtures), so a RESUMED run of that shape scans an EMPTY base..HEAD and every reader of train_evidence goes blind at once. WI-579 round 034 fixed ONE symptom at its call site - resume_owed_round dropped a genuinely parked review round and ran another BUILD instead, the C2 contract inverted - by having review_owed_by_evidence answer None for 'cannot say' and re-asking at the base the owed-marker carries. Three other readers were left: worker_exit's DONE banner reports nothing built, schedule_review_round never draws a fresh round on a complete train, and current_assignment_wi reads every assigned WI as remaining and re-claims one already built. Should the base be made durable for a resumed worker (the claim's integration base, recorded rather than re-derived), or should each reader carry the blindness the way round 034's did?"
-decision = """Whether a resumed worker gets a DURABLE integration base, or whether each reader of `train_evidence` carries the blindness itself.
+decision = """RULED 2026-09-06 under the owner's 2026-09-05 authorization to execute the accepted redesign plan: use a durable base (option a). The existing Git claim commit already records the boundary, so no new claim field or carrier is needed. Resolve that commit through first-parent history and validate its queued-to-active move; retain legacy/manual fallback only where no claim record exists. Unreadable claim evidence refuses rather than becoming HEAD..HEAD. Implementation and review: docs/ai-template-redesign-2026-09-05-codex/EXECUTION-RECORD.md. Original question follows.
+
+Whether a resumed worker gets a DURABLE integration base, or whether each reader of `train_evidence` carries the blindness itself.
 
 - `agent_loop.default_base` merge-bases to HEAD whenever the primary checkout IS the lane branch (its own docstring names the single-checkout attended run, and the test fixtures take that shape), so a RESUMED run of that shape scans an empty `base..HEAD` and every reader goes blind at once.
 - WI-579 round 034 fixed ONE symptom at ONE call site: `resume_owed_round` dropped a genuinely parked review round and ran another BUILD instead, inverting the C2 contract. The fix had `review_owed_by_evidence` answer None for "cannot say" and re-ask at the base the owed-marker carries.
@@ -3372,3 +3379,6 @@ recommendation = """(a) DURABLE BASE, with the derivation kept as the fallback.
 - the guard: the fallback must stay, so a claim made before this lands (or by hand) still resolves; and the recorded base is written by the claim, never by the worker.
 - the sequencing: rule with OI-83. Under an exit-and-relaunch policy a resumed run re-derives more often, which reduces but does not remove the need for this."""
 wi_refs = ["WI-579"]
+
+ruled_date = "2026-09-06"
+ruling_ref = "docs/ai-template-redesign-2026-09-05-codex/EXECUTION-RECORD.md"

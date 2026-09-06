@@ -285,6 +285,9 @@ def test_claim_moves_the_spec_commits_the_trunk_and_cuts_the_branch(tmp_path, ca
         == "claim: WI-401 -> active/wi-401 (bookkeeping)"
     )
     assert _rev(root, "wi-401") == _rev(root, "HEAD")
+    lane, refusal = integ.lane_worktree(root, "wi-401")
+    assert refusal is None, refusal
+    assert integ.ac.claim_base(lane) == (_rev(root, "wi-401"), True)
 
 
 def test_claim_runs_the_link_aware_move_ritual(tmp_path):

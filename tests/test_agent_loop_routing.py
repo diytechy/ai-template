@@ -504,6 +504,59 @@ def test_select_with_probe_cools_an_unreachable_suspect_by_default(tmp_path, cap
     assert "probe [A]: unreachable, cooled ~900s" in capsys.readouterr().out
 
 
+@pytest.mark.parametrize(
+    ("answer", "outcome", "exit_code"),
+    [("ok", "COMPLETED", "0"), ("unreachable", "ERROR", "2")],
+)
+def test_probe_metrics_are_attributed_and_committed(
+    tmp_path, answer, outcome, exit_code
+):
+    import subprocess
+
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "config", "user.name", "Test"], check=True
+    )
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "config", "user.email", "test@example.com"],
+        check=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "--allow-empty", "-qm", "base"],
+        check=True,
+    )
+    ctx, al = _probe_ctx(tmp_path, [("A", "FA", answer)])
+
+    ok, _transcript = al.probe_route(ctx.registry["A"], tmp_path)
+
+    assert ok is (answer == "ok")
+    logs = list((tmp_path / "docs" / "iteration").glob("call_*.log"))
+    assert len(logs) == 1
+    meta = al.agent_common.read_log_meta(logs[0])
+    assert meta["outcome"] == outcome
+    assert meta["exit-code"] == exit_code
+    assert meta["source-event"] == "recovery-probe"
+    assert (meta["roster-row"], meta["provider"], meta["model"], meta["tier"]) == (
+        "A",
+        "FA",
+        "m-A",
+        "medium",
+    )
+    subject = subprocess.run(
+        ["git", "-C", str(tmp_path), "log", "-1", "--format=%s"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    assert subject.rstrip().endswith("PROBE {}".format(outcome))
+    assert not subprocess.run(
+        ["git", "-C", str(tmp_path), "status", "--porcelain"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+
+
 def test_a_committing_design_check_arms_the_review_round_itself(monkeypatch):
     """2026-09-03 (measured on WI-579, eleven rounds): a DESIGN-CHECK runs the
     worker brief with the findings attached, so its commit IS the rework. With

@@ -35,8 +35,10 @@ Contract IF-065: the shared coordinator primitives the session engine and the
     disagree about what is held; the worker-assignment primitives
     (`WI_TOKEN_RE`, `sanitize_train`, `parse_wi_list`, `load_wi_registry`,
     `train_evidence`); `parse_map`; `preflight`, the launchability refusal; and
-    the session-log family — size-bounded logs, the regenerated iteration index
-    and the telemetry commit — with the generated run-state write. The names
+    the session-log family — every log through one shared writer, with
+    planner/probe/interactive launches through one durable invocation boundary,
+    the regenerated iteration index and telemetry commit — with the generated
+    run-state write. The names
     were extracted verbatim and `agent_loop` re-exports every historical one, so
     this layer adds a home without changing a public surface.
 """
@@ -92,6 +94,43 @@ try:
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from agent_session import build_argv, split_cmd
+
+
+def scripts_fingerprint(scripts_dir=None):
+    """Content identity of the Python implementation this process imported.
+
+    The source directory, relative paths and LF-normalized bytes all join one
+    digest, so adding, deleting, renaming or editing a ``*.py`` file moves it.
+    The default is this module's actual directory rather than the project root:
+    a dispatched worker targets a linked worktree but imports the coordinator
+    from the dispatcher's checkout.
+    """
+    scripts_dir = Path(scripts_dir).resolve() if scripts_dir else _SCRIPTS_DIR
+    fold = hashlib.sha256()
+    for path in sorted(scripts_dir.rglob("*.py")):
+        fold.update(path.relative_to(scripts_dir).as_posix().encode("utf-8"))
+        fold.update(b"\0")
+        fold.update(path.read_bytes().replace(b"\r\n", b"\n"))
+        fold.update(b"\n")
+    return fold.hexdigest()
+
+
+# Captured once, after the shared layer's imports resolve and before either
+# coordinator loop starts. Later comparisons always read disk afresh.
+LAUNCHED_SCRIPTS_FINGERPRINT = scripts_fingerprint()
+
+
+def running_scripts_moved():
+    """Whether the Python source this process launched from has moved."""
+    try:
+        return scripts_fingerprint() != LAUNCHED_SCRIPTS_FINGERPRINT
+    except OSError:
+        # If the implementation is being replaced while the tree is scanned,
+        # continuing is the unsafe answer. The caller turns True into the same
+        # typed restart used for an ordinary content change.
+        return True
+
+
 # Size bounds for the tracked per-session log (the Q13d "size-bounded" cap):
 # the head shows how the session started, the capped tail how it ended — the
 # part that explains the outcome. The raw unbounded stream goes to the
@@ -151,6 +190,13 @@ EXIT_REVIEW_OWED = 9
 # PACKED assignment early when the §7 continuation re-check refused the next
 # constituent, and nothing packs. The number stays retired rather than reused —
 # an exit code is a contract with every launcher and log that ever read it.)
+
+
+# The running coordinator's imported Python source moved. This is a resumable
+# process outcome, never a work outcome: the caller starts a fresh coordinator,
+# which reconstructs the active assignment and evidence from the existing tree.
+# Appended after the permanently retired 10 rather than reusing it.
+EXIT_RESTART = 11
 
 
 # The FB3 owner-only path(s): OWNER_SCRATCHPAD.md is free-form owner notes the
@@ -2250,17 +2296,118 @@ def trunk_name(root, worker=None):
     return (worker or {}).get("base", "") or "HEAD"
 
 
+def claim_subject(wi_ids, branch):
+    """The one commit-subject grammar for a claim's durable Git record."""
+    wi_ids = [wi_ids] if isinstance(wi_ids, str) else list(wi_ids)
+    return "claim: {} -> active/{} (bookkeeping)".format(";".join(wi_ids), branch)
+
+
+def name_status(out):
+    """Parse no-renames Git name-status output for claim/integration readers.
+
+    Each record is status + tab + path; normalize paths once so callers cannot
+    disagree about the same committed delta.
+    """
+    for line in out.splitlines():
+        parts = line.strip().split("\t")
+        if len(parts) < 2:
+            continue
+        yield parts[0], parts[-1].replace("\\", "/")
+
+
+def _is_claim_move(root, commit, branch, wi_ids):
+    """Whether `commit` carries every queued-to-active move its subject names.
+
+    Returns None when its committed delta cannot be read, so a caller can
+    refuse rather than treating an unreadable claim as a manual assignment.
+    """
+    code, delta = git(
+        root,
+        "diff-tree",
+        "--root",
+        "--no-commit-id",
+        "-r",
+        "--name-status",
+        "--no-renames",
+        commit,
+    )
+    if code != 0:
+        return None
+    active = {wi: "docs/work/active/{}/{}-".format(branch, wi) for wi in wi_ids}
+    queued = {wi: "docs/work/queued/{}-".format(wi) for wi in wi_ids}
+    added, removed = set(), set()
+    for status, path in name_status(delta):
+        for wi, prefix in active.items():
+            if status.startswith("A") and path.startswith(prefix):
+                added.add(wi)
+        for wi, prefix in queued.items():
+            if status.startswith("D") and path.startswith(prefix):
+                removed.add(wi)
+    return added == set(wi_ids) and removed == set(wi_ids)
+
+
+def claim_base(root):
+    """The current branch's claim commit, if its committed claim record is
+    readable.  `integrate.claim` writes the exact subject below before it cuts
+    the branch, so its first-parent history keeps the integration boundary even
+    when the checkout later becomes that branch itself.
+
+    Returns ``(base, readable)``.  `base is None` means this is a manual or
+    pre-claim worker and lets `default_base` retain its merge-base compatibility
+    fallback.  `readable is False` means Git could name the branch but could
+    not read its history; that is deliberately distinct so the caller does not
+    silently turn an unreadable claim into an empty HEAD..HEAD evidence range.
+    """
+    code, branch = git(root, "branch", "--show-current")
+    branch = branch.strip()
+    if code != 0 or not branch:
+        return None, True
+    suffix = " -> active/{} (bookkeeping)".format(branch)
+    code, history = git(
+        root,
+        "log",
+        "--first-parent",
+        "--fixed-strings",
+        "--grep=" + suffix,
+        "--format=%H%x09%s",
+        "HEAD",
+    )
+    if code != 0:
+        return None, False
+    for line in history.splitlines():
+        sha, sep, subject = line.partition("\t")
+        wi_ids = subject.removeprefix("claim: ").removesuffix(suffix).split(";")
+        is_claim_subject = (
+            sep
+            and sha
+            and all(WI_TOKEN_RE.fullmatch(wi) for wi in wi_ids)
+            and subject == claim_subject(wi_ids, branch)
+        )
+        if not is_claim_subject:
+            continue
+        valid_move = _is_claim_move(root, sha, branch, wi_ids)
+        if valid_move is None:
+            return None, False
+        if valid_move:
+            return sha, True
+    return None, True
+
+
 def default_base(root):
-    """The integration base a worker assumes when --base is not given: the
-    merge-base of the lane's HEAD with the TRUNK (the primary checkout's
-    branch), else HEAD. It used to be HEAD unconditionally — right for a
-    fresh claim (HEAD IS the claim commit) and wrong for every RESUMED
-    worker, whose base..HEAD evidence then read empty: the built trailers,
-    the owed review round and the resume itself were invisible, which is the
-    "resumed session finds nothing to do" pattern of the 2026-08-30 run
-    (WI-548 round 3). A repo whose primary checkout is the branch itself
-    (a single-checkout attended run, the test fixtures) merges-bases to HEAD
-    and keeps the old behaviour exactly."""
+    """The integration base a worker assumes when --base is not given.
+
+    A claimed branch first reads its claim commit from durable Git history.
+    That is the same boundary a linked worktree's merge-base normally reaches,
+    but it remains available after an attended single checkout has switched to
+    the lane branch.  A manual or old claim with no record keeps the existing
+    merge-base-with-trunk fallback; an unreadable claimed history fails closed
+    instead of making every `base..HEAD` evidence reader see an empty range.
+    """
+    claimed, readable = claim_base(root)
+    if not readable:
+        return None
+    if claimed:
+        return claimed
     trunk = trunk_name(root)
     code, out = git(root, "merge-base", trunk, "HEAD")
     if code == 0 and out.strip():
@@ -2413,7 +2560,7 @@ def write_session_log(iter_dir, meta, transcript):
     """
     transcript, redacted = redact_secrets(transcript)
     iter_dir.mkdir(parents=True, exist_ok=True)
-    header = ["# agent-loop session log — written by scripts/agent_loop.py"]
+    header = ["# agent session log — written by scripts/agent_common.py"]
     for key in (
         "session",
         "date",
@@ -2460,12 +2607,34 @@ def write_session_log(iter_dir, meta, transcript):
         # §3.3, telemetry first, retention dial off): the CLI's own session
         # id and context occupancy/window/percent, per family — "" wherever
         # today's one-shot call doesn't report it (family_context_telemetry).
+        # Invocation accounting also records session-id from other providers;
+        # context columns retain their existing family-specific meaning.
         "session-id",
         "context-used",
         "context-window",
         "context-pct",
+        "invocation-id",
+        "attempt-id",
+        "source-event",
+        "role",
+        "provider",
+        "requested-model",
+        "reported-model",
+        "tier",
+        "roster-row",
+        "started-at",
+        "ended-at",
+        "input-tokens",
+        "output-tokens",
+        "reasoning-tokens",
+        "raw-usage",
+        "usage-scope",
+        "usage-source",
+        "usage-status",
     ):
-        header.append("# {}: {}".format(key, meta.get(key, "")).rstrip())
+        # Header values occupy one physical line, including provider metadata.
+        value = str(meta.get(key, "")).replace("\r", "\\r").replace("\n", "\\n")
+        header.append("# {}: {}".format(key, value).rstrip())
     if redacted:
         header.append("# redacted: {} credential-shaped token(s)".format(redacted))
     header.append("# ---")
@@ -2483,14 +2652,46 @@ def write_session_log(iter_dir, meta, transcript):
     return path
 
 
+def invoke_and_persist(root, argv, timeout, *, metrics, runner, **kwargs):
+    """Invoke a non-worker session, durably account it, and return its result."""
+    import agent_session
+
+    outcome = "ERROR"
+    transcript = ""
+    try:
+        result = agent_session.invoke_session(
+            argv, root, timeout, metrics=metrics, runner=runner, **kwargs
+        )
+        code, transcript, timed_out = result
+        outcome = "TIMEOUT" if timed_out else ("COMPLETED" if code == 0 else "ERROR")
+        return result
+    finally:
+        metrics.update(
+            session="call_" + metrics["invocation-id"],
+            stamp=time.strftime("%Y%m%d-%H%M%S"),
+            date=time.strftime("%Y-%m-%d %H:%M"),
+            model=metrics.get("requested-model", ""),
+            phase=metrics.get("role", ""),
+            outcome=outcome,
+        )
+        log_path = write_session_log(
+            Path(root) / "docs" / "iteration", metrics, transcript
+        )
+        commit_telemetry(
+            root,
+            metrics["invocation-id"],
+            "{} {}".format(metrics["phase"], metrics["outcome"]),
+            [log_path],
+        )
+
+
 def read_log_meta(path):
     """Parse the `# key: value` metadata header of one session log."""
     meta = {}
     try:
         with open(str(path), encoding="utf-8", errors="replace") as fh:
-            for _ in range(32):
-                line = fh.readline()
-                if not line or line.startswith("# ---"):
+            for line in fh:
+                if not line.startswith("#") or line.startswith("# ---"):
                     break
                 m = re.match(r"#\s*([\w-]+):\s*(.*)", line)
                 if m:
@@ -2560,7 +2761,7 @@ def regenerate_index(docs_dir):
         )
     text = (
         "# Iteration index\n\n"
-        "_Generated by `scripts/agent_loop.py` from the `docs/iteration/*.log`\n"
+        "_Generated by `scripts/agent_common.py` from the `docs/iteration/*.log`\n"
         "metadata headers — regenerated every session, never hand-edited. The\n"
         "collated human-review record is `log.md`; this index is the quick\n"
         '"which session did this" pointer (process-options.md "Unattended\n'
@@ -2712,7 +2913,9 @@ def phase_draw_ordinal(iter_dirs, phase):
             # primary aggregate and the local worktree (a train branched from the
             # development checkout carries its history); a session's log name is
             # unique ((train, session, stamp)), so first sighting counts it once.
-            if log.name in seen:
+            # Standalone invocations have no worker draw ordinal, even when
+            # their role happens to share a worker phase name.
+            if log.name.startswith("call_") or log.name in seen:
                 continue
             seen.add(log.name)
             if read_log_meta(log).get("phase", "") == phase:

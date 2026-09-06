@@ -50,9 +50,13 @@ from pathlib import Path
 # covers an in-process import (a test) whose sys.path doesn't yet carry
 # scripts/ — the same sanctioned-sibling-import idiom agent_loop uses.
 try:
+    import agent_common
+    import agent_session as agent_session
     from agent_session import build_argv, parse_json_result, run_session
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import agent_common
+    import agent_session as agent_session
     from agent_session import build_argv, parse_json_result, run_session
 # --- the dual-plan decomposition round (WI-199; DP-001 selected plan P6) -------
 # The coordinator fan-in over the WI-194..WI-198 modules: a queued WI whose
@@ -152,7 +156,9 @@ def _dp_routes(root, tier):
     return routes, registry, "{} ({})".format(pair.reason, pair.detail)
 
 
-def _dp_session(template, model, prompt, root, timeout, env_cell=""):
+def _dp_session(
+    template, model, prompt, root, timeout, env_cell="", *, attribution=None
+):
     """One round session through the existing headless path. Returns
     (ok, output). A pair row's Env cell is merged over the ambient env
     (agent_route.parse_env), matching the loop's session launch."""
@@ -163,8 +169,18 @@ def _dp_session(template, model, prompt, root, timeout, env_cell=""):
         env = dict(os.environ)
         env.update(agent_route.parse_env(env_cell))
     argv, stdin_input = build_argv(template, model, prompt)
-    code, output, timed_out = run_session(
-        argv, root, timeout, env=env, stdin_input=stdin_input
+    metrics = dict(attribution or {})
+    metrics.setdefault("role", "PLAN")
+    metrics.setdefault("source-event", "dual-plan")
+    metrics["requested-model"] = model
+    code, output, timed_out = agent_common.invoke_and_persist(
+        root,
+        argv,
+        timeout,
+        metrics=metrics,
+        runner=run_session,
+        env=env,
+        stdin_input=stdin_input,
     )
     ok = code == 0 and not timed_out
     # A --output-format json/stream-json template (what the real agents.toml rows
@@ -230,6 +246,23 @@ def _hat_slots(root, row, planner_tmpl):
             )
         return {}
     return plan_briefs.hat_surface(root, plan_briefs.hat_context_for_work_item(row))
+
+
+def _dp_attribution(root, wi, round_dir, step, registry, route_id=""):
+    """Attribute a plan role to its existing round and selected roster row."""
+    kind, plan = step["step"], step.get("plan")
+    route = (registry or {}).get(route_id)
+    return {
+        "wi": wi,
+        "attempt-id": round_dir.relative_to(root).as_posix(),
+        "source-event": "{}:{}:{}".format(
+            round_dir.name, kind, plan or step.get("run", "")
+        ),
+        "role": kind,
+        "provider": route.family if route else "",
+        "tier": route.tier if route else "",
+        "roster-row": route_id if route else "",
+    }
 
 
 def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None):
@@ -314,6 +347,7 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
         nonlocal coverage_report, coverage_fails, fell_back
         nonlocal routes, route_of, critic_route_of
         kind, plan = step["step"], step.get("plan")
+
         if kind == plan_round.STEP_PLAN or kind in (
             plan_round.STEP_REPAIR,
             plan_round.STEP_REVISE,
@@ -342,7 +376,15 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
                 planner_tmpl,
             )
             _label, m, tmpl, env_cell, note = route_of[plan]
-            ok, output = _dp_session(tmpl, m, prompt, root, timeout, env_cell)
+            ok, output = _dp_session(
+                tmpl,
+                m,
+                prompt,
+                root,
+                timeout,
+                env_cell,
+                attribution=_dp_attribution(root, wi, round_dir, step, _registry, note),
+            )
             if not ok:
                 if _registry is not None and not fell_back:
                     # One runtime-nonresponse fallback (WI-196), then page.
@@ -426,8 +468,16 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
                 },
                 critic_tmpl,
             )
-            _label, m, tmpl, env_cell, _note = critic_route_of[plan]
-            ok, output = _dp_session(tmpl, m, prompt, root, timeout, env_cell)
+            _label, m, tmpl, env_cell, note = critic_route_of[plan]
+            ok, output = _dp_session(
+                tmpl,
+                m,
+                prompt,
+                root,
+                timeout,
+                env_cell,
+                attribution=_dp_attribution(root, wi, round_dir, step, _registry, note),
+            )
             if not ok:
                 return None, "session failed at CRITIQUE {}".format(plan)
             mm = _CRITIC_VERDICT_RE.search(output)
@@ -456,7 +506,14 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
                 },
                 arbiter_tmpl,
             )
-            ok, output = _dp_session(template, model, prompt, root, timeout)
+            ok, output = _dp_session(
+                template,
+                model,
+                prompt,
+                root,
+                timeout,
+                attribution=_dp_attribution(root, wi, round_dir, step, _registry),
+            )
             if not ok:
                 return None, "session failed at ARBITER run {}".format(run)
             mm = _ARBITER_VERDICT_RE.search(output)

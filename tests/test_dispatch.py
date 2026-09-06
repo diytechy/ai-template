@@ -1253,6 +1253,127 @@ def test_a_preflight_refusal_parks_the_lane_instead_of_committing_its_residue(
     assert not (root / "docs" / "handbacks").exists()
 
 
+def test_a_code_restart_parks_the_assignment_without_a_handback(
+    tmp_path, capfd, monkeypatch
+):
+    root = parked_repo(tmp_path)
+    worker = Recorder(outcomes=(drv.ac.EXIT_RESTART,))
+    monkeypatch.setattr(drv.ac, "running_scripts_moved", lambda: False)
+
+    rc = drv.run(root, drive_args(), worker=worker)
+
+    assert rc == drv.ac.EXIT_RESTART
+    assert len(worker.calls) == 1
+    assert (root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md").is_file()
+    assert not (root / "docs" / "work" / "partial").exists()
+    assert not (root / "docs" / "handbacks").exists()
+    assert "restart the coordinator" in capfd.readouterr().err
+
+
+def test_code_drift_stops_before_a_new_claim(tmp_path, monkeypatch):
+    root = git_repo(tmp_path)
+    queued = write_spec(root, "queued", "WI-401", specref="seed.txt")
+    _commit(root, "file WI-401", when=T_CODE)
+    worker = Recorder()
+    monkeypatch.setattr(drv.ac, "running_scripts_moved", lambda: True)
+
+    rc = drv.run(root, drive_args(), worker=worker)
+
+    assert rc == drv.ac.EXIT_RESTART
+    assert worker.calls == []
+    assert queued.is_file()
+    assert "wi-401-widget" not in _git(root, "branch", "--format=%(refname:short)")
+
+
+def test_restart_drain_preserves_other_finished_lane_for_fresh_code(
+    tmp_path, monkeypatch
+):
+    root = git_repo(tmp_path)
+    for wid in ("WI-401", "WI-402"):
+        write_spec(root, "queued", wid, specref="seed.txt")
+    _commit(root, "file two lanes", when=T_CODE)
+    calls = []
+
+    def worker(root_, branch, wi_ids, _args):
+        calls.append((branch, tuple(wi_ids)))
+        if wi_ids == ["WI-401"]:
+            return drv.ac.EXIT_RESTART
+        wt, err = drv.integrate.lane_worktree(root_, branch)
+        assert err is None, err
+        spec = next((wt / "docs" / "work" / "active" / branch).glob("WI-*.md"))
+        dst = wt / "docs" / "work" / "complete" / spec.name
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(spec.read_text(encoding="utf-8"), encoding="utf-8", newline="\n")
+        _git(wt, "rm", "-q", "docs/work/active/{}/{}".format(branch, spec.name))
+        _commit(wt, "finish the sibling lane", when=T_LATER)
+        return drv.ac.EXIT_DONE
+
+    monkeypatch.setattr(drv.ac, "running_scripts_moved", lambda: False)
+    monkeypatch.setattr(
+        drv.lane,
+        "spawn_refresh",
+        lambda *_a, **_k: (_ for _ in ()).throw(AssertionError("started refresh")),
+    )
+    monkeypatch.setattr(
+        drv.integrate,
+        "integrate",
+        lambda *_a, **_k: (_ for _ in ()).throw(AssertionError("integrated stale")),
+    )
+
+    rc = drv.run(root, drive_args(lanes=2), worker=worker)
+
+    assert rc == drv.ac.EXIT_RESTART
+    assert len(calls) == 2
+    assert _git(
+        root,
+        "show",
+        "wi-402-widget:docs/work/complete/WI-402-widget.md",
+    )
+    assert (root / "docs" / "work" / "active" / "wi-402-widget").is_dir()
+    assert not (root / "docs" / "handbacks").exists()
+
+
+def test_a_code_changing_integration_stops_the_next_lane_before_acceptance(
+    tmp_path, monkeypatch
+):
+    root = git_repo(tmp_path)
+    for wid in ("WI-401", "WI-402"):
+        write_spec(root, "queued", wid, specref="seed.txt")
+    _commit(root, "file two finishable lanes", when=T_CODE)
+    worker_calls = []
+    integrated = []
+    moved = {"now": False}
+
+    class FinishedRefresh:
+        def poll(self):
+            return 0
+
+    def integrate_one(_root, _tier, branches=None):
+        integrated.extend(branches or ())
+        moved["now"] = True
+        return 0
+
+    monkeypatch.setattr(drv.ac, "running_scripts_moved", lambda: moved["now"])
+    monkeypatch.setattr(drv.lane, "spawn_refresh", lambda *_a, **_k: FinishedRefresh())
+    monkeypatch.setattr(drv.integrate, "integrate", integrate_one)
+
+    rc = drv.run(
+        root,
+        drive_args(lanes=2),
+        worker=closing_all_worker(worker_calls),
+    )
+
+    assert rc == drv.ac.EXIT_RESTART
+    assert len(worker_calls) == 2
+    assert integrated == ["wi-401-widget"]
+    assert _git(
+        root,
+        "show",
+        "wi-402-widget:docs/work/complete/WI-402-widget.md",
+    )
+    assert (root / "docs" / "work" / "active" / "wi-402-widget").is_dir()
+
+
 # --- the consolidation census's trigger (the 2026-09-02 restructure plan §1.3)
 
 

@@ -376,26 +376,12 @@ def _claim_subject(wi_ids, branch):
     (WI-381, §A4: all spine WIs admit together) joins its ids with ";", so the
     single-WI form is byte-identical to what it always was. Accepts one id or
     the list, like `claim` itself."""
-    wi_ids = [wi_ids] if isinstance(wi_ids, str) else list(wi_ids)
-    return "claim: {} -> active/{} (bookkeeping)".format(";".join(wi_ids), branch)
+    return ac.claim_subject(wi_ids, branch)
 
 
 def _name_status(out):
-    """`(status, path)` per record of a `git diff --name-status` run, paths
-    posix-normalised; unreadable records are skipped.
-
-    ONE parse of that porcelain, because the two readers of it here both
-    AUTHORISE something off what a commit touched - `_abandoned_claim` a branch
-    deletion, `_minted_id_refusal` a merge refusal - and two parsers that
-    disagreed about the tab split or about backslashes would disagree about the
-    facts those authorisations rest on. Both callers pass `--no-renames`, so a
-    record is `<status>\\t<path>` and `parts[-1]` is that path.
-    """
-    for line in out.splitlines():
-        parts = line.strip().split("\t")
-        if len(parts) < 2:
-            continue
-        yield parts[0], parts[-1].replace("\\", "/")
+    """Compatibility name for the shared no-renames Git-status parser."""
+    return ac.name_status(out)
 
 
 def _abandoned_claim(root, wi_ids, branch):

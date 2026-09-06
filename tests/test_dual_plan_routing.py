@@ -16,12 +16,92 @@ the kit's tests — this file closes that coverage gap.
 """
 
 from conftest import load_script
+import json
+import datetime
+from types import SimpleNamespace
 
 al = load_script("agent_loop")
 # The dual-plan runner lives in plan_runner.py (WI-218 slice C); _dp_session
 # resolves run_session in ITS namespace, so the monkeypatch targets pr, not al.
 pr = load_script("plan_runner")
 pb = load_script("plan_briefs")
+
+
+def test_planner_logs_coexist_with_worker_numbering_and_index(tmp_path, monkeypatch):
+    common = pr.agent_common
+    docs = tmp_path / "docs"
+    logs = docs / "iteration"
+    old = common.write_session_log(
+        logs, {"session": "002", "stamp": "old", "date": "2026-09-05 10:00"}, "legacy"
+    )
+    worker = common.write_session_log(
+        logs,
+        {"session": "003", "stamp": "worker", "train": "wi-1", "phase": "CRITIQUE"},
+        "worker",
+    )
+    # Even an all-numeric UUID must not become a legacy ordinal.
+    monkeypatch.setattr(
+        pr.agent_session.uuid, "uuid4", lambda: SimpleNamespace(hex="1" * 32)
+    )
+    monkeypatch.setattr(pr, "run_session", lambda *a, **k: (0, "plan result", False))
+    assert pr._dp_session(
+        "tool", "m", "prompt", tmp_path, 1, attribution={"role": "CRITIQUE"}
+    )[0]
+    planner = next(logs.glob("call_*.log"))
+    row = common.read_log_meta(planner)
+    datetime.datetime.strptime(row["date"], "%Y-%m-%d %H:%M")
+    assert row["started-at"].endswith("Z")
+    assert common.next_session_number(logs) == 3
+    assert common.next_session_number(logs, "wi-1") == 4
+    assert common.phase_draw_ordinal(logs, "CRITIQUE") == 1
+    common.regenerate_index(docs)
+    index = (docs / "iteration_index.md").read_text()
+    assert all(path.name in index for path in (old, worker, planner))
+
+
+def test_failed_planning_invocations_keep_attribution_and_unknown_usage(
+    tmp_path, monkeypatch
+):
+    transcript = json.dumps(
+        {
+            "type": "result",
+            "session_id": "same-conversation",
+            "usage": {"input_tokens": 100},
+        }
+    )
+    monkeypatch.setattr(pr, "run_session", lambda *a, **k: (1, transcript, "idle"))
+    attribution = {
+        "source-event": "owner-review",
+        "role": "CRITIQUE",
+        "provider": "ANTHROPIC",
+        "tier": "strong",
+        "roster-row": "route-A",
+    }
+    for _ in range(2):
+        assert (
+            pr._dp_session(
+                "tool", "requested", "prompt", tmp_path, 1, attribution=attribution
+            )[0]
+            is False
+        )
+    logs = list((tmp_path / "docs" / "iteration").glob("*.log"))
+    assert len(logs) == 2
+    rows = [pr.agent_common.read_log_meta(p) for p in logs]
+    assert len({row["invocation-id"] for row in rows}) == 2
+    for row in rows:
+        assert row["source-event"] == "owner-review"
+        assert row["wi"] == ""
+        assert row["role"] == "CRITIQUE"
+        assert row["roster-row"] == "route-A"
+        assert row["input-tokens"] == "100"
+        assert row["output-tokens"] == ""
+        assert row["usage-scope"] == "unknown"
+        assert row["session-id"] == "same-conversation"
+        assert row["outcome"] == "TIMEOUT"
+    # Rereading a retained result cannot create another invocation or log.
+    assert pr.agent_common.read_log_meta(logs[0]) == rows[0]
+    assert len(list(logs[0].parent.glob("*.log"))) == 2
+
 
 # Two strong rows in different families so planner_pair can route a real pair.
 REGISTRY_CSV = (

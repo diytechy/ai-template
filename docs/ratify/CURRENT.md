@@ -10,7 +10,7 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 
 _The off-spine registries above carry no per-row rendering in this brief; since WI-571 `intake.py snapshot` copies one only when its own `Status` moves or `--approves` names it, but a re-SEED still blesses the whole tree. What it would absorb, changed since the snapshot:_
 
-- `docs/requirements/interfaces.toml` — 5 changed, 5 added, 1 removed since the snapshot; ruling(s): none cited.
+- `docs/requirements/interfaces.toml` — 6 changed, 5 added, 1 removed since the snapshot; ruling(s): none cited.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): none cited.
 
 

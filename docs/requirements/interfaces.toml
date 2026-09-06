@@ -362,8 +362,8 @@ interface_to_external = "B-05"
 owner = "scripts/agent_loop"
 consumers = ["external:downstream adopter"]
 channel = "git"
-data = "0 DONE · 2 preflight · 3 BLOCKED · 4 stall · 5 WAITING · 6 budget · 7 NEEDS-HUMAN · 8 paused"
-version = "v3"
+data = "0 DONE · 2 preflight · 3 BLOCKED · 4 stall · 5 WAITING · 6 budget · 7 NEEDS-HUMAN · 8 paused · 9 REVIEW-OWED · 11 RESTART"
+version = "v4"
 status = "Drafted"
 interface_to_external = "B-05"
 

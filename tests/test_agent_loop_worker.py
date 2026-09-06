@@ -777,6 +777,20 @@ def test_build_worker_assignment_bad_base_fails_closed(tmp_path, capsys):
 
 
 @env_gate_skipif("git")
+def test_build_worker_assignment_refuses_an_unreadable_default_base(
+    tmp_path, capsys, monkeypatch
+):
+    al = load_script("agent_loop")
+    repo, _base, _worker = _train_repo(tmp_path)
+    monkeypatch.setattr(al, "default_base", lambda _root: None)
+    args = argparse.Namespace(wi="WI-201", train="t1", base=None, rework=None)
+    worker, err = al.build_worker_assignment(args, repo)
+    assert worker is None
+    assert err == al.EXIT_PREFLIGHT
+    assert "claim history unreadable" in capsys.readouterr().err
+
+
+@env_gate_skipif("git")
 def test_build_worker_assignment_good_base_parses_wi_list(tmp_path):
     al = load_script("agent_loop")
     repo, base, _worker = _train_repo(tmp_path)
@@ -972,13 +986,14 @@ def test_a_row_this_branch_closed_is_not_a_stale_assignment(tmp_path):
 
 @env_gate_skipif("git")
 def test_a_single_checkout_worker_keeps_the_terminal_refusal(tmp_path):
-    # The behaviour-preserving half. In an attended single checkout the trunk
-    # IS the branch, so `default_base` merge-bases to HEAD, the evidence range
-    # is empty, and every terminal row still refuses — which is what the
-    # existing done/cancelled preflight tests above assert end to end.
+    # The compatibility half. A manual worker has no claim record, so its
+    # single-checkout default keeps the merge-base fallback (HEAD) and a
+    # terminal row still refuses. A claimed branch is covered separately by
+    # the durable-base regression.
     ac = load_script("agent_common")
     repo, _base = _make_train_repo(tmp_path)
     (repo / "work.txt").write_text("built\n", encoding="utf-8")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "build WI-201\n\nWI: WI-201")
+    assert ac.default_base(repo) == _git(repo, "rev-parse", "HEAD")
     assert ac.stale_terminal_assignment(repo, "WI-201", {"Status": "done"}) is True

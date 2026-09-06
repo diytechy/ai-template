@@ -248,6 +248,41 @@ def test_run_interactive_pipes_prompt_via_stdin(tmp_path):
     assert code == 0  # the child read the piped prompt and saw EOF
 
 
+def test_attached_interactive_runner_inherits_stdio(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_run(argv, **kwargs):
+        calls.append((argv, kwargs))
+        return types.SimpleNamespace(returncode=7)
+
+    monkeypatch.setattr(al.subprocess, "run", fake_run)
+    assert al._run_attached_session(["agent"], tmp_path, None) == (7, "", False)
+    assert calls == [(["agent"], {"cwd": str(tmp_path)})]
+
+
+def test_interactive_launch_error_is_recorded_then_raised(tmp_path):
+    args = types.SimpleNamespace(
+        interactive_cmd="definitely-missing-interactive-agent", model="m5"
+    )
+    with pytest.raises(FileNotFoundError):
+        al.run_interactive(
+            args,
+            tmp_path,
+            model_map={},
+            cmd_map={},
+            template="",
+            guardrails_policy="none",
+            warned_no_core=[],
+        )
+    logs = list((tmp_path / "docs" / "iteration").glob("call_*.log"))
+    assert len(logs) == 1
+    meta = al.agent_common.read_log_meta(logs[0])
+    assert meta["outcome"] == "ERROR"
+    assert meta["usage-status"] == "unavailable"
+    assert meta["invocation-id"]
+    assert meta["started-at"] and meta["ended-at"]
+
+
 def test_kill_tree_targets_the_whole_process_tree(monkeypatch):
     # Repo-review 2026-07-21 H-2: a timeout/interrupt must kill the session's
     # whole tree, not just the direct child (a .cmd shim's real work lives in a

@@ -82,7 +82,8 @@ AGENT_CMD_INTERACTIVE env var, falling back to AGENT_CMD.
 §2.3 model: `integrate.py claim` moves the spec queued/ -> active/<branch>/ on
 the trunk and cuts the branch; the ordered `--wi "WI-###[;WI-###…]"` list is
 built in the worktree named by --worktree, default --root, from the
-integration base --base, default HEAD at start). --train survives as the
+integration base --base, default the durable claim commit (or the merge-base
+with trunk for a legacy/manual assignment). --train survives as the
 optional session TAG scoping logs and review evidence — default: the current
 branch name. A worker has NO lane files: it never reads or writes
 status.md/next-wi and never regenerates generated root artifacts (the trunk
@@ -111,7 +112,8 @@ Exit codes: 0 DONE · 2 preflight/config failure (incl. the inert unfilled
 slot) · 3 BLOCKED · 4 stall abort (work stall or an all-ERROR agent-unavailable
 run — the banner distinguishes them) · 5 WAITING on a rate limit · 6 iteration
 budget exhausted while still RUNNING · 7 NEEDS-HUMAN (act, then re-run) · 8
-paused (the tracked docs/work/pause present — unpause and re-run to resume).
+paused (the tracked docs/work/pause present — unpause and re-run to resume) · 9
+REVIEW-OWED · 11 RESTART with freshly imported coordinator code.
 
 Preflight refuses to start iteration 1 when: the AGENT_CMD executable is
 missing (report, never a hang); the working directory is not a git repo; or
@@ -131,10 +133,13 @@ Contract IF-015: the unattended coordinator's effect on the repository it runs
     always named by an exit code: 0 DONE, 2 preflight or config failure, 3
     BLOCKED, 4 stall abort, 5 WAITING on a rate limit, 6 iteration budget
     exhausted while still running, 7 NEEDS-HUMAN, 8 paused on the tracked pause
-    file. Preflight refuses to start iteration 1 — rather than hanging or
-    committing under a wrong identity — when the agent executable is missing,
-    the working directory is not a git repository, or a privacy-checked repo's
-    effective author email is not in the exempt allowlist.
+    file, 9 REVIEW-OWED, 11 RESTART after the imported Python source moves (10
+    remains retired). A restart stops at the session/admission boundary and
+    preserves the branch evidence for a fresh launcher invocation. Preflight
+    refuses to start iteration 1 — rather than hanging or committing under a
+    wrong identity — when the agent executable is missing, the working directory
+    is not a git repository, or a privacy-checked repo's effective author email
+    is not in the exempt allowlist.
 """
 
 import argparse
@@ -214,6 +219,7 @@ EXIT_BUDGET = agent_common.EXIT_BUDGET
 EXIT_NEEDS_HUMAN = agent_common.EXIT_NEEDS_HUMAN
 EXIT_PAUSED = agent_common.EXIT_PAUSED
 EXIT_REVIEW_OWED = agent_common.EXIT_REVIEW_OWED
+EXIT_RESTART = agent_common.EXIT_RESTART
 END_STATES = agent_common.END_STATES
 OWNER_ONLY_PATHS = agent_common.OWNER_ONLY_PATHS
 read_declared = agent_common.read_declared
@@ -1667,7 +1673,8 @@ def parse_args():
         "--base",
         default=None,
         help="worker assignment: the integration base commit the branch was "
-        "cut from. Default: HEAD at worker start.",
+        "cut from. Default: the durable claim commit; legacy/manual "
+        "assignments use the merge-base with trunk.",
     )
     ap.add_argument(
         "--rework",
@@ -1942,12 +1949,12 @@ def build_worker_assignment(args, root):
             return None, EXIT_PREFLIGHT
         base = (args.base or "").strip() or default_base(root)
         if not base:
-            # An unborn HEAD (zero-commit repo) has no integration base to
-            # build evidence against — fail closed, never crash (a claim is
-            # always cut from an existing HEAD).
+            # An unreadable claim record or unborn HEAD has no integration
+            # base to build evidence against — fail closed, never crash.
             print(
-                "agent_loop: no --base and no HEAD commit to default to — a "
-                "worker builds from an integration base; commit first.",
+                "agent_loop: no resolvable --base (claim history unreadable "
+                "or no HEAD commit) — a worker builds from an integration "
+                "base; repair history or commit first.",
                 file=sys.stderr,
             )
             return None, EXIT_PREFLIGHT
@@ -2045,6 +2052,24 @@ def run_interactive(
             warned_no_core,
         )[0],
     )
+    metrics = {
+        "source-event": "interactive",
+        "role": "INTERACTIVE",
+        "requested-model": model,
+    }
+    code, _output, _timed_out = agent_common.invoke_and_persist(
+        root,
+        argv,
+        None,
+        metrics=metrics,
+        runner=_run_attached_session,
+        stdin_input=stdin_input,
+    )
+    return code
+
+
+def _run_attached_session(argv, root, _timeout, *, stdin_input=None):
+    """The ``invoke_session`` runner for a hands-on, attached-stdio sitting."""
     if stdin_input is None:
         # {prompt} rode argv: stdin stays the caller's terminal (hands-on).
         proc = subprocess.run(argv, cwd=str(root))
@@ -2053,7 +2078,7 @@ def run_interactive(
         # (stdout/stderr stay attached to the terminal). text=True is
         # load-bearing: a str input on a binary pipe is a TypeError.
         proc = subprocess.run(argv, cwd=str(root), input=stdin_input, text=True)
-    return proc.returncode
+    return proc.returncode, "", False
 
 
 def _subagent_gate_log_count(root):
@@ -2425,6 +2450,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         "brief": brief_key,
         "route_id": route_id,
         "route_family": route_family,
+        "route_tier": registry[route_id].tier if route_id else "",
         "session_env": session_env,
         # C5: this session is a review drawn with heterogeneity relaxed — a
         # typed field for the telemetry header, never a filename re-parse.
@@ -3176,12 +3202,21 @@ def resolve_idle_timeout(args):
     return idle if idle and idle > 0 else None
 
 
-def launch_session(ctx, argv, stdin_input, session_env):
+def launch_session(ctx, argv, stdin_input, plan, metrics):
     """Run one agent session and time it on the COORDINATOR's own clock, so a
     duration exists even when the session dies before emitting JSON (spawn
     failure, timeout, crash). Returns (code, output, timed_out, wall_secs)."""
     args = ctx.args
-    wall_start = time.time()
+    metrics.update(
+        {
+            "attempt-id": "{}@{}".format(ctx.worker["train"], ctx.worker["base"]),
+            "role": plan["phase"],
+            "provider": plan["route_family"] or "",
+            "requested-model": plan["model"],
+            "tier": plan["route_tier"],
+            "roster-row": plan["route_id"] or "",
+        }
+    )
     live = LiveStatus(ctx.worker["train"]) if ctx.use_live else None
     if args.no_session_echo:
         on_line = None
@@ -3189,18 +3224,20 @@ def launch_session(ctx, argv, stdin_input, session_env):
         on_line = live.event
     else:
         on_line = echo_session_line
-    code, output, timed_out = run_session(
+    code, output, timed_out = agent_session.invoke_session(
         argv,
         ctx.root,
         args.session_timeout,
-        env=session_env,
+        metrics=metrics,
+        runner=run_session,
+        env=plan["session_env"],
         on_line=on_line,
         stdin_input=stdin_input,
         idle_timeout=resolve_idle_timeout(args),
     )
     if live is not None:
         live.finish()
-    return code, output, timed_out, int(round(time.time() - wall_start))
+    return code, output, timed_out, metrics["wall-secs"]
 
 
 def write_raw_stream(raw_dir, name, output):
@@ -3231,7 +3268,8 @@ def family_context_telemetry(family, data):
     if family != "ANTHROPIC":
         return "", "", "", ""
     session_id = data.get("session_id") or ""
-    usage = data.get("usage") or {}
+    usage = data.get("usage")
+    usage = usage if isinstance(usage, dict) else {}
     usage_fields = (
         ("input_tokens", "inputTokens"),
         ("output_tokens", "outputTokens"),
@@ -3275,14 +3313,18 @@ def session_meta(
     """
     prompt = plan["prompt"]
     phase = plan["phase"]
-    usage = data.get("usage") or {}
+    usage = data.get("usage")
+    usage = usage if isinstance(usage, dict) else {}
     session_id, ctx_used, ctx_window, ctx_pct = family_context_telemetry(
         plan.get("route_family") or "", data
     )
     tokens = ""
     if usage.get("input_tokens") is not None or usage.get("output_tokens") is not None:
         tokens = "{}+{}".format(
-            usage.get("input_tokens", 0), usage.get("output_tokens", 0)
+            *(
+                "?" if usage.get(key) is None else usage[key]
+                for key in ("input_tokens", "output_tokens")
+            )
         )
     api_ms = data.get("duration_api_ms")
     ttft_ms = data.get("ttft_ms")
@@ -3328,7 +3370,9 @@ def session_meta(
         # (docs/plans/2026-08-29-adjudicator-session-retention-plan.md §3.3) —
         # what the process already reports about its own context, per family,
         # with the retention dial off. Blank wherever today's one-shot call
-        # doesn't carry it (family_context_telemetry).
+        # doesn't carry it (family_context_telemetry). Invocation accounting
+        # subsequently fills session-id for any provider reporting one;
+        # the retained context columns keep their existing family semantics.
         "session-id": session_id,
         "context-used": ctx_used,
         "context-window": ctx_window,
@@ -3396,8 +3440,22 @@ def probe_route(row, root, wall=30):
         return False, str(exc)
     row_env = agent_route.parse_env(row.env)
     env = {**os.environ, **row_env} if row_env else None
-    code, output, timed_out = run_session(
-        argv, root, wall, env=env, stdin_input=stdin_input
+    metrics = {
+        "source-event": "recovery-probe",
+        "role": "PROBE",
+        "provider": row.family,
+        "requested-model": row.model or "",
+        "tier": row.tier,
+        "roster-row": row.id,
+    }
+    code, output, timed_out = agent_common.invoke_and_persist(
+        root,
+        argv,
+        wall,
+        metrics=metrics,
+        runner=run_session,
+        env=env,
+        stdin_input=stdin_input,
     )
     data = parse_json_result(output or "")
     result = str(data.get("result", "")) if data else (output or "")
@@ -3860,6 +3918,9 @@ def run_iteration(ctx, i):
     worker = ctx.worker
     st = ctx.run.routing
     wait_out_blackout(ctx.lane)
+    code = moved_scripts_stop()
+    if code is not None:
+        return code
     # (The WI-209 serial dual-plan quiet-park guard retired with the serial
     # driver, WI-210: a dual row runs through --dual-plan, so the
     # page-instead-of-idle duty has no second path left to cover.)
@@ -3894,11 +3955,13 @@ def run_iteration(ctx, i):
     session = "{:03d}".format(next_session_number(ctx.iter_dir, worker["train"]))
     stamp = time.strftime("%Y%m%d-%H%M%S")
     wi_label = current_wi
-    before = head_sha(root)
     now = time.time()
     plan = route_session(ctx, i, current_wi, session, resume_reconcile, now)
     if isinstance(plan, int):
         return plan
+    # Route recovery may commit its own probe telemetry; only work produced by
+    # the selected session belongs in this session's commit range.
+    before = head_sha(root)
     print(
         "=== session {} [{}] ({}/{}) | phase={} model={} wi={} ===".format(
             session,
@@ -3911,8 +3974,9 @@ def run_iteration(ctx, i):
         )
     )
     argv, stdin_input = build_argv(plan["tmpl"], plan["model"], plan["prompt"])
+    invocation = {}
     code, output, timed_out, wall_secs = launch_session(
-        ctx, argv, stdin_input, plan["session_env"]
+        ctx, argv, stdin_input, plan, invocation
     )
     write_raw_stream(ctx.raw_dir, "{}{}-{}.log".format(ctx.tag, session, stamp), output)
     data = parse_json_result(output)
@@ -3935,6 +3999,7 @@ def run_iteration(ctx, i):
         ctx, plan, data, session, stamp, wi_label, outcome, commits, code, wall_secs
     )
     stamp_session_meta(meta, plan, timed_out)
+    meta.update(invocation)
     log_path = write_session_log(ctx.iter_dir, meta, output)
     # A worker never regenerates the iteration index: it is a GENERATED
     # root artifact the integrator rebuilds on the composed tree (spec
@@ -4389,6 +4454,20 @@ def announce_critique_budget(managed, st):
                 len(st.critique_srs), st.critique_max
             )
         )
+
+
+def moved_scripts_stop():
+    """Typed safe-boundary stop when this process's imported code moved."""
+    if not agent_common.running_scripts_moved():
+        return None
+    print(
+        "agent_loop: RESTART - coordinator Python changed after this process "
+        "imported it; the active assignment and committed evidence are "
+        "preserved. Invoke the launcher again to continue with fresh code.",
+        file=sys.stderr,
+        flush=True,
+    )
+    return EXIT_RESTART
 
 
 def run_loop(ctx):

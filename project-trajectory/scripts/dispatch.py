@@ -583,7 +583,8 @@ def _lane_close(root, branch, code):
     exceptional path: the lane hands back, the WI returns to trunk blocked and
     visible on the owner surface, and the dispatcher moves to the next one.
 
-    A lane that ALREADY CLOSED its specs is left alone whatever it exited with.
+    A process restart preserves the lane before any work-outcome decision.
+    Otherwise a lane that ALREADY CLOSED its specs is left alone.
     Its tree has already named an outcome — `complete/`, `cancelled/`, wherever
     it moved them — and the drain will merge it on that. Handing it back would
     be the dispatcher overruling the tree with an exit code, and it cannot anyway:
@@ -596,6 +597,14 @@ def _lane_close(root, branch, code):
     A failed handback DOES stop the run, and must: it is the one state the
     invariant cannot express, so it is reported rather than driven past.
     """
+    if code == ac.EXIT_RESTART:
+        _say(
+            "worker on {} reached a coordinator-code boundary (exit {}) - "
+            "the claim and its evidence stay on the branch; stop admission "
+            "and restart the coordinator before resuming it.".format(branch, code),
+            err=True,
+        )
+        return ac.EXIT_RESTART
     if branch in integrate.finished_branches(root):
         _say(
             "worker on {} exited {} but its specs are already out of active/ - "
@@ -729,7 +738,7 @@ def _close_done_adjudication(root, branch):
     return None
 
 
-def _advance(root, ln, tier):
+def _advance(root, ln, tier, restarting=False):
     """Advance one lane's state machine by one poll: None while busy, else a
     `(verb, code)` event —
 
@@ -738,12 +747,16 @@ def _advance(root, ln, tier):
                         tick's resume) or a DONE worker that finished nothing
                         (the stall candidate)
       ("fatal", code)   the run must end with `code` once the station drains
+      ("preserved", code) a child reached its boundary during a code restart;
+                          its branch is left for the fresh coordinator
     """
+    code = ln.code if ln.proc is None else ln.proc.poll()
+    if code is None:
+        return None
+    ln.proc = None
+    if restarting:
+        return ("preserved", code)
     if ln.phase == "worker":
-        code = ln.code if ln.proc is None else ln.proc.poll()
-        if code is None:
-            return None
-        ln.proc = None
         if code != ac.EXIT_DONE:
             rc = _lane_close(root, ln.branch, code)
             if rc is not None:
@@ -759,10 +772,7 @@ def _advance(root, ln, tier):
             ln.proc = lane.spawn_refresh(root, ln.branch, tier)
             return None
         return ("closed", None)
-    rc = ln.proc.poll()
-    if rc is None:
-        return None
-    ln.proc = None
+    rc = code
     if rc == 0:
         # THE MERGE SLOT, scoped to this lane's branch: another lane may be
         # mid-refresh on its own branch and must not be pulled into the slot
@@ -815,10 +825,13 @@ def _poll(root, table, args, tier, state):
     bookkeeping: a merge resets the stall counter, a lane that closed with
     the trunk exactly where its admission found it increments it (a worker
     that keeps reporting DONE without finishing cannot loop forever), and the
-    first fatal event freezes admission while the station drains."""
+    first fatal event freezes admission while the station drains. A code-restart
+    drain only waits for children to finish; it leaves their branches untouched
+    for the fresh process rather than starting more work under stale imports."""
     event = False
+    _arm_code_restart(table, state)
     for ln in list(table):
-        adv = _advance(root, ln, tier)
+        adv = _advance(root, ln, tier, restarting=state["fatal"] == ac.EXIT_RESTART)
         if adv is None:
             continue
         event = True
@@ -827,6 +840,11 @@ def _poll(root, table, args, tier, state):
         if verb == "fatal":
             if state["fatal"] is None:
                 state["fatal"] = code
+        elif verb == "preserved":
+            _say(
+                "child process on {} reached its boundary (exit {}) - leaving "
+                "the branch for the fresh coordinator.".format(ln.branch, code)
+            )
         elif verb == "merged":
             # WI(s), NOT lanes: an exclusive spine batch is ONE branch carrying
             # several WIs, so crediting the lane under-reports exactly the
@@ -844,7 +862,29 @@ def _poll(root, table, args, tier, state):
                 )
                 if state["fatal"] is None:
                     state["fatal"] = ac.EXIT_STALL
+        # Integrating this lane may itself have moved the imported scripts.
+        # Arm the restart before another lane can enter refresh/integration.
+        _arm_code_restart(table, state)
     return event
+
+
+def _arm_code_restart(table, state):
+    """Freeze admission when the source backing this process has moved."""
+    if state["fatal"] is not None or not ac.running_scripts_moved():
+        return
+    state["fatal"] = ac.EXIT_RESTART
+    _say(
+        "coordinator Python changed after this process imported it - stopping "
+        "admission{}; invoke the launcher again after exit to continue with "
+        "fresh code.".format(
+            " and waiting for {} child process(es) to reach their boundary".format(
+                len(table)
+            )
+            if table
+            else ""
+        ),
+        err=True,
+    )
 
 
 def _cycle_gate(args, table, state):

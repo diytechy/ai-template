@@ -929,8 +929,17 @@ def test_interactive_boots_exactly_one_session(loop_repo):
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert _invocations(ctl) == 1
-    # A hands-on session writes no unattended artifacts.
-    assert not (repo / "docs" / "iteration").exists()
+    logs = list((repo / "docs" / "iteration").glob("call_*.log"))
+    assert len(logs) == 1
+    meta = load_script("agent_common").read_log_meta(logs[0])
+    assert meta["source-event"] == "interactive"
+    assert meta["role"] == "INTERACTIVE"
+    assert meta["exit-code"] == "0"
+    assert meta["usage-status"] == "unavailable"
+    assert meta["input-tokens"] == meta["output-tokens"] == ""
+    assert logs[0].read_text(encoding="utf-8").endswith("# ---\n\n")
+    al = load_script("agent_loop")
+    assert al.phase_draw_ordinal([repo / "docs" / "iteration"], "REVIEW-A") == 0
 
 
 def test_unfilled_agent_cmd_is_inert_guidance(loop_repo):

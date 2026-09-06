@@ -1,0 +1,51 @@
+# agent session log — written by scripts/agent_common.py
+# session: call_7a7d7efaed0d44fba92633dd306efc99
+# date: 2026-09-06 00:45
+# train:
+# base:
+# phase: ADVERSARIAL-REVIEW
+# wi:
+# model: claude-opus-5
+# guardrails:
+# outcome: COMPLETED
+# commits:
+# tokens:
+# cost-usd: 0.44488700000000003
+# wall-secs: 67
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read: 0
+# cache-create: 29812
+# effort:
+# fast:
+# prompt-chars:
+# prompt-template:
+# prompt-sha:
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id: 08217216-7d6d-4ba1-b0de-7bf9cebae484
+# context-used:
+# context-window:
+# context-pct:
+# invocation-id: 7a7d7efaed0d44fba92633dd306efc99
+# attempt-id:
+# source-event: p0b-accounting-completion
+# role: ADVERSARIAL-REVIEW
+# provider: claude
+# requested-model: claude-opus-5
+# reported-model:
+# tier: high
+# roster-row:
+# started-at: 2026-09-06T05:44:45Z
+# ended-at: 2026-09-06T05:45:51Z
+# input-tokens: 2
+# output-tokens: 5260
+# reasoning-tokens:
+# raw-usage: {"cache_creation":{"ephemeral_1h_input_tokens":29812,"ephemeral_5m_input_tokens":0},"cache_creation_input_tokens":29812,"cache_read_input_tokens":0,"inference_geo":"not_available","input_tokens":2,"iterations":[{"cache_creation":{"ephemeral_1h_input_tokens":29812,"ephemeral_5m_input_tokens":0},"cache_creation_input_tokens":29812,"cache_read_input_tokens":0,"input_tokens":2,"output_tokens":5260,"type":"message"}],"output_tokens":5260,"server_tool_use":{"web_fetch_requests":0,"web_search_requests":0},"service_tier":"standard","speed":"standard"}
+# usage-scope: unknown
+# usage-source: reported
+# usage-status: known
+# ---
+{"type":"result","subtype":"success","is_error":false,"api_error_status":null,"duration_ms":65962,"duration_api_ms":67212,"ttft_ms":52814,"ttft_stream_ms":1144,"time_to_request_ms":14,"num_turns":2,"result":"{\"verdict\":\"APPROVE\",\"findings\":[\"Finding 1 CLOSED: phase_draw_ordinal skips log.name.startswith('call_') before de-dup and read_log_meta, so a standalone call whose role/phase is exactly CRITIQUE cannot advance a worker rotation; test_planner_logs_coexist_with_worker_numbering_and_index pins == 1 where the unguarded count would be 2. next_session_number is unaffected (anchored (\\\\d+)- cannot match a call_-leading name).\",\"Finding 2 CLOSED: write_session_log escapes \\\\r and \\\\n for every key in the fixed header tuple, covering all three provider-controlled fields at one boundary. The test is genuine because 'outcome' precedes 'session-id' in the tuple and read_log_meta is last-write-wins, so an unescaped payload would overwrite it on reread. \\\\n/\\\\r/\\\\r\\\\n are the only separators the text-mode reader honors, and newline='\\\\n' prevents reintroduction on Windows.\",\"MINOR (non-blocking, robustness): the call_ guard is coupled to filename composition — write_session_log prepends meta['train'] when present, so any future _dp_session attribution carrying 'train' would move the prefix and silently re-open the leak; keying on source-event/role would be immune.\",\"MINOR (out of scope): invoke_session sets metrics['error'] on the exception path, but 'error' is not in write_session_log's header key tuple, so the exception type never reaches the durable log; test_interactive_launch_error_is_recorded_then_raised only asserts outcome/usage-status.\"]}","stop_reason":"tool_use","session_id":"08217216-7d6d-4ba1-b0de-7bf9cebae484","total_cost_usd":0.44488700000000003,"usage":{"input_tokens":2,"cache_creation_input_tokens":29812,"cache_read_input_tokens":0,"output_tokens":5260,"server_tool_use":{"web_search_requests":0,"web_fetch_requests":0},"service_tier":"standard","cache_creation":{"ephemeral_1h_input_tokens":29812,"ephemeral_5m_input_tokens":0},"inference_geo":"not_available","iterations":[{"input_tokens":2,"output_tokens":5260,"cache_read_input_tokens":0,"cache_creation_input_tokens":29812,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":29812},"type":"message"}],"speed":"standard"},"modelUsage":{"claude-haiku-4-5-20251001":{"inputTokens":15172,"outputTokens":17,"cacheReadInputTokens":0,"cacheCreationInputTokens":0,"webSearchRequests":0,"costUSD":0.015257,"contextWindow":200000,"maxOutputTokens":32000},"claude-opus-5":{"inputTokens":2,"outputTokens":5260,"cacheReadInputTokens":0,"cacheCreationInputTokens":29812,"webSearchRequests":0,"costUSD":0.42963,"contextWindow":200000,"maxOutputTokens":32000}},"permission_denials":[],"structured_output":{"verdict":"APPROVE","findings":["Finding 1 CLOSED: phase_draw_ordinal skips log.name.startswith('call_') before de-dup and read_log_meta, so a standalone call whose role/phase is exactly CRITIQUE cannot advance a worker rotation; test_planner_logs_coexist_with_worker_numbering_and_index pins == 1 where the unguarded count would be 2. next_session_number is unaffected (anchored (\\d+)- cannot match a call_-leading name).","Finding 2 CLOSED: write_session_log escapes \\r and \\n for every key in the fixed header tuple, covering all three provider-controlled fields at one boundary. The test is genuine because 'outcome' precedes 'session-id' in the tuple and read_log_meta is last-write-wins, so an unescaped payload would overwrite it on reread. \\n/\\r/\\r\\n are the only separators the text-mode reader honors, and newline='\\n' prevents reintroduction on Windows.","MINOR (non-blocking, robustness): the call_ guard is coupled to filename composition — write_session_log prepends meta['train'] when present, so any future _dp_session attribution carrying 'train' would move the prefix and silently re-open the leak; keying on source-event/role would be immune.","MINOR (out of scope): invoke_session sets metrics['error'] on the exception path, but 'error' is not in write_session_log's header key tuple, so the exception type never reaches the durable log; test_interactive_launch_error_is_recorded_then_raised only asserts outcome/usage-status."]},"terminal_reason":"completed","fast_mode_state":"off","uuid":"82d07705-5da4-46ad-b8ae-7a85b5697509"}

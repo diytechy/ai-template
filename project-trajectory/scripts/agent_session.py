@@ -64,6 +64,7 @@ import sys
 import tempfile
 import threading
 import time
+import uuid
 from pathlib import Path
 
 
@@ -202,6 +203,64 @@ def parse_json_result(output):
         if data.get("type") == "result":
             return data
     return dicts[0] if dicts else {}
+
+
+def _result_accounting(data):
+    """Return raw, reportable fields from one parsed provider result.
+
+    This reader deliberately does not infer billing scope or add counters from
+    ``modelUsage``. A provider's nested totals can be cumulative or inclusive,
+    and a guessed aggregate is worse than an explicit unknown at this boundary.
+    """
+    if not isinstance(data, dict):
+        data = {}
+    usage = data.get("usage")
+    usage = usage if isinstance(usage, dict) else {}
+
+    def raw(key):
+        value = usage.get(key, "")
+        return "" if value is None else value
+
+    cost = data.get("total_cost_usd", "")
+    out = {
+        "session-id": data.get("session_id") or data.get("session-id") or "",
+        "reported-model": data.get("model") or data.get("model_id") or "",
+        "input-tokens": raw("input_tokens"),
+        "output-tokens": raw("output_tokens"),
+        "cache-read": raw("cache_read_input_tokens"),
+        "cache-create": raw("cache_creation_input_tokens"),
+        "reasoning-tokens": raw("reasoning_tokens"),
+        "cost-usd": "" if cost is None else cost,
+        "usage-scope": "unknown",
+        "usage-source": "unknown",
+        "usage-status": "unavailable",
+    }
+    if not out["reported-model"]:
+        model_usage = data.get("modelUsage")
+        if isinstance(model_usage, dict) and len(model_usage) == 1:
+            out["reported-model"] = next(iter(model_usage))
+    if isinstance(usage.get("scope"), str):
+        out["usage-scope"] = usage["scope"]
+    token_keys = {
+        "input_tokens",
+        "output_tokens",
+        "cache_read_input_tokens",
+        "cache_creation_input_tokens",
+        "reasoning_tokens",
+    }
+    present = [key for key in usage if key in token_keys and usage.get(key) is not None]
+    if present or cost not in ("", None):
+        out["usage-source"] = "reported"
+    if present:
+        out["usage-status"] = (
+            "known"
+            if out["input-tokens"] != "" and out["output-tokens"] != ""
+            else "partial"
+        )
+        out["raw-usage"] = json.dumps(usage, sort_keys=True, separators=(",", ":"))
+    elif out["cost-usd"] != "":
+        out["usage-status"] = "partial"
+    return out
 
 
 def _kill_tree(proc):
@@ -560,3 +619,47 @@ def run_session(
     if last and proc.returncode == 0:
         output = last  # codex: the deterministic last message, not the transcript
     return proc.returncode, output, False
+
+
+def invoke_session(argv, root, timeout, *, metrics, runner=run_session, **kwargs):
+    """Invoke one session and fill caller-owned launch/result metadata.
+
+    ``run_session`` remains the public three-tuple API. ``runner`` is injectable
+    so coordinators and tests retain their existing mock seam. No transcript,
+    spool or billing store is created by this boundary.
+    """
+    metrics["invocation-id"] = uuid.uuid4().hex
+    metrics["started-at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    started = time.monotonic()
+    try:
+        result = runner(argv, root, timeout, **kwargs)
+    except Exception as exc:
+        metrics.update(_result_accounting({}))
+        metrics.update(
+            {
+                "ended-at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "wall-secs": int(round(time.monotonic() - started)),
+                "exit-code": "",
+                "timeout": "",
+                "usage-source": "unknown",
+                "usage-status": "unavailable",
+                "usage-scope": "unknown",
+                "error": type(exc).__name__,
+            }
+        )
+        raise
+    code, output, timed_out = result
+    metrics.update(
+        {
+            "ended-at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "wall-secs": int(round(time.monotonic() - started)),
+            "exit-code": code,
+            "timeout": timed_out
+            if isinstance(timed_out, str)
+            else "wall"
+            if timed_out
+            else "",
+        }
+    )
+    metrics.update(_result_accounting(parse_json_result(output)))
+    return result

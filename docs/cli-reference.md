@@ -43,7 +43,7 @@ Contracts (interfaces): IF-015
 | `--dual-plan` | run one dual-plan decomposition round for this queued WI (its registry row must declare PlanMode=dual) and exit: two planner sessions, the coverage pre-pass, one cross-critique + revision, the position-swapped arbiter pair, artifacts under docs/plans/DP-NNN-*/ (process-options.md 'Dual-plan decomposition'; WI-199). |
 | `--train` | worker assignment: the session tag scoping logs and review evidence. Default: the current branch name (the §2.3 claim branch `integrate.py claim` cut). |
 | `--worktree` | worker assignment: the worktree to run in (becomes the effective --root; default: --root itself). |
-| `--base` | worker assignment: the integration base commit the branch was cut from. Default: HEAD at worker start. |
+| `--base` | worker assignment: the integration base commit the branch was cut from. Default: the durable claim commit; legacy/manual assignments use the merge-base with trunk. |
 | `--rework` | worker assignment: a findings file (review verdict) to embed in the worker prompt as the rework scope — assignment-scoped state, replacing the lane rework-wi pointer. |
 | `--max-iterations` | hard budget ceiling; raise deliberately (default 40) |
 | `--stall-limit` | consecutive no-commit sessions before abort (default 3) |

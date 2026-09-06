@@ -192,6 +192,11 @@ def test_full_round_unattended_selects_and_files(tmp_path):
     proc = run_dualplan(root, fake)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "SELECT plan" in proc.stdout
+    logs = list((root / "docs" / "iteration").glob("*.log"))
+    tracked = subprocess.check_output(
+        ["git", "ls-files", "docs/iteration"], cwd=root, text=True
+    ).splitlines()
+    assert logs and len(tracked) == len(logs)
 
     rounds = list((root / "docs" / "plans").iterdir())
     assert len(rounds) == 1 and rounds[0].name.startswith("DP-001-wi-002")

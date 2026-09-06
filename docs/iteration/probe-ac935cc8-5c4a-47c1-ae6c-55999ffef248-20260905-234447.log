@@ -1,0 +1,52 @@
+# agent session log — written by scripts/agent_common.py
+# session: probe-ac935cc8-5c4a-47c1-ae6c-55999ffef248
+# date: 2026-09-05 23:44
+# train:
+# base:
+# phase: PROBE
+# wi:
+# model: claude-opus-5
+# guardrails:
+# outcome: COMPLETED
+# commits:
+# tokens:
+# cost-usd: 0.02037
+# wall-secs:
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read: 0
+# cache-create: 1967
+# effort: high
+# fast:
+# prompt-chars:
+# prompt-template:
+# prompt-sha:
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id: ac935cc8-5c4a-47c1-ae6c-55999ffef248
+# context-used:
+# context-window:
+# context-pct:
+# invocation-id:
+# attempt-id:
+# source-event: redesign:P0b:availability-probe:pre-instrumentation
+# role: PROBE
+# provider: ANTHROPIC
+# requested-model: claude-opus-5
+# reported-model:
+# tier:
+# roster-row:
+# started-at:
+# ended-at:
+# input-tokens: 2
+# output-tokens: 4
+# reasoning-tokens:
+# raw-usage: {"cache_creation":{"ephemeral_1h_input_tokens":1967,"ephemeral_5m_input_tokens":0},"cache_creation_input_tokens":1967,"cache_read_input_tokens":0,"inference_geo":"not_available","input_tokens":2,"iterations":[{"cache_creation":{"ephemeral_1h_input_tokens":1967,"ephemeral_5m_input_tokens":0},"cache_creation_input_tokens":1967,"cache_read_input_tokens":0,"input_tokens":2,"output_tokens":4,"type":"message"}],"output_tokens":4,"server_tool_use":{"web_fetch_requests":0,"web_search_requests":0},"service_tier":"standard","speed":"standard"}
+# usage-scope: unknown
+# usage-source: reported
+# usage-status: known
+# ---
+Pre-instrumentation availability probe. Original invocation/start timing unavailable.
+{"type":"result","subtype":"success","is_error":false,"api_error_status":null,"duration_ms":1319,"duration_api_ms":2093,"ttft_ms":1309,"ttft_stream_ms":881,"time_to_request_ms":17,"num_turns":1,"result":"READY","stop_reason":"end_turn","session_id":"ac935cc8-5c4a-47c1-ae6c-55999ffef248","total_cost_usd":0.02037,"usage":{"input_tokens":2,"cache_creation_input_tokens":1967,"cache_read_input_tokens":0,"output_tokens":4,"server_tool_use":{"web_search_requests":0,"web_fetch_requests":0},"service_tier":"standard","cache_creation":{"ephemeral_1h_input_tokens":1967,"ephemeral_5m_input_tokens":0},"inference_geo":"not_available","iterations":[{"input_tokens":2,"output_tokens":4,"cache_read_input_tokens":0,"cache_creation_input_tokens":1967,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":1967},"type":"message"}],"speed":"standard"},"modelUsage":{"claude-haiku-4-5-20251001":{"inputTokens":530,"outputTokens":12,"cacheReadInputTokens":0,"cacheCreationInputTokens":0,"webSearchRequests":0,"costUSD":0.00059,"contextWindow":200000,"maxOutputTokens":32000},"claude-opus-5":{"inputTokens":2,"outputTokens":4,"cacheReadInputTokens":0,"cacheCreationInputTokens":1967,"webSearchRequests":0,"costUSD":0.01978,"contextWindow":200000,"maxOutputTokens":32000}},"permission_denials":[],"terminal_reason":"completed","fast_mode_state":"off","uuid":"2b49df08-600c-4dd2-ae70-736bdd0b77ba"}

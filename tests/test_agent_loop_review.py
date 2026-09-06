@@ -1134,11 +1134,11 @@ def test_review_owed_survives_a_failed_marker_write(managed_repo, tmp_path):
     assert kinds2[boundary] == "review", kinds2
 
 
-def test_default_base_is_the_merge_base_with_the_trunk(tmp_path):
-    # Round 3 (WI-548): a resumed worker's default base used to be HEAD, so
-    # its committed evidence read empty. In a lane WORKTREE the default is
-    # now the merge-base with the primary checkout's branch — the claim
-    # commit — while a single-checkout repo keeps HEAD.
+def test_default_base_reads_the_claim_record_after_a_single_checkout_resume(tmp_path):
+    # The claim commit is already durable Git evidence.  A linked lane reaches
+    # it through merge-base; after that worktree is gone and the primary
+    # checkout has switched to the lane branch, it must still be the evidence
+    # boundary rather than the branch tip.
     import subprocess as _sp
 
     trunk = tmp_path / "trunk"
@@ -1150,7 +1150,17 @@ def test_default_base_is_the_merge_base_with_the_trunk(tmp_path):
     (trunk / "seed.txt").write_text("seed\n", encoding="utf-8")
     _git(trunk, "add", "-A")
     _git(trunk, "commit", "-q", "-m", "seed")
-    seed = _git(trunk, "rev-parse", "HEAD")
+    queued_spec = trunk / "docs" / "work" / "queued" / "WI-1-test.md"
+    queued_spec.parent.mkdir(parents=True)
+    queued_spec.write_text("queued\n", encoding="utf-8")
+    _git(trunk, "add", "-A")
+    _git(trunk, "commit", "-q", "-m", "queue WI-1")
+    claim_spec = trunk / "docs" / "work" / "active" / "wi-1" / "WI-1-test.md"
+    claim_spec.parent.mkdir(parents=True)
+    queued_spec.rename(claim_spec)
+    _git(trunk, "add", "-A")
+    _git(trunk, "commit", "-q", "-m", "claim: WI-1 -> active/wi-1 (bookkeeping)")
+    claim = _git(trunk, "rev-parse", "HEAD")
     lane = tmp_path / "lane"
     _sp.run(
         ["git", "-C", str(trunk), "worktree", "add", "-q", "-b", "wi-1", str(lane)],
@@ -1160,11 +1170,52 @@ def test_default_base_is_the_merge_base_with_the_trunk(tmp_path):
     (lane / "work.txt").write_text("built\n", encoding="utf-8")
     _git(lane, "add", "-A")
     _git(lane, "commit", "-q", "-m", "build\n\nWI: WI-1")
+    (trunk / "trunk.txt").write_text("new trunk work\n", encoding="utf-8")
+    _git(trunk, "add", "-A")
+    _git(trunk, "commit", "-q", "-m", "trunk advances")
+    _git(lane, "merge", "--no-edit", "main")
+    # A matching subject alone is prose, not a claim boundary.  The reader
+    # must skip it and continue to the committed queued-to-active move.
+    _git(
+        lane,
+        "commit",
+        "--allow-empty",
+        "-q",
+        "-m",
+        "claim: WI-1 -> active/wi-1 (bookkeeping)",
+    )
     al = load_script("agent_loop")
-    assert al.default_base(lane) == seed  # the lane: its claim commit
-    assert al.default_base(trunk) == seed  # the primary: HEAD, as before
+    assert al.default_base(lane) == claim
     built, _blocked = al.train_evidence(lane, al.default_base(lane))
     assert "WI-1" in built
+
+    _sp.run(
+        ["git", "-C", str(trunk), "worktree", "remove", "--force", str(lane)],
+        check=True,
+        capture_output=True,
+    )
+    _git(trunk, "checkout", "-q", "wi-1")
+    assert al.default_base(trunk) == claim
+    built, _blocked = al.train_evidence(trunk, al.default_base(trunk))
+    assert "WI-1" in built
+    worker = {"train": "wi-1", "assigned": ["WI-1"], "base": claim, "rework": ""}
+    assert al.worker_endstate(trunk, worker, False, False, 0)[0] == al.EXIT_DONE
+    ac = load_script("agent_common")
+    assert ac.stale_terminal_assignment(trunk, "WI-1", {"Status": "done"}) is False
+
+
+def test_default_base_refuses_an_unreadable_claim_history(monkeypatch):
+    ac = load_script("agent_common")
+
+    def unreadable_claim_history(_root, *args):
+        if args == ("branch", "--show-current"):
+            return 0, "wi-1"
+        if args[:2] == ("log", "--first-parent"):
+            return 1, "fatal: unreadable object"
+        raise AssertionError(args)
+
+    monkeypatch.setattr(ac, "git", unreadable_claim_history)
+    assert ac.default_base("repo") is None
 
 
 # --- WI: MINOR-only refusals do not block routing (measured 2026-09-03/04) ----
