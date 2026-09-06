@@ -502,3 +502,54 @@ def test_check_ps1_applies_the_same_floor(spoof, label, tmp_path):
     else:
         assert done.returncode != 0, done.stdout + done.stderr
         assert "older than Python 3.11" in done.stdout + done.stderr
+
+
+# --- exit 11: the launcher relaunches a drained coordinator (2026-09-06) --------
+#
+# The coordinator exits 11 when its own Python moved under it (a trunk merge that
+# touched the scripts), after draining to a safe boundary. In this repo that is
+# nearly every integration, so a launcher that merely exited turned a walk-away
+# run into an attended one. The engine stub below exits 11 twice, then 0: the
+# launcher must run it three times and end with the engine's final code.
+
+RELAUNCH_STUB = (
+    "import pathlib, sys\n"
+    "p = pathlib.Path('relaunch-count')\n"
+    "n = int(p.read_text()) if p.exists() else 0\n"
+    "p.write_text(str(n + 1))\n"
+    "print('ENGINE-UNDER', sys.executable, 'run', n + 1)\n"
+    "sys.exit(11 if n < 2 else 0)\n"
+)
+
+
+def _relaunch_repo(tmp_path, launcher, engine_rel):
+    path = _repo(tmp_path / "repo", launcher, engine_rel)
+    (path.parent / engine_rel).write_text(RELAUNCH_STUB, encoding="utf-8")
+    _make_venv(path.parent)
+    return path
+
+
+@pytest.mark.parametrize("which", sorted(POSIX_LAUNCHERS))
+def test_sh_relaunches_the_engine_on_exit_11_and_stops_on_any_other_code(
+    which, tmp_path
+):
+    skip_without_env_gates("posix-shell")
+    launcher, engine = POSIX_LAUNCHERS[which]
+    path = _relaunch_repo(tmp_path, launcher, engine)
+    done = _run_sh(path, _write_fake_bin(tmp_path / "bin", OLD, "OLD"))
+    assert done.returncode == 0, done.stdout + done.stderr
+    assert "run 3" in done.stdout and "run 4" not in done.stdout, done.stdout
+    assert "relaunching (2 of 50)" in done.stderr, done.stderr
+
+
+@WINDOWS_ONLY
+@pytest.mark.parametrize("which", sorted(CMD_LAUNCHERS))
+def test_cmd_relaunches_the_engine_on_exit_11_and_stops_on_any_other_code(
+    which, tmp_path
+):
+    launcher, engine = CMD_LAUNCHERS[which]
+    path = _relaunch_repo(tmp_path, launcher, engine)
+    done = _run_cmd(path, _write_fake_bin(tmp_path / "bin", OLD, "OLD"))
+    assert done.returncode == 0, done.stdout + done.stderr
+    assert "run 3" in done.stdout and "run 4" not in done.stdout, done.stdout
+    assert "relaunching (2 of 50)" in done.stdout, done.stdout

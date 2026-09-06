@@ -633,7 +633,9 @@ def invoke_session(argv, root, timeout, *, metrics, runner=run_session, **kwargs
     started = time.monotonic()
     try:
         result = runner(argv, root, timeout, **kwargs)
-    except Exception as exc:
+    except BaseException as exc:
+        # BaseException, not Exception: a Ctrl-C in an attached sitting must
+        # leave a log with its wall-secs/ended-at filled, not blank columns.
         metrics.update(_result_accounting({}))
         metrics.update(
             {

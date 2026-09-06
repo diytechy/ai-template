@@ -210,12 +210,19 @@ scoped decomposition/review surface.
 ## Direct Inspection TC mapping
 
 The three authored `Inspection` SRs each have one direct Drafted TC. The
-procedures now live in the durable
-[`docs/test/inspection-procedures.md`](../test/inspection-procedures.md), with
-plain anchors and separate pending-result anchors. Each TC `method` names its
+procedures live in the durable
+[`docs/test/inspection-procedures.md`](../test/inspection-procedures.md), one
+section per subject under a stable anchor that carries no packet numbering and
+no result state:
+[Critique acceptance provenance](../test/inspection-procedures.md#critique-acceptance-provenance-inspection)
+(`TC-209`),
+[requirement and interface counterpart review](../test/inspection-procedures.md#requirement-and-interface-counterpart-review-inspection)
+(`TC-210`) and
+[decomposition proportionality](../test/inspection-procedures.md#decomposition-proportionality-inspection)
+(`TC-211`), each with a result subsection. Each TC `method` names its
 procedure anchor and its `evidence` names the corresponding result anchor.
-Those result anchors say `Not executed; reviewer/date/result pending` until a
-reviewer records an actual inspection. No passing inspection is claimed.
+Those result subsections say `Not executed; reviewer/date/result pending` until
+a reviewer records an actual inspection. No passing inspection is claimed.
 
 `SR-184` is LLR-exempt under the direct Inspection route; `LLR-048` and `TC-048`
 remain evidence for the existing SR-154 brief mechanism. The governing process
@@ -239,7 +246,12 @@ rationales, LLR/TC evidence and current work. SR-184 and SR-185 need their
 semantic behavior and fresh Inspection records; SR-186 needs its proportionality
 record; the direct TCs currently document procedures only. Re-attestation is
 owed for amended Approved rows `SN-007`, `SN-026`, and `SR-162`; the new SR/TC
-rows need ordinary first approval. H1/SR-175 consent or provider-inclusion work
+rows need ordinary first approval. The need-tier debt, which no snapshot-drift
+check reaches, is carried as an owner decision in
+[`docs/requirements/open-items.toml`](../requirements/open-items.toml) (OI-85),
+together with the SN-024 question of whether its family-heterogeneity clause
+binds attended Critique acceptance; SR-184's rationale no longer answers that
+question on its parent's behalf. H1/SR-175 consent or provider-inclusion work
 remains open, and none changes the LLR-176/build-surface redaction boundary.
 
 ## Opus disposition map

@@ -115,4 +115,23 @@ fi
 if [ -n "$AGENT_SESSION_IDLE_TIMEOUT" ]; then
   set -- --session-idle-timeout "$AGENT_SESSION_IDLE_TIMEOUT" "$@"
 fi
-exec "$PY" scripts/agent_loop.py "$@"
+# Exit 11 = RESTART: the coordinator's own Python moved under it (a trunk merge
+# that touched scripts/) and it drained to a safe boundary with the assignment
+# preserved in the tree. A fresh process reconstructs everything from git, so
+# the launcher relaunches it instead of handing the walk-away run back to a
+# human; 50 bounds a pathological loop. The engine still `exec`s — in a
+# subshell, so this launcher survives to relaunch it. Keep agent-resume.cmd in
+# sync (its :again loop).
+engine() {
+  exec "$PY" scripts/agent_loop.py "$@"
+}
+RELAUNCHES=0
+while :; do
+  (engine "$@")
+  CODE=$?
+  if [ "$CODE" -ne 11 ] || [ "$RELAUNCHES" -ge 50 ]; then
+    exit "$CODE"
+  fi
+  RELAUNCHES=$((RELAUNCHES + 1))
+  echo "agent-resume.sh: coordinator code moved; relaunching ($RELAUNCHES of 50)" >&2
+done

@@ -39,10 +39,17 @@ added.
 `_open_specs` retains raw newline bytes for the source edit while parsing a
 newline-normalized copy. The writer changes only the accepted array span and
 uses the original newline mode, preserving the complete prefix, suffix,
-comments outside the value, body and CRLF style.
+comments outside the value, body and CRLF style. Comments INSIDE the array
+(a rationale beside one dependency) are not preserved: the span is re-rendered
+from the parsed value, so they are dropped without notice. Keep dependency
+rationale outside the array (a trailing comment after `]` survives).
 
-The mint prevalidates every existing dependent edit using the planned successor
-IDs before `_write_draft`, open-item minting or any state mutation. An
+The mint prevalidates every dependent edit it can read using the planned
+successor IDs before `_write_draft`, open-item minting or any state mutation.
+A dependent whose frontmatter does not parse is skipped by both the
+prevalidation pass and the write (that is the validator's finding, not this
+writer's), so its edge onto the absorbed row survives the mint; the integrity
+check is the net for it. An
 unlocatable or non-unique declared target returns a typed refusal with no reset
 or cleanup, so unrelated dirty work cannot be erased. The same renderer is used
 for prevalidation and the authoritative write. The dead `_OI_ID_RE`, which had

@@ -234,3 +234,61 @@ Implementation commit: `22b21b06`. The follow-on
 instructions to that exact source commit. Project-specific vision/hat/need
 revalidation remains in the planned adopter workflow; this runtime slice does
 not complete that broader acceptance work.
+
+## Independent review and repair segment (2026-09-06, Fable 5.1)
+
+The owner asked for an independent review of the two implementation commits
+before locking the control decision. Three reviewers (runtime, continuation
+code, spine/docs) worked from `875a64b7`; findings and dispositions are in
+[the review](../reviews/2026-09-06-redesign-fable-review.md) and
+[its dispositions](../reviews/2026-09-06-redesign-fable-dispositions.md).
+The owner then instructed the fixes and locked the recommendation; the ruling
+is the [control decision's owner section](CONTROL-DECISION.md#owner-ruling-2026-09-06).
+
+Two P0b repairs were themselves defective and are repaired here, which closes
+the pre-repair segment under the measurement contract's own rule:
+
+- **Durable base.** The claim-first rule polluted every `base..HEAD` evidence
+  reader after a trunk merge into a lane (readers walk without
+  `--first-parent`). A linked lane now keeps the merge-base with trunk; the
+  claim commit is the boundary only in the single checkout the repair had
+  targeted. The regression test merges a trailer-bearing trunk commit.
+- **Code-drift scan.** A dangling editor lock file matched `*.py` and raised
+  at import of every kit entry point. Non-regular entries are skipped; a
+  failed launch capture disables detection with one warning instead of
+  restarting on every poll.
+
+**Restart at merge, ruled and implemented.** The drain design stands. The
+launchers (live and shipped templates) relaunch the coordinator on exit 11,
+bounded at 50, so a walk-away run survives its own integrations. Relaunches
+are not operator interventions; exhausting the cap is.
+
+Also landed: Ctrl-C in an attached sitting persists a complete `call_` record
+with `outcome: INTERRUPTED`; R-E judges a `#fragment` on a TOML registry as a
+row id (the line the dual-plan composer already held), with the reader homed
+in `kitlib.spine`; the old-kit resync test runs its kit assertions without
+Node; SR-184 no longer disclaims its parent's family clause; the Inspection
+carriers are named by subject; and **OI-85** carries the need-tier sitting
+(SN-007 / SN-026 re-attestation, the SN-024 ruling, the parked SN drift
+detector). No need cell, approval, policy dial or queue state changed. The
+restart drain's "preserved" treatment of non-boundary exits is retained by
+design (dispositions, item 5).
+
+### Validation
+
+Focused modules touched by the repairs, run at the repaired tree: coordinator
+drift, session accounting and stdin, hats, dogfood sync, launcher interpreter
+(including the new relaunch cases), old-kit resync, dispatch, module-size and
+complexity ratchets: `214 passed, 15 skipped`, then the ratchets alone
+`4 passed` after the reviewed `check_trajectory.py` +5 SLOC restamp. The base
+rule's two tests, R-E's fifteen SpecRef/anchor tests, intake's 35
+needs/supersede/mint tests, the bootstrap launcher/byte-cap tests, and the
+spine-carrier/rule/stage modules (`59 passed`) pass. Strict trajectory check on
+the live repo: clean (the three standing WI-title warnings). Trace at the tip:
+`orphans=0 integrity=0 schema-findings=0`, `docs/stage` current at
+DevStg-Tests with 17 drafts. Full unfiltered suite: `1 failed, 3593 passed,
+22 skipped in 694.32s`, the one red being this segment's own base-rule
+fallback, corrected by one line and re-verified on its module set (`84
+passed`); no second full run is claimed. Commit bar: `1674 passed, 4 skipped`,
+`59.0s vs 60s budget -> within`. Exact tails in
+[the session log](../log.d/2026-09-06-redesign-fable-review.md).

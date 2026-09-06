@@ -2869,6 +2869,11 @@ def specref_findings(root, w):
         ]
     if not frag:
         return []
+    ids = _kitspine.registry_ids(target)  # a TOML registry: the fragment is a row id
+    if ids is not None:
+        hint = _kitspine.registry_row_hint(ids, frag)
+        msg = "{}: SpecRef {!r} names no such row in {} ({})"
+        return [] if frag in ids else [msg.format(w["id"], spec, pathpart, hint)]
     # The anchor half (WI-354). Matching check_docs' link rule exactly — compare
     # lowercased, markdown targets only — so the SAME reference cannot pass as a
     # SpecRef and fail as a link, which is how WI-326's truncated anchor survived.

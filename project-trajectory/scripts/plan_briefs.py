@@ -277,6 +277,8 @@ def hat_surface(root, context):
 def _canonical_need_ref(spec):
     """Return an exact SN id from a canonical needs-carrier SpecRef, or None."""
     pathpart, separator, fragment = spec.partition("#")
+    if pathpart.startswith("./"):  # the same document, spelled from the root
+        pathpart = pathpart[2:]
     canonical = {NEEDS_REL, Path(NEEDS_REL).with_suffix(".md").as_posix()}
     if pathpart not in canonical or not separator or not fragment.strip():
         return None

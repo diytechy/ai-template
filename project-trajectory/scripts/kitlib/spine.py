@@ -73,6 +73,8 @@ __all__ = [
     "csv_rows",
     "norm_module",
     "refs",
+    "registry_ids",
+    "registry_row_hint",
     "is_example",
     "is_drafted",
     "is_approved",
@@ -178,6 +180,42 @@ def refs(value):
     same splitting defect class as the SN-001/SN-002 orphan bug OI-12 records.
     A pin repaired that copy; this module retires the copies instead."""
     return [t for t in re.split(r"[;,\s]+", (value or "").strip()) if t]
+
+
+def registry_ids(path):
+    """The row ids a TOML registry carrier exposes (`[need.SN-1]` -> `SN-1`),
+    or None when `path` is not an id-keyed TOML registry or cannot be read.
+
+    None is "unknown, do not judge" (the same contract as a markdown target's
+    unreadable anchor set in check_trajectory), never an empty set. One home
+    (2026-09-06) because two readers had disagreed on what a `#fragment` on the
+    canonical need carrier may name: the dual-plan composer refused anything but
+    an exact row id while R-E passed every fragment on a `.toml` target."""
+    if path.suffix.lower() != ".toml" or not path.is_file():
+        return None
+    try:
+        import tomllib
+
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    found = {
+        row_id
+        for table in data.values()
+        if isinstance(table, dict)
+        for row_id, row in table.items()
+        if isinstance(row, dict)
+    }
+    return frozenset(found) or None
+
+
+def registry_row_hint(ids, frag):
+    """Why `frag` names no row of a carrier exposing `ids`: the table-path
+    spelling (`need.SN-1`) gets its bare id back; anything else is unknown."""
+    bare = frag.rpartition(".")[2]
+    if bare in ids:
+        return "did you mean #" + bare + "?"
+    return "no row carries that id — cite the bare row id"
 
 
 #: A hard, gating open-item edge token — an `OI-###` id in a `Predecessors`

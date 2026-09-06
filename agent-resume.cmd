@@ -130,8 +130,22 @@ if defined AGENT_SESSION_IDLE_TIMEOUT (
 REM --root . : in this repo the engine lives under project-trajectory\scripts\,
 REM so its script-relative default would resolve to the kit dir, not the repo.
 REM Explicit flags come first so anything you pass on the command line wins.
+REM Exit 11 = RESTART: the coordinator's own Python moved under it (in this
+REM repo nearly every trunk merge touches project-trajectory\scripts\) and it
+REM drained to a safe boundary with the assignment preserved in the tree. A
+REM fresh process reconstructs everything from git, so the launcher relaunches
+REM it instead of handing the walk-away run back to a human; 50 bounds a
+REM pathological loop. Keep agent-resume.sh in sync (its while loop).
+set "RELAUNCHES=0"
+:again
 call %PY% project-trajectory\scripts\agent_loop.py --root . %TIMEOUT_ARGS% %*
 set "EXITCODE=%ERRORLEVEL%"
+if not "%EXITCODE%"=="11" goto exited
+if %RELAUNCHES% GEQ 50 goto exited
+set /a RELAUNCHES+=1
+echo agent-resume.cmd: coordinator code moved; relaunching (%RELAUNCHES% of 50)
+goto again
+:exited
 echo.
 echo Exited with code %EXITCODE%.
 pause

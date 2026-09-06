@@ -1172,7 +1172,11 @@ def test_default_base_reads_the_claim_record_after_a_single_checkout_resume(tmp_
     _git(lane, "commit", "-q", "-m", "build\n\nWI: WI-1")
     (trunk / "trunk.txt").write_text("new trunk work\n", encoding="utf-8")
     _git(trunk, "add", "-A")
-    _git(trunk, "commit", "-q", "-m", "trunk advances")
+    # Another lane's closure, landed on trunk and carrying its own trailer:
+    # the one shape that tells a correct evidence boundary from a merely
+    # non-empty one once the lane merges trunk in.
+    _git(trunk, "commit", "-q", "-m", "trunk advances\n\nWI: WI-777")
+    trunk_tip = _git(trunk, "rev-parse", "HEAD")
     _git(lane, "merge", "--no-edit", "main")
     # A matching subject alone is prose, not a claim boundary.  The reader
     # must skip it and continue to the committed queued-to-active move.
@@ -1185,9 +1189,13 @@ def test_default_base_reads_the_claim_record_after_a_single_checkout_resume(tmp_
         "claim: WI-1 -> active/wi-1 (bookkeeping)",
     )
     al = load_script("agent_loop")
-    assert al.default_base(lane) == claim
+    # A LINKED lane keeps the merge-base with trunk: `base..HEAD` readers walk
+    # without --first-parent, so the claim commit as base would read trunk's
+    # WI-777 closure as this lane's own (the 2026-09-06 review's finding 1).
+    assert al.default_base(lane) == trunk_tip
     built, _blocked = al.train_evidence(lane, al.default_base(lane))
     assert "WI-1" in built
+    assert "WI-777" not in built
 
     _sp.run(
         ["git", "-C", str(trunk), "worktree", "remove", "--force", str(lane)],
@@ -1195,6 +1203,8 @@ def test_default_base_reads_the_claim_record_after_a_single_checkout_resume(tmp_
         capture_output=True,
     )
     _git(trunk, "checkout", "-q", "wi-1")
+    # The single checkout: trunk can no longer be told from the current branch
+    # (merge-base would collapse to HEAD), so the durable claim is the boundary.
     assert al.default_base(trunk) == claim
     built, _blocked = al.train_evidence(trunk, al.default_base(trunk))
     assert "WI-1" in built
@@ -1208,6 +1218,8 @@ def test_default_base_refuses_an_unreadable_claim_history(monkeypatch):
     ac = load_script("agent_common")
 
     def unreadable_claim_history(_root, *args):
+        if args == ("worktree", "list", "--porcelain"):
+            return 0, ""  # no linked worktree: trunk IS the current branch
         if args == ("branch", "--show-current"):
             return 0, "wi-1"
         if args[:2] == ("log", "--first-parent"):

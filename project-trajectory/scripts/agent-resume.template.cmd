@@ -107,8 +107,22 @@ if defined AGENT_SESSION_TIMEOUT (
 if defined AGENT_SESSION_IDLE_TIMEOUT (
   set "TIMEOUT_ARGS=%TIMEOUT_ARGS% --session-idle-timeout %AGENT_SESSION_IDLE_TIMEOUT%"
 )
+REM Exit 11 = RESTART: the coordinator's own Python moved under it (a trunk
+REM merge that touched scripts\) and it drained to a safe boundary with the
+REM assignment preserved in the tree. A fresh process reconstructs everything
+REM from git, so the launcher relaunches it instead of handing the walk-away
+REM run back to a human; 50 bounds a pathological loop. Keep agent-resume.sh
+REM in sync (its while loop).
+set "RELAUNCHES=0"
+:again
 call %PY% scripts\agent_loop.py %TIMEOUT_ARGS% %*
 set "EXITCODE=%ERRORLEVEL%"
+if not "%EXITCODE%"=="11" goto exited
+if %RELAUNCHES% GEQ 50 goto exited
+set /a RELAUNCHES+=1
+echo agent-resume.cmd: coordinator code moved; relaunching (%RELAUNCHES% of 50)
+goto again
+:exited
 echo.
 echo Exited with code %EXITCODE%.
 pause

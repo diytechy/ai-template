@@ -103,11 +103,15 @@ def scripts_fingerprint(scripts_dir=None):
     digest, so adding, deleting, renaming or editing a ``*.py`` file moves it.
     The default is this module's actual directory rather than the project root:
     a dispatched worker targets a linked worktree but imports the coordinator
-    from the dispatcher's checkout.
+    from the dispatcher's checkout. An entry that is not a regular file (an
+    editor's dangling lock symlink, a directory named ``x.py``) is skipped;
+    a real file that cannot be read still raises, since its content is unknown.
     """
     scripts_dir = Path(scripts_dir).resolve() if scripts_dir else _SCRIPTS_DIR
     fold = hashlib.sha256()
     for path in sorted(scripts_dir.rglob("*.py")):
+        if not path.is_file():
+            continue
         fold.update(path.relative_to(scripts_dir).as_posix().encode("utf-8"))
         fold.update(b"\0")
         fold.update(path.read_bytes().replace(b"\r\n", b"\n"))
@@ -115,15 +119,32 @@ def scripts_fingerprint(scripts_dir=None):
     return fold.hexdigest()
 
 
+def _launch_fingerprint():
+    """The import-time capture. A scan failure must not crash the twelve entry
+    points that import this module: it warns once and returns None, which
+    `running_scripts_moved` reads as "drift detection unavailable"."""
+    try:
+        return scripts_fingerprint()
+    except OSError as exc:
+        print(
+            "agent_common: coordinator code-drift detection unavailable ({}); a "
+            "source change will not restart this process.".format(exc),
+            file=sys.stderr,
+        )
+        return None
+
+
 # Captured once, after the shared layer's imports resolve and before either
 # coordinator loop starts. Later comparisons always read disk afresh.
-LAUNCHED_SCRIPTS_FINGERPRINT = scripts_fingerprint()
+LAUNCHED_SCRIPTS_FINGERPRINT = _launch_fingerprint()
 
 
 def running_scripts_moved():
-    """Whether the Python source this process launched from has moved."""
+    """Whether the Python source this process launched from has moved. False
+    when the launch capture failed (None): unavailable, never a restart loop."""
+    launched = LAUNCHED_SCRIPTS_FINGERPRINT
     try:
-        return scripts_fingerprint() != LAUNCHED_SCRIPTS_FINGERPRINT
+        return launched is not None and scripts_fingerprint() != launched
     except OSError:
         # If the implementation is being replaced while the tree is scanned,
         # continuing is the unsafe answer. The caller turns True into the same
@@ -2321,16 +2342,8 @@ def _is_claim_move(root, commit, branch, wi_ids):
     Returns None when its committed delta cannot be read, so a caller can
     refuse rather than treating an unreadable claim as a manual assignment.
     """
-    code, delta = git(
-        root,
-        "diff-tree",
-        "--root",
-        "--no-commit-id",
-        "-r",
-        "--name-status",
-        "--no-renames",
-        commit,
-    )
+    flags = ("--root", "--no-commit-id", "-r", "--name-status", "--no-renames")
+    code, delta = git(root, "diff-tree", *flags, commit)
     if code != 0:
         return None
     active = {wi: "docs/work/active/{}/{}-".format(branch, wi) for wi in wi_ids}
@@ -2363,15 +2376,8 @@ def claim_base(root):
     if code != 0 or not branch:
         return None, True
     suffix = " -> active/{} (bookkeeping)".format(branch)
-    code, history = git(
-        root,
-        "log",
-        "--first-parent",
-        "--fixed-strings",
-        "--grep=" + suffix,
-        "--format=%H%x09%s",
-        "HEAD",
-    )
+    grep = ("--first-parent", "--fixed-strings", "--grep=" + suffix)
+    code, history = git(root, "log", *grep, "--format=%H%x09%s", "HEAD")
     if code != 0:
         return None, False
     for line in history.splitlines():
@@ -2396,19 +2402,22 @@ def claim_base(root):
 def default_base(root):
     """The integration base a worker assumes when --base is not given.
 
-    A claimed branch first reads its claim commit from durable Git history.
-    That is the same boundary a linked worktree's merge-base normally reaches,
-    but it remains available after an attended single checkout has switched to
-    the lane branch.  A manual or old claim with no record keeps the existing
-    merge-base-with-trunk fallback; an unreadable claimed history fails closed
-    instead of making every `base..HEAD` evidence reader see an empty range.
+    A lane in a LINKED worktree keeps the merge-base of HEAD with the trunk
+    (the primary checkout's branch): the `base..HEAD` evidence readers walk
+    without --first-parent, so after the lane merges trunk in only that
+    boundary keeps trunk's own commits — and their `WI:` trailers — out of
+    this lane's evidence. The durable claim commit is the boundary only when
+    trunk cannot be told from the current branch (an attended single checkout
+    that has switched to the lane branch, where the merge-base collapses to
+    HEAD and the range would read empty). A manual or old claim with no record
+    falls through to HEAD; an unreadable claimed history fails closed (None)
+    rather than handing every reader an empty range.
     """
-    claimed, readable = claim_base(root)
-    if not readable:
-        return None
-    if claimed:
-        return claimed
     trunk = trunk_name(root)
+    if trunk == git(root, "branch", "--show-current")[1].strip():
+        claimed, readable = claim_base(root)
+        if claimed or not readable:
+            return claimed  # None here = unreadable claim history: fail closed
     code, out = git(root, "merge-base", trunk, "HEAD")
     if code == 0 and out.strip():
         return out.strip()
@@ -2665,6 +2674,9 @@ def invoke_and_persist(root, argv, timeout, *, metrics, runner, **kwargs):
         code, transcript, timed_out = result
         outcome = "TIMEOUT" if timed_out else ("COMPLETED" if code == 0 else "ERROR")
         return result
+    except KeyboardInterrupt:
+        outcome = "INTERRUPTED"  # a Ctrl-C in an attached sitting, re-raised
+        raise
     finally:
         metrics.update(
             session="call_" + metrics["invocation-id"],

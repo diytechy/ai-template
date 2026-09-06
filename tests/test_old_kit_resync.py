@@ -603,6 +603,10 @@ def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path
     # mapping first, then restore the owner-controlled records before converting
     # carriers. This is the documented overwrite plus intentional owner merge,
     # rather than a script-only update that leaves stale kit documents behind.
+    # This leg does NOT test preservation: the byte-restore below is the test's
+    # own operator step. What it proves is that the documented overwrite plus
+    # carrier conversion leaves the restored files alone and lands a green
+    # current harness. The add-only leg above is the preservation oracle.
     supported = tmp_path / "node-adopter-supported"
     shutil.copytree(repo, supported)
     forced = run_py(
@@ -689,14 +693,17 @@ def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path
     watermark = run_py(["scripts/trace.py", "--bump-ids"], cwd=supported)
     assert watermark.returncode == 0, watermark.stdout + watermark.stderr
 
+    # The preserved application's own test is the one step that needs Node; a
+    # box without it must still drive every kit-side assertion below rather
+    # than skipping the whole leg (the kit half is what this module is for).
     node, npm = shutil.which("node"), shutil.which("npm")
+    product_ran = False
     if node and npm:
         product = subprocess.run(
             [npm, "test"], cwd=supported, capture_output=True, text=True
         )
         assert product.returncode == 0, product.stdout + product.stderr
-    else:
-        pytest.skip("Node/npm unavailable; preserved application test cannot run")
+        product_ran = True
 
     _adopter_git(supported, "commit", "-m", "resync: migrate carrier")
     final_commit = _adopter_git(supported, "rev-parse", "HEAD").strip()
@@ -723,3 +730,7 @@ def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path
     docs = run_py(["scripts/check_docs.py", "--root", "."], cwd=supported)
     docs_output = docs.stdout + docs.stderr
     assert docs.returncode == 0, docs_output
+    if not product_ran:
+        pytest.skip(
+            "Node/npm unavailable; kit assertions ran, the preserved application test did not"
+        )

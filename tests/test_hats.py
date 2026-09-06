@@ -616,6 +616,17 @@ def test_plan_runner_scope_refuses_bad_exact_canonical_need_specref(tmp_path):
         )
 
 
+def test_need_spec_ref_accepts_the_root_relative_spelling():
+    # `./docs/...` names the same document; it resolved to NOTHING (silently no
+    # parent) before 2026-09-06 while R-E resolved it clean.
+    assert (
+        plan_briefs._canonical_need_ref(
+            "./docs/requirements/stakeholder-needs.toml#SN-1"
+        )
+        == "SN-1"
+    )
+
+
 def test_need_spec_ref_uses_registry_path_spelling_on_windows(monkeypatch):
     monkeypatch.setattr(plan_briefs, "Path", PureWindowsPath)
     assert (

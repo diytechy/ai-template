@@ -70,3 +70,50 @@ control. The implementation can continue shared-reader, hat-context, adopter
 and renderer separation work while these inputs are pending. No new runtime,
 one-WI assignment policy, test-tier removal or Worktrunk dependency follows
 from those independent changes.
+
+## Owner ruling (2026-09-06)
+
+Recorded by the supervising session on the owner's instruction to lock the
+recommendation and keep execution moving. The owner stated no strong contrary
+opinion; every value below is an owner dial and may be re-ruled in this section.
+
+| Input | Ruling |
+|---|---|
+| Option | **Short control** |
+| Observation boundary | First 8 completed WIs, or 2 active days, whichever arrives first |
+| Maximum paid operation | 12 active coordinator hours and US$100 aggregate provider spend, whichever arrives first; in-flight drain cost reserved inside the cap |
+| Workload | The dependency-ready queue as it stands at launch, read spec by spec; no manufactured rows; held work stays held |
+| Configuration | Code frozen from the launch commit; sampling, consolidation, authority and provider-consent dials unchanged; the retained adjudicator patch is not applied for the window |
+| Outcome on a weak sample | **Insufficient evidence** resolves to targeted repair; no second window without a new ruling here |
+
+**Precondition, and why the window has not started.** An independent review
+of the repaired baseline (`22b21b06`) found two correctness defects in the
+repairs the window was meant to measure: the durable-base rule polluted every
+`base..HEAD` evidence reader after a trunk merge into a lane, and the
+code-drift scan crashed kit entry points at import on a dangling editor lock
+file. Under the segment rule above, those repairs close the pre-repair segment;
+the window measures the configuration at the commit that lands them, and the
+review record names them before any observation is reported.
+
+**Coordinator restart at merge.** The drift detector ends the dispatcher after
+any integration that touches the kit's scripts, which in this repository is
+every integration. The one-lane-at-a-time integration invariant is unaffected.
+Nothing about the stop needed a human; it only read as attended because the
+launchers were a plain `exec` with nothing above them, so exit 11 ended the
+process tree. Ruling: keep the fresh-process design (no hot reload, no second
+coordinator) and let the **launchers relaunch on exit 11**, bounded, so the
+drained boundary becomes a self-restart. The dispatcher keeps owning the
+boundary (stop admission, drain, preserve branches, exit); the relaunch lives
+one level up because old code cannot load new code into itself. A relaunch is logged
+by the fresh process and is not counted as an operator intervention; a run
+that exhausts the relaunch cap is.
+
+**Spend visibility.** The historical train shows cost in 3 of 11 sessions.
+The cap stands as written: a route that cannot report spend or a defensible
+reservation stops admission. If that stalls the window early, the record says
+so and the outcome is insufficient evidence, not a quietly widened cap.
+
+**Launch act.** Launching is the owner's reviewed deletion of `docs/work/pause`
+at or after the repair commit, with this section unchanged. The need-tier
+sitting (SN-007 / SN-026 re-attestation and the SN-024 ruling, carried as an
+open item minted 2026-09-06) is independent of the window and does not block it.

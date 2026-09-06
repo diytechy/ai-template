@@ -192,3 +192,32 @@ def test_runner_exception_is_recorded_then_reraised():
     assert metrics["usage-status"] == "unavailable"
     assert metrics["error"] == "RuntimeError"
     assert metrics["wall-secs"] >= 0
+
+
+def test_a_ctrl_c_in_an_attached_sitting_persists_a_complete_record(
+    tmp_path, monkeypatch
+):
+    # KeyboardInterrupt is a BaseException: the pre-2026-09-06 boundary caught
+    # Exception only, so the persisted `call_` log carried blank wall-secs,
+    # ended-at and usage-status while the interrupt propagated.
+    ac = load_script("agent_common")
+    (tmp_path / "docs" / "iteration").mkdir(parents=True)
+    committed = []
+    monkeypatch.setattr(ac, "commit_telemetry", lambda *a, **k: committed.append(a))
+
+    def interrupted(*args, **kwargs):
+        raise KeyboardInterrupt
+
+    metrics = {"requested-model": "m", "role": "INTERACTIVE"}
+    with pytest.raises(KeyboardInterrupt):
+        ac.invoke_and_persist(tmp_path, [], 1, metrics=metrics, runner=interrupted)
+
+    assert metrics["outcome"] == "INTERRUPTED"
+    assert metrics["usage-status"] == "unavailable"
+    assert metrics["ended-at"] and metrics["wall-secs"] >= 0
+    logs = list((tmp_path / "docs" / "iteration").glob("call_*.log"))
+    assert len(logs) == 1 and committed, (logs, committed)
+    header = logs[0].read_text(encoding="utf-8")
+    assert "# outcome: INTERRUPTED" in header
+    assert "# usage-status: unavailable" in header
+    assert "# wall-secs: \n" not in header and "# ended-at: \n" not in header

@@ -526,6 +526,48 @@ def test_specref_anchor_that_names_no_heading_warns_plain_fails_strict(tmp_path)
     assert "R-E WI-001" in strict.stderr
 
 
+def _need_registry(root):
+    p = root / "docs" / "requirements" / "stakeholder-needs.toml"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text('[need.SN-1]\nneed = "one"\n', encoding="utf-8")
+
+
+def test_specref_on_a_registry_carrier_resolves_a_bare_row_id(tmp_path):
+    # 2026-09-06: the dual-plan composer refuses any need-carrier fragment that
+    # is not an exact row id, so R-E must hold the same line at the commit bar.
+    _need_registry(tmp_path)
+    write_wis_sr(
+        tmp_path,
+        "WI-001,A,scripts,,,queued,,docs/requirements/stakeholder-needs.toml#SN-1\n",
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_specref_table_path_fragment_on_a_registry_is_a_finding(tmp_path):
+    # `#need.SN-1` is the literal TOML table path — a natural spelling that used
+    # to pass R-E (any fragment on a .toml target was "unknown") and then page
+    # the planning round at draw time. The finding names the accepted spelling.
+    _need_registry(tmp_path)
+    write_wis_sr(
+        tmp_path,
+        "WI-001,A,scripts,,,queued,,docs/requirements/stakeholder-needs.toml#need.SN-1\n",
+    )
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "R-E WI-001" in plain.stderr and "did you mean #SN-1?" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    unknown = write_wis_sr(
+        tmp_path,
+        "WI-001,A,scripts,,,queued,,docs/requirements/stakeholder-needs.toml#SN-9\n",
+    )
+    del unknown
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "names no such row" in strict.stderr, strict.stderr
+
+
 def test_specref_anchor_report_names_the_nearest_heading(tmp_path):
     # The finding must be ACTIONABLE, not merely true: a wrong anchor is nearly
     # always stale or TRUNCATED rather than invented (WI-326 cited a truncated
