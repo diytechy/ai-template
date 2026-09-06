@@ -4,6 +4,14 @@
 
 The intended deliverable is a smaller reusable kit, not a second permanent coordinator. Keep the current runner as a rollback option until cutover, then delete the replaced runtime. Retain unrelated working tools unless the capability review explicitly replaces or retires them.
 
+The next-level contracts live in [EXECUTION-DETAILS.md](EXECUTION-DETAILS.md),
+with [a slice table](EXECUTION-DETAILS.md#7-one-layer-below-the-implementation-packages).
+[VISION-OBJECTIVES.md](VISION-OBJECTIVES.md) defines the optional purpose-link
+extension and [BACKLOG-MIGRATION.md](BACKLOG-MIGRATION.md) records proposed
+treatments for existing work. These documents refine this package order;
+historical Fable findings remain evidence about their input versions.
+
+
 ## 1. Implementation boundaries
 
 Suggested files describe responsibilities rather than mandatory filenames:
@@ -75,7 +83,21 @@ P9R is an independent rendering slice after P0 and its own applicable contract a
 **Work:**
 
 - Record source revision, CLI/public carrier surface, active/queued work, relevant owner rulings, and currently supported adopter versions. Exclude owner-only material.
-- **Land four correctness fixes first, with tests, before the control window opens.** They are wrong today regardless of any redesign and are recorded as part of the observed configuration, not as the treatment under measurement: (1) the stage bar runs the tests at DevStg-Tests and above — today the refresh at that rung selects fourteen steps and no test step, so the merge slot's `Bar-Green` attests a suite that never ran; (2) the coordinator records the digest of its own scripts at launch and exits with a typed code when they move (OI-83); (3) a claim records its integration base so a resumed single-checkout worker cannot scan an empty range (OI-84); (4) the routed tier, roster row and WI id land in telemetry once per session. Hand commits with adversarial rounds, not loop WIs.
+- **Establish the repaired configuration before the control window opens.**
+  Reproduce and remedy stale coordinator code (OI-83), lost resumed base
+  (OI-84), and missing route/tier attribution through the current approval
+  process. Capture every invocation through the existing metrics carrier;
+  phase this work as [P0b](EXECUTION-DETAILS.md#7-one-layer-below-the-implementation-packages).
+  Record exactly which fixes landed and the remaining provider-metric gaps.
+  Supervised work need not run through the unattended loop, but still uses the
+  existing scoped work record, review, checks and authority.
+- **Separate check selection from stage meaning.** The former unconditional-test “fix”
+  incorrectly treated the selected bar as a claim that the full suite passed.
+  Preserve failing-first test-definition work. Apply
+  [the validation contract](EXECUTION-DETAILS.md#4-verification-selection-and-honest-stage-reporting)
+  to define implementation-change regression checks and accurate reports;
+  any changed cadence/stage requirement needs its own narrow amendment before
+  enablement. No universal all-green test requirement at DevStg-Tests is assumed.
 - **Start the census from the Claude plan's appendices** — [A (spine census)](../ai-template-redesign-2026-09-05%20-%20claude/A-spine-census.md), [B (module map)](../ai-template-redesign-2026-09-05%20-%20claude/B-module-map.md), [C (external tools)](../ai-template-redesign-2026-09-05%20-%20claude/C-external-tools.md) — rather than remeasuring from nothing. Every single-source figure in them is re-derived by an independent route before it drives a decision: its first draft carried two figures wrong in the plan's favor and the second Fable review found a third (the render family was said to run on every commit; it is already outside the smoke tier). Reproduce; do not copy.
 - Inventory all 27 SNs and 76 SRs, then the LLR/TC and test families they govern. Classify core, advanced capability, migration-only, or retirement candidate. Do not approve the classification automatically.
 - Capture representative scenarios from ordinary work, spine changes, adjudication, consolidation, human holds, partial close, interrupted review, and adopter upgrade. Census historical train sizes, starting with WI-584/587/588/589 from the prior investigation. For each, distinguish one shared acceptance decision from separate deliverables and compare one coherent consolidated WI against separate exclusive WIs, counting all resulting integration/review turns. Exclusivity provides serialization, not joint approval atomicity: related normative amendments that must be accepted together must fit one coherent WI and acceptance transaction, or retain an explicitly supported joint-approval mechanism until that need is resolved. This is decision material to produce, not a census claimed complete by this plan.
@@ -83,11 +105,24 @@ P9R is an independent rendering slice after P0 and its own applicable contract a
 - Explicitly disposition existing dev-slice/train batching policy and its approved design/tests: one-WI cardinality is a proposed policy change, not a compatible reinterpretation. Obtain that decision before enabling new assignment creation.
 - Establish an early realistic downstream fixture, including user-owned content and a representative non-Python adopter, before pruning the spine. Exercise scaffold, upgrade, and the changed behavior slices on supported platforms; a blank scaffold alone is insufficient.
 - Inventory interface obligations once per surface, with a clause map for each consumer’s required behavior. Imports establish dependencies, not error semantics or acceptance guarantees.
-- **The ruling session's agenda is the Claude plan's §7 list** (the five-promise frame and the SN-027/SN-024/SN-023 rulings; SN-029 left as written or explicitly amended; one WI per lane; the intake point; the ratchet set; the domain skills; Worktrunk — ruled, see the README; replace-don't-amend pricing; rendering as a path-triggered step; the control period and its gate; the exact-tree experiment) mapped onto the decisions in README §6. A decision this plan needs and that list lacks is added there, not decided by default.
-- **Unchanged dials during the window; a self-minting freeze is a treatment.** The Claude plan's Phase 0 turns `complete_review` off and pauses the consolidation census for the rebuild. That applies only if the gate selects the rebuild option, for P3–P8, recorded as a dial change; the control window itself runs under the settings as they stand so the 2026-09-04/05 churn fixes are what gets measured.
+- Review [the objective proposal](VISION-OBJECTIVES.md) and
+  [the current decision agenda](CROSSCHECK-BRIEF.md#3-decisions-to-settle),
+  using Claude's promises and §7 as comparison inputs. No objective, need
+  retirement, auto-rebaseline policy or capability removal is adopted merely
+  by copying that agenda.
+- **Unchanged dials during the window; a self-minting freeze is a treatment.**
+  A later freeze needs its own declared scope, authority, duration and restore
+  condition. Selecting replacement does not automatically disable sampling or
+  consolidation. The control configuration and any subsequent treatment are
+  measured and reported separately.
 - Predeclare a control-period workload, observation window, and decision thresholds with the owner before operating a pilot. Two weeks is a candidate window, not sufficient evidence by elapsed time alone. Observe the recently fixed loop under unchanged authority/review settings; report completions, attempts, review rounds per completed WI, interventions per completion and active day, adjudication by purpose, escaped defects, and work mix. Deduplicate retries and distinguish necessary adjudication from harness overhead. Any intake or policy experiment is a separately labeled treatment, not part of an unchanged baseline. Do not unpause or operate the loop as part of this documentation task.
 - Decide whether observed residual failures justify P3–P8 replacement work. Stop those packages if the existing loop meets the agreed needs; P2’s shared-reader/prompt improvements and P9R may still proceed on their own evidence; P2’s new assignment behavior remains conditional on the replacement decision and P1/P1A. If data is inadequate, report the uncertainty and extend the measurement instead of declaring the rewrite necessary.
 - Make a deletion ledger: old responsibility, candidate replacement, acceptance evidence, exact retirement condition. Count added schemas, parsers, states, durable carriers/refs, mutation paths, and operating/recovery procedures as well as deleted code. Unused compatibility code must get an expiry rather than a permanent adapter.
+- Refresh [the 18-item backlog snapshot](BACKLOG-MIGRATION.md) and inspect
+  active/deferred work and preserved patches. Produce clause-level mappings
+  before superseding anything; the whole queue is not a prerequisite. In
+  particular, retain the adjudicator-retention and delegated-report rulings,
+  and resolve snapshot-absorption authority before broad baseline migration.
 
 **Done when:** the workload, denominators, thresholds, observations, and explicit retain/targeted-repair/rebuild decision are recorded; every stakeholder need has a disposition proposal; public compatibility obligations are named; the selected scenarios can be reproduced without live paid agents by scripted adapters. The owner can distinguish behavior retained from behavior proposed for removal.
 
@@ -238,6 +273,16 @@ P9R is an independent rendering slice after P0 and its own applicable contract a
 - Give the owner a renderer-independent resume view: current activity, blocked decision, next safe action, and evidence/check freshness. Keep human-authored operational Notes for outages, quotas, or stale loaded processes that Git cannot infer. Every generated field needs a source and timestamp or an explicit unknown. Refresh live status on state transitions, pause, and failure without requiring an HTML commit on every tick. Retire a separate handoff only after the owner can resume both a paused and a failed run from this view plus Notes.
 - Record actual check selection, results, and skips separately from the derived development stage. A configured bar passing must not imply the complete suite passed. Preserve legitimate failing-first test-definition stages; any new stage-wide all-green requirement needs an explicit doctrine amendment.
 - Record model/tier/roster ID and session role before launch. Preserve budget use across retries and resumed sessions.
+- Implement [per-invocation accounting](EXECUTION-DETAILS.md#2-every-provider-invocation-has-attributable-usage)
+  at the common launch/result boundary for all roles, extending the current
+  log writer. Preserve unknown usage and token-inclusion semantics; account
+  for resumed conversations, auxiliary usage and interrupted export without
+  double counting. Retire duplicated role-specific accounting.
+- Pin [fresh builder rework](EXECUTION-DETAILS.md#3-review-feedback-starts-a-fresh-builder-invocation):
+  same assignment/attempt/worktree, a new invocation with applicable findings,
+  independent final review, and routing changes only under existing policy.
+  Reconcile WI-551/WI-541's adjudicator continuity separately before enabling
+  it; a fresh builder does not cancel that capability.
 - Stop recurring arbitration at the declared cap and produce a concise owner brief: contested obligation, evidence, options, recommendation, and affected work.
 
 **Done when:** each review type uses the same provenance/freshness rules; disagreements route consistently; exhausted budgets surface a concrete decision; a model or worker cannot silently lower approval requirements.
@@ -264,7 +309,11 @@ P9R is an independent rendering slice after P0 and its own applicable contract a
 
 **Problem:** module splitting has not separated HTML dependencies from text status, shared fixtures, or broad test invocation.
 
-**Premise, corrected:** the whole `test_traj_*` family, the wire-routing geometry tests included, is already in `tests/conftest.py` `SLOW_MODULES` and does not run in the per-commit smoke bar (verified 2026-09-05). P9R is justified as an import-boundary and coupling fix — core, text status and test collection must not load the renderer — and by the full-suite and CI cost, not by the smoke budget. Any claimed per-commit saving from this slice is a measurement to make, not a premise.
+**Premise, corrected:** `test_traj_graph` and several renderer/trajectory
+modules are already in `tests/conftest.py` `SLOW_MODULES`. Inventory actual
+membership rather than asserting every module with a prefix is excluded.
+P9R is justified by import/fixture coupling and measured full-suite/CI cost;
+it cannot claim an already-excluded geometry suite as a new smoke saving.
 
 **Scope and ordering:** follow [the rendering package and selection contract](LLR-AND-RENDERING.md#2-isolate-rendering-as-a-package-in-this-repository). This slice may run after P0's boundary/cost inventory and its own required test-cadence/assurance amendments; it need not wait for P8. Amend any conflicting full-suite promise, including SN-007 as applicable, before enabling narrower validation. Existing checks remain in force until then.
 
@@ -287,7 +336,17 @@ P9R is an independent rendering slice after P0 and its own applicable contract a
 - Keep current gate derivation and trace schema in this release. Consider direct SR evidence or stage simplification only in a separately reviewed proposal.
 - Replace master-process runtime prose with the four-step loop and the canonical policy tables. Put detailed operational reference beside the relevant adapter.
 - Run byte-budget checks before and after editing watched docs and report deltas. These plan documents are not among those capped files.
-- **Independently justified cuts, each its own argued WI on its own evidence, never bundled into the kernel migration** (taken from the Claude plan §4.5 and §4.8 by the second Fable review): reduce the ratchets to those that protect a guarantee an adopter can name, with one-line baselines moved only by a reviewed commit and a reason; cut the generated artifacts to what the ladder needs, regenerated in the merge slot rather than checked for freshness at commit time; move the sixteen domain skills (robotics, rendering, web UI) out of a process kit into a sibling repository; replace `RESYNC_PACK.md` with a versioned changelog plus a mechanical `bootstrap.py --sync`, the pack's own promotion trigger. A cut that retires a check goes through the deletion ledger like any other path.
+- **Individually evaluated simplification candidates**, each with its own
+  obligation/deletion argument: ratchets, generated artifacts, domain-skill
+  distribution and resync automation. Keep baselines review-controlled. Do not
+  remove the current generated-output freshness contract, move supported
+  content to another repository, or retire the resync instructions until the
+  successor preserves the promised adoption/verification behavior and its
+  applicable scope/cadence amendment has landed. No fixed cut count applies.
+- If selected, ship [objective references](VISION-OBJECTIVES.md#5-implementation-slice-and-acceptance)
+  as a separately bounded schema/doc slice with legacy-adopter compatibility.
+  This and independently justified consolidation may proceed without P8 when
+  no runner behavior changes and their own prerequisites are satisfied.
 
 **Done when:** every removed row/check has an explicit disposition; a minimum scaffold runs without importing/installing advanced capabilities; required capability tests and all mandated repo checks pass.
 

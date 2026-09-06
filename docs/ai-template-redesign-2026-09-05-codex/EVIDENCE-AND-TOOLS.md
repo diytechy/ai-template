@@ -22,6 +22,47 @@ The owner subsequently fixed this plan's permanent location inside `docs/ai-temp
 
 The source links below were repaired for the in-repository location. Fable's raw review and JSON metadata remain historical and unchanged: their hashes identify the revision after that review, not these later owner-requested additions. No new independent review or implementation-test result is claimed.
 
+## Owner follow-up: implementation detail and objective anchors
+
+The expanded proposal was checked against `fa17b85f464e0e606ed02380651d6596d4b89766`
+on 2026-09-05. [Execution contracts](EXECUTION-DETAILS.md) describe invocation
+accounting, review/rework, recovery and slice acceptance. The
+[backlog map](BACKLOG-MIGRATION.md) accounts for all 18 non-example queued WIs;
+the [objective proposal](VISION-OBJECTIVES.md) maps all 27 current needs. These
+are parsed inventories at that revision, not completed migrations. The
+[cross-check brief](CROSSCHECK-BRIEF.md) states the next review's questions.
+
+Source checks for this expansion:
+
+- [agent_loop.py](../../project-trajectory/scripts/agent_loop.py),
+  `session_meta`, and [agent_common.py](../../project-trajectory/scripts/agent_common.py),
+  `write_session_log`, already carry session metrics. The proposal extends
+  their shared responsibility; completeness across providers/roles is still
+  owed. [agent_session.py](../../project-trajectory/scripts/agent_session.py)
+  and [plan_runner.py](../../project-trajectory/scripts/plan_runner.py) identify
+  additional launch paths that must participate.
+- `agent_loop._run_bar` reports selected-bar results and step count; that is
+  not itself a full-suite-success claim. [check.py](../../project-trajectory/scripts/check.py)
+  and the test-first method distinguish definition-stage evidence from
+  implementation validation. The second Fable review's unconditional
+  DevStg-Tests test-execution recommendation is corrected in the active plan;
+  no existing mandatory regression check is waived.
+- [tests/conftest.py](../../tests/conftest.py) already excludes
+  `test_traj_graph` from smoke at both the original and current source
+  revisions. Moving it again cannot produce new smoke savings.
+- Worktrunk's documented flags permit preserving commits and retaining the
+  worktree. Git is already a system-binary dependency. The corrected tool row
+  below replaces the historical review's stronger incompatibility argument
+  with a scope/economic decision; no adapter experiment was run.
+
+The original review files and metadata remain unchanged. This expansion does
+not claim a new independent reviewer verdict, an approved vision amendment,
+a paid-operation benchmark or successful implementation of P5.
+The [session validation record](../log.d/2026-09-05-redesign-plan-detail.md)
+reports documentation/inventory checks and passing smoke assertions, together
+with the failed smoke-time budget and the owner's explicit exception permitting
+this documentation commit. The declared budget remains unchanged.
+
 ## Reproducible census
 
 | Surface | Observation | Interpretation |
@@ -104,7 +145,7 @@ Official documentation was consulted during this investigation. Recommendations 
 | Tool | Decision | Concrete substitution and retained responsibility |
 |---|---|---|
 | Python `graphlib.TopologicalSorter` | Evaluate for core use | Supplies dependency ordering/cycle detection and ready-node mechanics. WI priority, human holds, cancelled/partial semantics, reconciliation, and lane/exclusivity remain domain policy. It may not save much if the final scheduler is already a short dependency scan. Use APIs available at the 3.11 floor. [Python 3.11 docs](https://docs.python.org/3.11/library/graphlib.html) |
-| Worktrunk (`wt`, Rust CLI, MIT/Apache-2.0) | Optional operator tool and design reference; not a station replacement | `wt merge` is commit → squash → rebase onto target → blocking pre-merge hooks → fast-forward → remove; the rewrite of branch commits breaks the kit's commit-bound evidence, and with `--no-commit --no-squash --no-rebase --no-ff` the residual is a hooks runner, a merge commit and a worktree removal. Claim, refresh, generated-conflict settlement, trunk-step ordering, outcome-from-tree, refusals, verdict gate and in-slot intake stay in the kit; the P5 same-tree receipt design is further from its model. No documented locking between concurrent merges; hook trust prompt on first run; would be the first non-Python binary dependency. Useful: `wt switch -c <branch> -x claude` for hand lanes, `wt list --full`, and the shape of its project hook file and `--format json` for the rebuilt station CLI. Read, not executed. [Ruling](FABLE-REVIEW-2-GOVERNING-PLAN.md#4-worktrunk-ruling), [merge docs](https://worktrunk.dev/merge/) |
+| Worktrunk (`wt`, Rust CLI, MIT/Apache-2.0) | Optional operator tool and design reference; no required station prototype | Default merge rewrites are configurable: `--no-commit --no-rebase` preserves existing commits, `--no-remove` retains the worktree, and `--no-ff` permits a merge commit. It can own worktree/operator conveniences; claim ownership, current-policy authority, generated-conflict settlement, exact review evidence, serialized promotion and intake still need kit semantics. Hook denial skips hooks and continues; post hooks can run in the background, so mandatory acceptance cannot rely on those defaults. No sufficient deletion/cost argument has been demonstrated for adding a station adapter; that is not proof of incompatibility. Git is already a required binary. Read, not executed. [Merge](https://worktrunk.dev/merge/), [hooks](https://worktrunk.dev/hook/), [removal](https://worktrunk.dev/remove/) |
 | Git worktrees and commit/tree objects | Keep, narrow wrappers | Worktree add/list/remove/repair are already provided by Git. Preserve only claim ownership, safe cleanup, candidate/ref lifetime, and policy checks in custom code. A commit can carry metadata while naming an existing tree, supporting the proposed same-tree receipt experiment; this does not automatically run hooks or prove authorization. [Worktrees](https://git-scm.com/docs/git-worktree), [commit objects](https://git-scm.com/docs/git-commit-tree) |
 | pytest parametrization and Hypothesis | Keep pytest; evaluate Hypothesis as development-only | Parameterization reduces repeated test setup; generated/shrunk inputs and stateful tests can exercise scheduler transitions and recovery sequences. Retain explanatory regression examples and real-Git tests. New test tooling has a maintenance cost and requires the appropriate project dependency review. [pytest](https://docs.pytest.org/en/stable/how-to/parametrize.html), [Hypothesis stateful testing](https://hypothesis.readthedocs.io/en/latest/stateful.html) |
 | JSON Schema / `jsonschema`; Pydantic | Defer shipped dependency | A schema validator can replace repeated shape checks if deletion is substantial. JSON Schema is language-neutral; Pydantic is Python-oriented. Neither proves semantic non-overlap or authorized approval. Prefer a few typed records plus boundary parsing initially; do not write a general custom schema engine to avoid a library. [jsonschema](https://python-jsonschema.readthedocs.io/en/stable/), [Pydantic](https://docs.pydantic.dev/latest/) |

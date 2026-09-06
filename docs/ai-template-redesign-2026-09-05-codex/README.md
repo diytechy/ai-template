@@ -4,7 +4,7 @@
 
 **Permanent location:** `docs/ai-template-redesign-2026-09-05-codex/` in this repository, at the owner’s direction. Preserve the plan and review history here.
 
-**Recommendation:** first measure the recently fixed loop and simplify shared boundaries. Replace the orchestration kernel only where that evidence shows unresolved stakeholder needs justify it; preserve useful adoption and assurance tools and migrate by complete behavior slices. A rewrite is a conditional option, not the success criterion. See the [Claude plan comparison and incorporated changes](CROSS-REFERENCE-CLAUDE.md). A [second Fable review in a fresh session](FABLE-REVIEW-2-GOVERNING-PLAN.md) (2026-09-05) compared the two plans and ruled that this plan governs implementation, with the Claude plan's appendices, Phase 0 fixes, independently justified cuts and owner-decision agenda folded in here; it also rules Worktrunk out as a station replacement.
+**Recommendation:** first measure the recently fixed loop and simplify shared boundaries. Replace the orchestration kernel only where that evidence shows unresolved stakeholder needs justify it; preserve useful adoption and assurance tools and migrate by complete behavior slices. A rewrite is a conditional option, not the success criterion. See the [Claude plan comparison and incorporated changes](CROSS-REFERENCE-CLAUDE.md). A [second Fable review in a fresh session](FABLE-REVIEW-2-GOVERNING-PLAN.md) (2026-09-05) compared the two plans and recommended this plan as governing, incorporating material from Claude's plan. The current expansion reconciles those recommendations: it corrects the unconditional DevStg-Tests test-execution claim and Worktrunk rationale, and treats proposed cuts and scope changes individually. See [the current dispositions](CROSSCHECK-BRIEF.md#2-changes-since-the-second-fable-review).
 
 Your four-step loop is the right organizing model:
 
@@ -21,6 +21,24 @@ This proposal separates three decisions that are currently easy to conflate:
 This plan was amended after a Claude Fable 5 adversarial review at high effort. See [the findings and their dispositions](FABLE-REVIEW-DISPOSITIONS.md); the review does not approve implementation or change repository policy.
 
 Read [the implementation breakdown](IMPLEMENTATION.md) for executable phases, dependencies, exit criteria, migration, and rollback. [Evidence and reuse options](EVIDENCE-AND-TOOLS.md) contains measurements, source references, limitations, and external documentation.
+
+**Expanded for the next cross-check, 2026-09-05, against `fa17b85f`.** This
+revision adds one implementation layer beneath the packages. Read:
+
+1. [Vision objectives](VISION-OBJECTIVES.md): proposed `(O1)`–`(O6)` anchors in
+   the existing vision, a purpose map for all 27 needs, and optional reference
+   semantics without another registry or approval stage.
+2. [Execution details](EXECUTION-DETAILS.md): ownership, durable transitions,
+   per-invocation usage, fresh builder rework, truthful verification selection,
+   integration failure cases and concrete implementation slices.
+3. [Backlog reconciliation](BACKLOG-MIGRATION.md): all 18 current queued items,
+   their proposed treatment and the obligations that constrain migration.
+4. [Cross-check brief](CROSSCHECK-BRIEF.md): decisions and counterexamples for
+   the next independent reviewer, including corrections to the second Fable
+   review. The historical reviews remain unchanged; they do not approve these
+   additions. Runtime implementation, live vision/schema edits, queue changes
+   and paid-agent operation are outside this document revision.
+
 
 ## 1. What must survive simplification
 
@@ -101,6 +119,13 @@ PROCESS already states a small profile and proportionality doctrine. Yet the reu
 The September 5 investigation reports review churn confounding worker-quality measurements, missing routed-tier/roster IDs, and no uniform successful-close outcome record. Those results support small instrumentation improvements, not a learned router.
 
 **Redesign:** record WI ID, attempt, role, provider/model, roster row, tier, policy version, timestamps, review outcome, and terminal result once. Evaluate completed stakeholder work per unit of operator attention, tokens, and time. Do not use review-round count alone as a quality measure, and do not promise token savings before measuring them.
+
+The [per-invocation contract](EXECUTION-DETAILS.md#2-every-provider-invocation-has-attributable-usage)
+defines token categories, conversation-versus-invocation IDs, failed calls,
+cumulative counters, auxiliary-model inclusion, storage and metric completeness.
+It extends the existing session-log carrier across every role; it does not add
+a separate metrics database or treat total spend as current context occupancy.
+
 
 ## 3. The target loop
 
@@ -184,6 +209,14 @@ A shared result envelope serves plans, implementation, consolidation, and subjec
 
 Ordinary work gets one independent review under the configured review policy. A plan session is appropriate for uncertain design, scope changes, or explicit requests. Two competing plans and position-swapped arbitration remain an advanced strategy; do not make their eight-session happy path the default for a straightforward WI.
 
+Material rework starts a fresh builder invocation on the same assignment and
+worktree, with finding-linked feedback and retained decisions. A fresh process
+does not imply a new WI or a forced model change. Existing optional adjudicator
+continuity remains a separately scoped obligation; it does not authorize reuse
+of an author's conversation as an independent reviewer. The exact handoff is
+in [the rework contract](EXECUTION-DETAILS.md#3-review-feedback-starts-a-fresh-builder-invocation).
+
+
 A material defect must name the unmet criterion and evidence. Minor suggestions are recorded and do not silently become required scope. A reviewer can still identify an omitted stakeholder obligation; that is a scoped amendment/adjudication decision, not a prose rewrite disguised as fixing the original acceptance.
 
 An arbiter resolves a disputed finding against the same candidate, criteria, and evidence; it cannot waive a human hold or bless changed content under an old result. Start with one arbitration attempt per dispute, then a human decision if unresolved, subject to an explicitly reviewed policy. Preserve current configured routing and review settings until that policy migration is approved.
@@ -253,7 +286,26 @@ Keep Git/worktrees, TOML, the existing harness, bootstrap ownership, useful trac
 
 GitHub protections and merge queues are useful in an optional hosted mode, but do not replace local/offline operation or prove semantic review of every newly composed merge candidate. Schema libraries need a measured deletion argument.
 
-**Worktrunk is not a station replacement.** Its `wt merge` invariant is rebase-then-fast-forward, which rewrites the commits the kit's `Bar-Green` trailer, verdict freshness and review rounds bind to; with every history-preserving flag set (`--no-commit --no-squash --no-rebase --no-ff`) it reduces to a hooks runner, a merge commit and a worktree removal, while the claim, refresh, generated-conflict settlement, trunk-step ordering, outcome-from-tree, refusals, verdict gate and in-slot intake all stay in the kit. The P5 same-tree receipt design is further from its model still. It has no documented locking between concurrent merges, prompts for hook trust on first run, and would be the kit's first non-Python binary dependency. Ruling: optional operator tool for hand-driven lanes (`wt switch -c <branch> -x claude`, `wt list --full`) and a design reference for the rebuilt station CLI (a project hook file, `--format json`); no prototype owed. [Ruling and comparison table](FABLE-REVIEW-2-GOVERNING-PLAN.md#4-worktrunk-ruling). SQLite is unnecessary as an initial authority store. Temporal, Prefect, and LangGraph address broader orchestration problems and would add another runtime model here. The detailed comparison and sources are [in the evidence document](EVIDENCE-AND-TOOLS.md#external-tools).
+**Worktrunk stays optional operator tooling; no station prototype is required
+by this plan.** This is a scope/economics decision: claim authority, candidate
+preparation, required checks, evidence, outcomes and intake still need their
+kit-specific contracts. Worktrunk's default squash/rebase can rewrite evidence,
+but `--no-commit --no-rebase` preserves the existing graph; `--no-remove` retains
+the worktree, and `--no-ff` is available where the selected history requires a
+merge commit. History preservation is therefore possible, not disproved.
+It would add a system dependency alongside existing Git, not the first
+non-Python binary. Hook approval can be declined while the operation continues
+without those hooks, so ordinary hook configuration cannot be the sole
+acceptance authority. Required locking, cleanup/evidence retention and platform
+equivalence have not been established by a trial. Use it for hand-driven
+worktree navigation/status if useful; revisit an adapter only when a concrete
+deletion argument earns that work. [Merge semantics](https://worktrunk.dev/merge/),
+[hook semantics](https://worktrunk.dev/hook/),
+[historical review](FABLE-REVIEW-2-GOVERNING-PLAN.md#4-worktrunk-ruling).
+SQLite is unnecessary as an initial authority store. Temporal, Prefect, and
+LangGraph address broader orchestration problems and would add another runtime
+model here. The detailed comparison and sources are
+[in the evidence document](EVIDENCE-AND-TOOLS.md#external-tools).
 
 Do not add a learned worker-tier estimator, a new generic plugin framework, an event-sourcing platform, a replacement Git implementation, or new ratchets before the core behavior is smaller. The September 5 report's optional escapes ratchet and title improvement can remain legitimate maintenance proposals, but they do not solve this architectural problem.
 
@@ -271,9 +323,18 @@ The owner review should decide:
 6. Make justified LLR replacement a normal design-change route, without adding a separate approval layer.
 7. Isolate HTML rendering and select its expensive tests by affected capability rather than running them for every core change.
 8. Keep the old runner available only as a rollback implementation; permit one mutating runner at a time and remove compatibility paths after a named migration release.
-9. Land the four correctness fixes named in P0 (the bar runs tests at DevStg-Tests and above; the coordinator exits on script drift, OI-83; the claim records its base, OI-84; telemetry carries the routed tier and row id) before the control window opens, as part of the observed configuration, not as the treatment.
+9. Establish the P0 baseline with durable claim bases, safe script-drift
+   restart and per-invocation attribution. Resolve change-specific regression
+   selection and truthful reporting separately; do not impose an unconditional
+   passing-test bar at DevStg-Tests or waive any current required check.
 10. Adopt the package layout `spine/ queue/ loop/ surfaces/ scaffold/` with one-way downward imports as the directory shape the responsibilities in the implementation breakdown land in.
 11. Treat Worktrunk as an optional operator tool and a design reference only (§5); no station adapter is prototyped.
-12. Take the Claude plan's §7 decision list as the agenda of the P0 ruling session, and take its independently justified cuts (ratchets, generated artifacts, domain skills, the resync pack) as separately argued WIs on their own evidence, never as part of the kernel migration.
+12. Use the [current decision agenda](CROSSCHECK-BRIEF.md#3-decisions-to-settle),
+    informed by Claude's §7, without importing its withdrawn auto-rebaseline
+    rule or presumed need retirements. Ratchets, generated artifacts, domain
+    skills and resync changes remain individually argued proposals.
+13. Review the proposed objective anchors and optional SN references without
+    changing the stage ladder; review existing backlog obligations against each
+    implementation slice before minting or superseding work.
 
 These are proposals for the separate review the user requested. No new WIs were minted, no stages changed, and no runtime implementation or publication was performed in preparing or updating this report.
