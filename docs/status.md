@@ -24,31 +24,21 @@ supervisor prompt at the owner's request). Backward-looking homes:
 status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **RESUME HERE — THE FRONTIER IS PAUSED for the owner's review sitting
-  (tracked `docs/work/pause`, 2026-09-04); the loop is stopped with nothing in
-  flight.** A fresh reader starts at
-  [decisions-for-review-2026-09-05.md](decisions-for-review-2026-09-05.md) —
-  the sitting's answers and its **pick-up checklist**, which is the shortest
-  statement of what is owed next — then
-  [handoff-2026-09-04.md](handoff-2026-09-04.md) — its end-of-run and
-  owner-ruling notes first — then
-  [handoff-2026-09-03.md](handoff-2026-09-03.md) §2. On the trunk for review:
-  the out-of-band churn program (all eight items, the consolidation
-  adjudicator among them, each with tests and a RESYNC entry), the trunk
-  greening at the DevStg-Tests tier, and the loop's merges since the 09-03
-  unpause (two amendment adjudications, the four-row spine batch, the
-  LLR-207/208 first approvals and their successors, the clean-close spot
-  checks, the worker and reviewer briefs). Owner rulings recorded: the
-  weekday blackout disabled (restore the value in `docs/process.toml` to
-  re-arm); the close bar is the row's declared bar. One reviewed deletion of
-  the pause file resumes the generated frontier below. Hand-authored prose
-  here names no queued id (the claim-refusal rule).
-- **Redesign continuation:** use the scoped
-  [execution record](ai-template-redesign-2026-09-05-codex/EXECUTION-RECORD.md) and
-  [control preflight](ai-template-redesign-2026-09-05-codex/CONTROL-PREFLIGHT.md)
-  to review the launch commit and route-complete spend reservations. Complete
-  the SR-161 perspective-record sample before treating TC-211 as passed. The
-  unattended frontier stays paused until the control ruling's reviewed launch act.
+- **RESUME HERE:** start with [handoff-2026-09-06.md](handoff-2026-09-06.md),
+  then the [redesign execution record](ai-template-redesign-2026-09-05-codex/EXECUTION-RECORD.md).
+  Recheck Git and the generated frontier before choosing work; earlier handoffs
+  and sitting checklists are historical context.
+- **Next implementation:** resolve the existing SR-161 per-decomposition
+  perspective-record gap and complete TC-211's normal sample. Follow the
+  existing artifact adjudication route for the Drafted amendments; passing an
+  Inspection does not approve its requirement. Keep the scope proportional to
+  the missing obligation.
+- **Control launch:** retain the tracked `docs/work/pause` while preparing
+  route-complete spending bounds, including in-flight drain, against the
+  [settled control ruling](ai-template-redesign-2026-09-05-codex/CONTROL-DECISION.md#owner-ruling-2026-09-06).
+  Revalidate the [preflight](ai-template-redesign-2026-09-05-codex/CONTROL-PREFLIGHT.md)
+  at the proposed frozen launch commit, then obtain the ruling's owner-reviewed
+  pause deletion. Replacement packages follow the control's evidence decision.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). `wi416-parked-handback-contract` is still

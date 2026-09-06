@@ -1,5 +1,10 @@
 # Owner questions of 2026-09-05 — answers, what was done, what is left to pick up
 
+**Historical sitting record.** Resume from [handoff-2026-09-06.md](handoff-2026-09-06.md)
+and recheck the live queue before acting on this dated checklist. Later work,
+including per-invocation accounting, is recorded in the
+[redesign execution record](ai-template-redesign-2026-09-05-codex/EXECUTION-RECORD.md).
+
 **Why this exists.** The owner asked seven questions during the review sitting
 (item 1 was already answered) and asked for the answers to be saved as a report
 so the work can resume in a later session. State when this was written: trunk

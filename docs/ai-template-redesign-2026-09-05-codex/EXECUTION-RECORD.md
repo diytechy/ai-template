@@ -5,6 +5,11 @@ on `contract_split`. This is a supervised implementation sitting under
 the [package boundaries](IMPLEMENTATION.md), with the existing unattended
 queue paused. Package labels remain plan scope keys, not allocated WI IDs.
 
+**Resume:** the [September 6 handoff](../handoff-2026-09-06.md) gives the next
+session's read order, outstanding work and launch prerequisites. The current
+continuation below supersedes pending-state statements in the historical
+continuations that follow.
+
 ## Current OI-85 continuation (2026-09-06)
 
 The owner accepted OI-85(a) and authorized continued implementation. The

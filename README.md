@@ -67,6 +67,7 @@ chasing it.
 | [`project-trajectory/`](project-trajectory/) | The portable kit: the gated, requirement-traced development process plus all templates and runnable scripts. **This is the thing you copy into new repos.** |
 | [`project-trajectory/README.md`](project-trajectory/README.md) | Full contents + rationale for the kit. |
 | [`CLAUDE.md`](CLAUDE.md) | Guide for working **in this template repo** (developing the templates themselves). |
+| [`docs/status.md`](docs/status.md) · [current handoff](docs/handoff-2026-09-06.md) | Resume kit development: next work, committed redesign results and remaining control conditions. |
 
 ## The kit's headline pieces
 
@@ -118,7 +119,9 @@ chasing it.
     across bounded worker lanes, while mutation of the integration branch
     stays serialized and gated behind one fail-closed integrator (SN-027).
   - A per-phase model map (keyed on the in-process phase), reactive rate-limit
-    backoff, a stall guard, and tracked per-session logs in `docs/iteration/`.
+    backoff, a stall guard, and tracked per-invocation logs in `docs/iteration/`.
+    Logs retain route identity and reported token/cost fields when available;
+    unknown usage stays explicit and ambiguous counters are not summed.
   - Optional **multi-family, heterogeneous scheduling** (SN-026) — several LLM
     families are declared as (family × model × tier) pair-rows in
     `docs/agents.toml` and selected **per job and per level**; when
@@ -132,11 +135,13 @@ chasing it.
     [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Unattended
     operation").
   - Optional **subjective-quality critique loop** — a `Verification=Critique`
-    requirement's perceptual acceptance is judged by a fresh, provider-
-    heterogeneous **critic** against a written [`docs/rubrics/`](project-trajectory/rubrics/README.template.md)
-    rubric (numbered good/bad anchors, derived from the SN/SR intent, never the
-    authoring session), iterating rework toward the bar and escalating on budget
-    exhaustion; a lax-TC ratchet keeps the fix landing in the chain (SN-024).
+    requirement's perceptual acceptance is judged by a fresh, independent
+    **critic** against a written [`docs/rubrics/`](project-trajectory/rubrics/README.template.md)
+    rubric with numbered good/bad anchors derived from the SN/SR intent. Family
+    heterogeneity is required on the unattended path; the human chooses the
+    reviewer for attended acceptance. Rework iterates toward the bar and
+    escalates on budget exhaustion; a lax-TC ratchet keeps the fix landing in
+    the chain (SN-024).
   - Optional **tier-conditional guardrails** — the `guardrails` dial
     injects a vendored discipline core into weaker-tier sessions, drift-checked
     by `check_vendored.py`.
@@ -434,10 +439,11 @@ process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
 - The meta-repo's needs, requirements, and tests live under
   [`docs/requirements/`](docs/requirements/) + [`docs/test/`](docs/test/) —
   distinct from the blank templates the kit *ships*.
-- Its own derived stage is honest rather than flattering:
-  [`docs/stage`](docs/stage) currently reads **DevStg-Arch** (stage 4 of 8) — the
-  spine re-opened deliberately for the 2026-08 boundary/re-tier program after
-  reaching **DevStg-Impl** (the record: [`docs/log.md`](docs/log.md)).
+- Its current stage and frontier are derived into
+  [`docs/status.md`](docs/status.md) and [`PROJECT_STATE.html`](PROJECT_STATE.html)
+  from the live registries and [`docs/stage`](docs/stage). The
+  [current handoff](docs/handoff-2026-09-06.md) separates implementation evidence
+  from outstanding approvals and control observations.
 
 ### Configuration at a glance (defaults vs. this repo)
 
@@ -454,24 +460,24 @@ set:
 
 | Option (`docs/…`) | Fresh-scaffold default | Turn on / off | This repo |
 |---|---|---|---|
-| `stage` | **generated** — `derive_stage.py` computes it from artifact states (a fresh scaffold reads `DevStg-Reqs`) | never hand-edited; advances by *approving* artifacts | `DevStg-Arch` (derived; re-opened for the 2026-08 re-tier program after DevStg-Impl) |
+| `stage` | **generated** — `derive_stage.py` computes it from artifact states (a fresh scaffold reads `DevStg-Reqs`) | never hand-edited; advances by *approving* artifacts | see the [generated current state](docs/status.md#current-state) |
 | `process.toml` `gate_policy` | **not shipped** — SN-029 retired the enum for the dial below; a legacy key is read only as a migration fallback | `bootstrap.py --gate-policy <word>` still takes `"attended"` / `"single-approve"` / `"autonomous"`, but **translates** it to the dials rather than storing it (and scaffolds a deviation register) | not declared; the `"autonomous"` posture is recorded in its [register](docs/gate-policy.md) |
-| `process.toml` `human_approval_through` | `"DevStg-Release"` (every rung human-held) | name a lower rung — every rung **at or below** the value is human-held, down to `"DevStg-Below"` (nothing human-held) | `"DevStg-Release"` — every spine rung human-held (owner directive 2026-08-14; the live dial is the key in [`docs/process.toml`](docs/process.toml)) |
+| `process.toml` `human_approval_through` | `"DevStg-Release"` (every rung human-held) | name a lower rung — every rung **at or below** the value is human-held, down to `"DevStg-Below"` (nothing human-held) | `"DevStg-Needs"` — higher rungs use the delegated artifact approval route; read the live [dial](docs/process.toml) |
 | `process.toml` `push` | `"human"` | opt-in `"agent-iteration"` / `"agent"` | `"human"` |
 | `process.toml` `review_rounds` | `1` | reviewer dial `0`–`2` (an **int**, not a word) | `1` |
 | `process.toml` `privacy_check` | `false` | **opt-in** `true` (PII/identity layer) | `false` |
 | `process.toml` `secrets_scan` | `true` | **opt-out** `false` | `true` |
 | `process.toml` `privacy_review` | `"require"` | opt-down `"warn-unwired"` (the unwired reviewer warns instead of blocking) | `"require"` |
-| `process.toml` `blackout` | `"12:00-12:00"` — **disabled**, shipped in window shape so the format is visible (UTC, Mon–Fri when populated) | fill in your own `HH:MM-HH:MM`; empty value (or start == end) disables | `"12:00-19:00"` (the owner's own hours; the kit no longer ships them) |
+| `process.toml` `blackout` | `"12:00-12:00"` — **disabled**, shipped in window shape so the format is visible (UTC, Mon–Fri when populated) | fill in your own `HH:MM-HH:MM`; empty value (or start == end) disables | `""` — disabled; the tracked [pause](docs/work/pause) separately holds the unattended frontier |
 | `process.toml` `guardrails` | `"off"` | **opt-in** model-substring allowlist / `"all except …"` | `"off"` (no vendored core — reason in the key's comment) |
 | `process.toml` `trajectory_check` | `true` — the WI registry validator + its dashboard | **opt-out** `false` (vacuous anyway on a placeholder-only registry) | `true` |
 | `process.toml` `okf_export` | `true` | **opt-out** `false` | `false` since 2026-08-18 — the layer still ships; this repo stopped exporting its own bundle (551 files) and deleted it ([declared absent](docs/declared-absences)) |
 | `process.toml` `interfaces_check` | `true`, warn-first | **opt-out** `false` | `true` — declared seams checked |
-| `process.toml` `components_check` | `true`, warn-first | **opt-out** `false` | `true` — 5 components |
+| `process.toml` `components_check` | `true`, warn-first | **opt-out** `false` | `true` — current component inventory is generated in the [dashboard](PROJECT_STATE.html) |
 | `process.toml` `live_status` | `false` | **opt-in** `true` (same as `agent_loop.py --live-status`; TTY-only either way) | `false` |
 | `process.toml` `subagent_gate` | `"off"` | **opt-in** `"ask"` / `"deny"` (Claude hook example) | `"off"` |
 | `process.toml` `backlink_coverage_min` | `0` — report the number, gate nothing (the one `[checks]` dial that is a percentage, not a switch) | **opt-in** raise it to the share of live LLR rows a literal `Implements:` back-link must name; below it the `backlink-coverage` step warns, and errors from `DevStg-Tests` | `50` — raised 2026-08-21 once the tags landed: **83 of 165 live LLR rows (50.3%)**, measured by `gen_arch_map.py --backlink-coverage`. The dial rose because the campaign wrote the declarations, never because the bar came down |
-| `agents.toml` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — 8 pair rows / 3 families (ANTHROPIC / OPENAI / OPENCODE; tiers `strong/medium/quick`; Anthropic-led per tier — Fable strong, Opus medium) |
+| `agents.toml` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — the current routes are declared in [agents.toml](docs/agents.toml) and selected by [agents-enabled](docs/agents-enabled) |
 
 Scaffold-time *structure* (which process sections your generated docs carry) is
 a separate dial — `bootstrap.py --stack/--omit`, recorded in `docs/kit-profile`.

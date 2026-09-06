@@ -1,13 +1,19 @@
 # A smaller ai-template: redesign for separate review
 
-**Prepared:** 2026-09-05. **Status:** proposal; no runtime implementation, requirement rulings, or gate changes authorized by this document.
+**Prepared:** 2026-09-05. **Current status (2026-09-06):** independent repairs and
+renderer separation implemented; the perspective-record sample, artifact
+adjudications and control launch conditions remain open. Replacement remains
+conditional. This plan records scope; owner rulings and the live artifact
+authority govern execution and approval.
 
 **Permanent location:** `docs/ai-template-redesign-2026-09-05-codex/` in this repository, at the owner’s direction. Preserve the plan and review history here.
 
 **Execution authorized separately on 2026-09-05 and continued on 2026-09-06.**
-The [execution record](EXECUTION-RECORD.md) distinguishes completed changes,
-verification and conditional work. The proposal's approval does not turn its
-unperformed experiments into evidence.
+Start a new session with the [September 6 handoff](../handoff-2026-09-06.md), then
+the current section of the [execution record](EXECUTION-RECORD.md). They
+distinguish completed changes, verification and conditional work. The dated
+proposal and cross-check sections below preserve the design history; their
+earlier pending requests do not supersede the later recorded rulings.
 
 **Recommendation:** first measure the recently fixed loop and simplify shared boundaries. Replace the orchestration kernel only where that evidence shows unresolved stakeholder needs justify it; preserve useful adoption and assurance tools and migrate by complete behavior slices. A rewrite is a conditional option, not the success criterion. See the [Claude plan comparison and incorporated changes](CROSS-REFERENCE-CLAUDE.md). A [second Fable review in a fresh session](FABLE-REVIEW-2-GOVERNING-PLAN.md) (2026-09-05) compared the two plans and recommended this plan as governing, incorporating material from Claude's plan. The current expansion reconciles those recommendations: it corrects the unconditional DevStg-Tests test-execution claim and Worktrunk rationale, and treats proposed cuts and scope changes individually. See [the current dispositions](CROSSCHECK-BRIEF.md#2-changes-since-the-second-fable-review).
 
