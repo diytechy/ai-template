@@ -295,6 +295,18 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 5
 
+## SR-162 — Requirement boundary references resolve against the declared frame
+
+> **Requirement.** The delivered harness shall resolve every system-requirement boundary reference, and every declared interface's endpoint pair and signal type, against the declared external frame — an unresolvable crossing failing the strict trace naming the row — reporting requirements naming no crossing, crossings named by no requirement, declared crossings with no realizing interface row, an interface declaring no endpoint pair or no signal type from the closed discrete/variable vocabulary, and a seam joined to a counterpart whose signal type is incompatible with its own, each as an advisory, and staying vacuous for a project declaring no frame.
+
+> **Rationale.** Realizes SN-037 — every promised behavior's entry and exit locatable at a declared boundary, unresolved references mechanical findings, in the need's own words. SN-037 had no citing SR even though the machinery is already delivered (the frame registry, the boundary-reference field, the resolution and coverage rules); this row is the obligation that machinery enforces. Severity split deliberately: resolution hard, coverage advisory — the ruled warn-first sequencing while the corpus converges. The row also carries SN-037's SIGNAL-TYPING half — "every referenced interface identifies its boundary endpoints and whether its signal is discrete or variable ... incompatible signal types are mechanical findings". That half had ZERO textual occurrence in the SR layer while `orphans=0` held, even though `interfaces.toml` already carries a `signal` cell on every row (many of them typed `variable` by a recorded default with a re-type note, which is exactly the state a check is owed for). NAMED RESIDUAL, stated rather than quietly dropped: the need's last clause — that a reviewed change altering one side of the requirement/interface relationship carries or justifies the corresponding change on the other — is a REVIEW obligation this row does not claim to mechanize.
+
+
+### SR SR-162
+- **Rationale**
+  - before: Realizes SN-037 — every promised behavior's entry and exit locatable at a declared boundary, unresolved references mechanical findings, in the need's own words. SN-037 had no citing SR even though the machinery is already delivered (the frame registry, the boundary-reference field, the resolution and coverage rules); this row is the obligation that machinery enforces. Severity split deliberately: resolution hard, coverage advisory — the ruled warn-first sequencing while the corpus converges. The row also carries SN-037's SIGNAL-TYPING half — "every referenced interface identifies its boundary endpoints and whether its signal is discrete or variable ... incompatible signal types are mechanical findings". That half had ZERO textual occurrence in the SR layer while `orphans=0` held, even though `interfaces.toml` already carries a `signal` cell on every row (many of them typed `variable` by a recorded default with a re-type note, which is exactly the state a check is owed for). NAMED RESIDUAL, stated rather than quietly dropped: the need's last clause — that a reviewed change altering one side of the requirement/interface relationship carries or justifies the corresponding change on the other — is a REVIEW obligation this row does not claim to mechanize, and no SR states it yet.
+  - after: Realizes SN-037 — every promised behavior's entry and exit locatable at a declared boundary, unresolved references mechanical findings, in the need's own words. SN-037 had no citing SR even though the machinery is already delivered (the frame registry, the boundary-reference field, the resolution and coverage rules); this row is the obligation that machinery enforces. Severity split deliberately: resolution hard, coverage advisory — the ruled warn-first sequencing while the corpus converges. The row also carries SN-037's SIGNAL-TYPING half — "every referenced interface identifies its boundary endpoints and whether its signal is discrete or variable ... incompatible signal types are mechanical findings". That half had ZERO textual occurrence in the SR layer while `orphans=0` held, even though `interfaces.toml` already carries a `signal` cell on every row (many of them typed `variable` by a recorded default with a re-type note, which is exactly the state a check is owed for). NAMED RESIDUAL, stated rather than quietly dropped: the need's last clause — that a reviewed change altering one side of the requirement/interface relationship carries or justifies the corresponding change on the other — is a REVIEW obligation this row does not claim to mechanize.
+
 ## SR-163 — Every shipped file maps to a stakeholder outcome
 
 > **Requirement.** Every file the delivered package ships shall map, through the declared shipped-file inventory and its recorded exclusions, to at least one system requirement whose references resolve to a stakeholder need — generated outputs mapping through their generator — with missing files, stale inventory entries, unresolved references and unmapped files reported under the declared warning-to-gating policy.
@@ -473,5 +485,108 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **Expected**: Satisfies the acceptance folded into LLR-206 (parent SR-183) for the CLI modes and exit codes
 - **Automated**: Yes
 - **Evidence**: tests/test_check_complexity_cli.py
+- **Status**: Drafted
+- **Phase**: 5
+
+## SR-184 — Critique acceptance records intent-derived rubric anchors
+
+> **Requirement.** Where a delivered capability requires Critique acceptance, the delivered acceptance record shall identify a fresh reviewer session that did not author the artifact, apply a written rubric derived from the applicable SN/SR intent, and record each verdict and finding against numbered rubric-anchor ids.
+
+> **Rationale.** Carries SN-024's omitted author-independence, rubric provenance and anchor obligation as one coherent Critique acceptance decision. It applies to attended and unattended Critique acceptance; SR-154 remains the home of the underlying brief, unattended scheduling, consent, family selection and family diversity, degradation and escalation, and SR-155 remains the contested-plan state machine. The attended case does not mandate a second provider family or vendor. LLR-048 already assembles the rubric/intent/artifact brief and LLR-076 already refuses a missing dual-plan rubric; those mechanisms remain under SR-154 rather than being re-homed here. The acceptance record's process/provenance completeness is inspectable, while artifact adequacy remains the independent Critique judgment.
+
+_No approved baseline — absent from the docs/archive/last_approved snapshot — awaiting its first approval; current state only._
+
+### SR SR-184 (current)
+- **SR-ID**: SR-184
+- **Title**: Critique acceptance records intent-derived rubric anchors
+- **SN-Refs**: SN-024
+- **Boundary-Refs**: B-05
+- **Hat-Refs**: TEST-ENGINEER;PRODUCT-FITNESS
+- **Requirement**: Where a delivered capability requires Critique acceptance, the delivered acceptance record shall identify a fresh reviewer session that did not author the artifact, apply a written rubric derived from the applicable SN/SR intent, and record each verdict and finding against numbered rubric-anchor ids.
+- **AcceptanceCriteria**: A Critique acceptance record identifies the fresh non-author session, names the rubric and its SN/SR intent sources, and ties every verdict and finding to a numbered rubric-anchor id; a rubric copied from the verifying TC without independent derivation from the SN/SR intent is an Inspection finding, as is a missing reviewer, rubric, intent basis or anchor citation; this Inspection checks process and provenance and does not replace the Critique judgment of the produced artifact.
+- **Rationale**: Carries SN-024's omitted author-independence, rubric provenance and anchor obligation as one coherent Critique acceptance decision. It applies to attended and unattended Critique acceptance; SR-154 remains the home of the underlying brief, unattended scheduling, consent, family selection and family diversity, degradation and escalation, and SR-155 remains the contested-plan state machine. The attended case does not mandate a second provider family or vendor. LLR-048 already assembles the rubric/intent/artifact brief and LLR-076 already refuses a missing dual-plan rubric; those mechanisms remain under SR-154 rather than being re-homed here. The acceptance record's process/provenance completeness is inspectable, while artifact adequacy remains the independent Critique judgment.
+- **Priority**: S
+- **Verification**: Inspection
+- **Status**: Drafted
+- **Phase**: 5
+
+### TC TC-209 (current)
+- **TC-ID**: TC-209
+- **Verifies**: SR-184
+- **Level**: Inspection
+- **Method**: Follow the H2 Inspection procedure in docs/test/inspection-procedures.md#h2-inspection-procedure-critique-acceptance-record; inspect a complete record, an abnormal record missing reviewer/rubric/intent/anchor, and a fully populated record whose rubric is copied from the verifying TC without independent SN/SR derivation.
+- **Tier**: Release
+- **Expected**: Complete independently derived provenance is accepted; each missing field or TC-copied rubric without independent SN/SR derivation is an Inspection finding; artifact quality remains Critique's judgment.
+- **Automated**: No
+- **Evidence**: docs/test/inspection-procedures.md#h2-inspection-result-pending
+- **Status**: Drafted
+- **Phase**: 5
+
+## SR-185 — Coordinated requirement/interface change review
+
+> **Requirement.** When a reviewed change alters one side of a requirement/interface relationship, the change record shall identify the affected counterpart and carry the corresponding change or an explicit justification for retaining it.
+
+> **Rationale.** Carries the final clause of SN-037 as a separate semantic review obligation because SR-162 already owns the mechanical frame and interface resolution. A citation-only provenance check cannot establish that a changed signal or requirement still means the same thing at its counterpart; the record must expose the decision for an independent review.
+
+_No approved baseline — absent from the docs/archive/last_approved snapshot — awaiting its first approval; current state only._
+
+### SR SR-185 (current)
+- **SR-ID**: SR-185
+- **Title**: Coordinated requirement/interface change review
+- **SN-Refs**: SN-037
+- **Boundary-Refs**: B-05
+- **Hat-Refs**: CONSISTENCY;MAINTAINER;TEST-ENGINEER
+- **Requirement**: When a reviewed change alters one side of a requirement/interface relationship, the change record shall identify the affected counterpart and carry the corresponding change or an explicit justification for retaining it.
+- **AcceptanceCriteria**: For every reviewed change that alters one side of a requirement/interface relationship, the review record names the changed side and affected counterpart, either includes the corresponding change or records an explicit justification; the independent reviewer's semantic decision is recorded and is not discharged by reference-existence tests.
+- **Rationale**: Carries the final clause of SN-037 as a separate semantic review obligation because SR-162 already owns the mechanical frame and interface resolution. A citation-only provenance check cannot establish that a changed signal or requirement still means the same thing at its counterpart; the record must expose the decision for an independent review.
+- **Priority**: M
+- **Verification**: Inspection
+- **Status**: Drafted
+- **Phase**: 5
+
+### TC TC-210 (current)
+- **TC-ID**: TC-210
+- **Verifies**: SR-185
+- **Level**: Inspection
+- **Method**: Follow the H3 Inspection procedure in docs/test/inspection-procedures.md#h3-inspection-procedure-requirement-and-interface-change; inspect a semantic change record and an abnormal reference-existence-only record.
+- **Tier**: Release
+- **Expected**: The counterpart decision is explicit; reference-existence evidence alone is found insufficient.
+- **Automated**: No
+- **Evidence**: docs/test/inspection-procedures.md#h3-inspection-result-pending
+- **Status**: Drafted
+- **Phase**: 5
+
+## SR-186 — Proportionate requirement decomposition
+
+> **Requirement.** The delivered requirements process shall require each additional child within a required tier to carry an independent decision or verification purpose, and record the stopping decision in the scoped decomposition record, while retaining the required SN-to-SR-to-LLR-to-TC tiers and linking real verification to the existing obligation.
+
+> **Rationale.** Carries SN-012's unowned granularity clause as a process requirement on what the delivered process requires and records. A child that only paraphrases a parent or duplicates another child's verification adds review and maintenance cost without an independent decision. The process records the stopping decision within the required spine; this row does not guarantee adopter behavior beyond that record, and it never permits omitting a required SN→SR→LLR→TC tier or replacing real verification with a count. It does not impose a row-count cap, deletion quota, or new machine gate. Existing process doctrine and the spine-authoring adjudicator questions are the source of the judgment, while mechanism-specific evidence remains with its current SR.
+
+_No approved baseline — absent from the docs/archive/last_approved snapshot — awaiting its first approval; current state only._
+
+### SR SR-186 (current)
+- **SR-ID**: SR-186
+- **Title**: Proportionate requirement decomposition
+- **SN-Refs**: SN-012
+- **Boundary-Refs**: B-05
+- **Hat-Refs**: MAINTAINER;PRODUCT-FITNESS
+- **Requirement**: The delivered requirements process shall require each additional child within a required tier to carry an independent decision or verification purpose, and record the stopping decision in the scoped decomposition record, while retaining the required SN-to-SR-to-LLR-to-TC tiers and linking real verification to the existing obligation.
+- **Rationale**: Carries SN-012's unowned granularity clause as a process requirement on what the delivered process requires and records. A child that only paraphrases a parent or duplicates another child's verification adds review and maintenance cost without an independent decision. The process records the stopping decision within the required spine; this row does not guarantee adopter behavior beyond that record, and it never permits omitting a required SN→SR→LLR→TC tier or replacing real verification with a count. It does not impose a row-count cap, deletion quota, or new machine gate. Existing process doctrine and the spine-authoring adjudicator questions are the source of the judgment, while mechanism-specific evidence remains with its current SR.
+- **AcceptanceCriteria**: For a reviewed decomposition, each additional child within a required tier has an independent decision or verification purpose traceable to its parent; when further splitting would only paraphrase or duplicate, the existing scoped decomposition/review record states why the process stops at that independent-value boundary.
+- **Priority**: S
+- **Verification**: Inspection
+- **Status**: Drafted
+- **Phase**: 5
+- **Aspect**: process
+
+### TC TC-211 (current)
+- **TC-ID**: TC-211
+- **Verifies**: SR-186
+- **Level**: Inspection
+- **Method**: Follow the H5 Inspection procedure in docs/test/inspection-procedures.md#h5-inspection-procedure-proportionate-decomposition; inspect the complete chain and an extra paraphrasing child.
+- **Tier**: Release
+- **Expected**: A child within a required tier with no independent decision or verification purpose is an Inspection finding; otherwise the review records that independent value and why further splitting stops.
+- **Automated**: No
+- **Evidence**: docs/test/inspection-procedures.md#h5-inspection-result-pending
 - **Status**: Drafted
 - **Phase**: 5

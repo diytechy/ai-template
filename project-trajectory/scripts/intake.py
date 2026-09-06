@@ -319,7 +319,6 @@ def next_wi_id(root):
 # The OI registry (OI-73 exit (B)). Reads through the same rel `trace` uses so a
 # minted edge and the readiness gate resolve the same file.
 OPEN_ITEMS_REL = "docs/requirements/open-items.toml"
-_OI_ID_RE = re.compile(r"^\[open_item\.(OI-\d+)\]", re.M)
 
 
 def next_oi_id(root):
@@ -1596,9 +1595,6 @@ def _red_tc_context(line, targets):
 # — so only these four are candidates. `parse_spec_status` maps `complete/` to
 # `done`, so a terminal row is anything outside this set.
 _OPEN_STATUSES = frozenset({"draft", "queued", "active", "deferred"})
-# The frontmatter `needs = [...]` array line, replaced surgically so the rest of
-# a spec (its `## Context`, its Deliverable, every other cell) is untouched.
-_SPEC_NEEDS_RE = re.compile(r"(?m)^needs\s*=\s*\[.*?\]\s*$")
 
 
 def supersedes_ids(value):
@@ -1642,9 +1638,54 @@ def supersedes_ids(value):
     return out
 
 
-def _replace_inbound_edges(root, superseded, successors):
+_NEEDS_SOURCE_RE = re.compile(
+    r"""(?m)^[ \t]*(?:needs|"(?:\\.|[^"\\\r\n])*"|'[^'\r\n]*')"""
+    r"[ \t]*=[ \t]*(?=\[)"
+)
+
+
+def _replace_needs_value(text, rel, data, new_needs):
+    """Replace only root `needs` in raw LF/CRLF source with exact `+++` fences.
+
+    `data` is the unchanged tomllib dictionary from parse_spec_frontmatter;
+    the owning parser also requires exact fences and performs no normalization
+    of dictionary values. CR-only raw source is refused before mint effects."""
+    fences = list(re.finditer(r"(?m)^\+\+\+\r?$", text))
+    content_start = fences[0].end() + 1 if len(fences) >= 2 else 0
+    limit = fences[1].start() if len(fences) >= 2 else 0
+    expected = dict(data)
+    expected["needs"] = new_needs
+    rendered = wi_convert.toml_value(new_needs)
+    spans = []
+    for found in _NEEDS_SOURCE_RE.finditer(text, content_start, limit):
+        start = found.end()
+        for close in (match.end() for match in re.finditer(r"\]", text[start:limit])):
+            end = start + close
+            candidate = text[:start] + rendered + text[end:]
+            candidate_limit = limit + len(rendered) - (end - start)
+            frontmatter = candidate[content_start:candidate_limit]
+            try:
+                parsed = tomllib.loads(
+                    frontmatter.replace("\r\n", "\n").replace("\r", "\n")
+                )
+            except tomllib.TOMLDecodeError:
+                continue
+            if parsed == expected:
+                spans.append((start, end))
+                break
+    if len(spans) != 1:
+        raise ValueError(
+            "{}: cannot locate LF/CRLF frontmatter and a unique `needs` array "
+            "span; CR-only line endings are unsupported".format(rel)
+        )
+    start, end = spans[0]
+    return text[:start] + rendered + text[end:]
+
+
+def _replace_inbound_edges(root, superseded, successors, *, apply=True):
     """Re-point every OPEN row's HARD `needs` edge on `superseded` to
-    `successors` (OI-73 arm 4). Returns the relpaths changed.
+    `successors` (OI-73 arm 4). Returns the proposed relpaths; `apply=False`
+    validates every source span without writing it.
 
     `superseded` is one id or a list of them, and `successors` likewise, both
     read through `supersedes_ids`. ONE call carries a WHOLE many-to-many
@@ -1690,18 +1731,25 @@ def _replace_inbound_edges(root, superseded, successors):
     live = supersedes_ids(successors)
     if not dead or not live:
         return []
-    changed = []
+    edits = []
     for path, rel, text, data in _open_specs(Path(root) / WORK):
         rewritten = _repointed_needs(data, dead, live)
         if rewritten is None:
             continue
         new_needs, replaced, dropped = rewritten
-        new_line = "needs = " + wi_convert.toml_value(new_needs)
-        new_text, n = _SPEC_NEEDS_RE.subn(new_line, text, count=1)
-        if n:
-            path.write_text(new_text, encoding="utf-8", newline="\n")
-            changed.append((rel, replaced, dropped))
-    return changed
+        edits.append(
+            (
+                path,
+                _replace_needs_value(text, rel, data, new_needs),
+                rel,
+                replaced,
+                dropped,
+            )
+        )
+    if apply:
+        for path, new_text, _rel, _replaced, _dropped in edits:
+            path.write_text(new_text, encoding="utf-8", newline="")
+    return [(rel, replaced, dropped) for _p, _t, rel, replaced, dropped in edits]
 
 
 def _open_specs(work):
@@ -1720,8 +1768,10 @@ def _open_specs(work):
         try:
             if ac.parse_spec_status(rel) not in _OPEN_STATUSES:
                 continue
-            text = path.read_text(encoding="utf-8")
-            data, _body = ac.parse_spec_frontmatter(text, rel)
+            with path.open("r", encoding="utf-8", newline="") as fh:
+                text = fh.read()
+            normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+            data, _body = ac.parse_spec_frontmatter(normalized, rel)
         except (OSError, ValueError, UnicodeDecodeError):
             continue
         out.append((path, rel, text, data))
@@ -1853,7 +1903,7 @@ def _write_context(path, root, draft, row, registry):
             fh.write("\n## Context\n\n" + context + "\n")
 
 
-def _apply_supersedes(root, minted):
+def _apply_supersedes(root, minted, *, apply=True):
     """OI-73 arm 4 for a WHOLE mint: every successor carrying `supersedes`
     REPLACES its absorbed rows' inbound hard edges, in the SAME commit as the
     mint, so the WI-541-class strand (a live dependent left waiting on a
@@ -1868,7 +1918,8 @@ def _apply_supersedes(root, minted):
     row sharing one verdict is re-pointed in a single write, and a dependent
     naming absorbed rows with DIFFERENT verdicts ends holding the union of both,
     because the second group reads the first group's write and replaces only its
-    own tokens."""
+    own tokens. `apply=False` validates and reports the same proposed edits but
+    leaves every source untouched."""
     per_absorbed = {}
     for wi_id, absorbed in minted:
         for dead_id in absorbed:
@@ -1880,9 +1931,10 @@ def _apply_supersedes(root, minted):
         groups.setdefault(tuple(succs), []).append(dead_id)
     for successors, absorbed in groups.items():
         for rel, replaced, dropped in _replace_inbound_edges(
-            root, absorbed, list(successors)
+            root, absorbed, list(successors), apply=apply
         ):
-            _announce_repoint(rel, replaced, dropped, ";".join(successors))
+            if apply:
+                _announce_repoint(rel, replaced, dropped, ";".join(successors))
 
 
 def _announce_repoint(rel, replaced, dropped, into):
@@ -1948,6 +2000,24 @@ def _pre_mint_refusal(drafts, subject_verb, registry):
     return None
 
 
+def _supersede_source_refusal(root, drafts, subject_verb):
+    """Prevalidate every existing dependency edit before the mint writes.
+
+    Planned ids match the later allocation because this is the serial trunk
+    mint: each canonical successor write advances `next_wi_id` by exactly one.
+    They shape the lineage groups only; parsed source decides every edit."""
+    first_id = int(next_wi_id(root).split("-", 1)[1])
+    planned = [
+        ("WI-{:03d}".format(first_id + i), supersedes_ids(draft.get("supersedes")))
+        for i, draft in enumerate(drafts)
+    ]
+    try:
+        _apply_supersedes(root, planned, apply=False)
+    except ValueError as exc:
+        return "{}: {}; nothing minted".format(subject_verb, exc)
+    return None
+
+
 def _write_draft(root, draft, registry, subject_verb):
     """One draft filed as a queued spec: `((wi_id, relpath, absorbed), None)` or
     `(None, refusal)`. The caller owns the all-or-nothing restore; this writes.
@@ -1979,7 +2049,9 @@ def _mint(root, drafts, subject_verb):
     drafts = [d for d in drafts if str(d["title"]).strip() not in titles]
     if not drafts:
         return [], None
-    refusal = _pre_mint_refusal(drafts, subject_verb, registry)
+    refusal = _pre_mint_refusal(
+        drafts, subject_verb, registry
+    ) or _supersede_source_refusal(root, drafts, subject_verb)
     if refusal:
         return [], refusal
     minted = []

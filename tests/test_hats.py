@@ -24,12 +24,15 @@ fail before it is trusted to pass.
 
 from __future__ import annotations
 
+from pathlib import PureWindowsPath
+
 import pytest
 
 from conftest import ROOT, load_script
 
 hats = load_script("hats")
 plan_briefs = load_script("plan_briefs")
+plan_runner = load_script("plan_runner")
 
 # The kit's own roster + the shipped template — the two files this WI authored.
 LIVE_ROSTER = ROOT / "docs" / "requirements" / "hats.toml"
@@ -371,6 +374,350 @@ def _compose(root, context):
         CRITIQUE="(none)",
     )
     return plan_briefs.assemble(plan_briefs.HAT_PLANNER, slots, template)
+
+
+def _hat_scope_fixture(
+    tmp_path, *, malformed_sr=False, sr_carrier="toml", need_carrier="toml"
+):
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "hats.toml").write_text(
+        """
+[hat.SECURITY]
+applies_when = "always"
+asks = "security question"
+listens_for = "security failure"
+
+[hat.TEMPLATE]
+applies_when = 'scope == "template"'
+asks = "template question"
+listens_for = "template failure"
+
+[hat.REPOSITORY]
+applies_when = 'scope == "repository"'
+asks = "repository question"
+listens_for = "repository failure"
+
+[hat.SCRIPTS]
+applies_when = 'tags contains "scripts"'
+asks = "scripts question"
+listens_for = "scripts failure"
+
+[hat.NEED-TAG]
+applies_when = 'tags contains "need-only"'
+asks = "need-only question"
+listens_for = "need-only failure"
+
+[hat.SCRIPT-TEMPLATE]
+applies_when = 'tags contains "scripts" and scope == "template"'
+asks = "script-template question"
+listens_for = "script-template failure"
+
+[hat.CROSS-PARENT]
+applies_when = 'tags contains "need-only" and scope == "repository"'
+asks = "cross-parent question"
+listens_for = "cross-parent failure"
+""",
+        encoding="utf-8",
+    )
+    sr_name = (
+        "system-requirements.csv" if sr_carrier == "csv" else "system-requirements.toml"
+    )
+    sr_text = (
+        "[requirement.SR-1\n"
+        if malformed_sr
+        else (
+            "SR-ID,SN-Refs\nSR-1,SN-1;SN-2\n"
+            if sr_carrier == "csv"
+            else """
+[requirement.SR-1]
+sn_refs = ["SN-1", "SN-2"]
+"""
+        )
+    )
+    (req / sr_name).write_text(sr_text, encoding="utf-8")
+    need_name = (
+        "stakeholder-needs.md" if need_carrier == "md" else "stakeholder-needs.toml"
+    )
+    need_text = (
+        """## Core needs
+
+| SN-ID | Need | Why | Priority | Acceptance |
+| --- | --- | --- | --- | --- |
+| SN-1 | Template need. | A test. | M | It works. |
+| SN-2 | Repository need. | A test. | M | It works. |
+"""
+        if need_carrier == "md"
+        else """
+[need.SN-1]
+scope = "template"
+tags = ["need-only"]
+
+[need.SN-2]
+scope = "repository"
+"""
+    )
+    (req / need_name).write_text(need_text, encoding="utf-8")
+    return tmp_path
+
+
+def _hat_names(slots):
+    return [
+        line.split("**")[1] for line in slots.splitlines() if line.startswith("- **")
+    ]
+
+
+def test_plan_runner_scope_reads_parsed_sr_need_parents_and_preserves_roster_order(
+    tmp_path,
+):
+    root = _hat_scope_fixture(tmp_path)
+    template = _planner_template()
+
+    slots = plan_runner._hat_slots(
+        root,
+        {"Workstream": "scripts", "SafetyClass": "", "SR-Refs": "SR-1"},
+        template,
+    )
+
+    assert _hat_names(slots[plan_briefs.HAT_QUESTIONS_SLOT]) == [
+        "SECURITY",
+        "TEMPLATE",
+        "REPOSITORY",
+        "SCRIPTS",
+        "NEED-TAG",
+        "SCRIPT-TEMPLATE",
+    ]
+
+
+def test_plan_runner_scope_refuses_unknown_parent_refs_without_broadening_context(
+    tmp_path,
+):
+    root = _hat_scope_fixture(tmp_path)
+    template = _planner_template()
+
+    with pytest.raises(plan_briefs.HatsError, match=r"unknown SR id\(s\) SR-MISSING"):
+        plan_runner._hat_slots(
+            root,
+            {"Workstream": "", "SafetyClass": "", "SR-Refs": "SR-MISSING"},
+            template,
+        )
+
+
+def test_plan_runner_scope_does_not_read_parent_refs_when_roster_is_absent(tmp_path):
+    slots = plan_runner._hat_slots(
+        tmp_path,
+        {
+            "Workstream": "scripts",
+            "SafetyClass": "",
+            "SR-Refs": "SR-MISSING",
+        },
+        _planner_template(),
+    )
+
+    assert slots == {plan_briefs.HAT_QUESTIONS_SLOT: hats.NO_HATS}
+
+
+def test_plan_runner_scope_refuses_unknown_need_refs(tmp_path):
+    root = _hat_scope_fixture(tmp_path)
+    (root / "docs" / "requirements" / "system-requirements.toml").write_text(
+        """
+[requirement.SR-1]
+sn_refs = ["SN-MISSING"]
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(plan_briefs.HatsError, match=r"unknown SN id\(s\).*SN-MISSING"):
+        plan_runner._hat_slots(
+            root,
+            {"Workstream": "", "SafetyClass": "", "SR-Refs": "SR-1"},
+            _planner_template(),
+        )
+
+
+def test_plan_runner_scope_refuses_declared_refs_when_system_carrier_is_absent(
+    tmp_path,
+):
+    root = _hat_scope_fixture(tmp_path)
+    (root / "docs" / "requirements" / "system-requirements.toml").unlink()
+
+    with pytest.raises(
+        plan_briefs.HatsError, match="system-requirements carrier is absent"
+    ):
+        plan_runner._hat_slots(
+            root,
+            {"Workstream": "", "SafetyClass": "", "SR-Refs": "SR-1"},
+            _planner_template(),
+        )
+
+
+def test_plan_runner_scope_refuses_declared_need_refs_when_need_carrier_is_absent(
+    tmp_path,
+):
+    root = _hat_scope_fixture(tmp_path)
+    (root / "docs" / "requirements" / "stakeholder-needs.toml").unlink()
+
+    with pytest.raises(
+        plan_briefs.HatsError, match="stakeholder-needs carrier is absent"
+    ):
+        plan_runner._hat_slots(
+            root,
+            {"Workstream": "", "SafetyClass": "", "SR-Refs": "SR-1"},
+            _planner_template(),
+        )
+
+
+def test_plan_runner_scope_supports_csv_sr_and_markdown_need_carriers(tmp_path):
+    root = _hat_scope_fixture(tmp_path, sr_carrier="csv", need_carrier="md")
+    slots = plan_runner._hat_slots(
+        root,
+        {"Workstream": "", "SafetyClass": "", "SR-Refs": "SR-1"},
+        _planner_template(),
+    )
+
+    # The legacy carrier has no typed scope/tag fields. It is still resolved,
+    # so the required parents do not disappear or page; only the always hat
+    # applies to this deliberately unclassified legacy row.
+    assert _hat_names(slots[plan_briefs.HAT_QUESTIONS_SLOT]) == ["SECURITY"]
+
+
+def test_plan_runner_scope_resolves_exact_canonical_need_specref_fragment(tmp_path):
+    root = _hat_scope_fixture(tmp_path)
+    slots = plan_runner._hat_slots(
+        root,
+        {
+            "Workstream": "",
+            "SafetyClass": "",
+            "SR-Refs": "",
+            "SpecRef": "docs/requirements/stakeholder-needs.toml#SN-1",
+        },
+        _planner_template(),
+    )
+
+    assert _hat_names(slots[plan_briefs.HAT_QUESTIONS_SLOT]) == [
+        "SECURITY",
+        "TEMPLATE",
+        "NEED-TAG",
+    ]
+
+
+def test_plan_runner_scope_refuses_bad_exact_canonical_need_specref(tmp_path):
+    root = _hat_scope_fixture(tmp_path)
+    with pytest.raises(plan_briefs.HatsError, match=r"unknown SN id\(s\).*SN-404"):
+        plan_runner._hat_slots(
+            root,
+            {
+                "Workstream": "",
+                "SafetyClass": "",
+                "SR-Refs": "",
+                "SpecRef": "docs/requirements/stakeholder-needs.toml#SN-404",
+            },
+            _planner_template(),
+        )
+
+
+def test_need_spec_ref_uses_registry_path_spelling_on_windows(monkeypatch):
+    monkeypatch.setattr(plan_briefs, "Path", PureWindowsPath)
+    assert (
+        plan_briefs._canonical_need_ref("docs/requirements/stakeholder-needs.md#SN-1")
+        == "SN-1"
+    )
+
+
+@pytest.mark.parametrize("suffix", ["toml", "md"])
+def test_plan_runner_scope_resolves_spec_ref_as_markdown_need_alias(tmp_path, suffix):
+    root = _hat_scope_fixture(tmp_path, need_carrier="md")
+    slots = plan_runner._hat_slots(
+        root,
+        {
+            "Workstream": "",
+            "SafetyClass": "",
+            "SR-Refs": "",
+            "SpecRef": f"docs/requirements/stakeholder-needs.{suffix}#SN-1",
+        },
+        _planner_template(),
+    )
+
+    assert _hat_names(slots[plan_briefs.HAT_QUESTIONS_SLOT]) == ["SECURITY"]
+
+    # The valid legacy row has no conditional context, so its positive result
+    # alone cannot distinguish resolving it from silently dropping its parent.
+    with pytest.raises(plan_briefs.HatsError, match="unknown SN id.*SN-404"):
+        plan_runner._hat_slots(
+            root,
+            {"SpecRef": f"docs/requirements/stakeholder-needs.{suffix}#SN-404"},
+            _planner_template(),
+        )
+
+
+def test_plan_runner_scope_ignores_unrelated_goal_specref(tmp_path):
+    root = _hat_scope_fixture(tmp_path)
+    slots = plan_runner._hat_slots(
+        root,
+        {
+            "Workstream": "",
+            "SafetyClass": "",
+            "SR-Refs": "",
+            "SpecRef": "docs/goals/goal.md#SN-1",
+        },
+        _planner_template(),
+    )
+
+    assert _hat_names(slots[plan_briefs.HAT_QUESTIONS_SLOT]) == ["SECURITY"]
+
+
+def test_plan_runner_scope_preserves_carrier_refusal_for_malformed_parent_registry(
+    tmp_path,
+):
+    root = _hat_scope_fixture(tmp_path, malformed_sr=True)
+    template = _planner_template()
+
+    with pytest.raises(SystemExit, match="does not parse as TOML"):
+        plan_runner._hat_slots(
+            root,
+            {"Workstream": "", "SafetyClass": "", "SR-Refs": "SR-1"},
+            template,
+        )
+
+
+def test_dual_plan_round_pages_on_malformed_context_carrier(tmp_path):
+    root = _hat_scope_fixture(tmp_path, malformed_sr=True)
+    (root / "docs" / "goal.md").write_text("# Goal\n", encoding="utf-8")
+    rubric = root / plan_runner.PLAN_RUBRIC
+    rubric.parent.mkdir(parents=True, exist_ok=True)
+    rubric.write_text("# Rubric\n", encoding="utf-8")
+
+    outcome, detail = plan_runner.run_dual_plan_round(
+        root,
+        "WI-1",
+        {
+            "Workstream": "scripts",
+            "SafetyClass": "",
+            "SR-Refs": "SR-1",
+            "SpecRef": "docs/goal.md",
+        },
+        "unused",
+        "unused",
+        1,
+    )
+
+    assert outcome == "PAGE"
+    assert "system-requirements.toml does not parse as TOML" in detail
+
+
+def test_plan_runner_scope_does_not_read_parent_data_for_legacy_template_override(
+    tmp_path,
+):
+    root = _hat_scope_fixture(tmp_path, malformed_sr=True)
+
+    assert (
+        plan_runner._hat_slots(
+            root,
+            {"Workstream": "", "SafetyClass": "", "SR-Refs": "SR-1"},
+            "legacy {{GOAL_BRIEF}}",
+        )
+        == {}
+    )
 
 
 def test_the_shipped_planner_template_declares_the_slot():

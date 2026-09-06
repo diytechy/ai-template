@@ -31,11 +31,10 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
 | `CLAUDE.md` | **8,500** | 7,975 | 2026-09-04 | +89: WI-580 aligns mid-phase close with the phase cadence |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,781 | 2026-09-04 | WI-580 re-stamps the CLAUDE.md row |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,632 | 2026-09-06 | Redesign process-row restamp |
 
-**`AGENTS.template.md` and this file are parked at their caps** (~1% free
-each); `CLAUDE.md` holds ~6%. Those two are what you hit first, and the DOC is
-what gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
+**`AGENTS.template.md` has less than 1% free**; this skill and `CLAUDE.md`
+have about 6%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
 section under Gemini's truncation) and is not to be raised. Adding a sentence
 means cutting one, in the same edit. Each `Baseline` is pinned to its file's
 real size by `test_capped_doc_baselines_match_the_real_sizes`.
@@ -46,7 +45,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 88,365 | 2026-09-02 | **+10** WI-572 round-027 rework (§4 wording). Earlier: **+484** WI-572 — the approval act joins §4's fixed points as an adjudicator's, never a lane's; **+89** OI-67 slice 6 |
+| `project-trajectory/PROCESS.md` | 88,990 | 2026-09-06 | **+625** redesign — ordinary intake distinguishes unsuitable LLR designs from coverage gaps |
 | `project-trajectory/PROCESS_OPTIONS.md` | 187,932 | 2026-09-03 | **+766** the WI-579 merge (the verdict-carrier and `adjudication_review` prose, +590) and the loop-held design-check sentence (+176). Earlier: **+4** round 3, **+111** round 2, **+630** `restructured` |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped

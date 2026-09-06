@@ -201,6 +201,10 @@ half-gate.
 Retro-documenting an entire existing codebase into SN→SR→LLR→TC rows is
 make-work that produces paraphrase, not traceability. Instead:
 
+Start with the [authoring skill's adopter revalidation](skills/spine-authoring/SKILL.md#at-adoption-or-a-material-project-change):
+derive the relevant hats from this project's vision, then check missing needs
+and affected SRs before backfilling its implementation.
+
 - **Let `docs/stage` derive to `DevStg-Reqs` honestly**, whatever the code's
   maturity — the stage describes the *registry's* coverage of the product, and
   that coverage starts near zero. Approve up to DevStg-Tests/DevStg-Impl only when
@@ -257,6 +261,10 @@ kit's LLM re-sync pack. It is ONE HOME on purpose: these recipes used to sit her
 zero re-sync traffic (OI-27). This section frames the job and points; the pack
 does it. Read the pack from the kit checkout you are syncing **to** — the same
 one you are diffing against.
+
+The pack's deviation review also routes material purpose or assurance changes
+through [adopter revalidation](skills/spine-authoring/SKILL.md#at-adoption-or-a-material-project-change).
+Preserving a customized roster is the starting point for judging its relevance.
 
 | What you need | Where |
 | --- | --- |

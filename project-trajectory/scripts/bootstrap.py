@@ -2095,6 +2095,9 @@ MAPPING = [
     # scaffold whose regen halts at a missing generator leaves every LATER
     # generated family stale too (regen stops at the first failure).
     ("scripts/gen_verdict_rollup.py", "scripts/gen_verdict_rollup.py"),
+    # check.py runs this generator's --check arm, so its producer must ship
+    # beside the prompt templates rather than remain kit-local.
+    ("scripts/gen_prompt_catalog.py", "scripts/gen_prompt_catalog.py"),
     ("scripts/plan_coverage.py", "scripts/plan_coverage.py"),
     ("scripts/plan_round.py", "scripts/plan_round.py"),
     ("scripts/plan_briefs.py", "scripts/plan_briefs.py"),
@@ -2552,6 +2555,10 @@ def initialize_generated_docs(dest, created):
         # on its first `check.py` — the scaffolded registry already carries the
         # example rows the status template's Needs-<human> bullets name.
         ["scripts/gen_open_items.py"],
+        # The prompt catalogue is a required freshness artifact too. Generate
+        # it with the templates it inventories so a fresh Node scaffold reaches
+        # its first meaningful harness run.
+        ["scripts/gen_prompt_catalog.py"],
     ):
         if not (dest / rel_cmd[0]).exists() or not (dest / "docs").exists():
             continue

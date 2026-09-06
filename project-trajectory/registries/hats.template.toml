@@ -104,10 +104,14 @@ applies_when = "always"
 asks = """What secret, credential, or irreversible action does this touch — and which requirement says who may reach it?"""
 listens_for = """A decomposition that spends a secret, or takes an action nothing can undo, with no requirement naming the authority for it."""
 
+# The stable name includes first use of an upgraded kit. The seed predicate is
+# still tag-based: an untagged policy-only change will not select it. Adoption
+# and resync reviews must check actual applicability through spine-authoring;
+# widening this charter does not silently change a project's chosen predicates.
 [hat.FIRST-RUN-ADOPTER]
 applies_when = 'tags contains "scripts" or tags contains "templates" or tags contains "process"'
-asks = """Does this hold for a stranger with only the shipped README and examples — no context from this project, no one to ask?"""
-listens_for = """A requirement only satisfiable by someone who already knows this project: an undocumented convention, an example that does not run as shipped, a step whose prerequisite is never stated."""
+asks = """Can a new or upgrading adopter complete this using the shipped guidance while preserving project-owned content, policy meaning, accepted evidence and unfinished work?"""
+listens_for = """A requirement satisfiable only with undocumented project knowledge, or an upgrade that breaks supported callers, changes preserved content's meaning, loses accepted evidence or strands unfinished work."""
 
 [hat.UNATTENDED-OPS]
 applies_when = 'tags contains "unattended" or tags contains "loop"'
@@ -126,8 +130,8 @@ listens_for = """A requirement whose reason lives only in the session that wrote
 
 [hat.TEST-ENGINEER]
 applies_when = "always"
-asks = """What mechanical check fails if this is quietly violated — and can that check be shown to fail when it should?"""
-listens_for = """An obligation with no enforcer, or an enforcer that passes because it never actually looks at the thing it claims to check."""
+asks = """Which test, analysis, critique or attestation detects a violation, how is its ability to detect it demonstrated, and what does that evidence leave unverified?"""
+listens_for = """An obligation with no suitable verification, or evidence that passes without examining the claimed behavior or hides its limits."""
 
 [hat.UX-DESIGNER]
 applies_when = 'tags contains "render" or tags contains "ui"'
@@ -170,11 +174,14 @@ listens_for = """A surface whose acceptance names only how it looks to a sighted
 # conditional even though the hat is not — "no bound needed here" is a one-line
 # answer, which is what stops an always-on budget lens from presupposing a
 # budget for every subject. Gate it if your project genuinely has no speed or
-# size obligation anywhere; do not delete it.
+# size, provider-usage or operator-time obligation anywhere; review its relevance
+# against your own vision before changing it.
+# The resource question includes provider usage and operator time; a measured
+# bound is still conditional, not a budget demanded of every small change.
 [hat.PERFORMANCE]
 applies_when = "always"
-asks = """Does this need a measurable performance or size bound? If yes, what is the budget, measured on what, and what happens when it is exceeded?"""
-listens_for = """A material speed or size risk left unassessed, or a declared budget with no measurement behind it."""
+asks = """Does this need a measurable bound on speed, size, provider usage or operator time? If yes, what is the budget, under which conditions is it measured, and what happens when it is exceeded?"""
+listens_for = """A material resource or operating-cost risk left unassessed, a budget with no measurement behind it, or incomparable or unavailable measurements reported as a reliable total."""
 
 # Nothing else here asks whether two surfaces agree. The UX pair asks about ONE
 # surface's priority and ONE surface's conditions; MAINTAINER reaches
@@ -184,10 +191,12 @@ listens_for = """A material speed or size risk left unassessed, or a declared bu
 # provisional block below gives: the finding WAS unreachability, so a tag would
 # reproduce the defect the charter answers. Ruled for the kit, not for you —
 # the editing instruction at the top of this file governs every charter here.
+# Semantic agreement also spans requirements, interfaces and policy readers;
+# the surface examples above describe the original finding, not its full scope.
 [hat.CONSISTENCY]
 applies_when = "always"
-asks = """Where else does this same fact, state or action already appear — and does this render it in the same words, the same vocabulary and the same idiom as that one?"""
-listens_for = """One meaning given two treatments: a status word that differs between two surfaces, one concept carrying two colour or shape vocabularies, an interaction idiom that changes where the underlying structure does not."""
+asks = """Where else does this fact, state or action appear, and do the related requirements, interfaces, policy readers and user surfaces agree in meaning, vocabulary and interaction?"""
+listens_for = """Related contracts or readers disagreeing after a one-sided change, a rule stated differently by template and instance, or one meaning given conflicting words, visual treatments or interaction behavior."""
 
 # --- two CROSS-CUTTING lenses, ruled into the kit 2026-08-17 ------------------
 #

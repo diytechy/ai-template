@@ -54,26 +54,58 @@ LLR = solution-specific by design, and the artifact's identity belongs in the
 trace fields listed above. Route and justify leakage; a rule that forbids it
 just gets bent silently.
 
+## At adoption or a material project change
+
+Review the project's own vision, stakeholders, domain, operating environment
+and changed assurance obligations before relying on its existing hats or spine.
+Apply this at initial adoption and to the affected scope of an upgrade or
+project change. A tooling-only upgrade may record "no semantic impact" with
+its reason in the resync commit; routine commits do not require a whole-spine
+rederivation.
+
+Use the ordinary scoped change/review record for the following decisions:
+
+1. **Reassess hats against purpose.** Keep, refine, combine, condition or propose
+   retirement by each hat's question and failure class. Add a hat only when an
+   important distinct question has no suitable owner. A seed roster, a preserved
+   custom file or zero attributed rows does not establish relevance. When
+   changing or removing a hat, review its inbound Hat-Refs and preserve valid
+   obligations.
+2. **Check the real brief.** Inspect applicability on representative need/WI
+   contexts, including missing context and not-applicable cases. `hats.py audit`
+   is a worksheet; confirm that the actual decomposition receives every relevant
+   question. The roster lives in `docs/requirements/hats.toml`; the audit shows
+   the SN × conditional-hat matrix, needs reaching no conditional hat and each
+   hat's reach count. Repair unreachable predicates or missing declared tags through the
+   ordinary authoring/review route, without inferring context from arbitrary prose.
+3. **Revisit needs, then affected SRs.** A missing stakeholder outcome warrants
+   a new-SN proposal with purpose and observable acceptance intent. An existing
+   sound need with a missing perspective-derived constraint warrants an SR
+   amendment instead. Use a fresh derivation before comparing implementation-led
+   legacy text where independence matters; read legacy rationales before declaring
+   an obligation unsupported. A sound requirement violated by code needs a fix,
+   not another need.
+4. **Reconcile and review the affected chain.** Identify changed LLRs, TCs,
+   interfaces, evidence and queued/active work. Keep IDs where meaning remains;
+   preserve previous approvals as history and submit the scoped amendments under
+   the current authority. Rejected proposals leave authoritative content intact.
+   Do not automatically re-seed snapshots, cancel work or copy the kit's own
+   objectives, hats or needs into another product.
+
+Syntax checks prove reference integrity and preservation; independent judgment
+assesses relevance and adequacy. Optional prose objective anchors explain
+purpose without adding a registry tier, approval stage or completion percentage.
+
 ## 1. At SN intake — answer these before the need is approved
 
 A defect admitted here becomes a whole subtree of need-less requirements later.
-Four questions:
+Questions:
 
 - **(a) Does this need carry the TAGS that reach its governing perspective?**
-  Hats (`docs/requirements/hats.toml`) fire on an `applies_when` predicate over
-  declared fields — and *an undeclared field satisfies no condition*. A need with
-  no tags is invisible to the hat that most obviously governs it. Ask: **which
-  hats should derive from this need, and do its declared tags reach them?** Check
-  it, don't assume it — `python scripts/hats.py audit` is the intake sweep: it
-  prints the whole SN × conditional-hat matrix in one pass, plus the needs waking
-  no conditional hat, each hat's reach count, and the one mechanical finding (a
-  tag token no predicate anywhere can evaluate — `--strict` fails on that class
-  alone). The matrix is your **worksheet**, not a verdict: every blank row and
-  zero-reach hat is a question you answer per row. For a single row in isolation,
-  `python scripts/hats.py applicable --tag <tag> ...` prints
-  the hats that decomposition must face. If the governing hat is not in that list,
-  fix the tags (or the hat's predicate) *now* — a lens that cannot see the need
-  will never produce the obligations that need implies.
+  Hats fire on declared fields; an undeclared field satisfies no condition.
+  Use `python scripts/hats.py applicable --tag <tag> ...` and the actual brief
+  check above to verify the intended questions reach this need. The audit's
+  strict finding detects unknown predicate tags, not adequacy of decomposition.
 - **(b) Is every load-bearing clause in the NORMATIVE text?** A safety or bound
   or authority clause living in the `why`/rationale cell is not derivable: a
   deriving team reads the need and the acceptance, produces nothing for that
@@ -214,6 +246,16 @@ Four questions:
 - **A child adds detail.** If the LLR would merely re-word its parent, link
   instead. `trace.py`'s paraphrase advisory is lexical and warns forever; the
   judgement stays yours.
+- **Replace an unsuitable design through the normal amendment route.** If the
+  parent outcome remains sound but the LLR's mechanism causes the problem,
+  compare the old/new design, retained parent clauses and behavioral regressions,
+  affected trace/evidence/work references, and the code that becomes removable.
+  Amend the LLR and its mechanism-specific verification together; an Approved
+  LLR does not require keeping an obsolete shim. Preserve unchanged parent
+  approval, re-attest changed child content through the applicable authority,
+  and let the derived stage expose incomplete evidence. A changed stakeholder
+  outcome, justified SR constraint or active WI scope returns to its own intake
+  and approval path; it cannot be hidden as a design-only replacement.
 - **An LLR's `Hat-Refs` holds only what its OWN decomposition raised — never a
   copy of its parent's.** The row's EFFECTIVE set is derived (own refs unioned
   with its `SR-Refs` parents'), so an own ref is earned only where the design

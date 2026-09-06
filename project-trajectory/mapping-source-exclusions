@@ -29,6 +29,5 @@ prompts/CATALOG.md — generated kit-side prompt catalog
 scripts/check_complexity.py — meta-repo complexity census, not an adopter check
 scripts/check_dupes_census.py — meta-repo historical duplication census
 scripts/gen_arch_map.reference.ps1 — kit-side launcher reference
-scripts/gen_prompt_catalog.py — meta-repo prompt-catalog generator
 scripts/gen_skills_index.py — meta-repo skills-index generator
 skills/INDEX.csv — generated kit-side skill catalog

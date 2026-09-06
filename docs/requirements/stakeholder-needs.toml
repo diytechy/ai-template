@@ -139,7 +139,7 @@ status = "Approved"
 need = """The people maintaining this kit hold it to its own standard: it stays traceable and tested through every change."""
 why = """The kit is a foundation many repos inherit; a regression here propagates downstream."""
 priority = "M"
-acceptance = """The suite bootstraps a temp scaffold and runs every script; a green run of that whole suite is required before each change lands."""
+acceptance = """The declared bar is green before a change lands. The Full-suite run bootstraps a temp scaffold and exercises every delivered script."""
 
 [need.SN-008]
 status = "Approved"
@@ -210,7 +210,7 @@ acceptance = """A plain launch derives what to do next from the tracked WI DAG p
 
 [need.SN-026]
 status = "Approved"
-tags = ["unattended", "loop"]
+tags = ["unattended", "loop", "legal", "personal-data"]
 need ="""The repo owner can configure **several LLM families** — selected per job and per capability level — so that work benefiting from an independent second opinion is automatically routed to a *different* family wherever that is configured."""
 why = """One family is a single point of both failure and bias: an outage, a retired model or an expired auth stalls the whole loop, and a reviewer drawn from the implementer's own family shares its blind spots — so a same-family review reads like corroboration while adding little. Declaring the families and levels in a registry, rather than hard-coding one vendor, is also what keeps the kit vendor-neutral as models turn over."""
 priority = "S"

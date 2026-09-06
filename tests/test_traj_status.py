@@ -125,6 +125,48 @@ def test_status_splices_derived_facts(tmp_path):
     assert "hand-authored intent stays here" in after and "## Scope" in after
 
 
+def test_status_cli_does_not_load_dashboard_renderers(tmp_path):
+    make_status_repo(tmp_path)
+    script = str(SCRIPTS / "gen_trajectory.py")
+    denied = {
+        "traj_context",
+        "traj_graph",
+        "traj_panels",
+        "traj_render",
+        "traj_views",
+    }
+    probe = """
+import runpy
+import sys
+
+denied = {denied!r}
+
+class DenyDashboardImports:
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname.partition(".")[0] in denied:
+            raise AssertionError("status loaded dashboard module " + fullname)
+        return None
+
+sys.meta_path.insert(0, DenyDashboardImports())
+sys.argv = [{script!r}, "--root", {root!r}, "--status"]
+try:
+    runpy.run_path({script!r}, run_name="__main__")
+except SystemExit as exc:
+    if exc.code:
+        raise
+else:
+    raise AssertionError("gen_trajectory did not exit through its CLI boundary")
+
+loaded = denied.intersection(sys.modules)
+if loaded:
+    raise AssertionError("status retained dashboard modules: " + repr(sorted(loaded)))
+""".format(denied=denied, script=script, root=str(tmp_path))
+
+    proc = run_py(["-c", probe], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "**In stage:** **DevStg-Tests**" in block_of(tmp_path)
+
+
 def test_status_open_items_projection_and_ordering(tmp_path):
     make_status_repo(tmp_path)
     assert gen(tmp_path, "--status").returncode == 0

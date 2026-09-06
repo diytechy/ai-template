@@ -795,6 +795,105 @@ def test_the_mint_replaces_inbound_edges_of_the_superseded_row(tmp_path):
     assert rows[successor]["Supersedes"] == "WI-005"
 
 
+def test_the_mint_repoints_a_multiline_crlf_needs_value_surgically(tmp_path):
+    """OI-77: parsed TOML decides the edge even when its source spans lines.
+
+    The source locator must ignore a convincing assignment inside a quoted
+    value, retain the comment after the real array, and leave every byte outside
+    that one value alone. CRLF is part of that preservation contract.
+    """
+    root = git_repo(tmp_path)
+    write_sr(root)
+    write_spec(
+        root, "partial", "WI-005", slug="returned", body="\n## Deliverable\n\nstopped\n"
+    )
+    dependent = write_spec(
+        root, "queued", "WI-006", slug="dependent", specref="seed.txt", needs=["WI-005"]
+    )
+    before = (
+        '+++\r\nid = "WI-006"\r\ntitle = "dependent"\r\n'
+        'note = """quoted source text:\r\nneeds = ["WI-404"]\r\nend"""\r\n'
+        '# the real dependency follows\r\nneeds = [\r\n  "WI-005",\r\n]'
+        ' # retain this inline comment\r\nspecref = "seed.txt"\r\n+++\r\n'
+        "\r\n## Context\r\n\r\nretain the body exactly\r\n"
+    )
+    dependent.write_text(before, encoding="utf-8", newline="")
+    write_spec(
+        root,
+        "complete",
+        "WI-008",
+        slug="adjudicate",
+        safety_class="adjudication",
+        body=_SUPERSEDING,
+    )
+    _commit(root, "setup", when=T_CODE)
+
+    minted, refusal = intake.intake_after_merge(
+        root, _rev(root), _rev(root), {"WI-008": "merged"}, "wi-008"
+    )
+
+    assert refusal is None, refusal
+    successor = minted[0][0]
+    after = dependent.read_bytes()
+    old_value = b'[\r\n  "WI-005",\r\n]'
+    expected = before.encode().replace(old_value, '["{}"]'.format(successor).encode())
+    assert after == expected
+    assert b"\n" not in after.replace(b"\r\n", b"")
+    assert queued_rows(root)["WI-006"]["Predecessors"] == successor
+
+
+def test_parsed_semantics_select_the_quoted_root_key_over_a_nested_key(tmp_path):
+    """Quoted keys are valid TOML; a nested namesake is not the root cell."""
+    dependent = write_spec(tmp_path, "queued", "WI-006", slug="dependent")
+    before = (
+        '+++\nid = "WI-006"\ntitle = "dependent"\n"needs" = ["WI-005"]\n'
+        '[metadata]\nneeds = ["WI-404"]\n+++\n'
+    )
+    dependent.write_text(before, encoding="utf-8", newline="")
+
+    changed = intake._replace_inbound_edges(tmp_path, ["WI-005"], ["WI-101"])
+
+    assert changed == [("queued/WI-006-dependent.md", ["WI-005"], [])]
+    assert dependent.read_text(encoding="utf-8") == before.replace(
+        '"needs" = ["WI-005"]', '"needs" = ["WI-101"]'
+    )
+
+
+def test_a_cr_only_dependency_edit_refuses_before_any_mint_effect(tmp_path):
+    """An unlocatable parsed edge refuses without cleaning unrelated work."""
+    root = git_repo(tmp_path)
+    write_sr(root)
+    write_spec(
+        root, "partial", "WI-005", slug="returned", body="\n## Deliverable\n\nstopped\n"
+    )
+    dependent = write_spec(
+        root, "queued", "WI-006", slug="dependent", specref="seed.txt", needs=["WI-005"]
+    )
+    cr_only = dependent.read_text(encoding="utf-8").replace("\n", "\r")
+    dependent.write_text(cr_only, encoding="utf-8", newline="")
+    write_spec(
+        root,
+        "complete",
+        "WI-008",
+        slug="adjudicate",
+        safety_class="adjudication",
+        body=_SUPERSEDING,
+    )
+    _commit(root, "setup", when=T_CODE)
+    local = root / "unrelated-local-work.txt"
+    local.write_text("keep\n", encoding="utf-8")
+
+    minted, refusal = intake.intake_after_merge(
+        root, _rev(root), _rev(root), {"WI-008": "merged"}, "wi-008"
+    )
+
+    assert minted == []
+    assert "CR-only line endings are unsupported" in refusal
+    assert local.read_text(encoding="utf-8") == "keep\n"
+    assert dependent.read_bytes() == cr_only.encode()
+    assert not list((root / "docs/work/queued").glob("WI-009-*.md"))
+
+
 _CONSOLIDATING = """
 ## Deliverable
 
@@ -980,6 +1079,67 @@ def test_a_dependent_of_two_absorbed_rows_ends_with_the_union(tmp_path):
         ],
     )
     assert queued_rows(root)["WI-010"]["Predecessors"] == "WI-101;WI-102;WI-103"
+
+
+def test_the_mint_handles_new_successors_across_multiple_repoint_groups(tmp_path):
+    """Preflight and apply agree when apply also sees canonical new rows."""
+    root = git_repo(tmp_path)
+    write_sr(root)
+    for absorbed in ("WI-005", "WI-006"):
+        write_spec(root, "partial", absorbed, slug="returned")
+    write_spec(
+        root,
+        "queued",
+        "WI-010",
+        slug="dependent",
+        specref="seed.txt",
+        needs=["WI-005", "WI-006"],
+    )
+    dispositions = """
+## Deliverable
+
+Adjudicated: two returned rows continue across three successors.
+
+## Dispositions
+
+```toml
+title = "First WI-005 successor"
+supersedes = "WI-005"
+needs = ["WI-005"]
+```
+
+```toml
+title = "Shared successor"
+supersedes = ["WI-005", "WI-006"]
+needs = ["WI-005", "WI-006"]
+```
+
+```toml
+title = "Last WI-006 successor"
+supersedes = "WI-006"
+needs = ["WI-006"]
+```
+"""
+    write_spec(
+        root,
+        "complete",
+        "WI-020",
+        slug="adjudicate",
+        safety_class="adjudication",
+        body=dispositions,
+    )
+    _commit(root, "setup", when=T_CODE)
+
+    minted, refusal = intake.intake_after_merge(
+        root, _rev(root), _rev(root), {"WI-020": "merged"}, "wi-020"
+    )
+
+    assert refusal is None, refusal
+    successors = [wi_id for wi_id, _rel in minted]
+    assert successors == ["WI-021", "WI-022", "WI-023"]
+    rows = queued_rows(root)
+    assert rows["WI-010"]["Predecessors"] == ";".join(successors)
+    assert [rows[wi_id]["Predecessors"] for wi_id in successors] == ["", "", ""]
 
 
 def test_a_one_id_supersedes_string_is_unchanged_by_the_list_form():

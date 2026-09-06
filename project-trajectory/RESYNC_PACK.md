@@ -72,6 +72,11 @@ file you have edited.** Where §2's class and your local edit disagree, that is 
 decision for the operator, recorded in the re-sync commit — not something to
 resolve by taking the kit's copy because it is newer.
 
+For changes affecting the project's purpose, stakeholders, domain or assurance
+method, use the [authoring skill's adopter revalidation](skills/spine-authoring/SKILL.md#at-adoption-or-a-material-project-change)
+to assess its hats, possible missing needs and affected SRs. Record a scoped
+no-semantic-impact conclusion when that is the upgrade's actual result.
+
 ### 1.3 The order of moves
 
 1. **Legacy one-word policy files first.** If the repo still carries them under
@@ -84,6 +89,10 @@ resolve by taking the kit's copy because it is newer.
    not the whole move.
 3. **Then the deviation review** (§2) over the changed files: overwrite,
    regenerate, re-apply dials, or preserve — per file, per its class.
+   After taking the prompt templates and their generator, run
+   `python scripts/gen_prompt_catalog.py` to refresh `prompts/CATALOG.md`.
+   Bootstrap initializes it for fresh scaffolds; its fresh-only initialization
+   does not regenerate an existing adopter's catalog.
 4. **Then the applicable §3 entries**, oldest first. They cover what a file copy
    cannot: registry conversions, renamed or deleted scripts you must remove by
    hand, config folds, and state you must reconcile before a derived value is

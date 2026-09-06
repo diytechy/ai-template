@@ -860,13 +860,17 @@ medical-device repo and a game studio.
 
 ### Change intake — routing a problem to the spine
 
-An inbound problem (bug, review finding, field report) routes by **which
-registry row it contradicts** — that classification, not the fix, is step 1:
+An inbound problem routes by **which registry row it contradicts** — that
+classification, not the fix, is step 1. Then check the parent obligation and
+selected design before treating the violation as a coverage gap:
 
 ```mermaid
 flowchart TD
   P["problem identified"] --> C{"which row does it contradict?"}
-  C -->|"an existing SR/LLR is violated"| TG["coverage gap:\nno TC caught it"]
+  C -->|"an existing SR/LLR is violated"| D{"obligation and design still sound?"}
+  D -->|"yes"| TG["coverage gap:\nno TC caught it"]
+  D -->|"parent sound; LLR unsuitable"| DR["amend LLR + verification\npreserve parent acceptance"]
+  D -->|"promised behavior changes"| RG
   C -->|"no row speaks to it"| RG["requirement gap:\nnew/changed SN -> SR -> LLR\n(walk DevStg-Reqs/DevStg-Tests for that slice)"]
   TG --> T1["write the failing TC first"]
   RG --> S{"scope the solution"}
@@ -877,13 +881,19 @@ flowchart TD
   C2 --> W
   L2 --> W
   T1 --> W
+  DR --> W
   W --> G["implement test-first; gates re-run"]
   G --> V["touched CMP:\nhas-gap -> Founded"]
 ```
 
 - **Coverage gap** — the requirement was right and untested: the fix *starts*
   as a failing TC against the existing SR/LLR, never code-first.
-- **Requirement gap** — no row speaks to it: walk the DevStg-Reqs/DevStg-Tests bar for that slice
+- **Design replacement** — use the ordinary scoped amendment and its tier's
+  approval authority; preserve enduring behavioral regression tests and parent constraints.
+  Authoring is not approval. Use the `spine-authoring` skill questions
+  to distinguish an unsuitable LLR from a changed stakeholder obligation.
+- **Requirement gap** — no row speaks to it, or its promised outcome must change:
+  walk the DevStg-Reqs/DevStg-Tests bar for that slice
   only; the new rows then scope the solution (each new interface, component, or
   purchased part lands as its own registry row, so the next reader finds the
   decision where the ids live).

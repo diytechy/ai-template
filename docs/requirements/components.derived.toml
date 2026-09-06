@@ -21,7 +21,7 @@ components = 4
 design_rows = 192
 seam_rows = 167
 requirements_placed = 73
-requirements_unplaced = 3
+requirements_unplaced = 6
 seams_unplaced = 0
 
 [component_view.CMP-006]
@@ -786,5 +786,8 @@ sr_refs = [
   "SR-034",
   "SR-036",
   "SR-114",
+  "SR-184",
+  "SR-185",
+  "SR-186",
 ]
 seam_refs = []

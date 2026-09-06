@@ -1,5 +1,7 @@
 # ai-template
 
+## Project vision
+
 <a id="vision"></a>
 **PROJECT-VISION:** A reusable starting point for building **maintainable,
 requirement-traced projects** with AI agents and humans working from the same
@@ -9,6 +11,45 @@ trust what ships.
 
 It is **stack-agnostic** with **Python-first reference scripts** — drop it into
 any repo and wire the harness to that repo's tooling (SN-003).
+
+The vision has six purpose anchors. They guide scope and decomposition; the
+stakeholder needs and requirements carry acceptance obligations.
+
+<a id="objective-o1"></a>
+### (O1) Maintainable over time
+
+Keep code, analytics and their development process understandable and economical
+to change while preserving required behavior.
+
+<a id="objective-o2"></a>
+### (O2) Traceable and explainable
+
+Connect stakeholder purpose to requirements, design choices, implementation and
+verification so a reviewer can understand both what exists and why.
+
+<a id="objective-o3"></a>
+### (O3) Trustworthy evidence
+
+Build test-first and report verification honestly, including failures,
+limitations and protection against publishing secrets or private information.
+
+<a id="objective-o4"></a>
+### (O4) Explicit authority
+
+Advance through clear approval boundaries, keeping human and delegated
+decisions visible and preventing automation from granting itself more authority.
+
+<a id="objective-o5"></a>
+### (O5) A shared, usable way of working
+
+Let humans and different AI agents understand, coordinate and resume work from
+the same project record, with bounded self-direction where enabled.
+
+<a id="objective-o6"></a>
+### (O6) Reusable and proportionate
+
+Make adoption and upgrade practical across stacks and supported platforms,
+preserve project-owned content, and keep optional capabilities cheap to omit.
 
 **License: [Apache-2.0](LICENSE)** ([NOTICE](NOTICE)). Copying
 `project-trajectory/` into your repo — the quick start below — is exactly what

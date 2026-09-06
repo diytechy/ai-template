@@ -2120,3 +2120,36 @@ automated = "Yes"
 evidence = """tests/test_consolidate.py::test_the_queue_digest_covers_the_four_fields_that_change_the_question; tests/test_consolidate.py::test_a_malformed_digests_cell_reads_as_no_recorded_digest; tests/test_consolidate.py::test_a_shared_open_item_edge_is_a_commissioning_signal; tests/test_consolidate.py::test_the_module_signal_reads_both_the_llr_join_and_the_row_prose; tests/test_consolidate.py::test_the_module_signal_does_not_fire_on_a_bare_module_name; tests/test_consolidate.py::test_two_disjoint_overlapping_pairs_make_one_candidate_set; tests/test_consolidate.py::test_no_row_is_minted_beside_another_judgement; tests/test_consolidate.py::test_a_queue_state_that_has_been_judged_is_never_judged_again; tests/test_consolidate.py::test_a_consolidations_own_successor_does_not_seed_the_next_census; tests/test_consolidate.py::test_re_absorbing_a_row_a_consolidation_minted_is_refused_by_name; tests/test_consolidate.py::test_a_malformed_verdict_block_refuses_and_never_defaults; tests/test_consolidate.py::test_the_close_refuses_a_row_that_left_the_queue_by_name; tests/test_consolidate.py::test_an_absorbed_rows_scope_text_is_byte_identical_and_specref_kept; tests/test_consolidate_close.py::test_the_census_mints_one_row_and_refuses_a_second_while_it_is_pending; tests/test_consolidate_close.py::test_a_consolidate_verdict_absorbs_its_cluster_end_to_end; tests/test_consolidate_close.py::test_the_close_refuses_by_name_when_an_absorbed_row_was_claimed; tests/test_consolidate_close.py::test_queue_with_edge_writes_the_hard_needs_edge; tests/test_consolidate_close.py::test_return_to_draft_moves_the_row_back_with_the_finding_quoted"""
 status = "Drafted"
 phase = 5
+
+[test.TC-209]
+verifies = ["SR-184"]
+level = "Inspection"
+method = "Follow the H2 Inspection procedure in docs/test/inspection-procedures.md#h2-inspection-procedure-critique-acceptance-record; inspect a complete record, an abnormal record missing reviewer/rubric/intent/anchor, and a fully populated record whose rubric is copied from the verifying TC without independent SN/SR derivation."
+tier = "Release"
+expected = "Complete independently derived provenance is accepted; each missing field or TC-copied rubric without independent SN/SR derivation is an Inspection finding; artifact quality remains Critique's judgment."
+automated = "No"
+evidence = "docs/test/inspection-procedures.md#h2-inspection-result-pending"
+status = "Drafted"
+phase = 5
+
+[test.TC-210]
+verifies = ["SR-185"]
+level = "Inspection"
+method = "Follow the H3 Inspection procedure in docs/test/inspection-procedures.md#h3-inspection-procedure-requirement-and-interface-change; inspect a semantic change record and an abnormal reference-existence-only record."
+tier = "Release"
+expected = "The counterpart decision is explicit; reference-existence evidence alone is found insufficient."
+automated = "No"
+evidence = "docs/test/inspection-procedures.md#h3-inspection-result-pending"
+status = "Drafted"
+phase = 5
+
+[test.TC-211]
+verifies = ["SR-186"]
+level = "Inspection"
+method = "Follow the H5 Inspection procedure in docs/test/inspection-procedures.md#h5-inspection-procedure-proportionate-decomposition; inspect the complete chain and an extra paraphrasing child."
+tier = "Release"
+expected = "A child within a required tier with no independent decision or verification purpose is an Inspection finding; otherwise the review records that independent value and why further splitting stops."
+automated = "No"
+evidence = "docs/test/inspection-procedures.md#h5-inspection-result-pending"
+status = "Drafted"
+phase = 5

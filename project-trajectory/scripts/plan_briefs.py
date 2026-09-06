@@ -17,8 +17,8 @@ plan texts, the rubric). It never opens docs/status.md, docs/log.md, a
 docs/reviews/ verdict, or any self-assessment, so a planner/critic/arbiter can
 never be handed the driver's own notes — the leak that collapses independent
 finding rates (agent_loop's REVIEWER_PROMPT / CRITIQUE_PROMPT enforce the same
-rule for the review/critique hats). THE ALLOWLIST IS THE CONSTRUCTION: the only
-file reads in this module are the two registries above.
+rule for the review/critique hats). `build_surface` keeps that two-file
+allowlist; the separate hat surface reads the roster and explicit parents.
 
 The three hats register on the existing S8 --prompt-map / AGENT_PROMPT_MAP
 override (agent_loop.py; each entry names a prompt-template FILE). `HAT_KEYS`
@@ -40,12 +40,12 @@ from `docs/requirements/hats.toml` via the `hats` sibling; every applicable
 hat's question lands in the brief, so the session faces each perspective rather
 than being trusted to remember it.
 
-That is a THIRD file read, and it is deliberately NOT inside `build_surface`:
-the two-file allowlist is `build_surface`'s own contract and stays exactly as
-it was. The redaction INVARIANT is unchanged either way — the roster is a
-declared registry of questions, not the driver's notes, not `docs/status.md`,
-not a self-assessment — but keeping the widening in a separately named function
-means the boundary that matters is still readable in one place.
+Those reads are deliberately NOT inside `build_surface`: the two-file allowlist
+is `build_surface`'s own contract and stays exactly as it was. The redaction
+INVARIANT is unchanged either way — the roster and explicit parent carriers are
+declared inputs, not the driver's notes, not `docs/status.md`, not a
+self-assessment — and keeping the widening in separately named functions means
+the boundary that matters is still readable in one place.
 
 `{{HAT_QUESTIONS}}` is filled only when the (possibly operator-overridden)
 template DECLARES it — `declares_slot` is the guard. A strict fill rejects an
@@ -68,6 +68,7 @@ from pathlib import Path
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
+from kitlib.spine import refs as _refs
 
 # Sibling: the spine's registry CARRIER — the one home for
 # the TOML tier tables, the key->column vocabulary and both readers. Run as a
@@ -251,6 +252,7 @@ def build_surface(root):
 # --- the hats roster surface (SN-036) -----------------------------------------
 # The planner-brief slot the applicable perspectives land in.
 HAT_QUESTIONS_SLOT = "HAT_QUESTIONS"
+NEEDS_REL = hats_roster.NEEDS_REL
 
 # Re-exported so a composer needs one seam, not two, to put hats in a brief.
 HatsError = hats_roster.HatsError
@@ -269,6 +271,101 @@ def hat_surface(root, context):
     decomposition with no perspective, because the file listing them was
     broken, is the failure this refusal exists for."""
     chosen = hats_roster.applicable(hats_roster.load(root), context)
+    return {HAT_QUESTIONS_SLOT: hats_roster.brief_block(chosen)}
+
+
+def _canonical_need_ref(spec):
+    """Return an exact SN id from a canonical needs-carrier SpecRef, or None."""
+    pathpart, separator, fragment = spec.partition("#")
+    canonical = {NEEDS_REL, Path(NEEDS_REL).with_suffix(".md").as_posix()}
+    if pathpart not in canonical or not separator or not fragment.strip():
+        return None
+    fragment = fragment.strip()
+    if not re.fullmatch(r"SN-\d+", fragment):
+        raise HatsError("need SpecRef requires an exact SN-ID fragment: " + repr(spec))
+    return fragment
+
+
+def _hat_parent_context(work_context, need):
+    """Combine WI tags with one need, without combining sibling needs."""
+    context = hats_roster.context_from_need(need)
+    tags = list(
+        dict.fromkeys((*work_context.get("tags", ()), *context.get("tags", ())))
+    )
+    if tags:
+        context["tags"] = tags
+    return context
+
+
+def _parent_need_ids(root, row):
+    """Exact SN parents reached from explicit SR-Refs and canonical SpecRef."""
+    sr_refs = _refs(row.get("SR-Refs"))
+    need_ids = {}
+    if sr_refs:
+        if spine_carrier.resolve(root / SR_CSV) is None:
+            raise HatsError(
+                "cannot resolve declared SR-Refs {}: system-requirements carrier "
+                "is absent".format(", ".join(sr_refs))
+            )
+        sr_rows = {
+            str(sr.get("SR-ID") or ""): sr
+            for sr in spine_carrier.load(root / SR_CSV, "SR-ID", keep_examples=False)
+        }
+        missing_srs = [ref for ref in sr_refs if ref not in sr_rows]
+        if missing_srs:
+            raise HatsError(
+                "cannot resolve declared SR-Refs: unknown SR id(s) "
+                + ", ".join(missing_srs)
+            )
+        for sr_id in sr_refs:
+            for need_id in _refs(sr_rows[sr_id].get("SN-Refs")):
+                need_ids.setdefault(need_id, None)
+
+    spec = str(row.get("SpecRef") or "").strip()
+    spec_need = _canonical_need_ref(spec)
+    if spec_need:
+        need_ids.setdefault(spec_need, None)
+    return need_ids
+
+
+def _parent_need_contexts(root, row, work_context):
+    """One WI+SN context per parent; declared missing inputs refuse."""
+    need_ids = _parent_need_ids(root, row)
+    if not need_ids:
+        return []
+    if spine_carrier.resolve(root / NEEDS_REL, spine_carrier.NEED_CARRIERS) is None:
+        raise HatsError(
+            "cannot resolve declared stakeholder-need references {}: "
+            "stakeholder-needs carrier is absent".format(", ".join(need_ids))
+        )
+    needs = {
+        str(need.get("id") or ""): need
+        for need in spine_carrier.load_needs(root / NEEDS_REL)
+    }
+    missing_needs = [need_id for need_id in need_ids if need_id not in needs]
+    if missing_needs:
+        raise HatsError(
+            "cannot resolve declared stakeholder-need reference(s): unknown "
+            "SN id(s) {}".format(", ".join(missing_needs))
+        )
+    return [_hat_parent_context(work_context, needs[need_id]) for need_id in need_ids]
+
+
+def hat_surface_for_work_item(root, row):
+    """Hat surface for a WI and each exact parent, without merging parents."""
+    root = Path(root)
+    roster = hats_roster.load(root)
+    if not roster:  # absent/empty roster is the declared opt-out
+        return {HAT_QUESTIONS_SLOT: hats_roster.brief_block(roster)}
+    work_context = hats_roster.context_from_work_item(row)
+    contexts = [work_context] + _parent_need_contexts(root, row, work_context)
+    selected = {
+        hat["name"]
+        for context in contexts
+        for hat in hats_roster.applicable(roster, context)
+    }
+
+    chosen = [hat for hat in roster if hat["name"] in selected]
     return {HAT_QUESTIONS_SLOT: hats_roster.brief_block(chosen)}
 
 

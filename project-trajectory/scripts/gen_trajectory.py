@@ -109,6 +109,13 @@ except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import check_trajectory as ct
 
+# The text snapshot is a public mode of this command, but it does not render
+# HTML.  Keep its process path below the parse/validation carriers it uses and
+# out of the dashboard's graph, view, panel, and design-system modules.  A
+# regular import still loads the complete compatibility facade; only a direct
+# ``--status`` invocation takes this narrow path.
+_STATUS_ONLY = __name__ == "__main__" and "--status" in sys.argv[1:]
+
 # --- WI-280 split: the decomposed sibling modules ------------------------------
 # The implementation lives in the split siblings — traj_graph.py (layout +
 # wire routing), traj_parse.py (sources + the guarded `schedule` import's one
@@ -127,148 +134,151 @@ except ImportError:
 # `gt.traj_parse.subprocess`, which only works on the instance the moved code
 # actually resolves in — has one place to reach it. Deliberate, hence the
 # per-line F401 suppression each carries: unused HERE is the point.
-import traj_views  # noqa: F401
-import traj_context  # noqa: F401
-import traj_status  # noqa: F401
-import traj_render  # noqa: F401
-import traj_panels  # noqa: F401
-import traj_parse  # noqa: F401
-from traj_parse import (  # noqa: F401
-    OKF_DIR,
-    OKF_TIER_ORDER,
-    PROCESS_STAGE_FILE,
-    WORKSTREAM_LABELS,
-    _asof,
-    _stage_value,
-    _git,
-    _okf_frontmatter,
-    _okf_nodes,
-    _process_doc,
-    _run_captured,
-    _sn_rows,
-    _spine,
-    cmp_rows,
-    frame_context,
-    project_name,
-    project_vision,
-    read_sns,
-    runtime_flows,
-    schedule,
-    spine_stats,
-    sw_modules,
-)
-import traj_graph  # noqa: F401
-from traj_render import (  # noqa: F401
-    ARROW_SIZE,
-    CEDGE_LEN,
-    DRILL_GEOM,
-    DRILL_SCRIPT,
-    DRILL_STYLE,
-    MAX_TIER_COL,
-    OKF_TYPE_CODE,
-    OKF_TYPE_FILL,
-    PHASE_ACCENTS,
-    PORT_R,
-    RING_INKS,
-    SCROLL_CUE,
-    SHRINK_FLOOR,
-    STATUS_BUCKET,
-    STATUS_BUCKET_LABEL,
-    STATUS_FILL,
-    STATUS_GLYPH,
-    SVG_RX,
-    SW_NODE_FILL,
-    TIER_COL,
-    TIER_FILL,
-    _BLAB_CH,
-    _BSUB_CH,
-    _FOCUSABLE,
-    _INK_PAD,
-    _arrow_markers,
-    _cedge_marker,
-    _drill_block_label,
-    _drill_layer_svg,
-    _fit_lines,
-    _hscroll,
-    _ink_overflow,
-    _path_xs,
-    _render_drill,
-    _ring_ink,
-    _ring_style,
-    _svg_fit_style,
-    _svg_frame,
-    _svg_role,
-    _svg_wrap,
-    _tier_col_width,
-    esc,
-    tab_button,
-    tab_panel_open,
-)
-from traj_context import context_block  # noqa: F401
-from traj_views import (  # noqa: F401
-    DEFAULT_PHASE,
-    SW_CMPTREE_STYLE,
-    _cmp_panel,
-    _dag_layout,
-    _sw_node,
-    _sw_panel,
-    _wi_phases,
-    _wi_st,
-    _wi_status,
-    arch_icicle,
-    dag_svg,
-    flows_block,
-    sw_containment,
-    sw_graph,
-    when_view,
-)
-from traj_status import (  # noqa: F401
-    PAUSE_MALFORMED,
-    STATUS_BEGIN,
-    STATUS_END,
-    STATUS_MD,
-    _clip_title,
-    _frontier_lines,
-    _stage_facts,
-    _open_item_oneliners,
-    _pause_pending,
-    _spine_counts,
-    _spine_pending,
-    _splice_status,
-    _title_clause,
-    pending_block,
-    run_status,
-    status_block,
-)
-from traj_panels import (  # noqa: F401
-    _NEXT_WORK_CAP,
-    _NEXT_WORK_TITLE,
-    _know_panel,
-    _next_work_html,
-    _next_work_title,
-    _station_panel,
-    know_graph,
-    know_view,
-    process_panel,
-)
-from traj_graph import (  # noqa: F401
-    GraphGeom,
-    _FAN_PITCH,
-    _LEAD_RUNGS,
-    _MAX_LANES,
-    _cubic_points,
-    _dag_ranks,
-    _detour_d,
-    _detour_points,
-    _layered_layout,
-    _lead_rung,
-    _port_fan,
-    _route_edges,
-    _routed_label_xy,
-    _seg_hits_rect,
-    flat_graph,
-    route_graph,
-)
+if _STATUS_ONLY:
+    import traj_status  # noqa: F401
+else:
+    import traj_views  # noqa: F401
+    import traj_context  # noqa: F401
+    import traj_status  # noqa: F401
+    import traj_render  # noqa: F401
+    import traj_panels  # noqa: F401
+    import traj_parse  # noqa: F401
+    from traj_parse import (  # noqa: F401
+        OKF_DIR,
+        OKF_TIER_ORDER,
+        PROCESS_STAGE_FILE,
+        WORKSTREAM_LABELS,
+        _asof,
+        _stage_value,
+        _git,
+        _okf_frontmatter,
+        _okf_nodes,
+        _process_doc,
+        _run_captured,
+        _sn_rows,
+        _spine,
+        cmp_rows,
+        frame_context,
+        project_name,
+        project_vision,
+        read_sns,
+        runtime_flows,
+        schedule,
+        spine_stats,
+        sw_modules,
+    )
+    import traj_graph  # noqa: F401
+    from traj_render import (  # noqa: F401
+        ARROW_SIZE,
+        CEDGE_LEN,
+        DRILL_GEOM,
+        DRILL_SCRIPT,
+        DRILL_STYLE,
+        MAX_TIER_COL,
+        OKF_TYPE_CODE,
+        OKF_TYPE_FILL,
+        PHASE_ACCENTS,
+        PORT_R,
+        RING_INKS,
+        SCROLL_CUE,
+        SHRINK_FLOOR,
+        STATUS_BUCKET,
+        STATUS_BUCKET_LABEL,
+        STATUS_FILL,
+        STATUS_GLYPH,
+        SVG_RX,
+        SW_NODE_FILL,
+        TIER_COL,
+        TIER_FILL,
+        _BLAB_CH,
+        _BSUB_CH,
+        _FOCUSABLE,
+        _INK_PAD,
+        _arrow_markers,
+        _cedge_marker,
+        _drill_block_label,
+        _drill_layer_svg,
+        _fit_lines,
+        _hscroll,
+        _ink_overflow,
+        _path_xs,
+        _render_drill,
+        _ring_ink,
+        _ring_style,
+        _svg_fit_style,
+        _svg_frame,
+        _svg_role,
+        _svg_wrap,
+        _tier_col_width,
+        esc,
+        tab_button,
+        tab_panel_open,
+    )
+    from traj_context import context_block  # noqa: F401
+    from traj_views import (  # noqa: F401
+        DEFAULT_PHASE,
+        SW_CMPTREE_STYLE,
+        _cmp_panel,
+        _dag_layout,
+        _sw_node,
+        _sw_panel,
+        _wi_phases,
+        _wi_st,
+        _wi_status,
+        arch_icicle,
+        dag_svg,
+        flows_block,
+        sw_containment,
+        sw_graph,
+        when_view,
+    )
+    from traj_status import (  # noqa: F401
+        PAUSE_MALFORMED,
+        STATUS_BEGIN,
+        STATUS_END,
+        STATUS_MD,
+        _clip_title,
+        _frontier_lines,
+        _stage_facts,
+        _open_item_oneliners,
+        _pause_pending,
+        _spine_counts,
+        _spine_pending,
+        _splice_status,
+        _title_clause,
+        pending_block,
+        run_status,
+        status_block,
+    )
+    from traj_panels import (  # noqa: F401
+        _NEXT_WORK_CAP,
+        _NEXT_WORK_TITLE,
+        _know_panel,
+        _next_work_html,
+        _next_work_title,
+        _station_panel,
+        know_graph,
+        know_view,
+        process_panel,
+    )
+    from traj_graph import (  # noqa: F401
+        GraphGeom,
+        _FAN_PITCH,
+        _LEAD_RUNGS,
+        _MAX_LANES,
+        _cubic_points,
+        _dag_ranks,
+        _detour_d,
+        _detour_points,
+        _layered_layout,
+        _lead_rung,
+        _port_fan,
+        _route_edges,
+        _routed_label_xy,
+        _seg_hits_rect,
+        flat_graph,
+        route_graph,
+    )
 
 # The unified project-state artifact at the repo ROOT (WI-039, the approved
 # AXES spec): what was docs/trajectory.html, plus the How-SW view and the

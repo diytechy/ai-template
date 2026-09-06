@@ -3903,6 +3903,12 @@ def after_session(ctx, i, outcome, reset_hint, committed, judging=False):
     return None
 
 
+def session_commit_range(root, before):
+    """The post-session HEAD and its non-empty range when it moved."""
+    after = head_sha(root)
+    return after, f"{before or '(root)'}..{after or '?'}" if before != after else ""
+
+
 def run_iteration(ctx, i):
     """One worker session end-to-end: guards, routing (route_session),
     launch, telemetry, bookkeeping (session_bookkeeping), and the outcome
@@ -3954,7 +3960,6 @@ def run_iteration(ctx, i):
         current_wi = current_assignment_wi(root, worker)
     session = "{:03d}".format(next_session_number(ctx.iter_dir, worker["train"]))
     stamp = time.strftime("%Y%m%d-%H%M%S")
-    wi_label = current_wi
     now = time.time()
     plan = route_session(ctx, i, current_wi, session, resume_reconcile, now)
     if isinstance(plan, int):
@@ -3981,9 +3986,7 @@ def run_iteration(ctx, i):
     write_raw_stream(ctx.raw_dir, "{}{}-{}.log".format(ctx.tag, session, stamp), output)
     data = parse_json_result(output)
     reset_hint = limit_reset_hint(output, data, code)
-    after = head_sha(root)
-    committed = before != after
-    commits = "{}..{}".format(before or "(root)", after or "?") if committed else ""
+    after, commits = session_commit_range(root, before)
     # A worker has no lane run-state (spec §10): its state is always RUNNING
     # until its committed evidence says otherwise (worker_endstate).
     ctx.run.state = "RUNNING"
@@ -3992,11 +3995,11 @@ def run_iteration(ctx, i):
     # (including the "failed before it could work" error rule) live in
     # classify_outcome's docstring (single-source, WI-080 Slice D).
     outcome, errored = classify_outcome(
-        reset_hint, timed_out, ctx.run.state, committed, data, code
+        reset_hint, timed_out, ctx.run.state, bool(commits), data, code
     )
 
     meta = session_meta(
-        ctx, plan, data, session, stamp, wi_label, outcome, commits, code, wall_secs
+        ctx, plan, data, session, stamp, current_wi, outcome, commits, code, wall_secs
     )
     stamp_session_meta(meta, plan, timed_out)
     meta.update(invocation)
@@ -4026,14 +4029,14 @@ def run_iteration(ctx, i):
         )
     )
     r = session_bookkeeping(
-        ctx, plan, outcome, code, commits, after, reset_hint, now, session, wi_label
+        ctx, plan, outcome, code, commits, after, reset_hint, now, session, current_wi
     )
     if r == "reroute":
         return None
     if r is not None:
         return r
     judging = plan["is_review"] or plan["is_critique"]
-    return after_session(ctx, i, outcome, reset_hint, committed, judging=judging)
+    return after_session(ctx, i, outcome, reset_hint, bool(commits), judging=judging)
 
 
 def _coordinator_lock(root):

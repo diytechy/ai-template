@@ -226,8 +226,8 @@ def _hat_slots(root, row, planner_tmpl):
     THE GUARD IS WHY THIS IS CONDITIONAL: `plan_briefs.assemble` rejects a slot
     key the template does not declare, so filling it unconditionally would stop
     every operator `--prompt-map` override authored before the slot existed
-    from composing at all. Raises `HatsError` on a roster that exists and is
-    broken — the caller pages on it."""
+    from composing at all. Raises `HatsError` on a roster or declared scope
+    reference that is unusable — the caller pages on it."""
     import plan_briefs
 
     if not plan_briefs.declares_slot(planner_tmpl, plan_briefs.HAT_QUESTIONS_SLOT):
@@ -245,7 +245,7 @@ def _hat_slots(root, row, planner_tmpl):
                 file=sys.stderr,
             )
         return {}
-    return plan_briefs.hat_surface(root, plan_briefs.hat_context_for_work_item(row))
+    return plan_briefs.hat_surface_for_work_item(root, row)
 
 
 def _dp_attribution(root, wi, round_dir, step, registry, route_id=""):
@@ -289,7 +289,6 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
         return "PAGE", "no plan rubric on file ({})".format(PLAN_RUBRIC)
     goal_text = goal_path.read_text(encoding="utf-8", errors="replace")
     rubric_text = rubric_path.read_text(encoding="utf-8", errors="replace")
-    surface = plan_briefs.build_surface(root)
 
     def hat_template(hat):
         return plan_briefs.strip_dispatcher_block(
@@ -297,18 +296,17 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
         )
 
     try:
+        surface = plan_briefs.build_surface(root)
         planner_tmpl = hat_template(plan_briefs.HAT_PLANNER)
         critic_tmpl = hat_template(plan_briefs.HAT_CRITIC)
         arbiter_tmpl = hat_template(plan_briefs.HAT_ARBITER)
         hat_slots = _hat_slots(root, row, planner_tmpl)
     except OSError as exc:
         return "PAGE", "dual-plan hat template unreadable: {}".format(exc)
-    except plan_briefs.HatsError as exc:
-        # A MALFORMED roster PAGES rather than degrading: a decomposition
-        # briefed with no perspective because the file listing them was broken
-        # is exactly the silent miss the refusal exists for. An ABSENT roster
-        # is opt-out and never reaches here as an error.
-        return "PAGE", "the hats roster is unusable: {}".format(exc)
+    except (plan_briefs.HatsError, SystemExit) as exc:
+        # Malformed declared context PAGES with the reader's reason. An absent
+        # roster opts out before the optional parent carriers are read.
+        return "PAGE", "the planning context is unusable: {}".format(exc)
 
     routes, _registry, route_note = _dp_routes(root, "strong")
     if routes is None and _registry is not None:

@@ -5,6 +5,9 @@
 baseline, or registry schema. Its sample text becomes canonical only if moved
 into the root README through the normal reviewed change.
 
+The headed clauses now have their live home in the [root vision](../../README.md#vision);
+this document retains their proposal history and the purpose-to-need worksheet.
+
 **Current direction after the third Fable review O1:** six clauses as headed
 prose in the root README's vision section, with plain anchors and no
 `objective_refs` field. No reference-carrier parser, schema, approval-field or
@@ -82,33 +85,33 @@ at `fa17b85f`; adequacy still needs the independent cross-check.
 
 | Need | Proposed objective refs | Distinct contribution retained |
 |---|---|---|
-| SN-001 | O6 | Working adoption and upgrades that preserve adopter content |
-| SN-002 | O2, O3 | Mechanically verified traceability |
-| SN-003 | O6 | Stack-independent configuration and adoption |
-| SN-004 | O4, O3 | Explicit gates with enforced required checks |
-| SN-005 | O5, O3 | One agent-neutral working and enforcement contract |
-| SN-006 | O5, O4 | Bounded unattended operation and clear recovery/failure behavior |
-| SN-007 | O1, O3 | The kit verifies itself through changes |
-| SN-008 | O3 | Honest pass verdicts and explicit missing evidence |
-| SN-009 | O3 | Secrets and enabled identity/privacy protection |
-| SN-010 | O2, O5 | Navigable documentation and current generated views |
-| SN-011 | O6 | Argued dependencies and supported-platform operation |
-| SN-012 | O1, O6 | Proportionate granularity and optional capabilities |
-| SN-023 | O2, O5 | Visible progress and system connections |
-| SN-024 | O3 | Independent, rubric-grounded subjective verification |
-| SN-025 | O5 | Next work derived from tracked state |
-| SN-026 | O5, O3 | Configurable models and independent perspectives |
-| SN-027 | O5, O4 | Bounded parallel work and controlled serial integration |
-| SN-028 | O4, O5 | One discoverable and unambiguous policy home |
-| SN-029 | O4, O5 | Honest autonomous advancement under current authority |
-| SN-033 | O2, O5 | Needs recognizable to stakeholders |
-| SN-034 | O6, O5 | Accessible setup and resume entry points across platforms |
-| SN-035 | O5 | A discoverable actions menu within its declared scope |
-| SN-036 | O2, O3 | Relevant perspectives and failure cases considered in decomposition |
-| SN-037 | O2 | Requirements and architecture grounded in system boundaries |
-| SN-038 | O2, O6 | Every supplied file's purpose is explainable |
-| SN-039 | O6 | Applicability of each need is explicit |
-| SN-040 | O2 | Reproducible, reviewable component-partition rationale |
+| SN-001 | [O6](../../README.md#objective-o6) | Working adoption and upgrades that preserve adopter content |
+| SN-002 | [O2](../../README.md#objective-o2), [O3](../../README.md#objective-o3) | Mechanically verified traceability |
+| SN-003 | [O6](../../README.md#objective-o6) | Stack-independent configuration and adoption |
+| SN-004 | [O4](../../README.md#objective-o4), [O3](../../README.md#objective-o3) | Explicit gates with enforced required checks |
+| SN-005 | [O5](../../README.md#objective-o5), [O3](../../README.md#objective-o3) | One agent-neutral working and enforcement contract |
+| SN-006 | [O5](../../README.md#objective-o5), [O4](../../README.md#objective-o4) | Bounded unattended operation and clear recovery/failure behavior |
+| SN-007 | [O1](../../README.md#objective-o1), [O3](../../README.md#objective-o3) | The kit verifies itself through changes |
+| SN-008 | [O3](../../README.md#objective-o3) | Honest pass verdicts and explicit missing evidence |
+| SN-009 | [O3](../../README.md#objective-o3) | Secrets and enabled identity/privacy protection |
+| SN-010 | [O2](../../README.md#objective-o2), [O5](../../README.md#objective-o5) | Navigable documentation and current generated views |
+| SN-011 | [O6](../../README.md#objective-o6) | Argued dependencies and supported-platform operation |
+| SN-012 | [O1](../../README.md#objective-o1), [O6](../../README.md#objective-o6) | Proportionate granularity and optional capabilities |
+| SN-023 | [O2](../../README.md#objective-o2), [O5](../../README.md#objective-o5) | Visible progress and system connections |
+| SN-024 | [O3](../../README.md#objective-o3) | Independent, rubric-grounded subjective verification |
+| SN-025 | [O5](../../README.md#objective-o5) | Next work derived from tracked state |
+| SN-026 | [O5](../../README.md#objective-o5), [O3](../../README.md#objective-o3) | Configurable models and independent perspectives |
+| SN-027 | [O5](../../README.md#objective-o5), [O4](../../README.md#objective-o4) | Bounded parallel work and controlled serial integration |
+| SN-028 | [O4](../../README.md#objective-o4), [O5](../../README.md#objective-o5) | One discoverable and unambiguous policy home |
+| SN-029 | [O4](../../README.md#objective-o4), [O5](../../README.md#objective-o5) | Honest autonomous advancement under current authority |
+| SN-033 | [O2](../../README.md#objective-o2), [O5](../../README.md#objective-o5) | Needs recognizable to stakeholders |
+| SN-034 | [O6](../../README.md#objective-o6), [O5](../../README.md#objective-o5) | Accessible setup and resume entry points across platforms |
+| SN-035 | [O5](../../README.md#objective-o5) | A discoverable actions menu within its declared scope |
+| SN-036 | [O2](../../README.md#objective-o2), [O3](../../README.md#objective-o3) | Relevant perspectives and failure cases considered in decomposition |
+| SN-037 | [O2](../../README.md#objective-o2) | Requirements and architecture grounded in system boundaries |
+| SN-038 | [O2](../../README.md#objective-o2), [O6](../../README.md#objective-o6) | Every supplied file's purpose is explainable |
+| SN-039 | [O6](../../README.md#objective-o6) | Applicability of each need is explicit |
+| SN-040 | [O2](../../README.md#objective-o2) | Reproducible, reviewable component-partition rationale |
 
 Do not force a questionable need under O1 or O5 because those are broad.
 For each link, a reviewer should finish “without this need, this objective
