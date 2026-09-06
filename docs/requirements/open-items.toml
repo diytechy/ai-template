@@ -3304,10 +3304,12 @@ recommendation = """(c) for the branches now, (a) for contract_split once OI-44 
 
 [open_item.OI-82]
 title = "Does the owner's approval brief narrow to the rungs the dial still holds?"
-status = "pending"
+status = "ruled"
 raised = "2026-09-02"
 one_line = "WI-572 moved the first-approval act to the adjudicator and filtered the minted population by the human-approval dial at both adjudication ends (intake's mint and adjudicate_brief's composition, through agent_common.human_approves_spine). The plan's §2a table row 'Surfaces to the owner' says rows on a RELEASED rung no longer surface to the owner - but trace.py --approve modified still renders every Drafted chain, held or released, and calls human_approves_spine nowhere. Should the owner's approval brief narrow to the rungs the dial still HOLDS (so a sitting shows only what the owner actually owes a signature on), or keep rendering every Drafted chain (so the owner retains sight of what adjudicators are approving on their behalf)? WI-572 deliberately did not decide this: it changes what the owner sees at a sitting, which is the owner's call and not a side effect of moving who acts."
-decision = """Whether `trace.py --approve modified` (and the `docs/ratify/CURRENT.md` it renders) narrows the owner's approval brief to the spine tiers the human-approval dial still HOLDS, or keeps rendering every Drafted chain including the rungs adjudicators now approve on the owner's behalf.
+decision = """RULED 2026-09-06: option (a) NARROW, with the delegated set listed apart. `trace.py --approve modified` renders the Drafted chains on the rungs `human_approval_through` still HOLDS, read through the existing `agent_common.human_approves_spine`, and lists the released-rung Drafted rows in a separate collapsed ids-only section. The owner's reasoning: an amendment never mints a new id and is judged by the delegated adjudicator, and a first approval on a released rung is likewise delegated, so neither needs the owner's reading; the brief should show only what the owner owes. Applied by WI-577. Original question follows.
+
+Whether `trace.py --approve modified` (and the `docs/ratify/CURRENT.md` it renders) narrows the owner's approval brief to the spine tiers the human-approval dial still HOLDS, or keeps rendering every Drafted chain including the rungs adjudicators now approve on the owner's behalf.
 
 - WI-572 moved the first-approval act to the adjudicator and filtered the MINTED population by the dial at both adjudication ends, through `agent_common.human_approves_spine`.
 - The plan's §2a table row already asserts that rows on a RELEASED rung no longer surface to the owner. `trace.py` calls `human_approves_spine` nowhere, so that row is unsatisfied prose either way this is ruled.
