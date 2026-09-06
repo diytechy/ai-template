@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
 | `CLAUDE.md` | **8,500** | 7,975 | 2026-09-04 | +89: WI-580 aligns mid-phase close with the phase cadence |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,632 | 2026-09-06 | Redesign process-row restamp |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,613 | 2026-09-06 | F1-F4 Critique review corrections and process-row restamp |
 
 **`AGENTS.template.md` has less than 1% free**; this skill and `CLAUDE.md`
 have about 6%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
@@ -46,7 +46,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
 | `project-trajectory/PROCESS.md` | 88,990 | 2026-09-06 | **+625** redesign — ordinary intake distinguishes unsuitable LLR designs from coverage gaps |
-| `project-trajectory/PROCESS_OPTIONS.md` | 187,932 | 2026-09-03 | **+766** the WI-579 merge (the verdict-carrier and `adjudication_review` prose, +590) and the loop-held design-check sentence (+176). Earlier: **+4** round 3, **+111** round 2, **+630** `restructured` |
+| `project-trajectory/PROCESS_OPTIONS.md` | 189,535 | 2026-09-06 | **+1,603** H2/H3/H5 review-carrier rules: attended Critique provenance, counterpart semantic decisions, and recorded proportionality stopping boundaries |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

@@ -1,6 +1,6 @@
 """The pending-owner-actions projection (WI-234), as DERIVED (WI-322).
 
-`gen_trajectory.pending_block` is a pure projection of committed-tree state:
+`pending.pending_block` is a pure projection of committed-tree state:
 
   (a) `blocked` WI rows carrying a BlockRef (the attestation/approval page);
   (e) Drafted/Modified SR rows (WI-316) owing an approval / re-attest;
@@ -89,7 +89,7 @@ def _block(repo):
     """The derivation itself. Asserting on `pending_block` rather than on a
     rendered file keeps these regressions about WHAT IS PENDING — the question
     they were written to answer — independent of whichever surface renders it."""
-    return load_script("gen_trajectory").pending_block(repo)
+    return load_script("pending").pending_block(repo)
 
 
 # (A former source (a) `blocked` WI rows carrying a BlockRef retired with the
@@ -224,18 +224,18 @@ def test_tracked_pause_without_since_omits_the_stamp(tmp_path):
 def test_malformed_pause_still_projects_fail_closed(tmp_path):
     # A pause file we cannot read is still a pause: it projects the same loud
     # message the coordinator's reader returns, routing the owner to the fix.
-    gt = load_script("gen_trajectory")
+    pending = load_script("pending")
     _init(tmp_path)
     for bad in ("not toml at all\n", 'since = "2026-07-29"\n', "reason = 7\n"):
         _pause(tmp_path, bad)
-        assert "- **Paused** — {}.".format(gt.PAUSE_MALFORMED) in _block(tmp_path)
+        assert "- **Paused** — {}.".format(pending.PAUSE_MALFORMED) in _block(tmp_path)
 
 
 def test_pause_malformed_text_matches_the_coordinator_reader():
-    # One message, two readers: gen_trajectory copies the constant rather than
-    # importing the coordinator layer, so pin the copies equal.
+    # One message, two readers: pending owns the copy consumed by the status
+    # projection, so pin it to the coordinator's source value.
     assert (
-        load_script("gen_trajectory").PAUSE_MALFORMED
+        load_script("pending").PAUSE_MALFORMED
         == load_script("agent_common").PAUSE_MALFORMED
     )
 
@@ -250,12 +250,9 @@ def test_pause_projection_is_deterministic(tmp_path):
 
 # --- the read model and its siting (WI-483 slice 3) -------------------------
 #
-# Everything above asserts on `pending_block` through the `gen_trajectory`
-# facade, deliberately unchanged by the extraction: that is the
-# characterization, and it still passes byte-for-byte. What follows asserts the
-# two things the extraction ADDED — a typed model with a discriminating field,
-# and a home below every reader — so neither can quietly regress to the private
-# names in a render facade that the 2026-08-19 review found (H-02, M-02).
+# Everything here asserts on the read model directly.  The one public facade
+# compatibility contract belongs with the HTML family in test_gen_trajectory:
+# core collection must not import the dashboard merely to reach these names.
 
 
 def test_the_typed_model_kinds_every_pending_item(tmp_path):
@@ -291,26 +288,6 @@ def test_the_block_renders_exactly_the_model(tmp_path):
     block = pending.pending_block(tmp_path)
     for item in pending.pending_items(tmp_path):
         assert item.line in block
-
-
-def test_the_dashboard_still_answers_to_the_former_private_names(tmp_path):
-    # The re-export shim, which is what keeps the extraction free for callers:
-    # the facade's `_spine_pending` / `_pause_pending` and `PAUSE_MALFORMED`
-    # still resolve, and to the SAME objects. (`_blocked_pending` retired with
-    # the blockref vocabulary at WI-553/OI-70.)
-    gt = load_script("gen_trajectory")
-    pending = load_script("pending")
-    # `load_script` loads a FRESH module object per call, so identity would
-    # compare two copies; the claim is that the facade name resolves to the
-    # read model's function, which is what the module+qualname pair says.
-    for facade_name, model_name in (
-        ("_spine_pending", "spine_pending"),
-        ("_pause_pending", "pause_pending"),
-        ("pending_block", "pending_block"),
-    ):
-        fn = getattr(gt, facade_name)
-        assert (fn.__module__, fn.__qualname__) == ("pending", model_name)
-    assert gt.PAUSE_MALFORMED == pending.PAUSE_MALFORMED
 
 
 def test_the_dispatcher_reads_the_model_not_the_render_facade(tmp_path):

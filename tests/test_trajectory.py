@@ -20,6 +20,8 @@ import csv
 import difflib
 import shutil
 
+import pytest
+
 
 from conftest import ROOT, SCRIPTS, load_script, run_py
 
@@ -532,16 +534,31 @@ def _need_registry(root):
     p.write_text('[need.SN-1]\nneed = "one"\n', encoding="utf-8")
 
 
-def test_specref_on_a_registry_carrier_resolves_a_bare_row_id(tmp_path):
+@pytest.mark.parametrize(
+    "path",
+    [
+        "docs/requirements/stakeholder-needs.toml",
+        "./docs/requirements/stakeholder-needs.toml",
+        "././docs/requirements/stakeholder-needs.toml",
+        " docs/requirements/stakeholder-needs.toml ",
+        "docs/requirements/../requirements/stakeholder-needs.toml",
+    ],
+)
+@pytest.mark.parametrize("need_id", ["SN-1", "SN-404"])
+def test_specref_on_a_registry_carrier_resolves_a_bare_row_id(tmp_path, path, need_id):
     # 2026-09-06: the dual-plan composer refuses any need-carrier fragment that
     # is not an exact row id, so R-E must hold the same line at the commit bar.
     _need_registry(tmp_path)
     write_wis_sr(
         tmp_path,
-        "WI-001,A,scripts,,,queued,,docs/requirements/stakeholder-needs.toml#SN-1\n",
+        f"WI-001,A,scripts,,,queued,,{path}#{need_id}\n",
     )
     proc = run_traj(tmp_path, "--strict")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
+    if need_id == "SN-1":
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+    else:
+        assert proc.returncode == 1, proc.stdout + proc.stderr
+        assert "names no such row" in proc.stderr
 
 
 def test_specref_table_path_fragment_on_a_registry_is_a_finding(tmp_path):
@@ -566,6 +583,66 @@ def test_specref_table_path_fragment_on_a_registry_is_a_finding(tmp_path):
     strict = run_traj(tmp_path, "--strict")
     assert strict.returncode == 1
     assert "names no such row" in strict.stderr, strict.stderr
+
+
+def test_empty_need_registry_still_exposes_an_empty_row_id_set(tmp_path):
+    registry = tmp_path / "docs" / "requirements" / "stakeholder-needs.toml"
+    registry.parent.mkdir(parents=True, exist_ok=True)
+    registry.write_text("# no declared needs\n", encoding="utf-8")
+    write_wis_sr(
+        tmp_path,
+        "WI-001,A,scripts,,,queued,,././docs/requirements/stakeholder-needs.toml#SN-9\n",
+    )
+
+    strict = run_traj(tmp_path, "--strict")
+
+    assert strict.returncode == 1
+    assert "names no such row" in strict.stderr, strict.stderr
+
+
+def test_specref_does_not_treat_nested_config_tables_as_registry_rows(tmp_path):
+    (tmp_path / "pyproject.toml").write_text(
+        '[tool.pytest.ini_options]\naddopts = "-q"\n', encoding="utf-8"
+    )
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,queued,,pyproject.toml#tool.pytest\n")
+
+    strict = run_traj(tmp_path, "--strict")
+
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+
+
+def test_specref_row_ids_are_judged_only_on_the_shared_need_carrier(tmp_path):
+    registry = tmp_path / "docs" / "requirements" / "interfaces.toml"
+    registry.parent.mkdir(parents=True, exist_ok=True)
+    registry.write_text("[interface.IF-1]\n", encoding="utf-8")
+    write_wis_sr(
+        tmp_path,
+        "WI-001,A,scripts,,,queued,,docs/requirements/interfaces.toml#IF-404\n",
+    )
+
+    strict = run_traj(tmp_path, "--strict")
+
+    # The row-id rule is intentionally the H1/R-E agreement on stakeholder
+    # needs. Other registries remain path-only SpecRefs until they have a
+    # consumer contract that requires exact row resolution.
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+
+
+def test_malformed_need_registry_refuses_the_trajectory_check(tmp_path):
+    registry = tmp_path / "docs" / "requirements" / "stakeholder-needs.toml"
+    registry.parent.mkdir(parents=True, exist_ok=True)
+    registry.write_text("[need.SN-1\n", encoding="utf-8")
+    write_wis_sr(
+        tmp_path,
+        "WI-001,A,scripts,,,queued,,docs/requirements/stakeholder-needs.toml#SN-1\n",
+    )
+
+    strict = run_traj(tmp_path, "--strict")
+
+    # Live carrier reads fail closed across the checker; malformed content is
+    # not downgraded to an unknown anchor set or an empty registry.
+    assert strict.returncode == 1
+    assert "does not parse as TOML" in strict.stderr, strict.stderr
 
 
 def test_specref_anchor_report_names_the_nearest_heading(tmp_path):

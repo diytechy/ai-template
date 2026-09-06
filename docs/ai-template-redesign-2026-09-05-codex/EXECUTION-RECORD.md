@@ -5,7 +5,35 @@ on `contract_split`. This is a supervised implementation sitting under
 the [package boundaries](IMPLEMENTATION.md), with the existing unattended
 queue paused. Package labels remain plan scope keys, not allocated WI IDs.
 
-## Continuation status (2026-09-06)
+## Current OI-85 continuation (2026-09-06)
+
+The owner accepted OI-85(a) and authorized continued implementation. The
+[need-tier ruling](../log.d/2026-09-06-oi85-owner-ruling.md) records SN-007,
+SN-026 and SN-024 exactly, using the existing named-registry approval snapshot.
+The separate need-drift detector remains deferred; no other snapshot or
+artifact Status is absorbed by that act.
+
+| Scope | Current result | Remaining boundary |
+|---|---|---|
+| Fable repair review | Retain linked-lane base correction, bounded launcher restart, interruption accounting and non-Node resync checks; correct unavailable launch identity and overly broad TOML row inference | Final unfiltered run: 3661 passed, 22 skipped; review dispositions and actual limits in the continuation log |
+| P9R | Physical renderer package, shared in-memory stage/count snapshot, direct core fixtures and renderer-absent collection; conservative local selection with Full fallback | Full/freshness checks pass, including 176 HTML and 130 core/shared cases; source-anchored resync follows the implementation commit; CI/phase-close Full remain unchanged |
+| H2/H3/H5 | Deliver Critique provenance, counterpart semantic review and proportionality stopping rules through existing method/prompts | Critique closure approved; TC-209/TC-210 Inspections pass; TC-211 normal sample remains incomplete for the existing unimplemented SR-161 machine record; Drafted-row approval stays separate |
+| P0c | Owner selected Short control with absolute limits in the [control ruling](CONTROL-DECISION.md#owner-ruling-2026-09-06) | [Launch preflight](CONTROL-PREFLIGHT.md), cost reservation and reviewed pause deletion; no observations are invented |
+| P10 adopter guidance | Canonical vision/hat/need/SR revalidation method and populated adopter examples remain delivered | This slice's source/package migration recipe requires its implementation commit |
+
+P1/P1A/P3–P8 replacement and integration experiments, capability retirement,
+and the replacement portion of P9/P10 remain conditional on the control and
+contract decisions. Finishing the independent repairs does not establish a
+reason to replace the runner. Existing queued artifact adjudications retain
+their own authority; the OI-85 act does not approve the rest of the spine.
+
+
+The [continuation log](../log.d/2026-09-06-oi85-plan-completion.md) records the
+final unfiltered result (`3661 passed, 22 skipped in 744.34s`), failed-first
+checks and their fixes, review dispositions and per-commit results.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto --junitxml=out/run-logs/oi85-full-final.xml" rev=1e78ada3+OI85-final; out/run-logs/oi85-full-final.txt -->
+
+## Previous continuation (83f2c7aa to 77612fb2)
 
 The owner requested continued execution with Sol, Terra and Luna. Work resumed
 from `83f2c7aa`; the first slice below remains a historical record of its own

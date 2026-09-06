@@ -8,62 +8,17 @@ loader — equivalence with the inline filters it replaced, in file order, and t
 example-row drop only when asked — and `run_captured`, the single capture helper,
 whose five keywords and off-git degrade are pinned through a subprocess shim.
 
-The shim patches `gt.traj_parse.subprocess`: WI-280 moved the effects seam out of
+The shim patches `tp.subprocess`: WI-280 moved the effects seam out of
 the facade, so patching `gt.subprocess` would now silently miss.
 """
 
 import csv
-import re
 import subprocess
 import sys
 
 import pytest
-from conftest import ROOT, load_script, pin_autocrlf
-from traj_fixtures import FRAME, gen, html_of, make_repo, write_frame
-
-
-def test_asof_stamp_from_git_and_excluded_from_check(tmp_path):
-    # WI-039: the as-of line derives from the last source-touching COMMIT
-    # (never now(), so generation stays deterministic), is visible in the
-    # shell, and is excluded from the --check byte-compare — a stamp-only
-    # difference (the artifact committed one commit behind its sources' last
-    # touch) must not read as stale.
-    import subprocess
-
-    make_repo(tmp_path)
-
-    def git(*args):
-        return subprocess.run(
-            ["git", "-C", str(tmp_path), *args], capture_output=True, text=True
-        )
-
-    git("init")
-    pin_autocrlf(tmp_path)  # WI-461/WI-465; see conftest.pin_autocrlf
-    git("config", "user.email", "t@example.com")
-    git("config", "user.name", "T")
-    git("add", "-A")
-    git("commit", "-q", "-m", "sources")
-    assert gen(tmp_path).returncode == 0
-    text = html_of(tmp_path)
-    assert 'class="asof">state as of commit ' in text
-    # Simulate the artifact carrying a previous stamp: content equal, stamp not.
-    (tmp_path / "PROJECT_STATE.html").write_text(
-        re.sub(
-            r'(class="asof">state as of commit )[0-9a-f]+',
-            r"\g<1>0000000",
-            text,
-        ),
-        encoding="utf-8",
-    )
-    proc = gen(tmp_path, "--check")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-
-
-def test_no_git_means_no_stamp_and_stays_deterministic(tmp_path):
-    # Outside a git repo the stamp is simply absent — no crash, no wall clock.
-    make_repo(tmp_path)
-    assert gen(tmp_path).returncode == 0
-    assert 'class="asof"></p>' in html_of(tmp_path)
+from conftest import ROOT, load_script
+from traj_core_fixtures import FRAME, write_frame
 
 
 # --- WI-346: the one local spine loader + the one capture helper ---------------
@@ -122,7 +77,7 @@ def _scrambled_spine(root):
 
 def test_spine_loader_equals_the_former_inline_filters_in_file_order(tmp_path):
     root = _scrambled_spine(tmp_path)
-    gt = load_script("gen_trajectory")
+    tp = load_script("traj_parse")
 
     # The three comprehensions the three call sites each carried before WI-346,
     # transcribed from the pre-extraction source — but reading the fixture's
@@ -139,7 +94,7 @@ def test_spine_loader_equals_the_former_inline_filters_in_file_order(tmp_path):
     want_srs = _want("docs/requirements/system-requirements.csv", "SR-ID")
     want_llrs = _want("docs/requirements/low-level-requirements.csv", "LLR-ID")
     want_tcs = _want("docs/test/test-cases.csv", "TC-ID")
-    srs, llrs, tcs = gt._spine(root)
+    srs, llrs, tcs = tp._spine(root)
     # Whole-row equality: the loader must hand back the rows themselves, not a
     # projection — every call site reads columns the loader never names.
     assert srs == want_srs
@@ -154,8 +109,8 @@ def test_spine_loader_equals_the_former_inline_filters_in_file_order(tmp_path):
 
 def test_spine_loader_drops_example_rows_only_when_asked(tmp_path):
     root = _scrambled_spine(tmp_path)
-    gt = load_script("gen_trajectory")
-    srs, llrs, tcs = gt._spine(root, skip_example=True)
+    tp = load_script("traj_parse")
+    srs, llrs, tcs = tp._spine(root, skip_example=True)
     # `-000` gone from all three tiers, everything else still in file order.
     assert [r["SR-ID"] for r in srs] == ["SR-009", "SR-002", "SR-001"]
     assert [r["LLR-ID"] for r in llrs] == ["LLR-007", "LLR-001"]
@@ -163,13 +118,13 @@ def test_spine_loader_drops_example_rows_only_when_asked(tmp_path):
     # The default keeps them: only the pending projection owes the `-000` rule
     # (an example row owes no approval); the icicle and the maturity counts
     # render whatever the registry holds.
-    d_srs, d_llrs, d_tcs = gt._spine(root)
+    d_srs, d_llrs, d_tcs = tp._spine(root)
     assert "SR-000" in [r["SR-ID"] for r in d_srs]
     assert "LLR-000" in [r["LLR-ID"] for r in d_llrs]
     assert "TC-000" in [r["TC-ID"] for r in d_tcs]
     # And the rule reaches its real caller: SR-000 is `Drafted`, so a leaked
     # example row would invent an approval the owner does not owe.
-    pending = gt._spine_pending(root)
+    pending = load_script("pending").spine_pending(root)
     assert pending, "the Drafted SRs must still project"
     assert not any("SR-000" in line for line in pending)
     # SR-002 read `Modified` -> re-attest until D-9 step 7 retired the marker. It
@@ -193,7 +148,7 @@ class _SubprocessShim:
 def test_run_captured_states_the_five_keywords_and_degrades_off_git(
     tmp_path, monkeypatch
 ):
-    gt = load_script("gen_trajectory")
+    tp = load_script("traj_parse")
     # 1. The contract itself — all five keywords, stated once. Dropping
     #    `errors="replace"` alone reintroduces the L-25 crash on exactly the
     #    rare input nobody tests with, so pin the kwargs, not just the result.
@@ -205,8 +160,8 @@ def test_run_captured_states_the_five_keywords_and_degrades_off_git(
 
     # WI-280: `_run_captured` resolves `subprocess` in traj_parse's namespace now,
     # so patch the module the call looks in (gt.traj_parse is the cached instance).
-    monkeypatch.setattr(gt.traj_parse, "subprocess", _SubprocessShim(spy))
-    proc = gt._run_captured([sys.executable, "-c", "print('hi')"])
+    monkeypatch.setattr(tp, "subprocess", _SubprocessShim(spy))
+    proc = tp._run_captured([sys.executable, "-c", "print('hi')"])
     assert seen == {
         "capture_output": True,
         "text": True,
@@ -222,20 +177,20 @@ def test_run_captured_states_the_five_keywords_and_degrades_off_git(
     def boom(argv, **kwargs):
         raise OSError("no git here")
 
-    monkeypatch.setattr(gt.traj_parse, "subprocess", _SubprocessShim(boom))
+    monkeypatch.setattr(tp, "subprocess", _SubprocessShim(boom))
     with pytest.raises(OSError):
-        gt._run_captured(["git", "--version"])
+        tp._run_captured(["git", "--version"])
     # ...and both callers degrade to their empty forms rather than propagate.
     # (No registry is seeded: `_git`/`_asof` read git, not the work items.)
-    assert gt._git(tmp_path, "rev-parse", "HEAD") == (1, "")
-    assert gt._asof(tmp_path) == ""
+    assert tp._git(tmp_path, "rev-parse", "HEAD") == (1, "")
+    assert tp._asof(tmp_path) == ""
 
     # 3. Real git, no repo: the other off-git shape (a child that RUNS and
     #    fails). tmp_path is not a work tree, so git exits nonzero.
     monkeypatch.undo()
-    code, out = gt._git(tmp_path, "rev-parse", "--verify", "--quiet", "HEAD")
+    code, out = tp._git(tmp_path, "rev-parse", "--verify", "--quiet", "HEAD")
     assert code != 0 and out.strip() == ""
-    assert gt._asof(tmp_path) == ""
+    assert tp._asof(tmp_path) == ""
 
 
 # --- WI-455: `frame_context`, the depth-0 frame as a read model ----------------
@@ -245,25 +200,25 @@ def test_frame_context_is_none_without_a_declared_frame(tmp_path):
     # The registry's own applies-when: a project that never declares a boundary
     # simply does not create the file, and the reader says so with None rather
     # than an empty-but-present frame the view would render as a blank picture.
-    gt = load_script("gen_trajectory")
-    assert gt.traj_parse.frame_context(tmp_path) is None
+    tp = load_script("traj_parse")
+    assert tp.frame_context(tmp_path) is None
 
 
 def test_frame_context_drops_the_blank_form_s_example_rows(tmp_path):
     # A freshly bootstrapped scaffold HAS the file — the blank form, all of whose
     # rows end `-000`. Same rule as every other tier: example rows are not data.
-    gt = load_script("gen_trajectory")
+    tp = load_script("traj_parse")
     write_frame(
         tmp_path,
         (
             ROOT / "project-trajectory" / "registries" / "external.template.toml"
         ).read_text(encoding="utf-8"),
     )
-    assert gt.traj_parse.frame_context(tmp_path) is None
+    assert tp.frame_context(tmp_path) is None
 
 
 def test_frame_context_joins_the_tie_backs_and_keeps_id_order(tmp_path):
-    gt = load_script("gen_trajectory")
+    tp = load_script("traj_parse")
     write_frame(tmp_path, FRAME)
     (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
         """[interface.IF-001]
@@ -282,7 +237,7 @@ notes = "No tie-back: git is not a party of its own here."
 """,
         encoding="utf-8",
     )
-    frame = gt.traj_parse.frame_context(tmp_path)
+    frame = tp.frame_context(tmp_path)
     assert [e["id"] for e in frame["entities"]] == ["EXT-001", "EXT-002"]
     assert [c["id"] for c in frame["crossings"]] == ["B-01", "B-02"]
     by_id = {c["id"]: c for c in frame["crossings"]}
@@ -306,8 +261,8 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
     # in the registry header), and WI-455 slice 2's adjudication left exactly
     # three `external:` rows tied back to nothing, each with its reason on the row
     # (seven since OI-67 slice 4, nine since WI-534, below).
-    gt = load_script("gen_trajectory")
-    frame = gt.traj_parse.frame_context(ROOT)
+    tp = load_script("traj_parse")
+    frame = tp.frame_context(ROOT)
     assert len(frame["entities"]) == 4
     assert [c["id"] for c in frame["crossings"]] == ["B-01", "B-02", "B-04", "B-05"]
     assert len(frame["relationships"]) == 3

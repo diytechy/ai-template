@@ -59,6 +59,11 @@ for _k in [k for k in os.environ if k.startswith("AGENT_")]:
 # docs/stack.ini [smoke-budget] and tests/test_smoke_budget.py.
 SLOW_MODULES = frozenset(
     {
+        # P9R selector tests create/commit real Git fixtures and invoke the
+        # existing generators (45 cases, 11.57s alone); they are integration
+        # assurance at Full/CI, not in-process smoke units. No existing module
+        # changes tier and neither smoke budget changes.
+        "test_changed_selection",
         # WI-122: heavy end-to-end integration — full hook / gate /
         # scaffold-bootstrap runs the commit hook re-exercises live and the
         # close/CI gate re-runs wholesale, so per commit they are redundant.

@@ -59,13 +59,12 @@ An absent or placeholder-only registry renders nothing and passes vacuously (the
 opt-out layer stays free for a repo that never adopts it).
 Exit codes: 0 clean / vacuous / opted-out, 1 invalid registry or stale HTML.
 
-WI-280 decomposition: the implementation lives in sibling modules —
-traj_graph.py (pure layout + wire routing), traj_parse.py (registry/doc/git
-sources + the guarded `schedule` import), traj_render.py (SVG/HTML
-primitives, palettes, the drill renderer), traj_views.py (the What/When/
-How-SW views + panels), traj_panels.py (the Knowledge/Process/Next-work
-panels), traj_status.py (the --status snapshot + pending projection) —
-each re-exported here, so
+WI-280 decomposition: the display readers live in traj_display.py,
+traj_parse.py, and traj_status.py; the HTML emitters live in the rendering
+package (traj_graph.py for layout + wire routing, traj_render.py for SVG/HTML
+primitives, traj_views.py for What/When/How-SW, traj_panels.py for Knowledge /
+Process / Next-work, and traj_context.py for the system frame). They are
+re-exported here, so
 `import gen_trajectory` stays the one consumer seam and the render is
 byte-identical across the split.
 
@@ -117,12 +116,9 @@ except ImportError:
 _STATUS_ONLY = __name__ == "__main__" and "--status" in sys.argv[1:]
 
 # --- WI-280 split: the decomposed sibling modules ------------------------------
-# The implementation lives in the split siblings — traj_graph.py (layout +
-# wire routing), traj_parse.py (sources + the guarded `schedule` import's one
-# home), traj_render.py (SVG/HTML primitives + the drill renderer),
-# traj_views.py (the What/When/How-SW views + panels), traj_panels.py (the
-# Knowledge/Process/Next-work panels), traj_status.py (the --status snapshot
-# + pending projection) — and this facade re-exports the consumer-read names
+# The display readers (traj_display/parse/status) stay outside the rendering
+# package; its HTML emitters (graph/render/views/panels/context) stay inside it.
+# This facade re-exports the consumer-read names
 # so every existing `gen_trajectory.<name>` import keeps resolving (the seam,
 # and its Contracts: line, stay HERE). These
 # imports sit AFTER the guarded check_trajectory import above on purpose: that
@@ -137,11 +133,9 @@ _STATUS_ONLY = __name__ == "__main__" and "--status" in sys.argv[1:]
 if _STATUS_ONLY:
     import traj_status  # noqa: F401
 else:
-    import traj_views  # noqa: F401
-    import traj_context  # noqa: F401
+    from traj_display import load_display_snapshot
+    from rendering import traj_context, traj_graph, traj_panels, traj_render, traj_views  # noqa: F401
     import traj_status  # noqa: F401
-    import traj_render  # noqa: F401
-    import traj_panels  # noqa: F401
     import traj_parse  # noqa: F401
     from traj_parse import (  # noqa: F401
         OKF_DIR,
@@ -167,8 +161,7 @@ else:
         spine_stats,
         sw_modules,
     )
-    import traj_graph  # noqa: F401
-    from traj_render import (  # noqa: F401
+    from rendering.traj_render import (  # noqa: F401
         ARROW_SIZE,
         CEDGE_LEN,
         DRILL_GEOM,
@@ -214,8 +207,8 @@ else:
         tab_button,
         tab_panel_open,
     )
-    from traj_context import context_block  # noqa: F401
-    from traj_views import (  # noqa: F401
+    from rendering.traj_context import context_block  # noqa: F401
+    from rendering.traj_views import (  # noqa: F401
         DEFAULT_PHASE,
         SW_CMPTREE_STYLE,
         _cmp_panel,
@@ -250,7 +243,7 @@ else:
         run_status,
         status_block,
     )
-    from traj_panels import (  # noqa: F401
+    from rendering.traj_panels import (  # noqa: F401
         _NEXT_WORK_CAP,
         _NEXT_WORK_TITLE,
         _know_panel,
@@ -261,7 +254,7 @@ else:
         know_view,
         process_panel,
     )
-    from traj_graph import (  # noqa: F401
+    from rendering.traj_graph import (  # noqa: F401
         GraphGeom,
         _FAN_PITCH,
         _LEAD_RUNGS,
@@ -831,6 +824,7 @@ def _splice_context_into_panel(panel, context_html):
 
 
 def build_html(root, wis):
+    snapshot = load_display_snapshot(root)
     total = len(wis)
     done = sum(1 for w in wis if w["status"] == "done")
     active = sum(1 for w in wis if w["status"] == "active")
@@ -866,7 +860,7 @@ def build_html(root, wis):
         wi_active_line = '<div class="sub nowat">{} {}</div>'.format(
             STATUS_GLYPH["active"], names
         )
-    stats = spine_stats(root)
+    stats = snapshot.spine
     workstreams = len({w["workstream"] for w in wis})
     arch, arch_details, arch_desc = arch_icicle(root)
     dag, wi_details = dag_svg(wis)
@@ -948,7 +942,9 @@ def build_html(root, wis):
         tab, panel = _know_panel(root, *know)
         extra_tabs.append(tab)
         extra_panels.append(panel)
-    proc = process_panel(root, wis, stats)  # the method reference view (WI-085)
+    proc = process_panel(
+        root, wis, stats, snapshot.stage
+    )  # the method reference view (WI-085)
     if proc:
         tab, panel = proc
         extra_tabs.append(tab)

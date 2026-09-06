@@ -11,7 +11,7 @@ import re
 from dataclasses import dataclass
 
 import check_trajectory as ct
-from traj_graph import (
+from .traj_graph import (
     GraphGeom,
     _layered_layout,
     _routed_label_xy,
@@ -22,7 +22,7 @@ from traj_parse import WORKSTREAM_LABELS, _sn_rows, _spine
 from traj_parse import spine_carrier as _carrier
 
 
-from traj_render import (
+from .traj_render import (
     DRILL_STYLE,
     PHASE_ACCENTS,
     SCROLL_CUE,

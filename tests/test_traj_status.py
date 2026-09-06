@@ -9,8 +9,14 @@ the --check freshness gate, the vacuous / minimal-record / unreadable-stage
 arms, and the forward-only guard's scope.
 """
 
-from conftest import SCRIPTS, run_py
-from traj_fixtures import gen, make_repo, write_stage
+import os
+import shutil
+import subprocess
+import sys
+
+from conftest import SCRIPTS, load_script, run_py
+from traj_core_fixtures import make_repo, write_stage
+from trajectory_cli import run_status
 
 
 # --- the docs/status.md derived snapshot (WI-202, --status) --------------------
@@ -85,6 +91,52 @@ def make_status_repo(
     return root
 
 
+def test_core_collection_runs_without_the_rendering_package(tmp_path):
+    """Parser, status, and pending suites need no dashboard package bytes."""
+    if os.environ.get("P9R_CORE_ABSENCE_CHILD"):
+        return
+    root = tmp_path / "core"
+    shutil.copytree(
+        SCRIPTS,
+        root / "project-trajectory" / "scripts",
+        ignore=shutil.ignore_patterns("rendering", "__pycache__"),
+    )
+    shutil.copytree(
+        SCRIPTS.parent / "registries", root / "project-trajectory" / "registries"
+    )
+    shutil.copytree(
+        SCRIPTS.parent.parent / "docs" / "requirements", root / "docs" / "requirements"
+    )
+    tests = root / "tests"
+    tests.mkdir()
+    for name in (
+        "conftest.py",
+        "traj_core_fixtures.py",
+        "trajectory_cli.py",
+        "test_traj_parse.py",
+        "test_traj_status.py",
+        "test_gen_trajectory_pending.py",
+    ):
+        shutil.copy2(SCRIPTS.parent.parent / "tests" / name, tests / name)
+    env = dict(os.environ, P9R_CORE_ABSENCE_CHILD="1")
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "tests/test_traj_parse.py",
+            "tests/test_traj_status.py",
+            "tests/test_gen_trajectory_pending.py",
+        ],
+        cwd=root,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
 def status_text(root):
     return (root / "docs" / "status.md").read_text(encoding="utf-8")
 
@@ -98,7 +150,7 @@ def block_of(root):
 
 def test_status_splices_derived_facts(tmp_path):
     make_status_repo(tmp_path)
-    proc = gen(tmp_path, "--status")
+    proc = run_status(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     block = block_of(tmp_path)
     # The derived STAGE comes from the recorded `docs/stage` record, the spine
@@ -125,16 +177,19 @@ def test_status_splices_derived_facts(tmp_path):
     assert "hand-authored intent stays here" in after and "## Scope" in after
 
 
+def test_stage_facts_reads_only_the_recorded_stage(tmp_path):
+    write_stage(tmp_path, "DevStg-Reqs")
+    registry = tmp_path / "docs" / "requirements" / "system-requirements.toml"
+    registry.parent.mkdir(parents=True, exist_ok=True)
+    registry.write_text("[requirement.SR-1\n", encoding="utf-8")
+
+    assert load_script("traj_status")._stage_facts(tmp_path)["stage"] == "DevStg-Reqs"
+
+
 def test_status_cli_does_not_load_dashboard_renderers(tmp_path):
     make_status_repo(tmp_path)
     script = str(SCRIPTS / "gen_trajectory.py")
-    denied = {
-        "traj_context",
-        "traj_graph",
-        "traj_panels",
-        "traj_render",
-        "traj_views",
-    }
+    denied = {"rendering"}
     probe = """
 import runpy
 import sys
@@ -167,9 +222,36 @@ if loaded:
     assert "**In stage:** **DevStg-Tests**" in block_of(tmp_path)
 
 
+def test_status_cli_and_display_readers_run_without_rendering_package(tmp_path):
+    """The core status collection and public CLI need no HTML package bytes."""
+    make_status_repo(tmp_path)
+    core_scripts = tmp_path / "core-scripts"
+    shutil.copytree(
+        SCRIPTS,
+        core_scripts,
+        ignore=shutil.ignore_patterns("rendering", "__pycache__"),
+    )
+    imported = run_py(
+        [
+            "-c",
+            "import sys; sys.path.insert(0, {!r}); import traj_display, traj_status".format(
+                str(core_scripts)
+            ),
+        ],
+        cwd=tmp_path,
+    )
+    assert imported.returncode == 0, imported.stdout + imported.stderr
+    proc = run_py(
+        [core_scripts / "gen_trajectory.py", "--root", tmp_path, "--status"],
+        cwd=tmp_path,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "**In stage:** **DevStg-Tests**" in block_of(tmp_path)
+
+
 def test_status_open_items_projection_and_ordering(tmp_path):
     make_status_repo(tmp_path)
-    assert gen(tmp_path, "--status").returncode == 0
+    assert run_status(tmp_path).returncode == 0
     block = block_of(tmp_path)
     # id-order (OI-1 before OI-2) regardless of file order
     assert block.index("**OI-1**") < block.index("**OI-2**")
@@ -187,14 +269,14 @@ def test_status_does_not_bake_volatile_git_state(tmp_path):
     # Done-when 4: an item's live git state (OI-1's "ahead 9 commits") lives in the
     # brief's Decision field, never the stamped snapshot.
     make_status_repo(tmp_path)
-    assert gen(tmp_path, "--status").returncode == 0
+    assert run_status(tmp_path).returncode == 0
     assert "ahead 9 commits" not in block_of(tmp_path)
 
 
 def test_status_check_fresh_and_stale(tmp_path):
     make_status_repo(tmp_path)
-    assert gen(tmp_path, "--status").returncode == 0
-    fresh = gen(tmp_path, "--status", "--check")
+    assert run_status(tmp_path).returncode == 0
+    fresh = run_status(tmp_path, "--check")
     assert fresh.returncode == 0 and "up to date" in fresh.stdout
     # an open-items edit stales the block (caught at commit, not first in CI)
     oi = tmp_path / "docs" / "requirements" / "open-items.csv"
@@ -203,11 +285,11 @@ def test_status_check_fresh_and_stale(tmp_path):
         + "OI-5,a new ask,pending,,decide soon.,,,,,,,\n",
         encoding="utf-8",
     )
-    stale = gen(tmp_path, "--status", "--check")
+    stale = run_status(tmp_path, "--check")
     assert stale.returncode == 1 and "STALE" in stale.stderr
     # regenerating restores freshness and now projects OI-5
-    assert gen(tmp_path, "--status").returncode == 0
-    assert gen(tmp_path, "--status", "--check").returncode == 0
+    assert run_status(tmp_path).returncode == 0
+    assert run_status(tmp_path, "--check").returncode == 0
     assert "**OI-5** — decide soon." in block_of(tmp_path)
 
 
@@ -216,12 +298,12 @@ def test_status_vacuous_without_markers_or_file(tmp_path):
     # --check passes vacuously; an absent status.md is likewise a clean no-op.
     make_status_repo(tmp_path, status="# Status\n\n## Scope\n\n- Goal\n")
     before = status_text(tmp_path)
-    proc = gen(tmp_path, "--status")
+    proc = run_status(tmp_path)
     assert proc.returncode == 0 and "no GENERATED STATUS markers" in proc.stdout
     assert status_text(tmp_path) == before  # untouched
-    assert gen(tmp_path, "--status", "--check").returncode == 0
+    assert run_status(tmp_path, "--check").returncode == 0
     (tmp_path / "docs" / "status.md").unlink()
-    assert gen(tmp_path, "--status", "--check").returncode == 0
+    assert run_status(tmp_path, "--check").returncode == 0
 
 
 def test_status_renders_a_degraded_stage_record(tmp_path):
@@ -240,7 +322,7 @@ def test_status_renders_a_degraded_stage_record(tmp_path):
     thin = tmp_path / "thin"
     thin.mkdir()
     make_status_repo(thin, stage="stage = DevStg-Reqs\n")
-    assert gen(thin, "--status").returncode == 0
+    assert run_status(thin).returncode == 0
     block = block_of(thin)
     assert (
         "**In stage:** **DevStg-Reqs** (stage, requirement definition in work)" in block
@@ -254,7 +336,7 @@ def test_status_renders_a_degraded_stage_record(tmp_path):
     unreadable = tmp_path / "unreadable"
     unreadable.mkdir()
     make_status_repo(unreadable, stage="# a hand-written file, no record here\n")
-    assert gen(unreadable, "--status").returncode == 0
+    assert run_status(unreadable).returncode == 0
     block = block_of(unreadable)
     assert "**Stage:** not derived — no readable `docs/stage`." in block
     assert "DevStg-" not in block
@@ -279,7 +361,7 @@ def test_status_forward_only_guard_is_scoped_to_the_generated_block(tmp_path):
     # 1) A clean hand region beside the generated block: --strict is clean
     # (whatever done ids the BLOCK itself carries are the splice's business).
     (tmp_path / "docs" / "status.md").write_text(STATUS_MARKED, encoding="utf-8")
-    assert gen(tmp_path, "--status").returncode == 0
+    assert run_status(tmp_path).returncode == 0
     marked = run_py(
         [SCRIPTS / "check_trajectory.py", "--root", tmp_path, "--strict"], cwd=tmp_path
     )
@@ -294,7 +376,7 @@ def test_status_forward_only_guard_is_scoped_to_the_generated_block(tmp_path):
         ),
         encoding="utf-8",
     )
-    assert gen(tmp_path, "--status").returncode == 0
+    assert run_status(tmp_path).returncode == 0
     hand = run_py(
         [SCRIPTS / "check_trajectory.py", "--root", tmp_path, "--strict"], cwd=tmp_path
     )

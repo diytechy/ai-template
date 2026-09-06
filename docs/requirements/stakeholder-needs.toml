@@ -198,7 +198,7 @@ status = "Approved"
 need = """A reviewer can trust subjective/perceptual acceptance — a realistic-looking render, an artifact comparison with no crisp measurable interface — because it is adjudicated by an **independent critical eye against a written rubric**, never by the session that authored the artifact."""
 why = """*Trust what ships*; an implementer session cannot judge its own output, and a lax test case lets awkward work ship because nothing gave it the critical eye — another agent wearing a different hat must say *where and why* it isn't good enough and drive rework."""
 priority = "S"
-acceptance = """A `Verification=Critique` requirement is judged by a fresh, family-heterogeneous critique session against a written rubric derived from the SN/SR intent (not the possibly-lax TC); the verdict cites numbered rubric anchor ids, bounded iteration drives rework, and the loop escalates to the human on budget exhaustion."""
+acceptance = """A `Verification=Critique` requirement is judged by a fresh critique session against a written rubric derived from the SN/SR intent (not the possibly-lax TC); family heterogeneity is required on the unattended path, while the human chooses the reviewer for attended acceptance. The verdict cites numbered rubric anchor ids, bounded iteration drives rework, and the loop escalates to the human on budget exhaustion."""
 
 [need.SN-025]
 status = "Approved"

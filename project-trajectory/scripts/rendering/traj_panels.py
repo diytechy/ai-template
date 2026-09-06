@@ -26,9 +26,9 @@ import json
 import schedule
 import traj_parse
 from kitlib import station
-from traj_graph import GraphGeom, flat_graph
+from .traj_graph import GraphGeom, flat_graph
 from traj_parse import OKF_TIER_ORDER, _okf_nodes, _process_doc, _stage_value
-from traj_render import (
+from .traj_render import (
     DRILL_STYLE,
     OKF_TYPE_CODE,
     OKF_TYPE_FILL,
@@ -875,7 +875,7 @@ def _station_panel(root):
     )
 
 
-def process_panel(root, wis, stats):
+def process_panel(root, wis, stats, stage_record=None):
     """The Process tab + panel as (tab, panel), or None when there is no
     docs/stage (the tab is then omitted -> a stage-less repo renders
     byte-identically; the Knowledge-tab vacuity idiom). Three linked panels:
@@ -886,7 +886,9 @@ def process_panel(root, wis, stats):
     (commit bar vs gate bar). Fully self-contained (style inside the panel, no
     script needed — the shared tab switcher handles it); sorted inputs, no
     clocks."""
-    stage = _stage_value(root)
+    stage = (
+        stage_record.get("stage") if stage_record is not None else _stage_value(root)
+    )
     if not stage:
         return None
 

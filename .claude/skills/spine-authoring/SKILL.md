@@ -287,6 +287,12 @@ Questions:
   §3, "over-aggressive traceability is a failure mode in its own right"). Where
   the honest floor is a human's judgement, name the verification `Attest` rather
   than inflate a subjective call into a false `Test`.
+- **Record the stopping boundary in the existing scoped review.** For every
+  retained child, state the independent decision or verification purpose it adds;
+  when further splitting would only paraphrase or duplicate, record why the
+  decomposition stops there. Keep the `SN→SR→LLR→TC` tiers required by the
+  selected verification method and real verification links intact; this is a
+  review judgment, not a row-count quota or a new schema.
 
 ## 4. Validation instruments
 

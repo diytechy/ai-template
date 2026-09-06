@@ -84,7 +84,7 @@ def test_a_dangling_lock_symlink_is_not_part_of_the_fingerprint(tmp_path):
     assert ac.scripts_fingerprint(scripts) == clean
 
 
-def test_a_failed_launch_capture_disables_drift_detection_without_a_loop(
+def test_a_failed_launch_capture_refuses_coordinator_start_without_a_restart_loop(
     monkeypatch, capsys
 ):
     ac = load_script("agent_common")
@@ -94,9 +94,56 @@ def test_a_failed_launch_capture_disables_drift_detection_without_a_loop(
         lambda *_a: (_ for _ in ()).throw(OSError("unreadable at launch")),
     )
     assert ac._launch_fingerprint() is None
-    assert "drift detection unavailable" in capsys.readouterr().err
+    assert "coordinator launch must refuse" in capsys.readouterr().err
     # With no launch capture there is nothing to compare against: the answer
-    # is "unavailable" (False), never a restart on every poll.
+    # is "unavailable" (False), never EXIT_RESTART on every poll. The actual
+    # coordinator entry refuses once with the existing typed preflight exit.
     monkeypatch.setattr(ac, "LAUNCHED_SCRIPTS_FINGERPRINT", None)
     monkeypatch.setattr(ac, "scripts_fingerprint", lambda *_a: "moved")
     assert ac.running_scripts_moved() is False
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        SimpleNamespace(
+            root="unused",
+            worktree=None,
+            wi=None,
+            train=None,
+            interactive=False,
+            dual_plan=None,
+        ),
+        SimpleNamespace(
+            root="unused",
+            worktree=None,
+            wi="WI-1",
+            train="train-1",
+            interactive=False,
+            dual_plan=None,
+        ),
+        SimpleNamespace(
+            root="unused",
+            worktree=None,
+            wi=None,
+            train=None,
+            interactive=True,
+            dual_plan=None,
+        ),
+    ],
+    ids=["drive", "worker", "interactive"],
+)
+def test_unknown_launch_identity_refuses_coordinator_modes_before_setup(
+    monkeypatch, capsys, tmp_path, args
+):
+    al = load_script("agent_loop")
+    monkeypatch.setattr(al.agent_common, "LAUNCHED_SCRIPTS_FINGERPRINT", None)
+    monkeypatch.setattr(al, "parse_args", lambda: args)
+    monkeypatch.setattr(al, "_resolve_root", lambda _args: (tmp_path, None))
+    monkeypatch.setattr(
+        al,
+        "resolve_coordinator_dials",
+        lambda *_a: pytest.fail("coordinator setup ran with no source identity"),
+    )
+    assert al.main() == al.EXIT_PREFLIGHT
+    assert "source identity unavailable" in capsys.readouterr().err

@@ -119,3 +119,16 @@ fragment, unrelated goal SpecRefs, typed PAGE on malformed carrier refusal, and
 the legacy no-slot override. The complexity ratchet and existing dual-plan
 round suite pass. No provider was invoked, and no queue, registry, schema, or
 process file was changed.
+
+## OI-85 follow-up (2026-09-06)
+
+The historical no-snapshot statement above describes the first H1 slice.
+The owner has since re-attested SN-026's two tags through the
+[OI-85 named-registry act](../log.d/2026-09-06-oi85-owner-ruling.md).
+H1 and R-E now use the same canonical need-carrier spelling helper, following
+native path semantics for `./`, lexical `..`, whitespace and platform
+separators. A known-empty canonical need registry still rejects a nonexistent
+ID; malformed need content refuses. Other TOML files do not become inferred
+registries simply because they contain nested tables. The
+[continuation log](../log.d/2026-09-06-oi85-plan-completion.md) carries the
+failure-first regressions and final verification.

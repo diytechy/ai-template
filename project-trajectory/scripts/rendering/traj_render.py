@@ -9,7 +9,7 @@ import html
 import math
 import re
 
-from traj_graph import GraphGeom, _layered_layout, orthogonal_route, route_graph
+from .traj_graph import GraphGeom, _layered_layout, orthogonal_route, route_graph
 
 
 # --- shared When-view rendering helpers ---------------------------------------

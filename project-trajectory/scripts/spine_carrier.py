@@ -197,7 +197,9 @@ Requirements: SR-147 (one machine-parseable carrier for the spine).
 import csv
 import re
 import io
+import os
 import tomllib
+from pathlib import Path
 
 # The one sibling this module imports, and it is the SHIPPED package rather than
 # a peer: `kitlib` is import-clean of the rest of `scripts/` by assertion
@@ -469,6 +471,18 @@ def carriers(rel_path, suffixes=CARRIERS):
     `.toml` — matches neither name, and the check silently skips the one commit
     that rewrites every row it watches."""
     return [stem(rel_path) + s for s in suffixes]
+
+
+def names_carrier(rel_path, registry, suffixes=CARRIERS):
+    """Whether a root-relative spelling names one of `registry`'s carriers.
+
+    Strip cell whitespace and normalize native path components, as R-E does
+    when locating the referenced file. No filesystem dereference: backslashes
+    remain filename bytes on POSIX and separators on Windows.
+    """
+    normalized = Path(os.path.normpath(str(rel_path).strip())).as_posix()
+    canonical = Path(os.path.normpath(str(registry).strip())).as_posix()
+    return normalized in carriers(canonical, suffixes)
 
 
 def value_to_cell(value):

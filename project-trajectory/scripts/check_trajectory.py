@@ -274,6 +274,7 @@ WI_WORK = "docs/work"
 # already delegate to `kitlib.registry.read_spec_rows`, which unions the two
 # roots itself (`spec_roots`).
 WI_ARCHIVE_WORK = "docs/archive/work"
+SN_CSV = "docs/requirements/stakeholder-needs.toml"
 SR_CSV = "docs/requirements/system-requirements.toml"
 TC_CSV = "docs/test/test-cases.toml"
 IF_CSV = "docs/requirements/interfaces.toml"
@@ -2869,8 +2870,8 @@ def specref_findings(root, w):
         ]
     if not frag:
         return []
-    ids = _kitspine.registry_ids(target)  # a TOML registry: the fragment is a row id
-    if ids is not None:
+    if spine_carrier.names_carrier(pathpart, SN_CSV, spine_carrier.NEED_CARRIERS):
+        ids = spine_carrier.need_ids(spine_carrier.load_needs(target))
         hint = _kitspine.registry_row_hint(ids, frag)
         msg = "{}: SpecRef {!r} names no such row in {} ({})"
         return [] if frag in ids else [msg.format(w["id"], spec, pathpart, hint)]
@@ -4476,35 +4477,36 @@ def critique_ratchet_findings(root):
 
 
 # The render surface a perceptual (Verification=Critique) SR is judged against —
-# WI-243. The dashboard GENERATOR (`gen_trajectory.py`, located beside this
-# checker so the path resolves under `--root` in this repo and a downstream
-# scaffold alike) plus the optional meta-only render recipe. A change to either
+# WI-243. The dashboard facade and its direct render inputs (located beside this
+# checker so the paths resolve under `--root` in this repo and a downstream
+# scaffold alike) plus the optional meta-only render recipe. A change to any
 # after the latest CRITIQUE means the approved perceptual stamp judged an older
 # render, so the critique should re-fire.
 _RENDER_RECIPE_REL = "scripts/dashboard-shots/shoot.mjs"
 
 
-# WI-280 split the dashboard generator into `gen_trajectory.py` (the facade:
-# HTML_TEMPLATE + build_html) plus the `traj_*.py` siblings that hold every
-# emitter. The render surface is the WHOLE family — after the split, a change
-# that alters the rendered pixels lands in a sibling far more often than in the
-# facade, so watching the facade alone would have silently retired this warn.
-_RENDER_SURFACE_GLOB = "traj_*.py"
+# WI-280 split the dashboard generator into a facade, shared display readers and
+# renderer modules. P9R places HTML-only emitters under `rendering/`; the three
+# shared inputs stay watched because changing their values changes the render an
+# earlier perceptual verdict judged.
+_RENDER_SHARED_GLOB = "traj_*.py"
+_RENDER_PACKAGE_GLOB = "*.py"
+_RENDER_PACKAGE = "rendering"
 
 
 def _render_surface_paths(root):
     """Repo-relative render-surface paths that EXIST under `root`: the co-located
-    dashboard generator `gen_trajectory.py`, its WI-280 `traj_*.py` split siblings
-    (which hold the emitters), and the render recipe if the repo carries one. A
+    dashboard facade and shared display inputs, its `rendering/` emitter
+    package, and the render recipe if the repo carries one. A
     downstream without the meta-only recipe pays nothing for it; an unlocatable
     generator yields no path (the check then stays silent).
 
     Accepted warn-first boundary: layout-affecting values the family IMPORTS from
     modules OUTSIDE it (e.g. a display constant defined in this checker) are NOT
     watched — folding them in would fire the warn on every unrelated edit to those
-    modules. The surface is the generator family + recipe themselves; a render
-    change that lands only in an externally-imported constant is a known,
-    tolerated miss."""
+    modules. The surface is the facade, its direct display inputs and emitters,
+    plus the recipe; a render change that lands only in a more distant imported
+    constant is a known, tolerated miss."""
     out = []
     here = Path(__file__).resolve().parent
     gen = here / "gen_trajectory.py"
@@ -4512,9 +4514,11 @@ def _render_surface_paths(root):
         rel = gen.relative_to(root)
         if gen.is_file():
             out.append(rel.as_posix())
-        # The split siblings live beside the facade; sorted so the warn's path
-        # list is deterministic.
-        for sib in sorted(here.glob(_RENDER_SURFACE_GLOB)):
+        for sib in sorted(here.glob(_RENDER_SHARED_GLOB)):
+            out.append(sib.relative_to(root).as_posix())
+        # The HTML-only emitters live under the package; sorted so the warn's
+        # path list is deterministic.
+        for sib in sorted((here / _RENDER_PACKAGE).glob(_RENDER_PACKAGE_GLOB)):
             out.append(sib.relative_to(root).as_posix())
     except ValueError:
         # the checker is not under root (unusual) — try the kit's two homes.
@@ -4526,8 +4530,16 @@ def _render_surface_paths(root):
                 out.append(cand + "/gen_trajectory.py")
                 out.extend(
                     sorted(
-                        (root / cand / s.name).relative_to(root).as_posix()
-                        for s in (root / cand).glob(_RENDER_SURFACE_GLOB)
+                        s.relative_to(root).as_posix()
+                        for s in (root / cand).glob(_RENDER_SHARED_GLOB)
+                    )
+                )
+                out.extend(
+                    sorted(
+                        s.relative_to(root).as_posix()
+                        for s in (root / cand / _RENDER_PACKAGE).glob(
+                            _RENDER_PACKAGE_GLOB
+                        )
                     )
                 )
                 break
@@ -4612,9 +4624,8 @@ def critique_staleness_findings(root):
     `backlog_staleness_findings`). A `Verification=Critique` SR is judged by a
     human/critic look recorded in `docs/reviews/*-CRITIQUE.md`, and that verdict
     never re-fires on its own — so once the dashboard *render surface* changes,
-    the approval stamp is judging an older render. When a render-surface path (the
-    co-located `gen_trajectory.py`, plus the render recipe if present) last
-    changed STRICTLY AFTER the latest CRITIQUE evidence, flag that the perceptual
+    the approval stamp is judging an older render. When a declared render-surface
+    path last changed STRICTLY AFTER the latest CRITIQUE evidence, flag that the perceptual
     gate is stale and the dashboard critique should be re-run against the current
     render. Returns finding strings ([] when not applicable).
 
@@ -4625,11 +4636,12 @@ def critique_staleness_findings(root):
     and vacuous when the repo declares no perceptual SR (so a downstream repo
     without a `Verification=Critique` SR — none ship — pays nothing at either
     tier), carries no CRITIQUE evidence, or exposes no locatable render surface.
-    Bounded cost: one `git log -1` for the evidence plus one per render-surface
-    path (≤ 2 here). By construction (git-time, not a render diff) it fires on ANY
-    commit touching a render-surface path — a data-only or comment-only edit to the
-    generator flags even with zero visual change — the false-positive-over-
-    false-negative trade the sibling `backlog_staleness` also makes."""
+    Bounded cost: one `git log -1` for the evidence plus one per declared
+    render-surface path. By construction (git-time, not a render diff) it fires
+    on ANY commit touching a render-surface path — a data-only or comment-only
+    edit to the generator flags even with zero visual change — the
+    false-positive-over-false-negative trade the sibling `backlog_staleness`
+    also makes."""
     critique_srs = _load_critique_srs(root)
     if not critique_srs:
         return []

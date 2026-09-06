@@ -19,7 +19,7 @@ fixture builders more than one of them needs live in `tests/traj_fixtures.py`.
 
 import re
 
-from conftest import SCRIPTS, load_script
+from conftest import SCRIPTS, load_script, pin_autocrlf
 from traj_fixtures import (
     write_arch_src,
     GOOD_WIS,
@@ -30,7 +30,67 @@ from traj_fixtures import (
 )
 
 
+def test_asof_stamp_from_git_and_excluded_from_check(tmp_path):
+    # WI-039: the as-of line derives from the last source-touching COMMIT
+    # (never now(), so generation stays deterministic), is visible in the
+    # shell, and is excluded from the --check byte-compare — a stamp-only
+    # difference (the artifact committed one commit behind its sources' last
+    # touch) must not read as stale.
+    import subprocess
+
+    make_repo(tmp_path)
+
+    def git(*args):
+        return subprocess.run(
+            ["git", "-C", str(tmp_path), *args], capture_output=True, text=True
+        )
+
+    git("init")
+    pin_autocrlf(tmp_path)  # WI-461/WI-465; see conftest.pin_autocrlf
+    git("config", "user.email", "t@example.com")
+    git("config", "user.name", "T")
+    git("add", "-A")
+    git("commit", "-q", "-m", "sources")
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert 'class="asof">state as of commit ' in text
+    # Simulate the artifact carrying a previous stamp: content equal, stamp not.
+    (tmp_path / "PROJECT_STATE.html").write_text(
+        re.sub(
+            r'(class="asof">state as of commit )[0-9a-f]+',
+            r"\g<1>0000000",
+            text,
+        ),
+        encoding="utf-8",
+    )
+    proc = gen(tmp_path, "--check")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_no_git_means_no_stamp_and_stays_deterministic(tmp_path):
+    # Outside a git repo the stamp is simply absent — no crash, no wall clock.
+    make_repo(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    assert 'class="asof"></p>' in html_of(tmp_path)
+
+
 # --- renders a self-contained, offline dashboard -------------------------------
+
+
+def test_facade_reexports_pending_compatibility_names():
+    """The supported HTML facade retains its pending-state compatibility seam."""
+    gt = load_script("gen_trajectory")
+    pending = load_script("pending")
+    # load_script creates fresh module objects, so assert the exported target's
+    # module/name rather than object identity.
+    for facade_name, model_name in (
+        ("_spine_pending", "spine_pending"),
+        ("_pause_pending", "pause_pending"),
+        ("pending_block", "pending_block"),
+    ):
+        fn = getattr(gt, facade_name)
+        assert (fn.__module__, fn.__qualname__) == ("pending", model_name)
+    assert gt.PAUSE_MALFORMED == pending.PAUSE_MALFORMED
 
 
 def test_generates_self_contained_dashboard(tmp_path):

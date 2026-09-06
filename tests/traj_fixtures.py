@@ -22,129 +22,29 @@ module, and a helper this file grows for a second caller must be justified the
 same way.
 """
 
-import csv
 import re
-import sys
-from pathlib import Path
 
-from conftest import ROOT, SCRIPTS, load_script, run_py
-
-# The stage carrier's own module, so the `docs/stage` fixture below renders
-# through the format's ONE home (`kitlib.stage.render`) instead of hand-rolling
-# key=value lines a schema change would silently leave behind. `scripts/` is not
-# a package and nothing has necessarily imported a kit script yet at this point,
-# so the path insert is explicit rather than relying on `load_script` having run.
-if str(SCRIPTS) not in sys.path:
-    sys.path.insert(0, str(SCRIPTS))
-
-from kitlib import ladder as _ladder  # noqa: E402  (needs SCRIPTS on sys.path)
-from kitlib import stage as _kitstage  # noqa: E402
+from conftest import ROOT, SCRIPTS, run_py
+from trajectory_cli import run_trajectory
 
 
-WI_HEADER = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable\n"
-
-# A small but branching spine, so the icicle exercises multi-child subtrees and
-# the taller-cell label path; SR-001 Approved + SR-002 Drafted -> 50% definition.
-SN_MD = """# Stakeholder Needs (SN-###)
-
-| SN-ID | Need (plain language) | Why it matters | Priority | Acceptance intent |
-|---|---|---|---|---|
-| SN-001 | Do the thing well. | Users need it. | M | works end to end. |
-"""
-
-SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Core add,SN-001,"Shall add.",R,"add works",,M,Test,Approved
-SR-002,Core sub,SN-001,"Shall subtract.",R,"sub works",,M,Test,Drafted
-"""
-
-LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
-LLR-001,SR-001,Adder,src/m,add,"a+b",(see TC),Approved
-LLR-002,SR-001,Adder edge,src/m,add,"overflow guard",(see TC),Approved
-LLR-003,SR-002,Subber,src/m,sub,"a-b",(see TC),Approved
-"""
-
-TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
-TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1",ok,Yes,Approved
-TC-002,LLR-001,Unit,call add,Smoke,"a=2",ok,Yes,Approved
-TC-003,LLR-002,Unit,call add,Full,"a=3",ok,Yes,Approved
-TC-004,SR-002;LLR-003,Unit,call sub,Full,"a=4",ok,No,Drafted
-"""
-
-# A diamond DAG: WI-001 -> {WI-002, WI-003} -> WI-004; WI-003 also carries a
-# soft (advisory, ~-prefixed) edge after WI-002 — dashed in the render, never
-# a rank constraint.
-GOOD_WIS = (
-    "WI-001,Bootstrap,scripts,SR-001,,done,the adder\n"
-    "WI-002,Harness,scripts,SR-001,WI-001,active,harness green\n"
-    "WI-003,Subtraction,scripts,SR-002,WI-001;~WI-002,queued,the subber\n"
-    "WI-004,Release,docs,SR-002,WI-002;WI-003,queued,shipped\n"
+from traj_core_fixtures import (  # noqa: F401
+    FRAME,
+    GOOD_WIS,
+    LLRS,
+    SN_MD,
+    SRS,
+    TCS,
+    WI_HEADER,
+    make_repo,
+    write_frame,
+    write_stage,
+    write_wis,
 )
 
 
-def write_wis(root, wis_body=GOOD_WIS, header=WI_HEADER):
-    """Write the fixture work items into the registry's one home — `docs/work/`
-    spec files, status = directory (the CSV home retired at
-    concurrency-restructure Phase 5, RULING-4).
-
-    The CSV-shaped `wis_body`/`header` inputs stay: they are the compact,
-    readable way to state a registry in a test, and the ROW ORDER they declare is
-    reproduced through the `order` frontmatter key the folder reader sorts on.
-    One status needs translating, because the folder form encodes it
-    differently rather than as a word in a cell:
-
-      * `active` is `active/<branch>/`, one level deeper, so the spec is written
-        and then MOVED exactly as `integrate.py claim` files a claim.
-
-    (A `blocked` translation to a `queued/` spec carrying a `blockref` retired
-    with the blockref vocabulary at WI-553/OI-70 — nothing produces one now.)
-
-    Re-writing an id replaces its spec (fixtures re-seed freely); the file for a
-    previous status is removed first so status = directory stays single-homed.
-    """
-    wc = load_script("wi_convert")
-    cols = next(csv.reader([header.strip("\n")]))
-    work = root / "docs" / "work"
-    work.mkdir(parents=True, exist_ok=True)
-    for order, cells in enumerate(csv.reader(wis_body.splitlines()), 1):
-        if not cells:
-            continue
-        row = dict.fromkeys(wc.COLUMNS, "")
-        row.update({c: (v or "") for c, v in zip(cols, cells) if c in row})
-        status = row["Status"] or "queued"
-        if status == "active":
-            row["Status"] = "queued"  # relocated to active/<branch>/ below
-        wid = row["WI-ID"]
-        for old in list(work.glob("*/{}-*.md".format(wid))) + list(
-            work.glob("active/*/{}-*.md".format(wid))
-        ):
-            old.unlink()
-        relpath = wc.write_spec_file(work, row, order=order)
-        if status == "active":
-            claim = work / "active" / wid.lower() / Path(relpath).name
-            claim.parent.mkdir(parents=True, exist_ok=True)
-            (work / relpath).replace(claim)
-
-
-def make_repo(root, wis_body=GOOD_WIS, readme=True, header=WI_HEADER):
-    req = root / "docs" / "requirements"
-    req.mkdir(parents=True)
-    (root / "docs" / "test").mkdir(parents=True)
-    (req / "stakeholder-needs.md").write_text(SN_MD, encoding="utf-8")
-    (req / "system-requirements.csv").write_text(SRS, encoding="utf-8")
-    (req / "low-level-requirements.csv").write_text(LLRS, encoding="utf-8")
-    (root / "docs" / "test" / "test-cases.csv").write_text(TCS, encoding="utf-8")
-    write_wis(root, wis_body, header)
-    if readme:
-        (root / "README.md").write_text(
-            '# demoproj\n\n<a id="vision"></a>\n'
-            "**PROJECT-VISION:** Stay correct over time.\n\n## What\n",
-            encoding="utf-8",
-        )
-    return root
-
-
 def gen(root, *args):
-    return run_py([SCRIPTS / "gen_trajectory.py", "--root", root, *args], cwd=root)
+    return run_trajectory(root, *args)
 
 
 def html_of(root):
@@ -173,53 +73,6 @@ def write_arch_src(root):
     """Write the `src/m` demo module the default `[paths] src` profile scans."""
     (root / "src").mkdir(parents=True, exist_ok=True)
     (root / "src" / "m.py").write_text(ARCH_SRC, encoding="utf-8")
-
-
-# The depth-0 FRAME fixture (WI-455): two declared parties, two crossings on the
-# FIRST of them (so one party's card has to span two lanes) and one crossing-less
-# party (a declared party with nothing crossing is a real frame state), plus one
-# external-to-external relationship. `B-02` is deliberately left with no realizing
-# interface row, so the unrealized-crossing rendering has something to say.
-FRAME = """
-[entity.EXT-001]
-name = "Downstream adopter"
-class = "operational"
-description = "The team that adopts the package."
-status = "Drafted"
-
-[entity.EXT-002]
-name = "Vendored upstream"
-class = "enabling"
-description = "A source this project vendors from."
-status = "Drafted"
-
-[boundary.B-01]
-entity = "EXT-001"
-direction = "out"
-carries = "the delivered package"
-status = "Drafted"
-
-[boundary.B-02]
-entity = "EXT-001"
-direction = "in"
-carries = "adopter feedback"
-status = "Drafted"
-
-[relationship.REL-001]
-from = "EXT-002"
-to = "EXT-001"
-kind = "hands-off"
-flow = "a flow this system is not a party to"
-status = "Drafted"
-"""
-
-
-def write_frame(root, text=FRAME):
-    """Write the depth-0 frame registry the System-context view reads."""
-    req = root / "docs" / "requirements"
-    req.mkdir(parents=True, exist_ok=True)
-    (req / "external.toml").write_text(text, encoding="utf-8")
-    return root
 
 
 def if_row(iid, owner, consumers, channel="call", **cells):
@@ -402,43 +255,6 @@ def tiered_repo(root, wis_body, header=TIER_HDR, srs=TIER_SRS):
     make_repo(root, wis_body, header=header)
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
         srs, encoding="utf-8"
-    )
-    return root
-
-
-def write_stage(root, stage="DevStg-Tests", **over):
-    """Write a derived-format `docs/stage` under `root` carrying `stage`.
-
-    RENDERED THROUGH `kitlib.stage.render` (WI-498 slice 5), never hand-rolled:
-    the record format is a key=value block whose fields, ordering and `(none)`
-    spellings are the carrier's to state, and a fixture that re-implements them
-    can only ever agree with itself — the same reason `conftest.set_process_key`
-    delegates to bootstrap's writer. The record is COMPLETE (every declared
-    field) and its `fingerprint` is the real one over this tree's declared
-    inputs, so the file a fixture writes is one a self-healing reader would also
-    accept, not merely one the display readers tolerate.
-
-    `over` patches any field — `write_stage(root, "DevStg-Impl", drafted=3)`."""
-    record = {
-        "stage": stage,
-        "stage-ord": _ladder.stage_ord(stage),
-        "stage-of": _ladder.STAGE_OF,
-        "floored": False,
-        "settled-stage": stage,
-        "live-stage": stage,
-        "phase": None,
-        "per-phase": {"1": stage},
-        "per-phase-live": {"1": stage},
-        "drafted": 0,
-        "fingerprint": _kitstage.fingerprint(root),
-    }
-    record.update(over)
-    path = root / _kitstage.STAGE_FILE
-    path.parent.mkdir(parents=True, exist_ok=True)
-    # A fixed as-of/date: the stamp is informational and never compared, and a
-    # clock in a fixture is a clock in every byte-determinism assertion downstream.
-    path.write_text(
-        _kitstage.render(record, "fixture0", "2026-08-21"), encoding="utf-8"
     )
     return root
 

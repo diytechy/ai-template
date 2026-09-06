@@ -71,6 +71,11 @@ Produce exactly one markdown table, one row per proposed WI:
 After the table, a `## Notes` section: for every goal clause you deliberately
 do **not** cover, one line declaring the exclusion and why (a declared
 non-goal, never silence). State any assumption that shaped the decomposition.
+The Notes must also state the stopping boundary: each retained child has an
+independent decision or verification purpose, and further splitting stops where
+it would add no independent value. Tiers required by the selected verification
+method and real verification links remain in scope; a row count is not evidence
+of proportionality.
 
 ## Quality bar (the rubric you will be judged against)
 

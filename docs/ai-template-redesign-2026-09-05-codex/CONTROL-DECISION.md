@@ -63,11 +63,11 @@ thresholds (zero correctness failures; at most 20% matched latency/throughput
 regression; reduced protocol surface) remain a separate experiment contract,
 including its own absolute budget before execution.
 
-## Pending owner inputs
+## Original owner-input request (resolved below)
 
-Choose the observation boundary and absolute time/spend limits, or defer live
-control. The implementation can continue shared-reader, hat-context, adopter
-and renderer separation work while these inputs are pending. No new runtime,
+The owner selected the Short control in the ruling below. The implementation
+can continue shared-reader, hat-context, adopter and renderer separation work
+while the launch preflight is completed. No new runtime,
 one-WI assignment policy, test-tier removal or Worktrunk dependency follows
 from those independent changes.
 

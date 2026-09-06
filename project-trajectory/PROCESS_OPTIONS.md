@@ -121,6 +121,12 @@ into a straitjacket. Four points, one voice:
   build-size budget — and stop there. Decomposing a subjective judgment ("is this
   scene moving?") into finer rows a script still can't check adds process weight
   with no verification return; mark it `Attest` and move on.
+- **(d2) Record the stopping boundary.** In the existing scoped decomposition or
+  review record, name the independent decision or verification purpose of each
+  retained child and state why further splitting would add no independent value.
+  This records proportionality without a row-count quota, and it never permits
+  omitting a tier required by the selected verification method or replacing
+  real verification with a count.
 - **(e) Decision-surfacing rate is a setup dial, not a constant.** How often the
   driver pauses for the human to **approve a decision** is project-specific:
   calibrate it **at project setup** on the same risk axis as review-depth triage
@@ -1244,6 +1250,17 @@ redacted prompts, verdict files, hold-keyed escalation).
   is added as a new `B#` anchor at rework, so the next round judges against the
   **accumulated** reference, and every verdict **cites anchor ids** (what makes
   rounds comparable across sessions). See [`docs/rubrics/`](rubrics/README.md).
+- **The existing critique record carries its provenance.** The verdict identifies
+  the fresh non-author session. In unattended use, the assigned verdict
+  path/round binds to the coordinator's session log; in attended use, identify
+  the human-chosen fresh reviewer and its sitting/review record supplied by the
+  invocation. A provider session id is included when supplied but is not a
+  hidden prerequisite. It names the rubric path/revision
+  and applicable SN/SR intent sources, then records the numbered anchors judged;
+  an `APPROVE` with zero findings still records anchor coverage. Never invent
+  metadata. This is an inspection of the review record's process and provenance,
+  while `Critique` remains the judgment of the produced artifact; no new schema
+  or approval form is needed.
 - **Redaction by construction.** The critic gets the rubric + the SN/SR intent +
   the artifact recipe and **never the implementer's self-assessment** (`status.md`,
   `log.md`, the session transcript) — the same rule the reviewer prompt follows.
@@ -1982,6 +1999,12 @@ existing one, is a judgment call (token-window duplicate detection reads code,
 not contract prose) — recorded in `enforcement-audit.md` with a plan/spec
 critique-rubric anchor (`docs/rubrics/spec-interface-hygiene.md` **B1**, which
 WI-190's plan rubric imports).
+
+When a reviewed change alters one side of a declared requirement/interface
+relationship, the same scoped review record names the changed side and its
+counterpart, then records the independent reviewer's semantic decision: carry
+the corresponding change or explain why the counterpart remains valid. A
+reference-existence check can support that reading but cannot discharge it.
 
 **No-validation-delta warn.** A rework WI that addresses a prior failure but
 changes neither the TC prose (`docs/test/test-cases.toml`) nor the test logic

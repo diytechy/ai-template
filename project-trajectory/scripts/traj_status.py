@@ -38,7 +38,7 @@ import traj_parse
 # `spine_rules` NOR `derive_stage` — reading the recorded file needs only the
 # format, and the derivation engines stay out of a module that draws pages.
 from kitlib import ladder as _ladder
-from kitlib import stage as _kitstage
+from traj_display import load_display_snapshot, load_stage_record
 from traj_parse import cmp_rows, spine_stats
 
 # --- the pending-owner-actions projection, RE-EXPORTED (WI-483 slice 3) --------
@@ -109,17 +109,10 @@ def _stage_facts(root):
     `gen_trajectory.py --status --check`, so it must describe the commit it is
     generated alongside rather than derive a value the file beside it does not
     carry."""
-    path = root / _kitstage.STAGE_FILE
-    if not path.exists():
-        return {}
-    try:
-        record = _kitstage.parse(path.read_text(encoding="utf-8", errors="replace"))
-    except ValueError:  # a hand-edited or cross-ladder value: degrade, never guess
-        return {}
-    return record or {}
+    return load_stage_record(root)
 
 
-def _spine_counts(root):
+def _spine_counts(root, snapshot=None):
     """`{SN,SR,LLR,TC}` string counts for the snapshot, counted from the
     registries.
 
@@ -130,7 +123,7 @@ def _spine_counts(root):
     trustworthy, for a display convenience). The registry count was already the
     fallback arm here and is now the only arm, at no new cost class: this
     snapshot already loads the IF and CMP registries two lines below."""
-    st = spine_stats(root)
+    st = snapshot.spine if snapshot is not None else spine_stats(root)
     return {
         "SN": str(st["sn_total"]),
         "SR": str(st["sr_total"]),
@@ -276,8 +269,9 @@ def status_block(root):
     facts ONLY — the forward-only intent stays hand-authored outside the markers.
     Deterministic (no clocks), so the `--status --check` byte-compare is stable,
     exactly like the arch-map / dashboard freshness gates."""
-    record = _stage_facts(root)
-    counts = _spine_counts(root)
+    snapshot = load_display_snapshot(root)
+    record = snapshot.stage
+    counts = _spine_counts(root, snapshot)
     seams = len(ct.load_ifs(ct.spine_carrier.load(root / ct.IF_CSV, "IF-ID")))
     comps = len(cmp_rows(root))
 

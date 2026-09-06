@@ -3,9 +3,11 @@
 H2, H3 and H5 are authored as Drafted rows: `SR-184`–`SR-186` and `TC-209`–`TC-211`;
 `SR-184` uses the direct Inspection route and `LLR-048` remains under `SR-154`.
 H1's two subject tags and H4's acceptance cell are also authored under the
-owner's execution instruction, after independent review. No approval act, snapshot write, stage advancement or WI state change occurred. Re-attestation remains owed for the amended
-Approved rows `SN-007`, `SN-026`, and `SR-162`; the new SRs/TCs await ordinary
-first approval, and their behavior and Inspection results remain open. The source findings are [HATS-AND-DECOMPOSITION-REVIEW.md](HATS-AND-DECOMPOSITION-REVIEW.md#h2--sn-024s-rubric-contract-disappears-at-the-sr-tier),
+owner's execution instruction, after independent review. The owner subsequently accepted OI-85(a): SN-007/SN-026 are re-attested and
+SN-024 now scopes family heterogeneity to unattended Critique. The scoped
+[owner record](../log.d/2026-09-06-oi85-owner-ruling.md) records the needs-only
+snapshot refresh. SR-162 still owes re-attestation; the new SRs/TCs await
+ordinary first approval, implementation and Inspection results. The source findings are [HATS-AND-DECOMPOSITION-REVIEW.md](HATS-AND-DECOMPOSITION-REVIEW.md#h2--sn-024s-rubric-contract-disappears-at-the-sr-tier),
 with the live parent cells at `docs/requirements/stakeholder-needs.toml:137-142`
 (SN-007), `docs/requirements/stakeholder-needs.toml:174-183` (SN-012),
 `docs/requirements/stakeholder-needs.toml:196-205` (SN-024),
@@ -15,7 +17,7 @@ and H5 are authored Drafted SRs with direct Drafted Inspection TCs.
 
 ## H1 — record the legal and data-protection applicability of SN-026
 
-**Disposition: authored a metadata-only amendment to the existing `SN-026`; need-tier re-attestation remains owed.**
+**Disposition: authored a metadata-only amendment to the existing `SN-026`; re-attested by the owner under OI-85(a).**
 Its normative `need` and `acceptance` cells remain byte-for-byte unchanged.
 The live tag amendment records two applicable lenses; it does not alter managed
 selection, consent, or the provider inclusion rule. The current row is at
@@ -40,14 +42,13 @@ planted-credential obligations remain unimplemented, so the amendment does not c
 slice proves the parsed parent-context path. `SR-175`'s rationale records
 amending SN-026 as rejected option (b), “one rule, one home”; this amendment
 records the DO-178C feed-back applicability step and leaves the inclusion/
-consent rule in SR-175. Authoring the two tags is complete; need-tier re-attestation remains owed. This
-does not write an approval snapshot. Any approval act remains on the existing
-need-tier path. Provider selection, CI and test tiers are
+consent rule in SR-175. The owner has re-attested the two tags through the existing named-registry
+snapshot path under OI-85(a). Provider selection, CI and test tiers are
 unchanged.
 
 ## H4 — reconcile SN-007's landing promise with declared cadence
 
-**Disposition: authored an acceptance-only amendment to the existing `SN-007`; need-tier re-attestation remains owed.** The prior acceptance (`docs/requirements/stakeholder-needs.toml:137-142`) required
+**Disposition: authored an acceptance-only amendment to the existing `SN-007`; re-attested by the owner under OI-85(a).** The prior acceptance (`docs/requirements/stakeholder-needs.toml:137-142`) required
 a green whole suite before each change. The authored cell keeps the declared bar
 and the Full-suite scaffold/every-script promise; existing process and stack
 configuration continue to own tier cadence.
@@ -91,8 +92,8 @@ sn_refs = ["SN-024"]
 boundary_refs = ["B-05"]
 hat_refs = ["TEST-ENGINEER", "PRODUCT-FITNESS"]
 requirement = "Where a delivered capability requires Critique acceptance, the delivered acceptance record shall identify a fresh reviewer session that did not author the artifact, apply a written rubric derived from the applicable SN/SR intent, and record each verdict and finding against numbered rubric-anchor ids."
-acceptance_criteria = "A Critique acceptance record identifies the fresh non-author session, names the rubric and its SN/SR intent sources, and ties every verdict and finding to a numbered rubric-anchor id; a rubric copied from the verifying TC without independent derivation from the SN/SR intent is an Inspection finding, as is a missing reviewer, rubric, intent basis or anchor citation; this Inspection checks process and provenance and does not replace the Critique judgment of the produced artifact."
-rationale = "Carries SN-024's omitted author-independence, rubric provenance and anchor obligation as one coherent Critique acceptance decision. It applies to attended and unattended Critique acceptance; SR-154 remains the home of the underlying brief, unattended scheduling, consent, family selection and family diversity, degradation and escalation, and SR-155 remains the contested-plan state machine. The attended case does not mandate a second provider family or vendor. LLR-048 already assembles the rubric/intent/artifact brief and LLR-076 already refuses a missing dual-plan rubric; those mechanisms remain under SR-154 rather than being re-homed here. The acceptance record's process/provenance completeness is inspectable, while artifact adequacy remains the independent Critique judgment."
+acceptance_criteria = "A Critique acceptance record identifies the fresh non-author session, names the rubric and its SN/SR intent sources, and ties every verdict and finding to a numbered rubric-anchor id; a record whose rubric is copied from the verifying TC without independent derivation from the SN/SR intent fails, as does a record missing its reviewer, rubric, intent basis or anchor citation; what is judged is the record's process and provenance, never the adequacy of the produced artifact."
+rationale = "Carries SN-024's omitted author-independence, rubric provenance and anchor obligation as one coherent Critique acceptance decision. It applies to attended and unattended Critique acceptance; SR-154 remains the home of the underlying brief, unattended scheduling, consent, family selection and family diversity, degradation and escalation, and SR-155 remains the contested-plan state machine. LLR-048 already assembles the rubric/intent/artifact brief and LLR-076 already refuses a missing dual-plan rubric; those mechanisms remain under SR-154 rather than being re-homed here. The acceptance record's process/provenance completeness is inspectable, while artifact adequacy remains the independent Critique judgment."
 priority = "S"
 verification = "Inspection"
 status = "Drafted"
@@ -221,8 +222,8 @@ no result state:
 [decomposition proportionality](../test/inspection-procedures.md#decomposition-proportionality-inspection)
 (`TC-211`), each with a result subsection. Each TC `method` names its
 procedure anchor and its `evidence` names the corresponding result anchor.
-Those result subsections say `Not executed; reviewer/date/result pending` until
-a reviewer records an actual inspection. No passing inspection is claimed.
+Those result subsections record actual independent execution: TC-209 and
+TC-210 pass, while TC-211 retains an incomplete normal sample.
 
 `SR-184` is LLR-exempt under the direct Inspection route; `LLR-048` and `TC-048`
 remain evidence for the existing SR-154 brief mechanism. The governing process
@@ -235,7 +236,8 @@ clauses are:
 > ≥1 TC regardless of method. (`project-trajectory/PROCESS.md:737-744`)
 
 The authored TCs are `TC-209` for H2, `TC-210` for H3, and `TC-211` for H5.
-Their implementation and inspection results remain open.
+Their delivered guidance and individual Inspection results are recorded below;
+first approval of the Drafted artifacts remains separate.
 
 ## Review and sequencing
 
@@ -244,14 +246,11 @@ The existing tier authority separately decides approval and snapshot state after
 independent review of the exact wording against the full SN cell, affected SR
 rationales, LLR/TC evidence and current work. SR-184 and SR-185 need their
 semantic behavior and fresh Inspection records; SR-186 needs its proportionality
-record; the direct TCs currently document procedures only. Re-attestation is
-owed for amended Approved rows `SN-007`, `SN-026`, and `SR-162`; the new SR/TC
-rows need ordinary first approval. The need-tier debt, which no snapshot-drift
-check reaches, is carried as an owner decision in
-[`docs/requirements/open-items.toml`](../requirements/open-items.toml) (OI-85),
-together with the SN-024 question of whether its family-heterogeneity clause
-binds attended Critique acceptance; SR-184's rationale no longer answers that
-question on its parent's behalf. H1/SR-175 consent or provider-inclusion work
+record; the direct TCs point to the procedures and their recorded execution results. SR-162 still owes re-attestation, and the new SR/TC rows need ordinary first
+approval. OI-85(a) now records the owner's need-tier re-attestation and
+SN-024 qualification; its [reviewed act](../log.d/2026-09-06-oi85-owner-ruling.md)
+refreshes only the needs snapshot. SR-184's rationale leaves family policy to
+its now-qualified parent and SR-154. H1/SR-175 consent or provider-inclusion work
 remains open, and none changes the LLR-176/build-surface redaction boundary.
 
 ## Opus disposition map
@@ -274,3 +273,58 @@ The final authoring review's corrections are applied to the live rows and to thi
 no Status or approval snapshot is changed.
 
 SR-186 retains the optional `aspect = "process"` because the row is a process obligation; SR-184 and SR-185 omit that optional cell rather than inflating the schema. Hat-Refs follow current `listens_for` clauses: SR-184 uses TEST-ENGINEER and PRODUCT-FITNESS, SR-185 uses CONSISTENCY, MAINTAINER and TEST-ENGINEER, and SR-186 uses MAINTAINER and PRODUCT-FITNESS.
+
+
+## Implementation review subject (2026-09-06)
+
+H2/H3/H5 now use the existing process and review carriers. PROCESS_OPTIONS
+states the common Critique provenance, counterpart decision and proportionality
+rules; the critique and reviewer prompts carry the actionable instructions.
+The spine-authoring skill supplies the decomposition question, and the planner's
+existing Notes record the stopping decision. No new schema, machine gate,
+row-count sensor or required LLR layer is introduced.
+
+For H3, P9R changes the LLR source pointers for the rendering implementation
+and completes IF-011's description of its already-public text-status mode.
+The requirement-side chain is IF-011 (`docs/requirements/interfaces.toml:318-324`)
+→ LLR-035 (`docs/requirements/low-level-requirements.toml:378-387`) → SR-168
+(`docs/requirements/system-requirements.toml:846-858`) and SR-070
+(`docs/requirements/system-requirements.toml:370-388`); the paired
+status surface is IF-164 (`docs/requirements/interfaces.toml:675-683`) →
+LLR-198 (`docs/requirements/low-level-requirements.toml:1980-1989`) → SR-168.
+The decision is descriptive-only: the SR-168/SR-070 asserted behavior remains
+unchanged while the interface description records the existing status mode.
+The command remains `gen_trajectory.py`, its HTML and status checks retain
+exit 0/1, and IF-164 still names `traj_status` as the status writer. Retaining
+those counterparts preserves the supported calling convention; moving the
+private HTML implementation is not a reason to change a consumer's command.
+The independent review must judge this semantic argument against the actual
+source and interface cells; a successful reference lookup is insufficient.
+
+For H5, the stopping decision is the three distinct acceptance questions:
+SR-184 owns Critique record provenance, SR-185 owns counterpart agreement,
+and SR-186 owns proportionate decomposition. TC-209 applies normal, missing
+provenance and TC-copied rubric cases; TC-210 distinguishes semantic agreement
+from valid references; TC-211 challenges a redundant child while preserving
+required tiers. Those procedures supply verification the parent requirement
+sentences do not perform. PROCESS.md requires every SR to have an LLR or a
+method that is explicitly LLR-exempt, and every SR and LLR to have a TC
+(`project-trajectory/PROCESS.md:482-487`); it states that only
+Analysis/Inspection/Attest SRs are LLR-exempt while every SR still needs a TC
+(`project-trajectory/PROCESS.md:737-744`). Because SR-186 selects
+Verification=Inspection, its selected verification method permits this direct
+SR→TC link while retaining every tier required by that method; another LLR
+would duplicate these review judgments without defining a separate mechanism.
+Further splitting is not justified by another label for the same question.
+Existing mechanical evidence stays with SR-154/SR-162 and their
+children. This is a scoped decision, not a quota for other projects.
+
+Independent judgment uses the intent-derived
+[change-review rubric](../rubrics/change-review-records.md); the resulting
+Critique and subsequent Inspection records are linked from the existing
+[procedures](../test/inspection-procedures.md). The independent Critique approved
+the delivered guidance and scoped reasoning. TC-209/TC-210 Inspections passed;
+TC-211 retains its incomplete normal sample because the applicable SR-161
+machine perspective record is absent (the debt already stated in LLR-183).
+Publishing guidance does not claim every future contributor follows it, that
+TC-211 fully passed, or that the Drafted rows have been approved.

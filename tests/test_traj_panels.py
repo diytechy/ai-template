@@ -493,7 +493,7 @@ def test_station_barrier_and_admission_arms_pin_to_the_dispatcher(tmp_path):
     # added arm reds here before the dashboard can drift.
     sched = load_script("schedule")
     disp = load_script("dispatch")
-    tp = load_script("traj_panels")
+    tp = load_script("gen_trajectory").traj_panels
     levels = ("attended", "single-approve", "autonomous")
     truth = {
         disp._kind_action(kind, level)
@@ -592,7 +592,7 @@ def test_station_advance_card_names_the_shipped_merge(tmp_path):
     # RULING-6 audit reds. The card used to say "ff trunk to the barred tree",
     # misstating the shipped act; it now says "advance", which also still fits
     # the notemax budget (no truncating "…").
-    tp = load_script("traj_panels")
+    tp = load_script("gen_trajectory").traj_panels
     with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     station = _station_div(html_of(tmp_path))
@@ -611,8 +611,9 @@ def test_station_narrow_width_scrolls_instead_of_blurring(tmp_path):
     # views already carry (WI-219/WI-256/WI-307) rather than inventing a new one:
     # past the floor the ring stops shrinking and the container scrolls, with an
     # explicit cue - so 390px stays HONEST about the cut instead of blurring it.
-    tr = load_script("traj_render")
-    tp = load_script("traj_panels")
+    gt = load_script("gen_trajectory")
+    tr = gt.traj_render
+    tp = gt.traj_panels
     with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
@@ -711,7 +712,7 @@ def test_t1_hero_OVERLONG_active_title_discloses_natively(tmp_path):
 
     The bound is `traj_panels._NEXT_WORK_TITLE`, read rather than restated so a
     re-tuned bound cannot leave this test asserting against a stale number."""
-    panels = load_script("traj_panels")
+    panels = load_script("gen_trajectory").traj_panels
     bound = panels._NEXT_WORK_TITLE
     tail = "and here is the remainder that must still be reachable"
     long_title = ("A" * (bound + 5)) + " " + tail

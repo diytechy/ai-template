@@ -24,8 +24,6 @@ fail before it is trusted to pass.
 
 from __future__ import annotations
 
-from pathlib import PureWindowsPath
-
 import pytest
 
 from conftest import ROOT, load_script
@@ -616,23 +614,27 @@ def test_plan_runner_scope_refuses_bad_exact_canonical_need_specref(tmp_path):
         )
 
 
-def test_need_spec_ref_accepts_the_root_relative_spelling():
-    # `./docs/...` names the same document; it resolved to NOTHING (silently no
-    # parent) before 2026-09-06 while R-E resolved it clean.
-    assert (
-        plan_briefs._canonical_need_ref(
-            "./docs/requirements/stakeholder-needs.toml#SN-1"
-        )
-        == "SN-1"
-    )
+@pytest.mark.parametrize(
+    "path",
+    [
+        "./docs/requirements/stakeholder-needs.toml",
+        "././docs/requirements/stakeholder-needs.toml",
+        " docs/requirements/stakeholder-needs.toml ",
+        "docs/requirements/../requirements/stakeholder-needs.toml",
+    ],
+)
+def test_need_spec_ref_accepts_the_root_relative_spelling(path):
+    # R-E resolves these to the same file; the composer must retain its need
+    # context rather than silently omit the parent hats.
+    assert plan_briefs._canonical_need_ref(path + "#SN-1") == "SN-1"
 
 
-def test_need_spec_ref_uses_registry_path_spelling_on_windows(monkeypatch):
-    monkeypatch.setattr(plan_briefs, "Path", PureWindowsPath)
-    assert (
-        plan_briefs._canonical_need_ref("docs/requirements/stakeholder-needs.md#SN-1")
-        == "SN-1"
-    )
+def test_need_spec_ref_keeps_native_path_semantics():
+    import os
+
+    assert plan_briefs._canonical_need_ref(
+        "docs\\requirements\\stakeholder-needs.md#SN-1"
+    ) == ("SN-1" if os.name == "nt" else None)
 
 
 @pytest.mark.parametrize("suffix", ["toml", "md"])

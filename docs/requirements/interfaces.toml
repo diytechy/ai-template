@@ -319,7 +319,7 @@ status = "Drafted"
 owner = "scripts/gen_trajectory"
 consumers = ["scripts/check"]
 channel = "exit-code"
-data = "0 clean or vacuous · 1 invalid registry or stale HTML"
+data = "0 clean or vacuous · 1 invalid registry, stale HTML, or stale status snapshot under --check"
 version = "v1"
 status = "Drafted"
 
@@ -851,7 +851,7 @@ notes = """Published contract, not a single consumer: same population as IF-021/
 [interface.IF-052]
 rationale = """The read is traj_parse._stage_value and the tab traj_panels.process_panel, both re-exported by the facade that declares this seam."""
 owner = "scripts/traj_parse"
-requestors = ["scripts/gen_trajectory"]
+requestors = ["scripts/rendering/traj_panels"]
 channel = "call"
 data = "traj_parse._stage_value: the stage field of docs/stage, or None (the Process tab's omit condition)"
 version = "v1"
@@ -1139,7 +1139,7 @@ notes = """sink — gen_trajectory.py's decomposition moved the import, not the 
 [interface.IF-083]
 rationale = """A seam is declared per importing module, and the import that holds IF-056's derivation-loader seam moved to this split sibling with the views it serves."""
 owner = "scripts/check_trajectory"
-requestors = ["scripts/traj_views"]
+requestors = ["scripts/rendering/traj_views"]
 channel = "call"
 data = "check_trajectory joins: read_rows, load_seams, component_top_view, _norm_module, _split_refs, SR_CSV, TOP_VIEW_MAX"
 version = "v1"
@@ -1236,7 +1236,7 @@ component = "CMP-008"
 [interface.IF-093]
 rationale = """The dashboard's outcome vocabulary is READ from the vocabulary's own module instead of drifting as folklore."""
 owner = "scripts/kitlib/station"
-requestors = ["scripts/traj_panels"]
+requestors = ["scripts/rendering/traj_panels"]
 channel = "call"
 data = "OUTCOME_DIRS: complete · cancelled · partial; BAR_GREEN"
 version = "v1"
@@ -1246,7 +1246,7 @@ notes = """sink - a render leaf: provides nothing across components (consumed on
 
 [interface.IF-094]
 owner = "scripts/schedule"
-requestors = ["scripts/traj_panels"]
+requestors = ["scripts/rendering/traj_panels"]
 channel = "call"
 data = "_KIND_CONCURRENCY, _KIND_RANK and CONCURRENCY_EXCLUSIVE, read as constants"
 version = "v1"

@@ -139,7 +139,7 @@ status = "Approved"
 need = """The people maintaining this kit hold it to its own standard: it stays traceable and tested through every change."""
 why = """The kit is a foundation many repos inherit; a regression here propagates downstream."""
 priority = "M"
-acceptance = """The suite bootstraps a temp scaffold and runs every script; a green run of that whole suite is required before each change lands."""
+acceptance = """The declared bar is green before a change lands. The Full-suite run bootstraps a temp scaffold and exercises every delivered script."""
 
 [need.SN-008]
 status = "Approved"
@@ -198,7 +198,7 @@ status = "Approved"
 need = """A reviewer can trust subjective/perceptual acceptance — a realistic-looking render, an artifact comparison with no crisp measurable interface — because it is adjudicated by an **independent critical eye against a written rubric**, never by the session that authored the artifact."""
 why = """*Trust what ships*; an implementer session cannot judge its own output, and a lax test case lets awkward work ship because nothing gave it the critical eye — another agent wearing a different hat must say *where and why* it isn't good enough and drive rework."""
 priority = "S"
-acceptance = """A `Verification=Critique` requirement is judged by a fresh, family-heterogeneous critique session against a written rubric derived from the SN/SR intent (not the possibly-lax TC); the verdict cites numbered rubric anchor ids, bounded iteration drives rework, and the loop escalates to the human on budget exhaustion."""
+acceptance = """A `Verification=Critique` requirement is judged by a fresh critique session against a written rubric derived from the SN/SR intent (not the possibly-lax TC); family heterogeneity is required on the unattended path, while the human chooses the reviewer for attended acceptance. The verdict cites numbered rubric anchor ids, bounded iteration drives rework, and the loop escalates to the human on budget exhaustion."""
 
 [need.SN-025]
 status = "Approved"
@@ -210,7 +210,7 @@ acceptance = """A plain launch derives what to do next from the tracked WI DAG p
 
 [need.SN-026]
 status = "Approved"
-tags = ["unattended", "loop"]
+tags = ["unattended", "loop", "legal", "personal-data"]
 need ="""The repo owner can configure **several LLM families** — selected per job and per capability level — so that work benefiting from an independent second opinion is automatically routed to a *different* family wherever that is configured."""
 why = """One family is a single point of both failure and bias: an outage, a retired model or an expired auth stalls the whole loop, and a reviewer drawn from the implementer's own family shares its blind spots — so a same-family review reads like corroboration while adding little. Declaring the families and levels in a registry, rather than hard-coding one vendor, is also what keeps the kit vendor-neutral as models turn over."""
 priority = "S"

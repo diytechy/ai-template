@@ -4499,6 +4499,13 @@ def main():
     root, code = _resolve_root(args)
     if code is not None:
         return code
+    if agent_common.LAUNCHED_SCRIPTS_FINGERPRINT is None:
+        print(
+            "agent_loop: preflight failed — source identity unavailable; "
+            "fix readability and relaunch.",
+            file=sys.stderr,
+        )
+        return EXIT_PREFLIGHT
     docs = root / "docs"
 
     # The session dials, resolved ONCE from the single declared home

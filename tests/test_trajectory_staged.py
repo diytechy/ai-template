@@ -26,6 +26,12 @@ from conftest import (
 )
 
 wi_convert = load_script("wi_convert")
+RENDER_SHARED = (
+    "gen_trajectory.py",
+    "traj_display.py",
+    "traj_parse.py",
+    "traj_status.py",
+)
 
 
 # The registry-fixture writers below are copied from tests/test_trajectory.py
@@ -1395,7 +1401,7 @@ def test_render_surface_covers_the_whole_generator_family():
     """`_render_surface_paths` feeds the render-critique-staleness warn: a
     `Verification=Critique` SR whose judged render surface changed after the
     verdict must re-fire. WI-280 split every EMITTER out of gen_trajectory.py
-    into `traj_*.py` siblings, so a facade-only surface would leave that warn
+    into HTML emitter modules, so a facade-only surface would leave that warn
     running and always passing — the exact silent-green shape the warn exists
     to prevent. This pins the family, both because the change was unguarded
     (round-1 review, MINOR) and because the failure mode is invisible: nothing
@@ -1405,14 +1411,17 @@ def test_render_surface_covers_the_whole_generator_family():
     assert paths, "vacuous — the surface resolved to nothing"
 
     scripts_rel = "project-trajectory/scripts/"
-    assert scripts_rel + "gen_trajectory.py" in paths, paths
-    # Every sibling that actually exists beside the facade must be watched.
-    siblings = sorted(
-        p.name for p in (ROOT / "project-trajectory" / "scripts").glob("traj_*.py")
-    )
-    assert siblings, "premise gone: no traj_* siblings to watch"
-    for name in siblings:
+    for name in RENDER_SHARED:
         assert scripts_rel + name in paths, (name, paths)
+    # Every HTML emitter in the rendering package must be watched.
+    siblings = sorted(
+        p.name
+        for p in (ROOT / "project-trajectory" / "scripts" / "rendering").glob("*.py")
+        if p.name != "__init__.py"
+    )
+    assert siblings, "premise gone: no rendering emitters to watch"
+    for name in siblings:
+        assert scripts_rel + "rendering/" + name in paths, (name, paths)
     # Deterministic order, so the emitted warn text is stable.
     assert paths == sorted(dict.fromkeys(paths)) or paths[0].endswith(
         "gen_trajectory.py"
@@ -1430,9 +1439,14 @@ def test_render_surface_fallback_arm_finds_both_scaffold_homes(tmp_path):
         root = tmp_path / home.replace("/", "_")
         d = root / home
         d.mkdir(parents=True)
-        for name in ("gen_trajectory.py", "traj_graph.py", "traj_render.py"):
+        for name in RENDER_SHARED:
             (d / name).write_text("", encoding="utf-8")
+        package = d / "rendering"
+        package.mkdir()
+        for name in ("__init__.py", "traj_graph.py", "traj_render.py"):
+            (package / name).write_text("", encoding="utf-8")
         paths = ct._render_surface_paths(root)
-        assert home + "/gen_trajectory.py" in paths, (home, paths)
-        assert home + "/traj_graph.py" in paths, (home, paths)
-        assert home + "/traj_render.py" in paths, (home, paths)
+        for name in RENDER_SHARED:
+            assert home + "/" + name in paths, (name, paths)
+        assert home + "/rendering/traj_graph.py" in paths, (home, paths)
+        assert home + "/rendering/traj_render.py" in paths, (home, paths)

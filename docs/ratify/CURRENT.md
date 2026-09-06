@@ -10,7 +10,7 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 
 _The off-spine registries above carry no per-row rendering in this brief; since WI-571 `intake.py snapshot` copies one only when its own `Status` moves or `--approves` names it, but a re-SEED still blesses the whole tree. What it would absorb, changed since the snapshot:_
 
-- `docs/requirements/interfaces.toml` — 6 changed, 5 added, 1 removed since the snapshot; ruling(s): none cited.
+- `docs/requirements/interfaces.toml` — 11 changed, 5 added, 1 removed since the snapshot; ruling(s): none cited.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): none cited.
 
 
@@ -113,6 +113,26 @@ _traced — routes to adjudication_
   - before: Realizes SN-024 and SN-023 — an accessibility bar left unstated silently reads as no bar at all, so the obligation is stated here even though its clauses were not measurable when the row was written. They since became so, one clause at a time, which is why this row's method is mechanical: the thresholds are the child rows' and the acceptance is their chain. Hat-derived (hat.ACCESSIBILITY): keyboard operability, an accessible name per element, colour never the only channel, and a readable contrast floor are the charter's own subject, and no other lens in the roster names a measurable perceptual threshold — the UX pair reaches robustness (it does not overflow), never legibility. That dependency is CLOSED: the ACCESSIBILITY charter is ruled `always`, so the lens this row derives from is put to every decomposition — and it had already reached this row once SN-023 carried the `a11y` tag, which is why the gap is narrower than the unmeasurable-clauses opening suggests.
   - after: Realizes SN-024 and SN-023 — an accessibility bar left unstated silently reads as no bar at all, so the obligation is stated here even though its clauses were not measurable when the row was written. They since became so, one clause at a time, which is why this row's method is mechanical: the thresholds are the child rows' and the acceptance is their chain. Keyboard operability, an accessible name per element, colour never the only channel, and a readable contrast floor are the charter's own subject, and no other lens in the roster names a measurable perceptual threshold — the UX pair reaches robustness (it does not overflow), never legibility. That dependency is CLOSED: the ACCESSIBILITY charter is ruled `always`, so the lens this row derives from is put to every decomposition — and it had already reached this row once SN-023 carried the `a11y` tag, which is why the gap is narrower than the unmeasurable-clauses opening suggests.
 
+### LLR LLR-101
+- **Module**
+  - before: project-trajectory/scripts/traj_render.py
+  - after: project-trajectory/scripts/rendering/traj_render.py
+
+### LLR LLR-108
+- **Module**
+  - before: project-trajectory/scripts/traj_render.py;project-trajectory/scripts/gen_trajectory.py
+  - after: project-trajectory/scripts/rendering/traj_render.py;project-trajectory/scripts/gen_trajectory.py
+
+### LLR LLR-113
+- **Module**
+  - before: project-trajectory/scripts/traj_render.py
+  - after: project-trajectory/scripts/rendering/traj_render.py
+
+### LLR LLR-114
+- **Module**
+  - before: project-trajectory/scripts/traj_render.py
+  - after: project-trajectory/scripts/rendering/traj_render.py
+
 ## SR-053 — Dashboard UI uniformity (rubric-adjudicated)
 
 > **Requirement.** The state view the delivered generators produce shall read as one system across its tabs and views: one type scale and spacing rhythm; one status/phase/type color vocabulary applied consistently wherever the same concept renders; uniform node, edge, legend, and detail-panel styling across the SVG emitters; the same interaction idiom (expand, hover, detail) wherever the same structure appears.
@@ -125,6 +145,41 @@ _traced — routes to adjudication_
   - before: Realizes SN-024 and SN-023 — how alike is alike enough is subjective at the margins, which is why this row states the coherence property and lets each clause of it be pinned separately rather than pinning the whole to one threshold and pinning the wrong thing. Every clause is pinned, so the method is mechanical and the acceptance is the child chain. Fan-out re-stamp: the child count is the anchor census of the uniformity bar as it was first written — five anchors, three of them leaving a mechanized residue — not a decision count; this row states one cross-view coherence property, and every child exists because an anchor was bound to a test rather than because a second contract was merged in. Hat-derived (hat.CONSISTENCY): one meaning given two treatments across tabs, emitters and states is that charter's failure class verbatim, and it is the only lens in the roster that asks it; the charter is ruled in, so this row has a deriving lens. The narrower reading survives the ruling and is the one to re-open if the charter is ever cut: no stakeholder need states cross-view coherence, so the lens — not a need — is what reaches this row.
   - after: Realizes SN-024 and SN-023 — how alike is alike enough is subjective at the margins, which is why this row states the coherence property and lets each clause of it be pinned separately rather than pinning the whole to one threshold and pinning the wrong thing. Every clause is pinned, so the method is mechanical and the acceptance is the child chain. Fan-out re-stamp: the child count is the anchor census of the uniformity bar as it was first written — five anchors, three of them leaving a mechanized residue — not a decision count; this row states one cross-view coherence property, and every child exists because an anchor was bound to a test rather than because a second contract was merged in. One meaning given two treatments across tabs, emitters and states is that charter's failure class verbatim, and it is the only lens in the roster that asks it; the charter is ruled in, so this row has a deriving lens. The narrower reading survives the ruling and is the one to re-open if the charter is ever cut: no stakeholder need states cross-view coherence, so the lens — not a need — is what reaches this row.
 
+### LLR LLR-102
+- **Module**
+  - before: project-trajectory/scripts/traj_render.py
+  - after: project-trajectory/scripts/rendering/traj_render.py
+
+### LLR LLR-103
+- **Module**
+  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_render.py
+  - after: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/rendering/traj_render.py
+
+### LLR LLR-104
+- **Module**
+  - before: project-trajectory/scripts/traj_panels.py
+  - after: project-trajectory/scripts/rendering/traj_panels.py
+
+### LLR LLR-106
+- **Module**
+  - before: project-trajectory/scripts/traj_render.py
+  - after: project-trajectory/scripts/rendering/traj_render.py
+
+### LLR LLR-107
+- **Module**
+  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_render.py;project-trajectory/scripts/traj_views.py
+  - after: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/rendering/traj_render.py;project-trajectory/scripts/rendering/traj_views.py
+
+### LLR LLR-109
+- **Module**
+  - before: project-trajectory/scripts/traj_render.py
+  - after: project-trajectory/scripts/rendering/traj_render.py
+
+### LLR LLR-110
+- **Module**
+  - before: project-trajectory/scripts/traj_render.py
+  - after: project-trajectory/scripts/rendering/traj_render.py
+
 ## SR-054 — Dashboard usability (rubric-adjudicated)
 
 > **Requirement.** The state view the delivered generators produce shall support its core reading tasks with low friction: a first-time reviewer finds the project state, the next work, and how the parts connect, each within one tab switch; views default to a legible density (start-collapsed per the greater-than-3 rule) and reveal detail without losing context; labels stay readable at default zoom with no clipped or overlapping text.
@@ -136,6 +191,46 @@ _traced — routes to adjudication_
 - **Rationale**
   - before: Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded one-time judgement rather than on a standing re-judgement — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Hat-derived (hat.UX-DESIGNER + hat.UX-ENGINEER): findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today.
   - after: Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded one-time judgement rather than on a standing re-judgement — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today.
+
+### LLR LLR-055
+- **Module**
+  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_views.py
+  - after: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/rendering/traj_views.py
+
+### LLR LLR-099
+- **Module**
+  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_panels.py;project-trajectory/scripts/traj_render.py
+  - after: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/rendering/traj_panels.py;project-trajectory/scripts/rendering/traj_render.py
+
+### LLR LLR-100
+- **Module**
+  - before: project-trajectory/scripts/traj_render.py
+  - after: project-trajectory/scripts/rendering/traj_render.py
+
+### LLR LLR-105
+- **Module**
+  - before: project-trajectory/scripts/traj_render.py
+  - after: project-trajectory/scripts/rendering/traj_render.py
+
+### LLR LLR-115
+- **Module**
+  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_panels.py
+  - after: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/rendering/traj_panels.py
+
+### LLR LLR-116
+- **Module**
+  - before: project-trajectory/scripts/traj_render.py
+  - after: project-trajectory/scripts/rendering/traj_render.py
+
+### LLR LLR-119
+- **Module**
+  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_render.py;project-trajectory/scripts/traj_panels.py
+  - after: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/rendering/traj_render.py;project-trajectory/scripts/rendering/traj_panels.py
+
+### LLR LLR-120
+- **Module**
+  - before: project-trajectory/scripts/traj_graph.py
+  - after: project-trajectory/scripts/rendering/traj_graph.py
 
 ## SR-111 — Kit-version stamp
 

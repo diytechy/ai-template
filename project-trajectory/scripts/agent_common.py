@@ -121,14 +121,15 @@ def scripts_fingerprint(scripts_dir=None):
 
 def _launch_fingerprint():
     """The import-time capture. A scan failure must not crash the twelve entry
-    points that import this module: it warns once and returns None, which
-    `running_scripts_moved` reads as "drift detection unavailable"."""
+    points that import this module: it warns once and returns None. Generic
+    importers may continue; agent_loop refuses that unknown identity before it
+    enters a coordinator role."""
     try:
         return scripts_fingerprint()
     except OSError as exc:
         print(
             "agent_common: coordinator code-drift detection unavailable ({}); a "
-            "source change will not restart this process.".format(exc),
+            "coordinator launch must refuse this unknown source identity.".format(exc),
             file=sys.stderr,
         )
         return None
@@ -141,7 +142,8 @@ LAUNCHED_SCRIPTS_FINGERPRINT = _launch_fingerprint()
 
 def running_scripts_moved():
     """Whether the Python source this process launched from has moved. False
-    when the launch capture failed (None): unavailable, never a restart loop."""
+    when the launch capture failed (None): agent_loop refuses that state at
+    startup, so a missing baseline never becomes a restart loop."""
     launched = LAUNCHED_SCRIPTS_FINGERPRINT
     try:
         return launched is not None and scripts_fingerprint() != launched

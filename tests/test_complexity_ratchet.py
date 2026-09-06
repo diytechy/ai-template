@@ -293,8 +293,8 @@ BASELINE = {
     # module level with their joins passed in); when_view 15 -> under the
     # limit (its `agg_edges`/`wi_block` lifted out as `_agg_edges`/`_wi_block`)
     # — entry DELETED per the improvement rule.
-    ("traj_views.py", "arch_icicle"): 19,
-    ("traj_views.py", "sw_containment"): 17,
+    ("rendering/traj_views.py", "arch_icicle"): 19,
+    ("rendering/traj_views.py", "sw_containment"): 17,
     ("plan_coverage.py", "check_plan"): 17,
     ("plan_coverage.py", "main"): 12,
     ("plan_round.py", "record"): 29,

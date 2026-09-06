@@ -27,7 +27,7 @@ clocks), so the `--check` freshness byte-compare stays stable; a repo with no
 `external.toml` renders byte-identically to before the view existed.
 """
 
-from traj_render import (
+from .traj_render import (
     SCROLL_CUE,
     _arrow_markers,
     _hscroll,
