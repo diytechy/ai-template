@@ -39,6 +39,11 @@ revision adds one implementation layer beneath the packages. Read:
    additions. Runtime implementation, live vision/schema edits, queue changes
    and paid-agent operation are outside this document revision.
 
+The subsequent [vision, hats and SN-to-SR sweep](HATS-AND-DECOMPOSITION-REVIEW.md)
+reviews every current need, recommends an upgrading-adopter perspective, and
+separates missing SR obligations from incomplete implementation evidence.
+Include its findings in the next cross-check.
+
 
 ## 1. What must survive simplification
 
