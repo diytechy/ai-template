@@ -16,10 +16,10 @@ artifact Status is absorbed by that act.
 | Scope | Current result | Remaining boundary |
 |---|---|---|
 | Fable repair review | Retain linked-lane base correction, bounded launcher restart, interruption accounting and non-Node resync checks; correct unavailable launch identity and overly broad TOML row inference | Final unfiltered run: 3661 passed, 22 skipped; review dispositions and actual limits in the continuation log |
-| P9R | Physical renderer package, shared in-memory stage/count snapshot, direct core fixtures and renderer-absent collection; conservative local selection with Full fallback | Full/freshness checks pass, including 176 HTML and 130 core/shared cases; source-anchored resync follows the implementation commit; CI/phase-close Full remain unchanged |
+| P9R | Physical renderer package, shared in-memory stage/count snapshot, direct core fixtures and renderer-absent collection; conservative local selection with Full fallback | Full/freshness checks pass, including 176 HTML and 130 core/shared cases; resync entry is anchored to `cde260dd`; CI/phase-close Full remain unchanged |
 | H2/H3/H5 | Deliver Critique provenance, counterpart semantic review and proportionality stopping rules through existing method/prompts | Critique closure approved; TC-209/TC-210 Inspections pass; TC-211 normal sample remains incomplete for the existing unimplemented SR-161 machine record; Drafted-row approval stays separate |
 | P0c | Owner selected Short control with absolute limits in the [control ruling](CONTROL-DECISION.md#owner-ruling-2026-09-06) | [Launch preflight](CONTROL-PREFLIGHT.md), cost reservation and reviewed pause deletion; no observations are invented |
-| P10 adopter guidance | Canonical vision/hat/need/SR revalidation method and populated adopter examples remain delivered | This slice's source/package migration recipe requires its implementation commit |
+| P10 adopter guidance | Canonical vision/hat/need/SR revalidation method and populated adopter examples remain delivered | Source/package migration recipe is anchored to `cde260dd`; replacement cutover remains conditional |
 
 P1/P1A/P3–P8 replacement and integration experiments, capability retirement,
 and the replacement portion of P9/P10 remain conditional on the control and
@@ -32,6 +32,14 @@ The [continuation log](../log.d/2026-09-06-oi85-plan-completion.md) records the
 final unfiltered result (`3661 passed, 22 skipped in 744.34s`), failed-first
 checks and their fixes, review dispositions and per-commit results.
 <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto --junitxml=out/run-logs/oi85-full-final.xml" rev=1e78ada3+OI85-final; out/run-logs/oi85-full-final.txt -->
+
+Implementation committed locally as `cde260dd0aea68b92469c5b45fdde14c3dd78d59` with hooks enabled. The
+source-anchored [resync entry](../../project-trajectory/RESYNC_PACK.md) describes
+the package move and coherent runtime/prose refresh. Its follow-on commit is
+documentation only. Final smoke tests pass; the enforcing run measured 61.6s
+against the unchanged 60s budget and used the owner's standing timing exception.
+No push or control launch occurred.
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=cde260dd; out/run-logs/oi85-smoke-budget.txt -->
 
 ## Previous continuation (83f2c7aa to 77612fb2)
 

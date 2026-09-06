@@ -5,6 +5,8 @@ on `contract_split`, review Fable's repairs, and finish independently justified
 work. The owner authorized execution, Sol/Terra/Luna delegation, Claude CLI
 adversarial reviews and local commits. No push or unattended launch is included.
 
+Deferred open items: none.
+
 The separate [owner act](2026-09-06-oi85-owner-ruling.md) records the exact three
 need changes and needs-only snapshot. No other approval baseline is refreshed.
 The general SN-drift detector remains separately deferred.
@@ -134,6 +136,6 @@ entry follows this implementation commit because its exact hash does not
 exist until the commit is made.
 <!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=1e78ada3+OI85-final; out/run-logs/oi85-smoke-budget.txt -->
 
-Deferred open items: none. The explicit control-launch conditions and existing
+The explicit control-launch conditions and existing
 SR-161 verification gap remain as recorded above; no new operational hold or
 queue mutation was introduced.

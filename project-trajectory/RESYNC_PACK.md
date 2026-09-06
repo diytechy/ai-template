@@ -2551,6 +2551,86 @@ coordinators first, as the two preceding entries describe.
 No registry conversion, dependency, policy dial or approval is part of this
 entry.
 
+### Renderer package, canonical need references and review-record guidance [since cde260dd]
+
+**What changed.** The dashboard emitters now live in `scripts/rendering/`.
+`gen_trajectory.py` remains the command and supported import facade, including
+its existing re-exports. Direct `--status` execution reads `traj_status` and the
+shared in-memory `traj_display` snapshot without importing HTML. The snapshot
+is not another file or authored registry. Text and HTML output contracts remain
+unchanged; core parser/status/pending tests can run with the renderer package
+physically absent.
+
+The follow-up to the preceding repair also refuses coordinator startup with
+preflight exit 2 when its launch source fingerprint cannot be captured. Generic
+script imports still survive the warning; an unattended run cannot silently
+lose code-drift detection. This is not exit 11 and does not trigger the
+launchers' bounded restart loop.
+
+H1 and R-E now share canonical need-carrier spelling through `spine_carrier`,
+using native path semantics for whitespace and lexical components. An empty
+needs registry has zero valid row IDs; malformed needs refuse. The preceding
+entry's inferred row-ID check for arbitrary nested TOML is withdrawn: exact
+row-ID validation applies to the canonical stakeholder-needs carrier, while
+every other TOML SpecRef target retains its earlier path-only behavior, without
+fragment or row-ID validation.
+Nested configuration tables are not inferred to be registry rows. There is no
+carrier conversion or new schema to apply.
+
+**What to do.** Apply every entry in your recorded upgrade range; this entry
+describes only its own commit. Run the target kit's `bootstrap.py --dest <repo>`
+add-only to create newly mapped files, then refresh existing kit-owned files
+through the deviation review. `bootstrap.py` itself is target-kit tooling,
+not a file copied into the adopter. Refresh the `scripts/` set coherently:
+`agent_common.py`, `agent_loop.py`, `check_trajectory.py`, `plan_briefs.py`,
+`spine_carrier.py`, `kitlib/spine.py`, `gen_trajectory.py`, `traj_status.py`,
+`traj_display.py`, `traj_parse.py`, and `rendering/__init__.py` plus all five
+`rendering/traj_{context,graph,panels,render,views}.py` emitters. Exclude caches.
+The bootstrap manifest ships these paths to fresh scaffolds; ordinary add-only
+resync neither overwrites existing files nor removes old ones. If the upgrade
+range crosses the preceding launcher-restart entry, update `agent-resume.sh`
+and `agent-resume.cmd` from their target templates alongside the runner too.
+
+1. Preserve project-owned edits and history through §2's deviation review.
+   Compare any customized emitters before moving their edits into the package.
+2. Review and merge project-owned LLR Module pointers, interface requestor
+   paths and private imports that named the moved emitters. Preserve the filled
+   registries, hats and README vision rather than replacing them with this
+   meta-repo's copies. Review equivalents of IF-052/083/093/094 for the moved
+   requestors and IF-011 for the facade's existing `--status --check` stale exit 1.
+   Keep unchanged behavioral obligations and their approvals; a meaningful design amendment still owes its own review.
+   Attribute the package initializer and shared display reader to the existing
+   dashboard component where that is the adopter's design.
+3. With both the package and facade copied, run normal HTML generation and
+   `gen_trajectory.py --status --check`, generating status first if stale. After
+   references have been reconciled and these commands pass, remove the
+   five obsolete kit-owned root modules: `traj_context.py`, `traj_graph.py`,
+   `traj_panels.py`, `traj_render.py`, and `traj_views.py`. Keep root
+   `traj_parse.py`, `traj_status.py`, `traj_display.py` and the facade. Retain
+   facade re-exports until a separately decided compatibility window closes.
+4. Regenerate the declared dashboard, status, component and reference surfaces;
+   rerun normal HTML generation, `gen_trajectory.py --status --check`, trace and
+   the adopter's declared full enabled-capability bar. Review the result before
+   restarting an old coordinator with the new code. No live state conversion,
+   policy change or automatic unpause is part of this upgrade.
+
+Refresh `docs/process-options.md` from the kit's `PROCESS_OPTIONS.md`, the
+critique/reviewer/dual-plan-planner prompts and the canonical `spine-authoring`
+skill, then regenerate the existing prompt catalogue and skill fan-out.
+The guidance records fresh non-author Critique identity, intent-derived rubric
+anchors, a requirement/interface counterpart decision and the proportionality
+stopping reason in existing records. Attended calls can return the record
+through their invoking route; unattended calls retain their assigned verdict
+and commit contract. Follow the skill's adopter revalidation method to reassess
+hats against the project's vision and consider missing needs or affected SR
+rederivation. Do not copy this meta-repo's OI-85 approval snapshot, need wording
+or project-specific roster into an adopter.
+
+The meta-repo's `scripts/check_changed.py` is local test-selection assistance,
+not shipped kit machinery. It keeps CI and phase-close Full unchanged, and
+never labels a selected run as Full. No Worktrunk dependency or replacement
+runner is introduced by this slice.
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which

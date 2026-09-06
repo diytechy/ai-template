@@ -227,8 +227,8 @@ outcome alongside normal HTML, with the same 0/1 verdict. The façade remains
 the command owner because callers keep one CLI; `traj_status` remains the source
 owner of its splice through IF-164. No Status or new interface row is necessary.
 
-Downstream re-sync needs a dated RESYNC_PACK entry when this slice receives its
-commit identity: copy `traj_display.py` and the complete `rendering/` package
+The [dated resync entry](../../project-trajectory/RESYNC_PACK.md) is anchored
+to implementation commit `cde260dd`: copy `traj_display.py` and the complete `rendering/` package
 with the updated façade and bootstrap mapping. A reviewed operator may then
 delete the five former root-level `traj_*.py` emitters only after the adopted
 tree's normal dashboard and `--status --check` commands pass. `--force` is not
@@ -264,9 +264,10 @@ collection proof are complete. Completion evidence and rollout limits:
    criterion; no existing smoke test moved. First narrow use on an ordinary
    proposed change remains an operational observation, not a claimed speedup. CI/phase-close narrowing remains a separate cadence
    decision and retains the Full fallback.
-3. A dated RESYNC_PACK entry remains contingent on the integration commit
-   identity. It must give adopters the reviewed copy/delete procedure already
-   stated above; no generic automatic migration is justified.
+3. The dated RESYNC_PACK entry names `cde260dd` and gives the independently
+   reviewed copy/delete procedure. Facade re-export retirement and future
+   CI narrowing retain their separately decided compatibility/cadence gates;
+   no generic automatic migration is introduced.
 4. The façade's public re-exports remain supported compatibility surface. Their
    deletion requires an explicit supported-release retirement and replacement
    consumer proof, not a fixture-cleanup assumption.
