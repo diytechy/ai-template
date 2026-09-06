@@ -1,5 +1,13 @@
 # Control-launch preflight (read-only)
 
+> **Superseded in part, 2026-09-06 (later sitting).** The owner re-ruled that
+> a route without reported spend, or an aggregate that cannot be reserved,
+> does NOT stop admission; US$100 is a watched bound over reported spend. The
+> spend finding below stands as an accounting gap to record, not as the
+> "smallest immediate gate". Remaining launch conditions: the frozen launch
+> commit, queue/route revalidation at it, and the owner's reviewed pause
+> deletion. See the [re-ruling](CONTROL-DECISION.md#owner-ruling-2026-09-06).
+
 Observed 2026-09-06 15:56 -05:00 at repository `HEAD`
 `1e78ada3194c8806578cccf90a23afe2b64b9775`. The working tree had 65 tracked
 changes and untracked preparation records, so this is a preflight snapshot,

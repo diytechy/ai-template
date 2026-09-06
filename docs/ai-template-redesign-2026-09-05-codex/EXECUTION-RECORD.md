@@ -10,6 +10,15 @@ session's read order, outstanding work and launch prerequisites. The current
 continuation below supersedes pending-state statements in the historical
 continuations that follow.
 
+**Owner rulings sitting (2026-09-06, after `ae610215`):** the handoff's
+opening list links four rulings that change what this record's continuations
+assumed. In particular: SR-161's missing "machine perspective record" is no
+longer to be implemented (SN-036's acceptance is amended to a recorded review
+pass; four rows re-pointed, no new cell or check); unreported spend no longer
+stops control admission; the smoke budget is 90 s, so the timing exception
+cited below is retired; OI-82 is ruled (a) and WI-577 is ready. Read those
+logs before the historical continuations.
+
 ## Current OI-85 continuation (2026-09-06)
 
 The owner accepted OI-85(a) and authorized continued implementation. The
