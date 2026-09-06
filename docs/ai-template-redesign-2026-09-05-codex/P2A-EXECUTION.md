@@ -1,6 +1,6 @@
 # P2a execution — parsed dependency mutation
 
-Date: 2026-09-06  
+Date: 2026-09-06
 Baseline: `83f2c7aa990a757729e7847816d40a8cdc2afcc7`
 
 ## Scope and authority

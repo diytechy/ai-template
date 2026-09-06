@@ -53,6 +53,10 @@ and 76 SR identities present. No classification changes a live Status.
 
 ### Continuation validation and remaining decisions
 
+Implementation committed as `77612fb217b1b0d18b420d7460b394e7398d7d0f` with hooks
+enabled. The follow-on resync entry and committed-adopter measurements use this
+exact source. No push, artifact approval or unattended unpause occurred.
+
 The product Python changes passed the unfiltered suite: `3586 passed, 20
 skipped in 734.63s`. Its first attempt found the composer-size and stale-stage
 failures described in the session log; neither was waived. The final authoring

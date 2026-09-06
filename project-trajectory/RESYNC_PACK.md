@@ -2481,6 +2481,40 @@ Preserve historical logs and project-owned configuration. The meta-repo's
 additive smoke station is a local `docs/stack.ini` setting, not a new shipped
 template step. This update requires no new dependency or registry conversion.
 
+### Parent-need hats, parsed dependency edits and prompt-catalog delivery [since 77612fb2]
+
+Use the target kit's bootstrap for the add-only step, then take the changed
+kit-owned scripts together: `plan_briefs.py`, `plan_runner.py`, `intake.py`,
+`agent_loop.py`, `gen_trajectory.py` and the newly shipped
+`gen_prompt_catalog.py`. Stop/restart running coordinators as described in the
+preceding entry; preserve current claims and Git history.
+
+- Parent-need hat selection now follows explicit SR references and canonical
+  stakeholder-need SpecRef anchors through the existing carrier readers. Keep
+  project-owned hats and tags, and repair invalid declared references through
+  ordinary authoring. Absence of a roster retains the opt-out behavior.
+- Dependency replacement reads the parsed TOML array and preserves surrounding
+  source and CRLF. A source edit it cannot locate refuses before mint effects;
+  CR-only source is explicitly unsupported by this edit path. No queue rewrite
+  or destructive cleanup is an upgrade step.
+- Take the changed worker/reviewer prompt templates and regenerate the existing
+  catalog with `python scripts/gen_prompt_catalog.py`. Fresh scaffolds now
+  receive both the generator and initial catalog; an existing catalog requires
+  the explicit regeneration in §1.3.
+- Regenerate process docs and materialize skills through the existing procedure.
+  The ordinary change-intake route now distinguishes an unsuitable LLR design
+  from a violated sound design or a changed stakeholder obligation. Changed
+  child content still owes its applicable re-attestation.
+
+Review the expanded seed-hat questions against the adopter's own vision using
+[the canonical revalidation method](skills/spine-authoring/SKILL.md#at-adoption-or-a-material-project-change).
+Preserve custom hats and needs; do not copy this meta-repo's O1–O6 or its new
+SR/TC rows into the adopter. A missing outcome may warrant an SN proposal; a
+sound need may need an affected SR rederivation. No-semantic-impact upgrades
+record that conclusion with its reason. Text status retains its existing CLI
+while avoiding renderer imports; full HTML and test cadence remain in force.
+No new dependency, runtime cutover, capability removal or approval is implied.
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which

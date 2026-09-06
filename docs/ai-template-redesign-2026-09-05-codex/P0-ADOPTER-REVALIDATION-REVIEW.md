@@ -2,11 +2,13 @@
 
 **Fixture basis:** the populated Node adopter in
 `tests/test_old_kit_resync.py::test_node_adopter_upgrade_preserves_populated_owner_content`,
-run from source `83f2c7aa990a757729e7847816d40a8cdc2afcc7` plus the continuation
-changes, with the documented
-current-kit re-sync steps recorded in [P0 adopter evidence](P0-ADOPTER-EVIDENCE.md).
-The follow-on source-stamp commit will pin this evidence to the actual
-implementation commit; the current uncommitted source is not a release stamp.
+validated against committed implementation `77612fb217b1b0d18b420d7460b394e7398d7d0f`.
+The documented current-kit re-sync steps and measurements are recorded in
+[P0 adopter evidence](P0-ADOPTER-EVIDENCE.md).
+
+All eight upgrade/catalog tests passed on that clean committed tree
+(`8 passed in 9.51s`); this source stamp identifies code and fixture state,
+not an adopter approval or a passing manual Inspection.
 
 The fixture is a controlled, fictional adopter named **Signal Triage**. Its
 real fixture records are: a vision for trustworthy browser-signal incident

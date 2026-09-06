@@ -75,3 +75,24 @@ pending. The control-window decision and need-tier acceptance/re-attestation
 remain owner work; replacement and narrower test cadence are not enabled by
 drafting their prerequisites. The scoped partial progress on the queued
 residual sweep does not close its remaining obligations.
+
+### Commit and source stamp
+
+Implementation landed as `77612fb2` with hooks enabled. The follow-on resync
+entry names that source, and the populated adopter review/evidence now point
+to its full SHA. The complete upgrade/catalog module passed on the clean
+committed tree: `8 passed in 9.51s`. Fresh Node/Python footprints were also
+remeasured at that clean source; exact counts and method are in the adopter
+evidence. An initial local census attempt passed a Path to `module_sloc` and
+failed before producing a measurement; the corrected run passes file text.
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_old_kit_resync.py" rev=77612fb217b1b0d18b420d7460b394e7398d7d0f; out/run-logs/redesign-committed-adopter.txt; footprint derivation in P0-ADOPTER-EVIDENCE.md and out/run-logs/redesign-committed-footprint.json -->
+
+Removed the Markdown hard-break trailing spaces found by the staged diff check
+in P2A-EXECUTION.md. No product source, test membership, policy or approval
+changed in this source-stamp follow-up.
+
+Follow-on validation: smoke `1670 passed, 4 skipped in 56.67s`; the enforcing
+run passed again (`1670 passed, 4 skipped in 57.05s`, measured wall `57.3s vs
+60s budget -> within`, exit 0). Documentation reports zero broken links with
+the existing orphan warning; diff whitespace is clean.
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=77612fb2+source-stamp-docs; out/run-logs/redesign-source-stamp-smoke-budget.txt; initial run redesign-source-stamp-smoke.txt -->

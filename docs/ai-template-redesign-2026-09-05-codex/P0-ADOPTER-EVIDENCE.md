@@ -124,3 +124,21 @@ warns that its source checkout is dirty. If Node or npm is absent, pytest marks
 the populated test skipped before its final commit/harness checks; that
 environment has no passing populated-upgrade result. The separate fresh-scaffold
 test still exercises the mandatory catalog without Node.
+
+## Committed implementation recheck
+
+The complete upgrade/catalog module passed against clean source
+`77612fb217b1b0d18b420d7460b394e7398d7d0f`: `.venv/bin/python -m pytest -q tests/test_old_kit_resync.py`
+reported `8 passed in 9.51s`. No provider or live adopter was involved.
+
+Fresh scaffolds were remeasured at that same committed source using the command
+and exclusions above. Both stamps read `77612fb2 2026-09-06`. SLOC calls
+`check_complexity.module_sloc(path.read_text())`, not the path object.
+
+| Profile | Files | Bytes | Shipped Python files | Python bytes | Python SLOC |
+|---|---:|---:|---:|---:|---:|
+| node | 168 | 4,105,090 | 78 | 3,447,623 | 37,236 |
+| python | 169 | 4,104,121 | 78 | 3,447,623 | 37,236 |
+
+These are whole-profile footprints, not a physically isolated core or measured
+operating savings. The earlier dirty-tree measurements remain historical.
