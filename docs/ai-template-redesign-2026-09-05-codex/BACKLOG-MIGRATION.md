@@ -79,7 +79,12 @@ application is part of editing this plan.
 
 ## 4. Applying the reconciliation at implementation time
 
-For each authorized slice:
+For each authorized slice, first make a brief overlap check against queued,
+active and preserved work. Apply the full reconciliation below only where
+there is an overlap; an independent cleanup needs no empty six-field worksheet.
+Record an overlap finding in the slice's existing scope/review record.
+
+For an overlapping slice:
 
 1. Refresh this snapshot against current specs and Git; identify new/changed
    items, active assignments, pending amendments and retained partial work.

@@ -70,7 +70,34 @@ come from source inspection, not a claim that historical logs are complete.
 
 ### Minimum first
 
-**Disposition after the [third Fable review](FABLE-REVIEW-3-CROSSCHECK.md#3-findings) (finding O2):** P0b ships a minimum record by extending the existing session-log writer, and the fuller contract below is the deferred design, built field by field only when a consumer needs it. The minimum: `invocation_id`, `wi_id`, attempt, role, provider, requested and reported model, routed tier, roster row, start and end, exit status, and the token and cost counters exactly as the provider reports them, with `null` for anything unavailable. Three rules travel with it: a new process is a new id even when it resumes a conversation; a failed or timed-out call still gets a row; an unknown number is never coerced to zero. Cumulative-counter deltas, auxiliary-model inclusion semantics, the spool-and-flush rule around a P5 turn and coverage reporting wait for a reader that needs them. The P0 control table is the first consumer, and it reads role, WI, route, tier, tokens and cost per session.
+**Minimum first, retaining the third Fable review's O2 simplification:** P0b
+extends the existing session-log writer with `invocation_id`, `wi_id`, attempt,
+role, provider, requested/reported model, tier, roster row, start/end, exit
+status and raw token/cost counters. Unknown values stay null/absent under the
+carrier convention. A new invocation gets a new ID even when it resumes a
+conversation; failed/timed-out calls still get a row. Non-WI calls identify
+their source event rather than fabricating a WI.
+
+The P0 control table is already a consumer of comparable usage. The minimum
+therefore also identifies counter scope (invocation / cumulative conversation /
+unknown), provider-session identity when available, and whether a value is
+reported or estimated. Preserve overlapping categories without adding them;
+publish an aggregate only for values known to be comparable and disjoint.
+If deriving deltas or child inclusion is deferred, those values remain raw and
+non-additive. Report the known/unknown population beside totals. A simple
+counterexample: conversation totals 100 then 150 are not 250 spent tokens.
+
+Re-reading the same retained result uses its original invocation ID and does
+not append another billable copy. Use the existing output/log identity; this
+does not commission a new replay service. Recovery must expose missing results,
+not invent zero spend. A P0 outage may leave unknown usage, which limits the
+control comparison rather than creating a new approval gate.
+
+The fuller schema, delta computation, auxiliary-model aggregation and new
+spooling machinery below remain deferred until needed. The frozen-candidate
+boundary is a P5 prerequisite: telemetry must not mutate an already reviewed
+tree. Its concrete implementation can wait for P5; its correctness condition
+cannot wait until after that protocol is enabled.
 
 ### Record contract
 
@@ -198,6 +225,9 @@ work continues; the builder cannot silently lower the bar to close a finding.
 | Trunk/spec/policy invalidates candidate | Re-prepare and obtain applicable fresh checks/review; do not reuse an old approval as a new one |
 
 When the reviewer changed between rounds (a tier escalation), the brief carries every unresolved finding with its round and reviewer, and a contradiction between rounds is a dispute routed to the one-attempt arbitration, not a third opinion (third Fable review, GAP-3).
+Compare the same criterion and applicable subject before calling it a
+contradiction: a newly exposed defect, changed content or an already-fixed
+finding does not automatically require arbitration.
 
 The builder must actually change the deficient implementation or demonstrate
 why a finding is wrong. A record-only rewrite is not evidence that a material
@@ -221,7 +251,26 @@ The proposed refinement is a declared validation selection for the *change*
 in addition to the derived stage's process checks. Reuse the existing WI bar,
 stack configuration and check planner. Avoid another heuristic policy engine.
 
-**Smallest sufficient form (third Fable review, finding C1).** Verified 2026-09-05: `check.py --stage DevStg-Tests --list` selects fourteen process steps and no product step — `format`, `lint` and `tests+coverage` are keyed to DevStg-Impl — so a lane that breaks an existing, tested behavior at DevStg-Tests merges on a green `Bar-Green`. The bar is honest about what it ran; the gap is what it does not run. The fix is one declared step in this repository's `docs/stack.ini`: `[step:smoke]` with `from-stage = DevStg-Tests` and `command = {py} -m pytest -q -n auto -m smoke`, the per-commit bar the working agreement already demands of every agent by hand, made a step the station runs. It adds a check and narrows nothing, so it needs no SN-007 amendment and no ladder change. A failing-first test, when one exists, carries a marker excluded from that step; the marker is decided when the first such test is written. The table below is kept as report vocabulary ("selected checks passed" versus "full suite passed"); it is not built as a selector.
+**Small first improvement (third Fable review C1, qualified by the follow-up
+cross-check):** `check.py --stage DevStg-Tests --list` selects fourteen process
+steps and no product step. The existing custom-step grammar can add this repo's
+smoke command at `from-stage = DevStg-Tests`, without a new selection engine.
+This is an additive baseline check, not proof that every changed behavior was
+tested: `test_integrate`, `test_integrate_admission`, `test_integrate_station`
+and `test_integrate_unload` are already outside smoke. A defect held only by
+one of those tests can survive the proposed smoke step.
+
+Adding the step need not narrow or amend SN-007. Claiming that smoke discharges
+SN-007's whole-suite-before-landing promise would; the H4 cadence discrepancy
+remains to be reconciled. Use the existing declared WI bar and relevant
+acceptance tests for changed behavior, including tests outside smoke. State
+that evidence explicitly; do not build a second automatic selector.
+
+Do not invent an expected-red exclusion marker at the first inconvenient
+failure. Before changing selection, define and review the narrow test-definition
+evidence and its transition to implementation acceptance. An existing regression
+cannot be relabeled, and required checks remain required. The table below is
+report/acceptance vocabulary, not a selector implementation.
 
 | Change/claim | Validation owed |
 |---|---|

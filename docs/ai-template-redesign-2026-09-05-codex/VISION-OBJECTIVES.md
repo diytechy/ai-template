@@ -5,7 +5,18 @@
 baseline, or registry schema. Its sample text becomes canonical only if moved
 into the root README through the normal reviewed change.
 
-**Disposition after the [third Fable review](FABLE-REVIEW-3-CROSSCHECK.md#3-findings) (2026-09-05, finding O1):** adopt the smaller alternative this document names in §4 — the six clauses as headed prose in the root README's vision section with plain anchors, no `objective_refs` field, no carrier, parser, approval-classification or migration work, and no P1b/P9b slices. The mapping in §3 is kept here as a review worksheet. A carrier field is reconsidered only if, after P9's consolidation, a reviewer still cannot navigate from purpose to need. The redesign's thesis is fewer tiers describing the kit to itself; a sixth tier is not added while P9 removes rows.
+**Current direction after the third Fable review O1:** six clauses as headed
+prose in the root README's vision section, with plain anchors and no
+`objective_refs` field. No reference-carrier parser, schema, approval-field or
+migration work is commissioned; P1b/P9b remain deferred. The mapping in §3 is
+a review worksheet. Reconsider a carrier only if purpose-to-need navigation
+remains inadequate after consolidation. This is a reduction in schema work;
+the earlier proposal did not add an approval stage or normative registry tier.
+
+The prose-only decision does not remove purpose review. Adopters use their
+own vision to reassess hats, identify missing stakeholder needs and rederive
+affected SRs under [ADOPTER-REVALIDATION.md](ADOPTER-REVALIDATION.md). They do
+not inherit these six kit objectives or a fixed kit hat roster.
 
 ## 1. Recommendation and boundary
 
@@ -107,7 +118,8 @@ automatically authorizes a new objective or deletion of the need.
 
 ## 4. References and one source of truth
 
-**Recommended carrier:** one optional `objective_refs` array on an SN, using
+**Deferred alternative, not the current implementation:** one optional
+`objective_refs` array on an SN, using
 unqualified keys within that project's vision, for example:
 
 ```toml
@@ -157,10 +169,11 @@ existing review brief, with no schema change.
 
 ## 5. Implementation slice and acceptance
 
-P0 prepares the wording/mapping for review; this is independently useful even
-if no runner is replaced. P1A includes any necessary assurance-contract
-amendment. P9 can ship the optional reference carrier without waiting for a
-runner rewrite, after the objective decision and its own prerequisites.
+P0 prepares prose wording and the review mapping independently of runner
+replacement. Current delivery uses ordinary vision anchors and review links;
+it does not execute a carrier slice. The steps below are a deferred design
+checklist only if the carrier is later selected through a separate decision.
+The adopter review in ADOPTER-REVALIDATION.md does not depend on that choice.
 
 1. Review six clauses against the existing vision, all needs and non-goals.
 2. Agree the carrier choice: recommended optional SN field, or prose-only

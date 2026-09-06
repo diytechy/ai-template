@@ -98,10 +98,13 @@ P9R is an independent rendering slice after P0 and its own applicable contract a
   to define implementation-change regression checks and accurate reports;
   any changed cadence/stage requirement needs its own narrow amendment before
   enablement. No universal all-green test requirement at DevStg-Tests is assumed.
-  The smallest sufficient form, per the [third Fable review](FABLE-REVIEW-3-CROSSCHECK.md#3-findings) C1: one
+  The first additive improvement, per the [third Fable review](FABLE-REVIEW-3-CROSSCHECK.md#3-findings) C1: one
   `[step:smoke]` in this repository's `docs/stack.ini` at `from-stage = DevStg-Tests`
   running the existing smoke tier — the per-commit bar made a station step. No selection
-  engine; the §4 table in EXECUTION-DETAILS is report vocabulary.
+  engine; the §4 table in EXECUTION-DETAILS is report vocabulary. Smoke omits
+  integration regression modules and does not discharge SN-007's whole-suite
+  promise. Preserve changed-behavior acceptance through the existing WI bar;
+  resolve the cadence discrepancy before claiming that obligation satisfied.
 - **Start the census from the Claude plan's appendices** — [A (spine census)](../ai-template-redesign-2026-09-05%20-%20claude/A-spine-census.md), [B (module map)](../ai-template-redesign-2026-09-05%20-%20claude/B-module-map.md), [C (external tools)](../ai-template-redesign-2026-09-05%20-%20claude/C-external-tools.md) — rather than remeasuring from nothing. Every single-source figure in them is re-derived by an independent route before it drives a decision: its first draft carried two figures wrong in the plan's favor and the second Fable review found a third (the render family was said to run on every commit; it is already outside the smoke tier). Reproduce; do not copy.
 - Inventory all 27 SNs and 76 SRs, then the LLR/TC and test families they govern. Classify core, advanced capability, migration-only, or retirement candidate. Do not approve the classification automatically.
 - Capture representative scenarios from ordinary work, spine changes, adjudication, consolidation, human holds, partial close, interrupted review, and adopter upgrade. Census historical train sizes, starting with WI-584/587/588/589 from the prior investigation. For each, distinguish one shared acceptance decision from separate deliverables and compare one coherent consolidated WI against separate exclusive WIs, counting all resulting integration/review turns. Exclusivity provides serialization, not joint approval atomicity: related normative amendments that must be accepted together must fit one coherent WI and acceptance transaction, or retain an explicitly supported joint-approval mechanism until that need is resolved. This is decision material to produce, not a census claimed complete by this plan.
@@ -120,13 +123,18 @@ P9R is an independent rendering slice after P0 and its own applicable contract a
   consolidation. The control configuration and any subsequent treatment are
   measured and reported separately.
 - Predeclare a control-period workload, observation window, and decision thresholds with the owner before operating a pilot. Two weeks is a candidate window, not sufficient evidence by elapsed time alone. Observe the recently fixed loop under unchanged authority/review settings; report completions, attempts, review rounds per completed WI, interventions per completion and active day, adjudication by purpose, escaped defects, and work mix. Deduplicate retries and distinguish necessary adjudication from harness overhead. Any intake or policy experiment is a separately labeled treatment, not part of an unchanged baseline. Do not unpause or operate the loop as part of this documentation task.
-- Decide whether observed residual failures justify P3–P8 replacement work. Stop those packages if the existing loop meets the agreed needs; P2’s shared-reader/prompt improvements and P9R may still proceed on their own evidence; P2’s new assignment behavior remains conditional on the replacement decision and P1/P1A. If data is inadequate, report the uncertainty and extend the measurement instead of declaring the rewrite necessary.
+- Decide whether observed residual failures justify P3–P8 replacement work. Stop those packages if the existing loop meets the agreed needs; P2’s shared-reader/prompt improvements and P9R may still proceed on their own evidence; P2’s new assignment behavior remains conditional on the replacement decision and P1/P1A. If data remains inadequate after the declared window, report insufficient evidence and proceed only with independently justified targeted repairs. Replacement stays closed; another measurement window needs an explicit ruling, not an automatic extension.
 - Make a deletion ledger: old responsibility, candidate replacement, acceptance evidence, exact retirement condition. Count added schemas, parsers, states, durable carriers/refs, mutation paths, and operating/recovery procedures as well as deleted code. Unused compatibility code must get an expiry rather than a permanent adapter.
 - Refresh [the 18-item backlog snapshot](BACKLOG-MIGRATION.md) and inspect
   active/deferred work and preserved patches. Produce clause-level mappings
   before superseding anything; the whole queue is not a prerequisite. In
   particular, retain the adjudicator-retention and delegated-report rulings,
   and resolve snapshot-absorption authority before broad baseline migration.
+- Specify [adopter revalidation](ADOPTER-REVALIDATION.md): each project's own
+  vision and domain determine its hats, possible missing SNs and affected SR
+  rederivation. Use this repo's sweep as the method example, not as content to
+  copy into adopters. P0/P1 defines the review; P10 ships its adoption/upgrade
+  guidance and representative fixtures.
 
 **Done when:** the workload, denominators, thresholds, observations, and explicit retain/targeted-repair/rebuild decision are recorded; every stakeholder need has a disposition proposal; public compatibility obligations are named; the selected scenarios can be reproduced without live paid agents by scripted adapters. The owner can distinguish behavior retained from behavior proposed for removal.
 
@@ -367,6 +375,10 @@ it cannot claim an already-excluded geometry suite as a new smoke saving.
 - Run old and new schedulers read-only on saved snapshots, comparing intentional policy differences and unexplained differences separately.
 - Select exactly one mutating runner through an explicit version/config boundary. Refuse mixed claims or simultaneous runners.
 - Pilot on this repo and at least one representative adopter copy, including a non-Python profile and supported OS CI.
+- Ship the linked [adopter revalidation workflow](ADOPTER-REVALIDATION.md)
+  through the existing authoring/adoption/resync guidance. Exercise customized
+  hats, a missing-SN proposal, a hat-derived SR change and a no-change upgrade;
+  preserve adopter authority and filled records throughout.
 - Remove old runtime files, aliases, migration fallbacks outside the supported window, prompts, and tests whose behaviors were retired. Update bootstrap mapping, kit inventory, dependency ledger, resync pack, and docs together.
 
 **Done when:** fresh adoption and supported upgrade are green; a reviewer can locate one writer for each lifecycle fact; the old runner is unreachable in the shipped current profile; the rollback recipe has been exercised on a copy.
@@ -384,7 +396,7 @@ These are behavior families, not a request for one new registry row per bullet o
 | Integration | Real composed-tree checks; trunk changed after preparation; dirty checkout; conflicts; complete close before final review; no unauthorized artifact approval; publication policy honored |
 | Recovery | Crash at each durable boundary; existing process ownership uncertain; candidate/receipt written but not promoted; promoted but intake not run; cleanup interrupted; no duplicate work or close |
 | Partial/cancelled | Preserved code/report; terminal does not mean accepted implementation; dependencies stay unsatisfied or are explicitly rewritten; successor deduplication |
-| Adoption | Fresh green scaffold; preserved adopter files; supported old upgrade; non-Python tooling; Windows/POSIX; absent advanced layers have no required imports |
+| Adoption | Fresh green scaffold; preserved adopter files; supported old upgrade; non-Python tooling; Windows/POSIX; absent advanced layers have no required imports; project-specific vision/hat/need review and affected SR reconciliation under ADOPTER-REVALIDATION.md |
 | Assurance | Gate/check failure honesty; secrets and optional privacy behavior; trace integrity; unchanged human approval authority; normative amendment invalidates attestation |
 | User-facing | One explainable next-action view; operator sees a concrete blocked decision; no historical record is presented as a living requirement; status after fresh-clone recovery |
 

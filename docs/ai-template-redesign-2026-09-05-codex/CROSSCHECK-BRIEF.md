@@ -8,6 +8,11 @@ review has been run as part of preparing it.
 **Answered** by the [third Fable review](FABLE-REVIEW-3-CROSSCHECK.md) on 2026-09-05: executable for
 P0a/P0b with named corrections, applied to the active documents.
 
+The [subsequent Codex cross-check](FABLE-3-CROSSCHECK-DISPOSITIONS.md) validates
+those edits with qualifications on smoke coverage and metric aggregation,
+and incorporates the owner's adopter revalidation requirement. The agenda
+below states the reconciled direction; it is not another reviewer approval.
+
 ## 1. Read set and question
 
 Start with [README.md](README.md), [IMPLEMENTATION.md](IMPLEMENTATION.md),
@@ -32,7 +37,7 @@ Never read or cite the owner-only scratchpad.
 | Topic | Current disposition | Why |
 |---|---|---|
 | Original F-01..F-12 corrections | Retained, with experiments still unproven | Early enabling amendments, current authority, exact evidence, scoped reconciliation, recovery and honest cost comparison remain necessary. |
-| Unconditional tests at DevStg-Tests | Withdrawn; replaced by change-specific regression selection and accurate reporting | A selected bar is not automatically a claim of full-suite success. Preserve legitimate failing-first development and all existing required checks until amended. |
+| Unconditional tests at DevStg-Tests | Add this repo's smoke step as a baseline; no new selector | Smoke does not cover all integration regressions or discharge SN-007's full-suite promise. Preserve required checks and review any expected-red selection change before enabling it. |
 | Worktrunk exclusion | Keep optional operator role; remove overstated technical rationale | Rebase is a default, not inevitable; Git is already a system dependency. No mandatory adapter prototype is needed, but untested incompatibility cannot be called proved. |
 | “Independently justified” cuts | Individually evaluated candidates | No automatic removal of generated freshness, supported skills or migration instructions before replacement evidence and applicable scope decisions. |
 | Imported Claude agenda | Replaced by §3 below | Avoid restoring withdrawn auto-rebaseline or assumed need-retirement decisions through a stale cross-reference. |
@@ -41,8 +46,9 @@ Never read or cite the owner-only scratchpad.
 | Existing retention/reporting WIs | Explicit preservation/reconciliation | Fresh builders do not cancel adjudicator continuity; acceptance receipts do not silently replace owner-editable decision reports. |
 | Vision objectives | Six proposed anchors, all current needs mapped | Improve purpose navigation without another normative registry, completion score or stage. |
 
-Historical review files and metadata hashes are intentionally unchanged.
-They report what their authors saw and recommended at earlier revisions.
+Historical reviews report what their authors saw at earlier revisions; the
+second review also carries the dated addendum made in the third review's commit.
+This follow-up does not rewrite those reviews or their metadata.
 The active README/implementation/supplements contain the reconciled proposal.
 
 ## 3. Decisions to settle
@@ -54,15 +60,16 @@ governed by the repository's process.
 
 | Decision | Recommended direction | Evidence/authority still needed before enabling |
 |---|---|---|
-| Vision anchors | `(O1)`–`(O6)` in the one vision; optional `objective_refs` on needs | Review wording/scope and 27 mappings; compare optional field with prose-only links; apply normal vision/schema amendment |
-| Session metrics | Per-invocation records through one launch/result writer | Provider fixtures, inclusion semantics, missing-data handling, replay/export cases and a live-probe budget |
+| Vision anchors | `(O1)`–`(O6)` as prose anchors in this kit's vision; reference field deferred | Review wording and mapping; ordinary vision review, no new schema or stage |
+| Adopter revalidation | Reassess hats against each adopter's vision; possible SN mints and affected SR rederivation | Follow ADOPTER-REVALIDATION.md; preserve project ownership, distinguish a new stakeholder outcome from a hat-derived constraint, review before adoption |
+| Session metrics | Minimum per-invocation record through the existing writer | Counter scope, comparable/non-additive values, unknown population and stable result identity are needed by P0; fuller aggregation/spooling remains demand-driven |
 | Builder continuity | Fresh builder invocation, same assignment/attempt, finding-linked brief | Characterization and rework acceptance cases; no new builder-retention layer |
 | Adjudicator retention | Preserve existing owner-approved capability as optional | Read WI-551/WI-541 and OI-69; choose adaptation/restoration based on selected runtime and verify before enabling |
 | Queue relation | Reconcile obligations, not finish or cancel everything first | Clause-level treatment, successor/edge review and preserved assets; current snapshot refreshed |
 | Cardinality/admission | One WI per lane, intake before eligibility, sole scheduler decision | Historical train acceptance/cost cases and P1A amendments; exclusivity alone does not provide joint approval |
-| Validation | Change-appropriate tests plus truthful stage/selection reporting | Resolve SN-007/cadence and any changed check selection; never call unrun implementation tests passed |
+| Validation | Additive smoke baseline and existing WI acceptance, with truthful reporting | Resolve SN-007/cadence; smoke omits integration tests; no ad hoc expected-red exclusion or new selector |
 | Integration protocol | Compare smaller close-before-review change and exact-tree turn | P5 correctness, recovery, numeric latency/spend budgets and net simplification; retain adapter if unproven |
-| Measurement | Fixed declared configuration and credible work mix | Final observation window, sample and budget before paid operation; unknown metrics and necessary approvals separated from repair burden |
+| Measurement | Fixed configuration and credible work mix; insufficient evidence leaves replacement closed | Final window/sample/budget before paid operation; targeted repair is the default operating posture, another window requires a ruling |
 | Capabilities/cuts | Manual core, managed loop and advanced sets in existing mapping | Individual obligation/test/migration arguments; no deletion quotas or automatically new repositories |
 | Worktrunk | Optional operator tool; no required station prototype | Revisit only if a concrete substitution/deletion argument earns a trial |
 | Owner surfaces | Current-policy decisions visible in text and HTML where enabled | Preserve WI-557 report semantics; OI-82 remains the approval-display decision, not a hidden renderer choice |
@@ -73,11 +80,12 @@ acceptance. Any proposed narrowing is a distinct owner scope decision.
 
 ## 4. Counterexamples the review should try
 
-1. Put a need under a plausible but irrelevant objective. Can the human review
-   detect it even when the link checker passes? Remove an objective while a need
-   still cites it; does reference integrity fail without creating a new stage?
-2. Upgrade an adopter without objectives, and another with differently named
-   project objectives. Does either inherit this kit's product promises?
+1. Put a need under a plausible but irrelevant prose objective. Can the purpose
+   review detect the semantic mismatch even though every ordinary link resolves?
+   No objective-field validator is commissioned.
+2. Upgrade an adopter with a different vision and customized hats. Can its review
+   identify a missing domain lens, propose a genuinely missing SN and rederive
+   the affected SRs without copying kit promises or overwriting its approvals?
 3. Resume a provider conversation twice with cumulative counters; replay the
    second result. Does usage appear exactly once per invocation? Include an
    auxiliary model whose cost is already in the parent total.

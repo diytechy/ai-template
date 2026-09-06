@@ -26,8 +26,8 @@ Read [the implementation breakdown](IMPLEMENTATION.md) for executable phases, de
 revision adds one implementation layer beneath the packages. Read:
 
 1. [Vision objectives](VISION-OBJECTIVES.md): proposed `(O1)`–`(O6)` anchors in
-   the existing vision, a purpose map for all 27 needs, and optional reference
-   semantics without another registry or approval stage.
+   the existing vision and a purpose map for all 27 needs. Reference-field
+   semantics remain deferred; prose anchors add no registry or approval stage.
 2. [Execution details](EXECUTION-DETAILS.md): ownership, durable transitions,
    per-invocation usage, fresh builder rework, truthful verification selection,
    integration failure cases and concrete implementation slices.
@@ -46,6 +46,12 @@ The [third Fable review](FABLE-REVIEW-3-CROSSCHECK.md) answers the cross-check b
 the sweep: H1 is a targeted repair on its own evidence; H2–H5 enter the P0/P1a
 disposition manifest as promise-tier clauses without an SR home; the upgrade
 question folds into FIRST-RUN-ADOPTER's charter rather than a seventeenth hat.
+
+The [follow-up cross-check](FABLE-3-CROSSCHECK-DISPOSITIONS.md) retains those
+simplifications with corrections to smoke sufficiency, minimum metric semantics
+and stale agenda text. [Adopter revalidation](ADOPTER-REVALIDATION.md) makes the
+owner's additional requirement explicit: a project's own vision determines
+which hats fit, whether new needs are missing and which SRs need rederivation.
 
 
 ## 1. What must survive simplification
@@ -335,8 +341,9 @@ The owner review should decide:
    restart and per-invocation attribution. Resolve change-specific regression
    selection and truthful reporting separately; do not impose an unconditional
    passing-test bar at DevStg-Tests or waive any current required check. The
-   smallest form is one `[step:smoke]` at `from-stage = DevStg-Tests` in this
+   first improvement is one `[step:smoke]` at `from-stage = DevStg-Tests` in this
    repository's `docs/stack.ini` (third Fable review, C1); no selection engine.
+   Smoke is a baseline, not complete integration-regression or SN-007 coverage.
 10. Adopt the package layout `spine/ queue/ loop/ surfaces/ scaffold/` with one-way downward imports as the directory shape the responsibilities in the implementation breakdown land in.
 11. Treat Worktrunk as an optional operator tool and a design reference only (§5); no station adapter is prototyped.
 12. Use the [current decision agenda](CROSSCHECK-BRIEF.md#3-decisions-to-settle),
