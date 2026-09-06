@@ -28,11 +28,12 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   then the [redesign execution record](ai-template-redesign-2026-09-05-codex/EXECUTION-RECORD.md).
   Recheck Git and the generated frontier before choosing work; earlier handoffs
   and sitting checklists are historical context.
-- **Next implementation:** resolve the existing SR-161 per-decomposition
-  perspective-record gap and complete TC-211's normal sample. Follow the
-  existing artifact adjudication route for the Drafted amendments; passing an
-  Inspection does not approve its requirement. Keep the scope proportional to
-  the missing obligation.
+- **Next implementation:** apply the
+  [SN-036 / SR-161 owner ruling](log.d/2026-09-06-sn036-owner-ruling.md) — a
+  recorded review pass, not a guard: amend SN-036's acceptance (needs-only
+  snapshot), re-point SR-161 and LLR-183, re-point SR-186/TC-211's sample to a
+  real review record. No new cell, carrier or check. Then follow the existing
+  artifact adjudication route for the Drafted amendments.
 - **Control launch:** retain the tracked `docs/work/pause` while preparing
   route-complete spending bounds, including in-flight drain, against the
   [settled control ruling](ai-template-redesign-2026-09-05-codex/CONTROL-DECISION.md#owner-ruling-2026-09-06).
