@@ -94,7 +94,7 @@ is what makes the seconds a real bar rather than a claim a worker could read
 "passed" over — it FAILS the commit when the tier's wall time breaches the
 budget, instead of only being caught later in CI. The budget, re-tiered to fit
 by WI-281 and re-tiered again + re-measured 2026-08-23 (WI-496, after the tier
-crept back to 0.9-1.1x its ceiling): **≤ 60 s** wall, declared in
+crept back to 0.9-1.1x its ceiling): **≤ 90 s** wall (raised from 60 by owner ruling 2026-09-06), declared in
 `docs/stack.ini` `[smoke-budget]` (27.27 / 28.16 / 27.86 s over three warm
 runs on a 24-core box at the WI-496 re-tier) so it stays a real smoke test —
 "is it basically alive?", not a re-run of most of the suite. Tiering is

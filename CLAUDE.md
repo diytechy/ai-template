@@ -58,7 +58,7 @@ that easier to achieve in a real project — or get out of the way.
 - **Self-test before claiming done.** The per-commit bar means results AND
   seconds, both enforced locally, not just claimed (OI-52 ruling (a),
   2026-08-23): `python -m pytest -q -n auto -m smoke && python
-  scripts/check_smoke_budget.py --mode enforce`, budgeted at **60 s** wall in
+  scripts/check_smoke_budget.py --mode enforce`, budgeted at **90 s** wall (owner ruling 2026-09-06; was 60) in
   [`docs/stack.ini`](docs/stack.ini) — a breach FAILS the bar where it is
   introduced. **Re-tiered and re-measured 2026-08-23 (WI-496): 27.27 / 28.16 /
   27.86 s over three warm runs**, after moving five subprocess/scaffold-heavy

@@ -113,6 +113,16 @@ The cap stands as written: a route that cannot report spend or a defensible
 reservation stops admission. If that stalls the window early, the record says
 so and the outcome is insufficient evidence, not a quietly widened cap.
 
+**Re-ruled 2026-09-06 (later sitting).** The owner reversed the admission
+half of the clause above: the window exists to measure the first WIs, so a
+route that cannot report spend, or an aggregate that cannot be reserved, does
+NOT stop admission. The US$100 figure stays as a watched bound over REPORTED
+spend, with every missing figure recorded as missing; the WI, day and
+coordinator-hour bounds are unchanged and remain the stopping rule. The
+preflight's spend finding is therefore an accounting gap to report, not a
+launch prerequisite. Remaining launch conditions: the frozen launch commit,
+the queue/route revalidation at it, and the owner's reviewed pause deletion.
+
 **Launch act.** Launching is the owner's reviewed deletion of `docs/work/pause`
 at or after the repair commit, with this section unchanged. The need-tier
 sitting (SN-007 / SN-026 re-attestation and the SN-024 ruling, carried as an

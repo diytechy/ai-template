@@ -34,12 +34,13 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   snapshot), re-point SR-161 and LLR-183, re-point SR-186/TC-211's sample to a
   real review record. No new cell, carrier or check. Then follow the existing
   artifact adjudication route for the Drafted amendments.
-- **Control launch:** retain the tracked `docs/work/pause` while preparing
-  route-complete spending bounds, including in-flight drain, against the
-  [settled control ruling](ai-template-redesign-2026-09-05-codex/CONTROL-DECISION.md#owner-ruling-2026-09-06).
+- **Control launch:** retain the tracked `docs/work/pause` while preparing the
+  frozen launch commit against the
+  [settled control ruling](ai-template-redesign-2026-09-05-codex/CONTROL-DECISION.md#owner-ruling-2026-09-06)
+  (re-ruled 2026-09-06: unreported spend is recorded, never an admission stop).
   Revalidate the [preflight](ai-template-redesign-2026-09-05-codex/CONTROL-PREFLIGHT.md)
-  at the proposed frozen launch commit, then obtain the ruling's owner-reviewed
-  pause deletion. Replacement packages follow the control's evidence decision.
+  at that commit, then obtain the ruling's owner-reviewed pause deletion.
+  Replacement packages follow the control's evidence decision.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). `wi416-parked-handback-contract` is still
