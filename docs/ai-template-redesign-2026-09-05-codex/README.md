@@ -4,7 +4,7 @@
 
 **Permanent location:** `docs/ai-template-redesign-2026-09-05-codex/` in this repository, at the owner’s direction. Preserve the plan and review history here.
 
-**Recommendation:** first measure the recently fixed loop and simplify shared boundaries. Replace the orchestration kernel only where that evidence shows unresolved stakeholder needs justify it; preserve useful adoption and assurance tools and migrate by complete behavior slices. A rewrite is a conditional option, not the success criterion. See the [Claude plan comparison and incorporated changes](CROSS-REFERENCE-CLAUDE.md).
+**Recommendation:** first measure the recently fixed loop and simplify shared boundaries. Replace the orchestration kernel only where that evidence shows unresolved stakeholder needs justify it; preserve useful adoption and assurance tools and migrate by complete behavior slices. A rewrite is a conditional option, not the success criterion. See the [Claude plan comparison and incorporated changes](CROSS-REFERENCE-CLAUDE.md). A [second Fable review in a fresh session](FABLE-REVIEW-2-GOVERNING-PLAN.md) (2026-09-05) compared the two plans and ruled that this plan governs implementation, with the Claude plan's appendices, Phase 0 fixes, independently justified cuts and owner-decision agenda folded in here; it also rules Worktrunk out as a station replacement.
 
 Your four-step loop is the right organizing model:
 
@@ -251,7 +251,9 @@ The detailed replacement workflow, renderer boundary, selection table, and P9R e
 
 Keep Git/worktrees, TOML, the existing harness, bootstrap ownership, useful trace/gate code, and pytest. Consider stdlib `graphlib` for cycle detection and dependency traversal; keep the small policy-specific ordering explicit. Hypothesis is a plausible development-only addition for scheduler and crash-state invariants.
 
-GitHub protections and merge queues are useful in an optional hosted mode, but do not replace local/offline operation or prove semantic review of every newly composed merge candidate. Schema libraries need a measured deletion argument. SQLite is unnecessary as an initial authority store. Temporal, Prefect, and LangGraph address broader orchestration problems and would add another runtime model here. The detailed comparison and sources are [in the evidence document](EVIDENCE-AND-TOOLS.md#external-tools).
+GitHub protections and merge queues are useful in an optional hosted mode, but do not replace local/offline operation or prove semantic review of every newly composed merge candidate. Schema libraries need a measured deletion argument.
+
+**Worktrunk is not a station replacement.** Its `wt merge` invariant is rebase-then-fast-forward, which rewrites the commits the kit's `Bar-Green` trailer, verdict freshness and review rounds bind to; with every history-preserving flag set (`--no-commit --no-squash --no-rebase --no-ff`) it reduces to a hooks runner, a merge commit and a worktree removal, while the claim, refresh, generated-conflict settlement, trunk-step ordering, outcome-from-tree, refusals, verdict gate and in-slot intake all stay in the kit. The P5 same-tree receipt design is further from its model still. It has no documented locking between concurrent merges, prompts for hook trust on first run, and would be the kit's first non-Python binary dependency. Ruling: optional operator tool for hand-driven lanes (`wt switch -c <branch> -x claude`, `wt list --full`) and a design reference for the rebuilt station CLI (a project hook file, `--format json`); no prototype owed. [Ruling and comparison table](FABLE-REVIEW-2-GOVERNING-PLAN.md#4-worktrunk-ruling). SQLite is unnecessary as an initial authority store. Temporal, Prefect, and LangGraph address broader orchestration problems and would add another runtime model here. The detailed comparison and sources are [in the evidence document](EVIDENCE-AND-TOOLS.md#external-tools).
 
 Do not add a learned worker-tier estimator, a new generic plugin framework, an event-sourcing platform, a replacement Git implementation, or new ratchets before the core behavior is smaller. The September 5 report's optional escapes ratchet and title improvement can remain legitimate maintenance proposals, but they do not solve this architectural problem.
 
@@ -269,5 +271,9 @@ The owner review should decide:
 6. Make justified LLR replacement a normal design-change route, without adding a separate approval layer.
 7. Isolate HTML rendering and select its expensive tests by affected capability rather than running them for every core change.
 8. Keep the old runner available only as a rollback implementation; permit one mutating runner at a time and remove compatibility paths after a named migration release.
+9. Land the four correctness fixes named in P0 (the bar runs tests at DevStg-Tests and above; the coordinator exits on script drift, OI-83; the claim records its base, OI-84; telemetry carries the routed tier and row id) before the control window opens, as part of the observed configuration, not as the treatment.
+10. Adopt the package layout `spine/ queue/ loop/ surfaces/ scaffold/` with one-way downward imports as the directory shape the responsibilities in the implementation breakdown land in.
+11. Treat Worktrunk as an optional operator tool and a design reference only (§5); no station adapter is prototyped.
+12. Take the Claude plan's §7 decision list as the agenda of the P0 ruling session, and take its independently justified cuts (ratchets, generated artifacts, domain skills, the resync pack) as separately argued WIs on their own evidence, never as part of the kernel migration.
 
 These are proposals for the separate review the user requested. No new WIs were minted, no stages changed, and no runtime implementation or publication was performed in preparing or updating this report.
