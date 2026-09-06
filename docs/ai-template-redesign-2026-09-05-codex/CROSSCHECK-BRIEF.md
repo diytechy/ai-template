@@ -5,6 +5,9 @@ develop the plan one layer down. This is the input for a future independent
 Claude review, not that review's result. No new model session or external
 review has been run as part of preparing it.
 
+**Answered** by the [third Fable review](FABLE-REVIEW-3-CROSSCHECK.md) on 2026-09-05: executable for
+P0a/P0b with named corrections, applied to the active documents.
+
 ## 1. Read set and question
 
 Start with [README.md](README.md), [IMPLEMENTATION.md](IMPLEMENTATION.md),

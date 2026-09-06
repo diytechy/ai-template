@@ -42,7 +42,10 @@ revision adds one implementation layer beneath the packages. Read:
 The subsequent [vision, hats and SN-to-SR sweep](HATS-AND-DECOMPOSITION-REVIEW.md)
 reviews every current need, recommends an upgrading-adopter perspective, and
 separates missing SR obligations from incomplete implementation evidence.
-Include its findings in the next cross-check.
+The [third Fable review](FABLE-REVIEW-3-CROSSCHECK.md) answers the cross-check brief and dispositions
+the sweep: H1 is a targeted repair on its own evidence; H2–H5 enter the P0/P1a
+disposition manifest as promise-tier clauses without an SR home; the upgrade
+question folds into FIRST-RUN-ADOPTER's charter rather than a seventeenth hat.
 
 
 ## 1. What must survive simplification
@@ -331,15 +334,20 @@ The owner review should decide:
 9. Establish the P0 baseline with durable claim bases, safe script-drift
    restart and per-invocation attribution. Resolve change-specific regression
    selection and truthful reporting separately; do not impose an unconditional
-   passing-test bar at DevStg-Tests or waive any current required check.
+   passing-test bar at DevStg-Tests or waive any current required check. The
+   smallest form is one `[step:smoke]` at `from-stage = DevStg-Tests` in this
+   repository's `docs/stack.ini` (third Fable review, C1); no selection engine.
 10. Adopt the package layout `spine/ queue/ loop/ surfaces/ scaffold/` with one-way downward imports as the directory shape the responsibilities in the implementation breakdown land in.
 11. Treat Worktrunk as an optional operator tool and a design reference only (§5); no station adapter is prototyped.
 12. Use the [current decision agenda](CROSSCHECK-BRIEF.md#3-decisions-to-settle),
     informed by Claude's §7, without importing its withdrawn auto-rebaseline
     rule or presumed need retirements. Ratchets, generated artifacts, domain
     skills and resync changes remain individually argued proposals.
-13. Review the proposed objective anchors and optional SN references without
-    changing the stage ladder; review existing backlog obligations against each
-    implementation slice before minting or superseding work.
+13. Objective anchors as README prose only, no SN reference field (third Fable
+    review, O1); review existing backlog obligations against each implementation
+    slice before minting or superseding work.
+
+The single ruling agenda is [the cross-check brief's §3](CROSSCHECK-BRIEF.md#3-decisions-to-settle);
+this list records the plan's positions on it (third Fable review, C2).
 
 These are proposals for the separate review the user requested. No new WIs were minted, no stages changed, and no runtime implementation or publication was performed in preparing or updating this report.

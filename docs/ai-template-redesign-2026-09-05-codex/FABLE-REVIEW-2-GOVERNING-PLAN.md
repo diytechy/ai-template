@@ -67,3 +67,7 @@ The Claude plan's Phase 0 freezes self-minting during the rebuild (`complete_rev
 ## 7. Limits of this review
 
 No tests or timing runs were executed. Worktrunk was read, not installed; its Windows behavior and concurrency under two simultaneous merges were not exercised. The appendices' row classifications were sampled through the round-1 findings, not reconstructed. The owner intends a further check before implementation begins; nothing here authorizes P1 or later.
+
+## 8. Addendum, 2026-09-05 — corrections accepted
+
+Codex's expansion corrected two claims above, and both corrections stand. (a) §2 item 1 called the DevStg-Tests bar an attestation of "a suite that never ran"; the bar names the steps it ran, so it is honest labeling, and the gap is what it does not run — treated in the [third review](FABLE-REVIEW-3-CROSSCHECK.md), finding C1, with a one-step fix. (b) §4 called Worktrunk "the first non-Python binary dependency"; git is already required, so "the first binary beyond git" is accurate, and its `--yes` and `--no-hooks` flags make unattended use feasible. The ruling is unchanged.

@@ -98,6 +98,10 @@ P9R is an independent rendering slice after P0 and its own applicable contract a
   to define implementation-change regression checks and accurate reports;
   any changed cadence/stage requirement needs its own narrow amendment before
   enablement. No universal all-green test requirement at DevStg-Tests is assumed.
+  The smallest sufficient form, per the [third Fable review](FABLE-REVIEW-3-CROSSCHECK.md#3-findings) C1: one
+  `[step:smoke]` in this repository's `docs/stack.ini` at `from-stage = DevStg-Tests`
+  running the existing smoke tier — the per-commit bar made a station step. No selection
+  engine; the §4 table in EXECUTION-DETAILS is report vocabulary.
 - **Start the census from the Claude plan's appendices** — [A (spine census)](../ai-template-redesign-2026-09-05%20-%20claude/A-spine-census.md), [B (module map)](../ai-template-redesign-2026-09-05%20-%20claude/B-module-map.md), [C (external tools)](../ai-template-redesign-2026-09-05%20-%20claude/C-external-tools.md) — rather than remeasuring from nothing. Every single-source figure in them is re-derived by an independent route before it drives a decision: its first draft carried two figures wrong in the plan's favor and the second Fable review found a third (the render family was said to run on every commit; it is already outside the smoke tier). Reproduce; do not copy.
 - Inventory all 27 SNs and 76 SRs, then the LLR/TC and test families they govern. Classify core, advanced capability, migration-only, or retirement candidate. Do not approve the classification automatically.
 - Capture representative scenarios from ordinary work, spine changes, adjudication, consolidation, human holds, partial close, interrupted review, and adopter upgrade. Census historical train sizes, starting with WI-584/587/588/589 from the prior investigation. For each, distinguish one shared acceptance decision from separate deliverables and compare one coherent consolidated WI against separate exclusive WIs, counting all resulting integration/review turns. Exclusivity provides serialization, not joint approval atomicity: related normative amendments that must be accepted together must fit one coherent WI and acceptance transaction, or retain an explicitly supported joint-approval mechanism until that need is resolved. This is decision material to produce, not a census claimed complete by this plan.
@@ -343,10 +347,10 @@ it cannot claim an already-excluded geometry suite as a new smoke saving.
   content to another repository, or retire the resync instructions until the
   successor preserves the promised adoption/verification behavior and its
   applicable scope/cadence amendment has landed. No fixed cut count applies.
-- If selected, ship [objective references](VISION-OBJECTIVES.md#5-implementation-slice-and-acceptance)
-  as a separately bounded schema/doc slice with legacy-adopter compatibility.
-  This and independently justified consolidation may proceed without P8 when
-  no runner behavior changes and their own prerequisites are satisfied.
+- Objective anchors land as README prose only; the `objective_refs` carrier is
+  deferred (third Fable review, O1; see [VISION-OBJECTIVES.md](VISION-OBJECTIVES.md)).
+  Independently justified consolidation may proceed without P8 when no runner
+  behavior changes and its own prerequisites are satisfied.
 
 **Done when:** every removed row/check has an explicit disposition; a minimum scaffold runs without importing/installing advanced capabilities; required capability tests and all mandated repo checks pass.
 

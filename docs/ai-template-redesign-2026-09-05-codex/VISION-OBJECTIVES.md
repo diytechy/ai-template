@@ -5,6 +5,8 @@
 baseline, or registry schema. Its sample text becomes canonical only if moved
 into the root README through the normal reviewed change.
 
+**Disposition after the [third Fable review](FABLE-REVIEW-3-CROSSCHECK.md#3-findings) (2026-09-05, finding O1):** adopt the smaller alternative this document names in §4 — the six clauses as headed prose in the root README's vision section with plain anchors, no `objective_refs` field, no carrier, parser, approval-classification or migration work, and no P1b/P9b slices. The mapping in §3 is kept here as a review worksheet. A carrier field is reconsidered only if, after P9's consolidation, a reviewer still cannot navigate from purpose to need. The redesign's thesis is fewer tiers describing the kit to itself; a sixth tier is not added while P9 removes rows.
+
 ## 1. Recommendation and boundary
 
 Add short, stable objective keys `(O1)`, `(O2)`, etc. to the existing vision.

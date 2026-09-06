@@ -68,6 +68,10 @@ attribution and provider parity are incomplete. `plan_runner` also invokes
 `agent_session` and must use the same accounting boundary. These statements
 come from source inspection, not a claim that historical logs are complete.
 
+### Minimum first
+
+**Disposition after the [third Fable review](FABLE-REVIEW-3-CROSSCHECK.md#3-findings) (finding O2):** P0b ships a minimum record by extending the existing session-log writer, and the fuller contract below is the deferred design, built field by field only when a consumer needs it. The minimum: `invocation_id`, `wi_id`, attempt, role, provider, requested and reported model, routed tier, roster row, start and end, exit status, and the token and cost counters exactly as the provider reports them, with `null` for anything unavailable. Three rules travel with it: a new process is a new id even when it resumes a conversation; a failed or timed-out call still gets a row; an unknown number is never coerced to zero. Cumulative-counter deltas, auxiliary-model inclusion semantics, the spool-and-flush rule around a P5 turn and coverage reporting wait for a reader that needs them. The P0 control table is the first consumer, and it reads role, WI, route, tier, tokens and cost per session.
+
 ### Record contract
 
 Extend the existing per-session carrier; do not add a metrics database or a
@@ -193,6 +197,8 @@ work continues; the builder cannot silently lower the bar to close a finding.
 | Human authority required | Preserve evidence, stop/drain or continue independent work according to current policy |
 | Trunk/spec/policy invalidates candidate | Re-prepare and obtain applicable fresh checks/review; do not reuse an old approval as a new one |
 
+When the reviewer changed between rounds (a tier escalation), the brief carries every unresolved finding with its round and reviewer, and a contradiction between rounds is a dispute routed to the one-attempt arbitration, not a third opinion (third Fable review, GAP-3).
+
 The builder must actually change the deficient implementation or demonstrate
 why a finding is wrong. A record-only rewrite is not evidence that a material
 defect was fixed. The final reviewer checks the candidate and criteria, not
@@ -214,6 +220,8 @@ failing-first work from implementation acceptance. Preserve that distinction.
 The proposed refinement is a declared validation selection for the *change*
 in addition to the derived stage's process checks. Reuse the existing WI bar,
 stack configuration and check planner. Avoid another heuristic policy engine.
+
+**Smallest sufficient form (third Fable review, finding C1).** Verified 2026-09-05: `check.py --stage DevStg-Tests --list` selects fourteen process steps and no product step — `format`, `lint` and `tests+coverage` are keyed to DevStg-Impl — so a lane that breaks an existing, tested behavior at DevStg-Tests merges on a green `Bar-Green`. The bar is honest about what it ran; the gap is what it does not run. The fix is one declared step in this repository's `docs/stack.ini`: `[step:smoke]` with `from-stage = DevStg-Tests` and `command = {py} -m pytest -q -n auto -m smoke`, the per-commit bar the working agreement already demands of every agent by hand, made a step the station runs. It adds a check and narrows nothing, so it needs no SN-007 amendment and no ladder change. A failing-first test, when one exists, carries a marker excluded from that step; the marker is decided when the first such test is written. The table below is kept as report vocabulary ("selected checks passed" versus "full suite passed"); it is not built as a selector.
 
 | Change/claim | Validation owed |
 |---|---|
@@ -295,7 +303,10 @@ must set final thresholds and an absolute time/cost cap before P5 is run.
 
 Outcomes are **retain**, **targeted repair**, **replace**, or **insufficient
 evidence**. Failed/inconclusive experiments do not justify continuing the
-rewrite by momentum. Keep reviewer settings unchanged during the control
+rewrite by momentum. Insufficient evidence after the declared window resolves
+to **targeted repair** by default — the independently justified slices proceed
+and P3–P8 stay closed — and a second window opens only by explicit ruling, so
+the gate cannot loop (third Fable review, GAP-1). Keep reviewer settings unchanged during the control
 window. Any self-minting freeze during replacement is a separately authorized
 treatment with duration and restoration conditions; selecting replacement
 alone does not silently turn existing review dials off.
@@ -312,7 +323,7 @@ reviewable change plus its applicable checks; no package-wide “done” by pros
 | P0b footing | Durable base, defined script-drift stop and session attribution in current runner | Reproduce OI-83/OI-84, apply existing authority, replace inferred base and missing route metadata; run current bars |
 | P0c decision | Control results and retain/repair/replace ruling with budgets | Requires known configuration and credible observations; no automatic unpause |
 | P1a contracts | Domain records, transition/failure table and ownership | Walk all §1/§5 cases with fake providers before implementation |
-| P1b purpose | Reviewed objective wording and SN mapping | Independent of replacement; no new stage or inherited downstream objectives |
+| P1b purpose | **Deferred (third Fable review, O1):** objective clauses land as README prose only | No carrier field, no schema or parser work; the mapping stays a worksheet |
 | P1A enablement | Narrow approved amendments and old/new behavior/test map | Must precede live changed behavior; P5 supplies final evidence-specific amendments |
 | P2a readers | Shared parser/prompt and compatibility boundaries | Preserve absent/malformed policy, raw text/CRLF/source spans; remove duplicate consumers only after equivalence cases pass |
 | P3a intake | Proposal decision preview and atomic application | Duplicate/stale/overlapping/active-scope cases; replace idle-tick semantic census only at cutover |
@@ -324,7 +335,7 @@ reviewable change plus its applicable checks; no package-wide “done” by pros
 | P8 pilot | End-to-end fake-provider suite and approved real-WI sample | P1A and P5 contract settled; report unknown metrics and all interventions |
 | P9R extraction | Renderer package, snapshot boundary and shared test selection | May proceed independently after inventory/own amendments; prove core works with renderer absent |
 | P9a consolidation | Clause/evidence-backed removal and capability mapping | No count quotas; optional promises verified when enabled; independently argued cuts stay separate |
-| P9b objectives | Optional reference carrier and adopter migration, if selected | Follow VISION-OBJECTIVES.md; maintain legacy adopter validity and ordinary approval semantics |
+| P9b objectives | **Deferred (third Fable review, O1):** no reference carrier in this program | Reconsider only if purpose-to-need navigation still fails after P9a |
 | P10 cutover | Forward/reverse migration limits, single-writer switch and old-path deletion | Rehearse rollback after new accepted work without resetting away that work; publish supported-version boundary |
 
 Do not require parser cleanup or rendering extraction to wait for the runner
