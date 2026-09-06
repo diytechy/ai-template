@@ -50,3 +50,18 @@ no function-complexity ceiling was raised.
 Deferred open items: none created by this slice. Existing OI-82 remains pending;
 the control prerequisites and remaining implementation scope are retained in
 the execution record rather than represented as completed work.
+
+### Commit and adopter instructions
+
+Implementation landed as `22b21b06` with hooks enabled. A follow-on
+[resync entry](../../project-trajectory/RESYNC_PACK.md) names that exact source
+commit, the coherent script update, manual restart behavior, preserved claim
+history and metadata compatibility. Corrected the three final review-log
+headers to put the requested `high` in `effort`, leaving their undeclared
+routing tier blank; provider transcripts and usage values are unchanged.
+
+Documentation-only follow-on validation: smoke `1654 passed, 4 skipped in
+60.08s`, enforced wall `60.3s vs 60s budget -> OVER`, exit 1; the same owner
+timing authorization applies. Documentation check: no broken links, with the
+existing report orphan warning. No source or test membership changed after
+the implementation commit. <!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce" rev=22b21b06+resync-docs; out/run-logs/redesign-resync-smoke.txt -->

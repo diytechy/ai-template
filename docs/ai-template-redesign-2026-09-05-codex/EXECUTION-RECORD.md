@@ -137,3 +137,9 @@ Strict trajectory and trace integrity checks, documentation links, Ruff and
 the unchanged function-complexity ceilings pass. Documentation retains the
 existing report orphan warning and advisory staleness hints. No new dependency
 or approval carrier was introduced. The commit is local; no push is implied.
+
+Implementation commit: `22b21b06`. The follow-on
+[resync entry](../../project-trajectory/RESYNC_PACK.md) anchors its upgrade
+instructions to that exact source commit. Project-specific vision/hat/need
+revalidation remains in the planned adopter workflow; this runtime slice does
+not complete that broader acceptance work.

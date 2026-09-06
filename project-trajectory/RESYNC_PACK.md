@@ -2440,6 +2440,38 @@ YOUR attention is one schema column and one new check.
    your repo carries a stranded active claim, close it partial or delete the
    directory.
 
+### Resumed-worker evidence, coordinator restart and invocation accounting [since 22b21b06]
+
+Stop running coordinators before updating the kit-owned scripts. Take
+`agent_common.py`, `agent_loop.py`, `agent_session.py`, `dispatch.py`,
+`integrate.py` and `plan_runner.py` together from the target kit revision;
+the shared claim and session boundaries changed together.
+
+- **Restart behavior:** a running worker detects that its Python sources moved
+  and exits 11 before another session. The dispatcher stops admission, drains
+  running children and preserves their branches for an operator restart.
+  Invoke the launcher again to load the updated code. Custom wrappers must
+  preserve exit 11 as a restart request rather than treating it as a work-item
+  completion or partial close. No automatic relaunch was added.
+- **Resume evidence:** keep the existing Git claim commits and their
+  queued-to-active moves. The worker now resolves that durable boundary from
+  first-parent history, including when the primary checkout is the lane itself.
+  Unreadable claim history refuses to proceed; genuinely unclaimed/manual
+  assignments retain their previous fallback. Do not squash away an active
+  lane's claim history during the upgrade.
+- **Session records:** worker, planner, recovery-probe and interactive launches
+  use the existing `docs/iteration` carrier. Standalone records use `call_`
+  filenames and do not advance worker numbering or route rotation. Custom
+  readers should consume the metadata header through `# ---`, preserve unknown
+  usage as unknown, and treat escaped CR/LF in header values as display text.
+  Provider session IDs may repeat across distinct invocation IDs; raw counters
+  with unknown scope must not be summed. Interactive stdio remains attached,
+  so its records contain timing/exit metadata with unavailable usage.
+
+Preserve historical logs and project-owned configuration. The meta-repo's
+additive smoke station is a local `docs/stack.ini` setting, not a new shipped
+template step. This update requires no new dependency or registry conversion.
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which

@@ -17,7 +17,7 @@
 # ttft-secs:
 # cache-read: 0
 # cache-create: 29020
-# effort:
+# effort: high
 # fast:
 # prompt-chars:
 # prompt-template:
@@ -36,7 +36,7 @@
 # provider: claude
 # requested-model: claude-opus-5
 # reported-model:
-# tier: high
+# tier:
 # roster-row:
 # started-at: 2026-09-06T05:43:04Z
 # ended-at: 2026-09-06T05:43:28Z
