@@ -1,0 +1,58 @@
+# agent session log — written by scripts/agent_common.py
+# session: 012
+# date: 2026-09-07 14:06
+# train: contract_split
+# base: d522f3b0c729
+# phase: ADJUDICATE
+# primary-turn: WI-610-d522f3b0c7295ce2d46765551a6500491a76ff2c
+# judgment: docs/reviews/contract_split/012-ADJUDICATE-4dd61ff.md
+# candidate: 1171974ccb1171ff4177ac2aa694f5b6b2f036af
+# wi: WI-610
+# model: gpt-6-astra
+# guardrails:
+# outcome: COMMITTED
+# commits: 4dd61ffc..1171974c
+# tokens:
+# cost-usd:
+# wall-secs: 749
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 1130243
+# prompt-template: kit:ADJUDICATE
+# prompt-sha: sha256:e28fa7e34e81
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# invocation-id: 84d5a863842d4fa1b0e3ba713935b0f2
+# attempt-id: contract_split@d522f3b0c7295ce2d46765551a6500491a76ff2c
+# source-event:
+# role: ADJUDICATE
+# provider: OPENAI
+# requested-model: gpt-6-astra
+# reported-model:
+# tier: strong
+# roster-row: OPENAI-ASTRA
+# started-at: 2026-09-07T18:53:52Z
+# ended-at: 2026-09-07T19:06:21Z
+# input-tokens:
+# output-tokens:
+# reasoning-tokens:
+# raw-usage:
+# usage-scope: unknown
+# usage-source: unknown
+# usage-status: unavailable
+# ---
+Committed rework: `3ce4422f` and payload `1171974c`.
+
+All 52 rows remain RETURN, with zero accepted cells. Design and counterpart decisions are recorded; evidence is preserved. Hash rechecks, smoke, commit checks, and primary-turn validation passed.
+
+Ordinary managed review and atomic publication remain pending. Registries, snapshots, and coordinator pause are unchanged.
