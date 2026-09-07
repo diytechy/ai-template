@@ -134,3 +134,11 @@ act is owed before the first observation. Procedure: the handoff's launch
 section. The need-tier
 sitting (SN-007 / SN-026 re-attestation and the SN-024 ruling, carried as an
 open item minted 2026-09-06) is independent of the window and does not block it.
+
+
+**Retry authorization (2026-09-07 UTC).** After the repair review, lane
+preparation and correction of the unsupported rationale-citation attribution,
+the owner instructed “Okay, you can retry”. Resume the original lane under the
+same control envelope, counting prior active coordinator time and completed
+WIs rather than resetting them. The [retry record](CONTROL-RETRY.md) owns the
+new segment's launch evidence. Restore the pause at the stopping boundary.

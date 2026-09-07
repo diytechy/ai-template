@@ -20,10 +20,12 @@ requested three corrections before landing. They are applied:
   SN-036 anchor are queued as [WI-607](../work/queued/WI-607-refresh-sn-036-record-comments.md), separate follow-up scope. The current review explicitly
   applies SN-036 intent as well as the existing numbered rubric; neither an
   extra coverage sensor nor new metadata is warranted.
-- **F6:** retain the ruling citation because the owner explicitly instructed
-  “Rationale names this ruling.” That instruction takes precedence over the
-  standing prose convention. The detector's advisory remains visible; no
-  allow-list or check suppression is needed to accept a warn-only advisory.
+- **F6 (reopened before retry):** the original disposition retained the
+  ruling citation by attributing “Rationale names this ruling” to the owner.
+  The owner challenged that attribution; no direct owner message has been
+  verified. The phrase is from an agent-authored ruling record and does not
+  establish an owner override. The citation finding returns to ordinary
+  review under the standing prose convention and authorized amendment scope.
 
 The first review's incomplete and inconsistent abbreviation of the rubric hash
 is not an authoritative content identity. The source manifest in its supplied

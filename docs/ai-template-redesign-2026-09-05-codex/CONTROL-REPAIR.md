@@ -2,8 +2,9 @@
 
 The owner requested Claude Fable at medium effort to review the
 [incident](CONTROL-OBSERVATIONS.md), then authorized applying valid feedback
-and preparing a retry. The tracked pause remains. This repair does not start
-another control window or declare WI-605 complete.
+and preparing a retry. The preparation described below did not launch a retry or declare WI-605
+complete. The owner has now authorized retry; the current launch and stopping
+terms are in the [retry record](CONTROL-RETRY.md).
 
 ## Independent feedback and disposition
 
@@ -18,11 +19,14 @@ Claude Fable 5.1 with `CLAUDE_CODE_EFFORT_LEVEL=medium`; raw reported cost USD
   adjudication review precedes worker DONE and the coordinator's close. The
   reviewer now sees that role on the adjudication row it is reviewing. The
   lifecycle and its strict review identity checks remain intact.
-- Reject the proposed rationale-removal successor. The explicit
-  [owner instruction](../log.md#2026-09-06--sn-036--sr-161-owner-ruling-review-pass-not-a-guard) says “Rationale
-  names this ruling.” [F6 was already dispositioned](../reviews/2026-09-06-sn036-review-dispositions.md)
-  on that basis. A general process convention does not override it; retain
-  the citation and the visible advisory, with no suppression.
+- Reopen the rationale-citation finding. The owner challenged the attribution
+  of “Rationale names this ruling”; no direct owner message has been verified.
+  That phrase comes from the agent-authored ruling record, and F6 repeated it
+  as an explicit instruction without establishing its source. Withdraw that
+  claimed override of the standing prose convention. Fresh review must judge
+  the finding under the ordinary process and assignment scope; if correction
+  is owed, use the authorized amendment or successor route, not an invented
+  owner instruction. Historical verdicts remain evidence of what was said.
 - Resolve the duplicate-title warning as a false positive. WI-601 judges
   LLR-061; WI-603 judges LLR-167. Both distinct dependencies remain.
 - Accept the approved/traced distinction. Only LLR-061/167/183's approved

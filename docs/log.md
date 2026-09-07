@@ -63538,3 +63538,26 @@ approval snapshot change or merge claimed.
 
 Deferred open items: none. Existing later-stage complexity-baseline drift stays
 recorded in the repair report; this sitting does not claim that gate passed.
+
+
+## 2026-09-07 — Control retry authorized; citation attribution corrected
+
+The owner challenged where they had instructed “Rationale names this ruling.”
+The supervisor traced the phrase to the agent-authored record in f6c7360f,
+not to a verified owner message. Earlier log entries and F6 used an unsupported
+explicit-owner attribution; that claimed override is withdrawn. F6 and the
+repair disposition are reopened for ordinary review. No registry cell or
+approval snapshot is changed by this correction.
+
+The owner then instructed “Okay, you can retry”. Follow the
+[retry record](ai-template-redesign-2026-09-05-codex/CONTROL-RETRY.md): resume the
+original lane, preserve the existing control bounds across both measured
+segments, and restore the pause at the stopping boundary. The retained
+adjudicator patch is deferred for this segment under the existing configuration
+ruling and will be re-queued when it ends.
+
+Deferred open items: none — the reopened citation finding is work for the
+existing adjudication/review route, not a new owner ruling.
+
+Verification: 1687 passed, 8 skipped in 60.48s (0:01:00); timing: /Users/diytechy/Documents/ai-template/.venv/bin/python -m pytest -q -n auto -m smoke; smoke wall-clock budget: 60.8s vs 90s budget -> within
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict" rev=c00cfe57+retry-preparation; out/run-logs/control-retry/prelaunch-smoke.txt; prelaunch-docs.txt; prelaunch-trajectory.txt -->

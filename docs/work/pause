@@ -1,3 +1,0 @@
-# Short control stopped; do not resume its interrupted lane before repair.
-reason = "Control repair and retry preparation: the smoke failure propagation and adjudication scope/rework paths are repaired. Follow docs/ai-template-redesign-2026-09-05-codex/CONTROL-REPAIR.md for lane reconciliation, station refresh and fresh review. WI-605 is not approved or terminal; the coordinator remains stopped. No second control window is authorized."
-since = "2026-09-06"
