@@ -63,3 +63,449 @@ Advisory registry joins (WI-388; never gating):
 - IF-147 scripts/check_perf -> scripts/check: exit-code 0 OK, SKIP or WARN · 1 a Gate=fail budget breached in the run tier, or --update-baseline with no metrics
 
 Pre-selection prerequisite: WI-611 repairs terminal-continuation intake and the stale TC-205 citations found by the supervised preflight. The original scope and all semantic obligations above remain; the exact final TC-205 text and its actual coverage must still be judged.
+
+## Approval
+
+```toml
+version = 1
+turn = "WI-610-d522f3b0c7295ce2d46765551a6500491a76ff2c"
+base = "d522f3b0c7295ce2d46765551a6500491a76ff2c"
+proposal = "057bf520150b8213e3fb9f744bba664d295d54d6a96a5f512cd34cbdf4a5168e"
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-058"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-061"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-123"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Rationale" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "Rationale" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-140"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Rationale" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "Rationale" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-144"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Rationale" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "Rationale" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-149"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Rationale" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "Rationale" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-150"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Rationale" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "Rationale" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-151"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Rationale" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "Rationale" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-152"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Rationale" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "Rationale" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-153"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Rationale" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "Rationale" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-154"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Rationale" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "Rationale" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-158"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Rationale" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "Rationale" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-161"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Hat-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Rationale" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Hat-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "Rationale" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-167"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Rationale" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "Rationale" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-183"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Hat-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Rationale" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Hat-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "Rationale" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/low-level-requirements.toml"
+row = "LLR-207"
+classification = "return"
+before = { "CodeSymbol" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Component" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Detail" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Module" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Phase" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Rationale" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "SR-Refs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Status" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "TestRefs" = "1ec0ab08fcea5f7dd638651e4281322bbd031705", "Title" = "1ec0ab08fcea5f7dd638651e4281322bbd031705" }
+after = { "CodeSymbol" = "cd855a66183510036a087c028acd3e1fa367e134", "Component" = "cd855a66183510036a087c028acd3e1fa367e134", "Detail" = "cd855a66183510036a087c028acd3e1fa367e134", "Module" = "cd855a66183510036a087c028acd3e1fa367e134", "Phase" = "cd855a66183510036a087c028acd3e1fa367e134", "Rationale" = "cd855a66183510036a087c028acd3e1fa367e134", "SR-Refs" = "cd855a66183510036a087c028acd3e1fa367e134", "Status" = "cd855a66183510036a087c028acd3e1fa367e134", "TestRefs" = "cd855a66183510036a087c028acd3e1fa367e134", "Title" = "cd855a66183510036a087c028acd3e1fa367e134" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-024"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-033"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-043"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-052"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Aspect" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Aspect" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-053"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Aspect" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Aspect" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-054"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Aspect" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Aspect" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-111"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-112"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-129"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Aspect" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Aspect" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-144"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Aspect" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Aspect" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-146"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Aspect" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Aspect" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-147"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Aspect" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Aspect" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-148"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Aspect" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Aspect" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-149"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-156"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-161"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-162"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-167"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Aspect" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Aspect" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-175"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-176"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/requirements/system-requirements.toml"
+row = "SR-177"
+classification = "return"
+before = { "AcceptanceCriteria" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Boundary-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Hat-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Phase" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Priority" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Rationale" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Requirement" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "SN-Refs" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Status" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Title" = "435d8ce708795a5e3f9451ff0d171824b2b3c452", "Verification" = "435d8ce708795a5e3f9451ff0d171824b2b3c452" }
+after = { "AcceptanceCriteria" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Boundary-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Hat-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Phase" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Priority" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Rationale" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Requirement" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "SN-Refs" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Status" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Title" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43", "Verification" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/test/test-cases.toml"
+row = "TC-058"
+classification = "return"
+before = { "Automated" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Evidence" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Expected" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Level" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Method" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Phase" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Status" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Tier" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Verifies" = "ca71cc09e6093c5c5ff299e8d077453c967140d2" }
+after = { "Automated" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Evidence" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Expected" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Level" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Method" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Phase" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Status" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Tier" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Verifies" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/test/test-cases.toml"
+row = "TC-061"
+classification = "return"
+before = { "Automated" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Evidence" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Expected" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Level" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Method" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Phase" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Status" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Tier" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Verifies" = "ca71cc09e6093c5c5ff299e8d077453c967140d2" }
+after = { "Automated" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Evidence" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Expected" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Level" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Method" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Phase" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Status" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Tier" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Verifies" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/test/test-cases.toml"
+row = "TC-138"
+classification = "return"
+before = { "Automated" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Evidence" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Expected" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Level" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Method" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Phase" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Status" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Tier" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Verifies" = "ca71cc09e6093c5c5ff299e8d077453c967140d2" }
+after = { "Automated" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Evidence" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Expected" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Level" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Method" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Phase" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Status" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Tier" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Verifies" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/test/test-cases.toml"
+row = "TC-143"
+classification = "return"
+before = { "Automated" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Evidence" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Expected" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Level" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Method" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Phase" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Status" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Tier" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Verifies" = "ca71cc09e6093c5c5ff299e8d077453c967140d2" }
+after = { "Automated" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Evidence" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Expected" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Level" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Method" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Phase" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Status" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Tier" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Verifies" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/test/test-cases.toml"
+row = "TC-144"
+classification = "return"
+before = { "Automated" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Evidence" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Expected" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Level" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Method" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Phase" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Status" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Tier" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Verifies" = "ca71cc09e6093c5c5ff299e8d077453c967140d2" }
+after = { "Automated" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Evidence" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Expected" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Level" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Method" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Phase" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Status" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Tier" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Verifies" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/test/test-cases.toml"
+row = "TC-145"
+classification = "return"
+before = { "Automated" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Evidence" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Expected" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Level" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Method" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Phase" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Status" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Tier" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Verifies" = "ca71cc09e6093c5c5ff299e8d077453c967140d2" }
+after = { "Automated" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Evidence" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Expected" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Level" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Method" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Phase" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Status" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Tier" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Verifies" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/test/test-cases.toml"
+row = "TC-146"
+classification = "return"
+before = { "Automated" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Evidence" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Expected" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Level" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Method" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Phase" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Status" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Tier" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Verifies" = "ca71cc09e6093c5c5ff299e8d077453c967140d2" }
+after = { "Automated" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Evidence" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Expected" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Level" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Method" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Phase" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Status" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Tier" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Verifies" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/test/test-cases.toml"
+row = "TC-147"
+classification = "return"
+before = { "Automated" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Evidence" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Expected" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Level" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Method" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Phase" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Status" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Tier" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Verifies" = "ca71cc09e6093c5c5ff299e8d077453c967140d2" }
+after = { "Automated" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Evidence" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Expected" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Level" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Method" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Phase" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Status" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Tier" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Verifies" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/test/test-cases.toml"
+row = "TC-148"
+classification = "return"
+before = { "Automated" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Evidence" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Expected" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Level" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Method" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Phase" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Status" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Tier" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Verifies" = "ca71cc09e6093c5c5ff299e8d077453c967140d2" }
+after = { "Automated" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Evidence" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Expected" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Level" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Method" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Phase" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Status" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Tier" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Verifies" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/test/test-cases.toml"
+row = "TC-153"
+classification = "return"
+before = { "Automated" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Evidence" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Expected" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Level" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Method" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Phase" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Status" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Tier" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Verifies" = "ca71cc09e6093c5c5ff299e8d077453c967140d2" }
+after = { "Automated" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Evidence" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Expected" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Level" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Method" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Phase" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Status" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Tier" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Verifies" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/test/test-cases.toml"
+row = "TC-154"
+classification = "return"
+before = { "Automated" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Evidence" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Expected" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Level" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Method" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Phase" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Status" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Tier" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Verifies" = "ca71cc09e6093c5c5ff299e8d077453c967140d2" }
+after = { "Automated" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Evidence" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Expected" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Level" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Method" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Phase" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Status" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Tier" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Verifies" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/test/test-cases.toml"
+row = "TC-156"
+classification = "return"
+before = { "Automated" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Evidence" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Expected" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Level" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Method" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Phase" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Status" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Tier" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Verifies" = "ca71cc09e6093c5c5ff299e8d077453c967140d2" }
+after = { "Automated" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Evidence" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Expected" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Level" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Method" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Phase" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Status" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Tier" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Verifies" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/test/test-cases.toml"
+row = "TC-161"
+classification = "return"
+before = { "Automated" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Evidence" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Expected" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Level" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Method" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Phase" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Status" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Tier" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Verifies" = "ca71cc09e6093c5c5ff299e8d077453c967140d2" }
+after = { "Automated" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Evidence" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Expected" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Level" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Method" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Phase" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Status" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Tier" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Verifies" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/test/test-cases.toml"
+row = "TC-178"
+classification = "return"
+before = { "Automated" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Evidence" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Expected" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Level" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Method" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Phase" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Status" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Tier" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Verifies" = "ca71cc09e6093c5c5ff299e8d077453c967140d2" }
+after = { "Automated" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Evidence" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Expected" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Level" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Method" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Phase" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Status" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Tier" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Verifies" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+
+[[decision]]
+registry = "docs/test/test-cases.toml"
+row = "TC-205"
+classification = "return"
+before = { "Automated" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Evidence" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Expected" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Level" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Method" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Phase" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Status" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Tier" = "ca71cc09e6093c5c5ff299e8d077453c967140d2", "Verifies" = "ca71cc09e6093c5c5ff299e8d077453c967140d2" }
+after = { "Automated" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Evidence" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Expected" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Level" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Method" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Phase" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Status" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Tier" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc", "Verifies" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc" }
+evidence = ["d180d40e462e19b20e6c904f00a0720e3d7891f2"]
+```
+
+All scoped decisions return. No cells are accepted; absorption and impact tables are intentionally absent. The recorded MEANING/CLARITY observations are findings only.
+
+## Dispositions
+
+```toml
+title = "Correct combined amendment test obligations and prepare complete-scope reanchor"
+workstream = "process"
+buildtier = "strong"
+safety_class = "spine"
+specref = "docs/reviews/contract_split/002-ADJUDICATE-64c1e8a.md"
+sr_refs = ["SR-024", "SR-033", "SR-043", "SR-052", "SR-053", "SR-054", "SR-111", "SR-112", "SR-129", "SR-144", "SR-146", "SR-147", "SR-148", "SR-149", "SR-156", "SR-161", "SR-162", "SR-167", "SR-175", "SR-176", "SR-177"]
+needs = ["WI-608", "WI-611"]
+supersedes = "WI-610"
+```
+
+Continue the combined Approved-change scope owned by WI-610 under OI-88; WI-608 and WI-611 remain completed authoring prerequisites, not semantic approvals. Correct TC-161.Method so its routing obligation agrees with LLR-167.Detail and the actual all-shipped-routed/retired-conflict test. Correct TC-205.Method and Evidence correspondence: the retained dial, scheduler and shared-spec tests exercise historical closed lanes, not the newly described pending primary turn and verified publication. Identify actual primary proofs or author the missing coverage; state any remaining gap truthfully. Do not weaken the required primary-carrier or independent-review obligations to fit historical tests.
+
+Preserve the entire original 52-row scope for fresh cumulative approved-snapshot-to-final-candidate adjudication: LLR-058, LLR-061, LLR-123, LLR-140, LLR-144, LLR-149, LLR-150, LLR-151, LLR-152, LLR-153, LLR-154, LLR-158, LLR-161, LLR-167, LLR-183, LLR-207, SR-024, SR-033, SR-043, SR-052, SR-053, SR-054, SR-111, SR-112, SR-129, SR-144, SR-146, SR-147, SR-148, SR-149, SR-156, SR-161, SR-162, SR-167, SR-175, SR-176, SR-177, TC-058, TC-061, TC-138, TC-143, TC-144, TC-145, TC-146, TC-147, TC-148, TC-153, TC-154, TC-156, TC-161, TC-178, TC-205. No partial equivalent approval from this RETURN may be reused. Registry authoring must finish before a new bound candidate is selected. Through ordinary intake, prepare the complete-scope primary reanchor with actual committed judgment/session provenance, all meaning-changing uses and references, complete whole-file absorption evidence and independent review. No replacement stable requirement IDs or substitute publication protocol.
+
+Carry the original WI-610 Context and all absorbed obligations unchanged into that reanchor. Judge LLR-061/TC-061 together against the exact singleton and committed-trailer-AND-spec-move completion text. Preserve all PC-BATCH-USES.md retirement obligations, immutable history and the WI-611 citation correction; never claim the absent two-row mechanical-close test passed. Keep Drafted riders and their existing first-approval ownership, including WI-606, unchanged. WI-601/WI-603/WI-605 remain restructured history, not accepted or complete. No PC batch implementation or test deletion before actual live contract acceptance. Keep the coordinator paused; no control window, push or main merge is authorized.
