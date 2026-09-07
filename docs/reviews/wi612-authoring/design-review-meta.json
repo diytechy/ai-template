@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "claude",
+    "-p",
+    "--model",
+    "fable",
+    "--output-format",
+    "json",
+    "--tools",
+    ""
+  ],
+  "prompt_sha256": "ee8fdda8c54e84734d13a51d53b73c85698318def6eaaef70294543f6a25b657",
+  "exit": 0,
+  "wall_seconds": 145.822467082995,
+  "role": "independent in-progress source review, not semantic approval"
+}

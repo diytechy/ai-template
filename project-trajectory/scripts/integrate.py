@@ -164,7 +164,7 @@ import publication_verify
 import primary_publication
 import score_reviews
 import spec_move
-from kitlib import verdict as kverdict
+from primary_publication import verdict_reader as kverdict
 from kitlib.station import (
     BAR_GREEN,
     OUTCOME_DIRS,

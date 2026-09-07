@@ -192,7 +192,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 # `Review-Verdict:` trailer grammar and the round-file/session-log join. Read
 # here for the C2 review-owed derivation and by `integrate._verdict_gate` for
 # the merge slot's — one definition, two readers, which is the whole point.
-from kitlib import verdict as kverdict
+from primary_publication import verdict_reader as kverdict
 
 # The WI-218 split: the session-launch layer (slice B), the shared coordinator
 # primitives + the dual-plan runner (slice C), and (until Phase 5) the parallel dispatcher/

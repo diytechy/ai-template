@@ -1,0 +1,41 @@
+[
+  {
+    "module": "agent_loop",
+    "argv": [
+      "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3.13",
+      "-c",
+      "import sys; sys.path.insert(0, sys.argv[1]); __import__(sys.argv[2])",
+      "/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/project-trajectory/scripts",
+      "agent_loop"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.23733962496044114,
+    "output": ""
+  },
+  {
+    "module": "dispatch",
+    "argv": [
+      "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3.13",
+      "-c",
+      "import sys; sys.path.insert(0, sys.argv[1]); __import__(sys.argv[2])",
+      "/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/project-trajectory/scripts",
+      "dispatch"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.14439162495546043,
+    "output": ""
+  },
+  {
+    "module": "integrate",
+    "argv": [
+      "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3.13",
+      "-c",
+      "import sys; sys.path.insert(0, sys.argv[1]); __import__(sys.argv[2])",
+      "/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/project-trajectory/scripts",
+      "integrate"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.12997820798773319,
+    "output": ""
+  }
+]

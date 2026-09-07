@@ -2,13 +2,16 @@
 id = "WI-612"
 title = "Redistribute publication responsibilities and reconcile combined amendment verification"
 workstream = "process"
-sr_refs = ["SR-024", "SR-033", "SR-043", "SR-052", "SR-053", "SR-054", "SR-111", "SR-112", "SR-129", "SR-144", "SR-146", "SR-147", "SR-148", "SR-149", "SR-156", "SR-161", "SR-162", "SR-167", "SR-175", "SR-176", "SR-177"]
-needs = ["WI-608", "WI-611"]
-specref = "docs/reviews/contract_split/012-ADJUDICATE-4dd61ff.md"
+sr_refs = ["SR-026", "SR-174", "SR-178", "SR-024", "SR-033", "SR-043", "SR-052", "SR-053", "SR-054", "SR-111", "SR-112", "SR-129", "SR-144", "SR-146", "SR-147", "SR-148", "SR-149", "SR-156", "SR-161", "SR-162", "SR-167", "SR-175", "SR-176", "SR-177"]
+needs = ["WI-608", "WI-611", "WI-613", "WI-614", "WI-616", "WI-617"]
 buildtier = "strong"
 safety_class = "spine"
 supersedes = "WI-610"
 +++
+
+## Deliverable
+
+Redistributed transaction construction to LLR-153/TC-147 and writer exclusion to LLR-154/TC-148; retained carrier/evidence recognition at LLR-207/TC-205. Reconciled TC-161 routing/IF-075, TC-205 Integration/Full and actual primary proof attribution, and required counterpart authoring. Carried the entire original combined scope/context into its fresh reanchor. Evidence, measured checks, obligation mapping and independent source review are recorded in docs/reviews/wi612-authoring/. Supervised execution under the existing pause without an ordinary claim; this records source/proof completion, not semantic acceptance or interface approval. No batch implementation/test deletion, coordinator/control window, push or main merge.
 
 ## Context
 

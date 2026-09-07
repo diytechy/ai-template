@@ -1,0 +1,28 @@
+[
+  {
+    "branch": "main",
+    "argv": [
+      "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_primary_publication.py::test_real_return_publish_and_completion_replay"
+    ],
+    "exit": 0,
+    "wall_seconds": 5.359478582977317,
+    "output": ".                                                                        [100%]\n1 passed in 5.20s\n"
+  },
+  {
+    "branch": "master",
+    "argv": [
+      "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_primary_publication.py::test_real_return_publish_and_completion_replay"
+    ],
+    "exit": 0,
+    "wall_seconds": 5.4432309590047225,
+    "output": ".                                                                        [100%]\n1 passed in 5.32s\n"
+  }
+]

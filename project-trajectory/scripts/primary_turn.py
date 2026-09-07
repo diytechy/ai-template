@@ -73,14 +73,21 @@ def _definition(text):
 
 
 def _read_record(root, path):
-    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    return parse_record(
+        path.read_text(encoding="utf-8"), path.relative_to(root).as_posix()
+    )
+
+
+def parse_record(text, path):
+    """Parse one selection, whether read from the checkout or a Git carrier."""
+    data = tomllib.loads(text)
     if set(data) != _FIELDS or data.get("version") != 1:
         raise ValueError("{}: invalid primary selection schema".format(path))
     if not isinstance(data["turn"], str) or not _TURN.fullmatch(data["turn"]):
         raise ValueError("{}: invalid turn identity".format(path))
     if data["turn"] != "{}-{}".format(data["wi"], data["base"]):
         raise ValueError("{}: turn does not bind its WI and base".format(path))
-    if path.relative_to(root).as_posix() != record_path(data):
+    if path != record_path(data):
         raise ValueError("{}: selection is in the wrong home".format(path))
     return data
 

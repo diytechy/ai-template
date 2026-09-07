@@ -91,7 +91,7 @@ import lane
 import primary_adjudication
 import schedule
 import score_reviews
-from kitlib import verdict as kverdict
+from primary_publication import verdict_reader as kverdict
 
 SCRIPTS = Path(__file__).resolve().parent
 

@@ -242,6 +242,74 @@ def test_real_return_publish_and_completion_replay(tmp_path, monkeypatch):
     assert pp.completed(root, turn) and pp.publication_commit(root, turn) == landed
     assert pp.completed(root, turn)  # exact replay is idempotent; no new commit
     assert git(root, "rev-parse", "HEAD") == landed
+    # Both readers use the same verified carrier; the reset reader must not.
+    identity = verdict.governing_identity(
+        root, turn["primary_branch"], candidate, carrier=pp.carrier_candidate
+    )
+    # Cold identity proof must not fetch objects or rewrite FETCH_HEAD.
+    pp._VERIFIED_PUBLICATIONS.clear()
+    observed = [root / ".git/FETCH_HEAD", *sorted((root / ".git/objects").rglob("*"))]
+    before_objects = {str(p): p.read_bytes() for p in observed if p.is_file()}
+    assert pp.carrier_candidate(root, landed) == candidate
+    after_paths = [
+        root / ".git/FETCH_HEAD",
+        *sorted((root / ".git/objects").rglob("*")),
+    ]
+    assert {
+        str(p): p.read_bytes() for p in after_paths if p.is_file()
+    } == before_objects
+    assert (
+        verdict.governing_identity(
+            root, turn["primary_branch"], carrier=pp.carrier_candidate
+        )
+        == identity
+    )
+    assert verdict.work_tip(root, turn["primary_branch"]) == landed
+    message = git(root, "show", "-s", "--format=%B", landed)
+    final_tree = git(root, "rev-parse", landed + "^{tree}")
+    candidate_tree = git(root, "rev-parse", candidate + "^{tree}")
+    for forged_message, forged_tree, parent in (
+        (message, candidate_tree, candidate),  # missing the derived effects
+        (message, final_tree, landed),  # copied true words onto later work
+        (message.replace(turn_id, "WI-999-" + base), final_tree, candidate),
+        (message.replace(candidate, base), final_tree, candidate),
+        (
+            message.replace('"result": "pass"', '"result": "fail"'),
+            final_tree,
+            candidate,
+        ),
+        (message + "\n" + pp.TRAILER + turn_id, final_tree, candidate),
+    ):
+        forged = git(
+            root, "commit-tree", forged_tree, "-p", parent, "-m", forged_message
+        )
+        assert pp.carrier_candidate(root, forged) is None
+        if forged_message == message + "\n" + pp.TRAILER + turn_id:
+            assert pp._verified_candidate(root, turn, forged) is None
+    import os
+
+    bad_author = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(root),
+            "commit-tree",
+            final_tree,
+            "-p",
+            candidate,
+            "-m",
+            message,
+        ],
+        env=dict(
+            os.environ,
+            GIT_AUTHOR_NAME="Wrong author",
+            GIT_AUTHOR_EMAIL="wrong@example.invalid",
+        ),
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    assert pp.carrier_candidate(root, bad_author) is None
     original_derive = pp.derive_tree
     calls = []
 

@@ -1,0 +1,630 @@
+bringing up nodes...
+bringing up nodes...
+
+..FFFFFFF                                                                [100%]
+=================================== FAILURES ===================================
+_ test_pending_primary_review_dial_schedules_and_gates_real_publication[when-minting-ordinary-False] _
+[gw2] darwin -- Python 3.13.14 /Users/diytechy/Documents/ai-template/.venv/bin/python
+
+tmp_path = PosixPath('/private/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/pytest-of-diytechy/pytest-2002/popen-gw2/test_pending_primary_review_di0')
+mode = 'when-minting', draft_class = 'ordinary', owed = False
+
+    @pytest.mark.parametrize(
+        "mode,draft_class,owed",
+        [
+            ("never", "ordinary", False),
+            ("never", "spine", False),
+            ("when-minting", "ordinary", False),
+            ("when-minting", "spine", True),
+            ("when-minting", "dual", True),
+            ("always", "ordinary", True),
+            ("always", "spine", True),
+        ],
+    )
+    def test_pending_primary_review_dial_schedules_and_gates_real_publication(
+        tmp_path, mode, draft_class, owed
+    ):
+        import primary_publication as publication
+    
+        root, turn = _review_candidate(tmp_path, mode, draft_class)
+        assert publication.pending(root) == turn
+        ctx = _primary_loop_context(root, turn)
+        candidate = _git(root, "rev-parse", "HEAD")
+        before_files = _git(root, "ls-files")
+        agent_loop.build_bookkeeping(
+            ctx,
+            {
+                "phase": "ADJUDICATE",
+                "route_id": "fixture",
+                "route_family": "test",
+                "brief": "",
+            },
+            "COMMITTED",
+            0,
+            [candidate],
+            candidate,
+            turn["wi"],
+            0.0,
+        )
+        st = ctx.run.routing
+        assert st.review_queue == (["REVIEW-A"] if owed else [])
+        assert st.last_impl_family == ("test" if owed else None)
+        assert st.impl_range == ("{}..{}".format(turn["base"], candidate) if owed else None)
+        plan, refusal = primary_approval.approval_projection(root, turn)
+        assert bool(refusal) is owed
+        if owed:
+            assert "required independent review phases" in refusal
+            closed, refusal = publication.publish(root, turn)
+            assert closed is None and "required independent review phases" in refusal
+            assert _git(root, "rev-parse", "HEAD") == candidate
+            assert _git(root, "ls-files") == before_files
+            assert _git(root, "status", "--porcelain") == ""
+            _independent_fixture_round(root)
+            plan, refusal = primary_approval.approval_projection(root, turn)
+        else:
+            assert not list((root / "docs/reviews").rglob("*REVIEW-A*"))
+        assert refusal is None
+        assert (
+            plan["outcome"] == "return"
+            and plan["statuses"] == {}
+            and plan["approves"] == {}
+        )
+        drafts_before = agent_loop.dispositions_drafted(root, turn["wi"])
+        identity = verdict.governing_identity(root, "HEAD")
+        if owed:
+            assert agent_loop.review_owed_by_evidence(root, _worker(turn)) == []
+        closed, refusal = publication.publish(root, turn)
+        assert refusal is None and closed == [turn["wi"]]
+        assert publication.pending(root) is None and publication.completed(root, turn)
+        assert not (root / turn["spec"]).exists()
+        assert (root / "docs/archive/work/complete/WI-1-review.md").is_file()
+        assert len(list((root / "docs/work/queued").glob("WI-002-*.md"))) == 1
+        assert agent_loop.dispositions_drafted(root, turn["wi"]) == drafts_before
+>       assert verdict.governing_identity(root, "HEAD") == identity
+E       AssertionError: assert 'c9e2a6334400...1746e9f9e03c0' == 'd8fa966a3e14...1356fe7c8472d'
+E         
+E         - d8fa966a3e1493cb96621e771fc4bedba94fc20080256689f2b1356fe7c8472d
+E         + c9e2a6334400c57e956ed8a05b59f5528695cdb54445c13b8d61746e9f9e03c0
+
+/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/tests/test_primary_session.py:279: AssertionError
+----------------------------- Captured stdout call -----------------------------
+dispatch: adjudication review not owed ([attestation] adjudication_review = 'when-minting') -> no round
+intake: minted WI-002 at docs/work/queued/WI-002-continue-the-returned-work.md
+intake: minted WI-002 at docs/work/queued/WI-002-continue-the-returned-work.md
+_ test_pending_primary_review_dial_schedules_and_gates_real_publication[never-ordinary-False] _
+[gw1] darwin -- Python 3.13.14 /Users/diytechy/Documents/ai-template/.venv/bin/python
+
+tmp_path = PosixPath('/private/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/pytest-of-diytechy/pytest-2002/popen-gw1/test_pending_primary_review_di0')
+mode = 'never', draft_class = 'ordinary', owed = False
+
+    @pytest.mark.parametrize(
+        "mode,draft_class,owed",
+        [
+            ("never", "ordinary", False),
+            ("never", "spine", False),
+            ("when-minting", "ordinary", False),
+            ("when-minting", "spine", True),
+            ("when-minting", "dual", True),
+            ("always", "ordinary", True),
+            ("always", "spine", True),
+        ],
+    )
+    def test_pending_primary_review_dial_schedules_and_gates_real_publication(
+        tmp_path, mode, draft_class, owed
+    ):
+        import primary_publication as publication
+    
+        root, turn = _review_candidate(tmp_path, mode, draft_class)
+        assert publication.pending(root) == turn
+        ctx = _primary_loop_context(root, turn)
+        candidate = _git(root, "rev-parse", "HEAD")
+        before_files = _git(root, "ls-files")
+        agent_loop.build_bookkeeping(
+            ctx,
+            {
+                "phase": "ADJUDICATE",
+                "route_id": "fixture",
+                "route_family": "test",
+                "brief": "",
+            },
+            "COMMITTED",
+            0,
+            [candidate],
+            candidate,
+            turn["wi"],
+            0.0,
+        )
+        st = ctx.run.routing
+        assert st.review_queue == (["REVIEW-A"] if owed else [])
+        assert st.last_impl_family == ("test" if owed else None)
+        assert st.impl_range == ("{}..{}".format(turn["base"], candidate) if owed else None)
+        plan, refusal = primary_approval.approval_projection(root, turn)
+        assert bool(refusal) is owed
+        if owed:
+            assert "required independent review phases" in refusal
+            closed, refusal = publication.publish(root, turn)
+            assert closed is None and "required independent review phases" in refusal
+            assert _git(root, "rev-parse", "HEAD") == candidate
+            assert _git(root, "ls-files") == before_files
+            assert _git(root, "status", "--porcelain") == ""
+            _independent_fixture_round(root)
+            plan, refusal = primary_approval.approval_projection(root, turn)
+        else:
+            assert not list((root / "docs/reviews").rglob("*REVIEW-A*"))
+        assert refusal is None
+        assert (
+            plan["outcome"] == "return"
+            and plan["statuses"] == {}
+            and plan["approves"] == {}
+        )
+        drafts_before = agent_loop.dispositions_drafted(root, turn["wi"])
+        identity = verdict.governing_identity(root, "HEAD")
+        if owed:
+            assert agent_loop.review_owed_by_evidence(root, _worker(turn)) == []
+        closed, refusal = publication.publish(root, turn)
+        assert refusal is None and closed == [turn["wi"]]
+        assert publication.pending(root) is None and publication.completed(root, turn)
+        assert not (root / turn["spec"]).exists()
+        assert (root / "docs/archive/work/complete/WI-1-review.md").is_file()
+        assert len(list((root / "docs/work/queued").glob("WI-002-*.md"))) == 1
+        assert agent_loop.dispositions_drafted(root, turn["wi"]) == drafts_before
+>       assert verdict.governing_identity(root, "HEAD") == identity
+E       AssertionError: assert '1f036adf813b...0dacdbc797e7a' == '601cf701e0dc...70494b7992357'
+E         
+E         - 601cf701e0dc6f963c6a1a6efa5751ab3ae1953b17f514a4a8270494b7992357
+E         + 1f036adf813b0a7153158c584005ac0051f81c1768753a7bf270dacdbc797e7a
+
+/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/tests/test_primary_session.py:279: AssertionError
+----------------------------- Captured stdout call -----------------------------
+dispatch: adjudication review not owed ([attestation] adjudication_review = 'never') -> no round
+intake: minted WI-002 at docs/work/queued/WI-002-continue-the-returned-work.md
+intake: minted WI-002 at docs/work/queued/WI-002-continue-the-returned-work.md
+_ test_pending_primary_review_dial_schedules_and_gates_real_publication[when-minting-dual-True] _
+[gw0] darwin -- Python 3.13.14 /Users/diytechy/Documents/ai-template/.venv/bin/python
+
+tmp_path = PosixPath('/private/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/pytest-of-diytechy/pytest-2002/popen-gw0/test_pending_primary_review_di0')
+mode = 'when-minting', draft_class = 'dual', owed = True
+
+    @pytest.mark.parametrize(
+        "mode,draft_class,owed",
+        [
+            ("never", "ordinary", False),
+            ("never", "spine", False),
+            ("when-minting", "ordinary", False),
+            ("when-minting", "spine", True),
+            ("when-minting", "dual", True),
+            ("always", "ordinary", True),
+            ("always", "spine", True),
+        ],
+    )
+    def test_pending_primary_review_dial_schedules_and_gates_real_publication(
+        tmp_path, mode, draft_class, owed
+    ):
+        import primary_publication as publication
+    
+        root, turn = _review_candidate(tmp_path, mode, draft_class)
+        assert publication.pending(root) == turn
+        ctx = _primary_loop_context(root, turn)
+        candidate = _git(root, "rev-parse", "HEAD")
+        before_files = _git(root, "ls-files")
+        agent_loop.build_bookkeeping(
+            ctx,
+            {
+                "phase": "ADJUDICATE",
+                "route_id": "fixture",
+                "route_family": "test",
+                "brief": "",
+            },
+            "COMMITTED",
+            0,
+            [candidate],
+            candidate,
+            turn["wi"],
+            0.0,
+        )
+        st = ctx.run.routing
+        assert st.review_queue == (["REVIEW-A"] if owed else [])
+        assert st.last_impl_family == ("test" if owed else None)
+        assert st.impl_range == ("{}..{}".format(turn["base"], candidate) if owed else None)
+        plan, refusal = primary_approval.approval_projection(root, turn)
+        assert bool(refusal) is owed
+        if owed:
+            assert "required independent review phases" in refusal
+            closed, refusal = publication.publish(root, turn)
+            assert closed is None and "required independent review phases" in refusal
+            assert _git(root, "rev-parse", "HEAD") == candidate
+            assert _git(root, "ls-files") == before_files
+            assert _git(root, "status", "--porcelain") == ""
+            _independent_fixture_round(root)
+            plan, refusal = primary_approval.approval_projection(root, turn)
+        else:
+            assert not list((root / "docs/reviews").rglob("*REVIEW-A*"))
+        assert refusal is None
+        assert (
+            plan["outcome"] == "return"
+            and plan["statuses"] == {}
+            and plan["approves"] == {}
+        )
+        drafts_before = agent_loop.dispositions_drafted(root, turn["wi"])
+        identity = verdict.governing_identity(root, "HEAD")
+        if owed:
+            assert agent_loop.review_owed_by_evidence(root, _worker(turn)) == []
+        closed, refusal = publication.publish(root, turn)
+        assert refusal is None and closed == [turn["wi"]]
+        assert publication.pending(root) is None and publication.completed(root, turn)
+        assert not (root / turn["spec"]).exists()
+        assert (root / "docs/archive/work/complete/WI-1-review.md").is_file()
+        assert len(list((root / "docs/work/queued").glob("WI-002-*.md"))) == 1
+        assert agent_loop.dispositions_drafted(root, turn["wi"]) == drafts_before
+>       assert verdict.governing_identity(root, "HEAD") == identity
+E       AssertionError: assert '22913534dc39...07aeeed840351' == 'c7800c1f9ea7...28b864344f411'
+E         
+E         - c7800c1f9ea7c46d9d523d063b623875f7b1ecc2a49b69d1d4f28b864344f411
+E         + 22913534dc394821b1e8b53bf36d24f611dfc98c9a9410f12e107aeeed840351
+
+/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/tests/test_primary_session.py:279: AssertionError
+----------------------------- Captured stdout call -----------------------------
+dispatch: review-policy 1 -> scheduling review round ['REVIEW-A'] over the whole train diff
+intake: minted WI-002 at docs/work/queued/WI-002-continue-the-returned-work.md
+intake: minted WI-002 at docs/work/queued/WI-002-continue-the-returned-work.md
+_ test_pending_primary_review_dial_schedules_and_gates_real_publication[never-spine-False] _
+[gw1] darwin -- Python 3.13.14 /Users/diytechy/Documents/ai-template/.venv/bin/python
+
+tmp_path = PosixPath('/private/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/pytest-of-diytechy/pytest-2002/popen-gw1/test_pending_primary_review_di1')
+mode = 'never', draft_class = 'spine', owed = False
+
+    @pytest.mark.parametrize(
+        "mode,draft_class,owed",
+        [
+            ("never", "ordinary", False),
+            ("never", "spine", False),
+            ("when-minting", "ordinary", False),
+            ("when-minting", "spine", True),
+            ("when-minting", "dual", True),
+            ("always", "ordinary", True),
+            ("always", "spine", True),
+        ],
+    )
+    def test_pending_primary_review_dial_schedules_and_gates_real_publication(
+        tmp_path, mode, draft_class, owed
+    ):
+        import primary_publication as publication
+    
+        root, turn = _review_candidate(tmp_path, mode, draft_class)
+        assert publication.pending(root) == turn
+        ctx = _primary_loop_context(root, turn)
+        candidate = _git(root, "rev-parse", "HEAD")
+        before_files = _git(root, "ls-files")
+        agent_loop.build_bookkeeping(
+            ctx,
+            {
+                "phase": "ADJUDICATE",
+                "route_id": "fixture",
+                "route_family": "test",
+                "brief": "",
+            },
+            "COMMITTED",
+            0,
+            [candidate],
+            candidate,
+            turn["wi"],
+            0.0,
+        )
+        st = ctx.run.routing
+        assert st.review_queue == (["REVIEW-A"] if owed else [])
+        assert st.last_impl_family == ("test" if owed else None)
+        assert st.impl_range == ("{}..{}".format(turn["base"], candidate) if owed else None)
+        plan, refusal = primary_approval.approval_projection(root, turn)
+        assert bool(refusal) is owed
+        if owed:
+            assert "required independent review phases" in refusal
+            closed, refusal = publication.publish(root, turn)
+            assert closed is None and "required independent review phases" in refusal
+            assert _git(root, "rev-parse", "HEAD") == candidate
+            assert _git(root, "ls-files") == before_files
+            assert _git(root, "status", "--porcelain") == ""
+            _independent_fixture_round(root)
+            plan, refusal = primary_approval.approval_projection(root, turn)
+        else:
+            assert not list((root / "docs/reviews").rglob("*REVIEW-A*"))
+        assert refusal is None
+        assert (
+            plan["outcome"] == "return"
+            and plan["statuses"] == {}
+            and plan["approves"] == {}
+        )
+        drafts_before = agent_loop.dispositions_drafted(root, turn["wi"])
+        identity = verdict.governing_identity(root, "HEAD")
+        if owed:
+            assert agent_loop.review_owed_by_evidence(root, _worker(turn)) == []
+        closed, refusal = publication.publish(root, turn)
+        assert refusal is None and closed == [turn["wi"]]
+        assert publication.pending(root) is None and publication.completed(root, turn)
+        assert not (root / turn["spec"]).exists()
+        assert (root / "docs/archive/work/complete/WI-1-review.md").is_file()
+        assert len(list((root / "docs/work/queued").glob("WI-002-*.md"))) == 1
+        assert agent_loop.dispositions_drafted(root, turn["wi"]) == drafts_before
+>       assert verdict.governing_identity(root, "HEAD") == identity
+E       AssertionError: assert '99e0ac135f7e...89f33a73a4741' == '4d0bf3c88ef2...59ac990a61d8d'
+E         
+E         - 4d0bf3c88ef2ae0b923cf71123e6be9175064e4d8c132ac00a959ac990a61d8d
+E         + 99e0ac135f7ef6e87206b8726db2a54aa17c7627ee495897d0d89f33a73a4741
+
+/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/tests/test_primary_session.py:279: AssertionError
+----------------------------- Captured stdout call -----------------------------
+dispatch: adjudication review not owed ([attestation] adjudication_review = 'never') -> no round
+intake: minted WI-002 at docs/work/queued/WI-002-continue-the-returned-work.md
+intake: minted WI-002 at docs/work/queued/WI-002-continue-the-returned-work.md
+_ test_pending_primary_review_dial_schedules_and_gates_real_publication[when-minting-spine-True] _
+[gw2] darwin -- Python 3.13.14 /Users/diytechy/Documents/ai-template/.venv/bin/python
+
+tmp_path = PosixPath('/private/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/pytest-of-diytechy/pytest-2002/popen-gw2/test_pending_primary_review_di1')
+mode = 'when-minting', draft_class = 'spine', owed = True
+
+    @pytest.mark.parametrize(
+        "mode,draft_class,owed",
+        [
+            ("never", "ordinary", False),
+            ("never", "spine", False),
+            ("when-minting", "ordinary", False),
+            ("when-minting", "spine", True),
+            ("when-minting", "dual", True),
+            ("always", "ordinary", True),
+            ("always", "spine", True),
+        ],
+    )
+    def test_pending_primary_review_dial_schedules_and_gates_real_publication(
+        tmp_path, mode, draft_class, owed
+    ):
+        import primary_publication as publication
+    
+        root, turn = _review_candidate(tmp_path, mode, draft_class)
+        assert publication.pending(root) == turn
+        ctx = _primary_loop_context(root, turn)
+        candidate = _git(root, "rev-parse", "HEAD")
+        before_files = _git(root, "ls-files")
+        agent_loop.build_bookkeeping(
+            ctx,
+            {
+                "phase": "ADJUDICATE",
+                "route_id": "fixture",
+                "route_family": "test",
+                "brief": "",
+            },
+            "COMMITTED",
+            0,
+            [candidate],
+            candidate,
+            turn["wi"],
+            0.0,
+        )
+        st = ctx.run.routing
+        assert st.review_queue == (["REVIEW-A"] if owed else [])
+        assert st.last_impl_family == ("test" if owed else None)
+        assert st.impl_range == ("{}..{}".format(turn["base"], candidate) if owed else None)
+        plan, refusal = primary_approval.approval_projection(root, turn)
+        assert bool(refusal) is owed
+        if owed:
+            assert "required independent review phases" in refusal
+            closed, refusal = publication.publish(root, turn)
+            assert closed is None and "required independent review phases" in refusal
+            assert _git(root, "rev-parse", "HEAD") == candidate
+            assert _git(root, "ls-files") == before_files
+            assert _git(root, "status", "--porcelain") == ""
+            _independent_fixture_round(root)
+            plan, refusal = primary_approval.approval_projection(root, turn)
+        else:
+            assert not list((root / "docs/reviews").rglob("*REVIEW-A*"))
+        assert refusal is None
+        assert (
+            plan["outcome"] == "return"
+            and plan["statuses"] == {}
+            and plan["approves"] == {}
+        )
+        drafts_before = agent_loop.dispositions_drafted(root, turn["wi"])
+        identity = verdict.governing_identity(root, "HEAD")
+        if owed:
+            assert agent_loop.review_owed_by_evidence(root, _worker(turn)) == []
+        closed, refusal = publication.publish(root, turn)
+        assert refusal is None and closed == [turn["wi"]]
+        assert publication.pending(root) is None and publication.completed(root, turn)
+        assert not (root / turn["spec"]).exists()
+        assert (root / "docs/archive/work/complete/WI-1-review.md").is_file()
+        assert len(list((root / "docs/work/queued").glob("WI-002-*.md"))) == 1
+        assert agent_loop.dispositions_drafted(root, turn["wi"]) == drafts_before
+>       assert verdict.governing_identity(root, "HEAD") == identity
+E       AssertionError: assert '181f7dc89656...2bb88c0f060e9' == '30c229e67e9c...c2e92cc4f30d0'
+E         
+E         - 30c229e67e9c017b2ede71ac7dbfb6b990c1fc1cfe2538d1c93c2e92cc4f30d0
+E         + 181f7dc89656953b429b721a18c73c1e355fbe4466bb874801a2bb88c0f060e9
+
+/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/tests/test_primary_session.py:279: AssertionError
+----------------------------- Captured stdout call -----------------------------
+dispatch: review-policy 1 -> scheduling review round ['REVIEW-A'] over the whole train diff
+intake: minted WI-002 at docs/work/queued/WI-002-continue-the-returned-work.md
+intake: minted WI-002 at docs/work/queued/WI-002-continue-the-returned-work.md
+_ test_pending_primary_review_dial_schedules_and_gates_real_publication[always-ordinary-True] _
+[gw0] darwin -- Python 3.13.14 /Users/diytechy/Documents/ai-template/.venv/bin/python
+
+tmp_path = PosixPath('/private/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/pytest-of-diytechy/pytest-2002/popen-gw0/test_pending_primary_review_di1')
+mode = 'always', draft_class = 'ordinary', owed = True
+
+    @pytest.mark.parametrize(
+        "mode,draft_class,owed",
+        [
+            ("never", "ordinary", False),
+            ("never", "spine", False),
+            ("when-minting", "ordinary", False),
+            ("when-minting", "spine", True),
+            ("when-minting", "dual", True),
+            ("always", "ordinary", True),
+            ("always", "spine", True),
+        ],
+    )
+    def test_pending_primary_review_dial_schedules_and_gates_real_publication(
+        tmp_path, mode, draft_class, owed
+    ):
+        import primary_publication as publication
+    
+        root, turn = _review_candidate(tmp_path, mode, draft_class)
+        assert publication.pending(root) == turn
+        ctx = _primary_loop_context(root, turn)
+        candidate = _git(root, "rev-parse", "HEAD")
+        before_files = _git(root, "ls-files")
+        agent_loop.build_bookkeeping(
+            ctx,
+            {
+                "phase": "ADJUDICATE",
+                "route_id": "fixture",
+                "route_family": "test",
+                "brief": "",
+            },
+            "COMMITTED",
+            0,
+            [candidate],
+            candidate,
+            turn["wi"],
+            0.0,
+        )
+        st = ctx.run.routing
+        assert st.review_queue == (["REVIEW-A"] if owed else [])
+        assert st.last_impl_family == ("test" if owed else None)
+        assert st.impl_range == ("{}..{}".format(turn["base"], candidate) if owed else None)
+        plan, refusal = primary_approval.approval_projection(root, turn)
+        assert bool(refusal) is owed
+        if owed:
+            assert "required independent review phases" in refusal
+            closed, refusal = publication.publish(root, turn)
+            assert closed is None and "required independent review phases" in refusal
+            assert _git(root, "rev-parse", "HEAD") == candidate
+            assert _git(root, "ls-files") == before_files
+            assert _git(root, "status", "--porcelain") == ""
+            _independent_fixture_round(root)
+            plan, refusal = primary_approval.approval_projection(root, turn)
+        else:
+            assert not list((root / "docs/reviews").rglob("*REVIEW-A*"))
+        assert refusal is None
+        assert (
+            plan["outcome"] == "return"
+            and plan["statuses"] == {}
+            and plan["approves"] == {}
+        )
+        drafts_before = agent_loop.dispositions_drafted(root, turn["wi"])
+        identity = verdict.governing_identity(root, "HEAD")
+        if owed:
+            assert agent_loop.review_owed_by_evidence(root, _worker(turn)) == []
+        closed, refusal = publication.publish(root, turn)
+        assert refusal is None and closed == [turn["wi"]]
+        assert publication.pending(root) is None and publication.completed(root, turn)
+        assert not (root / turn["spec"]).exists()
+        assert (root / "docs/archive/work/complete/WI-1-review.md").is_file()
+        assert len(list((root / "docs/work/queued").glob("WI-002-*.md"))) == 1
+        assert agent_loop.dispositions_drafted(root, turn["wi"]) == drafts_before
+>       assert verdict.governing_identity(root, "HEAD") == identity
+E       AssertionError: assert '28454eaff2b6...7ed49bf3c122a' == '185700dc9452...3d4740c3fe200'
+E         
+E         - 185700dc9452f111ddd48dc02fe606e4551002e1b4d44afe09b3d4740c3fe200
+E         + 28454eaff2b64ae79516086e8c1896a22f8da6acb3d2a1f8f427ed49bf3c122a
+
+/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/tests/test_primary_session.py:279: AssertionError
+----------------------------- Captured stdout call -----------------------------
+dispatch: review-policy 1 -> scheduling review round ['REVIEW-A'] over the whole train diff
+intake: minted WI-002 at docs/work/queued/WI-002-continue-the-returned-work.md
+intake: minted WI-002 at docs/work/queued/WI-002-continue-the-returned-work.md
+_ test_pending_primary_review_dial_schedules_and_gates_real_publication[always-spine-True] _
+[gw2] darwin -- Python 3.13.14 /Users/diytechy/Documents/ai-template/.venv/bin/python
+
+tmp_path = PosixPath('/private/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/pytest-of-diytechy/pytest-2002/popen-gw2/test_pending_primary_review_di2')
+mode = 'always', draft_class = 'spine', owed = True
+
+    @pytest.mark.parametrize(
+        "mode,draft_class,owed",
+        [
+            ("never", "ordinary", False),
+            ("never", "spine", False),
+            ("when-minting", "ordinary", False),
+            ("when-minting", "spine", True),
+            ("when-minting", "dual", True),
+            ("always", "ordinary", True),
+            ("always", "spine", True),
+        ],
+    )
+    def test_pending_primary_review_dial_schedules_and_gates_real_publication(
+        tmp_path, mode, draft_class, owed
+    ):
+        import primary_publication as publication
+    
+        root, turn = _review_candidate(tmp_path, mode, draft_class)
+        assert publication.pending(root) == turn
+        ctx = _primary_loop_context(root, turn)
+        candidate = _git(root, "rev-parse", "HEAD")
+        before_files = _git(root, "ls-files")
+        agent_loop.build_bookkeeping(
+            ctx,
+            {
+                "phase": "ADJUDICATE",
+                "route_id": "fixture",
+                "route_family": "test",
+                "brief": "",
+            },
+            "COMMITTED",
+            0,
+            [candidate],
+            candidate,
+            turn["wi"],
+            0.0,
+        )
+        st = ctx.run.routing
+        assert st.review_queue == (["REVIEW-A"] if owed else [])
+        assert st.last_impl_family == ("test" if owed else None)
+        assert st.impl_range == ("{}..{}".format(turn["base"], candidate) if owed else None)
+        plan, refusal = primary_approval.approval_projection(root, turn)
+        assert bool(refusal) is owed
+        if owed:
+            assert "required independent review phases" in refusal
+            closed, refusal = publication.publish(root, turn)
+            assert closed is None and "required independent review phases" in refusal
+            assert _git(root, "rev-parse", "HEAD") == candidate
+            assert _git(root, "ls-files") == before_files
+            assert _git(root, "status", "--porcelain") == ""
+            _independent_fixture_round(root)
+            plan, refusal = primary_approval.approval_projection(root, turn)
+        else:
+            assert not list((root / "docs/reviews").rglob("*REVIEW-A*"))
+        assert refusal is None
+        assert (
+            plan["outcome"] == "return"
+            and plan["statuses"] == {}
+            and plan["approves"] == {}
+        )
+        drafts_before = agent_loop.dispositions_drafted(root, turn["wi"])
+        identity = verdict.governing_identity(root, "HEAD")
+        if owed:
+            assert agent_loop.review_owed_by_evidence(root, _worker(turn)) == []
+        closed, refusal = publication.publish(root, turn)
+        assert refusal is None and closed == [turn["wi"]]
+        assert publication.pending(root) is None and publication.completed(root, turn)
+        assert not (root / turn["spec"]).exists()
+        assert (root / "docs/archive/work/complete/WI-1-review.md").is_file()
+        assert len(list((root / "docs/work/queued").glob("WI-002-*.md"))) == 1
+        assert agent_loop.dispositions_drafted(root, turn["wi"]) == drafts_before
+>       assert verdict.governing_identity(root, "HEAD") == identity
+E       AssertionError: assert 'b47c6330542e...bc3b1f335cd34' == 'af080384dfab...1ceff84459b81'
+E         
+E         - af080384dfabf1eae43da9943e3b5bb857d8696816ac62a4fe91ceff84459b81
+E         + b47c6330542ea3d19b009b6d12a0de9b1406d09705e4af388a6bc3b1f335cd34
+
+/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/tests/test_primary_session.py:279: AssertionError
+----------------------------- Captured stdout call -----------------------------
+dispatch: review-policy 1 -> scheduling review round ['REVIEW-A'] over the whole train diff
+intake: minted WI-002 at docs/work/queued/WI-002-continue-the-returned-work.md
+intake: minted WI-002 at docs/work/queued/WI-002-continue-the-returned-work.md
+=========================== short test summary info ============================
+FAILED ../../../../var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/tests/test_primary_session.py::test_pending_primary_review_dial_schedules_and_gates_real_publication[when-minting-ordinary-False]
+FAILED ../../../../var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/tests/test_primary_session.py::test_pending_primary_review_dial_schedules_and_gates_real_publication[never-ordinary-False]
+FAILED ../../../../var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/tests/test_primary_session.py::test_pending_primary_review_dial_schedules_and_gates_real_publication[when-minting-dual-True]
+FAILED ../../../../var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/tests/test_primary_session.py::test_pending_primary_review_dial_schedules_and_gates_real_publication[never-spine-False]
+FAILED ../../../../var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/tests/test_primary_session.py::test_pending_primary_review_dial_schedules_and_gates_real_publication[when-minting-spine-True]
+FAILED ../../../../var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/tests/test_primary_session.py::test_pending_primary_review_dial_schedules_and_gates_real_publication[always-ordinary-True]
+FAILED ../../../../var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout/tests/test_primary_session.py::test_pending_primary_review_dial_schedules_and_gates_real_publication[always-spine-True]
+7 failed, 2 passed in 31.54s

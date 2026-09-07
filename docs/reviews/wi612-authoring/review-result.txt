@@ -1,0 +1,25 @@
+**VERDICT: APPROVE** findings=7 (0 blocking, 7 nonblocking)
+
+I reviewed the supplied diff, the three full source files, the packet documents and the pasted check outputs. I ran nothing. The candidate implements the RETURN's redistribution truthfully and I found no defect that should stop exact application to the paused branch.
+
+**What holds up**
+
+- **Dependency direction.** The library `kitlib/verdict.py` gains only an optional `carrier` capability and imports no script. `primary_publication` imports the library and exports a bound reader. The three application scripts import that reader. Cold imports of all three pass and the layering tests pass. No second review algorithm exists: the carrier is a peel target inside the existing walk, nothing else changed.
+- **Uniform binding.** The bound reader derives its set from signatures, so every function that resolves an identity, round, or trailer (`governing_rev`, `governing_identity`, `round_entries`, `branch_entries`, `tree_already_judged`, `format_branch_trailer`, `branch_trailers`) receives the same verifier. Internal calls thread the carrier through. `work_tip` has no carrier parameter and still calls refresh verification directly, so the reset path cannot peel a publication. The test asserts `work_tip == landed`.
+- **Shared exact proof.** Completion and identity both go through `_verified_candidate`, which requires exactly one turn trailer, a matching turn record read from the commit itself, parent equal to `Publication-Candidate`, byte-equal reconstructed tree, receipt line present, matching author, and the closed spec in a terminal home. Unverified proof returns None, leaving the identity unmapped and review owed. The seven forgeries in the test each fail at a distinct clause.
+- **Primary approval stays unbound.** The approval planner reads raw pre-publication evidence, avoiding recursive recognition inside the replay it feeds. Bound and unbound readers agree at the candidate because the judgment commit always moves the identity.
+- **Read-only reconstruction.** Identity verification calls `derive_tree(import_objects=False)`, and the test compares every object-store file and `FETCH_HEAD` byte for byte around a cold proof.
+- **Crash claims match tests.** The before-boundary test shows pending state, dirty residue, refusal, and success only after explicit reset. The after-boundary test proves cold completion in a fresh process with one successor. LLR-153 and TC-147 claim no more than that, and the packet names the reconciliation step.
+- **Evidence.** The first full run is retained and explained as invalid. The stable final run is the completion evidence, and the later test-only and registry-only edits are covered by targeted and final commit checks.
+
+**Nonblocking findings**
+
+1. **Contract wider than the cold-proof assertion.** IF-180 promises no change to primary index or working tree, but the cold carrier test only compares objects and `FETCH_HEAD`. The replay hands the primary root to `run_bar` as harness root. Add an index hash and `status --porcelain` assertion after the cold proof.
+2. **No negative cache.** A publication that fails verification in this environment is re-reconstructed on every reader call that reaches it. The contract declares the cost, but a persistently unverifiable commit at the walk frontier would run a clone per scheduler tick. Worth a follow-up item.
+3. **TC-205 refusal list reads as per-class drives.** Cross-WI close, malformed successor, partial snapshot, and stale proposal fail by reconstruction equality, and the text routes their construction proofs to TC-147. A judge could read "each fail toward more review" as a named carrier test per class. WI-619 should read it with that in mind.
+4. **TC-148 wording.** The Method says the "verdict" callback is exercised. The test labels that point "judgment". Same boundary, different word.
+5. **LLR-153 crash sentence.** "A crash before the atomic commit leaves the turn pending" is true but omits that resume requires reconciling the installed residue, which the test and the obligations map state. Not stronger than the tests, only less specific.
+6. **Uncaught SystemExit in the read path.** `carrier_candidate` and `derive_tree` catch the ordinary exception set. A staging helper that exits would propagate out of a reader instead of mapping nothing. This shape predates the change.
+7. **Signature inspection per attribute access.** The bound reader recomputes `inspect.signature` on every lookup. Harmless today. Memoize if it ever shows in profiles.
+
+No baseline was raised, no Status or snapshot byte moved, IF-175 and IF-180 remain Drafted with their stated owners, and the reanchor WI-619 carries the full original scope and Context.

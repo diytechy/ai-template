@@ -1,0 +1,21 @@
+Verdict: **REQUEST_CHANGES**. The identity mapping itself is the right fix and fails toward review, but the redistribution drops obligations and the new seam is undeclared and unhardened.
+
+What holds up:
+
+- **Root cause removed.** After publication the tip's identity differs from the reviewed candidate, so both readers re-owed review. Mapping the carrier to its first parent through the complete-byte verifier restores one identity, and the new session test asserts governing identity before and after publish are equal.
+- **Reset separation preserved.** The reset peel still calls refresh_attestation directly, and the test asserts the work tip stays at the landed publication. A publication is never peeled by the destructive path.
+- **No second approval definition.** carrier_candidate reads the turn record from the carrier commit itself and feeds the same verifier completion uses, so the identity reader cannot admit a carrier completion would refuse.
+
+Findings, ranked:
+
+1. **Layering inversion is undeclared and can crash instead of failing closed.** `project-trajectory/scripts/kitlib/verdict.py:437` lazily imports a script module from the library that the script depends on. IF-175's own completeness rule says an import no requestors entry carries is a finding against the row, and the edited Notes describe the behavior without naming the new edge or its provider. An ImportError or a path-context mismatch propagates out of governing_rev rather than answering None, which is not "toward more review". Declare the edge in IF-175, list carrier_candidate in LLR-207's code_symbol, and wrap the import so failure returns None.
+
+2. **Orphaned obligations after redistribution.** LLR-207 dropped `run`, `branch_tree_script`, `passed_steps` and `ADJUDICATION_SURFACES` from publication_verify, plus `validate` from primary_turn, and LLR-153 picked up only `generated_table/generated_paths/run_bar`. Nothing in the diff now owns those symbols. Either re-home them explicitly or state which existing row already carries them.
+
+3. **Read-only identity reader now performs writes and can run the product bar.** Every uncached publication visited by governing_rev triggers derive_tree: a temp clone, trunk_step regeneration, run_bar when the verification mode was product-bar, and a fetch that writes objects into the primary object store. The walk stops at the candidate because the judgment commit changes docs/work, so the cost is one replay per publication per process, not nested. That is bounded but unbudgeted for a scheduler-path call. Record the cost in LLR-207, or consider a durable verified receipt so replay runs once per repository rather than once per process. Confirm governing_rev tries the peel before the parent-identity comparison, otherwise a publication reached from a record-only commit above it stops without mapping.
+
+4. **TC-205 dial claim exceeds the driven matrix.** The method promises never, when-minting and always each with ordinary, spine and derived-dual drafts. The test drives seven cells and omits never/dual and always/dual. Add the rows or narrow the sentence.
+
+5. **Forgery arms are thinner than the cell states.** The five forged shapes in the publication test all fail on the parent, token or tree checks. No case drives a correct tree and message with a wrong author, and no case drives a verification receipt that disagrees with the replayed plan. Both refusals exist in `_verified_candidate` but are unproved from the carrier reader.
+
+Not blocking, noted: the token pre-check in `_peel_target` is a substring test, which is fine because carrier_candidate requires exactly one line-anchored trailer and full verification. The `parse_record` split is behavior-preserving apart from error messages now showing relative paths. Crash and lock proofs remain out of scope as stated.

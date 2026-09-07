@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+    "-m",
+    "ruff",
+    "check",
+    "project-trajectory/scripts/primary_publication.py",
+    "project-trajectory/scripts/primary_turn.py",
+    "project-trajectory/scripts/kitlib/verdict.py",
+    "project-trajectory/scripts/agent_loop.py",
+    "project-trajectory/scripts/integrate.py",
+    "project-trajectory/scripts/dispatch.py",
+    "tests/test_primary_session.py",
+    "tests/test_primary_publication.py"
+  ],
+  "cwd": "/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout",
+  "base": "9a52c964b068a12f4fbe3547811d2fb37d42c5e3",
+  "exit": 0,
+  "wall_seconds": 0.029286042030435055
+}

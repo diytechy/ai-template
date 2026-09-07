@@ -94,7 +94,10 @@ Contract IF-175: the verdict record, as functions two independent readers call
     `governing_identity` — over `governing_rev` / `refresh_attestation` — gives
     the rev that identity is measured at, so neither reader chooses its own
     (`work_tip` is the tip-only peel the `reset --hard` shares, deliberately
-    NOT the same walk);
+    NOT the same walk). Read-only identity/evidence functions accept an optional
+    `carrier(root, rev) -> candidate|None` capability. Application composition
+    binds the exact publication verifier once; an unbound reader maps no
+    publication. This is a verified mapping, never a reset-disposable class;
     `format_trailer` / `parse_trailer` the `Review-Verdict:` machine half;
     `round_file` / `session_log` the two name grammars `docs/reviews/` and
     `docs/iteration/`
@@ -107,7 +110,9 @@ Contract IF-175: the verdict record, as functions two independent readers call
     readers share a span without pretending to share a threshold;
     `branch_trailers` the verified attestations on
     the branch's own commits, in commit order. Pure functions plus thin reads through
-    `kitlib.git`, so nothing here writes and nothing imports a sibling service —
+    `kitlib.git`; the supplied carrier proof may reconstruct in a disposable
+    checkout, but must not import objects or change primary refs, index or
+    working tree. Nothing here imports a sibling service —
     the verdict parser arrives as an ARGUMENT rather than an import, which is
     what keeps this leaf free of an edge back into the scoring layer. Every
     function answers `None` where git had nothing to say and NEVER decides what
@@ -428,12 +433,12 @@ def refresh_attestation(root, branch, rev=None):
     return work, summary.strip()
 
 
-def _peel_target(root, branch, rev):
-    """The ordinary lane reader peels only a verified refresh."""
+def _peel_target(root, branch, rev, carrier):
+    """Read-only refresh traversal or the caller's exact carrier proof."""
     attested = refresh_attestation(root, branch, rev)
     if attested is not None:
         return attested[0]
-    return None
+    return carrier(root, rev) if carrier else None
 
 
 def work_tip(root, branch):
@@ -471,7 +476,7 @@ def work_tip(root, branch):
 _MAX_GOVERNING_WALK = 64
 
 
-def governing_rev(root, branch, rev=None):
+def governing_rev(root, branch, rev=None, *, carrier=None):
     """The commit whose tree governs a verdict on `branch`: `rev` (default: the
     tip), with refresh commits peeled AND identity-preserving commits walked
     through.
@@ -533,7 +538,7 @@ def governing_rev(root, branch, rev=None):
     rev = rev or branch
     identity = tree_identity(root, rev)
     for _ in range(_MAX_GOVERNING_WALK):
-        peeled = _peel_target(root, branch, rev)
+        peeled = _peel_target(root, branch, rev, carrier=carrier)
         if peeled is not None:
             rev = peeled
             identity = tree_identity(root, rev)
@@ -548,7 +553,7 @@ def governing_rev(root, branch, rev=None):
     return _rev(root, rev)
 
 
-def governing_identity(root, branch, rev=None):
+def governing_identity(root, branch, rev=None, *, carrier=None):
     """The non-record tree identity a verdict at `rev` on `branch` governs, or
     None. `rev` defaults to the branch tip: the identity a verdict must NAME.
 
@@ -568,7 +573,7 @@ def governing_identity(root, branch, rev=None):
     governed by the pre-refresh one, so the round was invisible to BOTH readers
     and no commit on the branch could ever make them agree (REVIEW-A round 015).
     One function, one rev rule, asked at whichever commit the caller holds."""
-    return tree_identity(root, governing_rev(root, branch, rev))
+    return tree_identity(root, governing_rev(root, branch, rev, carrier=carrier))
 
 
 def _rev(root, rev):
@@ -691,7 +696,7 @@ def logged_rounds(root, branch, paths):
     return sorted(rounds)
 
 
-def round_entries(root, branch, rounds, want, parse):
+def round_entries(root, branch, rounds, want, parse, *, carrier=None):
     """The `(phase, ordinal, verdict)` entries `score_reviews.latest_phase_verdicts`
     reads, restricted to the rounds that NAME the tree `want`.
 
@@ -721,7 +726,7 @@ def round_entries(root, branch, rounds, want, parse):
     resolved = {}
     for ordinal, phase, sha, path in rounds:
         if sha not in resolved:
-            resolved[sha] = governing_identity(root, branch, sha)
+            resolved[sha] = governing_identity(root, branch, sha, carrier=carrier)
         if resolved[sha] != want:
             continue
         text = git_out(root, ["show", "{}:{}".format(branch, path)])
@@ -737,16 +742,18 @@ def round_entries(root, branch, rounds, want, parse):
     return entries
 
 
-def branch_entries(root, branch, base, want, parse):
+def branch_entries(root, branch, base, want, parse, *, carrier=None):
     """Tree-bound entries from logged rounds in `base..branch`, or None when
     the branch's committed path set cannot be read."""
     paths = branch_paths(root, branch, base)
     if paths is None:
         return None
-    return round_entries(root, branch, logged_rounds(root, branch, paths), want, parse)
+    return round_entries(
+        root, branch, logged_rounds(root, branch, paths), want, parse, carrier=carrier
+    )
 
 
-def tree_already_judged(root, branch, base, parse):
+def tree_already_judged(root, branch, base, parse, *, carrier=None):
     """Has a logged round ALREADY named the branch's CURRENT governing tree?
 
     The question `integrate._round_refusal` asks at the merge slot, asked by
@@ -765,10 +772,10 @@ def tree_already_judged(root, branch, base, parse):
     evidence cannot be read has not been SHOWN to be unchanged, and refusing to
     draw a round on git's silence would stop every first build in a repo these
     readers cannot see into."""
-    want = governing_identity(root, branch)
+    want = governing_identity(root, branch, carrier=carrier)
     if want is None:
         return False
-    return bool(branch_entries(root, branch, base, want, parse))
+    return bool(branch_entries(root, branch, base, want, parse, carrier=carrier))
 
 
 def declared_phases(required):
@@ -832,7 +839,7 @@ def round_count(entries):
     return max(per_phase.values(), default=0)
 
 
-def format_branch_trailer(root, branch, base, word, parse):
+def format_branch_trailer(root, branch, base, word, parse, *, carrier=None):
     """The tree-bound trailer derived from logged branch evidence, or None.
 
     Stamped at `governing_identity`, the value both readers key on. Naming the
@@ -844,17 +851,17 @@ def format_branch_trailer(root, branch, base, word, parse):
     matches no refresh subject."""
     if not word:
         return None
-    tree = governing_identity(root, branch)
+    tree = governing_identity(root, branch, carrier=carrier)
     if tree is None:
         return None
-    entries = branch_entries(root, branch, base, tree, parse)
+    entries = branch_entries(root, branch, base, tree, parse, carrier=carrier)
     if entries is None:
         return None
     count = round_count(entries)
     return format_trailer(word, count, tree) if count else None
 
 
-def branch_trailers(root, branch, base):
+def branch_trailers(root, branch, base, *, carrier=None):
     """`{reviewed tree: [(word, rounds), ...]}` from every VERIFIED
     `Review-Verdict:` trailer on the branch's own commits, or None when git
     cannot answer. Each list is in COMMIT ORDER, oldest first, so `[-1]` is the
@@ -903,7 +910,7 @@ def branch_trailers(root, branch, base):
         if parsed is None:
             continue
         word, rounds, tree = parsed
-        if governing_identity(root, branch, sha) != tree:
+        if governing_identity(root, branch, sha, carrier=carrier) != tree:
             continue  # the words rode onto a tree they do not describe
         by_tree.setdefault(tree, []).append((word, rounds))
     return by_tree

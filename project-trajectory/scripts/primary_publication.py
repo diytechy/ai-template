@@ -1,13 +1,30 @@
-"""Atomic, turn-bound primary adjudication publication."""
+"""Atomic, turn-bound primary adjudication publication.
+
+Contracts: IF-180
+
+Contract IF-180: carrier_candidate(root, rev) -> candidate commit or None;
+    verdict_reader exposes the shared verdict API bound to that query.
+    The exact commit must carry the immutable turn and pass the completion
+    verifier's full reconstruction, parent, receipt and author checks. Missing
+    or invalid proof returns None; callers retain the unmapped identity and
+    therefore owe review. Successful proofs are cached only in this process.
+    Replay may create temporary checkouts and run their bar;
+    the query imports no objects and changes no primary ref, index or working tree. This is
+    a read-only identity query, never permission to reset away the publication.
+"""
 
 from __future__ import annotations
 
+import inspect
 import json
 import re
 import subprocess
 import sys
 import tempfile
+from functools import partial
 from pathlib import Path
+
+from kitlib import verdict
 
 import baseline_snapshot
 import intake
@@ -129,7 +146,7 @@ def _outside_adjudication_scope(root):
     )
 
 
-def derive_tree(root, turn, candidate="HEAD", tier="all"):
+def derive_tree(root, turn, candidate="HEAD", tier="all", *, import_objects=True):
     """Independently replay the exact publication and return its tree and plan."""
     root = Path(root).resolve()
     try:
@@ -142,13 +159,14 @@ def derive_tree(root, turn, candidate="HEAD", tier="all"):
             if refusal:
                 return None, None, None, refusal
             tree = _git(scratch, "write-tree")
-            # Import newly-written blobs/tree before the disposable object store
-            # disappears. A temporary commit makes the object closure fetchable;
-            # no primary ref is advanced.
-            carrier = _git(
-                scratch, "commit-tree", tree, "-p", cand, "-m", "projection carrier"
-            )
-            _git(root, "fetch", "--no-tags", str(scratch), carrier)
+            if import_objects:
+                # Import newly-written blobs/tree before the disposable object store
+                # disappears. A temporary commit makes the object closure fetchable;
+                # no primary ref is advanced.
+                carrier = _git(
+                    scratch, "commit-tree", tree, "-p", cand, "-m", "projection carrier"
+                )
+                _git(root, "fetch", "--no-tags", str(scratch), carrier)
         return tree, closed, plan, None
     except (KeyError, OSError, RuntimeError, ValueError) as exc:
         return None, None, None, str(exc)
@@ -215,40 +233,64 @@ def publication_commit(root, turn):
     out = _git(
         root, "log", "--format=%H", "--fixed-strings", "--grep=" + token, check=False
     )
-    for rev in out.splitlines():
-        proof = (str(Path(root).resolve()), rev, json.dumps(turn, sort_keys=True))
-        if proof in _VERIFIED_PUBLICATIONS:
-            return rev
-        body = _git(root, "show", "-s", "--format=%B", rev)
-        if token not in body:
-            continue
-        tree = _git(root, "show", "-s", "--format=%T", rev)
-        match = re.search(r"(?m)^Publication-Candidate: ([0-9a-f]{40})$", body)
-        if not match:
-            continue
-        if _git(root, "show", "-s", "--format=%P", rev) != match.group(1):
-            continue
-        expected, _closed, plan, refusal = derive_tree(root, turn, match.group(1))
-        if refusal or expected != tree:
-            continue
-        receipt = "Publication-Verification: " + json.dumps(
-            plan["verification"], sort_keys=True
-        )
-        if receipt not in body.splitlines():
-            continue
-        author = _git(root, "show", "-s", "--format=%an%x00%ae", rev).split("\0")
-        wanted = (plan or {}).get("author") or {}
-        if not wanted or author != [wanted.get("name"), wanted.get("email")]:
-            continue
-        spec = Path(str(turn.get("spec", ""))).name
-        homes = ("docs/work/complete/" + spec, "docs/archive/work/complete/" + spec)
-        if any(
-            _git(root, "ls-tree", "-r", "--name-only", rev, "--", home)
-            for home in homes
-        ):
-            _VERIFIED_PUBLICATIONS.add(proof)
-            return rev
+    return next(
+        (rev for rev in out.splitlines() if _verified_candidate(root, turn, rev)), None
+    )
+
+
+def _verified_candidate(root, turn, rev):
+    """One exact carrier proof shared by completion and governing identity."""
+    token = TRAILER + str(turn.get("turn", ""))
+    proof = (str(Path(root).resolve()), rev, json.dumps(turn, sort_keys=True))
+    if proof in _VERIFIED_PUBLICATIONS:
+        return _git(root, "rev-parse", rev + "^1")
+    body = _git(root, "show", "-s", "--format=%B", rev)
+    if [line for line in body.splitlines() if line.startswith(TRAILER)] != [token]:
+        return None
+    tree = _git(root, "show", "-s", "--format=%T", rev)
+    match = re.search(r"(?m)^Publication-Candidate: ([0-9a-f]{40})$", body)
+    if not match:
+        return None
+    if _git(root, "show", "-s", "--format=%P", rev) != match.group(1):
+        return None
+    expected, _closed, plan, refusal = derive_tree(
+        root, turn, match.group(1), import_objects=False
+    )
+    if refusal or expected != tree:
+        return None
+    receipt = "Publication-Verification: " + json.dumps(
+        plan["verification"], sort_keys=True
+    )
+    if receipt not in body.splitlines():
+        return None
+    author = _git(root, "show", "-s", "--format=%an%x00%ae", rev).split("\0")
+    wanted = (plan or {}).get("author") or {}
+    if not wanted or author != [wanted.get("name"), wanted.get("email")]:
+        return None
+    spec = Path(str(turn.get("spec", ""))).name
+    homes = ("docs/work/complete/" + spec, "docs/archive/work/complete/" + spec)
+    if any(
+        _git(root, "ls-tree", "-r", "--name-only", rev, "--", home) for home in homes
+    ):
+        _VERIFIED_PUBLICATIONS.add(proof)
+        return _git(root, "rev-parse", rev + "^1")
     return None
+
+
+def carrier_candidate(root, rev):
+    """Read-only mapping of this exact verified publication, never a reset peel."""
+    try:
+        rev, body = _git(root, "show", "-s", "--format=%H%x00%B", rev).split("\0", 1)
+        matches = re.findall(
+            r"(?m)^Primary-Publication-Turn: (WI-[0-9]+-[0-9a-f]{40})$", body
+        )
+        if len(matches) != 1:
+            return None
+        path = primary_turn.RECORDS + "/" + matches[0] + "/turn.toml"
+        turn = primary_turn.parse_record(_git(root, "show", rev + ":" + path), path)
+        return _verified_candidate(root, turn, rev)
+    except (KeyError, OSError, RuntimeError, ValueError, TypeError):
+        return None
 
 
 def completed(root, turn):
@@ -282,3 +324,19 @@ def writer_refusal(root):
             turn["wi"]
         )
     return None
+
+
+class _CarrierReader:
+    """Bind one verifier into the shared algorithm without reversing imports."""
+
+    def __getattr__(self, name):
+        value = getattr(verdict, name)
+        if (
+            inspect.isfunction(value)
+            and "carrier" in inspect.signature(value).parameters
+        ):
+            return partial(value, carrier=carrier_candidate)
+        return value
+
+
+verdict_reader = _CarrierReader()

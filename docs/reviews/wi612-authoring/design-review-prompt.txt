@@ -1,0 +1,973 @@
+Fresh independent design/source review of an IN-PROGRESS supervised candidate. Do not run tools or edit files. Output APPROVE or REQUEST_CHANGES and concrete findings. This is source review, not primary semantic acceptance. User authorized PC batch-contract authoring/adjudication BEFORE deleting code, no control window/push/main merge; pause remains. WI-610 returned the combined 52-row scope; WI-612 must redistribute LLR207 publication construction to existing LLR153/TC147 and lock/exclusion to LLR154/TC148, retain identity/carrier/logged-evidence at LLR207/TC205, correct TC161 routing+IF075, explicitly author IF175 Notes under separate Drafted-only prerequisite WI613, and prove primary dial/scheduler/shared input under WI614. These test proofs exposed missing verified-publication identity mapping, so canonically scoped WI615 authorizes root-cause repair reusing the exact publication verifier (no second approval definition). No batch code/test is deleted. Current focused run:118 passed in69.18s; full suite in progress, adversarial extension not yet validated. Tests use declared fixture evidence, not real provider approvals. Crash/process-kill and all-phase lock callbacks are still unproved: don't confuse existing hook-failure/replay tests with process kills. Author will separately scope those prerequisites before acceptance, not weaken the Method. Review source design especially circular reader/verifier imports, failure toward review, transient clone paths, complete-byte verifier reuse, performance when historical carriers are traversed and destructive-reset separation. Registry source remains unaccepted; no Status/snapshot changes. Does the fix remove the root cause safely, and does responsibility redistribution preserve all obligations?
+diff --git a/docs/requirements/interfaces.toml b/docs/requirements/interfaces.toml
+index 9d347825..d4d35098 100644
+--- a/docs/requirements/interfaces.toml
++++ b/docs/requirements/interfaces.toml
+@@ -1077,7 +1077,7 @@ data = "bytes -> tree identity; repo/rev -> governing identity; branch -> logged
+ version = "v1"
+ status = "Drafted"
+ component = "CMP-008"
+-notes = """The seam exists because two callers ask ONE question from two sides - the merge slot's may-this-merge and the loop's does-this-lane-still-owe-a-round - and answering it twice is what let a lane draw two identical rounds over a verdict nothing had invalidated. So this row is not bookkeeping over an import: it is the declaration that there is exactly one definition, and a second reader of round evidence anywhere else is a finding against this row rather than a new one. That definition includes the REV the identity is measured at, which is why the refresh peel is owned here and not by the merge slot: while it lived there, one reader peeled and the other measured at HEAD, and the row's whole claim was false across exactly one commit class. The peel has TWO shapes on purpose and they must not be merged: work_tip peels only a refresh sitting on the tip because it feeds a reset --hard where one commit too far destroys work, while governing_rev walks through any commit whose non-record identity equals its first parent's, to reach a disposable commit it would otherwise hide - a read-only question can afford an answer a destructive one cannot. Those two SHAPES are what this row governs; WHICH machine-authored commits are disposable is a class list, it belongs to the owner's own row (LLR-207 names both the station refresh and the machinery's adjudication close), and it is deliberately not restated here, so a reader meeting one seam sentence and one design sentence is never choosing which is current. That step condition is the row's own sentence rather than a proxy for it, so no commit SHAPE gets a case here: a walk that classified the paths a commit touched stopped at the zero-path ones it could not read, and the empty commit an attestation rides when its bookkeeping is unchanged is that shape, so the commit recording an approval buried the refresh. The singularity binds the BINDINGS too, not only the two named readers: the identity a round file's reviewed sha names and the identity an attestation's carrier names are asked through governing_identity at that commit, because a raw fold is this composition with the peel dropped and it disagrees across exactly the commit class the peel exists for - which is how a round drawn after a refresh became invisible to both readers at once, with nothing on the branch able to reconcile them. The rollup generator is a requestor for the NAME grammar only, and score_reviews for the PHASE SPAN only - it holds a hard `from kitlib.verdict import declared_phases` so latest_phase_verdicts keys the merge boundary's map by exactly the phases the loop schedules, and it reads no round evidence at all, so naming it here adds a requestor and NOT a fourth reader of the verdict. It is named because an import no requestors entry carries is an undeclared seam, which is the completeness rule this cell answers to; the singularity sentence above is about round evidence and does not reach a span reader either way. The span crosses as the CONSTANT too, not only through declared_phases: agent_loop's non-build phase set and its dial ceiling ask it at module scope, and that module deliberately keeps no tuple of its own, so a phase added here reaches the scheduler, the routing set and the clamp together. Off git every function answers None and this module never says what that means; each requestor declares its own direction, and both declared directions are toward more review."""
++notes = "The seam exists because two callers ask ONE question from two sides - the merge slot's may-this-merge and the loop's does-this-lane-still-owe-a-round - and answering it twice is what let a lane draw two identical rounds over a verdict nothing had invalidated. So this row is not bookkeeping over an import: it is the declaration that there is exactly one definition, and a second reader of round evidence anywhere else is a finding against this row rather than a new one. That definition includes the REV the identity is measured at, which is why the refresh peel is owned here and not by the merge slot: while it lived there, one reader peeled and the other measured at HEAD, and the row's whole claim was false across exactly one commit class. The peel has TWO shapes on purpose and they must not be merged: work_tip peels only a refresh sitting on the tip because it feeds a reset --hard where one commit too far destroys work, while governing_rev walks through any commit whose non-record identity equals its first parent's, to reach a disposable commit it would otherwise hide - a read-only question can afford an answer a destructive one cannot. Those two traversal shapes remain distinct. LLR-207 defines refresh-only disposal and verified primary-publication carrier recognition: the read-only identity reader maps a publication to its reviewed candidate only after its exact projection is verified against LLR-153, under LLR-154's writer ownership. A publication is not a disposable commit for the reset path. That step condition is the row's own sentence rather than a proxy for it, so no commit SHAPE gets a case here: a walk that classified the paths a commit touched stopped at the zero-path ones it could not read, and the empty commit an attestation rides when its bookkeeping is unchanged is that shape, so the commit recording an approval buried the refresh. The singularity binds the BINDINGS too, not only the two named readers: the identity a round file's reviewed sha names and the identity an attestation's carrier names are asked through governing_identity at that commit, because a raw fold is this composition with the peel dropped and it disagrees across exactly the commit class the peel exists for - which is how a round drawn after a refresh became invisible to both readers at once, with nothing on the branch able to reconcile them. The rollup generator is a requestor for the NAME grammar only, and score_reviews for the PHASE SPAN only - it holds a hard `from kitlib.verdict import declared_phases` so latest_phase_verdicts keys the merge boundary's map by exactly the phases the loop schedules, and it reads no round evidence at all, so naming it here adds a requestor and NOT a fourth reader of the verdict. It is named because an import no requestors entry carries is an undeclared seam, which is the completeness rule this cell answers to; the singularity sentence above is about round evidence and does not reach a span reader either way. The span crosses as the CONSTANT too, not only through declared_phases: agent_loop's non-build phase set and its dial ceiling ask it at module scope, and that module deliberately keeps no tuple of its own, so a phase added here reaches the scheduler, the routing set and the clamp together. Off git every function answers None and this module never says what that means; each requestor declares its own direction, and both declared directions are toward more review."
+ 
+ [interface.IF-173]
+ owner = "scripts/integrate"
+diff --git a/docs/requirements/low-level-requirements.toml b/docs/requirements/low-level-requirements.toml
+index cd855a66..d91a75e4 100644
+--- a/docs/requirements/low-level-requirements.toml
++++ b/docs/requirements/low-level-requirements.toml
+@@ -1533,9 +1533,9 @@ phase = 4
+ [design.LLR-153]
+ sr_refs = ["SR-174"]
+ title = "The unified trunk-side intake mint + the context block + the approval-level arms"
+-module = "project-trajectory/scripts/intake.py;project-trajectory/scripts/primary_approval.py;project-trajectory/scripts/primary_publication.py"
+-code_symbol = "intake_after_merge/mint_gap_rows/parse_dispositions/next_wi_id/context_block;approval_projection/absorption_census/impact_census;derive_tree/publish"
+-detail = """The mint invariant: a WI id is created only by a human trunk commit or this helper - lanes never mint. next_wi_id counts from max(the docs/id-watermark mark, the sweep of every spec FILENAME under docs/work/, active/<branch>/ included) + 1 - never max(live) alone, so an id freed by a deleted spec is never re-issued - and trace.read_watermark's refusal on an absent or malformed mark is deliberately NOT caught: a mint with no record of what has been allocated must not proceed on a guess (TC-158, IF-101). Three triggers, serial by construction: (a) the approved/routed-cell diff on the merged commit via check_trajectory.staged_spine_amendments -> one adjudication row listing each changed row/cell/before-after (routed traced cells: SN-Refs, Verifies, and LLR SR-Refs per the declared cell split); (b) a merged spec carrying ## Handback -> the disposition row (outcomes cancel / defer / re-queue with drafted follow-up / surface an open item; NEVER minted for an adjudication row - no recursion, and handback.hand_back refuses the act itself); (c) the dispatcher's gap census -> concrete gap-closure rows, deduped against every existing row. Drafts-not-mints: an adjudication turn's ## Dispositions fenced-toml drafts mint in ITS final primary publication, validated loudly. The same intake writer derives a stage-only deterministic projection from the reviewed `## Approval` bytes, exact candidate and scope: permitted Status changes, byte-identical snapshots, the queued-to-terminal move, successor specs and id-watermark, plus only generated paths already declared by the trunk step. The coordinator commits that projection atomically; `return` and `uncertain` accept no cells and include no snapshot, and `meaning` includes none until its impact review is accepted. A stale candidate, malformed draft, out-of-scope effect or UNJUDGED absorbed cell refuses before allocation or staging. If another scoped owner's UNJUDGED or out-of-scope drift makes a requested whole-file approval unpublishable, the adjudicator may revise it to `return`: zero accepted cells, no Status/snapshot effect, and a concrete reanchor or corrective continuation depending on those existing owners. The RETURN findings are evidence only; the later complete-scope reanchor independently judges every cell. A mechanical refusal instead leaves the turn pending for REWORK. Tier signals are measurable (rows touched, gate delta, handback reason class). context_block renders the pure registry joins (cancelled precedent WITH REASONS first, pending OIs, the LLR/TC code map, CMP knowledge packs, IF seams, precedent reviews) - advisory-never-gating, three consumers. flip_verified recommends only under attended, flips under single-approve/autonomous, and fails toward recommend on an unknown level. An ordinary mint commit retains the claim bookkeeping shape; adjudication completion is the terminal spec plus its matching publication commit, so a restart neither needs a journal state nor allocates again; every derived title is deterministic, so the sweep CLI re-run is idempotent."""
++module = "project-trajectory/scripts/intake.py;project-trajectory/scripts/primary_approval.py;project-trajectory/scripts/primary_publication.py;project-trajectory/scripts/primary_close.py;project-trajectory/scripts/spec_move.py;project-trajectory/scripts/publication_verify.py"
++code_symbol = "intake_after_merge/mint_gap_rows/parse_dispositions/next_wi_id/context_block;approval_projection/absorption_census/impact_census;derive_tree/publish;stage_primary_adjudication;move_spec;generated_table/generated_paths/run_bar"
++detail = "The mint invariant: a WI id is created only by a human trunk commit or this helper - lanes never mint. next_wi_id counts from max(the docs/id-watermark mark, the sweep of every spec FILENAME under docs/work/, active/<branch>/ included) + 1 - never max(live) alone, so an id freed by a deleted spec is never re-issued - and trace.read_watermark's refusal on an absent or malformed mark is deliberately NOT caught: a mint with no record of what has been allocated must not proceed on a guess (TC-158, IF-101). Three triggers, serial by construction: (a) the approved/routed-cell diff on the merged commit via check_trajectory.staged_spine_amendments -> one adjudication row listing each changed row/cell/before-after (routed traced cells: SN-Refs, Verifies, and LLR SR-Refs per the declared cell split); (b) a merged spec carrying ## Handback -> the disposition row (outcomes cancel / defer / re-queue with drafted follow-up / surface an open item; NEVER minted for an adjudication row - no recursion, and handback.hand_back refuses the act itself); (c) the dispatcher's gap census -> concrete gap-closure rows, deduped against every existing row. Drafts-not-mints: an adjudication turn's ## Dispositions fenced-toml drafts mint in ITS final primary publication, validated loudly. The same intake writer derives a stage-only deterministic projection from the reviewed `## Approval` bytes, exact candidate and scope: accepted scoped Status changes, snapshots equal to live bytes in the publication with every absorbed changed cell accepted in the bound ledger, the exact existing spec_move queued-to-terminal transformation, parsed successor specs and id-watermark, plus only generated paths already declared by the trunk step. The close moves the queued spec to docs/archive/work/complete/, clears specref, inserts the machinery's fixed ## Deliverable before ## Context, and applies only link rebasing derived by spec_move. Independent reconstruction verifies every final byte against this projection. The coordinator commits that projection atomically; `return` and `uncertain` accept no cells and include no snapshot, and `meaning` includes none until its impact review is accepted. A stale candidate, malformed draft, out-of-scope effect or UNJUDGED absorbed cell refuses before allocation or staging. If another scoped owner's UNJUDGED or out-of-scope drift makes a requested whole-file approval unpublishable, the adjudicator may revise it to `return`: zero accepted cells, no Status/snapshot effect, and a concrete reanchor or corrective continuation depending on those existing owners. The RETURN findings are evidence only; the later complete-scope reanchor independently judges every cell. A mechanical refusal instead leaves the turn pending for REWORK. Tier signals are measurable (rows touched, gate delta, handback reason class). context_block renders the pure registry joins (cancelled precedent WITH REASONS first, pending OIs, the LLR/TC code map, CMP knowledge packs, IF seams, precedent reviews) - advisory-never-gating, three consumers. flip_verified recommends only under attended, flips under single-approve/autonomous, and fails toward recommend on an unknown level. An ordinary mint commit retains the claim bookkeeping shape; adjudication completion is the terminal spec plus its matching publication commit, so a crash before the atomic commit leaves the turn pending and a crash after it derives completion without allocating again; restart neither needs a journal state nor duplicates an id; every derived title is deterministic, so the sweep CLI re-run is idempotent."
+ rationale = """A detected event must FORCE a row into the registry with nobody watching, and an id two lanes could pick at once must stay unrepresentable (R1)."""
+ test_refs = "(see TC-147)"
+ status = "Approved"
+@@ -1545,9 +1545,9 @@ phase = 4
+ [design.LLR-154]
+ sr_refs = ["SR-174"]
+ title = "The merge slot's post-merge intake arm"
+-module = "project-trajectory/scripts/integrate.py;project-trajectory/scripts/primary_adjudication.py;project-trajectory/scripts/primary_publication.py;project-trajectory/scripts/primary_close.py"
+-code_symbol = "integrate_one/_lane_bar_directives/_refresh_bar;run;publish/publication_commit;stage_primary_adjudication"
+-detail = """integrate_one's post-merge arm is the intake's one honest hook point: the merge has landed, the slot is still held, trunk is serial - intake.intake_after_merge(root, pre-merge head, head, outcomes, branch) mints there as one bookkeeping commit (docs/work/ + the declared generated set), and a mint refusal stops the run loudly while the merge stands (recovery: fix trunk-side, then python intake.py sweep). The refresh's bar directives (_lane_bar_directives, read off the same trunk claim the slot reads) carry the adjudication no-bar arm and the bar strictness pin to _run_bar's --gate. The same held slot also owns branchless adjudication publication. It remains held from primary-turn admission through judgment, required review and the intake writer's stage-only final projection. The scoped no-product-bar and strictness directives apply to that projection directly; no lane refresh is manufactured. A refusal leaves the queued spec and pending record for resume before any other selection."""
++module = "project-trajectory/scripts/integrate.py;project-trajectory/scripts/primary_adjudication.py;project-trajectory/scripts/primary_publication.py"
++code_symbol = "integrate_one/_lane_bar_directives/_refresh_bar/_dispatch_lock/_slot;run;publish"
++detail = "integrate_one's post-merge arm is the intake's one honest hook point: the merge has landed, the slot is still held, trunk is serial - intake.intake_after_merge(root, pre-merge head, head, outcomes, branch) mints there as one bookkeeping commit (docs/work/ + the declared generated set), and a mint refusal stops the run loudly while the merge stands (recovery: fix trunk-side, then python intake.py sweep). The refresh's bar directives (_lane_bar_directives, read off the same trunk claim the slot reads) carry the adjudication no-bar arm and the bar strictness pin to _run_bar's --gate. The same held slot also owns branchless adjudication publication. It remains held from primary-turn admission through judgment, required review and the intake writer's stage-only final projection and atomic commit. The admission/dispatch lock and integration slot exclude competing claims, merges, direct integration and new primary selections throughout; the durable pending turn retains writer ownership between processes. The scoped no-product-bar and strictness directives apply to that projection directly; no lane refresh is manufactured. A refusal leaves the queued spec and pending record for resume before any other selection."
+ rationale = """Minting anywhere else re-opens the two-lanes-one-id collision the trunk-only ruling ended; the slot is the only place trunk moves under a held lock."""
+ test_refs = "(see TC-148)"
+ status = "Approved"
+@@ -2182,9 +2182,9 @@ phase = 5
+ [design.LLR-207]
+ sr_refs = ["SR-156"]
+ title = "The verdict record: what carries a governing verdict, and what binds it to the tree it judged"
+-module = "project-trajectory/scripts/kitlib/verdict.py;project-trajectory/scripts/primary_turn.py;project-trajectory/scripts/primary_approval.py;project-trajectory/scripts/primary_publication.py;project-trajectory/scripts/primary_close.py;project-trajectory/scripts/publication_verify.py"
+-code_symbol = "RECORD_PREFIXES/fold_listing/tree_identity/refresh_subject/refresh_attestation/work_tip/governing_rev/governing_identity/format_trailer/parse_trailer/round_file/session_log/branch_paths/logged_rounds/round_entries/declared_phases/phases_owed/round_count/format_branch_trailer/branch_trailers;record_path/validate/validate_candidate;approval_projection/absorption_census/impact_census;derive_tree/publish/publication_commit/completed;stage_primary_adjudication;run/branch_tree_script/passed_steps/run_bar/generated_table/generated_paths/ADJUDICATION_SURFACES"
+-detail = """tree_identity folds raw NUL-delimited `git ls-tree -r -z` entries after dropping docs/reviews/, docs/log.d/ and docs/iteration/, and returns a 64-hex SHA-256 identity. fold_listing accepts bytes and preserves every path byte so display quoting or decoding cannot merge distinct work trees. refresh_attestation validates a station refresh from its subject, first parent, commit tree and Bar-Green trailer. work_tip peels only a verified refresh at the tip for the reset path; governing_rev is read-only and walks across commits whose non-record identity equals their first parent's, peeling any DISPOSABLE commit it meets to reach one those commits would otherwise hide, and ending at the first commit whose identity differs from its parent's or at its absent-parent and depth bounds - so a branch with no disposable commit under it still walks. ONE commit class is disposable to the existing read-only walk: the station's REFRESH, admitted by refresh_attestation. The primary adjudication publication is instead a VERIFIED CARRIER. Its attestation binds the queued WI, unique turn, primary base, reviewed candidate and exact reviewed ## Approval bytes. The verifier independently derives the allowed final projection: only accepted scoped Status/snapshot effects, the queued spec's exact existing close transformation, parsed successor specs and id-watermark, plus only generated paths already declared by the trunk step. The snapshot equals live in that commit and every absorbed changed cell is accepted in the bound ledger. The exact close transformation uses the existing spec_move rules: move the queued spec to docs/archive/work/complete/, clear specref, insert the machinery's fixed ## Deliverable before ## Context, and apply only link rebasing spec_move derives. The carrier maps the resulting tree to the reviewed candidate only when every derived byte agrees; a hand-written subject, wrong WI or turn, stale candidate, extra or missing path, cross-WI close, malformed successor, partial snapshot or unreviewed decision refuses toward more review. This is a verified projection, not a broad disposable-path class. work_tip calls refresh_attestation directly, so only a refresh may be removed by the destructive reset path. governing_identity composes governing_rev and tree_identity for the branch tip or an explicit revision, including a round's reviewed commit and a trailer's carrier; the branch argument is a branch NAME, because the peel verifies a refresh commit against the branch it names and no refresh subject names HEAD. logged_rounds joins branch-scoped round files to coordinator session logs by train and ordinal, and each round's review phase is the JOINED LOG's declared phase rather than the one its own filename carries, so a file cannot claim a phase its session did not serve; a joined key whose logs declare more than one review phase yields no round. round_entries retains only rounds whose reviewed revision governs the identity under judgement and emits phase, ordinal and verdict entries through an injected parser. declared_phases clamps the configured independent-review count to the available review phases. phases_owed returns declared phases with no drawn entry at the governing identity, independent of whether a drawn verdict parses or approves. round_count returns the largest per-phase entry count at one governing identity, so a multi-phase review cycle counts once and changed work starts a new count. format_trailer and parse_trailer carry `Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex>`. branch_trailers verifies each carrier against its governing identity and returns the ordered attestation sequence per tree. Readers treat unavailable repository answers according to their own fail-closed contract."""
++module = "project-trajectory/scripts/kitlib/verdict.py;project-trajectory/scripts/primary_turn.py;project-trajectory/scripts/primary_publication.py"
++code_symbol = "RECORD_PREFIXES/fold_listing/tree_identity/refresh_subject/refresh_attestation/work_tip/governing_rev/governing_identity/format_trailer/parse_trailer/round_file/session_log/branch_paths/logged_rounds/round_entries/declared_phases/phases_owed/round_count/format_branch_trailer/branch_trailers;record_path/validate_candidate;publication_commit/completed"
++detail = "tree_identity folds raw NUL-delimited `git ls-tree -r -z` entries after dropping docs/reviews/, docs/log.d/ and docs/iteration/, and returns a 64-hex SHA-256 identity. fold_listing accepts bytes and preserves every path byte so display quoting or decoding cannot merge distinct work trees. refresh_attestation validates a station refresh from its subject, first parent, commit tree and Bar-Green trailer. work_tip peels only a verified refresh at the tip for the reset path; governing_rev is read-only and walks across commits whose non-record identity equals their first parent's, peeling any DISPOSABLE commit it meets to reach one those commits would otherwise hide, and ending at the first commit whose identity differs from its parent's or at its absent-parent and depth bounds - so a branch with no disposable commit under it still walks. ONE commit class is disposable to the existing read-only walk: the station's REFRESH, admitted by refresh_attestation. The primary adjudication publication is instead a VERIFIED CARRIER. Its attestation binds the queued WI, unique turn, primary base, reviewed candidate and exact reviewed ## Approval bytes. The verified projection is constructed under LLR-153's publication contract and LLR-154's exclusive-writer contract. The carrier maps the resulting tree to the reviewed candidate only when every derived byte agrees; a hand-written subject, wrong WI or turn, stale candidate, extra or missing path, cross-WI close, malformed successor, partial snapshot or unreviewed decision refuses toward more review. This is a verified projection, not a broad disposable-path class. work_tip calls refresh_attestation directly, so only a refresh may be removed by the destructive reset path. governing_identity composes governing_rev and tree_identity for the branch tip or an explicit revision, including a round's reviewed commit and a trailer's carrier; the branch argument is a branch NAME, because the peel verifies a refresh commit against the branch it names and no refresh subject names HEAD. logged_rounds joins branch-scoped round files to coordinator session logs by train and ordinal, and each round's review phase is the JOINED LOG's declared phase rather than the one its own filename carries, so a file cannot claim a phase its session did not serve; a joined key whose logs declare more than one review phase yields no round. round_entries retains only rounds whose reviewed revision governs the identity under judgement and emits phase, ordinal and verdict entries through an injected parser. declared_phases clamps the configured independent-review count to the available review phases. phases_owed returns declared phases with no drawn entry at the governing identity, independent of whether a drawn verdict parses or approves. round_count returns the largest per-phase entry count at one governing identity, so a multi-phase review cycle counts once and changed work starts a new count. format_trailer and parse_trailer carry `Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex>`. branch_trailers verifies each carrier against its governing identity and returns the ordered attestation sequence per tree. Readers treat unavailable repository answers according to their own fail-closed contract."
+ rationale = """The merge gate asks whether a lane may merge while the loop asks which review phase the lane still owes. A shared identity, evidence join, phase span and count keep both answers on the same tree and policy. Logged round evidence is authoritative because its coordinator session establishes reviewer provenance; the self-verifying trailer is only a cross-check and cannot create an approval. Identity binding answers staleness directly and prevents ordering from promoting a verdict for different work. Separate read-only and reset peels protect both contracts: the reader may traverse identity-preserving commits, while the destructive reset path may remove only the verified refresh at its tip."""
+ test_refs = "TC-205"
+ status = "Approved"
+diff --git a/docs/test/test-cases.toml b/docs/test/test-cases.toml
+index ab4106cb..1397b25f 100644
+--- a/docs/test/test-cases.toml
++++ b/docs/test/test-cases.toml
+@@ -1444,11 +1444,11 @@ phase = 4
+ [test.TC-147]
+ verifies = ["SR-174", "LLR-153", "IF-091"]
+ level = "Integration"
+-method = """Run the intake suite against real git repos, red-then-green per trigger (trigger (b) keys on the close's immutable REPORT PATH, so a re-sweep dedupes exactly and a genuinely second close is a second row): an approved SR amendment mints ONE adjudication row (id max+1, the before/after listing in ## Context) and an LLR SR-Refs re-point mints while a Module-only move stays silent (the ruled routing); a merged handback mints the disposition row (NEEDS-HUMAN reason routes strong; a handed-back adjudication row mints NOTHING and its own handback attempt is refused structurally); a primary adjudication's reviewed ## Approval/Dispositions, exact accepted Status/snapshot effects, existing spec_move close, successors, watermark and declared generated records are derived by the stage-only writer and land in one atomic publication; stale, out-of-scope, malformed or UNJUDGED input stages nothing; a requested equivalent approval blocked by another scoped owner's UNJUDGED drift remains pending, then an adjudicator-revised RETURN with zero accepted cells and a dependency-preserving continuation closes atomically with no Status/snapshot write; the later complete-scope reanchor independently judges every cell and treats those RETURN findings as evidence only; crash-before remains pending and crash-after derives complete without a duplicate id; planmode=dual passes through kind-derived, and a malformed block, an unknown key, a second adjudication kind or a bad bar value refuse with nothing minted; the census mints gap rows once and dedupes on re-run; every re-run is idempotent by exact-title dedup; the context block renders every join in failure-cost order and answers the empty string on a bare repo; both gate-policy arms enact (attended recommends and leaves the registries byte-identical; single-approve and autonomous flip only the named Status cells, cell-exact elsewhere, idempotent)."""
++method = "Run the intake suite against real git repos, red-then-green per trigger (trigger (b) keys on the close's immutable REPORT PATH, so a re-sweep dedupes exactly and a genuinely second close is a second row): an approved SR amendment mints ONE adjudication row (id max+1, the before/after listing in ## Context) and an LLR SR-Refs re-point mints while a Module-only move stays silent (the ruled routing); a merged handback mints the disposition row (NEEDS-HUMAN reason routes strong; a handed-back adjudication row mints NOTHING and its own handback attempt is refused structurally); a primary adjudication's reviewed ## Approval/Dispositions, exact accepted scoped Status/snapshot effects with snapshots equal to live bytes and every absorbed changed cell accepted in the bound ledger, exact spec_move close (queued-to-complete move, cleared specref, fixed Deliverable before Context and only derived link rebasing), successors, watermark and declared generated records are derived by the stage-only writer and land in one atomic publication; stale, out-of-scope, malformed or UNJUDGED input stages nothing; a requested equivalent approval blocked by another scoped owner's UNJUDGED drift remains pending, then an adjudicator-revised RETURN with zero accepted cells and a dependency-preserving continuation closes atomically with no Status/snapshot write; the later complete-scope reanchor independently judges every cell and treats those RETURN findings as evidence only; crash-before remains pending and crash-after derives complete without a duplicate id; planmode=dual passes through kind-derived, and a malformed block, an unknown key, a second adjudication kind or a bad bar value refuse with nothing minted; the census mints gap rows once and dedupes on re-run; every re-run is idempotent by exact-title dedup; the context block renders every join in failure-cost order and answers the empty string on a bare repo; both gate-policy arms enact (attended recommends and leaves the registries byte-identical; single-approve and autonomous flip only the named Status cells, cell-exact elsewhere, idempotent)."
+ tier = "Full"
+ expected = "Satisfies SR-174 AcceptanceCriteria via the LLR-153 detail contract"
+ automated = "Yes"
+-evidence = "tests/test_intake.py"
++evidence = "tests/test_intake.py; tests/test_primary_approval.py; tests/test_primary_publication.py"
+ status = "Approved"
+ phase = 4
+ 
+@@ -1459,7 +1459,7 @@ method = """Run the integrator + dispatcher suites' intake-arm cases: a merged b
+ tier = "Full"
+ expected = "Satisfies SR-174 AcceptanceCriteria via the LLR-154 detail contract"
+ automated = "Yes"
+-evidence = "tests/test_integrate_station.py; tests/test_dispatch.py"
++evidence = "tests/test_integrate_station.py; tests/test_dispatch.py; tests/test_primary_adjudication.py"
+ status = "Approved"
+ phase = 4
+ 
+@@ -1598,7 +1598,7 @@ phase = 5
+ [test.TC-161]
+ verifies = ["LLR-167", "IF-124", "IF-075"]
+ level = "Integration"
+-method = """Drive the real loop against a fake agent CLI over throwaway git repos, one per routed brief, and capture what the session was actually handed. Assert the composed brief carries each slot's real derivation (the lane's report verbatim, the closed spec, the commit facts; the live census joined to the TC row and to the obligation it covers), that no `{slot}` survives in the output, and that the typed verdict line the brief demands is written to the path the brief named and committed with the result trailer. Then drive the refusals: a declared brief with no per-close report, a report with no typed `commit_range`, and a census that has come clean each remain HELD with the reason printed and never take the blank-Brief route. Pin the discriminator: two rows with an identical SpecRef and different declared `Brief` cells compose differently. Pin the two unrouted briefs as unrouted, naming themselves in the refusal. The amendment arm covers two seams: IF-124, the `last_approved` baseline read - the brief carries the snapshot as its anchor, only approved cells reach the judge, and with no snapshot the brief holds and says FIRST APPROVAL rather than fabricating an anchor; and IF-127, the lazily imported re-attestation model. Run each brief through the in-process primary engine and assert its immutable turn record binds the queued WI, primary branch/root, proposal spec, live/snapshot registry blobs and exact frontmatter scope; the resulting review evidence binds the full candidate after Approval/Dispositions additions. Drive a blank-Brief adjudication and assert its generic primary judgment assignment names the bound verdict path and contains no claim, branch, model-side close or snapshot instruction; ordinary non-adjudication work still receives its worker assignment and no legacy adjudication-worker context is retained. Any changed binding stales the result, and verdict-only commits leave snapshots, Status, queue and watermark unchanged."""
++method = "Drive the real loop against a fake agent CLI over throwaway git repos, one per routed brief, and capture what the session was actually handed. Assert the composed brief carries each slot's real derivation (the lane's report verbatim, the closed spec, the commit facts; the live census joined to the TC row and to the obligation it covers), that no `{slot}` survives in the output, and that the typed verdict line the brief demands is written to the path the brief named and committed with the result trailer. Then drive the refusals: a declared brief with no per-close report, a report with no typed `commit_range`, and a census that has come clean each remain HELD with the reason printed and never take the blank-Brief route. Pin the discriminator: two rows with an identical SpecRef and different declared `Brief` cells compose differently. Pin every shipped brief as routed and the retired conflict brief as absent from shipped routing. The amendment arm covers two seams: IF-124, the `last_approved` baseline read - the brief carries the snapshot as its anchor, only approved cells reach the judge, and with no snapshot the brief holds and says FIRST APPROVAL rather than fabricating an anchor; and IF-075, the lazily imported re-attestation model. Run each brief through the in-process primary engine and assert its immutable turn record binds the queued WI, primary branch/root, proposal spec, live/snapshot registry blobs and exact frontmatter scope; the resulting review evidence binds the full candidate after Approval/Dispositions additions. Drive a blank-Brief adjudication and assert its generic primary judgment assignment names the bound verdict path and contains no claim, branch, model-side close or snapshot instruction; ordinary non-adjudication work still receives its worker assignment and no legacy adjudication-worker context is retained. Any changed binding stales the result, and verdict-only commits leave snapshots, Status, queue and watermark unchanged."
+ tier = "Smoke"
+ expected = "Satisfies SR-146 AcceptanceCriteria"
+ automated = "Yes"
+@@ -2079,12 +2079,12 @@ phase = 5
+ 
+ [test.TC-205]
+ verifies = ["SR-156", "LLR-207", "IF-175"]
+-level = "Unit"
+-method = """The verdict record's two halves, each driven beside its opposite so neither reads as a rule with one answer. THE IDENTITY, pure over synthetic `git ls-tree -r` entries: a listing and the same listing plus a round file, a log fragment and a session log fold EQUAL, while a changed work blob and a changed docs/work/ spec each fold DIFFERENT - so the exclusion is proven to be an exclusion rather than a fold that ignores everything. THE ENCODING BOUNDARY, driven through git rather than asserted about it: a record path holding a non-ASCII character - the shape git QUOTES, asserted in the fixture so it cannot silently stop reproducing - leaves the identity unmoved, while an accented WORK path moves it; and raw listings with one blob renamed from invalid-UTF-8 path byte 200 to 201 - asserted to COLLIDE under replacement decoding - fold DIFFERENT through tree_identity, so parsing and the ASCII record-prefix boundary occur before any decode. THE TRAILER GRAMMAR: format/parse round-trip; the LAST trailer in a message governs, so a rework commit quoting the round it answers does not have the quotation read as its own attestation; and three malformed shapes - a verdict word outside the enum, a 40-hex tree, a missing round count - each fail to PARSE rather than parse to something. THE NAME PARSE: a round file with and without the relaxed tag, the pre-train flat layout, a session log, and the legacy hand-authored rollup answering None because it names no reviewed sha. THE GATE, on a two-branch git fixture with the trunk checked out: a logged reviewer round naming the current tree clears it with NO rollup present anywhere; the same file with a BUILD session log behind it does not (the implementer-authored round); a SECOND round file committed behind that ONE session log, whose NAME claims the other declared phase, is not a second reviewer - both files are asserted committed and the single log with them, the entries carry the LOG's phase, so at a declared policy of 2 REVIEW-B is still outstanding and the gate refuses by name until a REVIEW-B whose own session log declares it arrives and clears it; TWO session logs at ONE (train, ordinal) declaring DIFFERENT review phases - both asserted committed, with the round file they would otherwise phase asserted still present so the empty answer is the ambiguity rule and not an empty scan - serve NO round at all rather than letting the last log read win, and the gate refuses by name while the single-log arm beside it clears; a round whose tree was reworked away does not, while a log-fragment and scoreboard commit after a round leaves it governing; a CHANGES-REQUESTED round refuses; and a verified Review-Verdict trailer contradicting the rounds refuses by name in its verdict word and in a round count ABOVE the evidence, while a count BELOW it does NOT - both directions driven, because the writer is best-effort and a stamp the evidence outruns is a missed stamp whose refusal parked an approved lane at the very stop the cross-check exists to prevent - and TWO attestations at one governing tree leave the NEWEST governing so a legitimately re-drawn round is not accused of forgery. THE CARRIER IS VERIFIED AND NOT ONLY PARSED, which is what "the trailer cannot create an approval" costs: the identical attestation words on a commit that CHANGED the work under them - asserted in the fixture to have really moved the governing identity - are read at neither the tree they NAME nor the tree they rode, beside the record-only carrier of the same words that IS read, so copying a true attestation onto later work buys nothing. THE WRITER IS DRIVEN END TO END, not only the trailer helper: a completed round is run through the loop's own complete_review_round on a repository fixture and the commit it lands is asserted to CARRY the attestation, to name the governing tree, to be read back by the branch reader under the key the cross-check looks up, to leave that governing tree unmoved, and to satisfy the gate - the whole path between a round completing and its attestation landing, which every other trailer case skipped by committing the string itself, and which nothing anywhere reports when it stops writing because absence is the state the cross-check must stand down on. THE RESUME'S OWED SET IS THE EVIDENCE'S ALONE: with both declared phases served at the governing tree and a stale untracked owed-marker still present - the state a run killed between the last reviewer's commit and the round completing leaves - the resume is asserted to queue NOTHING, and beside it a genuine rework with one phase redrawn is asserted to queue that phase and only it. THE PEEL: a genuine Bar-Green refresh commit, verified against its own tree and parent, moves the branch tip's identity and neither reader's answer - the loop still says no round is owed and the gate still merges - which is the one commit class two separately-chosen revs disagreed on; and the same refresh with a coordinator TELEMETRY commit stacked on top of it - a record path, so the fold ignores it and only the tip-only peel could be defeated by it - still owes no round and still merges. THE PRIMARY ADJUDICATION CARRIER: drive its stage-only writer against the verifier. Exact reviewed Approval bytes, accepted Status/snapshot effects, spec_move close transformation, successor specs, watermark and declared generated bytes carry the review from candidate to final tree; forged subject, wrong WI/turn, stale proposal or candidate, extra/missing path, cross-WI close, malformed successor, partial snapshot and unreviewed decision each fail toward more review. Kill before and after the atomic commit and prove pending resume versus one derived completion and no duplicate mint. THE TWO PEELS' REFUSAL ARMS are held by tests/test_integrate_station.py, cited beside this module because integrate re-exports these very functions (refresh_attestation, work_tip) and the station suite is where a refresh can be produced rather than hand-written: a genuine refresh attested to the sha it produced; a forged Bar-Green trailer in three shapes, the sharpest being a genuine refresh message copied verbatim onto another commit; an amend that keeps the message while the tree moves, revoking the attestation; the deliberately forged attestation recorded as a STATED limit rather than a defence; and the reset peel's data-loss half - an honest work commit merely QUOTING the trailer is never peeled away, and a genuine refresh above it peels back to exactly that commit. BOTH carriers are driven, not only the convenient one: that non-empty telemetry commit, and then the EMPTY commit agent_common.commit_telemetry writes when a Review-Verdict attestation must land on unchanged bookkeeping - obtained by CALLING that producer rather than by hand, so the two cannot drift apart, and asserted to really be zero-path, because that is the commit shape a walk classifying PATHS could not classify and so stopped at, burying the refresh under the very commit that recorded the approval. A WORK commit above the refresh does re-owe and does refuse, so the walk is proven to step through what cannot invalidate a verdict rather than through everything. BOTH ORDERS of refresh and round, because only one of them was covered and the other was broken: the round drawn AFTER the refresh - the order the shipped path actually produces, since a lane's refresh is spawned as soon as its worker is DONE and before the merge slot runs, so any slot refusal parks a branch with a refresh and no round - cites the POST-refresh sha, asserted in the fixture to be that sha and not the pre-refresh one, and is asserted to serve the lane at both readers and to carry the coordinator's attestation under the key the cross-check looks it up by, while a rework above it still re-owes. THE ATTESTATION'S CARRIER IS SCOPED TO ITS OWN PATHS, on BOTH arms and not only the one that carries a pathspec: with an unrelated work file staged and the bookkeeping unchanged, the commit agent_common.commit_telemetry writes for NAMED paths and the one it writes for NO paths at all - the call this suite itself makes, and the arm where a scope appended only when paths exist evaporates - are each asserted zero-path with the caller's index left exactly as found, so work cannot land under a bookkeeping label nor an attestation ride a commit that changed the tree. THE DIAL: the three values over a brief-and-drafts matrix, an unrecognized value falling to when-minting rather than to never, and a primary adjudication turn closing with successor drafts publishing with no verdict artifact of any kind under both never and when-minting, while a spine draft still owes its round. THE DIAL AT THE SCHEDULER, the half a reader could otherwise only take on trust: a committing ADJUDICATE session is driven through the loop's own bookkeeping arm on a pending primary-turn repository at every dial value - including the `always` no repository fixture had reached - and the review queue it leaves is asserted together with the train-scoped diff range and the recorded judging family, which is what "exactly as a committing BUILD does" has to mean. Its INPUT is driven beside it: a queued adjudication spec with one bound pending turn, followed by the terminal spec and verified publication, is asserted to answer the scheduler and verdict reader consistently; ordinary branches retain the shared terminal-before-active precedence, driven pure on a two-path list and on the empty one. THE SHARED DEFINITION, in BOTH its dimensions. WHICH TREE: the C2 review-owed derivation answers owed after a rework and served after a fresh round, and record-only commits after the verdict re-owe nothing. HOW MANY PHASES: at a declared policy of 2 a lone logged REVIEW-A APPROVE is REFUSED by name and the gate clears only once a governing REVIEW-B joins it at the same identity; and the half-drawn round a killed run leaves - REVIEW-A served, the in-memory phase queue gone - is answered by both readers together, the derivation naming REVIEW-B and ONLY REVIEW-B while the gate refuses, then both agreeing once it lands, with the same fixture asserted SERVED at policy 1 so the answer is proven to come from the declared count. The phase span is driven pure at the values neither caller reaches - a negative policy, which a bare slice would answer by slicing from the END, and an over-dialled one - and the one class the two readers must disagree on is pinned: a drawn but UNPARSEABLE verdict is not re-drawn and does not clear the gate either. THE TIER IS THE WHOLE CITED SET'S, not the majority's: the cited integration-station, primary-approval and primary-publication cases include modules named in tests/conftest.py SLOW_MODULES and so deselected by `-m smoke`, so Full is the cheapest tier at which EVERY arm above actually runs and Smoke would have claimed commit-floor coverage for a set the commit floor only partly runs. Tier and the pytest marker remain independent declarations that no check compares (registry-machinery-reference §12.2); this cell is labelled on the side that under-claims."""
++level = "Integration"
++method = "The verdict record's two halves, each driven beside its opposite so neither reads as a rule with one answer. THE IDENTITY, pure over synthetic `git ls-tree -r` entries: a listing and the same listing plus a round file, a log fragment and a session log fold EQUAL, while a changed work blob and a changed docs/work/ spec each fold DIFFERENT - so the exclusion is proven to be an exclusion rather than a fold that ignores everything. THE ENCODING BOUNDARY, driven through git rather than asserted about it: a record path holding a non-ASCII character - the shape git QUOTES, asserted in the fixture so it cannot silently stop reproducing - leaves the identity unmoved, while an accented WORK path moves it; and raw listings with one blob renamed from invalid-UTF-8 path byte 200 to 201 - asserted to COLLIDE under replacement decoding - fold DIFFERENT through tree_identity, so parsing and the ASCII record-prefix boundary occur before any decode. THE TRAILER GRAMMAR: format/parse round-trip; the LAST trailer in a message governs, so a rework commit quoting the round it answers does not have the quotation read as its own attestation; and three malformed shapes - a verdict word outside the enum, a 40-hex tree, a missing round count - each fail to PARSE rather than parse to something. THE NAME PARSE: a round file with and without the relaxed tag, the pre-train flat layout, a session log, and the legacy hand-authored rollup answering None because it names no reviewed sha. THE GATE, on a two-branch git fixture with the trunk checked out: a logged reviewer round naming the current tree clears it with NO rollup present anywhere; the same file with a BUILD session log behind it does not (the implementer-authored round); a SECOND round file committed behind that ONE session log, whose NAME claims the other declared phase, is not a second reviewer - both files are asserted committed and the single log with them, the entries carry the LOG's phase, so at a declared policy of 2 REVIEW-B is still outstanding and the gate refuses by name until a REVIEW-B whose own session log declares it arrives and clears it; TWO session logs at ONE (train, ordinal) declaring DIFFERENT review phases - both asserted committed, with the round file they would otherwise phase asserted still present so the empty answer is the ambiguity rule and not an empty scan - serve NO round at all rather than letting the last log read win, and the gate refuses by name while the single-log arm beside it clears; a round whose tree was reworked away does not, while a log-fragment and scoreboard commit after a round leaves it governing; a CHANGES-REQUESTED round refuses; and a verified Review-Verdict trailer contradicting the rounds refuses by name in its verdict word and in a round count ABOVE the evidence, while a count BELOW it does NOT - both directions driven, because the writer is best-effort and a stamp the evidence outruns is a missed stamp whose refusal parked an approved lane at the very stop the cross-check exists to prevent - and TWO attestations at one governing tree leave the NEWEST governing so a legitimately re-drawn round is not accused of forgery. THE CARRIER IS VERIFIED AND NOT ONLY PARSED, which is what \"the trailer cannot create an approval\" costs: the identical attestation words on a commit that CHANGED the work under them - asserted in the fixture to have really moved the governing identity - are read at neither the tree they NAME nor the tree they rode, beside the record-only carrier of the same words that IS read, so copying a true attestation onto later work buys nothing. THE WRITER IS DRIVEN END TO END, not only the trailer helper: a completed round is run through the loop's own complete_review_round on a repository fixture and the commit it lands is asserted to CARRY the attestation, to name the governing tree, to be read back by the branch reader under the key the cross-check looks up, to leave that governing tree unmoved, and to satisfy the gate - the whole path between a round completing and its attestation landing, which every other trailer case skipped by committing the string itself, and which nothing anywhere reports when it stops writing because absence is the state the cross-check must stand down on. THE RESUME'S OWED SET IS THE EVIDENCE'S ALONE: with both declared phases served at the governing tree and a stale untracked owed-marker still present - the state a run killed between the last reviewer's commit and the round completing leaves - the resume is asserted to queue NOTHING, and beside it a genuine rework with one phase redrawn is asserted to queue that phase and only it. THE PEEL: a genuine Bar-Green refresh commit, verified against its own tree and parent, moves the branch tip's identity and neither reader's answer - the loop still says no round is owed and the gate still merges - which is the one commit class two separately-chosen revs disagreed on; and the same refresh with a coordinator TELEMETRY commit stacked on top of it - a record path, so the fold ignores it and only the tip-only peel could be defeated by it - still owes no round and still merges. THE PRIMARY ADJUDICATION CARRIER: verify recognition of the exact publication constructed under TC-147 and exclusively owned under TC-148. Only a verified carrier maps the final tree to its reviewed candidate; forged subject, wrong WI/turn, stale proposal or candidate, extra/missing path, cross-WI close, malformed successor, partial snapshot and unreviewed decision each fail toward more review. Construction, exact close transformation, accepted effects, allocation, atomicity and crash/replay proofs belong to TC-147; lock/exclusion/directive proofs belong to TC-148. THE TWO PEELS' REFUSAL ARMS are held by tests/test_integrate_station.py, cited beside this module because integrate re-exports these very functions (refresh_attestation, work_tip) and the station suite is where a refresh can be produced rather than hand-written: a genuine refresh attested to the sha it produced; a forged Bar-Green trailer in three shapes, the sharpest being a genuine refresh message copied verbatim onto another commit; an amend that keeps the message while the tree moves, revoking the attestation; the deliberately forged attestation recorded as a STATED limit rather than a defence; and the reset peel's data-loss half - an honest work commit merely QUOTING the trailer is never peeled away, and a genuine refresh above it peels back to exactly that commit. BOTH carriers are driven, not only the convenient one: that non-empty telemetry commit, and then the EMPTY commit agent_common.commit_telemetry writes when a Review-Verdict attestation must land on unchanged bookkeeping - obtained by CALLING that producer rather than by hand, so the two cannot drift apart, and asserted to really be zero-path, because that is the commit shape a walk classifying PATHS could not classify and so stopped at, burying the refresh under the very commit that recorded the approval. A WORK commit above the refresh does re-owe and does refuse, so the walk is proven to step through what cannot invalidate a verdict rather than through everything. BOTH ORDERS of refresh and round, because only one of them was covered and the other was broken: the round drawn AFTER the refresh - the order the shipped path actually produces, since a lane's refresh is spawned as soon as its worker is DONE and before the merge slot runs, so any slot refusal parks a branch with a refresh and no round - cites the POST-refresh sha, asserted in the fixture to be that sha and not the pre-refresh one, and is asserted to serve the lane at both readers and to carry the coordinator's attestation under the key the cross-check looks it up by, while a rework above it still re-owes. THE ATTESTATION'S CARRIER IS SCOPED TO ITS OWN PATHS, on BOTH arms and not only the one that carries a pathspec: with an unrelated work file staged and the bookkeeping unchanged, the commit agent_common.commit_telemetry writes for NAMED paths and the one it writes for NO paths at all - the call this suite itself makes, and the arm where a scope appended only when paths exist evaporates - are each asserted zero-path with the caller's index left exactly as found, so work cannot land under a bookkeeping label nor an attestation ride a commit that changed the tree. THE DIAL: retain the historical lane matrix, unknown-value fallback to when-minting and no-review lane-close cases as ordinary-lane proofs. Separately drive actual pending-primary selection and publication under never, when-minting and always with ordinary, spine and derived-dual successor drafts: no-review returns publish without a reviewer round; review-owed returns refuse with no staged or committed effects until independent fixture evidence serves the phase. THE DIAL AT THE SCHEDULER: committing ADJUDICATE bookkeeping on the same pending-primary repositories produces the expected review queue, train-scoped diff range and judging family. THE SHARED INPUT: compare the queued adjudication spec before publication with its terminal copy after verified publication; successor drafts remain the same, the verified carrier preserves the governing candidate identity and served phases remain served. Ordinary branches retain terminal-before-active precedence, driven by the historical shared-spec fixture. THE SHARED DEFINITION, in BOTH its dimensions. WHICH TREE: the C2 review-owed derivation answers owed after a rework and served after a fresh round, and record-only commits after the verdict re-owe nothing. HOW MANY PHASES: at a declared policy of 2 a lone logged REVIEW-A APPROVE is REFUSED by name and the gate clears only once a governing REVIEW-B joins it at the same identity; and the half-drawn round a killed run leaves - REVIEW-A served, the in-memory phase queue gone - is answered by both readers together, the derivation naming REVIEW-B and ONLY REVIEW-B while the gate refuses, then both agreeing once it lands, with the same fixture asserted SERVED at policy 1 so the answer is proven to come from the declared count. The phase span is driven pure at the values neither caller reaches - a negative policy, which a bare slice would answer by slicing from the END, and an over-dialled one - and the one class the two readers must disagree on is pinned: a drawn but UNPARSEABLE verdict is not re-drawn and does not clear the gate either. THE TIER IS THE WHOLE CITED SET'S, not the majority's: the cited integration-station, primary-approval and primary-publication cases include modules named in tests/conftest.py SLOW_MODULES and so deselected by `-m smoke`, so Full is the cheapest tier at which EVERY arm above actually runs and Smoke would have claimed commit-floor coverage for a set the commit floor only partly runs. Tier and the pytest marker remain independent declarations that no check compares (registry-machinery-reference §12.2); this cell is labelled on the side that under-claims."
+ tier = "Full"
+ expected = "Satisfies SR-156: the serial seam's verdict rung is computed from committed evidence a logged reviewer session produced and is bound to the tree it judged, with the merge refused when the evidence is absent, dissenting, re-rolled, or contradicted by its own attestation; and the round the loop draws and the verdict the seam demands are decided by one reader"
+ automated = "Yes"
+-evidence = """tests/test_verdict_record.py::test_the_identity_ignores_every_record_path; tests/test_verdict_record.py::test_the_identity_notices_work_and_notices_docs_work; tests/test_verdict_record.py::test_a_record_path_is_excluded_whatever_characters_it_holds; tests/test_verdict_record.py::test_distinct_invalid_utf8_work_paths_have_distinct_identities; tests/test_verdict_record.py::test_the_trailer_round_trips_and_the_last_one_governs; tests/test_verdict_record.py::test_a_malformed_trailer_is_no_trailer; tests/test_verdict_record.py::test_round_and_session_names_parse_including_the_relaxed_tag; tests/test_verdict_record.py::test_round_count_counts_cycles_not_reviewers; tests/test_verdict_record.py::test_a_logged_reviewer_round_naming_this_tree_clears_the_gate; tests/test_verdict_record.py::test_an_implementer_authored_file_in_the_review_path_is_not_a_round; tests/test_verdict_record.py::test_one_session_cannot_serve_a_phase_its_log_does_not_declare; tests/test_verdict_record.py::test_two_logs_at_one_key_declaring_two_phases_serve_no_round; tests/test_verdict_record.py::test_a_round_that_judged_an_earlier_tree_does_not_count; tests/test_verdict_record.py::test_a_record_only_commit_after_the_round_leaves_it_governing; tests/test_verdict_record.py::test_the_governing_round_can_refuse; tests/test_verdict_record.py::test_a_trailer_contradicting_the_rounds_refuses; tests/test_verdict_record.py::test_a_trailer_OVERSTATING_the_governing_round_count_refuses; tests/test_verdict_record.py::test_a_trailer_UNDERSTATING_the_governing_round_count_does_not; tests/test_verdict_record.py::test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit; tests/test_verdict_record.py::test_a_stale_owed_marker_over_served_evidence_redraws_nothing; tests/test_verdict_record.py::test_the_newest_attestation_at_a_tree_governs_the_cross_check; tests/test_verdict_record.py::test_an_attestation_riding_a_commit_that_changed_the_work_is_not_read; tests/test_verdict_record.py::test_a_station_refresh_owes_no_round_and_the_two_readers_agree; tests/test_verdict_record.py::test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel; tests/test_verdict_record.py::test_the_empty_carrier_commits_its_own_paths_and_never_the_index; tests/test_verdict_record.py::test_a_round_drawn_after_a_refresh_is_visible_to_both_readers; tests/test_verdict_record.py::test_the_dial_decides_when_an_adjudication_owes_a_round; tests/test_verdict_record.py::test_an_unreadable_dial_falls_to_when_minting_not_to_never; tests/test_verdict_record.py::test_an_adjudication_lane_owing_no_round_merges_with_no_verdict_file; tests/test_verdict_record.py::test_a_minting_adjudication_still_owes_its_round; tests/test_verdict_record.py::test_a_committing_adjudication_schedules_its_round_under_the_dial; tests/test_verdict_record.py::test_the_scheduler_and_the_gate_read_one_spec_copy; tests/test_verdict_record.py::test_the_done_banner_states_the_rounds_it_actually_drew; tests/test_verdict_record.py::test_the_trailer_count_is_derived_at_the_governing_tree; tests/test_verdict_record.py::test_the_review_owed_derivation_and_the_gate_share_one_definition; tests/test_verdict_record.py::test_policy_two_requires_both_independent_verdicts; tests/test_verdict_record.py::test_a_half_drawn_round_owes_its_missing_phase_and_only_that; tests/test_verdict_record.py::test_the_declared_phase_span_is_read_the_same_length_by_both_readers; tests/test_integrate_admission.py::test_an_approve_that_did_not_judge_this_tree_does_not_count; tests/test_integrate_admission.py::test_an_approve_that_names_the_current_tree_passes; tests/test_integrate_admission.py::test_the_legacy_rollup_path_warns_while_it_clears; tests/test_integrate_station.py::test_the_refresh_attests_the_bar_to_the_sha_it_produced; tests/test_integrate_station.py::test_a_forged_bar_green_trailer_does_not_make_a_branch_merge_ready; tests/test_integrate_station.py::test_amending_a_refresh_commit_revokes_its_attestation; tests/test_integrate_station.py::test_a_deliberately_forged_attestation_is_a_STATED_limit_not_a_defence; tests/test_integrate_station.py::test_a_work_commit_that_quotes_the_trailer_is_never_peeled_away; tests/test_primary_publication.py::test_completion_rejects_restamped_foreign_tree; tests/test_primary_publication.py::test_completion_requires_candidate_as_first_parent; tests/test_primary_publication.py::test_real_primary_close_moves_exact_queued_spec; tests/test_primary_publication.py::test_real_return_publish_and_completion_replay; tests/test_primary_publication.py::test_bootstrapped_return_publication_replay_keeps_real_regeneration_fresh; tests/test_primary_publication.py::test_real_first_approval_snapshot_and_successor_are_one_commit; tests/test_primary_approval.py::test_scope_and_unjudged_absorption_refuse; tests/test_primary_approval.py::test_standing_snapshot_requires_complete_approved_absorption_ledger; tests/test_primary_approval.py::test_review_owed_candidate_requires_existing_independent_approve"""
++evidence = "tests/test_verdict_record.py::test_the_identity_ignores_every_record_path; tests/test_verdict_record.py::test_the_identity_notices_work_and_notices_docs_work; tests/test_verdict_record.py::test_a_record_path_is_excluded_whatever_characters_it_holds; tests/test_verdict_record.py::test_distinct_invalid_utf8_work_paths_have_distinct_identities; tests/test_verdict_record.py::test_the_trailer_round_trips_and_the_last_one_governs; tests/test_verdict_record.py::test_a_malformed_trailer_is_no_trailer; tests/test_verdict_record.py::test_round_and_session_names_parse_including_the_relaxed_tag; tests/test_verdict_record.py::test_round_count_counts_cycles_not_reviewers; tests/test_verdict_record.py::test_a_logged_reviewer_round_naming_this_tree_clears_the_gate; tests/test_verdict_record.py::test_an_implementer_authored_file_in_the_review_path_is_not_a_round; tests/test_verdict_record.py::test_one_session_cannot_serve_a_phase_its_log_does_not_declare; tests/test_verdict_record.py::test_two_logs_at_one_key_declaring_two_phases_serve_no_round; tests/test_verdict_record.py::test_a_round_that_judged_an_earlier_tree_does_not_count; tests/test_verdict_record.py::test_a_record_only_commit_after_the_round_leaves_it_governing; tests/test_verdict_record.py::test_the_governing_round_can_refuse; tests/test_verdict_record.py::test_a_trailer_contradicting_the_rounds_refuses; tests/test_verdict_record.py::test_a_trailer_OVERSTATING_the_governing_round_count_refuses; tests/test_verdict_record.py::test_a_trailer_UNDERSTATING_the_governing_round_count_does_not; tests/test_verdict_record.py::test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit; tests/test_verdict_record.py::test_a_stale_owed_marker_over_served_evidence_redraws_nothing; tests/test_verdict_record.py::test_the_newest_attestation_at_a_tree_governs_the_cross_check; tests/test_verdict_record.py::test_an_attestation_riding_a_commit_that_changed_the_work_is_not_read; tests/test_verdict_record.py::test_a_station_refresh_owes_no_round_and_the_two_readers_agree; tests/test_verdict_record.py::test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel; tests/test_verdict_record.py::test_the_empty_carrier_commits_its_own_paths_and_never_the_index; tests/test_verdict_record.py::test_a_round_drawn_after_a_refresh_is_visible_to_both_readers; tests/test_verdict_record.py::test_the_dial_decides_when_an_adjudication_owes_a_round; tests/test_verdict_record.py::test_an_unreadable_dial_falls_to_when_minting_not_to_never; tests/test_verdict_record.py::test_an_adjudication_lane_owing_no_round_merges_with_no_verdict_file; tests/test_verdict_record.py::test_a_minting_adjudication_still_owes_its_round; tests/test_verdict_record.py::test_a_committing_adjudication_schedules_its_round_under_the_dial; tests/test_verdict_record.py::test_the_scheduler_and_the_gate_read_one_spec_copy; tests/test_verdict_record.py::test_the_done_banner_states_the_rounds_it_actually_drew; tests/test_verdict_record.py::test_the_trailer_count_is_derived_at_the_governing_tree; tests/test_verdict_record.py::test_the_review_owed_derivation_and_the_gate_share_one_definition; tests/test_verdict_record.py::test_policy_two_requires_both_independent_verdicts; tests/test_verdict_record.py::test_a_half_drawn_round_owes_its_missing_phase_and_only_that; tests/test_verdict_record.py::test_the_declared_phase_span_is_read_the_same_length_by_both_readers; tests/test_integrate_admission.py::test_an_approve_that_did_not_judge_this_tree_does_not_count; tests/test_integrate_admission.py::test_an_approve_that_names_the_current_tree_passes; tests/test_integrate_admission.py::test_the_legacy_rollup_path_warns_while_it_clears; tests/test_integrate_station.py::test_the_refresh_attests_the_bar_to_the_sha_it_produced; tests/test_integrate_station.py::test_a_forged_bar_green_trailer_does_not_make_a_branch_merge_ready; tests/test_integrate_station.py::test_amending_a_refresh_commit_revokes_its_attestation; tests/test_integrate_station.py::test_a_deliberately_forged_attestation_is_a_STATED_limit_not_a_defence; tests/test_integrate_station.py::test_a_work_commit_that_quotes_the_trailer_is_never_peeled_away; tests/test_primary_publication.py::test_completion_rejects_restamped_foreign_tree; tests/test_primary_publication.py::test_completion_requires_candidate_as_first_parent; tests/test_primary_publication.py::test_real_primary_close_moves_exact_queued_spec; tests/test_primary_publication.py::test_real_return_publish_and_completion_replay; tests/test_primary_publication.py::test_bootstrapped_return_publication_replay_keeps_real_regeneration_fresh; tests/test_primary_publication.py::test_real_first_approval_snapshot_and_successor_are_one_commit; tests/test_primary_approval.py::test_scope_and_unjudged_absorption_refuse; tests/test_primary_approval.py::test_standing_snapshot_requires_complete_approved_absorption_ledger; tests/test_primary_approval.py::test_review_owed_candidate_requires_existing_independent_approve; tests/test_primary_session.py::test_pending_primary_review_dial_schedules_and_gates_real_publication"
+ status = "Approved"
+ phase = 5
+ 
+diff --git a/project-trajectory/scripts/kitlib/verdict.py b/project-trajectory/scripts/kitlib/verdict.py
+index f94819c8..74ec8b00 100644
+--- a/project-trajectory/scripts/kitlib/verdict.py
++++ b/project-trajectory/scripts/kitlib/verdict.py
+@@ -429,10 +429,17 @@ def refresh_attestation(root, branch, rev=None):
+ 
+ 
+ def _peel_target(root, branch, rev):
+-    """The ordinary lane reader peels only a verified refresh."""
++    """Read-only refresh traversal or an exactly verified publication carrier."""
+     attested = refresh_attestation(root, branch, rev)
+     if attested is not None:
+         return attested[0]
++    # Completion and review identity must recognize the same exact carrier.
++    # Keep the import lazy: publication itself consumes this evidence reader.
++    body = git_out(root, ["show", "-s", "--format=%B", rev]) or ""
++    if "Primary-Publication-Turn: " in body:
++        from primary_publication import carrier_candidate
++
++        return carrier_candidate(root, rev)
+     return None
+ 
+ 
+diff --git a/project-trajectory/scripts/primary_publication.py b/project-trajectory/scripts/primary_publication.py
+index 6d60226a..cfe57a57 100644
+--- a/project-trajectory/scripts/primary_publication.py
++++ b/project-trajectory/scripts/primary_publication.py
+@@ -215,40 +215,63 @@ def publication_commit(root, turn):
+     out = _git(
+         root, "log", "--format=%H", "--fixed-strings", "--grep=" + token, check=False
+     )
+-    for rev in out.splitlines():
+-        proof = (str(Path(root).resolve()), rev, json.dumps(turn, sort_keys=True))
+-        if proof in _VERIFIED_PUBLICATIONS:
+-            return rev
++    return next(
++        (rev for rev in out.splitlines() if _verified_candidate(root, turn, rev)), None
++    )
++
++
++def _verified_candidate(root, turn, rev):
++    """One exact carrier proof shared by completion and governing identity."""
++    token = TRAILER + str(turn.get("turn", ""))
++    proof = (str(Path(root).resolve()), rev, json.dumps(turn, sort_keys=True))
++    if proof in _VERIFIED_PUBLICATIONS:
++        return _git(root, "rev-parse", rev + "^1")
++    body = _git(root, "show", "-s", "--format=%B", rev)
++    if token not in body:
++        return None
++    tree = _git(root, "show", "-s", "--format=%T", rev)
++    match = re.search(r"(?m)^Publication-Candidate: ([0-9a-f]{40})$", body)
++    if not match:
++        return None
++    if _git(root, "show", "-s", "--format=%P", rev) != match.group(1):
++        return None
++    expected, _closed, plan, refusal = derive_tree(root, turn, match.group(1))
++    if refusal or expected != tree:
++        return None
++    receipt = "Publication-Verification: " + json.dumps(
++        plan["verification"], sort_keys=True
++    )
++    if receipt not in body.splitlines():
++        return None
++    author = _git(root, "show", "-s", "--format=%an%x00%ae", rev).split("\0")
++    wanted = (plan or {}).get("author") or {}
++    if not wanted or author != [wanted.get("name"), wanted.get("email")]:
++        return None
++    spec = Path(str(turn.get("spec", ""))).name
++    homes = ("docs/work/complete/" + spec, "docs/archive/work/complete/" + spec)
++    if any(
++        _git(root, "ls-tree", "-r", "--name-only", rev, "--", home) for home in homes
++    ):
++        _VERIFIED_PUBLICATIONS.add(proof)
++        return _git(root, "rev-parse", rev + "^1")
++    return None
++
++
++def carrier_candidate(root, rev):
++    """Read-only mapping of this exact verified publication, never a reset peel."""
++    try:
++        rev = _git(root, "rev-parse", rev)
+         body = _git(root, "show", "-s", "--format=%B", rev)
+-        if token not in body:
+-            continue
+-        tree = _git(root, "show", "-s", "--format=%T", rev)
+-        match = re.search(r"(?m)^Publication-Candidate: ([0-9a-f]{40})$", body)
+-        if not match:
+-            continue
+-        if _git(root, "show", "-s", "--format=%P", rev) != match.group(1):
+-            continue
+-        expected, _closed, plan, refusal = derive_tree(root, turn, match.group(1))
+-        if refusal or expected != tree:
+-            continue
+-        receipt = "Publication-Verification: " + json.dumps(
+-            plan["verification"], sort_keys=True
++        matches = re.findall(
++            r"(?m)^Primary-Publication-Turn: (WI-[0-9]+-[0-9a-f]{40})$", body
+         )
+-        if receipt not in body.splitlines():
+-            continue
+-        author = _git(root, "show", "-s", "--format=%an%x00%ae", rev).split("\0")
+-        wanted = (plan or {}).get("author") or {}
+-        if not wanted or author != [wanted.get("name"), wanted.get("email")]:
+-            continue
+-        spec = Path(str(turn.get("spec", ""))).name
+-        homes = ("docs/work/complete/" + spec, "docs/archive/work/complete/" + spec)
+-        if any(
+-            _git(root, "ls-tree", "-r", "--name-only", rev, "--", home)
+-            for home in homes
+-        ):
+-            _VERIFIED_PUBLICATIONS.add(proof)
+-            return rev
+-    return None
++        if len(matches) != 1:
++            return None
++        path = primary_turn.RECORDS + "/" + matches[0] + "/turn.toml"
++        turn = primary_turn.parse_record(_git(root, "show", rev + ":" + path), path)
++        return _verified_candidate(root, turn, rev)
++    except (KeyError, OSError, RuntimeError, ValueError, TypeError):
++        return None
+ 
+ 
+ def completed(root, turn):
+diff --git a/project-trajectory/scripts/primary_turn.py b/project-trajectory/scripts/primary_turn.py
+index 2bf752fa..6b2502c9 100644
+--- a/project-trajectory/scripts/primary_turn.py
++++ b/project-trajectory/scripts/primary_turn.py
+@@ -73,14 +73,21 @@ def _definition(text):
+ 
+ 
+ def _read_record(root, path):
+-    data = tomllib.loads(path.read_text(encoding="utf-8"))
++    return parse_record(
++        path.read_text(encoding="utf-8"), path.relative_to(root).as_posix()
++    )
++
++
++def parse_record(text, path):
++    """Parse one selection, whether read from the checkout or a Git carrier."""
++    data = tomllib.loads(text)
+     if set(data) != _FIELDS or data.get("version") != 1:
+         raise ValueError("{}: invalid primary selection schema".format(path))
+     if not isinstance(data["turn"], str) or not _TURN.fullmatch(data["turn"]):
+         raise ValueError("{}: invalid turn identity".format(path))
+     if data["turn"] != "{}-{}".format(data["wi"], data["base"]):
+         raise ValueError("{}: turn does not bind its WI and base".format(path))
+-    if path.relative_to(root).as_posix() != record_path(data):
++    if path != record_path(data):
+         raise ValueError("{}: selection is in the wrong home".format(path))
+     return data
+ 
+diff --git a/tests/test_primary_publication.py b/tests/test_primary_publication.py
+index f1e22c33..a3d3d445 100644
+--- a/tests/test_primary_publication.py
++++ b/tests/test_primary_publication.py
+@@ -242,6 +242,25 @@ def test_real_return_publish_and_completion_replay(tmp_path, monkeypatch):
+     assert pp.completed(root, turn) and pp.publication_commit(root, turn) == landed
+     assert pp.completed(root, turn)  # exact replay is idempotent; no new commit
+     assert git(root, "rev-parse", "HEAD") == landed
++    # Both readers use the same verified carrier; the reset reader must not.
++    identity = verdict.governing_identity(root, "main", candidate)
++    assert pp.carrier_candidate(root, landed) == candidate
++    assert verdict.governing_identity(root, "main") == identity
++    assert verdict.work_tip(root, "main") == landed
++    message = git(root, "show", "-s", "--format=%B", landed)
++    final_tree = git(root, "rev-parse", landed + "^{tree}")
++    candidate_tree = git(root, "rev-parse", candidate + "^{tree}")
++    for forged_message, forged_tree, parent in (
++        (message, candidate_tree, candidate),  # missing the derived effects
++        (message, final_tree, landed),  # copied true words onto later work
++        (message.replace(turn_id, "WI-999-" + base), final_tree, candidate),
++        (message.replace(candidate, base), final_tree, candidate),
++        (message + "\n" + pp.TRAILER + turn_id, final_tree, candidate),
++    ):
++        forged = git(
++            root, "commit-tree", forged_tree, "-p", parent, "-m", forged_message
++        )
++        assert pp.carrier_candidate(root, forged) is None
+     original_derive = pp.derive_tree
+     calls = []
+ 
+diff --git a/tests/test_primary_session.py b/tests/test_primary_session.py
+index 52a19bad..3f728917 100644
+--- a/tests/test_primary_session.py
++++ b/tests/test_primary_session.py
+@@ -1,9 +1,12 @@
+ """Primary session completion gates against real Git turns and trailers."""
+ 
++import dataclasses
+ import subprocess
++
++import pytest
+ import sys
+ 
+-from conftest import SCRIPTS
++from conftest import SCRIPTS, make_minimal_project, record_ids, run_py, set_process_key
+ 
+ if str(SCRIPTS) not in sys.path:
+     sys.path.insert(0, str(SCRIPTS))
+@@ -108,3 +111,179 @@ def test_session_binding_resolves_real_judgment_and_completes_return(tmp_path):
+     assert records[0][1] == judgment.read_text(encoding="utf-8")
+     end = agent_loop.worker_endstate(root, _worker(turn), False, False, 0, rounds=())
+     assert end is not None and end[0] == agent_loop.EXIT_DONE
++
++
++# Full-tier primary-path proofs. Test-fixture logs model protocol inputs; they
++# never claim to be real provider sessions or production approval evidence.
++def _review_candidate(tmp_path, mode, draft_class):
++    root = tmp_path / "primary"
++    root.mkdir()
++    boot = run_py([SCRIPTS / "bootstrap.py", "--dest", root], cwd=tmp_path)
++    assert boot.returncode == 0, boot.stdout + boot.stderr
++    make_minimal_project(root)
++    set_process_key(root, "policies", "review_rounds", 1)
++    set_process_key(root, "attestation", "adjudication_review", mode)
++    spec = root / "docs/work/queued/WI-1-review.md"
++    spec.parent.mkdir(parents=True, exist_ok=True)
++    spec.write_text(
++        '+++\nid = "WI-1"\ntitle = "Judge the return"\n'
++        'workstream = "process"\nsafety_class = "adjudication"\n+++\n'
++        "\n## Context\n\nJudge the empty scope.\n",
++        encoding="utf-8",
++    )
++    record_ids(root)
++    _git(root, "init", "-q", "-b", "main")
++    _git(root, "config", "user.name", "Test")
++    _git(root, "config", "user.email", "test@example.invalid")
++    _git(root, "add", "-A")
++    _git(root, "commit", "-qm", "primary fixture")
++    turn = primary.begin(root, "WI-1")
++    judgment = root / "docs/reviews/primary-return.md"
++    judgment.parent.mkdir(parents=True, exist_ok=True)
++    judgment.write_text("OUTCOME: RETURN\n", encoding="utf-8")
++    draft = (
++        'planmode = "dual"'
++        if draft_class == "dual"
++        else 'safety_class = "{}"'.format(draft_class)
++    )
++    spec.write_text(
++        spec.read_text(encoding="utf-8")
++        + '\n## Approval\n\n```toml\nversion = 1\nturn = "{}"\n'
++        'base = "{}"\nproposal = "{}"\ndecision = []\n```\n'.format(
++            turn["turn"], turn["base"], verdict.tree_identity(root, turn["base"])
++        )
++        + '\n## Dispositions\n\n```toml\ntitle = "Continue the returned work"\n'
++        'workstream = "process"\nsr_refs = ["SR-001"]\n'
++        'supersedes = "WI-1"\nspecref = "docs/reviews/primary-return.md"\n'
++        + draft
++        + "\n```\n\nPreserve the returned obligation.\n",
++        encoding="utf-8",
++    )
++    _git(root, "add", "-A")
++    _git(root, "commit", "-qm", "primary return\n\nWI: WI-1")
++    binding = primary.session_binding(
++        root, _worker(turn), {"phase": "ADJUDICATE", "verdict_path": judgment}
++    )
++    log = root / "docs/iteration/primary-test.log"
++    log.parent.mkdir(parents=True, exist_ok=True)
++    log.write_text(
++        "# phase: ADJUDICATE\n# wi: WI-1\n# base: {}\n"
++        "# provider: test\n# roster-row: fixture\n# model: fixture\n"
++        "# session-id: fixture\n# invocation-id: fixture\n".format(turn["base"][:12])
++        + "".join("# {}: {}\n".format(k, v) for k, v in binding.items()),
++        encoding="utf-8",
++    )
++    _git(root, "add", "-A")
++    _git(root, "commit", "-qm", "fixture primary-session binding")
++    return root, turn
++
++
++def _primary_loop_context(root, turn):
++    fields = {field.name: None for field in dataclasses.fields(agent_loop.LoopContext)}
++    return dataclasses.replace(
++        agent_loop.LoopContext(**fields),
++        root=root,
++        docs=root / "docs",
++        rp_int=1,
++        worker=_worker(turn),
++        run=agent_loop.LoopRun(routing=agent_loop.RoutingState(1, 900, set(), 3, {})),
++    )
++
++
++def _independent_fixture_round(root):
++    reviewed = _git(root, "rev-parse", "HEAD")
++    path = root / "docs/reviews/fixture/001-REVIEW-A-{}.md".format(reviewed[:7])
++    path.parent.mkdir(parents=True, exist_ok=True)
++    path.write_text("VERDICT: APPROVE findings=0\n", encoding="utf-8")
++    log = root / "docs/iteration/fixture-001-20260101-000000.log"
++    log.write_text(
++        "# session: 001\n# train: fixture\n# phase: REVIEW-A\n"
++        "# outcome: COMMITTED\n# provider: independent-test-fixture\n",
++        encoding="utf-8",
++    )
++    _git(root, "add", "-A")
++    _git(root, "commit", "-qm", "fixture independent review")
++
++
++@pytest.mark.parametrize(
++    "mode,draft_class,owed",
++    [
++        ("never", "ordinary", False),
++        ("never", "spine", False),
++        ("when-minting", "ordinary", False),
++        ("when-minting", "spine", True),
++        ("when-minting", "dual", True),
++        ("always", "ordinary", True),
++        ("always", "spine", True),
++    ],
++)
++def test_pending_primary_review_dial_schedules_and_gates_real_publication(
++    tmp_path, mode, draft_class, owed
++):
++    import primary_publication as publication
++
++    root, turn = _review_candidate(tmp_path, mode, draft_class)
++    assert publication.pending(root) == turn
++    ctx = _primary_loop_context(root, turn)
++    candidate = _git(root, "rev-parse", "HEAD")
++    before_files = _git(root, "ls-files")
++    agent_loop.build_bookkeeping(
++        ctx,
++        {
++            "phase": "ADJUDICATE",
++            "route_id": "fixture",
++            "route_family": "test",
++            "brief": "",
++        },
++        "COMMITTED",
++        0,
++        [candidate],
++        candidate,
++        turn["wi"],
++        0.0,
++    )
++    st = ctx.run.routing
++    assert st.review_queue == (["REVIEW-A"] if owed else [])
++    assert st.last_impl_family == ("test" if owed else None)
++    assert st.impl_range == ("{}..{}".format(turn["base"], candidate) if owed else None)
++    plan, refusal = primary_approval.approval_projection(root, turn)
++    assert bool(refusal) is owed
++    if owed:
++        assert "required independent review phases" in refusal
++        closed, refusal = publication.publish(root, turn)
++        assert closed is None and "required independent review phases" in refusal
++        assert _git(root, "rev-parse", "HEAD") == candidate
++        assert _git(root, "ls-files") == before_files
++        assert _git(root, "status", "--porcelain") == ""
++        _independent_fixture_round(root)
++        plan, refusal = primary_approval.approval_projection(root, turn)
++    else:
++        assert not list((root / "docs/reviews").rglob("*REVIEW-A*"))
++    assert refusal is None
++    assert (
++        plan["outcome"] == "return"
++        and plan["statuses"] == {}
++        and plan["approves"] == {}
++    )
++    drafts_before = agent_loop.dispositions_drafted(root, turn["wi"])
++    identity = verdict.governing_identity(root, "HEAD")
++    if owed:
++        assert agent_loop.review_owed_by_evidence(root, _worker(turn)) == []
++    closed, refusal = publication.publish(root, turn)
++    assert refusal is None and closed == [turn["wi"]]
++    assert publication.pending(root) is None and publication.completed(root, turn)
++    assert not (root / turn["spec"]).exists()
++    assert (root / "docs/archive/work/complete/WI-1-review.md").is_file()
++    assert len(list((root / "docs/work/queued").glob("WI-002-*.md"))) == 1
++    assert agent_loop.dispositions_drafted(root, turn["wi"]) == drafts_before
++    assert verdict.governing_identity(root, "HEAD") == identity
++    if owed:
++        assert agent_loop.review_owed_by_evidence(root, _worker(turn)) == []
++    assert primary.registry_blobs(root, "HEAD") == turn["registry_blobs"]
++    assert (
++        primary.registry_blobs(root, "HEAD", "docs/archive/last_approved/")
++        == turn["approved_blobs"]
++    )
++    landed = _git(root, "rev-parse", "HEAD")
++    assert publication.completed(root, turn)
++    assert _git(root, "rev-parse", "HEAD") == landed
+
+FILE project-trajectory/scripts/primary_publication.py
+"""Atomic, turn-bound primary adjudication publication."""
+
+from __future__ import annotations
+
+import json
+import re
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+import baseline_snapshot
+import intake
+import primary_approval
+import primary_close
+import primary_turn
+import publication_verify
+
+TRAILER = "Primary-Publication-Turn: "
+# A Git commit and the serialized immutable turn completely identify a replay.
+# Cache only successful proofs in this process; restart audits them again.
+_VERIFIED_PUBLICATIONS = set()
+
+
+def _git(root, *args, check=True):
+    p = subprocess.run(
+        ["git", "-C", str(root), *args],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if check and p.returncode:
+        raise RuntimeError((p.stdout or "") + (p.stderr or ""))
+    return p.stdout.strip()
+
+
+def _project(root, turn, candidate, tier="all", harness_root=None):
+    primary_turn.validate_candidate(root, turn, candidate)
+    plan, refusal = primary_approval.approval_projection(root, turn, candidate)
+    if refusal:
+        return None, None, refusal
+    refusal = _apply_approval(root, candidate, plan)
+    if refusal:
+        return None, None, refusal
+    closed, drafts, refusal = primary_close.stage_primary_adjudication(
+        root, turn["spec"], judgment_path=plan["judgment"]
+    )
+    if refusal:
+        return None, None, refusal
+    minted, refusal = intake.stage_mint(
+        root, drafts, "primary adjudication {}".format(turn["wi"])
+    )
+    if refusal:
+        return None, None, refusal
+    step = next(
+        (
+            Path(root) / rel
+            for rel in (
+                "scripts/trunk_step.py",
+                "project-trajectory/scripts/trunk_step.py",
+            )
+            if (Path(root) / rel).is_file()
+        ),
+        None,
+    )
+    if step is None:
+        return None, None, "trunk_step.py is absent from the candidate"
+    p = subprocess.run(
+        [sys.executable, str(step), "--root", ".", "--regen"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+    )
+    if p.returncode:
+        return None, None, "regeneration failed: " + (p.stdout + p.stderr)[-2000:]
+    _git(root, "add", "-A")
+    product_bar = _outside_adjudication_scope(root)
+    if product_bar:
+        green, _out, why = publication_verify.run_bar(
+            Path(root), Path(harness_root or root), tier
+        )
+        if not green:
+            return None, None, why
+        _git(root, "add", "-A")
+    plan["verification"] = {
+        "mode": "product-bar" if product_bar else "scope-no-product-bar",
+        "paths": _git(root, "diff", "--cached", "--name-only").splitlines(),
+        "result": "pass",
+    }
+    return closed, plan, None
+
+
+def _apply_approval(root, candidate, plan):
+    statuses = plan.get("statuses") or {}
+    for rel, rows in statuses.items():
+        live = Path(root) / rel
+        refusal = intake._rewrite_toml_statuses(live, rel, list(rows))
+        if refusal:
+            return refusal
+    if statuses or plan.get("approves"):
+        # Snapshot prose carries a date. Bind it to the reviewed candidate's
+        # commit date so completion replay tomorrow derives identical bytes.
+        publication_day = _git(root, "show", "-s", "--format=%cs", candidate)
+        clock = baseline_snapshot._today
+        try:
+            baseline_snapshot._today = lambda: publication_day
+            approves = plan.get("approves") or {}
+            baseline_snapshot.copy_live(root, approves=approves, exact_rels=approves)
+        except SystemExit as exc:
+            return "snapshot copy refused: {}".format(exc)
+        finally:
+            baseline_snapshot._today = clock
+    return None
+
+
+def _outside_adjudication_scope(root):
+    changed = _git(root, "diff", "--cached", "--name-only").splitlines()
+    allowed = (
+        list(publication_verify.ADJUDICATION_SURFACES)
+        + [baseline_snapshot.SNAPSHOT_DIR + "/", "docs/id-watermark"]
+        + publication_verify.generated_paths(Path(root))
+    )
+    return not all(
+        any(
+            p == a.rstrip("/") or (a.endswith("/") and p.startswith(a)) for a in allowed
+        )
+        for p in changed
+    )
+
+
+def derive_tree(root, turn, candidate="HEAD", tier="all"):
+    """Independently replay the exact publication and return its tree and plan."""
+    root = Path(root).resolve()
+    try:
+        cand = _git(root, "rev-parse", candidate)
+        with tempfile.TemporaryDirectory(prefix="primary-publication-") as td:
+            scratch = Path(td) / "repo"
+            _git(root, "clone", "--shared", "--no-checkout", str(root), str(scratch))
+            _git(scratch, "checkout", "--detach", cand)
+            closed, plan, refusal = _project(scratch, turn, cand, tier, root)
+            if refusal:
+                return None, None, None, refusal
+            tree = _git(scratch, "write-tree")
+            # Import newly-written blobs/tree before the disposable object store
+            # disappears. A temporary commit makes the object closure fetchable;
+            # no primary ref is advanced.
+            carrier = _git(
+                scratch, "commit-tree", tree, "-p", cand, "-m", "projection carrier"
+            )
+            _git(root, "fetch", "--no-tags", str(scratch), carrier)
+        return tree, closed, plan, None
+    except (KeyError, OSError, RuntimeError, ValueError) as exc:
+        return None, None, None, str(exc)
+
+
+def publish(root, turn, candidate="HEAD", tier="all"):
+    """Replay, verify and atomically commit one publication; lock is caller-held."""
+    root = Path(root).resolve()
+    cand = None
+    installed = False
+    try:
+        cand = _git(root, "rev-parse", candidate)
+        if cand != _git(root, "rev-parse", "HEAD") or _git(
+            root, "status", "--porcelain"
+        ):
+            return None, "primary is not clean at the exact candidate"
+        primary_turn.validate(root, turn, cand)
+        tree, closed, plan, refusal = derive_tree(root, turn, cand, tier)
+        if refusal:
+            return None, refusal
+        _git(root, "read-tree", "--reset", "-u", tree)
+        installed = True
+        if _git(root, "write-tree") != tree:
+            raise ValueError("installed projection differs from verified tree")
+        author = (plan or {}).get("author") or {}
+        if not author:
+            raise ValueError("publication has no verified adjudicator author")
+        env = dict(
+            __import__("os").environ,
+            GIT_AUTHOR_NAME=author["name"],
+            GIT_AUTHOR_EMAIL=author["email"],
+        )
+        msg = "adjudicate: {} primary publication\n\n{}{}\nPublication-Candidate: {}\nPublication-Tree: {}".format(
+            turn["wi"], TRAILER, turn["turn"], cand, tree
+        )
+        msg += "\nPublication-Verification: " + json.dumps(
+            plan["verification"], sort_keys=True
+        )
+        p = subprocess.run(
+            ["git", "-C", str(root), "commit", "-m", msg],
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+        if p.returncode:
+            _git(root, "reset", "--hard", cand)
+            installed = False
+            return None, "publication commit failed: " + (p.stdout + p.stderr)[-2000:]
+        if _git(root, "rev-parse", "HEAD^{tree}") != tree:
+            raise ValueError("publication commit tree differs from the verified tree")
+        return closed, None
+    except (KeyError, OSError, RuntimeError, ValueError) as exc:
+        if installed and cand:
+            try:
+                _git(root, "reset", "--hard", cand)
+            except RuntimeError as restore:
+                return None, "{}; primary restore failed: {}".format(exc, restore)
+        return None, str(exc)
+
+
+def publication_commit(root, turn):
+    """Verified reachable publication carrier for a durable turn, else None."""
+    token = TRAILER + str(turn.get("turn", ""))
+    out = _git(
+        root, "log", "--format=%H", "--fixed-strings", "--grep=" + token, check=False
+    )
+    return next(
+        (rev for rev in out.splitlines() if _verified_candidate(root, turn, rev)), None
+    )
+
+
+def _verified_candidate(root, turn, rev):
+    """One exact carrier proof shared by completion and governing identity."""
+    token = TRAILER + str(turn.get("turn", ""))
+    proof = (str(Path(root).resolve()), rev, json.dumps(turn, sort_keys=True))
+    if proof in _VERIFIED_PUBLICATIONS:
+        return _git(root, "rev-parse", rev + "^1")
+    body = _git(root, "show", "-s", "--format=%B", rev)
+    if token not in body:
+        return None
+    tree = _git(root, "show", "-s", "--format=%T", rev)
+    match = re.search(r"(?m)^Publication-Candidate: ([0-9a-f]{40})$", body)
+    if not match:
+        return None
+    if _git(root, "show", "-s", "--format=%P", rev) != match.group(1):
+        return None
+    expected, _closed, plan, refusal = derive_tree(root, turn, match.group(1))
+    if refusal or expected != tree:
+        return None
+    receipt = "Publication-Verification: " + json.dumps(
+        plan["verification"], sort_keys=True
+    )
+    if receipt not in body.splitlines():
+        return None
+    author = _git(root, "show", "-s", "--format=%an%x00%ae", rev).split("\0")
+    wanted = (plan or {}).get("author") or {}
+    if not wanted or author != [wanted.get("name"), wanted.get("email")]:
+        return None
+    spec = Path(str(turn.get("spec", ""))).name
+    homes = ("docs/work/complete/" + spec, "docs/archive/work/complete/" + spec)
+    if any(
+        _git(root, "ls-tree", "-r", "--name-only", rev, "--", home) for home in homes
+    ):
+        _VERIFIED_PUBLICATIONS.add(proof)
+        return _git(root, "rev-parse", rev + "^1")
+    return None
+
+
+def carrier_candidate(root, rev):
+    """Read-only mapping of this exact verified publication, never a reset peel."""
+    try:
+        rev = _git(root, "rev-parse", rev)
+        body = _git(root, "show", "-s", "--format=%B", rev)
+        matches = re.findall(
+            r"(?m)^Primary-Publication-Turn: (WI-[0-9]+-[0-9a-f]{40})$", body
+        )
+        if len(matches) != 1:
+            return None
+        path = primary_turn.RECORDS + "/" + matches[0] + "/turn.toml"
+        turn = primary_turn.parse_record(_git(root, "show", rev + ":" + path), path)
+        return _verified_candidate(root, turn, rev)
+    except (KeyError, OSError, RuntimeError, ValueError, TypeError):
+        return None
+
+
+def completed(root, turn):
+    return publication_commit(root, turn) is not None
+
+
+def pending(root):
+    """One unfinished committed selection, or None; malformed/duplicate refuses."""
+    root = Path(root)
+    found = []
+    for path in sorted((root / primary_turn.RECORDS).glob("*/turn.toml")):
+        turn = primary_turn._read_record(root, path)
+        if not completed(root, turn):
+            found.append(turn)
+    if len(found) > 1:
+        raise ValueError(
+            "multiple unfinished primary adjudications: "
+            + ", ".join(turn["wi"] for turn in found)
+        )
+    return found[0] if found else None
+
+
+def writer_refusal(root):
+    """A durable pending turn owns the primary writer even between processes."""
+    try:
+        turn = pending(root)
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        return "primary adjudication selection is unreadable: {}".format(exc)
+    if turn:
+        return "primary adjudication {} is pending; resume it before another writer".format(
+            turn["wi"]
+        )
+    return None
+
+FILE project-trajectory/scripts/primary_turn.py
+"""Immutable primary-turn Git bindings; no session engine or publication writer."""
+
+import re
+import tomllib
+from pathlib import Path
+
+import agent_common as ac
+import baseline_snapshot
+from check_docs import blank_fenced
+from kitlib import git as kgit
+from kitlib import verdict
+
+RECORDS = "docs/reviews/primary"
+_TURN = re.compile(r"WI-[0-9]+-[0-9a-f]{40}\Z")
+_FIELDS = {
+    "version",
+    "turn",
+    "wi",
+    "base",
+    "primary_branch",
+    "primary_root",
+    "proposal_spec_blob",
+    "scope",
+    "registry_blobs",
+    "approved_blobs",
+    "spec",
+}
+
+
+def record_path(turn):
+    return "{}/{}/turn.toml".format(RECORDS, turn["turn"])
+
+
+def _required_git(root, *args):
+    value = kgit.git_out(root, args)
+    if value is None:
+        raise ValueError("cannot read primary Git binding: {}".format(" ".join(args)))
+    return value.strip()
+
+
+def registry_blobs(root, rev, prefix=""):
+    """Exact carrier objects at a revision, including absent-file identity."""
+    paths = [prefix + rel for rel in baseline_snapshot.SNAPSHOTTED]
+    paths += [str(Path(p).with_suffix(".csv")) for p in paths]
+    paths.append(prefix + str(Path(baseline_snapshot.NEEDS_REL).with_suffix(".md")))
+    listing = _required_git(root, "ls-tree", "-r", rev, "--", *paths)
+    return {
+        path: meta.split()[2]
+        for line in listing.splitlines()
+        for meta, path in [line.split("\t", 1)]
+    }
+
+
+def _primary_identity(root):
+    primary = kgit.primary_worktree_root(root)
+    if primary is None or kgit.is_linked_worktree(root) or not primary.samefile(root):
+        raise ValueError("adjudication needs the designated primary checkout")
+    branch = _required_git(root, "symbolic-ref", "--quiet", "--short", "HEAD")
+    if not branch:
+        raise ValueError("primary adjudication cannot run at detached HEAD")
+    return str(Path(root).resolve()), branch
+
+
+def _definition(text):
+    """The immutable proposal with its two judgment sections removed."""
+    kept, judgment = [], False
+    for raw, visible in zip(text.splitlines(keepends=True), blank_fenced(text)):
+        if visible.startswith("## "):
+            judgment = visible.strip() in ("## Approval", "## Dispositions")
+        if not judgment:
+            kept.append(raw)
+    return "".join(kept).rstrip() + "\n"
+
+
+def _read_record(root, path):
+    return parse_record(
+        path.read_text(encoding="utf-8"), path.relative_to(root).as_posix()
+    )
+
+
+def parse_record(text, path):
+    """Parse one selection, whether read from the checkout or a Git carrier."""
+    data = tomllib.loads(text)
+    if set(data) != _FIELDS or data.get("version") != 1:
+        raise ValueError("{}: invalid primary selection schema".format(path))
+    if not isinstance(data["turn"], str) or not _TURN.fullmatch(data["turn"]):
+        raise ValueError("{}: invalid turn identity".format(path))
+    if data["turn"] != "{}-{}".format(data["wi"], data["base"]):
+        raise ValueError("{}: turn does not bind its WI and base".format(path))
+    if path != record_path(data):
+        raise ValueError("{}: selection is in the wrong home".format(path))
+    return data
+
+
+def validate(root, turn, candidate="HEAD"):
+    """Re-resolve original proposal bindings and the permitted judgment delta."""
+    identity, branch = _primary_identity(root)
+    if (identity, branch) != (turn["primary_root"], turn["primary_branch"]):
+        raise ValueError("primary root or branch changed since selection")
+    if ac.working_tree_dirty(root):
+        raise ValueError(
+            "primary adjudication has uncommitted residue; reconcile it first"
+        )
+    return validate_candidate(root, turn, candidate)
+
+
+def validate_candidate(root, turn, candidate):
+    """Portable Git proof, also checked by the disposable publication replay."""
+    base = turn["base"]
+    _required_git(root, "merge-base", "--is-ancestor", base, candidate)
+    path = record_path(turn)
+    if tomllib.loads(_required_git(root, "show", candidate + ":" + path)) != turn:
+        raise ValueError("publication selection differs from its committed turn")
+    origin = _required_git(
+        root, "log", "--diff-filter=A", "--format=%H", candidate, "--", path
+    )
+    if not origin or "\n" in origin:
+        raise ValueError("selection has no unique committed origin")
+    if _required_git(root, "show", "-s", "--format=%P", origin) != base:
+        raise ValueError(
+            "selection origin is not the first commit after its bound base"
+        )
+    if _required_git(root, "rev-parse", origin + ":" + path) != _required_git(
+        root, "rev-parse", candidate + ":" + path
+    ):
+        raise ValueError("immutable primary selection was changed")
+    for prefix, key in (
+        ("", "registry_blobs"),
+        (baseline_snapshot.SNAPSHOT_DIR + "/", "approved_blobs"),
+    ):
+        if (
+            registry_blobs(root, base, prefix) != turn[key]
+            or registry_blobs(root, candidate, prefix) != turn[key]
+        ):
+            raise ValueError("{} changed during judgment".format(key))
+    _validate_proposal(root, turn, candidate)
+    spec = turn["spec"]
+    changed = _required_git(
+        root, "diff", "--name-only", "--no-renames", base, candidate
+    )
+    extra = [
+        p for p in changed.splitlines() if p != spec and not verdict.is_record_path(p)
+    ]
+    if extra:
+        raise ValueError("primary judgment changed unowned paths: " + ", ".join(extra))
+    return None
+
+
+def _validate_proposal(root, turn, candidate):
+    base = turn["base"]
+    spec = turn["spec"]
+    if (
+        not spec.startswith("docs/work/queued/")
+        or "/" in spec[len("docs/work/queued/") :]
+    ):
+        raise ValueError("selection does not name one queued spec")
+    if (
+        _required_git(root, "rev-parse", base + ":" + spec)
+        != turn["proposal_spec_blob"]
+    ):
+        raise ValueError("initial queued proposal identity does not match")
+    before = _required_git(root, "show", base + ":" + spec)
+    after = _required_git(root, "show", candidate + ":" + spec)
+    meta, _body = ac.parse_spec_frontmatter(before, spec)
+    if (meta.get("id"), meta.get("safety_class"), meta.get("adjudicates") or []) != (
+        turn["wi"],
+        "adjudication",
+        turn["scope"],
+    ):
+        raise ValueError(
+            "turn WI, role or scope does not equal the original queued proposal"
+        )
+    if _definition(before) != _definition(after):
+        raise ValueError("judgment changed the proposal outside Approval/Dispositions")

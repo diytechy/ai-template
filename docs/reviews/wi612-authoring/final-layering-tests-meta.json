@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/test_import_layers.py",
+    "tests/test_module_size_ratchet.py",
+    "tests/test_complexity_ratchet.py",
+    "tests/test_bootstrap.py::test_bootstrap_imports_only_the_common_package"
+  ],
+  "cwd": "/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi612-authoring-7umb_mqb/checkout",
+  "base": "9a52c964b068a12f4fbe3547811d2fb37d42c5e3",
+  "exit": 0,
+  "wall_seconds": 5.286393332993612
+}

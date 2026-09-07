@@ -1,0 +1,27 @@
+**REQUEST_CHANGES** (source review only; no semantic acceptance recorded).
+
+**Overall:** the inversion is sound. The library gains an injected capability and imports nothing from the application; the reset path still calls the refresh verifier directly; the bound reader peels a publication to its candidate and then stops because the candidate's Approval edit moves the non-record identity; failures and exceptions in the carrier query map to None, which is toward review; primary_approval's unbound use breaks the proof recursion. The findings below are about completeness of the binding, a write on a read path, and lint.
+
+**Blocking**
+
+1. **The read path writes into the primary repo.** Every uncached `carrier_candidate` runs `derive_tree`, whose scratch replay ends with `commit-tree` plus `git fetch` into the primary object store and FETCH_HEAD. That import is only needed by `publish`, which must `read-tree` the objects. On the identity path the tree sha comparison alone suffices and the objects already exist. Concurrent scheduler queries contend on FETCH_HEAD and each leaves a dangling carrier commit with a fresh timestamp. Parameterize `derive_tree` (for example `import_objects=False`) and pass False from `_verified_candidate`. This also makes IF-180's "may import Git objects" clause narrower and truer.
+
+2. **Undeclared IF-175 requestors.** `primary_approval.py` and `primary_turn.py` import `kitlib.verdict` directly, and primary_approval reading round evidence unbound is now an explicit design decision of this WI. IF-175's own notes say an import no requestors entry carries is an undeclared seam. Add both, and state in the notes that primary_approval reads unbound by design at the pre-publication candidate.
+
+3. **Probable ruff I001 in two files.** `primary_publication.py` has `from pathlib import Path` before `from functools import partial`, and `from kitlib import verdict` isolated between stdlib and local blocks. `tests/test_primary_session.py` has `import sys` inside the third-party block after `import pytest`. The bar runs ruff; verify before claiming green.
+
+**Should fix**
+
+4. **One predicate, two shapes.** `carrier_candidate` requires exactly one `Primary-Publication-Turn` trailer; `publication_commit` and `_verified_candidate` use a substring test that accepts two. A forged commit with a duplicated trailer is "completed" but not a carrier. Move the exactly-one check into `_verified_candidate` so completion and identity are literally the same proof, as LLR-207 now claims.
+
+5. **Hand-maintained bound-name set.** `_CarrierReader` lists seven names that must match every `carrier=` signature in `kitlib/verdict.py`; nothing detects drift when a new carrier-aware function lands. Derive the set with `inspect.signature(value).parameters` containing `carrier` (stdlib).
+
+6. **Cold-entry import cycles are not proven by the layer test.** `agent_loop` and `dispatch` now import `primary_publication` at module scope, which imports `intake`, `primary_approval`, `primary_close` and `publication_verify`. Cycle symptoms depend on which module is imported first, and conftest may mask them. Run each of `agent_loop`, `dispatch`, `integrate` as the first import in a fresh interpreter.
+
+7. **Name the provider symbol.** IF-180's owner symbol `verdict_reader` (and `_CarrierReader`) appears in no LLR code_symbol cell; add it to LLR-207's primary_publication list.
+
+**Noted limits, no change requested**
+
+- Mapping depends on environment-reproducible replay (trunk_step regen, product bar toolchain). Later environment drift un-maps historical publications toward review. IF-180's "unavailable verification leaves the identity unmapped" covers this; consider stating the reproducibility dependence explicitly.
+- Per-process replay cost at trunk tip after a publication is the same class `pending()` already pays; acceptable once finding 1 removes the writes.
+- The abrupt-exit and lock-callback tests match their stated claims: process loss on this box with supervised reset, and real engine locks with fixture inputs. Neither is called a power-loss or real-provider proof.
