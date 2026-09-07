@@ -2631,6 +2631,39 @@ not shipped kit machinery. It keeps CI and phase-close Full unchanged, and
 never labels a selected run as Full. No Worktrunk dependency or replacement
 runner is introduced by this slice.
 
+### Exclusive primary approval publication replaces branch-side approval [since 0f106ce9c1e13a5f86b744311d649a4f69df32f2]
+
+Take this repair as one set using the file-class procedure above. Refresh the shipped
+coordinator, integration and snapshot boundaries together with
+`scripts/primary_adjudication.py`, `primary_turn.py`, `primary_close.py`,
+`primary_approval.py`, `primary_publication.py`, `publication_verify.py`, and
+`scripts/kitlib/adjudication.py`; also take `prompts/primary-adjudication.template.md`
+and the updated amendment/first-approval/worker prompts,
+`skills/spine-authoring/SKILL.md`, `skills/gate-advance/SKILL.md`,
+PROCESS/PROCESS_OPTIONS guidance and prompt catalog. Bootstrap’s mapping
+contains the complete new shipped-file set. A partial
+copy is unsafe: the primary turn, typed verdict grammar, publication replay and
+exact snapshot copier are one protocol.
+
+Approval and snapshot writes are removed from every WI branch, including an
+adjudication lane. Do not carry a local branch-side Status flip or
+`docs/archive/last_approved/` write forward; leave it as pending drift for the
+exclusive primary publication path. That path accepts only a committed, typed
+primary judgment bound to its immutable selection, declared row scope, review
+and route/session evidence. It copies only the explicitly accepted registry
+set, so no unrelated Status flip, newly Approved row or drifted cell is silently
+blessed. RETURN/UNCERTAIN close without a Status or snapshot effect; a
+human-held cell remains for the manual signer.
+
+Before selecting a new primary turn, have a supervisor reconcile any already-active adjudication
+through an explicit migration record. Preserve the same work-item identity, queued spec, exact typed
+`Adjudicates` scope and incident evidence; do not invent a second selection or
+widen the scope during re-sync. After the primary publication lands, run the
+normal trunk regeneration and declared scope-based bar. The no-product-bar
+path remains limited to the derived adjudication surfaces; an escaped product
+change still runs the product bar.
+
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which

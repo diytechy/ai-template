@@ -28,12 +28,12 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   then the [redesign execution record](ai-template-redesign-2026-09-05-codex/EXECUTION-RECORD.md).
   Recheck Git and the generated frontier before choosing work; earlier handoffs
   and sitting checklists are historical context.
-- **Prepare the supervised retry:** finish the enforcing commit bar, commit
-  the reviewed primary-checkout adjudication repair, and record a fresh
-  preflight at that repaired revision. The independent runtime follow-up is approved;
+- **Run the supervised retry:** complete the pause-removal commit bar, freeze
+  that launch revision, then run the root launcher and supervise the carried
+  control envelope in the [fresh preflight](ai-template-redesign-2026-09-05-codex/CONTROL-APPROVAL-PREFLIGHT.md). The independent runtime follow-up is approved;
   retain its operational limits and the
   [reviewed repair contract](ai-template-redesign-2026-09-05-codex/APPROVAL-REPAIR-CONTRACT.md),
-  then follow the handoff’s pause-removal and supervised launch sequence.
+  including the dirty-staging recovery limit.
   Inspect the complete chains and every older cell a whole-registry snapshot
   would absorb; the needs-only SN-036 act does not approve those registries.
 - **Control retry stopped before integration:** the owner clarified that
@@ -41,10 +41,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   through the mechanical approval path. Follow the
   [revised repair plan](ai-template-redesign-2026-09-05-codex/CONTROL-RETRY.md#owner-clarification-and-revised-resolution)
   and [work-type and context audit](ai-template-redesign-2026-09-05-codex/WORK-FLOWS.md),
-  then reconcile the preserved lane and pass checks/review before retrying
-  under the handoff's carried control envelope. Retention may stay absent and
-  excluded from the measured configuration. The tracked pause
-  is restored; it stops new claims, so keep the coordinator stopped as well.
+  and preserve the supervisor migration through the retry. Retention may stay absent and
+  excluded from the measured configuration. At the stopping boundary, restore
+  the tracked pause and verify the coordinator and its providers have stopped.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). `wi416-parked-handback-contract` is still

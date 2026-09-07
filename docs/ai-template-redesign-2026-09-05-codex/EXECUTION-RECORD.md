@@ -25,14 +25,19 @@ findings and recovery constraints. The final full suite passed; the subsequent
 owner-only mover exclusion passed targeted publication/structural checks and
 [its bounded independent review](../reviews/2026-09-07-owner-relink-luna.md).
 The [repair log](../log.d/2026-09-07-approval-repair.md) records the exact test
-scope and results. Complete the enforcing commit bar and commit the repair
-before the fresh launch preflight; no new control launch is claimed yet.
+scope and results. The hooks-enabled repair commit is
+`0f106ce9c1e13a5f86b744311d649a4f69df32f2`. The
+[fresh preflight](CONTROL-APPROVAL-PREFLIGHT.md) records its committed queue,
+setup and route checks. The commit carrying that preflight removes the pause
+for the owner-authorized supervised retry; capture its exact SHA before
+launch and preserve the existing accounting. No new observation is claimed
+before the launcher actually starts.
 
 The owner settled [stable ID meaning and primary-checkout adjudication](WORK-FLOWS.md).
-Finish the commit bar for the
+Retain the verified
 [repair](CONTROL-RETRY.md#owner-clarification-and-revised-resolution) and
 [preserved-lane migration](../reviews/2026-09-07-WI-605-supervisor-migration.md)
-before the next measured segment. The handoff carries the limits and pause
+through the next measured segment. The handoff carries the limits and pause
 restoration requirement. Retention remains absent and may remain excluded;
 it must not hold up this repair or be silently enabled in the control.
 

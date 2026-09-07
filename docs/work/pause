@@ -1,2 +1,0 @@
-reason = "Repair before retry: implement exclusive primary-checkout adjudication, approval and mechanical snapshot publication in one commit, stable-ID meaning handling, and durable close/restart; reconcile the preserved lane and verify before launch. See docs/handoff-2026-09-07.md. Pause stops new claims only; keep the coordinator stopped during repair."
-since = "2026-09-07"
