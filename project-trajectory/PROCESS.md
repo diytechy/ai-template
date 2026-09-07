@@ -936,9 +936,14 @@ down** — hands a mechanical, well-specced subtask to a cheaper-tier subagent �
 that already delegates readily needs no push), and **steps sideways** to
 a peer-tier subagent with a fresh, dedicated context when the work would
 otherwise crowd the driver's context (bulk asset/prose generation, a wide file
-sweep; the independent reviewer above is already this pattern). Hosts
-increasingly make these hand-offs automatically; the judgment stands wherever
-the lever is manual.
+sweep; the independent reviewer above is already this pattern), and **fans
+out** to several subagents at once when the work splits into independent
+pieces — separate files, separate read-only investigations, separate test
+modules — so wall-clock is spent in parallel rather than in sequence. Fan-out
+stops at the shared seams: one commit sequence, one spine registry, one
+generated artifact are each ONE writer's, so the driver folds the results in
+serially and owns the bar. Hosts increasingly make these hand-offs
+automatically; the judgment stands wherever the lever is manual.
 
 **Decision-surfacing rate — same axis, set at setup.** The risk triage above
 also calibrates **how often the driver pauses for a human decision**. It is a
