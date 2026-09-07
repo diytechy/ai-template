@@ -210,10 +210,22 @@ Resolution before another launch:
    and scope so the copier writes that content; a free-form reference alone
    does not establish an approval. Textual change alone does not invalidate
    an implementation judgment when the meaning comparison confirms equivalence.
-   Whole-registry copying must not absorb other unapproved changes. This is
-   an approval-triggered write, never ordinary freshness regeneration.
+   Whole-registry copying must not absorb other unapproved changes — that
+   clause is [WI-596](../work/queued/WI-596-the-anchoring-copy-s-absorb-le.md)'s
+   declared scope, so depend on that row and cite its ledger rather than
+   restating it here; two homes for one rule is what this repair exists to
+   remove. This is an approval-triggered write, never ordinary freshness
+   regeneration.
 3. Enforce snapshot ownership at the existing worker-change and integration
-   boundaries. Reject worker-originated snapshot/approval-ledger changes;
+   boundaries. **Close the adjudication-actor exception first**: today
+   `integrate._approval_act_refusal` -> `_adjudication_lane` ->
+   `acceptance_record.merge_approval_refusal` stands the `SNAPSHOT_DIR`
+   prohibition down for any branch whose claimed specs are all
+   `safety_class = "adjudication"`, so a rule phrased against
+   "worker-originated" changes is a no-op against exactly the path that failed.
+   Refuse the snapshot write for every branch regardless of actor class, and
+   keep `adjudication_approval_refusal`'s `Adjudicates`-bounded `Status` flips
+   as they are. Reject worker-originated snapshot/approval-ledger changes;
    ordinary synchronization of accepted primary artifacts is not a worker
    approval act. Add explicit read-only/generated guidance in the snapshot
    directory and the briefs that consume it. Preserve byte-for-byte copies:

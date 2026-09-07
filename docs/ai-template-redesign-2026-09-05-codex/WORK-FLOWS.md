@@ -21,6 +21,15 @@ exclusive window prevents implementation from racing a requirement change.
 Judging a handback from ordinary work is still an exclusive adjudication turn;
 it does not entitle the ordinary worker to share the adjudicator conversation.
 
+This ownership boundary is not new. Owner ruling **2026-09-01** already states
+it, with the same concurrency reasoning, and `lane_approval_refusal` carries the
+argument verbatim: two lanes touching the spine conflict at merge and the
+snapshot must not move across a workstream, whereas a serial trunk-side act
+cannot conflict. The ruling assumed the act was trunk-side; the adjudication-lane
+exception landed the same day with the first-approval arm (WI-572) and made it a
+claimed worktree, which is what removed the guarantee the ruling rested on. The
+repair closes an exception to a standing rule; it establishes no new one.
+
 The snapshot always represents the last approved state. Proposed wording may
 be on trunk while awaiting judgment, with the previous snapshot still intact
 and drift still visible. Approval and its mechanically produced snapshot must
@@ -63,7 +72,8 @@ its proposed snapshots have not been integrated into primary.
 | Location | `lane.spawn_worker` launches the claimed worktree; `agent_loop._resolve_root` makes that worktree the effective root. Exclusive does not mean trunk-resident. |
 | Detection | `integrate.integrate_one` calls `intake.intake_after_merge` while holding the integration slot. `_routed_amendments` uses `acceptance_record.staged_spine_amendments` over the before/after merge trees; the amendment brief separately supplies the last-approved snapshot and live chain. The trigger scan itself is not a semantic comparison. |
 | Authoring scope | `worker.template.md` permits authoring Drafted rows and amending cell text in its generic worker rules. `acceptance_record.lane_approval_refusal` prohibits approval acts but expressly permits amendments. This does not enforce the owner's implementation-versus-spine separation. |
-| Snapshot write | The amendment and first-approval briefs direct the model to invoke the copier; `adjudicate_brief._aftermath` reinforces this. Move the write to the trunk approval boundary and remove that worker permission. |
+| Snapshot write (direction) | The amendment and first-approval briefs direct the model to invoke the copier; `adjudicate_brief._aftermath` reinforces this. Move the write to the trunk approval boundary and remove that worker permission. |
+| Snapshot write (permission) | Removing that direction is NOT sufficient: the merge slot deliberately permits the act for this actor. `integrate._approval_act_refusal` calls `_adjudication_lane`, true when every claimed spec on the branch declares `safety_class = "adjudication"`, and hands that flag to `acceptance_record.merge_approval_refusal`. The flag selects `adjudication_approval_refusal`, which BOUNDS the flips by the `Adjudicates` cell and lets the snapshot cover the registries those flips changed; only the `False` arm, `lane_approval_refusal`, prohibits a `SNAPSHOT_DIR` write outright. So an adjudication worktree is mechanically authorized to write the approved snapshot today, and the WI-605 lane did. Close the exception, not only the instruction. |
 
 These mechanisms are reusable. The correction is to their ownership and
 ordering, not a reason to replace mechanical drift detection or discard
