@@ -1,0 +1,60 @@
+# agent session log — written by scripts/agent_common.py
+# session: 011
+# date: 2026-09-07 13:49
+# train: contract_split
+# base: d522f3b0c729
+# phase: ADJUDICATE
+# primary-turn: WI-610-d522f3b0c7295ce2d46765551a6500491a76ff2c
+# judgment: docs/reviews/contract_split/011-ADJUDICATE-4a5d938.md
+# candidate: 4a5d938df3bbb81bc3d88298d71e2617c25d2fbb
+# wi: WI-610
+# model: opencode-go/kimi-k3
+# guardrails:
+# outcome: ERROR
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 1
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 1130479
+# prompt-template: kit:ADJUDICATE
+# prompt-sha: sha256:01088b63a438
+# timeout:
+# heterogeneity:
+# exit-code: 1
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# invocation-id: d74180ef34e547238c51adeaf94ee43f
+# attempt-id: contract_split@d522f3b0c7295ce2d46765551a6500491a76ff2c
+# source-event:
+# role: ADJUDICATE
+# provider: OPENCODE
+# requested-model: opencode-go/kimi-k3
+# reported-model:
+# tier: strong
+# roster-row: OPENCODE-KIMI
+# started-at: 2026-09-07T18:49:45Z
+# ended-at: 2026-09-07T18:49:46Z
+# input-tokens:
+# output-tokens:
+# reasoning-tokens:
+# raw-usage:
+# usage-scope: unknown
+# usage-source: unknown
+# usage-status: unavailable
+# ---
+[91m[1mError: [0m{
+  "name": "UnknownError",
+  "data": {
+    "message": "Unexpected server error. Check server logs for details.",
+    "ref": "err_7478e77b"
+  }
+}
