@@ -1,0 +1,27 @@
+version = 1
+turn = "WI-610-d522f3b0c7295ce2d46765551a6500491a76ff2c"
+wi = "WI-610"
+base = "d522f3b0c7295ce2d46765551a6500491a76ff2c"
+primary_branch = "contract_split"
+primary_root = "/Users/diytechy/Documents/ai-template"
+spec = "docs/work/queued/WI-610-adjudicate-combined-approved.md"
+proposal_spec_blob = "c27bfc07cdcb21be7dae68078b223ea4c89fb5ac"
+scope = ["LLR-058", "LLR-061", "LLR-123", "LLR-140", "LLR-144", "LLR-149", "LLR-150", "LLR-151", "LLR-152", "LLR-153", "LLR-154", "LLR-158", "LLR-161", "LLR-167", "LLR-183", "LLR-207", "SR-024", "SR-033", "SR-043", "SR-052", "SR-053", "SR-054", "SR-111", "SR-112", "SR-129", "SR-144", "SR-146", "SR-147", "SR-148", "SR-149", "SR-156", "SR-161", "SR-162", "SR-167", "SR-175", "SR-176", "SR-177", "TC-058", "TC-061", "TC-138", "TC-143", "TC-144", "TC-145", "TC-146", "TC-147", "TC-148", "TC-153", "TC-154", "TC-156", "TC-161", "TC-178", "TC-205"]
+
+[registry_blobs]
+"docs/requirements/components.toml" = "dfb9e077586659afbd4d9b2f636f891976add9e2"
+"docs/requirements/external.toml" = "179dcd21854d08b4b0e366bc96e2e3fd076522e2"
+"docs/requirements/interfaces.toml" = "9d347825972d065b683e6e6823f6b1efeccd4337"
+"docs/requirements/low-level-requirements.toml" = "cd855a66183510036a087c028acd3e1fa367e134"
+"docs/requirements/stakeholder-needs.toml" = "abf6c3ab7dcbf6df38efaecbf2188948b4f4cb9e"
+"docs/requirements/system-requirements.toml" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+"docs/test/test-cases.toml" = "ab4106cbcac0bfc30e5cf82dfc480244662adacc"
+
+[approved_blobs]
+"docs/archive/last_approved/docs/requirements/components.toml" = "cf67e1134ebd7690603b407e0a0d61d4bc10b062"
+"docs/archive/last_approved/docs/requirements/external.toml" = "179dcd21854d08b4b0e366bc96e2e3fd076522e2"
+"docs/archive/last_approved/docs/requirements/interfaces.toml" = "0b060fb818b03ab5b3413787bbb2f8f059931af3"
+"docs/archive/last_approved/docs/requirements/low-level-requirements.toml" = "1ec0ab08fcea5f7dd638651e4281322bbd031705"
+"docs/archive/last_approved/docs/requirements/stakeholder-needs.toml" = "abf6c3ab7dcbf6df38efaecbf2188948b4f4cb9e"
+"docs/archive/last_approved/docs/requirements/system-requirements.toml" = "435d8ce708795a5e3f9451ff0d171824b2b3c452"
+"docs/archive/last_approved/docs/test/test-cases.toml" = "ca71cc09e6093c5c5ff299e8d077453c967140d2"
