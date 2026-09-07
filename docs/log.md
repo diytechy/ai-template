@@ -62228,3 +62228,32 @@ No new guard was added for either MAJOR. The first is a prose correction to a
 sentence that described `check.py`'s step table from outside it; the brief now
 points at that table instead of restating it, so there is nothing left to keep
 in sync. The second is a deletion, which is its own antidote.
+
+## 2026-09-06 — Short control launch preparation and owner-authorized pause deletion
+
+The owner reaffirmed the supervised launch after the review of `22285df4`
+and authorized updating Claude Code. Its version is now 2.1.263; Fable 5.1
+and Astra each returned READY on live CLI probes with medium effort. The
+[preflight](ai-template-redesign-2026-09-05-codex/CONTROL-PREFLIGHT.md) retains
+the failed older-CLI probe, successful session identifiers and raw reported
+preparation cost without treating those calls as control observations.
+
+Read every ready spec again; the frontier contains 17 WIs and excludes
+deferred WI-551. Reviewed the pause deletion, corrected links that broke
+when that presence-based file was removed, and refreshed its generated views.
+The launch baseline is this deletion commit; its hash is written in the next
+record commit before the coordinator starts. Supervision and stopping follow
+the existing ruling and [observation record](ai-template-redesign-2026-09-05-codex/CONTROL-OBSERVATIONS.md).
+No policy, routing row, runtime code, requirement or approval snapshot changed.
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/schedule.py --root . ready --format json" rev=22285df4; out/run-logs/control-launch-ready.json -->
+
+Validation: smoke 1680 passed, 4 skipped in 62.14s; measured process wall
+62.41063329100143s, enforced at 62.4s against the 90s ceiling (within).
+Strict trajectory passes with warnings. Documentation initially found two
+links to the deleted pause; after pointing at stable documentation it passes
+with no broken links and the existing report orphan warning. Hooks remain
+enabled. No full-suite run or push is claimed. No byte-capped or watched
+master was edited.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke; .venv/bin/python scripts/check_smoke_budget.py --elapsed 62.41063329100143 --mode enforce; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=22285df4+control-launch; out/run-logs/control-launch-smoke.txt; out/run-logs/control-launch-smoke.json; out/run-logs/control-launch-docs.txt -->
+
+Deferred open items: none.

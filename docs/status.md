@@ -32,10 +32,11 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   for the perspective-review chain and the redesign Inspection artifacts.
   Inspect the complete chains and every older cell a whole-registry snapshot
   would absorb; the needs-only SN-036 act does not approve those registries.
-- **Control launch — authorized:** the next session deletes the tracked
-  `docs/work/pause` in a hooks-enabled commit and starts the coordinator from
-  the primary root, per the handoff's
-  [launch procedure](handoff-2026-09-06.md#launch-procedure) and the
+- **Control supervision:** start from the primary root after the hooks-enabled
+  pause-deletion commit, per the handoff's
+  [launch procedure](handoff-2026-09-06.md#launch-procedure). Keep the
+  [observation record](ai-template-redesign-2026-09-05-codex/CONTROL-OBSERVATIONS.md)
+  current and honor the
   [control ruling](ai-template-redesign-2026-09-05-codex/CONTROL-DECISION.md#owner-ruling-2026-09-06)
   (8 WIs / 2 days / 12 h; US$1000 reported spend is a watch, unreported spend
   never stops admission). Replacement packages follow the window's evidence.

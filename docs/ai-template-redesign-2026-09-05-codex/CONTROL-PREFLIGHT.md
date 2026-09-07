@@ -1,9 +1,10 @@
 # Control-launch preflight
 
-The final candidate is the reviewed commit carrying this preparation on
-`contract_split`, based on `a6b545849e0552de898b68e838b4eb6c1f8e5b33`.
-Its exact completed hash and pause-deletion diff are recorded after the commit
-exists. This record prepares the launch; it is not a control observation.
+The launch preparation is based on reviewed `22285df4182dd2b69b4e658d77732afaf145c165`
+on `contract_split`. The pause-deletion commit's completed hash is recorded
+here before starting the coordinator. Runtime observations belong in the
+[control observation record](CONTROL-OBSERVATIONS.md); preparation is not a
+control observation.
 
 ## Settled limits and remaining act
 
@@ -13,11 +14,10 @@ hours. US$1000 (raised from US$100, 2026-09-06 later sitting) is a watched bound
 and does not stop admission. Sampling, consolidation, authority and provider
 consent remain unchanged. The retained-adjudicator patch is outside the window.
 
-`docs/work/pause` remains tracked and the runner has not launched. The owner
-has since (2026-09-06, later sitting) instructed the next session to perform
-the deletion commit and start the window; that commit is the frozen launch
-commit and its hash is recorded here by the session that makes it. No
-additional permission is requested merely because spend is unavailable.
+The owner authorized the pause-deletion commit and supervised launch, and
+reaffirmed that instruction after the CLI update and successful Fable probe.
+The deletion commit is the frozen launch baseline. No additional permission
+is requested merely because spend is unavailable.
 
 ## Actual route evidence
 
@@ -26,26 +26,43 @@ OpenCode. **Re-lined 2026-09-06 (later sitting):** ANTHROPIC-FABLE (Fable 5.1
 at medium effort) leads the strong tier; ANTHROPIC-OPUS-STRONG is catalog-only.
 `agent_route.py --select --tier strong` returns ANTHROPIC-FABLE. WI-551 (the
 adjudicator session-retention patch) is moved to `deferred/` for the window,
-which the ruling's configuration row requires and the queue had not enforced. The Fable
-route has not been live-probed from this sitting; the launch's step 1 and the
-loop's pre-dispatch probe establish it. `agent_route.py --list` and tier selections, including exclusion of
+which the ruling's configuration row requires and the queue had not enforced.
+`agent_route.py --list` and tier selections, including exclusion of
 Anthropic, resolve without registry errors. The strong/medium/quick OpenAI
-choices are **Astra/Sol/Luna** since the owner re-lineup of 2026-09-06 (later
-sitting; Terra is catalog-only, and Astra is not yet live-probed from a
-sitting). Earlier in this record "Sol/Terra/Luna" names the line-up at the
-time. Local version probes returned Claude 2.1.207,
-Codex 0.153.4 and OpenCode 1.18.26.
+choices are **Astra/Sol/Luna** since the owner re-lineup of 2026-09-06;
+Terra is catalog-only. Claude Code was updated with owner authorization from
+2.1.207 to 2.1.263 after the Fable request rejected the older executable
+(minimum required: 2.1.251). Codex reported 0.153.4; the earlier OpenCode
+version check reported 1.18.26.
+
+**Live probes in this supervising conversation, before launch:**
+
+- Astra: `printf 'Reply with the single word READY.' | codex exec -c model_reasoning_effort=medium --model gpt-6-astra --dangerously-bypass-approvals-and-sandbox`.
+  Exit 0, `READY`; CLI header identified Astra and medium effort. Provider
+  session `01a07963-4b42-7680-8fcc-8dfb9834c16f`. Cost not reported.
+- Fable after updating: `printf 'Reply with the single word READY.' | CLAUDE_CODE_EFFORT_LEVEL=medium claude -p --model claude-fable-5-1 --output-format stream-json --verbose --dangerously-skip-permissions`.
+  Exit 0, `READY`, `is_error=false`; initialization and response identified
+  Fable 5.1 on Claude Code 2.1.263. Provider session
+  `36967d6d-5fcb-460e-97d9-c6542e580d05`, result timestamp
+  `2026-09-07T01:03:46.316Z`, raw `total_cost_usd=0.31372675`.
+  The earlier incompatible-CLI request exited 1 with API status 400 and raw
+  `total_cost_usd=0.000594`; that failure is not erased by the successful retry.
+
+These are actual tool results from this conversation, not reconstructed
+coordinator telemetry. They are preparation calls outside the window. Listing
+routes is not a live probe: `select_with_probe` probes suspect routes during
+recovery and skips fresh routes. Re-probe an unverified changed launch route
+explicitly instead of relying on that recovery mechanism.
 
 **Provider requests did occur during preparation:** the
 [Claude readiness probe](../reviews/2026-09-06-oi86-sn036-probe-structured-opus.md)
 and subsequent Opus reviews/Inspection used the requested `claude-opus-5`
 route. Initialization and result usage identify that model, and tracked
 invocation logs retain the actual results. Those calls establish availability
-of that review route on this account. Other control routes received registry,
-selection and installation checks only; their authentication, credit, live
-model availability and billing remain unverified until their normal pre-dispatch
-probes. Sol, Terra and Luna collaboration sessions are not evidence of Codex
-CLI authentication.
+of that review route on this account. Apart from those Opus calls and the
+Astra/Fable probes above, other control routes received registry, selection
+and installation checks only; their live availability and billing remain
+unverified. Collaboration sessions are not evidence of provider CLI authentication.
 
 No inspected setting imposes an aggregate provider-dollar limit. The runner
 records provider-reported cost where supplied but does not enforce the US$1000 watch.
@@ -58,12 +75,16 @@ review round. No policy value changed.
 
 The final preparation read of
 `.venv/bin/python project-trajectory/scripts/schedule.py --root . ready --format json`
-returned **18 ready WIs**. The new amendment adjudication and documentation
+returned **17 ready WIs** at `22285df4`, after WI-551 was deferred. The new amendment adjudication and documentation
 follow-up are ready; the new first-approval batch is held on the amendment.
-Complete ready specs were read during preparation; eligibility is not a claim
-or a decision to implement every older proposal. Revalidate this same queue and
-route registry at the completed frozen hash before presenting the launch diff.
-<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/schedule.py --root . ready --format json" rev=a6b54584+oi86-sn036-final; out/run-logs/oi86-ready.json refreshed at frozen commit -->
+Complete ready specs were read again by the supervisor. The returned ids are
+WI-582, WI-605, WI-601, WI-602, WI-603, WI-604, WI-581, WI-570, WI-577,
+WI-557, WI-596, WI-597, WI-536, WI-539, WI-556, WI-607 and WI-598.
+Eligibility is not a claim or a decision to implement every older proposal.
+The scheduler listing is not dispatch order: admission applies its existing
+adjudication-first partition and batching. Revalidate the queue and route
+registry at the completed frozen hash before starting.
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/schedule.py --root . ready --format json" rev=22285df4; out/run-logs/control-launch-ready.json -->
 
 ## Artifact approval remains separate
 
