@@ -12,10 +12,10 @@ supersedes = "WI-540"
 
 ## Context
 
-**Held during the supervised Short control retry.** The control configuration
-excludes this retained-adjudicator patch. The owner authorized retry after
-repair; keep this row deferred during the measured segment and re-queue it
-when that segment ends. See the
+**Re-queued after the supervised Short control retry stopped.** This patch
+was not admitted during the measured segment. The global pause remains; no
+coordinator launch is authorized while the interrupted lane and snapshot
+withdrawal/check conflict remain unresolved. See the
 [retry record](../../ai-template-redesign-2026-09-05-codex/CONTROL-RETRY.md).
 
 Drafted by WI-550 (its ## Dispositions section) and minted at its merge - drafts-not-mints, ruling R1/R3.

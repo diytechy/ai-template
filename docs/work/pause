@@ -1,0 +1,2 @@
+reason = "Control retry stopped before integration: the snapshot-equals-live integrity check rejected withdrawing the SR snapshot; worker restored the unendorsed SR-161 anchor and added a prose exception. Preserve the lane and resolve the withdrawal/check conflict before another launch. See docs/ai-template-redesign-2026-09-05-codex/CONTROL-RETRY.md."
+since = "2026-09-07"

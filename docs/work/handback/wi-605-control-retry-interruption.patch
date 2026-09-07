@@ -1,0 +1,231 @@
+diff --git a/docs/archive/last_approved/README.md b/docs/archive/last_approved/README.md
+index 963c1cd0..790c46c6 100644
+--- a/docs/archive/last_approved/README.md
++++ b/docs/archive/last_approved/README.md
+@@ -20,4 +20,4 @@ Each line below is a human's citation of the act that authorised a refresh absor
+ - 2026-09-04 — refresh under approval. Copied: low-level-requirements.toml (ref: WI-600); test-cases.toml (ref: WI-600). Registries not named by this act keep their prior snapshot bytes.
+ - 2026-09-06 — refresh under approval. Copied: stakeholder-needs.toml (ref: docs/log.d/2026-09-06-oi85-owner-ruling.md#2026-09-06--oi-85-owner-re-attestation). Registries not named by this act keep their prior snapshot bytes.
+ - 2026-09-06 — refresh under approval. Copied: stakeholder-needs.toml (ref: docs/log.d/2026-09-06-sn036-owner-ruling.md). Registries not named by this act keep their prior snapshot bytes.
+-- 2026-09-06 — refresh under approval. Copied: system-requirements.toml (ref: WI-605); test-cases.toml (ref: WI-605). Registries not named by this act keep their prior snapshot bytes.
++- 2026-09-06 — refresh under approval. Copied: system-requirements.toml (ref: WI-605); test-cases.toml (ref: WI-605). Registries not named by this act keep their prior snapshot bytes. EXCEPTION recorded 2026-09-06 by WI-605 rounds 004/006: SR-161 `Rationale` in the system-requirements.toml copy is NOT endorsed by WI-605 (returned for correction; its citation frame and unconditional discharge claim are owed a corrective amendment and a fresh independent re-attestation by WI-605's correction successor). The copy could not be reverted without breaking the snapshot-equals-live rule, so this line is the record that the anchor holds one cell no adjudication blessed.
+diff --git a/docs/reviews/wi-605-adjudicate-sr-161-llr-183-ow/006-ADJUDICATE-d69550e.md b/docs/reviews/wi-605-adjudicate-sr-161-llr-183-ow/006-ADJUDICATE-d69550e.md
+index 583b2aca..312a9b01 100644
+--- a/docs/reviews/wi-605-adjudicate-sr-161-llr-183-ow/006-ADJUDICATE-d69550e.md
++++ b/docs/reviews/wi-605-adjudicate-sr-161-llr-183-ow/006-ADJUDICATE-d69550e.md
+@@ -93,3 +93,17 @@ VERDICT: MEANING rows=1
+ Unaffected and preserved: the WI-601 / WI-603 reservations, the LLR successor
+ gated on them, the Drafted statuses of SR-183..186, LLR-210, TC-208..211, and
+ the existing pause. Released tier authority does not waive these limits.
++
++## Addendum (same session, aftermath commit) — correction to disposition 4
++
++The revert of the `system-requirements.toml` snapshot was attempted and
++refused by the kit's own rule: `trace.py --strict-integrity` reports an
++approval-record finding for any commit that touches a snapshot file without
++leaving it byte-identical to live (`acceptance_record.py`, "may only ever be
++written by copying the live file"), and this session may not edit live
++cells. The revert is therefore unrepresentable, exactly as the reviewer
++anticipated. The alternative the finding offered is taken instead: the
++WI-605 ledger line in `docs/archive/last_approved/README.md` (prose, excluded
++from that rule by name) is amended to except SR-161 `Rationale` and to say
++why the copy stands. The correction successor's acceptor re-copies the
++registry after the fix. Disposition 4 is otherwise unchanged.
+diff --git a/docs/work/active/wi-605-adjudicate-sr-161-llr-183-ow/WI-605-adjudicate-sr-161-llr-183-ow.md b/docs/work/active/wi-605-adjudicate-sr-161-llr-183-ow/WI-605-adjudicate-sr-161-llr-183-ow.md
+index 41b3b414..fbb13326 100644
+--- a/docs/work/active/wi-605-adjudicate-sr-161-llr-183-ow/WI-605-adjudicate-sr-161-llr-183-ow.md
++++ b/docs/work/active/wi-605-adjudicate-sr-161-llr-183-ow/WI-605-adjudicate-sr-161-llr-183-ow.md
+@@ -48,46 +48,6 @@ Supervisor reconciliation after the interrupted control:
+ - WI-601 and WI-603 judge distinct rows (LLR-061 and LLR-167). Their similar
+   generated titles are not duplication; both predecessor edges remain.
+ 
+-
+-```toml
+-title = "re-anchor: copy low-level-requirements.toml once WI-601 and WI-603 have ruled LLR-061 and LLR-167 (LLR-183 blessed by WI-605, uncopied)"
+-workstream = "process"
+-safety_class = "spine"
+-buildtier = "medium"
+-priority = 2
+-specref = "docs/requirements/low-level-requirements.toml"
+-bar = "DevStg-Reqs"
+-needs = ["WI-601", "WI-603"]
+-```
+-
+-VERDICT THIS CONTINUES: `docs/reviews/wi-605-adjudicate-sr-161-llr-183-ow/001-ADJUDICATE-46d010f.md`,
+-governing line `VERDICT: MEANING rows=23`. LLR-183 `Detail` is MEANING and its
+-new text is one this adjudicator blesses, but the re-anchor was WITHHELD for
+-`low-level-requirements.toml` alone: `intake.py snapshot` copies a registry
+-whole, and that copy would also absorb LLR-061 and LLR-167 — whose judgments
+-this row's own spec reserves to the queued WI-601 and WI-603 — plus 32 traced
+-`Module`/`CodeSymbol` re-points (LLR-035, LLR-051, LLR-052, LLR-055, LLR-056,
+-LLR-057, LLR-078, LLR-080, LLR-085..088, LLR-099..110, LLR-113..116, LLR-119,
+-LLR-120, LLR-160, LLR-200) that no adjudication has listed. The SR and TC
+-registries WERE re-anchored by WI-605 in their own commit.
+-
+-IN SCOPE — one snapshot act, no cell edit. Before copying, require completed
+-independent judgments accepting the exact live approved cells reserved to
+-WI-601 and WI-603. A verdict that RETURNED a cell or merely drafted corrective
+-work is not acceptance: wait for that corrective work and its applicable
+-judgment, or RETURN with the remaining dependency. Only then run `python project-trajectory/scripts/intake.py snapshot --approves
+-"docs/requirements/low-level-requirements.toml=<this row>"` citing all three verdicts (WI-601,
+-WI-603, WI-605) as the judgments the copy rides. Before copying, re-diff the
+-live registry against `docs/archive/last_approved` and confirm the absorbed
+-population is exactly: LLR-183 `Detail` (WI-605), LLR-061 and LLR-167
+-`Detail` (WI-601 / WI-603), the traced `Module`/`CodeSymbol` re-points above
+-(non-attesting under §A5.1, inventoried for the absorption ledger), and Drafted rows riding
+-without a Status move (LLR-210 stays with WI-604). Any other drifted Approved
+-cell is a RETURN, not a copy.
+-
+-OUT OF SCOPE — judging LLR-061 or LLR-167 (WI-601 / WI-603 own them), any
+-registry cell edit, any Status flip.
+-
+ ### Round 004 aftermath — RETURN the rationale correction
+ 
+ Verdict recorded first at `d522ef25` in
+@@ -96,22 +56,44 @@ Round 003's MAJOR finding is accepted: SR-161's live and snapshot Rationale
+ both carry a dated owner-ruling/log citation contrary to PROCESS.md §3.
+ Round 001's assertion that an owner override authorized it is withdrawn;
+ its approval of this exact rationale is not endorsed. Snapshot equality
+-does not establish policy validity. The other scoped judgments, TC-178's
+-supplementary mechanical linkage (distinct from TC-211's Inspection), and
+-the existing LLR successor remain unaffected.
+-
+-No registry cell, Status or snapshot is changed here. Re-reading the live
+-registries against their snapshots found SR and TC equal, with the LLR
+-population still matching the existing successor's inventory (including
+-LLR-061/167 CodeSymbol changes). WI-601 and WI-603 remain queued with no
++does not establish policy validity. WI-601 and WI-603 remain queued with no
+ completed judgments available in this checkout. Their reserved judgments
+ and explicit independent acceptance of every additionally absorbed cell
+ remain prerequisites to any LLR copy; an inventory alone is not approval.
+ LLR-210 and TC-208 remain with WI-604; all named Drafted rows stay Drafted.
+ The pause remains. Released tier authority does not waive these limits.
+ 
++### Round 006 aftermath — review-005 findings accepted
++
++Verdict recorded first at `668edaf4` in
++`docs/reviews/wi-605-adjudicate-sr-161-llr-183-ow/006-ADJUDICATE-d69550e.md`,
++which dispositions each of the five review-005 findings. Consequences taken
++in this round's aftermath commit, no registry cell edited and no Status
++moved:
++- The round-001 copy of `system-requirements.toml` into
++  `docs/archive/last_approved` carries SR-161 `Rationale`, a cell the WI's
++  own verdict declines. Reverting the copy was attempted and is
++  unrepresentable: `acceptance_record` requires any commit touching a
++  snapshot file to leave it byte-identical to live, and live may not be
++  edited here. The ledger line in `docs/archive/last_approved/README.md`
++  (prose, outside that rule) is instead amended to except SR-161 `Rationale`
++  by name, so the record no longer claims an authorisation the verdict
++  withdrew; the correction successor's acceptor re-copies the registry after
++  the fix. The `test-cases.toml` copy stands (TC-178 `Expected` blessed;
++  riders Drafted).
++- LLR-183's new `Detail` is MEANING and NOT blessed as written: its
++  discharge clause is unconditional while the delivered brief injection
++  reaches only `PlanMode=dual` rounds. The LLR registry stays uncopied.
++- Round 001's acceptance of TC-178 keeping `SR-161` in `Verifies` is
++  withdrawn; the direct edge serves no purpose LLR-183's edge does not.
++- The correction successor below is widened to carry all of these in one
++  scoped record; the LLR re-anchor successor now also waits for it.
++- This section's prose is ordered so that each fenced draft is followed
++  only by its own scope statement (`intake.parse_dispositions` attaches
++  trailing prose to the preceding block).
++
+ ```toml
+-title = "correct: SR-161 rationale citation frame, then obtain independent re-attestation of the corrected cell"
++title = "correct: SR-161 rationale frame and conditional discharge, LLR-183 discharge clause, SR-161 chain counterpart, TC-178 Verifies; then obtain independent re-attestation"
+ workstream = "process"
+ safety_class = "spine"
+ buildtier = "strong"
+@@ -120,18 +102,78 @@ specref = "docs/requirements/system-requirements.toml"
+ bar = "DevStg-Reqs"
+ ```
+ 
+-IN SCOPE — the authoring lane removes only SR-161 Rationale's dated ruling
+-and log-path frame, preserving the standing reasons for perspective coverage,
+-the existing review path and Hat-Refs provenance. No other cell may change.
+-Its amendment must receive a fresh independent whole-chain judgment of the
+-exact corrected before/after, including the SR-161 Inspection route through
+-TC-211 and TC-178's supplementary linkage. That acceptor, after independently
+-judging and explicitly listing every cell a whole SR registry copy would
+-absorb, records the corrected-cell approval and refreshes that snapshot in
+-the same approval act. The author does not copy the snapshot. Preserve all
+-Statuses; any additional unaccepted drift means RETURN without copying.
+-
+-OUT OF SCOPE — any LLR or TC amendment or snapshot, any other SR cell edit,
+-first approvals, closing or absorbing WI-601/WI-603/WI-604, or resuming work
+-past the existing pause. This draft requests corrective work; it neither
+-approves the current rationale nor pre-approves wording not yet authored.
++IN SCOPE — the authoring lane makes exactly these edits and no other. (a)
++SR-161 `Rationale`: remove the dated ruling and log-path frame, keeping the
++standing reasons as stand-alone prose; and restate the discharge with the
++condition the delivered content carries — the brief presents every applicable
++hat's question only where `plan_briefs.hat_surface_for_work_item` is reached
++(today the `PlanMode=dual` round via `plan_runner`), and no shipped prompt
++requires a review record to name each outcome — either in the tier's
++debt-stating pattern or by carrying the delivering change so the unconditional
++claim becomes true. (b) LLR-183 `Detail`: the same conditional restatement of
++its "Per-decomposition coverage is discharged by the existing review path"
++clause; mechanics clauses unchanged. (c) SR-161 chain counterpart, as the
++round-006 verdict records per row: retain LLR-183 and LLR-202; for the brief
++half, add SR-161 to LLR-168's `sr_refs` or mint a child under SR-161 carrying
++the brief-and-record clause, stating which rounds the brief reaches; state
++whether the record half is delivered content or debt. (d) TC-178 `Verifies`:
++drop `SR-161`, leaving `["LLR-183"]`; TC-211 remains SR-161's Inspection
++route. Every edit then receives a fresh independent whole-chain judgment of
++the exact corrected before/after. That acceptor, after independently judging
++and explicitly listing every cell a whole `system-requirements.toml` and
++`test-cases.toml` copy would absorb, records the approval and refreshes those
++two snapshots in the same act. The LLR registry is NOT copied by this row:
++its copy belongs to the re-anchor successor below. The author does not copy
++any snapshot. Preserve all Statuses; any additional unaccepted drift means
++RETURN without copying.
++
++OUT OF SCOPE — any LLR snapshot, any other SR/LLR/TC cell edit, first
++approvals, closing or absorbing WI-601/WI-603/WI-604, or resuming work past
++the existing pause. This draft requests corrective work; it neither approves
++the current cells nor pre-approves wording not yet authored.
++
++```toml
++title = "re-anchor: copy low-level-requirements.toml once WI-601 and WI-603 have ruled LLR-061 and LLR-167 and the SR-161/LLR-183 correction is re-attested"
++workstream = "process"
++safety_class = "spine"
++buildtier = "medium"
++priority = 2
++specref = "docs/requirements/low-level-requirements.toml"
++bar = "DevStg-Reqs"
++needs = ["WI-601", "WI-603"]
++```
++
++VERDICT THIS CONTINUES: `docs/reviews/wi-605-adjudicate-sr-161-llr-183-ow/006-ADJUDICATE-d69550e.md`,
++governing line `VERDICT: MEANING rows=1`, superseding round 001's LLR-183
++aftermath. LLR-183 `Detail` is MEANING and its current text is NOT blessed
++(discharge clause unconditional; see round 006 finding 1), so the re-anchor
++is WITHHELD for `low-level-requirements.toml`: `intake.py snapshot` copies a
++registry whole, and that copy would also absorb LLR-061 and LLR-167 — whose
++judgments this row's own spec reserves to the queued WI-601 and WI-603 — plus
++33 traced `Module`/`CodeSymbol` re-points (LLR-035, LLR-051, LLR-052,
++LLR-055, LLR-056, LLR-057, LLR-078, LLR-080, LLR-085..088, LLR-099..110,
++LLR-113..116, LLR-119, LLR-120, LLR-160, LLR-200) that no adjudication has
++listed.
++
++IN SCOPE — one snapshot act, no cell edit. Before copying, require completed
++independent judgments accepting the exact live approved cells reserved to
++WI-601 and WI-603, AND the completed re-attestation of the corrected LLR-183
++by the correction successor above (this row does not mint a `needs` edge to
++it because its id is not known at drafting; the acceptor verifies it by
++reading that successor's close record). A verdict that RETURNED a cell or
++merely drafted corrective work is not acceptance: wait for that corrective
++work and its applicable judgment, or RETURN with the remaining dependency.
++Only then run `python project-trajectory/scripts/intake.py snapshot --approves
++"docs/requirements/low-level-requirements.toml=<this row>"` citing every
++verdict the copy rides (WI-601, WI-603, the correction successor, WI-605).
++Before copying, re-diff the live registry against `docs/archive/last_approved`
++and confirm the absorbed population is exactly: LLR-183 `Detail` (corrected
++and re-attested), LLR-061 and LLR-167 `Detail`/`CodeSymbol` (WI-601 /
++WI-603), any `SR-Refs` re-point the correction successor made under (c), the
++traced `Module`/`CodeSymbol` re-points above (non-attesting under §A5.1,
++inventoried for the absorption ledger), and Drafted rows riding without a
++Status move (LLR-210 stays with WI-604). Any other drifted Approved cell is a
++RETURN, not a copy.
++
++OUT OF SCOPE — judging LLR-061 or LLR-167 (WI-601 / WI-603 own them), any
++registry cell edit, any Status flip.

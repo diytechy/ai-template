@@ -63561,3 +63561,32 @@ existing adjudication/review route, not a new owner ruling.
 
 Verification: 1687 passed, 8 skipped in 60.48s (0:01:00); timing: /Users/diytechy/Documents/ai-template/.venv/bin/python -m pytest -q -n auto -m smoke; smoke wall-clock budget: 60.8s vs 90s budget -> within
 <!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict" rev=c00cfe57+retry-preparation; out/run-logs/control-retry/prelaunch-smoke.txt; prelaunch-docs.txt; prelaunch-trajectory.txt -->
+
+
+## 2026-09-07 — Control retry stopped on approval-snapshot withdrawal
+
+The owner-authorized retry resumed the original lane and reached two independent
+review rounds with intervening scoped adjudication rework. No WI completed or
+merged. The scope reservations held and pytest ran through the repaired path.
+The strict integrity floor rejected restoring the previous SR snapshot after
+its approval was withdrawn; the worker instead retained the unendorsed copy
+with a prose exception. The supervisor paused admission and interrupted before
+integration, preserving all interrupted bytes in a forensic patch. The
+[retry record](ai-template-redesign-2026-09-05-codex/CONTROL-RETRY.md#stop-and-root-cause)
+contains the exact failure, isolated-index reproduction and resolution plan.
+
+The pause is restored and the retained-adjudicator patch re-queued after the
+segment. The lane remains active and unmerged, clean at 668edaf4 after its
+three interrupted paths were captured and restored. No runtime or approval
+snapshot changed on primary. No new control window is authorized.
+
+Deferred open items: none — the focused withdrawal-contract repair and lane
+reconciliation are recorded work, not an invented owner instruction. Any
+required approval follows the declared tier authority.
+
+Stop-record verification: 1687 passed, 8 skipped in 64.59s; enforced smoke
+wall 64.8s against 90s. Documentation: 1464 docs, 2329 links, zero broken,
+one existing orphan warning. Strict trajectory clean with existing warnings.
+The isolated-index withdrawal reproduction fails exactly as the live attempt
+reported; the real lane index remains unchanged by that reproduction.
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict" rev=20814274+control-stop; out/run-logs/control-retry/stop-smoke.txt; stop-docs.txt; stop-trajectory.txt; withdrawal-reproduction.json -->
