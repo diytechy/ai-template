@@ -3,10 +3,13 @@ id = "WI-608"
 title = "Apply the reviewed PC single-WI contract amendments"
 workstream = "process"
 sr_refs = ["SR-144", "SR-148", "SR-156"]
-specref = "docs/ai-template-redesign-2026-09-05-codex/PC-BATCH-CONTRACT.md"
 buildtier = "strong"
 safety_class = "spine"
 +++
+
+## Deliverable
+
+Exact reviewed PC source patch applied in c40144d0ffeb77fdbaafa454cb33398b1b615210; live registry bytes match corrected proposal 9fa3e1bbf188d50d762ca4ee6d6af14ad06f8618, with no Status or snapshot change. OI-88 explicitly replaces the earlier separate-owner clauses. The actual complete census is assigned to WI-610, hard predecessor WI-608, through the independently reviewed canonical transfer. Source trace and commit bar passed. Supervised completion while paused, without a lane claim; this closes authoring and ownership reconciliation only, not semantic acceptance or implementation.
 
 ## Context
 

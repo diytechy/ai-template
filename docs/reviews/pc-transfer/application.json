@@ -1,0 +1,13 @@
+{
+  "authoring_commit": "c40144d0ffeb77fdbaafa454cb33398b1b615210",
+  "applied_patch_sha256": "311887fc709a634749cf227d0b23bc2ee3f2d34bb3c037850f3360642c832b62",
+  "review_session": "a25f1114-89f8-4a4b-b184-a170bb980957",
+  "minted": [
+    [
+      "WI-610",
+      "docs/work/queued/WI-610-adjudicate-combined-approved.md"
+    ]
+  ],
+  "method": "canonical intake.stage_mint and spec_move in pristine disposable checkout; exact independently reviewed patch applied under existing dispatch/integration locks, no ordinary claim or coordinator",
+  "effects": "three restructured owners, two supervised authoring/resolution closes, combined scope and first-approval prerequisite edges; no snapshot or registry-cell approval"
+}

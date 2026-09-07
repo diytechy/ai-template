@@ -1,0 +1,37 @@
+{
+  "base": "c40144d0ffeb77fdbaafa454cb33398b1b615210",
+  "minted": [
+    [
+      "WI-610",
+      "docs/work/queued/WI-610-adjudicate-combined-approved.md"
+    ]
+  ],
+  "draft_sha256": "1614e8e019fc6c4e4c709a14a3781d87f29763304520e06c6adf900b6b39ca34",
+  "patch_sha256": "bb8b9e538d227cebc99f17db03281f293b2e57992c23fa904749e5613ceb4ebb",
+  "originals": {
+    "WI-601": {
+      "path": "docs/work/queued/WI-601-adjudicate-llr-061-approved.md",
+      "blob": "c33ae9eadaf41c16b222c02b231d9a5a523b0fb1",
+      "scope": [
+        "LLR-061"
+      ]
+    },
+    "WI-603": {
+      "path": "docs/work/queued/WI-603-adjudicate-llr-167-approved.md",
+      "blob": "3826779d625a2ed75550e8f448e516cf85650a18",
+      "scope": [
+        "LLR-167"
+      ]
+    },
+    "WI-605": {
+      "path": "docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md",
+      "blob": "9e5967174d0e38727273e1d31a34c7bf4c8d167d",
+      "scope": [
+        "SR-161",
+        "LLR-183",
+        "TC-178"
+      ]
+    }
+  },
+  "checks": "source, pause, frozen evidence unchanged; exact scope and predecessor; no self or obsolete inbound edges; canonical restructured archives, two supervised authoring/resolution closes"
+}

@@ -1,11 +1,12 @@
 # WI-609 — proposed one-time ownership transfer
 
-**Proposed decision:** authorize a reviewed, supervised transfer of the queued
-amendment scopes in WI-601, WI-603 and WI-605 into one new combined adjudication
-WI for the affected registry snapshot set, after exact PC source authoring.
-This is a queue-ownership decision, not approval of any requirement or code.
-No transfer, new primary selection or snapshot write has occurred.
-The decision is recorded as OI-88; WI-609 has a hard dependency on that answer.
+**Owner ruling:** OI-88 approved this one-time supervised transfer on 2026-09-07.
+The exact PC source amendments are committed in `c40144d0`. The
+[transfer record](../pc-transfer/README.md) carries the actual census, canonical
+lineage and independent review. Authoring and resolution close separately from
+semantic acceptance: the combined owner must still judge the complete snapshot
+set. This ruling approves no registry cell or code, and authorizes no control
+window, push or main merge.
 
 ## Why this is the smaller route
 
@@ -61,10 +62,10 @@ publication readiness. The real judgments remain to be performed.
    new control window. Any recurrence prevention that changes runner scheduling
    requires its own scoped review; no new merge-time hold is smuggled in here.
 
-## Why approval is requested now
+## Original approval boundary
 
-The current [WI-609 scope](../../work/queued/WI-609-resolve-scoped-judgments-versu.md)
-explicitly says “Preserve WI-601, WI-603 and WI-605 ownership”. The accepted PC
+The current [WI-609 scope](../../archive/work/complete/WI-609-resolve-scoped-judgments-versu.md)
+originally said “Preserve WI-601, WI-603 and WI-605 ownership”. The accepted PC
 proposal also requires the separate WI-601 judgment and predecessor. The normal
 automatic consolidation census refuses while queued adjudications exist
 (`consolidate._pending_refusal`), so simply launching that census is not a
@@ -80,10 +81,11 @@ question for legacy expiry does not block this decision.
 
 ## Evidence and present state
 
-The existing primary approval/publication tests passed unchanged. Actual output
-is recorded in the session log. Reviewer metadata and frozen prompt are preserved
-beside the verbatim review; the review is not a machine approval artifact.
-Production code, SR/LLR/TC registries, snapshots, existing amendment ownership
-and the tracked pause are unchanged. Only the owner question and WI-609's
-dependency on it were added to the live registries. WI-609 remains queued; no false claim or completion
-is recorded while work is performed as supervised proposal preparation.
+The [transfer record](../pc-transfer/README.md) contains the current application
+and verification evidence. The earlier proposal and independent design verdict
+are historical inputs, not primary approval artifacts. The combined successor
+retains the exact Approved-change set; Drafted first-approval ownership stays
+unchanged. The old amendment owners are restructured rather than accepted or
+complete. The authoring and resolution WIs close as supervised work under OI-88,
+without ordinary claims while paused. Runtime code and approval snapshots remain
+unchanged. No primary selection or control window has started.

@@ -1,0 +1,1 @@
+check_trajectory: clean (607 work item(s), 551 done (91%), 22 cancelled, graph acyclic).

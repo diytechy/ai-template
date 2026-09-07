@@ -1,0 +1,44 @@
+M	PROJECT_STATE.html
+M	docs/ai-template-redesign-2026-09-05-codex/BACKLOG-MIGRATION.md
+M	docs/ai-template-redesign-2026-09-05-codex/PC-BATCH-CONTRACT.md
+R088	docs/work/queued/WI-608-apply-the-reviewed-pc-single-w.md	docs/archive/work/complete/WI-608-apply-the-reviewed-pc-single-w.md
+R087	docs/work/queued/WI-609-resolve-scoped-judgments-versu.md	docs/archive/work/complete/WI-609-resolve-scoped-judgments-versu.md
+R096	docs/work/queued/WI-601-adjudicate-llr-061-approved.md	docs/archive/work/restructured/WI-601-adjudicate-llr-061-approved.md
+R096	docs/work/queued/WI-603-adjudicate-llr-167-approved.md	docs/archive/work/restructured/WI-603-adjudicate-llr-167-approved.md
+R099	docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md	docs/archive/work/restructured/WI-605-adjudicate-sr-161-llr-183-ow.md
+M	docs/id-watermark
+M	docs/log.d/2026-09-07-oi88-pc-authoring.md
+A	docs/log.d/2026-09-07-pc-reviewed-transfer.md
+M	docs/log.d/2026-09-07-wi609-resolution-proposal.md
+M	docs/reviews/pc-intake/preflight.md
+A	docs/reviews/pc-transfer/README.md
+A	docs/reviews/pc-transfer/actual-census.json
+A	docs/reviews/pc-transfer/candidate-checks.json
+A	docs/reviews/pc-transfer/evidence-manifest.json
+A	docs/reviews/pc-transfer/round-001/draft.json
+A	docs/reviews/pc-transfer/round-001/review-meta.json
+A	docs/reviews/pc-transfer/round-001/review-prompt.txt
+A	docs/reviews/pc-transfer/round-001/review-result.md
+A	docs/reviews/pc-transfer/round-001/transfer-files.txt
+A	docs/reviews/pc-transfer/round-001/transfer-meta.json
+A	docs/reviews/pc-transfer/round-001/transfer.patch
+A	docs/reviews/pc-transfer/round-002/draft.json
+A	docs/reviews/pc-transfer/round-002/integrity-note.txt
+A	docs/reviews/pc-transfer/round-002/review-meta.json
+A	docs/reviews/pc-transfer/round-002/review-prompt.txt
+A	docs/reviews/pc-transfer/round-002/review-result.txt
+A	docs/reviews/pc-transfer/round-002/review-transfer.patch
+A	docs/reviews/pc-transfer/round-002/transfer-files.txt
+A	docs/reviews/pc-transfer/round-002/transfer-meta.json
+A	docs/reviews/pc-transfer/transfer-budget.txt
+A	docs/reviews/pc-transfer/transfer-docs.txt
+A	docs/reviews/pc-transfer/transfer-open-items.txt
+A	docs/reviews/pc-transfer/transfer-smoke.txt
+A	docs/reviews/pc-transfer/transfer-trace.txt
+A	docs/reviews/pc-transfer/transfer-trajectory.txt
+M	docs/reviews/wi-609-resolution/DECISION.md
+M	docs/stage
+M	docs/status.md
+M	docs/work/queued/WI-604-adjudicate-llr-210-tc-208.md
+M	docs/work/queued/WI-606-adjudicate-sr-184-sr-185-sr.md
+A	docs/work/queued/WI-610-adjudicate-combined-approved.md

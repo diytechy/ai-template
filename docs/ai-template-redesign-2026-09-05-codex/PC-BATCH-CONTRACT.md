@@ -4,17 +4,19 @@ Authoring baseline: `196bfb9c`. The owner requested PC on 2026-09-07, with
 contract authoring and adjudication before code deletion, the coordinator
 paused, and no control window, push or merge to main. The
 [PC package](IMPLEMENTATION.md#pc--the-independently-agreed-cuts-unconditional-after-the-control-window)
-is the scope of this sitting. This proposal is not an approval or an applied
-registry amendment.
+is the scope of this sitting. The exact corrected patch was applied to live
+source in `c40144d0`; it is not semantically accepted. OI-88 supersedes this
+proposal’s earlier separate-owner clauses with the
+[reviewed combined transfer](../reviews/pc-transfer/README.md). The proposal
+record below preserves the authoring rationale.
 
 ## Exact proposed amendment
 
 [The patch](PC-BATCH-AMENDMENTS.patch) contains the exact candidate cell values
 against the baseline above. Applying it to a disposable copy parses as TOML
 and changes only the listed cells; all Status, parent, method-kind, evidence
-path, phase and perspective-reference fields remain unchanged. No live
-registry or snapshot has been edited. Existing tests have not been changed to
-assert the proposal already works.
+path, phase and perspective-reference fields remain unchanged. The exact live registry amendments preserve the snapshot baseline. Existing
+tests have not been changed to assert the proposal already works.
 
 | Rows | Proposed decision |
 |---|---|

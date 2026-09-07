@@ -1,0 +1,1 @@
+The CLI invocation disabled tools (--tools empty). Its real JSONL contains zero tool_use events. The response emits textual <invoke> blocks and purported results as assistant text; those are simulated, not measurements or actual filesystem observations. No such claim is relied on. The response is preserved verbatim; a fresh review of the complete measured candidate is required.

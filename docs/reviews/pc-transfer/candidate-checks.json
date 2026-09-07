@@ -1,0 +1,85 @@
+{
+  "base": "c40144d0ffeb77fdbaafa454cb33398b1b615210",
+  "checks": [
+    {
+      "name": "transfer-smoke",
+      "command": [
+        "-m",
+        "pytest",
+        "-q",
+        "-n",
+        "auto",
+        "-m",
+        "smoke"
+      ],
+      "exit": 0,
+      "wall_seconds": 54.59058074996574
+    },
+    {
+      "name": "transfer-budget",
+      "command": [
+        "scripts/check_smoke_budget.py",
+        "--mode",
+        "enforce",
+        "--elapsed",
+        "54.59058074996574"
+      ],
+      "exit": 0,
+      "wall_seconds": 0.03636283299420029
+    },
+    {
+      "name": "transfer-regen",
+      "command": [
+        "project-trajectory/scripts/trunk_step.py",
+        "--root",
+        ".",
+        "--regen"
+      ],
+      "exit": 0,
+      "wall_seconds": 9.509302166989073
+    },
+    {
+      "name": "transfer-trace",
+      "command": [
+        "project-trajectory/scripts/trace.py",
+        "--root",
+        ".",
+        "--strict"
+      ],
+      "exit": 0,
+      "wall_seconds": 2.2852387499879114
+    },
+    {
+      "name": "transfer-trajectory",
+      "command": [
+        "project-trajectory/scripts/check_trajectory.py",
+        "--root",
+        ".",
+        "--strict"
+      ],
+      "exit": 0,
+      "wall_seconds": 5.089623125037178
+    },
+    {
+      "name": "transfer-open-items",
+      "command": [
+        "project-trajectory/scripts/gen_open_items.py",
+        "--check"
+      ],
+      "exit": 0,
+      "wall_seconds": 1.8145935839856975
+    },
+    {
+      "name": "transfer-docs",
+      "command": [
+        "project-trajectory/scripts/check_docs.py",
+        "--root",
+        ".",
+        "--stale"
+      ],
+      "exit": 0,
+      "wall_seconds": 1.3489873749786057
+    }
+  ],
+  "scope": "complete prospective transfer checkout, no code/test changes; source authoring remains c40144d0"
+}

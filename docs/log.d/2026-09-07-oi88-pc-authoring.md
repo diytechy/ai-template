@@ -6,6 +6,8 @@ Applied the exact corrected [PC patch](../ai-template-redesign-2026-09-05-codex/
 
 Strict trace passed with no orphan or integrity findings; its existing advisories remain. fig: `.venv/bin/python project-trajectory/scripts/trace.py --root . --strict` on `b9852757` plus the exact reviewed patch, output `out/run-logs/pc-transfer/authoring-trace.txt`.
 
-Deferred open items: none — OI-88 is ruled; actual transfer review and semantic adjudication remain work, not outstanding owner approval. The separate legacy upgrade-window boundary remains undeclared and no legacy removal occurred.
+Deferred open items: none.
+
+OI-88 is ruled; actual transfer review and semantic adjudication remain work, not outstanding owner approval. The separate legacy upgrade-window boundary remains undeclared and no legacy removal occurred.
 
 Validation: smoke **1695 passed, 4 skipped in 49.70s** (49.94s measured wall; enforced within the 90s budget). fig: `.venv/bin/python -m pytest -q -n auto -m smoke` and `scripts/check_smoke_budget.py --mode enforce --elapsed 49.93877849995624` on `b9852757` plus this source/ruling changeset; output `out/run-logs/pc-transfer/authoring-smoke.txt`.

@@ -10,6 +10,10 @@ brief = "amendment"
 adjudicates = ["SR-161", "LLR-183", "TC-178"]
 +++
 
+## Deliverable
+
+Restructured into WI-610.
+
 ## Context
 
 Prepared from the SN-036 owner ruling and the live snapshot-drift brief. Source amendments are limited to the approved amendments to SR-161, LLR-183 and TC-178, while reading their whole chain, the revised direct Inspection route through TC-211, and TC-178's surviving supplementary Hat-Refs linkage. Decide whether each amended cell preserves or changes scope; The adjudication also judges the complete whole-registry absorption population below before any copy; it may re-attest only cells whose full chain and before/after it actually judged.

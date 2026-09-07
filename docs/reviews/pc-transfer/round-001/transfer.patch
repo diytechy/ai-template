@@ -1,0 +1,237 @@
+diff --git a/docs/ai-template-redesign-2026-09-05-codex/BACKLOG-MIGRATION.md b/docs/ai-template-redesign-2026-09-05-codex/BACKLOG-MIGRATION.md
+index 7e7ad55b..6d991238 100644
+--- a/docs/ai-template-redesign-2026-09-05-codex/BACKLOG-MIGRATION.md
++++ b/docs/ai-template-redesign-2026-09-05-codex/BACKLOG-MIGRATION.md
+@@ -44,9 +44,9 @@ are engineering proposals, not facts mechanically derived from the titles.
+ | [WI-596 — snapshot absorbed approvals](../archive/work/cancelled/WI-596-the-anchoring-copy-s-absorb-le.md) | Treat as an authority concern before broad re-anchoring or approval-snapshot migration | P1A/P9a: account for every changed row a whole-file snapshot would absorb; never bless unrelated text by reseeding the baseline. |
+ | [WI-597 — contradictory refusal wording](../work/queued/WI-597-stop-the-snapshot-refusal-s-op.md) | Small independent correction, or preserve its two-message cases when that code is replaced | P0b/P1A: report the actual scoped authorization; change no already-ruled scoping policy. It does not gate the entire redesign. |
+ | [WI-598 — regeneration table coverage](../work/queued/WI-598-drive-the-trunk-regen-step-tab.md) | Reuse as contract coverage for the selected regeneration path | P5a/P9R: assert declared order and explicit skip behavior for every applicable step; preserve named behavioral examples so testing a table is not the only oracle. |
+-| [WI-601 — LLR-061 amendment](../work/queued/WI-601-adjudicate-llr-061-approved.md) | Resolve under current authority if needed by the baseline, or include the specific amendment judgment in a reviewed replacement transaction | P1A/P7a: assignment-scoped brief/evidence obligations. Do not discard an owed judgment because the old module is scheduled for deletion. |
++| [WI-601 — LLR-061 amendment](../archive/work/restructured/WI-601-adjudicate-llr-061-approved.md) | Resolve under current authority if needed by the baseline, or include the specific amendment judgment in a reviewed replacement transaction | P1A/P7a: assignment-scoped brief/evidence obligations. Do not discard an owed judgment because the old module is scheduled for deletion. |
+ | [WI-602 — sampled WI-580 close](../work/queued/WI-602-spot-check-the-clean-close-of.md) | Keep under the current sampling policy during control; separately decide any later sampling treatment | P0c/P7a: no defect is alleged by this spec. Count sampling separately from corrective rework; do not classify it automatically as waste. |
+-| [WI-603 — LLR-167 amendment](../work/queued/WI-603-adjudicate-llr-167-approved.md) | Reconcile its pending brief-selection judgment with prompt consolidation | P1A/P2a: applicable brief selection and approval of changed normative text; one prompt catalog does not satisfy the judgment by itself. |
++| [WI-603 — LLR-167 amendment](../archive/work/restructured/WI-603-adjudicate-llr-167-approved.md) | Reconcile its pending brief-selection judgment with prompt consolidation | P1A/P2a: applicable brief selection and approval of changed normative text; one prompt catalog does not satisfy the judgment by itself. |
+ | [WI-604 — first approval of LLR-210/TC-208](../work/queued/WI-604-adjudicate-llr-210-tc-208.md) | Decide what governs the old-runner control period; when replacing census behavior, amend the contract explicitly instead of first approving obsolete text merely to green the stage | P0c/P1A/P3a: unapproved content stays visibly unapproved; preserve consolidation scope and verification through the replacement. |
+ 
+ The mapping deliberately does not invent new hard dependencies between all
+diff --git a/docs/work/queued/WI-608-apply-the-reviewed-pc-single-w.md b/docs/archive/work/complete/WI-608-apply-the-reviewed-pc-single-w.md
+similarity index 88%
+rename from docs/work/queued/WI-608-apply-the-reviewed-pc-single-w.md
+rename to docs/archive/work/complete/WI-608-apply-the-reviewed-pc-single-w.md
+index 519a7dc4..8ca3931d 100644
+--- a/docs/work/queued/WI-608-apply-the-reviewed-pc-single-w.md
++++ b/docs/archive/work/complete/WI-608-apply-the-reviewed-pc-single-w.md
+@@ -8,6 +8,10 @@ buildtier = "strong"
+ safety_class = "spine"
+ +++
+ 
++## Deliverable
++
++Exact reviewed PC source patch applied in c40144d0ffeb77fdbaafa454cb33398b1b615210; live registry bytes match corrected proposal 9fa3e1bbf188d50d762ca4ee6d6af14ad06f8618, with no Status or snapshot change. OI-88 explicitly replaces the earlier separate-owner clauses. The actual complete census is assigned to WI-610, hard predecessor WI-608, through the independently reviewed canonical transfer. Source trace and commit bar passed. Supervised completion while paused, without a lane claim; this closes authoring and ownership reconciliation only, not semantic acceptance or implementation.
++
+ ## Context
+ 
+ Owner-authorized PC continuation from 14ac5251. Apply the exact reviewed PC-BATCH-AMENDMENTS.patch as exclusive spine authoring, rechecking current cells and the correction-verification hashes first. Preserve every Status, parent, evidence, phase and perspective field. The patch file is a proposal, not an already applied amendment. No snapshot write, batch-code deletion or test deletion belongs to this authoring WI.
+diff --git a/docs/work/queued/WI-609-resolve-scoped-judgments-versu.md b/docs/archive/work/complete/WI-609-resolve-scoped-judgments-versu.md
+similarity index 87%
+rename from docs/work/queued/WI-609-resolve-scoped-judgments-versu.md
+rename to docs/archive/work/complete/WI-609-resolve-scoped-judgments-versu.md
+index f3d9bc22..9068e3f8 100644
+--- a/docs/work/queued/WI-609-resolve-scoped-judgments-versu.md
++++ b/docs/archive/work/complete/WI-609-resolve-scoped-judgments-versu.md
+@@ -9,6 +9,10 @@ safety_class = "spine"
+ needs = ["OI-88"]
+ +++
+ 
++## Deliverable
++
++OI-88 authorizes the independently reviewed existing-publisher resolution in docs/reviews/wi-609-resolution/DECISION.md. Applied canonical intake/spec-move transfer to WI-610; original owners are restructured, not accepted or complete. Actual committed census matches proposed scope; exact lineage and fail-closed scope/absorption behavior are reviewed in docs/reviews/pc-transfer/. Existing primary approval/publication tests validate missing/stale/outside-authority refusals. The owner-authorized combined scope supersedes the earlier separate-owner composition requirement: there are no foreign judgments to compose. No runtime or publisher semantics changed. This supervised resolution close records an executable route and successor, not live acceptance, a claim, or a new control window.
++
+ ## Context
+ 
+ Concrete PC preflight finding at 14ac5251: WI-601 owns only LLR-061. The actual LLR snapshot census also includes approved changes to LLR-140/152/153/154/158/167/183/207. With evidence validation assumed successful for diagnostic isolation, primary_approval._absorption_refusal still refuses LLR-140 without an accepted scoped decision; _decision_rows rejects adding that decision because it is outside WI-601's scope. No primary turn has started.
+diff --git a/docs/work/queued/WI-601-adjudicate-llr-061-approved.md b/docs/archive/work/restructured/WI-601-adjudicate-llr-061-approved.md
+similarity index 96%
+rename from docs/work/queued/WI-601-adjudicate-llr-061-approved.md
+rename to docs/archive/work/restructured/WI-601-adjudicate-llr-061-approved.md
+index c33ae9ea..04deb243 100644
+--- a/docs/work/queued/WI-601-adjudicate-llr-061-approved.md
++++ b/docs/archive/work/restructured/WI-601-adjudicate-llr-061-approved.md
+@@ -9,6 +9,10 @@ brief = "amendment"
+ adjudicates = ["LLR-061"]
+ +++
+ 
++## Deliverable
++
++Restructured into WI-610.
++
+ ## Context
+ 
+ Derived from `staged_spine_amendments` on the merged commit (§A5.2).
+diff --git a/docs/work/queued/WI-603-adjudicate-llr-167-approved.md b/docs/archive/work/restructured/WI-603-adjudicate-llr-167-approved.md
+similarity index 96%
+rename from docs/work/queued/WI-603-adjudicate-llr-167-approved.md
+rename to docs/archive/work/restructured/WI-603-adjudicate-llr-167-approved.md
+index 3826779d..d913fa33 100644
+--- a/docs/work/queued/WI-603-adjudicate-llr-167-approved.md
++++ b/docs/archive/work/restructured/WI-603-adjudicate-llr-167-approved.md
+@@ -9,6 +9,10 @@ brief = "amendment"
+ adjudicates = ["LLR-167"]
+ +++
+ 
++## Deliverable
++
++Restructured into WI-610.
++
+ ## Context
+ 
+ Derived from `staged_spine_amendments` on the merged commit (§A5.2).
+diff --git a/docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md b/docs/archive/work/restructured/WI-605-adjudicate-sr-161-llr-183-ow.md
+similarity index 99%
+rename from docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md
+rename to docs/archive/work/restructured/WI-605-adjudicate-sr-161-llr-183-ow.md
+index 9e596717..dda18c8e 100644
+--- a/docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md
++++ b/docs/archive/work/restructured/WI-605-adjudicate-sr-161-llr-183-ow.md
+@@ -10,6 +10,10 @@ brief = "amendment"
+ adjudicates = ["SR-161", "LLR-183", "TC-178"]
+ +++
+ 
++## Deliverable
++
++Restructured into WI-610.
++
+ ## Context
+ 
+ Prepared from the SN-036 owner ruling and the live snapshot-drift brief. Source amendments are limited to the approved amendments to SR-161, LLR-183 and TC-178, while reading their whole chain, the revised direct Inspection route through TC-211, and TC-178's surviving supplementary Hat-Refs linkage. Decide whether each amended cell preserves or changes scope; The adjudication also judges the complete whole-registry absorption population below before any copy; it may re-attest only cells whose full chain and before/after it actually judged.
+diff --git a/docs/id-watermark b/docs/id-watermark
+index 25b48adc..8e14aab2 100644
+--- a/docs/id-watermark
++++ b/docs/id-watermark
+@@ -19,7 +19,7 @@
+ # correction: B 7 -> 8 (OI-47)
+ # correction: REL 3 -> 4 (OI-47)
+ #
+-# basis: B=5 CMP=9 EXT=5 IF=179 LLR=210 OI=88 PB=4 REL=3 SN=40 SR=186 TC=211 WI=609
++# basis: B=5 CMP=9 EXT=5 IF=179 LLR=210 OI=88 PB=4 REL=3 SN=40 SR=186 TC=211 WI=610
+ #
+ ASSET = 0
+ B = 8
+@@ -37,4 +37,4 @@ REPO = 0
+ SN = 40
+ SR = 186
+ TC = 211
+-WI = 609
++WI = 610
+diff --git a/docs/reviews/pc-intake/preflight.md b/docs/reviews/pc-intake/preflight.md
+index 4b1d5c35..1691f5e3 100644
+--- a/docs/reviews/pc-intake/preflight.md
++++ b/docs/reviews/pc-intake/preflight.md
+@@ -57,10 +57,10 @@ checkout under the existing dispatch and integration locks, after checking the
+ base, clean tree and absence of a pending primary writer. No coordinator or
+ primary engine ran. [The mint record](mint-result.json) names the actual files.
+ 
+-- [WI-608](../../work/queued/WI-608-apply-the-reviewed-pc-single-w.md): exclusive
++- [WI-608](../../archive/work/complete/WI-608-apply-the-reviewed-pc-single-w.md): exclusive
+   authoring of the exact reviewed PC patch; no approval or snapshot changes.
+   Applying it increases drift and does not make WI-601 publishable.
+-- [WI-609](../../work/queued/WI-609-resolve-scoped-judgments-versu.md): a separate
++- [WI-609](../../archive/work/complete/WI-609-resolve-scoped-judgments-versu.md): a separate
+   scoped resolution of the publication-composition conflict, including its
+   governing contract impact and positive/negative acceptance cases. It must
+   first establish whether a valid existing route was missed. It does not
+diff --git a/docs/reviews/wi-609-resolution/DECISION.md b/docs/reviews/wi-609-resolution/DECISION.md
+index 3a0e1eab..b540f9fd 100644
+--- a/docs/reviews/wi-609-resolution/DECISION.md
++++ b/docs/reviews/wi-609-resolution/DECISION.md
+@@ -63,7 +63,7 @@ publication readiness. The real judgments remain to be performed.
+ 
+ ## Why approval is requested now
+ 
+-The current [WI-609 scope](../../work/queued/WI-609-resolve-scoped-judgments-versu.md)
++The current [WI-609 scope](../../archive/work/complete/WI-609-resolve-scoped-judgments-versu.md)
+ explicitly says “Preserve WI-601, WI-603 and WI-605 ownership”. The accepted PC
+ proposal also requires the separate WI-601 judgment and predecessor. The normal
+ automatic consolidation census refuses while queued adjudications exist
+diff --git a/docs/work/queued/WI-606-adjudicate-sr-184-sr-185-sr.md b/docs/work/queued/WI-606-adjudicate-sr-184-sr-185-sr.md
+index 18cb75f6..59284337 100644
+--- a/docs/work/queued/WI-606-adjudicate-sr-184-sr-185-sr.md
++++ b/docs/work/queued/WI-606-adjudicate-sr-184-sr-185-sr.md
+@@ -3,7 +3,7 @@ id = "WI-606"
+ title = "adjudicate: SR-184, SR-185, SR-186, TC-209, TC-210, TC-211 first approval after perspective-review amendment"
+ workstream = "process"
+ sr_refs = ["SR-184", "SR-185", "SR-186"]
+-needs = ["WI-605"]
++needs = ["WI-610"]
+ specref = "docs/requirements/system-requirements.toml"
+ buildtier = "strong"
+ safety_class = "adjudication"
+diff --git a/docs/work/queued/WI-610-adjudicate-combined-approved.md b/docs/work/queued/WI-610-adjudicate-combined-approved.md
+new file mode 100644
+index 00000000..10cc7a84
+--- /dev/null
++++ b/docs/work/queued/WI-610-adjudicate-combined-approved.md
+@@ -0,0 +1,63 @@
+++++
++id = "WI-610"
++title = "adjudicate: combined approved-cell amendments after PC authoring (OI-88 transfer)"
++workstream = "process"
++sr_refs = ["SR-024", "SR-033", "SR-043", "SR-052", "SR-053", "SR-054", "SR-111", "SR-112", "SR-129", "SR-144", "SR-146", "SR-147", "SR-148", "SR-149", "SR-156", "SR-161", "SR-162", "SR-167", "SR-175", "SR-176", "SR-177"]
++needs = ["WI-608"]
++specref = "docs/reviews/wi-609-resolution/DECISION.md"
++buildtier = "strong"
++safety_class = "adjudication"
++supersedes = "WI-601;WI-603;WI-605"
++brief = "amendment"
++adjudicates = ["LLR-058", "LLR-061", "LLR-123", "LLR-140", "LLR-144", "LLR-149", "LLR-150", "LLR-151", "LLR-152", "LLR-153", "LLR-154", "LLR-158", "LLR-161", "LLR-167", "LLR-183", "LLR-207", "SR-024", "SR-033", "SR-043", "SR-052", "SR-053", "SR-054", "SR-111", "SR-112", "SR-129", "SR-144", "SR-146", "SR-147", "SR-148", "SR-149", "SR-156", "SR-161", "SR-162", "SR-167", "SR-175", "SR-176", "SR-177", "TC-058", "TC-061", "TC-138", "TC-143", "TC-144", "TC-145", "TC-146", "TC-147", "TC-148", "TC-153", "TC-154", "TC-156", "TC-161", "TC-178", "TC-205"]
+++++
++
++## Context
++
++Owner-authorized one-time supervised ownership transfer under OI-88 and docs/reviews/wi-609-resolution/DECISION.md. This is the complete atomic Approved-change scope of the committed PC source candidate, not a consolidation-census judgment, acceptance of any row, or authority to run a control window. Authoring predecessor WI-608 remains a hard edge. The original separate scopes and full proposal Context are preserved in the restructured specs and Git; their original proposal blobs and the stopped WI-605 evidence remain authoritative history. The old owners have not accepted their rows and are not complete.
++
++Judge each scoped row cumulatively from the bound approved snapshot to the final live candidate, including parents, siblings, traced tests, and every meaning-changing use. Use the existing primary Approval payload, real immutable per-cell before/after blob IDs, actual committed current-turn judgment/session evidence, complete absorption ledger, and ordinary independent review. Inventories are discovery aids, not use acceptance. All changed Approved rows in the affected whole-file snapshot set require accepted scoped decisions; all Drafted riders stay Drafted and their existing first-approval owners remain unchanged. Missing, stale, contradictory, unjudged, or outside-authority evidence must refuse publication. A RETURN remains a truthful zero-effect outcome with required dispositions, not semantic approval. No manual snapshot copy, verifier bypass, substitute protocol, or widened bound turn.
++
++In particular, the PC singleton LLR-061 and TC-061 must be judged together against the exact cumulative LLR text. Review all batch-test retirement obligations in PC-BATCH-USES.md before any deletion. TC-205's pre-existing citation to test_a_two_row_batch_close_peels_under_one_canonical_order is absent in the current source: resolve it truthfully in the judgment or return a scoped authoring continuation; do not claim nonexistent evidence passed. Registry authoring belongs before selection; this adjudicator cannot change live source cells in a bound candidate.
++
++Done when the existing exclusive primary publisher validates the real decisions, impact and whole-file absorption evidence plus independent review/provenance, then atomically publishes an accepted outcome or a truthful RETURN with required scoped dispositions. Keep the coordinator paused; this WI authorizes no control window, push or main merge. Until actual live contract acceptance, do not delete PC batch implementation.
++
++The absorbed rows' acceptance criteria, carried across UNCHANGED. This is the spec this row must still satisfy — the ids are historical, the obligations are not:
++
++### WI-601 (absorbed) — its Done-when, verbatim
++
++(this row's spec declared no `## Done-when` section)
++
++### WI-603 (absorbed) — its Done-when, verbatim
++
++(this row's spec declared no `## Done-when` section)
++
++### WI-605 (absorbed) — its Done-when, verbatim
++
++(this row's spec declared no `## Done-when` section)
++
++Advisory registry joins (WI-388; never gating):
++
++### Cancelled precedent on the same SRs (do not re-propose the refuted)
++- WI-298 (cancelled) Dashboard --border misses the 3:1 graphical-boundary floor in both th… — reason: RETIRED 2026-07-24 as NOT-A-DEFECT, owner-ruled after verification against the artifact. The finding claimed --border supplies sub-3:1 boundaries for 'focusabl…
++
++### Decomposition code map (LLR/TC on the same SRs)
++- LLR-014 [project-trajectory/scripts/check_perf.py :: evaluate] tests: (see TC-014) — Budget comparator
++- LLR-024 [project-trajectory/scripts/gen_cases.py :: main] tests: (see TC-024) — Permutation expander
++- LLR-025 [project-trajectory/scripts/gen_skills_index.py :: main] tests: (see TC-025) — Skills index generator
++- LLR-033 [project-trajectory/scripts/gen_release_checklist.py :: main] tests: (see TC-033) — Release checklist generator
++- LLR-040 [project-trajectory/scripts/subagent_gate.py :: decide/main] tests: (see TC-043) — Subagent spawn gate
++- LLR-043 [project-trajectory/scripts/gen_skills_index.py :: check_agent_sync] tests: (see TC-045) — Cross-agent skill fan-out drift check
++
++### Knowledge packs the touched components declare (read before building)
++- CMP-006 W1 Registry & conformance: registry-hygiene
++- CMP-008 W3 Autonomy: docs/knowledge/agent-routing;docs/knowledge/effort-tiering;docs/knowledge/prompt-image-token-efficiency
++- CMP-009 W4 Human & adopter surfaces: downstream-resync
++
++### Interface seams via the touched modules
++- IF-001 scripts/trace -> scripts/check: stdout orphan, integrity, status and advisory findings, printed whole for the harness to relay
++- IF-145 scripts/trace -> scripts/check: exit-code 0 clean · 1 a finding under --strict, an integrity finding under --strict-integrity, or a stale brief under -…
++- IF-146 scripts/trace -> external:downstream adopter: file docs/test/report.md — metric counts, the orphan and finding lists, the joined SN -> SR -> LLR -> TC forest
++- IF-166 scripts/trace -> external:downstream adopter: file docs/test/report.html — a self-contained collapsible <details> tree of the SN -> SR -> LLR -> TC forest, writ…
++- IF-004 scripts/check_perf -> scripts/check: stdout check_perf: OK - <summary> or FAIL - <summary>, plus one <status> - <PB-ID> <metric> line per non-clean budget
++- IF-147 scripts/check_perf -> scripts/check: exit-code 0 OK, SKIP or WARN · 1 a Gate=fail budget breached in the run tier, or --update-baseline with no metrics

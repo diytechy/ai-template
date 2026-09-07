@@ -1,0 +1,112 @@
+{
+  "base": "c40144d0ffeb77fdbaafa454cb33398b1b615210",
+  "candidate_tree": "ea75b9bdcb4b0ca2ab3e0878f275246dd359b025",
+  "patch_sha256": "311887fc709a634749cf227d0b23bc2ee3f2d34bb3c037850f3360642c832b62",
+  "frozen_evidence_manifest": {
+    "README.md": "8c88c7ca5d40bafb176913cf4c8048e83ef5b47623c246d756ed71d909266361",
+    "actual-census.json": "34f0d3dfcdb7961d37d6b086bde26d03af1b277695e33c4bb5035d34003b3f78",
+    "candidate-checks.json": "94f8cea15aa8f9e5e1b13c54ef37342b93733546ba65d7e04404c515ae8f7d51",
+    "round-001/draft.json": "1614e8e019fc6c4e4c709a14a3781d87f29763304520e06c6adf900b6b39ca34",
+    "round-001/review-meta.json": "8df77b688640a3970b3bad13010ab1db16d99949fca40cc5233649802faea048",
+    "round-001/review-prompt.txt": "20c85565bfc27cf65d30f6ea2c9176045abb0918fde9bc9e73300244bcceac9f",
+    "round-001/review-result.md": "fb81ca482a33fb51d8a7bd5a3784c30fc83b60aeb9fe931dfd9842eba498904a",
+    "round-001/transfer-files.txt": "5bb8eb635ac052285b3d8798ece1c80f1b10aca2bc33767d87e411b32406d3fa",
+    "round-001/transfer-meta.json": "aebd8d25da4d5b789f70c875c11f73b9bc3106e67a0e02ea6bafee2447d6201b",
+    "round-001/transfer.patch": "bb8b9e538d227cebc99f17db03281f293b2e57992c23fa904749e5613ceb4ebb",
+    "round-002/draft.json": "1614e8e019fc6c4e4c709a14a3781d87f29763304520e06c6adf900b6b39ca34",
+    "round-002/integrity-note.txt": "397a6bb004508b87608a1d3901d0b71348c3e545d7e5c18f05eed509fad60172",
+    "round-002/review-meta.json": "ac0c66073f4461dd0d4e683e75805d544f6a083bc0d71f954614d647f003938b",
+    "round-002/review-prompt.txt": "4db6fa0acd93e926ec6850f7ec31a2bc0213c0402f622b79c49c5b982bde609d",
+    "round-002/review-result.txt": "3096352efe7f31627123e4787020a96bbeeda39cf497dcfb2129b85209a713e5",
+    "round-002/review-transfer.patch": "58fa8ae3a637515b4dedde4bb1bf0016e90dcf8ea6809c0ba78193b2723290f0",
+    "round-002/transfer-files.txt": "7ae2e5cc9a91658c02e32b30ad8ad0d04bdc9df5f5209438e167194ba26d54af",
+    "round-002/transfer-meta.json": "69c89a88d433e793f97c66a607a849974d3b8049dccec6c7416ee8d7d41824b2",
+    "transfer-budget.txt": "1b2c3d1b4f969b8a74898701e2481bd264709ae8cc611a4e3a7aa079bdeedd53",
+    "transfer-docs.txt": "58a005f9e387f89bba93c833c5ad6042c3cf059529e2f5a72a652c0f84269196",
+    "transfer-open-items.txt": "e40ad05ddf98b844e43868e03117250285b566f636dc84abdf6b4fba79bd80cc",
+    "transfer-smoke.txt": "6b2fb8419b497e66d09c69a619df53cad17381b92adc48960288a48c06e1cc78",
+    "transfer-trace.txt": "0279f42be2fc74b080dab9183cf62d033f575dd9213cdfafcec7a4bf31ea4afd",
+    "transfer-trajectory.txt": "ce3c0fbb3595e1dc6e195bd32ce61983df8ac8510f408698af8b57415c150dfe"
+  },
+  "checks": [
+    {
+      "name": "transfer-smoke",
+      "command": [
+        "-m",
+        "pytest",
+        "-q",
+        "-n",
+        "auto",
+        "-m",
+        "smoke"
+      ],
+      "exit": 0,
+      "wall_seconds": 54.59058074996574
+    },
+    {
+      "name": "transfer-budget",
+      "command": [
+        "scripts/check_smoke_budget.py",
+        "--mode",
+        "enforce",
+        "--elapsed",
+        "54.59058074996574"
+      ],
+      "exit": 0,
+      "wall_seconds": 0.03636283299420029
+    },
+    {
+      "name": "transfer-regen",
+      "command": [
+        "project-trajectory/scripts/trunk_step.py",
+        "--root",
+        ".",
+        "--regen"
+      ],
+      "exit": 0,
+      "wall_seconds": 9.509302166989073
+    },
+    {
+      "name": "transfer-trace",
+      "command": [
+        "project-trajectory/scripts/trace.py",
+        "--root",
+        ".",
+        "--strict"
+      ],
+      "exit": 0,
+      "wall_seconds": 2.2852387499879114
+    },
+    {
+      "name": "transfer-trajectory",
+      "command": [
+        "project-trajectory/scripts/check_trajectory.py",
+        "--root",
+        ".",
+        "--strict"
+      ],
+      "exit": 0,
+      "wall_seconds": 5.089623125037178
+    },
+    {
+      "name": "transfer-open-items",
+      "command": [
+        "project-trajectory/scripts/gen_open_items.py",
+        "--check"
+      ],
+      "exit": 0,
+      "wall_seconds": 1.8145935839856975
+    },
+    {
+      "name": "transfer-docs",
+      "command": [
+        "project-trajectory/scripts/check_docs.py",
+        "--root",
+        ".",
+        "--stale"
+      ],
+      "exit": 0,
+      "wall_seconds": 1.3489873749786057
+    }
+  ]
+}

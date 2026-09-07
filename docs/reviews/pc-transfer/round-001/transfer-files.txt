@@ -1,0 +1,11 @@
+M	docs/ai-template-redesign-2026-09-05-codex/BACKLOG-MIGRATION.md
+R088	docs/work/queued/WI-608-apply-the-reviewed-pc-single-w.md	docs/archive/work/complete/WI-608-apply-the-reviewed-pc-single-w.md
+R087	docs/work/queued/WI-609-resolve-scoped-judgments-versu.md	docs/archive/work/complete/WI-609-resolve-scoped-judgments-versu.md
+R096	docs/work/queued/WI-601-adjudicate-llr-061-approved.md	docs/archive/work/restructured/WI-601-adjudicate-llr-061-approved.md
+R096	docs/work/queued/WI-603-adjudicate-llr-167-approved.md	docs/archive/work/restructured/WI-603-adjudicate-llr-167-approved.md
+R099	docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md	docs/archive/work/restructured/WI-605-adjudicate-sr-161-llr-183-ow.md
+M	docs/id-watermark
+M	docs/reviews/pc-intake/preflight.md
+M	docs/reviews/wi-609-resolution/DECISION.md
+M	docs/work/queued/WI-606-adjudicate-sr-184-sr-185-sr.md
+A	docs/work/queued/WI-610-adjudicate-combined-approved.md

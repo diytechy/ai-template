@@ -57,10 +57,10 @@ checkout under the existing dispatch and integration locks, after checking the
 base, clean tree and absence of a pending primary writer. No coordinator or
 primary engine ran. [The mint record](mint-result.json) names the actual files.
 
-- [WI-608](../../work/queued/WI-608-apply-the-reviewed-pc-single-w.md): exclusive
+- [WI-608](../../archive/work/complete/WI-608-apply-the-reviewed-pc-single-w.md): exclusive
   authoring of the exact reviewed PC patch; no approval or snapshot changes.
   Applying it increases drift and does not make WI-601 publishable.
-- [WI-609](../../work/queued/WI-609-resolve-scoped-judgments-versu.md): a separate
+- [WI-609](../../archive/work/complete/WI-609-resolve-scoped-judgments-versu.md): a separate
   scoped resolution of the publication-composition conflict, including its
   governing contract impact and positive/negative acceptance cases. It must
   first establish whether a valid existing route was missed. It does not

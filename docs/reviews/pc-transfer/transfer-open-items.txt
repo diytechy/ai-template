@@ -1,0 +1,2 @@
+gen_open_items: 0 pending rows — and nothing contradicts it: 0 parsed entries in docs/provenance-allow (0 unreadable declaring line(s)); 11 fragment declaration(s) read, 11 of them `none`.
+gen_open_items: open-items view up to date.

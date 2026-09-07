@@ -3,11 +3,14 @@ id = "WI-609"
 title = "Resolve scoped judgments versus whole-file snapshot publication"
 workstream = "process"
 sr_refs = ["SR-148", "SR-156"]
-specref = "project-trajectory/PROCESS_OPTIONS.md#who-performs-the-approval-act"
 buildtier = "strong"
 safety_class = "spine"
 needs = ["OI-88"]
 +++
+
+## Deliverable
+
+OI-88 authorizes the independently reviewed existing-publisher resolution in docs/reviews/wi-609-resolution/DECISION.md. Applied canonical intake/spec-move transfer to WI-610; original owners are restructured, not accepted or complete. Actual committed census matches proposed scope; exact lineage and fail-closed scope/absorption behavior are reviewed in docs/reviews/pc-transfer/. Existing primary approval/publication tests validate missing/stale/outside-authority refusals. The owner-authorized combined scope supersedes the earlier separate-owner composition requirement: there are no foreign judgments to compose. No runtime or publisher semantics changed. This supervised resolution close records an executable route and successor, not live acceptance, a claim, or a new control window.
 
 ## Context
 

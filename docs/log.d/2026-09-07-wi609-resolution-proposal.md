@@ -34,5 +34,6 @@ No byte-capped guide changed. This is supervised proposal preparation while
 claims are paused; WI-609 remains queued and no completed implementation or
 live amendment acceptance is claimed.
 
-Deferred open items: OI-88 — approve the concrete one-time ownership transfer
-before any queue consolidation or primary acceptance is attempted.
+Deferred open items: none.
+
+Update 2026-09-07: the owner ruled OI-88; see the OI-88 source-authoring log. The pending question above records the original proposal sitting.

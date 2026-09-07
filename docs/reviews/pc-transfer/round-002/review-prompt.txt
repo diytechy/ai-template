@@ -1,0 +1,1776 @@
+Independently review the corrected exact OI-88 one-time transfer and supervised closes. Your previous actual RETURN is supplied, not an approval. Owner already approved this transfer; no new permission is needed. Scope/source/ownership census unchanged. Review corrections: actual census, original transfer input, your real round-001 result/frozen prompt/metadata are NOW added under tracked docs/reviews/pc-transfer in the patch file list (the reviewed operative diff omits their full contents solely to avoid repeating the frozen prompt; supplied metadata/hash inventory bind them); WI-606 dependency prose now agrees; final status regeneration and session log with actual checks will be written and checked before commit. Additionally WI-604 now needs WI-610 to prevent its own unjudged LLR/TC snapshot absorption, without changing first-approval ownership, and completed WI-608/WI-609 clear SpecRef under existing R-F. All scoped old proposal blobs and frozen evidence remain unchanged. This exact candidate is still only a disposable checkout patch; live queue unchanged. Review the added first-approval edge and all corrections. Respond OUTCOME: APPROVE, RETURN or UNCERTAIN for transfer and supervised authoring/resolution closes only. No primary semantic acceptance, runtime activation, coordinator/control window, push or main merge. The final close log/status and strict/commit checks remain completion conditions; require them but do not invent that they have already run on this candidate. The new review record is appended after your real response exists, never fabricated.
+
+--- docs/reviews/wi-609-resolution/DECISION.md ---
+# WI-609 — proposed one-time ownership transfer
+
+**Proposed decision:** authorize a reviewed, supervised transfer of the queued
+amendment scopes in WI-601, WI-603 and WI-605 into one new combined adjudication
+WI for the affected registry snapshot set, after exact PC source authoring.
+This is a queue-ownership decision, not approval of any requirement or code.
+No transfer, new primary selection or snapshot write has occurred.
+The decision is recorded as OI-88; WI-609 has a hard dependency on that answer.
+
+## Why this is the smaller route
+
+The [independent design review](review-result.md) returned the proposed
+judgment-only publication mechanism. It would add a protocol intent, reusable
+foreign-judgment validation, a collection hold and a bootstrap exception. The
+[rejected design](rejected-judgment-only-design.txt) is retained as review input,
+not as a second implementation plan. The review instead identified a combined
+scope under the existing publisher as the smaller way to drain the current
+backlog without weakening scope or absorption checks.
+
+[The exact proposed scope](combined-scope.json) is derived from the corrected
+PC candidate's actual whole-file census. It includes every changed Approved row
+that those three files would absorb. Drafted riders are listed separately and
+remain Drafted. This replaces the earlier PC proposal's dependency on an
+independent WI-601 close with one owner for the complete atomic approval set;
+it must therefore be explicitly approved as an ownership transfer.
+
+The [isolated executable check](combined-scope-check.txt) calls the real scope
+parser and absorption verifier on that candidate. Assuming accepted judgments
+and valid evidence solely for diagnostic isolation, both constraints pass for
+the combined scope. They fail for the current WI-601-only scope. This proves
+scope consistency, not semantic approval, impact coverage, valid provenance or
+publication readiness. The real judgments remain to be performed.
+
+## Exact effect of the proposed authorization
+
+1. Retain the paused coordinator and no-control-window/no-push/no-main-merge
+   constraints. Do not modify any currently bound primary turn; none is pending.
+2. Complete the exact PC authoring under WI-608, with no approval or snapshot
+   changes. Recompute the census at its actual committed candidate. If it differs
+   materially from the proposed scope, return the changed transfer for review.
+3. Independently review the complete transfer and lineage before its queue
+   mutation. Use canonical intake/spec-move helpers for the new owner and
+   restructured historical specs; preserve original scopes, proposals, real
+   review evidence, stopped WI-605 incident records and successor lineage.
+   Do not claim the old owners accepted their rows or mark them complete.
+4. The new adjudication owns the exact combined Approved-change set in
+   `combined-scope.json`, with WI-608 as its hard predecessor. No new WI ID is
+   reserved here. Replace obsolete dependent edges through the existing
+   lineage-repointing path; review every affected edge and prohibit self-edges.
+   The previous not-yet-minted PC amendment WI is unnecessary: its intended
+   scope is included in this one owner. Existing first-approval ownership of
+   Drafted rows is unchanged.
+5. Only after that transfer and authoring are complete may the new exclusive
+   primary adjudicator judge each row's cumulative approved-to-candidate text,
+   parents, siblings, tests and every meaning-changing use. Require a complete
+   real absorption ledger and ordinary independent review/provenance. A missing
+   or rejected judgment still refuses the whole copy. No manual snapshot copy,
+   synthetic approval, weakened check or new publication mechanism is authorized.
+6. After successful live contract acceptance, continue PC implementation under
+   its existing scope and test obligations. This decision does not authorize a
+   new control window. Any recurrence prevention that changes runner scheduling
+   requires its own scoped review; no new merge-time hold is smuggled in here.
+
+## Why approval is requested now
+
+The current [WI-609 scope](../../work/queued/WI-609-resolve-scoped-judgments-versu.md)
+explicitly says “Preserve WI-601, WI-603 and WI-605 ownership”. The accepted PC
+proposal also requires the separate WI-601 judgment and predecessor. The normal
+automatic consolidation census refuses while queued adjudications exist
+(`consolidate._pending_refusal`), so simply launching that census is not a
+supported way around this constraint. This proposal asks for a one-time
+supervised ownership change with independent review, not deletion of that guard.
+
+The original answer that no input was needed was too broad: diagnosis and
+preparation required none, but this chosen resolution changes the recorded
+ownership boundary. The alternative is a larger protocol change that also
+needs a bootstrap decision. The recommended transfer keeps existing approval
+semantics and all publisher checks intact. The unrelated oldest-supported-kit
+question for legacy expiry does not block this decision.
+
+## Evidence and present state
+
+The existing primary approval/publication tests passed unchanged. Actual output
+is recorded in the session log. Reviewer metadata and frozen prompt are preserved
+beside the verbatim review; the review is not a machine approval artifact.
+Production code, SR/LLR/TC registries, snapshots, existing amendment ownership
+and the tracked pause are unchanged. Only the owner question and WI-609's
+dependency on it were added to the live registries. WI-609 remains queued; no false claim or completion
+is recorded while work is performed as supervised proposal preparation.
+
+--- docs/reviews/wi-609-resolution/combined-scope.json ---
+{
+  "status": "owner-review proposal only; no transfer or mint performed",
+  "authoring_base": "53b36b46f009d8f3304ffe853e5383c1d424b8e1",
+  "registry_candidate_tree": "9fa3e1bbf188d50d762ca4ee6d6af14ad06f8618",
+  "supersedes": {
+    "WI-601": {
+      "path": "docs/work/queued/WI-601-adjudicate-llr-061-approved.md",
+      "scope": [
+        "LLR-061"
+      ],
+      "overlap": [
+        "LLR-061"
+      ]
+    },
+    "WI-603": {
+      "path": "docs/work/queued/WI-603-adjudicate-llr-167-approved.md",
+      "scope": [
+        "LLR-167"
+      ],
+      "overlap": [
+        "LLR-167"
+      ]
+    },
+    "WI-605": {
+      "path": "docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md",
+      "scope": [
+        "SR-161",
+        "LLR-183",
+        "TC-178"
+      ],
+      "overlap": [
+        "LLR-183",
+        "SR-161",
+        "TC-178"
+      ]
+    }
+  },
+  "new_scope": [
+    "LLR-058",
+    "LLR-061",
+    "LLR-123",
+    "LLR-140",
+    "LLR-144",
+    "LLR-149",
+    "LLR-150",
+    "LLR-151",
+    "LLR-152",
+    "LLR-153",
+    "LLR-154",
+    "LLR-158",
+    "LLR-161",
+    "LLR-167",
+    "LLR-183",
+    "LLR-207",
+    "SR-024",
+    "SR-033",
+    "SR-043",
+    "SR-052",
+    "SR-053",
+    "SR-054",
+    "SR-111",
+    "SR-112",
+    "SR-129",
+    "SR-144",
+    "SR-146",
+    "SR-147",
+    "SR-148",
+    "SR-149",
+    "SR-156",
+    "SR-161",
+    "SR-162",
+    "SR-167",
+    "SR-175",
+    "SR-176",
+    "SR-177",
+    "TC-058",
+    "TC-061",
+    "TC-138",
+    "TC-143",
+    "TC-144",
+    "TC-145",
+    "TC-146",
+    "TC-147",
+    "TC-148",
+    "TC-153",
+    "TC-154",
+    "TC-156",
+    "TC-161",
+    "TC-178",
+    "TC-205"
+  ],
+  "drafted_riders_not_approved": [
+    "LLR-210",
+    "SR-183",
+    "SR-184",
+    "SR-185",
+    "SR-186",
+    "TC-208",
+    "TC-209",
+    "TC-210",
+    "TC-211"
+  ],
+  "hard_predecessor": "WI-608",
+  "new_wi_id": "allocate through canonical intake after authorized reviewed transfer; not reserved",
+  "existing_scope_digests": {
+    "WI-601": "c33ae9eadaf41c16b222c02b231d9a5a523b0fb1",
+    "WI-603": "3826779d625a2ed75550e8f448e516cf85650a18",
+    "WI-605": "9e5967174d0e38727273e1d31a34c7bf4c8d167d"
+  }
+}
+
+--- docs/reviews/wi-609-resolution/combined-scope-check.txt ---
+DIAGNOSTIC ONLY: assume accepted meanings and valid evidence to test scope composition; these are NOT judgments or approval payloads.
+Scope rows: 52
+Whole-file riders: 61
+Decision parser: None
+Absorption composition: None
+None means only the isolated scope/ledger consistency check passed. Real independent whole-chain, impact, provenance and publication checks remain owed.
+
+--- docs/reviews/pc-contract/authoring-corrections.json ---
+{
+  "reviewed_candidate_tree": "cab1ee40635745516ed669beda023826805d84d3",
+  "corrected_candidate_tree": "9fa3e1bbf188d50d762ca4ee6d6af14ad06f8618",
+  "status": "author-verified exact corrections specified by round-004 conditional proposal-readiness opinion; not independent live acceptance",
+  "candidate_cell_changes": [
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-144",
+      "cell": "requirement",
+      "before": "The delivered loop content shall close a lane that cannot finish into a TERMINAL partial state that merges like any other branch, with one immutable per-close report naming the claimed outcome, the reason, the commit range and the keep/discard split \u2014 refusing a report that declares neither a split nor an explicit deferral, and refusing a second close of the same event rather than overwriting the first.",
+      "after": "The delivered loop content shall close a lane that cannot finish into a TERMINAL partial state that merges like any other branch, with one immutable per-close report naming the claimed outcome, the reason, the commit range and the keep/discard split \u2014 refusing a report that declares neither a split nor an explicit deferral, and refusing a second close of the same event rather than overwriting the first and refusing a close of a lane whose claim is other than one work item."
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-150",
+      "cell": "detail",
+      "before": "One lane's mechanics extracted from the dispatcher (docs/concurrency-v2.md \u00a7A4.2): ensure the lane worktree (integrate.lane_worktree, the one home both the worker and the refresh agree on), build the worker argv with the plain launch's session dials forwarded explicitly, launch the worker subprocess (spawn_worker non-blocking for the lane table and dispatch._launch's own default; run_worker its blocking form - a DECLARED SEAM with no in-kit caller, kept for a synchronous single-lane run, and the shape dispatch._launch's worker= injection substitutes), and run the \u00a7A2 station refresh as the lane's OWN subprocess (spawn_refresh - the invoker's integrate.py refresh CLI under the harness interpreter) so N lanes' bars overlap instead of queueing at the dispatcher (\u00a7A4.3). Reports outcomes, decides none: the tree signal (the assigned spec moved out of active/<branch>/) plus exit codes are the whole protocol - no state file, no back-channel. The dispatcher resume boundary (_admit_parked) refuses an empty or multi-WI executable assignment before repository mutation or provider launch.",
+      "after": "One lane's mechanics extracted from the dispatcher (docs/concurrency-v2.md \u00a7A4.2): ensure the lane worktree (integrate.lane_worktree, the one home both the worker and the refresh agree on), build the worker argv with the plain launch's session dials forwarded explicitly, launch the worker subprocess (spawn_worker non-blocking for the lane table and dispatch._launch's own default; run_worker its blocking form - a DECLARED SEAM with no in-kit caller, kept for a synchronous single-lane run, and the shape dispatch._launch's worker= injection substitutes), and run the \u00a7A2 station refresh as the lane's OWN subprocess (spawn_refresh - the invoker's integrate.py refresh CLI under the harness interpreter) so N lanes' bars overlap instead of queueing at the dispatcher (\u00a7A4.3). Reports outcomes, decides none: the tree signal (the assigned spec moved out of active/<branch>/) plus exit codes are the whole protocol - no state file, no back-channel. The dispatcher's parked-lane resume (dispatch._admit_parked) hands this row's mechanics only a single-WI assignment and refuses an empty or multi-WI one before repository mutation or provider launch."
+    }
+  ],
+  "final_artifact_sha256": {
+    "PC-BATCH-AMENDMENTS.patch": "9ba7c3311fba4f0ce9d9831ed2e7ab72be876f91c955ad55468dbe1fa7ef892c",
+    "PC-CANDIDATE-ABSORPTION.tsv": "4d6f20cdbc0d21e686200ed33fd8f0e94db50abd5a5556e692e408b0f3a4b2f5",
+    "PC-BATCH-OWNERSHIP.tsv": "fc6da2de2d6d87f3285359cd8c6f413368ad4cbfaf8baaa7b4af5a525c6b76a2"
+  },
+  "source_confirmed": [
+    "dispatch.py::_admit_parked resumes parked lanes",
+    "integrate.py::_abandoned_claim recognizes a crashed claim commit"
+  ],
+  "intake_condition": "hard predecessor WI-601 plus fresh per-row ownership check"
+}
+
+--- out/run-logs/pc-transfer/actual-census.json ---
+{
+  "base": "c40144d0ffeb77fdbaafa454cb33398b1b615210",
+  "status": "actual committed source census; no semantic acceptance",
+  "approved_blobs": {
+    "docs/archive/last_approved/docs/requirements/components.toml": "cf67e1134ebd7690603b407e0a0d61d4bc10b062",
+    "docs/archive/last_approved/docs/requirements/external.toml": "179dcd21854d08b4b0e366bc96e2e3fd076522e2",
+    "docs/archive/last_approved/docs/requirements/interfaces.toml": "0b060fb818b03ab5b3413787bbb2f8f059931af3",
+    "docs/archive/last_approved/docs/requirements/low-level-requirements.toml": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+    "docs/archive/last_approved/docs/requirements/stakeholder-needs.toml": "abf6c3ab7dcbf6df38efaecbf2188948b4f4cb9e",
+    "docs/archive/last_approved/docs/requirements/system-requirements.toml": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+    "docs/archive/last_approved/docs/test/test-cases.toml": "ca71cc09e6093c5c5ff299e8d077453c967140d2"
+  },
+  "census": [
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-058",
+      "state": "approved-change",
+      "cells": {
+        "Title": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-061",
+      "state": "approved-change",
+      "cells": {
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-123",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        },
+        "Title": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        },
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-140",
+      "state": "approved-change",
+      "cells": {
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-144",
+      "state": "approved-change",
+      "cells": {
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-149",
+      "state": "approved-change",
+      "cells": {
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-150",
+      "state": "approved-change",
+      "cells": {
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-151",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        },
+        "Title": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        },
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-152",
+      "state": "approved-change",
+      "cells": {
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-153",
+      "state": "approved-change",
+      "cells": {
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-154",
+      "state": "approved-change",
+      "cells": {
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-158",
+      "state": "approved-change",
+      "cells": {
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-161",
+      "state": "approved-change",
+      "cells": {
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-167",
+      "state": "approved-change",
+      "cells": {
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-183",
+      "state": "approved-change",
+      "cells": {
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-207",
+      "state": "approved-change",
+      "cells": {
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-210",
+      "state": "below-approval-rider",
+      "cells": {
+        "Title": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        },
+        "Module": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        },
+        "Detail": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        },
+        "Phase": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        },
+        "SR-Refs": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        },
+        "Component": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        },
+        "Status": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        },
+        "CodeSymbol": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        },
+        "Rationale": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        },
+        "TestRefs": {
+          "before": "1ec0ab08fcea5f7dd638651e4281322bbd031705",
+          "after": "cd855a66183510036a087c028acd3e1fa367e134"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-024",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-033",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-043",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-052",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-053",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-054",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-111",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-112",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-129",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-144",
+      "state": "approved-change",
+      "cells": {
+        "Requirement": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "AcceptanceCriteria": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-146",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-147",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-148",
+      "state": "approved-change",
+      "cells": {
+        "Requirement": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "AcceptanceCriteria": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-149",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-156",
+      "state": "approved-change",
+      "cells": {
+        "Requirement": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "AcceptanceCriteria": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-161",
+      "state": "approved-change",
+      "cells": {
+        "Verification": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Requirement": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "AcceptanceCriteria": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-162",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-167",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-175",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-176",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-177",
+      "state": "approved-change",
+      "cells": {
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-183",
+      "state": "below-approval-rider",
+      "cells": {
+        "Title": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Boundary-Refs": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Verification": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Phase": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Priority": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Status": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "AcceptanceCriteria": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Aspect": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Hat-Refs": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Requirement": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "SN-Refs": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-184",
+      "state": "below-approval-rider",
+      "cells": {
+        "Title": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Boundary-Refs": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Verification": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Phase": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Priority": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Status": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "AcceptanceCriteria": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Hat-Refs": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Requirement": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "SN-Refs": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-185",
+      "state": "below-approval-rider",
+      "cells": {
+        "Title": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Boundary-Refs": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Verification": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Phase": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Priority": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Status": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "AcceptanceCriteria": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Hat-Refs": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Requirement": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "SN-Refs": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-186",
+      "state": "below-approval-rider",
+      "cells": {
+        "Title": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Boundary-Refs": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Verification": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Phase": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Priority": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Status": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "AcceptanceCriteria": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Aspect": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Hat-Refs": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Requirement": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "Rationale": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        },
+        "SN-Refs": {
+          "before": "435d8ce708795a5e3f9451ff0d171824b2b3c452",
+          "after": "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-058",
+      "state": "approved-change",
+      "cells": {
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-061",
+      "state": "approved-change",
+      "cells": {
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-138",
+      "state": "approved-change",
+      "cells": {
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-143",
+      "state": "approved-change",
+      "cells": {
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-144",
+      "state": "approved-change",
+      "cells": {
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-145",
+      "state": "approved-change",
+      "cells": {
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-146",
+      "state": "approved-change",
+      "cells": {
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-147",
+      "state": "approved-change",
+      "cells": {
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-148",
+      "state": "approved-change",
+      "cells": {
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-153",
+      "state": "approved-change",
+      "cells": {
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-154",
+      "state": "approved-change",
+      "cells": {
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-156",
+      "state": "approved-change",
+      "cells": {
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-161",
+      "state": "approved-change",
+      "cells": {
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-178",
+      "state": "approved-change",
+      "cells": {
+        "Expected": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-205",
+      "state": "approved-change",
+      "cells": {
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-208",
+      "state": "below-approval-rider",
+      "cells": {
+        "Phase": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Status": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Verifies": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Evidence": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Level": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Tier": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Expected": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Automated": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-209",
+      "state": "below-approval-rider",
+      "cells": {
+        "Phase": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Status": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Verifies": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Evidence": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Level": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Tier": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Expected": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Automated": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-210",
+      "state": "below-approval-rider",
+      "cells": {
+        "Phase": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Status": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Verifies": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Evidence": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Level": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Tier": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Expected": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Automated": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    },
+    {
+      "registry": "docs/test/test-cases.toml",
+      "row": "TC-211",
+      "state": "below-approval-rider",
+      "cells": {
+        "Phase": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Status": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Method": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Verifies": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Evidence": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Level": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Tier": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Expected": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        },
+        "Automated": {
+          "before": "ca71cc09e6093c5c5ff299e8d077453c967140d2",
+          "after": "4331e4bbcf96fe80a70bcc78b9d64e9e3158c295"
+        }
+      }
+    }
+  ]
+}
+
+--- out/run-logs/pc-transfer/transfer-meta.json ---
+{
+  "base": "c40144d0ffeb77fdbaafa454cb33398b1b615210",
+  "minted": [
+    [
+      "WI-610",
+      "docs/work/queued/WI-610-adjudicate-combined-approved.md"
+    ]
+  ],
+  "draft_sha256": "1614e8e019fc6c4e4c709a14a3781d87f29763304520e06c6adf900b6b39ca34",
+  "patch_sha256": "7fd815517ef612bc636a2c35390a2bd6416917e79f6449d2c79bbe1d4e1749a9",
+  "originals": {
+    "WI-601": {
+      "path": "docs/work/queued/WI-601-adjudicate-llr-061-approved.md",
+      "blob": "c33ae9eadaf41c16b222c02b231d9a5a523b0fb1",
+      "scope": [
+        "LLR-061"
+      ]
+    },
+    "WI-603": {
+      "path": "docs/work/queued/WI-603-adjudicate-llr-167-approved.md",
+      "blob": "3826779d625a2ed75550e8f448e516cf85650a18",
+      "scope": [
+        "LLR-167"
+      ]
+    },
+    "WI-605": {
+      "path": "docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md",
+      "blob": "9e5967174d0e38727273e1d31a34c7bf4c8d167d",
+      "scope": [
+        "SR-161",
+        "LLR-183",
+        "TC-178"
+      ]
+    }
+  },
+  "checks": "source, pause, frozen evidence unchanged; exact scope and predecessor; no self or obsolete inbound edges; canonical restructured archives, two supervised authoring/resolution closes"
+}
+
+--- out/run-logs/pc-transfer/transfer-files.txt ---
+M	docs/ai-template-redesign-2026-09-05-codex/BACKLOG-MIGRATION.md
+R088	docs/work/queued/WI-608-apply-the-reviewed-pc-single-w.md	docs/archive/work/complete/WI-608-apply-the-reviewed-pc-single-w.md
+R087	docs/work/queued/WI-609-resolve-scoped-judgments-versu.md	docs/archive/work/complete/WI-609-resolve-scoped-judgments-versu.md
+R096	docs/work/queued/WI-601-adjudicate-llr-061-approved.md	docs/archive/work/restructured/WI-601-adjudicate-llr-061-approved.md
+R096	docs/work/queued/WI-603-adjudicate-llr-167-approved.md	docs/archive/work/restructured/WI-603-adjudicate-llr-167-approved.md
+R099	docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md	docs/archive/work/restructured/WI-605-adjudicate-sr-161-llr-183-ow.md
+M	docs/id-watermark
+M	docs/reviews/pc-intake/preflight.md
+A	docs/reviews/pc-transfer/README.md
+A	docs/reviews/pc-transfer/actual-census.json
+A	docs/reviews/pc-transfer/round-001/draft.json
+A	docs/reviews/pc-transfer/round-001/review-meta.json
+A	docs/reviews/pc-transfer/round-001/review-prompt.txt
+A	docs/reviews/pc-transfer/round-001/review-result.md
+A	docs/reviews/pc-transfer/round-001/transfer-files.txt
+A	docs/reviews/pc-transfer/round-001/transfer-meta.json
+A	docs/reviews/pc-transfer/round-001/transfer.patch
+M	docs/reviews/wi-609-resolution/DECISION.md
+M	docs/work/queued/WI-604-adjudicate-llr-210-tc-208.md
+M	docs/work/queued/WI-606-adjudicate-sr-184-sr-185-sr.md
+A	docs/work/queued/WI-610-adjudicate-combined-approved.md
+
+--- out/run-logs/pc-transfer/review-transfer.patch ---
+diff --git a/docs/ai-template-redesign-2026-09-05-codex/BACKLOG-MIGRATION.md b/docs/ai-template-redesign-2026-09-05-codex/BACKLOG-MIGRATION.md
+index 7e7ad55b..6d991238 100644
+--- a/docs/ai-template-redesign-2026-09-05-codex/BACKLOG-MIGRATION.md
++++ b/docs/ai-template-redesign-2026-09-05-codex/BACKLOG-MIGRATION.md
+@@ -44,9 +44,9 @@ are engineering proposals, not facts mechanically derived from the titles.
+ | [WI-596 — snapshot absorbed approvals](../archive/work/cancelled/WI-596-the-anchoring-copy-s-absorb-le.md) | Treat as an authority concern before broad re-anchoring or approval-snapshot migration | P1A/P9a: account for every changed row a whole-file snapshot would absorb; never bless unrelated text by reseeding the baseline. |
+ | [WI-597 — contradictory refusal wording](../work/queued/WI-597-stop-the-snapshot-refusal-s-op.md) | Small independent correction, or preserve its two-message cases when that code is replaced | P0b/P1A: report the actual scoped authorization; change no already-ruled scoping policy. It does not gate the entire redesign. |
+ | [WI-598 — regeneration table coverage](../work/queued/WI-598-drive-the-trunk-regen-step-tab.md) | Reuse as contract coverage for the selected regeneration path | P5a/P9R: assert declared order and explicit skip behavior for every applicable step; preserve named behavioral examples so testing a table is not the only oracle. |
+-| [WI-601 — LLR-061 amendment](../work/queued/WI-601-adjudicate-llr-061-approved.md) | Resolve under current authority if needed by the baseline, or include the specific amendment judgment in a reviewed replacement transaction | P1A/P7a: assignment-scoped brief/evidence obligations. Do not discard an owed judgment because the old module is scheduled for deletion. |
++| [WI-601 — LLR-061 amendment](../archive/work/restructured/WI-601-adjudicate-llr-061-approved.md) | Resolve under current authority if needed by the baseline, or include the specific amendment judgment in a reviewed replacement transaction | P1A/P7a: assignment-scoped brief/evidence obligations. Do not discard an owed judgment because the old module is scheduled for deletion. |
+ | [WI-602 — sampled WI-580 close](../work/queued/WI-602-spot-check-the-clean-close-of.md) | Keep under the current sampling policy during control; separately decide any later sampling treatment | P0c/P7a: no defect is alleged by this spec. Count sampling separately from corrective rework; do not classify it automatically as waste. |
+-| [WI-603 — LLR-167 amendment](../work/queued/WI-603-adjudicate-llr-167-approved.md) | Reconcile its pending brief-selection judgment with prompt consolidation | P1A/P2a: applicable brief selection and approval of changed normative text; one prompt catalog does not satisfy the judgment by itself. |
++| [WI-603 — LLR-167 amendment](../archive/work/restructured/WI-603-adjudicate-llr-167-approved.md) | Reconcile its pending brief-selection judgment with prompt consolidation | P1A/P2a: applicable brief selection and approval of changed normative text; one prompt catalog does not satisfy the judgment by itself. |
+ | [WI-604 — first approval of LLR-210/TC-208](../work/queued/WI-604-adjudicate-llr-210-tc-208.md) | Decide what governs the old-runner control period; when replacing census behavior, amend the contract explicitly instead of first approving obsolete text merely to green the stage | P0c/P1A/P3a: unapproved content stays visibly unapproved; preserve consolidation scope and verification through the replacement. |
+ 
+ The mapping deliberately does not invent new hard dependencies between all
+diff --git a/docs/work/queued/WI-608-apply-the-reviewed-pc-single-w.md b/docs/archive/work/complete/WI-608-apply-the-reviewed-pc-single-w.md
+similarity index 88%
+rename from docs/work/queued/WI-608-apply-the-reviewed-pc-single-w.md
+rename to docs/archive/work/complete/WI-608-apply-the-reviewed-pc-single-w.md
+index 519a7dc4..b9f0cd0d 100644
+--- a/docs/work/queued/WI-608-apply-the-reviewed-pc-single-w.md
++++ b/docs/archive/work/complete/WI-608-apply-the-reviewed-pc-single-w.md
+@@ -3,11 +3,14 @@ id = "WI-608"
+ title = "Apply the reviewed PC single-WI contract amendments"
+ workstream = "process"
+ sr_refs = ["SR-144", "SR-148", "SR-156"]
+-specref = "docs/ai-template-redesign-2026-09-05-codex/PC-BATCH-CONTRACT.md"
+ buildtier = "strong"
+ safety_class = "spine"
+ +++
+ 
++## Deliverable
++
++Exact reviewed PC source patch applied in c40144d0ffeb77fdbaafa454cb33398b1b615210; live registry bytes match corrected proposal 9fa3e1bbf188d50d762ca4ee6d6af14ad06f8618, with no Status or snapshot change. OI-88 explicitly replaces the earlier separate-owner clauses. The actual complete census is assigned to WI-610, hard predecessor WI-608, through the independently reviewed canonical transfer. Source trace and commit bar passed. Supervised completion while paused, without a lane claim; this closes authoring and ownership reconciliation only, not semantic acceptance or implementation.
++
+ ## Context
+ 
+ Owner-authorized PC continuation from 14ac5251. Apply the exact reviewed PC-BATCH-AMENDMENTS.patch as exclusive spine authoring, rechecking current cells and the correction-verification hashes first. Preserve every Status, parent, evidence, phase and perspective field. The patch file is a proposal, not an already applied amendment. No snapshot write, batch-code deletion or test deletion belongs to this authoring WI.
+diff --git a/docs/work/queued/WI-609-resolve-scoped-judgments-versu.md b/docs/archive/work/complete/WI-609-resolve-scoped-judgments-versu.md
+similarity index 87%
+rename from docs/work/queued/WI-609-resolve-scoped-judgments-versu.md
+rename to docs/archive/work/complete/WI-609-resolve-scoped-judgments-versu.md
+index f3d9bc22..5cb4b16c 100644
+--- a/docs/work/queued/WI-609-resolve-scoped-judgments-versu.md
++++ b/docs/archive/work/complete/WI-609-resolve-scoped-judgments-versu.md
+@@ -3,12 +3,15 @@ id = "WI-609"
+ title = "Resolve scoped judgments versus whole-file snapshot publication"
+ workstream = "process"
+ sr_refs = ["SR-148", "SR-156"]
+-specref = "project-trajectory/PROCESS_OPTIONS.md#who-performs-the-approval-act"
+ buildtier = "strong"
+ safety_class = "spine"
+ needs = ["OI-88"]
+ +++
+ 
++## Deliverable
++
++OI-88 authorizes the independently reviewed existing-publisher resolution in docs/reviews/wi-609-resolution/DECISION.md. Applied canonical intake/spec-move transfer to WI-610; original owners are restructured, not accepted or complete. Actual committed census matches proposed scope; exact lineage and fail-closed scope/absorption behavior are reviewed in docs/reviews/pc-transfer/. Existing primary approval/publication tests validate missing/stale/outside-authority refusals. The owner-authorized combined scope supersedes the earlier separate-owner composition requirement: there are no foreign judgments to compose. No runtime or publisher semantics changed. This supervised resolution close records an executable route and successor, not live acceptance, a claim, or a new control window.
++
+ ## Context
+ 
+ Concrete PC preflight finding at 14ac5251: WI-601 owns only LLR-061. The actual LLR snapshot census also includes approved changes to LLR-140/152/153/154/158/167/183/207. With evidence validation assumed successful for diagnostic isolation, primary_approval._absorption_refusal still refuses LLR-140 without an accepted scoped decision; _decision_rows rejects adding that decision because it is outside WI-601's scope. No primary turn has started.
+diff --git a/docs/work/queued/WI-601-adjudicate-llr-061-approved.md b/docs/archive/work/restructured/WI-601-adjudicate-llr-061-approved.md
+similarity index 96%
+rename from docs/work/queued/WI-601-adjudicate-llr-061-approved.md
+rename to docs/archive/work/restructured/WI-601-adjudicate-llr-061-approved.md
+index c33ae9ea..04deb243 100644
+--- a/docs/work/queued/WI-601-adjudicate-llr-061-approved.md
++++ b/docs/archive/work/restructured/WI-601-adjudicate-llr-061-approved.md
+@@ -9,6 +9,10 @@ brief = "amendment"
+ adjudicates = ["LLR-061"]
+ +++
+ 
++## Deliverable
++
++Restructured into WI-610.
++
+ ## Context
+ 
+ Derived from `staged_spine_amendments` on the merged commit (§A5.2).
+diff --git a/docs/work/queued/WI-603-adjudicate-llr-167-approved.md b/docs/archive/work/restructured/WI-603-adjudicate-llr-167-approved.md
+similarity index 96%
+rename from docs/work/queued/WI-603-adjudicate-llr-167-approved.md
+rename to docs/archive/work/restructured/WI-603-adjudicate-llr-167-approved.md
+index 3826779d..d913fa33 100644
+--- a/docs/work/queued/WI-603-adjudicate-llr-167-approved.md
++++ b/docs/archive/work/restructured/WI-603-adjudicate-llr-167-approved.md
+@@ -9,6 +9,10 @@ brief = "amendment"
+ adjudicates = ["LLR-167"]
+ +++
+ 
++## Deliverable
++
++Restructured into WI-610.
++
+ ## Context
+ 
+ Derived from `staged_spine_amendments` on the merged commit (§A5.2).
+diff --git a/docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md b/docs/archive/work/restructured/WI-605-adjudicate-sr-161-llr-183-ow.md
+similarity index 99%
+rename from docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md
+rename to docs/archive/work/restructured/WI-605-adjudicate-sr-161-llr-183-ow.md
+index 9e596717..dda18c8e 100644
+--- a/docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md
++++ b/docs/archive/work/restructured/WI-605-adjudicate-sr-161-llr-183-ow.md
+@@ -10,6 +10,10 @@ brief = "amendment"
+ adjudicates = ["SR-161", "LLR-183", "TC-178"]
+ +++
+ 
++## Deliverable
++
++Restructured into WI-610.
++
+ ## Context
+ 
+ Prepared from the SN-036 owner ruling and the live snapshot-drift brief. Source amendments are limited to the approved amendments to SR-161, LLR-183 and TC-178, while reading their whole chain, the revised direct Inspection route through TC-211, and TC-178's surviving supplementary Hat-Refs linkage. Decide whether each amended cell preserves or changes scope; The adjudication also judges the complete whole-registry absorption population below before any copy; it may re-attest only cells whose full chain and before/after it actually judged.
+diff --git a/docs/id-watermark b/docs/id-watermark
+index 25b48adc..8e14aab2 100644
+--- a/docs/id-watermark
++++ b/docs/id-watermark
+@@ -19,7 +19,7 @@
+ # correction: B 7 -> 8 (OI-47)
+ # correction: REL 3 -> 4 (OI-47)
+ #
+-# basis: B=5 CMP=9 EXT=5 IF=179 LLR=210 OI=88 PB=4 REL=3 SN=40 SR=186 TC=211 WI=609
++# basis: B=5 CMP=9 EXT=5 IF=179 LLR=210 OI=88 PB=4 REL=3 SN=40 SR=186 TC=211 WI=610
+ #
+ ASSET = 0
+ B = 8
+@@ -37,4 +37,4 @@ REPO = 0
+ SN = 40
+ SR = 186
+ TC = 211
+-WI = 609
++WI = 610
+diff --git a/docs/reviews/pc-intake/preflight.md b/docs/reviews/pc-intake/preflight.md
+index 4b1d5c35..1691f5e3 100644
+--- a/docs/reviews/pc-intake/preflight.md
++++ b/docs/reviews/pc-intake/preflight.md
+@@ -57,10 +57,10 @@ checkout under the existing dispatch and integration locks, after checking the
+ base, clean tree and absence of a pending primary writer. No coordinator or
+ primary engine ran. [The mint record](mint-result.json) names the actual files.
+ 
+-- [WI-608](../../work/queued/WI-608-apply-the-reviewed-pc-single-w.md): exclusive
++- [WI-608](../../archive/work/complete/WI-608-apply-the-reviewed-pc-single-w.md): exclusive
+   authoring of the exact reviewed PC patch; no approval or snapshot changes.
+   Applying it increases drift and does not make WI-601 publishable.
+-- [WI-609](../../work/queued/WI-609-resolve-scoped-judgments-versu.md): a separate
++- [WI-609](../../archive/work/complete/WI-609-resolve-scoped-judgments-versu.md): a separate
+   scoped resolution of the publication-composition conflict, including its
+   governing contract impact and positive/negative acceptance cases. It must
+   first establish whether a valid existing route was missed. It does not
+diff --git a/docs/reviews/wi-609-resolution/DECISION.md b/docs/reviews/wi-609-resolution/DECISION.md
+index 3a0e1eab..b540f9fd 100644
+--- a/docs/reviews/wi-609-resolution/DECISION.md
++++ b/docs/reviews/wi-609-resolution/DECISION.md
+@@ -63,7 +63,7 @@ publication readiness. The real judgments remain to be performed.
+ 
+ ## Why approval is requested now
+ 
+-The current [WI-609 scope](../../work/queued/WI-609-resolve-scoped-judgments-versu.md)
++The current [WI-609 scope](../../archive/work/complete/WI-609-resolve-scoped-judgments-versu.md)
+ explicitly says “Preserve WI-601, WI-603 and WI-605 ownership”. The accepted PC
+ proposal also requires the separate WI-601 judgment and predecessor. The normal
+ automatic consolidation census refuses while queued adjudications exist
+diff --git a/docs/work/queued/WI-604-adjudicate-llr-210-tc-208.md b/docs/work/queued/WI-604-adjudicate-llr-210-tc-208.md
+index 6f52f939..e8d0edf1 100644
+--- a/docs/work/queued/WI-604-adjudicate-llr-210-tc-208.md
++++ b/docs/work/queued/WI-604-adjudicate-llr-210-tc-208.md
+@@ -2,6 +2,7 @@
+ id = "WI-604"
+ title = "adjudicate: LLR-210, TC-208 - spine row(s) authored Drafted on merged trunk 3b004c4..f395907 await a FIRST APPROVAL; read the whole chain and record approval or return findings"
+ workstream = "process"
++needs = ["WI-610"]
+ specref = "docs/requirements/low-level-requirements.toml"
+ buildtier = "medium"
+ safety_class = "adjudication"
+@@ -24,3 +25,5 @@ this spec's `## Approval` section or RETURN with findings and a precisely scoped
+ follow-up in `## Dispositions`. After independent review, the primary publisher
+ atomically applies accepted Status/snapshot effects, closes this WI and mints
+ recorded dispositions.
++
++Dependency: WI-610 must first adjudicate the Approved-change population that this first-approval publication would absorb. This prerequisite preserves the existing LLR-210/TC-208 first-approval scope and does not approve either Drafted row.
+diff --git a/docs/work/queued/WI-606-adjudicate-sr-184-sr-185-sr.md b/docs/work/queued/WI-606-adjudicate-sr-184-sr-185-sr.md
+index 18cb75f6..74e614f3 100644
+--- a/docs/work/queued/WI-606-adjudicate-sr-184-sr-185-sr.md
++++ b/docs/work/queued/WI-606-adjudicate-sr-184-sr-185-sr.md
+@@ -3,7 +3,7 @@ id = "WI-606"
+ title = "adjudicate: SR-184, SR-185, SR-186, TC-209, TC-210, TC-211 first approval after perspective-review amendment"
+ workstream = "process"
+ sr_refs = ["SR-184", "SR-185", "SR-186"]
+-needs = ["WI-605"]
++needs = ["WI-610"]
+ specref = "docs/requirements/system-requirements.toml"
+ buildtier = "strong"
+ safety_class = "adjudication"
+@@ -15,6 +15,6 @@ adjudicates = ["SR-184", "SR-185", "SR-186", "TC-209", "TC-210", "TC-211"]
+ 
+ First-approval batch for the authored Drafted H2/H3/H5 rows. Read each row's whole chain and the actual independent review/Inspection evidence: SR-184/TC-209 (Critique provenance), SR-185/TC-210 (requirement/interface counterpart semantics), and SR-186/TC-211 (proportional decomposition plus the actual hat-by-hat review record).
+ 
+-Dependency: WI-605 must first adjudicate the approved SR-161/LLR-183 amendment coherently. TC-211 now directly verifies SR-161 and SR-186, so this first approval must read the post-adjudication SR-161 chain, TC-178's supplementary mechanical linkage, and the fresh TC-211 Inspection result. An old INCOMPLETE result is historical evidence, not a pass for the revised procedure.
++Dependency: WI-610 must first adjudicate the approved SR-161/LLR-183 amendment coherently. TC-211 now directly verifies SR-161 and SR-186, so this first approval must read the post-adjudication SR-161 chain, TC-178's supplementary mechanical linkage, and the fresh TC-211 Inspection result. An old INCOMPLETE result is historical evidence, not a pass for the revised procedure.
+ 
+-Approval is limited to SR-184, SR-185, SR-186, TC-209, TC-210 and TC-211. Do not request approval of any other Drafted or drifted row. Record the exact decision in this spec; after independent review, the primary publisher may apply its Status/snapshot effects only when the live whole-registry absorption ledger has no unjudged changed cell. The 18 older SR rationale changes and older LLR drift remain outside this batch. Preserve WI-601 and WI-603 exactly. The existing pause remains; queueing and adjudication do not authorize a claim.
++Approval is limited to SR-184, SR-185, SR-186, TC-209, TC-210 and TC-211. Do not request approval of any other Drafted or drifted row. Record the exact decision in this spec; after independent review, the primary publisher may apply its Status/snapshot effects only when the live whole-registry absorption ledger has no unjudged changed cell. The 18 older SR rationale changes and older LLR drift remain outside this batch. WI-601, WI-603 and WI-605 are restructured into WI-610 under OI-88; preserve their original scope and evidence in the archive. The existing pause remains; queueing and adjudication do not authorize a claim.
+diff --git a/docs/work/queued/WI-610-adjudicate-combined-approved.md b/docs/work/queued/WI-610-adjudicate-combined-approved.md
+new file mode 100644
+index 00000000..10cc7a84
+--- /dev/null
++++ b/docs/work/queued/WI-610-adjudicate-combined-approved.md
+@@ -0,0 +1,63 @@
+++++
++id = "WI-610"
++title = "adjudicate: combined approved-cell amendments after PC authoring (OI-88 transfer)"
++workstream = "process"
++sr_refs = ["SR-024", "SR-033", "SR-043", "SR-052", "SR-053", "SR-054", "SR-111", "SR-112", "SR-129", "SR-144", "SR-146", "SR-147", "SR-148", "SR-149", "SR-156", "SR-161", "SR-162", "SR-167", "SR-175", "SR-176", "SR-177"]
++needs = ["WI-608"]
++specref = "docs/reviews/wi-609-resolution/DECISION.md"
++buildtier = "strong"
++safety_class = "adjudication"
++supersedes = "WI-601;WI-603;WI-605"
++brief = "amendment"
++adjudicates = ["LLR-058", "LLR-061", "LLR-123", "LLR-140", "LLR-144", "LLR-149", "LLR-150", "LLR-151", "LLR-152", "LLR-153", "LLR-154", "LLR-158", "LLR-161", "LLR-167", "LLR-183", "LLR-207", "SR-024", "SR-033", "SR-043", "SR-052", "SR-053", "SR-054", "SR-111", "SR-112", "SR-129", "SR-144", "SR-146", "SR-147", "SR-148", "SR-149", "SR-156", "SR-161", "SR-162", "SR-167", "SR-175", "SR-176", "SR-177", "TC-058", "TC-061", "TC-138", "TC-143", "TC-144", "TC-145", "TC-146", "TC-147", "TC-148", "TC-153", "TC-154", "TC-156", "TC-161", "TC-178", "TC-205"]
+++++
++
++## Context
++
++Owner-authorized one-time supervised ownership transfer under OI-88 and docs/reviews/wi-609-resolution/DECISION.md. This is the complete atomic Approved-change scope of the committed PC source candidate, not a consolidation-census judgment, acceptance of any row, or authority to run a control window. Authoring predecessor WI-608 remains a hard edge. The original separate scopes and full proposal Context are preserved in the restructured specs and Git; their original proposal blobs and the stopped WI-605 evidence remain authoritative history. The old owners have not accepted their rows and are not complete.
++
++Judge each scoped row cumulatively from the bound approved snapshot to the final live candidate, including parents, siblings, traced tests, and every meaning-changing use. Use the existing primary Approval payload, real immutable per-cell before/after blob IDs, actual committed current-turn judgment/session evidence, complete absorption ledger, and ordinary independent review. Inventories are discovery aids, not use acceptance. All changed Approved rows in the affected whole-file snapshot set require accepted scoped decisions; all Drafted riders stay Drafted and their existing first-approval owners remain unchanged. Missing, stale, contradictory, unjudged, or outside-authority evidence must refuse publication. A RETURN remains a truthful zero-effect outcome with required dispositions, not semantic approval. No manual snapshot copy, verifier bypass, substitute protocol, or widened bound turn.
++
++In particular, the PC singleton LLR-061 and TC-061 must be judged together against the exact cumulative LLR text. Review all batch-test retirement obligations in PC-BATCH-USES.md before any deletion. TC-205's pre-existing citation to test_a_two_row_batch_close_peels_under_one_canonical_order is absent in the current source: resolve it truthfully in the judgment or return a scoped authoring continuation; do not claim nonexistent evidence passed. Registry authoring belongs before selection; this adjudicator cannot change live source cells in a bound candidate.
++
++Done when the existing exclusive primary publisher validates the real decisions, impact and whole-file absorption evidence plus independent review/provenance, then atomically publishes an accepted outcome or a truthful RETURN with required scoped dispositions. Keep the coordinator paused; this WI authorizes no control window, push or main merge. Until actual live contract acceptance, do not delete PC batch implementation.
++
++The absorbed rows' acceptance criteria, carried across UNCHANGED. This is the spec this row must still satisfy — the ids are historical, the obligations are not:
++
++### WI-601 (absorbed) — its Done-when, verbatim
++
++(this row's spec declared no `## Done-when` section)
++
++### WI-603 (absorbed) — its Done-when, verbatim
++
++(this row's spec declared no `## Done-when` section)
++
++### WI-605 (absorbed) — its Done-when, verbatim
++
++(this row's spec declared no `## Done-when` section)
++
++Advisory registry joins (WI-388; never gating):
++
++### Cancelled precedent on the same SRs (do not re-propose the refuted)
++- WI-298 (cancelled) Dashboard --border misses the 3:1 graphical-boundary floor in both th… — reason: RETIRED 2026-07-24 as NOT-A-DEFECT, owner-ruled after verification against the artifact. The finding claimed --border supplies sub-3:1 boundaries for 'focusabl…
++
++### Decomposition code map (LLR/TC on the same SRs)
++- LLR-014 [project-trajectory/scripts/check_perf.py :: evaluate] tests: (see TC-014) — Budget comparator
++- LLR-024 [project-trajectory/scripts/gen_cases.py :: main] tests: (see TC-024) — Permutation expander
++- LLR-025 [project-trajectory/scripts/gen_skills_index.py :: main] tests: (see TC-025) — Skills index generator
++- LLR-033 [project-trajectory/scripts/gen_release_checklist.py :: main] tests: (see TC-033) — Release checklist generator
++- LLR-040 [project-trajectory/scripts/subagent_gate.py :: decide/main] tests: (see TC-043) — Subagent spawn gate
++- LLR-043 [project-trajectory/scripts/gen_skills_index.py :: check_agent_sync] tests: (see TC-045) — Cross-agent skill fan-out drift check
++
++### Knowledge packs the touched components declare (read before building)
++- CMP-006 W1 Registry & conformance: registry-hygiene
++- CMP-008 W3 Autonomy: docs/knowledge/agent-routing;docs/knowledge/effort-tiering;docs/knowledge/prompt-image-token-efficiency
++- CMP-009 W4 Human & adopter surfaces: downstream-resync
++
++### Interface seams via the touched modules
++- IF-001 scripts/trace -> scripts/check: stdout orphan, integrity, status and advisory findings, printed whole for the harness to relay
++- IF-145 scripts/trace -> scripts/check: exit-code 0 clean · 1 a finding under --strict, an integrity finding under --strict-integrity, or a stale brief under -…
++- IF-146 scripts/trace -> external:downstream adopter: file docs/test/report.md — metric counts, the orphan and finding lists, the joined SN -> SR -> LLR -> TC forest
++- IF-166 scripts/trace -> external:downstream adopter: file docs/test/report.html — a self-contained collapsible <details> tree of the SN -> SR -> LLR -> TC forest, writ…
++- IF-004 scripts/check_perf -> scripts/check: stdout check_perf: OK - <summary> or FAIL - <summary>, plus one <status> - <PB-ID> <metric> line per non-clean budget
++- IF-147 scripts/check_perf -> scripts/check: exit-code 0 OK, SKIP or WARN · 1 a Gate=fail budget breached in the run tier, or --update-baseline with no metrics
+
+--- out/run-logs/pc-transfer/round-001/review-result.md ---
+OUTCOME: RETURN
+
+This is a readiness verdict on the transfer and the two supervised closes only. It certifies no semantic acceptance and no control readiness.
+
+**What checks out.** The actual census at the post-authoring commit and the proposed scope agree exactly. I compared row by row: the census lists 52 approved-change rows across the three registries and 9 below-approval riders, and both the scope file and the new WI-610 adjudicates list carry the same 52 rows with none of the 9 riders. The three superseded scopes are each fully contained in the new scope, their original blobs are recorded, and the restructured specs keep their frontmatter, adjudicates lists and Context with only a "Restructured into WI-610" Deliverable added. No rider owned by WI-604 or WI-606 is touched. WI-610 needs only WI-608, has no self-edge, and the one inbound edge on WI-605 is repointed to WI-610. The watermark moves to 610. The rejected foreign-judgment protocol is not implemented; the stale TC-205 citation is carried as a successor obligation, not claimed resolved. The negative tests remain applicable to this route: the standing-snapshot ledger test models exactly the one-owner, complete-ledger, riders-stay-Drafted shape WI-610 must satisfy, and the scope and UNJUDGED refusals still guard it.
+
+**Blocking corrections.**
+
+1. **The WI-609 Deliverable cites evidence the patch does not create.** It says lineage and fail-closed behavior "are reviewed in docs/reviews/pc-transfer/", but the file list adds nothing there. The census, transfer metadata and this review live only under an untracked run-log directory. Either add those artifacts plus this reviewer's verdict and frozen metadata under that tracked path in the same patch, or rewrite the citation to the real tracked location. As written the close claim is not honest.
+2. **WI-606's Context still names the old owners.** Its needs edge now points at WI-610, but the prose still says WI-605 must first adjudicate and "Preserve WI-601 and WI-603 exactly". Repoint both sentences to WI-610 and note the originals are restructured, so the edge and the brief agree and a later worker is not sent to specs that no longer exist in the queue.
+3. **Close ritual outside the patch.** Two WIs close here, yet the patch touches neither the status file nor the log. Before the commit bar, confirm the status file contains no WI-608 or WI-609 token and that the log records both closes with the pasted trace and bar output the WI-608 Deliverable claims.
+
+**Non-blocking, record for the successor or fix at apply time.**
+
+- WI-604 has no edge to WI-610 even though its whole-file first-approval copy would absorb the same unjudged LLR and TC rows and be refused. The ledger keeps it fail-closed, but an explicit edge would make the queue truthful.
+- WI-610's specref points at the decision record rather than a registry, unlike every other adjudication spec shown. Confirm intake and the trace check accept that before relying on it.
+- SR-183 is a Drafted rider with no first-approval owner among WI-604 or WI-606. That predates this transfer and is not caused by it.
+- No existing test exercises one turn whose scope and ledger span three registries. WI-610 already owes atomic publication, so this is an honest successor obligation, not a transfer defect.
+- I could not verify the recorded SHA-256 values or the blob identities without tools. The claims are stated as measured, not assumed, and nothing in the diff contradicts them.
+
+**Lineage and completion claims.** The WI-608 close and the restructured-not-complete framing are honest. The WI-609 close is honest except for the evidence-path citation in correction 1. Resolve the three blocking items, regenerate the derived docs, and the same patch is ready to apply without a second scope review.
+
+--- out/run-logs/pc-transfer/round-001/review-meta.json ---
+{
+  "route": "ANTHROPIC-FABLE",
+  "family": "ANTHROPIC",
+  "model": "claude-fable-5-1",
+  "tier": "strong",
+  "effort": "medium",
+  "session_id": "8c213650-3699-420a-b889-6f9ea88349ff",
+  "base": "c40144d0ffeb77fdbaafa454cb33398b1b615210",
+  "prompt_sha256": "20c85565bfc27cf65d30f6ea2c9176045abb0918fde9bc9e73300244bcceac9f",
+  "purpose": "exact supervised transfer and authoring/resolution closes only; not primary semantic approval",
+  "exit": 0,
+  "wall_seconds": 99.02932683302788,
+  "transcript_sha256": "518905a40bb5ebb4f2bca686e20984f94aab97229e163b3cddf29133deedafda",
+  "result_session_id": "8c213650-3699-420a-b889-6f9ea88349ff",
+  "usage": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 50895,
+    "cache_read_input_tokens": 3909,
+    "output_tokens": 7549,
+    "output_tokens_details": {
+      "thinking_tokens": 6259
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 50895,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 7549,
+        "cache_read_input_tokens": 3909,
+        "cache_creation_input_tokens": 50895,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 50895
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "cost_usd": 1.43245625
+}
+
+--- docs/work/queued/WI-604-adjudicate-llr-210-tc-208.md ---
++++
+id = "WI-604"
+title = "adjudicate: LLR-210, TC-208 - spine row(s) authored Drafted on merged trunk 3b004c4..f395907 await a FIRST APPROVAL; read the whole chain and record approval or return findings"
+workstream = "process"
+specref = "docs/requirements/low-level-requirements.toml"
+buildtier = "medium"
+safety_class = "adjudication"
+brief = "first-approval"
+adjudicates = ["LLR-210", "TC-208"]
++++
+
+## Context
+
+Derived from `staged_drafted_rows` on the merged commit (§A5.2).
+These spine rows are BELOW approval and no act has blessed them.
+Each line: registry row / what the lane did.
+
+- LLR-210 authored in `docs/requirements/low-level-requirements.toml`
+- TC-208 authored in `docs/test/test-cases.toml`
+
+Outcomes (owner ruling 2026-09-01): read each row's WHOLE CHAIN — the
+parent SR, the sibling LLRs and the test cases — and record either APPROVE in
+this spec's `## Approval` section or RETURN with findings and a precisely scoped
+follow-up in `## Dispositions`. After independent review, the primary publisher
+atomically applies accepted Status/snapshot effects, closes this WI and mints
+recorded dispositions.
+
+--- docs/work/queued/WI-606-adjudicate-sr-184-sr-185-sr.md ---
++++
+id = "WI-606"
+title = "adjudicate: SR-184, SR-185, SR-186, TC-209, TC-210, TC-211 first approval after perspective-review amendment"
+workstream = "process"
+sr_refs = ["SR-184", "SR-185", "SR-186"]
+needs = ["WI-605"]
+specref = "docs/requirements/system-requirements.toml"
+buildtier = "strong"
+safety_class = "adjudication"
+brief = "first-approval"
+adjudicates = ["SR-184", "SR-185", "SR-186", "TC-209", "TC-210", "TC-211"]
++++
+
+## Context
+
+First-approval batch for the authored Drafted H2/H3/H5 rows. Read each row's whole chain and the actual independent review/Inspection evidence: SR-184/TC-209 (Critique provenance), SR-185/TC-210 (requirement/interface counterpart semantics), and SR-186/TC-211 (proportional decomposition plus the actual hat-by-hat review record).
+
+Dependency: WI-605 must first adjudicate the approved SR-161/LLR-183 amendment coherently. TC-211 now directly verifies SR-161 and SR-186, so this first approval must read the post-adjudication SR-161 chain, TC-178's supplementary mechanical linkage, and the fresh TC-211 Inspection result. An old INCOMPLETE result is historical evidence, not a pass for the revised procedure.
+
+Approval is limited to SR-184, SR-185, SR-186, TC-209, TC-210 and TC-211. Do not request approval of any other Drafted or drifted row. Record the exact decision in this spec; after independent review, the primary publisher may apply its Status/snapshot effects only when the live whole-registry absorption ledger has no unjudged changed cell. The 18 older SR rationale changes and older LLR drift remain outside this batch. Preserve WI-601 and WI-603 exactly. The existing pause remains; queueing and adjudication do not authorize a claim.
