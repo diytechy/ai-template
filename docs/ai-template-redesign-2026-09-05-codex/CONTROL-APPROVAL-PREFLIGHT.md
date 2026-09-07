@@ -1,5 +1,9 @@
 # Approval-repair control preflight — 2026-09-07
 
+**Historical launch evidence:** this segment ran and stopped on correctness.
+[Its observations](CONTROL-APPROVAL-OBSERVATIONS.md) now govern continuation;
+do not remove the restored pause or launch again using the preparation below.
+
 Preparation for the supervised retry authorized in the
 [September 7 handoff](../handoff-2026-09-07.md). This record and pause removal
 belong to the launch commit; its exact SHA is captured in the ignored segment

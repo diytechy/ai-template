@@ -127,7 +127,7 @@ approval effects settle, including across coordinator restarts.
 `[adjudicator]` configuration table are absent from the current runtime.
 `agent_loop.family_context_telemetry` reports provider session metadata but
 does not resume a conversation. Restoration is queued in
-[WI-551](../work/deferred/WI-551-re-land-the-adjudicator-sessio.md), followed by
+[WI-551](../work/queued/WI-551-re-land-the-adjudicator-sessio.md), followed by
 [WI-541's on-box verification](../work/queued/WI-541-verify-retention-layer.md).
 Consequently the current control runs did not deliver the intended continuity,
 and this audit found no active retained conversation for parallel WIs to race.

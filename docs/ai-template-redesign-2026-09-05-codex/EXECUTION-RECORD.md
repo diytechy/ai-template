@@ -9,7 +9,23 @@ queue paused. Package labels remain plan scope keys, not allocated WI IDs.
 session's read order, repair prerequisites, preserved lane and supervised
 retry procedure. It supersedes the earlier continuation/launch instructions.
 
-## Current continuation — approval repair before retry (2026-09-07)
+## Current continuation — repaired control stopped (2026-09-07)
+
+The repaired control was launched from `b830f202` and stopped at `79115aab`
+on a coordinator/verifier candidate-SHA mismatch. The independent follow-up
+also confirmed a derived successor review-routing defect. The
+[actual observations](CONTROL-APPROVAL-OBSERVATIONS.md) own the preserved
+turn, attempts, measured time, usage gaps and next boundary. Zero WIs completed;
+no live Status or snapshot registry changed. All owned processes are stopped,
+the pause is restored and retention is re-queued without being implemented.
+Do not resume the pending turn or infer another window from remaining time.
+
+The independently authorized PC package is next under its existing contract
+amendment-before-deletion order. Resolve the preserved primary writer state
+before claiming new work. The two observed runtime defects remain technical
+follow-ups; no post-stop code fix or PC completion is claimed.
+
+## Previous continuation — approval repair before retry (2026-09-07)
 
 Both control segments stopped without a completed or integrated WI. The
 coordinator is stopped, pause tracked, and the interrupted lane preserved;

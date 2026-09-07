@@ -1,0 +1,2 @@
+reason = "Supervised approval retry stopped on a coordinator/verifier candidate-SHA mismatch. The pending primary selection and committed zero-effect RETURN are incident evidence, not approval or completion. Keep coordinator stopped; pause alone does not prevent pending-turn resume. See docs/ai-template-redesign-2026-09-05-codex/CONTROL-APPROVAL-OBSERVATIONS.md."
+since = "2026-09-07"

@@ -12,16 +12,15 @@ supersedes = "WI-540"
 
 ## Context
 
-Deferred for the upcoming supervised control segment under the September 7
-handoff. Retention remains absent and its restoration is excluded. Re-queue
-this same item after the coordinator has stopped and the tracked pause is
-restored; later restoration still owes separate spine authoring and judgment.
+Re-queued after the repaired supervised control segment stopped and the
+pause was restored. Retention remained absent throughout the measured
+configuration. Before later restoration, separate its governing spine
+amendments from implementation, resolve cross-WI session ownership and
+serialized keep-warm, and perform the existing on-box verification. Do not
+apply the preserved patch unchanged. The coordinator remains stopped under
+[the new control record](../../ai-template-redesign-2026-09-05-codex/CONTROL-APPROVAL-OBSERVATIONS.md).
 
-**Re-queued after the supervised Short control retry stopped.** This patch
-was not admitted during the measured segment. The global pause remains; no
-coordinator launch is authorized while the interrupted lane and snapshot
-withdrawal/check conflict remain unresolved. See the
-[retry record](../../ai-template-redesign-2026-09-05-codex/CONTROL-RETRY.md).
+**The historical proposal below is input, subordinate to the prerequisites above.**
 
 Drafted by WI-550 (its ## Dispositions section) and minted at its merge - drafts-not-mints, ruling R1/R3.
 
