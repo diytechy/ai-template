@@ -178,6 +178,10 @@ snapshot; confirmed unchanged meaning preserves existing implementation
 judgments. The [work-type diagrams and runtime audit](WORK-FLOWS.md) separate
 implementation, exclusive spine authoring, trunk approval and retained
 adjudicator context. They are the sequencing detail for this repair.
+The owner further clarified that an ID's meaning must remain stable or every
+use and reference needs an impact review. Adjudication itself runs in the
+primary checkout on the active integration branch, with no adjudication
+worktree; see [location and publication](WORK-FLOWS.md#where-adjudication-runs).
 
 The shipped amendment prompt currently directs exactly the wrong ownership:
 `project-trajectory/prompts/adjudicate-amendment.template.md:91` tells the
@@ -203,11 +207,16 @@ Resolution before another launch:
    a MEANING classification alone is not approval. Keep human-held approvals
    at the human boundary. No worker edits, copies or restores snapshot files
    or writes approval exceptions into their ledger.
-2. Connect the existing mechanical copy implementation to the authoritative
-   approval/integration step, after the applicable judgment and required
-   reviews have been accepted. Publish the approval and its snapshot together,
-   before releasing the exclusive spine window. Identify the approved content
-   and scope so the copier writes that content; a free-form reference alone
+2. Move the whole approval operation to an exclusive coordinator turn in the
+   primary checkout on the integration branch. Connect the mechanical copier
+   there, after the applicable judgment and required reviews are accepted.
+   Publish the approval, any approval Status change and its snapshot in the
+   same trunk commit, before releasing the exclusive spine window. A confirmed
+   equivalent amendment preserves its approval and implementation judgments;
+   publish its equivalence decision and mechanical snapshot update together.
+   Uncertain equivalence holds the baseline, and changed meaning requires
+   impact review of every use and reference to the ID. Identify the approved
+   content and scope so the copier writes that content; a free-form reference alone
    does not establish an approval. Textual change alone does not invalidate
    an implementation judgment when the meaning comparison confirms equivalence.
    Whole-registry copying must not absorb other unapproved changes — that
@@ -223,9 +232,14 @@ Resolution before another launch:
    prohibition down for any branch whose claimed specs are all
    `safety_class = "adjudication"`, so a rule phrased against
    "worker-originated" changes is a no-op against exactly the path that failed.
-   Refuse the snapshot write for every branch regardless of actor class, and
-   keep `adjudication_approval_refusal`'s `Adjudicates`-bounded `Status` flips
-   as they are. Reject worker-originated snapshot/approval-ledger changes;
+   Refuse snapshot writes from all WI branches regardless of actor class.
+   Remove adjudication worktree dispatch and move its approval effects to the
+   trunk operation in step 2. Preserve the `Adjudicates` scope restriction
+   there, together with the requirement for an approval and its snapshot in
+   one commit. Do not retain the current demand for that pair in a worker's
+   delta: it would refuse a legitimate first approval after worker snapshot
+   permission is removed. Cover the amendment/no-Status-flip bypass as well
+   as first approvals. Reject worker-originated snapshot/approval-ledger changes;
    ordinary synchronization of accepted primary artifacts is not a worker
    approval act. Add explicit read-only/generated guidance in the snapshot
    directory and the briefs that consume it. Preserve byte-for-byte copies:
@@ -238,7 +252,9 @@ Resolution before another launch:
    not silently absorbed. Exercise both human approval and adjudication paths
    with their actual stage authority and required review sequence. Verify
    meaning-preserving prose changes retain implementation judgments, and
-   implementation work hands back any needed spine change. Check exclusivity
+   update the snapshot only with the accepted equivalence decision. Verify
+   meaning changes cannot bypass the ID-use impact review, and implementation
+   work hands back any needed spine change. Check exclusivity
    through approval and snapshot publication, including restart recovery.
 5. Reconcile the existing unmerged lane against the authoritative primary
    snapshots, preserving its evidence and valid corrective successor work.

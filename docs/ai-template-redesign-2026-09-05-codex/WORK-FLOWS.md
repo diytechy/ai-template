@@ -15,6 +15,17 @@ the wording, existing implementation judgments remain valid and the mechanical
 approval step updates the snapshot. Do not add another implementation approval
 requirement merely because that text or its hash changed.
 
+An existing ID denotes a stable meaning. In the owner's clarification,
+“reapproval” of edited prose asks whether that meaning stayed the same; it is
+not permission to assign a new meaning to the same ID. If equivalence cannot
+be established, keep the prior approved snapshot and resolve the semantic
+question. An actual meaning change requires impact review of every use and
+reference to the ID, including downstream requirements, tests, implementation
+and approval evidence, before the changed obligation can be accepted. A local
+MEANING verdict followed by a new snapshot is not sufficient. No new-ID policy
+or replacement status is introduced here: `Modified` remains retired because
+the snapshot detects textual drift.
+
 Implementation WIs do not amend their governing SN/SR/LLR prose. A needed
 change returns as a handback; a separate exclusive spine WI authors it. The
 exclusive window prevents implementation from racing a requirement change.
@@ -41,6 +52,31 @@ Identifying which proposal was approved is still necessary to copy the right
 content. That bookkeeping is not a second semantic judgment. Likewise, the
 existing review of an implementation candidate's tree is a different question
 from whether requirement prose preserves its meaning.
+
+## Where adjudication runs
+
+The owner's “active branch” means the integration branch in the coordinator's
+primary checkout: currently `contract_split` in this repository. It does not
+mean an arbitrary WI branch, and it does not require switching to `main`.
+Use the coordinator's designated checkout and branch, not the adjudicator's
+ambient working directory, to identify that location.
+
+Adjudication runs there as an exclusive coordinator turn. It does not receive
+a separate adjudication worktree. Existing coordinator/integration ownership
+must keep lane admission, merges and other writers from interleaving with
+that turn; the retained conversation also has only one caller. Work-item and
+verdict records still identify the judgment and its scope, without creating a
+branch to carry the approval act. Findings requiring new prose return to a
+separate exclusive authoring WI; the judge does not rewrite the requirement
+it is judging.
+
+For a new item, the accepted judgment, approval Status change and mechanically
+generated snapshot are published in the same trunk commit. For confirmed
+equivalent wording, retain the existing approval and implementation judgments,
+and publish the equivalence decision with its mechanical snapshot update on
+trunk. This advances the accepted wording without pretending it is a new
+obligation. For unresolved or changed meaning, hold the baseline until the
+semantic question and any required impact review are resolved.
 
 ## What the runtime does today
 
@@ -73,7 +109,8 @@ its proposed snapshots have not been integrated into primary.
 | Detection | `integrate.integrate_one` calls `intake.intake_after_merge` while holding the integration slot. `_routed_amendments` uses `acceptance_record.staged_spine_amendments` over the before/after merge trees; the amendment brief separately supplies the last-approved snapshot and live chain. The trigger scan itself is not a semantic comparison. |
 | Authoring scope | `worker.template.md` permits authoring Drafted rows and amending cell text in its generic worker rules. `acceptance_record.lane_approval_refusal` prohibits approval acts but expressly permits amendments. This does not enforce the owner's implementation-versus-spine separation. |
 | Snapshot write (direction) | The amendment and first-approval briefs direct the model to invoke the copier; `adjudicate_brief._aftermath` reinforces this. Move the write to the trunk approval boundary and remove that worker permission. |
-| Snapshot write (permission) | Removing that direction is NOT sufficient: the merge slot deliberately permits the act for this actor. `integrate._approval_act_refusal` calls `_adjudication_lane`, true when every claimed spec on the branch declares `safety_class = "adjudication"`, and hands that flag to `acceptance_record.merge_approval_refusal`. The flag selects `adjudication_approval_refusal`, which BOUNDS the flips by the `Adjudicates` cell and lets the snapshot cover the registries those flips changed; only the `False` arm, `lane_approval_refusal`, prohibits a `SNAPSHOT_DIR` write outright. So an adjudication worktree is mechanically authorized to write the approved snapshot today, and the WI-605 lane did. Close the exception, not only the instruction. |
+| Snapshot write (permission) | Removing that direction is insufficient. `integrate._approval_act_refusal` passes `_adjudication_lane`'s actor flag to `acceptance_record.merge_approval_refusal`. First approvals enter `adjudication_approval_refusal`, which bounds flips by `Adjudicates` and requires their registry snapshots in the same branch delta. An amendment with no Status flip instead returns the delta-read error alone, permitting snapshot writes without that scope check; this is the WI-605 path. The ordinary-lane arm prohibits snapshot writes. Replace both adjudication exceptions with trunk-side approval publication, preserving scope checks there. |
+| Semantic aftermath | The amendment prompt stops after CLARITY without updating the snapshot, and directs an authorized MEANING re-anchor while Status stays Approved. `trace.reattest_model` detects post-approval drift from the snapshot, not a Modified status. The repaired path must preserve judgments and mechanically advance accepted equivalent wording, while changed meaning requires the owner's ID-use impact review. |
 
 These mechanisms are reusable. The correction is to their ownership and
 ordering, not a reason to replace mechanical drift detection or discard
@@ -132,9 +169,10 @@ sequenceDiagram
     Note over T,W: Spine authoring is exclusive; workers never write approved snapshots
 ```
 
-Verify this with two distinct WI worktrees and the same eligible route: the
-second adjudication resumes the first conversation, while ordinary reviewers
-remain separate. Exercise an active judgment plus a due keep-warm tick, a
+Verify this with outcomes from two distinct WI worktrees and the same eligible
+route: both adjudications run in the primary checkout, and the second resumes
+the first conversation while ordinary reviewers remain separate. Exercise an
+active judgment plus a due keep-warm tick, a
 restart, and the existing reset policy. Keep-warm must not resume an in-use
 session, and reset must not be mistaken for withdrawal of recorded approvals.
 This is a retention acceptance check, not a new requirement staleness gate.

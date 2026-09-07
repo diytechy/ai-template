@@ -63647,3 +63647,35 @@ Verification: 1687 passed, 8 skipped in 62.40s; enforced smoke wall 62.8s
 against 90s. Documentation: 1465 docs, 2342 links, zero broken, one existing
 orphan warning. No new tests for this documentation-only change.
 <!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=4c26e432+work-flow-audit; out/run-logs/work-flow-audit/smoke.txt; docs.txt -->
+
+## 2026-09-07 — Stable ID meaning and primary-branch adjudication
+
+The owner clarified that the snapshot replaces the retired Modified status,
+and that reapproval of an existing ID asks whether its meaning stayed the
+same. Changed meaning requires review of every use and reference. The owner
+also agreed that adjudication belongs on the active branch without a separate
+adjudication worktree. Updated the
+[work-flow contract](ai-template-redesign-2026-09-05-codex/WORK-FLOWS.md#where-adjudication-runs)
+to identify that branch as the coordinator's integration branch in the primary
+checkout, and require exclusive writer and retained-session ownership.
+
+The [repair plan](ai-template-redesign-2026-09-05-codex/CONTROL-RETRY.md#owner-clarification-and-revised-resolution)
+now moves the whole approval operation there: approval, any approval Status
+change and mechanical snapshot publication in one commit. Confirmed equivalent
+wording retains its judgments and advances the snapshot with the equivalence
+decision. Changed meaning cannot be accepted by a local re-anchor alone.
+The target diagram reflects the ID-use impact review.
+
+Incorporated the review of the preceding Opus documentation commit: preserve
+first-approval scope and snapshot coupling at trunk publication, not in a
+worker delta; explicitly identify the amendment/no-Status-flip bypass as the
+incident path. No runtime, prompt, registry, queue, snapshot or pause changed.
+No capped files changed. Coordinator remains stopped.
+
+Deferred open items: none — this records the owner's clarification in the
+existing repair plan; it introduces no new ID-allocation or status policy.
+
+Verification: 1687 passed, 8 skipped in 60.05s; enforced smoke wall 60.5s
+against 90s. Documentation: 1466 docs, 2347 links, zero broken, one existing
+orphan warning. No new tests for this documentation-only change.
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=55ad0402+primary-adjudication-plan; out/run-logs/primary-adjudication-plan/smoke.txt; docs.txt -->

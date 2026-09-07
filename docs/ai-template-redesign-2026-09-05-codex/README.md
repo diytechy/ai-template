@@ -159,6 +159,10 @@ clarification: implementation never co-edits its governing spine, spine work
 is exclusive, and snapshots advance mechanically at approval on trunk.
 The [work-flow audit](WORK-FLOWS.md) distinguishes this target from the shipped
 runtime and records the gaps in adjudicator session retention.
+Here “trunk” means the active integration branch in the primary checkout;
+adjudication runs there directly, without its own worktree. The
+[location contract](WORK-FLOWS.md#where-adjudication-runs) makes that identity
+and the single-writer requirement explicit.
 
 ```mermaid
 flowchart TD
@@ -166,12 +170,14 @@ flowchart TD
         I[Create and reconcile work] --> K{Work type}
         K -->|spine authoring| E[Drain lanes; hold exclusive spine window]
         K -->|adjudication| J
-        H[Receive implementation handback] --> J[Exclusive adjudication of handback]
+        H[Receive implementation handback] --> J[Exclusive adjudication in primary checkout]
         J --> I
         M[Serial integration after checks and review] --> I
         L[Land proposed spine text; snapshot stays approved baseline]
         L --> D[Mechanically detect changed cells against approved snapshot]
-        D --> A[Adjudicator judges meaning and acceptance; human where held]
+        D --> A[Judge ID meaning and acceptance; human where held]
+        A -->|changed meaning| X[Review every use and reference before accepting changed obligation]
+        X --> A
         A -->|return for revision| E
         A -->|approved| S[Publish approval and mechanical snapshot update together]
         S --> U[Settle affected scope; release exclusive window]
@@ -197,8 +203,9 @@ The exclusive window spans authoring through resolution of its approval;
 landing proposed prose does not release dependent implementation. A
 meaning-preserving clarification retains the existing implementation judgment.
 Its accepted wording becomes the new snapshot at approval. A meaning-changing
-proposal needs the applicable approval and impact disposition before dependent
-implementation resumes. Disputed review findings still use bounded arbitration
+proposal needs review of every use and reference to its ID, followed by the
+applicable approval, before dependent implementation resumes. Disputed review
+findings still use bounded arbitration
 and the applicable human boundary.
 
 There are four policy responsibilities and thin execution adapters:
