@@ -1,0 +1,19 @@
+{
+  "base": "14ac5251bc5d1f6a39a1d2fc0867d8af3a5da7ac",
+  "minted": [
+    [
+      "WI-608",
+      "docs/work/queued/WI-608-apply-the-reviewed-pc-single-w.md"
+    ],
+    [
+      "WI-609",
+      "docs/work/queued/WI-609-resolve-scoped-judgments-versu.md"
+    ]
+  ],
+  "copied_paths": [
+    "docs/work/queued/WI-608-apply-the-reviewed-pc-single-w.md",
+    "docs/work/queued/WI-609-resolve-scoped-judgments-versu.md",
+    "docs/id-watermark"
+  ],
+  "method": "canonical intake.stage_mint in disposable checkout, exact new specs and watermark copied under existing station locks"
+}

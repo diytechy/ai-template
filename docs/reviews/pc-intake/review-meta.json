@@ -1,0 +1,48 @@
+{
+  "route": "ANTHROPIC-FABLE",
+  "family": "ANTHROPIC",
+  "model": "claude-fable-5-1",
+  "tier": "strong",
+  "effort": "medium",
+  "session_id": "6da04f5a-9416-4113-abb2-878f5810b725",
+  "base": "14ac5251bc5d1f6a39a1d2fc0867d8af3a5da7ac",
+  "prompt_sha256": "fc6a5109f7dbde50d7ee883ee8e11f5028e3a9cb88827cf17114a3bd1c891080",
+  "exit": 0,
+  "wall_seconds": 56.92433362494921,
+  "transcript_sha256": "9a477b0d6d51c3ddccbd7b076be9e8eb9c38c9f2843b9cbf4dbd91607297fa1f",
+  "result_session_id": "6da04f5a-9416-4113-abb2-878f5810b725",
+  "usage": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 13952,
+    "cache_read_input_tokens": 3909,
+    "output_tokens": 3957,
+    "output_tokens_details": {
+      "thinking_tokens": 2500
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13952,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 3957,
+        "cache_read_input_tokens": 3909,
+        "cache_creation_input_tokens": 13952,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 13952
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "cost_usd": 0.48349125
+}

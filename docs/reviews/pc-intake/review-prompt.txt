@@ -1,0 +1,328 @@
+You are an independent ANTHROPIC-FABLE reviewer, not the author, assessing a read-only preflight finding and the next bounded PC intake step. Coordinator paused, no primary turn has started. Do not write files, invoke tools, approve registry cells, or suggest bypassing ownership or snapshots. Review the source and actual diagnostic below. The diagnostic explicitly mocks only evidence-reference validation to assume even perfect judgments exist, and calls the real scope/absorption helpers over actual baseline census. Its output is not an approval artifact.
+
+Question: is a successful WI601 scoped reanchor impossible on this baseline because whole-file absorption demands accepted decisions outside WI601 while decision parsing forbids them? Distinguish safe fail-closed behavior from a supported composition mechanism missing between independently scoped judgments. The owner's PC packet preserves WI601/603/605 ownership; do not enlarge scopes or consolidate them without a reviewed transfer. The package authorizes batch deletion after contract acceptance and says no runner behavior outside batch admission changes. The author proposes to continue reversible intake only: queue a strong spine-authoring WI to apply the exact PC patch without Status/snapshot changes, and queue a separately scoped strong work item to resolve this actual publication composition conflict (no implementation in this sitting). The future PC amendment adjudication must exclude LLR061 and depend on WI601; it can only be minted/bound against the eventual live authoring candidate, not pretend that a patch file amended live cells. The repair WI should own the seam between scoped judgments and a whole-registry publication, require exact before/after and provenance, preserve separate ownership, and prove legitimate distinct-owner judgments can compose while stale/missing/foreign judgments refuse. Do not prescribe a new ledger/registry or approve a shortcut. Judge whether this queue plan is coherent and avoids creating a primary turn known to strand. Give OUTCOME: APPROVE, RETURN, or UNCERTAIN for that bounded intake plan, with concrete findings, policy constraints, and the next admissible step. Do not treat this opinion as approval of the future repair design or implementation. Be concise.
+
+--- diagnostic ---
+BASE 14ac5251bc5d1f6a39a1d2fc0867d8af3a5da7ac
+WI-601 exact scope ['LLR-061']
+LLR snapshot approved-change population ['LLR-061', 'LLR-140', 'LLR-152', 'LLR-153', 'LLR-154', 'LLR-158', 'LLR-167', 'LLR-183', 'LLR-207']
+Assuming valid evidence for every census row, actual absorption refusal: approved-cell absorption LLR-140 has no accepted scoped decision
+Adding the required outside-scope decision instead: decision LLR-140 is outside the turn scope
+No judgment, turn, claim, snapshot or live registry was written.
+
+--- exact source excerpts ---
+def _decision_rows(payload, scope):
+    decisions = payload.get("decision", [])
+    rows = []
+    for item in decisions:
+        if not isinstance(item, dict):
+            return None, "decision is not a table"
+        need = {"registry", "row", "classification", "before", "after", "evidence"}
+        if set(item) != need:
+            return None, "decision {} has an unexpected key set".format(
+                item.get("row", "?")
+            )
+        if (
+            not isinstance(item["registry"], str)
+            or not isinstance(item["row"], str)
+            or not isinstance(item["classification"], str)
+            or item["classification"] not in _CLASSES
+        ):
+            return None, "decision has an invalid registry, row or classification"
+        if item["row"] not in scope:
+            return None, "decision {} is outside the turn scope".format(item["row"])
+        if (
+            not isinstance(item["before"], dict)
+            or not isinstance(item["after"], dict)
+            or set(item["before"]) != set(item["after"])
+        ):
+            return (
+                None,
+                "decision {} must bind identical before/after cell sets".format(
+                    item["row"]
+                ),
+            )
+        if not item["before"] or not all(
+            isinstance(c, str) and isinstance(v, str) and _HEX40.fullmatch(v)
+            for m in (item["before"], item["after"])
+            for c, v in m.items()
+        ):
+            return None, "decision {} has invalid cell blob identities".format(
+                item["row"]
+            )
+        if (
+            not isinstance(item["evidence"], list)
+            or not item["evidence"]
+            or not all(isinstance(x, str) for x in item["evidence"])
+        ):
+            return None, "decision {} has no evidence refs".format(item["row"])
+        rows.append(item)
+    if {item["row"] for item in rows} != set(scope) or len(rows) != len(scope):
+        return None, "decisions must name every scoped row exactly once"
+    return rows, None
+
+
+
+def absorption_census(root, turn, candidate, accepted):
+    """Actual copied population from bound snapshots to the proposed live rows."""
+    census = {}
+    registries = {registry for registry, _rid in accepted}
+    for registry in sorted(registries):
+        old_blob = turn["approved_blobs"].get(snapshot.SNAPSHOT_DIR + "/" + registry)
+        new_blob = _blob_at(root, candidate, registry)
+        if not old_blob or not new_blob:
+            raise ValueError(
+                "{} needs an explicit initial signing before automatic publication".format(
+                    registry
+                )
+            )
+        old = registry_rows(root, old_blob, registry)
+        new = registry_rows(root, new_blob, registry)
+        for rid in sorted(set(old) | set(new)):
+            before, after = old.get(rid, {}), new.get(rid, {})
+            if snapshot._claims_approval(before):
+                if not after:
+                    raise ValueError(
+                        "approved row {} was removed from its carrier".format(rid)
+                    )
+                id_col = next(
+                    (k for k in before if k.endswith("-ID")), _id_column(registry)
+                )
+                changed = record.split_changed_cells(registry, id_col, before, after)[
+                    "approved"
+                ]
+                state = "approved-change"
+            elif (registry, rid) not in accepted and not snapshot._claims_approval(
+                after
+            ):
+                changed = {
+                    k: (before.get(k), after.get(k))
+                    for k in set(before) | set(after)
+                    if not k.endswith("-ID") and before.get(k) != after.get(k)
+                }
+                state = "below-approval-rider"
+            else:
+                continue
+            if changed:
+                census[(registry, rid)] = {
+                    "state": state,
+                    "cells": {
+                        cell: {"before": old_blob, "after": new_blob}
+                        for cell in changed
+                    },
+                }
+    return census
+
+
+def _absorption_refusal(root, turn, candidate, payload, decisions, judgments):
+    accepted = {
+        (d["registry"], d["row"]): d
+        for d in decisions
+        if d["classification"] in {"approve", "equivalent", "meaning"}
+    }
+    if not accepted:
+        return None
+    try:
+        expected = absorption_census(root, turn, candidate, accepted)
+    except (ValueError, KeyError) as exc:
+        return str(exc)
+    seen = {}
+    for item in payload.get("absorption", []):
+        why = _absorption_shape(item)
+        if why:
+            return why
+        key = (item["registry"], item["row"])
+        if key in seen:
+            return "duplicate absorption for {}".format(item["row"])
+        seen[key] = item
+        why = _evidence_refusal(root, candidate, [item["judgment"]], judgments)
+        if why:
+            return why
+        if (
+            key not in expected
+            or {k: item[k] for k in ("state", "cells")} != expected[key]
+        ):
+            return "absorption {} cells/state do not equal the exact whole-file census".format(
+                item["row"]
+            )
+        if item["state"] == "approved-change" and key not in accepted:
+            return "approved-cell absorption {} has no accepted scoped decision".format(
+                item["row"]
+            )
+    if set(seen) != set(expected):
+        return "whole-file absorption ledger omits changed approved cells or Drafted riders"
+    return None
+
+
+
+def _effects(root, candidate, decisions, judgments, require_provenance):
+    classifications = {d["classification"] for d in decisions}
+    author = _machine_author(judgments) if require_provenance else None
+    judgment = judgments[0][0].get("judgment") if judgments else None
+    if require_provenance and author is None:
+        return _refusal(
+            "no unique committed ADJUDICATE judgment and route/session identity bind this candidate"
+        )
+    if classifications <= {"return", "uncertain"}:
+        return (
+            {
+                "outcome": "return",
+                "statuses": {},
+                "approves": {},
+                "author": author,
+                "judgment": judgment,
+                "findings": [
+                    "{}: {}".format(d["row"], d["classification"]) for d in decisions
+                ],
+            },
+            None,
+        )
+    if classifications - {"approve", "equivalent", "meaning"}:
+        return _refusal(
+            "only accepted first-approval or equivalent decisions may publish; meaning requires its later complete-scope reanchor"
+        )
+    if judgments and any(
+        re.search(r"(?m)^\s*OUTCOME:\s*RETURN\b", body) for _meta, body in judgments
+    ):
+        return _refusal("a RETURN judgment cannot authorize accepted approval cells")
+    statuses, why = _status_projection(root, candidate, decisions)
+    if why:
+        return _refusal(why)
+    approves = {d["registry"]: d["evidence"][0] for d in decisions}
+    return (
+        {
+            "outcome": "publish",
+            "statuses": statuses,
+            "approves": approves,
+            "author": author,
+            "judgment": judgment,
+            "findings": [],
+        },
+        None,
+    )
+
+
+
+--- docs/work/queued/WI-601-adjudicate-llr-061-approved.md ---
++++
+id = "WI-601"
+title = "adjudicate: LLR-061 - approved/routed cell(s) amended on merged trunk 67e6a50..dc36375 (§A5.2); judge whether scope moved and record the decision"
+workstream = "process"
+specref = "docs/requirements/low-level-requirements.toml"
+buildtier = "medium"
+safety_class = "adjudication"
+brief = "amendment"
+adjudicates = ["LLR-061"]
++++
+
+## Context
+
+Derived from `staged_spine_amendments` on the merged commit (§A5.2).
+Approved and ROUTED traced cells only; other traced cells are silent
+by ruling. Each line: registry row / cell: before -> after.
+
+- LLR-061 `Detail`: 'Replaces internal --track assumptions with explicit --wi/--train/worktree assignment; assembles the worker prompt from …' -> 'Replaces internal --track assumptions with explicit --wi/--train/worktree assignment; assembles the worker prompt from …'
+
+Outcomes (§A5.2): record the exact LLR-061 decision in this spec's
+`## Approval` section, or RETURN with findings and draft the real scope-change,
+re-scope or cancellation continuation in `## Dispositions`. The primary
+publisher applies any accepted Status/snapshot effects and closes or mints the
+recorded dispositions atomically after independent review.
+
+--- docs/work/queued/WI-603-adjudicate-llr-167-approved.md ---
++++
+id = "WI-603"
+title = "adjudicate: LLR-167 - approved/routed cell(s) amended on merged trunk 3b004c4..f395907 (§A5.2); judge whether scope moved and record the decision"
+workstream = "process"
+specref = "docs/requirements/low-level-requirements.toml"
+buildtier = "medium"
+safety_class = "adjudication"
+brief = "amendment"
+adjudicates = ["LLR-167"]
++++
+
+## Context
+
+Derived from `staged_spine_amendments` on the merged commit (§A5.2).
+Approved and ROUTED traced cells only; other traced cells are silent
+by ruling. Each line: registry row / cell: before -> after.
+
+- LLR-167 `Detail`: "The row's DECLARED `Brief` cell selects the template (`intake` writes it at every adjudication mint); `compose` fills i…" -> "The row's DECLARED `Brief` cell selects the template (`intake` writes it at every adjudication mint); `compose` fills i…"
+
+Outcomes (§A5.2): record the exact LLR-167 decision in this spec's
+`## Approval` section, or RETURN with findings and draft the real scope-change,
+re-scope or cancellation continuation in `## Dispositions`. The primary
+publisher applies any accepted Status/snapshot effects and closes or mints the
+recorded dispositions atomically after independent review.
+
+--- docs/ai-template-redesign-2026-09-05-codex/PC-BATCH-OWNERSHIP.tsv ---
+row	prior_drift	queued_owner	proposed_cumulative_owner
+LLR-058	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+LLR-061	approved-change:Detail	WI-601	WI-601
+LLR-123	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+LLR-144	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+LLR-149	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+LLR-150	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+LLR-151	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+LLR-152	approved-change:Detail	none	future PC amendment WI; hard predecessor WI-601
+LLR-161	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+SR-144	approved-change:Rationale	none	future PC amendment WI; hard predecessor WI-601
+SR-148	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+SR-156	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+TC-058	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+TC-061	no prior drift	none	future PC amendment WI; hard predecessor WI-601; acceptance conditioned on final LLR-061 judgment
+TC-138	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+TC-143	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+TC-144	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+TC-145	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+TC-154	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+TC-156	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+
+--- governing ownership rule ---
+
+
+*Referenced from PROCESS.md §4.* The dial above says **which rungs** a human
+still accepts. It never said **who acts** on the rungs it releases, and for a
+single-lane repo the question does not arise — the session that authors a row
+is the only session there is. It arises the moment work runs in parallel lanes,
+and the owner ruled it (2026-09-01):
+
+> The approval act on a spine row — the `Status` flip `Drafted` → `Approved`
+> (and on to `Founded`), and the `docs/archive/last_approved/` copy that anchors
+> it — belongs to an **adjudicator**, performed on the **serial trunk side**,
+> never to the worker lane that authored the row.
+
+Two reasons, and both are properties of the lane rather than of the model
+driving it:
+
+- **Context.** Approving a row means reading its whole chain — the parent
+  requirement, the sibling decomposition rows, the tests that claim to cover
+  it — and deciding the row belongs where it sits. One work item does not hold
+  that chain; it holds its own scope, which is the point of scoping it.
+- **Concurrency.** Two lanes touching the spine conflict at merge, and the
+  approval snapshot must not move across a workstream — a lane that re-anchors
+  the record seals whatever text happened to be live in *its* tree. A
+  trunk-side act, taken while nothing else claims, cannot do either.
+
+**The division of labour, in full:**
+
+| | A worker lane | An exclusive primary adjudication turn |
+|---|---|---|
+| Authors spine rows | Only exclusive spine-authoring work; new rows stay `Drafted`. | No. |
+| Amends governing SN/SR/LLR text | Only exclusive spine-authoring work, within scope. Implementation returns a handback. | No; it returns findings to separate authoring work. |
+| Flips spine `Status` | **Never** (SN/SR/LLR/TC). | Mechanical publication applies an accepted first approval, after required review and authority checks. |
+| Writes `docs/archive/last_approved/` or its ledger | **Never**, including adjudication worktrees. | The mechanical publisher copies accepted content in the approval commit; the model does not invoke the copier. |
+| Judges a post-approval amendment | No; it records its scoped proposal. | Compares meaning against the last approved snapshot under the rule below. |
+| Concurrency | Ordinary implementation may run in parallel; spine authoring runs alone. | Runs in the coordinator's designated primary checkout on its integration branch, without a worktree; ownership excludes admission, merges and other writers through publication and restart. |
+
+**An ID denotes stable meaning.** Changed bytes require semantic comparison,
+not automatic invalidation of implementation judgments. Accepted equivalent
+wording preserves those judgments and its existing approval; publish the
+equivalence decision and mechanical snapshot update together. Uncertain
+equivalence holds the prior baseline. Changed meaning requires impact review
+of every use and reference, including downstream requirements, tests,
+implementation and approval evidence, before acceptance. A `MEANING` verdict
+alone never authorizes a copy. No new-ID policy or replacement status follows.
+Rejection leaves the baseline intact. A whole-file copy must enumerate and
+resolve every unapproved cell it would absorb outside the accepted scope.
+

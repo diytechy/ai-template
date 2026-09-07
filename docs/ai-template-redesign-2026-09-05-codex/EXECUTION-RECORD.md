@@ -9,7 +9,17 @@ queue paused. Package labels remain plan scope keys, not allocated WI IDs.
 session's read order, repair prerequisites, preserved lane and supervised
 retry procedure. It supersedes the earlier continuation/launch instructions.
 
-## Current continuation — PC contract authoring (2026-09-07)
+## Current continuation — PC intake and publication preflight (2026-09-07)
+
+The [intake preflight](../reviews/pc-intake/preflight.md) records the actual
+publication-composition conflict found while attempting the next step. The
+canonical mint queued exact PC source authoring and a separate resolution WI.
+No primary turn started: the existing scope/absorption checks have no jointly
+satisfiable acceptance for the current single-row owner and whole-file drift.
+Keep the pause and existing ownership; complete the independently reviewed
+resolution and its necessary follow-ups before selecting an approval turn.
+
+## Previous continuation — PC contract authoring (2026-09-07)
 
 The owner requested PC after the five post-stop fixes at `196bfb9c`. The
 [repair record](../reviews/2026-09-07-post-stop-fixes.md) and

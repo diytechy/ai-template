@@ -1,0 +1,6 @@
+BASE 14ac5251bc5d1f6a39a1d2fc0867d8af3a5da7ac
+WI-601 exact scope ['LLR-061']
+LLR snapshot approved-change population ['LLR-061', 'LLR-140', 'LLR-152', 'LLR-153', 'LLR-154', 'LLR-158', 'LLR-167', 'LLR-183', 'LLR-207']
+Assuming valid evidence for every census row, actual absorption refusal: approved-cell absorption LLR-140 has no accepted scoped decision
+Adding the required outside-scope decision instead: decision LLR-140 is outside the turn scope
+No judgment, turn, claim, snapshot or live registry was written.
