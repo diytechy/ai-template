@@ -1,8 +1,8 @@
 # A smaller ai-template: redesign for separate review
 
 **Prepared:** 2026-09-05. **Current status (2026-09-06):** independent repairs and
-renderer separation implemented; the perspective-record sample, artifact
-adjudications and control launch conditions remain open. Replacement remains
+renderer separation implemented; the perspective-review amendment is applied,
+artifact adjudications are queued, and control launch awaits its reviewed owner act. Replacement remains
 conditional. This plan records scope; owner rulings and the live artifact
 authority govern execution and approval.
 

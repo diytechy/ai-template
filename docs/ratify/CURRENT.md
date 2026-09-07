@@ -390,6 +390,49 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 5
 
+## SR-161 — Decompositions carry a perspective record
+
+> **Requirement.** When a decomposition round is reviewed, the delivered planning content shall provide every applicable declared perspective's question in the decomposition brief and require the sitting's review record to name the outcome for each perspective.
+
+> **Rationale.** A decomposition produced from one perspective can look complete while omitting security, operations or first-use failures. The hats roster and plan briefs already supply the applicable questions, and the sitting's review record preserves their outcomes; a separate machine-readable coverage record and checker would duplicate that review without improving its adequacy judgment. Hat-Refs remain the row-level provenance for perspectives that raised a requirement. This applies the owner ruling of 2026-09-06 (docs/log.d/2026-09-06-sn036-owner-ruling.md).
+
+
+### SR SR-161
+- **AcceptanceCriteria**
+  - before: A decomposition round writes the perspective record beside its artifacts; a declared perspective applicable to the decomposition and absent from the record is reported; the record distinguishes not-applicable from considered-with-no-finding; the independent adequacy review reads the record rather than the authoring transcript.
+  - after: For one completed decomposition round, the applicable perspectives resolve from the declared hats roster, the decomposition brief presents each applicable perspective's question, and the sitting's review record names an outcome for every one; the independent adequacy review reads that record.
+- **Rationale**
+  - before: Realizes SN-036 — a decomposition produced from one perspective can look complete while omitting security, operations or first-use failures, and the omission is invisible unless the record names what was considered. SN-036 had no citing SR. The declared-perspective inventory is the ruled hats roster; the record proves coverage and provenance while adequacy stays with the independent review, exactly as the need partitions it.
+  - after: A decomposition produced from one perspective can look complete while omitting security, operations or first-use failures. The hats roster and plan briefs already supply the applicable questions, and the sitting's review record preserves their outcomes; a separate machine-readable coverage record and checker would duplicate that review without improving its adequacy judgment. Hat-Refs remain the row-level provenance for perspectives that raised a requirement. This applies the owner ruling of 2026-09-06 (docs/log.d/2026-09-06-sn036-owner-ruling.md).
+- **Requirement**
+  - before: The delivered planning content shall leave, with every decomposition it produces, a machine-readable record of the declared review perspectives — each perspective's applicability decision and the requirements or explicit no-finding it produced — such that an applicable declared perspective missing from the record is a reportable finding.
+  - after: When a decomposition round is reviewed, the delivered planning content shall provide every applicable declared perspective's question in the decomposition brief and require the sitting's review record to name the outcome for each perspective.
+- **Verification**
+  - before: Test
+  - after: Inspection
+
+### LLR LLR-183
+- **Detail**
+  - before: The machine-readable half of the perspective record, sited on the row rather than beside it. spine_carrier declares hat_refs (column Hat-Refs) as an OPTIONAL key on the SR and LLR tiers, a typed array of hat roster NAMES; the roster name is the id space, and the C-###-style clause numbering that appears in eight rationale cells is prose that resolves against nothing. Absence is NOT RECORDED and never no-perspective-applied, which is why no rule anywhere requires the cell to be present. trace.load_hat_names reads the roster's table keys only - hats.py stays the sole validator of roster CONTENT, and this reader answers the one question that module answers for nobody else, is this name declared - degrading to the empty set for an absent or unparseable file so the whole rule goes vacuous rather than reporting every row as dangling. trace.hat_findings splits severity the way the boundary rule does: a name the roster does not declare is a finding in the --strict failure set under its own class label, while coverage and the roster's own unattributed hats are single advisory summary lines that never gate. trace.effective_hats derives a design row's effective set as its own refs unioned with its SR parents', so the LLR cell holds only what its own decomposition raised and a dangling parent contributes nothing rather than raising. check_trajectory classifies Hat-Refs TRACED at both tiers, which is what keeps the cell off the re-attest window and out of the snapshot drift basis. NOT DISCHARGED, stated in the debt-stating pattern this tier uses rather than left to be discovered: the parent asks for a record that distinguishes NOT-APPLICABLE from CONSIDERED-WITH-NO-FINDING, and this cell expresses neither - both are facts about a decomposition, while this cell is a fact about a row. Applicability is separately DERIVABLE from the roster's own predicates, so storing it here would store a derived fact and let it go stale; the no-finding half needs a per-decomposition artifact that does not exist.
+  - after: The row-level provenance part of perspective review, sited on the row rather than beside it. spine_carrier declares hat_refs (column Hat-Refs) as an OPTIONAL key on the SR and LLR tiers, a typed array of hat roster NAMES; the roster name is the id space, and the C-###-style clause numbering that appears in eight rationale cells is prose that resolves against nothing. Absence means NOT RECORDED and never no-perspective-applied, which is why no rule anywhere requires the cell to be present. trace.load_hat_names reads the roster's table keys only - hats.py stays the sole validator of roster CONTENT, and this reader answers the one question that module answers for nobody else, is this name declared - degrading to the empty set for an absent or unparseable file so the whole rule goes vacuous rather than reporting every row as dangling. trace.hat_findings splits severity the way the boundary rule does: a name the roster does not declare is a finding in the --strict failure set under its own class label, while coverage and the roster's own unattributed hats are single advisory summary lines that never gate. trace.effective_hats derives a design row's effective set as its own refs unioned with its SR parents', so the LLR cell holds only what its own decomposition raised and a dangling parent contributes nothing rather than raising. check_trajectory classifies Hat-Refs TRACED at both tiers, which is what keeps the cell off the re-attest window and out of the snapshot drift basis. Per-decomposition coverage is discharged by the existing review path: applicability derives from the roster's predicates, the decomposition brief presents every applicable hat's question, and the sitting's review record names each outcome. Hat-Refs retain their narrower role of identifying the hats that raised a row; storing applicability or no-finding outcomes in this cell would duplicate review facts and let them go stale.
+
+### TC TC-178
+- **Expected**
+  - before: Satisfies the acceptance folded into LLR-183 (parent SR-161)
+  - after: Satisfies LLR-183's Hat-Refs provenance, name-resolution, severity and effective-set mechanics; SR-161's perspective-review acceptance is inspected by TC-211.
+
+### TC TC-211 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-211
+- **Verifies**: SR-161;SR-186
+- **Level**: Inspection
+- **Method**: Follow the decomposition proportionality inspection in docs/test/inspection-procedures.md#decomposition-proportionality-inspection; inspect one actual completed decomposition review record, its complete chain, and an extra paraphrasing child.
+- **Tier**: Release
+- **Expected**: The actual review record names every applicable perspective's outcome, each child within a required tier has an independent decision or verification purpose, and the record explains why further splitting stops; any omitted outcome or purposeless child is an Inspection finding.
+- **Automated**: No
+- **Evidence**: docs/test/inspection-procedures.md#decomposition-proportionality-inspection-result
+- **Status**: Drafted
+- **Phase**: 5
+
 ## SR-162 — Requirement boundary references resolve against the declared frame
 
 > **Requirement.** The delivered harness shall resolve every system-requirement boundary reference, and every declared interface's endpoint pair and signal type, against the declared external frame — an unresolvable crossing failing the strict trace naming the row — reporting requirements naming no crossing, crossings named by no requirement, declared crossings with no realizing interface row, an interface declaring no endpoint pair or no signal type from the closed discrete/variable vocabulary, and a seam joined to a counterpart whose signal type is incompatible with its own, each as an advisory, and staying vacuous for a project declaring no frame.
@@ -676,11 +719,11 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 
 ### TC TC-211 (current)
 - **TC-ID**: TC-211
-- **Verifies**: SR-186
+- **Verifies**: SR-161;SR-186
 - **Level**: Inspection
-- **Method**: Follow the decomposition proportionality inspection in docs/test/inspection-procedures.md#decomposition-proportionality-inspection; inspect the complete chain and an extra paraphrasing child.
+- **Method**: Follow the decomposition proportionality inspection in docs/test/inspection-procedures.md#decomposition-proportionality-inspection; inspect one actual completed decomposition review record, its complete chain, and an extra paraphrasing child.
 - **Tier**: Release
-- **Expected**: A child within a required tier with no independent decision or verification purpose is an Inspection finding; otherwise the review records that independent value and why further splitting stops.
+- **Expected**: The actual review record names every applicable perspective's outcome, each child within a required tier has an independent decision or verification purpose, and the record explains why further splitting stops; any omitted outcome or purposeless child is an Inspection finding.
 - **Automated**: No
 - **Evidence**: docs/test/inspection-procedures.md#decomposition-proportionality-inspection-result
 - **Status**: Drafted

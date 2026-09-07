@@ -189,8 +189,8 @@ aspect = "process"
 
 No lower-chain row exists for this outcome. A direct `TC` Inspection can read
 the same scoped decomposition/review record required by `SR-161`
-(`docs/requirements/system-requirements.toml:753-764`), including its
-applicability/no-finding fields where that SR applies; an LLR would add no
+(`docs/requirements/system-requirements.toml:753-764`), including the hat-by-hat outcomes required by the
+[SN-036 owner ruling](../log.d/2026-09-06-sn036-owner-ruling.md) where that SR applies; an LLR would add no
 mechanism and would only mirror the authoring judgment. Reuse
 `project-trajectory/PROCESS.md` §3 and
 `project-trajectory/PROCESS_OPTIONS.md`'s proportionality doctrine, the
@@ -223,7 +223,9 @@ no result state:
 (`TC-211`), each with a result subsection. Each TC `method` names its
 procedure anchor and its `evidence` names the corresponding result anchor.
 Those result subsections record actual independent execution: TC-209 and
-TC-210 pass, while TC-211 retains an incomplete normal sample.
+TC-210 pass; the later independent TC-211 Inspection also passes against the
+actual completed hat-by-hat review, with the earlier incomplete execution
+retained as history.
 
 `SR-184` is LLR-exempt under the direct Inspection route; `LLR-048` and `TC-048`
 remain evidence for the existing SR-154 brief mechanism. The governing process
@@ -262,7 +264,7 @@ remains open, and none changes the LLR-176/build-surface redaction boundary.
 | B3 — H1 tags affect applicability | Recorded as intentional: the SN × conditional-hat matrix changes, both lenses use SR-175's existing decomposition home, no further SR is owed for attribution, and SR-175's substantive work remains open. The rejected “one rule, one home” option remains owned by SR-175. |
 | B4 — H2 attended independence | Closed at the new SR: a fresh non-author Critique verdict uses the intent-derived rubric and numbered anchors for attended and unattended acceptance. Its `Inspection` TC checks process/provenance; Critique remains the artifact-quality judgment. SR-184 remains direct Inspection and LLR-exempt; LLR-048 stays under SR-154. |
 | B5 — H3 verification coherence | H3 now has one `Inspection` method, a recorded independent reviewer's semantic decision, and an inspection case rather than a regression or alternative `Attest` path. |
-| B6 — H5 record/artifact sprawl | H5 points to the existing scoped decomposition/review record and SR-161 applicability/no-finding record where applicable; its direct TC is one inspection procedure, with no new schema, form, or review session. |
+| B6 — H5 record/artifact sprawl | H5 points to the existing scoped decomposition/review record and SR-161 hat-by-hat review outcomes where applicable; its direct TC is one inspection procedure, with no new schema, form, or review session. |
 | B7 — direct-TC permission | The governing PROCESS clauses are summarized above with `Inspection` LLR-exemption and all-SR-needs-TC references; SR-184 uses the permitted direct route. |
 
 The [independent closure review](../reviews/2026-09-06-redesign-amendment-closure-opus.md)
@@ -324,7 +326,10 @@ Independent judgment uses the intent-derived
 Critique and subsequent Inspection records are linked from the existing
 [procedures](../test/inspection-procedures.md). The independent Critique approved
 the delivered guidance and scoped reasoning. TC-209/TC-210 Inspections passed;
-TC-211 retains its incomplete normal sample because the applicable SR-161
-machine perspective record is absent (the debt already stated in LLR-183).
-Publishing guidance does not claim every future contributor follows it, that
-TC-211 fully passed, or that the Drafted rows have been approved.
+the later [TC-211 Inspection](../reviews/2026-09-06-sn036-inspection-structured-opus.md)
+also passed against the [completed hat-by-hat review](../reviews/2026-09-06-sn036-closure-structured-opus.md).
+The earlier procedure required a machine record that did not exist; the owner
+replaced that obligation with the review path and the later execution inspected
+that actual path. Its earlier incomplete result remains historical. Publishing
+guidance does not guarantee every future contributor follows it, and these
+Inspection results do not approve the Drafted rows.

@@ -755,11 +755,11 @@ title = "Decompositions carry a perspective record"
 sn_refs = ["SN-036"]
 boundary_refs = ["B-05"]
 hat_refs = ["TEST-ENGINEER"]
-requirement = """The delivered planning content shall leave, with every decomposition it produces, a machine-readable record of the declared review perspectives — each perspective's applicability decision and the requirements or explicit no-finding it produced — such that an applicable declared perspective missing from the record is a reportable finding."""
-rationale = """Realizes SN-036 — a decomposition produced from one perspective can look complete while omitting security, operations or first-use failures, and the omission is invisible unless the record names what was considered. SN-036 had no citing SR. The declared-perspective inventory is the ruled hats roster; the record proves coverage and provenance while adequacy stays with the independent review, exactly as the need partitions it."""
-acceptance_criteria = """A decomposition round writes the perspective record beside its artifacts; a declared perspective applicable to the decomposition and absent from the record is reported; the record distinguishes not-applicable from considered-with-no-finding; the independent adequacy review reads the record rather than the authoring transcript."""
+requirement = """When a decomposition round is reviewed, the delivered planning content shall provide every applicable declared perspective's question in the decomposition brief and require the sitting's review record to name the outcome for each perspective."""
+rationale = """A decomposition produced from one perspective can look complete while omitting security, operations or first-use failures. The hats roster and plan briefs already supply the applicable questions, and the sitting's review record preserves their outcomes; a separate machine-readable coverage record and checker would duplicate that review without improving its adequacy judgment. Hat-Refs remain the row-level provenance for perspectives that raised a requirement. This applies the owner ruling of 2026-09-06 (docs/log.d/2026-09-06-sn036-owner-ruling.md)."""
+acceptance_criteria = """For one completed decomposition round, the applicable perspectives resolve from the declared hats roster, the decomposition brief presents each applicable perspective's question, and the sitting's review record names an outcome for every one; the independent adequacy review reads that record."""
 priority = "S"
-verification = "Test"
+verification = "Inspection"
 status = "Approved"
 phase = 5
 

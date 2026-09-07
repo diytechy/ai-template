@@ -271,7 +271,7 @@ status = "Approved"
 priority = "S"
 need = """**Scope: template (adopters + this repo).** When a stakeholder's need is turned into detailed requirements, it is examined from every relevant expert and downstream-user perspective so important failure cases are not lost."""
 why = """A decomposition produced from one perspective can omit security, operations, accessibility or first-use failures while still appearing complete. The omission remains invisible unless the review records which relevant perspectives were considered and what each contributed."""
-acceptance = """Each decomposition has a machine-readable record of the declared perspectives, the applicability decision for each perspective, and the requirements or explicit no-finding result produced from it. A check reports any applicable declared perspective missing from that record. The record proves coverage and provenance; an independent review judges whether the resulting requirements are adequate."""
+acceptance = """Each decomposition round is reviewed against every applicable declared perspective, and the review record names each perspective and its outcome. The record demonstrates coverage and provenance; an independent review judges whether the resulting requirements are adequate."""
 
 [need.SN-037]
 status = "Approved"

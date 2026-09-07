@@ -1,0 +1,20 @@
++++
+id = "WI-606"
+title = "adjudicate: SR-184, SR-185, SR-186, TC-209, TC-210, TC-211 first approval after perspective-review amendment"
+workstream = "process"
+sr_refs = ["SR-184", "SR-185", "SR-186"]
+needs = ["WI-605"]
+specref = "docs/requirements/system-requirements.toml"
+buildtier = "strong"
+safety_class = "adjudication"
+brief = "first-approval"
+adjudicates = ["SR-184", "SR-185", "SR-186", "TC-209", "TC-210", "TC-211"]
++++
+
+## Context
+
+First-approval batch for the authored Drafted H2/H3/H5 rows. Read each row's whole chain and the actual independent review/Inspection evidence: SR-184/TC-209 (Critique provenance), SR-185/TC-210 (requirement/interface counterpart semantics), and SR-186/TC-211 (proportional decomposition plus the actual hat-by-hat review record).
+
+Dependency: WI-605 must first adjudicate the approved SR-161/LLR-183 amendment coherently. TC-211 now directly verifies SR-161 and SR-186, so this first approval must read the post-adjudication SR-161 chain, TC-178's supplementary mechanical linkage, and the fresh TC-211 Inspection result. An old INCOMPLETE result is historical evidence, not a pass for the revised procedure.
+
+Approval is limited to SR-184, SR-185, SR-186, TC-209, TC-210 and TC-211. Do not approve or snapshot any other Drafted or drifted row. Before any whole-registry snapshot, inspect the live absorption brief and list every additional changed cell; the 18 older SR rationale changes and older LLR drift are outside this batch unless each is separately judged. Preserve WI-601 and WI-603 exactly. The existing pause remains; queueing and adjudication do not authorize a claim.

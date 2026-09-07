@@ -50,30 +50,47 @@ execute that source.
 
 ## Decomposition proportionality inspection
 
-Read the existing scoped decomposition/review record and its applicable
-SR-161 applicability/no-finding record. Confirm the required spine remains the
-scope boundary, then inspect a small chain containing a child that only
-paraphrases or duplicates a parent's decision or verification. A child within a
-required tier with no independent decision or verification purpose is an
-Inspection finding. Record why
-further splitting stops at the independent-value boundary. This procedure uses
-the existing record and does not impose a row-count threshold or extra depth.
+Read one actual completed decomposition review record, the declared hats roster,
+and the decomposition brief used by that review. Resolve the applicable hats,
+confirm that the brief presents every applicable hat's question and that the
+review record names each hat's outcome. Confirm the required spine remains the
+scope boundary, then inspect the complete reviewed chain and a small chain
+containing a child that only paraphrases or duplicates a parent's decision or
+verification. A missing applicable-hat outcome or a child within a required tier
+with no independent decision or verification purpose is an Inspection finding.
+Record why further splitting stops at the independent-value boundary. This
+procedure uses the existing brief and review record and does not impose a
+row-count threshold, extra depth, new record carrier, or machine coverage check.
 
 ### Decomposition proportionality inspection result
 
-**INCOMPLETE — 2026-09-06, [fresh Opus 5/high Inspection](../reviews/2026-09-06-oi85-inspection-structured-opus.md).** The inspector accepted the
-independent purposes of SR-184/SR-185/SR-186 and their direct Inspection cases,
-read the stopping reason, and rejected the paraphrasing child. The procedure's
-normal sample also calls for its applicable SR-161 perspective record. That
-machine-record producer remains unimplemented and no such record was supplied;
-LLR-183 already names this undischarged per-decomposition no-finding obligation.
-This positive-input gap is retained; prose and Hat-Refs do not count as its
-output. TC-211 is not reported fully passed, and its method is not weakened to
-obtain a pass. The remaining work is the existing SR-161 implementation and an
-Inspection of a complete produced sample. No new carrier or machine gate was
-introduced by this sitting.
+**PASS — 2026-09-06, [fresh Opus 5/high Inspection](../reviews/2026-09-06-sn036-inspection-structured-opus.md).** The independent inspector re-derived the
+applicable set from the roster and exact parent/work context, confirmed every
+applicable question in the [actual brief](../reviews/2026-09-06-sn036-decomposition-brief.md),
+and read a reasoned outcome for each in the [completed review](../reviews/2026-09-06-sn036-closure-structured-opus.md).
+It checked the chain's distinct child purposes, the permitted direct Inspection
+tiers and the stated stopping reason. It rejected the missing TEST-ENGINEER
+outcome and the paraphrasing-child cases. This is document Inspection evidence;
+it does not approve artifact text or claim software-test execution.
 
-## Bounded abnormal inputs for the OI-85 inspection
+The inspector separately requested corrections to the review's transcribed
+rubric digest, the preflight and the adjudication ledger. The
+[disposition record](../reviews/2026-09-06-sn036-review-dispositions.md) records
+those corrections; the original verdict bodies and historical result remain.
+The extra negative brief-question example is a queued future improvement, not
+an execution claimed here.
+
+**Historical INCOMPLETE — 2026-09-06, [earlier Opus 5/high Inspection](../reviews/2026-09-06-oi85-inspection-structured-opus.md).** That inspector accepted the
+independent purposes of SR-184/SR-185/SR-186 and their direct Inspection cases,
+read the stopping reason, and rejected the paraphrasing child. The procedure
+then required a machine-produced SR-161 perspective record that did not exist,
+as LLR-183 then stated. The later [owner ruling](../log.d/2026-09-06-sn036-owner-ruling.md)
+replaced that obligation with the existing hat-by-hat review path; this sitting
+amended LLR-183 accordingly. The earlier result remains incomplete for the
+procedure it actually executed. A new Inspection of the revised procedure is
+recorded separately; the ruling itself supplies no test result.
+
+## Bounded abnormal inspection inputs
 
 These are synthetic counterexamples for the procedures above. They do not amend
 live requirements or impersonate actual reviews. The positive subjects are the
@@ -94,13 +111,16 @@ inspector must identify the exact versions it reads.
   existing behavior. Its review says only that all named IDs and endpoints
   resolve and therefore the change passes. It records neither a corresponding
   behavioral change nor a reason why retaining it preserves meaning.
+- **Missing perspective outcome:** the actual completed review record with its
+  TEST-ENGINEER outcome omitted, while the applicable-hat brief and all other
+  outcomes remain. The Inspection must identify that omitted applicable hat.
 - **Paraphrasing child:** the actual SR-186→TC-211 chain gains an unminted
   candidate child saying “the process shall keep decomposition proportionate,”
   verified by the same Inspection judgment without another decision or case.
   Its only stated purpose is to make the chain look more detailed. This adds
   no independent decision or verification purpose within a required tier.
 
-The SR-161 machine-generated perspective-record producer remains an existing,
-unimplemented obligation. This Inspection must report how that affects its
-positive proportionality sample; a prose worksheet cannot be presented as a
-successful execution of the absent producer.
+The historical incomplete result records what that earlier inspection examined.
+The later TC-211 execution above inspected the actual completed review record
+and recorded its own reviewer, date, subject and findings; the owner ruling
+itself supplied no Inspection result.

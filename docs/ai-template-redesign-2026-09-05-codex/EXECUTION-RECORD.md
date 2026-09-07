@@ -19,7 +19,26 @@ stops control admission; the smoke budget is 90 s, so the timing exception
 cited below is retired; OI-82 is ruled (a) and WI-577 is ready. Read those
 logs before the historical continuations.
 
-## Current OI-85 continuation (2026-09-06)
+## Current OI-86/OI-87 continuation (2026-09-06)
+
+Both recommendations are ruled in the [owner record](../log.d/2026-09-06-oi86-oi87-owner-ruling.md).
+The SN-036 review-pass amendment is applied through the needs-only snapshot
+route, with SR-161/LLR-183 and TC-211 reconciled to the actual review record.
+The [Opus dispositions](../reviews/2026-09-06-sn036-review-dispositions.md)
+record the independent review corrections, including TC-178's supplementary
+mechanical-evidence wording and retention of SR-186's separate purpose.
+Actual Inspection outcomes live in the [procedures](../test/inspection-procedures.md).
+
+Amendment adjudication and dependent first approval are now queued explicitly;
+Drafted SR/TC statuses and SR/LLR/TC snapshots remain unchanged. Each
+whole-registry copy owes judgment of all older cells it would absorb. The
+[preflight](CONTROL-PREFLIGHT.md) records control preparation; the pause and
+policy dials remain in place, and no control observation or replacement
+selection is claimed. The [sitting log](../log.d/2026-09-06-sn036-plan-continuation.md)
+records checks, evidence and scope deviations. Follow the refreshed handoff
+for the remaining owner launch act and queued work.
+
+## Previous OI-85 continuation (2026-09-06)
 
 The owner accepted OI-85(a) and authorized continued implementation. The
 [need-tier ruling](../log.d/2026-09-06-oi85-owner-ruling.md) records SN-007,

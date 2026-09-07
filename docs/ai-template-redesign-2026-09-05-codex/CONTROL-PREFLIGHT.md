@@ -1,104 +1,74 @@
-# Control-launch preflight (read-only)
+# Control-launch preflight
 
-> **Superseded in part, 2026-09-06 (later sitting).** The owner re-ruled that
-> a route without reported spend, or an aggregate that cannot be reserved,
-> does NOT stop admission; US$100 is a watched bound over reported spend. The
-> spend finding below stands as an accounting gap to record, not as the
-> "smallest immediate gate". Remaining launch conditions: the frozen launch
-> commit, queue/route revalidation at it, and the owner's reviewed pause
-> deletion. See the [re-ruling](CONTROL-DECISION.md#owner-ruling-2026-09-06).
+The final candidate is the reviewed commit carrying this preparation on
+`contract_split`, based on `a6b545849e0552de898b68e838b4eb6c1f8e5b33`.
+Its exact completed hash and pause-deletion diff are recorded after the commit
+exists. This record prepares the launch; it is not a control observation.
 
-Observed 2026-09-06 15:56 -05:00 at repository `HEAD`
-`1e78ada3194c8806578cccf90a23afe2b64b9775`. The working tree had 65 tracked
-changes and untracked preparation records, so this is a preflight snapshot,
-not a frozen launch commit. No provider command, queue mutation, pause change,
-or policy change was made for this record.
+## Settled limits and remaining act
 
-## Control and authority
+The [later owner ruling](CONTROL-DECISION.md#owner-ruling-2026-09-06) governs:
+first eight completed WIs or two active days, at most twelve active coordinator
+hours. US$100 is a watched bound over reported spend; missing spend is recorded
+and does not stop admission. Sampling, consolidation, authority and provider
+consent remain unchanged. The retained-adjudicator patch is outside the window.
 
-`CONTROL-DECISION.md` records the owner's **Short control**: stop at eight
-completed items or two active days, and at 12 active coordinator hours or
-US$100 aggregate provider spend, whichever is first. Possible in-flight drain
-cost belongs inside that US$100 cap. It requires the dependency-ready queue at
-launch, frozen code from the repair commit, and unchanged sampling,
-consolidation, authority, and provider-consent dials. It also says that a
-route without reported spend or a defensible reservation must stop admission;
-unknown is never zero.
+`docs/work/pause` remains tracked and the runner has not launched. The remaining
+owner act is its reviewed deletion against the selected frozen commit after
+queue/route revalidation. General plan continuation supplied neither that exact
+hash nor the review of that deletion. No additional permission is requested
+merely because spend is unavailable.
 
-The same ruling names the launch act precisely: the **owner's reviewed deletion
-of `docs/work/pause` at or after the repair commit**, with the ruling unchanged.
-That file is present at this snapshot and says deletion in a reviewed commit is
-the way to resume. Therefore the control has not launched.
+## Actual route evidence
 
-The current OI-85 ruling is complete (`status = "ruled"`), including the
-SN-007/SN-026 re-attestation and SN-024 qualification. Its decision explicitly
-says that the need-tier act does not cause a policy dial, queue state,
-unattended launch, or SR/TC approval. The latest plan-execution authorization
-does not substitute for the control's still-required owner-reviewed deletion.
+The enabled registry resolves eight entries across Anthropic, OpenAI and
+OpenCode. `agent_route.py --list` and tier selections, including exclusion of
+Anthropic, resolve without registry errors. The strong/medium/quick OpenAI
+choices are Sol/Terra/Luna. Local version probes returned Claude 2.1.207,
+Codex 0.153.4 and OpenCode 1.18.26.
 
-## Routes, policy, and spend evidence
+**Provider requests did occur during preparation:** the
+[Claude readiness probe](../reviews/2026-09-06-oi86-sn036-probe-structured-opus.md)
+and subsequent Opus reviews/Inspection used the requested `claude-opus-5`
+route. Initialization and result usage identify that model, and tracked
+invocation logs retain the actual results. Those calls establish availability
+of that review route on this account. Other control routes received registry,
+selection and installation checks only; their authentication, credit, live
+model availability and billing remain unverified until their normal pre-dispatch
+probes. Sol, Terra and Luna collaboration sessions are not evidence of Codex
+CLI authentication.
 
-`docs/agents-enabled` is present. Its eight entries resolve without parser or
-registry errors against `docs/agents.toml`'s nine rows: strong, medium, and
-quick routes across Anthropic, OpenAI, and OpenCode. The enabled command
-templates invoke `claude`, `codex exec`, or `opencode run`; they are capable of
-incurring provider use. This read-only preflight did not test CLI installation,
-authentication, account credit, provider spending limits, or provider billing
-semantics, so each is unknown.
+No inspected setting imposes an aggregate provider-dollar limit. The runner
+records provider-reported cost where supplied but does not enforce US$100.
+That remains the ruled accounting limitation, not an admission gate. The dials
+remain in `docs/process.toml`: Needs-held authority, final review always,
+keep-nondependent false, clean-close sampling at its declared rate, and one
+review round. No policy value changed.
 
-The declared operating dials are `human_approval_through = "DevStg-Needs"`,
-`final_review = "always"`, `keep_nondependent = false`,
-`complete_review = "sample"`, and `complete_sample_rate = 4` in
-`docs/process.toml`; `docs/stack.ini` still maps the loop phases to `opus`.
-No inspected policy dial sets a provider-dollar ceiling.
+## Current queue
 
-The router registry supplies identity, tier, command template, environment, and
-failure notes, but no price, account-limit, reservation, or cap field.
-`agent_loop.py` and `agent_session.py` only copy a provider-result
-`total_cost_usd` into telemetry. The session accounting reader deliberately
-leaves billing scope unknown and refuses to infer an aggregate. No inspected
-reader aggregates cost across sessions, reserves drain cost before admission,
-or blocks a new admission at US$100.
+The final preparation read of
+`.venv/bin/python project-trajectory/scripts/schedule.py --root . ready --format json`
+returned **18 ready WIs**. The new amendment adjudication and documentation
+follow-up are ready; the new first-approval batch is held on the amendment.
+Complete ready specs were read during preparation; eligibility is not a claim
+or a decision to implement every older proposal. Revalidate this same queue and
+route registry at the completed frozen hash before presenting the launch diff.
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/schedule.py --root . ready --format json" rev=a6b54584+oi86-sn036-final; out/run-logs/oi86-ready.json refreshed at frozen commit -->
 
-**Finding:** on repository evidence, US$100 including drain cannot be enforced
-or defensibly reserved without an additional accounting arrangement. An
-external provider/account limit could in principle supply that arrangement
-without changing these route or policy files, but none is recorded or verified
-here. It remains unknown, which the control ruling says must stop admission.
+## Artifact approval remains separate
 
-## Queue observation
+The queued amendment adjudication judges SR-161/LLR-183/TC-178 and the complete
+snapshot absorption population before any copy. Its dependent first-approval
+batch judges only SR-184–186 and TC-209–211, reading the amended chain and actual
+Inspection evidence. Existing unrelated adjudications keep their own scopes.
+The comment/rubric advisories are a separate ordinary documentation WI.
 
-Read-only command:
-
-```sh
-.venv/bin/python project-trajectory/scripts/schedule.py --root . ready --format json
-```
-
-At the observed revision it returned 15 `ready` queued entries: five exclusive
-(one spine, four adjudication) and ten ordinary parallel entries. This is only
-a census; it neither claims nor reprioritizes any work. Re-run it immediately
-before any reviewed launch action because status, dependencies, and the
-working-tree launch commit can change.
-
-## Outstanding launch gate
-
-The smallest immediate gate is route-complete, drain-inclusive evidence that
-US$100 is reserved and that admission will stop before exceeding it. Until
-that evidence exists, the Short-control ruling requires no admission. After
-it, the remaining ordered conditions are: land and review the repair/frozen
-launch commit named by `CONTROL-DECISION.md`, revalidate the queue and route
-preflight at that commit, and have the owner review the deletion of
-`docs/work/pause`. This record does not authorize or perform any of them.
-
-## Sources inspected
-
-- `docs/ai-template-redesign-2026-09-05-codex/CONTROL-DECISION.md` — Short
-  control, spend rule, repair-commit precondition, and launch act.
-- `docs/work/pause` — current pause remains present.
-- `docs/agents-enabled` and `docs/agents.toml` — enabled routing and command
-  templates; parser resolution performed with `agent_route` loaders.
-- `docs/process.toml` and `docs/stack.ini` — current operating dials.
-- `project-trajectory/scripts/agent_route.py`, `agent_loop.py`, and
-  `agent_session.py` — route schema and telemetry-only cost handling.
-- `docs/requirements/open-items.toml` (`OI-85`) — completed ruling and its
-  explicit non-authorization of unattended launch.
+The live dial releases these tiers to an independent serial-trunk adjudicator.
+The adjudicator must read the whole chain, current review/Inspection evidence
+and every live/snapshot delta, then approve or return findings. A snapshot
+copies its named registry whole: older cells may be absorbed only with an
+explicit judgment and approval record for each. This applies to SR, LLR and TC
+registries alike. The needs-only SN-036 act is no permission to refresh them.
+No artifact approval or snapshot permission follows from queueing a spec or
+from passing a document Inspection.

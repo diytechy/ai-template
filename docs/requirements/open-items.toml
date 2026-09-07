@@ -3421,10 +3421,12 @@ ruling_ref = "docs/log.d/2026-09-06-oi85-owner-ruling.md"
 
 [open_item.OI-86]
 title = "OI-49 (b)'s exception read: the two unargued interface picks and the loaders-versus-frontier ownership split"
-status = "pending"
+status = "ruled"
 raised = "2026-09-06"
 one_line = "OI-49 was ruled (b) RATIFY WITH A NAMED EXCEPTION LIST on 2026-08-22 and closed, but the exception read itself - the owner re-reading only the flagged subset - was never performed and lived only as status.md prose. This row is that residue, scoped to exactly the subset the dossier names: the two unargued picks (IF-013 -> SR-006 not SR-007; the second pick in the dossier's section 1) and the IF-056/IF-082/IF-084 (owner = the loaders/joins) versus IF-071/IF-085 (owner = the ready-frontier DECISION) split, which turns on what each contract says CROSSES."
-decision = """Whether the owner accepts the dossier's recommendation on each flagged pick, or re-points an owner. The bulk of the interface rework was ratified under OI-49 (b); nothing here re-opens it.
+decision = """RULED (owner, 2026-09-06): option (a), ACCEPT THE DOSSIER AS WRITTEN. Keep SR-006 on IF-013 and SR-154 on IF-044; keep the loaders/joins owner on IF-056/IF-082/IF-084 and the ready-frontier decision owner on IF-071/IF-085. The dossier's contract-based reasons are accepted as the exception read. No interface owner or notes cell changes, no snapshot act is needed, and OI-60 is not reopened. Exact record: docs/log.d/2026-09-06-oi86-oi87-owner-ruling.md. Original decision brief follows.
+
+Whether the owner accepts the dossier's recommendation on each flagged pick, or re-points an owner. The bulk of the interface rework was ratified under OI-49 (b); nothing here re-opens it.
 
 - The dossier of record: docs/plans/2026-08-22-interface-exception-dossier.md, sections 1 (the two unargued picks) and 2 (the loaders/frontier split).
 - Minted 2026-09-06 because a ruled open item renders no card, so an act the ruling left with the owner had no surface but hand-maintained prose."""
@@ -3433,13 +3435,17 @@ blast_radius = """- deferring: the flagged IF rows keep their dossier-recommende
 options = """- (a) ACCEPT THE DOSSIER AS WRITTEN: keep SR-006 on IF-013, keep the loaders/joins owner on IF-056/082/084 and the frontier-decision owner on IF-071/085. FOR: each recommendation is argued from what the contract says crosses; the read is a confirmation. AGAINST: none beyond the reading time.
 - (b) RE-POINT ONE OR MORE: name the pick and the owner, and the cell change lands with a note citing this row. FOR: the owner's judgment is the whole point of an exception list. AGAINST: an Approved cell move opens a re-attest of the interfaces registry."""
 recommendation = "(a) accept the dossier; each pick already carries its reason in the row's notes cell, so the read is five rows and one sitting."
+ruled_date = "2026-09-06"
+ruling_ref = "docs/log.d/2026-09-06-oi86-oi87-owner-ruling.md"
 
 [open_item.OI-87]
 title = "The wording round's two banked findings: SR/LLR overlap on seven chains, and LLR-041's drifted Detail"
-status = "pending"
+status = "ruled"
 raised = "2026-09-06"
 one_line = "The 2026-08-24 draft wording round left two findings for the owner that no row carried: on seven of nine LLR rows the reviewer's CUT-REDUNDANT answer pointed at the parent SR (the tiers overlap on those chains), and LLR-041's Approved Detail cell has drifted from its snapshot and was deliberately not simplified. Both lived only as status.md prose; this row is their surface."
-decision = """Two separate owner judgments, recorded together because they came from one round.
+decision = """RULED (owner, 2026-09-06): option (a), ACCEPT THE OVERLAP, ROUTE LLR-041 TO ADJUDICATION. The seven SR/LLR overlaps are tolerated as a known paraphrase-advisory class; no SR is re-cut. The normal Approved-cell amendment adjudication route already covered LLR-041: the 2026-08-24 OI-62 sitting amended its Detail, approved it, and re-seeded the matching snapshot in commit 13593db9 (recorded in docs/log.d/2026-08-24-oi62-rule-and-spine-approval.md and docs/ratify/2026-08-24-spine-approval.md). No additional WI or queue entry is needed. This ruling records that route and does not itself approve or amend LLR-041; it does not change the LLR or snapshot. Exact record: docs/log.d/2026-09-06-oi86-oi87-owner-ruling.md. Original decision brief follows.
+
+Two separate owner judgments, recorded together because they came from one round.
 
 - Overlap: whether the SR/LLR overlap the reviewer reported on seven chains becomes a decomposition question at the requirement tier (a WI to re-cut those SRs), or is accepted as tolerable restatement.
 - LLR-041: whether its drifted Detail is re-attested as-is through the normal adjudication route, or re-worded first.
@@ -3449,3 +3455,5 @@ blast_radius = """- deferring: no check reds; the three paraphrase advisories al
 options = """- (a) ACCEPT THE OVERLAP, ROUTE LLR-041 TO ADJUDICATION: no SR is re-cut; LLR-041 is re-attested through the existing amendment adjudication. FOR: cheapest; matches the owner's stated preference for review passes over re-cuts. AGAINST: the seven chains keep restating their parents.
 - (b) MINT A DECOMPOSITION WI for the seven chains and route LLR-041 with it. FOR: acts on an independent reviewer's finding. AGAINST: seven Approved SR re-attests for a wording gain."""
 recommendation = "(a); the overlap is a known advisory class and re-cutting seven Approved SRs is not proportionate to it."
+ruled_date = "2026-09-06"
+ruling_ref = "docs/log.d/2026-09-06-oi86-oi87-owner-ruling.md"
