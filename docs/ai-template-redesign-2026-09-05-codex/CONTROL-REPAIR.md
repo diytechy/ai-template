@@ -19,7 +19,7 @@ Claude Fable 5.1 with `CLAUDE_CODE_EFFORT_LEVEL=medium`; raw reported cost USD
   reviewer now sees that role on the adjudication row it is reviewing. The
   lifecycle and its strict review identity checks remain intact.
 - Reject the proposed rationale-removal successor. The explicit
-  [owner instruction](../log.d/2026-09-06-sn036-owner-ruling.md) says “Rationale
+  [owner instruction](../log.md#2026-09-06--sn-036--sr-161-owner-ruling-review-pass-not-a-guard) says “Rationale
   names this ruling.” [F6 was already dispositioned](../reviews/2026-09-06-sn036-review-dispositions.md)
   on that basis. A general process convention does not override it; retain
   the citation and the visible advisory, with no suppression.
@@ -128,3 +128,34 @@ measured 78.3s against the unchanged 90s ceiling and returned success.
 Documentation passes with zero broken links and the existing generated-report
 orphan warning; strict trajectory passes with warnings. Ruff passes.
 <!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict" rev=2137230e+control-repair; out/run-logs/control-repair/commit-smoke.txt; docs-final.txt; trajectory.txt -->
+
+## Final preparation checkpoint
+
+Runtime repair: `a7f57c3f`. Lane reconciliation: `b678287c`, followed by the
+durable owner-instruction link at `8e6555ec`. The invalid 003 verdict file is
+absent, the original commit remains in history, and the original scoped SR/TC
+snapshots remain on the unmerged lane. No primary approval snapshot changed.
+
+The first station refresh passed smoke (1687 passed, 8 skipped in 72.60s;
+measured 73.0s/90s) but refused on 22 links to consumed log fragments, and
+rolled back cleanly to the lane's work commit. This was a real additional
+preparation blocker. Compile the 25 already-committed primary fragments through
+trunk_step and retarget their incoming links to the permanent compiled headings;
+that correction is now applied. It preserves the record text and every ruling,
+changes no authority or cap, and avoids putting disposable fragment links back
+into the lane. The branch's own new fragment is left for its station compile.
+
+The link-correction commit bars pass: primary 1687 passed/8 skipped in 59.83s,
+measured 60.1s/90s; lane 1676 passed/8 skipped in 62.80s, measured 63.0s/90s.
+Documentation passes on each. On the actual committed lane, both
+review_owed_by_evidence and resume_owed_round select exactly REVIEW-A before any
+build/adjudication session, without creating a marker or launching a provider.
+<!-- fig: derived="out/run-logs/control-repair/retry-routing-check.json, links-primary-smoke.txt, links-primary-smoke.json, links-lane-smoke.txt, links-lane-smoke.json, compiled-docs.txt, links-lane-docs.txt; out/run-logs/refresh-refused-wi-605-adjudicate-sr-161-llr-183-ow.log" rev=a7f57c3f+durable-log-links; lane=8e6555ec -->
+
+The station refresh is rerun after this record commit. Its resulting
+Bar-Green commit on the original lane is the durable verification of the
+combined tree; the local command output is retained under
+`out/run-logs/control-repair/station-refresh-final.txt`. A successful refresh
+is preparation, not WI-605 approval, terminal handback or merge. The next
+session still owes its independent REVIEW-A. Keep the global pause until the
+owner authorizes the retry; no second control window has been opened.

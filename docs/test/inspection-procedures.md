@@ -84,7 +84,7 @@ an execution claimed here.
 independent purposes of SR-184/SR-185/SR-186 and their direct Inspection cases,
 read the stopping reason, and rejected the paraphrasing child. The procedure
 then required a machine-produced SR-161 perspective record that did not exist,
-as LLR-183 then stated. The later [owner ruling](../log.d/2026-09-06-sn036-owner-ruling.md)
+as LLR-183 then stated. The later [owner ruling](../log.md#2026-09-06--sn-036--sr-161-owner-ruling-review-pass-not-a-guard)
 replaced that obligation with the existing hat-by-hat review path; this sitting
 amended LLR-183 accordingly. The earlier result remains incomplete for the
 procedure it actually executed. A new Inspection of the revised procedure is

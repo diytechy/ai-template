@@ -5,7 +5,7 @@ H2, H3 and H5 are authored as Drafted rows: `SR-184`–`SR-186` and `TC-209`–`
 H1's two subject tags and H4's acceptance cell are also authored under the
 owner's execution instruction, after independent review. The owner subsequently accepted OI-85(a): SN-007/SN-026 are re-attested and
 SN-024 now scopes family heterogeneity to unattended Critique. The scoped
-[owner record](../log.d/2026-09-06-oi85-owner-ruling.md) records the needs-only
+[owner record](../log.md#2026-09-06--oi-85-owner-re-attestation) records the needs-only
 snapshot refresh. SR-162 still owes re-attestation; the new SRs/TCs await
 ordinary first approval, implementation and Inspection results. The source findings are [HATS-AND-DECOMPOSITION-REVIEW.md](HATS-AND-DECOMPOSITION-REVIEW.md#h2--sn-024s-rubric-contract-disappears-at-the-sr-tier),
 with the live parent cells at `docs/requirements/stakeholder-needs.toml:137-142`
@@ -190,7 +190,7 @@ aspect = "process"
 No lower-chain row exists for this outcome. A direct `TC` Inspection can read
 the same scoped decomposition/review record required by `SR-161`
 (`docs/requirements/system-requirements.toml:753-764`), including the hat-by-hat outcomes required by the
-[SN-036 owner ruling](../log.d/2026-09-06-sn036-owner-ruling.md) where that SR applies; an LLR would add no
+[SN-036 owner ruling](../log.md#2026-09-06--sn-036--sr-161-owner-ruling-review-pass-not-a-guard) where that SR applies; an LLR would add no
 mechanism and would only mirror the authoring judgment. Reuse
 `project-trajectory/PROCESS.md` §3 and
 `project-trajectory/PROCESS_OPTIONS.md`'s proportionality doctrine, the
@@ -250,7 +250,7 @@ rationales, LLR/TC evidence and current work. SR-184 and SR-185 need their
 semantic behavior and fresh Inspection records; SR-186 needs its proportionality
 record; the direct TCs point to the procedures and their recorded execution results. SR-162 still owes re-attestation, and the new SR/TC rows need ordinary first
 approval. OI-85(a) now records the owner's need-tier re-attestation and
-SN-024 qualification; its [reviewed act](../log.d/2026-09-06-oi85-owner-ruling.md)
+SN-024 qualification; its [reviewed act](../log.md#2026-09-06--oi-85-owner-re-attestation)
 refreshes only the needs snapshot. SR-184's rationale leaves family policy to
 its now-qualified parent and SR-154. H1/SR-175 consent or provider-inclusion work
 remains open, and none changes the LLR-176/build-surface redaction boundary.

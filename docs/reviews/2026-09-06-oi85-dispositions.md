@@ -20,7 +20,7 @@ The test now scans the actual package without weakening the radius invariant;
 LLR-035 names both modules under its existing dashboard responsibility.
 Both failed cases then passed. Formatting the moved panel module changes no
 behavior. Full-suite and commit-bar results belong to the
-[continuation log](../log.d/2026-09-06-oi85-plan-completion.md).
+[continuation log](../log.md#2026-09-06--oi-85-continuation-and-independent-repair-close).
 
 The correct continuation is the repaired current runner, not an assumed
 replacement. The [control preflight](../ai-template-redesign-2026-09-05-codex/CONTROL-PREFLIGHT.md)

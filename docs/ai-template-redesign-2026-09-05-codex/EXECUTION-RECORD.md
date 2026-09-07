@@ -21,7 +21,7 @@ logs before the historical continuations.
 
 ## Current OI-86/OI-87 continuation (2026-09-06)
 
-Both recommendations are ruled in the [owner record](../log.d/2026-09-06-oi86-oi87-owner-ruling.md).
+Both recommendations are ruled in the [owner record](../log.md#2026-09-06--oi-86-and-oi-87-owner-rulings).
 The SN-036 review-pass amendment is applied through the needs-only snapshot
 route, with SR-161/LLR-183 and TC-211 reconciled to the actual review record.
 The [Opus dispositions](../reviews/2026-09-06-sn036-review-dispositions.md)
@@ -34,14 +34,14 @@ Drafted SR/TC statuses and SR/LLR/TC snapshots remain unchanged. Each
 whole-registry copy owes judgment of all older cells it would absorb. The
 [preflight](CONTROL-PREFLIGHT.md) records control preparation; the pause and
 policy dials remain in place, and no control observation or replacement
-selection is claimed. The [sitting log](../log.d/2026-09-06-sn036-plan-continuation.md)
+selection is claimed. The [sitting log](../log.md#2026-09-06--perspective-review-amendment-and-redesign-continuation)
 records checks, evidence and scope deviations. Follow the refreshed handoff
 for the remaining owner launch act and queued work.
 
 ## Previous OI-85 continuation (2026-09-06)
 
 The owner accepted OI-85(a) and authorized continued implementation. The
-[need-tier ruling](../log.d/2026-09-06-oi85-owner-ruling.md) records SN-007,
+[need-tier ruling](../log.md#2026-09-06--oi-85-owner-re-attestation) records SN-007,
 SN-026 and SN-024 exactly, using the existing named-registry approval snapshot.
 The separate need-drift detector remains deferred; no other snapshot or
 artifact Status is absorbed by that act.
@@ -61,7 +61,7 @@ reason to replace the runner. Existing queued artifact adjudications retain
 their own authority; the OI-85 act does not approve the rest of the spine.
 
 
-The [continuation log](../log.d/2026-09-06-oi85-plan-completion.md) records the
+The [continuation log](../log.md#2026-09-06--oi-85-continuation-and-independent-repair-close) records the
 final unfiltered result (`3661 passed, 22 skipped in 744.34s`), failed-first
 checks and their fixes, review dispositions and per-commit results.
 <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto --junitxml=out/run-logs/oi85-full-final.xml" rev=1e78ada3+OI85-final; out/run-logs/oi85-full-final.txt -->
@@ -360,4 +360,4 @@ DevStg-Tests with 17 drafts. Full unfiltered suite: `1 failed, 3593 passed,
 fallback, corrected by one line and re-verified on its module set (`84
 passed`); no second full run is claimed. Commit bar: `1674 passed, 4 skipped`,
 `59.0s vs 60s budget -> within`. Exact tails in
-[the session log](../log.d/2026-09-06-redesign-fable-review.md).
+[the session log](../log.md#2026-09-06--independent-review-of-the-redesign-implementation-repairs-control-ruling).

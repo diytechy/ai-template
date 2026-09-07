@@ -58,7 +58,7 @@ Source checks for this expansion:
 The original review files and metadata remain unchanged. This expansion does
 not claim a new independent reviewer verdict, an approved vision amendment,
 a paid-operation benchmark or successful implementation of P5.
-The [session validation record](../log.d/2026-09-05-redesign-plan-detail.md)
+The [session validation record](../log.md#2026-09-05--expand-the-redesign-plan-for-independent-cross-check)
 reports documentation/inventory checks and passing smoke assertions, together
 with the failed smoke-time budget and the owner's explicit exception permitting
 this documentation commit. The declared budget remains unchanged.

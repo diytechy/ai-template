@@ -300,7 +300,7 @@ page and the status projection), and `check.py` runs `gen_open_items.py
 own recommendation; retain only what touches core functionality or vision).
 ALL OF THIS IS APPLIED** — the three peripheral rows are `ruled` in the
 registry with the record fragment
-[log.d/2026-09-05-owner-rulings-oi79-oi80-oi81.md](log.d/2026-09-05-owner-rulings-oi79-oi80-oi81.md),
+[log.d/2026-09-05-owner-rulings-oi79-oi80-oi81.md](log.md#2026-09-05--oi-79-oi-80-and-oi-81-ruled-under-the-owners-delegation-of-the-peripheral-queue),
 the three core rows are still `pending` with the briefs below written into
 them, and the surfaces are regenerated. The "owner act remaining" column is
 what is genuinely left:

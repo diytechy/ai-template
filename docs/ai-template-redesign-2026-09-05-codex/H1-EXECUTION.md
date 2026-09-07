@@ -124,11 +124,11 @@ process file was changed.
 
 The historical no-snapshot statement above describes the first H1 slice.
 The owner has since re-attested SN-026's two tags through the
-[OI-85 named-registry act](../log.d/2026-09-06-oi85-owner-ruling.md).
+[OI-85 named-registry act](../log.md#2026-09-06--oi-85-owner-re-attestation).
 H1 and R-E now use the same canonical need-carrier spelling helper, following
 native path semantics for `./`, lexical `..`, whitespace and platform
 separators. A known-empty canonical need registry still rejects a nonexistent
 ID; malformed need content refuses. Other TOML files do not become inferred
 registries simply because they contain nested tables. The
-[continuation log](../log.d/2026-09-06-oi85-plan-completion.md) carries the
+[continuation log](../log.md#2026-09-06--oi-85-continuation-and-independent-repair-close) carries the
 failure-first regressions and final verification.
