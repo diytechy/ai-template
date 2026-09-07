@@ -53,7 +53,7 @@ decision and is not reopened here.
 
 `primary_approval.absorption_census(root, turn, candidate, accepted)` is the
 whole-registry absorb ledger. That is
-[WI-596](../work/queued/WI-596-the-anchoring-copy-s-absorb-le.md)'s declared
+[WI-596](../archive/work/cancelled/WI-596-the-anchoring-copy-s-absorb-le.md)'s declared
 scope, still queued. The overlap was flagged twice before implementation
 (`55ad0402`, resolution step 2) and the dependency was not taken. Decide one
 home: either WI-596 is superseded by this implementation and closed with that

@@ -2,11 +2,35 @@
 id = "WI-596"
 title = "The anchoring copy's absorb ledger: the first-approval brief and the approval act's record name every drifted Approved row a whole-file snapshot re-blesses"
 workstream = "process"
-specref = "docs/reviews/wi-590-adjudicate-llr-207-llr-208/008-REVIEW-A-9671078.md"
+specref = ""
 buildtier = "medium"
 priority = 3
 safety_class = "ordinary"
 +++
+
+## Deliverable
+
+Original SpecRef: [WI-590 round 008](../../../reviews/wi-590-adjudicate-llr-207-llr-208/008-REVIEW-A-9671078.md).
+The terminal frontmatter clears the live SpecRef; the original review remains
+at its evidence home.
+
+CANCELLED AS SUPERSEDED, 2026-09-07, under resume item 5's explicit supervisor
+choice. Superseded by the primary approval repair at
+`0f106ce9c1e13a5f86b744311d649a4f69df32f2`, whose
+`primary_approval.absorption_census` is the single owner of the whole-file
+population. The [scope mapping and source review](../../../reviews/2026-09-07-post-stop-fixes.md#item-5--one-owner-for-the-absorption-census)
+records how its primary brief, typed Approval carrier and publication verifier
+replace this proposal's legacy brief/acceptance-record/intake path.
+
+This cancellation does not claim this WI shipped its original presentation or
+rollup-consumption design. The primary envelope already renders the shared
+census; the adjudicator supplies exact judgment references in the committed
+Approval payload, which publication verifies and preserves through close.
+An absent, UNJUDGED or incomplete ledger refuses publication. The generated
+review rollup remains a human summary and gains no approval authority.
+No second census implementation or queued owner remains. The original Context
+below is preserved as the rationale for the superseded proposal; its historical
+row judgments are not newly accepted here.
 
 ## Context
 

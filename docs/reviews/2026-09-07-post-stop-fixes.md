@@ -61,3 +61,42 @@ last minutes, merge refresh can occur under the lock, contenders refuse rather
 than wait, and claims/intake/generators do not take this lock. It removes the
 false sub-second promise and distinguishes the pending-record refusal from the
 OS lock. No runtime behavior changes; no new tests for a docstring correction.
+
+## Item 5 — one owner for the absorption census
+
+Cancel [WI-596](../archive/work/cancelled/WI-596-the-anchoring-copy-s-absorb-le.md)
+as superseded by primary approval repair `0f106ce9`. This is the explicit
+closure option authorized by resume item 5, not a claim that its original
+implementation plan shipped. Preserve its Context and record the disposition
+in its terminal Deliverable. No live WI has a dependency on this row.
+
+The current ownership, checked in source:
+
+| Superseded proposal | Current home |
+|---|---|
+| Whole-file changed-row population | `primary_approval.absorption_census`, shared by briefing and publication verification |
+| First-approval brief's absorb ledger | `adjudicate_brief._primary_absorption_text` renders the common primary envelope, including the specialized first-approval brief |
+| Durable record of absorbed cells and their judgments | The committed `## Approval` payload's typed `[[absorption]]` tables; publication preserves the carrier in the terminal spec |
+| Hold an unjudged absorption before copying | `_absorption_refusal` compares the exact census, requires accepted scoped decisions and checks judgment references; `_absorption_shape` refuses `UNJUDGED` |
+
+The old standalone brief placeholder, `acceptance_record` ingestion and
+rollup/intake consumption design are retired by this disposition. They were
+not implemented as specified. The current brief supplies cell/blob identities;
+the adjudicator supplies judgment references in the typed payload. The human
+rollup remains a generated reading of review rounds, not another approval
+record. Whole-file snapshot granularity is unchanged. No new census or
+approval-consumer route is introduced.
+
+Existing tests exercise shared-census briefing, every registry carrier,
+unjudged absorption and the exact ledger requirement. This cancellation changes
+queue state and documentation only; it approves none of the historical rows
+mentioned in the old WI. Navigable links follow the archived spec; historical
+invocation metadata, findings and source-path quotations remain untouched.
+
+## Stop boundary
+
+Resume items 1–5 are addressed in separate commits with their source reviews
+and per-commit verification recorded in [the session log](../log.md).
+The pending primary writer is clear, the pause remains tracked, and the
+coordinator stays stopped. Package PC is next authorized work and has not
+started. No further control window, push or merge to main is authorized here.

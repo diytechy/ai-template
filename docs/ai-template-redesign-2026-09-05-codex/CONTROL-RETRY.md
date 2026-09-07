@@ -225,7 +225,7 @@ Resolution before another launch:
    does not establish an approval. Textual change alone does not invalidate
    an implementation judgment when the meaning comparison confirms equivalence.
    Whole-registry copying must not absorb other unapproved changes — that
-   clause is [WI-596](../work/queued/WI-596-the-anchoring-copy-s-absorb-le.md)'s
+   clause is [WI-596](../archive/work/cancelled/WI-596-the-anchoring-copy-s-absorb-le.md)'s
    declared scope, so depend on that row and cite its ledger rather than
    restating it here; two homes for one rule is what this repair exists to
    remove. This is an approval-triggered write, never ordinary freshness

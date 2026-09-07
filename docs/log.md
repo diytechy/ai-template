@@ -63797,3 +63797,34 @@ Verification: smoke 1695 passed, 4 skipped in 50.61s; measured wall 50.9s
 enforced against 90s. Strict trajectory, Ruff format and docs checks pass
 (one existing orphan warning).
 <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke; .venv/bin/python scripts/check_smoke_budget.py --mode enforce --elapsed <measured-wall>; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict" rev=276cf1ae+resume-item-4; out/run-logs/post-stop-repair/4-bar.txt; 4-docs.txt; 4-trajectory.txt -->
+
+## 2026-09-07 — Cancel the duplicate census proposal as superseded (resume item 5)
+
+[Source review and scope mapping](reviews/2026-09-07-post-stop-fixes.md#item-5--one-owner-for-the-absorption-census):
+WI-596 is cancelled as superseded by repair `0f106ce9`. The shared census feeds
+the primary envelope and publication verifier; the committed typed Approval
+carrier preserves the absorbed cells and judgment references. The old standalone
+brief/acceptance-record/rollup-intake design is retired, not reported as shipped.
+Original Context and review evidence remain. No live dependent names the row.
+
+The lifecycle check required clearing the terminal SpecRef; its original review
+link now lives in the Deliverable. Updated navigable links and generated queue
+views through `trunk_step --regen`; the stage's only change is generated as-of
+metadata, with no rung or fingerprint change. Updated status/handoff to the
+completed stop boundary. No runtime or capped-file changes and no scope deviation.
+
+Deferred open items: none — all five requested resume items are settled. PC is
+next authorized work but has not started; the coordinator stays stopped.
+
+Verification: existing absorption tests 12 passed, 23 deselected in 4.70s;
+smoke 1695 passed, 4 skipped in 49.42s, measured wall 49.6s enforced against
+90s. Strict trajectory clean; docs 1505 documents, 2427 links, zero broken,
+one existing orphan warning. All five commits have supervisor source reviews;
+no independent provider adjudication or disputed-cell acceptance is claimed.
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_adjudicate_brief.py::test_primary_absorption_uses_shared_approved_cells_not_traced_drift tests/test_primary_approval.py -k absorption; .venv/bin/python -m pytest -q -n auto -m smoke; .venv/bin/python scripts/check_smoke_budget.py --mode enforce --elapsed <measured-wall>; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=3ac99533+resume-item-5; out/run-logs/post-stop-repair/5-census.txt; 5-bar.txt; 5-trajectory-final.txt; 5-docs-final.txt -->
+
+The final state proof verifies no pending writer, unchanged selection evidence,
+the original queued proposal blob, unchanged governing registries/snapshots,
+invocation/judgment files and tracked pause, plus the original legacy branch
+and forensic patch. No coordinator launch, control window, push or merge to
+main occurred in this sitting. Evidence: `out/run-logs/post-stop-repair/5-state-proof.txt`.
