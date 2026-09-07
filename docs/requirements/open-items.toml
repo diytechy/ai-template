@@ -3460,7 +3460,10 @@ ruling_ref = "docs/log.d/2026-09-06-oi86-oi87-owner-ruling.md"
 
 [open_item.OI-88]
 title = "Authorize a one-time reviewed transfer of WI-601, WI-603 and WI-605 into one combined adjudication …"
-status = "pending"
+status = "ruled"
 raised = "2026-09-07"
 one_line = "Authorize a one-time reviewed transfer of WI-601, WI-603 and WI-605 into one combined adjudication after WI-608 authoring? Recommended: use the existing publisher with the complete 52-row Approved-change scope and keep 9 Drafted riders unapproved. No verifier weakening, new control window, push or merge to main. Exact scope and constraints: docs/reviews/wi-609-resolution/DECISION.md."
 wi_refs = ["WI-609"]
+decision = """RULED (owner, 2026-09-07): Yes that's fine. Approves the exact one-time supervised ownership transfer in docs/reviews/wi-609-resolution/DECISION.md: apply the exact reviewed PC amendments, recompute the actual census, independently review the complete transfer and lineage before mutating the queue, and consolidate WI-601/WI-603/WI-605 into one combined amendment adjudication with hard predecessor WI-608. This supersedes their separate ownership and the earlier PC dependency on WI-601. It approves no registry cells, snapshots, implementation or control window. Preserve the tracked pause, original evidence and Drafted first-approval owners; no push or merge to main. All existing publisher checks remain required."""
+ruled_date = "2026-09-07"
+ruling_ref = "docs/log.d/2026-09-07-oi88-pc-authoring.md"

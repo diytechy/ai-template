@@ -597,7 +597,7 @@ phase = 3
 [test.TC-058]
 verifies = ["SR-148", "LLR-058", "LLR-123"]
 level = "Integration"
-method = """Run schedule.py against a fixture registry; the ready frontier, the exclusions with reason codes, and the deterministic traincar order match across ready --explain, ready --format json, simulate, and the dispatcher; a soft edge never blocks and Priority outranks downstream-dependent count within a gate class."""
+method = "Run schedule.py against a fixture registry; the ready frontier, the exclusions with reason codes, and the deterministic work-item order match across ready --explain, ready --format json, simulate, and the dispatcher; a soft edge never blocks and Priority outranks downstream-dependent count within a gate class."
 tier = "Full"
 expected = "Satisfies SR-148 AcceptanceCriteria via the LLR-058 and LLR-123 detail contracts"
 automated = "Yes"
@@ -630,7 +630,7 @@ phase = 4
 [test.TC-061]
 verifies = ["SR-026", "LLR-061"]
 level = "Integration"
-method = """Run two concurrent workers from explicit --wi/--train/worktree assignments; assert no lane-local status/next/run-state file, non-colliding logs/review evidence naming the exact reviewed commit, no root-truth mutation, and --track refused as an unknown flag (retired)."""
+method = "Run two concurrent workers from explicit single-WI --wi/--train/worktree assignments; refuse empty or multi-WI assignments before provider launch; require the assigned row's identity, SpecRef and completion state in its prompt; assert no lane-local status/next/run-state file, non-colliding logs/review evidence naming the exact reviewed commit, no root-truth mutation, and --track refused as an unknown flag (retired)."
 tier = "Full"
 expected = "Satisfies SR-026 AcceptanceCriteria via the LLR-061 detail contract"
 automated = "Yes"
@@ -1345,7 +1345,7 @@ phase = 4
 [test.TC-138]
 verifies = ["SR-144", "LLR-144"]
 level = "Unit"
-method = """Run the handback suite: a partial close moves each claimed spec to the terminal partial/ and writes its immutable per-close report under docs/handbacks/, leaves the branch finished, is CLEAN under the real trajectory check (R-A exempts partial — the spec's definition is deliberately byte-identical), refuses a second close without residue, and is LOUD when a terminal spec has no report; a close writes NO blockref because the partial/ folder is itself terminal (the anti-livelock property is the move, not a queued-plus-blockref marker), while an existing Deliverable survives the move; a branch trunk holds no claim for is refused. The quarantine arm reverts the product paths and keeps the failing diff as a bar-inert .patch, reverts a RENAME correctly (the --name-status -z stream read as records, not pairs - mutation-proven), leaves the handback bookkeeping alone, refuses when the red is not the lane's own code, and restores rather than reports when a revert step fails."""
+method = "Run the handback suite: an empty or multi-spec active claim refuses partial close before any report or state change, leaving all claimed specs intact; a partial close moves the one claimed spec to the terminal partial/ and writes its immutable per-close report under docs/handbacks/, leaves the branch finished, is CLEAN under the real trajectory check (R-A exempts partial — the spec's definition is deliberately byte-identical), refuses a second close without residue, and is LOUD when a terminal spec has no report; a close writes NO blockref because the partial/ folder is itself terminal (the anti-livelock property is the move, not a queued-plus-blockref marker), while an existing Deliverable survives the move; a branch trunk holds no claim for is refused. The quarantine arm reverts the product paths and keeps the failing diff as a bar-inert .patch, reverts a RENAME correctly (the --name-status -z stream read as records, not pairs - mutation-proven), leaves the handback bookkeeping alone, refuses when the red is not the lane's own code, and restores rather than reports when a revert step fails."
 tier = "Full"
 expected = "Satisfies SR-144 AcceptanceCriteria via the LLR-144 detail contract"
 automated = "Yes"
@@ -1400,7 +1400,7 @@ phase = 4
 [test.TC-143]
 verifies = ["SR-148", "LLR-149"]
 level = "Unit"
-method = """Run the dispatch admission suite: an exclusive row + a busy lane answers wait (never a parallel claim slipped past the barrier) while the same frontier without one keeps filling lanes; lanes back -> every spine row admits as ONE batch ahead of ordinary work; the §A8 table verbatim per kind x level (attended surfaces attestation/gate rows, single-approve keeps non-dependent work and admits the queued approval batch only at the close, autonomous dispatches them exclusive); the lanes ladder resolves CLI > AGENT_LANES > stack.ini > 1 with absent/malformed/sub-1 falling to serial; gap_census names unverified SRs, orphan rows and draft SNs mechanically and answers [] on a registry-less repo; kind_of agrees with classify at every quarantine."""
+method = "Run the dispatch admission suite: an exclusive row + a busy lane answers wait (never a parallel claim slipped past the barrier) while the same frontier without one keeps filling lanes; lanes back -> the first spine row in LLR-123 order admits alone ahead of ordinary work, preserving adjudication-first partition and the human-held stop, with remaining spine rows queued and spine work dispatchable on either tier; ordinary work fills separate single-WI lanes only when the exclusive barrier permits it; the kind x human-held table surfaces held attestation/gate rows, including at the keep_nondependent close, and never releases an approval hold; delegated-tier attestation/gate rows dispatch singly and exclusively for recorded reviewer judgment; the lanes ladder resolves CLI > AGENT_LANES > stack.ini > 1 with absent/malformed/sub-1 falling to serial; gap_census names unverified SRs, orphan rows and draft SNs mechanically and answers [] on a registry-less repo; kind_of agrees with classify at every quarantine."
 tier = "Full"
 expected = "Satisfies SR-148 AcceptanceCriteria via the LLR-149 admission-table detail contract"
 automated = "Yes"
@@ -1411,7 +1411,7 @@ phase = 4
 [test.TC-144]
 verifies = ["SR-156", "LLR-150"]
 level = "Integration"
-method = """Run the dispatch loop suite on real git repos with the real bar: a spine batch claims as one commit and its worker receives both ids together, ordinary work admitted only after the window closes; a NEEDS-HUMAN worker hands back, the lane's refresh runs as its own subprocess and the branch merges; a red refresh quarantines a merges-nothing branch once and stops the run for a done-asserting one; an attended gate row drains and exits 0 with the approvals banner; the empty-frontier ladder hands the gap census to the intake mint (rows minted in one bookkeeping commit, driven by the same run, deduped on the next idle pass) and counts rung-2 cards off the shared pending read; pause/dirty-trunk/stall/crash-resume keep their serial-loop contracts at lanes=1."""
+method = "Run the dispatch loop suite on real git repos with the real bar: each spine assignment claims one WI in one commit and its worker receives only that id; the next spine WI waits until the previous exclusive lane returns, and ordinary work waits until the exclusive barrier clears; a NEEDS-HUMAN worker hands back, the lane's refresh runs as its own subprocess and the branch merges; a red refresh quarantines a merges-nothing branch once and stops the run for a done-asserting one; an attended gate row drains and exits 0 with the approvals banner; the empty-frontier ladder hands the gap census to the intake mint (rows minted in one bookkeeping commit, driven by the same run, deduped on the next idle pass) and counts rung-2 cards off the shared pending read; pause/dirty-trunk/stall/crash-resume keep their serial-loop contracts at lanes=1. Drive _admit_parked with empty and multi-WI executable assignments: both refuse before any repository mutation or provider launch; a single-WI interrupted lane still resumes under the existing exclusive barrier."
 tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-150 detail contract"
 automated = "Yes"
@@ -1422,7 +1422,7 @@ phase = 4
 [test.TC-145]
 verifies = ["SR-156", "LLR-151"]
 level = "Unit"
-method = """Run the integrator claim suite: a spine claim succeeds on an idle station (the deleted safety-class arm, red-then-green); a hand claim while another holder has the dispatch lock refuses naming the lock and leaves the queue untouched, while dispatch_lock_held=True proceeds; a spine batch claims as ONE bookkeeping commit whose subject joins the ids and whose specs all land in active/<branch>/; every pre-existing single-WI claim contract (abandoned-claim re-cut, relink oracle, minted-id rung, bookkeeping-commit audit) holds unchanged."""
+method = "Run the integrator claim suite: a spine claim succeeds on an idle station (the deleted safety-class arm, red-then-green); a hand claim while another holder has the dispatch lock refuses naming the lock and leaves the queue untouched, while dispatch_lock_held=True proceeds; one spine WI claims in one bookkeeping commit with its sole spec in active/<branch>/; empty and multi-WI claims refuse before mutation, with no partial claim; every pre-existing single-WI claim contract (abandoned-claim re-cut, relink oracle, minted-id rung, bookkeeping-commit audit) holds unchanged. A historical multi-spec claim commit in trunk history remains readable evidence and is neither re-claimed nor split by the claim or recovery path."
 tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-151 detail contract"
 automated = "Yes"
@@ -1521,7 +1521,7 @@ phase = 5
 [test.TC-154]
 verifies = ["SR-148", "LLR-159"]
 level = "Integration"
-method = """Run the loop-order suite: an adjudication row admits ahead of a ready spine batch while the ruled rank table is unchanged; the partition is stable and cannot move work past a human-held stop; a red TC is named only under a `done` citer, with the three exempt statuses and the mixed-target case driven; the census grammar round-trips and matches nothing else."""
+method = "Run the loop-order suite: an adjudication row admits ahead of a ready spine WI while the ruled rank table is unchanged; the partition is stable and cannot move work past a human-held stop; a red TC is named only under a `done` citer, with the three exempt statuses and the mixed-target case driven; the census grammar round-trips and matches nothing else."
 tier = "Smoke"
 expected = "Satisfies SR-148 AcceptanceCriteria via the LLR-159 detail contract"
 automated = "Yes"
@@ -1543,7 +1543,7 @@ phase = 5
 [test.TC-156]
 verifies = ["SR-144", "LLR-161"]
 level = "Integration"
-method = """Run the handback suite over real git worktrees: a partial close is clean under the REAL trajectory check (not a stub), a terminal spec with no report is loud, a second close is refused and leaves no residue, and the disposition is keyed on the report path so a re-sweep mints nothing."""
+method = "Run the handback suite over real git worktrees: a partial close is clean under the REAL trajectory check (not a stub), a terminal spec with no report is loud, a second close is refused and leaves no residue, an injected refusal after creating the single report restores it and leaves the claim/terminal state unchanged, and the disposition is keyed on the report path so a re-sweep mints nothing."
 tier = "Full"
 expected = "Satisfies SR-144 AcceptanceCriteria via the LLR-161 detail contract"
 automated = "Yes"
