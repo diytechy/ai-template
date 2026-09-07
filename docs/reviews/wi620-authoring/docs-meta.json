@@ -1,0 +1,12 @@
+{
+  "name": "docs",
+  "argv": [
+    "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+    "project-trajectory/scripts/check_docs.py",
+    "--root",
+    ".",
+    "--stale"
+  ],
+  "exit": 0,
+  "wall_seconds": 1.4498817499843426
+}

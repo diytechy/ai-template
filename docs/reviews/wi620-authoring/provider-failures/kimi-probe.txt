@@ -1,0 +1,3 @@
+{"type":"error","timestamp":1788819396321,"sessionID":"ses_f820e2a0affe0YS1t5wPfx4pYZ","error":{"name":"UnknownError","data":{"message":"Unexpected server error. Check server logs for details.","ref":"err_ea9128ae"}}}
+
+STDERR:

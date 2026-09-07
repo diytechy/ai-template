@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "rg",
+    "-n",
+    "--fixed-strings",
+    "_rewrite_toml_statuses",
+    "project-trajectory/scripts",
+    "-g",
+    "*.py"
+  ],
+  "exit": 0,
+  "base": "487a0208fd0740afe2ca2cd42da325eda23f973a",
+  "sources": {
+    "project-trajectory/scripts/intake.py": "b4f7469a424be081d8e426eff3c26baa4dedf093ce363a0c4c2f990c30c1e1be",
+    "project-trajectory/scripts/primary_publication.py": "6fbd57d127c57e296284abcbdca659d4bd38470bad57c6f2c9c4f44471a9464c"
+  },
+  "scope": "all Python production source under project-trajectory/scripts; private helper, no downstream caller claim"
+}

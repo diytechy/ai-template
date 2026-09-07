@@ -1,0 +1,22 @@
+{
+  "candidate_tree": "60011497612e009a5e4aaae8bc77d03225b1f049",
+  "argv": [
+    "codex",
+    "exec",
+    "-c",
+    "model_reasoning_effort=medium",
+    "--model",
+    "gpt-6-astra",
+    "--dangerously-bypass-approvals-and-sandbox",
+    "--output-last-message",
+    "/Users/diytechy/Documents/ai-template/out/run-logs/wi-620/review-result.txt"
+  ],
+  "prompt_sha256": "d6369dff081625e630d77e86e3f09c07275a33f0c4b3277b5fdce8e6d292ed3a",
+  "exit": 0,
+  "wall_seconds": 37.65487212501466,
+  "independent_session": true,
+  "family": "OPENAI",
+  "degraded_same_family": true,
+  "unavailable": "Fable session limit; fresh Kimi probe server error",
+  "purpose": "supervised source review, not primary semantic approval"
+}

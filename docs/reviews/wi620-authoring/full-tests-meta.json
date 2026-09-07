@@ -1,0 +1,13 @@
+{
+  "name": "full-tests",
+  "argv": [
+    "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-n",
+    "auto"
+  ],
+  "exit": 0,
+  "wall_seconds": 952.430438957992
+}

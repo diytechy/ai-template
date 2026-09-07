@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "opencode",
+    "run",
+    "--dir",
+    ".",
+    "-m",
+    "opencode-go/kimi-k3",
+    "--auto",
+    "--format",
+    "json"
+  ],
+  "exit": 1,
+  "wall_seconds": 1.1295425000134856
+}

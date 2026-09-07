@@ -37,7 +37,7 @@ must still accept meaning-changing uses by their own authority.
 - SR-026 with LLR-061/TC-061: retain headless assignment and committed evidence
   reconciliation. Judge exact singleton and trailer-AND-spec-move completion together.
 - SR-174 with LLR-153/TC-147 and LLR-154/TC-148: retain at-most-once allocation,
-  deletion non-reuse and the high-water mark. IF-091 remains intake; IF-090 remains
+  deletion non-reuse and the high-water mark. IF-090 remains intake; IF-091 remains
   amendment-reader/admission, neither implicitly becomes a publication interface.
 - SR-178 with LLR-158/TC-153: retain status-independent normative drift, including needs.
 - LLR-159 with TC-154: retain stable partition and human holds.

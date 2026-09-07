@@ -3,20 +3,23 @@ id = "WI-620"
 title = "Correct counterpart proof mapping and complete the combined amendment reanchor"
 workstream = "process"
 sr_refs = ["SR-026", "SR-174", "SR-178", "SR-024", "SR-033", "SR-043", "SR-052", "SR-053", "SR-054", "SR-111", "SR-112", "SR-129", "SR-144", "SR-146", "SR-147", "SR-148", "SR-149", "SR-156", "SR-161", "SR-162", "SR-167", "SR-175", "SR-176", "SR-177"]
-needs = ["WI-608", "WI-611", "WI-613", "WI-614", "WI-615", "WI-616", "WI-617"]
-specref = "docs/reviews/contract_split/014-ADJUDICATE-3e43db9.md"
+needs = ["WI-608", "WI-611", "WI-613", "WI-614", "WI-615", "WI-616", "WI-617", "WI-621", "WI-622", "WI-624"]
 buildtier = "strong"
 safety_class = "spine"
 supersedes = "WI-619"
 +++
+
+## Deliverable
+
+Corrected IF-090/IF-091 attribution and the continuation file path, completed the clause-to-proof map and preserved the entire cumulative amendment scope in a fresh primary reanchor. Source, proof mapping, actual validation and independent source review are recorded in docs/reviews/wi620-authoring/. Supervised execution under the existing pause without an ordinary claim; this records source/proof completion, not semantic acceptance. No registry Status change, accepted snapshot, batch deletion, control window, push or main merge.
 
 ## Context
 
 Drafted by WI-619 (its ## Dispositions section) and minted at its merge - drafts-not-mints, ruling R1/R3.
 
 Continue WI-619's entire transferred Approved-change scope under OI-88. This
-RETURN accepts zero cells. Correct the SpecRef packet's reversed IF-090/IF-091
-attribution: IF-090 is intake_after_merge/mint_gap_rows/context_block; IF-091 is
+RETURN accepts zero cells. Correct the reversed IF-090/IF-091 attribution in
+`docs/reviews/wi612-authoring/OBLIGATIONS.md`: IF-090 is intake_after_merge/mint_gap_rows/context_block; IF-091 is
 amendment/drafted-row records and lane_approval_refusal. Preserve the specified
 counterparts for LLR-153/TC-147 and LLR-154/TC-148 and both interfaces' actual
 meanings and separate Drafted first-approval authority. Do not widen either seam.

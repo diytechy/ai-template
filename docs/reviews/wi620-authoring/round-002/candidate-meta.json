@@ -1,0 +1,125 @@
+{
+  "base": "487a0208fd0740afe2ca2cd42da325eda23f973a",
+  "tree": "62905d73bc1438f7d90d8f1be43421fad280145f",
+  "patch_sha256": "bb889fd2207395aea64387299f35ff06d06e38de46f9acca92caa1c412c22a1c",
+  "checks": [
+    {
+      "name": "regen",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "project-trajectory/scripts/trunk_step.py",
+        "--root",
+        ".",
+        "--regen"
+      ],
+      "exit": 0,
+      "wall_seconds": 9.374908916011918
+    },
+    {
+      "name": "collection",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--collect-only",
+        "tests/test_primary_publication.py",
+        "tests/test_primary_approval.py",
+        "tests/test_primary_adjudication.py"
+      ],
+      "exit": 0,
+      "wall_seconds": 0.2594761250074953
+    },
+    {
+      "name": "full-tests",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-n",
+        "auto"
+      ],
+      "exit": 0,
+      "wall_seconds": 952.430438957992
+    },
+    {
+      "name": "architecture",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_import_layers.py",
+        "tests/test_module_size_ratchet.py",
+        "tests/test_complexity_ratchet.py"
+      ],
+      "exit": 0,
+      "wall_seconds": 2.7607457500416785
+    },
+    {
+      "name": "trace",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "project-trajectory/scripts/trace.py",
+        "--root",
+        ".",
+        "--strict"
+      ],
+      "exit": 0,
+      "wall_seconds": 2.1254428749671206
+    },
+    {
+      "name": "trajectory",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "project-trajectory/scripts/check_trajectory.py",
+        "--root",
+        ".",
+        "--strict"
+      ],
+      "exit": 0,
+      "wall_seconds": 4.674231374985538
+    },
+    {
+      "name": "docs",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "project-trajectory/scripts/check_docs.py",
+        "--root",
+        ".",
+        "--stale"
+      ],
+      "exit": 0,
+      "wall_seconds": 1.3603206669795327
+    },
+    {
+      "name": "smoke",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-n",
+        "auto",
+        "-m",
+        "smoke"
+      ],
+      "exit": 0,
+      "wall_seconds": 52.2304484579945
+    },
+    {
+      "name": "budget",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "scripts/check_smoke_budget.py",
+        "--mode",
+        "enforce",
+        "--elapsed",
+        "52.2304484579945"
+      ],
+      "exit": 0,
+      "wall_seconds": 0.03233174997149035
+    }
+  ]
+}

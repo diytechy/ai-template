@@ -1,8 +1,17 @@
+import os
 import subprocess
+
+import pytest
 import sys
 from pathlib import Path
 
-from conftest import SCRIPTS, make_minimal_project, record_ids, run_py, set_process_key
+from conftest import (
+    SCRIPTS,
+    make_minimal_project,
+    record_ids,
+    run_py,
+    set_process_key,
+)
 
 import gen_trajectory
 import primary_publication as pp
@@ -32,13 +41,13 @@ def repo(tmp_path):
 def test_completion_rejects_restamped_foreign_tree(tmp_path, monkeypatch):
     root = repo(tmp_path)
     base = git(root, "rev-parse", "HEAD")
-    turn = {"turn": "WI-1-" + base, "spec": "docs/work/queued/WI-1-x.md"}
+    turn = {"wi": "WI-1", "turn": "WI-1-" + base, "spec": "docs/work/queued/WI-1-x.md"}
     (root / "docs/work/complete").mkdir(parents=True)
     (root / "docs/work/complete/WI-1-x.md").write_text("closed\n")
     (root / "foreign").write_text("smuggled\n")
     git(root, "add", "-A")
     tree = git(root, "write-tree")
-    msg = "x\n\n{}{}\nPublication-Candidate: {}\nPublication-Tree: {}".format(
+    msg = "adjudicate: WI-1 primary publication\n\n{}{}\nPublication-Candidate: {}\nPublication-Tree: {}".format(
         pp.TRAILER, turn["turn"], base, tree
     )
     git(root, "commit", "-qm", msg)
@@ -54,8 +63,8 @@ def test_completion_requires_candidate_as_first_parent(tmp_path, monkeypatch):
     git(root, "add", "-A")
     git(root, "commit", "-qm", "other")
     tree = git(root, "show", "-s", "--format=%T", "HEAD")
-    turn = {"turn": "WI-1-" + base, "spec": "docs/work/queued/WI-1-x.md"}
-    msg = "x\n\n{}{}\nPublication-Candidate: {}\nPublication-Tree: {}".format(
+    turn = {"wi": "WI-1", "turn": "WI-1-" + base, "spec": "docs/work/queued/WI-1-x.md"}
+    msg = "adjudicate: WI-1 primary publication\n\n{}{}\nPublication-Candidate: {}\nPublication-Tree: {}".format(
         pp.TRAILER, turn["turn"], base, tree
     )
     git(root, "commit", "--allow-empty", "-qm", msg)
@@ -172,7 +181,8 @@ def test_project_runs_candidate_bar_with_primary_harness_python(tmp_path, monkey
     assert sentinel.read_text(encoding="utf-8") == "used"
 
 
-def test_real_return_publish_and_completion_replay(tmp_path, monkeypatch):
+@pytest.mark.parametrize("product_bar", [False, True], ids=["scoped", "required-bar"])
+def test_real_return_publish_and_completion_replay(tmp_path, monkeypatch, product_bar):
     root = repo(tmp_path)
     spec = root / "docs/work/queued/WI-1-x.md"
     spec.write_text(
@@ -181,6 +191,17 @@ def test_real_return_publish_and_completion_replay(tmp_path, monkeypatch):
     step = root / "project-trajectory/scripts/trunk_step.py"
     step.parent.mkdir(parents=True)
     step.write_text("import sys\nsys.exit(0)\n")
+    if product_bar:
+        step.write_text(
+            "from pathlib import Path\n"
+            "Path('derived-product').write_text('regenerated\\n')\n"
+        )
+        (step.parent / "check.py").write_text(
+            "from pathlib import Path\n"
+            "assert Path('derived-product').read_text() == 'regenerated\\n'\n"
+            "Path('bar-ran').write_text('checked\\n')\n"
+            "print('  PASS  candidate-check   0.0s')\n"
+        )
     git(root, "add", "-A")
     git(root, "commit", "-qm", "base")
     turn = primary_adjudication.begin(root, "WI-1")
@@ -246,18 +267,25 @@ def test_real_return_publish_and_completion_replay(tmp_path, monkeypatch):
     identity = verdict.governing_identity(
         root, turn["primary_branch"], candidate, carrier=pp.carrier_candidate
     )
-    # Cold identity proof must not fetch objects or rewrite FETCH_HEAD.
+    # A cold query must preserve dirty as well as clean primary state. Compare
+    # every file, including index, refs, worktree, objects and FETCH_HEAD.
+    if product_bar:
+        assert (root / "bar-ran").read_text() == "checked\n"
+    (root / "staged-sentinel").write_text("staged\n")
+    git(root, "add", "staged-sentinel")
+    (root / "staged-sentinel").write_text("unstaged over staged\n")
+    (root / "untracked-sentinel").write_text("untracked\n")
+    before = {
+        p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()
+    }
     pp._VERIFIED_PUBLICATIONS.clear()
-    observed = [root / ".git/FETCH_HEAD", *sorted((root / ".git/objects").rglob("*"))]
-    before_objects = {str(p): p.read_bytes() for p in observed if p.is_file()}
     assert pp.carrier_candidate(root, landed) == candidate
-    after_paths = [
-        root / ".git/FETCH_HEAD",
-        *sorted((root / ".git/objects").rglob("*")),
-    ]
-    assert {
-        str(p): p.read_bytes() for p in after_paths if p.is_file()
-    } == before_objects
+    after = {
+        p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()
+    }
+    assert after == before
+    git(root, "reset", "--hard", landed)
+    (root / "untracked-sentinel").unlink()
     assert (
         verdict.governing_identity(
             root, turn["primary_branch"], carrier=pp.carrier_candidate
@@ -286,8 +314,6 @@ def test_real_return_publish_and_completion_replay(tmp_path, monkeypatch):
         assert pp.carrier_candidate(root, forged) is None
         if forged_message == message + "\n" + pp.TRAILER + turn_id:
             assert pp._verified_candidate(root, turn, forged) is None
-    import os
-
     bad_author = subprocess.run(
         [
             "git",
@@ -331,7 +357,7 @@ def test_real_return_publish_and_completion_replay(tmp_path, monkeypatch):
         "commit",
         "--allow-empty",
         "-qm",
-        "forged publication\n\n{}{}\nPublication-Candidate: {}\n"
+        "adjudicate: WI-1 primary publication\n\n{}{}\nPublication-Candidate: {}\n"
         "Publication-Tree: {}".format(pp.TRAILER, turn["turn"], landed, forged_tree),
     )
     assert pp.completed(root, turn)
@@ -455,14 +481,14 @@ def test_bootstrapped_return_publication_replay_keeps_real_regeneration_fresh(
     assert git(root, "status", "--porcelain") == ""
 
 
-def test_real_first_approval_snapshot_and_successor_are_one_commit(
-    tmp_path, monkeypatch
-):
+def _first_approval_candidate(tmp_path, status_key="status"):
     root = repo(tmp_path)
     registry = root / "docs/requirements/low-level-requirements.toml"
     registry.parent.mkdir(parents=True, exist_ok=True)
     registry.write_text(
-        '[design.LLR-001]\ntitle="row"\ndetail="detail"\nrationale="why"\nstatus="Drafted"\n'
+        '[design.LLR-001]\ntitle="row"\ndetail="detail"\nrationale="why"\nstatus="Drafted"\n'.replace(
+            "status=", status_key + "="
+        )
     )
     snapshot = (
         root
@@ -519,6 +545,28 @@ def test_real_first_approval_snapshot_and_successor_are_one_commit(
     git(root, "add", "-A")
     git(root, "commit", "-qm", "ADJUDICATE telemetry")
     candidate = git(root, "rev-parse", "HEAD")
+    return root, turn, candidate, registry, snapshot
+
+
+@pytest.mark.parametrize(
+    "carrier_fault",
+    [
+        "forged-subject",
+        "extra-path",
+        "missing-path",
+        "cross-WI-close",
+        "malformed-successor",
+        "partial-snapshot",
+        "unreviewed-decision",
+        "stale-proposal",
+        "wrong-WI",
+    ],
+)
+def test_real_first_approval_snapshot_and_successor_are_one_commit(
+    tmp_path, monkeypatch, carrier_fault
+):
+    root, turn, candidate, registry, snapshot = _first_approval_candidate(tmp_path)
+    turn_id = turn["turn"]
     monkeypatch.setattr(pp.baseline_snapshot, "_today", lambda: "2001-01-01")
     closed, refusal = pp.publish(root, turn, candidate)
     assert refusal is None and closed == ["WI-1"]
@@ -530,3 +578,109 @@ def test_real_first_approval_snapshot_and_successor_are_one_commit(
     monkeypatch.setattr(pp.baseline_snapshot, "_today", lambda: "2099-12-31")
     assert pp.completed(root, turn)  # replay is independent of today's date
     assert git(root, "rev-list", "--count", candidate + "..HEAD") == "1"
+
+    # Forge one defect onto a real accepted carrier. Keep its real candidate,
+    # receipt and adjudicator author, so another invalid field cannot mask it.
+    landed = git(root, "rev-parse", "HEAD")
+    message = git(root, "show", "-s", "--format=%B", landed)
+    author = git(root, "show", "-s", "--format=%an%x00%ae", landed).split("\0")
+    complete = root / "docs/archive/work/complete/WI-1-x.md"
+    selection = root / pp.primary_turn.record_path(turn)
+    if carrier_fault == "forged-subject":
+        message = "unreviewed publication subject\n" + message.partition("\n")[2]
+    elif carrier_fault == "extra-path":
+        (root / "unexpected").write_text("unreviewed effect\n")
+    elif carrier_fault == "missing-path":
+        complete.unlink()
+    elif carrier_fault == "cross-WI-close":
+        complete.rename(complete.with_name("WI-999-x.md"))
+    elif carrier_fault == "malformed-successor":
+        successors[0].write_text("not a valid spec\n")
+    elif carrier_fault == "partial-snapshot":
+        snapshot.write_text(
+            git(root, "show", candidate + ":" + snapshot.relative_to(root).as_posix())
+        )
+    elif carrier_fault == "unreviewed-decision":
+        text = complete.read_text()
+        assert 'classification="approve"' in text
+        complete.write_text(
+            text.replace('classification="approve"', 'classification="return"')
+        )
+    elif carrier_fault == "stale-proposal":
+        text = selection.read_text()
+        assert turn["proposal_spec_blob"] in text
+        selection.write_text(text.replace(turn["proposal_spec_blob"], "0" * 40))
+    else:
+        assert carrier_fault == "wrong-WI"
+        foreign = (
+            selection.parent.with_name(
+                selection.parent.name.replace("WI-1-", "WI-999-")
+            )
+            / selection.name
+        )
+        foreign.parent.mkdir()
+        foreign.write_text(selection.read_text().replace("WI-1", "WI-999"))
+        selection.unlink()
+        message = message.replace(turn_id, turn_id.replace("WI-1-", "WI-999-"))
+        message = message.replace(
+            "adjudicate: WI-1 primary publication",
+            "adjudicate: WI-999 primary publication",
+        )
+    git(root, "add", "-A")
+    forged_tree = git(root, "write-tree")
+    assert (forged_tree == git(root, "rev-parse", landed + "^{tree}")) == (
+        carrier_fault == "forged-subject"
+    )
+    forged = subprocess.check_output(
+        [
+            "git",
+            "-C",
+            str(root),
+            "commit-tree",
+            forged_tree,
+            "-p",
+            candidate,
+            "-m",
+            message,
+        ],
+        text=True,
+        env=dict(os.environ, GIT_AUTHOR_NAME=author[0], GIT_AUTHOR_EMAIL=author[1]),
+    ).strip()
+    git(root, "reset", "--hard", landed)
+    pp._VERIFIED_PUBLICATIONS.clear()
+    assert pp.carrier_candidate(root, forged) is None, carrier_fault
+    assert pp.carrier_candidate(root, landed) == candidate
+
+
+def test_unwritable_status_is_a_publication_and_carrier_refusal(tmp_path, monkeypatch):
+    # Valid TOML reaches the semantic Drafted check, but the conservative writer
+    # only rewrites its canonical bare-key layout. Refuse without exiting.
+    root, turn, candidate, _registry, _snapshot = _first_approval_candidate(
+        tmp_path, status_key='"status"'
+    )
+    closed, refusal = pp.publish(root, turn, candidate)
+    assert closed is None and "refusing to report a flip" in refusal
+    assert git(root, "rev-parse", "HEAD") == candidate
+    assert git(root, "status", "--porcelain") == ""
+    tree = git(root, "rev-parse", candidate + "^{tree}")
+    message = "adjudicate: WI-1 primary publication\n\n{}{}\nPublication-Candidate: {}".format(
+        pp.TRAILER, turn["turn"], candidate
+    )
+    carrier = git(root, "commit-tree", tree, "-p", candidate, "-m", message)
+    original = pp.intake._rewrite_toml_statuses
+    refusals = []
+
+    def observed(*args):
+        refusal = original(*args)
+        refusals.append(refusal)
+        return refusal
+
+    monkeypatch.setattr(pp.intake, "_rewrite_toml_statuses", observed)
+    before = {
+        p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()
+    }
+    assert pp.carrier_candidate(root, carrier) is None
+    assert len(refusals) == 1 and "refusing to report a flip" in refusals[0]
+    assert {
+        p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()
+    } == before

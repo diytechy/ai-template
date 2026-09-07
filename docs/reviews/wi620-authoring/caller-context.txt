@@ -1,0 +1,99 @@
+Existing publication consumer:
+def _apply_approval(root, candidate, plan):
+    statuses = plan.get("statuses") or {}
+    for rel, rows in statuses.items():
+        live = Path(root) / rel
+        refusal = intake._rewrite_toml_statuses(live, rel, list(rows))
+        if refusal:
+            return refusal
+    if statuses or plan.get("approves"):
+
+Legacy intake entry:
+def _apply_flips(root, tables, located):
+    """SKIP an already-blessed row, REFUSE everything else, WRITE NOTHING; the
+    sorted flipped ids, which is now always empty — and permanently so. OI-45
+    (ruled 2026-08-20, executed by WI-490) settled the question this function
+    used to carry open.
+
+    **THE STATE THIS ACT MOVED FROM RETIRED AT D-9 STEP 7.** It enacted ruled
+    decision 2's cheap outcome (`Modified` -> `Approved` for a row judged
+    no-scope-moved); under the snapshot ladder an amendment never flips its
+    row, so an amended row already reads `Approved` and there is no cell to
+    move. D-9 step 7 left two candidate resolutions on the table — re-bless a
+    drifted `Approved` row under loop-hold (a), or retire the arm (b) — and
+    OI-45 RULED (b): the guard below is the ruled shape, not a stopgap awaiting
+    an owner call.
+
+    OI-45 IS THE RECORD, and what it retires is precise: MECHANICAL
+    approval — a scripted path moving a Status cell with no judgment behind
+    it. It does not say no agent may ever move a Status cell. An LLM session or
+    adjudicator is fully expected to flip a row to `Approved`, and further to
+    `Founded`, for spine content past the declared human-approval level
+    (`agent_common.human_holds` says which) — at the human's request, or when
+    working through content the level does not hold to human approval. The
+    dial says who holds what; this function's refusal says only that no SCRIPT
+    decides. `_cmd_snapshot`'s authority-gated refresh is the one mechanical
+    door the approval record has.
+
+    **THE MACHINERY FOR RE-BLESSING IS GONE (2026-08-20)**: the write loops it
+    left standing were unreachable behind the refusal, so what looked like
+    "kept intact for (a)" was dead code with a source-grep test pinning it. The
+    signature keeps `root`/`tables` because the caller's contract is unchanged
+    — not because a future ruling might restore a writer here; restoring one
+    would be reopening OI-45, not extending this function."""
+    flipped = []
+    for rid, (rel, status, row, status_ix) in sorted(located.items()):
+        if status is None:
+            # The row exists and carries NO Status at all. Absent is not
+            # "not Modified" — there is nothing here to re-verify, and skipping
+            # it silently reports a clean adjudication over a row that never
+            # staged one. Fail closed, naming the row.
+            raise SystemExit(
+                "intake: {} in {} has no `{}` — a row with no status cannot be "
+                "re-verified, and treating that as a no-op would report an "
+                "adjudication the registry does not record".format(
+                    rid, tables[rel][0], _STATUS_KEY
+                )
+            )
+        # RESOLVED AT D-9 STEP 7, as the guard this replaces promised. It read
+        # `if status != "Modified": continue` — one silent skip over two unrelated
+        # states: an already-blessed row (idempotent, correct) and a row this act
+        # has no business touching (silent, wrong). The resolution splits them.
+        if status == "Approved":
+            # Already at the value this act writes — the one legitimate skip, and
+            # the idempotence `flip_verified`'s docstring advertises.
+            continue
+        # Everything else is REFUSED, naming the row. Fail-CLOSED and strictly
+        # less permissive than the skip it replaces:
+        #   `Drafted`  a FIRST approval, not an adjudication's cheap outcome.
+        #   `Founded`  ABOVE `Approved` — writing `Approved` moves it DOWN.
+        #   anything   outside the closed enum, already an integrity error.
+        raise SystemExit(
+            'intake: {} in {} reads `{} = "{}"` — this act moves a row TO '
+            "`Approved` and the only state it moved FROM (`Modified`) retired at "
+            "D-9 migration step 7. Under the snapshot ladder an amendment does "
+            "not flip its row at all, so there is no cell for a mechanical "
+            "adjudication to move: an amended row still reads `Approved`, and "
+            "what it owes is a fresh human read plus `intake.py snapshot` in the "
+            "same commit. Refusing rather than skipping, so the row is named "
+            "instead of being passed over.".format(
+                rid, tables[rel][0], _STATUS_KEY, status
+            )
+        )
+    # THE WRITE LOOPS AND THE COPY WENT WITH THE ARM (2026-08-20, the batch
+    # review's MINOR-12). Everything that used to follow the refusal above — the
+    # per-carrier status write, the CSV re-emit, and the `copy_live` that rode
+    # them — was UNREACHABLE from the moment the refusal replaced the silent
+    # skip: the loop now either `continue`s an already-blessed row or raises.
+    # Dead code that LOOKS live is worse than no code, and a test was pinning a
+    # guard on it by source grep, which reads as coverage of a path nothing can
+    # execute. OI-45 RULED (b) RETIRE THE ARM (2026-08-20, executed by WI-490):
+    # mechanical approval is retired for good, not deferred, and
+    # `_cmd_snapshot`'s authority-gated refresh is the one mechanical door the
+    # approval record has. An agent may still move a Status cell through the
+    # reviewed-commit path under the declared authority dial
+    # (`agent_common.human_holds`) — the retirement is of this SCRIPT, not of
+    # agent judgment. Restoring writes here means reopening the ruling, not
+    # un-commenting this.
+    return sorted(flipped)
+

@@ -1,0 +1,18 @@
+VERDICT: APPROVE
+
+No blocking findings in the supplied source/proof candidate.
+
+- **Refusal contract:** the helper returns before its write when any requested rewrite fails. The supplied caller census and `_apply_approval` show that its production caller immediately propagates the diagnostic. The quoted-status regression reaches the actual writer during both publication and carrier reconstruction; its observation prevents missing-receipt rejection from masking the intended query path.
+- **Subject repair:** writer and verifier share `_subject`. The isolated mutation preserves the genuine tree, parent, turn, receipt and author. The supplied failing reproducer demonstrates the defect; the final source rejects it. Existing negative fixtures retain canonical subjects, preserving their intended coverage.
+- **Replay and unchanged bytes:** cache-cleared scoped and required-bar queries compare primary file contents, including index, refs, objects, FETCH_HEAD and staged/unstaged/untracked work. The deterministic bar output makes omitted replay observable.
+- **Proof and trace correspondence:** the map distinguishes carrier-tree corruption from construction admission and explicitly labels shared-call-path inference. TC-147’s module citation and TC-205’s explicit regression citation cover the two status-refusal arms without weakening Method or Full tier.
+- **Bookkeeping and authority:** the supplied reanchor retains the 52-row scope, cumulative context and reservations. Dependent owners point to WI-623; separate first-approval ownership remains explicit. Source-work closure is distinguished from the tested mechanical close.
+
+Nonblocking observations:
+
+- **Fixture limits remain material:** byte comparisons do not establish filesystem metadata invariance or arbitrary-script isolation. The required-bar fixture uses small deterministic scripts. The supplied proof map appropriately limits these claims.
+- **Validation is split across revisions:** the recorded full suite passed before the subject change. Final focused results report 208 passed, architecture 11 passed, and smoke 1696 passed/4 skipped within budget. These support the later change without establishing a post-subject full-suite result; the package states that distinction correctly.
+
+The prior blocking caller-census and forged-subject findings are resolved. Prior nonblocking observations are corrected or explicitly bounded.
+
+This verdict covers only the supplied source/proof review. I used no tools, independently executed no checks, and grant no primary semantic acceptance; all amendments remain pending.

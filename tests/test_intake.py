@@ -2060,9 +2060,10 @@ def test_a_toml_row_with_no_status_line_refuses_rather_than_claiming_a_flip(tmp_
     # same thing without routing through the policy guard, which since D-9
     # step 7 refuses every located row before the writer is reached.
     sr_toml = _write(root, SR_TOML.replace('status = "Drafted"\n', ""))
-    with pytest.raises(SystemExit) as excinfo:
-        intake._rewrite_toml_statuses(sr_toml, SR_REL, ["SR-001"])
-    assert "refusing to report a flip that was not written" in str(excinfo.value)
+    before = sr_toml.read_bytes()
+    refusal = intake._rewrite_toml_statuses(sr_toml, SR_REL, ["SR-001"])
+    assert "refusing to report a flip that was not written" in refusal
+    assert sr_toml.read_bytes() == before
 
 
 def test_an_unknown_row_id_refuses_the_flip(tmp_path):

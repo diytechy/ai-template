@@ -172,6 +172,10 @@ def derive_tree(root, turn, candidate="HEAD", tier="all", *, import_objects=True
         return None, None, None, str(exc)
 
 
+def _subject(turn):
+    return "adjudicate: {} primary publication".format(turn["wi"])
+
+
 def publish(root, turn, candidate="HEAD", tier="all"):
     """Replay, verify and atomically commit one publication; lock is caller-held."""
     root = Path(root).resolve()
@@ -199,8 +203,8 @@ def publish(root, turn, candidate="HEAD", tier="all"):
             GIT_AUTHOR_NAME=author["name"],
             GIT_AUTHOR_EMAIL=author["email"],
         )
-        msg = "adjudicate: {} primary publication\n\n{}{}\nPublication-Candidate: {}\nPublication-Tree: {}".format(
-            turn["wi"], TRAILER, turn["turn"], cand, tree
+        msg = "{}\n\n{}{}\nPublication-Candidate: {}\nPublication-Tree: {}".format(
+            _subject(turn), TRAILER, turn["turn"], cand, tree
         )
         msg += "\nPublication-Verification: " + json.dumps(
             plan["verification"], sort_keys=True
@@ -245,6 +249,8 @@ def _verified_candidate(root, turn, rev):
     if proof in _VERIFIED_PUBLICATIONS:
         return _git(root, "rev-parse", rev + "^1")
     body = _git(root, "show", "-s", "--format=%B", rev)
+    if body.partition("\n")[0] != _subject(turn):
+        return None
     if [line for line in body.splitlines() if line.startswith(TRAILER)] != [token]:
         return None
     tree = _git(root, "show", "-s", "--format=%T", rev)

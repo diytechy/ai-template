@@ -1,0 +1,15 @@
+{
+  "name": "collection",
+  "argv": [
+    "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "--collect-only",
+    "tests/test_primary_publication.py",
+    "tests/test_primary_approval.py",
+    "tests/test_primary_adjudication.py"
+  ],
+  "exit": 0,
+  "wall_seconds": 0.22890283301239833
+}

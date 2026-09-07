@@ -1,0 +1,42 @@
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [ 48%]
+........................................................................ [ 97%]
+....                                                                     [100%]
+==================================== ERRORS ====================================
+______________ ERROR collecting tests/test_primary_publication.py ______________
+ImportError while importing test module '/private/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi620-authoring-8sb1gu0m/checkout/tests/test_primary_publication.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_primary_publication.py:10: in <module>
+    import gen_trajectory
+E   ModuleNotFoundError: No module named 'gen_trajectory'
+_______________ ERROR collecting tests/test_primary_approval.py ________________
+ImportError while importing test module '/private/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi620-authoring-8sb1gu0m/checkout/tests/test_primary_approval.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_primary_approval.py:9: in <module>
+    from kitlib import verdict as KV
+E   ModuleNotFoundError: No module named 'kitlib'
+_____________ ERROR collecting tests/test_primary_adjudication.py ______________
+ImportError while importing test module '/private/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/wi620-authoring-8sb1gu0m/checkout/tests/test_primary_adjudication.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_primary_adjudication.py:9: in <module>
+    import agent_common as ac
+E   ModuleNotFoundError: No module named 'agent_common'
+=========================== short test summary info ============================
+ERROR tests/test_primary_publication.py - ImportError while importing test mo...
+ERROR tests/test_primary_approval.py - ImportError while importing test modul...
+ERROR tests/test_primary_adjudication.py - ImportError while importing test m...
+148 passed, 3 errors in 97.39s (0:01:37)

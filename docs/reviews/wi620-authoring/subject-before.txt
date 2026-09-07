@@ -1,0 +1,118 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_real_first_approval_snapshot_and_successor_are_one_commit[forged-subject] _
+
+tmp_path = PosixPath('/private/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/pytest-of-diytechy/pytest-2043/test_real_first_approval_snaps0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10abac2b0>
+carrier_fault = 'forged-subject'
+
+    @pytest.mark.parametrize(
+        "carrier_fault",
+        [
+            "forged-subject",
+            "extra-path",
+            "missing-path",
+            "cross-WI-close",
+            "malformed-successor",
+            "partial-snapshot",
+            "unreviewed-decision",
+            "stale-proposal",
+            "wrong-WI",
+        ],
+    )
+    def test_real_first_approval_snapshot_and_successor_are_one_commit(
+        tmp_path, monkeypatch, carrier_fault
+    ):
+        root, turn, candidate, registry, snapshot = _first_approval_candidate(tmp_path)
+        turn_id = turn["turn"]
+        monkeypatch.setattr(pp.baseline_snapshot, "_today", lambda: "2001-01-01")
+        closed, refusal = pp.publish(root, turn, candidate)
+        assert refusal is None and closed == ["WI-1"]
+        assert 'status = "Approved"' in registry.read_text()
+        assert snapshot.read_bytes() == registry.read_bytes()
+        successors = list((root / "docs/work/queued").glob("WI-002-*.md"))
+        assert len(successors) == 1 and 'needs = ["WI-1"]' in successors[0].read_text()
+        assert "WI = 2" in (root / "docs/id-watermark").read_text()
+        monkeypatch.setattr(pp.baseline_snapshot, "_today", lambda: "2099-12-31")
+        assert pp.completed(root, turn)  # replay is independent of today's date
+        assert git(root, "rev-list", "--count", candidate + "..HEAD") == "1"
+    
+        # Forge one defect onto a real accepted carrier. Keep its real candidate,
+        # receipt and adjudicator author, so another invalid field cannot mask it.
+        landed = git(root, "rev-parse", "HEAD")
+        message = git(root, "show", "-s", "--format=%B", landed)
+        author = git(root, "show", "-s", "--format=%an%x00%ae", landed).split("\0")
+        complete = root / "docs/archive/work/complete/WI-1-x.md"
+        selection = root / pp.primary_turn.record_path(turn)
+        if carrier_fault == "forged-subject":
+            message = "unreviewed publication subject\n" + message.partition("\n")[2]
+        elif carrier_fault == "extra-path":
+            (root / "unexpected").write_text("unreviewed effect\n")
+        elif carrier_fault == "missing-path":
+            complete.unlink()
+        elif carrier_fault == "cross-WI-close":
+            complete.rename(complete.with_name("WI-999-x.md"))
+        elif carrier_fault == "malformed-successor":
+            successors[0].write_text("not a valid spec\n")
+        elif carrier_fault == "partial-snapshot":
+            snapshot.write_text(
+                git(root, "show", candidate + ":" + snapshot.relative_to(root).as_posix())
+            )
+        elif carrier_fault == "unreviewed-decision":
+            text = complete.read_text()
+            assert 'classification="approve"' in text
+            complete.write_text(
+                text.replace('classification="approve"', 'classification="return"')
+            )
+        elif carrier_fault == "stale-proposal":
+            text = selection.read_text()
+            assert turn["proposal_spec_blob"] in text
+            selection.write_text(text.replace(turn["proposal_spec_blob"], "0" * 40))
+        else:
+            assert carrier_fault == "wrong-WI"
+            foreign = (
+                selection.parent.with_name(
+                    selection.parent.name.replace("WI-1-", "WI-999-")
+                )
+                / selection.name
+            )
+            foreign.parent.mkdir()
+            foreign.write_text(selection.read_text().replace("WI-1", "WI-999"))
+            selection.unlink()
+            message = message.replace(turn_id, turn_id.replace("WI-1-", "WI-999-"))
+        git(root, "add", "-A")
+        forged_tree = git(root, "write-tree")
+        assert (forged_tree == git(root, "rev-parse", landed + "^{tree}")) == (
+            carrier_fault == "forged-subject"
+        )
+        forged = subprocess.check_output(
+            [
+                "git",
+                "-C",
+                str(root),
+                "commit-tree",
+                forged_tree,
+                "-p",
+                candidate,
+                "-m",
+                message,
+            ],
+            text=True,
+            env=dict(os.environ, GIT_AUTHOR_NAME=author[0], GIT_AUTHOR_EMAIL=author[1]),
+        ).strip()
+        git(root, "reset", "--hard", landed)
+        pp._VERIFIED_PUBLICATIONS.clear()
+>       assert pp.carrier_candidate(root, forged) is None, carrier_fault
+E       AssertionError: forged-subject
+E       assert 'be2b2f54366c71cdbd40abc6c1d709eea35a9022' is None
+E        +  where 'be2b2f54366c71cdbd40abc6c1d709eea35a9022' = <function carrier_candidate at 0x10aa0c540>(PosixPath('/private/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/pytest-of-diytechy/pytest-2043/test_real_first_approval_snaps0/r'), 'b7163353fdfdd1a048697b0e935adfe2850d51e5')
+E        +    where <function carrier_candidate at 0x10aa0c540> = pp.carrier_candidate
+
+tests/test_primary_publication.py:647: AssertionError
+----------------------------- Captured stdout call -----------------------------
+intake: minted WI-002 at docs/work/queued/WI-002-continue-exact-work.md
+intake: minted WI-002 at docs/work/queued/WI-002-continue-exact-work.md
+intake: minted WI-002 at docs/work/queued/WI-002-continue-exact-work.md
+=========================== short test summary info ============================
+FAILED tests/test_primary_publication.py::test_real_first_approval_snapshot_and_successor_are_one_commit[forged-subject]
+1 failed in 2.21s

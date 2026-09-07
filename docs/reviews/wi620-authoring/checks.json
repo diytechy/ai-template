@@ -1,0 +1,145 @@
+{
+  "base": "487a0208fd0740afe2ca2cd42da325eda23f973a",
+  "checks": [
+    {
+      "name": "regen",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "project-trajectory/scripts/trunk_step.py",
+        "--root",
+        ".",
+        "--regen"
+      ],
+      "exit": 0,
+      "wall_seconds": 9.356182417017408
+    },
+    {
+      "name": "collection",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--collect-only",
+        "tests/test_primary_publication.py",
+        "tests/test_primary_approval.py",
+        "tests/test_primary_adjudication.py"
+      ],
+      "exit": 0,
+      "wall_seconds": 0.22890283301239833
+    },
+    {
+      "name": "full-tests",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-n",
+        "auto"
+      ],
+      "exit": 0,
+      "wall_seconds": 952.430438957992,
+      "historical": true,
+      "runtime_source_tree": "62905d73bc1438f7d90d8f1be43421fad280145f",
+      "limit": "Before final narrow subject predicate and its fixture changes"
+    },
+    {
+      "name": "focused",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-n",
+        "auto",
+        "tests/test_primary_publication.py",
+        "tests/test_primary_approval.py",
+        "tests/test_primary_adjudication.py",
+        "tests/test_primary_session.py",
+        "tests/test_verdict_record.py",
+        "tests/test_intake.py"
+      ],
+      "exit": 0,
+      "wall_seconds": 108.13142708298983
+    },
+    {
+      "name": "architecture",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_import_layers.py",
+        "tests/test_module_size_ratchet.py",
+        "tests/test_complexity_ratchet.py"
+      ],
+      "exit": 0,
+      "wall_seconds": 2.752748375001829
+    },
+    {
+      "name": "trace",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "project-trajectory/scripts/trace.py",
+        "--root",
+        ".",
+        "--strict"
+      ],
+      "exit": 0,
+      "wall_seconds": 2.4451899160048924
+    },
+    {
+      "name": "trajectory",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "project-trajectory/scripts/check_trajectory.py",
+        "--root",
+        ".",
+        "--strict"
+      ],
+      "exit": 0,
+      "wall_seconds": 5.169004082970787
+    },
+    {
+      "name": "docs",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "project-trajectory/scripts/check_docs.py",
+        "--root",
+        ".",
+        "--stale"
+      ],
+      "exit": 0,
+      "wall_seconds": 1.4498817499843426
+    },
+    {
+      "name": "smoke",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-n",
+        "auto",
+        "-m",
+        "smoke"
+      ],
+      "exit": 0,
+      "wall_seconds": 54.4808795840363
+    },
+    {
+      "name": "budget",
+      "argv": [
+        "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+        "scripts/check_smoke_budget.py",
+        "--mode",
+        "enforce",
+        "--elapsed",
+        "54.4808795840363"
+      ],
+      "exit": 0,
+      "wall_seconds": 0.032832249999046326
+    }
+  ]
+}

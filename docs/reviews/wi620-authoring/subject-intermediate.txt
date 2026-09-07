@@ -1,0 +1,392 @@
+.....FF...........                                                       [100%]
+=================================== FAILURES ===================================
+____________ test_real_return_publish_and_completion_replay[scoped] ____________
+
+tmp_path = PosixPath('/private/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/pytest-of-diytechy/pytest-2044/test_real_return_publish_and_c0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10a70cc00>
+product_bar = False
+
+    @pytest.mark.parametrize("product_bar", [False, True], ids=["scoped", "required-bar"])
+    def test_real_return_publish_and_completion_replay(tmp_path, monkeypatch, product_bar):
+        root = repo(tmp_path)
+        spec = root / "docs/work/queued/WI-1-x.md"
+        spec.write_text(
+            '+++\nid = "WI-1"\ntitle = "clean close"\nsafety_class = "adjudication"\nspecref = "x"\n+++\n\n## Context\n\njudge\n'
+        )
+        step = root / "project-trajectory/scripts/trunk_step.py"
+        step.parent.mkdir(parents=True)
+        step.write_text("import sys\nsys.exit(0)\n")
+        if product_bar:
+            step.write_text(
+                "from pathlib import Path\n"
+                "Path('derived-product').write_text('regenerated\\n')\n"
+            )
+            (step.parent / "check.py").write_text(
+                "from pathlib import Path\n"
+                "assert Path('derived-product').read_text() == 'regenerated\\n'\n"
+                "Path('bar-ran').write_text('checked\\n')\n"
+                "print('  PASS  candidate-check   0.0s')\n"
+            )
+        git(root, "add", "-A")
+        git(root, "commit", "-qm", "base")
+        turn = primary_adjudication.begin(root, "WI-1")
+        base = turn["base"]
+        turn_id = turn["turn"]
+        proposal = verdict.tree_identity(root, base)
+        approval = (
+            '\n## Approval\n\n```toml\nversion = 1\nturn = "{}"\n'
+            'base = "{}"\nproposal = "{}"\ndecision = []\n```\n'
+        ).format(turn_id, base, proposal)
+        spec.write_text(spec.read_text() + approval)
+        log = root / "docs/iteration/WI-1.log"
+        log.parent.mkdir(parents=True)
+        log.write_text(
+            "# phase: ADJUDICATE\n# wi: WI-1\n# base: {}\n# provider: test\n# roster-row: test\n# model: test\n# session-id: s\n# invocation-id: i\n".format(
+                base[:12]
+            )
+        )
+        review = root / "docs/reviews/WI-1-001-REVIEW-A.md"
+        review.parent.mkdir(parents=True, exist_ok=True)
+        review.write_text("VERDICT: APPROVE\nOUTCOME: REVIEWED\n")
+        git(root, "add", "-A")
+        git(root, "commit", "-qm", "ADJUDICATE verdict")
+        candidate = git(root, "rev-parse", "HEAD")
+        log.write_text(
+            log.read_text()
+            + "# primary-turn: {}\n# judgment: docs/reviews/WI-1-001-REVIEW-A.md\n# candidate: {}\n".format(
+                turn_id, candidate
+            )
+        )
+        git(root, "add", "-A")
+        git(root, "commit", "-qm", "ADJUDICATE telemetry")
+        candidate = git(root, "rev-parse", "HEAD")
+        hook = root / ".git/hooks/pre-commit"
+        hook.write_text("#!/bin/sh\nexit 1\n")
+        hook.chmod(0o755)
+        failed, refusal = pp.publish(root, turn, candidate)
+        assert failed is None and "commit failed" in refusal
+        assert git(root, "rev-parse", "HEAD") == candidate
+        assert git(root, "status", "--porcelain") == ""
+        hook.unlink()
+        hook.write_text(
+            "#!/bin/sh\nprintf 'smuggled\\n' > hook-smuggled\ngit add hook-smuggled\n",
+            encoding="utf-8",
+        )
+        hook.chmod(0o755)
+        closed, refusal = pp.publish(root, turn, candidate)
+        assert closed is None
+        assert refusal == "publication commit tree differs from the verified tree"
+        assert git(root, "rev-parse", "HEAD") == candidate
+        assert git(root, "status", "--porcelain") == ""
+        assert not (root / "hook-smuggled").exists()
+        assert not pp.completed(root, turn)
+        hook.unlink()
+        closed, refusal = pp.publish(root, turn, candidate)
+        assert refusal is None and closed == ["WI-1"]
+        assert (root / "docs/archive/work/complete/WI-1-x.md").is_file()
+        landed = git(root, "rev-parse", "HEAD")
+        assert pp.completed(root, turn) and pp.publication_commit(root, turn) == landed
+        assert pp.completed(root, turn)  # exact replay is idempotent; no new commit
+        assert git(root, "rev-parse", "HEAD") == landed
+        # Both readers use the same verified carrier; the reset reader must not.
+        identity = verdict.governing_identity(
+            root, turn["primary_branch"], candidate, carrier=pp.carrier_candidate
+        )
+        # A cold query must preserve dirty as well as clean primary state. Compare
+        # every file, including index, refs, worktree, objects and FETCH_HEAD.
+        if product_bar:
+            assert (root / "bar-ran").read_text() == "checked\n"
+        (root / "staged-sentinel").write_text("staged\n")
+        git(root, "add", "staged-sentinel")
+        (root / "staged-sentinel").write_text("unstaged over staged\n")
+        (root / "untracked-sentinel").write_text("untracked\n")
+        before = {
+            p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()
+        }
+        pp._VERIFIED_PUBLICATIONS.clear()
+        assert pp.carrier_candidate(root, landed) == candidate
+        after = {
+            p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()
+        }
+        assert after == before
+        git(root, "reset", "--hard", landed)
+        (root / "untracked-sentinel").unlink()
+        assert (
+            verdict.governing_identity(
+                root, turn["primary_branch"], carrier=pp.carrier_candidate
+            )
+            == identity
+        )
+        assert verdict.work_tip(root, turn["primary_branch"]) == landed
+        message = git(root, "show", "-s", "--format=%B", landed)
+        final_tree = git(root, "rev-parse", landed + "^{tree}")
+        candidate_tree = git(root, "rev-parse", candidate + "^{tree}")
+        for forged_message, forged_tree, parent in (
+            (message, candidate_tree, candidate),  # missing the derived effects
+            (message, final_tree, landed),  # copied true words onto later work
+            (message.replace(turn_id, "WI-999-" + base), final_tree, candidate),
+            (message.replace(candidate, base), final_tree, candidate),
+            (
+                message.replace('"result": "pass"', '"result": "fail"'),
+                final_tree,
+                candidate,
+            ),
+            (message + "\n" + pp.TRAILER + turn_id, final_tree, candidate),
+        ):
+            forged = git(
+                root, "commit-tree", forged_tree, "-p", parent, "-m", forged_message
+            )
+            assert pp.carrier_candidate(root, forged) is None
+            if forged_message == message + "\n" + pp.TRAILER + turn_id:
+                assert pp._verified_candidate(root, turn, forged) is None
+        bad_author = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(root),
+                "commit-tree",
+                final_tree,
+                "-p",
+                candidate,
+                "-m",
+                message,
+            ],
+            env=dict(
+                os.environ,
+                GIT_AUTHOR_NAME="Wrong author",
+                GIT_AUTHOR_EMAIL="wrong@example.invalid",
+            ),
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        assert pp.carrier_candidate(root, bad_author) is None
+        original_derive = pp.derive_tree
+        calls = []
+    
+        def counted_derive(*args, **kwargs):
+            calls.append(args[2])
+            return original_derive(*args, **kwargs)
+    
+        monkeypatch.setattr(pp, "derive_tree", counted_derive)
+        assert pp.completed(root, turn)
+        assert pp.pending(root) is None
+        assert calls == []
+        mismatched_turn = dict(turn, primary_root="wrong-primary-root")
+        assert not pp.completed(root, mismatched_turn)
+        assert calls == [candidate]
+        calls.clear()
+        forged_tree = git(root, "show", "-s", "--format=%T", "HEAD")
+        git(
+            root,
+            "commit",
+            "--allow-empty",
+            "-qm",
+            "forged publication\n\n{}{}\nPublication-Candidate: {}\n"
+            "Publication-Tree: {}".format(pp.TRAILER, turn["turn"], landed, forged_tree),
+        )
+        assert pp.completed(root, turn)
+>       assert calls == [landed]
+E       AssertionError: assert [] == ['c2024626842...e88de218e889']
+E         
+E         Right contains one more item: 'c202462684208cab2ae363a09132e88de218e889'
+E         Use -v to get more diff
+
+tests/test_primary_publication.py:364: AssertionError
+_________ test_real_return_publish_and_completion_replay[required-bar] _________
+
+tmp_path = PosixPath('/private/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/pytest-of-diytechy/pytest-2044/test_real_return_publish_and_c1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10a792d50>
+product_bar = True
+
+    @pytest.mark.parametrize("product_bar", [False, True], ids=["scoped", "required-bar"])
+    def test_real_return_publish_and_completion_replay(tmp_path, monkeypatch, product_bar):
+        root = repo(tmp_path)
+        spec = root / "docs/work/queued/WI-1-x.md"
+        spec.write_text(
+            '+++\nid = "WI-1"\ntitle = "clean close"\nsafety_class = "adjudication"\nspecref = "x"\n+++\n\n## Context\n\njudge\n'
+        )
+        step = root / "project-trajectory/scripts/trunk_step.py"
+        step.parent.mkdir(parents=True)
+        step.write_text("import sys\nsys.exit(0)\n")
+        if product_bar:
+            step.write_text(
+                "from pathlib import Path\n"
+                "Path('derived-product').write_text('regenerated\\n')\n"
+            )
+            (step.parent / "check.py").write_text(
+                "from pathlib import Path\n"
+                "assert Path('derived-product').read_text() == 'regenerated\\n'\n"
+                "Path('bar-ran').write_text('checked\\n')\n"
+                "print('  PASS  candidate-check   0.0s')\n"
+            )
+        git(root, "add", "-A")
+        git(root, "commit", "-qm", "base")
+        turn = primary_adjudication.begin(root, "WI-1")
+        base = turn["base"]
+        turn_id = turn["turn"]
+        proposal = verdict.tree_identity(root, base)
+        approval = (
+            '\n## Approval\n\n```toml\nversion = 1\nturn = "{}"\n'
+            'base = "{}"\nproposal = "{}"\ndecision = []\n```\n'
+        ).format(turn_id, base, proposal)
+        spec.write_text(spec.read_text() + approval)
+        log = root / "docs/iteration/WI-1.log"
+        log.parent.mkdir(parents=True)
+        log.write_text(
+            "# phase: ADJUDICATE\n# wi: WI-1\n# base: {}\n# provider: test\n# roster-row: test\n# model: test\n# session-id: s\n# invocation-id: i\n".format(
+                base[:12]
+            )
+        )
+        review = root / "docs/reviews/WI-1-001-REVIEW-A.md"
+        review.parent.mkdir(parents=True, exist_ok=True)
+        review.write_text("VERDICT: APPROVE\nOUTCOME: REVIEWED\n")
+        git(root, "add", "-A")
+        git(root, "commit", "-qm", "ADJUDICATE verdict")
+        candidate = git(root, "rev-parse", "HEAD")
+        log.write_text(
+            log.read_text()
+            + "# primary-turn: {}\n# judgment: docs/reviews/WI-1-001-REVIEW-A.md\n# candidate: {}\n".format(
+                turn_id, candidate
+            )
+        )
+        git(root, "add", "-A")
+        git(root, "commit", "-qm", "ADJUDICATE telemetry")
+        candidate = git(root, "rev-parse", "HEAD")
+        hook = root / ".git/hooks/pre-commit"
+        hook.write_text("#!/bin/sh\nexit 1\n")
+        hook.chmod(0o755)
+        failed, refusal = pp.publish(root, turn, candidate)
+        assert failed is None and "commit failed" in refusal
+        assert git(root, "rev-parse", "HEAD") == candidate
+        assert git(root, "status", "--porcelain") == ""
+        hook.unlink()
+        hook.write_text(
+            "#!/bin/sh\nprintf 'smuggled\\n' > hook-smuggled\ngit add hook-smuggled\n",
+            encoding="utf-8",
+        )
+        hook.chmod(0o755)
+        closed, refusal = pp.publish(root, turn, candidate)
+        assert closed is None
+        assert refusal == "publication commit tree differs from the verified tree"
+        assert git(root, "rev-parse", "HEAD") == candidate
+        assert git(root, "status", "--porcelain") == ""
+        assert not (root / "hook-smuggled").exists()
+        assert not pp.completed(root, turn)
+        hook.unlink()
+        closed, refusal = pp.publish(root, turn, candidate)
+        assert refusal is None and closed == ["WI-1"]
+        assert (root / "docs/archive/work/complete/WI-1-x.md").is_file()
+        landed = git(root, "rev-parse", "HEAD")
+        assert pp.completed(root, turn) and pp.publication_commit(root, turn) == landed
+        assert pp.completed(root, turn)  # exact replay is idempotent; no new commit
+        assert git(root, "rev-parse", "HEAD") == landed
+        # Both readers use the same verified carrier; the reset reader must not.
+        identity = verdict.governing_identity(
+            root, turn["primary_branch"], candidate, carrier=pp.carrier_candidate
+        )
+        # A cold query must preserve dirty as well as clean primary state. Compare
+        # every file, including index, refs, worktree, objects and FETCH_HEAD.
+        if product_bar:
+            assert (root / "bar-ran").read_text() == "checked\n"
+        (root / "staged-sentinel").write_text("staged\n")
+        git(root, "add", "staged-sentinel")
+        (root / "staged-sentinel").write_text("unstaged over staged\n")
+        (root / "untracked-sentinel").write_text("untracked\n")
+        before = {
+            p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()
+        }
+        pp._VERIFIED_PUBLICATIONS.clear()
+        assert pp.carrier_candidate(root, landed) == candidate
+        after = {
+            p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()
+        }
+        assert after == before
+        git(root, "reset", "--hard", landed)
+        (root / "untracked-sentinel").unlink()
+        assert (
+            verdict.governing_identity(
+                root, turn["primary_branch"], carrier=pp.carrier_candidate
+            )
+            == identity
+        )
+        assert verdict.work_tip(root, turn["primary_branch"]) == landed
+        message = git(root, "show", "-s", "--format=%B", landed)
+        final_tree = git(root, "rev-parse", landed + "^{tree}")
+        candidate_tree = git(root, "rev-parse", candidate + "^{tree}")
+        for forged_message, forged_tree, parent in (
+            (message, candidate_tree, candidate),  # missing the derived effects
+            (message, final_tree, landed),  # copied true words onto later work
+            (message.replace(turn_id, "WI-999-" + base), final_tree, candidate),
+            (message.replace(candidate, base), final_tree, candidate),
+            (
+                message.replace('"result": "pass"', '"result": "fail"'),
+                final_tree,
+                candidate,
+            ),
+            (message + "\n" + pp.TRAILER + turn_id, final_tree, candidate),
+        ):
+            forged = git(
+                root, "commit-tree", forged_tree, "-p", parent, "-m", forged_message
+            )
+            assert pp.carrier_candidate(root, forged) is None
+            if forged_message == message + "\n" + pp.TRAILER + turn_id:
+                assert pp._verified_candidate(root, turn, forged) is None
+        bad_author = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(root),
+                "commit-tree",
+                final_tree,
+                "-p",
+                candidate,
+                "-m",
+                message,
+            ],
+            env=dict(
+                os.environ,
+                GIT_AUTHOR_NAME="Wrong author",
+                GIT_AUTHOR_EMAIL="wrong@example.invalid",
+            ),
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        assert pp.carrier_candidate(root, bad_author) is None
+        original_derive = pp.derive_tree
+        calls = []
+    
+        def counted_derive(*args, **kwargs):
+            calls.append(args[2])
+            return original_derive(*args, **kwargs)
+    
+        monkeypatch.setattr(pp, "derive_tree", counted_derive)
+        assert pp.completed(root, turn)
+        assert pp.pending(root) is None
+        assert calls == []
+        mismatched_turn = dict(turn, primary_root="wrong-primary-root")
+        assert not pp.completed(root, mismatched_turn)
+        assert calls == [candidate]
+        calls.clear()
+        forged_tree = git(root, "show", "-s", "--format=%T", "HEAD")
+        git(
+            root,
+            "commit",
+            "--allow-empty",
+            "-qm",
+            "forged publication\n\n{}{}\nPublication-Candidate: {}\n"
+            "Publication-Tree: {}".format(pp.TRAILER, turn["turn"], landed, forged_tree),
+        )
+        assert pp.completed(root, turn)
+>       assert calls == [landed]
+E       AssertionError: assert [] == ['090729db3ae...dcc41a09ed26']
+E         
+E         Right contains one more item: '090729db3aeb8e55a17397d6aa03dcc41a09ed26'
+E         Use -v to get more diff
+
+tests/test_primary_publication.py:364: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_primary_publication.py::test_real_return_publish_and_completion_replay[scoped]
+FAILED tests/test_primary_publication.py::test_real_return_publish_and_completion_replay[required-bar]
+2 failed, 16 passed in 44.05s

@@ -1,0 +1,12 @@
+{
+  "name": "regen",
+  "argv": [
+    "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+    "project-trajectory/scripts/trunk_step.py",
+    "--root",
+    ".",
+    "--regen"
+  ],
+  "exit": 0,
+  "wall_seconds": 9.356182417017408
+}

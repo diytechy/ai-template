@@ -1,0 +1,12 @@
+{
+  "name": "trace",
+  "argv": [
+    "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+    "project-trajectory/scripts/trace.py",
+    "--root",
+    ".",
+    "--strict"
+  ],
+  "exit": 0,
+  "wall_seconds": 2.4451899160048924
+}

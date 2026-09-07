@@ -20,6 +20,9 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 KIT = ROOT / "project-trajectory"
 SCRIPTS = KIT / "scripts"
+# Kit scripts are sibling modules, not a package. Set their import home before
+# collecting any test module, independently of which test calls load_script first.
+sys.path.insert(0, str(SCRIPTS))
 
 # Hermeticity: a coordinator-launched session (agent-resume.* -> agent_loop.py ->
 # the agent CLI running this suite as the commit bar) inherits the launcher's

@@ -1,0 +1,13 @@
+{
+  "name": "budget",
+  "argv": [
+    "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+    "scripts/check_smoke_budget.py",
+    "--mode",
+    "enforce",
+    "--elapsed",
+    "54.4808795840363"
+  ],
+  "exit": 0,
+  "wall_seconds": 0.032832249999046326
+}

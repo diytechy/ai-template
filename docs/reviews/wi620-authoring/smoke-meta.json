@@ -1,0 +1,15 @@
+{
+  "name": "smoke",
+  "argv": [
+    "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-n",
+    "auto",
+    "-m",
+    "smoke"
+  ],
+  "exit": 0,
+  "wall_seconds": 54.4808795840363
+}

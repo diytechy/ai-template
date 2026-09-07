@@ -1,0 +1,19 @@
+{
+  "candidate_tree": "fadeee3d768728ef38f65cdbc47f5b9ee67a32ef",
+  "argv": [
+    "claude",
+    "-p",
+    "--model",
+    "claude-fable-5-1",
+    "--output-format",
+    "json",
+    "--tools",
+    ""
+  ],
+  "prompt_sha256": "ea2e65fae72161a9e7fb9cc2040c9d08914751dead1a690f83be3440e1005e8f",
+  "exit": 0,
+  "wall_seconds": 158.2480754170101,
+  "independent_session": true,
+  "family": "ANTHROPIC",
+  "purpose": "supervised source review, not primary semantic approval"
+}

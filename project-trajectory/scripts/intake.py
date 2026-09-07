@@ -2482,7 +2482,7 @@ def _flip_status_lines(lines, table, rid):
 
 
 def _rewrite_toml_statuses(live, rel, ids):
-    """Move every named row's status line to `Approved` in one TOML registry.
+    """Move named status lines to Approved; return a refusal string or None.
 
     Split out of `_apply_flips` when the snapshot copy joined it (D-9 step 3):
     the carrier-specific write is a self-contained job with its own refusal, and
@@ -2509,7 +2509,7 @@ def _rewrite_toml_statuses(live, rel, ids):
             # A located row whose status line cannot be found is a refusal to
             # write, never a silent skip: the caller already reported the flip,
             # so a no-op here would claim an approval that is not in the file.
-            raise SystemExit(
+            return (
                 "intake: {} has no `{}` line under [{}.{}] — refusing to "
                 "report a flip that was not written".format(
                     live, _STATUS_KEY, table, rid

@@ -1,0 +1,12 @@
+{
+  "name": "trajectory",
+  "argv": [
+    "/Users/diytechy/Documents/ai-template/.venv/bin/python",
+    "project-trajectory/scripts/check_trajectory.py",
+    "--root",
+    ".",
+    "--strict"
+  ],
+  "exit": 0,
+  "wall_seconds": 5.169004082970787
+}
