@@ -1,7 +1,9 @@
 # Supervised control retry
 
-**Stopped before integration; pause restored.** The snapshot withdrawal/check
-conflict below requires repair and lane reconciliation before another launch.
+**Stopped before integration; pause restored.** The owner clarified that
+worktrees must never write snapshots. The revised resolution below moves
+snapshot writing to the mechanical approval path; the withdrawal failure
+remains evidence of the incorrect ownership and timing in the existing flow.
 No work item completed or merged in this segment.
 
 The owner authorized retry with “Okay, you can retry”, after challenging the
@@ -159,31 +161,75 @@ reconcile it selectively. No branch was renamed, deleted or reset, and no
 accepted review or terminal result was fabricated. The retained-adjudicator
 patch is re-queued after the stop, under the restored global pause.
 
+### Owner clarification and revised resolution
+
+After this report, the owner stated: “a worktree should absolutely never touch
+a snapshot” and “Snapshots are only updated mechanically after the adjudicator
+or human approves the actual spine change.” This is the current owner boundary,
+including adjudicator worktrees. A worker may edit in-scope spine content;
+judgment is the adjudicator's or human's act; updating the approved snapshot
+is a subsequent mechanical act. A model invoking a copy command itself from
+its worktree does not satisfy that separation.
+
+The shipped amendment prompt currently directs exactly the wrong ownership:
+`project-trajectory/prompts/adjudicate-amendment.template.md:91` tells the
+adjudicator “the re-attestation is YOURS and this session performs it” and
+supplies `intake.py snapshot --approves`. The first-approval prompt similarly
+tells the session to take the snapshot. `adjudicate_brief._aftermath` reinforces
+that direction; its comment explains that the old mechanical flip path was
+retired, then treats the session as responsible for the aftermath. The copy
+command mechanically copies files, but the model chooses when to invoke it
+and the reference it supplies names an act without validating its completed
+approval evidence. In this incident the copy entered the lane before the
+required independent review had settled acceptance.
+
+This supersedes the earlier withdrawal-first repair plan. The primary defect
+is assigning snapshot writes to a worker before approval is complete. Adding
+another allowed worker rollback path would leave that defect in place.
+
 Resolution before another launch:
 
-1. Reconcile the approval-copy contract and its staged/committed readers around
-   a reviewed withdrawal to an exact previously accepted snapshot. Determine
-   the authoritative rollback target and its approval provenance at that
-   boundary; do not add a generic old-blob allowance or a README exception.
-   Preserve the prohibition on tampered snapshots, partial copies/deletions
-   and copying an unaccepted live cell. Apply the applicable SR-179/LLR-178
-   amendment/review route if their declared contract needs changing.
-2. Exercise both staged and committed withdrawal, later live amendment,
-   unauthorized historical-target selection, and existing invalid-copy cases.
-   Keep this failing real-lane reproduction as the acceptance case. Obtain
-   independent review of the contract and smallest implementation change.
-3. Reconcile the preserved lane: withdraw the unendorsed SR snapshot, retain
-   only justified TC evidence, remove the prose-exception workaround, complete
-   the parsed successor scopes/counterpart decisions and their acceptance
-   prerequisites, and correct premature aftermath claims. Honor the owner-tier
-   need; do not weaken ordinary-round coverage merely to match today's code.
-4. Pass the station refresh and fresh REVIEW-A, then use the normal adjudication
-   close and integration route. This report does not authorize another control
-   launch. The pause alone does not prevent resuming an existing claim, so keep
-   the coordinator stopped until reconciliation and a later authorized retry.
+1. Remove snapshot-writing and snapshot-repair instructions from adjudication
+   and authoring briefs, generated assignments and their supporting guidance.
+   The adjudicator records the exact accepted/returned changes and evidence;
+   a MEANING classification alone is not approval. Keep human-held approvals
+   at the human boundary. No worker edits, copies or restores snapshot files
+   or writes approval exceptions into their ledger.
+2. Connect the existing mechanical copy implementation to the authoritative
+   approval/integration step, after the applicable judgment and required
+   reviews have been accepted. Bind the act to the exact approved spine
+   revision and scope; a free-form reference is not sufficient evidence.
+   Whole-registry copying must not absorb other unapproved changes. This is
+   an approval-triggered write, never ordinary freshness regeneration.
+3. Enforce snapshot ownership at the existing worker-change and integration
+   boundaries. Reject worker-originated snapshot/approval-ledger changes;
+   ordinary synchronization of accepted primary artifacts is not a worker
+   approval act. Add explicit read-only/generated guidance in the snapshot
+   directory and the briefs that consume it. Preserve byte-for-byte copies:
+   a snapshot-only banner inside each mirrored registry would itself violate
+   that format, so put the instruction in its directory guidance and prompt
+   framing unless the format is deliberately changed.
+4. Verify accepted approval produces the intended mechanical snapshot;
+   returned, missing, stale or wrong-scope evidence produces no write; worker
+   snapshot edits are refused; mixed accepted/returned registry content is
+   not silently absorbed. Exercise both human approval and adjudication paths
+   with their actual stage authority and required review sequence.
+5. Reconcile the existing unmerged lane against the authoritative primary
+   snapshots, preserving its evidence and valid corrective successor work.
+   Remove the premature approval copy and prose-exception workaround through
+   an explicit supervisor repair, not a new worker permission. Complete the
+   counterpart decisions and successor prerequisites, then pass fresh review
+   and the station bar under the corrected ownership. Do not weaken the
+   owner-tier ordinary-round coverage obligation to fit current code.
+
+The staged/committed mirror checks must be assessed within this corrected
+flow; their observed inability to express the existing incident's rollback
+remains a recovery concern, not the central product design. Keep the pause
+and coordinator stop. This clarification does not authorize another control
+launch or approve the disputed spine cells.
 
 The sample remains insufficient to select a runner replacement. It demonstrates
-that the scope/interpreter repairs functioned in this retry and that approval
-withdrawal needs a focused contract repair. Ordinary review/rework rounds are
+that the scope/interpreter repairs functioned in this retry and that snapshot
+write ownership and approval sequencing need a focused contract repair. Ordinary review/rework rounds are
 not counted as manual interventions; the supervisor's stop is one correctness
 intervention. The log-conflict resolution was prelaunch preparation.

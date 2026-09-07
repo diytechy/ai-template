@@ -32,12 +32,12 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   for the perspective-review chain and the redesign Inspection artifacts.
   Inspect the complete chains and every older cell a whole-registry snapshot
   would absorb; the needs-only SN-036 act does not approve those registries.
-- **Control retry stopped before integration:** the snapshot integrity check
-  rejected withdrawal of an unendorsed copy. Follow the
-  [retry findings and repair plan](ai-template-redesign-2026-09-05-codex/CONTROL-RETRY.md#stop-and-root-cause)
-  before any further launch. The tracked pause is restored. It stops new
-  claims, so do not invoke the coordinator to resume the preserved active lane
-  until the withdrawal conflict and review findings are resolved.
+- **Control retry stopped before integration:** the owner clarified that
+  workers must not write snapshots; updates follow accepted spine approval
+  through the mechanical approval path. Follow the
+  [revised repair plan](ai-template-redesign-2026-09-05-codex/CONTROL-RETRY.md#owner-clarification-and-revised-resolution)
+  and reconcile the preserved lane before another launch. The tracked pause
+  is restored; it stops new claims, so keep the coordinator stopped as well.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). `wi416-parked-handback-contract` is still

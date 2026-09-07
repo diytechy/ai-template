@@ -63590,3 +63590,28 @@ one existing orphan warning. Strict trajectory clean with existing warnings.
 The isolated-index withdrawal reproduction fails exactly as the live attempt
 reported; the real lane index remains unchanged by that reproduction.
 <!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict" rev=20814274+control-stop; out/run-logs/control-retry/stop-smoke.txt; stop-docs.txt; stop-trajectory.txt; withdrawal-reproduction.json -->
+
+
+## 2026-09-07 — Owner clarifies snapshot write ownership
+
+The owner stated “a worktree should absolutely never touch a snapshot” and
+“Snapshots are only updated mechanically after the adjudicator or human
+approves the actual spine change.” Worker scope permits appropriate spine
+edits; adjudicators deliver judgment; the subsequent snapshot write belongs
+to the mechanical approval path, including when judgment came from an LLM.
+
+The supervisor traced the incident's initial copy to explicit instructions
+in the amendment/first-approval prompts and the generated aftermath, rather
+than an LLM spontaneously choosing to edit a generated file. The earlier
+withdrawal-first repair proposal is superseded by the
+[ownership and sequencing plan](ai-template-redesign-2026-09-05-codex/CONTROL-RETRY.md#owner-clarification-and-revised-resolution).
+This record changes no runtime, prompt, registry or snapshot bytes and grants
+no new launch authority; the coordinator remains stopped and pause tracked.
+
+Deferred open items: none — this records the owner's stated boundary without
+attributing additional implementation choices or cell approvals to them.
+
+Verification: 1687 passed, 8 skipped in 71.88s; enforced smoke wall 72.3s
+against 90s. Documentation: 1464 docs, 2330 links, zero broken, one existing
+orphan warning. No new tests or runtime changes for this recorded clarification.
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=98c6dd8a+snapshot-ownership-record; out/run-logs/snapshot-ownership/smoke.txt; docs.txt -->
