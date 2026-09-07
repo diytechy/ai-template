@@ -63781,3 +63781,19 @@ size-ratchet tests 3 passed in 0.62s; final smoke 1695 passed, 4 skipped in
 48.42s, measured wall 48.6s enforced against 90s. Ruff lint/format, strict
 trajectory and documentation checks pass (one existing orphan warning).
 <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_verdict_record.py tests/test_primary_approval.py tests/test_intake.py; .venv/bin/python -m pytest -q -n auto -m smoke; .venv/bin/python scripts/check_smoke_budget.py --mode enforce --elapsed <measured-wall>; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=9fa88ddc+resume-item-3; out/run-logs/post-stop-repair/3-focused-final.txt; 3-bar-final.txt; 3-docs-final.txt -->
+
+## 2026-09-07 — Document the retained primary lock hold (resume item 4)
+
+[Source review and decision](reviews/2026-09-07-post-stop-fixes.md#item-4--retain-the-lock-hold-and-document-its-actual-scope):
+retain the integration lock across selection, provider judgment and publication
+for cross-process exclusion. Corrected `_slot`'s false sub-second promise,
+covered its possible in-lock merge refresh, and distinguished non-blocking OS
+locking from the durable pending-turn refusal. Runtime behavior is unchanged;
+no new tests, scope deviations or capped-file changes.
+
+Deferred open items: none — the census disposition is the last resume item.
+
+Verification: smoke 1695 passed, 4 skipped in 50.61s; measured wall 50.9s
+enforced against 90s. Strict trajectory, Ruff format and docs checks pass
+(one existing orphan warning).
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke; .venv/bin/python scripts/check_smoke_budget.py --mode enforce --elapsed <measured-wall>; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict" rev=276cf1ae+resume-item-4; out/run-logs/post-stop-repair/4-bar.txt; 4-docs.txt; 4-trajectory.txt -->

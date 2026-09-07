@@ -46,3 +46,18 @@ three consumers and delegates all classification policy to the existing
 scheduler. A separate module for this mapping would add a new home without
 removing behavior. The threshold and every other module baseline stay intact.
 <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_module_size_ratchet.py" rev=9fa88ddc+resume-item-3; out/run-logs/post-stop-repair/3-bar.txt; 3-ratchet.txt -->
+
+## Item 4 — retain the lock hold and document its actual scope
+
+Keep `integrate.lock` held across the provider session. It protects the whole
+primary turn against a competing process; releasing and retaking it would add
+a gap and another acquisition without a demonstrated throughput need in this
+exclusive station. The durable pending selection remains the protection
+between processes and after interruption.
+
+Source review traced both callers and the POSIX/Windows non-blocking lock
+implementations. The corrected `_slot` docstring states that primary holds may
+last minutes, merge refresh can occur under the lock, contenders refuse rather
+than wait, and claims/intake/generators do not take this lock. It removes the
+false sub-second promise and distinguishes the pending-record refusal from the
+OS lock. No runtime behavior changes; no new tests for a docstring correction.

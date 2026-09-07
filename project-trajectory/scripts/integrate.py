@@ -2663,16 +2663,19 @@ def integrate_one(root, branch, tier, held=None):
 def _slot(root, *, primary_turn=False):
     """TAKE THE SLOT - the exclusive turn to advance trunk. Error string or None.
 
-    THE ONE ACQUISITION SITE IN THIS FILE, and it must stay that way (§A2.0
-    requirement 1). The design is speculative: the 11-minute bar runs OUTSIDE
-    this lock, and only the ancestor check plus the merge run inside it, so the
-    slot is held for well under a second and extra lanes buy throughput instead
-    of queueing behind one bar. Restricting the design to pessimistic - the
-    owner's recorded caveat - is then a ONE-LINE change: delete dispatch.py's
-    speculative refresh call, and every refresh happens under
-    this already-held lock via `integrate_one`'s not-merge-ready arm. Nothing
-    else moves, and no dial is added for a decision nobody has yet needed to
-    change.
+    The shared acquisition site for the merge drain and primary adjudication.
+    Lanes normally refresh before the drain takes this lock; a missing refresh
+    can still run under it in `integrate_one`. Primary adjudication holds it
+    from selection through the provider session and publication, potentially
+    for minutes. Retaining that hold excludes a competing process throughout
+    the turn, including while the provider writes its judgment.
+
+    Acquisition is non-blocking: a contender refuses rather than queues.
+    Claims, intake and generators do not take this lock. The pending selection
+    separately refuses a merge even between processes or after a crash; the
+    primary-turn flag bypasses that durable refusal, never the OS lock. The
+    caller releases the lock in its finally block; process exit also releases
+    the OS advisory lock.
     """
     if not primary_turn:
         refusal = primary_publication.writer_refusal(root)
