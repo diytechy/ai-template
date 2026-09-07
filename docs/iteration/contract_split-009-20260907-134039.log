@@ -1,0 +1,56 @@
+# agent session log — written by scripts/agent_common.py
+# session: 009
+# date: 2026-09-07 13:44
+# train: contract_split
+# base: d522f3b0c729
+# phase: ADJUDICATE
+# primary-turn: WI-610-d522f3b0c7295ce2d46765551a6500491a76ff2c
+# judgment: docs/reviews/contract_split/009-ADJUDICATE-27e6bc5.md
+# candidate: 27e6bc5b8e16881ecefd88a790fd142cf0b67e91
+# wi: WI-610
+# model: gpt-6-astra
+# guardrails:
+# outcome: NO-COMMIT
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 63
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 1130243
+# prompt-template: kit:ADJUDICATE
+# prompt-sha: sha256:ada31a4e7860
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# invocation-id: ac60d45a9efc494481bb6b6dfc2f8571
+# attempt-id: contract_split@d522f3b0c7295ce2d46765551a6500491a76ff2c
+# source-event:
+# role: ADJUDICATE
+# provider: OPENAI
+# requested-model: gpt-6-astra
+# reported-model:
+# tier: strong
+# roster-row: OPENAI-ASTRA
+# started-at: 2026-09-07T18:43:10Z
+# ended-at: 2026-09-07T18:44:14Z
+# input-tokens:
+# output-tokens:
+# reasoning-tokens:
+# raw-usage:
+# usage-scope: unknown
+# usage-source: unknown
+# usage-status: unavailable
+# ---
+The full-file SHA-256 matches the supplied value. The file is accessible, but I have not completed reading its entire 1,131,379 bytes or inspecting all required evidence.
+
+Under your completeness requirement, I must refuse the adjudication. I wrote no judgment or Approval, changed no files, and made no commit.
