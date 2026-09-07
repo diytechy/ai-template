@@ -1,0 +1,60 @@
+# agent session log — written by scripts/agent_common.py
+# session: 014
+# date: 2026-09-07 16:13
+# train: contract_split
+# base: 5772a835ca45
+# phase: ADJUDICATE
+# primary-turn: WI-619-5772a835ca45da16af910adc516b404d13f29554
+# judgment: docs/reviews/contract_split/014-ADJUDICATE-3e43db9.md
+# candidate: 925fa88793c4488b56413a7e9021fd6fd7349e7d
+# wi: WI-619
+# model: gpt-6-astra
+# guardrails:
+# outcome: COMMITTED
+# commits: 3e43db91..925fa887
+# tokens:
+# cost-usd:
+# wall-secs: 878
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 1189525
+# prompt-template: kit:ADJUDICATE
+# prompt-sha: sha256:60ec7e29ac23
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# invocation-id: 821aed6d25d14ee48cb7510a832c8029
+# attempt-id: contract_split@5772a835ca45da16af910adc516b404d13f29554
+# source-event:
+# role: ADJUDICATE
+# provider: OPENAI
+# requested-model: gpt-6-astra
+# reported-model:
+# tier: strong
+# roster-row: OPENAI-ASTRA
+# started-at: 2026-09-07T20:58:51Z
+# ended-at: 2026-09-07T21:13:29Z
+# input-tokens:
+# output-tokens:
+# reasoning-tokens:
+# raw-usage:
+# usage-scope: unknown
+# usage-source: unknown
+# usage-status: unavailable
+# ---
+VERDICT: MEANING rows=52
+
+Committed findings (`84a65595`) and an all-row RETURN payload (`925fa887`): zero accepted cells. The continuation addresses reversed interface attribution, unresolved proof correspondence and unjudged impact evidence.
+
+Hash verified before inspection and both commits. Smoke, docs, strict trajectory and commit hooks passed. Working tree is clean.
+
+Independent review and atomic publication remain with the existing primary engine.
