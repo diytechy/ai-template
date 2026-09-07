@@ -63615,3 +63615,35 @@ Verification: 1687 passed, 8 skipped in 71.88s; enforced smoke wall 72.3s
 against 90s. Documentation: 1464 docs, 2330 links, zero broken, one existing
 orphan warning. No new tests or runtime changes for this recorded clarification.
 <!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=98c6dd8a+snapshot-ownership-record; out/run-logs/snapshot-ownership/smoke.txt; docs.txt -->
+
+## 2026-09-07 — Clarify work types and audit adjudicator continuity
+
+The owner corrected the supervisor's “stale approval evidence” framing:
+mechanically detected requirement text changes need a meaning comparison;
+confirmed semantic equivalence preserves existing implementation judgments.
+Implementation needing a spine change returns a handback, and exclusive
+spine authoring is separate from implementation. Updated the
+[target diagram](ai-template-redesign-2026-09-05-codex/README.md#3-the-target-loop)
+and [repair plan](ai-template-redesign-2026-09-05-codex/CONTROL-RETRY.md#owner-clarification-and-revised-resolution)
+to show trunk approval and mechanical snapshot publication before release
+of the exclusive window.
+
+The [source audit](ai-template-redesign-2026-09-05-codex/WORK-FLOWS.md) records
+current exclusive adjudication in worktrees, trunk-side amendment detection,
+generic authoring permission that fails to distinguish implementation, and
+the absent retained-session runtime. Static inspection of the preserved
+retention source diffs found per-worktree state that does not provide default
+cross-WI continuity and an optional keep-warm path requiring serialization
+when state is centralized. Its queued restoration also combines ordinary
+implementation with spine amendments and needs scope reconciliation. These
+are pre-restoration findings, not claims of observed concurrent session use.
+
+No runtime, prompt, registry, snapshot or queued assignment was changed.
+The coordinator remains stopped and pause tracked. No capped files changed.
+Deferred open items: none — the findings are incorporated into the existing
+paused repair and retention work, with no new owner ruling requested.
+
+Verification: 1687 passed, 8 skipped in 62.40s; enforced smoke wall 62.8s
+against 90s. Documentation: 1465 docs, 2342 links, zero broken, one existing
+orphan warning. No new tests for this documentation-only change.
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=4c26e432+work-flow-audit; out/run-logs/work-flow-audit/smoke.txt; docs.txt -->

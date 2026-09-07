@@ -36,7 +36,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   workers must not write snapshots; updates follow accepted spine approval
   through the mechanical approval path. Follow the
   [revised repair plan](ai-template-redesign-2026-09-05-codex/CONTROL-RETRY.md#owner-clarification-and-revised-resolution)
-  and reconcile the preserved lane before another launch. The tracked pause
+  and [work-type and context audit](ai-template-redesign-2026-09-05-codex/WORK-FLOWS.md),
+  then reconcile the preserved lane before another launch. The tracked pause
   is restored; it stops new claims, so keep the coordinator stopped as well.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`

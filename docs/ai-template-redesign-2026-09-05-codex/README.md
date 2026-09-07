@@ -154,25 +154,52 @@ a separate metrics database or treat total spend as current context occupancy.
 
 ## 3. The target loop
 
+**Work type and location matter.** This target incorporates the owner's
+clarification: implementation never co-edits its governing spine, spine work
+is exclusive, and snapshots advance mechanically at approval on trunk.
+The [work-flow audit](WORK-FLOWS.md) distinguishes this target from the shipped
+runtime and records the gaps in adjudicator session retention.
+
 ```mermaid
 flowchart TD
-    R[Request, finding, or proposed successor] --> I[Create and reconcile on current trunk]
-    I --> Q[Eligible WI queue]
-    I --> H[Human decision when authority or meaning is unresolved]
-    Q --> S[One scheduler decision]
-    S --> D[Claim one WI per lane]
-    D --> P[Plan if needed, then execute]
-    P --> C[Prepare final candidate on current trunk]
-    C --> T[Checks and independent review]
-    T -->|material defect| P
-    T -->|disputed finding| A[Bounded arbitration]
-    A --> P
-    A --> H
-    A -->|accepted| M[Serial integration of accepted candidate]
-    T -->|accepted| M
-    M --> I
-    M --> V[Derived status and evidence views]
+    subgraph Trunk[Trunk: coordination, judgment and approval]
+        I[Create and reconcile work] --> K{Work type}
+        K -->|spine authoring| E[Drain lanes; hold exclusive spine window]
+        K -->|adjudication| J
+        H[Receive implementation handback] --> J[Exclusive adjudication of handback]
+        J --> I
+        M[Serial integration after checks and review] --> I
+        L[Land proposed spine text; snapshot stays approved baseline]
+        L --> D[Mechanically detect changed cells against approved snapshot]
+        D --> A[Adjudicator judges meaning and acceptance; human where held]
+        A -->|return for revision| E
+        A -->|approved| S[Publish approval and mechanical snapshot update together]
+        S --> U[Settle affected scope; release exclusive window]
+        U --> I
+    end
+    subgraph Ordinary[Implementation worktrees: parallel eligible WIs]
+        B[Implement against settled requirements]
+        B -->|in scope| R[Checks and independent review; rework as needed]
+        B -->|needs spine change| HB[Close with handback; no spine or snapshot edit]
+    end
+    subgraph Spine[Exclusive spine worktree]
+        P[Author requirement attributes; no implementation or snapshot edit]
+        P --> C[Check scoped proposal]
+    end
+    K -->|implementation| B
+    R --> M
+    HB --> H
+    E --> P
+    C --> L
 ```
+
+The exclusive window spans authoring through resolution of its approval;
+landing proposed prose does not release dependent implementation. A
+meaning-preserving clarification retains the existing implementation judgment.
+Its accepted wording becomes the new snapshot at approval. A meaning-changing
+proposal needs the applicable approval and impact disposition before dependent
+implementation resumes. Disputed review findings still use bounded arbitration
+and the applicable human boundary.
 
 There are four policy responsibilities and thin execution adapters:
 

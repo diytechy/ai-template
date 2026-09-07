@@ -166,10 +166,18 @@ patch is re-queued after the stop, under the restored global pause.
 After this report, the owner stated: “a worktree should absolutely never touch
 a snapshot” and “Snapshots are only updated mechanically after the adjudicator
 or human approves the actual spine change.” This is the current owner boundary,
-including adjudicator worktrees. A worker may edit in-scope spine content;
-judgment is the adjudicator's or human's act; updating the approved snapshot
-is a subsequent mechanical act. A model invoking a copy command itself from
-its worktree does not satisfy that separation.
+including adjudicator worktrees. An exclusive spine-authoring worker may edit
+in-scope spine content; an implementation worker needing that change returns
+a handback. Judgment is the adjudicator's or human's act; the trunk approval
+step mechanically updates the approved snapshot. A model invoking a copy
+command itself from its worktree does not satisfy that separation.
+
+The owner's subsequent clarification also corrects the earlier “stale approval
+evidence” framing: changed text calls for a meaning comparison against the
+snapshot; confirmed unchanged meaning preserves existing implementation
+judgments. The [work-type diagrams and runtime audit](WORK-FLOWS.md) separate
+implementation, exclusive spine authoring, trunk approval and retained
+adjudicator context. They are the sequencing detail for this repair.
 
 The shipped amendment prompt currently directs exactly the wrong ownership:
 `project-trajectory/prompts/adjudicate-amendment.template.md:91` tells the
@@ -197,8 +205,11 @@ Resolution before another launch:
    or writes approval exceptions into their ledger.
 2. Connect the existing mechanical copy implementation to the authoritative
    approval/integration step, after the applicable judgment and required
-   reviews have been accepted. Bind the act to the exact approved spine
-   revision and scope; a free-form reference is not sufficient evidence.
+   reviews have been accepted. Publish the approval and its snapshot together,
+   before releasing the exclusive spine window. Identify the approved content
+   and scope so the copier writes that content; a free-form reference alone
+   does not establish an approval. Textual change alone does not invalidate
+   an implementation judgment when the meaning comparison confirms equivalence.
    Whole-registry copying must not absorb other unapproved changes. This is
    an approval-triggered write, never ordinary freshness regeneration.
 3. Enforce snapshot ownership at the existing worker-change and integration
@@ -210,10 +221,13 @@ Resolution before another launch:
    that format, so put the instruction in its directory guidance and prompt
    framing unless the format is deliberately changed.
 4. Verify accepted approval produces the intended mechanical snapshot;
-   returned, missing, stale or wrong-scope evidence produces no write; worker
-   snapshot edits are refused; mixed accepted/returned registry content is
+   returned or missing approval, or content outside its scope, produces no
+   write; worker snapshot edits are refused; mixed accepted/returned registry content is
    not silently absorbed. Exercise both human approval and adjudication paths
-   with their actual stage authority and required review sequence.
+   with their actual stage authority and required review sequence. Verify
+   meaning-preserving prose changes retain implementation judgments, and
+   implementation work hands back any needed spine change. Check exclusivity
+   through approval and snapshot publication, including restart recovery.
 5. Reconcile the existing unmerged lane against the authoritative primary
    snapshots, preserving its evidence and valid corrective successor work.
    Remove the premature approval copy and prose-exception workaround through
@@ -221,6 +235,11 @@ Resolution before another launch:
    counterpart decisions and successor prerequisites, then pass fresh review
    and the station bar under the corrected ownership. Do not weaken the
    owner-tier ordinary-round coverage obligation to fit current code.
+
+Separately, reconcile the queued retention restoration with the
+[continuity and concurrent-use findings](WORK-FLOWS.md#retained-adjudicator-context)
+before admitting that work. Retention is still wanted but is not implemented
+in the current runtime; it must not be reported as surviving between WIs today.
 
 The staged/committed mirror checks must be assessed within this corrected
 flow; their observed inability to express the existing incident's rollback
