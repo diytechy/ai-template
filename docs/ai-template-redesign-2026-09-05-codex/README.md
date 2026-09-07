@@ -336,6 +336,8 @@ Do not add a learned worker-tier estimator, a new generic plugin framework, an e
 
 ## 6. Review decisions and recommendation
 
+**Owner ruling 2026-09-06 (later sitting):** the deletions both plans agreed on independently (one WI per lane, the legacy tail, the P0b hygiene) are package **PC** in [IMPLEMENTATION.md](IMPLEMENTATION.md#pc--the-independently-agreed-cuts-unconditional-after-the-control-window) and run after the control window closes regardless of its outcome; they are not conditional on the replacement decision. The paragraph below stands for everything else.
+
 I recommend **measurement and shared-boundary simplification first, with a staged replacement kernel conditional on P0’s decision gate**. If the corrected current loop meets the agreed outcomes, stop the replacement work and retain only independently justified simplifications. The packages below describe the replacement option, not an obligation to execute every package.
 
 The owner review should decide:

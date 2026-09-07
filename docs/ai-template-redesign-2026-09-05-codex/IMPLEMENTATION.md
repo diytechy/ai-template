@@ -70,7 +70,14 @@ flowchart LR
     P7 --> P8[P8 End-to-end candidate release]
     P8 --> P9[P9 Requirements and capability migration]
     P9 --> P10[P10 Adopter migration and deletion]
+    P0 --> PC[PC Agreed cuts - unconditional after the control window]
+    PC --> P9
 ```
+
+**PC is not conditional.** It holds the deletions both independent plans
+agreed on and follows the control window's close whatever the window's
+outcome; it is not gated on P1/P1A/P5 or on the replacement decision (owner
+ruling 2026-09-06, later sitting). See its package below.
 
 P9R is an independent rendering slice after P0 and its own applicable contract amendments; it does not wait for the full runner migration. P1A is the gate for enabling changed behavior under the repository’s own requirements; isolated fixtures and read-only adapters can proceed beforehand. P0 gates replacement work on measured need; the arrows show dependencies if that option is selected, not automatic authorization to build it. P5 is an early stop/go experiment. It must settle whether peeling can be removed before P6 hardens a replacement runtime around the wrong evidence model. P3/P4 can proceed independently of that experiment after P2, but do not run multiple mutating coordinators on the same repo.
 
@@ -334,6 +341,45 @@ it cannot claim an already-excluded geometry suite as a new smoke saving.
 **Done when:** core imports and test collection work without the renderer; core-only changes omit the expensive HTML family; rendering/schema/shared-input changes select it; actual data still generates a current, honest surface; selection handles renames/deletions and missing bases; full enabled-capability tests remain green; measured cost and coverage reports distinguish selected runs from full runs.
 
 **Deletion enabled:** renderer imports from core/status, fixture coupling, and obsolete facade re-exports after their compatibility window. Test-case retirement still requires the ordinary obligation/evidence mapping.
+
+### PC — The independently agreed cuts (unconditional, after the control window)
+
+**Problem:** measuring first and cutting later is right for the replacement
+decision, but three deletions were agreed by both plans without reference to
+that decision (cross-reference §1: one WI per lane with batch admission gone;
+retire the legacy tail; the P0b hygiene the repairs left behind). Parking them
+inside the conditional P3–P8 set makes them hostage to a ruling they do not
+depend on, and leaves their tests running against behavior nobody intends to
+keep.
+
+**Sequence:** starts at the first commit after the Short control window closes
+(a re-created pause or a reached bound), on whichever trunk tip that is. Never
+inside the window: the window measures the frozen configuration.
+
+**Work:**
+
+- One WI per lane as a schema invariant: retire multi-WI spine batch admission
+  and train assembly in the current runner, keeping exclusive-serial execution
+  for spine rows. Each retired test maps to a surviving obligation or to this
+  package's deletion record, per the P9 rule; no test quota.
+- The legacy tail, each item behind its declared migration window: the CSV
+  spec converter, the retired-vocabulary ratchet's `G*`/`ratif*` arms, and
+  resync entries older than the supported window. Retire the row, the code and
+  the tests together with one disposition line each.
+- P0b hygiene: re-key `docs/complexity-baseline` for the `rendering/` package
+  move, and either route `scripts/check_changed.py` through `check.py`'s step
+  composition or delete it; it has no caller.
+
+**Not in this package** (owner-ruled candidates, each needs its own SN-tier
+disposition first): SN-027's parallel lanes, the eight-module minimal kit, and
+the rendering reduction beyond P9R.
+
+**Done when:** the three items above are landed as ordinary WIs with their
+deletion records; the unfiltered suite is green with the retired tests mapped;
+no runner behavior outside batch admission changed.
+
+**Deletion enabled:** batch assembly and its verdict helpers, the CSV
+converter, the retired-vocabulary arms, the uncalled selector.
 
 ### P9 — Consolidate requirements, tests, docs, and capability packaging
 
