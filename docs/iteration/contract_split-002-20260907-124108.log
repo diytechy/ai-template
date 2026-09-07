@@ -1,0 +1,58 @@
+# agent session log — written by scripts/agent_common.py
+# session: 002
+# date: 2026-09-07 12:52
+# train: contract_split
+# base: d522f3b0c729
+# phase: ADJUDICATE
+# primary-turn: WI-610-d522f3b0c7295ce2d46765551a6500491a76ff2c
+# judgment: docs/reviews/contract_split/002-ADJUDICATE-64c1e8a.md
+# candidate: e691243c97ec9869bde4260137b0197a2b014805
+# wi: WI-610
+# model: gpt-6-astra
+# guardrails:
+# outcome: COMMITTED
+# commits: 64c1e8a0..e691243c
+# tokens:
+# cost-usd:
+# wall-secs: 539
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 1019442
+# prompt-template: kit:ADJUDICATE
+# prompt-sha: sha256:ef7e60ac4992
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# invocation-id: 25ab48f490394447b2dcd9940bb6e773
+# attempt-id: contract_split@d522f3b0c7295ce2d46765551a6500491a76ff2c
+# source-event:
+# role: ADJUDICATE
+# provider: OPENAI
+# requested-model: gpt-6-astra
+# reported-model:
+# tier: strong
+# roster-row: OPENAI-ASTRA
+# started-at: 2026-09-07T17:43:39Z
+# ended-at: 2026-09-07T17:52:38Z
+# input-tokens:
+# output-tokens:
+# reasoning-tokens:
+# raw-usage:
+# usage-scope: unknown
+# usage-source: unknown
+# usage-status: unavailable
+# ---
+Committed `VERDICT: MEANING rows=52` in `d180d40e`; Approval payload and continuation in `e691243c`.
+
+All 52 decisions RETURN with zero accepted cells. TC-161 has contradictory routing obligations; TC-205’s cited lane tests do not establish its claimed primary-turn coverage.
+
+Checks passed. Registries and snapshots remain unchanged. Publication awaits the exclusive publisher’s provenance and independent review checks.
