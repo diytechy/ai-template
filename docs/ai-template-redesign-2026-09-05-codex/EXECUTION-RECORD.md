@@ -5,10 +5,30 @@ on `contract_split`. This is a supervised implementation sitting under
 the [package boundaries](IMPLEMENTATION.md), with the existing unattended
 queue paused. Package labels remain plan scope keys, not allocated WI IDs.
 
-**Resume:** the [September 6 handoff](../handoff-2026-09-06.md) gives the next
-session's read order, outstanding work and launch prerequisites. The current
-continuation below supersedes pending-state statements in the historical
-continuations that follow.
+**Resume:** the [September 7 handoff](../handoff-2026-09-07.md) gives the next
+session's read order, repair prerequisites, preserved lane and supervised
+retry procedure. It supersedes the earlier continuation/launch instructions.
+
+## Current continuation — approval repair before retry (2026-09-07)
+
+Both control segments stopped without a completed or integrated WI. The
+coordinator is stopped, pause tracked, and the interrupted lane preserved;
+the [retry record](CONTROL-RETRY.md#preserved-state-and-resolution-plan) owns
+the evidence. The subsequent Codex/Opus commits through `def51c22` changed
+plan documents, not the runtime. The new approval path is still unimplemented.
+
+The owner settled [stable ID meaning and primary-checkout adjudication](WORK-FLOWS.md).
+Implement the [repair](CONTROL-RETRY.md#owner-clarification-and-revised-resolution),
+migrate adjudication close/records, reconcile the preserved lane and verify
+before the next measured segment. The handoff carries the limits and pause
+restoration requirement. Retention remains absent and may remain excluded;
+it must not hold up this repair or be silently enabled in the control.
+
+The latest Opus review's close/migration findings are retained. Its concurrency
+and verification descriptions are qualified in the boundary table: preserve
+the existing drained exclusive turn and the applicable scope-based checks,
+including the explicit no-product-bar path. Trunk-side ownership still needs
+mechanical enforcement against other entry points and restart races.
 
 **Owner rulings sitting (2026-09-06, after `ae610215`):** the handoff's
 opening list links four rulings that change what this record's continuations
@@ -19,7 +39,7 @@ stops control admission; the smoke budget is 90 s, so the timing exception
 cited below is retired; OI-82 is ruled (a) and WI-577 is ready. Read those
 logs before the historical continuations.
 
-## Current OI-86/OI-87 continuation (2026-09-06)
+## Previous OI-86/OI-87 continuation (2026-09-06)
 
 Both recommendations are ruled in the [owner record](../log.md#2026-09-06--oi-86-and-oi-87-owner-rulings).
 The SN-036 review-pass amendment is applied through the needs-only snapshot

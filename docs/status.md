@@ -24,12 +24,13 @@ supervisor prompt at the owner's request). Backward-looking homes:
 status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **RESUME HERE:** start with [handoff-2026-09-06.md](handoff-2026-09-06.md),
+- **RESUME HERE:** start with [handoff-2026-09-07.md](handoff-2026-09-07.md),
   then the [redesign execution record](ai-template-redesign-2026-09-05-codex/EXECUTION-RECORD.md).
   Recheck Git and the generated frontier before choosing work; earlier handoffs
   and sitting checklists are historical context.
-- **Next adjudication:** follow the queued amendment and first-approval routes
-  for the perspective-review chain and the redesign Inspection artifacts.
+- **Repair before adjudication:** implement primary-checkout adjudication,
+  atomic approval/snapshot publication and the stable-ID meaning contract,
+  then migrate the pending amendment and first-approval records.
   Inspect the complete chains and every older cell a whole-registry snapshot
   would absorb; the needs-only SN-036 act does not approve those registries.
 - **Control retry stopped before integration:** the owner clarified that
@@ -37,7 +38,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   through the mechanical approval path. Follow the
   [revised repair plan](ai-template-redesign-2026-09-05-codex/CONTROL-RETRY.md#owner-clarification-and-revised-resolution)
   and [work-type and context audit](ai-template-redesign-2026-09-05-codex/WORK-FLOWS.md),
-  then reconcile the preserved lane before another launch. The tracked pause
+  then reconcile the preserved lane and pass checks/review before retrying
+  under the handoff's carried control envelope. Retention may stay absent and
+  excluded from the measured configuration. The tracked pause
   is restored; it stops new claims, so keep the coordinator stopped as well.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`

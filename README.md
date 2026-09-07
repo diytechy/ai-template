@@ -67,7 +67,7 @@ chasing it.
 | [`project-trajectory/`](project-trajectory/) | The portable kit: the gated, requirement-traced development process plus all templates and runnable scripts. **This is the thing you copy into new repos.** |
 | [`project-trajectory/README.md`](project-trajectory/README.md) | Full contents + rationale for the kit. |
 | [`CLAUDE.md`](CLAUDE.md) | Guide for working **in this template repo** (developing the templates themselves). |
-| [`docs/status.md`](docs/status.md) · [current handoff](docs/handoff-2026-09-06.md) | Resume kit development: next work, committed redesign results and remaining control conditions. |
+| [`docs/status.md`](docs/status.md) · [current handoff](docs/handoff-2026-09-07.md) | Resume kit development: approval repair, preserved lane and subsequent supervised control retry. |
 
 ## The kit's headline pieces
 
@@ -442,7 +442,7 @@ process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
 - Its current stage and frontier are derived into
   [`docs/status.md`](docs/status.md) and [`PROJECT_STATE.html`](PROJECT_STATE.html)
   from the live registries and [`docs/stage`](docs/stage). The
-  [current handoff](docs/handoff-2026-09-06.md) separates implementation evidence
+  [current handoff](docs/handoff-2026-09-07.md) separates implementation evidence
   from outstanding approvals and control observations.
 
 ### Configuration at a glance (defaults vs. this repo)

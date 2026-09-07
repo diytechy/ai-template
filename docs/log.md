@@ -63679,3 +63679,43 @@ Verification: 1687 passed, 8 skipped in 60.05s; enforced smoke wall 60.5s
 against 90s. Documentation: 1466 docs, 2347 links, zero broken, one existing
 orphan warning. No new tests for this documentation-only change.
 <!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=55ad0402+primary-adjudication-plan; out/run-logs/primary-adjudication-plan/smoke.txt; docs.txt -->
+
+## 2026-09-07 — Fresh-session handoff for repair and supervised retry
+
+The owner requested refreshed working surfaces before continuing execution
+in a new session. [The new handoff](handoff-2026-09-07.md) records the
+repair-first sequence, primary and preserved-lane identities, patch hash,
+verification/migration work, retention exclusion, carried control limits and
+the requirement to restore the pause and supervise the stop. Status, both
+README entry points, the execution record and control-document entry points
+now lead there; the prior handoff and launch instructions are marked historical.
+Updated the tracked pause's reason from the withdrawal symptom to the agreed
+approval/adjudication repair. Its original since date and blocking presence
+are preserved.
+
+The commit hook caught the generated Open Items page's stale pause reason;
+regenerated it with `gen_open_items.py`. Verified its only content change is
+the escaped old reason replaced by the escaped new reason. No approval card
+or registry content changed.
+
+Applied the reviewed qualifications to Opus's `def51c22`: keep the close and
+pending-row migration findings, preserve already-exclusive dispatch instead
+of assuming a new competing writer, and carry the scope-based adjudication
+verification policy rather than inventing a new full product bar. Direct
+integration entry points and restart ownership still require enforcement.
+The underlying approval and retention runtime repairs remain unimplemented.
+
+Rechecked the primary and interrupted lane, the forensic patch hash and the
+absence of a running coordinator/launcher. No runtime, registry, queue,
+snapshot or provider configuration changed; no process launched. No capped
+files changed. The primary snapshot diff against the prior retry launch is
+empty. Preserved lane and evidence remain untouched.
+
+Deferred open items: none — next-session work follows the agreed repair and
+retry, with existing authority and control limits carried forward.
+
+Verification: 1687 passed, 8 skipped in 59.41s; enforced smoke wall 59.7s
+against 90s. Documentation: 1468 docs, 2368 links, zero broken, one existing
+orphan warning. Strict trajectory passed; generated status and dashboard
+checks were fresh. No new tests for the documentation and pause-reason update.
+<!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict" rev=def51c22+handoff-2026-09-07; out/run-logs/handoff-2026-09-07/smoke.txt; docs.txt; trajectory.txt -->

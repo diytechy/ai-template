@@ -1,5 +1,12 @@
 # Control-window decision
 
+**Current continuation:** the [September 7 handoff](../handoff-2026-09-07.md)
+supersedes earlier launch procedures. Implement and verify the agreed
+approval/adjudication repair, then retry under the existing owner-ruling
+envelope with prior usage carried forward. Keep the coordinator stopped and
+pause tracked during repair; the historical option table is not a new choice
+or a reset of the bounds below.
+
 Prepared 2026-09-06 against repaired baseline `83f2c7aa`. This is a proposed
 operating envelope for P0c, not observations, a replacement ruling or a change
 to the tracked pause. The [measurement contract](EXECUTION-DETAILS.md#6-measurement-and-stopgo)
@@ -140,5 +147,7 @@ open item minted 2026-09-06) is independent of the window and does not block it.
 preparation and correction of the unsupported rationale-citation attribution,
 the owner instructed “Okay, you can retry”. Resume the original lane under the
 same control envelope, counting prior active coordinator time and completed
-WIs rather than resetting them. The [retry record](CONTROL-RETRY.md) owns the
-new segment's launch evidence. Restore the pause at the stopping boundary.
+WIs rather than resetting them. The [retry record](CONTROL-RETRY.md) owns that
+segment's launch evidence. Restore the pause at the stopping boundary. For the
+next repaired segment, use the current handoff's sequence and record a fresh
+preflight and launch identity; preserve this envelope.

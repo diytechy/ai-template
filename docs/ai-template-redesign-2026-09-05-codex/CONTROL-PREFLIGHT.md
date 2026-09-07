@@ -4,6 +4,9 @@
 correctness findings. [Results and the required repair](CONTROL-OBSERVATIONS.md)
 govern continuation; the new tracked pause must not be deleted using the
 original launch instruction below.
+For the next repaired segment, use the
+[September 7 handoff](../handoff-2026-09-07.md) and record a fresh preflight;
+the CLI probes below remain historical availability evidence.
 
 The launch preparation is based on reviewed `22285df4182dd2b69b4e658d77732afaf145c165`
 on `contract_split`. The frozen pause-deletion launch commit is

@@ -6,6 +6,11 @@ snapshot writing to the mechanical approval path; the withdrawal failure
 remains evidence of the incorrect ownership and timing in the existing flow.
 No work item completed or merged in this segment.
 
+**Next session:** follow [handoff-2026-09-07.md](../handoff-2026-09-07.md).
+Implement and verify the revised repair before retrying. The envelope/launch
+sections below describe the previous segment; do not use their launch sequence
+or remaining-time figure as a fresh preflight.
+
 The owner authorized retry with “Okay, you can retry”, after challenging the
 unsupported attribution of “Rationale names this ruling”. That attribution is
 withdrawn in the [repair disposition](CONTROL-REPAIR.md) and F6; ordinary review
@@ -269,12 +274,15 @@ Resolution before another launch:
    lane, which step 5 already covers, and `WI-601`, `WI-602`, `WI-603`,
    `WI-604` and `WI-606` queued with `safety_class = "adjudication"`. Removing
    adjudication worktree dispatch changes how all six run, and `WI-606`
-   depends on `WI-605`. Decide whether they re-shape in place or the dispatch
-   change carries a compatibility arm, and settle the three mechanical
+   depends on `WI-605`. Migrate their records and scopes to trunk execution;
+   do not preserve an adjudication-worktree compatibility route. Settle the three mechanical
    consequences the [boundary table](WORK-FLOWS.md#what-the-runtime-does-today)
-   now records: the integration-slot interaction and its throughput cost, the
-   branch-keyed adjudication close, and the bar on a trunk-side approval
-   commit. None of these is a new requirement; each is an existing mechanism
+   now records: preserve exclusive ownership across entry points and restarts,
+   replace the branch-keyed adjudication close, and carry scope-based checks
+   and evidence onto trunk approval publication. Existing exclusive admission
+   already drains the station, and scoped adjudication already has an explicit
+   no-product-bar arm; neither a new concurrent writer nor a new full bar
+   follows from moving the turn. None of these is a new requirement; each is an existing mechanism
    whose key or holder the move invalidates.
 
 Separately, reconcile the queued retention restoration with the
@@ -285,8 +293,9 @@ in the current runtime; it must not be reported as surviving between WIs today.
 The staged/committed mirror checks must be assessed within this corrected
 flow; their observed inability to express the existing incident's rollback
 remains a recovery concern, not the central product design. Keep the pause
-and coordinator stop. This clarification does not authorize another control
-launch or approve the disputed spine cells.
+and coordinator stop through repair. The September 7 handoff records the
+owner's intended new-session execution and subsequent supervised retry;
+this plan does not itself approve disputed spine cells.
 
 The sample remains insufficient to select a runner replacement. It demonstrates
 that the scope/interpreter repairs functioned in this retry and that snapshot

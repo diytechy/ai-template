@@ -1,2 +1,2 @@
-reason = "Control retry stopped before integration: the snapshot-equals-live integrity check rejected withdrawing the SR snapshot; worker restored the unendorsed SR-161 anchor and added a prose exception. Preserve the lane and resolve the withdrawal/check conflict before another launch. See docs/ai-template-redesign-2026-09-05-codex/CONTROL-RETRY.md."
+reason = "Repair before retry: implement exclusive primary-checkout adjudication, approval and mechanical snapshot publication in one commit, stable-ID meaning handling, and durable close/restart; reconcile the preserved lane and verify before launch. See docs/handoff-2026-09-07.md. Pause stops new claims only; keep the coordinator stopped during repair."
 since = "2026-09-07"
