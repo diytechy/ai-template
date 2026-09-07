@@ -1,0 +1,65 @@
+{
+  "head": "3c25b448eae9ea0f6c76ad75f6ba96f78193bc0a",
+  "checks": [
+    {
+      "name": "rollup",
+      "argv": [
+        "project-trajectory/scripts/gen_verdict_rollup.py"
+      ],
+      "exit": 0,
+      "wall_seconds": 0.14305512502323836
+    },
+    {
+      "name": "smoke",
+      "argv": [
+        "-m",
+        "pytest",
+        "-q",
+        "-n",
+        "auto",
+        "-m",
+        "smoke"
+      ],
+      "exit": 0,
+      "wall_seconds": 48.97644308296731
+    },
+    {
+      "name": "budget",
+      "argv": [
+        "scripts/check_smoke_budget.py",
+        "--mode",
+        "enforce",
+        "--elapsed",
+        "48.97644308296731"
+      ],
+      "exit": 0,
+      "wall_seconds": 0.03554041701136157
+    },
+    {
+      "name": "docs",
+      "argv": [
+        "project-trajectory/scripts/check_docs.py",
+        "--root",
+        ".",
+        "--stale"
+      ],
+      "exit": 0,
+      "wall_seconds": 1.7567987089860253
+    },
+    {
+      "name": "trajectory",
+      "argv": [
+        "project-trajectory/scripts/check_trajectory.py",
+        "--root",
+        ".",
+        "--strict"
+      ],
+      "exit": 0,
+      "wall_seconds": 4.868156832992099
+    }
+  ],
+  "original_sha256": {
+    "/Users/diytechy/Documents/ai-template/docs/iteration/contract_split-005-20260907-125326.log": "99b9b180a93b52dbbf480f563b5f729e4ced65cecc90895a0755166885ed09d7",
+    "/Users/diytechy/Documents/ai-template/docs/reviews/contract_split/scoreboard.txt": "aadba01863a5ceb150d220cd2a7d44b59ab89d1255a66061f70238807dfbd224"
+  }
+}
