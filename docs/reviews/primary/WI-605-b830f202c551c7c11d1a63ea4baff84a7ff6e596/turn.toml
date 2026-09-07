@@ -1,0 +1,27 @@
+version = 1
+turn = "WI-605-b830f202c551c7c11d1a63ea4baff84a7ff6e596"
+wi = "WI-605"
+base = "b830f202c551c7c11d1a63ea4baff84a7ff6e596"
+primary_branch = "contract_split"
+primary_root = "/Users/diytechy/Documents/ai-template"
+spec = "docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md"
+proposal_spec_blob = "9e5967174d0e38727273e1d31a34c7bf4c8d167d"
+scope = ["SR-161", "LLR-183", "TC-178"]
+
+[registry_blobs]
+"docs/requirements/components.toml" = "dfb9e077586659afbd4d9b2f636f891976add9e2"
+"docs/requirements/external.toml" = "179dcd21854d08b4b0e366bc96e2e3fd076522e2"
+"docs/requirements/interfaces.toml" = "9d347825972d065b683e6e6823f6b1efeccd4337"
+"docs/requirements/low-level-requirements.toml" = "da0762f8d0f124b086c1e3a7b1e67086e1ba31ac"
+"docs/requirements/stakeholder-needs.toml" = "abf6c3ab7dcbf6df38efaecbf2188948b4f4cb9e"
+"docs/requirements/system-requirements.toml" = "6524fbb9f27d1735b33cab2731a32f86943f33e8"
+"docs/test/test-cases.toml" = "354a27de0df76fa86c195d023d7b835bdd25d4d6"
+
+[approved_blobs]
+"docs/archive/last_approved/docs/requirements/components.toml" = "cf67e1134ebd7690603b407e0a0d61d4bc10b062"
+"docs/archive/last_approved/docs/requirements/external.toml" = "179dcd21854d08b4b0e366bc96e2e3fd076522e2"
+"docs/archive/last_approved/docs/requirements/interfaces.toml" = "0b060fb818b03ab5b3413787bbb2f8f059931af3"
+"docs/archive/last_approved/docs/requirements/low-level-requirements.toml" = "1ec0ab08fcea5f7dd638651e4281322bbd031705"
+"docs/archive/last_approved/docs/requirements/stakeholder-needs.toml" = "abf6c3ab7dcbf6df38efaecbf2188948b4f4cb9e"
+"docs/archive/last_approved/docs/requirements/system-requirements.toml" = "435d8ce708795a5e3f9451ff0d171824b2b3c452"
+"docs/archive/last_approved/docs/test/test-cases.toml" = "ca71cc09e6093c5c5ff299e8d077453c967140d2"
