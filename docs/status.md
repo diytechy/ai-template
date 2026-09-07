@@ -32,13 +32,13 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   for the perspective-review chain and the redesign Inspection artifacts.
   Inspect the complete chains and every older cell a whole-registry snapshot
   would absorb; the needs-only SN-036 act does not approve those registries.
-- **Control launch:** retain the tracked `docs/work/pause` while preparing the
-  frozen launch commit against the
-  [settled control ruling](ai-template-redesign-2026-09-05-codex/CONTROL-DECISION.md#owner-ruling-2026-09-06)
-  (re-ruled 2026-09-06: unreported spend is recorded, never an admission stop).
-  Revalidate the [preflight](ai-template-redesign-2026-09-05-codex/CONTROL-PREFLIGHT.md)
-  at that commit, then obtain the ruling's owner-reviewed pause deletion.
-  Replacement packages follow the control's evidence decision.
+- **Control launch — authorized:** the next session deletes the tracked
+  `docs/work/pause` in a hooks-enabled commit and starts the coordinator from
+  the primary root, per the handoff's
+  [launch procedure](handoff-2026-09-06.md#launch-procedure) and the
+  [control ruling](ai-template-redesign-2026-09-05-codex/CONTROL-DECISION.md#owner-ruling-2026-09-06)
+  (8 WIs / 2 days / 12 h; US$1000 reported spend is a watch, unreported spend
+  never stops admission). Replacement packages follow the window's evidence.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). `wi416-parked-handback-contract` is still

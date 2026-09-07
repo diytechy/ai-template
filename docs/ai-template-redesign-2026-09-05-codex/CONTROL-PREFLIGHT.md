@@ -9,15 +9,15 @@ exists. This record prepares the launch; it is not a control observation.
 
 The [later owner ruling](CONTROL-DECISION.md#owner-ruling-2026-09-06) governs:
 first eight completed WIs or two active days, at most twelve active coordinator
-hours. US$100 is a watched bound over reported spend; missing spend is recorded
+hours. US$1000 (raised from US$100, 2026-09-06 later sitting) is a watched bound over reported spend; missing spend is recorded
 and does not stop admission. Sampling, consolidation, authority and provider
 consent remain unchanged. The retained-adjudicator patch is outside the window.
 
-`docs/work/pause` remains tracked and the runner has not launched. The remaining
-owner act is its reviewed deletion against the selected frozen commit after
-queue/route revalidation. General plan continuation supplied neither that exact
-hash nor the review of that deletion. No additional permission is requested
-merely because spend is unavailable.
+`docs/work/pause` remains tracked and the runner has not launched. The owner
+has since (2026-09-06, later sitting) instructed the next session to perform
+the deletion commit and start the window; that commit is the frozen launch
+commit and its hash is recorded here by the session that makes it. No
+additional permission is requested merely because spend is unavailable.
 
 ## Actual route evidence
 
@@ -39,7 +39,7 @@ probes. Sol, Terra and Luna collaboration sessions are not evidence of Codex
 CLI authentication.
 
 No inspected setting imposes an aggregate provider-dollar limit. The runner
-records provider-reported cost where supplied but does not enforce US$100.
+records provider-reported cost where supplied but does not enforce the US$1000 watch.
 That remains the ruled accounting limitation, not an admission gate. The dials
 remain in `docs/process.toml`: Needs-held authority, final review always,
 keep-nondependent false, clean-close sampling at its declared rate, and one

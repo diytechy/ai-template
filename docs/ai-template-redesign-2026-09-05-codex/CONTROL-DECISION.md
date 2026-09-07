@@ -81,7 +81,7 @@ opinion; every value below is an owner dial and may be re-ruled in this section.
 |---|---|
 | Option | **Short control** |
 | Observation boundary | First 8 completed WIs, or 2 active days, whichever arrives first |
-| Maximum paid operation | 12 active coordinator hours and US$100 aggregate provider spend, whichever arrives first; in-flight drain cost reserved inside the cap |
+| Maximum paid operation | 12 active coordinator hours; US$1000 reported provider spend as a watched bound (raised from US$100 on 2026-09-06, later sitting: the routes bill against a subscription, so the figure is a watch, not a reservation) |
 | Workload | The dependency-ready queue as it stands at launch, read spec by spec; no manufactured rows; held work stays held |
 | Configuration | Code frozen from the launch commit; sampling, consolidation, authority and provider-consent dials unchanged; the retained adjudicator patch is not applied for the window |
 | Outcome on a weak sample | **Insufficient evidence** resolves to targeted repair; no second window without a new ruling here |
@@ -116,14 +116,21 @@ so and the outcome is insufficient evidence, not a quietly widened cap.
 **Re-ruled 2026-09-06 (later sitting).** The owner reversed the admission
 half of the clause above: the window exists to measure the first WIs, so a
 route that cannot report spend, or an aggregate that cannot be reserved, does
-NOT stop admission. The US$100 figure stays as a watched bound over REPORTED
-spend, with every missing figure recorded as missing; the WI, day and
+NOT stop admission. The spend figure stays as a watched bound over REPORTED
+spend, with every missing figure recorded as missing — and is **US$1000**, not
+US$100, since the same sitting: the enabled routes bill against a subscription,
+so the number bounds what is reported, not what is reserved; the WI, day and
 coordinator-hour bounds are unchanged and remain the stopping rule. The
 preflight's spend finding is therefore an accounting gap to report, not a
 launch prerequisite. Remaining launch conditions: the frozen launch commit,
 the queue/route revalidation at it, and the owner's reviewed pause deletion.
 
 **Launch act.** Launching is the owner's reviewed deletion of `docs/work/pause`
-at or after the repair commit, with this section unchanged. The need-tier
+at or after the repair commit, with this section unchanged. **Authorized
+2026-09-06 (later sitting):** the owner instructed the next session to perform
+that deletion commit and start the window; the owner's instruction is the
+review, the deletion commit is the frozen launch commit, and no further owner
+act is owed before the first observation. Procedure: the handoff's launch
+section. The need-tier
 sitting (SN-007 / SN-026 re-attestation and the SN-024 ruling, carried as an
 open item minted 2026-09-06) is independent of the window and does not block it.
