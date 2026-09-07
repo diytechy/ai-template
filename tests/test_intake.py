@@ -2302,3 +2302,56 @@ def test_a_bare_sweep_still_walks_the_terminal_folders(tmp_path, capsys):
     assert _sweep(root) == 0
     assert "sweep minted 1 row(s)." in capsys.readouterr().out
     assert any("work/partial/WI-005" in ref for ref in _minted_specrefs(root))
+
+
+@pytest.mark.parametrize("status", ["done", "partial", "cancelled"])
+def test_closed_consolidation_successor_can_continue_without_reabsorption(status):
+    registry = [
+        {"WI-ID": "WI-1", "Status": "restructured", "Title": "original"},
+        {"WI-ID": "WI-2", "Status": status, "Supersedes": "WI-1", "Title": "combined"},
+    ]
+    draft = {"title": "continue the closed outcome", "supersedes": ["WI-2"]}
+    assert intake._pre_mint_refusal([draft], "returned judgment", registry) is None
+    # An actual consolidation still cannot absorb the same protected successor.
+    draft["consolidated"] = True
+    assert "RETURN-TO-DRAFT" in intake._pre_mint_refusal([draft], "census", registry)
+
+
+def test_terminal_continuation_repoints_waiters_without_rewriting_old_consolidation(
+    tmp_path,
+):
+    root = git_repo(tmp_path)
+    original = write_spec(
+        root,
+        "restructured",
+        "WI-001",
+        body="\n## Deliverable\n\nRestructured into WI-002.\n",
+    )
+    closed = write_spec(
+        root,
+        "complete",
+        "WI-002",
+        supersedes="WI-001",
+        body="\n## Deliverable\n\nReturned with findings.\n",
+    )
+    waiter = write_spec(root, "queued", "WI-003", needs=["WI-002"])
+    _commit(root, "consolidated judgment returned")
+    before = {p: p.read_bytes() for p in [original, closed]}
+    minted, refusal = intake.stage_mint(
+        root,
+        [
+            {
+                "title": "reanchor the same scope",
+                "kind": "adjudication",
+                "brief": "amendment",
+                "adjudicates": ["LLR-001"],
+                "supersedes": ["WI-002"],
+            }
+        ],
+        "returned judgment",
+    )
+    assert refusal is None, refusal
+    assert minted[0][0] == "WI-004"
+    assert 'needs = ["WI-004"]' in waiter.read_text()
+    assert queued_rows(root)["WI-004"]["Supersedes"] == "WI-002"
+    assert {p: p.read_bytes() for p in before} == before

@@ -1,0 +1,76 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_closed_consolidation_successor_can_continue_without_reabsorption[done] __
+
+status = 'done'
+
+    @pytest.mark.parametrize("status", ["done", "partial", "cancelled"])
+    def test_closed_consolidation_successor_can_continue_without_reabsorption(status):
+        registry = [
+            {"WI-ID": "WI-1", "Status": "restructured", "Title": "original"},
+            {"WI-ID": "WI-2", "Status": status, "Supersedes": "WI-1", "Title": "combined"},
+        ]
+        draft = {"title": "continue the closed outcome", "supersedes": ["WI-2"]}
+>       assert intake._pre_mint_refusal([draft], "returned judgment", registry) is None
+E       AssertionError: assert 'returned judgment: the draft absorbs WI-2 - a row minted by an earlier consolidation. Re-absorbing one overturns that judgement, which is a RETURN-TO-DRAFT for the owner to rule, never a second mint; nothing minted' is None
+E        +  where 'returned judgment: the draft absorbs WI-2 - a row minted by an earlier consolidation. Re-absorbing one overturns that judgement, which is a RETURN-TO-DRAFT for the owner to rule, never a second mint; nothing minted' = <function _pre_mint_refusal at 0x10b64ca40>([{'title': 'continue the closed outcome', 'supersedes': ['WI-2']}], 'returned judgment', [{'WI-ID': 'WI-1', 'Status': 'restructured', 'Title': 'original'}, {'WI-ID': 'WI-2', 'Status': 'done', 'Supersedes': 'WI-1', 'Title': 'combined'}])
+E        +    where <function _pre_mint_refusal at 0x10b64ca40> = intake._pre_mint_refusal
+
+tests/test_intake.py:2314: AssertionError
+_ test_closed_consolidation_successor_can_continue_without_reabsorption[partial] _
+
+status = 'partial'
+
+    @pytest.mark.parametrize("status", ["done", "partial", "cancelled"])
+    def test_closed_consolidation_successor_can_continue_without_reabsorption(status):
+        registry = [
+            {"WI-ID": "WI-1", "Status": "restructured", "Title": "original"},
+            {"WI-ID": "WI-2", "Status": status, "Supersedes": "WI-1", "Title": "combined"},
+        ]
+        draft = {"title": "continue the closed outcome", "supersedes": ["WI-2"]}
+>       assert intake._pre_mint_refusal([draft], "returned judgment", registry) is None
+E       AssertionError: assert 'returned judgment: the draft absorbs WI-2 - a row minted by an earlier consolidation. Re-absorbing one overturns that judgement, which is a RETURN-TO-DRAFT for the owner to rule, never a second mint; nothing minted' is None
+E        +  where 'returned judgment: the draft absorbs WI-2 - a row minted by an earlier consolidation. Re-absorbing one overturns that judgement, which is a RETURN-TO-DRAFT for the owner to rule, never a second mint; nothing minted' = <function _pre_mint_refusal at 0x10b64ca40>([{'title': 'continue the closed outcome', 'supersedes': ['WI-2']}], 'returned judgment', [{'WI-ID': 'WI-1', 'Status': 'restructured', 'Title': 'original'}, {'WI-ID': 'WI-2', 'Status': 'partial', 'Supersedes': 'WI-1', 'Title': 'combined'}])
+E        +    where <function _pre_mint_refusal at 0x10b64ca40> = intake._pre_mint_refusal
+
+tests/test_intake.py:2314: AssertionError
+_ test_closed_consolidation_successor_can_continue_without_reabsorption[cancelled] _
+
+status = 'cancelled'
+
+    @pytest.mark.parametrize("status", ["done", "partial", "cancelled"])
+    def test_closed_consolidation_successor_can_continue_without_reabsorption(status):
+        registry = [
+            {"WI-ID": "WI-1", "Status": "restructured", "Title": "original"},
+            {"WI-ID": "WI-2", "Status": status, "Supersedes": "WI-1", "Title": "combined"},
+        ]
+        draft = {"title": "continue the closed outcome", "supersedes": ["WI-2"]}
+>       assert intake._pre_mint_refusal([draft], "returned judgment", registry) is None
+E       AssertionError: assert 'returned judgment: the draft absorbs WI-2 - a row minted by an earlier consolidation. Re-absorbing one overturns that judgement, which is a RETURN-TO-DRAFT for the owner to rule, never a second mint; nothing minted' is None
+E        +  where 'returned judgment: the draft absorbs WI-2 - a row minted by an earlier consolidation. Re-absorbing one overturns that judgement, which is a RETURN-TO-DRAFT for the owner to rule, never a second mint; nothing minted' = <function _pre_mint_refusal at 0x10b64ca40>([{'title': 'continue the closed outcome', 'supersedes': ['WI-2']}], 'returned judgment', [{'WI-ID': 'WI-1', 'Status': 'restructured', 'Title': 'original'}, {'WI-ID': 'WI-2', 'Status': 'cancelled', 'Supersedes': 'WI-1', 'Title': 'combined'}])
+E        +    where <function _pre_mint_refusal at 0x10b64ca40> = intake._pre_mint_refusal
+
+tests/test_intake.py:2314: AssertionError
+_ test_terminal_continuation_repoints_waiters_without_rewriting_old_consolidation _
+
+tmp_path = PosixPath('/private/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/pytest-of-diytechy/pytest-1983/test_terminal_continuation_rep0')
+
+    def test_terminal_continuation_repoints_waiters_without_rewriting_old_consolidation(tmp_path):
+        root = git_repo(tmp_path)
+        original = write_spec(root, "restructured", "WI-001", body="\n## Deliverable\n\nRestructured into WI-002.\n")
+        closed = write_spec(root, "complete", "WI-002", supersedes="WI-001", body="\n## Deliverable\n\nReturned with findings.\n")
+        waiter = write_spec(root, "queued", "WI-003", needs=["WI-002"])
+        _commit(root, "consolidated judgment returned")
+        before = {p: p.read_bytes() for p in [original, closed]}
+        minted, refusal = intake.stage_mint(root, [{"title": "reanchor the same scope", "kind": "adjudication", "brief": "amendment", "adjudicates": ["LLR-001"], "supersedes": ["WI-002"]}], "returned judgment")
+>       assert refusal is None, refusal
+E       AssertionError: returned judgment: the draft absorbs WI-002 - a row minted by an earlier consolidation. Re-absorbing one overturns that judgement, which is a RETURN-TO-DRAFT for the owner to rule, never a second mint; nothing minted
+E       assert 'returned judgment: the draft absorbs WI-002 - a row minted by an earlier consolidation. Re-absorbing one overturns that judgement, which is a RETURN-TO-DRAFT for the owner to rule, never a second mint; nothing minted' is None
+
+tests/test_intake.py:2328: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_intake.py::test_closed_consolidation_successor_can_continue_without_reabsorption[done]
+FAILED tests/test_intake.py::test_closed_consolidation_successor_can_continue_without_reabsorption[partial]
+FAILED tests/test_intake.py::test_closed_consolidation_successor_can_continue_without_reabsorption[cancelled]
+FAILED tests/test_intake.py::test_terminal_continuation_repoints_waiters_without_rewriting_old_consolidation
+4 failed, 63 deselected in 0.69s

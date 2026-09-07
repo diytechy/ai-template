@@ -3,7 +3,7 @@ id = "WI-610"
 title = "adjudicate: combined approved-cell amendments after PC authoring (OI-88 transfer)"
 workstream = "process"
 sr_refs = ["SR-024", "SR-033", "SR-043", "SR-052", "SR-053", "SR-054", "SR-111", "SR-112", "SR-129", "SR-144", "SR-146", "SR-147", "SR-148", "SR-149", "SR-156", "SR-161", "SR-162", "SR-167", "SR-175", "SR-176", "SR-177"]
-needs = ["WI-608"]
+needs = ["WI-608", "WI-611"]
 specref = "docs/reviews/wi-609-resolution/DECISION.md"
 buildtier = "strong"
 safety_class = "adjudication"
@@ -61,3 +61,5 @@ Advisory registry joins (WI-388; never gating):
 - IF-166 scripts/trace -> external:downstream adopter: file docs/test/report.html — a self-contained collapsible <details> tree of the SN -> SR -> LLR -> TC forest, writ…
 - IF-004 scripts/check_perf -> scripts/check: stdout check_perf: OK - <summary> or FAIL - <summary>, plus one <status> - <PB-ID> <metric> line per non-clean budget
 - IF-147 scripts/check_perf -> scripts/check: exit-code 0 OK, SKIP or WARN · 1 a Gate=fail budget breached in the run tier, or --update-baseline with no metrics
+
+Pre-selection prerequisite: WI-611 repairs terminal-continuation intake and the stale TC-205 citations found by the supervised preflight. The original scope and all semantic obligations above remain; the exact final TC-205 text and its actual coverage must still be judged.

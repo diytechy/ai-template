@@ -118,6 +118,7 @@ import agent_common as ac
 import baseline_snapshot
 import census
 import consolidate
+from consolidate import supersedes_ids
 import schedule
 import trace
 import wi_convert
@@ -1603,47 +1604,6 @@ def _red_tc_context(line, targets):
 _OPEN_STATUSES = frozenset({"draft", "queued", "active", "deferred"})
 
 
-def supersedes_ids(value):
-    """A draft's `supersedes` as an ORDERED, de-duplicated list of ids.
-
-    ONE id or SEVERAL, in one reader (the 2026-09-02 restructure plan §1.5).
-    Every disposition names exactly one predecessor and writes it as a bare
-    string; a CONSOLIDATION absorbs several rows into one successor and writes a
-    TOML list. Both spellings arrive here and leave as a list, so nothing
-    downstream — the cell, the edge re-point, the refusals — has two shapes to
-    handle. An absent or empty value is an empty list, which is what "this row
-    continues nothing" means.
-
-    A STRING is SPLIT, because the writer's own form is a joined one:
-    `_draft_row` stores the cell as `";".join(supersedes_ids(...))`, so a minted
-    spec carries `supersedes = "WI-558;WI-560"` — and a reader that took that
-    back as ONE token would hand `_supersedes_refusal` a value it must reject as
-    "not a WI-### id", which is a writer emitting what its own sibling reader
-    refuses. The writer's form round-trips through the reader; that is the rule.
-
-    ONE separator, `;`, and it is the WRITER's: this split exists to read a
-    machine-written cell back, never to parse an author's prose. A hand-authored
-    `## Dispositions` block is held to the stricter spelling at its own boundary
-    (`_authored_supersedes_refusal`: a string is exactly one id, several ids are
-    a TOML list), so nothing that reaches here needs a second separator class.
-
-    Deliberately NOT `kitlib.spine.refs`, the shared multi-ref splitter, though
-    this is otherwise exactly its job: `refs` also splits on WHITESPACE, and a
-    `supersedes` naming free prose ("the other one") would then reach the
-    refusal as three tokens, so the message could no longer echo the author's
-    own value back at them."""
-    if value is None:
-        return []
-    items = value if isinstance(value, (list, tuple)) else [value]
-    out = []
-    for item in items:
-        for token in str(item).split(";"):
-            token = token.strip()
-            if token and token not in out:
-                out.append(token)
-    return out
-
-
 _NEEDS_SOURCE_RE = re.compile(
     r"""(?m)^[ \t]*(?:needs|"(?:\\.|[^"\\\r\n])*"|'[^'\r\n]*')"""
     r"[ \t]*=[ \t]*(?=\[)"
@@ -1998,9 +1958,7 @@ def _pre_mint_refusal(drafts, subject_verb, registry):
         # earlier consolidation minted (overturning that judgement). The rule
         # lives in `consolidate` beside the census that has to state it; this is
         # its call site.
-        refusal = consolidate.reabsorption_refusal(
-            registry, supersedes_ids(draft.get("supersedes"))
-        )
+        refusal = consolidate.draft_reabsorption_refusal(registry, draft)
         if refusal:
             return "{}: {}".format(subject_verb, refusal)
     return None

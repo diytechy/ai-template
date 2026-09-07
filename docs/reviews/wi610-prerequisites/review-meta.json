@@ -1,0 +1,11 @@
+{
+  "candidate_tree": "5fca47dd74d88389690aca8ac5a0a49996154cc6",
+  "prompt_sha256": "e3ccc2445a5167441e31ab58a9ca366758c4e4312cd16fac5375d27bc7bec6fb",
+  "route": "OPENAI-ASTRA",
+  "model": "gpt-6-astra",
+  "effort": "medium",
+  "fresh_context": true,
+  "degraded": "same-family independent session; Fable session limit, Kimi server error",
+  "exit": 0,
+  "wall_seconds": 37.57932866696501
+}

@@ -1,0 +1,84 @@
+{
+  "base": "a8ff18282bd9941ad060a3cf4dcb520b891caccd",
+  "checks": [
+    {
+      "name": "smoke",
+      "argv": [
+        "-m",
+        "pytest",
+        "-q",
+        "-n",
+        "auto",
+        "-m",
+        "smoke"
+      ],
+      "exit": 0,
+      "wall_seconds": 48.6147453750018
+    },
+    {
+      "name": "budget",
+      "argv": [
+        "scripts/check_smoke_budget.py",
+        "--mode",
+        "enforce",
+        "--elapsed",
+        "48.6147453750018"
+      ],
+      "exit": 0,
+      "wall_seconds": 0.03658775001531467
+    },
+    {
+      "name": "regen",
+      "argv": [
+        "project-trajectory/scripts/trunk_step.py",
+        "--root",
+        ".",
+        "--regen"
+      ],
+      "exit": 0,
+      "wall_seconds": 9.430587375012692
+    },
+    {
+      "name": "trace",
+      "argv": [
+        "project-trajectory/scripts/trace.py",
+        "--root",
+        ".",
+        "--strict"
+      ],
+      "exit": 0,
+      "wall_seconds": 2.2788965420331806
+    },
+    {
+      "name": "trajectory",
+      "argv": [
+        "project-trajectory/scripts/check_trajectory.py",
+        "--root",
+        ".",
+        "--strict"
+      ],
+      "exit": 0,
+      "wall_seconds": 5.039966125041246
+    },
+    {
+      "name": "docs",
+      "argv": [
+        "project-trajectory/scripts/check_docs.py",
+        "--root",
+        ".",
+        "--stale"
+      ],
+      "exit": 0,
+      "wall_seconds": 1.3864318749983795
+    },
+    {
+      "name": "open-items",
+      "argv": [
+        "project-trajectory/scripts/gen_open_items.py",
+        "--check"
+      ],
+      "exit": 0,
+      "wall_seconds": 1.784603292006068
+    }
+  ]
+}

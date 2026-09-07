@@ -1,0 +1,108 @@
+{
+  "base": "a8ff18282bd9941ad060a3cf4dcb520b891caccd",
+  "tree": "5fca47dd74d88389690aca8ac5a0a49996154cc6",
+  "patch_sha256": "cbe320dd47bc3aa0cd20a577c03b7fd30d0e2b09f7e5850e9be57f09b4304d4d",
+  "checks": [
+    {
+      "name": "smoke",
+      "argv": [
+        "-m",
+        "pytest",
+        "-q",
+        "-n",
+        "auto",
+        "-m",
+        "smoke"
+      ],
+      "exit": 0,
+      "wall_seconds": 48.6147453750018
+    },
+    {
+      "name": "budget",
+      "argv": [
+        "scripts/check_smoke_budget.py",
+        "--mode",
+        "enforce",
+        "--elapsed",
+        "48.6147453750018"
+      ],
+      "exit": 0,
+      "wall_seconds": 0.03658775001531467
+    },
+    {
+      "name": "regen",
+      "argv": [
+        "project-trajectory/scripts/trunk_step.py",
+        "--root",
+        ".",
+        "--regen"
+      ],
+      "exit": 0,
+      "wall_seconds": 9.430587375012692
+    },
+    {
+      "name": "trace",
+      "argv": [
+        "project-trajectory/scripts/trace.py",
+        "--root",
+        ".",
+        "--strict"
+      ],
+      "exit": 0,
+      "wall_seconds": 2.2788965420331806
+    },
+    {
+      "name": "trajectory",
+      "argv": [
+        "project-trajectory/scripts/check_trajectory.py",
+        "--root",
+        ".",
+        "--strict"
+      ],
+      "exit": 0,
+      "wall_seconds": 5.039966125041246
+    },
+    {
+      "name": "docs",
+      "argv": [
+        "project-trajectory/scripts/check_docs.py",
+        "--root",
+        ".",
+        "--stale"
+      ],
+      "exit": 0,
+      "wall_seconds": 1.3864318749983795
+    },
+    {
+      "name": "open-items",
+      "argv": [
+        "project-trajectory/scripts/gen_open_items.py",
+        "--check"
+      ],
+      "exit": 0,
+      "wall_seconds": 1.784603292006068
+    }
+  ],
+  "minted": [
+    [
+      "WI-611",
+      "docs/archive/work/complete/WI-611-repair-consolidated-work-conti.md"
+    ]
+  ],
+  "census": "exact same 52 Approved-change rows and 9 Drafted riders; no widened approval scope",
+  "file_hashes": {
+    "README.md": "29dc1c6250673ac9973607faf48809d3f3355c2f5a80e9cd7daf0e84080e1826",
+    "ancestry-red.txt": "9a70673c0a3d4dcc93dda2675a342b8ab9bf1d47cf52bd1f2032af313b375efc",
+    "budget.txt": "8fa55caf05cdfa0e583288e4bf2b006cb913ba9329cff73c4ae9e0c4eeeed837",
+    "checks.json": "d6a40be67ff42bc1239f5fcec15157a9c701e5a7c3314c67ae323dfeed0122a1",
+    "citation-map.json": "f0284965f4e4e6d5da12bd2958dc1a4e94f2a06749289ec350864a99f3d37e7c",
+    "docs.txt": "f5f787cad8efe71d955314d77a1b5d359206dbd58f9150122e1e4e38bc2201f2",
+    "focused-meta.json": "3f0b73b96dd381e63ce7b525da0341da45b1df595aa396a4dccedfdd5e0fc57f",
+    "focused-tests.txt": "f88856c936edf88089f41c8386635ac28bacfab978c73711373fda8bf5f66ac2",
+    "green-tests.txt": "97eb0eb6097cd7138f5f5a5cae01bad38c57965a47dc82103dbe60cae65858b8",
+    "red-tests.txt": "c6cd847148992e626323c7878a70dab06e8ea73ba6b34c92b1258f2c8e0cdd7c",
+    "smoke.txt": "7e2a62898f27747a1ba8963a16e8204a60fb1e7109ad2d19f3393fd404586a95",
+    "trace.txt": "0279f42be2fc74b080dab9183cf62d033f575dd9213cdfafcec7a4bf31ea4afd",
+    "trajectory.txt": "0c5edc2fabf74eeedded37406d5970f8ed1075f047043a829b0019e8166e18b9"
+  }
+}

@@ -232,26 +232,70 @@ def consolidations(rows):
     return [r for r in rows if _cell(r, "Brief").lower() == BRIEF]
 
 
+def supersedes_ids(value):
+    """A draft's `supersedes` as an ORDERED, de-duplicated list of ids.
+
+    ONE id or SEVERAL, in one reader (the 2026-09-02 restructure plan §1.5).
+    Every disposition names exactly one predecessor and writes it as a bare
+    string; a CONSOLIDATION absorbs several rows into one successor and writes a
+    TOML list. Both spellings arrive here and leave as a list, so nothing
+    downstream — the cell, the edge re-point, the refusals — has two shapes to
+    handle. An absent or empty value is an empty list, which is what "this row
+    continues nothing" means.
+
+    A STRING is SPLIT, because the writer's own form is a joined one:
+    `_draft_row` stores the cell as `";".join(supersedes_ids(...))`, so a minted
+    spec carries `supersedes = "WI-558;WI-560"` — and a reader that took that
+    back as ONE token would hand `_supersedes_refusal` a value it must reject as
+    "not a WI-### id", which is a writer emitting what its own sibling reader
+    refuses. The writer's form round-trips through the reader; that is the rule.
+
+    ONE separator, `;`, and it is the WRITER's: this split exists to read a
+    machine-written cell back, never to parse an author's prose. A hand-authored
+    `## Dispositions` block is held to the stricter spelling at its own boundary
+    (`_authored_supersedes_refusal`: a string is exactly one id, several ids are
+    a TOML list), so nothing that reaches here needs a second separator class.
+
+    Deliberately NOT `kitlib.spine.refs`, the shared multi-ref splitter, though
+    this is otherwise exactly its job: `refs` also splits on WHITESPACE, and a
+    `supersedes` naming free prose ("the other one") would then reach the
+    refusal as three tokens, so the message could no longer echo the author's
+    own value back at them."""
+    if value is None:
+        return []
+    items = value if isinstance(value, (list, tuple)) else [value]
+    out = []
+    for item in items:
+        for token in str(item).split(";"):
+            token = token.strip()
+            if token and token not in out:
+                out.append(token)
+    return out
+
+
 def _superseded(row):
-    return {tok.strip() for tok in _cell(row, "Supersedes").split(";") if tok.strip()}
+    return set(supersedes_ids(_cell(row, "Supersedes")))
 
 
 def consolidation_successors(rows):
-    """The ids of rows a consolidation MINTED — read from the registry, not
-    remembered.
+    """Consolidated work and its continuations, derived from typed lineage.
 
-    A successor is a row whose `Supersedes` names a `restructured` row, and that
-    is exact rather than heuristic: `restructured/` is the one terminal folder a
-    lane may not close into, so only a consolidation close (or a hand trunk
-    commit standing in for one) puts a row there. Counting `len(Supersedes) > 1`
-    instead would have been a guess — a disposition names one predecessor and a
-    consolidation that absorbed exactly one row would be invisible."""
+    A Supersedes edge onto a restructured row identifies the original
+    consolidation successor. A later terminal continuation inherits that
+    protection: finishing or returning the work does not make its grouping
+    eligible for an automatic second consolidation.
+    """
     absorbed = {_cell(r, "WI-ID") for r in rows if _cell(r, "Status") == RESTRUCTURED}
-    return {
-        _cell(r, "WI-ID")
-        for r in rows
-        if absorbed & _superseded(r) and _cell(r, "WI-ID")
-    }
+    successors = set()
+    while True:
+        inherited = {
+            _cell(r, "WI-ID")
+            for r in rows
+            if (absorbed | successors) & _superseded(r) and _cell(r, "WI-ID")
+        }
+        if inherited <= successors:
+            return successors
+        successors |= inherited
 
 
 def prior_absorbs(rows):
@@ -496,6 +540,21 @@ def _judged_refusal(rows, queue_sha):
                 )
             )
     return None
+
+
+def draft_reabsorption_refusal(rows, draft):
+    """A disposition continues terminal work; consolidation re-archives it.
+
+    Classify the draft at the lineage boundary. Ordinary continuation cannot
+    replace a live protected owner, and descendants retain the protection read
+    by consolidation_successors. The shared strict guard still judges every
+    actual consolidation, including a draft that names terminal sources.
+    """
+    absorbed = supersedes_ids(draft.get("supersedes"))
+    if not draft.get("consolidated"):
+        terminal = {r["WI-ID"] for r in rows if r.get("Status") in ac.TERMINAL_STATUSES}
+        absorbed = [wid for wid in absorbed if wid not in terminal]
+    return reabsorption_refusal(rows, absorbed)
 
 
 def reabsorption_refusal(rows, absorbed):

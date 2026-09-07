@@ -946,3 +946,17 @@ def test_the_shipped_brief_teaches_the_grammar_the_close_enforces():
     assert "cannot disagree" not in text
     assert "no second copy to disagree with it" not in text
     assert "close REFUSES if either disagrees" in text
+
+
+def test_consolidation_protection_follows_terminal_continuations():
+    rows = [
+        _row("WI-001", Status="restructured"),
+        _row("WI-002", Status="done", Supersedes="WI-001"),
+        _row("WI-003", Status="partial", Supersedes="WI-002"),
+        _row("WI-004", Status="queued", Supersedes="WI-003"),
+        _row("WI-005", Status="queued"),
+    ]
+    assert consolidate.consolidation_successors(rows) == {"WI-002", "WI-003", "WI-004"}
+    assert "WI-004" in consolidate.reabsorption_refusal(rows, ["WI-004"])
+    pairs = [("WI-004", "WI-005", "shared-sr", "same scope")]
+    assert consolidate._seed_pairs(rows, pairs) == []

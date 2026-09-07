@@ -1,0 +1,24 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_consolidation_protection_follows_terminal_continuations _________
+
+    def test_consolidation_protection_follows_terminal_continuations():
+        rows = [
+            _row("WI-001", Status="restructured"),
+            _row("WI-002", Status="done", Supersedes="WI-001"),
+            _row("WI-003", Status="partial", Supersedes="WI-002"),
+            _row("WI-004", Status="queued", Supersedes="WI-003"),
+            _row("WI-005", Status="queued"),
+        ]
+>       assert consolidate.consolidation_successors(rows) == {"WI-002", "WI-003", "WI-004"}
+E       AssertionError: assert {'WI-002'} == {'WI-002', 'WI-003', 'WI-004'}
+E         
+E         Extra items in the right set:
+E         'WI-003'
+E         'WI-004'
+E         Use -v to get more diff
+
+tests/test_consolidate.py:959: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_consolidate.py::test_consolidation_protection_follows_terminal_continuations
+1 failed, 72 deselected in 0.08s

@@ -1,0 +1,11 @@
+APPROVE
+
+No blocking findings in the supplied prerequisite candidate.
+
+- **Continuation boundary:** Only drafts without the `consolidated` flag exclude terminal predecessors from the reabsorption check. Live protected owners remain checked; actual consolidations retain the strict guard even for terminal sources. The separate already-restructured-source refusal is unchanged.
+- **Lineage and cycles:** Protection propagates transitively from restructured sources through Supersedes edges. The accumulated set only grows within the finite registry, so cycles terminate; an unrelated cycle cannot acquire protection without a connection to a protected lineage.
+- **Parser compatibility:** `supersedes_ids` moves unchanged, and the intake import preserves its existing callable name. Ordered deduplication, semicolon round-tripping and separate strict authored-input validation remain intact. The intake baseline decreases by 12 SLOC.
+- **TC-205 evidence:** The replacement citations support relevant current publication, completion, scope, absorption and review-refusal behavior. They do **not** establish every retained Method obligation—for example, commit-hook failure/replay is not process-kill testing around both commit boundaries. The candidate explicitly reserves cumulative Method and actual coverage adjudication for WI-610; no obligation or Full tier is removed.
+- **Records and authority:** WI-610 gains WI-611 as a hard predecessor without changing its declared approval scope. The supplied close record reports measured validation and supervised execution, with semantic acceptance still owed. Same-family review degradation is explicit, and appending this actual response preserves the stated review boundary.
+
+This is source review of tree `5fca47dd74d88389690aca8ac5a0a49996154cc6`, not PC acceptance or primary Approval. Test results are supplied measurements; I executed no tools and edited no files.
