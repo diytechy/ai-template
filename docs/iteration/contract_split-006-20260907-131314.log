@@ -1,0 +1,344 @@
+# agent session log — written by scripts/agent_common.py
+# session: 006
+# date: 2026-09-07 13:15
+# train: contract_split
+# base: d522f3b0c729
+# phase: ADJUDICATE
+# primary-turn: WI-610-d522f3b0c7295ce2d46765551a6500491a76ff2c
+# judgment: docs/reviews/contract_split/006-ADJUDICATE-0a83e9a.md
+# candidate: 0a83e9ac3dc54d38dfc6834dad959bd482ca2512
+# wi: WI-610
+# model: gpt-6-astra
+# guardrails:
+# outcome: ERROR
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 2
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 1128773
+# prompt-template: kit:ADJUDICATE
+# prompt-sha: sha256:523437bcbfd4
+# timeout:
+# heterogeneity:
+# exit-code: 1
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# invocation-id: e9497278b6464ef78581d65dd6b3143b
+# attempt-id: contract_split@d522f3b0c7295ce2d46765551a6500491a76ff2c
+# source-event:
+# role: ADJUDICATE
+# provider: OPENAI
+# requested-model: gpt-6-astra
+# reported-model:
+# tier: strong
+# roster-row: OPENAI-ASTRA
+# started-at: 2026-09-07T18:15:31Z
+# ended-at: 2026-09-07T18:15:32Z
+# input-tokens:
+# output-tokens:
+# reasoning-tokens:
+# raw-usage:
+# usage-scope: unknown
+# usage-source: unknown
+# usage-status: unavailable
+# redacted: 1 credential-shaped token(s)
+# ---
+Reading prompt from stdin...
+OpenAI Codex v0.153.4
+--------
+workdir: /Users/diytechy/Documents/ai-template
+model: gpt-6-astra
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 01a07d15-2288-7fb1-b8d6-1183b87c0566
+--------
+user
+You are the independent adjudicator for one exclusive PRIMARY turn. Judge the
+bound queued spec and the exact derived evidence below. The turn bindings and
+the registry census are evidence supplied by the coordinator; never invent a
+hash, row, registry, scope member or review reference.
+
+GOVERNING ASSIGNMENT (scope constraints, not evidence):
+docs/work/queued/WI-610-adjudicate-combined-approved.md (SpecRef: docs/reviews/wi-609-resolution/DECISION.md)
+Owner-authorized one-time supervised ownership transfer under OI-88 and docs/reviews/wi-609-resolution/DECISION.md. This is the complete atomic Approved-change scope of the committed PC source candidate, not a consolidation-census judgment, acceptance of any row, or authority to run a control window. Authoring predecessor WI-608 remains a hard edge. The original separate scopes and full proposal Context are preserved in the restructured specs and Git; their original proposal blobs and the stopped WI-605 evidence remain authoritative history. The old owners have not accepted their rows and are not complete.
+
+Judge each scoped row cumulatively from the bound approved snapshot to the final live candidate, including parents, siblings, traced tests, and every meaning-changing use. Use the existing primary Approval payload, real immutable per-cell before/after blob IDs, actual committed current-turn judgment/session evidence, complete absorption ledger, and ordinary independent review. Inventories are discovery aids, not use acceptance. All changed Approved rows in the affected whole-file snapshot set require accepted scoped decisions; all Drafted riders stay Drafted and their existing first-approval owners remain unchanged. Missing, stale, contradictory, unjudged, or outside-authority evidence must refuse publication. A RETURN remains a truthful zero-effect outcome with required dispositions, not semantic approval. No manual snapshot copy, verifier bypass, substitute protocol, or widened bound turn.
+
+In particular, the PC singleton LLR-061 and TC-061 must be judged together against the exact cumulative LLR text. Review all batch-test retirement obligations in PC-BATCH-USES.md before any deletion. TC-205's pre-existing citation to test_a_two_row_batch_close_peels_under_one_canonical_order is absent in the current source: resolve it truthfully in the judgment or return a scoped authoring continuation; do not claim nonexistent evidence passed. Registry authoring belongs before selection; this adjudicator cannot change live source cells in a bound candidate.
+
+Done when the existing exclusive primary publisher validates the real decisions, impact and whole-file absorption evidence plus independent review/provenance, then atomically publishes an accepted outcome or a truthful RETURN with required scoped dispositions. Keep the coordinator paused; this WI authorizes no control window, push or main merge. Until actual live contract acceptance, do not delete PC batch implementation.
+
+The absorbed rows' acceptance criteria, carried across UNCHANGED. This is the spec this row must still satisfy — the ids are historical, the obligations are not:
+
+### WI-601 (absorbed) — its Done-when, verbatim
+
+(this row's spec declared no `## Done-when` section)
+
+### WI-603 (absorbed) — its Done-when, verbatim
+
+(this row's spec declared no `## Done-when` section)
+
+### WI-605 (absorbed) — its Done-when, verbatim
+
+(this row's spec declared no `## Done-when` section)
+
+Advisory registry joins (WI-388; never gating):
+
+### Cancelled precedent on the same SRs (do not re-propose the refuted)
+- WI-298 (cancelled) Dashboard --border misses the 3:1 graphical-boundary floor in both th… — reason: RETIRED 2026-07-24 as NOT-A-DEFECT, owner-ruled after verification against the artifact. The finding claimed --border supplies sub-3:1 boundaries for 'focusabl…
+
+### Decomposition code map (LLR/TC on the same SRs)
+- LLR-014 [project-trajectory/scripts/check_perf.py :: evaluate] tests: (see TC-014) — Budget comparator
+- LLR-024 [project-trajectory/scripts/gen_cases.py :: main] tests: (see TC-024) — Permutation expander
+- LLR-025 [project-trajectory/scripts/gen_skills_index.py :: main] tests: (see TC-025) — Skills index generator
+- LLR-033 [project-trajectory/scripts/gen_release_checklist.py :: main] tests: (see TC-033) — Release checklist generator
+- LLR-040 [project-trajectory/scripts/subagent_gate.py :: decide/main] tests: (see TC-043) — Subagent spawn gate
+- LLR-043 [project-trajectory/scripts/gen_skills_index.py :: check_agent_sync] tests: (see TC-045) — Cross-agent skill fan-out drift check
+
+### Knowledge packs the touched components declare (read before building)
+- CMP-006 W1 Registry & conformance: registry-hygiene
+- CMP-008 W3 Autonomy: docs/knowledge/agent-routing;docs/knowledge/effort-tiering;docs/knowledge/prompt-image-token-efficiency
+- CMP-009 W4 Human & adopter surfaces: downstream-resync
+
+
+[... 5491 line(s) elided — full stream in out/run-logs/ ...]
+
+4. Acknowledge `implementer-touched-review-path` in the record. The supplied range contains the train’s own judgment and the machine-authored selection; `begin` commits that selection before the implementer runs. This explains the whole-train diff’s misattribution without suppressing the tripwire, changing its source code, or treating the explanation as approval.
+5. Obtain ordinary independent review of the actual revised candidate and real current-session provenance before any valid atomic RETURN publication. Later, after authorized authoring and required proof work, obtain a fresh complete-scope primary reanchor that independently judges every cell and its impact.
+
+The loop-held page permits this design check and continued PC authoring/adjudication; it does not impose a mandatory owner stop. Keep the coordinator paused. No control window, source-code changes inside this candidate, batch-code deletion, snapshot copying, check bypass, push or main merge is part of this course.
+
+Judge the CELLS BELOW and nothing else as evidence. The governing assignment limits which rows you may rule on and which publication scope you may report. You have no access to the session that made the change, and you must not go looking: an amendment's author is not a witness to their own intent.
+
+--- ACCEPTED ANCHOR ---
+docs/archive/last_approved, copied 2026-09-07 (commit 0f106ce9) — the approved text as a human last blessed it. This is the text BEFORE the change below; it is not the change under judgement, and it could only have been published by the primary approval act in a reviewed commit.
+--- AMENDED CELLS (before/after, per row) ---
+- SR SR-024 (chain of SR-024)
+  - Rationale
+    - before: Realizes SN-002 — dimensional coverage is generated from the SR's declared inputs, not hand-listed. Hat-derived (hat.TEST-ENGINEER): systematic expansion reduces the risk that a dimensional combination is omitted, which is the charter's coverage half. Generation does NOT answer the charter's second half: showing that an enforcer fails when it should is demonstrated by negative or planted-failure tests, and a hand-listed negative case can demonstrate it. Those negative tests remain a separate obligation, not this row's.
+    - after: Realizes SN-002 — dimensional coverage is generated from the SR's declared inputs, not hand-listed. Systematic expansion reduces the risk that a dimensional combination is omitted, which is the charter's coverage half. Generation does NOT answer the charter's second half: showing that an enforcer fails when it should is demonstrated by negative or planted-failure tests, and a hand-listed negative case can demonstrate it. Those negative tests remain a separate obligation, not this row's.
+- LLR LLR-061 (chain of SR-026)
+  - Detail
+    - before: Replaces internal --track assumptions with explicit --wi/--train/worktree assignment; assembles the worker prompt from AGENTS.md + WI row + SpecRef + predecessor context + train diff + rework finding (never the generated status surface); collision-safe per-assignment logs/review evidence naming the exact reviewed commit; the --track lane machinery is retired outright. The assignment is the branch integrate.py's claim cut, and the session tag defaults to the branch name; the prompt never includes docs/status.md; a worker branch never edits root status, another branch's claims, the root log or generated artifacts; the result channel is committed trailer evidence (WI: / Blocked-WI: + BlockRef:).
+    - after: Replaces internal --track assumptions with explicit --wi/--train/worktree assignment; assembles the worker prompt from AGENTS.md + WI row + SpecRef + predecessor context + train diff + rework finding (never the generated status surface), plus the one assigned row with its id, title, SpecRef and completion state, derived from the SAME two-part completion predicate as worker completion - a committed WI: trailer AND the spec gone from active/<branch>/. Empty or multi-item assignments refuse before a session starts; the --wi input names one WI and has no semicolon-list form; collision-safe per-assignment logs/review evidence naming the exact reviewed commit; the --track lane machinery is retired outright. The assignment is the branch integrate.py's claim cut, and the session tag defaults to the branch name; the prompt never includes docs/status.md; a worker branch never edits root status, another branch's claims, the root log or generated artifacts; the result channel is committed trailer evidence (WI: / Blocked-WI: + BlockRef:).
+- TC TC-061 (chain of SR-026)
+  - Method
+    - before: Run two concurrent workers from explicit --wi/--train/worktree assignments; assert no lane-local status/next/run-state file, non-colliding logs/review evidence naming the exact reviewed commit, no root-truth mutation, and --track refused as an unknown flag (retired).
+    - after: Run two concurrent workers from explicit single-WI --wi/--train/worktree assignments; refuse empty or multi-WI assignments before provider launch; require the assigned row's identity, SpecRef and completion state in its prompt; assert no lane-local status/next/run-state file, non-colliding logs/review evidence naming the exact reviewed commit, no root-truth mutation, and --track refused as an unknown flag (retired).
+- SR SR-033 (chain of SR-033)
+  - Rationale
+    - before: Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. Hat-derived (hat.PERFORMANCE), and no wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did.
+    - after: Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did.
+- SR SR-043 (chain of SR-043)
+  - Rationale
+    - before: Realizes SN-006 (a walk-away run stays safe — bounded, supervised fan-out with the override held by the human, not the model) and SN-012 (opt-in: absent/off is a vacuous allow, so a non-adopter pays nothing). Supervision, not security — a model that can edit files can remove the hook (adapted from stop-subagent-fanout, MIT; spec docs/archive/INTEGRATION_PLAN.md Phase 4). Hat-derived (hat.SECURITY): C-SEC-2 asks that the irreversible actions an unattended run can take be enumerated, each naming the dial or human authority that permits it — which is this row exactly, for the one action that starts further actors. A direct hit, and the reason this row is not accretion: its parentage was real and lived only in SN-006's `why` cell until the safety half moved into that need's normative text at this same pass. WHY THE FAIL-OPEN ARM IS DELIBERATE: SN-006 asks that the unattended layer keep moving and surface to the human only where it cannot proceed, so a gate that wedges every tool on its own bug is the failure this clause was written against; what an error never relaxes is the human-held override itself, which the model cannot set.
+    - after: Realizes SN-006 (a walk-away run stays safe — bounded, supervised fan-out with the override held by the human, not the model) and SN-012 (opt-in: absent/off is a vacuous allow, so a non-adopter pays nothing). Supervision, not security — a model that can edit files can remove the hook (adapted from stop-subagent-fanout, MIT; spec docs/archive/INTEGRATION_PLAN.md Phase 4). C-SEC-2 asks that the irreversible actions an unattended run can take be enumerated, each naming the dial or human authority that permits it — which is this row exactly, for the one action that starts further actors. A direct hit, and the reason this row is not accretion: its parentage was real and lived only in SN-006's `why` cell until the safety half moved into that need's normative text at this same pass. WHY THE FAIL-OPEN ARM IS DELIBERATE: SN-006 asks that the unattended layer keep moving and surface to the human only where it cannot proceed, so a gate that wedges every tool on its own bug is the failure this clause was written against; what an error never relaxes is the human-held override itself, which the model cannot set.
+- SR SR-052 (chain of SR-052)
+  - Rationale
+    - before: Realizes SN-024 and SN-023 — an accessibility bar left unstated silently reads as no bar at all, so the obligation is stated here even though its clauses were not measurable when the row was written. They since became so, one clause at a time, which is why this row's method is mechanical: the thresholds are the child rows' and the acceptance is their chain. Hat-derived (hat.ACCESSIBILITY): keyboard operability, an accessible name per element, colour never the only channel, and a readable contrast floor are the charter's own subject, and no other lens in the roster names a measurable perceptual threshold — the UX pair reaches robustness (it does not overflow), never legibility. That dependency is CLOSED: the ACCESSIBILITY charter is ruled `always`, so the lens this row derives from is put to every decomposition — and it had already reached this row once SN-023 carried the `a11y` tag, which is why the gap is narrower than the unmeasurable-clauses opening suggests.
+    - after: Realizes SN-024 and SN-023 — an accessibility bar left unstated silently reads as no bar at all, so the obligation is stated here even though its clauses were not measurable when the row was written. They since became so, one clause at a time, which is why this row's method is mechanical: the thresholds are the child rows' and the acceptance is their chain. Keyboard operability, an accessible name per element, colour never the only channel, and a readable contrast floor are the charter's own subject, and no other lens in the roster names a measurable perceptual threshold — the UX pair reaches robustness (it does not overflow), never legibility. That dependency is CLOSED: the ACCESSIBILITY charter is ruled `always`, so the lens this row derives from is put to every decomposition — and it had already reached this row once SN-023 carried the `a11y` tag, which is why the gap is narrower than the unmeasurable-clauses opening suggests.
+- SR SR-053 (chain of SR-053)
+  - Rationale
+    - before: Realizes SN-024 and SN-023 — how alike is alike enough is subjective at the margins, which is why this row states the coherence property and lets each clause of it be pinned separately rather than pinning the whole to one threshold and pinning the wrong thing. Every clause is pinned, so the method is mechanical and the acceptance is the child chain. Fan-out re-stamp: the child count is the anchor census of the uniformity bar as it was first written — five anchors, three of them leaving a mechanized residue — not a decision count; this row states one cross-view coherence property, and every child exists because an anchor was bound to a test rather than because a second contract was merged in. Hat-derived (hat.CONSISTENCY): one meaning given two treatments across tabs, emitters and states is that charter's failure class verbatim, and it is the only lens in the roster that asks it; the charter is ruled in, so this row has a deriving lens. The narrower reading survives the ruling and is the one to re-open if the charter is ever cut: no stakeholder need states cross-view coherence, so the lens — not a need — is what reaches this row.
+    - after: Realizes SN-024 and SN-023 — how alike is alike enough is subjective at the margins, which is why this row states the coherence property and lets each clause of it be pinned separately rather than pinning the whole to one threshold and pinning the wrong thing. Every clause is pinned, so the method is mechanical and the acceptance is the child chain. Fan-out re-stamp: the child count is the anchor census of the uniformity bar as it was first written — five anchors, three of them leaving a mechanized residue — not a decision count; this row states one cross-view coherence property, and every child exists because an anchor was bound to a test rather than because a second contract was merged in. One meaning given two treatments across tabs, emitters and states is that charter's failure class verbatim, and it is the only lens in the roster that asks it; the charter is ruled in, so this row has a deriving lens. The narrower reading survives the ruling and is the one to re-open if the charter is ever cut: no stakeholder need states cross-view coherence, so the lens — not a need — is what reaches this row.
+- SR SR-054 (chain of SR-054)
+  - Rationale
+    - before: Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded one-time judgement rather than on a standing re-judgement — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Hat-derived (hat.UX-DESIGNER + hat.UX-ENGINEER): findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today.
+    - after: Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded one-time judgement rather than on a standing re-judgement — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today.
+- SR SR-111 (chain of SR-111)
+  - Rationale
+    - before: Realizes SN-007 — without a recorded origin an adopter cannot tell which kit version they are on, so a re-sync degrades from a diff into a guess and the ADOPTING.md re-sync procedure has no baseline to diff against. Deriving the version from file hashes was rejected: it reports that something differs without saying from what. The stamp is what lets a maintainer identify the upstream version a scaffold came from and compute a re-sync diff. Hat-derived (hat.MAINTAINER): C-MNT-7 — "every generated view shall identify itself as generated and name the inputs it was generated from" — is the MAINTAINER clause this row answers, and a scaffold carrying no recorded origin cannot answer it. The clause is DEFINED in the recorded derivation (`docs/plans/2026-08-16-blind-derivation-c-hats.md`, hat.MAINTAINER §C-MNT-7), not in the roster file itself, so the clause is cited with its home named — and the sentence above stands without the citation.
+    - after: Realizes SN-007 — without a recorded origin an adopter cannot tell which kit version they are on, so a re-sync degrades from a diff into a guess and the ADOPTING.md re-sync procedure has no baseline to diff against. Deriving the version from file hashes was rejected: it reports that something differs without saying from what. The stamp is what lets a maintainer identify the upstream version a scaffold came from and compute a re-sync diff.
+- SR SR-112 (chain of SR-112)
+  - Rationale
+    - before: Realizes the dissolved edge expectation that a generated artifact drifting from its source fails its --check — one skill maintained in three agent-specific copies rots into three different skills, and the copy an agent actually loads is the one nobody edited. Maintaining a single shared directory was rejected because each agent harness looks in its own path; the fan-out is forced, so the copies are generated and drift is a finding. Generated marking is what stops a maintainer editing a disposable copy. Hat-derived (hat.MAINTAINER): the same clause's other half — C-MNT-7's "identify itself as generated" — and one skill fanned into three per-agent copies is that surface multiplied by the number of harnesses. Same disposition as SR-111: the clause is defined in the recorded derivation (`docs/plans/2026-08-16-blind-derivation-c-hats.md`, hat.MAINTAINER §C-MNT-7) rather than in the roster file, and the sentence above stands without the citation.
+    - after: Realizes the dissolved edge expectation that a generated artifact drifting from its source fails its --check — one skill maintained in three agent-specific copies rots into three different skills, and the copy an agent actually loads is the one nobody edited. Maintaining a single shared directory was rejected because each agent harness looks in its own path; the fan-out is forced, so the copies are generated and drift is a finding. Generated marking is what stops a maintainer editing a disposable copy.
+- SR SR-129 (chain of SR-129)
+  - Rationale
+    - before: WHAT THE ROW STATES IS THE CAPABILITY. The spec folder layout (status = directory, TOML frontmatter, Deliverable in the body), the retired flat CSV and the drained-stop mechanics are implementation and history, which the requirement tier does not carry: layout and claim detection belong to LLR-136, and the current-and-legacy carriers to that design row's cells as current-carrier evidence. The 140-cell lesson: an unproven representation change is where a registry silently loses cells. The converter is the migration path every adopter of the folder home takes, and the single spec writer the filing seam reuses (concurrency-restructure spec, Phase 2). Hat-derived (hat.TEST-ENGINEER): a converter is the check on a representation change, and the charter's second half — can it be shown to fail when it should — is exactly what a cell-exact round-trip over the live registry provides; the 140-cell lesson in this row's own rationale is that failure class already observed once.
+    - after: WHAT THE ROW STATES IS THE CAPABILITY. The spec folder layout (status = directory, TOML frontmatter, Deliverable in the body), the retired flat CSV and the drained-stop mechanics are implementation and history, which the requirement tier does not carry: layout and claim detection belong to LLR-136, and the current-and-legacy carriers to that design row's cells as current-carrier evidence. The 140-cell lesson: an unproven representation change is where a registry silently loses cells. The converter is the migration path every adopter of the folder home takes, and the single spec writer the filing seam reuses (concurrency-restructure spec, Phase 2). A converter is the check on a representation change, and the charter's second half — can it be shown to fail when it should — is exactly what a cell-exact round-trip over the live registry provides; the 140-cell lesson in this row's own rationale is that failure class already observed once.
+- SR SR-144 (chain of SR-144)
+  - AcceptanceCriteria
+    - before: A partial close is clean under the real validator (the terminal Deliverable rule is exempt, because an early close leaves the spec's definition byte-identical by design); a terminal spec with no report is LOUD rather than silently un-disposed; a second close is refused and leaves no residue in the lane; a multi-spec close that refuses restores every report it wrote.
+    - after: A partial close is clean under the real validator (the terminal Deliverable rule is exempt, because an early close leaves the spec's definition byte-identical by design); a terminal spec with no report is LOUD rather than silently un-disposed; a second close is refused and leaves no residue in the lane; a refused single-item close restores the report it created and leaves the claim and terminal state unchanged. A close of a branch holding other than one claimed spec refuses before any report or state change.
+  - Rationale
+    - before: Five successive dedup mechanisms leaked because each reconstructed the return event from a MUTABLE proxy; a document that never moves dissolves the class instead of mitigating it. The refusals are what make "immutable" a property rather than a claim. The split is a field because its absence once merged rejected code onto trunk: silence about it is different from saying "I could not judge", and only silence is unactionable. Hat-derived (hat.UNATTENDED-OPS): a claim a dead lane never releases is C-UNA-3's deadlocked-until-morning case, and the immutable per-close record is C-UNA-5's answer to a failure that pages nobody — a close no one can read is externally indistinguishable from a run that finished.
+    - after: Five successive dedup mechanisms leaked because each reconstructed the return event from a MUTABLE proxy; a document that never moves dissolves the class instead of mitigating it. The refusals are what make "immutable" a property rather than a claim. The split is a field because its absence once merged rejected code onto trunk: silence about it is different from saying "I could not judge", and only silence is unactionable. A claim a dead lane never releases is C-UNA-3's deadlocked-until-morning case, and the immutable per-close record is C-UNA-5's answer to a failure that pages nobody — a close no one can read is externally indistinguishable from a run that finished.
+  - Requirement
+    - before: The delivered loop content shall close a lane that cannot finish into a TERMINAL partial state that merges like any other branch, with one immutable per-close report naming the claimed outcome, the reason, the commit range and the keep/discard split — refusing a report that declares neither a split nor an explicit deferral, and refusing a second close of the same event rather than overwriting the first.
+    - after: The delivered loop content shall close a lane that cannot finish into a TERMINAL partial state that merges like any other branch, with one immutable per-close report naming the claimed outcome, the reason, the commit range and the keep/discard split — refusing a report that declares neither a split nor an explicit deferral, and refusing a second close of the same event rather than overwriting the first and refusing a close of a lane whose claim is other than one work item.
+- LLR LLR-144 (chain of SR-144)
+  - Detail
+    - before: close_partial: commits the lane's work as-is, moves each claimed spec to the TERMINAL partial/ (nothing re-claims it, so nothing strands) and writes ONE IMMUTABLE per-close report under docs/handbacks/ naming the claimed outcome, the reason, the commit range and the keep/discard split. The report is the close EVENT's identity — immutable so it never moves, unique so a second close is a second document — which is what dissolves the starvation class a mutable dedup proxy re-opens. A second close is refused rather than overwriting the first, and any refusal restores every report the call wrote; the terminal partial/ move alone is the anti-livelock property — the spec never returns to queued/, so the driver cannot claim, hand back and re-claim the same row forever. quarantine: the red arm - reverts the product paths to the merge base and keeps the failing diff as a bar-inert .patch under docs/work/handback/, reading `git diff --name-status -z` as three-field RECORDS so a rename cannot revert the wrong path, checking every git return code, and restoring rather than reporting when a revert step fails. Both leave the branch finished, so integrate.branch_outcomes reads the outcome off the spec's DIRECTORY - complete/=merged, cancelled/=cancelled, any open folder=handback - and every lane ends in a merge.
+    - after: close_partial refuses a branch whose active directory holds other than exactly one claimed spec before writing any report or changing repository state. For a single-spec branch it commits the lane's work as-is, moves the one claimed spec to the TERMINAL partial/ (nothing re-claims it, so nothing strands) and writes ONE IMMUTABLE per-close report under docs/handbacks/ naming the claimed outcome, the reason, the commit range and the keep/discard split. The report is the close EVENT's identity — immutable so it never moves, unique so a second close is a second document — which is what dissolves the starvation class a mutable dedup proxy re-opens. A second close is refused rather than overwriting the first, and any refusal restores the report the single-WI call created and leaves claim and terminal state unchanged; the terminal partial/ move alone is the anti-livelock property — the spec never returns to queued/, so the driver cannot claim, hand back and re-claim the same row forever. quarantine: the red arm - reverts the product paths to the merge base and keeps the failing diff as a bar-inert .patch under docs/work/handback/, reading `git diff --name-status -z` as three-field RECORDS so a rename cannot revert the wrong path, checking every git return code, and restoring rather than reporting when a revert step fails. Both leave the branch finished, so integrate.branch_outcomes reads the outcome off the spec's DIRECTORY - complete/=merged, cancelled/=cancelled, any open folder=handback - and every lane ends in a merge.
+- LLR LLR-161 (chain of SR-144)
+  - Detail
+    - before: `close_partial` writes the report FIRST (it is the event's identity), refuses when one already exists, and restores EVERY report this call wrote on any refusal — so a multi-spec lane ca
+[... byte cap hit — full stream in out/run-logs/ ...]
+ leaves the registries byte-identical; single-approve and autonomous flip only the named Status cells, cell-exact elsewhere, idempotent).
+- TC TC-148 (chain of SR-174)
+  - Method
+    - before: Run the integrator + dispatcher suites' intake-arm cases: a merged branch that amended an approved SR cell yields the adjudication row as its own mint: commit immediately after the merge commit on trunk (in-slot, serial); the dispatcher's empty-frontier rung 1 mints gap rows and KEEPS DRIVING them in the same run, then exits honestly when every gap already carries a row; a census-mint refusal stops the run loudly; the handback loop tests drive the disposition row the same run mints.
+    - after: Run the integrator + dispatcher suites' intake-arm cases: a merged branch that amended an approved SR cell yields the adjudication row as its own mint: commit immediately after the merge commit on trunk (in-slot, serial); the dispatcher's empty-frontier rung 1 mints gap rows and KEEPS DRIVING them in the same run, then exits honestly when every gap already carries a row; a census-mint refusal stops the run loudly; the handback loop tests drive the disposition row the same run mints. Drive a branchless adjudication under the same integration slot and assert callbacks at admission, verdict, review and pre-commit cannot claim, merge, directly integrate or start another turn; the stage-only projection receives the scoped bar directive, and refusal leaves the one immutable pending turn with no partial commit.
+- SR SR-175 (chain of SR-175)
+  - Rationale
+    - before: Hat-derived (hat.DATA-PROTECTION, with hat.SECURITY C-SEC-5 and hat.LEGAL C-LEG-3 converging on the same boundary control — three charters, three reasons, one crossing; clause texts in docs/plans/2026-08-16-blind-derivation-c-hats.md): repository content is briefed to external model providers, and for an adopter that content's history carries every contributor's name, email and timestamp — personal data crossing with no declared basis or exclusion in any need. SN-026's own text governs WHICH model runs, never WHAT IT IS SHOWN, so this obligation is content beyond the parent's demand — derived from the lenses named above rather than from the need's text, which is what makes the derivation reviewable and lets the need owner see it fed back (the alternative, amending SN-026, was deliberately not taken alongside: one rule, one home — option analysis in docs/plans/2026-08-17-wi468-obligation-intake-options.md §1 option (b)). WHAT EXISTS TODAY IS A DISCIPLINE, NOT A DECLARATION: the push channel is measurably narrow — an allowlist-only planning surface, the project log excluded BY NAME in three composers, zero authorship fields formatted into any prompt — but the rule lives as a convention inside the composing functions, unfalsifiable because no requirement stated it; this row converts it into a stated one and the chain below pins the conventions as they exist. NOT YET MECHANIZED, stated rather than implied: the declared-set surface itself (a per-row inclusion/exclusion field on the provider registry, or a policy dial) and the planted-credential dispatch block in the acceptance are not built. THE PULL-CHANNEL LIMIT, the design-control honesty this row must carry: every enabled runner is launched with permission-bypass flags and can read the whole tree itself, so the declared rule can bound what the loop ASSEMBLES and state the scope of what the consent surface CONSENTS to — it cannot technically bound an invoked runner, the same no-design-control reading the frame applies to external actors at REL-003 and the B-06/B-07 cut.
+    - after: Repository content is briefed to external model providers, and for an adopter that content's history carries every contributor's name, email and timestamp — personal data crossing with no declared basis or exclusion in any need. SN-026's own text governs WHICH model runs, never WHAT IT IS SHOWN, so this obligation is content beyond the parent's demand — derived from the data-protection lens, with the security and legal lenses converging on the same boundary control (three charters, three reasons, one crossing), rather than from the need's text, which is what makes the derivation reviewable and lets the need owner see it fed back (the alternative, amending SN-026, was deliberately not taken alongside: one rule, one home — option analysis in docs/plans/2026-08-17-wi468-obligation-intake-options.md §1 option (b)). WHAT EXISTS TODAY IS A DISCIPLINE, NOT A DECLARATION: the push channel is measurably narrow — an allowlist-only planning surface, the project log excluded BY NAME in three composers, zero authorship fields formatted into any prompt — but the rule lives as a convention inside the composing functions, unfalsifiable because no requirement stated it; this row converts it into a stated one and the chain below pins the conventions as they exist. NOT YET MECHANIZED, stated rather than implied: the declared-set surface itself (a per-row inclusion/exclusion field on the provider registry, or a policy dial) and the planted-credential dispatch block in the acceptance are not built. THE PULL-CHANNEL LIMIT, the design-control honesty this row must carry: every enabled runner is launched with permission-bypass flags and can read the whole tree itself, so the declared rule can bound what the loop ASSEMBLES and state the scope of what the consent surface CONSENTS to — it cannot technically bound an invoked runner, the same no-design-control reading the frame applies to external actors at REL-003 and the B-06/B-07 cut.
+- SR SR-176 (chain of SR-176)
+  - Rationale
+    - before: Hat-derived (hat.DATA-PROTECTION, C-DPR-2 — clause text in docs/plans/2026-08-16-blind-derivation-c-hats.md): the finding record is the one artifact guaranteed to contain the personal data it reports, created by the control itself — SN-009 defeating itself, since a scanner that catches a value and then echoes it into a committed artifact has published what it protected. The intake proposal's measurement (docs/plans/2026-08-17-wi468-obligation-intake-options.md §2 option (b)) grounds the row: the scanner mints no record of its own (check_privacy prints location, label and the MATCHED VALUE to stdout and writes nothing), but an unattended run's transcript is committed bookkeeping, so the durable copy of every finding is the session log — and the transcript path redacts credential shapes only. DELIBERATE NARROWING of the charter's ask, recorded here as the deriving decision: C-DPR-2 asks for a retention limit and an access rule, and a kit cannot honestly promise either over an adopter's git history (committed content is effectively forever; access is the host's) — what it CAN promise is that the matched value never reaches durable storage, which moots both. MECHANIZED TODAY for the always-on class: the transcript writer redacts the credential shapes and its summary line names class and count, never the value — pinned by the chain below. NOT YET MECHANIZED, stated rather than implied: the PII/identity classes the privacy gate adds are not in the redaction set, so for an adopter with the gate on a PII finding echoed into a session transcript would persist — closing that, on the same seam, is this row's build debt.
+    - after: The finding record is the one artifact guaranteed to contain the personal data it reports, created by the control itself — SN-009 defeating itself, since a scanner that catches a value and then echoes it into a committed artifact has published what it protected. The intake proposal's measurement (docs/plans/2026-08-17-wi468-obligation-intake-options.md §2 option (b)) grounds the row: the scanner mints no record of its own (check_privacy prints location, label and the MATCHED VALUE to stdout and writes nothing), but an unattended run's transcript is committed bookkeeping, so the durable copy of every finding is the session log — and the transcript path redacts credential shapes only. DELIBERATE NARROWING of the charter's ask, recorded here as the deriving decision: C-DPR-2 asks for a retention limit and an access rule, and a kit cannot honestly promise either over an adopter's git history (committed content is effectively forever; access is the host's) — what it CAN promise is that the matched value never reaches durable storage, which moots both. MECHANIZED TODAY for the always-on class: the transcript writer redacts the credential shapes and its summary line names class and count, never the value — pinned by the chain below. NOT YET MECHANIZED, stated rather than implied: the PII/identity classes the privacy gate adds are not in the redaction set, so for an adopter with the gate on a PII finding echoed into a session transcript would persist — closing that, on the same seam, is this row's build debt.
+- SR SR-177 (chain of SR-177)
+  - Rationale
+    - before: Hat-derived (hat.PERFORMANCE, C-PRF-1 — clause text in docs/plans/2026-08-16-blind-derivation-c-hats.md): the charter refuses a declared budget with no measurement behind it, and SN-027 is that finding inverted — the system's most complex machinery justified by a throughput claim no instrument measures, flagged unfalsifiable as written by three independent derivations. The intake proposal (docs/plans/2026-08-17-wi468-obligation-intake-options.md §3 option (b)) is DELIBERATELY LESS than the charter asks — the narrowing is the decision: C-PRF-1 wants a declared improvement over the serial semantic on a declared workload, but the wall time of an LLM loop is dominated by provider latency and model choice, so a numeric target would pin machine, provider and model conditions the kit does not control (one machine is one data point) — this row makes the throughput claim OBSERVABLE rather than BUDGETED. The concrete argument the instrument earns its keep: the lanes dial is undeclared in this repository and defaults to 1, so the machinery SN-027 justifies by fan-out runs SERIAL here and nothing today would say so — this report's first run would have printed lanes=1. SN-027's own `why` states the same structural claim, so the need and the instrument stop overclaiming together. NOT DECOMPOSED, stated rather than implied: nothing aggregates the existing per-session telemetry (wall seconds, api seconds, turns — the session-log headers and the iteration index) by lane or by run, so there is no seam to pin and no test to cite; the row lands Drafted-undecomposed with the aggregation surface as its whole build gap, and the telemetry columns alone do NOT satisfy it.
+    - after: The charter refuses a declared budget with no measurement behind it, and SN-027 is that finding inverted — the system's most complex machinery justified by a throughput claim no instrument measures, flagged unfalsifiable as written by three independent derivations. The intake proposal (docs/plans/2026-08-17-wi468-obligation-intake-options.md §3 option (b)) is DELIBERATELY LESS than the charter asks — the narrowing is the decision: C-PRF-1 wants a declared improvement over the serial semantic on a declared workload, but the wall time of an LLM loop is dominated by provider latency and model choice, so a numeric target would pin machine, provider and model conditions the kit does not control (one machine is one data point) — this row makes the throughput claim OBSERVABLE rather than BUDGETED. The concrete argument the instrument earns its keep: the lanes dial is undeclared in this repository and defaults to 1, so the machinery SN-027 justifies by fan-out runs SERIAL here and nothing today would say so — this report's first run would have printed lanes=1. SN-027's own `why` states the same structural claim, so the need and the instrument stop overclaiming together. NOT DECOMPOSED, stated rather than implied: nothing aggregates the existing per-session telemetry (wall seconds, api seconds, turns — the session-log headers and the iteration index) by lane or by run, so there is no seam to pin and no test to cite; the row lands Drafted-undecomposed with the aggregation surface as its whole build gap, and the telemetry columns alone do NOT satisfy it.
+- LLR LLR-158 (chain of SR-178)
+  - Detail
+    - before: An approval that records what it blessed by COPYING the registries needs no canonical text to hash, no separator that cannot occur in a cell and no second exclusion list, so no digest engine sits behind this row — the comparison basis is discharged by split_changed_cells(csv_path, id_col, head, row) -> {"approved": {cell: (before, after)}, "traced": {...}}: the id column and Status are excluded STRUCTURALLY - the id is the join key rather than content, and folding Status in would make every flip read as an amendment and every amendment invisible behind its own flip - and the remainder is split by spine_cell_class, the SAME classifier the amend-without-flip guard reads, so the two can never disagree about what normative means. It is PUBLIC for exactly one reason: baseline_snapshot.is_drifted reads it as the drift basis (LLR-173), so the snapshot comparison and the staged-amendment guard are one rule with one home rather than two rules that agree until they do not. _APPROVED_TEXT names the one Status value whose row TEXT is approved (Approved — the status fold collapsed Verified and Planned into it) and requires the SAME value on both sides, so prose rewritten under an Approved row is never invisible. It returns the before/after PAIRS a brief has to render anyway, which is why it replaced a hash rather than being wrapped by one. Needs are covered by the whole-file copy rather than by a per-need projection: the three need tables have different shapes, and a projection would have hashed the garbling. ONE TWO-TREE WALK feeds every reader that asks what a spine delta did: _spine_row_sides pairs each row's before and after side once, and four consumers read it — staged_spine_amendments (the rows whose approved text moved), staged_approval_acts (the rows that crossed INTO an approval claim, or arrived already making one), staged_drafted_rows (the rows a lane authored below approval, which the first-approval mint is raised over) and lane_approval_refusal, the judgement over the second, worded for the merge slot that refuses a work branch performing an approval act. The walk is shared rather than copied so that the set one reader EXEMPTS is the set another REPORTS, MINUS the de-approvals: an Approved -> Drafted withdrawal moves Status, so the amendment reader exempts it, but it blesses nothing, so the approval-act reader does not report it and staged_drafted_rows raises the re-approval it now owes instead. Subject to that one subtraction, an approval act is invisible to the amendment reader by construction, and a row that no reader saw is unrepresentable. The per-row judgement is stated once, in _approval_act, so the flip arm and the born arm are read side by side rather than as two branches of the walk that could drift apart. UNREPRESENTABLE WITHIN A DECLARED BOUND, and the bound is named rather than left as an absence — the walk's universe is a PARAMETER over two declared sets, not one set every reader shares. SPINE_CSVS is the THREE registries whose rows carry an id column and an approved text — system-requirements, low-level-requirements, test-cases — and is the walk's default, so staged_spine_amendments and staged_drafted_rows read exactly it, the same universe the amend-without-flip warn and the intake mint hold; widening those is its own decision rather than a side effect of this rung. APPROVAL_ACT_CSVS is those three PLUS stakeholder-needs, and staged_approval_acts passes it, so lane_approval_refusal — the judgement over that reader — refuses a lane signing a NEED as readily as one signing an LLR. The need tier is inside because it is a spine tier carrying the same status vocabulary, and because the rung the approval act was moved off the writer's lane for is precisely the one a lane must not sign for itself. The three registries a snapshot anchors that no approval reader walks — interfaces, external, components — are listed in OUTSIDE_THE_APPROVAL_ACT: off-spine, their approval cells governed by their own rung rather than this one. The two lists are pinned as one exhaustive, disjoint statement, SNAPSHOTTED == APPROVAL_ACT_CSVS + OUTSIDE_THE_APPROVAL_ACT, against baseline_snapshot.SNAPSHOTTED's seven. A tier added to the snapshot therefore lands on one side or the other by a deliberate edit, and cannot reach no approval reader at all.
+    - after: An approval that records what it blessed by COPYING the registries needs no canonical text to hash, no separator that cannot occur in a cell and no second exclusion list, so no digest engine sits behind this row — the comparison basis is discharged by split_changed_cells(csv_path, id_col, head, row) -> {"approved": {cell: (before, after)}, "traced": {...}}: the id column and Status are excluded STRUCTURALLY - the id is the join key rather than content, and folding Status in would make every flip read as an amendment and every amendment invisible behind its own flip - and the remainder is split by spine_cell_class, the SAME classifier the amend-without-flip guard reads, so the two can never disagree about what normative means. It is PUBLIC for exactly one reason: baseline_snapshot.is_drifted reads it as the drift basis (LLR-173), so the snapshot comparison and the staged-amendment guard are one rule with one home rather than two rules that agree until they do not. _APPROVED_TEXT names the one Status value whose row TEXT is approved (Approved — the status fold collapsed Verified and Planned into it) and requires the SAME value on both sides, so prose rewritten under an Approved row is never invisible. It returns the before/after PAIRS a brief has to render anyway, which is why it replaced a hash rather than being wrapped by one. Needs are covered by the whole-file copy rather than by a per-need projection: the three need tables have different shapes, and a projection would have hashed the garbling. ONE TWO-TREE WALK feeds every reader that asks what a spine delta did: _spine_row_sides pairs each row's before and after side once, and four consumers read it — staged_spine_amendments (the rows whose approved text moved), staged_approval_acts (the rows that crossed INTO an approval claim, or arrived already making one), staged_drafted_rows (the rows a lane authored below approval, which the first-approval mint is raised over) and lane_approval_refusal, the judgement over the second, worded for the merge slot that refuses a work branch performing an approval act. The walk is shared rather than copied so that the set one reader EXEMPTS is the set another REPORTS, MINUS the de-approvals: an Approved -> Drafted withdrawal moves Status, so the amendment reader exempts it, but it blesses nothing, so the approval-act reader does not report it and staged_drafted_rows raises the re-approval it now owes instead. Subject to that one subtraction, an approval act is invisible to the amendment reader by construction, and a row that no reader saw is unrepresentable. The per-row judgement is stated once, in _approval_act, so the flip arm and the born arm are read side by side rather than as two branches of the walk that could drift apart. UNREPRESENTABLE WITHIN A DECLARED BOUND, and the bound is named rather than left as an absence — the walk's universe is a PARAMETER over two declared sets, not one set every reader shares. SPINE_CSVS is the THREE registries whose rows carry an id column and an approved text — system-requirements, low-level-requirements, test-cases — and is the walk's default, so staged_spine_amendments and staged_drafted_rows read exactly it, the same universe the amend-without-flip warn and the intake mint hold; widening those is its own decision rather than a side effect of this rung. APPROVAL_ACT_CSVS is those three PLUS stakeholder-needs, and staged_approval_acts passes it, so lane_approval_refusal — the judgement over that reader — refuses every WI branch signing a NEED as readily as one signing an LLR, regardless of safety class. It also refuses every WI-branch snapshot or approval-ledger change, including an amendment with no Status flip. The only positive writer is the held primary turn's intake projection, which binds the accepted decision, exact row scope and complete absorb ledger and stages each snapshot as a byte-identical copy beside its approval effects. The need tier is inside because it is a spine tier carrying the same status vocabulary, and because the rung the approval act was moved off the writer's lane for is precisely the one a lane must not sign for itself. The three registries a snapshot anchors that no approval reader walks — interfaces, external, components — are listed in OUTSIDE_THE_APPROVAL_ACT: off-spine, their approval cells governed by their own rung rather than this one. The two lists are pinned as one exhaustive, disjoint statement, SNAPSHOTTED == APPROVAL_ACT_CSVS + OUTSIDE_THE_APPROVAL_ACT, against baseline_snapshot.SNAPSHOTTED's seven. A tier added to the snapshot therefore lands on one side or the other by a deliberate edit, and cannot reach no approval reader at all.
+- TC TC-153 (chain of SR-178)
+  - Method
+    - before: Run the drift half of the baseline-snapshot suite. It first drives the premise: test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip shows the staged-amendment guard silent on a sanctioned amend+flip over a real two-commit git repo. It then pins exactly what a change is taken over, in four corners: test_a_approved_cell_moving_under_an_approved_row_is_DRIFT (an approved cell must move it), test_a_TRACED_cell_moving_is_NOT_drift (the traced half must not), test_status_itself_is_never_the_amendment (the marker is excluded structurally, so a flip is neither an amendment nor a mask for one), and test_a_row_below_approval_can_never_be_drifted (no claim to fall from). The guard and the snapshot comparison share one public basis, split_changed_cells, called by both staged_spine_amendments and baseline_snapshot.is_drifted, so their agreement carries no case of its own.
+    - after: Run the drift half of the baseline-snapshot suite. It first drives the premise: test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip shows the staged-amendment guard silent on a sanctioned amend+flip over a real two-commit git repo. It then pins exactly what a change is taken over, in four corners: test_a_approved_cell_moving_under_an_approved_row_is_DRIFT (an approved cell must move it), test_a_TRACED_cell_moving_is_NOT_drift (the traced half must not), test_status_itself_is_never_the_amendment (the marker is excluded structurally, so a flip is neither an amendment nor a mask for one), and test_a_row_below_approval_can_never_be_drifted (no claim to fall from). The guard and the snapshot comparison share one public basis, split_changed_cells, called by both staged_spine_amendments and baseline_snapshot.is_drifted, so their agreement carries no case of its own. Drive ordinary and adjudication-class WI branches attempting snapshots, approval-ledger writes, first approvals and amendment-only snapshot changes; all refuse. For each of all seven snapshot registries, drive the held primary writer with every changed Approved cell accepted or UNJUDGED and every Drafted rider listed below approval, then returned, stale and extra-cell variants; only the fully accepted exact scope stages a byte-identical snapshot and every rider remains below approval.
+--- PUBLICATION SCOPE (later primary publication only) ---
+docs/requirements/low-level-requirements.toml=WI-610;docs/requirements/system-requirements.toml=WI-610;docs/test/test-cases.toml=WI-610
+    - `docs/requirements/system-requirements.toml=WI-610` covers SR-024, SR-033, SR-043, SR-052, SR-053, SR-054, SR-111, SR-112, SR-129, SR-144, SR-146, SR-147, SR-148, SR-149, SR-156, SR-161, SR-162, SR-167, SR-175, SR-176, SR-177
+    - `docs/requirements/low-level-requirements.toml=WI-610` covers LLR-061, LLR-144, LLR-161, LLR-167, LLR-058, LLR-123, LLR-149, LLR-152, LLR-140, LLR-150, LLR-151, LLR-207, LLR-183, LLR-153, LLR-154, LLR-158
+    - `docs/test/test-cases.toml=WI-610` covers TC-061, TC-138, TC-156, TC-161, TC-058, TC-143, TC-146, TC-154, TC-144, TC-145, TC-205, TC-178, TC-147, TC-148, TC-153
+--- END ---
+
+Method:
+- Read the BEFORE text and write down, for yourself, the concrete obligation it imposes — what a builder must do, what a test must check.
+- Read the AFTER text and do the same, independently.
+- Compare the two obligations, not the two paragraphs. Diff noise is not the subject; the obligation is.
+- When the two obligations differ AT ALL, the answer is `meaning`. Fail toward `meaning`: a wrongly-kept attestation is a silent false claim that a human blessed this text, and that is the failure this rung exists to prevent. A wrongly-owed re-attest costs one sitting.
+- If the diff is mixed — one cell clarified, another moved the obligation — the answer for the ROW is `meaning`, and you say which cell carried it.
+- An existing ID denotes a stable meaning. `CLARITY` preserves the existing
+  implementation judgments and records equivalent wording; it does not assign
+  a new meaning or require implementation re-approval. If equivalence cannot
+  be established, hold the prior approved snapshot and record the unresolved
+  decision for primary adjudication. A `MEANING` decision requires impact review
+  of every use and reference to the ID — downstream requirements, tests,
+  implementation and approval evidence — before changed wording is accepted or
+  published. Do not mint a replacement ID as a shortcut.
+- If any amended row or cell is not ready to bless as shown, record an explicit
+  `RETURN` disposition naming the exact row/cell and the corrective amendment
+  required. Do not omit the finding or repair the judged registry in place.
+
+Write your verdict to /Users/diytechy/Documents/ai-template/docs/reviews/contract_split/006-ADJUDICATE-0a83e9a.md. One line per amended row, in the log.md block format:
+
+    - [MEANING|CLARITY] <row-id> <cell> -> the obligation before -> the obligation after -> why they are (not) the same
+
+Then exactly one machine line:
+
+    VERDICT: MEANING|CLARITY rows=N
+
+The verdict line classifies the amendment question; `RETURN` dispositions carry
+the corrective handback for any row that cannot be accepted as shown.
+
+`CLARITY` only when EVERY row you were shown is clarity. Commit that verdict file (an adjudication is a recorded verdict — its one home), ending that commit with the trailer `WI: WI-610` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open.
+
+THEN, AND ONLY AFTER THAT VERDICT IS RECORDED, the aftermath. A `CLARITY` verdict owes no implementation re-approval: the existing judgments stand, and the baseline remains held until the exclusive primary publication step records the accepted equivalent wording.
+
+A `MEANING` verdict says the text a human blessed no longer imposes the obligation it imposed. The attestation it carries is now a false claim, and the row owes a fresh one:
+
+- If the rung is one the repo's declared gate authority has RELEASED to the loop, record the exact row decision, authority basis and publication scope in this verdict. The exclusive primary-checkout publication step performs any required re-attestation and snapshot update only after the required impact review and independent checks settle. Leave the prior snapshot intact until then.
+- If the rung is one the dial still HOLDS for a human, stop at the verdict. The row surfaces on the owner's approval brief and the signature is theirs; the prior snapshot remains intact.
+
+THE DIAL FOR THIS ROW: the LLR/SR/TC tier(s) sit on a rung the declared gate authority has RELEASED. Record the exact MEANING decision and its authority/evidence scope; the exclusive primary publication step performs any re-attestation after required impact review and checks. Leave the prior snapshot intact until then.
+
+Do not edit any registry CELL either way. Amending the text is the authoring lane's act, approving it is yours, and rewriting a row you are judging is neither — a row whose findings need answering is RETURNED through `## Dispositions`, never fixed in place by its judge.
+
+The specialized brief above defines the required machine outcome. Follow that grammar exactly; do not emit the generic primary outcome line.
+
+--- REQUIRED `## Approval` CARRIER ---
+For every turn, including `RETURN` and `UNCERTAIN`, write one exact fenced
+TOML block under the queued spec's `## Approval` heading. A nonempty scope
+registry decision scope must carry one decision table per scoped row, including
+returned rows; a zero registry-decision scope may use `decision = []` only for
+the generic RETURN or the typed consolidation carrier. Copy every identity from
+the derived evidence above; never invent or recalculate a hash. If every
+scoped decision is `return` or `uncertain`, there are zero accepted cells:
+omit the `absorption` and `impact` tables. Those ledgers are required only
+when at least one scoped decision is accepted; the specialized verdict line
+still uses its own grammar, and an amendment's MEANING/CLARITY line is
+findings-only when all Approval decisions return.
+
+```toml
+version = 1
+turn = "WI-610-d522f3b0c7295ce2d46765551a6500491a76ff2c"
+base = "d522f3b0c7295ce2d46765551a6500491a76ff2c"
+proposal = "057bf520150b8213e3fb9f744bba664d295d54d6a96a5f512cd34cbdf4a5168e"
+decision = [] # valid only for a zero-scope generic RETURN
+
+[[absorption]]
+registry = "<exact live registry path>"
+row = "<exact scoped row id>"
+cells = { Status = { before = "<bound blob>", after = "<bound blob>" } }
+judgment = "<immutable judgment commit>"
+state = "approved-change|below-approval-rider"
+
+[[impact]]
+id = "<stable id from the derived impact census>"
+path = "<exact path from the derived impact census>"
+source_blob = "<exact derived source blob>"
+disposition = "amend|retain|regenerate|history-unchanged"
+evidence = ["<immutable judgment commit>"]
+```
+
+For a nonempty scope, replace `decision = []` with exactly one `[[decision]]`
+table per scoped row:
+
+```toml
+[[decision]]
+registry = "<exact live registry path>"
+row = "<exact scoped row id>"
+classification = "approve|equivalent|return|uncertain|meaning"
+before = { Status = "<bound blob>" }
+after = { Status = "<candidate blob>" }
+evidence = ["<immutable judgment commit>"]
+```
+
+each table has `registry`, `row`, `classification`, `before`, `after`, and
+`evidence`. The `before` and `after` maps contain the exact cell-to-blob
+identities rendered above. `absorption.cells` contains the exact nested
+cell-to-before/after identities for every whole-file changed cell. When an
+accepted `meaning` decision requires the impact ledger, include every
+`(id, path)` impact census pair; the selected queued spec uses its immutable
+`proposal_spec_blob` as its source blob, and every other pair uses the
+rendered candidate blob.
+
+First commit the verdict artifact and obtain its immutable commit id. Then
+write and commit the `## Approval` payload with that id in `evidence`; the
+coordinator records the final candidate and judgment path only after this
+payload commit. This ordering prevents a self-referential candidate identity.
+The payload records judgment and scope; it never itself flips Status, writes a
+snapshot, closes the spec, or publishes.
+
+If any required cell or whole-file absorption is `UNJUDGED`, outside scope,
+stale, or lacks its required evidence, record `RETURN` with zero accepted
+cells. Add a concrete continuation or reanchor in the queued spec's
+`## Dispositions`; name the existing scope owner and corrective authoring it
+depends on. Equivalence observations in a RETURN are findings only and cannot
+be reused as approval evidence. A malformed or inconsistent record remains
+held for REWORK under the existing turn; do not convert a mechanical refusal
+into acceptance.
+
+Do not edit registry cells, change Status, write snapshots, create a model-side
+close, or invent a successor outside the typed `## Dispositions` path. Commit
+the verdict to /Users/diytechy/Documents/ai-template/docs/reviews/contract_split/006-ADJUDICATE-0a83e9a.md with the exact machine line above and the trailer
+`WI: WI-610`. The later primary publisher consumes only the exact recorded
+decision and independently verifies all bindings and bytes.
+Error: turn/start: turn/start failed: Input exceeds the maximum length of 1048576 characters. (code -32602), data: {"input_error_code":"input_too_large","max_chars":1048576,"actual_chars":1128773}
