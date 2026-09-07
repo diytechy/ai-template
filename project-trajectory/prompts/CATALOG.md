@@ -18,13 +18,13 @@ is a refusal rather than a silently empty instruction.
 
 | Key | File | Digest | Slots |
 |---|---|---|---|
-| `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:ed01b24b0cac` | `{aftermath}`, `{baseline}`, `{rows}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:36e919073281` | `{aftermath}`, `{assignment}`, `{baseline}`, `{rework}`, `{rows}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-CONSOLIDATE` | [adjudicate-consolidate.template.md](adjudicate-consolidate.template.md) | `sha256:e2904c0d2963` | `{candidate}`, `{digests}`, `{mechanical}`, `{open_rows}`, `{prior}`, `{spine}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:04b017775dce` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-FIRST-APPROVAL` | [adjudicate-first-approval.template.md](adjudicate-first-approval.template.md) | `sha256:f1480095c8c6` | `{approves_rows}`, `{baseline}`, `{chain}`, `{registries}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-RED-TC` | [adjudicate-red-tc.template.md](adjudicate-red-tc.template.md) | `sha256:6c33cffc9727` | `{spine}`, `{tcs}`, `{verdict}`, `{wi}` |
 | `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:66976e43c582` | `{brief}`, `{verdict}` |
-| `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:e6809ad74365` | `{process_doc}`, `{scripts}`, `{trunk}`, `{verdict}`, `{wis}` |
+| `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:4dba4fb214af` | `{process_doc}`, `{py}`, `{scripts}`, `{trunk}`, `{verdict}`, `{wis}` |
 | `WORKER` | [worker.template.md](worker.template.md) | `sha256:d502386c18e9` | `{assignment_block}`, `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{scripts}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
 
 An operator override replaces a template per phase (`--prompt-map`); an

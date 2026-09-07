@@ -25,6 +25,10 @@
                    working it out from a dial it would have to go read.
        {verdict}   the repo path this session writes its verdict to.
        {wi}        this adjudication row's own id, for the result trailer.
+       {assignment} the governing spec Context, verbatim and untruncated;
+                    scope constraints, never evidence about the cells.
+       {rework}    independent review findings and the prior verdict path,
+                   or explicit none on an initial sitting; untruncated.
 
      WHY THE AFTERMATH IS STATED HERE AT ALL. This template used to end "the
      flip, if one is owed, is the mechanical tool's act, not yours" — true when
@@ -51,7 +55,11 @@ CLARITY means: a reader who acted correctly on the OLD text would still act corr
 
 MEANING means: some behaviour, limit, actor, scope or acceptance condition is different. A threshold moved. A case was added or removed. An actor changed. A "should" became a "must". If a correct implementation of the old text could FAIL the new text — or pass it while doing something the old text forbade — that is meaning, however small the diff looks.
 
-Judge the CELLS BELOW and nothing else. You have no access to the session that made the change, and you must not go looking: an amendment's author is not a witness to their own intent.
+{assignment}
+
+{rework}
+
+Judge the CELLS BELOW and nothing else as evidence. The governing assignment limits which rows you may rule on and which registries you may copy. You have no access to the session that made the change, and you must not go looking: an amendment's author is not a witness to their own intent.
 
 --- ACCEPTED ANCHOR ---
 {baseline}

@@ -15,7 +15,7 @@ integrate.py's bar seam (see tests/test_integrate.py for the wired half).
 import os
 import sys
 
-from conftest import load_script
+from conftest import load_script, env_gate_skipif
 
 agent_common = load_script("agent_common")
 _failure_tail = agent_common._failure_tail
@@ -291,6 +291,37 @@ def test_harness_python_prefers_venv_else_sys_executable(tmp_path):
     assert agent_common.harness_python(tmp_path) == sys.executable
     exe = _stub_venv(tmp_path)
     assert agent_common.harness_python(tmp_path) == str(exe)
+
+
+@env_gate_skipif("git")
+def test_linked_worktree_harness_uses_primary_venv(tmp_path):
+    import subprocess
+
+    primary = tmp_path / "primary"
+    primary.mkdir()
+    commands = [
+        ["init"],
+        [
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.com",
+            "commit",
+            "--allow-empty",
+            "-m",
+            "initial",
+        ],
+        ["worktree", "add", "-b", "lane", str(tmp_path / "lane")],
+    ]
+    for command in commands:
+        subprocess.run(
+            ["git", "-C", str(primary), *command], check=True, capture_output=True
+        )
+    exe = _stub_venv(primary)
+    lane = tmp_path / "lane"
+    assert agent_common.harness_python(lane) == str(exe)
+    local = _stub_venv(lane)
+    assert agent_common.harness_python(lane) == str(local)
 
 
 def test_interpreter_version_reads_self_and_fails_soft_on_a_broken_exe(tmp_path):

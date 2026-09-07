@@ -1522,8 +1522,8 @@ def venv_python(root):
 
 def harness_python(root):
     """The interpreter the test harness (pytest + the pinned dev tools) should run
-    under for a worktree session: the repo's own .venv when present (shared by
-    absolute path — one pinned ≥3.11 toolchain, no per-worktree install).
+    under for a worktree session: its local .venv, then the primary checkout's
+    .venv (shared by absolute path, with no per-worktree install).
     Returns a str path — a bar runner substitutes it for {py} so the bar runs
     under the floor-satisfying interpreter even when the caller was itself
     launched on ambient Python (WI-286).
@@ -1534,7 +1534,7 @@ def harness_python(root):
     is refused UPSTREAM by `harness_floor_failures` below - integrate.py calls
     it before the bar - so a declared repo never reaches this fallback
     (WI-361; the dispatcher-era gate this replaces died at Phase 5)."""
-    py = venv_python(root)
+    py = venv_python(root) or venv_python(primary_worktree_root(root) or root)
     return str(py) if py else sys.executable
 
 

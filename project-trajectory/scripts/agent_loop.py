@@ -147,6 +147,7 @@ import atexit
 import datetime
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -708,6 +709,11 @@ def reviewer_prompt(prompt_templates, phase, verdict_path, root=None, worker=Non
         text = text.replace("{process_doc}", process_doc_path(root))
         text = text.replace("{trunk}", trunk_name(root, worker))
         text = text.replace("{scripts}", scripts_dir(root))
+        py = agent_common.harness_python(root)
+        text = text.replace(
+            "{py}",
+            subprocess.list2cmdline([py]) if os.name == "nt" else shlex.quote(py),
+        )
     return text
 
 
@@ -724,7 +730,18 @@ def reviewed_rows_block(worker):
     if not assigned:
         return "  - (not declared for this round — infer the scope from the diff)"
     rows = (worker or {}).get("rows") or {}
-    return "\n".join("  - {} — {}".format(w, _row_title(rows, w)) for w in assigned)
+    return "\n".join(
+        "  - {} — {}{}".format(
+            w,
+            _row_title(rows, w),
+            " (adjudication: mechanical close follows the review round; an active "
+            "spec and empty Deliverable are expected. Review the verdict and "
+            "Dispositions; the coordinator writes the Deliverable and closes on DONE.)"
+            if adjudicating(rows.get(w, {}))
+            else "",
+        )
+        for w in assigned
+    )
 
 
 def process_doc_path(root):
@@ -787,7 +804,9 @@ def session_body(root, worker, current_wi, session, sha, reviews_dir, templates)
         verdict_path = fresh_verdict_path(
             reviews_dir, "{}-ADJUDICATE-{}.md".format(session, (sha or "")[:7])
         )
-        body, why = adjudicate_brief.compose(root, row, verdict_path, templates)
+        body, why = adjudicate_brief.compose(
+            root, row, verdict_path, templates, rework=worker["rework"]
+        )
         if body is None:
             return None, None, why, ""
         return body, verdict_path, None, brief

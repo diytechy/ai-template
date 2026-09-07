@@ -1013,7 +1013,8 @@ def test_reviewer_prompt_renders_trunk_and_process_doc_slots(managed_repo):
     # Round 2: the script directory is the same hazard — this fixture has no
     # scripts/ dir, so the kit's own directory renders; nothing literal.
     assert "{scripts}" not in rev_block
-    assert "python project-trajectory/scripts/check.py --jobs 0" in rev_block
+    assert "project-trajectory/scripts/check.py --jobs 0" in rev_block
+    assert "{py}" not in rev_block
 
 
 def test_reviewer_prompt_names_the_rows_under_review(managed_repo):
@@ -1051,6 +1052,23 @@ def test_reviewer_prompt_without_an_assignment_says_so(managed_repo):
         {"REVIEW-A": override}, "REVIEW-A", "v.md", root=repo, worker=None
     )
     assert out == "review the diff. Write your verdict to v.md and stop.\n"
+
+
+def test_review_brief_uses_resolved_harness_and_adjudication_close(
+    managed_repo, monkeypatch
+):
+    repo, _ctl, _cmd = managed_repo
+    monkeypatch.setattr(
+        agent_loop.agent_common, "harness_python", lambda root: "/shared env/bin/python"
+    )
+    worker = {
+        "assigned": ["WI-201"],
+        "rows": {"WI-201": {"Title": "Judge amendment", "SafetyClass": "adjudication"}},
+    }
+    text = agent_loop.reviewer_prompt({}, "REVIEW-A", "v.md", root=repo, worker=worker)
+    assert "shared env/bin/python" in text and "{py}" not in text
+    assert "mechanical close" in text
+    assert "active" in text and "Dispositions" in text
 
 
 def test_review_owed_resume_keeps_the_relaxed_audit_trail(managed_repo, tmp_path):

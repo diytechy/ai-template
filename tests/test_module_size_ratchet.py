@@ -545,7 +545,11 @@ BASELINE = {
     # `LimitWait`) — signature lines and the docstrings that used to be inline
     # comment blocks are the whole bump. Reviewed bump, reason in
     # docs/log.d/2026-08-23-wi483-bookkeeping-engines.md.
-    "agent_loop.py": 2685,  # 2026-09-06 OI-85/P9R, +7: refuse coordinator startup when the launch code identity is unavailable, using the existing preflight exit; reviewed restamp, docs/log.d/2026-09-06-oi85-plan-completion.md. Earlier: 2026-09-06, +65 P0b: one typed code-restart boundary plus durable probe/interactive invocation accounting; existing function complexity ceilings retained.
+    # +19 SLOC, control repair: Fable-reviewed scope/rework forwarding and
+    # reviewer rendering of the resolved interpreter and mechanical-close role.
+    # These are additions at the existing session/review composition boundaries;
+    # extracting a second routing module would duplicate their ownership.
+    "agent_loop.py": 2704,  # 2026-09-06 OI-85/P9R, +7: refuse coordinator startup when the launch code identity is unavailable, using the existing preflight exit; reviewed restamp, docs/log.d/2026-09-06-oi85-plan-completion.md. Earlier: 2026-09-06, +65 P0b: one typed code-restart boundary plus durable probe/interactive invocation accounting; existing function complexity ceilings retained.
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now

@@ -3,6 +3,8 @@
 Operating envelope: [owner ruling](CONTROL-DECISION.md#owner-ruling-2026-09-06).
 Preparation and live route probes: [preflight](CONTROL-PREFLIGHT.md).
 
+Current resolution and reviewer dispositions: [control repair](CONTROL-REPAIR.md).
+
 ## Launch
 
 The hooks-enabled pause-deletion baseline is
@@ -112,9 +114,9 @@ SHA-256 `d1db313c6db674f3204693e881492e930c138a99cff463d88a3c1e263c1f9646`.
 Only its two uncommitted paths (`docs/archive/last_approved/README.md` and the
 LLR snapshot) were restored to the lane's committed HEAD; the lane is clean.
 This is an interrupted assignment, not a complete/partial acceptance or a
-renamed parked ref. Do not run the existing as-is partial-close helper on the
-unsafe staged state: it would commit that state. Reconcile the lane under the
-corrected scope before deciding its terminal outcome. The tracked pause stops
+renamed parked ref. The partial-close helper refuses adjudication lanes before its as-is residue
+commit; that path is not this lane's terminal outcome. Reconcile the judgment
+and its successor disposition, then use the normal reviewed adjudication close. The tracked pause stops
 new claims but the dispatcher can resume a parked claim before testing pause,
 so do not relaunch merely because the pause exists.
 
@@ -125,11 +127,14 @@ specialized `adjudicate_brief.compose` result without including
 without using the WI's scope, and the amendment template says to judge the
 shown cells only. After the SR/TC copy, the regenerated brief therefore showed
 the remaining LLR drift and authorized its snapshot without conveying the
-WI-605 exclusions or Sol's requested rework. The repair must carry governing
+WI-605 exclusions or Sol's requested rework. Here “drift” means the approved
+Detail cells: traced Module/CodeSymbol re-points are non-attesting and were
+deliberately excluded from the brief. The copy tool accepts a named approval
+reference but does not validate that its judgment has semantic authority. The repair must carry governing
 assignment constraints and review findings into the specialized judge path,
 while preserving independent judgment of the evidence.
 
-The close-order finding also needs reconciliation: Sol asked the agent to
+The close-order finding was subsequently rejected (see the repair record): Sol asked the agent to
 close the active row before review, while `dispatch._close_done_adjudication`
 and `handback.close_adjudication` own a mechanical adjudication close after
 worker completion. Do not patch around that disagreement by deleting a

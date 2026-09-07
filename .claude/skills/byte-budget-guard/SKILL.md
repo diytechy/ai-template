@@ -30,8 +30,8 @@ before you edit and again before you commit.
 | File | Hard cap | Baseline | Stamped | Latest change |
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
-| `CLAUDE.md` | **8,500** | 7,975 | 2026-09-04 | +89: WI-580 aligns mid-phase close with the phase cadence |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,613 | 2026-09-06 | F1-F4 Critique review corrections and process-row restamp |
+| `CLAUDE.md` | **8,500** | 8,009 | 2026-09-06 | Reconcile +34 from the owner-ruled 90s smoke budget |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,594 | 2026-09-06 | Control repair: reconcile CLAUDE.md baseline |
 
 **`AGENTS.template.md` has less than 1% free**; this skill and `CLAUDE.md`
 have about 6%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own

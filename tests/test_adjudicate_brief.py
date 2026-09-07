@@ -686,6 +686,68 @@ def test_the_amendment_brief_carries_the_snapshot_as_its_anchor(tmp_path):
     assert "refuse floats" in values["rows"]  # after
 
 
+@pytest.mark.parametrize("rework", ["", "Address the missing predecessor judgment."])
+def test_specialized_session_preserves_governing_scope_and_rework(tmp_path, rework):
+    repo = _amendment_repo(tmp_path)
+    spec = next((repo / "docs/work").rglob("WI-301-*.md"))
+    constraint = "WI-302 retains LLR-001; RETURN and draft a successor until it judges."
+    spec.write_text(spec.read_text() + "\n## Context\n\n" + constraint + "\n")
+    rows = agent_loop.agent_common.load_wi_registry(repo)
+    worker = {"rows": rows, "rework": rework}
+    body, verdict, hold, brief = agent_loop.session_body(
+        repo, worker, "WI-301", "003", "abcdef0", repo / "docs/reviews", {}
+    )
+    assert hold is None and brief == "amendment"
+    assert constraint in body
+    assert "INDEPENDENT adjudicator" in body and "refuse floats" in body
+    assert str(verdict) in body
+    if rework:
+        assert rework in body
+    assert "resume from docs/status.md" not in body
+
+
+def test_specialized_override_cannot_drop_scope_or_truncate_rework(tmp_path):
+    repo = _amendment_repo(tmp_path)
+    spec = next((repo / "docs/work").rglob("WI-301-*.md"))
+    spec.write_text(
+        spec.read_text() + "\n## Context\n\nReserved judgment stays withheld.\n"
+        "\n## Dispositions\n\nSELF-ASSESSMENT SENTINEL\n"
+    )
+    rework = "finding\n" * 100 + "Last finding must survive."
+    prior = repo / "docs/reviews/001-ADJUDICATE-1234567.md"
+    prior.parent.mkdir(parents=True)
+    prior.write_text("VERDICT: MEANING rows=1\n")
+    override = "{wi} {verdict} {rows} {baseline} {aftermath}"
+    body, why = ab.compose(
+        repo,
+        agent_loop.agent_common.load_wi_registry(repo)["WI-301"],
+        prior.parent / "003-ADJUDICATE-abcdef0.md",
+        {ab.BRIEF_PROMPTS["amendment"]: override},
+        rework=rework,
+    )
+    assert why is None
+    assert "Reserved judgment stays withheld." in body
+    assert "Last finding must survive." in body and str(prior) in body
+    assert "SELF-ASSESSMENT SENTINEL" not in body
+
+
+def test_specialized_session_holds_when_governing_spec_is_missing(tmp_path):
+    repo = _amendment_repo(tmp_path)
+    rows = agent_loop.agent_common.load_wi_registry(repo)
+    next((repo / "docs/work").rglob("WI-301-*.md")).unlink()
+    body, verdict, hold, brief = agent_loop.session_body(
+        repo,
+        {"rows": rows, "rework": "pending finding"},
+        "WI-301",
+        "003",
+        "abcdef0",
+        repo / "docs/reviews",
+        {},
+    )
+    assert body is None and verdict is None and brief == ""
+    assert "governing assignment" in hold
+
+
 def test_only_APPROVED_cells_reach_the_judge(tmp_path):
     # A traced cell is ruled non-attesting (§A5.1), so asking a judge to rule
     # "meaning or clarity" on a re-pointed Phase cell asks a question the

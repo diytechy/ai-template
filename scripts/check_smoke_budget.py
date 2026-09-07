@@ -6,8 +6,9 @@ seconds budget declared in docs/stack.ini [smoke-budget] — a smoke test answer
 "is it basically alive?", not "re-run most of the full suite". WI-281 split the
 budget in two: the ALWAYS-ON deterministic membership ratchet
 (tests/test_smoke_budget.py) is the machine-independent floor; THIS is the
-wall-clock half. It defaults to `--mode warn` for LOCAL convenience (a breach
-prints a WARNING, exit 0). CI runs it with `--mode enforce` (exit 1 on breach).
+wall-clock half. It defaults to `--mode warn` for LOCAL convenience (a budget
+breach prints a WARNING). CI uses `--mode enforce` (exit 1 on budget breach).
+A fresh run always propagates test failure, regardless of the budget mode.
 
 WHY ENFORCE, RE-ARGUED 2026-08-21 — the previous justification was seven times
 off and had never been re-measured. It read: "startup-dominated, not core-bound
@@ -122,12 +123,14 @@ def main(argv=None):
         "--mode",
         choices=("warn", "enforce"),
         default="warn",
-        help="warn (default): report only; enforce: exit 1 when over budget.",
+        help="warn (default): report budget breaches; enforce: fail them. "
+        "Test failures always fail a fresh run.",
     )
     args = ap.parse_args(argv)
     cp = _profile()
     budget = declared_seconds(cp)
 
+    child_code = 0
     if args.elapsed is not None:
         elapsed = args.elapsed
     else:
@@ -135,17 +138,16 @@ def main(argv=None):
         print("timing: " + " ".join(shlex.quote(c) for c in cmd))
         start = time.perf_counter()
         proc = subprocess.run(cmd, cwd=str(ROOT))
+        child_code = proc.returncode
         elapsed = time.perf_counter() - start
         if proc.returncode != 0:
-            # A red smoke tier is a separate failure from a slow one; surface it
-            # but do not let a broken run masquerade as a budget verdict.
             print(
-                "note: smoke tier exited {} (test failures are not a budget "
-                "breach; fix them separately)".format(proc.returncode),
+                "FAIL: smoke tier exited {}".format(child_code),
                 file=sys.stderr,
             )
 
-    return evaluate(elapsed, budget, args.mode)
+    budget_code = evaluate(elapsed, budget, args.mode)
+    return child_code or budget_code
 
 
 if __name__ == "__main__":

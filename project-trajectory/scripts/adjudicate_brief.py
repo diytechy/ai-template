@@ -1034,7 +1034,54 @@ _ASSEMBLERS = {
 ROUTED = tuple(sorted(_ASSEMBLERS))
 
 
-def compose(root, row, verdict_path, prompt_templates=None):
+def assignment_context(root, row):
+    """The governing spec's Context, without Deliverable or disposition claims.
+
+    Keep constraints verbatim and untruncated. They limit the judgment's scope;
+    they are not evidence that the amended cells deserve approval.
+    """
+    root = Path(root)
+    wi = row.get("WI-ID") or ""
+    found = [
+        p.relative_to(root).as_posix()
+        for home in ac.SPEC_HOMES
+        for p in (root / home).rglob(wi + "-*.md")
+    ]
+    chosen = ac.authoritative_spec(found)
+    text = _read(root / chosen) if chosen else None
+    if text is None:
+        return None, "cannot read governing assignment spec for {}".format(wi)
+    context = re.search(r"(?ms)^## Context\s*\n(.*?)(?=^#{1,2} |\Z)", text)
+    return "{} (SpecRef: {})\n{}".format(
+        chosen,
+        row.get("SpecRef") or "none",
+        context.group(1).strip() if context else "No additional Context declared.",
+    ), None
+
+
+def judgment_context(assignment, verdict_path, rework):
+    """Separate governing scope and review work from independent cell evidence."""
+    prior = sorted(Path(verdict_path).parent.glob("*-ADJUDICATE-*.md"))
+    return {
+        "assignment": "GOVERNING ASSIGNMENT (scope constraints, not evidence):\n"
+        + assignment
+        + "\nRead the named spec for the complete assignment. The evidence below "
+        "does not widen it. Tier authority does not override reserved rows or "
+        "prerequisite judgments. If a snapshot would absorb unapproved scope, "
+        "withhold it and draft the successor in ## Dispositions.",
+        "rework": (
+            "REWORK of the existing adjudication, not a new delegation. "
+            "Address or explicitly disposition each independent finding. "
+            "Preserve unaffected judgments and reservations. Prior verdict: {}\n{}".format(
+                prior[-1] if prior else "none recorded", rework
+            )
+        )
+        if rework
+        else "REWORK: none — initial sitting.",
+    }
+
+
+def compose(root, row, verdict_path, prompt_templates=None, rework=""):
     """`(prompt_text, None)` when this adjudication row's declared brief could
     be filled IN FULL, else `(None, reason)` — on which the caller HOLDS the
     row for a human (rule 3), never quietly downgrading it to a build.
@@ -1069,6 +1116,17 @@ def compose(root, row, verdict_path, prompt_templates=None):
     values["wi"] = (row.get("WI-ID") or "").strip()
     try:
         base = (prompt_templates or {}).get(key) or prompts.load(key)
-        return prompts.fill(key, base, values), None
+        assignment, why = assignment_context(root, row)
+        if assignment is None:
+            return None, why
+        context = judgment_context(assignment, verdict_path, rework)
+        # Every specialized path and override receives this context. Slots let
+        # a template place it; omitting them cannot silently drop constraints.
+        present = prompts.slots(base)
+        values.update({k: v for k, v in context.items() if k in present})
+        prefix = "\n\n".join(v for k, v in context.items() if k not in present)
+        return "\n\n".join(
+            filter(None, [prefix, prompts.fill(key, base, values)])
+        ), None
     except prompts.PromptError as exc:
         return None, str(exc)

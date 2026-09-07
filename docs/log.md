@@ -62311,3 +62311,50 @@ watched master changed; no full-suite run is claimed.
 <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke; .venv/bin/python scripts/check_smoke_budget.py --elapsed 58.846227500005625 --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict" rev=46d010f4+control-stop; out/run-logs/control-stop-smoke.txt; control-stop-smoke-isolated.txt; control-stop-smoke-isolated.json; control-stop-docs.txt; control-stop-trajectory.txt -->
 
 Deferred open items: none — these are reproducible repair findings, not a new owner policy choice.
+
+## 2026-09-06 — Control repairs reviewed by Fable and prepared for retry
+
+The owner requested a Claude Fable medium-effort review of the incident and
+repair plan, then authorized implementing valid feedback and preparing a
+retry. The [repair record](ai-template-redesign-2026-09-05-codex/CONTROL-REPAIR.md)
+links the unaltered review, its accepted and rejected findings, root causes,
+regressions and the interrupted lane's preparation sequence. No coordinator
+retry or second control window is launched; the pause stays tracked.
+
+The smoke wrapper now propagates test failures in either timing mode. Review
+commands resolve the shared virtual environment. Every specialized adjudication
+brief carries governing assignment Context and independent rework, including
+under prompt overrides; the reviewer sees the adjudication's mechanical-close
+role. No lifecycle, policy dial, dependency or spine cell was changed. The
+small module-size increase (agent_loop 2685 -> 2704 SLOC) belongs at its existing
+composition boundary, per the independently reviewed repair; context assembly
+stays in its existing sibling. No new over-threshold complexity remains from
+the repair; the additional audit's inherited baseline drift is recorded rather
+than restamped away.
+
+Fable's rationale-removal recommendation is rejected under the explicit owner
+instruction “Rationale names this ruling,” already dispositioned as F6. The
+near-identical WI-601/WI-603 titles describe distinct LLRs; both edges remain.
+The partial-close explanation is corrected: that helper refuses adjudication
+lanes before any residue commit. The original lane is being reconciled for its
+normal independent review and mechanical close, not a recursive partial close.
+
+Verification: baseline lifecycle tests 197 passed. The new regressions failed
+before repair; the first repaired focused run passed 164 tests, and the four
+specialized composition cases pass. The unfiltered suite completed with 3671
+passed, 26 skipped and two failures in 726.11s. Both are resolved and pass their
+targeted reruns: the temporarily incomplete repair-document link, and a stale
+CLAUDE.md byte stamp inherited from c559a403. The repaired wrapper's actual
+commit bar passed 1687 tests with 8 skips in 78.12s, measured 78.3s/90s.
+Docs, strict trajectory and Ruff pass with the recorded existing warnings.
+An actual check.py smoke step now fails on an under-budget child exit 7.
+<!-- fig: derived="out/run-logs/control-repair/{lifecycle-baseline,focused-after,full-suite,full-suite-failures-rerun,docs-failure-rerun,commit-smoke,docs-final,trajectory,smoke-end-to-end}.txt" rev=2137230e+control-repair -->
+
+Byte deltas: CLAUDE.md remains 8009 bytes (491 under its 8500 cap); its stale
+7975-byte baseline is corrected, not the file or cap. The byte-budget-guard
+skill source and both tracked copies shrink 4613 -> 4594 bytes (406 under the
+5000 cap); cap tests pass. No other watched or capped master changed.
+<!-- fig: derived="out/run-logs/control-repair/byte-stamp.json; full-suite-failures-rerun.txt" rev=2137230e+control-repair -->
+
+Deferred open items: none — the pending action is the existing independent
+review of the reconciled lane, not a new policy ruling.

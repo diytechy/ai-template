@@ -32,9 +32,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   for the perspective-review chain and the redesign Inspection artifacts.
   Inspect the complete chains and every older cell a whole-registry snapshot
   would absorb; the needs-only SN-036 act does not approve those registries.
-- **Control stopped:** repair the smoke-wrapper false green and the
-  adjudication scope/rework omissions, then reconcile the preserved interrupted
-  lane before any relaunch. The pause alone does not forbid resuming a claimed
+- **Control stopped:** the smoke and adjudication prompt repairs are in place.
+  Follow the [repair and retry record](ai-template-redesign-2026-09-05-codex/CONTROL-REPAIR.md)
+  for the interrupted lane's reconciliation and fresh review before any close. The pause alone does not forbid resuming a claimed
   lane. Follow the
   [observation record](ai-template-redesign-2026-09-05-codex/CONTROL-OBSERVATIONS.md)
   and honor the
