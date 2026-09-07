@@ -63719,3 +63719,22 @@ against 90s. Documentation: 1468 docs, 2368 links, zero broken, one existing
 orphan warning. Strict trajectory passed; generated status and dashboard
 checks were fresh. No new tests for the documentation and pause-reason update.
 <!-- fig: cmd=".venv/bin/python scripts/check_smoke_budget.py --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict" rev=def51c22+handoff-2026-09-07; out/run-logs/handoff-2026-09-07/smoke.txt; docs.txt; trajectory.txt -->
+
+## 2026-09-07 — Retire the stopped primary turn (resume item 1)
+
+[Supervisor disposition and source review](reviews/2026-09-07-primary-turn-retirement.md):
+retired the invalid selection into an evidence-only home, preserving its bytes,
+actual invocation metadata and verdict. Restored the queued proposal's original
+blob; no successor minted or WI closed. The pending writer boundary is clear;
+pause remains tracked and the coordinator stays stopped. No deviations from the
+resume scope and no capped files changed.
+
+Deferred open items: none — this executes the authorized supervisor retirement;
+remaining repairs precede PC and no disputed cell was approved.
+
+Verification: smoke 1694 passed, 4 skipped in 50.75s; the budget's fresh run
+1694 passed, 4 skipped in 51.99s, enforced wall 52.2s against 90s. Strict
+trajectory clean. Docs: 1504 documents, 2416 links, zero broken, one existing
+orphan warning. Original selection/proposal blob identities verified, and
+`pending`/`writer_refusal` both return `None`. No new runtime behavior to test.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke; .venv/bin/python scripts/check_smoke_budget.py --mode enforce; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=1741cd88+resume-item-1; out/run-logs/post-stop-repair/1-smoke.txt; 1-trajectory.txt; 1-docs.txt -->

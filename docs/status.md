@@ -30,11 +30,11 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   and sitting checklists are historical context.
 - **Control stopped on correctness:** read the
   [new observations](ai-template-redesign-2026-09-05-codex/CONTROL-APPROVAL-OBSERVATIONS.md).
-  Keep the coordinator stopped. The tracked pause alone cannot stop a pending
-  primary selection from resuming. Preserve the stopped candidate and actual
-  invocation metadata; do not bypass the immutable-turn validator or retry
-  automatically. Candidate-SHA logging and derived successor review routing
-  require technical correction and supervisor reconciliation before admission.
+  Keep the coordinator stopped and the tracked pause in place. The
+  [supervisor retirement](reviews/2026-09-07-primary-turn-retirement.md)
+  clears the pending writer while preserving the stopped candidate and actual
+  invocation metadata. Candidate-SHA logging and derived successor review
+  routing still require technical correction before admission.
   The ordered work list and its kickoff prompt are in
   [the handoff](handoff-2026-09-07.md#resume-prompt-2026-09-07-after-the-stop);
   the [supervisor review](reviews/2026-09-07-control-approval-supervisor-review.md)
@@ -43,7 +43,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 - **Next authorized package:** the independent
   [PC cuts](ai-template-redesign-2026-09-05-codex/IMPLEMENTATION.md#pc--the-independently-agreed-cuts-unconditional-after-the-control-window).
   Author and adjudicate its batch-contract amendments before deleting code;
-  first reconcile the preserved primary turn so the writer boundary is clear.
+  first finish the remaining post-stop resume commits.
   A weak control sample does not authorize replacement or another window.
   Retention is re-queued but remains absent; its separate spine-authoring,
   session-ownership and on-box verification prerequisites still apply.
