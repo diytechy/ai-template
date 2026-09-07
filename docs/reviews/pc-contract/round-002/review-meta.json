@@ -1,0 +1,57 @@
+{
+  "route": "ANTHROPIC-FABLE",
+  "family": "ANTHROPIC",
+  "tier": "strong",
+  "model": "claude-fable-5-1",
+  "effort": "medium",
+  "session_id": "12a50acb-8f5e-43be-8ea7-5769b88f9d6c",
+  "base": "196bfb9cfb057cdc3df7f9feaf49403c0f57d90b",
+  "prompt_sha256": "7981242cfdbf3aa6f20130778b1b9d2d9a152c12342a820409d070916d3be123",
+  "files": {
+    "docs/ai-template-redesign-2026-09-05-codex/PC-BATCH-CONTRACT.md": "1ab9b549ab1da1dbe8cfcb73672bf9dfa70bad878422f42cf391231114e20c6d",
+    "docs/ai-template-redesign-2026-09-05-codex/PC-BATCH-AMENDMENTS.patch": "92115a69ce52d3ca08aa3a9eb34124d7abea83b4d25f9c9003e37c85f5b20294",
+    "docs/ai-template-redesign-2026-09-05-codex/PC-BATCH-IMPACT.tsv": "068cb68511f17ff08754edcc515d406184f2fb1901a454a570617346369a4f3f",
+    "docs/ai-template-redesign-2026-09-05-codex/PC-ABSORPTION-PRECONDITIONS.tsv": "906fbf1747312092ffe230c87202e6d918f93ae1cb2ae54796204376af5d4d48",
+    "out/run-logs/pc/chain.json": "3046a5bdf938724f5a96cf61b940330d99fd1dfb588415bcd0ec9eb5fd26e011",
+    "docs/ai-template-redesign-2026-09-05-codex/PC-BATCH-USES.md": "fe3684699cbaf63869b6410880a35b86a405d46ac8d725ab94d795acdb16fae8",
+    "out/run-logs/pc/supplement.txt": "b57698ce69a0fba3e19c27f967a6a055c9165ceeded95d5bab1b8d75e73aed05"
+  },
+  "exit": 0,
+  "wall_seconds": 177.52887079201173,
+  "reported_cost_usd": 3.8603762500000003,
+  "usage": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 155582,
+    "cache_read_input_tokens": 3909,
+    "output_tokens": 12709,
+    "output_tokens_details": {
+      "thinking_tokens": 9952
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 155582,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 12709,
+        "cache_read_input_tokens": 3909,
+        "cache_creation_input_tokens": 155582,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 155582
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "result_session_id": "12a50acb-8f5e-43be-8ea7-5769b88f9d6c",
+  "local_transcript_sha256": "6cb1a6672c29f506c2900035b6052903450ef5b5d51c3bc1a1ef9acc60f5defb"
+}

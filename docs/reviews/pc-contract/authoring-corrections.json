@@ -1,0 +1,31 @@
+{
+  "reviewed_candidate_tree": "cab1ee40635745516ed669beda023826805d84d3",
+  "corrected_candidate_tree": "9fa3e1bbf188d50d762ca4ee6d6af14ad06f8618",
+  "status": "author-verified exact corrections specified by round-004 conditional proposal-readiness opinion; not independent live acceptance",
+  "candidate_cell_changes": [
+    {
+      "registry": "docs/requirements/system-requirements.toml",
+      "row": "SR-144",
+      "cell": "requirement",
+      "before": "The delivered loop content shall close a lane that cannot finish into a TERMINAL partial state that merges like any other branch, with one immutable per-close report naming the claimed outcome, the reason, the commit range and the keep/discard split \u2014 refusing a report that declares neither a split nor an explicit deferral, and refusing a second close of the same event rather than overwriting the first.",
+      "after": "The delivered loop content shall close a lane that cannot finish into a TERMINAL partial state that merges like any other branch, with one immutable per-close report naming the claimed outcome, the reason, the commit range and the keep/discard split \u2014 refusing a report that declares neither a split nor an explicit deferral, and refusing a second close of the same event rather than overwriting the first and refusing a close of a lane whose claim is other than one work item."
+    },
+    {
+      "registry": "docs/requirements/low-level-requirements.toml",
+      "row": "LLR-150",
+      "cell": "detail",
+      "before": "One lane's mechanics extracted from the dispatcher (docs/concurrency-v2.md \u00a7A4.2): ensure the lane worktree (integrate.lane_worktree, the one home both the worker and the refresh agree on), build the worker argv with the plain launch's session dials forwarded explicitly, launch the worker subprocess (spawn_worker non-blocking for the lane table and dispatch._launch's own default; run_worker its blocking form - a DECLARED SEAM with no in-kit caller, kept for a synchronous single-lane run, and the shape dispatch._launch's worker= injection substitutes), and run the \u00a7A2 station refresh as the lane's OWN subprocess (spawn_refresh - the invoker's integrate.py refresh CLI under the harness interpreter) so N lanes' bars overlap instead of queueing at the dispatcher (\u00a7A4.3). Reports outcomes, decides none: the tree signal (the assigned spec moved out of active/<branch>/) plus exit codes are the whole protocol - no state file, no back-channel. The dispatcher resume boundary (_admit_parked) refuses an empty or multi-WI executable assignment before repository mutation or provider launch.",
+      "after": "One lane's mechanics extracted from the dispatcher (docs/concurrency-v2.md \u00a7A4.2): ensure the lane worktree (integrate.lane_worktree, the one home both the worker and the refresh agree on), build the worker argv with the plain launch's session dials forwarded explicitly, launch the worker subprocess (spawn_worker non-blocking for the lane table and dispatch._launch's own default; run_worker its blocking form - a DECLARED SEAM with no in-kit caller, kept for a synchronous single-lane run, and the shape dispatch._launch's worker= injection substitutes), and run the \u00a7A2 station refresh as the lane's OWN subprocess (spawn_refresh - the invoker's integrate.py refresh CLI under the harness interpreter) so N lanes' bars overlap instead of queueing at the dispatcher (\u00a7A4.3). Reports outcomes, decides none: the tree signal (the assigned spec moved out of active/<branch>/) plus exit codes are the whole protocol - no state file, no back-channel. The dispatcher's parked-lane resume (dispatch._admit_parked) hands this row's mechanics only a single-WI assignment and refuses an empty or multi-WI one before repository mutation or provider launch."
+    }
+  ],
+  "final_artifact_sha256": {
+    "PC-BATCH-AMENDMENTS.patch": "9ba7c3311fba4f0ce9d9831ed2e7ab72be876f91c955ad55468dbe1fa7ef892c",
+    "PC-CANDIDATE-ABSORPTION.tsv": "4d6f20cdbc0d21e686200ed33fd8f0e94db50abd5a5556e692e408b0f3a4b2f5",
+    "PC-BATCH-OWNERSHIP.tsv": "fc6da2de2d6d87f3285359cd8c6f413368ad4cbfaf8baaa7b4af5a525c6b76a2"
+  },
+  "source_confirmed": [
+    "dispatch.py::_admit_parked resumes parked lanes",
+    "integrate.py::_abandoned_claim recognizes a crashed claim commit"
+  ],
+  "intake_condition": "hard predecessor WI-601 plus fresh per-row ownership check"
+}

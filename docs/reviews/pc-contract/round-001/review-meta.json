@@ -1,0 +1,55 @@
+{
+  "route": "ANTHROPIC-FABLE",
+  "family": "ANTHROPIC",
+  "tier": "strong",
+  "model": "claude-fable-5-1",
+  "effort": "medium",
+  "session_id": "3a0110dc-85b4-4383-a22f-75b30d524944",
+  "base": "196bfb9cfb057cdc3df7f9feaf49403c0f57d90b",
+  "prompt_sha256": "b6efb830142a2eaff6c2118fd2ac56df7c8433ce31be84145b4fcadf825a545d",
+  "files": {
+    "docs/ai-template-redesign-2026-09-05-codex/PC-BATCH-CONTRACT.md": "06d2f039714c96c03b1a6fdc01434106915018bdd84ffccd30104342d8fa6e80",
+    "docs/ai-template-redesign-2026-09-05-codex/PC-BATCH-AMENDMENTS.patch": "9fb6c1435c435df729bebc6d153da298f1f5f535ca5db0290afdb589da89fc29",
+    "docs/ai-template-redesign-2026-09-05-codex/PC-BATCH-IMPACT.tsv": "e6a513ae37e2add7c96a0f53c066f564b60964f0e08019bb9547b53ca1cab615",
+    "docs/ai-template-redesign-2026-09-05-codex/PC-ABSORPTION-PRECONDITIONS.tsv": "906fbf1747312092ffe230c87202e6d918f93ae1cb2ae54796204376af5d4d48",
+    "out/run-logs/pc/chain.json": "3046a5bdf938724f5a96cf61b940330d99fd1dfb588415bcd0ec9eb5fd26e011"
+  },
+  "exit": 0,
+  "wall_seconds": 165.23369358299533,
+  "reported_cost_usd": 2.8541192499999997,
+  "usage": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 108835,
+    "cache_read_input_tokens": 3909,
+    "output_tokens": 11988,
+    "output_tokens_details": {
+      "thinking_tokens": 9162
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 108835,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 11988,
+        "cache_read_input_tokens": 3909,
+        "cache_creation_input_tokens": 108835,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 108835
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "result_session_id": "3a0110dc-85b4-4383-a22f-75b30d524944",
+  "local_transcript_sha256": "feb8720de1e03bd674a54fdb99fc5fdebc8cfd9f87d4c68698d18962d62a8e2c"
+}

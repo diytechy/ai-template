@@ -1,0 +1,56 @@
+{
+  "route": "ANTHROPIC-FABLE",
+  "family": "ANTHROPIC",
+  "tier": "strong",
+  "model": "claude-fable-5-1",
+  "effort": "medium",
+  "session_id": "276d9c7b-8ec5-4502-8182-488818fa98a1",
+  "base": "196bfb9cfb057cdc3df7f9feaf49403c0f57d90b",
+  "prompt_sha256": "5ec09c45edb2251b7c4bb43bfb83d700d3e1fde35c3148ba04f2fdf896625364",
+  "files": {
+    "docs/ai-template-redesign-2026-09-05-codex/PC-BATCH-CONTRACT.md": "f1a5946aaf6b3c19553e1d92f0957e5e2149c49593b89b14d35d14f0b6f71545",
+    "docs/ai-template-redesign-2026-09-05-codex/PC-BATCH-AMENDMENTS.patch": "540d1cc6265665ff3435b7a0e5eaf218399e30c7ee3218eb84cbf2e2f9a08bb9",
+    "out/run-logs/pc/chain.json": "3046a5bdf938724f5a96cf61b940330d99fd1dfb588415bcd0ec9eb5fd26e011",
+    "docs/ai-template-redesign-2026-09-05-codex/PC-BATCH-USES.md": "fe3684699cbaf63869b6410880a35b86a405d46ac8d725ab94d795acdb16fae8",
+    "docs/ai-template-redesign-2026-09-05-codex/PC-CANDIDATE-ABSORPTION.tsv": "f9dbc5f84a868306409cc40cb51b4e71fcdd427462710cd6e1c86b5c98f52a4a",
+    "out/run-logs/pc/round-003/review-result.md": "844aa20ba815804b08211f4c2b060a74e7bc730523ed0de9748eb95fbc64fe7c"
+  },
+  "exit": 0,
+  "wall_seconds": 170.65497704100562,
+  "reported_cost_usd": 2.25386625,
+  "usage": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 77585,
+    "cache_read_input_tokens": 3909,
+    "output_tokens": 13005,
+    "output_tokens_details": {
+      "thinking_tokens": 9490
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 77585,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 13005,
+        "cache_read_input_tokens": 3909,
+        "cache_creation_input_tokens": 77585,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 77585
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "result_session_id": "276d9c7b-8ec5-4502-8182-488818fa98a1",
+  "local_transcript_sha256": "8705122fd39bffff9d08a74fb2ef6108f94020fe86e04533e92e471f2e1139a2"
+}

@@ -1,0 +1,21 @@
+row	prior_drift	queued_owner	proposed_cumulative_owner
+LLR-058	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+LLR-061	approved-change:Detail	WI-601	WI-601
+LLR-123	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+LLR-144	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+LLR-149	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+LLR-150	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+LLR-151	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+LLR-152	approved-change:Detail	none	future PC amendment WI; hard predecessor WI-601
+LLR-161	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+SR-144	approved-change:Rationale	none	future PC amendment WI; hard predecessor WI-601
+SR-148	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+SR-156	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+TC-058	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+TC-061	no prior drift	none	future PC amendment WI; hard predecessor WI-601; acceptance conditioned on final LLR-061 judgment
+TC-138	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+TC-143	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+TC-144	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+TC-145	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+TC-154	no prior drift	none	future PC amendment WI; hard predecessor WI-601
+TC-156	no prior drift	none	future PC amendment WI; hard predecessor WI-601

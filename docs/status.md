@@ -38,8 +38,11 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   census overlap items from the handoff. Do not start another control window.
 - **Next authorized package:** the independent
   [PC cuts](ai-template-redesign-2026-09-05-codex/IMPLEMENTATION.md#pc--the-independently-agreed-cuts-unconditional-after-the-control-window).
-  Author and adjudicate its batch-contract amendments before deleting code.
-  The post-stop repair is complete; PC has not started.
+  The [batch-contract packet](ai-template-redesign-2026-09-05-codex/PC-BATCH-CONTRACT.md)
+  has an independent proposal-readiness opinion with its required corrections
+  applied. Bind normal intake with its ownership/dependency conditions and
+  settle scoped snapshot-absorption judgments before live acceptance or deletion.
+  Legacy cuts also require the currently undeclared supported upgrade window.
   A weak control sample does not authorize replacement or another window.
   Retention is re-queued but remains absent; its separate spine-authoring,
   session-ownership and on-box verification prerequisites still apply.

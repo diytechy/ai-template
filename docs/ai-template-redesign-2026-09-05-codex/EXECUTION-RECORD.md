@@ -9,7 +9,25 @@ queue paused. Package labels remain plan scope keys, not allocated WI IDs.
 session's read order, repair prerequisites, preserved lane and supervised
 retry procedure. It supersedes the earlier continuation/launch instructions.
 
-## Current continuation — repaired control stopped (2026-09-07)
+## Current continuation — PC contract authoring (2026-09-07)
+
+The owner requested PC after the five post-stop fixes at `196bfb9c`. The
+[repair record](../reviews/2026-09-07-post-stop-fixes.md) and
+[retirement decision](../reviews/2026-09-07-primary-turn-retirement.md) settle
+the old pending writer and runtime findings. The writer is clear and the
+tracked pause remains; no coordinator or control window is started.
+
+The [PC batch-contract packet](PC-BATCH-CONTRACT.md) owns the exact proposed
+cell patch, whole-chain review inputs, ID-use inventory, existing adjudication
+ownership and snapshot-absorption preconditions. No code deletion or live
+registry amendment is claimed. The supported oldest upgrade revision remains
+an owner input before the separate legacy-tail deletion can proceed.
+The independent proposal review reached conditional APPROVE for intake; its
+specified authoring corrections are applied and recorded in the packet.
+Normal intake still owes its ownership recheck and hard predecessor, followed
+by scoped whole-file absorption judgments before live contract acceptance.
+
+## Previous continuation — repaired control stopped (2026-09-07)
 
 The repaired control was launched from `b830f202` and stopped at `79115aab`
 on a coordinator/verifier candidate-SHA mismatch. The independent follow-up

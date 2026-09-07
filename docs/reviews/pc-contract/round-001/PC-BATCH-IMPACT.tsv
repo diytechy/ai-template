@@ -1,0 +1,572 @@
+id	path	blob	treatment
+LLR-058	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+LLR-058	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+LLR-058	docs/ai-template-redesign-2026-09-05-codex/README.md	6569ac7efc3f4ac48c021ace835e1d2adb151f18	review use before enabling single-WI implementation
+LLR-058	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/archive/plans/2026-08-10-carrier-cutover.patch	b09ed6df61fbf433f386f7c4baca727900dc7adf	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/archive/work/cancelled/WI-596-the-anchoring-copy-s-absorb-le.md	bf69d2c912ada477bad262a0cd00056b999ba65b	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/archive/work/complete/WI-178-4-g2-parallel-dispatch-decomposition.md	87e71f3dc3dbfc208b29bbedc7cfbb2b30cf6964	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/archive/work/complete/WI-495-interface-exception-dossier.md	07c4ecc38b434406ccfb5742b21fe675129ba41f	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/archive/work/complete/WI-553-hold-ban-and-surface-hygiene.md	cbf3f7bd7e9d41dd7c9c3b0b089b6cbc7e2d6db5	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/archive/work/complete/WI-566-adjudicate-llr-058-llr-144.md	aa9975a0d8d97b55fe938cd1cc8b639aac45ad5c	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/archive/work/complete/WI-573-adjudicate-llr-136-llr-158.md	3eb14ad6c3d65d2852b6b299c4646b58c7a004d5	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/archive/work/complete/WI-575-llr-158-s-declared-registry-bo.md	238b8753faf7ded62c60e356498bc4daa8775db7	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/archive/work/complete/WI-578-adjudicate-llr-158-llr-203.md	3e9c0a37e6e64b98e02542d2d0582bb173f74308	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/archive/work/complete/WI-584-the-snapshot-s-scoped-writer-a.md	66007f1590770322bf559a2cda824bc4266f4b56	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/archive/work/complete/WI-590-adjudicate-llr-207-llr-208.md	9659ecb7267d42afed748d9ded46ca2ef5fa2cac	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/iteration/4-g3-WI-237-a515-001-20260719-112315.log	29605ab738b1786f5ab6fc1436179ed31aa8937b	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/iteration/wi-553-hold-ban-and-surface-hygiene-003-20260901-061707.log	e95e9b7f8b8ffd45c344eaae94686911dc70a343	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/iteration/wi-566-adjudicate-llr-058-llr-144-001-20260901-065538.log	05210da6b1f6a99db080c8d35ef36234e174b175	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/iteration/wi-568-dispose-the-close-recorded-at-005-20260901-172258.log	dd6236fc328b55fd9d9d48c7299794c2fe4a9c02	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/iteration/wi-573-adjudicate-llr-136-llr-158-001-20260902-053225.log	b9df84a91cca9cbfd49d8efa764c307c433f5ed5	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/iteration/wi-578-adjudicate-llr-158-llr-203-001-20260902-200119.log	05b6d9b393169fbb405c6225d5948e3ed66ada0f	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/iteration/wi-590-adjudicate-llr-207-llr-208-007-20260904-154754.log	e1576f0b095095e0e8008c16d0b4e33ca25a6ef0	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/iteration/wi-591-spot-check-the-clean-close-of-001-20260904-181745.log	c82148db9f7a02125f6cecb4a9a7c5fb38047d24	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/log.md	3f80b5220c5b5764c39232a49ae6d713aa9418e9	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/plans/2026-08-22-interface-exception-dossier.md	72bf5f03683f842be21351cebf4b9bff260dca98	review use before enabling single-WI implementation
+LLR-058	docs/plans/2026-08-23-sr-owned-provides-report.md	cb0c860b729f7dab7b4911a73aed494969d6d5dd	review use before enabling single-WI implementation
+LLR-058	docs/ratify/2026-07-27-reattest.md	ae10a7b64d2a5508ea27ec5983873449e8eedfa8	review use before enabling single-WI implementation
+LLR-058	docs/ratify/2026-07-29d-phase5.md	915822bb04ee384ef96a7581bfadd9b0b18c7414	review use before enabling single-WI implementation
+LLR-058	docs/requirements/components.derived.toml	1216922bbf4aee213a4a3a358852407437af83e5	review use before enabling single-WI implementation
+LLR-058	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+LLR-058	docs/reviews/WI-383-REVIEW-A.md	50fe0915e3ab539852fa229eb8b80f43cafc84cd	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/reviews/WI-553-REVIEW-A.md	54906e2ba678c116be61986179a11f5999b4989c	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/reviews/WI-566-REVIEW-A.md	c1ee79be285b61f06ab1f0d15f512dcec64987bb	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/reviews/retier-v2/ROUND-2-SOL-TERRA.md	5db5df251091fc0f4e8c6b34a659e5734653443c	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/reviews/wi-553-hold-ban-and-surface-hygiene/002-REVIEW-A-ae02efc.md	ebd1ed086b5f3cd9a881e9def5396b9b9d4f9b87	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/reviews/wi-566-adjudicate-llr-058-llr-144/001-ADJUDICATE-05fb6a3.md	6a165e548fcde01158fbfdcf1c8c0ed21178d013	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/reviews/wi-566-adjudicate-llr-058-llr-144/002-REVIEW-A-61ad8b8-supervisor.md	b95ae7f541d5edda99d31c6a236955a28486a9f8	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/reviews/wi-573-adjudicate-llr-136-llr-158/001-ADJUDICATE-07cbabb.md	75696da57d5b9a86104568a248feaeae1301beed	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/reviews/wi-578-adjudicate-llr-158-llr-203/001-ADJUDICATE-921f947.md	908d31373a3137a11970a5b8a781d6c325b86c1a	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/reviews/wi-578-adjudicate-llr-158-llr-203/002-REVIEW-A-c3ae6ba-supervisor.md	a1a3ed203e117232b628dd35a4fbaa8f3dcea386	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/reviews/wi-585-adjudicate-llr-045-llr-140/001-ADJUDICATE-d202c9f.md	5b25ef01622d9d506d67562a24a06f1eb9e0d7f6	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/reviews/wi-590-adjudicate-llr-207-llr-208/008-REVIEW-A-9671078.md	144a7a4b21a04ed95a356f25594f6587dcd9201b	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/reviews/wi-590-adjudicate-llr-207-llr-208/011-REVIEW-A-7b72d2f-supervisor.md	f16d8de94b47941620cee8ccea0348d5b878d86a	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/reviews/wi-590-adjudicate-llr-207-llr-208/012-REVIEW-A-5ee77bd-supervisor.md	fbbeddb561f350cb15d9fc2657a06ec5fd386298	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/reviews/wi-590-adjudicate-llr-207-llr-208/013-REVIEW-A-9890841-supervisor.md	dd178471559149c43b1d1d90e7ea3b4b436ab9cd	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/reviews/wi-590-adjudicate-llr-207-llr-208/014-REVIEW-A-1715ae7-supervisor.md	c2e9f8f80e77b1fe7673084af70ef6317b1dd65c	preserve historical record; do not rewrite as current acceptance
+LLR-058	docs/runtime-flows.md	bbd9664e4064b5e7d9a9fff49a168d25b7819c50	review use before enabling single-WI implementation
+LLR-058	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+LLR-058	project-trajectory/scripts/schedule.py	f1f3431e2784c578f46dfc71e0455213edfca318	review use before enabling single-WI implementation
+LLR-061	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+LLR-061	docs/ai-template-redesign-2026-09-05-codex/BACKLOG-MIGRATION.md	7e7ad55b5f3ceb72da2374b38c2c4156f100ac0c	review use before enabling single-WI implementation
+LLR-061	docs/ai-template-redesign-2026-09-05-codex/CONTROL-OBSERVATIONS.md	4b8a656e65aa8b7bd80e6a825d9ffd8f964de511	review use before enabling single-WI implementation
+LLR-061	docs/ai-template-redesign-2026-09-05-codex/CONTROL-REPAIR-FABLE-REVIEW.md	d20f0807805e6c467a5faf528036f0504db9d635	review use before enabling single-WI implementation
+LLR-061	docs/ai-template-redesign-2026-09-05-codex/CONTROL-REPAIR.md	cb4a77ff7850607f9096d88f6416cadf179ba7b2	review use before enabling single-WI implementation
+LLR-061	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+LLR-061	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/archive/plans/2026-08-10-carrier-cutover.patch	b09ed6df61fbf433f386f7c4baca727900dc7adf	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/archive/work/complete/WI-181-slice-c-worker-assignment-mode.md	46987c56ee553d314e5cb862b176e4fbb5938255	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/archive/work/complete/WI-580-the-worker-and-reviewer-briefs.md	44d0073ff842660e67943a692eebe8c8d2c3ceb7	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/handoff-2026-09-04.md	55c09d934924bd27ea567a721ba5d9b0dd5fb76d	review use before enabling single-WI implementation
+LLR-061	docs/iteration/call_41870904412c4ee4a13689e98b88546d-20260906-190139.log	c20a50acbc231f0c389664b2b281a5379838a4e4	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/iteration/contract_split-001-20260907-040924.log	9af6b16f08a66a08e7c67e48c0e8c3f470a56790	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/iteration/wi-580-the-worker-and-reviewer-briefs-001-20260904-223603.log	9d4bbfa745024fcd87a7492861b65e778edbe679	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/iteration/wi-580-the-worker-and-reviewer-briefs-003-20260904-231749.log	8618af5637c4974ecb060062ed0c098c65ee9b74	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/iteration/wi-580-the-worker-and-reviewer-briefs-006-20260904-233509.log	154dd9118f0fb50ebf91bb6b9f87b6433398379f	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/iteration/wi-580-the-worker-and-reviewer-briefs-008-20260905-000243.log	38116455ef4ec302bc752bf803ee2b216625ee9b	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/iteration/wi-580-the-worker-and-reviewer-briefs-009-20260905-001427.log	a9bff74bd949c9d021d5533099f25da712bcf023	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/iteration/wi-580-the-worker-and-reviewer-briefs-012-20260905-002621.log	57431d956c1af6b1588f3c685d5ceacd16e1399e	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/log.md	3f80b5220c5b5764c39232a49ae6d713aa9418e9	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/open-items.html	1193ef6d45e1d1362bfbfd30692ba1f164e04d37	review use before enabling single-WI implementation
+LLR-061	docs/plans/2026-08-14-wi451-slice2-ledger.md	ee473d8109136093aa9a47d1523e07e6878c9c31	review use before enabling single-WI implementation
+LLR-061	docs/plans/2026-08-23-sr-owned-provides-report.md	cb0c860b729f7dab7b4911a73aed494969d6d5dd	review use before enabling single-WI implementation
+LLR-061	docs/ratify/2026-07-26-reattest.md	87c8cd42035d2f3ec12d66c9b53dfaf6e056bd7d	review use before enabling single-WI implementation
+LLR-061	docs/ratify/2026-07-27-reattest.md	ae10a7b64d2a5508ea27ec5983873449e8eedfa8	review use before enabling single-WI implementation
+LLR-061	docs/ratify/2026-07-29d-phase5.md	915822bb04ee384ef96a7581bfadd9b0b18c7414	review use before enabling single-WI implementation
+LLR-061	docs/ratify/CURRENT.md	19f8e67e6e269e93e1dcb89db3cdc336c6ca6e7e	review use before enabling single-WI implementation
+LLR-061	docs/requirements/components.derived.toml	1216922bbf4aee213a4a3a358852407437af83e5	review use before enabling single-WI implementation
+LLR-061	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+LLR-061	docs/reviews/2026-09-06-sn036-records-final-structured-opus.md	66f556a3d502575e51d6d0e573c484d6a3720784	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/reviews/2026-09-07-WI-605-supervisor-migration.md	73d352f365bb4124152afe0f45529c476b60b72c	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/reviews/2026-09-07-approval-contract-spine-authoring-round-2.md	39944f48b6766a6c49d832cd7f733edbe03ce5e1	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/reviews/contract_split/001-ADJUDICATE-65eda1b.md	1759db891c5027cfe0f3218239a1c1b5cd748ea3	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/reviews/wi-580-the-worker-and-reviewer-briefs/006-REVIEW-A-69209a9.md	dc986885ca92902b7f4996ef77c1885eccf5d9d1	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/reviews/wi-580-the-worker-and-reviewer-briefs/012-REVIEW-A-f98e7d3-relaxed.md	312aeb0501795dd6c6bf43bcc63ea2b115947e3e	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/reviews/wi451-slice2/round1-terra.md	9c30dcc161fdc8b057c1849bfb72ffab7ac72b4f	preserve historical record; do not rewrite as current acceptance
+LLR-061	docs/runtime-flows.md	bbd9664e4064b5e7d9a9fff49a168d25b7819c50	review use before enabling single-WI implementation
+LLR-061	docs/status.md	2460845a5230f92afb77660d7713a5bbd2ceba87	review use before enabling single-WI implementation
+LLR-061	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+LLR-061	docs/work/handback/wi-605-control-interruption-llr-snapshot.patch	4c1d3d25757bf9f56ddebef0b20a0b2eced7427d	review use before enabling single-WI implementation
+LLR-061	docs/work/handback/wi-605-control-retry-interruption.patch	52c61b2c580f0b7dcdafbd9ebc6961400abd0c5c	review use before enabling single-WI implementation
+LLR-061	docs/work/queued/WI-601-adjudicate-llr-061-approved.md	c33ae9eadaf41c16b222c02b231d9a5a523b0fb1	review use before enabling single-WI implementation
+LLR-061	docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md	9e5967174d0e38727273e1d31a34c7bf4c8d167d	review use before enabling single-WI implementation
+LLR-061	project-trajectory/scripts/agent_common.py	ed86fd6deaead6449fa59fbdce9ec7ee8f81c9b1	review use before enabling single-WI implementation
+LLR-061	project-trajectory/scripts/agent_loop.py	dacea9a81ebc0e76e5beacd6c7f8e1d9e5d8eecb	review use before enabling single-WI implementation
+LLR-061	tests/test_agent_loop_worker.py	0d4ab50d90623ee72c964b972408a2aac624adee	review use before enabling single-WI implementation
+LLR-123	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+LLR-123	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+LLR-123	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+LLR-123	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+LLR-123	docs/archive/plans/2026-08-10-carrier-cutover.patch	b09ed6df61fbf433f386f7c4baca727900dc7adf	preserve historical record; do not rewrite as current acceptance
+LLR-123	docs/log.md	3f80b5220c5b5764c39232a49ae6d713aa9418e9	preserve historical record; do not rewrite as current acceptance
+LLR-123	docs/plans/2026-08-23-sr-owned-provides-report.md	cb0c860b729f7dab7b4911a73aed494969d6d5dd	review use before enabling single-WI implementation
+LLR-123	docs/ratify/2026-07-27-reattest.md	ae10a7b64d2a5508ea27ec5983873449e8eedfa8	review use before enabling single-WI implementation
+LLR-123	docs/ratify/2026-07-29d-phase5.md	915822bb04ee384ef96a7581bfadd9b0b18c7414	review use before enabling single-WI implementation
+LLR-123	docs/requirements/components.derived.toml	1216922bbf4aee213a4a3a358852407437af83e5	review use before enabling single-WI implementation
+LLR-123	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+LLR-123	docs/reviews/WI-383-REVIEW-A.md	50fe0915e3ab539852fa229eb8b80f43cafc84cd	preserve historical record; do not rewrite as current acceptance
+LLR-123	docs/runtime-flows.md	bbd9664e4064b5e7d9a9fff49a168d25b7819c50	review use before enabling single-WI implementation
+LLR-123	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+LLR-123	project-trajectory/scripts/schedule.py	f1f3431e2784c578f46dfc71e0455213edfca318	review use before enabling single-WI implementation
+LLR-149	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+LLR-149	docs/ai-template-redesign-2026-09-05 - claude/PLAN.md	809cc60d89b3f802509aa2667cefa10494507501	review use before enabling single-WI implementation
+LLR-149	docs/ai-template-redesign-2026-09-05 - claude/review-02-crossref-codex-plan.md	e315ced2bab3ba5cfc220a96fe0930b9e20861d6	review use before enabling single-WI implementation
+LLR-149	docs/ai-template-redesign-2026-09-05-codex/FABLE-REVIEW-2-GOVERNING-PLAN.md	4e99f7e9234fc5d5efaea105ecec1af12f1b02ff	review use before enabling single-WI implementation
+LLR-149	docs/ai-template-redesign-2026-09-05-codex/FABLE-REVIEW-DISPOSITIONS.md	b18abbf6959c19523e220578acfc3f921a294c68	review use before enabling single-WI implementation
+LLR-149	docs/ai-template-redesign-2026-09-05-codex/FABLE-REVIEW.md	fe684a95e9b69402d026140e5fde250bfee0e84f	review use before enabling single-WI implementation
+LLR-149	docs/ai-template-redesign-2026-09-05-codex/IMPLEMENTATION.md	2d19938c492a641bcce0bc86e11c1f9e33aa4bba	review use before enabling single-WI implementation
+LLR-149	docs/ai-template-redesign-2026-09-05-codex/LLR-AND-RENDERING.md	62e411ad174fe51058cc91ead4388e17cc559837	review use before enabling single-WI implementation
+LLR-149	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+LLR-149	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+LLR-149	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+LLR-149	docs/archive/plans/2026-08-10-carrier-cutover.patch	b09ed6df61fbf433f386f7c4baca727900dc7adf	preserve historical record; do not rewrite as current acceptance
+LLR-149	docs/archive/work/complete/WI-381-spine-barrier-batch-and-wait.md	e9fe0c298b7d9125923210005a4c65e2e0aec10c	preserve historical record; do not rewrite as current acceptance
+LLR-149	docs/archive/work/complete/WI-483-core-decomposition-program.md	966b75ef09b836a08a51415a94025ebac5f58664	preserve historical record; do not rewrite as current acceptance
+LLR-149	docs/log.md	3f80b5220c5b5764c39232a49ae6d713aa9418e9	preserve historical record; do not rewrite as current acceptance
+LLR-149	docs/plans/2026-08-13-sitting-3-spine-verification.md	07b418da2e14e900e294a16a8926f70f856ee2c4	review use before enabling single-WI implementation
+LLR-149	docs/ratify/2026-08-07-wi419.md	f75d90259819ab66e714fa24aca93a5976839179	review use before enabling single-WI implementation
+LLR-149	docs/ratify/2026-08-08-mechanized-loop.md	e72231c32f0d63c7960920b434c6282855b726ae	review use before enabling single-WI implementation
+LLR-149	docs/requirements/components.derived.toml	1216922bbf4aee213a4a3a358852407437af83e5	review use before enabling single-WI implementation
+LLR-149	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+LLR-149	docs/reviews/WI-381-REVIEW-A.md	3b7336bb40686ed176ff9352311126f935544ea4	preserve historical record; do not rewrite as current acceptance
+LLR-149	docs/runtime-flows.md	bbd9664e4064b5e7d9a9fff49a168d25b7819c50	review use before enabling single-WI implementation
+LLR-149	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+LLR-149	project-trajectory/scripts/dispatch.py	4b6cdc03f3211efb1069bdb5bf3599b0e45e805c	review use before enabling single-WI implementation
+LLR-150	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+LLR-150	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+LLR-150	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+LLR-150	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+LLR-150	docs/archive/plans/2026-08-10-carrier-cutover.patch	b09ed6df61fbf433f386f7c4baca727900dc7adf	preserve historical record; do not rewrite as current acceptance
+LLR-150	docs/archive/plans/2026-08-13-sitting-pack.md	2e714dd17f51e4652b323b4405a4d1fd29f21bc5	preserve historical record; do not rewrite as current acceptance
+LLR-150	docs/archive/plans/2026-08-13-wi444-batch-application.md	3774d8959cace2e0fc6fb4b123daf8c2e486e8ca	preserve historical record; do not rewrite as current acceptance
+LLR-150	docs/archive/work/complete/WI-381-spine-barrier-batch-and-wait.md	e9fe0c298b7d9125923210005a4c65e2e0aec10c	preserve historical record; do not rewrite as current acceptance
+LLR-150	docs/archive/work/complete/WI-422-dead-symbol-sweep.md	837f1b5620e7b0937b6ceb62aebace5d08b6cc93	preserve historical record; do not rewrite as current acceptance
+LLR-150	docs/archive/work/complete/WI-444-the-applied-reattest-batch-and-sitting-pack.md	db5de0c33362f513f55acd29d7adb9d3d73be0e1	preserve historical record; do not rewrite as current acceptance
+LLR-150	docs/iteration/wi-586-adjudicate-llr-207-llr-208-005-20260903-170743.log	5654ec7ce4df5907f72ecafcd28a0858dc8abc7c	preserve historical record; do not rewrite as current acceptance
+LLR-150	docs/iteration/wi-590-adjudicate-llr-207-llr-208-002-20260904-123008.log	8882ffdea6867ad2db6e6eadb69069f2d81f2b6e	preserve historical record; do not rewrite as current acceptance
+LLR-150	docs/log.md	3f80b5220c5b5764c39232a49ae6d713aa9418e9	preserve historical record; do not rewrite as current acceptance
+LLR-150	docs/plans/2026-08-13-sitting-3-spine-verification.md	07b418da2e14e900e294a16a8926f70f856ee2c4	review use before enabling single-WI implementation
+LLR-150	docs/plans/2026-08-25-if-contract-verdicts.md	209c2b2cfc8df3f1a637368910069fd100a59d40	review use before enabling single-WI implementation
+LLR-150	docs/ratify/2026-08-07-wi419.md	f75d90259819ab66e714fa24aca93a5976839179	review use before enabling single-WI implementation
+LLR-150	docs/ratify/2026-08-08-mechanized-loop.md	e72231c32f0d63c7960920b434c6282855b726ae	review use before enabling single-WI implementation
+LLR-150	docs/repo-lock.md	dea3041f43aff97b65c678ea1f74ee63befdbde3	review use before enabling single-WI implementation
+LLR-150	docs/requirements/components.derived.toml	1216922bbf4aee213a4a3a358852407437af83e5	review use before enabling single-WI implementation
+LLR-150	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+LLR-150	docs/requirements/open-items.toml	4508a650fc014a1d2c649bdee7f3b25dabfb73d6	review use before enabling single-WI implementation
+LLR-150	docs/reviews/wi-586-adjudicate-llr-207-llr-208/001-ADJUDICATE-d7ffb41.md	0c90255e187486f3bb5a33af15c6dbd172c72284	preserve historical record; do not rewrite as current acceptance
+LLR-150	docs/reviews/wi-586-adjudicate-llr-207-llr-208/005-ADJUDICATE-3c7764c.md	3cb6af7ec17d4423f7849589689944a15f447bd4	preserve historical record; do not rewrite as current acceptance
+LLR-150	docs/reviews/wi-590-adjudicate-llr-207-llr-208/009-ADJUDICATE-9671078.md	4214182d6262dcddf6344a0ecccf2a6389fa6dfe	preserve historical record; do not rewrite as current acceptance
+LLR-150	docs/reviews/wi-600-adjudicate-llr-207-tc-205/001-ADJUDICATE-1b3008f.md	762a6711b652248804a1a48cc68488d3c2012d2a	preserve historical record; do not rewrite as current acceptance
+LLR-150	docs/runtime-flows.md	bbd9664e4064b5e7d9a9fff49a168d25b7819c50	review use before enabling single-WI implementation
+LLR-150	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+LLR-150	project-trajectory/scripts/lane.py	670a3c4d814c6e931c50721855818101966810d9	review use before enabling single-WI implementation
+LLR-151	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+LLR-151	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+LLR-151	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+LLR-151	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+LLR-151	docs/archive/plans/2026-08-10-carrier-cutover.patch	b09ed6df61fbf433f386f7c4baca727900dc7adf	preserve historical record; do not rewrite as current acceptance
+LLR-151	docs/archive/work/complete/WI-381-spine-barrier-batch-and-wait.md	e9fe0c298b7d9125923210005a4c65e2e0aec10c	preserve historical record; do not rewrite as current acceptance
+LLR-151	docs/archive/work/complete/WI-390-concurrency-v2-program-close.md	4dd02a01a4ea872d8a4f9a28d0502dd2edc00dae	preserve historical record; do not rewrite as current acceptance
+LLR-151	docs/iteration/wi-586-adjudicate-llr-207-llr-208-005-20260903-170743.log	5654ec7ce4df5907f72ecafcd28a0858dc8abc7c	preserve historical record; do not rewrite as current acceptance
+LLR-151	docs/iteration/wi-590-adjudicate-llr-207-llr-208-002-20260904-123008.log	8882ffdea6867ad2db6e6eadb69069f2d81f2b6e	preserve historical record; do not rewrite as current acceptance
+LLR-151	docs/log.md	3f80b5220c5b5764c39232a49ae6d713aa9418e9	preserve historical record; do not rewrite as current acceptance
+LLR-151	docs/ratify/2026-08-07-wi419.md	f75d90259819ab66e714fa24aca93a5976839179	review use before enabling single-WI implementation
+LLR-151	docs/ratify/2026-08-08-mechanized-loop.md	e72231c32f0d63c7960920b434c6282855b726ae	review use before enabling single-WI implementation
+LLR-151	docs/requirements/components.derived.toml	1216922bbf4aee213a4a3a358852407437af83e5	review use before enabling single-WI implementation
+LLR-151	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+LLR-151	docs/reviews/wi-586-adjudicate-llr-207-llr-208/001-ADJUDICATE-d7ffb41.md	0c90255e187486f3bb5a33af15c6dbd172c72284	preserve historical record; do not rewrite as current acceptance
+LLR-151	docs/reviews/wi-586-adjudicate-llr-207-llr-208/005-ADJUDICATE-3c7764c.md	3cb6af7ec17d4423f7849589689944a15f447bd4	preserve historical record; do not rewrite as current acceptance
+LLR-151	docs/reviews/wi-590-adjudicate-llr-207-llr-208/009-ADJUDICATE-9671078.md	4214182d6262dcddf6344a0ecccf2a6389fa6dfe	preserve historical record; do not rewrite as current acceptance
+LLR-151	docs/runtime-flows.md	bbd9664e4064b5e7d9a9fff49a168d25b7819c50	review use before enabling single-WI implementation
+LLR-151	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+LLR-151	project-trajectory/scripts/integrate.py	3a6988ea814b96a2712d349287bdcc36ecba38dc	review use before enabling single-WI implementation
+LLR-161	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+LLR-161	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+LLR-161	docs/ai-template-redesign-2026-09-05-codex/P2A-EXECUTION.md	077c24374742f1344dc6b6ddf94e259ab8af28af	review use before enabling single-WI implementation
+LLR-161	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/archive/plans/2026-08-10-carrier-cutover.patch	b09ed6df61fbf433f386f7c4baca727900dc7adf	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/archive/work/complete/WI-552-adjudicator-two-exit-close.md	7668d7ed6533107b7642781007de858d88a3ef39	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/archive/work/complete/WI-553-hold-ban-and-surface-hygiene.md	cbf3f7bd7e9d41dd7c9c3b0b089b6cbc7e2d6db5	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/iteration/wi-538-arm-and-rebase-004-20260830-215939.log	8bd9ba2b36e2eb11c275af1cb1dbbd1d0a9f897a	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/iteration/wi-552-adjudicator-two-exit-close-001-20260901-012620.log	6b52e47fcdb7d030967858f2670a0741afa02fbc	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/iteration/wi-552-adjudicator-two-exit-close-002-20260901-021946.log	3a94491b5ebb8e28627b76572c8873ade5767df1	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/iteration/wi-552-adjudicator-two-exit-close-007-20260901-031737.log	d523957228d965086ba296f803556c8a1e19cdbf	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/iteration/wi-552-adjudicator-two-exit-close-008-20260901-032614.log	93c550ce2e4956ea466c51d4da2498ddc1b5e239	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/iteration/wi-552-adjudicator-two-exit-close-010-20260901-033450.log	9a246ccf3f9578b4ba1c6d2b7e41edba817bf493	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/iteration/wi-552-adjudicator-two-exit-close-016-20260901-042122.log	e53fe22e7a4b9fe47db5c2ff1552ec69f56197ba	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/iteration/wi-553-hold-ban-and-surface-hygiene-001-20260901-050042.log	3ce7d30904c21b07f18185c84e992ca3b89972f9	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/iteration/wi-553-hold-ban-and-surface-hygiene-003-20260901-061707.log	e95e9b7f8b8ffd45c344eaae94686911dc70a343	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/iteration/wi-563-spot-check-the-clean-close-of-001-20260901-043426.log	a18a5365023bc3f838d046fd6e59d8036163401a	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/iteration/wi-568-dispose-the-close-recorded-at-005-20260901-172258.log	dd6236fc328b55fd9d9d48c7299794c2fe4a9c02	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/log.md	3f80b5220c5b5764c39232a49ae6d713aa9418e9	preserve historical record; do not rewrite as current acceptance
+LLR-161	docs/open-items.html	1193ef6d45e1d1362bfbfd30692ba1f164e04d37	review use before enabling single-WI implementation
+LLR-161	docs/plans/2026-08-13-sitting-3-spine-verification.md	07b418da2e14e900e294a16a8926f70f856ee2c4	review use before enabling single-WI implementation
+LLR-161	docs/requirements/components.derived.toml	1216922bbf4aee213a4a3a358852407437af83e5	review use before enabling single-WI implementation
+LLR-161	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+LLR-161	docs/requirements/open-items.toml	4508a650fc014a1d2c649bdee7f3b25dabfb73d6	review use before enabling single-WI implementation
+LLR-161	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+LLR-161	docs/work/handback/wi-605-control-interruption-llr-snapshot.patch	4c1d3d25757bf9f56ddebef0b20a0b2eced7427d	review use before enabling single-WI implementation
+LLR-161	project-trajectory/RESYNC_PACK.md	db12dac22294459171b65b72da1ce55771e790c2	review use before enabling single-WI implementation
+LLR-161	project-trajectory/scripts/census.py	8507f133b6c86ce3d1d889ffba3be1689b52599d	review use before enabling single-WI implementation
+LLR-161	project-trajectory/scripts/check_trajectory.py	cc7f4130e70edbd88d0b8990727932f8ab59814e	review use before enabling single-WI implementation
+LLR-161	project-trajectory/scripts/dispatch.py	4b6cdc03f3211efb1069bdb5bf3599b0e45e805c	review use before enabling single-WI implementation
+LLR-161	project-trajectory/scripts/handback.py	49f59a69719a5b42577c04cf5f2d4ecaf1ed95a1	review use before enabling single-WI implementation
+LLR-161	project-trajectory/scripts/intake.py	561260053ca2796c6d0c4ddac9fe422b55cfc63a	review use before enabling single-WI implementation
+LLR-161	project-trajectory/scripts/kitlib/registry.py	ac9ecf1916e5c07937f8cc79e9ffc9e9a98fc635	review use before enabling single-WI implementation
+LLR-161	project-trajectory/scripts/kitlib/station.py	6c9a3c881a35111a956becfdd82119f02c67ff72	review use before enabling single-WI implementation
+LLR-161	project-trajectory/scripts/pending.py	9530e0dcc2fdfc69897b1d0dc407fa4957f5a18d	review use before enabling single-WI implementation
+LLR-161	project-trajectory/scripts/schedule.py	f1f3431e2784c578f46dfc71e0455213edfca318	review use before enabling single-WI implementation
+LLR-161	project-trajectory/scripts/wi_convert.py	45ec1f9a8816e06163f521c59d5d2e85f18f1277	review use before enabling single-WI implementation
+LLR-161	tests/test_intake.py	a22604dc01db0882630b317ee0fe9efe1c7743c8	review use before enabling single-WI implementation
+LLR-161	tests/test_module_size_ratchet.py	a300e4f53ec1ee41943e2cbcca953eadf9e60054	review use before enabling single-WI implementation
+SR-144	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+SR-144	docs/ai-template-redesign-2026-09-05 - claude/PLAN.md	809cc60d89b3f802509aa2667cefa10494507501	review use before enabling single-WI implementation
+SR-144	docs/ai-template-redesign-2026-09-05 - claude/review-02-crossref-codex-plan.md	e315ced2bab3ba5cfc220a96fe0930b9e20861d6	review use before enabling single-WI implementation
+SR-144	docs/ai-template-redesign-2026-09-05-codex/APPROVAL-REPAIR-CONTRACT.md	273c7bc044a61f90eae9691d7836f90b55829038	review use before enabling single-WI implementation
+SR-144	docs/ai-template-redesign-2026-09-05-codex/FABLE-REVIEW-DISPOSITIONS.md	b18abbf6959c19523e220578acfc3f921a294c68	review use before enabling single-WI implementation
+SR-144	docs/ai-template-redesign-2026-09-05-codex/FABLE-REVIEW.md	fe684a95e9b69402d026140e5fde250bfee0e84f	review use before enabling single-WI implementation
+SR-144	docs/ai-template-redesign-2026-09-05-codex/IMPLEMENTATION.md	2d19938c492a641bcce0bc86e11c1f9e33aa4bba	review use before enabling single-WI implementation
+SR-144	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+SR-144	docs/ai-template-redesign-2026-09-05-codex/P0-SCENARIOS.md	1397c0a58dc31319fcb10fc8913f4c3ffc61a0bb	review use before enabling single-WI implementation
+SR-144	docs/ai-template-redesign-2026-09-05-codex/P2A-EXECUTION.md	077c24374742f1344dc6b6ddf94e259ab8af28af	review use before enabling single-WI implementation
+SR-144	docs/archive/history/README.md	cbdd1b685296a3dc9bc6b10bab124d63da4b502c	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/archive/history/handback-contract.md	5f51b8f68fd73e3005d9a957d17b9cda44770c3c	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/archive/last_approved/docs/requirements/system-requirements.toml	435d8ce708795a5e3f9451ff0d171824b2b3c452	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/archive/plans/2026-08-10-carrier-cutover.patch	b09ed6df61fbf433f386f7c4baca727900dc7adf	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/archive/plans/2026-08-10-sn-sr-prose-rewrite.md	9d0afde8e15289e0f524e9278e5794a92cb963ad	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/archive/plans/2026-08-13-part-a-data-pack.md	35350ab8272fa703d7f98ea36b4b4609a3b64d59	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/archive/work/complete/WI-424-route-the-adjudicator-briefs.md	6d581ddf7bf9e005ca7aa8c4a3301f27498842e2	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/archive/work/complete/WI-425-repoint-retired-sn-citations.md	be991587e3f40fe302b4146b118bfde7bd5e4cf3	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/archive/work/complete/WI-483-core-decomposition-program.md	966b75ef09b836a08a51415a94025ebac5f58664	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/archive/work/complete/WI-547-adjudicate-sr-024-sr-033-sr.md	d172a509ac8814a3efbe6a7fda1dc765eba13c12	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/archive/work/complete/WI-552-adjudicator-two-exit-close.md	7668d7ed6533107b7642781007de858d88a3ef39	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/archive/work/complete/WI-566-adjudicate-llr-058-llr-144.md	aa9975a0d8d97b55fe938cd1cc8b639aac45ad5c	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/handbacks/README.md	c28535b686e5810ed61ceb2f3b189d71dece7f8f	review use before enabling single-WI implementation
+SR-144	docs/iteration/wi-546-wi-484-delegated-residue-the-001-20260830-122205.log	8ee162d90c81b014d2642ad79b0f7aa5e274f1f3	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-546-wi-484-delegated-residue-the-002-20260830-125731.log	da9b249ba5be8e7a65b82d6f9f8ea9a8e5c4f171	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-546-wi-484-delegated-residue-the-003-20260830-130226.log	f684aafd62313592b062c12455b2691f7b5bad4e	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-546-wi-484-delegated-residue-the-004-20260830-130628.log	7e9c97da12d482f342b2ef78ec86b6df9d020663	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-546-wi-484-delegated-residue-the-005-20260830-131004.log	db3292420eaf17ab8e4ee0a62b825098ffc3e3e3	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-546-wi-484-delegated-residue-the-006-20260830-131226.log	4ef93a079c9ff3eac8c70d63a8014863adee0592	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-547-adjudicate-sr-024-sr-033-sr-001-20260830-193037.log	b0c726bcfcd1f6d98e08452c34792bf17cfb634c	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-552-adjudicator-two-exit-close-001-20260901-012620.log	6b52e47fcdb7d030967858f2670a0741afa02fbc	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-552-adjudicator-two-exit-close-002-20260901-021946.log	3a94491b5ebb8e28627b76572c8873ade5767df1	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-552-adjudicator-two-exit-close-005-20260901-023713.log	55ff72295f15c6a2db30b00d5fe53db4f63ad609	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-552-adjudicator-two-exit-close-007-20260901-031737.log	d523957228d965086ba296f803556c8a1e19cdbf	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-552-adjudicator-two-exit-close-008-20260901-032614.log	93c550ce2e4956ea466c51d4da2498ddc1b5e239	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-552-adjudicator-two-exit-close-010-20260901-033450.log	9a246ccf3f9578b4ba1c6d2b7e41edba817bf493	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-552-adjudicator-two-exit-close-016-20260901-042122.log	e53fe22e7a4b9fe47db5c2ff1552ec69f56197ba	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-563-spot-check-the-clean-close-of-001-20260901-043426.log	a18a5365023bc3f838d046fd6e59d8036163401a	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-568-dispose-the-close-recorded-at-005-20260901-172258.log	dd6236fc328b55fd9d9d48c7299794c2fe4a9c02	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-578-adjudicate-llr-158-llr-203-001-20260902-200119.log	05b6d9b393169fbb405c6225d5948e3ed66ada0f	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-590-adjudicate-llr-207-llr-208-002-20260904-123008.log	8882ffdea6867ad2db6e6eadb69069f2d81f2b6e	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/iteration/wi-590-adjudicate-llr-207-llr-208-007-20260904-154754.log	e1576f0b095095e0e8008c16d0b4e33ca25a6ef0	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/knowledge/crash-atomicity-recovery.md	d1253fa57d836757f39a7f3c124ad36334a4a65f	review use before enabling single-WI implementation
+SR-144	docs/knowledge/unattended-operation.md	b17246fbadeee78e277658fdb2ad04314adeedc1	review use before enabling single-WI implementation
+SR-144	docs/log.md	3f80b5220c5b5764c39232a49ae6d713aa9418e9	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/open-items.html	1193ef6d45e1d1362bfbfd30692ba1f164e04d37	review use before enabling single-WI implementation
+SR-144	docs/plans/2026-08-13-sitting-2-boundary-and-context.md	01462aa734c061985d27c5f9eaac9130d2f55309	review use before enabling single-WI implementation
+SR-144	docs/plans/2026-08-13-sitting-3-spine-verification.md	07b418da2e14e900e294a16a8926f70f856ee2c4	review use before enabling single-WI implementation
+SR-144	docs/plans/2026-08-14-wi451-slice1-sr-census.md	fecc90a7d3b71f911da56bf0d543990b52736f88	review use before enabling single-WI implementation
+SR-144	docs/plans/2026-08-14-wi451-slice2-ledger.md	ee473d8109136093aa9a47d1523e07e6878c9c31	review use before enabling single-WI implementation
+SR-144	docs/plans/2026-08-16-derivation-alignment.md	96c5561262a28f0aca151940bb72b0149a05bb7a	review use before enabling single-WI implementation
+SR-144	docs/plans/2026-08-25-blind-derivation-a-outputs.md	bb19bc07f6034be21c5fc082a3050c901d8cf267	review use before enabling single-WI implementation
+SR-144	docs/plans/2026-08-25-blind-derivation-b-obligations.md	ea37ccb2b9d32c7e8d5e84086b128a56282fb448	review use before enabling single-WI implementation
+SR-144	docs/ratify/CURRENT.md	19f8e67e6e269e93e1dcb89db3cdc336c6ca6e7e	review use before enabling single-WI implementation
+SR-144	docs/requirements/components.derived.toml	1216922bbf4aee213a4a3a358852407437af83e5	review use before enabling single-WI implementation
+SR-144	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+SR-144	docs/requirements/system-requirements.toml	6524fbb9f27d1735b33cab2731a32f86943f33e8	review use before enabling single-WI implementation
+SR-144	docs/reviews/2026-09-07-approval-contract-live-luna-round-2.md	c40026cbdf63ed61de8e16ae624819ae5e213358	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/reviews/2026-09-07-approval-contract-live-luna-round-3.md	fa07dab4b300bcef7573e2508019db9209bb1545	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/reviews/2026-09-07-approval-contract-live-luna.md	4999e854cfe9a3c08e56d854ed22f78e699e1072	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/reviews/2026-09-07-approval-contract-luna.md	400c5f6a9739d8973eac400bb0debbbbae6dcccd	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/reviews/contract_split/001-ADJUDICATE-65eda1b.md	1759db891c5027cfe0f3218239a1c1b5cd748ea3	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/reviews/wi-547-adjudicate-sr-024-sr-033-sr/001-ADJUDICATE-fb0ed7c.md	d8b1431727855554ee3127945d44c785654fbc9b	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/reviews/wi-552-adjudicator-two-exit-close/007-REVIEW-A-9286104-relaxed.md	82a355ee459ae1e2f751c792df4c062a1ca928d9	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/reviews/wi-566-adjudicate-llr-058-llr-144/001-ADJUDICATE-05fb6a3.md	6a165e548fcde01158fbfdcf1c8c0ed21178d013	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/reviews/wi-573-adjudicate-llr-136-llr-158/001-ADJUDICATE-07cbabb.md	75696da57d5b9a86104568a248feaeae1301beed	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/reviews/wi-578-adjudicate-llr-158-llr-203/001-ADJUDICATE-921f947.md	908d31373a3137a11970a5b8a781d6c325b86c1a	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/reviews/wi-585-adjudicate-llr-045-llr-140/001-ADJUDICATE-d202c9f.md	5b25ef01622d9d506d67562a24a06f1eb9e0d7f6	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/reviews/wi-593-adjudicate-llr-197-approved/001-ADJUDICATE-ae3d788.md	0faf2732de6b4de5e1d5328d76eab52f090e89c7	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/reviews/wi-599-adjudicate-llr-208-tc-206/001-ADJUDICATE-993e455.md	62583d8bbd01473eb7770dfa63aa312153a194e4	preserve historical record; do not rewrite as current acceptance
+SR-144	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+SR-144	docs/work/handback/wi-605-control-interruption-llr-snapshot.patch	4c1d3d25757bf9f56ddebef0b20a0b2eced7427d	review use before enabling single-WI implementation
+SR-144	docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md	9e5967174d0e38727273e1d31a34c7bf4c8d167d	review use before enabling single-WI implementation
+SR-144	project-trajectory/PROCESS_OPTIONS.md	9a71da981ac3ec85d411d9f5228c7dc5800d9a77	review use before enabling single-WI implementation
+SR-144	project-trajectory/RESYNC_PACK.md	db12dac22294459171b65b72da1ce55771e790c2	review use before enabling single-WI implementation
+SR-144	project-trajectory/scripts/adjudicate_brief.py	75d67f36fa4729d72ab5c9f6d985aae895bb1970	review use before enabling single-WI implementation
+SR-144	project-trajectory/scripts/agent_common.py	ed86fd6deaead6449fa59fbdce9ec7ee8f81c9b1	review use before enabling single-WI implementation
+SR-144	project-trajectory/scripts/bootstrap.py	a276705f7c523af995bca5f7e7c242f1893fa47e	review use before enabling single-WI implementation
+SR-144	project-trajectory/scripts/check.py	6ec523ce45ae51257e16d81671b5d7fcc775d4b1	review use before enabling single-WI implementation
+SR-144	project-trajectory/scripts/check_trajectory.py	cc7f4130e70edbd88d0b8990727932f8ab59814e	review use before enabling single-WI implementation
+SR-144	project-trajectory/scripts/dispatch.py	4b6cdc03f3211efb1069bdb5bf3599b0e45e805c	review use before enabling single-WI implementation
+SR-144	project-trajectory/scripts/handback.py	49f59a69719a5b42577c04cf5f2d4ecaf1ed95a1	review use before enabling single-WI implementation
+SR-144	project-trajectory/scripts/intake.py	561260053ca2796c6d0c4ddac9fe422b55cfc63a	review use before enabling single-WI implementation
+SR-144	project-trajectory/scripts/integrate.py	3a6988ea814b96a2712d349287bdcc36ecba38dc	review use before enabling single-WI implementation
+SR-144	project-trajectory/scripts/kitlib/registry.py	ac9ecf1916e5c07937f8cc79e9ffc9e9a98fc635	review use before enabling single-WI implementation
+SR-144	project-trajectory/scripts/kitlib/station.py	6c9a3c881a35111a956becfdd82119f02c67ff72	review use before enabling single-WI implementation
+SR-144	project-trajectory/scripts/rendering/traj_render.py	aa33548172e7d878ff3736b3a3ce44eafa42f6cb	review use before enabling single-WI implementation
+SR-144	project-trajectory/scripts/wi_convert.py	45ec1f9a8816e06163f521c59d5d2e85f18f1277	review use before enabling single-WI implementation
+SR-144	tests/test_adjudicate_brief.py	4f8cb9c39851737b1275fbf9aa0c113b773c8f2c	review use before enabling single-WI implementation
+SR-144	tests/test_bootstrap.py	5118b93ee20c2b230ac4235a43b93e7ea070cc4c	review use before enabling single-WI implementation
+SR-144	tests/test_check_docs.py	3fd4d4b979a202fc8fe9b7397bc2e317d6ec3d54	review use before enabling single-WI implementation
+SR-144	tests/test_dispatch.py	a850f93294ba657e57ec0889de9c7c9a7b72c939	review use before enabling single-WI implementation
+SR-144	tests/test_handback.py	834f320ed66184ad5942dc9e277dd7e791545c0f	review use before enabling single-WI implementation
+SR-144	tests/test_intake.py	a22604dc01db0882630b317ee0fe9efe1c7743c8	review use before enabling single-WI implementation
+SR-144	tests/test_integrate_admission.py	8d466b465e9899cfa42856cf303523ec66e4722a	review use before enabling single-WI implementation
+SR-144	tests/test_kitlib_station.py	10f1abf86f55aac2c7732f3811ae7e9f2be176b6	review use before enabling single-WI implementation
+SR-144	tests/test_loop_order.py	9c8d4c8ab12eaed7096ccb02766db52db663eef4	review use before enabling single-WI implementation
+SR-148	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+SR-148	docs/ai-template-redesign-2026-09-05 - claude/PLAN.md	809cc60d89b3f802509aa2667cefa10494507501	review use before enabling single-WI implementation
+SR-148	docs/ai-template-redesign-2026-09-05 - claude/review-02-crossref-codex-plan.md	e315ced2bab3ba5cfc220a96fe0930b9e20861d6	review use before enabling single-WI implementation
+SR-148	docs/ai-template-redesign-2026-09-05-codex/APPROVAL-REPAIR-CONTRACT.md	273c7bc044a61f90eae9691d7836f90b55829038	review use before enabling single-WI implementation
+SR-148	docs/ai-template-redesign-2026-09-05-codex/FABLE-REVIEW-2-GOVERNING-PLAN.md	4e99f7e9234fc5d5efaea105ecec1af12f1b02ff	review use before enabling single-WI implementation
+SR-148	docs/ai-template-redesign-2026-09-05-codex/FABLE-REVIEW-DISPOSITIONS.md	b18abbf6959c19523e220578acfc3f921a294c68	review use before enabling single-WI implementation
+SR-148	docs/ai-template-redesign-2026-09-05-codex/FABLE-REVIEW.md	fe684a95e9b69402d026140e5fde250bfee0e84f	review use before enabling single-WI implementation
+SR-148	docs/ai-template-redesign-2026-09-05-codex/IMPLEMENTATION.md	2d19938c492a641bcce0bc86e11c1f9e33aa4bba	review use before enabling single-WI implementation
+SR-148	docs/ai-template-redesign-2026-09-05-codex/LLR-AND-RENDERING.md	62e411ad174fe51058cc91ead4388e17cc559837	review use before enabling single-WI implementation
+SR-148	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+SR-148	docs/ai-template-redesign-2026-09-05-codex/P0-SCENARIOS.md	1397c0a58dc31319fcb10fc8913f4c3ffc61a0bb	review use before enabling single-WI implementation
+SR-148	docs/ai-template-redesign-2026-09-05-codex/README.md	6569ac7efc3f4ac48c021ace835e1d2adb151f18	review use before enabling single-WI implementation
+SR-148	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/last_approved/docs/requirements/system-requirements.toml	435d8ce708795a5e3f9451ff0d171824b2b3c452	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/plans/2026-08-12-sn-intake.md	d8306a24047a075299e6ea68d842a3339a3b136a	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/plans/2026-08-13-part-a-data-pack.md	35350ab8272fa703d7f98ea36b4b4609a3b64d59	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/plans/2026-08-15-resume-brief.md	a135d108d36ff0e8fe5820ffbd385611a92f0670	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/repo-review-2026-08-19.md	66158e0d1bc300918192937607bca221cf7f7d3c	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/work/complete/WI-177-4-g1-parallel-dispatch-requirement-s.md	8b79373df8205ae2350d58f7d6fc60e93dce6d41	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/work/complete/WI-178-4-g2-parallel-dispatch-decomposition.md	87e71f3dc3dbfc208b29bbedc7cfbb2b30cf6964	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/work/complete/WI-179-slice-a-scheduler-contract-schema.md	a45a0bdc70c810cf8ac41956c3b990f5b1056e5d	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/work/complete/WI-180-slice-b-de-author-status-remove-next.md	2a1d68539ad4083664c38e83f42de7ce3547046b	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/work/complete/WI-186-slice-h-telemetry-scaffold-migrati.md	8235666688a7f40d4f4ac23e7c97aa4e9dceee24	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/work/complete/WI-204-spine-only-traincar-amend-sr-058-rule.md	157077b32f0b79cbe7439ef3d391d35b8a64ee6e	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/work/complete/WI-234-project-pending-owner-actions-attestati.md	d88083ed26f808691b1588cf01e4b9808f7be272	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/work/complete/WI-457-dispose-the-close-recorded-at-docs-hand.md	cac61d3bc7bdd130facb772e4c379186371dfa8f	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/work/complete/WI-458-retier-class-a-the-seven-authoring-calls.md	0f0b2a2dd204e6b2b44714c27ea227ee90524441	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/work/complete/WI-460-retier-closing-verification.md	e7f298b7b002786e7b8c1b8de689f1f35ad0e73b	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/work/complete/WI-483-core-decomposition-program.md	966b75ef09b836a08a51415a94025ebac5f58664	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/work/complete/WI-487-implements-backlink-campaign.md	723bad560e86e1a94c7c6d198db1828231561b77	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/work/complete/WI-498-stage-unification-program.md	53831c999d4ede1607b9ac1cc4d7239326c6d9eb	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/work/complete/WI-501-stale-approved-cell-repair.md	88a1d1e857b5b2c048cd604de082f91d29b06287	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/archive/work/complete/WI-566-adjudicate-llr-058-llr-144.md	aa9975a0d8d97b55fe938cd1cc8b639aac45ad5c	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/handbacks/WI-451-wi451-sr-retier-campaign.md	e96e4758c8e707b84300d3a10ce5c6a1cb1baf85	review use before enabling single-WI implementation
+SR-148	docs/interface-reference.md	36748212065cdb9d115a060d4e2eca3021a7d63e	review use before enabling single-WI implementation
+SR-148	docs/iteration/wi-552-adjudicator-two-exit-close-016-20260901-042122.log	e53fe22e7a4b9fe47db5c2ff1552ec69f56197ba	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/iteration/wi-590-adjudicate-llr-207-llr-208-002-20260904-123008.log	8882ffdea6867ad2db6e6eadb69069f2d81f2b6e	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/iteration/wi-590-adjudicate-llr-207-llr-208-007-20260904-154754.log	e1576f0b095095e0e8008c16d0b4e33ca25a6ef0	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/knowledge/traceability-enforcement.md	02537f867acab8ac499675dfa52cbc10f05a5814	review use before enabling single-WI implementation
+SR-148	docs/log.md	3f80b5220c5b5764c39232a49ae6d713aa9418e9	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/open-items.html	1193ef6d45e1d1362bfbfd30692ba1f164e04d37	review use before enabling single-WI implementation
+SR-148	docs/plans/2026-08-13-sitting-3-spine-verification.md	07b418da2e14e900e294a16a8926f70f856ee2c4	review use before enabling single-WI implementation
+SR-148	docs/plans/2026-08-14-wi451-slice1-sr-census.md	fecc90a7d3b71f911da56bf0d543990b52736f88	review use before enabling single-WI implementation
+SR-148	docs/plans/2026-08-14-wi451-slice2-ledger.md	ee473d8109136093aa9a47d1523e07e6878c9c31	review use before enabling single-WI implementation
+SR-148	docs/plans/2026-08-15-retier-completion.md	b307814917cba8965b6d53f14a48916ac4fe5beb	review use before enabling single-WI implementation
+SR-148	docs/plans/2026-08-15-retier-v2-one-decision-tiering.md	62e6d6ddf15b614dbbea617295a0dca79b687be1	review use before enabling single-WI implementation
+SR-148	docs/plans/2026-08-15-review-package.md	38ed4759b47a0e435bf46306854621a78931b06f	review use before enabling single-WI implementation
+SR-148	docs/plans/2026-08-16-derivation-alignment.md	96c5561262a28f0aca151940bb72b0149a05bb7a	review use before enabling single-WI implementation
+SR-148	docs/plans/2026-08-17-wi468-obligation-intake-options.md	5332e998bf8085da9bb104b92028851cdd102c3f	review use before enabling single-WI implementation
+SR-148	docs/plans/2026-08-23-sr-owned-provides-report.md	cb0c860b729f7dab7b4911a73aed494969d6d5dd	review use before enabling single-WI implementation
+SR-148	docs/plans/2026-08-25-blind-derivation-a-outputs.md	bb19bc07f6034be21c5fc082a3050c901d8cf267	review use before enabling single-WI implementation
+SR-148	docs/plans/2026-08-25-blind-derivation-b-obligations.md	ea37ccb2b9d32c7e8d5e84086b128a56282fb448	review use before enabling single-WI implementation
+SR-148	docs/plans/2026-08-25-if-contract-verdicts.md	209c2b2cfc8df3f1a637368910069fd100a59d40	review use before enabling single-WI implementation
+SR-148	docs/ratify/CURRENT.md	19f8e67e6e269e93e1dcb89db3cdc336c6ca6e7e	review use before enabling single-WI implementation
+SR-148	docs/repo-lock.md	dea3041f43aff97b65c678ea1f74ee63befdbde3	review use before enabling single-WI implementation
+SR-148	docs/requirements/components.derived.toml	1216922bbf4aee213a4a3a358852407437af83e5	review use before enabling single-WI implementation
+SR-148	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+SR-148	docs/requirements/open-items.toml	4508a650fc014a1d2c649bdee7f3b25dabfb73d6	review use before enabling single-WI implementation
+SR-148	docs/requirements/system-requirements.toml	6524fbb9f27d1735b33cab2731a32f86943f33e8	review use before enabling single-WI implementation
+SR-148	docs/reviews/2026-08-22-wi498-program-close/RESUME.md	6ab1f0a52a21bd169905fa074e03277229f0b9d3	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/reviews/2026-08-22-wi498-program-close/ROUND-OPUS.md	2c8bbd044f7a0dd8639555cbbc0f1d726dff0747	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/reviews/2026-08-22-wi498-program-close/ROUND-SOL-RAW.md	f076366369297eb06aed9bd7a79fe17765f48833	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/reviews/2026-08-29-oi67-slice3/slice3-batch-B.json	47fa5d8303c5d4a11c4cbc3a41b529ecffe3ec2a	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/reviews/2026-08-29-oi67-slice3/slice3-worklist.json	9a76fb58cac815a6172501f5db471c8d80a9b58b	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/reviews/2026-09-07-approval-contract-live-luna-round-2.md	c40026cbdf63ed61de8e16ae624819ae5e213358	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/reviews/2026-09-07-approval-contract-live-luna-round-3.md	fa07dab4b300bcef7573e2508019db9209bb1545	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/reviews/2026-09-07-approval-contract-live-luna.md	4999e854cfe9a3c08e56d854ed22f78e699e1072	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/reviews/2026-09-07-approval-contract-luna-round-2.md	296cdf9404ae1a1f8cbf458d1dc9b5f05bfd38a9	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/reviews/2026-09-07-approval-contract-luna.md	400c5f6a9739d8973eac400bb0debbbbae6dcccd	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/reviews/retier-v2/ROUND-SOL.md	e5cb99b2c70c67df2bc2a2e51f56059d49380ee3	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/reviews/wi451-retier/ROUND-2-SOL.md	d06b6b8e2ac817e5b79d48ac79bc820eb4a0db97	preserve historical record; do not rewrite as current acceptance
+SR-148	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+SR-148	docs/work/handback/wi-605-control-interruption-llr-snapshot.patch	4c1d3d25757bf9f56ddebef0b20a0b2eced7427d	review use before enabling single-WI implementation
+SR-148	project-trajectory/scripts/census.py	8507f133b6c86ce3d1d889ffba3be1689b52599d	review use before enabling single-WI implementation
+SR-148	project-trajectory/scripts/dispatch.py	4b6cdc03f3211efb1069bdb5bf3599b0e45e805c	review use before enabling single-WI implementation
+SR-148	project-trajectory/scripts/schedule.py	f1f3431e2784c578f46dfc71e0455213edfca318	review use before enabling single-WI implementation
+SR-148	project-trajectory/scripts/trace_text.py	7c245f50d0f8d970e8f01e5ef5dae6a4c5d620ec	review use before enabling single-WI implementation
+SR-148	project-trajectory/scripts/trunk_step.py	0e45843b365c5487f5f5945f17eaf876a667d943	review use before enabling single-WI implementation
+SR-148	tests/test_trace_rules.py	36a1c7f044a6ea637c540f03c62973cd339eb08f	review use before enabling single-WI implementation
+SR-156	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+SR-156	docs/ai-template-redesign-2026-09-05 - claude/PLAN.md	809cc60d89b3f802509aa2667cefa10494507501	review use before enabling single-WI implementation
+SR-156	docs/ai-template-redesign-2026-09-05 - claude/review-02-crossref-codex-plan.md	e315ced2bab3ba5cfc220a96fe0930b9e20861d6	review use before enabling single-WI implementation
+SR-156	docs/ai-template-redesign-2026-09-05-codex/APPROVAL-REPAIR-CONTRACT.md	273c7bc044a61f90eae9691d7836f90b55829038	review use before enabling single-WI implementation
+SR-156	docs/ai-template-redesign-2026-09-05-codex/FABLE-REVIEW-DISPOSITIONS.md	b18abbf6959c19523e220578acfc3f921a294c68	review use before enabling single-WI implementation
+SR-156	docs/ai-template-redesign-2026-09-05-codex/IMPLEMENTATION.md	2d19938c492a641bcce0bc86e11c1f9e33aa4bba	review use before enabling single-WI implementation
+SR-156	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+SR-156	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/last_approved/docs/requirements/system-requirements.toml	435d8ce708795a5e3f9451ff0d171824b2b3c452	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-177-4-g1-parallel-dispatch-requirement-s.md	8b79373df8205ae2350d58f7d6fc60e93dce6d41	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-178-4-g2-parallel-dispatch-decomposition.md	87e71f3dc3dbfc208b29bbedc7cfbb2b30cf6964	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-179-slice-a-scheduler-contract-schema.md	a45a0bdc70c810cf8ac41956c3b990f5b1056e5d	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-182-slice-d-dispatcher-worktree-pool-r.md	408d23f5b145beb9c6f9e8052acfcb6a04a1218d	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-183-slice-e-change-train-continuation-fo.md	5e67098c897e446a6e5b6fc05c595b4ecc488e5f	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-184-slice-f-atomic-integrator-cas-bloc.md	fab125ba9cb208314676a619d9fd9b1454072473	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-185-slice-g-recovery-fault-injection.md	9a33acbadae853d5e306cbccca5b1e6a655c6ccb	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-186-slice-h-telemetry-scaffold-migrati.md	8235666688a7f40d4f4ac23e7c97aa4e9dceee24	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-204-spine-only-traincar-amend-sr-058-rule.md	157077b32f0b79cbe7439ef3d391d35b8a64ee6e	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-220-dispatcher-hardening-diverged-dev-need.md	6767135275c73da14ca0bb99e0dbc637f03190a9	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-222-salvage-committed-round-evidence-on-post.md	8cfea8a07cfa65ee5912b767b31e68497c878878	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-224-harden-salvage-scans-against-git-quoted.md	0ec9ff2b7a69d722439c67c004d36f13d597db2f	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-230-publish-under-disjoint-dirt-publication.md	83dce2a1abdea9a776311518a07c6bd215180a12	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-231-integrator-regenerates-generated-artifac.md	41c33a147a644d60424b177c6a6e86a4a1ddca5c	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-232-make-needs-re-review-actionable-dispatc.md	09a3ea738176fa05f4b813813a9928b96c0106fb	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-233-dispatcher-git-drops-stderr-hook-and.md	a5d7f3ceb54a0dc6ce3775dbea68a0303921f81d	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-235-declare-the-generated-artifact-set-in-st.md	b44eba0e702f443f43ce5a837b2222d3ede6cf9b	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-237-ownership-claims-scan-ignores-integratio.md	83e8b8a6ed05ccf856b4036eba56b682502feea6	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-238-blocked-disposition-survives-a-registry.md	1ff578d5a247c6fe58f50a7b6d408d0431410790	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-239-completion-supersedes-a-blocked-wi-trail.md	789eb301a4be656f2bf25ee57fed7b6e965ca3cc	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-240-park-quarantine-details-carry-the-failin.md	23b7d633142e87a9b48f50582f80c892f9673649	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-260-integrator-verdict-gate-semantics-owner.md	cc2f7af0b9c6250e036864db69f966a9ffac8393	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-456-adjudicate-sr-007-sr-008-sr-009-sr-0.md	26b10cc9bf00953bc7cc83522506aa7b60985b38	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/archive/work/complete/WI-461-crlf-relay-conviction-red-on-floor.md	91153b68e1991aae3f5ff4292f1d73efb6ed839e	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/iteration/wi-579-the-verdict-carrier-and-the-ad-005-20260902-221212.log	1dcee6b46104e22511c07410eed8260fb13e4f8f	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/iteration/wi-579-the-verdict-carrier-and-the-ad-024-20260903-023733.log	d9ae06f11b0e4e2cf32def34ce3813ef1ba8b854	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/iteration/wi-579-the-verdict-carrier-and-the-ad-026-20260903-030821.log	94a060cd06df59de62d8d08069e3af879af8b9e1	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/iteration/wi-586-adjudicate-llr-207-llr-208-005-20260903-170743.log	5654ec7ce4df5907f72ecafcd28a0858dc8abc7c	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/iteration/wi-589-two-verified-defects-around-th-003-20260903-184846.log	0725c2f4df38b917d644ca4b195cab383b1b6ff7	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/iteration/wi-590-adjudicate-llr-207-llr-208-001-20260904-114701.log	be1424e071a09164ceb5a9b7bedd54ed3f305d29	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/iteration/wi-590-adjudicate-llr-207-llr-208-002-20260904-123008.log	8882ffdea6867ad2db6e6eadb69069f2d81f2b6e	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/iteration/wi-590-adjudicate-llr-207-llr-208-004-20260904-152349.log	53ed12fe0aba149919112f6f9d34d44baaf70616	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/iteration/wi-590-adjudicate-llr-207-llr-208-007-20260904-154754.log	e1576f0b095095e0e8008c16d0b4e33ca25a6ef0	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/iteration/wi-595-llr-207-tc-205-return-and-llr-001-20260904-190807.log	e292cc3316d7579f3cfd0fa674fb81a1428da6c7	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/iteration/wi-595-llr-207-tc-205-return-and-llr-007-20260904-205731.log	5a869bce91157ec41321cf4e5ead5b7c49877c5c	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/iteration/wi-600-adjudicate-llr-207-tc-205-001-20260904-223000.log	7a393a03e2997ec73eae98054af1a38cd2bd3fec	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/log.md	3f80b5220c5b5764c39232a49ae6d713aa9418e9	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/open-items.html	1193ef6d45e1d1362bfbfd30692ba1f164e04d37	review use before enabling single-WI implementation
+SR-156	docs/plans/2026-08-13-sitting-3-spine-verification.md	07b418da2e14e900e294a16a8926f70f856ee2c4	review use before enabling single-WI implementation
+SR-156	docs/plans/2026-08-14-wi451-slice2-ledger.md	ee473d8109136093aa9a47d1523e07e6878c9c31	review use before enabling single-WI implementation
+SR-156	docs/plans/2026-08-15-retier-v2-one-decision-tiering.md	62e6d6ddf15b614dbbea617295a0dca79b687be1	review use before enabling single-WI implementation
+SR-156	docs/plans/2026-08-16-derivation-alignment.md	96c5561262a28f0aca151940bb72b0149a05bb7a	review use before enabling single-WI implementation
+SR-156	docs/plans/2026-08-17-acceptance-form-ledger.md	6b1628903da67607b394bc1d1924a30018c9f9c3	review use before enabling single-WI implementation
+SR-156	docs/plans/2026-08-17-wi468-obligation-intake-options.md	5332e998bf8085da9bb104b92028851cdd102c3f	review use before enabling single-WI implementation
+SR-156	docs/plans/2026-08-25-blind-derivation-a-outputs.md	bb19bc07f6034be21c5fc082a3050c901d8cf267	review use before enabling single-WI implementation
+SR-156	docs/plans/2026-08-25-blind-derivation-b-obligations.md	ea37ccb2b9d32c7e8d5e84086b128a56282fb448	review use before enabling single-WI implementation
+SR-156	docs/ratify/CURRENT.md	19f8e67e6e269e93e1dcb89db3cdc336c6ca6e7e	review use before enabling single-WI implementation
+SR-156	docs/requirements/components.derived.toml	1216922bbf4aee213a4a3a358852407437af83e5	review use before enabling single-WI implementation
+SR-156	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+SR-156	docs/requirements/system-requirements.toml	6524fbb9f27d1735b33cab2731a32f86943f33e8	review use before enabling single-WI implementation
+SR-156	docs/reviews/2026-09-07-approval-contract-live-luna-round-2.md	c40026cbdf63ed61de8e16ae624819ae5e213358	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/2026-09-07-approval-contract-live-luna-round-3.md	fa07dab4b300bcef7573e2508019db9209bb1545	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/2026-09-07-approval-contract-live-luna.md	4999e854cfe9a3c08e56d854ed22f78e699e1072	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/2026-09-07-approval-contract-luna-round-2.md	296cdf9404ae1a1f8cbf458d1dc9b5f05bfd38a9	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/2026-09-07-approval-contract-luna.md	400c5f6a9739d8973eac400bb0debbbbae6dcccd	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/wi-586-adjudicate-llr-207-llr-208/001-ADJUDICATE-d7ffb41.md	0c90255e187486f3bb5a33af15c6dbd172c72284	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/wi-586-adjudicate-llr-207-llr-208/003-ADJUDICATE-9c563df.md	77fb73703d756dd6907f4b928926bde63eab5e7e	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/wi-586-adjudicate-llr-207-llr-208/005-ADJUDICATE-3c7764c.md	3cb6af7ec17d4423f7849589689944a15f447bd4	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/wi-586-adjudicate-llr-207-llr-208/007-ADJUDICATE-aeefcb2.md	e553e2a0ee84342e77b3f81d36fee0e83785fac7	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/wi-586-adjudicate-llr-207-llr-208/009-ADJUDICATE-082b9e1.md	14b4fc4c6974526fdc99a3660c58d9712a2ac123	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/wi-586-adjudicate-llr-207-llr-208/011-ADJUDICATE-397d4b1.md	20bf5e20b27ff0f9f2f49d19203f9e1ec2db3870	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/wi-590-adjudicate-llr-207-llr-208/004-ADJUDICATE-774ef35.md	9f0e14e3c9240c7c6e95a00cc77fbb931a1bc939	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/wi-590-adjudicate-llr-207-llr-208/006-ADJUDICATE-a1d80c6.md	89eaf00123fce822dc1191fc8a8b48f4c8502481	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/wi-590-adjudicate-llr-207-llr-208/009-ADJUDICATE-9671078.md	4214182d6262dcddf6344a0ecccf2a6389fa6dfe	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/wi-595-llr-207-tc-205-return-and-llr/007-REVIEW-A-8fc8f44.md	966061923843bad8588ec9de85202b7dfeffbdb8	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/wi-595-llr-207-tc-205-return-and-llr/010-REVIEW-A-914f978.md	eabeb547fcf70a6f368235574a85e7d2c2daf375	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/reviews/wi-600-adjudicate-llr-207-tc-205/001-ADJUDICATE-1b3008f.md	762a6711b652248804a1a48cc68488d3c2012d2a	preserve historical record; do not rewrite as current acceptance
+SR-156	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+SR-156	project-trajectory/scripts/agent_common.py	ed86fd6deaead6449fa59fbdce9ec7ee8f81c9b1	review use before enabling single-WI implementation
+SR-156	project-trajectory/scripts/integrate.py	3a6988ea814b96a2712d349287bdcc36ecba38dc	review use before enabling single-WI implementation
+TC-058	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+TC-058	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+TC-058	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+TC-058	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+TC-058	docs/archive/plans/2026-08-10-carrier-cutover.patch	b09ed6df61fbf433f386f7c4baca727900dc7adf	preserve historical record; do not rewrite as current acceptance
+TC-058	docs/archive/work/complete/WI-178-4-g2-parallel-dispatch-decomposition.md	87e71f3dc3dbfc208b29bbedc7cfbb2b30cf6964	preserve historical record; do not rewrite as current acceptance
+TC-058	docs/archive/work/complete/WI-179-slice-a-scheduler-contract-schema.md	a45a0bdc70c810cf8ac41956c3b990f5b1056e5d	preserve historical record; do not rewrite as current acceptance
+TC-058	docs/iteration/4-g3-WI-237-a515-001-20260719-112315.log	29605ab738b1786f5ab6fc1436179ed31aa8937b	preserve historical record; do not rewrite as current acceptance
+TC-058	docs/log.md	3f80b5220c5b5764c39232a49ae6d713aa9418e9	preserve historical record; do not rewrite as current acceptance
+TC-058	docs/plans/2026-08-16-derivation-alignment.md	96c5561262a28f0aca151940bb72b0149a05bb7a	review use before enabling single-WI implementation
+TC-058	docs/ratify/2026-07-27-reattest.md	ae10a7b64d2a5508ea27ec5983873449e8eedfa8	review use before enabling single-WI implementation
+TC-058	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+TC-058	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+TC-058	tests/test_schedule.py	be7fd3cd309c6c1e15b8921d4f2e40360877fb75	review use before enabling single-WI implementation
+TC-061	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+TC-061	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+TC-061	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+TC-061	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+TC-061	docs/archive/plans/2026-08-10-carrier-cutover.patch	b09ed6df61fbf433f386f7c4baca727900dc7adf	preserve historical record; do not rewrite as current acceptance
+TC-061	docs/archive/work/complete/WI-181-slice-c-worker-assignment-mode.md	46987c56ee553d314e5cb862b176e4fbb5938255	preserve historical record; do not rewrite as current acceptance
+TC-061	docs/iteration/wi-580-the-worker-and-reviewer-briefs-008-20260905-000243.log	38116455ef4ec302bc752bf803ee2b216625ee9b	preserve historical record; do not rewrite as current acceptance
+TC-061	docs/log.md	3f80b5220c5b5764c39232a49ae6d713aa9418e9	preserve historical record; do not rewrite as current acceptance
+TC-061	docs/open-items.html	1193ef6d45e1d1362bfbfd30692ba1f164e04d37	review use before enabling single-WI implementation
+TC-061	docs/ratify/2026-07-26-reattest.md	87c8cd42035d2f3ec12d66c9b53dfaf6e056bd7d	review use before enabling single-WI implementation
+TC-061	docs/ratify/2026-07-27-reattest.md	ae10a7b64d2a5508ea27ec5983873449e8eedfa8	review use before enabling single-WI implementation
+TC-061	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+TC-061	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+TC-061	docs/work/handback/wi-605-control-interruption-llr-snapshot.patch	4c1d3d25757bf9f56ddebef0b20a0b2eced7427d	review use before enabling single-WI implementation
+TC-061	tests/test_agent_loop_worker.py	0d4ab50d90623ee72c964b972408a2aac624adee	review use before enabling single-WI implementation
+TC-143	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+TC-143	docs/ai-template-redesign-2026-09-05-codex/IMPLEMENTATION.md	2d19938c492a641bcce0bc86e11c1f9e33aa4bba	review use before enabling single-WI implementation
+TC-143	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+TC-143	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+TC-143	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+TC-143	docs/archive/plans/2026-08-10-carrier-cutover.patch	b09ed6df61fbf433f386f7c4baca727900dc7adf	preserve historical record; do not rewrite as current acceptance
+TC-143	docs/archive/work/complete/WI-381-spine-barrier-batch-and-wait.md	e9fe0c298b7d9125923210005a4c65e2e0aec10c	preserve historical record; do not rewrite as current acceptance
+TC-143	docs/log.md	3f80b5220c5b5764c39232a49ae6d713aa9418e9	preserve historical record; do not rewrite as current acceptance
+TC-143	docs/ratify/2026-08-07-wi419.md	f75d90259819ab66e714fa24aca93a5976839179	review use before enabling single-WI implementation
+TC-143	docs/ratify/2026-08-08-mechanized-loop.md	e72231c32f0d63c7960920b434c6282855b726ae	review use before enabling single-WI implementation
+TC-143	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+TC-143	docs/reviews/WI-381-REVIEW-A.md	3b7336bb40686ed176ff9352311126f935544ea4	preserve historical record; do not rewrite as current acceptance
+TC-143	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+TC-144	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+TC-144	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+TC-144	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+TC-144	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+TC-144	docs/archive/plans/2026-08-10-carrier-cutover.patch	b09ed6df61fbf433f386f7c4baca727900dc7adf	preserve historical record; do not rewrite as current acceptance
+TC-144	docs/archive/work/complete/WI-388-adjudication-mechanical-scope-judgement.md	4f4b5345ed0535626f49dcc0df6acb15c37f31a3	preserve historical record; do not rewrite as current acceptance
+TC-144	docs/iteration/wi-590-adjudicate-llr-207-llr-208-002-20260904-123008.log	8882ffdea6867ad2db6e6eadb69069f2d81f2b6e	preserve historical record; do not rewrite as current acceptance
+TC-144	docs/log.md	3f80b5220c5b5764c39232a49ae6d713aa9418e9	preserve historical record; do not rewrite as current acceptance
+TC-144	docs/ratify/2026-08-07-wi419.md	f75d90259819ab66e714fa24aca93a5976839179	review use before enabling single-WI implementation
+TC-144	docs/ratify/2026-08-08-mechanized-loop.md	e72231c32f0d63c7960920b434c6282855b726ae	review use before enabling single-WI implementation
+TC-144	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+TC-144	docs/reviews/WI-381-REVIEW-A.md	3b7336bb40686ed176ff9352311126f935544ea4	preserve historical record; do not rewrite as current acceptance
+TC-144	docs/reviews/WI-388-REVIEW-A.md	1ea615ca4bf5f264f834c7e9feb812bdaf606479	preserve historical record; do not rewrite as current acceptance
+TC-144	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+TC-145	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+TC-145	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+TC-145	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+TC-145	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+TC-145	docs/archive/plans/2026-08-10-carrier-cutover.patch	b09ed6df61fbf433f386f7c4baca727900dc7adf	preserve historical record; do not rewrite as current acceptance
+TC-145	docs/archive/work/complete/WI-390-concurrency-v2-program-close.md	4dd02a01a4ea872d8a4f9a28d0502dd2edc00dae	preserve historical record; do not rewrite as current acceptance
+TC-145	docs/archive/work/partial/WI-521-decomposition-debt-owner.md	c455fbd8305b97d99747ffd841294fbc2a156e92	preserve historical record; do not rewrite as current acceptance
+TC-145	docs/iteration/wi-590-adjudicate-llr-207-llr-208-002-20260904-123008.log	8882ffdea6867ad2db6e6eadb69069f2d81f2b6e	preserve historical record; do not rewrite as current acceptance
+TC-145	docs/iteration/wi521-decomposition-debt-owner-001-20260830-055059.log	9d7dfba34b0a0643dedcb1f165720f8be3f5b7ea	preserve historical record; do not rewrite as current acceptance
+TC-145	docs/log.md	3f80b5220c5b5764c39232a49ae6d713aa9418e9	preserve historical record; do not rewrite as current acceptance
+TC-145	docs/ratify/2026-08-07-wi419.md	f75d90259819ab66e714fa24aca93a5976839179	review use before enabling single-WI implementation
+TC-145	docs/ratify/2026-08-08-mechanized-loop.md	e72231c32f0d63c7960920b434c6282855b726ae	review use before enabling single-WI implementation
+TC-145	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+TC-145	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+TC-154	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+TC-154	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+TC-154	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+TC-154	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+TC-154	docs/archive/plans/2026-08-10-carrier-cutover.patch	b09ed6df61fbf433f386f7c4baca727900dc7adf	preserve historical record; do not rewrite as current acceptance
+TC-154	docs/plans/2026-08-13-sitting-3-spine-verification.md	07b418da2e14e900e294a16a8926f70f856ee2c4	review use before enabling single-WI implementation
+TC-154	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+TC-154	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation
+TC-156	PROJECT_STATE.html	9458ab3f16f24d3bca99d76a2e3a94a2bf1fde61	review use before enabling single-WI implementation
+TC-156	docs/ai-template-redesign-2026-09-05-codex/P0-OBLIGATION-MAP.md	908692f16441f822c54d1a10a76a7b791cae4a0e	review use before enabling single-WI implementation
+TC-156	docs/ai-template-redesign-2026-09-05-codex/P2A-EXECUTION.md	077c24374742f1344dc6b6ddf94e259ab8af28af	review use before enabling single-WI implementation
+TC-156	docs/archive/last_approved/docs/requirements/low-level-requirements.toml	1ec0ab08fcea5f7dd638651e4281322bbd031705	preserve historical record; do not rewrite as current acceptance
+TC-156	docs/archive/last_approved/docs/test/test-cases.toml	ca71cc09e6093c5c5ff299e8d077453c967140d2	preserve historical record; do not rewrite as current acceptance
+TC-156	docs/archive/plans/2026-08-10-carrier-cutover.patch	b09ed6df61fbf433f386f7c4baca727900dc7adf	preserve historical record; do not rewrite as current acceptance
+TC-156	docs/iteration/wi-552-adjudicator-two-exit-close-010-20260901-033450.log	9a246ccf3f9578b4ba1c6d2b7e41edba817bf493	preserve historical record; do not rewrite as current acceptance
+TC-156	docs/plans/2026-08-13-sitting-3-spine-verification.md	07b418da2e14e900e294a16a8926f70f856ee2c4	review use before enabling single-WI implementation
+TC-156	docs/requirements/low-level-requirements.toml	da0762f8d0f124b086c1e3a7b1e67086e1ba31ac	review use before enabling single-WI implementation
+TC-156	docs/test/test-cases.toml	354a27de0df76fa86c195d023d7b835bdd25d4d6	review use before enabling single-WI implementation

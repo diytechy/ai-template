@@ -1,0 +1,125 @@
+# PC — single-WI batch-contract proposal
+
+Authoring baseline: `196bfb9c`. The owner requested PC on 2026-09-07, with
+contract authoring and adjudication before code deletion, the coordinator
+paused, and no control window, push or merge to main. The
+[PC package](IMPLEMENTATION.md#pc--the-independently-agreed-cuts-unconditional-after-the-control-window)
+is the scope of this sitting. This proposal is not an approval or an applied
+registry amendment.
+
+## Exact proposed amendment
+
+[The patch](PC-BATCH-AMENDMENTS.patch) contains the exact candidate cell values
+against the baseline above. Applying it to a disposable copy parses as TOML
+and changes only the listed cells; all Status, parent, method-kind, evidence
+path, phase and perspective-reference fields remain unchanged. No live
+registry or snapshot has been edited. Existing tests have not been changed to
+assert the proposal already works.
+
+| Rows | Proposed decision |
+|---|---|
+| SR-148 | Admission selects one WI per assignment while retaining the current precedence, deterministic ordering and human holds |
+| SR-156 | A lane's executable claim has exactly one WI; multi-item inputs refuse before effects and historical batches remain evidence |
+| SR-144 | Partial-close failure preserves a single-WI claim and removes the report created by that failed close |
+| LLR-058, LLR-123; TC-058 | Preserve frontier and ordering as distinct decisions; order WIs rather than naming a first member of a traincar |
+| LLR-061; TC-061 | One assigned row in the worker prompt and one completion predicate; remove the multi-WI walk while preserving truthful completion and collision-safe evidence |
+| LLR-149; TC-143 | The exclusive barrier admits the first eligible spine WI alone; remaining spine WIs stay queued; human-held rows continue to surface |
+| LLR-150; TC-144 | The worker receives one WI; subsequent spine work waits for the exclusive lane to return; refresh, handback, quarantine and pause behavior stay intact |
+| LLR-151; TC-145 | One-spec claim transaction under the existing dispatch lock; refuse unsupported cardinality before mutation and before resuming a provider |
+| LLR-161; TC-156 | Preserve immutable reports, rollback on refused close and exactly-once disposition under single-WI execution |
+| TC-154 | Preserve adjudication-first stable partition, tested against a spine WI instead of a spine batch |
+
+The parent outcomes remain wanted. SN-027 still requires bounded parallel
+ordinary lanes and serialized integration. SN-025 still requires deterministic
+selection from tracked state. SN-029 still requires actual delegated approval
+and human holds at the declared tiers. None is amended. This is a design change
+under those outcomes, not a retirement of parallel work or approval review.
+
+The existing kind-by-human-held table already surfaces held rows even at a
+`keep_nondependent` close. The old batch-specific LLR/TC prose still described
+the retired single-approve behavior. The candidate follows the current hold
+contract; it does not authorize weakening a hold or changing the policy dial.
+
+## Scope census and retained obligations
+
+The FABLE-REVIEW F-01 candidate list was checked against current cells, not
+treated as an instruction to rewrite them all:
+
+- SR-144 and SR-156 need the cardinality changes above.
+- SR-170 and SR-173 retain their writer, ordering and no-partial-commit
+  obligations unchanged. A batch of regenerated files is not a batch of WIs.
+- LLR-159's stable partition and census remain unchanged; its TC-154 loses
+  only the batch-shaped test setup.
+- LLR-182's outcome vocabulary remains valid for one assigned WI and remains
+  the existing shared reader. Historical sets are not new executable claims.
+- LLR-210 remains Drafted and owned by its existing first-approval work. Queue
+  consolidation can propose one successor over several old scopes without
+  executing those scopes together on one lane. PC does not retire it.
+- LLR-140/152/154/158/207/208 retain the primary-publication, evidence identity,
+  no-product-bar, review and absorption contracts. Removing batch helpers is
+  not permission to remove branch-tree identity, publication replay or review.
+
+[The ID-use census](PC-BATCH-IMPACT.tsv) lists each selected row's tracked
+references at the baseline, their exact blobs and their live/historical
+treatment. Owner-only material is excluded. Historical records remain intact;
+live references require review and, where necessary, updates before enablement.
+This inventory is evidence for impact adjudication, not a blanket disposition
+of every reference. The candidate patch's new references are part of the
+proposal and must be included when a live candidate is bound later.
+
+## Existing ownership and approval preconditions
+
+LLR-061 already belongs to queued WI-601's amendment adjudication. This
+proposal neither closes that WI nor claims its prior amendment accepted.
+Before applying the candidate, reconcile that ownership explicitly: the same
+queued owner must judge the actual final LLR-061 text, or a recorded
+disposition must transfer the scope. Do not create a second adjudication owner.
+WI-604/606 keep their Drafted first-approval scopes unchanged.
+
+[The pre-existing whole-file census](PC-ABSORPTION-PRECONDITIONS.tsv) was derived
+through `primary_approval.absorption_census` against the live baseline. It is
+the population already riding the three registries before this proposal.
+The future candidate must regenerate it after applying the patch. The primary
+publisher requires every absorbed changed cell to have an accepted scoped
+judgment; neither PC authorization nor this packet supplies the older rows'
+judgments. No whole-file snapshot copy is authorized here.
+
+A semantic review may accept the proposed design while publication remains
+held. That is not enough to delete implementation governed by an unaccepted
+live amendment. The sequence stays: exact authoring, normal amendment intake
+with exclusive ownership, primary whole-chain adjudication and its publication
+preconditions, then single-WI implementation and its independent review.
+
+## Implementation and deletion acceptance, after contract acceptance
+
+Each implementation WI must map every retired test to a retained obligation
+or an explicit deletion entry. No blanket deletion of a test module containing
+mixed behavior. In particular:
+
+- Keep the exclusive barrier, adjudication-first partition, human holds,
+  independent ordinary lanes and deterministic priority order.
+- Replace batch admission/claim/worker fixtures with singleton cases and
+  explicit zero-effect rejection of multi-item inputs.
+- Keep per-WI completion, immutable close reports, required review phases,
+  candidate identity, integration bars and crash recovery.
+- Remove train assembly and the multi-WI walk only after those cases exist.
+  Retain `train` as an existing branch/review-scope identifier where renaming
+  it would only create migration work; a branch name is not a batch feature.
+- Before switching runtime, enumerate live claims and finished-unmerged
+  candidates. Any multi-WI claim holds the switch until supervised reconciliation
+  under the prior contract. Preserve historical invocation membership rather
+  than rewriting it as singleton evidence.
+
+The package's other cuts are separate ordinary WIs. The CSV converter is not
+the whole `wi_convert` module: its live spec parser/writer has current intake
+and validation callers. Safe resync and provenance remain wanted. The
+[obligation map](P0-OBLIGATION-MAP.md#decision-ledger-and-unmet-evidence)
+requires a supported-version boundary and fixtures before legacy expiry;
+none is established by this sitting. The supported oldest kit revision is an
+owner input, pending while contract work proceeds. Until then retain the CSV
+conversion, retired-vocabulary enforcement and old resync instructions.
+
+P0b's complexity re-key and uncalled selector decision are still in PC. They
+may proceed once the contract prerequisite is settled, with a deletion record
+and applicable tests. No replacement-coordinator, retention or rendering
+expansion is included.
