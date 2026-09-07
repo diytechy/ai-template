@@ -264,6 +264,19 @@ Resolution before another launch:
    and the station bar under the corrected ownership. Do not weaken the
    owner-tier ordinary-round coverage obligation to fit current code.
 
+6. Scope the migration the trunk-turn decision implies, before step 3 removes
+   worktree dispatch. Six rows are shaped for it today: `WI-605` in its active
+   lane, which step 5 already covers, and `WI-601`, `WI-602`, `WI-603`,
+   `WI-604` and `WI-606` queued with `safety_class = "adjudication"`. Removing
+   adjudication worktree dispatch changes how all six run, and `WI-606`
+   depends on `WI-605`. Decide whether they re-shape in place or the dispatch
+   change carries a compatibility arm, and settle the three mechanical
+   consequences the [boundary table](WORK-FLOWS.md#what-the-runtime-does-today)
+   now records: the integration-slot interaction and its throughput cost, the
+   branch-keyed adjudication close, and the bar on a trunk-side approval
+   commit. None of these is a new requirement; each is an existing mechanism
+   whose key or holder the move invalidates.
+
 Separately, reconcile the queued retention restoration with the
 [continuity and concurrent-use findings](WORK-FLOWS.md#retained-adjudicator-context)
 before admitting that work. Retention is still wanted but is not implemented
