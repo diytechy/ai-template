@@ -1,0 +1,65 @@
+{
+  "base": "35020525450fb12b9b404823cc5dffa74256af9b",
+  "checks": [
+    {
+      "name": "regen",
+      "argv": [
+        "project-trajectory/scripts/trunk_step.py",
+        "--root",
+        ".",
+        "--regen"
+      ],
+      "exit": 0,
+      "wall_seconds": 10.051598709018435
+    },
+    {
+      "name": "smoke",
+      "argv": [
+        "-m",
+        "pytest",
+        "-q",
+        "-n",
+        "auto",
+        "-m",
+        "smoke"
+      ],
+      "exit": 0,
+      "wall_seconds": 52.58259858295787
+    },
+    {
+      "name": "budget",
+      "argv": [
+        "scripts/check_smoke_budget.py",
+        "--mode",
+        "enforce",
+        "--elapsed",
+        "52.58259858295787"
+      ],
+      "exit": 0,
+      "wall_seconds": 0.03451724996557459
+    },
+    {
+      "name": "docs",
+      "argv": [
+        "project-trajectory/scripts/check_docs.py",
+        "--root",
+        ".",
+        "--stale"
+      ],
+      "exit": 0,
+      "wall_seconds": 1.771539874956943
+    },
+    {
+      "name": "trajectory",
+      "argv": [
+        "project-trajectory/scripts/check_trajectory.py",
+        "--root",
+        ".",
+        "--strict"
+      ],
+      "exit": 0,
+      "wall_seconds": 4.9837094160029665
+    }
+  ],
+  "attempted_turn_sha256": "9bacda0a8e1cf20eb5972068f7ecaf12438cd066bd78a1bfb5b098435e5c8194"
+}
