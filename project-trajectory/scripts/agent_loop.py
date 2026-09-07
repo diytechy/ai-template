@@ -4046,7 +4046,7 @@ def run_iteration(ctx, i):
     )
     stamp_session_meta(meta, plan, timed_out)
     meta.update(invocation)
-    meta.update(primary_adjudication.session_binding(root, worker, plan, after))
+    meta.update(primary_adjudication.session_binding(root, worker, plan))
     log_path = write_session_log(ctx.iter_dir, meta, output)
     # A worker never regenerates the iteration index: it is a GENERATED
     # root artifact the integrator rebuilds on the composed tree (spec

@@ -63738,3 +63738,21 @@ trajectory clean. Docs: 1504 documents, 2416 links, zero broken, one existing
 orphan warning. Original selection/proposal blob identities verified, and
 `pending`/`writer_refusal` both return `None`. No new runtime behavior to test.
 <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke; .venv/bin/python scripts/check_smoke_budget.py --mode enforce; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=1741cd88+resume-item-1; out/run-logs/post-stop-repair/1-smoke.txt; 1-trajectory.txt; 1-docs.txt -->
+
+## 2026-09-07 — Bind primary invocation candidates to full commits (resume item 2)
+
+[Source review](reviews/2026-09-07-post-stop-fixes.md#item-2--exact-candidate-identity):
+removed the candidate argument from `session_binding`; the binding owner reads
+`head_sha_full` directly. The real-Git regression now uses production metadata
+and resolves its actual judgment through the verifier. It failed before the fix
+on the short/full identity mismatch and passes after. Existing historical logs
+are untouched. No scope deviations or capped-file changes.
+
+Deferred open items: none — remaining resume items precede PC.
+
+Verification: focused primary session/adjudication/approval tests 43 passed in
+14.79s; smoke 1694 passed, 4 skipped in 51.88s, measured wall 52.1s enforced
+against 90s. Ruff lint/format and strict trajectory pass; docs zero broken
+with one existing orphan warning. This is a narrow binding correction, not a
+broad script change or phase close; the required bar is per commit.
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_primary_session.py tests/test_primary_adjudication.py tests/test_primary_approval.py; .venv/bin/python -m pytest -q -n auto -m smoke; .venv/bin/python scripts/check_smoke_budget.py --mode enforce --elapsed <measured-wall>; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=2c984716+resume-item-2; out/run-logs/post-stop-repair/2-focused.txt; 2-bar.txt; 2-docs.txt -->

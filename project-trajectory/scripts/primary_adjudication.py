@@ -132,12 +132,12 @@ def run(root, args, session, *, wi=None, turn=None, tier="all"):
         ac.release_lock(Path(root) / "out" / "integrate.lock")
 
 
-def session_binding(root, worker, plan, candidate):
+def session_binding(root, worker, plan):
     """Coordinator-authored join from this invocation to its committed ruling."""
     if not worker.get("primary_turn") or plan["phase"] != "ADJUDICATE":
         return {}
     return {
         "primary-turn": worker["primary_turn"]["turn"],
         "judgment": Path(plan["verdict_path"]).relative_to(root).as_posix(),
-        "candidate": candidate,
+        "candidate": ac.head_sha_full(root),
     }

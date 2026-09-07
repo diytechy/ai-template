@@ -10,6 +10,7 @@ if str(SCRIPTS) not in sys.path:
 
 import agent_loop
 import primary_adjudication as primary
+import primary_approval
 from kitlib import verdict
 
 
@@ -63,7 +64,7 @@ def test_wi_trailer_without_primary_approval_stays_in_rework(tmp_path):
     assert refusal and "Approval" in refusal
 
 
-def test_valid_primary_return_can_complete_the_judgment_turn(tmp_path):
+def test_session_binding_resolves_real_judgment_and_completes_return(tmp_path):
     root = _repo(tmp_path)
     turn = primary.begin(root, "WI-1")
     proposal = verdict.tree_identity(root, turn["base"])
@@ -83,18 +84,27 @@ def test_valid_primary_return_can_complete_the_judgment_turn(tmp_path):
     _git(root, "add", "-A")
     _git(root, "commit", "-qm", "judgment\n\nWI: WI-1")
     judged = _git(root, "rev-parse", "HEAD")
+    binding = primary.session_binding(
+        root,
+        _worker(turn),
+        {"phase": "ADJUDICATE", "verdict_path": judgment},
+    )
+    assert binding["candidate"] == judged
+    assert len(binding["candidate"]) == 40
     log = root / "docs/iteration/primary.log"
     log.parent.mkdir(parents=True)
     log.write_text(
         "# phase: ADJUDICATE\n# wi: WI-1\n# base: {}\n"
         "# provider: test\n# roster-row: test\n# model: test\n"
-        "# session-id: s\n# invocation-id: i\n# primary-turn: {}\n"
-        "# judgment: docs/reviews/judgment.md\n# candidate: {}\n".format(
-            turn["base"][:12], turn["turn"], judged
-        ),
+        "# session-id: s\n# invocation-id: i\n".format(turn["base"][:12])
+        + "".join("# {}: {}\n".format(k, v) for k, v in binding.items()),
         encoding="utf-8",
     )
     _git(root, "add", "-A")
     _git(root, "commit", "-qm", "primary telemetry")
+    records = primary_approval._judgment_records(root, "HEAD", turn, "")
+    assert len(records) == 1
+    assert records[0][0]["candidate"] == judged
+    assert records[0][1] == judgment.read_text(encoding="utf-8")
     end = agent_loop.worker_endstate(root, _worker(turn), False, False, 0, rounds=())
     assert end is not None and end[0] == agent_loop.EXIT_DONE
