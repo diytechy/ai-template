@@ -125,6 +125,7 @@ prompts/README.md — see the `prompts/` line above; the authoring rules ship to
 prompts/worker.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/worker.template.md).
 prompts/reviewer.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/reviewer.template.md).
 prompts/critique.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/critique.template.md).
+prompts/primary-adjudication.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/primary-adjudication.template.md).
 prompts/adjudicate-amendment.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-amendment.template.md).
 prompts/adjudicate-first-approval.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-first-approval.template.md).
 prompts/adjudicate-disposition.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-disposition.template.md).

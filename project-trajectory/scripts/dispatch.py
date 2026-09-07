@@ -88,6 +88,7 @@ import handback
 import intake
 import integrate
 import lane
+import primary_adjudication
 import schedule
 import score_reviews
 from kitlib import verdict as kverdict
@@ -717,27 +718,6 @@ def _launch(root, table, branch, wi_ids, exclusive, args, worker):
     table.append(ln)
 
 
-def _close_done_adjudication(root, branch):
-    """THE ADJUDICATION-ROW CLOSE (OI-70/OI-73, Done-when 1) on a DONE worker.
-
-    A DONE worker whose specs are still in active/ is normally the stall
-    candidate — but an adjudication row that recorded its verdict owes a
-    MECHANICAL close, because the machinery (not the agent's own spec_move) is
-    what moves its drafts into queued/ and archives the row terminal (the C6
-    loop OI-70 measured, where the dispatcher resumed a finished adjudication
-    row forever). `close_adjudication` no-ops for a non-adjudication lane (that
-    stall candidate is unchanged) and for one already self-closed, and refuses a
-    disposition that drafted no successor (the refusal invariant). Returns the
-    fatal exit code on a refusal, else None."""
-    if branch in integrate.finished_branches(root):
-        return None
-    _ids, refusal = handback.close_adjudication(root, branch)
-    if refusal:
-        _say("cannot close adjudication {}: {}".format(branch, refusal), err=True)
-        return ac.EXIT_PREFLIGHT
-    return None
-
-
 def _advance(root, ln, tier, restarting=False):
     """Advance one lane's state machine by one poll: None while busy, else a
     `(verb, code)` event —
@@ -759,10 +739,6 @@ def _advance(root, ln, tier, restarting=False):
     if ln.phase == "worker":
         if code != ac.EXIT_DONE:
             rc = _lane_close(root, ln.branch, code)
-            if rc is not None:
-                return ("fatal", rc)
-        else:
-            rc = _close_done_adjudication(root, ln.branch)
             if rc is not None:
                 return ("fatal", rc)
         if ln.branch in integrate.finished_branches(root):
@@ -1022,6 +998,14 @@ def _admit_parked(root, table, args, worker, parked, free, config_refusal, state
     before any barrier can open. `(admitted, exit_code)`."""
     admitted = False
     for branch in parked:
+        if integrate._adjudication_lane(root, branch):
+            _say(
+                "{} is an obsolete adjudication claim; migrate its preserved scope to primary before resuming".format(
+                    branch
+                ),
+                err=True,
+            )
+            return admitted, ac.EXIT_PREFLIGHT
         if free <= 0:
             break
         excl = _branch_exclusive(root, branch)
@@ -1114,6 +1098,18 @@ def _admit(
     archives", so a parked lane is still resumed and a finished branch is still
     drained under one — the run ends `EXIT_PAUSED` only once nothing is left in
     flight."""
+    try:
+        turn = primary_adjudication.pending(root)
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        _say(str(exc), err=True)
+        return False, ac.EXIT_PREFLIGHT
+    if turn:
+        if table:
+            _say("a pending primary turn conflicts with live work lanes", err=True)
+            return False, ac.EXIT_PREFLIGHT
+        return _admit_primary(
+            root, args, turn["wi"], state, config_refusal, turn=turn, tier=tier
+        )
     exclusive_live = any(ln.exclusive for ln in table)
     free = 0 if exclusive_live else max(0, lanes_total - len(table))
     if free == 0:
@@ -1232,12 +1228,38 @@ def _admit_frontier(
         if code != 0:
             return False, code
         state["merged"] += residue
+        if kinds.get(payload[0]) == "adjudication":
+            return _admit_primary(
+                root, args, payload[0], state, config_refusal, tier=tier
+            )
         return _claim_lanes(
             root, table, args, worker, [payload], True, config_refusal, state
         )
     return _claim_lanes(
         root, table, args, worker, payload, False, config_refusal, state
     )
+
+
+def _admit_primary(root, args, wi, state, config_refusal, *, turn=None, tier="all"):
+    """The exclusive admission's branchless arm, using the same session engine."""
+    action, code = _pre_admit(args, [], state, config_refusal)
+    if action != "ok":
+        return False, code
+    session = state.get("primary_session")
+    if session is None:
+        _say("primary adjudication has no in-process session engine", err=True)
+        return False, ac.EXIT_PREFLIGHT
+    state["cycles"] += 1
+    _say(
+        "cycle {} - primary adjudication {}{}".format(
+            state["cycles"], wi, " (resume)" if turn else ""
+        )
+    )
+    code = primary_adjudication.run(root, args, session, wi=wi, turn=turn, tier=tier)
+    if code == ac.EXIT_DONE:
+        state["merged"] += 1
+        return True, None
+    return False, code
 
 
 def _paused_exit(root, tier, paused, state):
@@ -1365,7 +1387,7 @@ def _station_exit(root, tier, verb, payload, state):
 _POLL_SECONDS = 0.5
 
 
-def run(root, args, worker=None, tier="all"):
+def run(root, args, worker=None, tier="all", primary_session=None):
     """The dispatch loop (docs/concurrency-v2.md §A4). `worker` is the one
     injection seam (tests): a callable `(root, branch, wi_ids, args) -> exit
     code` standing in for the worker session launch, run synchronously at
@@ -1401,7 +1423,13 @@ def run(root, args, worker=None, tier="all"):
     # unwired scaffold (the spec's empty-frontier contract; codex
     # cross-review finding, round 1).
     config_refusal = _session_config_refusal(root, args) if worker is None else None
-    state = {"merged": 0, "stall": 0, "cycles": 0, "fatal": None}
+    state = {
+        "merged": 0,
+        "stall": 0,
+        "cycles": 0,
+        "fatal": None,
+        "primary_session": primary_session,
+    }
     table = []
     while True:
         # The pause is re-read at the top of every tick so one appearing

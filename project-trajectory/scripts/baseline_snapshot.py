@@ -147,11 +147,13 @@ try:
     import check_trajectory
     import spine_rules
     import spine_carrier
+    from kitlib import git as _kitgit
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import check_trajectory
     import spine_rules
     import spine_carrier
+    from kitlib import git as _kitgit
 
 # The snapshot's root, repo-relative. One generation only, never migrated in
 # place — git holds the history, and a snapshot edited forward would be a second
@@ -584,7 +586,7 @@ def refresh_ledger(root, snapshot=None):
     return ledger
 
 
-def refresh_refusal(root, approves=None, snapshot=None, *, seed=False):
+def refresh_refusal(root, approves=None, snapshot=None, *, seed=False, exact_rels=None):
     """The refusal text for an unauthorised refresh, or `""` when the copy is
     authorised — THE AUTHORITY CHECK THE WRITER SHIPPED WITHOUT (adversarial
     round, 2026-08-20: ROUND-OPUS CRITICAL-2 / ROUND-SOL CRITICAL-1).
@@ -667,7 +669,11 @@ def refresh_refusal(root, approves=None, snapshot=None, *, seed=False):
     # The act's write scope, the same set the writer uses. A `seed` over a
     # standing record really does rewrite all seven, so its scope is total.
     scope = (
-        set(SNAPSHOTTED) if seed else _authorised_registries(root, approves, snapshot)
+        set(SNAPSHOTTED)
+        if seed
+        else set(exact_rels)
+        if exact_rels is not None
+        else _authorised_registries(root, approves, snapshot)
     )
     # Scoped when the act writes something; whole-ledger when it writes nothing,
     # so a no-op refresh over drifted approved text is refused rather than silent.
@@ -725,6 +731,25 @@ def _refusal_text(blocked, scope):
     return "\n".join(lines)
 
 
+_README_GUIDANCE = """# `last_approved` — approval record
+
+**This directory is generated and read-only in every linked worktree.** Record
+judgment in the work item; only the exclusive primary-checkout approval turn
+may mechanically copy accepted registry content here.
+
+**This file is prose. Nothing parses it.** Every machine fact about the
+snapshot comes from the copied registry files beside it, or from `git log` over
+this directory.
+"""
+
+
+def _write_readme_guidance(base):
+    """Create the non-ledger directory guidance if the seed has none yet."""
+    path = base / README
+    if not path.is_file():
+        path.write_text(_README_GUIDANCE, encoding="utf-8", newline="\n")
+
+
 def _record_approval(base, approves, copied_rels):
     """Append this act's SCOPE to the snapshot's prose stamp, creating the stamp
     when the repo has none: the registries it copied and, for EACH, whether a
@@ -753,10 +778,7 @@ def _record_approval(base, approves, copied_rels):
     )
     if not path.is_file():
         path.write_text(
-            "# `last_approved` — the approval stamp\n\n"
-            "**This file is prose. Nothing parses it.** Every machine fact about "
-            "the snapshot comes from the copied registry files beside it, or "
-            "from `git log` over this directory.\n\n"
+            _README_GUIDANCE + "\n"
             "## Refreshes recorded under an explicit approval\n\n"
             "Each line below records a refresh that copied a registry under "
             "authority — a `--approves` ref, or a `Status` move in the copied "
@@ -821,7 +843,7 @@ def _authorised_registries(root, approves, snapshot):
     return out
 
 
-def _refresh_targets(root, approves, seed, base):
+def _refresh_targets(root, approves, seed, base, exact_rels=None):
     """`(targets, first_signing)`: the registries a REFRESH of a standing
     snapshot copies, and whether this refresh is a first signing — or a raised
     refusal when the copy is unauthorised.
@@ -841,9 +863,20 @@ def _refresh_targets(root, approves, seed, base):
         snapshot = load_all(root)
     except SystemExit:
         snapshot = None  # unreadable record: copy_live is the repair path
-    refusal = refresh_refusal(root, approves, snapshot, seed=seed)
+    refusal = refresh_refusal(
+        root, approves, snapshot, seed=seed, exact_rels=exact_rels
+    )
     if refusal:
         raise SystemExit(refusal)
+    if exact_rels is not None:
+        if snapshot is None or not any(
+            spine_carrier.resolve(base / rel) for rel in SNAPSHOTTED
+        ):
+            raise SystemExit(
+                "baseline_snapshot: REFUSED — an exact-target refresh requires "
+                "a readable standing approval record"
+            )
+        return set(exact_rels), False
     first_signing = (
         seed
         or snapshot is None
@@ -854,7 +887,61 @@ def _refresh_targets(root, approves, seed, base):
     return _authorised_registries(root, approves, snapshot), False
 
 
-def copy_live(root, *, seed=False, approves=None):
+def _copy_registry(root, base, rel):
+    """Mirror one live carrier, removing the displaced carrier of its stem."""
+    suffixes = (
+        spine_carrier.NEED_CARRIERS if rel == NEEDS_REL else spine_carrier.CARRIERS
+    )
+    live = spine_carrier.resolve(Path(root) / rel, suffixes)
+    for cand in spine_carrier.carriers(rel, suffixes):
+        stale = base / cand
+        if stale.is_file() and (live is None or stale.name != live.name):
+            stale.unlink()
+    if live is None:
+        return None
+    dest = base / Path(rel).parent / live.name
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(live, dest)
+    return dest.relative_to(Path(root)).as_posix()
+
+
+def _exact_refresh_rels(seed, approves, exact_rels):
+    """Validate the primary publisher's non-widening registry set."""
+    if exact_rels is None:
+        return None
+    if seed:
+        raise ValueError("exact_rels is only valid for a standing refresh")
+    try:
+        exact_rels = {resolve_registry(rel) for rel in exact_rels}
+        named = {resolve_registry(rel) for rel in (approves or {})}
+    except TypeError as exc:
+        raise ValueError("exact_rels must be an iterable of registry names") from exc
+    if exact_rels != named:
+        raise ValueError(
+            "exact_rels must name exactly the registries named by approves"
+        )
+    return exact_rels
+
+
+def _copy_targets(root, seed, approves, exact_rels):
+    """Create once, or resolve the standing refresh's exact copy population."""
+    base = snapshot_root(root)
+    if base.is_dir():
+        targets, first = _refresh_targets(root, approves, seed, base, exact_rels)
+        return base, targets, first
+    if not seed:
+        raise SystemExit(
+            "baseline_snapshot: REFUSED — {} does not exist, and creating it "
+            "would bless whatever text happens to be in the tree right now. "
+            "The first snapshot rides the owner's signing commit: run "
+            "`intake.py snapshot --seed` there, after every pending row has "
+            "been ruled.".format(base)
+        )
+    base.mkdir(parents=True, exist_ok=True)
+    return base, set(SNAPSHOTTED), True
+
+
+def copy_live(root, *, seed=False, approves=None, exact_rels=None):
     """Mirror the registries an act AUTHORISES into `docs/archive/last_approved/`;
     the sorted list of repo-relative paths written.
 
@@ -901,50 +988,23 @@ def copy_live(root, *, seed=False, approves=None):
     REGENERATED the snapshot would defeat the whole mechanism: the snapshot is
     deliberately behind live whenever an amendment is pending, and that lag IS
     the signal."""
-    base = snapshot_root(root)
-    if not base.is_dir():
-        if not seed:
-            raise SystemExit(
-                "baseline_snapshot: REFUSED — {} does not exist, and creating it "
-                "would bless whatever text happens to be in the tree right now. "
-                "The first snapshot rides the owner's signing commit: run "
-                "`intake.py snapshot --seed` there, after every pending row has "
-                "been ruled.".format(base)
-            )
-        base.mkdir(parents=True, exist_ok=True)
-        to_copy = set(SNAPSHOTTED)  # the seed blesses the whole tree, once
-        first_signing = True
-    else:
-        # The authority gate and the scope decision, keyed on the directory
-        # EXISTING rather than on `seed`: creating is seeding and rewriting is
-        # refreshing, whatever flag the caller passed. `--seed` against a
-        # standing record is a mistake, and a mistake is exactly the thing that
-        # must not sail past the check. `_refresh_targets` raises on refusal.
-        to_copy, first_signing = _refresh_targets(root, approves, seed, base)
+    exact_rels = _exact_refresh_rels(seed, approves, exact_rels)
+    if _kitgit.is_linked_worktree(root):
+        raise SystemExit(
+            "baseline_snapshot: REFUSED — a linked worktree may not write {}. "
+            "Record the judgment there; the exclusive primary-checkout approval "
+            "turn copies the accepted snapshot.".format(SNAPSHOT_DIR)
+        )
+    base, to_copy, first_signing = _copy_targets(root, seed, approves, exact_rels)
     written = []
     copied_rels = []
     for rel in SNAPSHOTTED:
         if rel not in to_copy:
             continue
-        suffixes = (
-            spine_carrier.NEED_CARRIERS if rel == NEEDS_REL else spine_carrier.CARRIERS
-        )
-        live = spine_carrier.resolve(Path(root) / rel, suffixes)
-        dest_dir = base / Path(rel).parent
-        # Every carrier path for this stem, so the STALE one is removed whether
-        # or not a live file is being written over it. Done before the copy, so
-        # a carrier change lands as delete-then-write rather than leaving both.
-        for cand in spine_carrier.carriers(rel, suffixes):
-            stale = base / cand
-            if stale.is_file() and (live is None or stale.name != live.name):
-                stale.unlink()
-        if live is None:
-            continue
-        dest_dir.mkdir(parents=True, exist_ok=True)
-        dest = dest_dir / live.name
-        shutil.copyfile(live, dest)
-        written.append(dest.relative_to(Path(root)).as_posix())
-        copied_rels.append(rel)
+        dest = _copy_registry(root, base, rel)
+        if dest is not None:
+            written.append(dest)
+            copied_rels.append(rel)
     written = sorted(written)
     # Every non-seed refresh that copied a registry is stamped, so the act's
     # scope is auditable whether a `--approves` ref or a `Status` move authorised
@@ -954,6 +1014,8 @@ def copy_live(root, *, seed=False, approves=None):
     # refresh that copied nothing (a traced-only re-point) write no line.
     if not first_signing and copied_rels:
         _record_approval(base, approves or {}, copied_rels)
+    elif first_signing:
+        _write_readme_guidance(base)
     return written
 
 

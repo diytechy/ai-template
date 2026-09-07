@@ -20,6 +20,7 @@ So every test here pins the boundary rather than a finding:
 """
 
 import ast
+import subprocess
 
 from conftest import SCRIPTS, load_script
 
@@ -293,3 +294,78 @@ def test_an_off_spine_status_flip_is_not_the_act_this_rung_refuses(tmp_path):
     assert (
         acceptance_record.lane_approval_refusal(tmp_path, "HEAD~1", "HEAD") is None
     ), "an off-spine flip is outside the ruled scope of this rung"
+
+
+def _approval_delta_repo(root, *, flip=False, snapshot=False):
+    """A claimed adjudication branch's two-tree approval-record delta."""
+
+    def git(*args):
+        subprocess.run(
+            ["git", "-C", str(root)] + list(args),
+            check=True,
+            capture_output=True,
+            stdin=subprocess.DEVNULL,
+        )
+
+    git("init")
+    git("config", "user.email", "loop@example.com")
+    git("config", "user.name", "Loop Test")
+    registry = root / "docs" / "requirements" / "system-requirements.toml"
+    registry.parent.mkdir(parents=True)
+    registry.write_text(
+        '[requirement.SR-001]\ntitle = "row"\nrequirement = "old"\n'
+        'status = "Drafted"\n',
+        encoding="utf-8",
+    )
+    git("add", "-A")
+    git("commit", "-q", "-m", "seed")
+    if flip:
+        registry.write_text(
+            registry.read_text(encoding="utf-8").replace(
+                'status = "Drafted"', 'status = "Approved"'
+            ),
+            encoding="utf-8",
+        )
+    if snapshot:
+        mirror = root / acceptance_record.SNAPSHOT_DIR / "docs" / "requirements"
+        mirror.mkdir(parents=True)
+        (mirror / "system-requirements.toml").write_text(
+            registry.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+    git("add", "-A")
+    git("commit", "-q", "-m", "worker delta")
+    return root
+
+
+def test_worktree_boundary_refuses_a_flip_and_snapshot_without_an_actor_argument(
+    tmp_path,
+):
+    root = _approval_delta_repo(tmp_path, flip=True, snapshot=True)
+
+    refusal = acceptance_record.merge_approval_refusal(root, "HEAD~1", "HEAD")
+
+    assert refusal is not None
+    assert "APPROVAL ACT" in refusal
+    assert "SR-001" in refusal
+    assert "wrote docs/archive/last_approved" in refusal
+
+
+def test_worktree_boundary_refuses_the_no_flip_snapshot_bypass(tmp_path):
+    root = _approval_delta_repo(tmp_path, snapshot=True)
+
+    refusal = acceptance_record.merge_approval_refusal(root, "HEAD~1", "HEAD")
+
+    assert refusal is not None
+    assert "APPROVAL ACT" in refusal
+    assert "wrote docs/archive/last_approved" in refusal
+
+
+def test_first_approval_scope_remains_a_typed_reader_for_trunk_publication():
+    metas = [
+        ("WI-401.md", {"brief": "first-approval", "adjudicates": ["SR-001"]}),
+        ("WI-402.md", {"brief": "first-approval", "adjudicates": ["LLR-001"]}),
+    ]
+
+    assert acceptance_record.first_approval_scope(metas) == frozenset(
+        {"SR-001", "LLR-001"}
+    )

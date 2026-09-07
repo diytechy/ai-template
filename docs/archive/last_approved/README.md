@@ -1,5 +1,11 @@
 # `last_approved` — the approval stamp
 
+**Read-only approval record.** WI worktrees must not edit, copy, restore or add
+exceptions to this directory. The primary publisher writes byte-identical
+registry copies only after accepted judgment and required review. Pending live
+wording deliberately differs from this record; that difference is not a
+freshness defect. The entries below retain their historical wording.
+
 **This file is prose. Nothing parses it.** Every machine fact about the snapshot comes from the copied registry files beside it, or from `git log` over this directory.
 
 ## Refreshes recorded under an explicit approval

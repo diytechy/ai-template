@@ -1754,6 +1754,11 @@ MAPPING = [
     # prose wires its own file through --prompt-map instead of editing these.
     ("prompts/README.md", "prompts/README.md"),
     ("prompts/worker.template.md", "prompts/worker.template.md", "SR-146"),
+    (
+        "prompts/primary-adjudication.template.md",
+        "prompts/primary-adjudication.template.md",
+        "SR-146",
+    ),
     ("prompts/reviewer.template.md", "prompts/reviewer.template.md", "SR-146"),
     ("prompts/critique.template.md", "prompts/critique.template.md", "SR-146"),
     (
@@ -1997,6 +2002,7 @@ MAPPING = [
     # the must-be-whole rule applies: a scaffold missing it ImportErrors on the
     # first merge attempt, not on some rare path.
     ("scripts/kitlib/verdict.py", "scripts/kitlib/verdict.py"),
+    ("scripts/kitlib/adjudication.py", "scripts/kitlib/adjudication.py"),
     # WI-448 slice 3 added `spine`: the spine ROW vocabulary — the Status
     # predicates, the LLR-exemption set, the phase parse, the SN id scrapes and
     # the registry CSV loader — which `trace.py` and `spine_rules.py` each
@@ -2117,6 +2123,12 @@ MAPPING = [
     # ADJUDICATE session composes from the worker assignment, which is
     # the WI-424 defect this ships to close.
     ("scripts/adjudicate_brief.py", "scripts/adjudicate_brief.py"),
+    ("scripts/primary_adjudication.py", "scripts/primary_adjudication.py"),
+    ("scripts/primary_turn.py", "scripts/primary_turn.py"),
+    ("scripts/primary_close.py", "scripts/primary_close.py"),
+    ("scripts/publication_verify.py", "scripts/publication_verify.py"),
+    ("scripts/primary_approval.py", "scripts/primary_approval.py"),
+    ("scripts/primary_publication.py", "scripts/primary_publication.py"),
     ("scripts/plan_coverage_step.py", "scripts/plan_coverage_step.py"),
     ("scripts/plan_artifacts.py", "scripts/plan_artifacts.py"),
     # The work-item registry's CSV <-> spec-folder converter (§2 of

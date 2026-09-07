@@ -110,6 +110,10 @@ import baseline_snapshot
 import consolidate as cons
 import prompts
 import spine_carrier
+import primary_approval
+from kitlib import verdict as kverdict
+from kitlib.adjudication import VERDICT_GRAMMAR as VERDICT_GRAMMAR
+from kitlib.adjudication import verdict_text_refusal
 
 # The declared `Brief` cell -> the prompt key its session is composed from.
 BRIEF_PROMPTS = {
@@ -151,34 +155,6 @@ EVIDENCE_CLIP = 80
 # `VERDICT: APPROVE|CHANGES-REQUESTED`, which is the review vocabulary. Three
 # of these four say `OUTCOME:` and none says `APPROVE`, so reusing it would
 # have parsed every adjudication verdict as unreadable.
-VERDICT_GRAMMAR = {
-    "amendment": ("VERDICT", ("MEANING", "CLARITY"), ("rows",)),
-    "first-approval": ("OUTCOME", ("APPROVE", "RETURN"), ("rows",)),
-    "disposition": ("OUTCOME", ("COMPLETE", "PARTIAL", "CANCELLED"), ("successors",)),
-    # The CONSOLIDATION grammar (restructure plan §1.2). Its first three
-    # alternatives are the retired `conflict` grammar verbatim; the fourth is
-    # the exit that brief lacked, and `absorbs` is the counter that makes it
-    # readable — a verdict saying CONSOLIDATE without naming what it absorbed
-    # is a judgement the close cannot enact. BOTH counters are required on
-    # EVERY alternative, `-` being the honest "none": a counter that appears
-    # only on the alternative that uses it lets a session omit it and still
-    # parse, which is the silent half-verdict `verdict_refusal` exists to
-    # refuse.
-    #
-    # BOTH ARE `;`-JOINED LISTS AND BOTH ARE RECONCILED. `absorbs=` restates the
-    # `## Dispositions` draft's `supersedes`, `needs=` the WAITERS of the
-    # `## Consolidation` block's `edges` - and `consolidate.reconcile_refusal`
-    # refuses the close on any divergence. `needs=` was spelled singular here
-    # and in the template while `edges` was already a list, so a conformant
-    # two-edge verdict was refused with no way to write one that passed; the
-    # grammar, the brief and the check are ONE fact now (review round 3).
-    "consolidate": (
-        "OUTCOME",
-        ("QUEUE", "QUEUE-WITH-EDGE", "RETURN-TO-DRAFT", "CONSOLIDATE"),
-        ("needs", "absorbs"),
-    ),
-    "red-tc": ("OUTCOME", ("DRAFTED", "NEEDS-JUDGEMENT"), ("cases", "drafts")),
-}
 
 
 def declared_brief(row):
@@ -217,26 +193,10 @@ def verdict_refusal(brief, verdict_path):
     line, is the label one of the declared alternatives, are the counters
     present. Every arm names what is wrong, because "the verdict is invalid" is
     not something a human can act on at 3am."""
-    keyword, labels, counters = VERDICT_GRAMMAR.get(brief, (None, (), ()))
-    if keyword is None:
-        return "unknown brief {!r} — no verdict grammar".format(brief)
     text = _read(verdict_path) if verdict_path else None
     if text is None:
         return "no verdict was written to {}".format(verdict_path or "(no path)")
-    matched = re.search(r"^\s*{}:\s*(\S+)(.*)$".format(keyword), text, re.M)
-    if matched is None:
-        return "{} carries no `{}:` machine line".format(verdict_path, keyword)
-    label, rest = matched.group(1).strip(), matched.group(2)
-    if label not in labels:
-        return "{} says `{}: {}` — not one of {}".format(
-            verdict_path, keyword, label, "|".join(labels)
-        )
-    missing = [c for c in counters if not re.search(r"\b{}\s*=\s*\S+".format(c), rest)]
-    if missing:
-        return "{} says `{}: {}` but omits {}".format(
-            verdict_path, keyword, label, ", ".join(missing)
-        )
-    return None
+    return verdict_text_refusal(brief, text, verdict_path)
 
 
 def _clip(text, limit):
@@ -475,27 +435,34 @@ def amendment_values(root, row):
     baseline = (
         "{}{} — the approved text as a human last blessed it. This is the text "
         "BEFORE the change below; it is not the change under judgement, and it "
-        "could only have been written by copying a live registry in an approval "
-        "commit.".format(
+        "could only have been published by the primary approval act in a "
+        "reviewed commit.".format(
             baseline_snapshot.SNAPSHOT_DIR,
             ", copied {} (commit {})".format(stamp_date, stamp_rev)
             if stamp_rev
             else " (not yet committed, so no copy stamp)",
         )
     )
-    lines, tiers = [], set()
+    lines, tiers, registries = [], set(), {}
     for entry in model:
         for chain_row in entry["rows"]:
             approved = chain_row.get("approved") or frozenset()
             cells = [c for c in chain_row["cells"] if c[0] in approved]
             if not cells:
                 continue
-            tiers.add(chain_row["kind"])
-            lines.append(
-                "- {} {} (chain of {})".format(
-                    chain_row["kind"], chain_row["id"], entry["id"]
+            kind, rid = chain_row["kind"], chain_row["id"]
+            tiers.add(kind)
+            try:
+                registry = _REGISTRY_OF[kind]
+            except KeyError:
+                return None, (
+                    "amended row {} {} has no known publication registry; refusing "
+                    "to compose a scope the primary publication cannot verify".format(
+                        kind, rid
+                    )
                 )
-            )
+            registries.setdefault(registry, {})[rid] = True
+            lines.append("- {} {} (chain of {})".format(kind, rid, entry["id"]))
             for name, before, after in cells:
                 lines.append("  - {}".format(name))
                 lines.append("    - before: {}".format(before or "(empty)"))
@@ -510,6 +477,7 @@ def amendment_values(root, row):
         "baseline": baseline,
         "rows": "\n".join(lines),
         "aftermath": _aftermath(root, tiers),
+        **_publication_scope(registries, (row.get("WI-ID") or "").strip()),
     }, None
 
 
@@ -526,6 +494,21 @@ _REGISTRY_OF = {
     "LLR": "docs/requirements/low-level-requirements.toml",
     "TC": TC_REGISTRY,
 }
+
+
+def _publication_scope(registries, wi_id):
+    """Render the exact registry and row scope for later primary publication."""
+    return {
+        "registries": baseline_snapshot.format_approves(
+            {rel: wi_id or "this adjudication" for rel in registries}
+        ),
+        "approves_rows": "\n".join(
+            "    - `{}={}` covers {}".format(
+                rel, wi_id or "this adjudication", ", ".join(rids)
+            )
+            for rel, rids in registries.items()
+        ),
+    }
 
 
 def _loop_approves(root, kind):
@@ -565,16 +548,17 @@ def _aftermath(root, tiers):
     if mine:
         parts.append(
             "THE DIAL FOR THIS ROW: the {} tier(s) sit on a rung the declared "
-            "gate authority has RELEASED, so a MEANING verdict on them is "
-            "re-attested BY YOU, in this session, in its own reviewed "
-            "commit.".format("/".join(mine))
+            "gate authority has RELEASED. Record the exact MEANING decision and "
+            "its authority/evidence scope; the exclusive primary publication "
+            "step performs any re-attestation after required impact review and "
+            "checks. Leave the prior snapshot intact until then.".format("/".join(mine))
         )
     if held:
         parts.append(
             "THE DIAL FOR THIS ROW: the {} tier(s) sit on a rung the declared "
             "gate authority still HOLDS for a human, so a MEANING verdict on "
-            "them stops at your verdict and the signature is the owner's — do "
-            "not re-anchor them.".format("/".join(held))
+            "them stops at your verdict and the signature is the owner's — keep "
+            "the prior snapshot intact and do not publish them.".format("/".join(held))
         )
     return "\n\n".join(parts)
 
@@ -639,10 +623,11 @@ def first_approval_values(root, row):
     """`({chain, baseline, registries}, None)` for the spine rows a lane
     authored `Drafted` and did not approve, or `(None, reason)`.
 
-    THE APPROVAL ACT IS THE ADJUDICATOR'S, on the serial trunk side: a work
-    lane's merge is refused if it flips a `Status` or writes the approval
-    record (`integrate._approval_act_refusal`), so these rows are waiting on a
-    session like the one this brief composes. Two reasons the owner gave.
+    THE DECISION IS THE ADJUDICATOR'S, on the serial trunk side: a work lane's
+    merge is refused if it flips a `Status` or writes the approval record
+    (`integrate._approval_act_refusal`), so these rows are waiting on a session
+    like the one this brief composes. Primary publication follows the recorded
+    decision after required reviews. Two reasons the owner gave.
     CONTEXT: approving means holding the row's WHOLE chain, which one work item
     does not — so `{chain}` is the whole chain, not the changed cells.
     CONCURRENCY: an adjudication lane runs alone, so the act cannot race a
@@ -781,14 +766,14 @@ def first_approval_values(root, row):
     wi_id = (row.get("WI-ID") or "").strip()
     stamp_rev, stamp_date = baseline_snapshot.stamp(root)
     baseline = (
-        "{}{}. Approving these rows moves it for the registries you flip and "
-        "for no others (WI-571), so an off-spine census computed against it "
-        "survives your act.".format(
+        "{}{}. The later primary publication may move it only for the registries "
+        "and rows evidenced by this decision (WI-571), so an off-spine census "
+        "computed against it cannot absorb unreviewed text.".format(
             baseline_snapshot.SNAPSHOT_DIR,
             ", copied {} (commit {})".format(stamp_date, stamp_rev)
             if stamp_rev
-            else " does not exist yet — your act is this repo's FIRST signing, "
-            "and `--seed` is what creates it",
+            else " does not exist yet — this is the repo's FIRST signing "
+            "decision; primary publication creates it after review",
         )
     )
     return {
@@ -799,21 +784,12 @@ def first_approval_values(root, row):
         # here ("(no registry — nothing here is Drafted)") described a state the
         # refusal now makes unreachable — and rendering it would have been rule
         # 2's failure, a `--approves` slot filled with prose.
-        "registries": baseline_snapshot.format_approves(
-            {rel: wi_id or "this adjudication" for rel in registries}
-        ),
-        # WHICH ROWS EACH TOKEN COVERS. The argument above is written for an
-        # ALL-APPROVE verdict, which the template blesses this session not to
-        # give ("a MIXED batch is normal"). Naming a registry whose rows were
-        # all returned re-anchors text nobody approved, and the merge slot
-        # refuses it as WIDENED — so the drop rule needs the mapping, derived
-        # here rather than left to the session to reconstruct from row kinds.
-        "approves_rows": "\n".join(
-            "    - `{}={}` covers {}".format(
-                rel, wi_id or "this adjudication", ", ".join(rids)
-            )
-            for rel, rids in registries.items()
-        ),
+        **_publication_scope(registries, wi_id),
+        # WHICH ROWS EACH TOKEN COVERS. The scope is evidence for the later
+        # primary publication, not a copier command for this session. Naming a
+        # registry whose rows were all returned would absorb text nobody
+        # approved, so the publication gate must refuse it as WIDENED. Keep the
+        # mapping derived here rather than leaving the session to reconstruct it.
     }, None
 
 
@@ -1079,6 +1055,274 @@ def judgment_context(assignment, verdict_path, rework):
         if rework
         else "REWORK: none — initial sitting.",
     }
+
+
+def _primary_blob_text(root, blob):
+    """Read one already-bound registry blob, refusing missing objects."""
+    if not isinstance(blob, str) or not re.fullmatch(r"[0-9a-f]{40}", blob):
+        return None
+    return primary_approval._git(Path(root), ["cat-file", "-p", blob])
+
+
+def _primary_row_view(
+    registry, rid, live, approved, id_col, approved_blob, live_blob, turn, brief
+):
+    before, after = approved.get(rid) or {}, live.get(rid) or {}
+    if rid not in turn["scope"]:
+        return None, None
+    if rid not in live or (rid not in approved and brief not in ("first-approval", "")):
+        return None, "scoped row {} is absent from both bound registry views".format(
+            rid
+        )
+    if rid not in approved:
+        before = after
+    cells = sorted(c for c in set(before) | set(after) if c != id_col)
+    row = "- registry={} row={}\n  - before blob={} after blob={}\n  - cells: {}\n  - before values: {}\n  - after values: {}".format(
+        registry,
+        rid,
+        approved_blob,
+        live_blob,
+        ", ".join(cells),
+        " | ".join("{}={}".format(c, before.get(c, "")) for c in cells),
+        " | ".join("{}={}".format(c, after.get(c, "")) for c in cells),
+    )
+    return row, None
+
+
+def _primary_load_registry(root, registry, live_blob, approved_blob):
+    live_text = _primary_blob_text(root, live_blob)
+    approved_text = _primary_blob_text(root, approved_blob) if approved_blob else None
+    if live_text is None or (approved_blob and approved_text is None):
+        return (
+            None,
+            None,
+            None,
+            "cannot read bound registry blobs for {}".format(registry),
+        )
+    try:
+        id_col = primary_approval._id_column(registry)
+        live = spine_carrier.rows_from_text(
+            live_text, id_col, primary_approval._suffix(registry)
+        )
+        approved = (
+            spine_carrier.rows_from_text(
+                approved_text, id_col, primary_approval._suffix(registry)
+            )
+            if approved_text is not None
+            else {}
+        )
+    except ValueError as exc:
+        return None, None, None, str(exc)
+    if live is None or approved is None:
+        return (
+            None,
+            None,
+            None,
+            "cannot parse bound registry blobs for {}".format(registry),
+        )
+    return live, approved, id_col, None
+
+
+def _primary_registry_view(root, turn, registry, live_blob, brief):
+    approved_blob = turn["approved_blobs"].get(
+        baseline_snapshot.SNAPSHOT_DIR + "/" + registry
+    )
+    if not approved_blob and brief not in ("first-approval", ""):
+        return (
+            None,
+            None,
+            None,
+            "no approved snapshot blob is bound for {}".format(registry),
+        )
+    live, approved, id_col, refusal = _primary_load_registry(
+        root, registry, live_blob, approved_blob
+    )
+    if refusal:
+        return None, None, None, refusal
+    rendered = []
+    for rid in sorted(set(live) | set(approved)):
+        row, refusal = _primary_row_view(
+            registry, rid, live, approved, id_col, approved_blob, live_blob, turn, brief
+        )
+        if refusal:
+            return None, None, None, refusal
+        if row:
+            rendered.append(row)
+    return live, approved, rendered, None
+
+
+def _primary_absorption_text(root, turn, live_rows, decision_scope):
+    accepted = {
+        (registry, rid)
+        for registry, rows in live_rows.items()
+        for rid in rows
+        if rid in decision_scope
+    }
+    if not decision_scope:
+        return "(no registry-decision scope; typed consolidation carrier)", None
+    initial = any(
+        baseline_snapshot.SNAPSHOT_DIR + "/" + registry not in turn["approved_blobs"]
+        for registry, _rid in accepted
+    )
+    if initial:
+        return (
+            "(no approved snapshot is bound; this is an initial signing and a "
+            "RETURN is the only publishable outcome until the explicit baseline seed)"
+        ), None
+    try:
+        census = primary_approval.absorption_census(root, turn, turn["base"], accepted)
+    except (OSError, ValueError, TypeError) as exc:
+        return None, "cannot derive the exact whole-file absorption census: {}".format(
+            exc
+        )
+    text = (
+        "\n".join(
+            "- registry={} row={} state={} cells: {}".format(
+                registry,
+                rid,
+                item["state"],
+                " | ".join(
+                    "{}: before={} after={}".format(
+                        cell, identities["before"], identities["after"]
+                    )
+                    for cell, identities in sorted(item["cells"].items())
+                ),
+            )
+            for (registry, rid), item in sorted(census.items())
+        )
+        or "(no changed cells in the exact whole-file census)"
+    )
+    return text, None
+
+
+def _primary_impact_text(root, turn, decision_scope):
+    try:
+        impacts = primary_approval.impact_census(
+            root, turn["base"], turn, set(decision_scope)
+        )
+    except (OSError, ValueError, TypeError) as exc:
+        return None, "cannot derive the complete stable-ID impact census: {}".format(
+            exc
+        )
+    return "\n".join(
+        "- id={} path={} source_blob={}".format(rid, path, blob)
+        for (rid, path), blob in sorted(impacts.items())
+    ) or "(no tracked uses found)", None
+
+
+def _primary_scope_values(root, turn, brief=""):
+    """Derive primary bindings, row/cell identities and absorption census."""
+    why = primary_approval._turn_refusal(turn)
+    if why:
+        return None, why
+    root = Path(root)
+    proposal = kverdict.tree_identity(root, turn["base"])
+    live_rows, approved_rows, rendered = {}, {}, []
+    for registry, live_blob in sorted(turn["registry_blobs"].items()):
+        live, approved, rows, why = _primary_registry_view(
+            root, turn, registry, live_blob, brief
+        )
+        if why:
+            return None, why
+        live_rows[registry], approved_rows[registry] = live, approved
+        rendered.extend(rows)
+    decision_scope = primary_approval.approval_scope(turn, brief)
+    found = {
+        rid for rows in live_rows.values() for rid in rows if rid in decision_scope
+    }
+    missing = sorted(set(decision_scope) - found)
+    if missing:
+        return None, "scope rows missing from bound registry census: {}".format(
+            ", ".join(missing)
+        )
+    impact, why = _primary_impact_text(root, turn, decision_scope)
+    if why:
+        return None, why
+    absorption, why = _primary_absorption_text(root, turn, live_rows, decision_scope)
+    if why:
+        return None, why
+    scope = "\n".join("- " + rid for rid in turn["scope"])
+    registries = "\n".join(
+        "- {} = {}".format(path, turn["registry_blobs"][path])
+        for path in sorted(turn["registry_blobs"])
+    )
+    approved = "\n".join(
+        "- {} = {}".format(path, turn["approved_blobs"][path])
+        for path in sorted(turn["approved_blobs"])
+    )
+    return {
+        "turn": turn["turn"],
+        "wi": turn["wi"],
+        "base": turn["base"],
+        "primary_branch": turn["primary_branch"],
+        "primary_root": turn["primary_root"],
+        "proposal_spec_blob": turn["proposal_spec_blob"],
+        "scope": scope,
+        "decision_scope": "\n".join("- " + rid for rid in decision_scope)
+        or "(none — typed consolidation has no registry-decision scope)",
+        "registry_blobs": registries,
+        "approved_blobs": approved,
+        "proposal": proposal,
+        "rows": "\n".join(rendered),
+        "impact": impact,
+        "absorption": absorption,
+    }, None
+
+
+def compose_primary(root, row, verdict_path, turn, prompt_templates=None, rework=""):
+    """Compose the common primary-turn carrier around a specialized brief.
+
+    A declared brief must compose successfully; it never falls through to the
+    generic blank-Brief assignment. The assembler is read-only and all hashes
+    in the evidence come from the bound turn or registry blobs.
+    """
+    brief = declared_brief(row)
+    values, reason = _primary_scope_values(root, turn, brief)
+    if values is None:
+        return None, "primary brief cannot be filled: {}".format(reason)
+    assignment, why = assignment_context(root, row)
+    if assignment is None:
+        return None, why
+    context = judgment_context(assignment, verdict_path, rework)
+    if brief:
+        if brief == "primary":
+            return None, "primary cannot be nested as a specialized brief"
+        specialized, why = compose(root, row, verdict_path, prompt_templates, rework)
+        if specialized is None:
+            return None, "declared {} brief remains HELD: {}".format(brief, why)
+    else:
+        specialized = (
+            "No specialized Brief was declared. Judge the bound primary evidence "
+            "directly and write the generic OUTCOME line; this assignment carries "
+            "no worker claim, branch, model-side close or snapshot instruction."
+        )
+    values.update(
+        {
+            "verdict": str(verdict_path),
+            "record_path": str(verdict_path),
+            "spec": _read(Path(root) / turn["spec"]) or "(bound spec is not readable)",
+            "specialized": specialized,
+            "impact": values["impact"],
+            **context,
+        }
+    )
+    values["verdict_grammar"] = (
+        "The only accepted machine outcomes are these:\n\n"
+        "    OUTCOME: REVIEWED|RETURN\n\n"
+        "`REVIEWED` means every scoped decision, complete whole-file absorption "
+        "ledger, stable-ID impact disposition and required evidence reference is "
+        "complete. It does not itself flip cells, write a snapshot, close the "
+        "spec, or publish."
+        if not brief
+        else "The specialized brief above defines the required machine outcome. "
+        "Follow that grammar exactly; do not emit the generic primary outcome line."
+    )
+    key = prompts.ADJUDICATE_PRIMARY
+    try:
+        base = (prompt_templates or {}).get(key) or prompts.load(key)
+        return prompts.fill(key, base, values), None
+    except prompts.PromptError as exc:
+        return None, str(exc)
 
 
 def compose(root, row, verdict_path, prompt_templates=None, rework=""):

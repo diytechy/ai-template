@@ -174,6 +174,7 @@ try:
     import agent_route
     import agent_session
     import plan_runner
+    import primary_adjudication
     import prompts
     import score_reviews
 except ImportError:  # pragma: no cover - in-process fallback
@@ -183,6 +184,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     import agent_route
     import agent_session
     import plan_runner
+    import primary_adjudication
     import prompts
     import score_reviews
 
@@ -548,6 +550,9 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text="", assigned=None)
         title=(row.get("Title") or "(row missing from the registry)").strip(),
         srs=(row.get("SR-Refs") or "—").strip() or "—",
         specref=(row.get("SpecRef") or "—").strip() or "—",
+        safety_class=(row.get("SafetyClass") or row.get("safety_class") or "undeclared")
+        .strip()
+        .lower(),
         train=train,
         base=base,
         scripts=scripts_dir(root),
@@ -800,6 +805,21 @@ def session_body(root, worker, current_wi, session, sha, reviews_dir, templates)
     owes no report), and holding those would page a human for routine work."""
     row = worker["rows"].get(current_wi) if worker and current_wi else None
     brief = adjudicate_brief.declared_brief(row) if row and adjudicating(row) else ""
+    if worker and worker.get("primary_turn"):
+        verdict_path = fresh_verdict_path(
+            reviews_dir, "{}-ADJUDICATE-{}.md".format(session, (sha or "")[:7])
+        )
+        body, why = adjudicate_brief.compose_primary(
+            root,
+            row,
+            verdict_path,
+            worker["primary_turn"],
+            templates,
+            rework="\n".join(
+                filter(None, (worker["rework"], worker.get("adjudication_owed")))
+            ),
+        )
+        return body, verdict_path, why, brief or "primary"
     if brief:
         verdict_path = fresh_verdict_path(
             reviews_dir, "{}-ADJUDICATE-{}.md".format(session, (sha or "")[:7])
@@ -1581,6 +1601,10 @@ def worker_endstate(
         return None
     if substantive_working_tree_dirty(root):
         return None  # committed evidence only — a dirty tree (owner-only exempt) is not done
+    refusal = primary_adjudication.completion_refusal(root, worker)
+    if refusal:
+        worker["adjudication_owed"] = refusal
+        return None
     return _done_endstate(worker, managed, rp_int, rounds)
 
 
@@ -4022,6 +4046,7 @@ def run_iteration(ctx, i):
     )
     stamp_session_meta(meta, plan, timed_out)
     meta.update(invocation)
+    meta.update(primary_adjudication.session_binding(root, worker, plan, after))
     log_path = write_session_log(ctx.iter_dir, meta, output)
     # A worker never regenerates the iteration index: it is a GENERATED
     # root artifact the integrator rebuilds on the composed tree (spec
@@ -4082,7 +4107,7 @@ def _drive_entry(root, args):
     code = _coordinator_lock(root)
     if code is not None:
         return code
-    return dispatch.run(root, args)
+    return dispatch.run(root, args, primary_session=main)
 
 
 # --- loop startup: resolve the run, then run it --------------------------------
@@ -4512,9 +4537,9 @@ def run_loop(ctx):
 
 
 # Implements: SR-154, LLR-045, SR-155, LLR-132
-def main():
+def main(args=None, *, primary_turn=None):
     _utf8_console()
-    args = parse_args()
+    args = parse_args() if args is None else args
     root, code = _resolve_root(args)
     if code is not None:
         return code
@@ -4544,6 +4569,8 @@ def main():
     setup, code = resolve_session_setup(args, root)
     if code is not None:
         return code
+    if primary_turn is not None:
+        setup.worker["primary_turn"] = primary_turn
 
     # The one coordination surface is docs/ (WI-210: the --track lane
     # redirection is retired; the repo-singular policy files live here too).
@@ -4571,7 +4598,7 @@ def main():
     # One coordinator per worktree (a double-launch or cron overlap is the
     # collision the branch guard can't catch — same branch, same checkout).
     # Both the loop and a single interactive session take it; atexit drops it.
-    code = _coordinator_lock(root)
+    code = _coordinator_lock(root) if primary_turn is None else None
     if code is not None:
         return code
 

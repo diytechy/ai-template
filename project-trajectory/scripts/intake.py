@@ -691,10 +691,9 @@ def _amendment_context(records):
             )
     lines += [
         "",
-        "Outcomes (§A5.2): flip rows back to Approved where no scope moved",
-        "(per the declared approval level in docs/process.toml — "
-        "recommend-only while the tier is HUMAN-HELD, ruled decision",
-        "2), or draft the real scope-change / re-scope / cancellation rows in",
+        "Outcomes (§A5.2): record exact accepted-equivalence or RETURN findings",
+        "for primary mechanical publication, or draft the real scope-change /",
+        "re-scope / cancellation rows in",
         "a `## Dispositions` section of THIS spec — intake mints them at this",
         "row's merge (drafts-not-mints, R1).",
     ]
@@ -722,7 +721,7 @@ def _amendment_drafts(root, before, after):
     ids = sorted({rec["id"] for rec in records})
     title = (
         "adjudicate: {} - approved/routed cell(s) amended on merged trunk "
-        "{}..{} (§A5.2); judge whether scope moved, then flip or draft "
+        "{}..{} (§A5.2); judge whether scope moved, then accept or draft "
         "follow-ups in ## Dispositions".format(
             ", ".join(ids), str(before)[:7], str(after)[:7]
         )
@@ -739,6 +738,7 @@ def _amendment_drafts(root, before, after):
                 stage_moved=_stage_moved(root, before, after),
             ),
             "sr_refs": _owning_srs(records),
+            "adjudicates": ids,
             "specref": records[0]["registry"],
             "context": _amendment_context(records),
         }
@@ -803,14 +803,13 @@ def _first_approval_context(records):
         )
     lines += [
         "",
-        "Outcomes (owner ruling 2026-09-01): read each row's WHOLE CHAIN — the",
-        "parent SR, the sibling LLRs, the test cases — and either APPROVE (move",
-        "the rows' `Status` to `Approved` and take the anchoring snapshot,",
-        '`python scripts/intake.py snapshot --approves "<REGISTRY>=<this row>"`,',
-        "in ONE reviewed commit on this lane) or RETURN with findings, drafting",
-        "the follow-up in a `## Dispositions` section of THIS spec — intake mints",
-        "it at this row's merge (drafts-not-mints, R1). The approval act is",
-        "YOURS: a work lane's merge is refused if it performs one.",
+        "Read each row's WHOLE CHAIN — the parent SR, sibling LLRs and test",
+        "cases — and record APPROVE with exact scope and authority, or RETURN",
+        "with findings and follow-up drafts in this spec's `## Dispositions`.",
+        "Judgment runs in an exclusive primary-checkout turn. After required",
+        "review, mechanical publication applies accepted Status/snapshot effects",
+        "and mints the dispositions. The judging session writes neither Status",
+        "approvals nor snapshots; every WI branch is refused for those writes.",
     ]
     return "\n".join(lines)
 
@@ -822,8 +821,8 @@ def _first_approval_drafts(root, before, after):
     ids = sorted({rec["id"] for rec in records})
     title = (
         "adjudicate: {} - spine row(s) authored Drafted on merged trunk {}..{} "
-        "await a FIRST APPROVAL; read the whole chain, then approve (flip + "
-        "snapshot) or return with findings".format(
+        "await a FIRST APPROVAL; judge the whole chain and record exact approval "
+        "scope or return with findings".format(
             ", ".join(ids), str(before)[:7], str(after)[:7]
         )
     )
@@ -2039,7 +2038,7 @@ def _write_draft(root, draft, registry, subject_verb):
     return (wi_id, (Path(WORK) / rel).as_posix(), absorbed), None
 
 
-def _mint(root, drafts, subject_verb):
+def _mint(root, drafts, subject_verb, *, commit=True):
     """Write every draft as a queued spec, then ONE bookkeeping commit.
     `([(wi_id, relpath)], refusal)`; all-or-nothing — a refusal restores trunk
     and reports zero minted."""
@@ -2103,7 +2102,8 @@ def _mint(root, drafts, subject_verb):
     # restore path is `git reset --hard HEAD`, whole-tree, so a bump written
     # before a refusal is reverted with the spec it was minted for.
     trace.bump_watermark(root)
-    refusal = _bookkeeping_commit(
+    finish = _bookkeeping_commit if commit else lambda _root, _subject: None
+    refusal = finish(
         root,
         "mint: {} - {} (WI-388 intake; bookkeeping)".format(
             ";".join(w for w, _ in minted), subject_verb
@@ -2114,6 +2114,16 @@ def _mint(root, drafts, subject_verb):
     for wi_id, rel in minted:
         _say("minted {} at {}".format(wi_id, rel))
     return minted, None
+
+
+def stage_mint(root, drafts, subject_verb):
+    """Stage the canonical mint writes without regeneration or committing.
+
+    Intended for a pristine disposable publication checkout.  Allocation,
+    lineage re-pointing, consolidation archival and watermark ownership remain
+    exactly the `_mint` implementation used by ordinary intake.
+    """
+    return _mint(root, drafts, subject_verb, commit=False)
 
 
 def _bookkeeping_commit(root, subject):
@@ -2520,7 +2530,6 @@ def _rewrite_toml_statuses(live, rel, ids):
     whole-file diff — on exactly the registry whose diffs the amendment guard
     reads. `newline=""` keeps the bytes; the split is on the detected
     terminator."""
-    table = spine_carrier.SPINE_TABLE[dict(acceptance_record.SPINE_CSVS)[rel]]
     # open() rather than Path.read_text: read_text only grew a `newline`
     # parameter at Python 3.13, and the kit's floor is 3.11 — on the floor the
     # keyword is a TypeError, found 2026-08-15 when the suite first ran on the
@@ -2530,6 +2539,7 @@ def _rewrite_toml_statuses(live, rel, ids):
     eol = "\r\n" if "\r\n" in raw else "\n"
     lines = raw.split(eol)
     for rid in ids:
+        table = spine_carrier.REGISTRY_TABLE[rid.rsplit("-", 1)[0] + "-ID"]
         if not _flip_status_lines(lines, table, rid):
             # A located row whose status line cannot be found is a refusal to
             # write, never a silent skip: the caller already reported the flip,

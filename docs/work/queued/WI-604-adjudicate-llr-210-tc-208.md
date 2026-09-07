@@ -1,6 +1,6 @@
 +++
 id = "WI-604"
-title = "adjudicate: LLR-210, TC-208 - spine row(s) authored Drafted on merged trunk 3b004c4..f395907 await a FIRST APPROVAL; read the whole chain, then approve (flip + snapshot) or return with findings"
+title = "adjudicate: LLR-210, TC-208 - spine row(s) authored Drafted on merged trunk 3b004c4..f395907 await a FIRST APPROVAL; read the whole chain and record approval or return findings"
 workstream = "process"
 specref = "docs/requirements/low-level-requirements.toml"
 buildtier = "medium"
@@ -19,10 +19,8 @@ Each line: registry row / what the lane did.
 - TC-208 authored in `docs/test/test-cases.toml`
 
 Outcomes (owner ruling 2026-09-01): read each row's WHOLE CHAIN — the
-parent SR, the sibling LLRs, the test cases — and either APPROVE (move
-the rows' `Status` to `Approved` and take the anchoring snapshot,
-`python scripts/intake.py snapshot --approves "<REGISTRY>=<this row>"`,
-in ONE reviewed commit on this lane) or RETURN with findings, drafting
-the follow-up in a `## Dispositions` section of THIS spec — intake mints
-it at this row's merge (drafts-not-mints, R1). The approval act is
-YOURS: a work lane's merge is refused if it performs one.
+parent SR, the sibling LLRs and the test cases — and record either APPROVE in
+this spec's `## Approval` section or RETURN with findings and a precisely scoped
+follow-up in `## Dispositions`. After independent review, the primary publisher
+atomically applies accepted Status/snapshot effects, closes this WI and mints
+recorded dispositions.

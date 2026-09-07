@@ -25,7 +25,7 @@ which is the failure mode.
 import csv
 import io
 import re
-import shlex
+import shutil
 import subprocess
 import sys
 
@@ -44,6 +44,7 @@ baseline_snapshot = load_script("baseline_snapshot")
 agent_loop = load_script("agent_loop")
 wi_convert = load_script("wi_convert")
 intake = load_script("intake")
+primary_adjudication = load_script("primary_adjudication")
 
 pytestmark = env_gate_skipif("git")
 
@@ -684,6 +685,145 @@ def test_the_amendment_brief_carries_the_snapshot_as_its_anchor(tmp_path):
     assert "not the change under judgement" in values["baseline"]
     assert "The system shall add two numbers." in values["rows"]  # before
     assert "refuse floats" in values["rows"]  # after
+    assert values["registries"] == "docs/requirements/system-requirements.toml=WI-301"
+    assert (
+        "`docs/requirements/system-requirements.toml=WI-301` covers SR-001"
+        in values["approves_rows"]
+    )
+
+
+def test_amendment_brief_requires_explicit_corrective_return_dispositions(tmp_path):
+    repo = _amendment_repo(tmp_path)
+    text, why = ab.compose(
+        repo, {"WI-ID": "WI-301", "Brief": "amendment"}, repo / "docs/reviews/v.md"
+    )
+    assert why is None, why
+    assert "explicit\n  `RETURN` disposition" in text
+    assert "corrective amendment" in text
+    assert "PUBLICATION SCOPE" in text
+
+
+def test_primary_brief_refuses_an_unbound_turn_before_composing(tmp_path):
+    repo = _repo(tmp_path)
+    body, why = ab.compose_primary(
+        repo,
+        {"WI-ID": "WI-301", "Brief": ""},
+        repo / "docs/reviews/v.md",
+        {"version": 1},
+    )
+    assert body is None
+    assert "unexpected fixed-key shape" in why
+
+
+def _primary_turn_repo(tmp_path, brief, *, snapshot=True, foreign_drift=False):
+    repo = _first_approval_repo(tmp_path)
+    if not snapshot:
+        shutil.rmtree(repo / baseline_snapshot.SNAPSHOT_DIR)
+    spec = next((repo / "docs/work").rglob("WI-301-*.md"))
+    text = spec.read_text(encoding="utf-8")
+    text = text.replace('brief = "first-approval"\n', "")
+    if brief:
+        text = text.replace(
+            'title = "adjudicate: LLR-001 - await a FIRST APPROVAL"',
+            'title = "adjudicate: LLR-001 - primary turn"',
+        )
+        text = text.replace(
+            'safety_class = "adjudication"\n',
+            'safety_class = "adjudication"\nbrief = "{}"\n'.format(brief),
+        )
+    spec.write_text(text, encoding="utf-8", newline="\n")
+    if foreign_drift:
+        live = repo / "docs/requirements/low-level-requirements.csv"
+        live.write_text(
+            live.read_text(encoding="utf-8").replace(
+                "src/demo.py,add,add()", "src/other.py,changed,add()"
+            )
+            + "LLR-002,SR-001,sibling,src/demo.py,sibling,old detail,TC-001,Approved,,P1\n",
+            encoding="utf-8",
+        )
+        snap = (
+            repo
+            / "docs/archive/last_approved/docs/requirements/low-level-requirements.csv"
+        )
+        snap.write_text(
+            snap.read_text(encoding="utf-8")
+            + "LLR-002,SR-001,sibling,src/demo.py,sibling,old detail,TC-001,Approved,,P1\n",
+            encoding="utf-8",
+        )
+        live.write_text(
+            live.read_text(encoding="utf-8").replace(
+                "src/demo.py,sibling,old detail", "src/demo.py,sibling,new detail"
+            ),
+            encoding="utf-8",
+        )
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "queue primary adjudication")
+    return repo, primary_adjudication.begin(repo, "WI-301")
+
+
+def test_primary_composes_from_a_real_begin_turn_and_keeps_specialized_grammar(
+    tmp_path,
+):
+    repo, turn = _primary_turn_repo(tmp_path, "first-approval")
+    text, why = ab.compose_primary(
+        repo,
+        {"WI-ID": "WI-301", "Brief": "first-approval", "Adjudicates": "LLR-001"},
+        repo / "docs/reviews/v.md",
+        turn,
+    )
+    assert why is None, why
+    assert "OUTCOME: APPROVE|RETURN rows=N" in text
+    assert "OUTCOME: REVIEWED|RETURN" not in text
+    assert "version = 1" in text and 'turn = "{}"'.format(turn["turn"]) in text
+    assert "id=LLR-001" in text
+
+
+def test_primary_blank_brief_renders_generic_schema_and_approval_carrier(tmp_path):
+    repo, turn = _primary_turn_repo(tmp_path, "", snapshot=False)
+    text, why = ab.compose_primary(
+        repo,
+        {"WI-ID": "WI-301", "Brief": "", "Adjudicates": "LLR-001"},
+        repo / "docs/reviews/v.md",
+        turn,
+    )
+    assert why is None, why
+    assert "OUTCOME: REVIEWED|RETURN" in text
+    assert "decision = [] # valid only for a zero-scope generic RETURN" in text
+    assert "[[absorption]]" in text and "[[impact]]" in text
+    assert "before = {" in text and "after = {" in text
+    assert "never invent or recalculate a hash" in text
+
+
+def test_primary_absorption_uses_shared_approved_cells_not_traced_drift(tmp_path):
+    repo, turn = _primary_turn_repo(tmp_path, "", foreign_drift=True)
+    text, why = ab.compose_primary(
+        repo,
+        {"WI-ID": "WI-301", "Brief": "", "Adjudicates": "LLR-001"},
+        repo / "docs/reviews/v.md",
+        turn,
+    )
+    assert why is None, why
+    assert "row=LLR-002" in text and "Detail: before=" in text
+    assert (
+        "row=LLR-001"
+        not in text.split("--- DERIVED WHOLE-FILE ABSORPTION CENSUS ---", 1)[1].split(
+            "--- DERIVED IMPACT SCOPE ---", 1
+        )[0]
+    )
+    assert (
+        "CodeSymbol"
+        not in text.split("--- DERIVED WHOLE-FILE ABSORPTION CENSUS ---", 1)[1].split(
+            "--- DERIVED IMPACT SCOPE ---", 1
+        )[0]
+    )
+
+
+def test_primary_verdict_grammar_accepts_reviewed_or_return(tmp_path):
+    path = tmp_path / "verdict.md"
+    path.write_text("OUTCOME: REVIEWED\n", encoding="utf-8")
+    assert ab.verdict_refusal("primary", path) is None
+    path.write_text("OUTCOME: RETURN\n", encoding="utf-8")
+    assert ab.verdict_refusal("primary", path) is None
 
 
 @pytest.mark.parametrize("rework", ["", "Address the missing predecessor judgment."])
@@ -717,7 +857,9 @@ def test_specialized_override_cannot_drop_scope_or_truncate_rework(tmp_path):
     prior = repo / "docs/reviews/001-ADJUDICATE-1234567.md"
     prior.parent.mkdir(parents=True)
     prior.write_text("VERDICT: MEANING rows=1\n")
-    override = "{wi} {verdict} {rows} {baseline} {aftermath}"
+    override = (
+        "{wi} {verdict} {rows} {baseline} {aftermath} {registries} {approves_rows}"
+    )
     body, why = ab.compose(
         repo,
         agent_loop.agent_common.load_wi_registry(repo)["WI-301"],
@@ -800,7 +942,8 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
     values, why = ab.amendment_values(repo, row)
     assert why is None, why
     assert "RELEASED" in values["aftermath"]
-    assert "re-attested BY YOU, in this session" in values["aftermath"]
+    assert "exclusive primary publication" in values["aftermath"]
+    assert "Leave the prior snapshot intact" in values["aftermath"]
 
     set_process_key(repo, "attestation", "human_approval_through", "DevStg-Release")
     values, why = ab.amendment_values(repo, row)
@@ -815,7 +958,8 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
     text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
     assert why is None, why
     assert "the mechanical tool's act, not yours" not in text
-    assert "the signature is the owner's" in text  # the aftermath landed instead
+    assert "the signature is the owner's" in text  # held rows remain owner-held
+    assert "does not invoke a copier" not in text
     assert re.findall(r"\{[a-z_]+\}", text) == []
     template = (
         SCRIPTS.parent / "prompts" / "adjudicate-amendment.template.md"
@@ -904,25 +1048,24 @@ def test_the_first_approval_brief_carries_the_WHOLE_CHAIN(tmp_path):
     assert re.findall(r"\{[a-z_]+\}", text) == []
     assert "You are an INDEPENDENT adjudicator" in text
     assert "OUTCOME: APPROVE|RETURN rows=N" in text
-    # The act itself is spelled out, because nothing downstream performs it for
-    # the session: the mechanical writer retired (OI-45 ruled (b)), so the flip
-    # and its anchoring copy are this session's own reviewed commit.
-    assert "python scripts/intake.py snapshot --approves" in text
-    assert "one reviewed commit" in text
+    # The session records the bounded decision; publication belongs to the
+    # exclusive primary-checkout step and no copier command reaches the model.
+    assert "python scripts/intake.py snapshot --approves" not in text
+    assert "does not flip cells or write snapshots" in text
+    assert "exclusive primary-checkout approval step" in text
 
 
-def test_the_first_approval_brief_cannot_stop_before_its_approved_act(tmp_path):
+def test_the_first_approval_brief_stops_after_recording_its_decision(tmp_path):
     repo = _first_approval_repo(tmp_path)
     text, why = ab.compose(repo, _fa_row(), repo / "docs/reviews/v.md")
     assert why is None, why
     terminal = text.split("THEN, AND ONLY AFTER THAT VERDICT IS RECORDED", 1)[1]
-    assert "If ANY row line says `APPROVE`" in terminal
-    assert "mixed batch whose `OUTCOME` is `RETURN`" in terminal
-    assert "Stop only after that approval commit is recorded" in terminal
+    assert "stop this adjudication turn" in terminal
     assert (
-        "Only when EVERY row line says `RETURN` may you stop without changing"
+        "exclusive primary publication step consumes the exact recorded decisions"
         in terminal
     )
+    assert "keep the prior baseline until publication succeeds" in terminal
 
 
 def test_the_first_approval_brief_REFUSES_once_the_rows_are_ruled(tmp_path):
@@ -983,7 +1126,7 @@ def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
     )
     text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
     assert why is None, why
-    assert "never a `HELD FOR THE OWNER` one" in text
+    assert "held or out-of-scope rows remain byte-exact" in text
 
     # And when the dial holds EVERY rung — the kit's shipped default, so this is
     # what an adopter who has declared nothing gets — the arm has no question at
@@ -1030,40 +1173,18 @@ def _two_registry_repo(tmp_path):
     return repo
 
 
-def _shell_command_count(line):
-    """How many commands a POSIX shell would read `line` as.
-
-    `shlex` with `punctuation_chars` yields an unquoted `;` as its own token and
-    keeps a quoted one inside its string, which is exactly the distinction under
-    test. `shlex.split` alone cannot serve: it is a lexer, not a parser, and
-    returns the whole `a;b` run as ONE token whether it is quoted or not — so a
-    test written on it would have passed against the defect."""
-    lex = shlex.shlex(line, posix=True, punctuation_chars=True)
-    lex.whitespace_split = True
-    return sum(1 for token in lex if token == ";") + 1
-
-
-def test_the_rendered_snapshot_command_survives_a_shell(tmp_path):
-    # WI-572 REVIEW-A round 7, MAJOR 2. `{registries}` is `;`-joined by
-    # `format_approves` and rendered into a SHELL command line in the template.
-    # Unquoted, a two-registry batch is two commands: the first snapshots one
-    # registry, the second runs `docs/test/test-cases.toml=WI-301` as a program
-    # — so only half the act is anchored and the merge then refuses it. The
-    # template quotes the argument; this pins that the rendered line is ONE
-    # command, which is the property that actually matters.
+def test_the_rendered_scope_evidence_is_preserved_without_a_copier(tmp_path):
+    # The adjudicator records the exact scope for the later primary publication.
+    # It must not receive a shell command that can copy a whole registry from a
+    # lane worktree.
     repo = _two_registry_repo(tmp_path)
     row = _fa_row(Adjudicates="SR-001;LLR-001")
     text, why = ab.compose(repo, row, tmp_path / "verdict.md")
     assert why is None, why
-    line = next(ln for ln in text.splitlines() if "intake.py snapshot --approves" in ln)
-    command = line[line.index("`python") + 1 :]
-    command = command[: command.index("`")]
-    # The premise: this batch really does span two registries, so an unquoted
-    # render WOULD split. Without it the assertion below is vacuous.
-    assert ";" in command
-    assert _shell_command_count(command) == 1, command
-    # ...and the same string unquoted is the defect, proving the guard bites.
-    assert _shell_command_count(command.replace('"', "")) == 2
+    assert "intake.py snapshot --approves" not in text
+    assert "docs/requirements/system-requirements.toml=WI-301" in text
+    assert "docs/requirements/low-level-requirements.toml=WI-301" in text
+    assert "Publication scope tokens for the later primary publication" in text
 
 
 def test_a_mixed_batch_can_tell_which_rows_each_approves_token_covers(tmp_path):

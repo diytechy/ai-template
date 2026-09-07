@@ -229,6 +229,8 @@ def _relink_inbound_links(root, moves):
         if ".git" in parts or "node_modules" in parts:
             continue
         rel = path.relative_to(root).as_posix()
+        if rel in ac.OWNER_ONLY_PATHS:
+            continue
         doc_dir = posixpath.dirname(rel)
         changed = _rewrite_md_links(
             path,

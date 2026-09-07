@@ -50,7 +50,7 @@ suite.
 
 import re
 
-from conftest import SCRIPTS, env_gate_skipif, run_py
+from conftest import SCRIPTS, env_gate_skipif, load_script, run_py
 from integrate_fixtures import (
     T_CODE,
     T_LATER,
@@ -69,6 +69,8 @@ from integrate_fixtures import (
 )
 
 pytestmark = env_gate_skipif("git")
+primary_publication = load_script("primary_publication")
+publication_verify = load_script("publication_verify")
 
 
 # --- 5b. THE STATION PROTOCOL (WI-386) ---------------------------------------
@@ -335,7 +337,7 @@ def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
     # intake mints ONE adjudication row as its own bookkeeping commit inside
     # the same held slot — serial by construction, derived description, no
     # model in the path (§A5.2; rulings R1/R3).
-    root = claim_repo(tmp_path)
+    root = claim_repo(tmp_path, safety="spine")
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
     sr_header = (
@@ -426,36 +428,17 @@ def test_a_malformed_bar_value_refuses_the_refresh(tmp_path):
     assert "bar" in refusal and "G9" in refusal
 
 
-def test_an_adjudication_lane_runs_no_bar(tmp_path):
-    # WI-388 (1): adjudication runs NO BAR (§A5.2) — its outputs are Status
-    # cells and the work registry, nothing a product bar can speak to. The
-    # refresh still merges trunk in and runs the trunk step, still commits a
-    # verified Bar-Green attestation (the slot's contract), but the check
-    # harness is never invoked and the summary says so. `product=False`: the
-    # lane's delta is the pure registry shape the kind's premise names — a
-    # spine Status edit rides along and stays inside the scope rung.
-    root = station_repo(tmp_path, safety="adjudication", product=False)
-    wt = _lane(root, "wi-401")
-    (wt / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
-    (wt / "docs" / "requirements" / "system-requirements.csv").write_text(
-        "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-        "Permutations,Priority,Verification,Status\n"
-        'SR-001,Adder,SN-001,"t","w","a",,C,Test,Approved\n',
-        encoding="utf-8",
-        newline="\n",
-    )
-    _commit(wt, "WI-401: the Status-cell judgement", when=T_LATER)
-    sha, refusal = integ.refresh(root, "wi-401", "smoke")
-    assert refusal is None, refusal
-    assert _order(wt) == ["trunk_step"], "the bar must not run for adjudication"
-    attested = integ.refresh_attestation(root, "wi-401", sha)
-    assert attested is not None
-    assert "no-bar" in attested[1]
-    ready, why = integ._merge_ready(root, "wi-401")
-    assert ready and "no-bar" in why
+def test_primary_publication_surfaces_need_no_product_bar(tmp_path):
+    root = claim_repo(tmp_path)
+    proof = root / "docs" / "reviews" / "primary-proof.md"
+    proof.parent.mkdir(parents=True, exist_ok=True)
+    proof.write_text("reviewed\n", encoding="utf-8")
+    _git(root, "add", "--", "docs/reviews/primary-proof.md")
+
+    assert primary_publication._outside_adjudication_scope(root) is False
 
 
-def test_a_product_touching_adjudication_lane_fails_toward_the_bar(tmp_path):
+def test_product_touching_primary_publication_fails_toward_the_bar(tmp_path):
     # REVIEW-A finding 1, the reviewer's own drive kept as the regression: a
     # product file plus a check harness that FAILS if invoked rode an
     # adjudication-only lane through the no-bar arm onto trunk — an un-run
@@ -463,42 +446,31 @@ def test_a_product_touching_adjudication_lane_fails_toward_the_bar(tmp_path):
     # still the bar"). The scope rung closes it: the branch's non-refresh
     # delta touches a path outside the §A5.2 surfaces (the product file), so
     # the refresh runs the FULL bar — which is red, and says so.
-    root = station_repo(tmp_path, check_src=STUB_CHECK_RED, safety="adjudication")
-    wt = _lane(root, "wi-401")
-    sha, refusal = integ.refresh(root, "wi-401", "smoke")
-    assert sha is None
-    assert "the bar is RED on the refreshed tree" in refusal
-    assert "check-red" in _order(wt), "the harness must have RUN"
-    ready, _why = integ._merge_ready(root, "wi-401")
-    assert not ready
-
-
-def test_a_mixed_claim_still_runs_the_bar(tmp_path):
-    # Fail toward the bar: the no-bar arm arms only when EVERY claimed spec is
-    # the adjudication kind. A batch claim holding one ordinary row beside the
-    # adjudication row bars as usual.
-    root = claim_repo(tmp_path, safety="adjudication")
-    write_spec(root, "queued", "WI-402", slug="extra", specref="seed.txt")
-    (root / ".gitignore").write_text(
-        "out/\nbar-cache/\n", encoding="utf-8", newline="\n"
-    )
-    (root / "docs" / "stack.ini").write_text(
-        "[product]\ntest = {py} -m pytest -q\n", encoding="utf-8", newline="\n"
-    )
-    declare_generated(root)
+    root = claim_repo(tmp_path)
     scripts = root / "scripts"
     scripts.mkdir(exist_ok=True)
-    (scripts / "trunk_step.py").write_text(
-        STUB_TRUNK_STEP, encoding="utf-8", newline="\n"
+    (scripts / "check.py").write_text(STUB_CHECK_RED, encoding="utf-8")
+    (root / "product.py").write_text("changed = True\n", encoding="utf-8")
+    _git(root, "add", "--", "product.py", "scripts/check.py")
+
+    assert primary_publication._outside_adjudication_scope(root) is True
+    green, output, why = publication_verify.run_bar(root, root, "smoke")
+    assert green is False
+    assert "check-red" in _order(root)
+    assert output or "bar exit" in why
+
+
+def test_declared_generated_primary_effect_stays_inside_no_bar_scope(tmp_path):
+    root = claim_repo(tmp_path)
+    (root / "docs" / "stack.ini").write_text(
+        "[generated]\nreport.txt = report\n", encoding="utf-8"
     )
-    (scripts / "check.py").write_text(STUB_CHECK_GREEN, encoding="utf-8", newline="\n")
-    _commit(root, "chore: the stub harness and the declared bar", when=T_CODE)
-    assert integ.claim(root, ["WI-401", "WI-402"], "wi-401") == 0
-    wt, err = integ.lane_worktree(root, "wi-401")
-    assert err is None, err
-    _sha, refusal = integ.refresh(root, "wi-401", "smoke")
-    assert refusal is None, refusal
-    assert "check" in _order(wt)
+    _commit(root, "declare generated publication output", when=T_CODE)
+    (root / "report.txt").write_text("generated\n", encoding="utf-8")
+    _git(root, "add", "--", "report.txt")
+
+    assert publication_verify.generated_paths(root) == ["report.txt"]
+    assert primary_publication._outside_adjudication_scope(root) is False
 
 
 # 5b.3 — the disposable-commit rule (§A2.1)
@@ -620,27 +592,27 @@ def test_the_refresh_refuses_rather_than_discard_uncommitted_lane_work(tmp_path)
 # 5b.4 — the two requirements the owner's caveat produced
 
 
-def test_slot_acquisition_has_exactly_one_call_site():
-    # §A2.0 requirement 1, and it is a claim ABOUT THE SOURCE, so it is checked
-    # against the source. "Restricting the design to pessimistic is a one-line
-    # change" is only true while every refresh that happens inside the slot
-    # happens under a lock taken in one place; a second acquisition site would
-    # make that a rewrite, quietly, and nothing else would notice.
+def test_slot_acquisition_has_exactly_two_approved_call_sites():
+    # One lock acquisition helper has two approved callers: ordinary integration
+    # and the held primary adjudication turn. Both routes must share `_slot`;
+    # another caller would introduce an unreviewed primary writer path.
     src = (SCRIPTS / "integrate.py").read_text(encoding="utf-8")
     sites = [ln for ln in src.splitlines() if "acquire_lock(" in ln]
     assert len(sites) == 1, sites
-    assert "def _slot(root)" in src
+    assert "def _slot(root, *, primary_turn=False)" in src
     # ...and it is inside `_slot`, not merely singular.
-    body = src.split("def _slot(root):", 1)[1].split("\ndef ", 1)[0]
+    body = src.split("def _slot(root, *, primary_turn=False):", 1)[1].split(
+        "\ndef ", 1
+    )[0]
     assert "acquire_lock(" in body
-    # And the SLOT, not just the lock call: counting `acquire_lock(` alone let
-    # a second acquisition through the existing helper pass (REVIEW-A round 1
-    # drove it — `_extra = _slot(root)` at the top of `integrate_one` was
-    # green). `_slot(` must occur exactly twice: the definition and its one
-    # call, so a second acquisition by EITHER route reds here.
-    calls = [ln for ln in src.splitlines() if "_slot(" in ln]
-    assert len(calls) == 2, calls
-    assert any(ln.strip().startswith("def _slot(") for ln in calls), calls
+    # Count the helper calls as well as its one physical acquisition site.
+    primary = (SCRIPTS / "primary_adjudication.py").read_text(encoding="utf-8")
+    integrate_calls = [ln for ln in src.splitlines() if "_slot(" in ln]
+    primary_calls = [ln for ln in primary.splitlines() if "integrate._slot(" in ln]
+    assert len(integrate_calls) == 2, integrate_calls  # definition + integrate()
+    assert any(ln.strip().startswith("def _slot(") for ln in integrate_calls)
+    assert len(primary_calls) == 1, primary_calls
+    assert "primary_turn=True" in primary_calls[0]
 
 
 def test_the_pessimistic_sequence_runs_when_a_lane_loses_the_race(tmp_path):

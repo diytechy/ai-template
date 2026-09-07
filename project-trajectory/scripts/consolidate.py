@@ -915,10 +915,9 @@ def close_refusal(root, record, absorbed, rows, where, *, scope, drafts, recorde
     3. **Every row this verdict touches is inside the row's `Adjudicates`
        scope.** The scope cell was decorative on this path: a draft superseding
        a row the census never clustered closed, merged and archived it. The
-       first-approval sibling has enforced exactly this bound since WI-572
-       (`is OUTSIDE `Adjudicates` scope`), and for the same reason — a live
-       re-derivation with no scope to intersect asks a wider question than the
-       mint asked.
+       first-approval brief likewise intersects its live re-derivation with
+       declared scope; without that intersection a brief asks a wider question
+       than the mint asked.
     4. **The recorded `Digests` still describe the tree.** The pair is recorded
        at the mint precisely so a stale verdict is detectable, and nothing
        compared it: a forged or simply out-of-date cell enacted a verdict

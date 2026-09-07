@@ -15,11 +15,23 @@ Both control segments stopped without a completed or integrated WI. The
 coordinator is stopped, pause tracked, and the interrupted lane preserved;
 the [retry record](CONTROL-RETRY.md#preserved-state-and-resolution-plan) owns
 the evidence. The subsequent Codex/Opus commits through `def51c22` changed
-plan documents, not the runtime. The new approval path is still unimplemented.
+plan documents, not the runtime. The current preparation implements the new
+path under the separately authored and reviewed
+[repair contract](APPROVAL-REPAIR-CONTRACT.md). The
+[independent follow-up](../reviews/2026-09-07-approval-runtime-opus-followup.md)
+approved the runtime with stated operational limits; the
+[dispositions](../reviews/2026-09-07-approval-runtime-dispositions.md) retain the
+findings and recovery constraints. The final full suite passed; the subsequent
+owner-only mover exclusion passed targeted publication/structural checks and
+[its bounded independent review](../reviews/2026-09-07-owner-relink-luna.md).
+The [repair log](../log.d/2026-09-07-approval-repair.md) records the exact test
+scope and results. Complete the enforcing commit bar and commit the repair
+before the fresh launch preflight; no new control launch is claimed yet.
 
 The owner settled [stable ID meaning and primary-checkout adjudication](WORK-FLOWS.md).
-Implement the [repair](CONTROL-RETRY.md#owner-clarification-and-revised-resolution),
-migrate adjudication close/records, reconcile the preserved lane and verify
+Finish the commit bar for the
+[repair](CONTROL-RETRY.md#owner-clarification-and-revised-resolution) and
+[preserved-lane migration](../reviews/2026-09-07-WI-605-supervisor-migration.md)
 before the next measured segment. The handoff carries the limits and pause
 restoration requirement. Retention remains absent and may remain excluded;
 it must not hold up this repair or be silently enabled in the control.
@@ -27,8 +39,8 @@ it must not hold up this repair or be silently enabled in the control.
 The latest Opus review's close/migration findings are retained. Its concurrency
 and verification descriptions are qualified in the boundary table: preserve
 the existing drained exclusive turn and the applicable scope-based checks,
-including the explicit no-product-bar path. Trunk-side ownership still needs
-mechanical enforcement against other entry points and restart races.
+including the explicit no-product-bar path. The repaired primary-turn and publication tests cover competing entry points
+and durable restart; retain the reviewed dirty-staging recovery limit.
 
 **Owner rulings sitting (2026-09-06, after `ae610215`):** the handoff's
 opening list links four rulings that change what this record's continuations

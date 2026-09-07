@@ -492,7 +492,7 @@ def test_the_lane_refusal_names_every_act_and_the_snapshot_write(tmp_path):
         in refusal
     )
     assert "the approval act is the ADJUDICATOR's" in refusal
-    assert "Leave the rows `Drafted`" in refusal  # the remedy, not just the verdict
+    assert "leave newly authored rows `Drafted`" in refusal
     # The green half of the same fixture: the AUTHORING commit is admitted.
     assert ar.lane_approval_refusal(tmp_path, "HEAD~2", "HEAD~1") is None
 

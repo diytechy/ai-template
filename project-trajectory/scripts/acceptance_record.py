@@ -384,6 +384,55 @@ def split_changed_cells(csv_path, id_col, head, row):
     return changed
 
 
+# Trace bindings implementation may maintain without rewriting the obligation.
+# Everything else fails toward governing authoring: the existing residual rule
+# in `split_changed_cells` already classifies unknown columns as approved.
+_IMPLEMENTATION_TRACE_CELLS = {
+    _spine_stem("docs/requirements/low-level-requirements.toml"): frozenset(
+        {"CodeSymbol", "TestRefs"}
+    ),
+    _spine_stem("docs/test/test-cases.toml"): frozenset({"Evidence"}),
+}
+
+
+def implementation_spine_refusal(root, base, head, safety_classes):
+    """Refuse governing spine authoring by a non-`spine` work branch.
+
+    This is the worker-role half of the existing two-tree boundary.  Exclusive
+    `spine` work may author the proposal (approval remains separately refused);
+    other work may update only the declared implementation evidence bindings.
+    """
+    kinds = {str(value or "").strip().lower() for value in (safety_classes or ())}
+    if kinds == {"spine"}:
+        return None
+    forbidden = []
+    for registry, id_col, before_rows, after_rows, canonical in _spine_row_sides(
+        root, base, head, APPROVAL_ACT_CSVS
+    ):
+        allowed = _IMPLEMENTATION_TRACE_CELLS.get(_spine_stem(canonical), frozenset())
+        for rid in sorted(set(before_rows) | set(after_rows)):
+            before, after = before_rows.get(rid), after_rows.get(rid)
+            if before is None or after is None:
+                forbidden.append("{} {} row".format(registry, rid))
+                continue
+            cells = split_changed_cells(canonical, id_col, before, after)
+            changed = set(cells["approved"]) | set(cells["traced"])
+            if (before.get("Status") or "") != (after.get("Status") or ""):
+                changed.add("Status")
+            blocked = sorted(changed - allowed)
+            if blocked:
+                forbidden.append("{} {} ({})".format(registry, rid, ", ".join(blocked)))
+    if not forbidden:
+        return None
+    return (
+        "implementation work amended governing spine content outside an exclusive "
+        "SafetyClass=spine authoring WI ({}). Return the needed meaning change as "
+        "a handback for separate spine authoring; nothing was merged".format(
+            "; ".join(forbidden)
+        )
+    )
+
+
 def _spine_revs(root, base, head, touches=()):
     """`(changed-paths, old-prefix, new-prefix)` for the two trees the spine scan
     compares, or None when git cannot answer (the silent-no-op degrade).
@@ -546,10 +595,9 @@ def staged_approval_acts(root, base="HEAD", head=None):
 
     Owner ruling 2026-09-01 (WI-572): the act this reports is the ADJUDICATOR's,
     performed on the serial trunk side. `approval_delta` directly below reads it
-    ONCE for `merge_approval_refusal`, which applies either the ordinary-lane ban
-    or the adjudication row's recorded scope at `integrate._approval_act_refusal`
-    — this reader does not itself cross the `IF-091` seam, and the seam does not
-    declare that it does.
+    ONCE for `merge_approval_refusal`, which refuses every worktree delta. The
+    typed `first_approval_scope` reader remains for the later trunk publication
+    boundary; no worktree actor consumes that scope as permission.
 
     Returns [] when not applicable; any missing git context is a silent no-op,
     like `staged_spine_amendments`."""
@@ -618,77 +666,27 @@ def first_approval_scope(metas):
     )
 
 
-def adjudication_approval_refusal(scope, delta):
-    """Refuse a first-approval act that exceeds its recorded row scope."""
-    acts, snapshot_files, refusal = delta
-    if refusal:
-        return refusal
-    if not scope:
-        return (
-            "first-approval adjudication declares an EMPTY `Adjudicates` scope; "
-            "the merge cannot know which rows its approval act may reach; nothing "
-            "was merged"
-        )
-    outside = [act for act in acts if act["id"] not in scope]
-    acted_registries = {act["registry"] for act in acts}
-    snapshot_registries = {
-        line.partition(" ")[2][len(SNAPSHOT_DIR) + 1 :]
-        for line in snapshot_files
-        if line.partition(" ")[2] != SNAPSHOT_DIR + "/README.md"
-    }
-    widened = sorted(snapshot_registries - acted_registries)
-    missing = sorted(acted_registries - snapshot_registries)
-    if not outside and not widened and not missing:
-        return None
-    lines = [
-        "  {} is OUTSIDE `Adjudicates` scope ({})".format(
-            act["id"], ";".join(sorted(scope))
-        )
-        for act in outside
-    ]
-    lines += [
-        "  snapshot WIDENED to {} without an approved row".format(r) for r in widened
-    ]
-    lines += [
-        "  {} was approved WITHOUT its anchoring snapshot".format(r) for r in missing
-    ]
-    # THE REMEDY, PER ARM. The three lines above say what the delta did; a
-    # session reading only those learns it is stopped and not what to do — and
-    # the WIDENED arm in particular is reached by following the brief exactly
-    # (its `--approves` is fixed before the verdict, so a batch that returns a
-    # registry's rows in full still names it). Each arm's repair is stated
-    # where the stop is read.
-    return (
-        "first-approval adjudication exceeds the approval act recorded on its "
-        "`Adjudicates` row: the merge admits only scoped flips and exactly their "
-        "registry snapshots; nothing was merged:\n{}\nRemedy — WIDENED: "
-        "`--approves` named a registry this act flipped nothing in (its rows "
-        "were all RETURNED); drop that token and re-take the snapshot, so the "
-        "copy blesses only text this act approved. WITHOUT ITS ANCHOR: the flip "
-        "landed with no copy behind it; add that registry to `--approves`. "
-        "OUTSIDE SCOPE: the row is another adjudication's; restore its `Status` "
-        "byte-exact.".format("\n".join(lines))
-    )
+def merge_approval_refusal(root, base, head):
+    """Refuse every worktree approval-record delta, regardless of its actor.
 
-
-def merge_approval_refusal(root, base, head, metas, adjudication):
-    """Apply one derived approval delta to its actor's authorization rule."""
-    delta = approval_delta(root, base, head)
-    if adjudication:
-        scope = first_approval_scope(metas)
-        if scope is not None or delta[0]:
-            return adjudication_approval_refusal(scope or frozenset(), delta)
-        return delta[2]
-    return lane_approval_refusal(root, base, head, delta)
+    A claimed adjudication worktree is not the later primary-checkout
+    publication boundary: it records judgment, while the coordinator's primary
+    turn publishes the accepted approval and mechanically copies the snapshot.
+    `first_approval_scope` remains available to that future operation; this
+    worktree boundary intentionally receives no actor or scope argument that
+    could become permission.
+    """
+    return lane_approval_refusal(root, base, head, approval_delta(root, base, head))
 
 
 def lane_approval_refusal(root, base, head, delta=None):
     """Why a WORK BRANCH's delta may not merge because it performs an APPROVAL
-    ACT — the refusal text, or None when it performs none.
+    ACT — the refusal text, or None when it performs none. Governing authoring
+    authority is decided separately by `implementation_spine_refusal`.
 
     THE ACT IS THE ADJUDICATOR'S, ON TRUNK (owner ruling 2026-09-01). A worker
-    lane AUTHORS `Drafted` SN/SR/LLR/TC rows and AMENDS cell text on any such
-    row, including approved ones. In those four spine registries
+    `spine` lane may author `Drafted` SN/SR/LLR/TC rows and amend their text.
+    In those four spine registries
     (`APPROVAL_ACT_CSVS`) it does not flip a `Status` into `Approved`/`Founded`
     or mint a row already claiming one; it does not write `SNAPSHOT_DIR`. The
     off-spine three (`OUTSIDE_THE_APPROVAL_ACT`) stay outside this rung — their
@@ -745,9 +743,11 @@ def lane_approval_refusal(root, base, head, delta=None):
         "claiming one, and it does not write {}/. Approving means reading the "
         "row's whole chain, which one "
         "work item does not hold, and a trunk-side act cannot conflict with a "
-        "second lane the way this one can. Leave the rows `Drafted`: the "
-        "first-approval adjudication minted at this merge is what reads the "
-        "chain, flips and takes the snapshot, on trunk. Nothing was "
+        "second lane the way this one can. Restore unauthorized approval and "
+        "snapshot writes; leave newly authored rows `Drafted` and preserve "
+        "existing approval statuses. Hand the bounded judgment to the "
+        "primary-checkout approval turn reads the chain and, after its accepted "
+        "review, publishes the Status change and mechanical snapshot. Nothing was "
         "merged:\n{}".format(head, SNAPSHOT_DIR, "\n".join(lines))
     )
 
@@ -1005,6 +1005,71 @@ def _snapshot_survives(root, new_rev):
     return bool(out and out.strip())
 
 
+def _primary_merge_snapshot_sync(root, snapshot_names, head):
+    """Whether staged snapshot paths are an exact in-progress primary merge.
+
+    A refresh runs ``git merge --no-commit`` in its linked worktree before the
+    strict integrity floor.  That merge may stage approval artifacts already
+    accepted on the primary checkout.  It is not worker authority: the merge
+    source must be ``MERGE_HEAD``, still an ancestor of the primary HEAD; every
+    staged snapshot blob must equal that source and have mirrored its live
+    counterpart at the commit that last wrote it; and no path may have changed
+    on the worker side since the merge base.  Any unreadable question is false.
+    """
+    if head is not None:
+        return False
+    merge_head = _git(root, ["rev-parse", "--verify", "--quiet", "MERGE_HEAD"])
+    primary = _kitgit.primary_worktree_root(root)
+    if not merge_head or primary is None:
+        return False
+    merge_head = merge_head.strip()
+    primary_head = _kitgit.git_out(primary, ["rev-parse", "--verify", "HEAD"])
+    if (
+        not primary_head
+        or _git(root, ["merge-base", "--is-ancestor", merge_head, primary_head.strip()])
+        is None
+    ):
+        return False
+    if (
+        _git(root, ["diff", "--cached", "--quiet", merge_head, "--", SNAPSHOT_DIR])
+        is None
+    ):
+        return False
+    merge_base = _git(root, ["merge-base", "HEAD", merge_head])
+    if not merge_base:
+        return False
+    source = _git(
+        root,
+        ["diff", "--name-only", merge_base.strip(), merge_head, "--", SNAPSHOT_DIR],
+    )
+    worker = _git(
+        root, ["diff", "--name-only", merge_base.strip(), "HEAD", "--", SNAPSHOT_DIR]
+    )
+    if source is None or worker is None:
+        return False
+    if not set(snapshot_names) <= set(source.splitlines()) or set(snapshot_names) & set(
+        worker.splitlines()
+    ):
+        return False
+    return all(
+        _source_snapshot_is_valid(root, merge_head, name) for name in snapshot_names
+    )
+
+
+def _source_snapshot_is_valid(root, source, name):
+    """Whether ``name`` was a live byte-for-byte copy at its source write."""
+    if name == SNAPSHOT_DIR + "/" + SNAPSHOT_README:
+        return True
+    origin = _git(root, ["log", "-1", "--format=%H", source, "--", name])
+    if not origin:
+        return False
+    origin = origin.strip()
+    live_name = name[len(SNAPSHOT_DIR) + 1 :]
+    snapshot = _git(root, ["show", "{}:{}".format(origin, name)])
+    live = _git(root, ["show", "{}:{}".format(origin, live_name)])
+    return snapshot is not None and snapshot == live
+
+
 def staged_snapshot_findings(root, base="HEAD", head=None):
     """THE MIRROR INVARIANT (snapshot design §F3), as warn strings.
 
@@ -1033,6 +1098,12 @@ def staged_snapshot_findings(root, base="HEAD", head=None):
     no-op when git cannot answer or no snapshot file moved — the same degrade
     every other scan here takes.
 
+    The linked-worktree ownership arm is deliberately an index-only question:
+    `head is None` asks who is trying to stage a write now. A commit-ish is
+    historical evidence that may be read from any checkout, so its bytes stay
+    under the ordinary committed-mirror and merge-admission checks rather than
+    being attributed to the checkout that inspected them.
+
     **TWO SEVERITIES SINCE D-9 MIGRATION STEP 7, which is what the design asked
     for** (§F3 risk 3: *"warn at the staged hook, ERROR on the integrity
     floor"*). This producer is unchanged and returns plain strings; the
@@ -1053,7 +1124,29 @@ def staged_snapshot_findings(root, base="HEAD", head=None):
     staged_names, _old_rev, new_rev = revs
     prefix = SNAPSHOT_DIR + "/"
     out = []
-    for name in sorted(n for n in staged_names if n.startswith(prefix)):
+    snapshot_names = sorted(n for n in staged_names if n.startswith(prefix))
+    primary_sync = (
+        head is None
+        and bool(snapshot_names)
+        and _kitgit.is_linked_worktree(root)
+        and _primary_merge_snapshot_sync(root, snapshot_names, head)
+    )
+    if (
+        head is None
+        and snapshot_names
+        and _kitgit.is_linked_worktree(root)
+        and not primary_sync
+    ):
+        out.append(
+            "{} was written from a linked worktree; restore these worker-originated "
+            "paths and record judgment in the work item. Only the exclusive "
+            "primary-checkout approval turn may publish the approval record: {}".format(
+                SNAPSHOT_DIR, "; ".join(snapshot_names)
+            )
+        )
+    for name in snapshot_names:
+        if primary_sync:
+            continue
         live_rel = name[len(prefix) :]
         # The README is PROSE (design §F8) — a stamp for a human, parsed by
         # nothing, with no live counterpart to mirror. Excluding it by name

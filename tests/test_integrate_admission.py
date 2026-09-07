@@ -473,114 +473,57 @@ def test_a_lane_that_flips_a_status_to_approved_is_refused_at_the_merge_slot(tmp
     assert refusal is not None
     assert "APPROVAL ACT" in refusal
     assert "SR-001 flipped Drafted -> Approved" in refusal
-    assert "Leave the rows `Drafted`" in refusal  # actionable, not just a verdict
+    assert "leave newly authored rows `Drafted`" in refusal
     assert _rev(root, "HEAD") != _rev(root, "wi-401")  # nothing merged
 
 
-def test_a_scoped_adjudication_lane_may_land_its_flip_and_snapshot(tmp_path):
+def test_first_approval_adjudication_never_gets_a_claim_branch(tmp_path):
+    home = tmp_path / "first-approval"
+    home.mkdir()
+    root = claim_repo(
+        home,
+        safety="adjudication",
+        brief="first-approval",
+        adjudicates=("SR-001",),
+    )
+
+    assert integ.claim(root, "WI-401", "wi-401") == 1
+    assert "wi-401" not in _git(root, "branch", "--format=%(refname:short)").split()
+    assert (root / "docs/work/queued/WI-401-widget.md").exists()
+
+
+def test_amendment_adjudication_also_never_gets_a_claim_branch(tmp_path):
+    home = tmp_path / "amendment"
+    home.mkdir()
+    root = claim_repo(
+        home,
+        safety="adjudication",
+        brief="amendment",
+        adjudicates=("SR-001",),
+    )
+
+    assert integ.claim(root, "WI-401", "wi-401") == 1
+    assert "wi-401" not in _git(root, "branch", "--format=%(refname:short)").split()
+    assert (root / "docs/work/queued/WI-401-widget.md").exists()
+
+
+def test_a_spine_authoring_lane_cannot_use_the_no_flip_snapshot_bypass(tmp_path):
     root = _spine_lane(
-        tmp_path / "adjudication",
-        flip=True,
+        tmp_path / "snapshot-only",
         snapshot=True,
-        safety="adjudication",
-        adjudicates=("SR-001",),
-    )
-
-    assert integ._adjudication_lane(root, "wi-401") is True
-    assert integ._approval_act_refusal(root, "wi-401") is None
-    refusal = integ.integrate_one(root, "wi-401", "smoke")
-    assert "no [product] test declaration" in refusal
-    assert "APPROVAL ACT" not in refusal
-
-
-def test_a_first_approval_adjudication_with_no_scope_is_refused(tmp_path):
-    root = _spine_lane(tmp_path / "empty-scope", flip=True, safety="adjudication")
-
-    refusal = integ._approval_act_refusal(root, "wi-401")
-    assert refusal is not None
-    assert "EMPTY `Adjudicates` scope" in refusal
-
-
-def test_a_scoped_return_only_adjudication_needs_no_approval_act(tmp_path):
-    root = _spine_lane(
-        tmp_path / "return-only",
-        safety="adjudication",
-        adjudicates=("SR-001",),
-    )
-
-    assert integ._approval_act_refusal(root, "wi-401") is None
-
-
-def test_a_scoped_flip_without_its_snapshot_is_refused(tmp_path):
-    root = _spine_lane(
-        tmp_path / "unanchored",
-        flip=True,
-        safety="adjudication",
-        adjudicates=("SR-001",),
+        safety="spine",
     )
 
     refusal = integ._approval_act_refusal(root, "wi-401")
     assert refusal is not None
-    assert (
-        "system-requirements.csv was approved WITHOUT its anchoring snapshot" in refusal
-    )
+    assert "wrote docs/archive/last_approved/" in refusal
 
 
-def test_an_adjudication_kind_alone_does_not_authorise_a_flip(tmp_path):
-    root = _spine_lane(
-        tmp_path / "actor-only",
-        flip=True,
-        safety="adjudication",
-        first_approval=False,
-    )
-
-    refusal = integ._approval_act_refusal(root, "wi-401")
-    assert refusal is not None
-    assert "EMPTY `Adjudicates` scope" in refusal
-
-
-def test_an_adjudication_cannot_flip_a_row_outside_its_scope(tmp_path):
-    root = _spine_lane(
-        tmp_path / "outside",
-        flip=True,
-        snapshot=True,
-        safety="adjudication",
-        adjudicates=("SR-002",),
-    )
-
-    refusal = integ.integrate_one(root, "wi-401", "smoke")
-    assert refusal is not None
-    assert "SR-001 is OUTSIDE `Adjudicates` scope (SR-002)" in refusal
-    assert _rev(root, "HEAD") != _rev(root, "wi-401")
-
-
-def test_an_adjudication_snapshot_cannot_widen_beyond_its_flips(tmp_path):
-    root = _spine_lane(
-        tmp_path / "wide-snapshot",
-        flip=True,
-        snapshot=True,
-        safety="adjudication",
-        adjudicates=("SR-001",),
-    )
-    _git(root, "checkout", "-q", "wi-401")
-    snap = root / "docs" / "archive" / "last_approved" / "docs" / "test"
-    snap.mkdir(parents=True, exist_ok=True)
-    (snap / "test-cases.toml").write_text("[cases]\n", encoding="utf-8", newline="\n")
-    _commit(root, "WI-401: widen the approval snapshot", when=T_LATER)
-    _git(root, "checkout", "-q", "main")
-
-    refusal = integ.integrate_one(root, "wi-401", "smoke")
-    assert refusal is not None
-    assert "snapshot WIDENED to docs/test/test-cases.toml" in refusal
-    assert _rev(root, "HEAD") != _rev(root, "wi-401")
-
-
-def test_unreadable_actor_frontmatter_fails_toward_the_approval_refusal(tmp_path):
-    root = _spine_lane(tmp_path / "unreadable", flip=True, safety="adjudication")
+def test_approval_refusal_does_not_depend_on_readable_frontmatter(tmp_path):
+    root = _spine_lane(tmp_path / "unreadable", flip=True)
     claimed = root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
     claimed.write_text("not frontmatter\n", encoding="utf-8")
 
-    assert integ._adjudication_lane(root, "wi-401") is False
     refusal = integ._approval_act_refusal(root, "wi-401")
     assert refusal is not None
     assert "SR-001 flipped Drafted -> Approved" in refusal
@@ -611,14 +554,14 @@ def test_a_lane_that_writes_the_approval_snapshot_is_refused(tmp_path):
     assert _rev(root, "HEAD") != _rev(root, "wi-401")
 
 
-def test_a_lane_that_only_authors_and_amends_drafted_rows_is_admitted(tmp_path):
+def test_a_spine_lane_that_authors_and_amends_drafted_rows_is_admitted(tmp_path):
     # THE OTHER HALF, and the half that makes this a rule instead of a ban on
     # touching the spine: authoring `Drafted` rows and amending cell text is
     # exactly what the ruling leaves to the lane. Driven twice — the rung itself
     # says None, and the SLOT gets past it to the NEXT refusal (this fixture
     # declares no `[product] test`), which is what proves the admission is in
     # situ rather than only in the helper.
-    root = _spine_lane(tmp_path / "clean")
+    root = _spine_lane(tmp_path / "clean", safety="spine")
 
     assert integ._approval_act_refusal(root, "wi-401") is None
     refusal = integ.integrate_one(root, "wi-401", "smoke")
@@ -631,7 +574,7 @@ def test_a_trunk_side_approval_after_the_claim_is_not_the_lanes(tmp_path):
     # keeps the ruling from banning approval outright: the adjudicator's act
     # happens on trunk, so it sits in the merge BASE and is not in the branch's
     # delta at all. Free by construction, not by exemption.
-    root = _spine_lane(tmp_path / "trunk")
+    root = _spine_lane(tmp_path / "trunk", safety="spine")
     reg = root / "docs" / "requirements" / "system-requirements.csv"
     reg.write_text(_SR_HEADER + _sr("Approved"), encoding="utf-8", newline="\n")
     _commit(root, "spine: the adjudicator approves SR-001 on trunk", when=T_LATER)
@@ -918,7 +861,7 @@ def test_the_branch_trees_copy_wins_under_the_invokers_layout(tmp_path, monkeypa
     inv = root / "kit" / "scripts"
     inv.mkdir(parents=True)
     (inv / "trunk_step.py").write_text("# invoker\n", encoding="utf-8", newline="\n")
-    monkeypatch.setattr(integ, "SCRIPTS", inv)
+    monkeypatch.setattr(integ.publication_verify, "SCRIPTS", inv)
     wt = tmp_path / "lane"
     lane = wt / "kit" / "scripts"
     lane.mkdir(parents=True)
@@ -934,7 +877,7 @@ def test_an_out_of_root_invoker_probes_the_known_layouts(tmp_path, monkeypatch):
     inv = tmp_path / "elsewhere" / "scripts"
     inv.mkdir(parents=True)
     (inv / "check.py").write_text("# invoker\n", encoding="utf-8", newline="\n")
-    monkeypatch.setattr(integ, "SCRIPTS", inv)
+    monkeypatch.setattr(integ.publication_verify, "SCRIPTS", inv)
     wt = tmp_path / "lane"
     (wt / "scripts").mkdir(parents=True)
     (wt / "scripts" / "check.py").write_text(
@@ -953,7 +896,7 @@ def test_a_branch_tree_without_the_script_falls_back_to_the_invoker(
     inv = tmp_path / "elsewhere" / "scripts"
     inv.mkdir(parents=True)
     (inv / "trunk_step.py").write_text("# invoker\n", encoding="utf-8", newline="\n")
-    monkeypatch.setattr(integ, "SCRIPTS", inv)
+    monkeypatch.setattr(integ.publication_verify, "SCRIPTS", inv)
     wt = tmp_path / "lane"
     wt.mkdir()
     got = integ._branch_tree_script(wt, tmp_path / "repo", "trunk_step.py")
@@ -969,7 +912,7 @@ def test_run_trunk_step_executes_the_branch_trees_copy(tmp_path, monkeypatch):
     (inv / "trunk_step.py").write_text(
         "import sys\n\nsys.exit(3)\n", encoding="utf-8", newline="\n"
     )
-    monkeypatch.setattr(integ, "SCRIPTS", inv)
+    monkeypatch.setattr(integ.publication_verify, "SCRIPTS", inv)
     root = tmp_path / "repo"
     root.mkdir()
     wt = tmp_path / "lane"

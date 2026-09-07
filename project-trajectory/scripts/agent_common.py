@@ -67,6 +67,7 @@ from pathlib import Path
 # scripts/ — the same sanctioned-sibling idiom the engines use for each other.
 try:
     from kitlib import config as _kitconfig
+    from kitlib import git as _kitgit
     from kitlib import ladder as _kitladder
     from kitlib import registry as _kitregistry
     from kitlib import secret_classes as _kitsecrets
@@ -75,6 +76,7 @@ try:
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import config as _kitconfig
+    from kitlib import git as _kitgit
     from kitlib import ladder as _kitladder
     from kitlib import registry as _kitregistry
     from kitlib import secret_classes as _kitsecrets
@@ -2578,6 +2580,9 @@ def write_session_log(iter_dir, meta, transcript):
         "train",
         "base",
         "phase",
+        "primary-turn",
+        "judgment",
+        "candidate",
         "wi",
         "model",
         "guardrails",
@@ -2937,42 +2942,8 @@ def phase_draw_ordinal(iter_dirs, phase):
     return count
 
 
-def worktree_records(root):
-    """Parsed `git worktree list --porcelain` records as (path, branch) pairs,
-    in git's own order — the MAIN checkout always first (WI-263); branch is
-    None when that worktree is detached. [] when git cannot answer (not a
-    repo, git missing) — each caller chooses its own fail direction. The one
-    porcelain walk, shared so the primary-checkout reader and the
-    integrator's holder lookup cannot drift apart."""
-    code, out = git(root, "worktree", "list", "--porcelain")
-    if code != 0:
-        return []
-    records, path, branch = [], None, None
-    for line in out.splitlines():
-        if line.startswith("worktree "):
-            if path is not None:
-                records.append((path, branch))
-            path = line[len("worktree ") :].strip()
-            branch = None
-        elif line.startswith("branch refs/heads/"):
-            branch = line[len("branch refs/heads/") :].strip()
-    if path is not None:
-        records.append((path, branch))
-    return records
-
-
-def primary_worktree_root(root):
-    """The MAIN (primary) worktree of `root`'s repo — the FIRST entry of
-    `git worktree list --porcelain`, which git always lists ahead of the linked
-    worktrees (WI-263). A dispatched worker runs agent_loop inside a linked TRAIN
-    worktree; this is how it reaches the durable cross-train iteration aggregate
-    that lives on the primary checkout. Returns a Path, or None when git can't
-    answer (not a repo, git missing) — the caller then falls back to its local
-    dir, so a draw never crashes."""
-    records = worktree_records(root)
-    if not records or not records[0][0]:
-        return None
-    return Path(records[0][0])
+worktree_records = _kitgit.worktree_records
+primary_worktree_root = _kitgit.primary_worktree_root
 
 
 def draw_iter_dirs(root, local_iter_dir):

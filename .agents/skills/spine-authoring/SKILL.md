@@ -16,13 +16,14 @@ smell after the fact. The tiering itself is a judgement, and this is the questio
 list to put to a row **before** it lands.
 
 **Authoring is not approving** (owner ruling 2026-09-01; `docs/process.md` §4).
-A worker lane writes its rows `Drafted` and may amend any cell of any row,
-approved ones included. It never flips a `Status` to `Approved`/`Founded`, never
-writes a row already claiming one, and never writes `docs/archive/last_approved/`
-— that act is an adjudication session's, on the serial trunk side, after reading
-the row's whole chain, and a lane's merge is refused by name if its delta
-performs it. So use the question list to make a row *ready*; the answer to "is
-it approved" comes from elsewhere.
+Exclusive spine-authoring work writes new rows `Drafted` and may amend in-scope
+approved text. Implementation work returns needed governing changes as a
+handback. No WI branch flips a spine `Status` into approval or writes
+`docs/archive/last_approved/`, including its ledger. The exclusive primary
+adjudicator judges the whole chain; mechanical publication follows accepted
+judgment and required reviews. The stable-ID meaning and publication rules live
+in PROCESS_OPTIONS.md, "Who performs the approval act". Use this question list
+to make a row ready; authoring never supplies its approval.
 
 **Authority, not restated here:** `docs/process.md` §3 (one fact one home;
 decompose don't paraphrase; one decision per row, one home per method; one

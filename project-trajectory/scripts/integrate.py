@@ -160,6 +160,8 @@ import tomllib
 from pathlib import Path
 
 import agent_common as ac
+import publication_verify
+import primary_publication
 import score_reviews
 import spec_move
 from kitlib import verdict as kverdict
@@ -652,6 +654,9 @@ def _claim_refusal(root, wi_ids, branch):
 
     Implements: SR-156, LLR-151
     """
+    refusal = primary_publication.writer_refusal(root)
+    if refusal:
+        return refusal
     paused = ac.tracked_pause(root / "docs")
     if paused is not None:
         return (
@@ -670,17 +675,9 @@ def _claim_refusal(root, wi_ids, branch):
             "branch name {!r} does not map to a flat claim directory - the queue "
             "handles single-segment branch names".format(branch)
         )
-    for wi_id in wi_ids:
-        try:
-            meta = _spec_frontmatter(_queued_spec(root, wi_id))
-        except ValueError as exc:
-            return str(exc)
-        refusal = _specref_refusal(root, meta, wi_id)  # WI-370
-        if refusal:
-            return refusal
-        refusal = _status_prose_refusal(root, wi_id)  # WI-358
-        if refusal:
-            return refusal
+    refusal = _claim_specs_refusal(root, wi_ids)
+    if refusal:
+        return refusal
     import schedule  # sibling; deferred so the cheap refusals above stay cheap
 
     ready = {
@@ -694,6 +691,25 @@ def _claim_refusal(root, wi_ids, branch):
         return "{} is not on the ready frontier (unmet needs or not queued)".format(
             ";".join(missing)
         )
+    return None
+
+
+def _claim_specs_refusal(root, wi_ids):
+    for wi_id in wi_ids:
+        try:
+            meta = _spec_frontmatter(_queued_spec(root, wi_id))
+        except ValueError as exc:
+            return str(exc)
+        if meta.get("safety_class") == "adjudication":
+            return "{} needs an exclusive primary adjudication turn, never a claim branch".format(
+                wi_id
+            )
+        refusal = _specref_refusal(root, meta, wi_id)  # WI-370
+        if refusal:
+            return refusal
+        refusal = _status_prose_refusal(root, wi_id)  # WI-358
+        if refusal:
+            return refusal
     return None
 
 
@@ -1114,11 +1130,9 @@ def _claimed_spec_frontmatters(root, branch):
 def _adjudication_lane(root, branch, metas=None):
     """Does EVERY claimed spec on `branch` declare the `adjudication` kind?
 
-    `_lane_bar_directives`' `skip` test, asked on its own because the approval
-    rung needs the answer BEFORE the bar question exists. Both callers use
-    `_claimed_spec_frontmatters`, so actor identity has one reader. UNREADABLE
-    FRONTMATTER ANSWERS FALSE: there it runs the bar; here it makes the branch a
-    work lane whose approval act refuses. Both fail toward more checking."""
+    Shared by the bar and verdict policy readers. Unreadable frontmatter
+    answers false and therefore requires the product bar. Approval-write
+    refusal applies to every branch independently of this classification."""
     metas = _claimed_spec_frontmatters(root, branch) if metas is None else metas
     return bool(metas) and all(
         str(meta.get("safety_class") or "").strip().lower() == "adjudication"
@@ -1146,26 +1160,26 @@ def _approval_act_refusal(root, branch):
     shares its material with. What stays in the merge slot is the RUNG — the
     merge base this branch is judged against, and the placement in the ladder.
 
-    An adjudication is the permitted actor, not unbounded authority. A claimed
-    first-approval row's `Adjudicates` cell bounds its flips, and the snapshot
-    may cover exactly the registries those flips changed. The delta is derived
-    once here and handed to either judgement, so actor classification can no
-    longer bypass the material being authorised.
+    Every WI branch has the same restriction, including an adjudication
+    branch. Scope and authority belong to primary approval publication;
+    classifying a branch as adjudication cannot grant it snapshot ownership.
     """
     import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
 
-    metas = _claimed_spec_frontmatters(root, branch)
     head = _head(root)
     code, base = ac.git(root, "merge-base", head, branch)
     if code != 0 or not base.strip():
         # Fail closed: an unread delta is not an empty one.
         message = f"cannot read the merge base of trunk {head[:10]} and {branch}, so the spine delta the approval-act rung reads is unknowable; nothing was merged:\n{ac._failure_tail(base)}"
         return message
-    judge = acceptance_record.merge_approval_refusal
-    if not metas:
-        return judge(root, base.strip(), branch, [], False)
-    actor = _adjudication_lane(root, branch, metas=metas)
-    return judge(root, base.strip(), branch, metas, actor)
+    metas = _claimed_spec_frontmatters(root, branch)
+    classes = (
+        None if metas is None else [meta.get("safety_class") for _name, meta in metas]
+    )
+    refusal = acceptance_record.merge_approval_refusal(root, base.strip(), branch)
+    return refusal or acceptance_record.implementation_spine_refusal(
+        root, base.strip(), branch, classes
+    )
 
 
 def _last_commit_time(root, ref, *pathspec):
@@ -1546,105 +1560,10 @@ def _declared_bar_or_refusal(root):
     return None
 
 
-def _run(argv, cwd):
-    """One captured child run: (returncode, stdout+stderr folded). The single
-    subprocess seam for the bar and the trunk step, so the capture keywords
-    have one home in this file."""
-    proc = subprocess.run(
-        argv,
-        cwd=str(cwd),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        stdin=subprocess.DEVNULL,
-    )
-    out = (proc.stdout or "") + ("\n" + proc.stderr if proc.stderr else "")
-    return proc.returncode, out
-
-
-def _branch_tree_script(wt, root, name):
-    """The BRANCH tree's copy of harness script `name`, else the invoker's.
-
-    The trunk step and the bar must be the refreshed branch's own: a work
-    branch may change a generator or the harness itself, and regenerating that
-    tree with the invoker's trunk-vintage copy writes artifacts the refresh
-    commit's own floor - which runs the branch's version - then refuses them as
-    stale (WI-368, first hit by WI-366's renderer change). The invoker is
-    trunk-vintage whenever dispatch.py drives the loop in-process, so this cannot
-    be simplified to "the module that is running". Discovery mirrors the
-    shipped hook's scripts-dir probe: the invoker's root-relative layout first,
-    then the known layouts; the invoker's copy is the fallback so a branch that
-    predates the script (or a root the invoker sits outside of) still
-    integrates.
-    """
-    rels = []
-    try:
-        rels.append(SCRIPTS.relative_to(root))
-    except ValueError:
-        pass
-    rels.extend((Path("scripts"), Path("project-trajectory") / "scripts"))
-    for rel in rels:
-        cand = wt / rel / name
-        if cand.is_file():
-            return cand
-    return SCRIPTS / name
-
-
-def _passed_steps(out):
-    """The DISTINCT step names check.py's output reports as PASS.
-
-    Counted by name, not by line (WI-377): under --jobs each step's status
-    line prints twice - once by the lane runner as it finishes, once in the
-    final summary block - so a line count reported a 20-step bar as "40
-    steps", a false measurement in the merge record. Distinct names give the
-    same answer at --jobs 1 and --jobs N.
-    """
-    names = set()
-    for ln in out.splitlines():
-        if re.match(r"\s*PASS\s", ln):
-            parts = ln.split()
-            if len(parts) >= 2:
-                names.add(parts[1])
-    return names
-
-
-def _run_bar(wt, root, tier, gate=None):
-    """check.py at the derived gate on the refreshed branch; fail-closed reading.
-
-    Green means: exit 0 AND the report carries no SKIP line. `--trunk-lane` is
-    passed because the tree being barred IS the tree that becomes trunk (the
-    --no-ff merge of a branch containing trunk reproduces it byte for byte), so
-    the §5.2 freshness gates - which stand down on a work branch, and which
-    this very step just regenerated - have to run here or nothing checks them.
-
-    `gate` (WI-388, the `bar` frontmatter key) pins check.py's --gate: a row
-    claimed to deliver evidence at a level still bars at that level if
-    docs/gate moves mid-flight. None keeps check.py on its own derived-gate
-    read, exactly as before.
-    """
-    py = ac.harness_python(root)
-    check = _branch_tree_script(wt, root, "check.py")
-    argv = [str(py), str(check), "--jobs", "0", "--tier", tier, "--trunk-lane"]
-    if gate:
-        argv += ["--stage", gate]
-    code, out = _run(argv, wt)
-    skips = [ln for ln in out.splitlines() if re.match(r"\s*SKIP\s", ln)]
-    if code != 0:
-        return False, out, "bar exit {}".format(code)
-    if skips:
-        return (
-            False,
-            out,
-            "bar reported SKIP - a skip is a refusal here:\n" + "\n".join(skips),
-        )
-    return (
-        True,
-        out,
-        "bar PASS ({} steps, tier {}{})".format(
-            len(_passed_steps(out)), tier, ", gate " + gate if gate else ""
-        ),
-    )
+_run = publication_verify.run
+_branch_tree_script = publication_verify.branch_tree_script
+_passed_steps = publication_verify.passed_steps
+_run_bar = publication_verify.run_bar
 
 
 def _run_trunk_step(wt, root):
@@ -1714,34 +1633,7 @@ def _normalize_bar(value):
 # it arrives with that set. (Its predecessor `docs/gate` was listed literally
 # and RETIRED at WI-498 slice 5; a dead pathspec silently NARROWS this
 # allowlist, failing lanes toward the full bar for no reason.)
-_ADJUDICATION_SURFACES = (
-    "docs/work/",
-    # WI-504 (OI-55 ruled (a)): a disposition's terminal close now moves the
-    # spec under the archive, one directory deeper — without this row that
-    # exact move (spec moves are named above as a ruled disposition outcome)
-    # would fail an adjudication lane off the no-bar path.
-    "docs/archive/work/",
-    "docs/log.d/",
-    "docs/reviews/",
-    # BOTH carrier paths per spine tier: this is a pathspec
-    # allowlist matched against `git diff --name-only`, and a repo that has not
-    # migrated stages the `.csv` name. Naming one suffix would fail the lane
-    # TOWARD the full bar there — safe, but wrong, and invisible until someone
-    # wonders why adjudication never takes the cheap path.
-    "docs/requirements/system-requirements.toml",
-    "docs/requirements/system-requirements.csv",
-    "docs/requirements/low-level-requirements.toml",
-    "docs/requirements/low-level-requirements.csv",
-    "docs/test/test-cases.toml",
-    "docs/test/test-cases.csv",
-    "docs/requirements/open-items.toml",
-    "docs/requirements/open-items.csv",
-    # SR-144's per-close reports: an adjudication lane READS them and, on an
-    # override, may write a corrective one. Without this row a lane that
-    # touches a report falls off the no-bar path into the full bar — a
-    # ~11-minute penalty for editing a document no product bar can speak to.
-    "docs/handbacks/",
-)
+_ADJUDICATION_SURFACES = publication_verify.ADJUDICATION_SURFACES
 
 
 def _adjudication_scope_ok(root, branch):
@@ -2771,7 +2663,7 @@ def integrate_one(root, branch, tier, held=None):
     return None
 
 
-def _slot(root):
+def _slot(root, *, primary_turn=False):
     """TAKE THE SLOT - the exclusive turn to advance trunk. Error string or None.
 
     THE ONE ACQUISITION SITE IN THIS FILE, and it must stay that way (§A2.0
@@ -2785,6 +2677,10 @@ def _slot(root):
     else moves, and no dial is added for a decision nobody has yet needed to
     change.
     """
+    if not primary_turn:
+        refusal = primary_publication.writer_refusal(root)
+        if refusal:
+            return refusal
     return ac.acquire_lock(root / "out" / "integrate.lock")
 
 
@@ -2858,40 +2754,8 @@ def _held_summary(root, held):
     return 1
 
 
-def _generated_table(root):
-    """The stack.ini [generated] rows as `{path: kind}` - the §5.2 declared
-    trunk-only set, READ rather than restated (check.py `_generated_census`
-    reads the same section for its own duty).
-
-    A row's value is `<kind> [| <BEGIN> | <END>]`; only the kind is kept,
-    because a marker pair narrows which REGION a regenerator rewrites, not
-    which path is declared."""
-    import configparser
-
-    ini = root / "docs" / "stack.ini"
-    if not ini.exists():
-        return {}
-    cp = configparser.ConfigParser(interpolation=None)
-    # Keys are PATHS: configparser's default optionxform lowercases, which
-    # would make PROJECT_STATE.html unmatchable and red the audit on the very
-    # bookkeeping it exists to permit.
-    cp.optionxform = str
-    try:
-        cp.read_string(ini.read_text(encoding="utf-8-sig", errors="replace"))
-    except (configparser.Error, OSError):
-        return {}
-    if not cp.has_section("generated"):
-        return {}
-    return {
-        key.strip(): (value or "").split("|")[0].strip()
-        for key, value in cp.items("generated")
-        if key.strip()
-    }
-
-
-def _generated_paths(root):
-    """The stack.ini [generated] keys - the §5.2 declared trunk-only set."""
-    return list(_generated_table(root))
+_generated_table = publication_verify.generated_table
+_generated_paths = publication_verify.generated_paths
 
 
 def audit(root, since):

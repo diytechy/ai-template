@@ -247,6 +247,25 @@ def test_worker_prompt_carries_the_context_block_computed_fresh(tmp_path):
     assert "Context refs" not in prompt2
 
 
+@pytest.mark.parametrize(
+    ("safety", "role"),
+    [("spine", "spine-authoring scope"), ("ordinary", "implementation scope")],
+)
+def test_worker_prompt_exposes_existing_safety_class(tmp_path, safety, role):
+    row = {
+        "WI-ID": "WI-005",
+        "Title": "the assignment",
+        "SR-Refs": "SR-001",
+        "SpecRef": "seed.txt",
+        "SafetyClass": safety,
+    }
+    prompt = agent_loop.worker_prompt(
+        tmp_path, {"WI-005": row}, "WI-005", "wi-005", "0" * 7
+    )
+    assert "SafetyClass: {}".format(safety) in prompt
+    assert role in prompt
+
+
 def test_worker_prompt_single_row_carries_no_assignment_block(tmp_path):
     # WI-580 Done-when 2, the byte-identity half: `{assignment_block}` renders
     # EMPTY for a one-row lane, so the single-row brief is what it was — the

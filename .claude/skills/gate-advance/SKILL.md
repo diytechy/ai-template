@@ -102,11 +102,12 @@ dial still holds, the owner. On a rung it has released, an **adjudication
 session, on the serial trunk side** — never the worker lane that authored the
 rows: approving means reading the row's whole chain, which one work item does
 not hold, and a lane that re-anchors the record seals whatever text was live in
-its own tree. A lane authors `Drafted` rows and amends cell text; its merge is
-REFUSED if its delta flips an **SN/SR/LLR/TC** `Status` or writes
-`docs/archive/last_approved/`, and the first-approval adjudication minted at
-that merge approves what it authored. Everything below is therefore the
-ACCEPTOR's procedure, not an author's:
+its own tree. Exclusive spine work authors `Drafted` rows and amends in-scope
+text; implementation hands back needed governing changes. Every WI branch is
+REFUSED if it approves an **SN/SR/LLR/TC** row or writes
+`docs/archive/last_approved/`, including its ledger. The adjudicator records
+judgment in primary; mechanical publication follows acceptance and required
+reviews. Everything below is the ACCEPTOR's procedure:
 
 - **Into `DevStg-Reqs`** — a draft requirement is approved: `Status` **`Drafted`
   → `Approved`** on the SR (and an SN leaves its draft state). The approval
@@ -134,18 +135,16 @@ ACCEPTOR's procedure, not an author's:
   human actually read at a sitting. Once you have read and blessed
   `CURRENT.md`, mint that sitting's dated copy — `python
   scripts/trace.py --mint-approval-brief <slug>` — and commit it alongside the
-  approving `Status`/snapshot change. Blessing the amendment
-  is `python scripts/intake.py snapshot` in the reviewed commit: the copy IS
-  the signature now, so without it the record of what was blessed does not
-  move. If the amendment invalidated the evidence, that is the harness's
-  problem to report and not a Status value. Record the ruling in the log's
-  Decisions, like any approval. The amendment itself is the authoring lane's
-  to make; the RE-COPY is the acceptor's (the ruling above), so amend and
-  re-copy in the **same commit** wherever ONE session does both — which is
-  every re-attestation, since a lane that re-copied would be approving. (The
-  `--staged` warn enforces the pairing.) A row's `Status` answers for its OWN
-  cells (owner ruling 2026-08-17) — a child LLR/TC amendment never touches
-  the owning SR.
+  approving `Status`/snapshot change. Apply PROCESS_OPTIONS.md's "Who performs
+  the approval act" meaning rule: accepted equivalent wording preserves
+  implementation judgments; uncertainty holds the baseline; changed meaning
+  requires impact review of every use and reference. The mechanical primary
+  publisher commits accepted judgment and the corresponding snapshot together,
+  after scope, authority, required review and whole-file absorption checks.
+  Authoring and judgment are separate; the adjudicator never invokes the
+  copier or rewrites its proposal. Record the ruling in the log's Decisions.
+  A row's `Status` answers for its OWN cells — a child amendment never changes
+  the owning SR's Status.
 
   > **The vocabulary is CLOSED at three values** — `Drafted`, `Approved`,
   > `Founded` — matched case-insensitively, and a value outside it is an

@@ -43,6 +43,9 @@ import argparse
 import os
 import subprocess
 
+from kitlib import adjudication as adjudication_grammar
+from kitlib import verdict
+
 from conftest import (
     SCRIPTS,
     disable_blackout,
@@ -539,6 +542,70 @@ Re-land the reviewed parts.
     return worker
 
 
+def returning_primary_session(root):
+    """A real committed primary RETURN, including its disposition successor."""
+
+    def session(args, primary_turn=None):
+        turn = primary_turn
+        assert turn is not None
+        spec = root / turn["spec"]
+        text = spec.read_text(encoding="utf-8")
+        meta, _body = drv.ac.parse_spec_frontmatter(text, turn["spec"])
+        brief = str(meta.get("brief") or "")
+        if brief == "disposition" and "\n## Dispositions\n" not in text:
+            text += (
+                "\n## Dispositions\n\n```toml\n"
+                'title = "Continue the reviewed handback"\n'
+                'workstream = "process"\n'
+                'buildtier = "quick"\n'
+                'specref = "{}"\n'
+                "```\n"
+            ).format(meta["specref"])
+        text += (
+            "\n## Approval\n\n```toml\nversion = 1\n"
+            'turn = "{}"\nbase = "{}"\nproposal = "{}"\n'
+            "decision = []\n```\n"
+        ).format(turn["turn"], turn["base"], verdict.tree_identity(root, turn["base"]))
+        spec.write_text(text, encoding="utf-8", newline="\n")
+        judgment = root / "docs/reviews/{}-primary.md".format(turn["wi"])
+        judgment.parent.mkdir(parents=True, exist_ok=True)
+        if brief == "disposition":
+            outcome = "OUTCOME: COMPLETE successors=1\n"
+        elif brief == "consolidate":
+            outcome = "OUTCOME: QUEUE needs=- absorbs=-\n"
+        else:
+            outcome = "OUTCOME: RETURN\n"
+        assert (
+            adjudication_grammar.verdict_text_refusal(
+                brief or "primary", outcome, str(judgment), scope=turn["scope"]
+            )
+            is None
+        )
+        judgment.write_text(outcome, encoding="utf-8", newline="\n")
+        _commit(root, "ADJUDICATE verdict")
+        judged = _git(root, "rev-parse", "HEAD").strip()
+        log = root / "docs/iteration/{}-primary.log".format(turn["wi"])
+        log.parent.mkdir(parents=True, exist_ok=True)
+        log.write_text(
+            "# phase: ADJUDICATE\n# wi: {}\n# base: {}\n"
+            "# provider: test\n# roster-row: dispatch\n# model: test\n"
+            "# session-id: session\n# invocation-id: invocation\n"
+            "# primary-turn: {}\n# judgment: {}\n# candidate: {}\n".format(
+                turn["wi"],
+                turn["base"][:12],
+                turn["turn"],
+                judgment.relative_to(root).as_posix(),
+                judged,
+            ),
+            encoding="utf-8",
+            newline="\n",
+        )
+        _commit(root, "ADJUDICATE telemetry")
+        return drv.ac.EXIT_DONE
+
+    return session
+
+
 def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capfd):
     # THE RUN-STOP THIS DELETES. Exit 7 used to end the whole walk-away run
     # with the branch parked. Now the lane closes into trunk and the driver
@@ -547,7 +614,13 @@ def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capfd
     root = stub_harness_repo(tmp_path)
     worker = then_closing(building_worker(7, [("half-done.py", "VALUE = 1\n")]))
 
-    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
+    rc = drv.run(
+        root,
+        drive_args(),
+        worker=worker,
+        tier="smoke",
+        primary_session=returning_primary_session(root),
+    )
     assert rc == 0
     out = capfd.readouterr().out
     assert "handback: closed WI-401 as partial from wi-401-widget" in out, out
@@ -575,8 +648,10 @@ def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capfd
     assert (root / "half-done.py").read_text(encoding="utf-8") == "VALUE = 1\n"
     # ...and the handback's merge MINTED the disposition row at intake
     # (WI-388, ruling R3), which this same run then drove to a close.
-    assert worker.calls[1][1] == ("WI-402",), worker.calls
-    assert list((root / "docs" / "work" / "complete").glob("WI-402-*.md"))
+    # WI-402 is judged on primary without becoming a worker claim; its reviewed
+    # disposition mints WI-403, and that ordinary continuation is the next lane.
+    assert worker.calls[1][1] == ("WI-403",), worker.calls
+    assert list((root / "docs/archive/work/complete").glob("WI-402-*.md"))
 
 
 def test_a_decided_exit_after_the_lane_closed_merges_on_its_declared_outcome(
@@ -625,7 +700,13 @@ def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(tmp_path,
     root = stub_harness_repo(tmp_path)
     worker = then_closing(building_worker(7, [("broken.py", "VALUE = (\n")]))
 
-    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
+    rc = drv.run(
+        root,
+        drive_args(),
+        worker=worker,
+        tier="smoke",
+        primary_session=returning_primary_session(root),
+    )
     assert rc == 0
     captured = capfd.readouterr()
     assert "quarantining it" in captured.err, captured.err
@@ -1133,7 +1214,13 @@ def test_empty_frontier_rung_one_mints_gap_rows_then_drives_them(tmp_path, capfd
     root = census_repo(tmp_path)
     worker = closing_all_worker()
 
-    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
+    rc = drv.run(
+        root,
+        drive_args(),
+        worker=worker,
+        tier="smoke",
+        primary_session=returning_primary_session(root),
+    )
     assert rc == 0
     out = capfd.readouterr().out
     assert "minted" in out and "gap-closure" in out, out
@@ -1421,7 +1508,13 @@ def test_the_dispatcher_mints_the_consolidation_row_for_an_overlapping_queue(
     root = overlapping_queue_repo(tmp_path)
     worker = closing_all_worker()
 
-    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
+    rc = drv.run(
+        root,
+        drive_args(),
+        worker=worker,
+        tier="smoke",
+        primary_session=returning_primary_session(root),
+    )
     assert rc == 0
     out = capfd.readouterr().out
     assert "consolidation census - minted" in out, out

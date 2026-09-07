@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
 | `CLAUDE.md` | **8,500** | 8,009 | 2026-09-06 | Reconcile +34 from the owner-ruled 90s smoke budget |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,594 | 2026-09-06 | Control repair: reconcile CLAUDE.md baseline |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,511 | 2026-09-07 | Approval repair: restamp watched method sizes |
 
 **`AGENTS.template.md` has less than 1% free**; this skill and `CLAUDE.md`
 have about 6%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
@@ -45,8 +45,8 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 88,990 | 2026-09-06 | **+625** redesign — ordinary intake distinguishes unsuitable LLR designs from coverage gaps |
-| `project-trajectory/PROCESS_OPTIONS.md` | 189,535 | 2026-09-06 | **+1,603** H2/H3/H5 review-carrier rules: attended Critique provenance, counterpart semantic decisions, and recorded proportionality stopping boundaries |
+| `project-trajectory/PROCESS.md` | 89,355 | 2026-09-07 | **−51** approval repair: primary publication and exclusive spine authoring |
+| `project-trajectory/PROCESS_OPTIONS.md` | 190,517 | 2026-09-07 | **+982** approval repair: stable meaning, primary judgment and mechanical publication |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

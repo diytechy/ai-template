@@ -25,8 +25,15 @@ fail-direction to declare, and folding that choice in here would hide it.
 """
 
 import subprocess
+from pathlib import Path
 
-__all__ = ["git_bytes", "git_out"]
+__all__ = [
+    "git_bytes",
+    "git_out",
+    "worktree_records",
+    "primary_worktree_root",
+    "is_linked_worktree",
+]
 
 
 def _git_stdout(root, args, **kwargs):
@@ -64,14 +71,12 @@ def git_out(root, args, stdin=None):
                stdin: str | None — batch input, or nothing
       Outputs: str | None — stdout on success; None on any failure
     """
-    return _git_stdout(
-        root,
-        args,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        input=stdin,
-    )
+    kwargs = {"text": True, "encoding": "utf-8", "errors": "replace"}
+    if stdin is None:
+        kwargs["stdin"] = subprocess.DEVNULL
+    else:
+        kwargs["input"] = stdin
+    return _git_stdout(root, args, **kwargs)
 
 
 def git_bytes(root, args):
@@ -82,3 +87,56 @@ def git_bytes(root, args):
     before deciding whether any field may be decoded.
     """
     return _git_stdout(root, args)
+
+
+def worktree_records(root):
+    """Parsed ``git worktree list --porcelain`` records, or ``[]`` on failure.
+
+    Git lists the primary worktree first; a detached worktree has ``branch =
+    None``.  Keeping the porcelain walk beside the low-level Git reader lets all
+    callers agree about that identity without importing a coordinator-level
+    module.  ``[]`` means Git could not answer; each caller chooses its own fail
+    direction.
+    """
+    out = git_out(root, ["worktree", "list", "--porcelain"])
+    if out is None:
+        return []
+    records, path, branch = [], None, None
+    for line in out.splitlines():
+        if line.startswith("worktree "):
+            if path is not None:
+                records.append((path, branch))
+            path = line[len("worktree ") :].strip()
+            branch = None
+        elif line.startswith("branch refs/heads/"):
+            branch = line[len("branch refs/heads/") :].strip()
+    if path is not None:
+        records.append((path, branch))
+    return records
+
+
+def primary_worktree_root(root):
+    """The primary worktree path, or ``None`` when Git cannot identify it.
+
+    A dispatched worker uses this to find durable primary artifacts; callers
+    that only need a local fallback keep that choice outside this reader.
+    """
+    records = worktree_records(root)
+    return Path(records[0][0]) if records and records[0][0] else None
+
+
+def is_linked_worktree(root):
+    """Whether Git identifies ``root`` as a linked worktree.
+
+    Git's worktree identity is its private git-dir versus the shared common-dir,
+    not a spelling of the working-directory path.  This stays false off Git so
+    callers that merely observe ownership retain their documented no-repo path.
+    """
+    out = git_out(
+        root,
+        ["rev-parse", "--path-format=absolute", "--git-dir", "--git-common-dir"],
+    )
+    if out is None:
+        return False
+    paths = [line.strip() for line in out.splitlines() if line.strip()]
+    return len(paths) == 2 and paths[0] != paths[1]

@@ -7,11 +7,19 @@ specref = "docs/requirements/system-requirements.toml"
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
+adjudicates = ["SR-161", "LLR-183", "TC-178"]
 +++
 
 ## Context
 
 Prepared from the SN-036 owner ruling and the live snapshot-drift brief. Source amendments are limited to the approved amendments to SR-161, LLR-183 and TC-178, while reading their whole chain, the revised direct Inspection route through TC-211, and TC-178's surviving supplementary Hat-Refs linkage. Decide whether each amended cell preserves or changes scope; The adjudication also judges the complete whole-registry absorption population below before any copy; it may re-attest only cells whose full chain and before/after it actually judged.
+
+Supervisor clarification superseding the preceding legacy phrasing: "approved amendments",
+"judges the complete whole-registry absorption population" and "re-attest" do
+not assert acceptance or enlarge this WI's scope. This turn adjudicates only
+SR-161, LLR-183 and TC-178. The remaining ledger is a publication precondition:
+an unjudged changed cell requires RETURN with zero accepted cells and a precise
+continuation; it does not transfer that cell's ownership to WI-605.
 
 Required snapshot absorption ledger before any snapshot write:
 
@@ -25,4 +33,10 @@ Required snapshot absorption ledger before any snapshot write:
 - Newly present Drafted SR-183/SR-184/SR-185/SR-186 and LLR-210 would also ride their respective copies. Preserve their Drafted statuses; this is not their first approval. LLR-210 remains with WI-604.
 - Test registry absorption population: `docs/test/test-cases.toml` differs from its snapshot on TC-178's Expected cell and newly present Drafted TC-208/TC-209/TC-210/TC-211. No other existing test row differs at preparation. Read it again at execution. Copying these new Drafted rows does not approve them; their Status must remain Drafted until their own first-approval adjudication (TC-208 remains with WI-604; TC-209–211 with the dependent batch). No other test cell or Status is authorized to change here.
 
-No snapshot may be written for any of the three affected registries unless every additional changed cell it would absorb has been independently judged and explicitly listed in the approving record. For older SR/LLR cells, either cite a prior whole-chain judgment that covers the exact live text, or perform that independent judgment here without changing the cell. Preserve WI-601 and WI-603 as the owners of their existing scopes: cite their completed judgments when available; do not close, absorb or duplicate those WIs. If any necessary judgment is unavailable or the cell cannot be accepted, RETURN with findings and draft the precisely scoped successor in `## Dispositions`; do not copy the registry. The `--approves` reference names that completed approval record, not a waiver of this read. Do not flip any unrelated Status. The existing pause remains; this is adjudication preparation, not a claim.
+The primary publisher may write no snapshot for any of the three affected registries unless every additional changed cell it would absorb has an independently reviewed judgment explicitly listed in the approval record. For older SR/LLR cells, cite a prior whole-chain judgment covering the exact live text; WI-605 does not independently acquire those scopes. Preserve WI-601 and WI-603 as the owners of their existing scopes: cite their completed judgments when available; do not close, absorb or duplicate those WIs. If any necessary judgment is unavailable or the scoped cell cannot be accepted, RETURN with findings and draft the precisely scoped successor in `## Dispositions`; do not request a copy. An approval reference names a completed judgment and never waives this review. Do not request any unrelated Status change. The existing pause remains; this is adjudication preparation, not a claim.
+
+Supervisor migration continuity: this same WI was returned from its stopped
+legacy worktree to the queue under the repaired primary-turn contract. Read
+`docs/reviews/2026-09-07-WI-605-supervisor-migration.md` before judgment. The
+preserved branch, round files and interruption patch are incident evidence and
+claims under review; none is an accepted approval payload or executable patch.

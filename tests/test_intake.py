@@ -318,7 +318,10 @@ def test_a_drafted_row_mints_one_first_approval_adjudication(tmp_path):
     text = (root / relpath).read_text(encoding="utf-8")
     assert "## Context" in text
     assert "SR-001 amended" in text
-    assert "read each row's WHOLE CHAIN" in text  # the outcomes, not just the list
+    assert "Read each row's WHOLE CHAIN" in text  # the outcomes, not just the list
+    assert "judging session writes neither Status" in text
+    assert "snapshot --approves" not in text
+    assert "flip + snapshot" not in row["Title"]
     # ...and the AMENDMENT trigger stayed silent on the same delta: the row left
     # `Approved`, so no approved text moved behind anyone's back.
     assert "meaning-or-clarity" not in text

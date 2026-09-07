@@ -3,9 +3,10 @@
      APPROVE OR RETURN? (owner ruling 2026-09-01; PROCESS.md §4.) Sent to an
      ADJUDICATE-phase session when a merged lane left spine rows `Drafted` — text
      that is authored and waiting on an approval nobody has given. The approval
-     act is THIS session's, on the serial trunk side: a work lane's merge is
-     refused if it flips a `Status` or writes the approval snapshot, so nothing
-     is approved until a session like this one approves it.
+     decision is THIS session's, on the serial trunk side: a work lane's merge
+     is refused if it flips a `Status` or writes the approval snapshot. This
+     session records the bounded decision; exclusive primary publication follows
+     the accepted judgement and required reviews.
 
      WHY THE ADJUDICATOR AND NOT THE AUTHORING LANE. Two reasons, both the
      owner's. CONTEXT: approving a row means holding its whole chain — the
@@ -33,19 +34,19 @@
                    agent_common.human_approves_spine and the `Adjudicates`
                    column are what make it true, not the wording.
        {baseline}  what the approval record currently anchors, and therefore
-                   what your snapshot would move. Registry- and git-derived.
-       {registries} the `--approves` argument your approving commit owes, one
-                   entry per registry whose rows you are flipping. Written for
-                   an ALL-APPROVE verdict, because it is fixed HERE, at
-                   composition, and the approve/return split does not exist
-                   until you rule.
-       {approves_rows} which rows each of those `;`-joined tokens covers. This
-                   is what makes a MIXED verdict actionable: a token whose rows
-                   you returned in full must be DROPPED, because copying a
-                   registry this act flipped nothing in re-anchors unreviewed
-                   text, and acceptance_record.adjudication_approval_refusal
-                   stops that merge as WIDENED. Derived from the same walk that
-                   builds {registries}, so the two cannot disagree.
+                   the baseline the later primary publication may move.
+                   Registry- and git-derived.
+       {registries} the exact registry/row publication scope evidenced by this
+                   decision, one entry per registry whose rows are in scope.
+                   It is recorded for later primary publication; this session
+                   does not invoke a copier.
+       {approves_rows} which rows each scope token covers. This makes a MIXED
+                   verdict actionable: a token whose rows you returned in full
+                   must be DROPPED, because publishing a registry this decision
+                   accepted nothing in would absorb unreviewed text. The
+                   primary publication gate must stop that widening. Derived
+                   from the same walk that builds {registries}, so the two
+                   cannot disagree.
        {verdict}   the repo path this session writes its verdict to.
        {wi}        this adjudication row's own id, for the result trailer.
 
@@ -55,7 +56,7 @@
      with it. The chain is the whole evidence.
 -->
 
-You are an INDEPENDENT adjudicator launched by the unattended coordinator, wearing a DIFFERENT hat from whoever authored these rows. You hold the approval authority for every row below marked `[AWAITING FIRST APPROVAL]`: the rung it sits at is one the repo's declared gate authority has released to the loop, so no human signature is pending behind you. What you approve is approved.
+You are an INDEPENDENT adjudicator launched by the unattended coordinator, wearing a DIFFERENT hat from whoever authored these rows. You decide every row below marked `[AWAITING FIRST APPROVAL]`: the rung it sits at is one the repo's declared gate authority has released to the loop, so no human signature is pending behind you. Record the exact row decision and its authority/scope evidence. An accepted decision is published later by the exclusive primary-checkout approval step; this session does not flip cells or write snapshots.
 
 A row marked `[AWAITING FIRST APPROVAL - HELD FOR THE OWNER, NOT YOURS TO FLIP]` is shown because it is part of a chain you must read — never because it is yours. Its rung is one the dial still holds for a human. Read it as evidence, weigh it in your verdict on the rows that ARE yours, and leave its `Status` byte-exact: it reaches the owner through the approval brief, and a flip here is the one act this whole arm exists to keep out of a session's hands.
 
@@ -82,17 +83,22 @@ Method — read the CHAIN, not the row:
 - Read the wording as a closed obligation: a "should" that means "must", a threshold with no units, an actor left unnamed, an acceptance condition nobody could observe. Each is a RETURN, not a note.
 - Fail toward `RETURN`. An approval is a standing claim that a competent reader blessed this text; a wrongly-returned row costs one more lane, and a wrongly-approved one is a false claim the record then carries forward.
 
-If the answer is APPROVE, perform the act — it is yours, and nothing downstream does it for you:
+If the answer is APPROVE, record the decision — it is yours, and nothing downstream may widen it:
 
-1. Move each approved row's `Status` from `Drafted` to `Approved` — only rows marked `[AWAITING FIRST APPROVAL]`, never a `HELD FOR THE OWNER` one — and NOTHING else in the registry. Every other cell of every row stays byte-exact.
-2. Take the anchoring snapshot in the SAME commit: `python scripts/intake.py snapshot --approves "{registries}"`. Without the copy, the record of what you blessed does not move, and the row reads as approved-but-unanchored. KEEP THE QUOTES: the argument joins registries with `;`, which every shell reads as a command separator, so an unquoted batch spanning two registries snapshots only the first and runs the second as a command.
+1. Name exactly which rows are approved and which are returned. Only rows marked `[AWAITING FIRST APPROVAL]` may receive `APPROVE`; held or out-of-scope rows remain byte-exact and are evidence only.
+2. Record the authority basis and exact registry/row scope that a later exclusive primary publication may apply. Do not flip a `Status`, edit a registry, invoke a snapshot copier, or write under `docs/archive/last_approved/` in this session.
 
-   THAT ARGUMENT IS WRITTEN FOR AN ALL-APPROVE VERDICT. Its `;`-joined tokens cover exactly these rows:
+   The scope evidence below covers exactly these rows:
+
+Publication scope tokens for the later primary publication: {registries}
 
 {approves_rows}
 
-   If you RETURNED every row a token covers, DROP that token. Naming a registry you flipped nothing in re-anchors its live text — text this act did not bless — and the merge refuses the whole commit as a snapshot WIDENED without an approved row. Keep a token when at least ONE of its rows is approved: the copy takes the registry whole, and the rows you returned stay `Drafted` inside it, which is what they are.
-3. Commit those two together as one reviewed commit. That commit IS the approval.
+   If you RETURNED every row a token covers, DROP that token from later
+   publication. Naming a registry whose rows this decision did not approve
+   would absorb unreviewed text; the primary publication step must refuse that
+   widening. Keep a token only when at least ONE of its rows is approved, and
+   preserve the row-level mapping for the later whole-file publication.
 
 If the answer is RETURN, change NO registry cell. Draft the follow-up work in a `## Dispositions` section of this row's own spec — one fenced ```toml block per draft — and intake mints it at this row's merge. Do not file the row yourself; a lane that mints an id is refused at the merge slot.
 
@@ -108,7 +114,4 @@ Then exactly one machine line:
 
 `APPROVE` only when EVERY row you were shown is approved. Commit the verdict file (an adjudication is a recorded verdict — its one home), ending that commit with the trailer `WI: {wi}` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open.
 
-THEN, AND ONLY AFTER THAT VERDICT IS RECORDED, finish the outcome you ruled:
-
-- If ANY row line says `APPROVE` — an all-approve `OUTCOME: APPROVE` or a mixed batch whose `OUTCOME` is `RETURN` — perform steps 1–3 above for exactly those approved rows. The flip plus scoped snapshot is a separate reviewed commit after the verdict commit. Stop only after that approval commit is recorded.
-- Only when EVERY row line says `RETURN` may you stop without changing a registry or the approval snapshot. The required `## Dispositions` follow-up is already part of the recorded verdict.
+THEN, AND ONLY AFTER THAT VERDICT IS RECORDED, stop this adjudication turn. The exclusive primary publication step consumes the exact recorded decisions and scope. It must apply only approved rows, preserve returned rows, refuse widened snapshot scope, and keep the prior baseline until publication succeeds.

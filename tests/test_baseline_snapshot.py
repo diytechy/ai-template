@@ -327,6 +327,7 @@ def test_a_DRAFTED_rows_amendment_is_not_absorption(tmp_path):
 IF_REL = "docs/requirements/interfaces.toml"
 LLR_REL = "docs/requirements/low-level-requirements.toml"
 TC_REL = "docs/test/test-cases.toml"
+EXT_REL = "docs/requirements/external.toml"
 # A non-`status` cell of the first shipped interface row — off-spine drift that
 # authorises nothing, so a spine-only act must leave its snapshot copy alone.
 _IF_DRIFT_FROM = "printed whole for the harness"
@@ -361,12 +362,14 @@ def test_a_STATUS_MOVE_refresh_is_STAMPED_as_a_Status_move(tmp_path):
     """WI-571 rework: a refresh authorised by a `Status` move alone (no
     `--approves` ref) copied its registry but wrote NO stamp, so that approval
     act was unauditable in the prose the stamp promises to carry. Now every
-    non-seed refresh that copies a registry is recorded — the seed writes no
-    stamp, so the record here is written by the flip and names the copied
-    registry with `Status move`, not a ref."""
+    non-seed refresh that copies a registry is recorded — the seed writes only
+    read-only directory guidance, so the approval record here is written by the
+    flip and names the copied registry with `Status move`, not a ref."""
     root = _seeded_with_a_drafted_sr(tmp_path)
     stamp_path = SNAP.snapshot_root(root) / SNAP.README
-    assert not stamp_path.is_file(), "the seed must not write an approval stamp"
+    seed_guidance = stamp_path.read_text(encoding="utf-8")
+    assert "linked worktree" in seed_guidance
+    assert "## Refreshes recorded" not in seed_guidance
     _rewrite(root, SR_REL, 'status = "Drafted"', 'status = "Approved"')  # the flip
     written = SNAP.copy_live(root)  # no --approves: a Status move authorises it
     assert any("system-requirements" in w for w in written)
@@ -420,6 +423,50 @@ def test_a_named_ref_copies_EXACTLY_its_registry(tmp_path):
     assert (SNAP.snapshot_root(root) / IF_REL).read_bytes() == seed_if
     assert any("system-requirements" in w for w in written)
     assert not any("interfaces" in w for w in written)
+
+
+def test_exact_targets_do_not_absorb_foreign_flip_drift_or_new_approval(tmp_path):
+    """The primary publisher's named write set never inherits copier widening."""
+    root = _tree(tmp_path)
+    # Make IF-001 an existing approved row in the initial record, so its later
+    # Data amendment is real approved drift rather than a new-row special case.
+    _rewrite(root, IF_REL, 'status = "Drafted"', 'status = "Approved"')
+    SNAP.copy_live(root, seed=True)
+    before_if = (SNAP.snapshot_root(root) / IF_REL).read_bytes()
+    before_ext = (SNAP.snapshot_root(root) / EXT_REL).read_bytes()
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (accepted)")
+    _rewrite(root, IF_REL, _IF_DRIFT_FROM, _IF_DRIFT_TO)
+    _rewrite(root, IF_REL, 'status = "Drafted"', 'status = "Approved"')
+    with (root / EXT_REL).open("a", encoding="utf-8", newline="\n") as stream:
+        stream.write(
+            '\n[entity.EXT-999]\nname = "new approved outsider"\n'
+            'class = "operational"\ndescription = "Must not widen this copy."\n'
+            'status = "Approved"\n'
+        )
+
+    written = SNAP.copy_live(
+        root,
+        approves={SR_REL: "accepted judgment"},
+        exact_rels={SR_REL},
+    )
+
+    assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == (
+        root / SR_REL
+    ).read_bytes()
+    assert (SNAP.snapshot_root(root) / IF_REL).read_bytes() == before_if
+    assert (SNAP.snapshot_root(root) / EXT_REL).read_bytes() == before_ext
+    assert any("system-requirements" in path for path in written)
+    assert not any("interfaces" in path or "external" in path for path in written)
+
+
+def test_exact_empty_target_does_not_fall_back_to_status_widening(tmp_path):
+    root = _seeded_with_a_drafted_sr(tmp_path)
+    before_sr = (SNAP.snapshot_root(root) / SR_REL).read_bytes()
+    _rewrite(root, SR_REL, 'status = "Drafted"', 'status = "Approved"')
+
+    assert SNAP.copy_live(root, exact_rels=()) == []
+    assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == before_sr
 
 
 def test_a_named_ref_mutes_ONLY_the_registry_it_names(tmp_path):
@@ -933,6 +980,14 @@ def _git_tree(tmp_path):
     return root, run_git
 
 
+def _linked_worktree(root, run_git, tmp_path):
+    """A real linked worker tree, not a mocked worktree-list response."""
+    linked = tmp_path / "linked-worker"
+    made = run_git("worktree", "add", "-q", "-b", "linked-worker", str(linked), "HEAD")
+    assert made.returncode == 0, made.stdout + made.stderr
+    return linked
+
+
 def test_a_clean_copy_satisfies_the_mirror_invariant(tmp_path):
     # Green first, and it must be green by CONSTRUCTION: a legitimate copy is
     # byte-for-byte and rides the same commit, so this can never warn.
@@ -941,6 +996,260 @@ def test_a_clean_copy_satisfies_the_mirror_invariant(tmp_path):
     SNAP.copy_live(root)
     run_git("add", "-A")
     assert CT.staged_snapshot_findings(root) == []
+
+
+def test_a_linked_worktree_cannot_run_the_snapshot_copier(tmp_path):
+    root, run_git = _git_tree(tmp_path)
+    linked = _linked_worktree(root, run_git, tmp_path)
+    before = (SNAP.snapshot_root(linked) / SR_REL).read_bytes()
+
+    _rewrite(root, SR_REL, 'title = "', 'title = "primary ')
+    written = SNAP.copy_live(root, approves={SR_REL: "primary publication"})
+    assert f"{SNAP.SNAPSHOT_DIR}/{SR_REL}" in written
+    assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == (
+        root / SR_REL
+    ).read_bytes()
+
+    try:
+        SNAP.copy_live(linked)
+    except SystemExit as exc:
+        assert "linked worktree may not write" in str(exc)
+    else:
+        raise AssertionError("linked worktree copy_live was allowed")
+
+    assert (SNAP.snapshot_root(linked) / SR_REL).read_bytes() == before
+
+
+def test_a_linked_snapshot_stage_reds_the_real_strict_integrity_floor(scaffold):
+    """The worker ownership finding must reach trace's hard integrity exit."""
+    skip_without_env_gates("git")
+    sr = scaffold / SR_REL
+    sr.write_text(sr.read_text(encoding="utf-8") + _WORKED_SR, encoding="utf-8")
+    assert run_py(["scripts/trace.py", "--bump-ids"], cwd=scaffold).returncode == 0
+    seeded = run_py(["scripts/intake.py", "snapshot", "--seed"], cwd=scaffold)
+    assert seeded.returncode == 0, seeded.stdout + seeded.stderr
+
+    git = shutil.which("git")
+    initialized = subprocess.run([git, "-C", str(scaffold), "init", "-q"])
+    assert initialized.returncode == 0
+    pin_autocrlf(scaffold)
+    for args in (("user.email", "t@example.com"), ("user.name", "T")):
+        configured = subprocess.run([git, "-C", str(scaffold), "config", *args])
+        assert configured.returncode == 0
+    committed = subprocess.run([git, "-C", str(scaffold), "add", "-A"])
+    assert committed.returncode == 0
+    committed = subprocess.run([git, "-C", str(scaffold), "commit", "-qm", "seed"])
+    assert committed.returncode == 0
+
+    linked = scaffold.parent / "linked-worker"
+    made = subprocess.run(
+        [
+            git,
+            "-C",
+            str(scaffold),
+            "worktree",
+            "add",
+            "-q",
+            "-b",
+            "linked-worker",
+            str(linked),
+            "HEAD",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert made.returncode == 0, made.stdout + made.stderr
+    _rewrite(linked, SR_REL, 'title = "', 'title = "worker ')
+    shutil.copyfile(linked / SR_REL, SNAP.snapshot_root(linked) / SR_REL)
+    staged = subprocess.run(
+        [git, "-C", str(linked), "add", "-A"], capture_output=True, text=True
+    )
+    assert staged.returncode == 0, staged.stdout + staged.stderr
+
+    red = run_py(["scripts/trace.py", "--strict-integrity"], cwd=linked)
+    out = red.stdout + red.stderr
+    assert red.returncode == 1, out
+    assert "linked worktree" in out, out
+    assert "integrity=1" in out, out
+
+
+def test_a_linked_worktree_snapshot_write_reaches_the_integrity_producer(tmp_path):
+    root, run_git = _git_tree(tmp_path)
+    linked = _linked_worktree(root, run_git, tmp_path)
+    _rewrite(linked, SR_REL, 'title = "', 'title = "worker ')
+    shutil.copyfile(linked / SR_REL, SNAP.snapshot_root(linked) / SR_REL)
+    staged = subprocess.run(
+        ["git", "-C", str(linked), "add", "-A"], capture_output=True, text=True
+    )
+    assert staged.returncode == 0, staged.stdout + staged.stderr
+
+    findings = CT.staged_snapshot_findings(linked)
+
+    assert any("linked worktree" in finding for finding in findings), findings
+    assert any(SR_REL in finding for finding in findings), findings
+
+
+def test_a_linked_worktree_reading_a_committed_snapshot_delta_is_not_a_write(tmp_path):
+    root, run_git = _git_tree(tmp_path)
+    linked = _linked_worktree(root, run_git, tmp_path)
+    _rewrite(root, SR_REL, 'title = "', 'title = "primary ')
+    SNAP.copy_live(root, approves={SR_REL: "primary approval publication"})
+    committed = run_git("add", "-A")
+    assert committed.returncode == 0, committed.stdout + committed.stderr
+    committed = run_git("commit", "-m", "primary approval publication")
+    assert committed.returncode == 0, committed.stdout + committed.stderr
+
+    findings = CT.staged_snapshot_findings(linked, "HEAD~1", "HEAD")
+
+    assert not any("linked worktree" in finding for finding in findings), findings
+
+
+def test_only_an_exact_primary_merge_may_stage_snapshots_in_a_linked_worktree(tmp_path):
+    root, run_git = _git_tree(tmp_path)
+    linked = _linked_worktree(root, run_git, tmp_path)
+    _rewrite(root, SR_REL, 'title = "', 'title = "primary ')
+    SNAP.copy_live(root, approves={SR_REL: "primary approval publication"})
+    committed = run_git("add", "-A")
+    assert committed.returncode == 0, committed.stdout + committed.stderr
+    committed = run_git("commit", "-m", "primary approval publication")
+    assert committed.returncode == 0, committed.stdout + committed.stderr
+    primary_head = run_git("rev-parse", "HEAD")
+    assert primary_head.returncode == 0, primary_head.stdout + primary_head.stderr
+    merged = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(linked),
+            "merge",
+            "--no-ff",
+            "--no-commit",
+            primary_head.stdout.strip(),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert merged.returncode == 0, merged.stdout + merged.stderr
+    staged_names = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(linked),
+            "diff",
+            "--cached",
+            "--name-only",
+            "--",
+            SNAP.SNAPSHOT_DIR,
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert SR_REL in staged_names.stdout
+    assert CT.staged_snapshot_findings(linked) == []
+
+    snapshot = SNAP.snapshot_root(linked) / SR_REL
+    snapshot.write_bytes(snapshot.read_bytes() + b"\n# worker change\n")
+    staged = subprocess.run(
+        ["git", "-C", str(linked), "add", "-A"], capture_output=True, text=True
+    )
+    assert staged.returncode == 0, staged.stdout + staged.stderr
+    findings = CT.staged_snapshot_findings(linked)
+    assert any("linked worktree" in finding for finding in findings), findings
+
+
+def test_primary_snapshot_sync_does_not_reapprove_pending_worker_wording(tmp_path):
+    root, run_git = _git_tree(tmp_path)
+    linked = _linked_worktree(root, run_git, tmp_path)
+    _rewrite(linked, SR_REL, 'title = "', 'title = "worker pending ')
+    worker = subprocess.run(
+        ["git", "-C", str(linked), "add", "-A"], capture_output=True, text=True
+    )
+    assert worker.returncode == 0, worker.stdout + worker.stderr
+    worker = subprocess.run(
+        ["git", "-C", str(linked), "commit", "-m", "worker wording"],
+        capture_output=True,
+        text=True,
+    )
+    assert worker.returncode == 0, worker.stdout + worker.stderr
+
+    _append_new_approved_sr(root, "SR-999")
+    SNAP.copy_live(root)
+    committed = run_git("add", "-A")
+    assert committed.returncode == 0, committed.stdout + committed.stderr
+    committed = run_git("commit", "-m", "primary approval publication")
+    assert committed.returncode == 0, committed.stdout + committed.stderr
+    primary = run_git("rev-parse", "HEAD")
+    assert primary.returncode == 0, primary.stdout + primary.stderr
+    merged = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(linked),
+            "merge",
+            "--no-ff",
+            "--no-commit",
+            primary.stdout.strip(),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert merged.returncode == 0, merged.stdout + merged.stderr
+
+    staged_names = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(linked),
+            "diff",
+            "--cached",
+            "--name-only",
+            "--",
+            SNAP.SNAPSHOT_DIR,
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert SR_REL in staged_names.stdout
+    assert CT.staged_snapshot_findings(linked) == []
+    assert (SNAP.snapshot_root(linked) / SR_REL).read_bytes() != (
+        linked / SR_REL
+    ).read_bytes()
+
+
+def test_a_malformed_primary_snapshot_is_not_trusted_by_linked_synchronization(
+    tmp_path,
+):
+    root, run_git = _git_tree(tmp_path)
+    linked = _linked_worktree(root, run_git, tmp_path)
+    _rewrite(root, SR_REL, 'title = "', 'title = "primary ')
+    SNAP.copy_live(root, approves={SR_REL: "primary approval publication"})
+    source_snapshot = SNAP.snapshot_root(root) / SR_REL
+    source_snapshot.write_bytes(
+        source_snapshot.read_bytes() + b"\n# malformed source\n"
+    )
+    committed = run_git("add", "-A")
+    assert committed.returncode == 0, committed.stdout + committed.stderr
+    committed = run_git("commit", "-m", "malformed primary snapshot")
+    assert committed.returncode == 0, committed.stdout + committed.stderr
+    primary = run_git("rev-parse", "HEAD")
+    assert primary.returncode == 0, primary.stdout + primary.stderr
+    merged = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(linked),
+            "merge",
+            "--no-ff",
+            "--no-commit",
+            primary.stdout.strip(),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert merged.returncode == 0, merged.stdout + merged.stderr
+
+    findings = CT.staged_snapshot_findings(linked)
+
+    assert any("linked worktree" in finding for finding in findings), findings
 
 
 def test_a_SCOPED_refresh_leaves_the_UNTOUCHED_offspine_mirror_GREEN(tmp_path):

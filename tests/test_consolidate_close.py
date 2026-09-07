@@ -39,6 +39,7 @@ integ = hb.integrate
 trace = load_script("trace")
 
 T_BASE = 1_000_000
+_PRIMARY_DRAFTS = {}
 
 
 def _git(root, *args):
@@ -184,23 +185,13 @@ NO_NEEDS_SPEC = (
 )
 
 
-def _record_verdict(root, branch, body, machine=None):
-    """What an ADJUDICATE session does on the lane: write its typed blocks into
-    its OWN spec, write the VERDICT FILE under `docs/reviews/` carrying the
-    machine line, and commit with the result trailer.
-
-    The verdict file is part of the fixture because the close reconciles it: the
-    `OUTCOME:`/`absorbs=` counters and the typed `## Consolidation` block are one
-    fact, and a fixture that wrote only the block could not see them disagree."""
-    wt, err = integ.lane_worktree(root, branch)
-    assert err is None, err
-    active = wt / "docs" / "work" / "active" / branch
-    spec = sorted(active.glob("WI-*.md"))[0]
+def _record_verdict(root, spec_rel, body, machine=None):
+    spec = root / spec_rel
     spec.write_text(
         spec.read_text(encoding="utf-8") + body, encoding="utf-8", newline="\n"
     )
     if machine is not None:
-        reviews = wt / "docs" / "reviews"
+        reviews = root / "docs" / "reviews"
         reviews.mkdir(parents=True, exist_ok=True)
         (reviews / "001-ADJUDICATE-abc1234.md").write_text(
             "- [MINOR] the cluster is one row -> overlap -> consolidate\n"
@@ -209,15 +200,23 @@ def _record_verdict(root, branch, body, machine=None):
             encoding="utf-8",
             newline="\n",
         )
-    _git(wt, "add", "-A")
-    _git(wt, "commit", "--no-verify", "-m", "adjudicate: the verdict\n\nWI: recorded")
-    return wt
+    _commit(root, "adjudicate: the verdict")
+    return root
+
+
+def _primary_close(root, spec_rel):
+    judgment = "docs/reviews/001-ADJUDICATE-abc1234.md"
+    ids, drafts, refusal = hb.stage_primary_adjudication(
+        root, spec_rel, judgment_path=judgment
+    )
+    if refusal is None:
+        _PRIMARY_DRAFTS[str(root)] = drafts
+    return ids, refusal
 
 
 def _merge(root, branch):
-    _git(root, "merge", "--no-ff", "-q", "-m", "integrate: merge " + branch, branch)
-    head = _git(root, "rev-parse", "HEAD").strip()
-    return head
+    _commit(root, "primary: close consolidation")
+    return _git(root, "rev-parse", "HEAD").strip()
 
 
 def test_the_census_mints_one_row_and_refuses_a_second_while_it_is_pending(tmp_path):
@@ -270,17 +269,15 @@ def test_a_consolidate_verdict_absorbs_its_cluster_end_to_end(tmp_path):
     minted, refusal = intake.mint_consolidation(root, busy=False)
     assert refusal is None, refusal
     judge_id = minted[0][0]
-    branch = judge_id.lower()
-    assert integ.claim(root, judge_id, branch) == 0
+    branch = minted[0][1]
     _record_verdict(root, branch, DISPOSITIONS + VERDICT, machine=MACHINE)
 
-    ids, refusal = hb.close_adjudication(root, branch)
+    ids, refusal = _primary_close(root, branch)
     assert refusal is None, refusal
     assert ids == [judge_id]
-    before = _git(root, "rev-parse", "HEAD").strip()
-    after = _merge(root, branch)
-    successors, refusal = intake.intake_after_merge(
-        root, before, after, {judge_id: "merged"}, branch
+    _merge(root, branch)
+    successors, refusal = intake.stage_mint(
+        root, _PRIMARY_DRAFTS.pop(str(root)), "primary consolidation"
     )
     assert refusal is None, refusal
     assert len(successors) == 1, successors
@@ -324,12 +321,10 @@ def test_the_close_refuses_by_name_when_an_absorbed_row_was_claimed(tmp_path):
     lane is building."""
     root = cluster_repo(tmp_path)
     minted, _ = intake.mint_consolidation(root, busy=False)
-    judge_id = minted[0][0]
-    branch = judge_id.lower()
-    assert integ.claim(root, judge_id, branch) == 0
+    branch = minted[0][1]
     assert integ.claim(root, "WI-402", "wi-402") == 0
     _record_verdict(root, branch, DISPOSITIONS + VERDICT, machine=MACHINE)
-    ids, refusal = hb.close_adjudication(root, branch)
+    ids, refusal = _primary_close(root, branch)
     assert ids is None
     assert refusal and "WI-402" in refusal and "no longer queued" in refusal
 
@@ -339,15 +334,15 @@ def test_queue_with_edge_writes_the_hard_needs_edge(tmp_path):
     root = cluster_repo(tmp_path)
     minted, _ = intake.mint_consolidation(root, busy=False)
     judge_id = minted[0][0]
-    branch = judge_id.lower()
-    assert integ.claim(root, judge_id, branch) == 0
+    branch = minted[0][1]
     _record_verdict(
         root,
         branch,
         '\n## Consolidation\n\n```toml\noutcome = "queue-with-edge"\n'
         'edges = ["WI-402 needs WI-401"]\n```\n',
+        machine="OUTCOME: QUEUE-WITH-EDGE needs=WI-402 absorbs=-",
     )
-    ids, refusal = hb.close_adjudication(root, branch)
+    ids, refusal = _primary_close(root, branch)
     assert refusal is None, refusal
     assert ids == [judge_id]
     _merge(root, branch)
@@ -360,17 +355,16 @@ def test_queue_with_edge_writes_the_hard_needs_edge(tmp_path):
 def test_return_to_draft_moves_the_row_back_with_the_finding_quoted(tmp_path):
     root = cluster_repo(tmp_path)
     minted, _ = intake.mint_consolidation(root, busy=False)
-    judge_id = minted[0][0]
-    branch = judge_id.lower()
-    assert integ.claim(root, judge_id, branch) == 0
+    branch = minted[0][1]
     _record_verdict(
         root,
         branch,
         '\n## Consolidation\n\n```toml\noutcome = "return-to-draft"\n'
         'returns = ["WI-403"]\n'
         'finding = "WI-403 re-proposes what WI-390 already refuted."\n```\n',
+        machine="OUTCOME: RETURN-TO-DRAFT needs=- absorbs=-",
     )
-    ids, refusal = hb.close_adjudication(root, branch)
+    ids, refusal = _primary_close(root, branch)
     assert refusal is None, refusal
     _merge(root, branch)
     rows = _rows(root)
@@ -388,8 +382,7 @@ def _minted_judge(root):
     minted, refusal = intake.mint_consolidation(root, busy=False)
     assert refusal is None, refusal
     judge_id = minted[0][0]
-    branch = judge_id.lower()
-    assert integ.claim(root, judge_id, branch) == 0
+    branch = minted[0][1]
     return judge_id, branch
 
 
@@ -402,12 +395,11 @@ def test_the_successor_context_quotes_every_absorbed_done_when_verbatim(tmp_path
     root = cluster_repo(tmp_path)
     judge_id, branch = _minted_judge(root)
     _record_verdict(root, branch, DISPOSITIONS + VERDICT, machine=MACHINE)
-    ids, refusal = hb.close_adjudication(root, branch)
+    ids, refusal = _primary_close(root, branch)
     assert refusal is None, refusal
-    before = _git(root, "rev-parse", "HEAD").strip()
-    after = _merge(root, branch)
-    successors, refusal = intake.intake_after_merge(
-        root, before, after, {judge_id: "merged"}, branch
+    _merge(root, branch)
+    successors, refusal = intake.stage_mint(
+        root, _PRIMARY_DRAFTS.pop(str(root)), "primary consolidation"
     )
     assert refusal is None, refusal
     successor = successors[0][0]
@@ -436,7 +428,7 @@ def test_a_verdict_absorbing_a_row_outside_the_cluster_is_refused_at_the_close(
         wide + VERDICT,
         machine="OUTCOME: CONSOLIDATE needs=- absorbs=WI-401;WI-402;WI-403;WI-409",
     )
-    ids, refusal = hb.close_adjudication(root, branch)
+    ids, refusal = _primary_close(root, branch)
     assert ids is None
     assert refusal and "WI-409" in refusal and "OUTSIDE" in refusal
     assert _rows(root)["WI-409"]["Status"] == "queued"
@@ -453,7 +445,7 @@ def test_a_verdict_whose_machine_line_disagrees_with_its_block_is_refused(tmp_pa
         DISPOSITIONS + VERDICT,
         machine="OUTCOME: QUEUE needs=- absorbs=-",
     )
-    ids, refusal = hb.close_adjudication(root, branch)
+    ids, refusal = _primary_close(root, branch)
     assert ids is None
     assert refusal and "OUTCOME: QUEUE" in refusal and "one judgement" in refusal
     for wid in ("WI-401", "WI-402", "WI-403"):
@@ -473,7 +465,7 @@ def test_a_stale_digests_cell_refuses_the_close(tmp_path):
     )
     _commit(root, "a row lands after the census ran")
     _record_verdict(root, branch, DISPOSITIONS + VERDICT, machine=MACHINE)
-    ids, refusal = hb.close_adjudication(root, branch)
+    ids, refusal = _primary_close(root, branch)
     assert ids is None
     assert refusal and "QUEUE has moved" in refusal
 
@@ -497,7 +489,7 @@ Scope: the second half.
 """
     )
     _record_verdict(root, branch, split + VERDICT, machine=MACHINE)
-    ids, refusal = hb.close_adjudication(root, branch)
+    ids, refusal = _primary_close(root, branch)
     assert ids is None
     assert refusal and "drafted 2 successor(s)" in refusal
 
@@ -510,15 +502,13 @@ def test_a_row_claimed_between_close_and_merge_refuses_the_whole_mint(tmp_path):
     root = cluster_repo(tmp_path)
     judge_id, branch = _minted_judge(root)
     _record_verdict(root, branch, DISPOSITIONS + VERDICT, machine=MACHINE)
-    ids, refusal = hb.close_adjudication(root, branch)
+    ids, refusal = _primary_close(root, branch)
     assert refusal is None, refusal
-    before = _git(root, "rev-parse", "HEAD").strip()
-    after = _merge(root, branch)
+    _merge(root, branch)
     # The race the close cannot see: a hand claim lands after it committed.
     assert integ.claim(root, "WI-402", "wi-402") == 0
-    after = _git(root, "rev-parse", "HEAD").strip()
-    minted, refusal = intake.intake_after_merge(
-        root, before, after, {judge_id: "merged"}, branch
+    minted, refusal = intake.stage_mint(
+        root, _PRIMARY_DRAFTS.pop(str(root)), "primary consolidation"
     )
     assert minted == []
     assert refusal and "WI-402" in refusal and "no longer a queued spec" in refusal
@@ -530,12 +520,9 @@ def test_a_row_claimed_between_close_and_merge_refuses_the_whole_mint(tmp_path):
 
 
 def _lane_tree_state(root, branch):
-    """`(worktree status, index+worktree diff)` for the lane's `docs/work` — the
-    two reads that together say "nothing was written and nothing was staged"."""
-    wt, err = integ.lane_worktree(root, branch)
-    assert err is None, err
+    """Primary index/worktree status: nothing written and nothing staged."""
     status = subprocess.run(
-        ["git", "-C", str(wt), "status", "--porcelain", "--", "docs/work"],
+        ["git", "-C", str(root), "status", "--porcelain", "--", "docs/work"],
         capture_output=True,
         encoding="utf-8",
     ).stdout
@@ -565,15 +552,14 @@ def test_a_refused_edge_leaves_the_lane_tree_byte_identical(tmp_path):
         'edges = ["WI-402 needs WI-401", "WI-404 needs WI-401"]\n```\n',
         machine="OUTCOME: QUEUE-WITH-EDGE needs=WI-402;WI-404 absorbs=-",
     )
-    ids, refusal = hb.close_adjudication(root, branch)
+    ids, refusal = _primary_close(root, branch)
     assert ids is None
     assert refusal and "WI-404" in refusal and "no readable `needs` line" in refusal
     assert "nothing written" in refusal
     # THE CLAIM: the first edge was never written, so the lane's docs/work is
     # exactly where the verdict commit left it.
     assert _lane_tree_state(root, branch).strip() == "", _lane_tree_state(root, branch)
-    wt, _err = integ.lane_worktree(root, branch)
-    spec = (wt / "docs" / "work" / "queued" / "WI-402-wi-402.md").read_text(
+    spec = (root / "docs" / "work" / "queued" / "WI-402-wi-402.md").read_text(
         encoding="utf-8"
     )
     assert "WI-401" not in spec
@@ -591,15 +577,11 @@ def test_a_refused_return_leaves_the_lane_tree_byte_identical(tmp_path):
         'returns = ["WI-402", "WI-403"]\nfinding = "re-proposes a refuted scope"\n```\n',
         machine="OUTCOME: RETURN-TO-DRAFT needs=- absorbs=-",
     )
-    # WI-403 leaves the queue on the LANE only, after the trunk-side guards read
-    # a still-queued trunk: the preflight is the lane-side rung that catches it.
-    wt, err = integ.lane_worktree(root, branch)
-    assert err is None, err
-    (wt / "docs" / "work" / "queued" / "WI-403-wi-403.md").unlink()
-    _git(wt, "add", "-A")
-    _git(wt, "commit", "--no-verify", "-m", "a hand edit on the lane")
-    ids, refusal = hb.close_adjudication(root, branch)
+    # WI-403 leaves the primary queue before publication; preflight catches it.
+    (root / "docs" / "work" / "queued" / "WI-403-wi-403.md").unlink()
+    _commit(root, "a concurrent queue edit")
+    ids, refusal = _primary_close(root, branch)
     assert ids is None
-    assert refusal and "WI-403" in refusal and "nothing written" in refusal
+    assert refusal and "WI-403" in refusal and "no longer queued" in refusal
     assert _lane_tree_state(root, branch).strip() == ""
-    assert (wt / "docs" / "work" / "queued" / "WI-402-wi-402.md").is_file()
+    assert (root / "docs" / "work" / "queued" / "WI-402-wi-402.md").is_file()

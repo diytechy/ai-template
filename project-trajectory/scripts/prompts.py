@@ -118,6 +118,7 @@ ADJUDICATE_DISPOSITION = "ADJUDICATE-DISPOSITION"
 # mints the row are what make them reachable.
 ADJUDICATE_CONSOLIDATE = "ADJUDICATE-CONSOLIDATE"
 ADJUDICATE_RED_TC = "ADJUDICATE-RED-TC"
+ADJUDICATE_PRIMARY = "ADJUDICATE-PRIMARY"
 
 KIT_PROMPTS = {
     WORKER: "worker.template.md",
@@ -128,6 +129,7 @@ KIT_PROMPTS = {
     ADJUDICATE_DISPOSITION: "adjudicate-disposition.template.md",
     ADJUDICATE_CONSOLIDATE: "adjudicate-consolidate.template.md",
     ADJUDICATE_RED_TC: "adjudicate-red-tc.template.md",
+    ADJUDICATE_PRIMARY: "primary-adjudication.template.md",
 }
 
 # A single-brace `{name}` slot. Lower-case + underscore only, so a `{}` that is

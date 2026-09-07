@@ -402,6 +402,43 @@ def test_inside_a_git_repo_the_move_is_a_staged_git_mv(tmp_path):
     assert "docs/specs/WI-001.md" not in tracked
 
 
+def test_move_never_reads_rewrites_or_stages_a_fake_owner_only_file(
+    tmp_path, monkeypatch
+):
+    """Owner-only scratch content stays outside the close ritual's traversal."""
+    skip_without_env_gates("git")
+    repo = tmp_path
+    _git = _seeded_repo(repo)
+    src = repo / "docs/work/queued/WI-1-private.md"
+    src.parent.mkdir(parents=True, exist_ok=True)
+    src.write_text("# WI-1\n", encoding="utf-8")
+    owner = repo / sm.ac.OWNER_ONLY_PATHS[0]
+    original = "private [WI](docs/work/queued/WI-1-private.md)\n"
+    owner.write_text(original, encoding="utf-8")
+    _git("add", "-A")
+    _git("commit", "-qm", "seed synthetic owner-only file")
+    open_path = sm.Path.open
+
+    def public_open(path, *args, **kwargs):
+        assert path != owner, "the relinker read synthetic owner-only content"
+        return open_path(path, *args, **kwargs)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(sm.Path, "open", public_open)
+        touched, err = sm.move_spec(
+            repo,
+            "docs/work/queued/WI-1-private.md",
+            "docs/work/complete/WI-1-private.md",
+        )
+
+    assert err is None
+    assert owner.read_bytes() == original.encode("utf-8")
+    assert sm.ac.OWNER_ONLY_PATHS[0] not in touched
+    assert (
+        sm.ac.OWNER_ONLY_PATHS[0] not in _git("diff", "--cached", "--name-only").split()
+    )
+
+
 def test_the_move_stages_the_working_tree_content_not_the_stale_index_blob(tmp_path):
     """THE WI-408 FIELD DEFECT, in the exact shape it fired (WI-401's close,
     2026-08-02): the worker filled the spec's `## Deliverable` — an UNSTAGED

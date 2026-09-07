@@ -113,6 +113,12 @@ chasing it.
     each scoped by its WI row, spec, and train context, never a `status.md`
     resume — and the stop banner + exit codes carry the run's
     outcome.
+  - Adjudication uses an exclusive primary-checkout turn, with a queued spec
+    and committed judgments. The `primary_adjudication.py`,
+    `primary_approval.py` and `primary_publication.py` modules bind that turn
+    to its reviewed approval, snapshot and successor effects.
+    The [approval repair contract](docs/ai-template-redesign-2026-09-05-codex/APPROVAL-REPAIR-CONTRACT.md)
+    records the reviewed boundaries and migration.
   - **Parallel-by-default execution** *(delivered — phase `v4` at DevStg-Impl;
     [`parallel-wi-dispatch.md`](docs/archive/specs/parallel-wi-dispatch.2026-07-20.md))*: a plain
     launch **is** the dispatcher: it fans out every dependency-ready work item

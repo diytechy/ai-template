@@ -12,6 +12,11 @@ supersedes = "WI-540"
 
 ## Context
 
+Deferred for the upcoming supervised control segment under the September 7
+handoff. Retention remains absent and its restoration is excluded. Re-queue
+this same item after the coordinator has stopped and the tracked pause is
+restored; later restoration still owes separate spine authoring and judgment.
+
 **Re-queued after the supervised Short control retry stopped.** This patch
 was not admitted during the measured segment. The global pause remains; no
 coordinator launch is authorized while the interrupted lane and snapshot

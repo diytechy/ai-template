@@ -1013,9 +1013,9 @@ notes = """source - trace_text consumes NOTHING by design: it is the pure predic
 [interface.IF-077]
 rationale = """The import is lazy and degrades to path-only because this module runs in the SHIPPED pre-commit hook, where a hard requirement would block an adopter's every commit. The ship-and-re-sync-together obligation is the same ground IF-056 stands on."""
 owner = "scripts/check_docs"
-requestors = ["scripts/check_trajectory"]
+requestors = ["scripts/check_trajectory", "scripts/primary_turn"]
 channel = "call"
-data = "parse_doc: one document's outbound links and its anchor set"
+data = "parse_doc: one document's outbound links and its anchor set; blank_fenced: line-preserving Markdown text with fenced code hidden from heading readers"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
@@ -1547,7 +1547,7 @@ notes = """cross-component crossing declared per the architecture rule: this mod
 
 [interface.IF-123]
 owner = "scripts/baseline_snapshot"
-requestors = ["scripts/intake"]
+requestors = ["scripts/intake", "scripts/primary_adjudication", "scripts/primary_publication", "scripts/primary_turn"]
 channel = "call"
 data = "copy_live, load_all, rows_for, exists, stamp, is_drifted, unanchored_findings"
 version = "v1"

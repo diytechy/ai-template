@@ -59,6 +59,13 @@ for _k in [k for k in os.environ if k.startswith("AGENT_")]:
 # docs/stack.ini [smoke-budget] and tests/test_smoke_budget.py.
 SLOW_MODULES = frozenset(
     {
+        # Primary approval proofs create real Git histories, disposable clones,
+        # hooks and publication replays (23 initial cases: 9.12s alone). Keep
+        # this integration assurance in Full/CI, preserving both smoke budgets.
+        "test_primary_adjudication",
+        "test_primary_approval",
+        "test_primary_publication",
+        "test_primary_session",
         # P9R selector tests create/commit real Git fixtures and invoke the
         # existing generators (45 cases, 11.57s alone); they are integration
         # assurance at Full/CI, not in-process smoke units. No existing module

@@ -457,14 +457,25 @@ driving it:
 
 **The division of labour, in full:**
 
-| | A worker lane | An adjudication |
+| | A worker lane | An exclusive primary adjudication turn |
 |---|---|---|
-| Authors spine rows | Yes — new rows are written `Drafted`, chain links, rationale and evidence cells filled. | No. |
-| Amends spine text | Yes — any cell, on any row, `Approved` ones included; the row's `Status` is left alone. | No; it RETURNS a row with findings, never rewrites it. |
-| Flips `Status` | **Never on a spine row** (SN/SR/LLR/TC). A flip in the lane's delta refuses the merge. | Yes, on the rungs the dial releases, in its own reviewed commit. |
-| Writes `docs/archive/last_approved/` | **Never.** | Yes — in the same commit as the flip, scoped to the registries the act covers. |
-| Judges a post-approval amendment | No; it records what it changed and why. | Yes — meaning or clarity; on a released rung a *meaning* verdict is followed by its own re-attestation in the same session, on a held rung the row goes to the owner. |
-| Concurrency | Runs beside other lanes; may not hold the spine. | Runs alone, so two acts cannot overlap. |
+| Authors spine rows | Only exclusive spine-authoring work; new rows stay `Drafted`. | No. |
+| Amends governing SN/SR/LLR text | Only exclusive spine-authoring work, within scope. Implementation returns a handback. | No; it returns findings to separate authoring work. |
+| Flips spine `Status` | **Never** (SN/SR/LLR/TC). | Mechanical publication applies an accepted first approval, after required review and authority checks. |
+| Writes `docs/archive/last_approved/` or its ledger | **Never**, including adjudication worktrees. | The mechanical publisher copies accepted content in the approval commit; the model does not invoke the copier. |
+| Judges a post-approval amendment | No; it records its scoped proposal. | Compares meaning against the last approved snapshot under the rule below. |
+| Concurrency | Ordinary implementation may run in parallel; spine authoring runs alone. | Runs in the coordinator's designated primary checkout on its integration branch, without a worktree; ownership excludes admission, merges and other writers through publication and restart. |
+
+**An ID denotes stable meaning.** Changed bytes require semantic comparison,
+not automatic invalidation of implementation judgments. Accepted equivalent
+wording preserves those judgments and its existing approval; publish the
+equivalence decision and mechanical snapshot update together. Uncertain
+equivalence holds the prior baseline. Changed meaning requires impact review
+of every use and reference, including downstream requirements, tests,
+implementation and approval evidence, before acceptance. A `MEANING` verdict
+alone never authorizes a copy. No new-ID policy or replacement status follows.
+Rejection leaves the baseline intact. A whole-file copy must enumerate and
+resolve every unapproved cell it would absorb outside the accepted scope.
 
 **How it is held.** Three mechanisms, none of them a new detector:
 
@@ -490,21 +501,23 @@ driving it:
    chain in its brief, asking one question: approve, or return with findings. A
    rung the dial still holds is not minted; it surfaces to the owner as before.
    Those row ids are RECORDED ON THE MINTED ROW, and the brief — which re-derives
-   its population live, because the row is claimed long after the merge — acts
+   its population live, because judgment may follow the merge much later — acts
    only on the intersection. Otherwise "the rows the lane handed over" is a
    sentence the machinery does not keep: the live model is repo-wide, so one
    lane's merge would hand its adjudicator every unapproved row in the tree, and
    the snapshot would move across workstreams the concurrency reason above says
    it must not.
-3. An adjudication row is not `ordinary`, so the coordinator already runs it as
-   an exclusive lane. The concurrency guarantee is a property the machinery had
-   before this ruling; the ruling is what points the act at it.
+3. Adjudication uses the drained exclusive window in primary. Scope-based
+   verification still includes its explicit no-product-bar path; actual
+   product changes owe the applicable bar. Durable WI and verdict records
+   bind judgment, review, authority, close and successor minting without an
+   adjudication branch. The exclusive window releases only after those effects
+   settle; a restart resumes that same turn first.
 
-**What this is not.** It is not a change to the dial or to which rungs are
-human-held — a held rung still surfaces to the owner exactly as before, and the
-adjudicator acts only where the dial has released. It is not a return of
-mechanical approval: no hook, step or helper writes a `Status` cell. The act is
-a *session's* reviewed commit, and what changed is which session may take it.
+Human-held rungs retain the human boundary. The adjudicator judges; the
+publisher checks the exact accepted content, scope and required evidence, then
+commits decision, any Status change and snapshot together. Mechanical copying
+does not itself judge meaning or grant approval.
 
 ### The three presets
 
