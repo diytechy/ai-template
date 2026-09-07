@@ -1,0 +1,9 @@
+{
+  "purpose": "explicit supervised loop-held design check; not primary Approval",
+  "model": "gpt-6-astra",
+  "effort": "medium",
+  "degraded": "fresh independent same-family session; alternate providers unavailable",
+  "prompt_sha256": "6f557fcbfb91de5d946961df7235ad9472c3801da3a42ce02204483d127601e6",
+  "exit": 0,
+  "wall_seconds": 97.67983445897698
+}

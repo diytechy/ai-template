@@ -1,0 +1,905 @@
+2026-09-07T18:09:53.488403Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-07T18:09:53.490825Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-07T18:09:53.497960Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-07T18:09:53.499835Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-07T18:09:53.501450Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+OpenAI Codex v0.153.4
+--------
+workdir: /Users/diytechy/Documents/ai-template
+model: gpt-6-astra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: medium
+reasoning summaries: none
+session id: 01a07d0f-f741-7392-831e-b002c32afba3
+--------
+user
+Perform the fresh strong-tier DESIGN-CHECK required by the existing loop-held escalation, using only supplied sources. Do not use tools, edit files or claim execution. State whether to continue adjudication rework or redesign, document assumptions, and give a concrete bounded course. This is advice to a still-pending primary adjudication, not an Approval payload or independent review of its final future candidate.
+
+Actual managed history: WI-610's 52-row atomic amendment judgment returned every row for contradictory TC-161.Method vs LLR-167 and inaccurate TC-205 primary-path evidence vs LLR-207. The ordinary reviewer requested two MAJOR reasoning corrections below. The same round flagged implementer-touched-review-path. Exact reviewed range contains only its own docs/reviews/contract_split/002-ADJUDICATE-64c1e8a.md and docs/reviews/primary/WI-610-d522f3b0c7295ce2d46765551a6500491a76ff2c/turn.toml. impl_changed_paths excludes the train's own path but not the machine-authored selection. The selection was committed by primary_adjudication.begin before the implementer ran; no foreign review was changed. The generic whole-train diff misattributes that selection. The tripwire must be acknowledged, not suppressed or treated as final approval.
+
+The reviewer's actual session log exists unchanged but its telemetry commit failed because gen_verdict_rollup --check found a stale generated rollup. Preserve that original log and regenerate the rollup, never fabricate provenance. Source code changes are forbidden inside this bound candidate. Do not propose bypassing checks or copying snapshots. The configured policy is loop-held: a page routes to strong design check, not a mandatory owner stop. Configured non-OpenAI probes failed (Anthropic session-limit, OpenCode server errors). This is a fresh independent Astra session under the documented degraded same-family availability policy; no cross-family corroboration is claimed.
+
+Assess the MAJOR findings on their substance. The exact live rows are below. Is either LLR unsuitable in shape? Give each retained decision's verification purpose and why splitting adds or does not add independent value, or identify precise required decomposition. For each named unchanged counterpart, state carry-or-retain with rationale, distinguish a change needing its own applicable authority from an unchanged relationship. Respect unchanged parent acceptance; the bound turn cannot author live cells or widen approval scope. All rows remain RETURN until a valid complete reanchor. The user authorizes continued PC authoring/adjudication while keeping coordinator paused: no control window, batch-code deletion, push or main merge.
+
+<source path="docs/reviews/contract_split/002-ADJUDICATE-64c1e8a.md">
+# WI-610 cumulative amendment judgment
+
+Turn: WI-610-d522f3b0c7295ce2d46765551a6500491a76ff2c
+Base: d522f3b0c7295ce2d46765551a6500491a76ff2c
+Proposal: 057bf520150b8213e3fb9f744bba664d295d54d6a96a5f512cd34cbdf4a5168e
+Candidate at entry: 64c1e8a066d57165899cf09ccc029d0003641d32
+
+## Row findings
+
+- [CLARITY] LLR-058 Title -> derive the dependency-ready frontier; separate ordering belongs to LLR-123 -> derive that same frontier with a title naming only that responsibility -> the unchanged Detail preserves the obligation
+- [MEANING] LLR-061 Detail -> worker assignment without a singleton boundary or the added prompt-state predicate -> one assigned row, no semicolon input, prelaunch cardinality refusal, and trailer-AND-move completion in its prompt -> adds cardinality and truthful-state obligations; judged together with TC-061
+- [MEANING] LLR-123 Detail, Rationale, Title -> rank eligible traincars with first WI id as tie-break -> rank individual WIs with WI id as tie-break -> changes the scheduling unit
+- [MEANING] LLR-140 Detail -> review and close adjudication through lane machinery -> bind queued adjudication to an exclusive primary turn and verified atomic completion -> changes execution, review inputs and writer exclusion
+- [MEANING] LLR-144 Detail -> close every claimed spec with all-report rollback -> refuse non-singleton branches before writes and roll back the single close without state changes -> removes executable batch closes while preserving quarantine and rename recovery
+- [MEANING] LLR-149 Detail -> admit all spine rows in one exclusive batch -> admit the first ordered spine WI exclusively and queue the remainder, preserving held approvals -> changes grouping and delegated approval admission
+- [MEANING] LLR-150 Detail -> lane mechanics report moved specs and exit codes -> mechanics receive one assignment and parked resume refuses zero or many before mutation or launch -> adds a resume boundary
+- [MEANING] LLR-151 Detail, Rationale, Title -> claim every member of a spine batch in one commit -> claim one WI or refuse before mutation; historical multi-WI claims remain evidence only -> trades a shared reattestation window for separate exclusive windows
+- [MEANING] LLR-152 Detail -> adjudication lane refresh grants no-bar treatment -> exclusive primary turn grants no-bar only to the exact permitted publication projection -> changes the no-bar subject and effect boundary
+- [MEANING] LLR-153 Detail -> mint adjudication dispositions at lane merge -> derive and atomically publish reviewed primary effects; RETURN has zero accepted cells and no snapshot -> changes publication and restart semantics
+- [MEANING] LLR-154 Detail -> post-merge intake owns minting and refresh directives -> same slot remains held across primary admission, judgment, review and publication -> adds exclusion and pending-resume obligations
+- [MEANING] LLR-158 Detail -> refuse lane approval acts over the declared spine walk -> refuse all WI-branch approval and snapshot/ledger writes; only held primary projection may publish -> changes authorized writer and required absorption evidence
+- [MEANING] LLR-161 Detail -> restore every report in a multi-spec close refusal -> restore the single report and preserve claim and terminal state -> changes supported close cardinality and rollback obligation
+- [MEANING] LLR-167 Detail -> worker-oriented briefs may fall back and conflict/amendment remain unrouted -> bound primary briefs hold on assembly failure, route every shipped brief and retire conflict -> changes routing and refusal; TC-161 still contradicts the new requirement
+- [MEANING] LLR-183 Detail -> Hat-Refs mechanics explicitly leave per-decomposition coverage undisclosed -> Hat-Refs remain provenance while brief and review record discharge coverage -> removes an explicit debt by assigning review-path discharge under changed SR-161
+- [MEANING] LLR-207 Detail -> refresh and mechanical adjudication close are disposable verified peels -> only refresh is disposable; primary publication is an exact verified projection carrier -> changes which commits preserve judgment and the proof required
+- [CLARITY] SR-024 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [CLARITY] SR-033 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [CLARITY] SR-043 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [CLARITY] SR-052 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [CLARITY] SR-053 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [CLARITY] SR-054 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [CLARITY] SR-111 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [CLARITY] SR-112 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [CLARITY] SR-129 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [MEANING] SR-144 Requirement, AcceptanceCriteria, Rationale -> terminally close multi-spec lanes with immutable reports and rollback -> require a single spec and refuse other cardinalities before state change -> changes the supported close contract
+- [CLARITY] SR-146 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [CLARITY] SR-147 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [MEANING] SR-148 Requirement, AcceptanceCriteria, Rationale -> derive ordered eligible assignments including grouped spine work -> admit exactly one WI per assignment while preserving precedence and holds -> changes the unit admitted, independently of claim enforcement
+- [CLARITY] SR-149 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [MEANING] SR-156 Requirement, AcceptanceCriteria -> run bounded isolated lanes through serial integration -> run one WI per lane and refuse invalid claim/assignment/resume before mutation -> adds cardinality enforcement and historical-evidence limits
+- [MEANING] SR-161 Requirement, AcceptanceCriteria, Rationale, Verification -> produce machine-readable applicability and outcome coverage with reportable omissions -> provide applicable questions in briefs and record every outcome for inspection -> replaces machine-detectable coverage with review evidence; owner ruling authorizes judgment, not equivalence
+- [CLARITY] SR-162 Rationale -> retain the unmechanized corresponding-interface review obligation -> retain that obligation without claiming no SR states it -> removing a stale census statement does not change the requirement or approve a Drafted sibling
+- [CLARITY] SR-167 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [CLARITY] SR-175 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [CLARITY] SR-176 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [CLARITY] SR-177 Rationale -> impose the unchanged Requirement and AcceptanceCriteria with named perspective provenance -> impose the same Requirement and AcceptanceCriteria with redundant derivation labels or citations removed -> Hat-Refs and the substantive rationale, limitations and build debts remain; provenance wording does not add or retire behavior
+- [MEANING] TC-058 Method -> test deterministic traincar ordering -> test deterministic work-item ordering -> changes the ordered unit under SR-148 and LLR-123
+- [MEANING] TC-061 Method -> exercise worker assignment and completion -> exercise singleton assignment refusal and truthful row-state prompt -> adds tests for the cumulative LLR-061 contract, not merely wording
+- [MEANING] TC-138 Method -> exercise terminal handback of claimed specs -> also refuse non-singleton closes before state changes -> changes acceptance scenarios under LLR-144
+- [MEANING] TC-143 Method -> assert all spine work admits together -> assert sequential exclusive singletons with retained priority and human holds -> replaces the positive batch behavior
+- [MEANING] TC-144 Method -> assert grouped spine workers through real dispatch -> assert sequential singleton workers and zero-effect invalid parked resumes -> changes end-to-end scenarios
+- [MEANING] TC-145 Method -> assert a successful batch claim -> assert singleton claim, invalid-cardinality refusal and historical multi-claim readability -> changes the positive and negative claim cases
+- [MEANING] TC-146 Method -> exercise no-bar adjudication refresh and strictness -> exercise primary exclusivity, projection-scoped no-bar, pending resume and verified completion -> changes lifecycle and verification subject
+- [MEANING] TC-147 Method -> exercise merge-time disposition minting -> exercise stage-only atomic primary publication and zero-effect RETURN/restart handling -> adds atomicity, provenance and absorption refusal obligations
+- [MEANING] TC-148 Method -> exercise serial post-merge intake -> also exercise writer exclusion throughout primary publication -> adds lock-boundary and refusal scenarios
+- [MEANING] TC-153 Method -> exercise shared drift classification -> also exercise all seven snapshot writers, scope, absorption, riders and branch approval refusals -> substantially extends the tested authority boundary
+- [MEANING] TC-154 Method -> assert adjudication precedes a ready spine batch -> assert adjudication precedes a ready spine WI -> changes the competing admission unit
+- [MEANING] TC-156 Method -> exercise immutable close and disposition identity -> also drive single-close rollback with claim and terminal state unchanged -> changes rollback proof under the singleton contract
+- [MEANING] TC-161 Method -> test worker fallback and two unrouted briefs -> test held primary briefs and bound primary evidence but still demand two unrouted briefs -> changes lifecycle while retaining a contradictory acceptance clause; RETURN Method
+- [MEANING] TC-178 Expected -> claim the acceptance folded into LLR-183 with parent SR-161 -> limit this case to Hat-Refs mechanics and place perspective inspection in TC-211 -> changes the declared coverage boundary; Drafted TC-211 is not accepted here
+- [MEANING] TC-205 Method -> test the mechanical-close disposable class and lane adjudication dial -> test exact primary publication carrier, restart and primary-turn dial/input behavior -> changes carrier and lifecycle; retained lane fixtures do not establish the newly claimed primary coverage
+
+VERDICT: MEANING rows=52
+
+## Publication decision
+
+RETURN for every scoped row: zero accepted cells, no Status or snapshot effects. The clarity findings above are not reusable approval evidence. The delegated LLR/SR/TC authority and OI-88 transfer permit this judgment; they do not resolve contradictory test acceptance or substitute for complete impact acceptance. Publication scope remains only the three bound LLR/SR/TC registries owned by WI-610. No outside row is accepted.
+
+## Required corrections
+
+1. RETURN TC-161.Method: replace the retained instruction to pin two unrouted briefs with the actual all-shipped-routed/retired-conflict obligation, consistently with LLR-167.Detail. tests/test_adjudicate_brief.py::test_every_shipped_brief_is_routed_and_the_retired_one_is_gone explicitly asserts ROUTED equals BRIEF_PROMPTS and conflict is unknown. This is a contradictory contract, not a missing inventory entry.
+2. RETURN TC-205.Method and its Evidence correspondence: the primary-turn dial, scheduler and shared-input claims are not established by the retained tests test_an_adjudication_lane_owing_no_round_merges_with_no_verdict_file, test_a_committing_adjudication_schedules_its_round_under_the_dial and test_the_scheduler_and_the_gate_read_one_spec_copy. At tests/test_verdict_record.py:1054,1118,1142 they use adjudication_repo, a closed wi-401 branch and/or stale active/terminal copies. They do not drive the pending-primary/verified-publication scenarios now described. Correct the declared coverage and identify or author actual primary-path proofs before rejudgment; do not relabel lane evidence as primary evidence.
+
+WI-611 removed the nonexistent test_a_two_row_batch_close_peels_under_one_canonical_order citation from TC-205.Evidence. Its absence is historical, not a test passed or a PC deletion performed here. The replacement references name existing primary tests, but reference existence alone cannot discharge every Method clause.
+
+## Impact and retirement limits
+
+Read PC-BATCH-USES.md as proposed treatments, including the dispatch-admission and dispatch worker batch tests, batch claim, all-row worker prompt, multi-WI worker walk, historical two-row close citation, concurrency-v2 ruling history, publication replay, historical claims, migration fixtures, generated surfaces and Drafted first-approval owners. None is authorized for deletion by this RETURN. In particular LLR-061 and TC-061 are judged together: singleton cardinality and the exact committed-trailer AND active-spec-removal predicate are added obligations; collision-safe evidence and per-WI completion must survive retirement of the multi-WI walk.
+
+The returned candidate has not received complete per-use impact acceptance. All other scoped meaning changes remain unaccepted with the atomic set; absence of a separate defect finding is not acceptance. Parents, siblings and traced tests must be rejudged cumulatively at reanchor. Drafted LLR-210, SR-183 through SR-186 and TC-208 through TC-211 retain their existing first-approval owners and remain Drafted. WI-601/WI-603/WI-605 remain restructured historical owners, not completed approvals.
+
+## Continuation
+
+Use the queued spec Dispositions to draft one scoped spine authoring continuation of WI-610, depending on completed authoring prerequisites WI-608 and WI-611. Correct TC-161.Method and TC-205.Method/Evidence correspondence without weakening LLR-167 or LLR-207, preserve the full transferred 52-row scope and original obligations, then obtain a fresh complete-scope primary reanchor through ordinary intake. No replacement requirement IDs, direct successor mint, registry edits during this turn, snapshot copy or synthetic review reference. The later publisher must obtain real current-session provenance and independent review for the spine continuation before any atomic RETURN publication.
+## Validation
+
+At the unchanged registry candidate, `.venv/bin/python -m pytest -q tests/test_adjudicate_brief.py::test_every_shipped_brief_is_routed_and_the_retired_one_is_gone`: 1 passed in 1.04s. This supports the TC-161 contradiction; it is not acceptance of the entire impact set.
+
+`.venv/bin/python -m pytest -q -n auto -m smoke`: 1696 passed, 4 skipped in 49.80s. Smoke is a commit check, not proof of TC-205's Full-tier Method. The amendment verdict parser accepts the 52-row record. No product source, registry or snapshot was edited.
+
+Budget-enforced smoke rerun: 1696 passed, 4 skipped in 49.41s; measured wall 49.6s against 90s, within. `check_docs.py --root . --stale`: OK, zero broken links, one existing report.md orphan warning and staleness hints.
+
+</source>
+
+<source path="docs/reviews/contract_split/005-REVIEW-A-e691243-relaxed.md">
+- [MAJOR] docs/reviews/contract_split/002-ADJUDICATE-64c1e8a.md:71 -> The required corrections route both defects straight to TC-161/TC-205 wording and evidence repair without applying PROCESS.md §5's parent-sound/LLR-unsuitable branch to LLR-167 and LLR-207; both retained LLRs combine independently verifiable routing, fallback/hold, evidence-binding, publication-carrier, restart, scheduler, and verdict-reader decisions, while the record gives no per-decision verification purpose or reason further decomposition adds no independent value -> Re-adjudicate the design shape before drafting the continuation: either decompose/amend each unsuitable LLR with corresponding verification while preserving its parent acceptance and re-attest every changed child through its authority, or record each retained decision's independent verification purpose and a semantic reason no further split adds value; then make the Dispositions follow that judgment -> @owner
+- [MAJOR] docs/reviews/contract_split/002-ADJUDICATE-64c1e8a.md:80 -> The record defers parents, siblings, and traced tests wholesale to the reanchor instead of making the required same-scope semantic decisions for unchanged counterparts outside the 52-row decision set: SR-026 for LLR-061/TC-061; SR-174 and IF-091 for LLR-153/TC-147; SR-174 and IF-090 for LLR-154/TC-148; SR-178 for LLR-158/TC-153; LLR-159 for TC-154; IF-075/IF-124 for TC-161; and IF-175 for TC-205. Their references exist, but neither the row findings nor Dispositions says why each counterpart remains semantically valid or must carry a corresponding change -> Add explicit independent carry-or-retain decisions and rationales for every named relationship to this adjudication record, and carry those decisions into the continuation scope; any counterpart changed as a result must be re-attested by its applicable authority while unchanged parent acceptance and approval remain intact -> @owner
+VERDICT: CHANGES-REQUESTED findings=2
+
+</source>
+
+<source path="project-trajectory/scripts/primary_adjudication.py">
+"""Exclusive primary adjudication: immutable selection, existing engine, one publication.
+
+The queued spec and committed review evidence are the work in progress. There
+is no claim branch or phase journal. Only a verified publication completes a
+selection; an interrupted selection precedes every later admission.
+"""
+
+from __future__ import annotations
+
+import copy
+from pathlib import Path
+
+import agent_common as ac
+import baseline_snapshot
+from kitlib import spine
+
+import primary_turn
+import primary_publication
+import primary_approval
+import integrate
+
+RECORDS = primary_turn.RECORDS
+record_path = primary_turn.record_path
+_required_git = primary_turn._required_git
+registry_blobs = primary_turn.registry_blobs
+_primary_identity = primary_turn._primary_identity
+_read_record = primary_turn._read_record
+validate = primary_turn.validate
+validate_candidate = primary_turn.validate_candidate
+
+
+def pending(root):
+    return primary_publication.pending(root)
+
+
+def writer_refusal(root):
+    return primary_publication.writer_refusal(root)
+
+
+def completion_refusal(root, worker):
+    """A committed WI trailer cannot complete an unpublishable primary ruling."""
+    turn = worker.get("primary_turn")
+    if not turn:
+        return None
+    try:
+        validate(root, turn)
+        _plan, refusal = primary_approval.approval_projection(root, turn)
+        return refusal
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        return str(exc)
+
+
+def begin(root, wi):
+    """Commit one selection while both station locks are held, without claiming."""
+    root = Path(root)
+    if writer_refusal(root):
+        raise ValueError(writer_refusal(root))
+    if ac.working_tree_dirty(root):
+        raise ValueError("selecting primary adjudication requires a clean checkout")
+    identity, branch = _primary_identity(root)
+    spec = integrate._queued_spec(root, wi)
+    meta = integrate._spec_frontmatter(spec)
+    if meta.get("safety_class") != "adjudication":
+        raise ValueError("{} is not an adjudication".format(wi))
+    if meta.get("brief") in ("amendment", "first-approval") and not meta.get(
+        "adjudicates"
+    ):
+        raise ValueError(
+            "{} needs its exact typed Adjudicates scope before selection".format(wi)
+        )
+    base = _required_git(root, "rev-parse", "HEAD")
+    rel = spec.relative_to(root).as_posix()
+    turn = dict(
+        version=1,
+        turn="{}-{}".format(wi, base),
+        wi=wi,
+        base=base,
+        primary_branch=branch,
+        primary_root=identity,
+        spec=rel,
+        proposal_spec_blob=_required_git(root, "rev-parse", base + ":" + rel),
+        scope=meta.get("adjudicates") or [],
+        registry_blobs=registry_blobs(root, base),
+        approved_blobs=registry_blobs(root, base, baseline_snapshot.SNAPSHOT_DIR + "/"),
+    )
+    text = spine.toml_fields((k, v) for k, v in turn.items() if not isinstance(v, dict))
+    for key in ("registry_blobs", "approved_blobs"):
+        text += "\n[{}]\n".format(key) + spine.toml_fields(
+            (spine.toml_string(k), v) for k, v in turn[key].items()
+        )
+    path = root / record_path(turn)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("x", encoding="utf-8", newline="\n") as stream:
+        stream.write(text)
+    _required_git(root, "add", "--", record_path(turn))
+    _required_git(
+        root,
+        "commit",
+        "-m",
+        "adjudicate: select {} for exclusive primary judgment".format(wi),
+    )
+    return turn
+
+
+def run(root, args, session, *, wi=None, turn=None, tier="all"):
+    """Run the existing engine in process while holding the integration slot."""
+    refusal = integrate._slot(root, primary_turn=True)
+    if refusal:
+        print("adjudicate: " + refusal)
+        return ac.EXIT_PREFLIGHT
+    try:
+        turn = turn or begin(root, wi)
+        validate(root, turn)
+        assigned = copy.copy(args)
+        assigned.wi, assigned.base = turn["wi"], turn["base"]
+        assigned.train = turn["primary_branch"]
+        assigned.worktree, assigned.root = None, str(root)
+        code = session(assigned, primary_turn=turn)
+        if code != ac.EXIT_DONE:
+            return code
+        validate(root, turn)
+        closed, refusal = primary_publication.publish(root, turn, tier=tier)
+        if refusal:
+            raise ValueError(refusal)
+        if closed != [turn["wi"]]:
+            raise ValueError("publication did not close the selected WI")
+        return ac.EXIT_DONE
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        print("adjudicate: {} (selection retained for resume)".format(exc))
+        return ac.EXIT_PREFLIGHT
+    finally:
+        ac.release_lock(Path(root) / "out" / "integrate.lock")
+
+
+def session_binding(root, worker, plan):
+    """Coordinator-authored join from this invocation to its committed ruling."""
+    if not worker.get("primary_turn") or plan["phase"] != "ADJUDICATE":
+        return {}
+    return {
+        "primary-turn": worker["primary_turn"]["turn"],
+        "judgment": Path(plan["verdict_path"]).relative_to(root).as_posix(),
+        "candidate": ac.head_sha_full(root),
+    }
+
+</source>
+
+<live source path="docs/requirements/low-level-requirements.toml">
+{
+  "LLR-167": {
+    "sr_refs": [
+      "SR-146",
+      "SR-144",
+      "SR-148"
+    ],
+    "title": "The adjudicator briefs' evidence, and the refusal that keeps a half-filled one unsent",
+    "module": "project-trajectory/scripts/adjudicate_brief.py;project-trajectory/scripts/primary_adjudication.py;project-trajectory/scripts/primary_turn.py;project-trajectory/scripts/kitlib/adjudication.py",
+    "code_symbol": "compose/compose_primary/disposition_values/red_tc_values/consolidate_values;begin/run;record_path/validate/validate_candidate;verdict_text_refusal",
+    "detail": "The row's DECLARED `Brief` cell selects the template (`intake` writes it at every adjudication mint); `compose` fills it through `prompts.fill`'s strict both-ways check and the primary adjudication turn calls the same `agent_loop.session_body` review engine in process for BOTH routing arms, passing the designated primary root, queued WI, unique turn identity, primary base, candidate tree identity, declared scope and already-held lock explicitly, so every route receives the same bound brief without a worktree or branch. A blank-Brief adjudication instead receives a generic primary judgment assignment bound to that turn, WI, base, candidate and scope and naming its verdict path; it contains no claim, branch, model-side close or snapshot instruction. A declared brief whose assembler fails remains HELD and never takes the blank-Brief route. Ordinary non-adjudication work keeps its worker assignment, and no legacy adjudication-worker context remains. Each assembler returns `(values, None)` or `(None, reason)` and NEVER a partial: `disposition_values` walks SpecRef -> the closed spec -> its immutable per-close report -> that report's TYPED `commit_range` -> `git log`/`--name-status` clipped at the declared 80 lines, and refuses the clean-close spot-check arm because it writes no report; `red_tc_values` RE-RUNS `dispatch.red_tc_census` rather than remembering it, joins each line through `dispatch.parse_red_tc` to the TC row's Method/Expected/Evidence and to the SR/LLR text its targets name, and refuses a census that has come clean. EVERY shipped brief is routed: `conflict` was RETIRED rather than filled (it had a template and a verdict grammar and never a mint, an assembler or a reader for the `needs=` its own grammar demanded), and `consolidate_values` composes the consolidation brief from the row's `Adjudicates` cluster re-derived LIVE - every row of that cluster or none, and a cluster whose overlap has dissolved refuses rather than briefing a session about a contradiction that no longer exists. The committed verdict names that turn and exact candidate. A snapshot/live difference is evidence for semantic comparison and never approval by itself.",
+    "rationale": "Two rules decide the shape. A judge's brief must not carry the claim under judgement as its premise - a leaked self-assessment anchors the judgement to it - so every value is registry-, git- or report-derived and the one claim shown - the lane's report - is the template's own labelled subject. And a HALF-filled brief is worse than the generic prompt: hollow sections read as an investigation that was run and found nothing, which is the expensive way to be wrong, so there is no placeholder path at all. The discriminator is a declared cell rather than a SpecRef shape because that inference is unsound - an amendment to a test-case row and a red-TC census row both cite the TC registry while their briefs give contradictory instructions - and rather than a Title substring because that is the `NEEDS-HUMAN` fold (LLR-161).",
+    "test_refs": "TC-161",
+    "status": "Approved",
+    "component": "CMP-008",
+    "phase": 5
+  },
+  "LLR-207": {
+    "sr_refs": [
+      "SR-156"
+    ],
+    "title": "The verdict record: what carries a governing verdict, and what binds it to the tree it judged",
+    "module": "project-trajectory/scripts/kitlib/verdict.py;project-trajectory/scripts/primary_turn.py;project-trajectory/scripts/primary_approval.py;project-trajectory/scripts/primary_publication.py;project-trajectory/scripts/primary_close.py;project-trajectory/scripts/publication_verify.py",
+    "code_symbol": "RECORD_PREFIXES/fold_listing/tree_identity/refresh_subject/refresh_attestation/work_tip/governing_rev/governing_identity/format_trailer/parse_trailer/round_file/session_log/branch_paths/logged_rounds/round_entries/declared_phases/phases_owed/round_count/format_branch_trailer/branch_trailers;record_path/validate/validate_candidate;approval_projection/absorption_census/impact_census;derive_tree/publish/publication_commit/completed;stage_primary_adjudication;run/branch_tree_script/passed_steps/run_bar/generated_table/generated_paths/ADJUDICATION_SURFACES",
+    "detail": "tree_identity folds raw NUL-delimited `git ls-tree -r -z` entries after dropping docs/reviews/, docs/log.d/ and docs/iteration/, and returns a 64-hex SHA-256 identity. fold_listing accepts bytes and preserves every path byte so display quoting or decoding cannot merge distinct work trees. refresh_attestation validates a station refresh from its subject, first parent, commit tree and Bar-Green trailer. work_tip peels only a verified refresh at the tip for the reset path; governing_rev is read-only and walks across commits whose non-record identity equals their first parent's, peeling any DISPOSABLE commit it meets to reach one those commits would otherwise hide, and ending at the first commit whose identity differs from its parent's or at its absent-parent and depth bounds - so a branch with no disposable commit under it still walks. ONE commit class is disposable to the existing read-only walk: the station's REFRESH, admitted by refresh_attestation. The primary adjudication publication is instead a VERIFIED CARRIER. Its attestation binds the queued WI, unique turn, primary base, reviewed candidate and exact reviewed ## Approval bytes. The verifier independently derives the allowed final projection: only accepted scoped Status/snapshot effects, the queued spec's exact existing close transformation, parsed successor specs and id-watermark, plus only generated paths already declared by the trunk step. The snapshot equals live in that commit and every absorbed changed cell is accepted in the bound ledger. The exact close transformation uses the existing spec_move rules: move the queued spec to docs/archive/work/complete/, clear specref, insert the machinery's fixed ## Deliverable before ## Context, and apply only link rebasing spec_move derives. The carrier maps the resulting tree to the reviewed candidate only when every derived byte agrees; a hand-written subject, wrong WI or turn, stale candidate, extra or missing path, cross-WI close, malformed successor, partial snapshot or unreviewed decision refuses toward more review. This is a verified projection, not a broad disposable-path class. work_tip calls refresh_attestation directly, so only a refresh may be removed by the destructive reset path. governing_identity composes governing_rev and tree_identity for the branch tip or an explicit revision, including a round's reviewed commit and a trailer's carrier; the branch argument is a branch NAME, because the peel verifies a refresh commit against the branch it names and no refresh subject names HEAD. logged_rounds joins branch-scoped round files to coordinator session logs by train and ordinal, and each round's review phase is the JOINED LOG's declared phase rather than the one its own filename carries, so a file cannot claim a phase its session did not serve; a joined key whose logs declare more than one review phase yields no round. round_entries retains only rounds whose reviewed revision governs the identity under judgement and emits phase, ordinal and verdict entries through an injected parser. declared_phases clamps the configured independent-review count to the available review phases. phases_owed returns declared phases with no drawn entry at the governing identity, independent of whether a drawn verdict parses or approves. round_count returns the largest per-phase entry count at one governing identity, so a multi-phase review cycle counts once and changed work starts a new count. format_trailer and parse_trailer carry `Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex>`. branch_trailers verifies each carrier against its governing identity and returns the ordered attestation sequence per tree. Readers treat unavailable repository answers according to their own fail-closed contract.",
+    "rationale": "The merge gate asks whether a lane may merge while the loop asks which review phase the lane still owes. A shared identity, evidence join, phase span and count keep both answers on the same tree and policy. Logged round evidence is authoritative because its coordinator session establishes reviewer provenance; the self-verifying trailer is only a cross-check and cannot create an approval. Identity binding answers staleness directly and prevents ordering from promoting a verdict for different work. Separate read-only and reset peels protect both contracts: the reader may traverse identity-preserving commits, while the destructive reset path may remove only the verified refresh at its tip.",
+    "test_refs": "TC-205",
+    "status": "Approved",
+    "component": "CMP-008",
+    "phase": 5
+  },
+  "LLR-061": {
+    "sr_refs": [
+      "SR-026"
+    ],
+    "title": "Explicit WI/train/worktree worker assignment",
+    "module": "project-trajectory/scripts/agent_loop.py",
+    "code_symbol": "build_worker_assignment/worker_prompt/assignment_block",
+    "detail": "Replaces internal --track assumptions with explicit --wi/--train/worktree assignment; assembles the worker prompt from AGENTS.md + WI row + SpecRef + predecessor context + train diff + rework finding (never the generated status surface), plus the one assigned row with its id, title, SpecRef and completion state, derived from the SAME two-part completion predicate as worker completion - a committed WI: trailer AND the spec gone from active/<branch>/. Empty or multi-item assignments refuse before a session starts; the --wi input names one WI and has no semicolon-list form; collision-safe per-assignment logs/review evidence naming the exact reviewed commit; the --track lane machinery is retired outright. The assignment is the branch integrate.py's claim cut, and the session tag defaults to the branch name; the prompt never includes docs/status.md; a worker branch never edits root status, another branch's claims, the root log or generated artifacts; the result channel is committed trailer evidence (WI: / Blocked-WI: + BlockRef:).",
+    "test_refs": "(see TC-061)",
+    "status": "Approved",
+    "component": "CMP-008",
+    "phase": 4
+  },
+  "LLR-153": {
+    "sr_refs": [
+      "SR-174"
+    ],
+    "title": "The unified trunk-side intake mint + the context block + the approval-level arms",
+    "module": "project-trajectory/scripts/intake.py;project-trajectory/scripts/primary_approval.py;project-trajectory/scripts/primary_publication.py",
+    "code_symbol": "intake_after_merge/mint_gap_rows/parse_dispositions/next_wi_id/context_block;approval_projection/absorption_census/impact_census;derive_tree/publish",
+    "detail": "The mint invariant: a WI id is created only by a human trunk commit or this helper - lanes never mint. next_wi_id counts from max(the docs/id-watermark mark, the sweep of every spec FILENAME under docs/work/, active/<branch>/ included) + 1 - never max(live) alone, so an id freed by a deleted spec is never re-issued - and trace.read_watermark's refusal on an absent or malformed mark is deliberately NOT caught: a mint with no record of what has been allocated must not proceed on a guess (TC-158, IF-101). Three triggers, serial by construction: (a) the approved/routed-cell diff on the merged commit via check_trajectory.staged_spine_amendments -> one adjudication row listing each changed row/cell/before-after (routed traced cells: SN-Refs, Verifies, and LLR SR-Refs per the declared cell split); (b) a merged spec carrying ## Handback -> the disposition row (outcomes cancel / defer / re-queue with drafted follow-up / surface an open item; NEVER minted for an adjudication row - no recursion, and handback.hand_back refuses the act itself); (c) the dispatcher's gap census -> concrete gap-closure rows, deduped against every existing row. Drafts-not-mints: an adjudication turn's ## Dispositions fenced-toml drafts mint in ITS final primary publication, validated loudly. The same intake writer derives a stage-only deterministic projection from the reviewed `## Approval` bytes, exact candidate and scope: permitted Status changes, byte-identical snapshots, the queued-to-terminal move, successor specs and id-watermark, plus only generated paths already declared by the trunk step. The coordinator commits that projection atomically; `return` and `uncertain` accept no cells and include no snapshot, and `meaning` includes none until its impact review is accepted. A stale candidate, malformed draft, out-of-scope effect or UNJUDGED absorbed cell refuses before allocation or staging. If another scoped owner's UNJUDGED or out-of-scope drift makes a requested whole-file approval unpublishable, the adjudicator may revise it to `return`: zero accepted cells, no Status/snapshot effect, and a concrete reanchor or corrective continuation depending on those existing owners. The RETURN findings are evidence only; the later complete-scope reanchor independently judges every cell. A mechanical refusal instead leaves the turn pending for REWORK. Tier signals are measurable (rows touched, gate delta, handback reason class). context_block renders the pure registry joins (cancelled precedent WITH REASONS first, pending OIs, the LLR/TC code map, CMP knowledge packs, IF seams, precedent reviews) - advisory-never-gating, three consumers. flip_verified recommends only under attended, flips under single-approve/autonomous, and fails toward recommend on an unknown level. An ordinary mint commit retains the claim bookkeeping shape; adjudication completion is the terminal spec plus its matching publication commit, so a restart neither needs a journal state nor allocates again; every derived title is deterministic, so the sweep CLI re-run is idempotent.",
+    "rationale": "A detected event must FORCE a row into the registry with nobody watching, and an id two lanes could pick at once must stay unrepresentable (R1).",
+    "test_refs": "(see TC-147)",
+    "status": "Approved",
+    "component": "CMP-008",
+    "phase": 4
+  },
+  "LLR-154": {
+    "sr_refs": [
+      "SR-174"
+    ],
+    "title": "The merge slot's post-merge intake arm",
+    "module": "project-trajectory/scripts/integrate.py;project-trajectory/scripts/primary_adjudication.py;project-trajectory/scripts/primary_publication.py;project-trajectory/scripts/primary_close.py",
+    "code_symbol": "integrate_one/_lane_bar_directives/_refresh_bar;run;publish/publication_commit;stage_primary_adjudication",
+    "detail": "integrate_one's post-merge arm is the intake's one honest hook point: the merge has landed, the slot is still held, trunk is serial - intake.intake_after_merge(root, pre-merge head, head, outcomes, branch) mints there as one bookkeeping commit (docs/work/ + the declared generated set), and a mint refusal stops the run loudly while the merge stands (recovery: fix trunk-side, then python intake.py sweep). The refresh's bar directives (_lane_bar_directives, read off the same trunk claim the slot reads) carry the adjudication no-bar arm and the bar strictness pin to _run_bar's --gate. The same held slot also owns branchless adjudication publication. It remains held from primary-turn admission through judgment, required review and the intake writer's stage-only final projection. The scoped no-product-bar and strictness directives apply to that projection directly; no lane refresh is manufactured. A refusal leaves the queued spec and pending record for resume before any other selection.",
+    "rationale": "Minting anywhere else re-opens the two-lanes-one-id collision the trunk-only ruling ended; the slot is the only place trunk moves under a held lock.",
+    "test_refs": "(see TC-148)",
+    "status": "Approved",
+    "component": "CMP-008",
+    "phase": 4
+  },
+  "LLR-158": {
+    "sr_refs": [
+      "SR-178"
+    ],
+    "title": "The one comparison basis an amendment is measured by",
+    "module": "project-trajectory/scripts/acceptance_record.py;project-trajectory/scripts/primary_approval.py",
+    "code_symbol": "split_changed_cells/spine_cell_class/_APPROVED_TEXT/_spine_row_sides/staged_spine_amendments/_approval_act/staged_approval_acts/staged_drafted_rows/lane_approval_refusal/SPINE_CSVS/APPROVAL_ACT_CSVS/OUTSIDE_THE_APPROVAL_ACT;approval_projection/absorption_census/impact_census",
+    "detail": "An approval that records what it blessed by COPYING the registries needs no canonical text to hash, no separator that cannot occur in a cell and no second exclusion list, so no digest engine sits behind this row \u2014 the comparison basis is discharged by split_changed_cells(csv_path, id_col, head, row) -> {\"approved\": {cell: (before, after)}, \"traced\": {...}}: the id column and Status are excluded STRUCTURALLY - the id is the join key rather than content, and folding Status in would make every flip read as an amendment and every amendment invisible behind its own flip - and the remainder is split by spine_cell_class, the SAME classifier the amend-without-flip guard reads, so the two can never disagree about what normative means. It is PUBLIC for exactly one reason: baseline_snapshot.is_drifted reads it as the drift basis (LLR-173), so the snapshot comparison and the staged-amendment guard are one rule with one home rather than two rules that agree until they do not. _APPROVED_TEXT names the one Status value whose row TEXT is approved (Approved \u2014 the status fold collapsed Verified and Planned into it) and requires the SAME value on both sides, so prose rewritten under an Approved row is never invisible. It returns the before/after PAIRS a brief has to render anyway, which is why it replaced a hash rather than being wrapped by one. Needs are covered by the whole-file copy rather than by a per-need projection: the three need tables have different shapes, and a projection would have hashed the garbling. ONE TWO-TREE WALK feeds every reader that asks what a spine delta did: _spine_row_sides pairs each row's before and after side once, and four consumers read it \u2014 staged_spine_amendments (the rows whose approved text moved), staged_approval_acts (the rows that crossed INTO an approval claim, or arrived already making one), staged_drafted_rows (the rows a lane authored below approval, which the first-approval mint is raised over) and lane_approval_refusal, the judgement over the second, worded for the merge slot that refuses a work branch performing an approval act. The walk is shared rather than copied so that the set one reader EXEMPTS is the set another REPORTS, MINUS the de-approvals: an Approved -> Drafted withdrawal moves Status, so the amendment reader exempts it, but it blesses nothing, so the approval-act reader does not report it and staged_drafted_rows raises the re-approval it now owes instead. Subject to that one subtraction, an approval act is invisible to the amendment reader by construction, and a row that no reader saw is unrepresentable. The per-row judgement is stated once, in _approval_act, so the flip arm and the born arm are read side by side rather than as two branches of the walk that could drift apart. UNREPRESENTABLE WITHIN A DECLARED BOUND, and the bound is named rather than left as an absence \u2014 the walk's universe is a PARAMETER over two declared sets, not one set every reader shares. SPINE_CSVS is the THREE registries whose rows carry an id column and an approved text \u2014 system-requirements, low-level-requirements, test-cases \u2014 and is the walk's default, so staged_spine_amendments and staged_drafted_rows read exactly it, the same universe the amend-without-flip warn and the intake mint hold; widening those is its own decision rather than a side effect of this rung. APPROVAL_ACT_CSVS is those three PLUS stakeholder-needs, and staged_approval_acts passes it, so lane_approval_refusal \u2014 the judgement over that reader \u2014 refuses every WI branch signing a NEED as readily as one signing an LLR, regardless of safety class. It also refuses every WI-branch snapshot or approval-ledger change, including an amendment with no Status flip. The only positive writer is the held primary turn's intake projection, which binds the accepted decision, exact row scope and complete absorb ledger and stages each snapshot as a byte-identical copy beside its approval effects. The need tier is inside because it is a spine tier carrying the same status vocabulary, and because the rung the approval act was moved off the writer's lane for is precisely the one a lane must not sign for itself. The three registries a snapshot anchors that no approval reader walks \u2014 interfaces, external, components \u2014 are listed in OUTSIDE_THE_APPROVAL_ACT: off-spine, their approval cells governed by their own rung rather than this one. The two lists are pinned as one exhaustive, disjoint statement, SNAPSHOTTED == APPROVAL_ACT_CSVS + OUTSIDE_THE_APPROVAL_ACT, against baseline_snapshot.SNAPSHOTTED's seven. A tier added to the snapshot therefore lands on one side or the other by a deliberate edit, and cannot reach no approval reader at all.",
+    "rationale": "A ledger that does not parse is not an anchor at all, and every reader then falls back silently to the git-history derivation it replaced. The copy-based baseline removes that failure mode rather than hardening it: the record is a file a human can open and `git diff`. What had to be kept is the DEFINITION of a change - which cells count, and which of them are approved rather than merely traced - and that is one function, cited by both readers, rather than a hash whose inputs each reader re-derives.",
+    "test_refs": "TC-153",
+    "status": "Approved",
+    "component": "CMP-006",
+    "phase": 5
+  },
+  "LLR-159": {
+    "sr_refs": [
+      "SR-148"
+    ],
+    "title": "Admission order and the red-TC census",
+    "module": "project-trajectory/scripts/dispatch.py",
+    "code_symbol": "_judgement_first/_admission/red_tc_census/parse_red_tc/_implemented_ids",
+    "detail": "`_judgement_first` is a STABLE PARTITION over the frontier, applied inside `_admission` before the surface/dispatch split so it can never move work past a human-held stop. `red_tc_census` rides the existing finding-string seam with a distinct prefix; `_red_tc_line` and `parse_red_tc` sit adjacent because the grammar is a contract between two modules, and `intake` routes on the parser rather than re-splitting prose. red_tc_census names, as its own class, a test case that is not green while every requirement it verifies is cited by a work item recorded done \u2014 Approved, Drafted and Modified test cases are exempt, which under the narrowed enum is the whole closed vocabulary, so the census is structurally dead in a conformant repo; an open, partial or cancelled citer makes nothing red, and a test case verifying a mix of claimed and unclaimed targets is not red; each named line routes to an adjudication row whose suggested tier is estimated from measured breadth, never defaulted; the census line's grammar has exactly one reader (parse_red_tc).",
+    "rationale": "The alternative to the partition \u2014 renumbering `schedule._KIND_RANK` \u2014 would change ordering for every downstream repo for a rung that belongs to admission. The alternative to the parser is prose carrying control flow, which is the exact defect the typed `suggested_tier` field replaced.",
+    "test_refs": "TC-154",
+    "status": "Approved",
+    "component": "CMP-008",
+    "phase": 5
+  }
+}
+</live source>
+
+<live source path="docs/requirements/system-requirements.toml">
+{
+  "SR-026": {
+    "title": "Coordinator resumes headless",
+    "sn_refs": [
+      "SN-006"
+    ],
+    "boundary_refs": [
+      "B-05"
+    ],
+    "hat_refs": [
+      "UNATTENDED-OPS"
+    ],
+    "requirement": "The delivered coordinator shall resume headless with stdin closed, never blocking on a prompt: a worker resumes from its explicit claimed assignment plus the committed trailer evidence on its branch, and the integrator derives claim and queue state from trunk history alone \u2014 the generated status surface never a session input.",
+    "rationale": "Realizes SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run. The acceptance is deliberately narrower than it once was: it had carried two obligations the shall never stated - transient-limit backoff and stall abort - and an acceptance cell cannot mint a requirement. Both were MINTED rather than deleted, because each describes live behaviour worth keeping: SR-171 and SR-172. An unattended run blocked on a prompt is indistinguishable from a hung one and holds its lane until a human notices. Keeping a separate serial resume path beside the dispatcher was rejected: two authorities over one decision drift, and the divergence surfaces as a run that resumes differently depending on how it was started.",
+    "acceptance_criteria": "A worker reconciles from its assignment + committed evidence and the integrator from trunk history; every mode runs with stdin closed and a prompt cannot wedge it.",
+    "priority": "S",
+    "verification": "Test",
+    "status": "Approved",
+    "phase": 1
+  },
+  "SR-174": {
+    "title": "Work-item identity is allocated once and never re-issued",
+    "sn_refs": [
+      "SN-008",
+      "SN-025"
+    ],
+    "boundary_refs": [
+      "B-05"
+    ],
+    "hat_refs": [
+      "INTEGRITY-RECOVERABILITY",
+      "MAINTAINER"
+    ],
+    "requirement": "The delivered loop content shall allocate each work-item identity at most once, so that no two concurrent actors receive the same identity and an identity freed by a deletion is never re-issued.",
+    "rationale": "Identity allocation is its own decision, not a consequence of serialization: serializing the writer makes a COLLISION unlikely and does nothing about RE-USE, which is the half that silently re-points every commit message and archived document citing the freed id. The non-reuse clause has a `shall` of its own here rather than living in SR-170's acceptance, which is a cell that cannot mint a requirement. Realizes SN-008 and SN-025.",
+    "acceptance_criteria": "Two actors finishing against the same tree cannot obtain the same work-item identity; an identity freed by deleting its record is not re-issued to new work; allocation counts from the recorded high-water mark rather than from the live maximum.",
+    "priority": "M",
+    "verification": "Test",
+    "status": "Approved",
+    "phase": 4
+  },
+  "SR-178": {
+    "title": "Text that has moved away from its acceptance record is reported",
+    "sn_refs": [
+      "SN-029"
+    ],
+    "boundary_refs": [
+      "B-02"
+    ],
+    "hat_refs": [
+      "TEST-ENGINEER"
+    ],
+    "requirement": "The kit shall report any recorded artifact whose text has moved away from the\ncopy recording its acceptance - stakeholder needs included, despite their\ncarrying no status cell - regardless of any Status movement.",
+    "rationale": "THE DRIFT half, separable from SR-140 in the direction that matters: a record that exists and rides its approval commit, with nothing ever comparing live text against it, satisfies SR-140 completely and leaves every later amendment invisible. That is not a hypothetical - it is precisely the failure the git-history derivation had, and the reason a baseline on disk was owed at all.\nREGARDLESS OF STATUS MOVEMENT is the load-bearing clause, not a qualifier. The amendment machinery watches the Status flip, and the sanctioned staged-amendment path deliberately does not flip - so a rule keyed off the flip returns nothing on exactly the rows a sitting exists to judge. Reporting against the recorded copy is the only reading that survives that, because the copy is a baseline OUTSIDE the live file and a walk over the live file can never be one.\nTHE STAKEHOLDER-NEED RIDER is in the normative text rather than left to the acceptance because a need has no Status cell at all: every amendment-watching rule in the kit is keyed off a field the need tier does not have, so without the clause the tier a sitting most wants to hold is the one tier the rule cannot reach. Needs are covered by the whole-file copy rather than by a per-need projection - the three need tables have different shapes, and a projection would have recorded the garbling.\nWHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-without-flip guard: the id column and the Status cell are excluded STRUCTURALLY (the id is the join key rather than content, and folding Status in would make every flip read as an amendment and every amendment invisible behind its own flip), and the remainder splits into an approved half and a traced half. Two readers of one basis rather than two rules that agree until they do not.",
+    "acceptance_criteria": "An artifact whose normative text has moved since the copy that recorded its acceptance is reported whether or not its Status moved; an approved cell moving under a row still claiming approval is reported, a merely traced cell moving is not, and a row below approval has no claim to fall from and is never reported; the status marker itself is never read as the movement, so a flip is neither an amendment nor a mask for one; and a stakeholder need is held to the same rule despite carrying no status cell for the amendment machinery to watch.",
+    "priority": "S",
+    "verification": "Test",
+    "status": "Approved",
+    "phase": 5,
+    "aspect": "process"
+  },
+  "SR-024": {
+    "title": "Permutation case generation",
+    "sn_refs": [
+      "SN-002"
+    ],
+    "boundary_refs": [
+      "B-05"
+    ],
+    "hat_refs": [
+      "TEST-ENGINEER"
+    ],
+    "requirement": "The delivered permutation-case generator shall expand a Permutations spec into concrete dimensional cases.",
+    "rationale": "Realizes SN-002 \u2014 dimensional coverage is generated from the SR's declared inputs, not hand-listed. Systematic expansion reduces the risk that a dimensional combination is omitted, which is the charter's coverage half. Generation does NOT answer the charter's second half: showing that an enforcer fails when it should is demonstrated by negative or planted-failure tests, and a hand-listed negative case can demonstrate it. Those negative tests remain a separate obligation, not this row's.",
+    "acceptance_criteria": "A spec grammar (range/set/bool with @full|@pairwise|@boundaries) yields the expected case set.",
+    "priority": "S",
+    "verification": "Test",
+    "status": "Approved",
+    "phase": 1
+  },
+  "SR-161": {
+    "title": "Decompositions carry a perspective record",
+    "sn_refs": [
+      "SN-036"
+    ],
+    "boundary_refs": [
+      "B-05"
+    ],
+    "hat_refs": [
+      "TEST-ENGINEER"
+    ],
+    "requirement": "When a decomposition round is reviewed, the delivered planning content shall provide every applicable declared perspective's question in the decomposition brief and require the sitting's review record to name the outcome for each perspective.",
+    "rationale": "A decomposition produced from one perspective can look complete while omitting security, operations or first-use failures. The hats roster and plan briefs already supply the applicable questions, and the sitting's review record preserves their outcomes; a separate machine-readable coverage record and checker would duplicate that review without improving its adequacy judgment. Hat-Refs remain the row-level provenance for perspectives that raised a requirement. This applies the owner ruling of 2026-09-06 (docs/log.d/2026-09-06-sn036-owner-ruling.md).",
+    "acceptance_criteria": "For one completed decomposition round, the applicable perspectives resolve from the declared hats roster, the decomposition brief presents each applicable perspective's question, and the sitting's review record names an outcome for every one; the independent adequacy review reads that record.",
+    "priority": "S",
+    "verification": "Inspection",
+    "status": "Approved",
+    "phase": 5
+  }
+}
+</live source>
+
+<live source path="docs/requirements/interfaces.toml">
+{
+  "IF-091": {
+    "owner": "scripts/acceptance_record",
+    "requestors": [
+      "scripts/intake",
+      "scripts/integrate"
+    ],
+    "channel": "call",
+    "data": "staged_spine_amendments and staged_drafted_rows records (intake) \u00b7 the lane_approval_refusal text (integrate) \u00b7 SPINE_CSVS",
+    "version": "v1",
+    "status": "Drafted",
+    "component": "CMP-008"
+  },
+  "IF-090": {
+    "owner": "scripts/intake",
+    "requestors": [
+      "scripts/integrate",
+      "scripts/dispatch",
+      "scripts/agent_loop"
+    ],
+    "channel": "call",
+    "data": "intake_after_merge (integrate) \u00b7 mint_gap_rows (dispatch) \u00b7 context_block (agent_loop, advisory)",
+    "version": "v1",
+    "status": "Drafted",
+    "component": "CMP-008"
+  },
+  "IF-075": {
+    "rationale": "Split out of reattest_lines rather than reimplemented, because a second copy of the baseline derivation in a second module is the paraphrase-not-decompose failure this kit exists to prevent. The cross-component import (Generators -> Traceability core) is declared here rather than retagged: the model belongs with the registries it reads, and the renderer belongs with the generators.",
+    "owner": "scripts/trace",
+    "requestors": [
+      "scripts/gen_open_items",
+      "scripts/adjudicate_brief"
+    ],
+    "channel": "call",
+    "data": "reattest_model entries: chain rows, changed cells, baseline rev and date; an empty model is a valid answer",
+    "version": "v1",
+    "status": "Drafted"
+  },
+  "IF-124": {
+    "owner": "scripts/baseline_snapshot",
+    "requestors": [
+      "scripts/adjudicate_brief"
+    ],
+    "channel": "call",
+    "data": "exists, stamp and SNAPSHOT_DIR",
+    "carried_by": "IF-123",
+    "version": "v1",
+    "status": "Drafted",
+    "notes": "cross-component crossing declared per the architecture rule: this module is CMP-008 (LLR-159) and baseline_snapshot is CMP-006 (LLR-173). The IF-104/IF-122 consumption shape. The anchor is PROVABLY not the text under judgement: the mirror invariant (check_trajectory.staged_snapshot_findings) proves the copy rode a reviewed approval commit, and nothing but a copy can write it. Covered by TC-161's amendment arm."
+  },
+  "IF-175": {
+    "owner": "scripts/kitlib/verdict",
+    "requestors": [
+      "scripts/integrate",
+      "scripts/agent_loop",
+      "scripts/gen_verdict_rollup",
+      "scripts/score_reviews"
+    ],
+    "channel": "call",
+    "data": "bytes -> tree identity; repo/rev -> governing identity; branch -> logged rounds/trailers; policy + entries -> owed phases/count; text <-> trailer",
+    "version": "v1",
+    "status": "Drafted",
+    "component": "CMP-008",
+    "notes": "The seam exists because two callers ask ONE question from two sides - the merge slot's may-this-merge and the loop's does-this-lane-still-owe-a-round - and answering it twice is what let a lane draw two identical rounds over a verdict nothing had invalidated. So this row is not bookkeeping over an import: it is the declaration that there is exactly one definition, and a second reader of round evidence anywhere else is a finding against this row rather than a new one. That definition includes the REV the identity is measured at, which is why the refresh peel is owned here and not by the merge slot: while it lived there, one reader peeled and the other measured at HEAD, and the row's whole claim was false across exactly one commit class. The peel has TWO shapes on purpose and they must not be merged: work_tip peels only a refresh sitting on the tip because it feeds a reset --hard where one commit too far destroys work, while governing_rev walks through any commit whose non-record identity equals its first parent's, to reach a disposable commit it would otherwise hide - a read-only question can afford an answer a destructive one cannot. Those two SHAPES are what this row governs; WHICH machine-authored commits are disposable is a class list, it belongs to the owner's own row (LLR-207 names both the station refresh and the machinery's adjudication close), and it is deliberately not restated here, so a reader meeting one seam sentence and one design sentence is never choosing which is current. That step condition is the row's own sentence rather than a proxy for it, so no commit SHAPE gets a case here: a walk that classified the paths a commit touched stopped at the zero-path ones it could not read, and the empty commit an attestation rides when its bookkeeping is unchanged is that shape, so the commit recording an approval buried the refresh. The singularity binds the BINDINGS too, not only the two named readers: the identity a round file's reviewed sha names and the identity an attestation's carrier names are asked through governing_identity at that commit, because a raw fold is this composition with the peel dropped and it disagrees across exactly the commit class the peel exists for - which is how a round drawn after a refresh became invisible to both readers at once, with nothing on the branch able to reconcile them. The rollup generator is a requestor for the NAME grammar only, and score_reviews for the PHASE SPAN only - it holds a hard `from kitlib.verdict import declared_phases` so latest_phase_verdicts keys the merge boundary's map by exactly the phases the loop schedules, and it reads no round evidence at all, so naming it here adds a requestor and NOT a fourth reader of the verdict. It is named because an import no requestors entry carries is an undeclared seam, which is the completeness rule this cell answers to; the singularity sentence above is about round evidence and does not reach a span reader either way. The span crosses as the CONSTANT too, not only through declared_phases: agent_loop's non-build phase set and its dial ceiling ask it at module scope, and that module deliberately keeps no tuple of its own, so a phase added here reaches the scheduler, the routing set and the clamp together. Off git every function answers None and this module never says what that means; each requestor declares its own direction, and both declared directions are toward more review."
+  }
+}
+</live source>
+
+<live source path="docs/test/test-cases.toml">
+{
+  "TC-161": {
+    "verifies": [
+      "LLR-167",
+      "IF-124",
+      "IF-075"
+    ],
+    "level": "Integration",
+    "method": "Drive the real loop against a fake agent CLI over throwaway git repos, one per routed brief, and capture what the session was actually handed. Assert the composed brief carries each slot's real derivation (the lane's report verbatim, the closed spec, the commit facts; the live census joined to the TC row and to the obligation it covers), that no `{slot}` survives in the output, and that the typed verdict line the brief demands is written to the path the brief named and committed with the result trailer. Then drive the refusals: a declared brief with no per-close report, a report with no typed `commit_range`, and a census that has come clean each remain HELD with the reason printed and never take the blank-Brief route. Pin the discriminator: two rows with an identical SpecRef and different declared `Brief` cells compose differently. Pin the two unrouted briefs as unrouted, naming themselves in the refusal. The amendment arm covers two seams: IF-124, the `last_approved` baseline read - the brief carries the snapshot as its anchor, only approved cells reach the judge, and with no snapshot the brief holds and says FIRST APPROVAL rather than fabricating an anchor; and IF-127, the lazily imported re-attestation model. Run each brief through the in-process primary engine and assert its immutable turn record binds the queued WI, primary branch/root, proposal spec, live/snapshot registry blobs and exact frontmatter scope; the resulting review evidence binds the full candidate after Approval/Dispositions additions. Drive a blank-Brief adjudication and assert its generic primary judgment assignment names the bound verdict path and contains no claim, branch, model-side close or snapshot instruction; ordinary non-adjudication work still receives its worker assignment and no legacy adjudication-worker context is retained. Any changed binding stales the result, and verdict-only commits leave snapshots, Status, queue and watermark unchanged.",
+    "tier": "Smoke",
+    "expected": "Satisfies SR-146 AcceptanceCriteria",
+    "automated": "Yes",
+    "evidence": "tests/test_adjudicate_brief.py",
+    "status": "Approved",
+    "phase": 5
+  },
+  "TC-205": {
+    "verifies": [
+      "SR-156",
+      "LLR-207",
+      "IF-175"
+    ],
+    "level": "Unit",
+    "method": "The verdict record's two halves, each driven beside its opposite so neither reads as a rule with one answer. THE IDENTITY, pure over synthetic `git ls-tree -r` entries: a listing and the same listing plus a round file, a log fragment and a session log fold EQUAL, while a changed work blob and a changed docs/work/ spec each fold DIFFERENT - so the exclusion is proven to be an exclusion rather than a fold that ignores everything. THE ENCODING BOUNDARY, driven through git rather than asserted about it: a record path holding a non-ASCII character - the shape git QUOTES, asserted in the fixture so it cannot silently stop reproducing - leaves the identity unmoved, while an accented WORK path moves it; and raw listings with one blob renamed from invalid-UTF-8 path byte 200 to 201 - asserted to COLLIDE under replacement decoding - fold DIFFERENT through tree_identity, so parsing and the ASCII record-prefix boundary occur before any decode. THE TRAILER GRAMMAR: format/parse round-trip; the LAST trailer in a message governs, so a rework commit quoting the round it answers does not have the quotation read as its own attestation; and three malformed shapes - a verdict word outside the enum, a 40-hex tree, a missing round count - each fail to PARSE rather than parse to something. THE NAME PARSE: a round file with and without the relaxed tag, the pre-train flat layout, a session log, and the legacy hand-authored rollup answering None because it names no reviewed sha. THE GATE, on a two-branch git fixture with the trunk checked out: a logged reviewer round naming the current tree clears it with NO rollup present anywhere; the same file with a BUILD session log behind it does not (the implementer-authored round); a SECOND round file committed behind that ONE session log, whose NAME claims the other declared phase, is not a second reviewer - both files are asserted committed and the single log with them, the entries carry the LOG's phase, so at a declared policy of 2 REVIEW-B is still outstanding and the gate refuses by name until a REVIEW-B whose own session log declares it arrives and clears it; TWO session logs at ONE (train, ordinal) declaring DIFFERENT review phases - both asserted committed, with the round file they would otherwise phase asserted still present so the empty answer is the ambiguity rule and not an empty scan - serve NO round at all rather than letting the last log read win, and the gate refuses by name while the single-log arm beside it clears; a round whose tree was reworked away does not, while a log-fragment and scoreboard commit after a round leaves it governing; a CHANGES-REQUESTED round refuses; and a verified Review-Verdict trailer contradicting the rounds refuses by name in its verdict word and in a round count ABOVE the evidence, while a count BELOW it does NOT - both directions driven, because the writer is best-effort and a stamp the evidence outruns is a missed stamp whose refusal parked an approved lane at the very stop the cross-check exists to prevent - and TWO attestations at one governing tree leave the NEWEST governing so a legitimately re-drawn round is not accused of forgery. THE CARRIER IS VERIFIED AND NOT ONLY PARSED, which is what \"the trailer cannot create an approval\" costs: the identical attestation words on a commit that CHANGED the work under them - asserted in the fixture to have really moved the governing identity - are read at neither the tree they NAME nor the tree they rode, beside the record-only carrier of the same words that IS read, so copying a true attestation onto later work buys nothing. THE WRITER IS DRIVEN END TO END, not only the trailer helper: a completed round is run through the loop's own complete_review_round on a repository fixture and the commit it lands is asserted to CARRY the attestation, to name the governing tree, to be read back by the branch reader under the key the cross-check looks up, to leave that governing tree unmoved, and to satisfy the gate - the whole path between a round completing and its attestation landing, which every other trailer case skipped by committing the string itself, and which nothing anywhere reports when it stops writing because absence is the state the cross-check must stand down on. THE RESUME'S OWED SET IS THE EVIDENCE'S ALONE: with both declared phases served at the governing tree and a stale untracked owed-marker still present - the state a run killed between the last reviewer's commit and the round completing leaves - the resume is asserted to queue NOTHING, and beside it a genuine rework with one phase redrawn is asserted to queue that phase and only it. THE PEEL: a genuine Bar-Green refresh commit, verified against its own tree and parent, moves the branch tip's identity and neither reader's answer - the loop still says no round is owed and the gate still merges - which is the one commit class two separately-chosen revs disagreed on; and the same refresh with a coordinator TELEMETRY commit stacked on top of it - a record path, so the fold ignores it and only the tip-only peel could be defeated by it - still owes no round and still merges. THE PRIMARY ADJUDICATION CARRIER: drive its stage-only writer against the verifier. Exact reviewed Approval bytes, accepted Status/snapshot effects, spec_move close transformation, successor specs, watermark and declared generated bytes carry the review from candidate to final tree; forged subject, wrong WI/turn, stale proposal or candidate, extra/missing path, cross-WI close, malformed successor, partial snapshot and unreviewed decision each fail toward more review. Kill before and after the atomic commit and prove pending resume versus one derived completion and no duplicate mint. THE TWO PEELS' REFUSAL ARMS are held by tests/test_integrate_station.py, cited beside this module because integrate re-exports these very functions (refresh_attestation, work_tip) and the station suite is where a refresh can be produced rather than hand-written: a genuine refresh attested to the sha it produced; a forged Bar-Green trailer in three shapes, the sharpest being a genuine refresh message copied verbatim onto another commit; an amend that keeps the message while the tree moves, revoking the attestation; the deliberately forged attestation recorded as a STATED limit rather than a defence; and the reset peel's data-loss half - an honest work commit merely QUOTING the trailer is never peeled away, and a genuine refresh above it peels back to exactly that commit. BOTH carriers are driven, not only the convenient one: that non-empty telemetry commit, and then the EMPTY commit agent_common.commit_telemetry writes when a Review-Verdict attestation must land on unchanged bookkeeping - obtained by CALLING that producer rather than by hand, so the two cannot drift apart, and asserted to really be zero-path, because that is the commit shape a walk classifying PATHS could not classify and so stopped at, burying the refresh under the very commit that recorded the approval. A WORK commit above the refresh does re-owe and does refuse, so the walk is proven to step through what cannot invalidate a verdict rather than through everything. BOTH ORDERS of refresh and round, because only one of them was covered and the other was broken: the round drawn AFTER the refresh - the order the shipped path actually produces, since a lane's refresh is spawned as soon as its worker is DONE and before the merge slot runs, so any slot refusal parks a branch with a refresh and no round - cites the POST-refresh sha, asserted in the fixture to be that sha and not the pre-refresh one, and is asserted to serve the lane at both readers and to carry the coordinator's attestation under the key the cross-check looks it up by, while a rework above it still re-owes. THE ATTESTATION'S CARRIER IS SCOPED TO ITS OWN PATHS, on BOTH arms and not only the one that carries a pathspec: with an unrelated work file staged and the bookkeeping unchanged, the commit agent_common.commit_telemetry writes for NAMED paths and the one it writes for NO paths at all - the call this suite itself makes, and the arm where a scope appended only when paths exist evaporates - are each asserted zero-path with the caller's index left exactly as found, so work cannot land under a bookkeeping label nor an attestation ride a commit that changed the tree. THE DIAL: the three values over a brief-and-drafts matrix, an unrecognized value falling to when-minting rather than to never, and a primary adjudication turn closing with successor drafts publishing with no verdict artifact of any kind under both never and when-minting, while a spine draft still owes its round. THE DIAL AT THE SCHEDULER, the half a reader could otherwise only take on trust: a committing ADJUDICATE session is driven through the loop's own bookkeeping arm on a pending primary-turn repository at every dial value - including the `always` no repository fixture had reached - and the review queue it leaves is asserted together with the train-scoped diff range and the recorded judging family, which is what \"exactly as a committing BUILD does\" has to mean. Its INPUT is driven beside it: a queued adjudication spec with one bound pending turn, followed by the terminal spec and verified publication, is asserted to answer the scheduler and verdict reader consistently; ordinary branches retain the shared terminal-before-active precedence, driven pure on a two-path list and on the empty one. THE SHARED DEFINITION, in BOTH its dimensions. WHICH TREE: the C2 review-owed derivation answers owed after a rework and served after a fresh round, and record-only commits after the verdict re-owe nothing. HOW MANY PHASES: at a declared policy of 2 a lone logged REVIEW-A APPROVE is REFUSED by name and the gate clears only once a governing REVIEW-B joins it at the same identity; and the half-drawn round a killed run leaves - REVIEW-A served, the in-memory phase queue gone - is answered by both readers together, the derivation naming REVIEW-B and ONLY REVIEW-B while the gate refuses, then both agreeing once it lands, with the same fixture asserted SERVED at policy 1 so the answer is proven to come from the declared count. The phase span is driven pure at the values neither caller reaches - a negative policy, which a bare slice would answer by slicing from the END, and an over-dialled one - and the one class the two readers must disagree on is pinned: a drawn but UNPARSEABLE verdict is not re-drawn and does not clear the gate either. THE TIER IS THE WHOLE CITED SET'S, not the majority's: the cited integration-station, primary-approval and primary-publication cases include modules named in tests/conftest.py SLOW_MODULES and so deselected by `-m smoke`, so Full is the cheapest tier at which EVERY arm above actually runs and Smoke would have claimed commit-floor coverage for a set the commit floor only partly runs. Tier and the pytest marker remain independent declarations that no check compares (registry-machinery-reference \u00a712.2); this cell is labelled on the side that under-claims.",
+    "tier": "Full",
+    "expected": "Satisfies SR-156: the serial seam's verdict rung is computed from committed evidence a logged reviewer session produced and is bound to the tree it judged, with the merge refused when the evidence is absent, dissenting, re-rolled, or contradicted by its own attestation; and the round the loop draws and the verdict the seam demands are decided by one reader",
+    "automated": "Yes",
+    "evidence": "tests/test_verdict_record.py::test_the_identity_ignores_every_record_path; tests/test_verdict_record.py::test_the_identity_notices_work_and_notices_docs_work; tests/test_verdict_record.py::test_a_record_path_is_excluded_whatever_characters_it_holds; tests/test_verdict_record.py::test_distinct_invalid_utf8_work_paths_have_distinct_identities; tests/test_verdict_record.py::test_the_trailer_round_trips_and_the_last_one_governs; tests/test_verdict_record.py::test_a_malformed_trailer_is_no_trailer; tests/test_verdict_record.py::test_round_and_session_names_parse_including_the_relaxed_tag; tests/test_verdict_record.py::test_round_count_counts_cycles_not_reviewers; tests/test_verdict_record.py::test_a_logged_reviewer_round_naming_this_tree_clears_the_gate; tests/test_verdict_record.py::test_an_implementer_authored_file_in_the_review_path_is_not_a_round; tests/test_verdict_record.py::test_one_session_cannot_serve_a_phase_its_log_does_not_declare; tests/test_verdict_record.py::test_two_logs_at_one_key_declaring_two_phases_serve_no_round; tests/test_verdict_record.py::test_a_round_that_judged_an_earlier_tree_does_not_count; tests/test_verdict_record.py::test_a_record_only_commit_after_the_round_leaves_it_governing; tests/test_verdict_record.py::test_the_governing_round_can_refuse; tests/test_verdict_record.py::test_a_trailer_contradicting_the_rounds_refuses; tests/test_verdict_record.py::test_a_trailer_OVERSTATING_the_governing_round_count_refuses; tests/test_verdict_record.py::test_a_trailer_UNDERSTATING_the_governing_round_count_does_not; tests/test_verdict_record.py::test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit; tests/test_verdict_record.py::test_a_stale_owed_marker_over_served_evidence_redraws_nothing; tests/test_verdict_record.py::test_the_newest_attestation_at_a_tree_governs_the_cross_check; tests/test_verdict_record.py::test_an_attestation_riding_a_commit_that_changed_the_work_is_not_read; tests/test_verdict_record.py::test_a_station_refresh_owes_no_round_and_the_two_readers_agree; tests/test_verdict_record.py::test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel; tests/test_verdict_record.py::test_the_empty_carrier_commits_its_own_paths_and_never_the_index; tests/test_verdict_record.py::test_a_round_drawn_after_a_refresh_is_visible_to_both_readers; tests/test_verdict_record.py::test_the_dial_decides_when_an_adjudication_owes_a_round; tests/test_verdict_record.py::test_an_unreadable_dial_falls_to_when_minting_not_to_never; tests/test_verdict_record.py::test_an_adjudication_lane_owing_no_round_merges_with_no_verdict_file; tests/test_verdict_record.py::test_a_minting_adjudication_still_owes_its_round; tests/test_verdict_record.py::test_a_committing_adjudication_schedules_its_round_under_the_dial; tests/test_verdict_record.py::test_the_scheduler_and_the_gate_read_one_spec_copy; tests/test_verdict_record.py::test_the_done_banner_states_the_rounds_it_actually_drew; tests/test_verdict_record.py::test_the_trailer_count_is_derived_at_the_governing_tree; tests/test_verdict_record.py::test_the_review_owed_derivation_and_the_gate_share_one_definition; tests/test_verdict_record.py::test_policy_two_requires_both_independent_verdicts; tests/test_verdict_record.py::test_a_half_drawn_round_owes_its_missing_phase_and_only_that; tests/test_verdict_record.py::test_the_declared_phase_span_is_read_the_same_length_by_both_readers; tests/test_integrate_admission.py::test_an_approve_that_did_not_judge_this_tree_does_not_count; tests/test_integrate_admission.py::test_an_approve_that_names_the_current_tree_passes; tests/test_integrate_admission.py::test_the_legacy_rollup_path_warns_while_it_clears; tests/test_integrate_station.py::test_the_refresh_attests_the_bar_to_the_sha_it_produced; tests/test_integrate_station.py::test_a_forged_bar_green_trailer_does_not_make_a_branch_merge_ready; tests/test_integrate_station.py::test_amending_a_refresh_commit_revokes_its_attestation; tests/test_integrate_station.py::test_a_deliberately_forged_attestation_is_a_STATED_limit_not_a_defence; tests/test_integrate_station.py::test_a_work_commit_that_quotes_the_trailer_is_never_peeled_away; tests/test_primary_publication.py::test_completion_rejects_restamped_foreign_tree; tests/test_primary_publication.py::test_completion_requires_candidate_as_first_parent; tests/test_primary_publication.py::test_real_primary_close_moves_exact_queued_spec; tests/test_primary_publication.py::test_real_return_publish_and_completion_replay; tests/test_primary_publication.py::test_bootstrapped_return_publication_replay_keeps_real_regeneration_fresh; tests/test_primary_publication.py::test_real_first_approval_snapshot_and_successor_are_one_commit; tests/test_primary_approval.py::test_scope_and_unjudged_absorption_refuse; tests/test_primary_approval.py::test_standing_snapshot_requires_complete_approved_absorption_ledger; tests/test_primary_approval.py::test_review_owed_candidate_requires_existing_independent_approve",
+    "status": "Approved",
+    "phase": 5
+  },
+  "TC-061": {
+    "verifies": [
+      "SR-026",
+      "LLR-061"
+    ],
+    "level": "Integration",
+    "method": "Run two concurrent workers from explicit single-WI --wi/--train/worktree assignments; refuse empty or multi-WI assignments before provider launch; require the assigned row's identity, SpecRef and completion state in its prompt; assert no lane-local status/next/run-state file, non-colliding logs/review evidence naming the exact reviewed commit, no root-truth mutation, and --track refused as an unknown flag (retired).",
+    "tier": "Full",
+    "expected": "Satisfies SR-026 AcceptanceCriteria via the LLR-061 detail contract",
+    "automated": "Yes",
+    "evidence": "tests/test_agent_loop_worker.py",
+    "status": "Approved",
+    "phase": 4
+  },
+  "TC-147": {
+    "verifies": [
+      "SR-174",
+      "LLR-153",
+      "IF-091"
+    ],
+    "level": "Integration",
+    "method": "Run the intake suite against real git repos, red-then-green per trigger (trigger (b) keys on the close's immutable REPORT PATH, so a re-sweep dedupes exactly and a genuinely second close is a second row): an approved SR amendment mints ONE adjudication row (id max+1, the before/after listing in ## Context) and an LLR SR-Refs re-point mints while a Module-only move stays silent (the ruled routing); a merged handback mints the disposition row (NEEDS-HUMAN reason routes strong; a handed-back adjudication row mints NOTHING and its own handback attempt is refused structurally); a primary adjudication's reviewed ## Approval/Dispositions, exact accepted Status/snapshot effects, existing spec_move close, successors, watermark and declared generated records are derived by the stage-only writer and land in one atomic publication; stale, out-of-scope, malformed or UNJUDGED input stages nothing; a requested equivalent approval blocked by another scoped owner's UNJUDGED drift remains pending, then an adjudicator-revised RETURN with zero accepted cells and a dependency-preserving continuation closes atomically with no Status/snapshot write; the later complete-scope reanchor independently judges every cell and treats those RETURN findings as evidence only; crash-before remains pending and crash-after derives complete without a duplicate id; planmode=dual passes through kind-derived, and a malformed block, an unknown key, a second adjudication kind or a bad bar value refuse with nothing minted; the census mints gap rows once and dedupes on re-run; every re-run is idempotent by exact-title dedup; the context block renders every join in failure-cost order and answers the empty string on a bare repo; both gate-policy arms enact (attended recommends and leaves the registries byte-identical; single-approve and autonomous flip only the named Status cells, cell-exact elsewhere, idempotent).",
+    "tier": "Full",
+    "expected": "Satisfies SR-174 AcceptanceCriteria via the LLR-153 detail contract",
+    "automated": "Yes",
+    "evidence": "tests/test_intake.py",
+    "status": "Approved",
+    "phase": 4
+  },
+  "TC-148": {
+    "verifies": [
+      "SR-174",
+      "LLR-154",
+      "IF-090"
+    ],
+    "level": "Integration",
+    "method": "Run the integrator + dispatcher suites' intake-arm cases: a merged branch that amended an approved SR cell yields the adjudication row as its own mint: commit immediately after the merge commit on trunk (in-slot, serial); the dispatcher's empty-frontier rung 1 mints gap rows and KEEPS DRIVING them in the same run, then exits honestly when every gap already carries a row; a census-mint refusal stops the run loudly; the handback loop tests drive the disposition row the same run mints. Drive a branchless adjudication under the same integration slot and assert callbacks at admission, verdict, review and pre-commit cannot claim, merge, directly integrate or start another turn; the stage-only projection receives the scoped bar directive, and refusal leaves the one immutable pending turn with no partial commit.",
+    "tier": "Full",
+    "expected": "Satisfies SR-174 AcceptanceCriteria via the LLR-154 detail contract",
+    "automated": "Yes",
+    "evidence": "tests/test_integrate_station.py; tests/test_dispatch.py",
+    "status": "Approved",
+    "phase": 4
+  },
+  "TC-153": {
+    "verifies": [
+      "SR-178",
+      "LLR-158"
+    ],
+    "level": "Integration",
+    "method": "Run the drift half of the baseline-snapshot suite. It first drives the premise: test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip shows the staged-amendment guard silent on a sanctioned amend+flip over a real two-commit git repo. It then pins exactly what a change is taken over, in four corners: test_a_approved_cell_moving_under_an_approved_row_is_DRIFT (an approved cell must move it), test_a_TRACED_cell_moving_is_NOT_drift (the traced half must not), test_status_itself_is_never_the_amendment (the marker is excluded structurally, so a flip is neither an amendment nor a mask for one), and test_a_row_below_approval_can_never_be_drifted (no claim to fall from). The guard and the snapshot comparison share one public basis, split_changed_cells, called by both staged_spine_amendments and baseline_snapshot.is_drifted, so their agreement carries no case of its own. Drive ordinary and adjudication-class WI branches attempting snapshots, approval-ledger writes, first approvals and amendment-only snapshot changes; all refuse. For each of all seven snapshot registries, drive the held primary writer with every changed Approved cell accepted or UNJUDGED and every Drafted rider listed below approval, then returned, stale and extra-cell variants; only the fully accepted exact scope stages a byte-identical snapshot and every rider remains below approval.",
+    "tier": "Smoke",
+    "expected": "Satisfies SR-178 AcceptanceCriteria via the LLR-158 detail contract",
+    "automated": "Yes",
+    "evidence": "tests/test_baseline_snapshot.py",
+    "status": "Approved",
+    "phase": 5
+  },
+  "TC-154": {
+    "verifies": [
+      "SR-148",
+      "LLR-159"
+    ],
+    "level": "Integration",
+    "method": "Run the loop-order suite: an adjudication row admits ahead of a ready spine WI while the ruled rank table is unchanged; the partition is stable and cannot move work past a human-held stop; a red TC is named only under a `done` citer, with the three exempt statuses and the mixed-target case driven; the census grammar round-trips and matches nothing else.",
+    "tier": "Smoke",
+    "expected": "Satisfies SR-148 AcceptanceCriteria via the LLR-159 detail contract",
+    "automated": "Yes",
+    "evidence": "tests/test_loop_order.py",
+    "status": "Approved",
+    "phase": 5
+  }
+}
+</live source>
+
+<PROCESS section 5>
+## 5. Verdict & status protocol
+
+Two files split *now* from *history*: `status.md` is the **working surface** —
+the whole file holds only what must be performed next (open items, pending
+decisions, the next action) — and `log.md` is the **append-only history** it
+points at (sign-offs, verdicts, approved decisions, session notes; evidence,
+never normative). Act from status.md; append evidence to log.md — directly on
+the serial trunk lane, or as a `docs/log.d/<WI-id>-<slug>.md` fragment on a
+work branch, compiled into `log.md` in merge order by `trunk_step.py` (the
+sign-off table and Decisions log are trunk-serial edits, never fragments).
+There is a **third** tier behind those two — `docs/archive/`, where a document
+that records a historical decision and is no longer read by a script goes to
+stop competing with the live surfaces; its README states the boundary rule and
+the counter-rule (a generated or script-read surface is machinery, not history).
+
+**Open items — the owner decision surface, always shipped.** A decision deferred
+to the owner is a **row** in `docs/requirements/open-items.toml`, rendered by
+`gen_open_items.py` into `docs/open-items.html`; status.md's `Needs <human>`
+bullets stay one-liners pointing at it, and every scaffold gets both whatever its
+profile — *you deferred and no `OI` row resolves it* is a finding only a repo
+that HAS the registry can act on. Three mechanisms keep the announcement and the
+queue from being two artifacts: a `docs/provenance-allow` entry **names** the
+`OI-###` it defers (a required field, integrity-class); a `docs/log.d/` fragment
+**declares** the ids its session deferred (`Deferred open items: OI-45` / `…
+none — <why>`), warn-only at the commit bar; and zero pending rows while entries
+still stand is reported as a contradiction naming them. The surface is the
+substrate, never the mechanism — a fresh registry renders *the owner queue is
+empty* perfectly truthfully.
+
+Reviews use this block — in `log.md`, or as a `docs/reviews/WI-<n>-<PHASE>.md`
+verdict file under the review layer (work-item-scoped names; serial counters
+race under concurrency):
+
+```
+### <HAT or REVIEWER> — <Gate> — Round <r> — <YYYY-MM-DD>
+Verdict: APPROVE | CHANGES-REQUESTED
+Findings:
+- [BLOCKER|MAJOR|MINOR] <ID or area> → <issue> → <suggested change> → @<owner>
+```
+
+Sitting sign-offs live in the **Sittings** table in `log.md`; the driver
+records the gate decision there, cites it from status.md's *Stage* line,
+and requests acceptance per the declared gate authority (§4).
+
+**Voice policy — warmth has a layer boundary.** Personality is a human value, not
+a machine one: **human-facing** output (CLI narration, a kickoff greeting, a
+release-checklist intro) may carry warmth and **dry wit at most**;
+**machine/agent-facing** output — this protocol's findings and verdicts,
+subagent prompts, registry cells, commit messages — stays **literal, terse,
+structured: no whimsy**. Levity there costs tokens, reads ambiguously to the
+next agent (irony/understatement is exactly what a parser misreads), and
+erodes the honesty/severity signal this protocol depends on. Default voice is
+**restrained**
+("direct and concrete; dry wit at most; never at the expense of clarity or
+honesty"); a project may expose an optional, named **tone knob** to dial levity
+up or down — never a baked-in persona, since no single tone fits both a
+medical-device repo and a game studio.
+
+### Change intake — routing a problem to the spine
+
+An inbound problem routes by **which registry row it contradicts** — that
+classification, not the fix, is step 1. Then check the parent obligation and
+selected design before treating the violation as a coverage gap:
+
+```mermaid
+flowchart TD
+  P["problem identified"] --> C{"which row does it contradict?"}
+  C -->|"an existing SR/LLR is violated"| D{"obligation and design still sound?"}
+  D -->|"yes"| TG["coverage gap:\nno TC caught it"]
+  D -->|"parent sound; LLR unsuitable"| DR["amend LLR + verification\npreserve parent acceptance"]
+  D -->|"promised behavior changes"| RG
+  C -->|"no row speaks to it"| RG["requirement gap:\nnew/changed SN -> SR -> LLR\n(walk DevStg-Reqs/DevStg-Tests for that slice)"]
+  TG --> T1["write the failing TC first"]
+  RG --> S{"scope the solution"}
+  S -->|"new seam"| I2["IF-### row\n+ a TC per contract"]
+  S -->|"new subsystem/part"| C2["CMP-### / PART-### rows\n+ Component tags"]
+  S -->|"code only"| L2["LLR rows on the\nexisting modules"]
+  I2 --> W["WI-### into the DAG"]
+  C2 --> W
+  L2 --> W
+  T1 --> W
+  DR --> W
+  W --> G["implement test-first; gates re-run"]
+  G --> V["touched CMP:\nhas-gap -> Founded"]
+```
+
+- **Coverage gap** — the requirement was right and untested: the fix *starts*
+  as a failing TC against the existing SR/LLR, never code-first.
+- **Design replacement** — use the ordinary scoped amendment and its tier's
+  approval authority; preserve enduring behavioral regression tests and parent constraints.
+  Authoring is not approval. Use the `spine-authoring` skill questions
+  to distinguish an unsuitable LLR from a changed stakeholder obligation.
+- **Requirement gap** — no row speaks to it, or its promised outcome must change:
+  walk the DevStg-Reqs/DevStg-Tests bar for that slice
+  only; the new rows then scope the solution (each new interface, component, or
+  purchased part lands as its own registry row, so the next reader finds the
+  decision where the ids live).
+- Off-spine effects ride along: a touched `CMP-###` walks
+  `Founded → Drafted+has-gap → Founded` (its `Knowledge` cell keeps what was
+  learned), and the work schedules as `WI-###` rows — never as prose
+  accumulating on the working surface.
+
+</PROCESS section 5>
+
+codex
+**DESIGN-CHECK: continue adjudication rework, with a bounded redesign of LLR-207’s responsibility split. Retain LLR-167’s shape.** Both MAJOR findings are substantive: the judgment needs a design-shape decision and explicit counterpart decisions before its continuation is adequate.
+
+This is advice to the pending primary adjudication, not an Approval payload or independent review of a future candidate. All 52 rows remain RETURN until a valid complete reanchor.
+
+I assume the supplied live cells and managed history are authoritative for this assessment. Referenced test names and reported historical results are evidence descriptions, not executions or independently inspected proofs here. Unsupplied parent acceptance remains a constraint; it is not reopened or certified by this check. This is the stipulated fresh Astra assessment under degraded same-family availability, with no cross-family corroboration claimed. No tools were used or files changed.
+
+**LLR-167: retain, with explicit verification obligations.** Its organizing decision is how to deliver a complete, correctly selected, evidence-derived judgment brief bound to one primary turn. Different negative cases do not by themselves require different LLRs.
+
+| Retained decision | Verification purpose and reason to retain together |
+|---|---|
+| Declared `Brief` selects the template; strict filling forbids partial output | Prove that identical SpecRefs with different declared briefs select different instructions, and missing or extra slots refuse. Selection and completeness jointly determine whether the delivered brief is valid. |
+| Blank Brief receives a bound generic assignment; declared assembly failure remains HELD | Prove genuine absence differs from failure. Splitting fallback from refusal would separate the two sides of the same dispatch decision. |
+| Both routing arms use the same in-process primary engine and explicit bindings | Prove each delivered assignment identifies the queued WI, turn, base, candidate, scope and primary context; changed bindings stale the result. This establishes whose judgment the assembled evidence supports. |
+| Ordinary workers retain their assignment; legacy adjudication-worker context disappears | Prove the routing boundary does not substitute worker instructions for primary judgment or disrupt ordinary work. This is the complement of the same dispatch contract. |
+| Disposition assembler derives immutable report and typed commit-range evidence, clipped at 80 lines | Prove provenance, bounds and refusal without the required report. This is one route’s implementation of the common complete-evidence contract. |
+| Red-TC assembler recomputes and joins the live census; consolidation rederives the entire live cluster | Prove stale or dissolved subjects refuse and partial clusters never brief a judge. These are route-specific freshness predicates, usefully distinguished by verification cases rather than separate requirement ownership. |
+| Every shipped brief is routed; conflict is retired | Prove routed inventory equals shipped inventory and conflict is unknown. This closes the dispatch domain governed by the same row. |
+| Committed verdict binds turn and candidate; snapshot differences confer no approval | Prove output correspondence and prevent comparison evidence becoming authority. These complete the input-to-judgment binding contract. |
+
+A split here would mostly distribute one validity contract across template-specific rows while still requiring their common integration proof. Preserve distinct test scenarios, but no new LLR is required on the supplied evidence.
+
+TC-161’s “two unrouted briefs” clause directly contradicts that contract. Correct it to all-shipped-routed/retired-conflict verification. Do not weaken LLR-167 to accommodate it.
+
+**LLR-207: unsuitable as presently bounded; redistribute responsibilities among existing scoped rows.** Shared subject matter—verdict integrity—does not make transaction construction, recovery and evidence interpretation one design decision. Their failures have independent observable consequences.
+
+The precise decomposition should be:
+
+| Existing owner | Responsibility after amendment | Verification purpose |
+|---|---|---|
+| LLR-207 / TC-205 | Byte-preserving tree identity, record exclusions and governing-revision traversal | Distinguish changed work from record-only changes, including quoted and invalid-UTF-8 paths. |
+| LLR-207 / TC-205 | Refresh verification and distinct read-only versus destructive traversal rules | Prove readers can recover governing evidence without permitting reset to remove publication or work commits. Keeping the two traversal rules together makes their intentional difference explicit. |
+| LLR-207 / TC-205 | Recognition of a verified primary carrier and its mapping to the reviewed candidate | Prove only independently verified exact projections carry judgment; subjects, trailers or plausible paths alone cannot establish that mapping. |
+| LLR-207 / TC-205 | Session-log joins, revision binding, phase provenance, ambiguous-join refusal, phase span, owed phases and round counts | Prove the scheduler and gate consume the same evidence definition. Retain together because separating these definitions recreates the disagreement this row explicitly prevents. A drawn unparsable verdict may serve a phase without allowing the gate to pass. |
+| LLR-207 / TC-205 | Trailer grammar, carrier binding and evidence cross-checks | Prove trailers cannot create approval, stale carriers do not count, and counts/verdicts are interpreted against governing logged evidence. These are representations and checks of the same evidence model. |
+| LLR-153 / TC-147 | Construction and atomic publication of the allowed projection: accepted effects, exact close transformation, successors, watermark and declared generated output | Prove the transaction stages only authorized bytes, refuses invalid input without partial effects, and preserves allocation guarantees. |
+| LLR-153 / TC-147 | Crash-before/crash-after completion and no duplicate successor allocation | Prove recovery derives completion from the transaction rather than allocating twice. |
+| LLR-154 / TC-148 | Held-slot lifetime, writer exclusion, projection directives and pending-turn admission precedence | Prove another writer or selection cannot intervene and refusal retains the pending turn. |
+
+LLR-207 should retain the carrier’s **recognition conditions**, but transaction-construction and recovery obligations should have their normative home in LLR-153; lock ownership belongs in LLR-154. Use explicit references to those contracts without duplicating their detailed prescriptions.
+
+This split adds independent value: correct identity calculation cannot establish atomic allocation, and correct atomic publication cannot establish reviewer provenance. The existing scoped rows already provide those ownership boundaries, so no replacement requirement IDs are needed. Every changed child and verification cell still requires its applicable authority.
+
+TC-205 also needs clause-by-clause evidence correspondence. The three identified lane fixtures do not prove pending-primary dial, scheduler or shared-input behavior. Retain their valid ordinary-lane coverage where applicable. Identify actual primary-path proofs, or carry explicitly missing proofs into separately authorized test work; do not relabel fixtures, infer coverage from names, or delete promised behavior to fit available evidence. Its integration and publication claims also require reconsidering the current `Unit` level declaration. Smoke results cannot establish its Full-tier contract.
+
+The second MAJOR requires these explicit counterpart decisions:
+
+| Relationship | Decision and rationale |
+|---|---|
+| SR-026 → LLR-061 / TC-061 | **Retain SR-026.** A singleton claimed assignment and trailer-AND-active-spec-removal reconciliation refine explicit assignment and committed evidence without changing headless operation or trunk-derived truth. Carry verification of both completion predicates, collision-safe evidence and per-WI completion into the child work. |
+| SR-174 → LLR-153 / TC-147 | **Retain SR-174.** Atomic successor publication and replay safety implement allocation-at-most-once. Preserve high-water-mark allocation and deletion non-reuse; serialization alone is insufficient. |
+| IF-091 → LLR-153 / TC-147 | **Retain IF-091’s declared relationship.** Its amendment/drafted-row records and lane-refusal seam remain valid. It does not purport to describe the new publication writer. Do not enlarge its meaning to cover that writer; any additional interface declaration needs its own applicable authority. It remains Drafted. |
+| SR-174 → LLR-154 / TC-148 | **Retain SR-174.** Holding the slot through primary publication preserves exclusion between allocators. Its accepted non-reuse obligation remains independently required. |
+| IF-090 → LLR-154 / TC-148 | **Retain IF-090.** The named post-merge intake, gap mint and advisory context calls remain applicable. Branchless publication does not, by itself, change those call contracts. This interface does not certify the publication seam and remains Drafted. |
+| SR-178 → LLR-158 / TC-153 | **Retain SR-178.** Writer restrictions and absorption checks must preserve the existing normative-versus-traced comparison, status-independent reporting and stakeholder-need coverage. Added authorization checks do not replace drift detection or narrow its universe. |
+| LLR-159 → TC-154 | **Retain LLR-159.** Stable partition over the frontier is independent of batch versus singleton admission. Preserve ordering, human-held stops and census semantics; changing the competing test unit needs no change to that partition contract. |
+| IF-075 → TC-161 | **Retain IF-075.** Re-attestation model entries and a valid empty result remain compatible with bound primary briefs. Carry a TC-161 reference correction: the supplied Method calls this seam IF-127 while `Verifies` names IF-075. On the supplied sources, IF-075 is the described model seam; no IF-127 contract is available to justify that attribution. |
+| IF-124 → TC-161 | **Retain IF-124.** Reading `exists`, `stamp` and the snapshot directory remains compatible with primary binding. Preserve missing-anchor refusal and the distinction between an accepted baseline and acceptance of current differences. Its Drafted status remains unchanged. |
+| IF-175 → TC-205 | **Carry a corresponding amendment.** Its notes explicitly say LLR-207 names refresh and adjudication close as disposable. That is false under the retained refresh-only rule and verified-carrier design. Preserve the shared reader, binding and two-traversal contracts; correct the obsolete class attribution and explain carrier mapping consistently. This change requires the interface’s applicable authority outside the bound three-registry approval scope. IF-175 remains Drafted pending that process. |
+
+These retain decisions preserve unchanged relationships; they are not new approvals. In particular, retaining a Drafted interface does not complete its first approval. IF-175’s required change must become a dependency of complete impact acceptance, not an unauthorized addition to this turn.
+
+The bounded course is:
+
+1. Rework the pending adjudication record and its proposed Dispositions to include these design and counterpart decisions. Preserve the cumulative 52-row RETURN and the original obligations.
+2. Draft one scoped authoring continuation through the existing Dispositions/intake mechanism, depending on WI-608 and WI-611. Include TC-161 correction, LLR-207 responsibility redistribution, corresponding verification amendments, and explicit dependencies for IF-175 and any missing primary-path proof work. Do not author live registry cells in this bound turn or directly mint successors.
+3. Preserve the ordinary reviewer’s original session log unchanged. Regenerate the stale verdict rollup from authentic records and complete the normal checked telemetry path. A failed telemetry commit is not missing reviewer history, and regeneration cannot fabricate provenance.
+4. Acknowledge `implementer-touched-review-path` in the record. The supplied range contains the train’s own judgment and the machine-authored selection; `begin` commits that selection before the implementer runs. This explains the whole-train diff’s misattribution without suppressing the tripwire, changing its source code, or treating the explanation as approval.
+5. Obtain ordinary independent review of the actual revised candidate and real current-session provenance before any valid atomic RETURN publication. Later, after authorized authoring and required proof work, obtain a fresh complete-scope primary reanchor that independently judges every cell and its impact.
+
+The loop-held page permits this design check and continued PC authoring/adjudication; it does not impose a mandatory owner stop. Keep the coordinator paused. No control window, source-code changes inside this candidate, batch-code deletion, snapshot copying, check bypass, push or main merge is part of this course.
+tokens used
+28,634
+**DESIGN-CHECK: continue adjudication rework, with a bounded redesign of LLR-207’s responsibility split. Retain LLR-167’s shape.** Both MAJOR findings are substantive: the judgment needs a design-shape decision and explicit counterpart decisions before its continuation is adequate.
+
+This is advice to the pending primary adjudication, not an Approval payload or independent review of a future candidate. All 52 rows remain RETURN until a valid complete reanchor.
+
+I assume the supplied live cells and managed history are authoritative for this assessment. Referenced test names and reported historical results are evidence descriptions, not executions or independently inspected proofs here. Unsupplied parent acceptance remains a constraint; it is not reopened or certified by this check. This is the stipulated fresh Astra assessment under degraded same-family availability, with no cross-family corroboration claimed. No tools were used or files changed.
+
+**LLR-167: retain, with explicit verification obligations.** Its organizing decision is how to deliver a complete, correctly selected, evidence-derived judgment brief bound to one primary turn. Different negative cases do not by themselves require different LLRs.
+
+| Retained decision | Verification purpose and reason to retain together |
+|---|---|
+| Declared `Brief` selects the template; strict filling forbids partial output | Prove that identical SpecRefs with different declared briefs select different instructions, and missing or extra slots refuse. Selection and completeness jointly determine whether the delivered brief is valid. |
+| Blank Brief receives a bound generic assignment; declared assembly failure remains HELD | Prove genuine absence differs from failure. Splitting fallback from refusal would separate the two sides of the same dispatch decision. |
+| Both routing arms use the same in-process primary engine and explicit bindings | Prove each delivered assignment identifies the queued WI, turn, base, candidate, scope and primary context; changed bindings stale the result. This establishes whose judgment the assembled evidence supports. |
+| Ordinary workers retain their assignment; legacy adjudication-worker context disappears | Prove the routing boundary does not substitute worker instructions for primary judgment or disrupt ordinary work. This is the complement of the same dispatch contract. |
+| Disposition assembler derives immutable report and typed commit-range evidence, clipped at 80 lines | Prove provenance, bounds and refusal without the required report. This is one route’s implementation of the common complete-evidence contract. |
+| Red-TC assembler recomputes and joins the live census; consolidation rederives the entire live cluster | Prove stale or dissolved subjects refuse and partial clusters never brief a judge. These are route-specific freshness predicates, usefully distinguished by verification cases rather than separate requirement ownership. |
+| Every shipped brief is routed; conflict is retired | Prove routed inventory equals shipped inventory and conflict is unknown. This closes the dispatch domain governed by the same row. |
+| Committed verdict binds turn and candidate; snapshot differences confer no approval | Prove output correspondence and prevent comparison evidence becoming authority. These complete the input-to-judgment binding contract. |
+
+A split here would mostly distribute one validity contract across template-specific rows while still requiring their common integration proof. Preserve distinct test scenarios, but no new LLR is required on the supplied evidence.
+
+TC-161’s “two unrouted briefs” clause directly contradicts that contract. Correct it to all-shipped-routed/retired-conflict verification. Do not weaken LLR-167 to accommodate it.
+
+**LLR-207: unsuitable as presently bounded; redistribute responsibilities among existing scoped rows.** Shared subject matter—verdict integrity—does not make transaction construction, recovery and evidence interpretation one design decision. Their failures have independent observable consequences.
+
+The precise decomposition should be:
+
+| Existing owner | Responsibility after amendment | Verification purpose |
+|---|---|---|
+| LLR-207 / TC-205 | Byte-preserving tree identity, record exclusions and governing-revision traversal | Distinguish changed work from record-only changes, including quoted and invalid-UTF-8 paths. |
+| LLR-207 / TC-205 | Refresh verification and distinct read-only versus destructive traversal rules | Prove readers can recover governing evidence without permitting reset to remove publication or work commits. Keeping the two traversal rules together makes their intentional difference explicit. |
+| LLR-207 / TC-205 | Recognition of a verified primary carrier and its mapping to the reviewed candidate | Prove only independently verified exact projections carry judgment; subjects, trailers or plausible paths alone cannot establish that mapping. |
+| LLR-207 / TC-205 | Session-log joins, revision binding, phase provenance, ambiguous-join refusal, phase span, owed phases and round counts | Prove the scheduler and gate consume the same evidence definition. Retain together because separating these definitions recreates the disagreement this row explicitly prevents. A drawn unparsable verdict may serve a phase without allowing the gate to pass. |
+| LLR-207 / TC-205 | Trailer grammar, carrier binding and evidence cross-checks | Prove trailers cannot create approval, stale carriers do not count, and counts/verdicts are interpreted against governing logged evidence. These are representations and checks of the same evidence model. |
+| LLR-153 / TC-147 | Construction and atomic publication of the allowed projection: accepted effects, exact close transformation, successors, watermark and declared generated output | Prove the transaction stages only authorized bytes, refuses invalid input without partial effects, and preserves allocation guarantees. |
+| LLR-153 / TC-147 | Crash-before/crash-after completion and no duplicate successor allocation | Prove recovery derives completion from the transaction rather than allocating twice. |
+| LLR-154 / TC-148 | Held-slot lifetime, writer exclusion, projection directives and pending-turn admission precedence | Prove another writer or selection cannot intervene and refusal retains the pending turn. |
+
+LLR-207 should retain the carrier’s **recognition conditions**, but transaction-construction and recovery obligations should have their normative home in LLR-153; lock ownership belongs in LLR-154. Use explicit references to those contracts without duplicating their detailed prescriptions.
+
+This split adds independent value: correct identity calculation cannot establish atomic allocation, and correct atomic publication cannot establish reviewer provenance. The existing scoped rows already provide those ownership boundaries, so no replacement requirement IDs are needed. Every changed child and verification cell still requires its applicable authority.
+
+TC-205 also needs clause-by-clause evidence correspondence. The three identified lane fixtures do not prove pending-primary dial, scheduler or shared-input behavior. Retain their valid ordinary-lane coverage where applicable. Identify actual primary-path proofs, or carry explicitly missing proofs into separately authorized test work; do not relabel fixtures, infer coverage from names, or delete promised behavior to fit available evidence. Its integration and publication claims also require reconsidering the current `Unit` level declaration. Smoke results cannot establish its Full-tier contract.
+
+The second MAJOR requires these explicit counterpart decisions:
+
+| Relationship | Decision and rationale |
+|---|---|
+| SR-026 → LLR-061 / TC-061 | **Retain SR-026.** A singleton claimed assignment and trailer-AND-active-spec-removal reconciliation refine explicit assignment and committed evidence without changing headless operation or trunk-derived truth. Carry verification of both completion predicates, collision-safe evidence and per-WI completion into the child work. |
+| SR-174 → LLR-153 / TC-147 | **Retain SR-174.** Atomic successor publication and replay safety implement allocation-at-most-once. Preserve high-water-mark allocation and deletion non-reuse; serialization alone is insufficient. |
+| IF-091 → LLR-153 / TC-147 | **Retain IF-091’s declared relationship.** Its amendment/drafted-row records and lane-refusal seam remain valid. It does not purport to describe the new publication writer. Do not enlarge its meaning to cover that writer; any additional interface declaration needs its own applicable authority. It remains Drafted. |
+| SR-174 → LLR-154 / TC-148 | **Retain SR-174.** Holding the slot through primary publication preserves exclusion between allocators. Its accepted non-reuse obligation remains independently required. |
+| IF-090 → LLR-154 / TC-148 | **Retain IF-090.** The named post-merge intake, gap mint and advisory context calls remain applicable. Branchless publication does not, by itself, change those call contracts. This interface does not certify the publication seam and remains Drafted. |
+| SR-178 → LLR-158 / TC-153 | **Retain SR-178.** Writer restrictions and absorption checks must preserve the existing normative-versus-traced comparison, status-independent reporting and stakeholder-need coverage. Added authorization checks do not replace drift detection or narrow its universe. |
+| LLR-159 → TC-154 | **Retain LLR-159.** Stable partition over the frontier is independent of batch versus singleton admission. Preserve ordering, human-held stops and census semantics; changing the competing test unit needs no change to that partition contract. |
+| IF-075 → TC-161 | **Retain IF-075.** Re-attestation model entries and a valid empty result remain compatible with bound primary briefs. Carry a TC-161 reference correction: the supplied Method calls this seam IF-127 while `Verifies` names IF-075. On the supplied sources, IF-075 is the described model seam; no IF-127 contract is available to justify that attribution. |
+| IF-124 → TC-161 | **Retain IF-124.** Reading `exists`, `stamp` and the snapshot directory remains compatible with primary binding. Preserve missing-anchor refusal and the distinction between an accepted baseline and acceptance of current differences. Its Drafted status remains unchanged. |
+| IF-175 → TC-205 | **Carry a corresponding amendment.** Its notes explicitly say LLR-207 names refresh and adjudication close as disposable. That is false under the retained refresh-only rule and verified-carrier design. Preserve the shared reader, binding and two-traversal contracts; correct the obsolete class attribution and explain carrier mapping consistently. This change requires the interface’s applicable authority outside the bound three-registry approval scope. IF-175 remains Drafted pending that process. |
+
+These retain decisions preserve unchanged relationships; they are not new approvals. In particular, retaining a Drafted interface does not complete its first approval. IF-175’s required change must become a dependency of complete impact acceptance, not an unauthorized addition to this turn.
+
+The bounded course is:
+
+1. Rework the pending adjudication record and its proposed Dispositions to include these design and counterpart decisions. Preserve the cumulative 52-row RETURN and the original obligations.
+2. Draft one scoped authoring continuation through the existing Dispositions/intake mechanism, depending on WI-608 and WI-611. Include TC-161 correction, LLR-207 responsibility redistribution, corresponding verification amendments, and explicit dependencies for IF-175 and any missing primary-path proof work. Do not author live registry cells in this bound turn or directly mint successors.
+3. Preserve the ordinary reviewer’s original session log unchanged. Regenerate the stale verdict rollup from authentic records and complete the normal checked telemetry path. A failed telemetry commit is not missing reviewer history, and regeneration cannot fabricate provenance.
+4. Acknowledge `implementer-touched-review-path` in the record. The supplied range contains the train’s own judgment and the machine-authored selection; `begin` commits that selection before the implementer runs. This explains the whole-train diff’s misattribution without suppressing the tripwire, changing its source code, or treating the explanation as approval.
+5. Obtain ordinary independent review of the actual revised candidate and real current-session provenance before any valid atomic RETURN publication. Later, after authorized authoring and required proof work, obtain a fresh complete-scope primary reanchor that independently judges every cell and its impact.
+
+The loop-held page permits this design check and continued PC authoring/adjudication; it does not impose a mandatory owner stop. Keep the coordinator paused. No control window, source-code changes inside this candidate, batch-code deletion, snapshot copying, check bypass, push or main merge is part of this course.

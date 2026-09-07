@@ -1,0 +1,8 @@
+APPROVE — for the stated session-local transport scope.
+
+- The corrected wording removes the extra refusal: the full task governs unjudged evidence and permits its canonical zero-effect RETURN with zero accepted cells and no snapshots.
+- Integrity requirements remain intact: verify the full-file hash before inspection and again before committing; inaccessible or mismatched content requires refusing approval.
+- Evidence obligations remain intact: read all instructions in bounded sections, then inspect evidence as required. Hash verification and inventory access do not establish semantic acceptance.
+- Provenance distinguishes the full prompt from the short native-stdin request and records the executable and arguments. Diagnostics go to stderr, preserving native stdout.
+
+These are transport properties, not proof that the recipient actually completed verification or semantic inspection; those remain subject to adjudication.

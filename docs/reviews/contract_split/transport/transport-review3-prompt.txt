@@ -1,0 +1,43 @@
+Second follow-up: the file-delivered model verified integrity but stopped because it had not yet inspected every inventory entry. The previous adapter wrongly prohibited even writing the canonical zero-effect RETURN. The task explicitly requires RETURN when uses remain unjudged, with zero accepted cells and no snapshots. The corrected transport now defers that outcome to the full task instructions while preserving hash verification and refusing approval on integrity failure. Does this remove the extra shadow refusal without weakening integrity or semantic acceptance?
+
+Follow-up review: previous findings required diagnostics off stdout and explicit recipient hash/readability verification. Both corrected below. The managed collector intentionally combines stdout/stderr as a human-readable log, and Codex usage extraction already scans arbitrary CLI diagnostics; no consumer parses the complete merged log as native JSONL. The native stdout stream itself is unchanged. The delivery manifest preserves the adapter/native-stdin distinction.
+
+Fresh independent transport integrity review only. Do not run tools or edit files. Review the following session-local CLI adapter before use by the existing managed primary adjudication. Output APPROVE or REQUEST_CHANGES with reasons. It is not product source and grants no new approval authority. Managed routing still chooses the same configured codex command/model; only that subprocess inherits a PATH with this adapter first. WI610_REAL_CODEX records the previously resolved native command. All model CLI arguments are passed unchanged. The full assembled prompt (over the CLI initial-input max 1048576 characters) is stored unchanged in a hash-named UTF8 file; the native CLI receives a path/hash instruction and reads via tools. The managed log's existing prompt hash therefore still names the exact bytes delivered to its CLI boundary, not the short model-facing reference; the raw output explicitly records BOTH, the real executable and argv. No verifier, scope, candidate, session metadata writer, review gate, or approval payload code is changed. No fake reviewer/session log is authored. Does this transport preserve evidence availability and truthful provenance, and avoid silently reducing obligations? The model's semantic inspection still must be judged, not inferred from delivery/hash. The adapter is session-scoped, not installed globally. Small prompts pass verbatim.
+
+#!/usr/bin/env python3
+"""Session-local file delivery for oversized stdin; not a product/approval writer."""
+from pathlib import Path
+import hashlib,json,os,subprocess,sys
+real=os.environ['WI610_REAL_CODEX']
+if not sys.argv[1:] or sys.argv[1]!='exec' or sys.stdin.isatty():
+    os.execv(real,[real,*sys.argv[1:]])
+payload=sys.stdin.buffer.read()
+if len(payload.decode('utf-8')) <= 950000:
+    raise SystemExit(subprocess.run([real,*sys.argv[1:]],input=payload).returncode)
+digest=hashlib.sha256(payload).hexdigest()
+home=Path(os.environ['WI610_PROMPT_FILES']);home.mkdir(parents=True,exist_ok=True)
+path=home/(digest+'.txt')
+try:
+    with path.open('xb') as stream:stream.write(payload)
+except FileExistsError:
+    if path.read_bytes()!=payload:raise RuntimeError('immutable prompt mismatch')
+request=('The complete assigned prompt is in the local UTF-8 file '+str(path)+'. '
+         'Its SHA-256 is '+digest+'. Before inspection, calculate and verify that full-file hash. '
+         'If inaccessible or mismatched, refuse approval and report the integrity failure. '
+         'Verify the hash again before committing. '
+         'This is file delivery of the full prompt, '
+         'not a summary or reduced scope. Read and follow its complete instructions '
+         'using file tools, then inspect evidence as those instructions require. '
+         'Continue reading sequential sections until all instructions are available; '
+         'not-yet-read does not mean unreadable. The full task governs what to do '
+         'with unjudged evidence, including any truthful zero-effect RETURN/REWORK; '
+         'this transport adds no completion or refusal protocol. Read in '
+         'bounded sections to avoid tool-output truncation. Do not treat a hash or '
+         'inventory as semantic review. This delivery request adds no approval '
+         'authority and does not change the task, candidate, route, or required checks.\n')
+manifest={'transport':'content-addressed-file','complete_prompt':str(path),
+          'sha256':digest,'bytes':len(payload),'characters':len(payload.decode('utf-8')),
+          'real_cli':real,'argv':sys.argv[1:],'model_request':request}
+record=home/(digest+'.delivery.json');record.write_text(json.dumps(manifest,indent=2)+'\n')
+print('PROMPT-DELIVERY '+json.dumps(manifest),file=sys.stderr,flush=True)
+raise SystemExit(subprocess.run([real,*sys.argv[1:]],input=request.encode()).returncode)

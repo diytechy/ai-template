@@ -1,0 +1,70 @@
+**DESIGN-CHECK: continue adjudication rework, with a bounded redesign of LLR-207’s responsibility split. Retain LLR-167’s shape.** Both MAJOR findings are substantive: the judgment needs a design-shape decision and explicit counterpart decisions before its continuation is adequate.
+
+This is advice to the pending primary adjudication, not an Approval payload or independent review of a future candidate. All 52 rows remain RETURN until a valid complete reanchor.
+
+I assume the supplied live cells and managed history are authoritative for this assessment. Referenced test names and reported historical results are evidence descriptions, not executions or independently inspected proofs here. Unsupplied parent acceptance remains a constraint; it is not reopened or certified by this check. This is the stipulated fresh Astra assessment under degraded same-family availability, with no cross-family corroboration claimed. No tools were used or files changed.
+
+**LLR-167: retain, with explicit verification obligations.** Its organizing decision is how to deliver a complete, correctly selected, evidence-derived judgment brief bound to one primary turn. Different negative cases do not by themselves require different LLRs.
+
+| Retained decision | Verification purpose and reason to retain together |
+|---|---|
+| Declared `Brief` selects the template; strict filling forbids partial output | Prove that identical SpecRefs with different declared briefs select different instructions, and missing or extra slots refuse. Selection and completeness jointly determine whether the delivered brief is valid. |
+| Blank Brief receives a bound generic assignment; declared assembly failure remains HELD | Prove genuine absence differs from failure. Splitting fallback from refusal would separate the two sides of the same dispatch decision. |
+| Both routing arms use the same in-process primary engine and explicit bindings | Prove each delivered assignment identifies the queued WI, turn, base, candidate, scope and primary context; changed bindings stale the result. This establishes whose judgment the assembled evidence supports. |
+| Ordinary workers retain their assignment; legacy adjudication-worker context disappears | Prove the routing boundary does not substitute worker instructions for primary judgment or disrupt ordinary work. This is the complement of the same dispatch contract. |
+| Disposition assembler derives immutable report and typed commit-range evidence, clipped at 80 lines | Prove provenance, bounds and refusal without the required report. This is one route’s implementation of the common complete-evidence contract. |
+| Red-TC assembler recomputes and joins the live census; consolidation rederives the entire live cluster | Prove stale or dissolved subjects refuse and partial clusters never brief a judge. These are route-specific freshness predicates, usefully distinguished by verification cases rather than separate requirement ownership. |
+| Every shipped brief is routed; conflict is retired | Prove routed inventory equals shipped inventory and conflict is unknown. This closes the dispatch domain governed by the same row. |
+| Committed verdict binds turn and candidate; snapshot differences confer no approval | Prove output correspondence and prevent comparison evidence becoming authority. These complete the input-to-judgment binding contract. |
+
+A split here would mostly distribute one validity contract across template-specific rows while still requiring their common integration proof. Preserve distinct test scenarios, but no new LLR is required on the supplied evidence.
+
+TC-161’s “two unrouted briefs” clause directly contradicts that contract. Correct it to all-shipped-routed/retired-conflict verification. Do not weaken LLR-167 to accommodate it.
+
+**LLR-207: unsuitable as presently bounded; redistribute responsibilities among existing scoped rows.** Shared subject matter—verdict integrity—does not make transaction construction, recovery and evidence interpretation one design decision. Their failures have independent observable consequences.
+
+The precise decomposition should be:
+
+| Existing owner | Responsibility after amendment | Verification purpose |
+|---|---|---|
+| LLR-207 / TC-205 | Byte-preserving tree identity, record exclusions and governing-revision traversal | Distinguish changed work from record-only changes, including quoted and invalid-UTF-8 paths. |
+| LLR-207 / TC-205 | Refresh verification and distinct read-only versus destructive traversal rules | Prove readers can recover governing evidence without permitting reset to remove publication or work commits. Keeping the two traversal rules together makes their intentional difference explicit. |
+| LLR-207 / TC-205 | Recognition of a verified primary carrier and its mapping to the reviewed candidate | Prove only independently verified exact projections carry judgment; subjects, trailers or plausible paths alone cannot establish that mapping. |
+| LLR-207 / TC-205 | Session-log joins, revision binding, phase provenance, ambiguous-join refusal, phase span, owed phases and round counts | Prove the scheduler and gate consume the same evidence definition. Retain together because separating these definitions recreates the disagreement this row explicitly prevents. A drawn unparsable verdict may serve a phase without allowing the gate to pass. |
+| LLR-207 / TC-205 | Trailer grammar, carrier binding and evidence cross-checks | Prove trailers cannot create approval, stale carriers do not count, and counts/verdicts are interpreted against governing logged evidence. These are representations and checks of the same evidence model. |
+| LLR-153 / TC-147 | Construction and atomic publication of the allowed projection: accepted effects, exact close transformation, successors, watermark and declared generated output | Prove the transaction stages only authorized bytes, refuses invalid input without partial effects, and preserves allocation guarantees. |
+| LLR-153 / TC-147 | Crash-before/crash-after completion and no duplicate successor allocation | Prove recovery derives completion from the transaction rather than allocating twice. |
+| LLR-154 / TC-148 | Held-slot lifetime, writer exclusion, projection directives and pending-turn admission precedence | Prove another writer or selection cannot intervene and refusal retains the pending turn. |
+
+LLR-207 should retain the carrier’s **recognition conditions**, but transaction-construction and recovery obligations should have their normative home in LLR-153; lock ownership belongs in LLR-154. Use explicit references to those contracts without duplicating their detailed prescriptions.
+
+This split adds independent value: correct identity calculation cannot establish atomic allocation, and correct atomic publication cannot establish reviewer provenance. The existing scoped rows already provide those ownership boundaries, so no replacement requirement IDs are needed. Every changed child and verification cell still requires its applicable authority.
+
+TC-205 also needs clause-by-clause evidence correspondence. The three identified lane fixtures do not prove pending-primary dial, scheduler or shared-input behavior. Retain their valid ordinary-lane coverage where applicable. Identify actual primary-path proofs, or carry explicitly missing proofs into separately authorized test work; do not relabel fixtures, infer coverage from names, or delete promised behavior to fit available evidence. Its integration and publication claims also require reconsidering the current `Unit` level declaration. Smoke results cannot establish its Full-tier contract.
+
+The second MAJOR requires these explicit counterpart decisions:
+
+| Relationship | Decision and rationale |
+|---|---|
+| SR-026 → LLR-061 / TC-061 | **Retain SR-026.** A singleton claimed assignment and trailer-AND-active-spec-removal reconciliation refine explicit assignment and committed evidence without changing headless operation or trunk-derived truth. Carry verification of both completion predicates, collision-safe evidence and per-WI completion into the child work. |
+| SR-174 → LLR-153 / TC-147 | **Retain SR-174.** Atomic successor publication and replay safety implement allocation-at-most-once. Preserve high-water-mark allocation and deletion non-reuse; serialization alone is insufficient. |
+| IF-091 → LLR-153 / TC-147 | **Retain IF-091’s declared relationship.** Its amendment/drafted-row records and lane-refusal seam remain valid. It does not purport to describe the new publication writer. Do not enlarge its meaning to cover that writer; any additional interface declaration needs its own applicable authority. It remains Drafted. |
+| SR-174 → LLR-154 / TC-148 | **Retain SR-174.** Holding the slot through primary publication preserves exclusion between allocators. Its accepted non-reuse obligation remains independently required. |
+| IF-090 → LLR-154 / TC-148 | **Retain IF-090.** The named post-merge intake, gap mint and advisory context calls remain applicable. Branchless publication does not, by itself, change those call contracts. This interface does not certify the publication seam and remains Drafted. |
+| SR-178 → LLR-158 / TC-153 | **Retain SR-178.** Writer restrictions and absorption checks must preserve the existing normative-versus-traced comparison, status-independent reporting and stakeholder-need coverage. Added authorization checks do not replace drift detection or narrow its universe. |
+| LLR-159 → TC-154 | **Retain LLR-159.** Stable partition over the frontier is independent of batch versus singleton admission. Preserve ordering, human-held stops and census semantics; changing the competing test unit needs no change to that partition contract. |
+| IF-075 → TC-161 | **Retain IF-075.** Re-attestation model entries and a valid empty result remain compatible with bound primary briefs. Carry a TC-161 reference correction: the supplied Method calls this seam IF-127 while `Verifies` names IF-075. On the supplied sources, IF-075 is the described model seam; no IF-127 contract is available to justify that attribution. |
+| IF-124 → TC-161 | **Retain IF-124.** Reading `exists`, `stamp` and the snapshot directory remains compatible with primary binding. Preserve missing-anchor refusal and the distinction between an accepted baseline and acceptance of current differences. Its Drafted status remains unchanged. |
+| IF-175 → TC-205 | **Carry a corresponding amendment.** Its notes explicitly say LLR-207 names refresh and adjudication close as disposable. That is false under the retained refresh-only rule and verified-carrier design. Preserve the shared reader, binding and two-traversal contracts; correct the obsolete class attribution and explain carrier mapping consistently. This change requires the interface’s applicable authority outside the bound three-registry approval scope. IF-175 remains Drafted pending that process. |
+
+These retain decisions preserve unchanged relationships; they are not new approvals. In particular, retaining a Drafted interface does not complete its first approval. IF-175’s required change must become a dependency of complete impact acceptance, not an unauthorized addition to this turn.
+
+The bounded course is:
+
+1. Rework the pending adjudication record and its proposed Dispositions to include these design and counterpart decisions. Preserve the cumulative 52-row RETURN and the original obligations.
+2. Draft one scoped authoring continuation through the existing Dispositions/intake mechanism, depending on WI-608 and WI-611. Include TC-161 correction, LLR-207 responsibility redistribution, corresponding verification amendments, and explicit dependencies for IF-175 and any missing primary-path proof work. Do not author live registry cells in this bound turn or directly mint successors.
+3. Preserve the ordinary reviewer’s original session log unchanged. Regenerate the stale verdict rollup from authentic records and complete the normal checked telemetry path. A failed telemetry commit is not missing reviewer history, and regeneration cannot fabricate provenance.
+4. Acknowledge `implementer-touched-review-path` in the record. The supplied range contains the train’s own judgment and the machine-authored selection; `begin` commits that selection before the implementer runs. This explains the whole-train diff’s misattribution without suppressing the tripwire, changing its source code, or treating the explanation as approval.
+5. Obtain ordinary independent review of the actual revised candidate and real current-session provenance before any valid atomic RETURN publication. Later, after authorized authoring and required proof work, obtain a fresh complete-scope primary reanchor that independently judges every cell and its impact.
+
+The loop-held page permits this design check and continued PC authoring/adjudication; it does not impose a mandatory owner stop. Keep the coordinator paused. No control window, source-code changes inside this candidate, batch-code deletion, snapshot copying, check bypass, push or main merge is part of this course.

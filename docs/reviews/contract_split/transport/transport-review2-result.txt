@@ -1,0 +1,9 @@
+APPROVE.
+
+- Oversized prompts retain their exact bytes in a hash-addressed file; existing-file collisions require byte equality.
+- The recipient explicitly must verify the hash, read the complete instructions and evidence, and refuse if delivery verification fails. Review obligations remain explicit.
+- The manifest truthfully distinguishes the full adapter input from the native CLI’s reference request and records the executable and arguments.
+- Diagnostics go to stderr; native stdout passes through. The stated merged-log behavior introduces no JSONL contract violation.
+- Small prompts pass unchanged, and the adapter grants no approval authority.
+
+Approval covers transport integrity only. Recipient compliance and substantive inspection still require evidence; hashes and delivery records do not establish either.

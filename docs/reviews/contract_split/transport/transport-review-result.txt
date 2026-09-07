@@ -1,0 +1,10 @@
+REQUEST_CHANGES
+
+The design preserves the full prompt bytes and explicitly discloses the model-facing substitution. Its instructions do not reduce review obligations or grant approval authority. Two transport issues remain:
+
+- **Output compatibility:** `PROMPT-DELIVERY ...` is unconditionally written to stdout. This changes the native CLI output protocol and can break consumers expecting JSONL under `--json`. Use a supported diagnostic channel or establish that the managed collector explicitly handles this prefix.
+- **File integrity:** A hash-named file is not immutable. The adapter checks an existing file once, but neither prevents subsequent modification nor instructs the recipient to verify its hash before inspection. Require recipient-side verification and a failed review if the file is inaccessible, mismatched, or cannot be read completely.
+
+The existing prompt hash truthfully identifies input received by the **adapter**, not stdin received by the **native CLI**. The manifest discloses that distinction; downstream provenance must preserve it.
+
+Even after these fixes, successful delivery and hash verification establish availability and integrity—not semantic inspection or completion of the adjudication.

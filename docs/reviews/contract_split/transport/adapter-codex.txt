@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+"""Session-local file delivery for oversized stdin; not a product/approval writer."""
+from pathlib import Path
+import hashlib,json,os,subprocess,sys
+real=os.environ['WI610_REAL_CODEX']
+if not sys.argv[1:] or sys.argv[1]!='exec' or sys.stdin.isatty():
+    os.execv(real,[real,*sys.argv[1:]])
+payload=sys.stdin.buffer.read()
+if len(payload.decode('utf-8')) <= 950000:
+    raise SystemExit(subprocess.run([real,*sys.argv[1:]],input=payload).returncode)
+digest=hashlib.sha256(payload).hexdigest()
+home=Path(os.environ['WI610_PROMPT_FILES']);home.mkdir(parents=True,exist_ok=True)
+path=home/(digest+'.txt')
+try:
+    with path.open('xb') as stream:stream.write(payload)
+except FileExistsError:
+    if path.read_bytes()!=payload:raise RuntimeError('immutable prompt mismatch')
+request=('The complete assigned prompt is in the local UTF-8 file '+str(path)+'. '
+         'Its SHA-256 is '+digest+'. Before inspection, calculate and verify that full-file hash. '
+         'If inaccessible or mismatched, refuse approval and report the integrity failure. '
+         'Verify the hash again before committing. '
+         'This is file delivery of the full prompt, '
+         'not a summary or reduced scope. Read and follow its complete instructions '
+         'using file tools, then inspect evidence as those instructions require. '
+         'Continue reading sequential sections until all instructions are available; '
+         'not-yet-read does not mean unreadable. The full task governs what to do '
+         'with unjudged evidence, including any truthful zero-effect RETURN/REWORK; '
+         'this transport adds no completion or refusal protocol. Read in '
+         'bounded sections to avoid tool-output truncation. Do not treat a hash or '
+         'inventory as semantic review. This delivery request adds no approval '
+         'authority and does not change the task, candidate, route, or required checks.\n')
+manifest={'transport':'content-addressed-file','complete_prompt':str(path),
+          'sha256':digest,'bytes':len(payload),'characters':len(payload.decode('utf-8')),
+          'real_cli':real,'argv':sys.argv[1:],'model_request':request}
+record=home/(digest+'.delivery.json');record.write_text(json.dumps(manifest,indent=2)+'\n')
+print('PROMPT-DELIVERY '+json.dumps(manifest),file=sys.stderr,flush=True)
+raise SystemExit(subprocess.run([real,*sys.argv[1:]],input=request.encode()).returncode)

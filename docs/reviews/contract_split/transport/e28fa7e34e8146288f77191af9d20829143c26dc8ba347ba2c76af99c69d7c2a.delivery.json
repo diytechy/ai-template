@@ -1,0 +1,19 @@
+{
+  "transport": "content-addressed-file",
+  "complete_prompt": "/Users/diytechy/Documents/ai-template/out/run-logs/wi-610/prompt-files/e28fa7e34e8146288f77191af9d20829143c26dc8ba347ba2c76af99c69d7c2a.txt",
+  "sha256": "e28fa7e34e8146288f77191af9d20829143c26dc8ba347ba2c76af99c69d7c2a",
+  "bytes": 1131379,
+  "characters": 1130243,
+  "real_cli": "/Users/diytechy/.local/node/bin/codex",
+  "argv": [
+    "exec",
+    "-c",
+    "model_reasoning_effort=medium",
+    "--model",
+    "gpt-6-astra",
+    "--dangerously-bypass-approvals-and-sandbox",
+    "--output-last-message",
+    "/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/codex-lastmsg-nsotzsll.txt"
+  ],
+  "model_request": "The complete assigned prompt is in the local UTF-8 file /Users/diytechy/Documents/ai-template/out/run-logs/wi-610/prompt-files/e28fa7e34e8146288f77191af9d20829143c26dc8ba347ba2c76af99c69d7c2a.txt. Its SHA-256 is e28fa7e34e8146288f77191af9d20829143c26dc8ba347ba2c76af99c69d7c2a. Before inspection, calculate and verify that full-file hash. If inaccessible or mismatched, refuse approval and report the integrity failure. Verify the hash again before committing. This is file delivery of the full prompt, not a summary or reduced scope. Read and follow its complete instructions using file tools, then inspect evidence as those instructions require. Continue reading sequential sections until all instructions are available; not-yet-read does not mean unreadable. The full task governs what to do with unjudged evidence, including any truthful zero-effect RETURN/REWORK; this transport adds no completion or refusal protocol. Read in bounded sections to avoid tool-output truncation. Do not treat a hash or inventory as semantic review. This delivery request adds no approval authority and does not change the task, candidate, route, or required checks.\n"
+}

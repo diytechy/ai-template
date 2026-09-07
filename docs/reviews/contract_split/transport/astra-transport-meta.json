@@ -1,0 +1,10 @@
+{
+  "purpose": "transport only; no selection or approval",
+  "route": "OPENAI-ASTRA",
+  "model": "gpt-6-astra",
+  "effort": "medium",
+  "exit": 0,
+  "wall_seconds": 12.497530416992959,
+  "prompt_sha256": "0052a4dc0cafa1fa25593cab293c01c4ef2339cf8799d4617532b89e267b581b",
+  "result": "TRANSPORT_READY"
+}

@@ -1,0 +1,6 @@
+{
+  "purpose": "inert file transport only; no primary judgment",
+  "exit": 0,
+  "wall_seconds": 45.555247459036764,
+  "result": "Verification token: `FILE_DELIVERY_READY`\n\nSHA-256 (calculated from the complete file): `90cb65127ec650036afa7e7e5311641d34cfa1e03d2b50e3d18c0467e222d3ec`"
+}
