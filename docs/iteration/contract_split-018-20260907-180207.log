@@ -1,0 +1,60 @@
+# agent session log — written by scripts/agent_common.py
+# session: 018
+# date: 2026-09-07 18:02
+# train: contract_split
+# base: c492da3dd0e6
+# phase: REVIEW-A
+# primary-turn:
+# judgment:
+# candidate:
+# wi: WI-623
+# model: opencode-go/kimi-k3
+# guardrails:
+# outcome: ERROR
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 1
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 5882
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:e44e385a5160
+# timeout:
+# heterogeneity:
+# exit-code: 1
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# invocation-id: b0bd30fcfe8e46239a9c985a14d038b2
+# attempt-id: contract_split@c492da3dd0e6247610bf0af116305e989d1d17f7
+# source-event:
+# role: REVIEW-A
+# provider: OPENCODE
+# requested-model: opencode-go/kimi-k3
+# reported-model:
+# tier: strong
+# roster-row: OPENCODE-KIMI
+# started-at: 2026-09-07T23:02:07Z
+# ended-at: 2026-09-07T23:02:08Z
+# input-tokens:
+# output-tokens:
+# reasoning-tokens:
+# raw-usage:
+# usage-scope: unknown
+# usage-source: unknown
+# usage-status: unavailable
+# ---
+[91m[1mError: [0m{
+  "name": "UnknownError",
+  "data": {
+    "message": "Unexpected server error. Check server logs for details.",
+    "ref": "err_009fd36d"
+  }
+}
