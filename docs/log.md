@@ -62256,4 +62256,11 @@ enabled. No full-suite run or push is claimed. No byte-capped or watched
 master was edited.
 <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke; .venv/bin/python scripts/check_smoke_budget.py --elapsed 62.41063329100143 --mode enforce; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=22285df4+control-launch; out/run-logs/control-launch-smoke.txt; out/run-logs/control-launch-smoke.json; out/run-logs/control-launch-docs.txt -->
 
+Follow-on record: the frozen launch baseline is
+`de9a2bfa7febe32ae16099cc09008f43a2240165`, now named in the preflight and
+observation record. Queue/route revalidation agrees. Its record-only commit
+bar passed: 1680 passed, 4 skipped in 58.24s; measured wall 58.5s within 90s;
+documentation passes. No coordinator started before this identity was recorded.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke; .venv/bin/python scripts/check_smoke_budget.py --elapsed <measured-process-wall> --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=de9a2bfa+launch-identity; out/run-logs/control-launch-record-smoke.txt; out/run-logs/control-launch-record-smoke.json; out/run-logs/control-launch-record-docs.txt -->
+
 Deferred open items: none.

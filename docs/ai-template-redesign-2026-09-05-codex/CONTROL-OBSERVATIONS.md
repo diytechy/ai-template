@@ -5,9 +5,14 @@ Preparation and live route probes: [preflight](CONTROL-PREFLIGHT.md).
 
 ## Launch
 
-Awaiting the hooks-enabled pause-deletion commit; no coordinator observation
-has occurred. The supervisor records the exact commit and UTC start before
-reporting any running interval. WI-551 remains deferred through the window.
+The hooks-enabled pause-deletion baseline is
+`de9a2bfa7febe32ae16099cc09008f43a2240165` on `contract_split`. The queue and
+route registry were revalidated at that commit. The following record-only
+commit names this baseline; no runtime bytes differ. Coordinator UTC start,
+process id and output are captured locally under `out/run-logs/control-window/`
+at invocation, then folded into this record at a safe stopped boundary.
+WI-551 remains deferred through the window. No coordinator observation has
+occurred at the time of this record commit.
 
 ## Recording and stopping
 

@@ -1,8 +1,8 @@
 # Control-launch preflight
 
 The launch preparation is based on reviewed `22285df4182dd2b69b4e658d77732afaf145c165`
-on `contract_split`. The pause-deletion commit's completed hash is recorded
-here before starting the coordinator. Runtime observations belong in the
+on `contract_split`. The frozen pause-deletion launch commit is
+`de9a2bfa7febe32ae16099cc09008f43a2240165` (hooks enabled). Runtime observations belong in the
 [control observation record](CONTROL-OBSERVATIONS.md); preparation is not a
 control observation.
 
