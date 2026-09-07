@@ -1,0 +1,863 @@
+You are an independent ANTHROPIC-FABLE strong reviewer of a concrete proposed resolution for WI-609. Coordinator and primary selection remain paused. No tools or file writes. The author is OpenAI. User asks whether we can resolve the technical blocker without further input; they have authorized investigation and fixing, while forbidding another control window, push or merge to main. Judge the DESIGN below, not a claim that it is implemented. Be critical about actual correctness and authority, not about missing implementation that the design explicitly owes. Find the smallest simpler sound solution if this one creates unnecessary machinery. Preserve distinct queued ownership, provenance, stable-ID meaning, complete whole-file snapshot acceptance, and fail-closed handling of missing judgments. Assess whether judgment-only completion using existing carriers plus later composition is the necessary minimal change, and whether freshness/replay terminates. Explicitly assess the bootstrap: how could an independently adjudicated governing repair be introduced without using the very broken snapshot path to approve it first? Do not infer owner approval, suggest bypassing checks or falsely say no owner decision is needed if a governing exception is actually necessary. Identify concrete exact corrections. Respond OUTCOME: APPROVE, RETURN, or UNCERTAIN for resolution-design readiness, plus whether implementation can proceed as preparation with no activation or snapshots under current authority. Distinguish owner input needed for this technical repair from the unrelated legacy migration-window question.
+
+--- Design ---
+# WI-609 — scoped judgments and whole-file publication
+
+Candidate design only, baseline 53b36b46. No production code, governing cell,
+Status, snapshot, primary selection or claim changes are made by this design.
+
+## Root cause and rejected shortcuts
+
+A scope owner cannot finish recording an accepted semantic judgment unless it
+can copy an entire live registry. The copy requires accepted decisions for
+foreign drift, but the decision parser forbids decisions outside that owner's
+scope. The evidence reader also only recognizes the current turn's invocation.
+Existing zero-effect RETURN is a finite exit but means no accepted decisions;
+it cannot be relabeled as acceptance. There is no supported composition route
+in the existing projection: changing only the absorption membership check is
+insufficient and would weaken evidence ownership.
+
+Do not widen WI-601/603/605, substitute equivalent for meaning, temporarily
+revert other live changes to manufacture a copyable tree, or publish a partial
+snapshot. Do not invent a parallel ledger, hand-authored reviewer identity or a
+second coordinator. All positive evidence must come from actual primary
+judgments and verified existing publication carriers.
+
+## Proposed minimal change
+
+Separate the completion of one scoped judgment from permission to update the
+shared approval baseline, using the existing Approval payload and atomic
+primary publication carrier. Add one explicit versioned intent discriminator:
+`publication = "judgment-only" | "snapshot"`; absent means the existing strict
+snapshot behavior, so old payloads and missing-ledger errors never silently
+become successful closes. No new WI status, directory, journal or ledger.
+
+1. A judgment-only turn still validates the immutable selection, exact scoped
+   decisions, declared authority, actual reviewer invocation, independent
+   review when owed, and complete impact review for meaning. It records the
+   result and closes only its own queued adjudication WI through the existing
+   verified publication transformation. Its projection has NO Status changes
+   and NO snapshot copies. Its outcome is explicitly `judgment-recorded`, not
+   `return` or `snapshot-published`; any output/readout must state baseline-held.
+   The queued WI's completion proves its judgment task completed, not that the
+   amended registry is approved. First-approval rows remain Drafted. This must
+   be a governing amendment before runtime enablement, not merely a parser fix.
+
+2. A snapshot-intent turn still judges only its own immutable scope. Its exact
+   whole-file absorption ledger may cite either this turn's accepted scoped
+   decision or an accepted decision from a prior VERIFIED judgment-only or
+   snapshot publication, using the existing immutable judgment commit reference
+   plus a deterministic join to its unique originating turn and publication.
+   Foreign evidence is evidence owned by that prior scope, never an extra
+   decision in the current turn. The current adjudicator reviews the complete
+   absorption census and explicitly requests the copy; missing evidence does
+   not automatically broaden the request or change intent.
+
+3. A foreign reference is eligible only if its originating primary selection,
+   exact queued proposal, typed decision and logged provider/reviewer provenance
+   validate at its original candidate, and the existing publication verifier
+   proves its actual close. The referenced row must be inside that origin's
+   scope with an accepted classification; a RETURN, uncertain, uncompleted,
+   forged or stale judgment is not evidence. Existing reviews from retired
+   legacy worktrees remain historical claims, not silently upgraded evidence.
+
+4. Conservative freshness initially requires identical bound live registry
+   and approved-snapshot blob maps between the foreign turn and current turn.
+   All requirement tiers therefore keep the same parent/sibling context. A
+   change anywhere in those maps refuses reuse and requires renewed scoped
+   judgment; do not add row-hash exceptions in the first implementation.
+   Also require the source/test/policy context to remain unchanged: the history
+   between the foreign publication and current base may contain only record-only
+   commits or complete, independently verified primary-publication segments.
+   Each segment validates its base-to-candidate restricted effects and its
+   candidate-to-publication exact projection. Ordinary authoring/intake/code or
+   policy changes refuse reuse. Do not compare the full non-record tree alone:
+   a legitimate scoped close changes queued specs and generated surfaces.
+   Current-turn Approval/Dispositions changes are already checked by the
+   existing exact proposal validator. Meaning impact evidence must be kept
+   under the same conservative context proof; do not silently waive new live
+   uses. If the proof cannot show the changed paths are precisely verified
+   primary bookkeeping, require a renewed judgment.
+
+5. Foreign validation must be historical and noncircular: references and their
+   publication commits strictly precede the current bound base. Replay each
+   source at its own historical candidate. Memoize only successful proofs by
+   immutable commit plus turn identity, using the existing cache owner; a
+   cycle, missing object or ambiguous origin refuses. No caller may disable
+   provenance or invoke a copier directly. This remains the current single
+   primary actor and existing atomic publisher.
+
+6. Keep all live registry and snapshot bytes fixed during the collection of
+   judgment-only turns. When the last owning turn has an accepted scoped
+   judgment, it may request snapshot intent with the complete census and the
+   earlier references. Only then does the existing publisher copy live files
+   byte-identically and perform requested in-scope first-approval Status flips.
+   Prior foreign first approvals would require additional explicit authority
+   for their deferred Status effects: defer that extension initially. First
+   implementation supports foreign evidence for already-Approved amendments;
+   Drafted riders remain Drafted and are explicitly accounted for. A separate
+   first-approval turn never promotes somebody else's Drafted row.
+
+## Why the order terminates
+
+For the current approved-change case, owner A records its judgment with the
+baseline held and its WI closes; owner B can therefore run without competing
+with a pending A turn. B records its own judgment; the last necessary owner
+requests the complete snapshot copy. No earlier owner must copy foreign rows
+just to finish. All judgments retain the same approved/live carrier maps until
+that copy. If a source revision intervenes, collection deliberately restarts
+for affected evidence; this is honest staleness, not a circular dependency.
+
+The PC amendment WI still has a hard predecessor on WI-601, whose completed
+judgment must accept its exact final LLR-061 text. The PC source authoring must
+happen BEFORE that judgment; the later PC adjudication reuses it only if all
+freshness checks hold. Existing owners are neither transferred nor absorbed.
+Unowned changed rows need separate scoped intake before this collection starts;
+a missing owner or judgment never becomes an automatic acceptance.
+
+## Executable acceptance cases required before enablement
+
+Use real temporary Git repositories and actual primary carrier replay, extending
+existing test_primary_approval/test_primary_publication fixtures. No synthetic
+review text alone substitutes for logged invocation metadata.
+
+- Two Approved rows, A and B, changed from one snapshot and separately owned.
+  A's judgment-only publication closes only A's WI; assert registry and
+  snapshot byte identity and no Status effects. Pending selection clears and
+  B can start. B's snapshot request binds both accepted decisions and copies
+  the complete live registry; assert A's scope never contains B and vice versa.
+- Replay A's receipt and B's final publication from committed historical trees;
+  both re-derive exactly, including after restart and at a later wall date.
+- Missing foreign judgment, RETURN, uncertain, unfinished origin, wrong row,
+  wrong owner, forged log/model/session, unreviewed required phase, altered
+  origin proposal, future ref, ambiguous ref, wrong before/after, cycle and
+  missing objects each refuse without Status/snapshot effects.
+- Mutate a registry sibling, parent, approved snapshot, test, source or policy
+  between A and B: refuse stale reuse. Beside it, exact verified primary close
+  bookkeeping and record-only commits do permit reuse. A work blob disguised
+  as a generated/record-only carrier must refuse.
+- A judgment-only payload missing required impact evidence still refuses.
+  Omitting the new intent keeps the existing incomplete-ledger refusal.
+  Unknown intent/version refuses. Mixed accepted and returned decisions keep
+  the existing refusal; no partial success is invented.
+- Drafted riders stay Drafted. A foreign first-approval decision cannot flip
+  its row from a later unrelated scope. Existing human-held authority remains
+  held on judgment-only as on snapshot intent.
+- Kill before/after atomic receipt and final-copy commits; resume detects one
+  real completion and never duplicates a mint or treats a stale receipt as a
+  fresh approval. Existing ordinary integration and crash-claim behavior remain.
+
+## Governing impact and delivery
+
+The mechanical defect is real, but the proposed extra intent changes the
+published protocol and must be authored and adjudicated first. Inspect and
+amend the affected LLR-140/152/153/154/158/167/207 and TC-132/146/147/148/153/161/205
+only where their actual cells require it; no blanket changes. LLR-152 overlaps
+PC's pending patch, LLR-167 belongs to WI-603, and LLR-207 has older drift.
+Preserve those owners and cumulative before/after. The rule that equivalent
+wording and a snapshot update publish together needs an explicit exception for
+judgment-only completion that confers no live acceptance, not silent reinterpretation.
+
+Implementation should change the existing primary projection/evidence reader
+and prompt envelope, not add a second publisher. Author the exact protocol
+amendment, independent semantic review, then a bounded implementation with the
+real Git cases above and full-suite validation. Until that is complete, the
+coordinator and primary selection remain paused. No control-window request or
+owner decision is implied by this technical proposal.
+
+--- Governing rule ---
+
+
+*Referenced from PROCESS.md §4.* The dial above says **which rungs** a human
+still accepts. It never said **who acts** on the rungs it releases, and for a
+single-lane repo the question does not arise — the session that authors a row
+is the only session there is. It arises the moment work runs in parallel lanes,
+and the owner ruled it (2026-09-01):
+
+> The approval act on a spine row — the `Status` flip `Drafted` → `Approved`
+> (and on to `Founded`), and the `docs/archive/last_approved/` copy that anchors
+> it — belongs to an **adjudicator**, performed on the **serial trunk side**,
+> never to the worker lane that authored the row.
+
+Two reasons, and both are properties of the lane rather than of the model
+driving it:
+
+- **Context.** Approving a row means reading its whole chain — the parent
+  requirement, the sibling decomposition rows, the tests that claim to cover
+  it — and deciding the row belongs where it sits. One work item does not hold
+  that chain; it holds its own scope, which is the point of scoping it.
+- **Concurrency.** Two lanes touching the spine conflict at merge, and the
+  approval snapshot must not move across a workstream — a lane that re-anchors
+  the record seals whatever text happened to be live in *its* tree. A
+  trunk-side act, taken while nothing else claims, cannot do either.
+
+**The division of labour, in full:**
+
+| | A worker lane | An exclusive primary adjudication turn |
+|---|---|---|
+| Authors spine rows | Only exclusive spine-authoring work; new rows stay `Drafted`. | No. |
+| Amends governing SN/SR/LLR text | Only exclusive spine-authoring work, within scope. Implementation returns a handback. | No; it returns findings to separate authoring work. |
+| Flips spine `Status` | **Never** (SN/SR/LLR/TC). | Mechanical publication applies an accepted first approval, after required review and authority checks. |
+| Writes `docs/archive/last_approved/` or its ledger | **Never**, including adjudication worktrees. | The mechanical publisher copies accepted content in the approval commit; the model does not invoke the copier. |
+| Judges a post-approval amendment | No; it records its scoped proposal. | Compares meaning against the last approved snapshot under the rule below. |
+| Concurrency | Ordinary implementation may run in parallel; spine authoring runs alone. | Runs in the coordinator's designated primary checkout on its integration branch, without a worktree; ownership excludes admission, merges and other writers through publication and restart. |
+
+**An ID denotes stable meaning.** Changed bytes require semantic comparison,
+not automatic invalidation of implementation judgments. Accepted equivalent
+wording preserves those judgments and its existing approval; publish the
+equivalence decision and mechanical snapshot update together. Uncertain
+equivalence holds the prior baseline. Changed meaning requires impact review
+of every use and reference, including downstream requirements, tests,
+implementation and approval evidence, before acceptance. A `MEANING` verdict
+alone never authorizes a copy. No new-ID policy or replacement status follows.
+Rejection leaves the baseline intact. A whole-file copy must enumerate and
+resolve every unapproved cell it would absorb outside the accepted scope.
+
+
+--- Existing exact source ---
+def _decision_rows(payload, scope):
+    decisions = payload.get("decision", [])
+    rows = []
+    for item in decisions:
+        if not isinstance(item, dict):
+            return None, "decision is not a table"
+        need = {"registry", "row", "classification", "before", "after", "evidence"}
+        if set(item) != need:
+            return None, "decision {} has an unexpected key set".format(
+                item.get("row", "?")
+            )
+        if (
+            not isinstance(item["registry"], str)
+            or not isinstance(item["row"], str)
+            or not isinstance(item["classification"], str)
+            or item["classification"] not in _CLASSES
+        ):
+            return None, "decision has an invalid registry, row or classification"
+        if item["row"] not in scope:
+            return None, "decision {} is outside the turn scope".format(item["row"])
+        if (
+            not isinstance(item["before"], dict)
+            or not isinstance(item["after"], dict)
+            or set(item["before"]) != set(item["after"])
+        ):
+            return (
+                None,
+                "decision {} must bind identical before/after cell sets".format(
+                    item["row"]
+                ),
+            )
+        if not item["before"] or not all(
+            isinstance(c, str) and isinstance(v, str) and _HEX40.fullmatch(v)
+            for m in (item["before"], item["after"])
+            for c, v in m.items()
+        ):
+            return None, "decision {} has invalid cell blob identities".format(
+                item["row"]
+            )
+        if (
+            not isinstance(item["evidence"], list)
+            or not item["evidence"]
+            or not all(isinstance(x, str) for x in item["evidence"])
+        ):
+            return None, "decision {} has no evidence refs".format(item["row"])
+        rows.append(item)
+    if {item["row"] for item in rows} != set(scope) or len(rows) != len(scope):
+        return None, "decisions must name every scoped row exactly once"
+    return rows, None
+
+
+
+def absorption_census(root, turn, candidate, accepted):
+    """Actual copied population from bound snapshots to the proposed live rows."""
+    census = {}
+    registries = {registry for registry, _rid in accepted}
+    for registry in sorted(registries):
+        old_blob = turn["approved_blobs"].get(snapshot.SNAPSHOT_DIR + "/" + registry)
+        new_blob = _blob_at(root, candidate, registry)
+        if not old_blob or not new_blob:
+            raise ValueError(
+                "{} needs an explicit initial signing before automatic publication".format(
+                    registry
+                )
+            )
+        old = registry_rows(root, old_blob, registry)
+        new = registry_rows(root, new_blob, registry)
+        for rid in sorted(set(old) | set(new)):
+            before, after = old.get(rid, {}), new.get(rid, {})
+            if snapshot._claims_approval(before):
+                if not after:
+                    raise ValueError(
+                        "approved row {} was removed from its carrier".format(rid)
+                    )
+                id_col = next(
+                    (k for k in before if k.endswith("-ID")), _id_column(registry)
+                )
+                changed = record.split_changed_cells(registry, id_col, before, after)[
+                    "approved"
+                ]
+                state = "approved-change"
+            elif (registry, rid) not in accepted and not snapshot._claims_approval(
+                after
+            ):
+                changed = {
+                    k: (before.get(k), after.get(k))
+                    for k in set(before) | set(after)
+                    if not k.endswith("-ID") and before.get(k) != after.get(k)
+                }
+                state = "below-approval-rider"
+            else:
+                continue
+            if changed:
+                census[(registry, rid)] = {
+                    "state": state,
+                    "cells": {
+                        cell: {"before": old_blob, "after": new_blob}
+                        for cell in changed
+                    },
+                }
+    return census
+
+
+def _absorption_refusal(root, turn, candidate, payload, decisions, judgments):
+    accepted = {
+        (d["registry"], d["row"]): d
+        for d in decisions
+        if d["classification"] in {"approve", "equivalent", "meaning"}
+    }
+    if not accepted:
+        return None
+    try:
+        expected = absorption_census(root, turn, candidate, accepted)
+    except (ValueError, KeyError) as exc:
+        return str(exc)
+    seen = {}
+    for item in payload.get("absorption", []):
+        why = _absorption_shape(item)
+        if why:
+            return why
+        key = (item["registry"], item["row"])
+        if key in seen:
+            return "duplicate absorption for {}".format(item["row"])
+        seen[key] = item
+        why = _evidence_refusal(root, candidate, [item["judgment"]], judgments)
+        if why:
+            return why
+        if (
+            key not in expected
+            or {k: item[k] for k in ("state", "cells")} != expected[key]
+        ):
+            return "absorption {} cells/state do not equal the exact whole-file census".format(
+                item["row"]
+            )
+        if item["state"] == "approved-change" and key not in accepted:
+            return "approved-cell absorption {} has no accepted scoped decision".format(
+                item["row"]
+            )
+    if set(seen) != set(expected):
+        return "whole-file absorption ledger omits changed approved cells or Drafted riders"
+    return None
+
+
+
+def _effects(root, candidate, decisions, judgments, require_provenance):
+    classifications = {d["classification"] for d in decisions}
+    author = _machine_author(judgments) if require_provenance else None
+    judgment = judgments[0][0].get("judgment") if judgments else None
+    if require_provenance and author is None:
+        return _refusal(
+            "no unique committed ADJUDICATE judgment and route/session identity bind this candidate"
+        )
+    if classifications <= {"return", "uncertain"}:
+        return (
+            {
+                "outcome": "return",
+                "statuses": {},
+                "approves": {},
+                "author": author,
+                "judgment": judgment,
+                "findings": [
+                    "{}: {}".format(d["row"], d["classification"]) for d in decisions
+                ],
+            },
+            None,
+        )
+    if classifications - {"approve", "equivalent", "meaning"}:
+        return _refusal(
+            "only accepted first-approval or equivalent decisions may publish; meaning requires its later complete-scope reanchor"
+        )
+    if judgments and any(
+        re.search(r"(?m)^\s*OUTCOME:\s*RETURN\b", body) for _meta, body in judgments
+    ):
+        return _refusal("a RETURN judgment cannot authorize accepted approval cells")
+    statuses, why = _status_projection(root, candidate, decisions)
+    if why:
+        return _refusal(why)
+    approves = {d["registry"]: d["evidence"][0] for d in decisions}
+    return (
+        {
+            "outcome": "publish",
+            "statuses": statuses,
+            "approves": approves,
+            "author": author,
+            "judgment": judgment,
+            "findings": [],
+        },
+        None,
+    )
+
+
+
+--- project-trajectory/scripts/primary_publication.py ---
+"""Atomic, turn-bound primary adjudication publication."""
+
+from __future__ import annotations
+
+import json
+import re
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+import baseline_snapshot
+import intake
+import primary_approval
+import primary_close
+import primary_turn
+import publication_verify
+
+TRAILER = "Primary-Publication-Turn: "
+# A Git commit and the serialized immutable turn completely identify a replay.
+# Cache only successful proofs in this process; restart audits them again.
+_VERIFIED_PUBLICATIONS = set()
+
+
+def _git(root, *args, check=True):
+    p = subprocess.run(
+        ["git", "-C", str(root), *args],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if check and p.returncode:
+        raise RuntimeError((p.stdout or "") + (p.stderr or ""))
+    return p.stdout.strip()
+
+
+def _project(root, turn, candidate, tier="all", harness_root=None):
+    primary_turn.validate_candidate(root, turn, candidate)
+    plan, refusal = primary_approval.approval_projection(root, turn, candidate)
+    if refusal:
+        return None, None, refusal
+    refusal = _apply_approval(root, candidate, plan)
+    if refusal:
+        return None, None, refusal
+    closed, drafts, refusal = primary_close.stage_primary_adjudication(
+        root, turn["spec"], judgment_path=plan["judgment"]
+    )
+    if refusal:
+        return None, None, refusal
+    minted, refusal = intake.stage_mint(
+        root, drafts, "primary adjudication {}".format(turn["wi"])
+    )
+    if refusal:
+        return None, None, refusal
+    step = next(
+        (
+            Path(root) / rel
+            for rel in (
+                "scripts/trunk_step.py",
+                "project-trajectory/scripts/trunk_step.py",
+            )
+            if (Path(root) / rel).is_file()
+        ),
+        None,
+    )
+    if step is None:
+        return None, None, "trunk_step.py is absent from the candidate"
+    p = subprocess.run(
+        [sys.executable, str(step), "--root", ".", "--regen"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+    )
+    if p.returncode:
+        return None, None, "regeneration failed: " + (p.stdout + p.stderr)[-2000:]
+    _git(root, "add", "-A")
+    product_bar = _outside_adjudication_scope(root)
+    if product_bar:
+        green, _out, why = publication_verify.run_bar(
+            Path(root), Path(harness_root or root), tier
+        )
+        if not green:
+            return None, None, why
+        _git(root, "add", "-A")
+    plan["verification"] = {
+        "mode": "product-bar" if product_bar else "scope-no-product-bar",
+        "paths": _git(root, "diff", "--cached", "--name-only").splitlines(),
+        "result": "pass",
+    }
+    return closed, plan, None
+
+
+def _apply_approval(root, candidate, plan):
+    statuses = plan.get("statuses") or {}
+    for rel, rows in statuses.items():
+        live = Path(root) / rel
+        refusal = intake._rewrite_toml_statuses(live, rel, list(rows))
+        if refusal:
+            return refusal
+    if statuses or plan.get("approves"):
+        # Snapshot prose carries a date. Bind it to the reviewed candidate's
+        # commit date so completion replay tomorrow derives identical bytes.
+        publication_day = _git(root, "show", "-s", "--format=%cs", candidate)
+        clock = baseline_snapshot._today
+        try:
+            baseline_snapshot._today = lambda: publication_day
+            approves = plan.get("approves") or {}
+            baseline_snapshot.copy_live(root, approves=approves, exact_rels=approves)
+        except SystemExit as exc:
+            return "snapshot copy refused: {}".format(exc)
+        finally:
+            baseline_snapshot._today = clock
+    return None
+
+
+def _outside_adjudication_scope(root):
+    changed = _git(root, "diff", "--cached", "--name-only").splitlines()
+    allowed = (
+        list(publication_verify.ADJUDICATION_SURFACES)
+        + [baseline_snapshot.SNAPSHOT_DIR + "/", "docs/id-watermark"]
+        + publication_verify.generated_paths(Path(root))
+    )
+    return not all(
+        any(
+            p == a.rstrip("/") or (a.endswith("/") and p.startswith(a)) for a in allowed
+        )
+        for p in changed
+    )
+
+
+def derive_tree(root, turn, candidate="HEAD", tier="all"):
+    """Independently replay the exact publication and return its tree and plan."""
+    root = Path(root).resolve()
+    try:
+        cand = _git(root, "rev-parse", candidate)
+        with tempfile.TemporaryDirectory(prefix="primary-publication-") as td:
+            scratch = Path(td) / "repo"
+            _git(root, "clone", "--shared", "--no-checkout", str(root), str(scratch))
+            _git(scratch, "checkout", "--detach", cand)
+            closed, plan, refusal = _project(scratch, turn, cand, tier, root)
+            if refusal:
+                return None, None, None, refusal
+            tree = _git(scratch, "write-tree")
+            # Import newly-written blobs/tree before the disposable object store
+            # disappears. A temporary commit makes the object closure fetchable;
+            # no primary ref is advanced.
+            carrier = _git(
+                scratch, "commit-tree", tree, "-p", cand, "-m", "projection carrier"
+            )
+            _git(root, "fetch", "--no-tags", str(scratch), carrier)
+        return tree, closed, plan, None
+    except (KeyError, OSError, RuntimeError, ValueError) as exc:
+        return None, None, None, str(exc)
+
+
+def publish(root, turn, candidate="HEAD", tier="all"):
+    """Replay, verify and atomically commit one publication; lock is caller-held."""
+    root = Path(root).resolve()
+    cand = None
+    installed = False
+    try:
+        cand = _git(root, "rev-parse", candidate)
+        if cand != _git(root, "rev-parse", "HEAD") or _git(
+            root, "status", "--porcelain"
+        ):
+            return None, "primary is not clean at the exact candidate"
+        primary_turn.validate(root, turn, cand)
+        tree, closed, plan, refusal = derive_tree(root, turn, cand, tier)
+        if refusal:
+            return None, refusal
+        _git(root, "read-tree", "--reset", "-u", tree)
+        installed = True
+        if _git(root, "write-tree") != tree:
+            raise ValueError("installed projection differs from verified tree")
+        author = (plan or {}).get("author") or {}
+        if not author:
+            raise ValueError("publication has no verified adjudicator author")
+        env = dict(
+            __import__("os").environ,
+            GIT_AUTHOR_NAME=author["name"],
+            GIT_AUTHOR_EMAIL=author["email"],
+        )
+        msg = "adjudicate: {} primary publication\n\n{}{}\nPublication-Candidate: {}\nPublication-Tree: {}".format(
+            turn["wi"], TRAILER, turn["turn"], cand, tree
+        )
+        msg += "\nPublication-Verification: " + json.dumps(
+            plan["verification"], sort_keys=True
+        )
+        p = subprocess.run(
+            ["git", "-C", str(root), "commit", "-m", msg],
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+        if p.returncode:
+            _git(root, "reset", "--hard", cand)
+            installed = False
+            return None, "publication commit failed: " + (p.stdout + p.stderr)[-2000:]
+        if _git(root, "rev-parse", "HEAD^{tree}") != tree:
+            raise ValueError("publication commit tree differs from the verified tree")
+        return closed, None
+    except (KeyError, OSError, RuntimeError, ValueError) as exc:
+        if installed and cand:
+            try:
+                _git(root, "reset", "--hard", cand)
+            except RuntimeError as restore:
+                return None, "{}; primary restore failed: {}".format(exc, restore)
+        return None, str(exc)
+
+
+def publication_commit(root, turn):
+    """Verified reachable publication carrier for a durable turn, else None."""
+    token = TRAILER + str(turn.get("turn", ""))
+    out = _git(
+        root, "log", "--format=%H", "--fixed-strings", "--grep=" + token, check=False
+    )
+    for rev in out.splitlines():
+        proof = (str(Path(root).resolve()), rev, json.dumps(turn, sort_keys=True))
+        if proof in _VERIFIED_PUBLICATIONS:
+            return rev
+        body = _git(root, "show", "-s", "--format=%B", rev)
+        if token not in body:
+            continue
+        tree = _git(root, "show", "-s", "--format=%T", rev)
+        match = re.search(r"(?m)^Publication-Candidate: ([0-9a-f]{40})$", body)
+        if not match:
+            continue
+        if _git(root, "show", "-s", "--format=%P", rev) != match.group(1):
+            continue
+        expected, _closed, plan, refusal = derive_tree(root, turn, match.group(1))
+        if refusal or expected != tree:
+            continue
+        receipt = "Publication-Verification: " + json.dumps(
+            plan["verification"], sort_keys=True
+        )
+        if receipt not in body.splitlines():
+            continue
+        author = _git(root, "show", "-s", "--format=%an%x00%ae", rev).split("\0")
+        wanted = (plan or {}).get("author") or {}
+        if not wanted or author != [wanted.get("name"), wanted.get("email")]:
+            continue
+        spec = Path(str(turn.get("spec", ""))).name
+        homes = ("docs/work/complete/" + spec, "docs/archive/work/complete/" + spec)
+        if any(
+            _git(root, "ls-tree", "-r", "--name-only", rev, "--", home)
+            for home in homes
+        ):
+            _VERIFIED_PUBLICATIONS.add(proof)
+            return rev
+    return None
+
+
+def completed(root, turn):
+    return publication_commit(root, turn) is not None
+
+
+def pending(root):
+    """One unfinished committed selection, or None; malformed/duplicate refuses."""
+    root = Path(root)
+    found = []
+    for path in sorted((root / primary_turn.RECORDS).glob("*/turn.toml")):
+        turn = primary_turn._read_record(root, path)
+        if not completed(root, turn):
+            found.append(turn)
+    if len(found) > 1:
+        raise ValueError(
+            "multiple unfinished primary adjudications: "
+            + ", ".join(turn["wi"] for turn in found)
+        )
+    return found[0] if found else None
+
+
+def writer_refusal(root):
+    """A durable pending turn owns the primary writer even between processes."""
+    try:
+        turn = pending(root)
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        return "primary adjudication selection is unreadable: {}".format(exc)
+    if turn:
+        return "primary adjudication {} is pending; resume it before another writer".format(
+            turn["wi"]
+        )
+    return None
+
+--- project-trajectory/scripts/primary_turn.py ---
+"""Immutable primary-turn Git bindings; no session engine or publication writer."""
+
+import re
+import tomllib
+from pathlib import Path
+
+import agent_common as ac
+import baseline_snapshot
+from check_docs import blank_fenced
+from kitlib import git as kgit
+from kitlib import verdict
+
+RECORDS = "docs/reviews/primary"
+_TURN = re.compile(r"WI-[0-9]+-[0-9a-f]{40}\Z")
+_FIELDS = {
+    "version",
+    "turn",
+    "wi",
+    "base",
+    "primary_branch",
+    "primary_root",
+    "proposal_spec_blob",
+    "scope",
+    "registry_blobs",
+    "approved_blobs",
+    "spec",
+}
+
+
+def record_path(turn):
+    return "{}/{}/turn.toml".format(RECORDS, turn["turn"])
+
+
+def _required_git(root, *args):
+    value = kgit.git_out(root, args)
+    if value is None:
+        raise ValueError("cannot read primary Git binding: {}".format(" ".join(args)))
+    return value.strip()
+
+
+def registry_blobs(root, rev, prefix=""):
+    """Exact carrier objects at a revision, including absent-file identity."""
+    paths = [prefix + rel for rel in baseline_snapshot.SNAPSHOTTED]
+    paths += [str(Path(p).with_suffix(".csv")) for p in paths]
+    paths.append(prefix + str(Path(baseline_snapshot.NEEDS_REL).with_suffix(".md")))
+    listing = _required_git(root, "ls-tree", "-r", rev, "--", *paths)
+    return {
+        path: meta.split()[2]
+        for line in listing.splitlines()
+        for meta, path in [line.split("\t", 1)]
+    }
+
+
+def _primary_identity(root):
+    primary = kgit.primary_worktree_root(root)
+    if primary is None or kgit.is_linked_worktree(root) or not primary.samefile(root):
+        raise ValueError("adjudication needs the designated primary checkout")
+    branch = _required_git(root, "symbolic-ref", "--quiet", "--short", "HEAD")
+    if not branch:
+        raise ValueError("primary adjudication cannot run at detached HEAD")
+    return str(Path(root).resolve()), branch
+
+
+def _definition(text):
+    """The immutable proposal with its two judgment sections removed."""
+    kept, judgment = [], False
+    for raw, visible in zip(text.splitlines(keepends=True), blank_fenced(text)):
+        if visible.startswith("## "):
+            judgment = visible.strip() in ("## Approval", "## Dispositions")
+        if not judgment:
+            kept.append(raw)
+    return "".join(kept).rstrip() + "\n"
+
+
+def _read_record(root, path):
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    if set(data) != _FIELDS or data.get("version") != 1:
+        raise ValueError("{}: invalid primary selection schema".format(path))
+    if not isinstance(data["turn"], str) or not _TURN.fullmatch(data["turn"]):
+        raise ValueError("{}: invalid turn identity".format(path))
+    if data["turn"] != "{}-{}".format(data["wi"], data["base"]):
+        raise ValueError("{}: turn does not bind its WI and base".format(path))
+    if path.relative_to(root).as_posix() != record_path(data):
+        raise ValueError("{}: selection is in the wrong home".format(path))
+    return data
+
+
+def validate(root, turn, candidate="HEAD"):
+    """Re-resolve original proposal bindings and the permitted judgment delta."""
+    identity, branch = _primary_identity(root)
+    if (identity, branch) != (turn["primary_root"], turn["primary_branch"]):
+        raise ValueError("primary root or branch changed since selection")
+    if ac.working_tree_dirty(root):
+        raise ValueError(
+            "primary adjudication has uncommitted residue; reconcile it first"
+        )
+    return validate_candidate(root, turn, candidate)
+
+
+def validate_candidate(root, turn, candidate):
+    """Portable Git proof, also checked by the disposable publication replay."""
+    base = turn["base"]
+    _required_git(root, "merge-base", "--is-ancestor", base, candidate)
+    path = record_path(turn)
+    if tomllib.loads(_required_git(root, "show", candidate + ":" + path)) != turn:
+        raise ValueError("publication selection differs from its committed turn")
+    origin = _required_git(
+        root, "log", "--diff-filter=A", "--format=%H", candidate, "--", path
+    )
+    if not origin or "\n" in origin:
+        raise ValueError("selection has no unique committed origin")
+    if _required_git(root, "show", "-s", "--format=%P", origin) != base:
+        raise ValueError(
+            "selection origin is not the first commit after its bound base"
+        )
+    if _required_git(root, "rev-parse", origin + ":" + path) != _required_git(
+        root, "rev-parse", candidate + ":" + path
+    ):
+        raise ValueError("immutable primary selection was changed")
+    for prefix, key in (
+        ("", "registry_blobs"),
+        (baseline_snapshot.SNAPSHOT_DIR + "/", "approved_blobs"),
+    ):
+        if (
+            registry_blobs(root, base, prefix) != turn[key]
+            or registry_blobs(root, candidate, prefix) != turn[key]
+        ):
+            raise ValueError("{} changed during judgment".format(key))
+    _validate_proposal(root, turn, candidate)
+    spec = turn["spec"]
+    changed = _required_git(
+        root, "diff", "--name-only", "--no-renames", base, candidate
+    )
+    extra = [
+        p for p in changed.splitlines() if p != spec and not verdict.is_record_path(p)
+    ]
+    if extra:
+        raise ValueError("primary judgment changed unowned paths: " + ", ".join(extra))
+    return None
+
+
+def _validate_proposal(root, turn, candidate):
+    base = turn["base"]
+    spec = turn["spec"]
+    if (
+        not spec.startswith("docs/work/queued/")
+        or "/" in spec[len("docs/work/queued/") :]
+    ):
+        raise ValueError("selection does not name one queued spec")
+    if (
+        _required_git(root, "rev-parse", base + ":" + spec)
+        != turn["proposal_spec_blob"]
+    ):
+        raise ValueError("initial queued proposal identity does not match")
+    before = _required_git(root, "show", base + ":" + spec)
+    after = _required_git(root, "show", candidate + ":" + spec)
+    meta, _body = ac.parse_spec_frontmatter(before, spec)
+    if (meta.get("id"), meta.get("safety_class"), meta.get("adjudicates") or []) != (
+        turn["wi"],
+        "adjudication",
+        turn["scope"],
+    ):
+        raise ValueError(
+            "turn WI, role or scope does not equal the original queued proposal"
+        )
+    if _definition(before) != _definition(after):
+        raise ValueError("judgment changed the proposal outside Approval/Dispositions")

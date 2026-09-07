@@ -1,0 +1,6 @@
+DIAGNOSTIC ONLY: assume accepted meanings and valid evidence to test scope composition; these are NOT judgments or approval payloads.
+Scope rows: 52
+Whole-file riders: 61
+Decision parser: None
+Absorption composition: None
+None means only the isolated scope/ledger consistency check passed. Real independent whole-chain, impact, provenance and publication checks remain owed.

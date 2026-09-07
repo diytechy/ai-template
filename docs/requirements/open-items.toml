@@ -3457,3 +3457,10 @@ options = """- (a) ACCEPT THE OVERLAP, ROUTE LLR-041 TO ADJUDICATION: no SR is r
 recommendation = "(a); the overlap is a known advisory class and re-cutting seven Approved SRs is not proportionate to it."
 ruled_date = "2026-09-06"
 ruling_ref = "docs/log.d/2026-09-06-oi86-oi87-owner-ruling.md"
+
+[open_item.OI-88]
+title = "Authorize a one-time reviewed transfer of WI-601, WI-603 and WI-605 into one combined adjudication …"
+status = "pending"
+raised = "2026-09-07"
+one_line = "Authorize a one-time reviewed transfer of WI-601, WI-603 and WI-605 into one combined adjudication after WI-608 authoring? Recommended: use the existing publisher with the complete 52-row Approved-change scope and keep 9 Drafted riders unapproved. No verifier weakening, new control window, push or merge to main. Exact scope and constraints: docs/reviews/wi-609-resolution/DECISION.md."
+wi_refs = ["WI-609"]

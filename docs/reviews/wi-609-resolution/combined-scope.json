@@ -1,0 +1,110 @@
+{
+  "status": "owner-review proposal only; no transfer or mint performed",
+  "authoring_base": "53b36b46f009d8f3304ffe853e5383c1d424b8e1",
+  "registry_candidate_tree": "9fa3e1bbf188d50d762ca4ee6d6af14ad06f8618",
+  "supersedes": {
+    "WI-601": {
+      "path": "docs/work/queued/WI-601-adjudicate-llr-061-approved.md",
+      "scope": [
+        "LLR-061"
+      ],
+      "overlap": [
+        "LLR-061"
+      ]
+    },
+    "WI-603": {
+      "path": "docs/work/queued/WI-603-adjudicate-llr-167-approved.md",
+      "scope": [
+        "LLR-167"
+      ],
+      "overlap": [
+        "LLR-167"
+      ]
+    },
+    "WI-605": {
+      "path": "docs/work/queued/WI-605-adjudicate-sr-161-llr-183-ow.md",
+      "scope": [
+        "SR-161",
+        "LLR-183",
+        "TC-178"
+      ],
+      "overlap": [
+        "LLR-183",
+        "SR-161",
+        "TC-178"
+      ]
+    }
+  },
+  "new_scope": [
+    "LLR-058",
+    "LLR-061",
+    "LLR-123",
+    "LLR-140",
+    "LLR-144",
+    "LLR-149",
+    "LLR-150",
+    "LLR-151",
+    "LLR-152",
+    "LLR-153",
+    "LLR-154",
+    "LLR-158",
+    "LLR-161",
+    "LLR-167",
+    "LLR-183",
+    "LLR-207",
+    "SR-024",
+    "SR-033",
+    "SR-043",
+    "SR-052",
+    "SR-053",
+    "SR-054",
+    "SR-111",
+    "SR-112",
+    "SR-129",
+    "SR-144",
+    "SR-146",
+    "SR-147",
+    "SR-148",
+    "SR-149",
+    "SR-156",
+    "SR-161",
+    "SR-162",
+    "SR-167",
+    "SR-175",
+    "SR-176",
+    "SR-177",
+    "TC-058",
+    "TC-061",
+    "TC-138",
+    "TC-143",
+    "TC-144",
+    "TC-145",
+    "TC-146",
+    "TC-147",
+    "TC-148",
+    "TC-153",
+    "TC-154",
+    "TC-156",
+    "TC-161",
+    "TC-178",
+    "TC-205"
+  ],
+  "drafted_riders_not_approved": [
+    "LLR-210",
+    "SR-183",
+    "SR-184",
+    "SR-185",
+    "SR-186",
+    "TC-208",
+    "TC-209",
+    "TC-210",
+    "TC-211"
+  ],
+  "hard_predecessor": "WI-608",
+  "new_wi_id": "allocate through canonical intake after authorized reviewed transfer; not reserved",
+  "existing_scope_digests": {
+    "WI-601": "c33ae9eadaf41c16b222c02b231d9a5a523b0fb1",
+    "WI-603": "3826779d625a2ed75550e8f448e516cf85650a18",
+    "WI-605": "9e5967174d0e38727273e1d31a34c7bf4c8d167d"
+  }
+}

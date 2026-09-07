@@ -1,0 +1,163 @@
+# WI-609 — scoped judgments and whole-file publication
+
+Candidate design only, baseline 53b36b46. No production code, governing cell,
+Status, snapshot, primary selection or claim changes are made by this design.
+
+## Root cause and rejected shortcuts
+
+A scope owner cannot finish recording an accepted semantic judgment unless it
+can copy an entire live registry. The copy requires accepted decisions for
+foreign drift, but the decision parser forbids decisions outside that owner's
+scope. The evidence reader also only recognizes the current turn's invocation.
+Existing zero-effect RETURN is a finite exit but means no accepted decisions;
+it cannot be relabeled as acceptance. There is no supported composition route
+in the existing projection: changing only the absorption membership check is
+insufficient and would weaken evidence ownership.
+
+Do not widen WI-601/603/605, substitute equivalent for meaning, temporarily
+revert other live changes to manufacture a copyable tree, or publish a partial
+snapshot. Do not invent a parallel ledger, hand-authored reviewer identity or a
+second coordinator. All positive evidence must come from actual primary
+judgments and verified existing publication carriers.
+
+## Proposed minimal change
+
+Separate the completion of one scoped judgment from permission to update the
+shared approval baseline, using the existing Approval payload and atomic
+primary publication carrier. Add one explicit versioned intent discriminator:
+`publication = "judgment-only" | "snapshot"`; absent means the existing strict
+snapshot behavior, so old payloads and missing-ledger errors never silently
+become successful closes. No new WI status, directory, journal or ledger.
+
+1. A judgment-only turn still validates the immutable selection, exact scoped
+   decisions, declared authority, actual reviewer invocation, independent
+   review when owed, and complete impact review for meaning. It records the
+   result and closes only its own queued adjudication WI through the existing
+   verified publication transformation. Its projection has NO Status changes
+   and NO snapshot copies. Its outcome is explicitly `judgment-recorded`, not
+   `return` or `snapshot-published`; any output/readout must state baseline-held.
+   The queued WI's completion proves its judgment task completed, not that the
+   amended registry is approved. First-approval rows remain Drafted. This must
+   be a governing amendment before runtime enablement, not merely a parser fix.
+
+2. A snapshot-intent turn still judges only its own immutable scope. Its exact
+   whole-file absorption ledger may cite either this turn's accepted scoped
+   decision or an accepted decision from a prior VERIFIED judgment-only or
+   snapshot publication, using the existing immutable judgment commit reference
+   plus a deterministic join to its unique originating turn and publication.
+   Foreign evidence is evidence owned by that prior scope, never an extra
+   decision in the current turn. The current adjudicator reviews the complete
+   absorption census and explicitly requests the copy; missing evidence does
+   not automatically broaden the request or change intent.
+
+3. A foreign reference is eligible only if its originating primary selection,
+   exact queued proposal, typed decision and logged provider/reviewer provenance
+   validate at its original candidate, and the existing publication verifier
+   proves its actual close. The referenced row must be inside that origin's
+   scope with an accepted classification; a RETURN, uncertain, uncompleted,
+   forged or stale judgment is not evidence. Existing reviews from retired
+   legacy worktrees remain historical claims, not silently upgraded evidence.
+
+4. Conservative freshness initially requires identical bound live registry
+   and approved-snapshot blob maps between the foreign turn and current turn.
+   All requirement tiers therefore keep the same parent/sibling context. A
+   change anywhere in those maps refuses reuse and requires renewed scoped
+   judgment; do not add row-hash exceptions in the first implementation.
+   Also require the source/test/policy context to remain unchanged: the history
+   between the foreign publication and current base may contain only record-only
+   commits or complete, independently verified primary-publication segments.
+   Each segment validates its base-to-candidate restricted effects and its
+   candidate-to-publication exact projection. Ordinary authoring/intake/code or
+   policy changes refuse reuse. Do not compare the full non-record tree alone:
+   a legitimate scoped close changes queued specs and generated surfaces.
+   Current-turn Approval/Dispositions changes are already checked by the
+   existing exact proposal validator. Meaning impact evidence must be kept
+   under the same conservative context proof; do not silently waive new live
+   uses. If the proof cannot show the changed paths are precisely verified
+   primary bookkeeping, require a renewed judgment.
+
+5. Foreign validation must be historical and noncircular: references and their
+   publication commits strictly precede the current bound base. Replay each
+   source at its own historical candidate. Memoize only successful proofs by
+   immutable commit plus turn identity, using the existing cache owner; a
+   cycle, missing object or ambiguous origin refuses. No caller may disable
+   provenance or invoke a copier directly. This remains the current single
+   primary actor and existing atomic publisher.
+
+6. Keep all live registry and snapshot bytes fixed during the collection of
+   judgment-only turns. When the last owning turn has an accepted scoped
+   judgment, it may request snapshot intent with the complete census and the
+   earlier references. Only then does the existing publisher copy live files
+   byte-identically and perform requested in-scope first-approval Status flips.
+   Prior foreign first approvals would require additional explicit authority
+   for their deferred Status effects: defer that extension initially. First
+   implementation supports foreign evidence for already-Approved amendments;
+   Drafted riders remain Drafted and are explicitly accounted for. A separate
+   first-approval turn never promotes somebody else's Drafted row.
+
+## Why the order terminates
+
+For the current approved-change case, owner A records its judgment with the
+baseline held and its WI closes; owner B can therefore run without competing
+with a pending A turn. B records its own judgment; the last necessary owner
+requests the complete snapshot copy. No earlier owner must copy foreign rows
+just to finish. All judgments retain the same approved/live carrier maps until
+that copy. If a source revision intervenes, collection deliberately restarts
+for affected evidence; this is honest staleness, not a circular dependency.
+
+The PC amendment WI still has a hard predecessor on WI-601, whose completed
+judgment must accept its exact final LLR-061 text. The PC source authoring must
+happen BEFORE that judgment; the later PC adjudication reuses it only if all
+freshness checks hold. Existing owners are neither transferred nor absorbed.
+Unowned changed rows need separate scoped intake before this collection starts;
+a missing owner or judgment never becomes an automatic acceptance.
+
+## Executable acceptance cases required before enablement
+
+Use real temporary Git repositories and actual primary carrier replay, extending
+existing test_primary_approval/test_primary_publication fixtures. No synthetic
+review text alone substitutes for logged invocation metadata.
+
+- Two Approved rows, A and B, changed from one snapshot and separately owned.
+  A's judgment-only publication closes only A's WI; assert registry and
+  snapshot byte identity and no Status effects. Pending selection clears and
+  B can start. B's snapshot request binds both accepted decisions and copies
+  the complete live registry; assert A's scope never contains B and vice versa.
+- Replay A's receipt and B's final publication from committed historical trees;
+  both re-derive exactly, including after restart and at a later wall date.
+- Missing foreign judgment, RETURN, uncertain, unfinished origin, wrong row,
+  wrong owner, forged log/model/session, unreviewed required phase, altered
+  origin proposal, future ref, ambiguous ref, wrong before/after, cycle and
+  missing objects each refuse without Status/snapshot effects.
+- Mutate a registry sibling, parent, approved snapshot, test, source or policy
+  between A and B: refuse stale reuse. Beside it, exact verified primary close
+  bookkeeping and record-only commits do permit reuse. A work blob disguised
+  as a generated/record-only carrier must refuse.
+- A judgment-only payload missing required impact evidence still refuses.
+  Omitting the new intent keeps the existing incomplete-ledger refusal.
+  Unknown intent/version refuses. Mixed accepted and returned decisions keep
+  the existing refusal; no partial success is invented.
+- Drafted riders stay Drafted. A foreign first-approval decision cannot flip
+  its row from a later unrelated scope. Existing human-held authority remains
+  held on judgment-only as on snapshot intent.
+- Kill before/after atomic receipt and final-copy commits; resume detects one
+  real completion and never duplicates a mint or treats a stale receipt as a
+  fresh approval. Existing ordinary integration and crash-claim behavior remain.
+
+## Governing impact and delivery
+
+The mechanical defect is real, but the proposed extra intent changes the
+published protocol and must be authored and adjudicated first. Inspect and
+amend the affected LLR-140/152/153/154/158/167/207 and TC-132/146/147/148/153/161/205
+only where their actual cells require it; no blanket changes. LLR-152 overlaps
+PC's pending patch, LLR-167 belongs to WI-603, and LLR-207 has older drift.
+Preserve those owners and cumulative before/after. The rule that equivalent
+wording and a snapshot update publish together needs an explicit exception for
+judgment-only completion that confers no live acceptance, not silent reinterpretation.
+
+Implementation should change the existing primary projection/evidence reader
+and prompt envelope, not add a second publisher. Author the exact protocol
+amendment, independent semantic review, then a bounded implementation with the
+real Git cases above and full-suite validation. Until that is complete, the
+coordinator and primary selection remain paused. No control-window request or
+owner decision is implied by this technical proposal.

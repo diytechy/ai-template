@@ -11,6 +11,14 @@ retry procedure. It supersedes the earlier continuation/launch instructions.
 
 ## Current continuation — PC intake and publication preflight (2026-09-07)
 
+The [concrete resolution proposal](../reviews/wi-609-resolution/DECISION.md)
+recommends one reviewed combined adjudication scope under the existing
+publisher. The independent review returned a larger judgment-only protocol;
+the scope/census diagnostic passes for the combined proposal without changing
+the verifier. Ownership transfer needs an explicit owner decision because the
+current PC/repair scopes preserve the separate owners. No transfer or primary
+selection has occurred; the pause and all production bytes remain unchanged.
+
 The [intake preflight](../reviews/pc-intake/preflight.md) records the actual
 publication-composition conflict found while attempting the next step. The
 canonical mint queued exact PC source authoring and a separate resolution WI.

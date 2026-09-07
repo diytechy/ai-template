@@ -6,6 +6,7 @@ sr_refs = ["SR-148", "SR-156"]
 specref = "project-trajectory/PROCESS_OPTIONS.md#who-performs-the-approval-act"
 buildtier = "strong"
 safety_class = "spine"
+needs = ["OI-88"]
 +++
 
 ## Context
