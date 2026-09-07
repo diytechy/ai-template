@@ -36,7 +36,7 @@
 #     malformed annotation and two lines resolving to one id with different
 #     weights each fail preflight loudly, naming the offending line — never a
 #     silent fall-back to the single-model path.
-ANTHROPIC-OPUS-STRONG
+ANTHROPIC-FABLE
 OPENAI-SOL
 OPENCODE-KIMI
 ANTHROPIC-OPUS

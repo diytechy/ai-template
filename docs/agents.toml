@@ -21,12 +21,12 @@
 
 [agent.ANTHROPIC-FABLE]
 family = "ANTHROPIC"
-model = "claude-fable-5"
-version = "5"
+model = "claude-fable-5-1"
+version = "5.1"
 tier = "strong"
 cmd_template = """claude -p --model {model} --output-format stream-json --verbose --dangerously-skip-permissions"""
-env = "CLAUDE_CODE_EFFORT_LEVEL=high"
-notes = """newest Claude frontier family - leads gate-bearing kit work (PLAN/DESIGN-CHECK/CRITIQUE; BUILD relaxed to medium 2026-07-12 evening WI-121); CATALOG-ONLY since 2026-07-22 (owner has no Fable access; dropped from docs/agents-enabled and ANTHROPIC-OPUS-STRONG took the strong slot) - re-add to the enable-list to restore; auth: run claude once interactively (or claude setup-token)"""
+env = "CLAUDE_CODE_EFFORT_LEVEL=medium"
+notes = """Fable 5.1 leads the strong Anthropic tier at MEDIUM effort (owner directive 2026-09-06, restoring Fable at strong after the 2026-07-22 Opus stand-in); BUILD/PLAN/DESIGN-CHECK/CRITIQUE strong draws ride here; ANTHROPIC-OPUS-STRONG stays as the catalog fallback row"""
 
 [agent.ANTHROPIC-OPUS-STRONG]
 family = "ANTHROPIC"
@@ -35,7 +35,7 @@ version = "4.8"
 tier = "strong"
 cmd_template = """claude -p --model {model} --output-format stream-json --verbose --dangerously-skip-permissions"""
 env = "CLAUDE_CODE_EFFORT_LEVEL=high"
-notes = """strong tier = Opus (owner directive 2026-07-22: Fable temporarily inaccessible, so Opus takes the strong Anthropic slot, matching the medium ANTHROPIC-OPUS row - one model x two tier-routes, the pair-row model); PLAN/DESIGN-CHECK/CRITIQUE ride here; effort dialed to medium (owner directive 2026-08-02, for the small well-scoped queue; was xhigh from WI-331 2026-07-29) - NOTE this now sits BELOW the medium ANTHROPIC-OPUS row's high, so the effort ladder is inverted against the tier ladder; bump back to high if review quality regresses; auth: run claude once interactively Owner directive 2026-09-02: model pinned to claude-opus-5 (the bare `opus` alias resolved to claude-opus-4-8 on this box - probed with `claude -p --model opus`, and 143 session telemetry records agreed); effort HIGH on this row (the 2026-08-02 strong=medium / medium=high inversion is undone: strong=high, medium=medium)."""
+notes = """CATALOG-ONLY since 2026-09-06: Opus held the strong Anthropic slot while Fable was inaccessible (2026-07-22); ANTHROPIC-FABLE leads strong again. Re-enable this row to fall back to Opus at strong"""
 
 [agent.ANTHROPIC-OPUS]
 family = "ANTHROPIC"
