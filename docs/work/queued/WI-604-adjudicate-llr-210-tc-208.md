@@ -2,7 +2,7 @@
 id = "WI-604"
 title = "adjudicate: LLR-210, TC-208 - spine row(s) authored Drafted on merged trunk 3b004c4..f395907 await a FIRST APPROVAL; read the whole chain and record approval or return findings"
 workstream = "process"
-needs = ["WI-619"]
+needs = ["WI-620"]
 specref = "docs/requirements/low-level-requirements.toml"
 buildtier = "medium"
 safety_class = "adjudication"

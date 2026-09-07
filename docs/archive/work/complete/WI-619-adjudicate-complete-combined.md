@@ -4,13 +4,17 @@ title = "adjudicate: complete combined amendments after returned source and proo
 workstream = "process"
 sr_refs = ["SR-026", "SR-174", "SR-178", "SR-024", "SR-033", "SR-043", "SR-052", "SR-053", "SR-054", "SR-111", "SR-112", "SR-129", "SR-144", "SR-146", "SR-147", "SR-148", "SR-149", "SR-156", "SR-161", "SR-162", "SR-167", "SR-175", "SR-176", "SR-177"]
 needs = ["WI-608", "WI-611", "WI-613", "WI-614", "WI-615", "WI-616", "WI-617"]
-specref = "docs/reviews/wi612-authoring/README.md"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 supersedes = "WI-612"
 brief = "amendment"
 adjudicates = ["LLR-058", "LLR-061", "LLR-123", "LLR-140", "LLR-144", "LLR-149", "LLR-150", "LLR-151", "LLR-152", "LLR-153", "LLR-154", "LLR-158", "LLR-161", "LLR-167", "LLR-183", "LLR-207", "SR-024", "SR-033", "SR-043", "SR-052", "SR-053", "SR-054", "SR-111", "SR-112", "SR-129", "SR-144", "SR-146", "SR-147", "SR-148", "SR-149", "SR-156", "SR-161", "SR-162", "SR-167", "SR-175", "SR-176", "SR-177", "TC-058", "TC-061", "TC-138", "TC-143", "TC-144", "TC-145", "TC-146", "TC-147", "TC-148", "TC-153", "TC-154", "TC-156", "TC-161", "TC-178", "TC-205"]
 +++
+
+## Deliverable
+
+The held primary adjudication recorded and independently reviewed its judgment. The verified atomic publisher closed this queued row and minted its recorded `## Dispositions` successors in the same primary commit; any human-owed answer is a `pending` open item the successor depends on. The judgment and review evidence remain under `docs/reviews/`.
 
 ## Context
 
