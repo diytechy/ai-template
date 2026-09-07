@@ -1,5 +1,10 @@
 # Control-launch preflight
 
+**Launch evidence, now historical:** the control was started and stopped on
+correctness findings. [Results and the required repair](CONTROL-OBSERVATIONS.md)
+govern continuation; the new tracked pause must not be deleted using the
+original launch instruction below.
+
 The launch preparation is based on reviewed `22285df4182dd2b69b4e658d77732afaf145c165`
 on `contract_split`. The frozen pause-deletion launch commit is
 `de9a2bfa7febe32ae16099cc09008f43a2240165` (hooks enabled). Runtime observations belong in the

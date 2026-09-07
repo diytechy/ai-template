@@ -62264,3 +62264,50 @@ documentation passes. No coordinator started before this identity was recorded.
 <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke; .venv/bin/python scripts/check_smoke_budget.py --elapsed <measured-process-wall> --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=de9a2bfa+launch-identity; out/run-logs/control-launch-record-smoke.txt; out/run-logs/control-launch-record-smoke.json; out/run-logs/control-launch-record-docs.txt -->
 
 Deferred open items: none.
+
+## 2026-09-06 — Short control stopped on false-green verification and lost adjudication scope
+
+Launched the root coordinator from `dc848687` against the recorded
+`de9a2bfa` runtime baseline; WI-605 was the sole claimed work item. The
+[control observation record](ai-template-redesign-2026-09-05-codex/CONTROL-OBSERVATIONS.md)
+carries the three started sessions, one independent review, raw available
+usage, exact UTC interval and both interventions. The control ended after
+1178.3461733749718s with zero completed WIs and zero merged branches. No
+throughput or replacement conclusion is supported by this sample.
+<!-- fig: derived="out/run-logs/control-window/launch.json and launcher.log; primary git history dc848687..46d010f4; lane HEAD ceab73e1" rev=46d010f4 -->
+
+Two correctness findings caused the stop. The smoke-budget wrapper ignores a
+nonzero pytest exit when elapsed time is within budget (reproduced against its
+real main function with a failing stubbed child). Then the specialized
+adjudication rework regenerated the remaining global drift without the
+review feedback or the WI's reserved scopes, and staged an LLR approval copy
+that WI-605 explicitly withheld for WI-601/WI-603. The supervisor first paused
+admission, then interrupted worker and coordinator before that snapshot was
+committed or promoted. All child processes exited. No primary approval
+snapshot changed. The close-before-review guidance also conflicts with the
+existing mechanical adjudication close; reconcile that as part of the scoped
+repair, not by treating one model's finding as settled authority.
+
+Preserved the worker's committed branch at `ceab73e1` and the unauthorized
+uncommitted snapshot as a
+[forensic patch](work/handback/wi-605-control-interruption-llr-snapshot.patch).
+Restored only those two uncommitted snapshot paths to the lane's HEAD; its
+working tree is clean. The original active claim is retained as an interrupted
+assignment, not renamed, accepted, or converted into an as-is partial close.
+The global pause remains; a relaunch can resume a claimed lane even under
+pause, so the resume surfaces now require repair and reconciliation first.
+WI-551 was re-queued after the window closed, per the original handoff; it
+remained excluded during the window. No runtime repair, second window, push,
+spine edit or approval is performed by this stop-record commit.
+
+Verification: the first stop-record smoke run passed 1676 tests with 8 skips
+in 96.72s but its 97.2s measured wall exceeded 90s while the worker also ran
+smoke. That supervisor-induced contention is recorded. After the worker
+stopped, the isolated run passed 1676 tests with 8 skips in 58.63s; measured
+wall 58.846227500005625s, enforcing budget pass. Pytest exit was checked
+separately, so the false-green wrapper was not trusted. Documentation and
+strict trajectory are checked before this hooks-enabled commit. No capped or
+watched master changed; no full-suite run is claimed.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke; .venv/bin/python scripts/check_smoke_budget.py --elapsed 58.846227500005625 --mode enforce; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale; .venv/bin/python project-trajectory/scripts/check_trajectory.py --root . --strict" rev=46d010f4+control-stop; out/run-logs/control-stop-smoke.txt; control-stop-smoke-isolated.txt; control-stop-smoke-isolated.json; control-stop-docs.txt; control-stop-trajectory.txt -->
+
+Deferred open items: none — these are reproducible repair findings, not a new owner policy choice.

@@ -12,11 +12,12 @@ supersedes = "WI-540"
 
 ## Context
 
-**Deferred 2026-09-06 for the Short control window** (owner ruling in the
+**Held during the 2026-09-06 Short control window** (owner ruling in the
 control decision's configuration row: "the retained adjudicator patch is not
 applied for the window", because it changes the adjudicator behaviour the
-window measures). Re-queue at the window's close; nothing else about this row
-changed.
+window measures). Re-queued after the supervisor stopped the window on
+correctness findings. The global pause remains; this does not authorize a
+relaunch before the control findings and interrupted lane are reconciled.
 
 Drafted by WI-550 (its ## Dispositions section) and minted at its merge - drafts-not-mints, ruling R1/R3.
 
