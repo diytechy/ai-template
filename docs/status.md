@@ -35,6 +35,11 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   invocation metadata; do not bypass the immutable-turn validator or retry
   automatically. Candidate-SHA logging and derived successor review routing
   require technical correction and supervisor reconciliation before admission.
+  The ordered work list and its kickoff prompt are in
+  [the handoff](handoff-2026-09-07.md#resume-prompt-2026-09-07-after-the-stop);
+  the [supervisor review](reviews/2026-09-07-control-approval-supervisor-review.md)
+  adds the lock semantics, the `WI-596` census overlap and a now-false
+  `integrate._slot` docstring.
 - **Next authorized package:** the independent
   [PC cuts](ai-template-redesign-2026-09-05-codex/IMPLEMENTATION.md#pc--the-independently-agreed-cuts-unconditional-after-the-control-window).
   Author and adjudicate its batch-contract amendments before deleting code;

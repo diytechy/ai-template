@@ -85,6 +85,16 @@ TC-178 linkage argument or its successor scopes/classification.
    rounds ran in this segment. Fixing only the candidate identity would leave
    this separate review defect exposed.
 
+A later [supervisor review](../reviews/2026-09-07-control-approval-supervisor-review.md)
+re-derived both findings from source and accepts them. It adds four: the
+repair's volume follows the owner's primary-checkout ruling (about 1,100 lines
+of new machinery, not the gross 8,298); `primary_approval.absorption_census`
+duplicates queued `WI-596`; `integrate.lock` excludes only the merge drain, is
+non-blocking, and does no work while held across a provider call, while the
+durable blocker is the on-disk pending turn; and `integrate._slot`'s "held for
+well under a second" docstring is now false on the primary path. Its ordered
+work list is the resume prompt in [the handoff](../handoff-2026-09-07.md#resume-prompt-2026-09-07-after-the-stop).
+
 The stopping intervention was the supervisor's single correctness stop, not a
 provider fallback, a policy waiver, or a replacement experiment. No source was
 changed inside the measured segment. The prelaunch full and smoke greens are
