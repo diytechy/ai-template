@@ -468,8 +468,21 @@ def test_human_held_scope_refuses_machine_publication(tmp_path):
     assert "human-held" in refusal
 
 
-def test_review_owed_candidate_requires_existing_independent_approve(tmp_path):
-    root, turn = _fixture(tmp_path, brief="consolidate", review_rounds=1)
+@pytest.mark.parametrize("brief,dual", [("consolidate", False), ("", True)])
+def test_review_owed_candidate_requires_existing_independent_approve(
+    tmp_path, brief, dual
+):
+    root, turn = _fixture(tmp_path, brief=brief, review_rounds=1)
+    if dual:
+        spec = root / turn["spec"]
+        spec.write_text(
+            spec.read_text(encoding="utf-8")
+            + '\n## Dispositions\n\n```toml\ntitle = "successor"\n'
+            'workstream = "process"\nplanmode = "dual"\n```\n',
+            encoding="utf-8",
+        )
+        _git(root, "add", "-A")
+        _git(root, "commit", "-qm", "draft an undeclared dual successor")
 
     _plan, refusal = PA.approval_projection(root, turn)
 

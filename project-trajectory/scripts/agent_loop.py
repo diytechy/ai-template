@@ -2965,9 +2965,7 @@ def dispositions_drafted(root, wi):
     drafts, refusal = intake.parse_dispositions(text, found[chosen].name)
     if refusal:
         return ["spine"]
-    # `kind`: `parse_dispositions` normalizes the declared `safety_class` cell
-    # into it (see `integrate._verdict_owed`).
-    return [d.get("kind") for d in drafts]
+    return [intake.draft_kind(d) for d in drafts]
 
 
 def schedule_adjudication_round(ctx, plan, commits, after, wi_label):

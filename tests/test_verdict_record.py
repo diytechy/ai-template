@@ -1031,10 +1031,14 @@ def adjudication_repo(tmp_path, mode, drafts_class="ordinary"):
     landed = root / "docs" / "archive" / "work" / "complete" / spec.name
     landed.parent.mkdir(parents=True, exist_ok=True)
     landed.write_text(
-        spec.read_text(encoding="utf-8")
-        + "\n## Dispositions\n\n```toml\n"
+        spec.read_text(encoding="utf-8") + "\n## Dispositions\n\n```toml\n"
         'title = "the successor"\nworkstream = "process"\n'
-        'safety_class = "{}"\n```\n\nThe successor\'s scope.\n'.format(drafts_class),
+        + (
+            'planmode = "dual"\n'
+            if drafts_class is None
+            else 'safety_class = "{}"\n'.format(drafts_class)
+        )
+        + "```\n\nThe successor's scope.\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -1106,6 +1110,7 @@ def _adjudication_ctx(root, plan_brief="amendment"):
         # when-minting: the drafted successor's class is the whole question.
         ("when-minting", "ordinary", "amendment", False),
         ("when-minting", "spine", "amendment", True),
+        ("when-minting", None, "amendment", True),
         # always: the value no repo fixture had ever driven.
         ("always", "ordinary", "amendment", True),
     ],

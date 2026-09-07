@@ -379,7 +379,7 @@ def _review_refusal(root, candidate, turn, spec_text):
     if why:
         return why
     if required < 1 or not agent_common.adjudication_review_owed(
-        root / "docs", meta.get("brief", ""), [d.get("kind") for d in drafts]
+        root / "docs", meta.get("brief", ""), [intake.draft_kind(d) for d in drafts]
     ):
         return None
     want = kverdict.tree_identity(root, candidate)

@@ -33,8 +33,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   Keep the coordinator stopped and the tracked pause in place. The
   [supervisor retirement](reviews/2026-09-07-primary-turn-retirement.md)
   clears the pending writer while preserving the stopped candidate and actual
-  invocation metadata. Candidate-SHA logging and derived successor review
-  routing still require technical correction before admission.
+  invocation metadata. Finish the lock documentation and census disposition
+  after the [candidate and review-routing fixes](reviews/2026-09-07-post-stop-fixes.md).
   The ordered work list and its kickoff prompt are in
   [the handoff](handoff-2026-09-07.md#resume-prompt-2026-09-07-after-the-stop);
   the [supervisor review](reviews/2026-09-07-control-approval-supervisor-review.md)

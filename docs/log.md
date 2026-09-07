@@ -63756,3 +63756,28 @@ against 90s. Ruff lint/format and strict trajectory pass; docs zero broken
 with one existing orphan warning. This is a narrow binding correction, not a
 broad script change or phase close; the required bar is per commit.
 <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_primary_session.py tests/test_primary_adjudication.py tests/test_primary_approval.py; .venv/bin/python -m pytest -q -n auto -m smoke; .venv/bin/python scripts/check_smoke_budget.py --mode enforce --elapsed <measured-wall>; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=2c984716+resume-item-2; out/run-logs/post-stop-repair/2-focused.txt; 2-bar.txt; 2-docs.txt -->
+
+## 2026-09-07 — Review successors by their scheduled class (resume item 3)
+
+[Source review and baseline rationale](reviews/2026-09-07-post-stop-fixes.md#item-3--resolve-the-successors-scheduled-class-before-review):
+all three review consumers now use the scheduler's class resolution through
+`intake.draft_kind`. An undeclared dual draft owes high-risk review, while its
+minted spec retains the original empty class. No policy or mint-format change.
+The actual preserved carrier now resolves to ordinary/high-risk and owes review;
+that read-only proof does not accept its historical judgment.
+
+Both new regression cases failed before repair. The first implementation's
+redundant minted class was caught by the existing intake test and removed.
+The smoke ratchet then caught the shared adapter's four SLOC: deliberately
+re-stamped intake 1455 -> 1459, source-reviewed because it replaces raw reads
+at three consumers and adds no classification policy or separate module. No
+other baseline or threshold changed. No capped files changed or scope deviation.
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_module_size_ratchet.py" rev=9fa88ddc+resume-item-3; out/run-logs/post-stop-repair/3-bar.txt; 3-ratchet.txt -->
+
+Deferred open items: none — remaining resume items precede PC.
+
+Verification: focused verdict/primary-approval/intake suite 164 passed in 57.71s;
+size-ratchet tests 3 passed in 0.62s; final smoke 1695 passed, 4 skipped in
+48.42s, measured wall 48.6s enforced against 90s. Ruff lint/format, strict
+trajectory and documentation checks pass (one existing orphan warning).
+<!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_verdict_record.py tests/test_primary_approval.py tests/test_intake.py; .venv/bin/python -m pytest -q -n auto -m smoke; .venv/bin/python scripts/check_smoke_budget.py --mode enforce --elapsed <measured-wall>; .venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=9fa88ddc+resume-item-3; out/run-logs/post-stop-repair/3-focused-final.txt; 3-bar-final.txt; 3-docs-final.txt -->

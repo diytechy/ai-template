@@ -1258,6 +1258,13 @@ def parse_dispositions(text, where):
     return drafts, None
 
 
+def draft_kind(draft):
+    """The kind scheduling will derive, without adding a redundant authored cell."""
+    return schedule.kind_of(
+        {"safetyclass": draft.get("kind"), "planmode": draft.get("planmode")}
+    )
+
+
 def _supersedes_refusal(value, at, known_ids=None, absorbed_ids=None):
     """Refuse a `supersedes` that names something the mint cannot re-point.
 

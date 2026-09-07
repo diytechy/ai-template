@@ -1100,8 +1100,9 @@ def adjudication_review_owed(docs, brief, drafts):
     `consolidate` verdict closes rows it was not minted from.
 
     `brief` is the adjudicator brief this session was composed from ("" for a
-    session that had none) and `drafts` the `safety_class` of each successor its
-    `## Dispositions` block drafts. Both are read from committed facts by the
+    session that had none) and `drafts` the effective scheduled kind of each
+    successor its `## Dispositions` block drafts, resolved by `intake.draft_kind`.
+    Both are read from committed facts by the
     callers, never from run-state, so a resumed loop and the merge slot see the
     same inputs.
 
