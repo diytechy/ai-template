@@ -358,10 +358,21 @@ inside the window: the window measures the frozen configuration.
 
 **Work:**
 
-- One WI per lane as a schema invariant: retire multi-WI spine batch admission
-  and train assembly in the current runner, keeping exclusive-serial execution
-  for spine rows. Each retired test maps to a surviving obligation or to this
-  package's deletion record, per the P9 rule; no test quota.
+- One WI per lane as a schema invariant, in two ordered steps. **First, the
+  batch-specific slice of P1A, brought forward into this package:** amend the
+  Approved contracts that require batch admission — SR-148's selection
+  contract, LLR-149's kind × approval-level admission table and TC-143 with
+  its `tests/test_dispatch_admission.py` evidence, plus any row the strict
+  trace or the FABLE-REVIEW F-01 candidate list (SR-144/156/170/173,
+  LLR-159/182/210) names when batching goes — through the normal change-intake
+  route under current authority, adjudicated before any code is deleted. A
+  deletion record does not reconcile an approved contract. **Second,** retire
+  multi-WI spine batch admission and train assembly in the current runner,
+  keeping exclusive-serial execution for spine rows. Each retired test maps to
+  a surviving obligation or to this package's deletion record, per the P9 rule;
+  no test quota. P1A keeps every other amendment (scheduler-owned admission,
+  intake-owned reconciliation, partial-close/evidence changes) for the
+  conditional runner.
 - The legacy tail, each item behind its declared migration window: the CSV
   spec converter, the retired-vocabulary ratchet's `G*`/`ratif*` arms, and
   resync entries older than the supported window. Retire the row, the code and

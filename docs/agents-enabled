@@ -37,10 +37,10 @@
 #     weights each fail preflight loudly, naming the offending line — never a
 #     silent fall-back to the single-model path.
 ANTHROPIC-FABLE
-OPENAI-SOL
+OPENAI-ASTRA
 OPENCODE-KIMI
 ANTHROPIC-OPUS
-OPENAI-TERRA
+OPENAI-SOL
 OPENCODE-GROK
 ANTHROPIC-SONNET
 OPENAI-LUNA

@@ -24,11 +24,16 @@ additional permission is requested merely because spend is unavailable.
 The enabled registry resolves eight entries across Anthropic, OpenAI and
 OpenCode. **Re-lined 2026-09-06 (later sitting):** ANTHROPIC-FABLE (Fable 5.1
 at medium effort) leads the strong tier; ANTHROPIC-OPUS-STRONG is catalog-only.
-`agent_route.py --select --tier strong` returns ANTHROPIC-FABLE. The Fable
+`agent_route.py --select --tier strong` returns ANTHROPIC-FABLE. WI-551 (the
+adjudicator session-retention patch) is moved to `deferred/` for the window,
+which the ruling's configuration row requires and the queue had not enforced. The Fable
 route has not been live-probed from this sitting; the launch's step 1 and the
 loop's pre-dispatch probe establish it. `agent_route.py --list` and tier selections, including exclusion of
 Anthropic, resolve without registry errors. The strong/medium/quick OpenAI
-choices are Sol/Terra/Luna. Local version probes returned Claude 2.1.207,
+choices are **Astra/Sol/Luna** since the owner re-lineup of 2026-09-06 (later
+sitting; Terra is catalog-only, and Astra is not yet live-probed from a
+sitting). Earlier in this record "Sol/Terra/Luna" names the line-up at the
+time. Local version probes returned Claude 2.1.207,
 Codex 0.153.4 and OpenCode 1.18.26.
 
 **Provider requests did occur during preparation:** the

@@ -12,6 +12,12 @@ supersedes = "WI-540"
 
 ## Context
 
+**Deferred 2026-09-06 for the Short control window** (owner ruling in the
+control decision's configuration row: "the retained adjudicator patch is not
+applied for the window", because it changes the adjudicator behaviour the
+window measures). Re-queue at the window's close; nothing else about this row
+changed.
+
 Drafted by WI-550 (its ## Dispositions section) and minted at its merge - drafts-not-mints, ruling R1/R3.
 
 The adjudicator session-retention layer is still wanted — WI-541

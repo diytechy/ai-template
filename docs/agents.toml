@@ -55,13 +55,21 @@ cmd_template = """claude -p --model {model} --output-format stream-json --verbos
 env = "CLAUDE_CODE_EFFORT_LEVEL=high"
 notes = """quick tier; the tier guardrails would guard once a core is vendored (docs/guardrails-policy)"""
 
+[agent.OPENAI-ASTRA]
+family = "OPENAI"
+model = "gpt-6-astra"
+version = "6"
+tier = "strong"
+cmd_template = "codex exec -c model_reasoning_effort=medium --model {model} --dangerously-bypass-approvals-and-sandbox"
+notes = """GPT-6 flagship (Astra) - the strong-tier cross-family draw (owner re-lineup 2026-09-06: Astra strong, Sol medium, Luna quick); effort pinned medium in the template so the row does not inherit ~/.codex/config.toml; provider CLI codex, prompt on stdin"""
+
 [agent.OPENAI-SOL]
 family = "OPENAI"
 model = "gpt-5.6-sol"
 version = "5.6"
-tier = "strong"
+tier = "medium"
 cmd_template = "codex exec -c model_reasoning_effort=medium --model {model} --dangerously-bypass-approvals-and-sandbox"
-notes = """GPT-5.6 flagship (Sol) - the strong-tier cross-family draw (its WI-160 preferred-BUILD pin was retired by the owner directive 2026-07-19: Anthropic leads BUILD per tier); provider CLI (codex) replaces opencode for the OPENAI family (WI-160); install: npm i -g @openai/codex; sign in: codex login. Owner directive 2026-09-01: -c model_reasoning_effort=medium pinned on ALL three codex rows (codex 0.145.0 has no --effort flag; the -c override is the only CLI dial). Before this, Sol and Luna silently inherited model_reasoning_effort=\"xhigh\" from this box's ~/.codex/config.toml, so the WI-548 C7 Terra experiment compared medium against xhigh, not a provider default"""
+notes = """GPT-5.6 Sol - the medium-tier cross-family draw (owner re-lineup 2026-09-06, down from strong when Astra took that slot); effort pinned medium; provider CLI codex, prompt on stdin"""
 
 [agent.OPENAI-TERRA]
 family = "OPENAI"
@@ -69,7 +77,7 @@ model = "gpt-5.6-terra"
 version = "5.6"
 tier = "medium"
 cmd_template = "codex exec -c model_reasoning_effort=medium --model {model} --dangerously-bypass-approvals-and-sandbox"
-notes = """GPT-5.6 balanced (Terra) - the cross-family review leg; provider CLI (codex) replaces opencode (WI-160); install: npm i -g @openai/codex; sign in: codex login. C7 EXPERIMENT (2026-08-30, WI-548): -c model_reasoning_effort=medium pins the review leg's reasoning effort (codex has no env dial; CmdTemplate is the declared home) - measure round wall + the codex `tokens used` line against the ~10-min unpinned rounds of 2026-08-30 and keep or revert on the numbers. KEPT and generalised by the owner directive 2026-09-01: all three codex rows carry the same medium pin (see OPENAI-SOL notes for the config-inheritance caveat)"""
+notes = """CATALOG-ONLY since 2026-09-06: Sol took the medium slot in the owner re-lineup (Astra/Sol/Luna); re-add OPENAI-TERRA to docs/agents-enabled to draw it again"""
 
 [agent.OPENAI-LUNA]
 family = "OPENAI"
