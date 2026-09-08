@@ -1,0 +1,58 @@
+# agent session log — written by scripts/agent_common.py
+# session: 022
+# date: 2026-09-07 19:42
+# train: contract_split
+# base: c492da3dd0e6
+# phase: ADJUDICATE
+# primary-turn: WI-623-c492da3dd0e6247610bf0af116305e989d1d17f7
+# judgment: docs/reviews/contract_split/022-ADJUDICATE-aa42ddd.md
+# candidate: b0645502ede73c60a49680cc0252e9e0321be841
+# wi: WI-623
+# model: gpt-6-astra
+# guardrails:
+# outcome: COMMITTED
+# commits: aa42ddd1..b0645502
+# tokens:
+# cost-usd:
+# wall-secs: 577
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 1397848
+# prompt-template: kit:ADJUDICATE
+# prompt-sha: sha256:34222f4c32c6
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# invocation-id: e9cc90bf62ca47d3a8e9de2c757bfd4b
+# attempt-id: contract_split@c492da3dd0e6247610bf0af116305e989d1d17f7
+# source-event:
+# role: ADJUDICATE
+# provider: OPENAI
+# requested-model: gpt-6-astra
+# reported-model:
+# tier: strong
+# roster-row: OPENAI-ASTRA
+# started-at: 2026-09-08T00:32:50Z
+# ended-at: 2026-09-08T00:42:27Z
+# input-tokens:
+# output-tokens:
+# reasoning-tokens:
+# raw-usage:
+# usage-scope: unknown
+# usage-source: unknown
+# usage-status: unavailable
+# ---
+Committed the [verdict](/Users/diytechy/Documents/ai-template/docs/reviews/contract_split/022-ADJUDICATE-aa42ddd.md) and Approval/Dispositions updates: `7494b135`, `b0645502`.
+
+All 52 rows remain RETURN; zero cells accepted. Retrospective comparison authorization is recorded; independent review and publication remain pending.
+
+Hash verified before inspection and both commits. Checks passed; latest smoke: 1,696 passed, 4 skipped, 54.0s within budget. Working tree clean; coordinator remains paused.
