@@ -1,0 +1,253 @@
+# WI-623 amendment rework judgment
+
+Turn: WI-623-c492da3dd0e6247610bf0af116305e989d1d17f7
+Base: c492da3dd0e6247610bf0af116305e989d1d17f7
+Inspected checkout: aa42ddd1375f67b298883b1b032ddf19f72b4f8c
+Proposal: ef6086929ee50393352e6ed98be68d9c1f5e995b18a720c447c594c7d643298e
+Proposal spec blob: e86549cf33a95cc8f28e56317b64608bae04462b
+
+Acceptance disposition: RETURN the entire bound scope, zero accepted cells.
+This is rework of the existing adjudication. The row observations below were
+compared with the supplied original approved-snapshot-to-candidate values and
+retain their classifications. They are findings only, with no reusable partial
+or equivalent approval. The registry and snapshot bindings supplied in this
+prompt match the inspected checkout. The coordinator must bind the final
+candidate after the subsequent Approval payload commit; this record does not
+invent that future candidate or an independent reviewer endorsement.
+
+## Row findings
+
+- [CLARITY] LLR-058 Title -> derive the dependency-ready frontier -> derive that same frontier with the title confined to it -> Detail already assigns ordering elsewhere; the new title removes misleading duplication.
+- [MEANING] LLR-061 Detail -> explicit worker assignment and committed result evidence -> exactly one assigned row, no empty/multi-item launch or semicolon input, with completion requiring both a committed WI trailer and removal from active -> adds cardinality, prompt content and a conjunctive completion condition; judge with TC-061.
+- [MEANING] LLR-123 Detail/Rationale/Title -> order traincars by their first WI -> order individual WIs by their own id -> changes the ordered unit while retaining the precedence keys.
+- [MEANING] LLR-140 Detail -> adjudication-lane review and terminal-first branch lookup -> queued primary turn, durable pending precedence and verified publication completion under the held station lock -> changes adjudication execution and completion authority while preserving ordinary integration.
+- [MEANING] LLR-144 Detail -> move each claimed spec and restore all created reports on refusal -> refuse non-singleton claims before mutation and close one spec with report and claim/terminal rollback -> removes executable multi-spec close and adds a precondition.
+- [MEANING] LLR-149 Detail -> admit all spine rows in one exclusive batch -> admit the first ordered spine WI alone, with remaining rows queued and delegated approvals singly exclusive -> changes cardinality and approval-table behavior; human holds remain binding.
+- [MEANING] LLR-150 Detail -> lane subprocess mechanics over assigned specs -> the assigned single spec and premutation/prelaunch refusal of empty or multi-WI parked resumes -> adds a resume-boundary constraint.
+- [MEANING] LLR-151 Detail/Rationale/Title -> batch-aware claim commit moving all grouped specs -> exactly one moved spec with cardinality refusal and historical multi-WI records readable but not executable -> trades one grouped window for successive exclusive windows.
+- [MEANING] LLR-152 Detail -> lane-refresh no-bar classification and strictest batch bar -> branchless primary projection with scoped no-bar evidence and a single turn's declared bar -> changes the checked object and effect boundary.
+- [MEANING] LLR-153 Detail -> post-merge intake and draft allocation -> reviewed stage-only primary transaction, exact close, scoped acceptance, whole-file ledger, successors and atomic publication/replay -> adds transaction and acceptance obligations; existing high-water allocation remains required.
+- [MEANING] LLR-154 Detail -> post-merge in-slot intake and refresh directives -> the held slot also owns primary admission through judgment, review, projection and commit, with durable pending exclusion -> extends lock lifetime and protected writers.
+- [MEANING] LLR-158 Detail -> refuse lane approval acts over the declared spine universe -> refuse every WI branch's snapshots and approval-ledger changes, including amendment-only changes, with a held-primary positive writer -> extends the forbidden effects and binds acceptance to exact scope and absorption.
+- [MEANING] LLR-161 Detail -> restore every report in a multi-spec partial close -> restore the single created report and preserve claim/terminal state -> changes supported close cardinality and states additional rollback effects.
+- [MEANING] LLR-167 Detail -> routed claimed-worker brief with fallback on assembly refusal and two unrouted briefs -> one bound primary-brief validity contract, held failed assembly, distinct blank generic route, all shipped briefs routed and conflict retired -> changes route, refusal and evidence obligations while retaining strict filling and live derivation.
+- [MEANING] LLR-183 Detail -> row Hat-Refs provenance with per-decomposition coverage explicitly undischarged -> row provenance retained while roster questions and sitting outcomes discharge that coverage -> changes the coverage instrument and the claimed discharge.
+- [MEANING] LLR-207 Detail -> refresh and mechanical adjudication close are disposable to the read-only walk -> refresh-only disposal plus exact reconstructed primary carrier mapping with cold read-only verification -> changes which commits can carry a governing judgment; construction and exclusion belong to LLR-153 and LLR-154.
+- [CLARITY] SR-024 Rationale -> generated dimensional coverage with separate negative-test obligations -> the same coverage and separation without the Hat-derived prefix -> removes a provenance label without changing the builder's task.
+- [CLARITY] SR-033 Rationale -> generated warn-budget checklist as this project's response to a charter question -> the same response and explicit limit on the charter's demand -> removes a label, preserving the obligation and its justification.
+- [CLARITY] SR-043 Rationale -> supervised spawn gate with deliberate fail-open errors and human-held override -> the same supervision, failure direction and override -> deleted Hat-derived wording does not change gate behavior.
+- [CLARITY] SR-052 Rationale -> accessibility thresholds through the child chain and the always-applicable charter -> the same thresholds, chain and applicability -> the provenance prefix is removed without changing the bar.
+- [CLARITY] SR-053 Rationale -> cross-view coherence supported by the charter rather than an express need -> the same coherence, child-chain verification and deriving-lens reservation -> retains the distinction that prevents invented stakeholder authority.
+- [CLARITY] SR-054 Rationale -> task usability with mechanical clauses and a recorded perceptual residue -> the same verification split and designer/engineer questions -> only the introductory provenance label changes.
+- [CLARITY] SR-111 Rationale -> record scaffold origin to identify the upstream version and compute a resync diff -> the same origin record and purpose without the additional charter citation -> no new origin or resync behavior is required.
+- [CLARITY] SR-112 Rationale -> generate fan-out skill copies, identify them as generated and report drift -> the same generated marking and drift behavior without the extra charter citation -> the operative generated-marking rationale remains explicit.
+- [CLARITY] SR-129 Rationale -> prove the work-registry conversion cell-exactly and retain the single writer -> the same conversion proof and writer -> removes the Hat-derived prefix, not representation-integrity obligations.
+- [MEANING] SR-144 Requirement/AcceptanceCriteria -> terminal partial close including multi-spec restoration -> reject any claim other than one WI before changing state and preserve single-close rollback -> excludes previously supported multi-spec operation.
+- [CLARITY] SR-146 Rationale -> reviewable prompt prose with session digest and declared inclusion rule -> the same inspectable egress discipline -> removes the provenance label while retaining C-SEC-5 and its reasoning.
+- [CLARITY] SR-147 Rationale -> one structured carrier whose converter proves cell preservation before authority flips -> the same carrier and proof -> removes a label without relaxing migration evidence.
+- [MEANING] SR-148 Requirement/AcceptanceCriteria/Rationale -> deterministic tracked-state selection by the declared precedence -> exactly one work item per admission, including exclusive spine work -> adds cardinality; separate ordinary lanes may still run concurrently.
+- [CLARITY] SR-149 Rationale -> enforce vocabulary conversion while preserving immutable history and attestations -> the same enforcement and carve-outs -> the deleted Hat-derived prefix changes no allowed rewrite.
+- [MEANING] SR-156 Requirement/AcceptanceCriteria -> bounded isolated lanes and serial integration -> exactly one WI per executable lane and zero-effect rejection of empty/multi-item claim, assignment and resume inputs -> adds execution limits while preserving historical evidence readability.
+- [MEANING] SR-161 Requirement/AcceptanceCriteria/Rationale/Verification -> machine-readable per-decomposition perspective record with missing coverage reported -> applicable questions in the brief and each outcome in the sitting's review record, inspected -> replaces the required artifact and verification instrument.
+- [CLARITY] SR-162 Rationale -> interface correspondence is a review obligation not mechanized by this row, with a claim no SR yet states it -> retain the same review obligation without the obsolete absence claim -> changes the account of coverage, not the correspondence duty.
+- [CLARITY] SR-167 Rationale -> hard perf-verdict obligation with stated opt-in scope and separately owed trace repointing -> the same verdict, scope and debt -> removing Hat-derived wording does not discharge the separate approval act.
+- [CLARITY] SR-175 Rationale -> provider content rule derived beyond SN-026, with undeveloped controls and a runner pull-channel limit -> the same derived boundary rule, debt and limit in plain language -> the derivation remains explicit; no sandbox or completed implementation is implied.
+- [CLARITY] SR-176 Rationale -> keep matched values out of durable findings with a stated PII redaction gap -> the same duty, deliberate charter narrowing and build gap -> removes a provenance prefix without extending existing credential coverage to PII.
+- [CLARITY] SR-177 Rationale -> make throughput observable rather than promise an uncontrolled numeric improvement -> the same instrument and undecomposed aggregation gap -> removes the prefix while retaining the narrowing and limits.
+- [MEANING] TC-058 Method -> compare deterministic traincar order across scheduling surfaces -> compare individual work-item order -> changes the unit whose ordering the fixture must demonstrate.
+- [MEANING] TC-061 Method -> concurrent explicit assignments and isolated evidence -> concurrent singleton assignments plus prelaunch cardinality refusal and truthful assigned-row prompt -> adds assertions; LLR-061's trailer-AND-spec-removal predicate remains the exact completion oracle.
+- [MEANING] TC-138 Method -> partial close moves each claimed spec -> empty/multi-spec claims refuse before effects and one spec closes -> changes positive and negative construction; quarantine and rename recovery remain required.
+- [MEANING] TC-143 Method -> all spine rows admit together under the older table -> first ordered spine WI alone, subsequent turns, ordinary lanes only outside the barrier and held approvals never released -> changes expected admission and policy behavior.
+- [MEANING] TC-144 Method -> batch claims and a worker receiving both ids -> sequential exclusive singleton claims, one-id worker and invalid parked-resume refusal -> changes integration observations while retaining handback, quarantine and crash-resume duties.
+- [MEANING] TC-145 Method -> one commit claims a spine batch -> one commit claims one spine WI, other cardinalities refuse, historical batch records are not split or reclaimed -> replaces batch success with executable-cardinality refusal.
+- [MEANING] TC-146 Method -> adjudication-lane refresh with no bar and mixed-batch fallback -> branchless primary exclusion, pending precedence, verified completion and scoped projection receipt -> changes the required evidence path; malformed bar values still refuse.
+- [MEANING] TC-147 Method/Evidence -> adjudication drafts mint at lane merge -> exact reviewed approval/close/successor projection and atomic primary publication, zero-effect invalid input and explicit RETURN recovery -> adds transaction, complete absorption and replay proofs.
+- [MEANING] TC-148 Method/Evidence -> post-merge intake and dispatcher continuation -> also test branchless held-slot exclusion at admission, verdict, review and pre-commit plus projection directives -> adds writer-lifetime verification; verdict/judgment names the same callback boundary.
+- [MEANING] TC-153 Method -> normative drift comparator cases -> also reject WI-branch approval effects and test all snapshot registries with accepted, unjudged, returned, stale, extra-cell and Drafted-rider cases -> adds approval-scope and whole-file verification.
+- [MEANING] TC-154 Method -> adjudication precedes a spine batch -> adjudication precedes a spine WI -> changes the competing assignment unit while retaining stable partition and human holds.
+- [MEANING] TC-156 Method -> real partial-close validity, duplicate refusal and report-key dedup -> additionally inject refusal after one report and assert report/claim/terminal restoration -> adds a rollback test obligation.
+- [MEANING] TC-161 Method/Tier -> routed worker fixtures, fallback and two unrouted briefs at Smoke -> bound primary routes, HELD failures, all shipped routing, IF-075 attribution and committed-candidate correspondence at Full -> changes both verification behavior and tier; missing-anchor refusal remains required.
+- [MEANING] TC-178 Expected -> claim the acceptance folded into LLR-183 and parent SR-161 -> limit this case to Hat-Refs mechanics and send perspective-review acceptance to TC-211 -> narrows this test's claimed discharge and adds a separate acceptance dependency.
+- [MEANING] TC-205 Method/Level/Evidence/Verifies -> mechanical-close disposal alongside refresh with historical dial cases -> Integration-level exact primary-carrier recognition, concrete refusal classes and actual pending-primary dial/scheduler/shared-input proofs -> replaces the carrier and expands verified behavior; Full remains required and IF-180 remains separately Drafted.
+
+VERDICT: MEANING rows=52
+
+## Rework findings and dispositions
+
+R1 — RETURN every scoped row and every cell in its supplied decision map.
+Complete independent per-use and whole-file absorption judgments remain
+UNJUDGED. The prior record reports reading the supplied before/after row values and absorption census,
+WI-620 README/PROOFS, WI-612 README/OBLIGATIONS and PC-BATCH-USES. In this
+rework I reread the amendment before/after values, those source packets and
+PC-BATCH-USES, the prior judgment and both review findings. The impact census is available as exact ID/path/blob evidence in the
+delivered prompt; its full population has not received semantic review here.
+Parsing that inventory establishes neither use acceptance nor whole-file
+absorption. Generated surfaces, downstream chains, historical approval uses,
+implementation and test uses not independently settled remain UNJUDGED, not
+absent or unreadable. No impact or absorption ledger is accepted. Preserve the
+complete-scope continuation, its original Context, all prerequisites and owners.
+No corrective registry authoring is ordered merely because review is incomplete.
+
+R2 — The owner has now explicitly authorized completion of WI-623 and the
+retrospective comparison requested by REVIEW-A rounds 19 and 21. The complete
+assigned prompt carries that authority. This resolves the missing authorization
+for a retrospective comparison, not the independently owed endorsement. Both
+rounds remain CHANGES-REQUESTED records; neither is rewritten or counted green.
+
+Use the same pending turn, base and proposal named above. The next REVIEW-A
+must receive the exact base-to-final-HEAD comparison through its session-local
+prompt override, including this judgment and the final queued spec's Approval
+and Dispositions. The comparison command is:
+
+```sh
+git diff c492da3dd0e6247610bf0af116305e989d1d17f7 HEAD -- .
+```
+
+Resolve and record HEAD to its full commit at review launch. This is the
+explicitly authorized retrospective range, not `contract_split...HEAD` and not
+an exclusion-filtered range that hides the judgment. I inspected its current
+stat: it includes the queued spec, actual judgment/review artifacts, selection
+record and coordinator records; it is nonempty. That observation confirms
+review input exists, not that its contents are independently endorsed. Registry
+source and snapshot blobs remain the supplied binding: their cumulative semantic
+comparison is still the immutable before/after evidence, not a source change in
+this retrospective bookkeeping range.
+
+The coordinator must deliver that override and obtain actual ordinary independent
+review after the Approval payload commit, with the final candidate and real
+session provenance. No independent reviewer is impersonated by this adjudication.
+Publication remains held until those steps succeed. If the next review input or
+carrier is malformed or inconsistent, retain REWORK under this same pending turn.
+Do not change the route, selected source candidate or turn to clear a refusal.
+No product defect or new registry amendment follows from the two empty-diff
+findings. R1, the zero-effect RETURN, and its complete-scope continuation remain
+unchanged. The coordinator stays paused; this authorization permits no control
+window, batch-code/test deletion, push or main merge.
+
+The prior specific proof observations and their reservations remain unaffected.
+The corrected IF-090 intake / IF-091 amendment-reader attribution appears in
+OBLIGATIONS and does not widen either seam or approve its status. The supplied
+TC-205 Evidence no longer cites the absent two-row mechanical-close test; no
+execution or success is claimed for that historical function.
+
+I independently inspected primary_publication._subject, publish and
+_verified_candidate, plus the first-approval carrier mutation and unwritable
+status fixtures. Writer and verifier share the canonical subject. The isolated
+forged-subject case preserves the real tree, candidate, receipt and author;
+the other variants preserve a canonical subject to reach their later checks.
+Extra/missing paths, cross-WI close, malformed successor, partial snapshot and
+changed completed decision are concrete carrier mutations rejected through
+exact reconstructed-tree equality, not separate construction-admission tests.
+The construction-to-recognition coverage argument remains the shared replay
+path and is explicitly an inference; it does not mean each TC-147 test directly
+queries a carrier.
+
+The cold return fixtures clear cached proof and compare primary bytes including
+index, dirty worktree sentinels, objects, refs and FETCH_HEAD. The required-bar
+fixture uses deterministic small scripts and an observable tree-writing check;
+it does not establish arbitrary-script sandboxing, filesystem metadata invariance
+or a production full-suite replay. The unwritable-status fixture observes the
+actual returned writer diagnostic during query and compares primary bytes, so
+an earlier subject refusal or later missing receipt cannot stand in for that
+path. The recorded SystemExit repair retains the helper's refusal contract;
+no additional catch, parser expansion or optimization is ordered here.
+
+Uncached reconstruction cost, signature inspection, process-loss versus
+power-loss, explicit pre-commit residue reconciliation and fixture versus real
+reviewer provenance retain the limits recorded in the source packet and previous
+judgment. No previous test result is presented as this session's execution.
+
+## Counterparts, stage and retirement reservations
+
+SR-026 retains headless assignment and committed-evidence reconciliation.
+LLR-061 and TC-061 must be accepted together against both false arms and the true
+arm of committed-WI-trailer AND active-spec-removal completion, including prompt
+truth. The singleton changes are intended contract/test obligations ahead of the
+implementation cuts; existing batch implementation is not a reason to pretend
+those future singleton behaviors already pass, or to delete them in this turn.
+
+SR-174 retains allocation at most once, deletion non-reuse and high-water
+allocation. LLR-153 owns transaction construction, LLR-154 writer exclusion and
+LLR-207 recognition. These boundaries remain coherent; no substitute requirement
+IDs are needed. SR-178 retains normative drift independent of Status, including
+needs. LLR-159 retains stable partition, human holds and the existing census
+contract. IF-075 permits an empty reattestation model; IF-124 retains missing-anchor
+refusal. The unchanged parent approvals are not reopened by this RETURN, and any
+changed child/counterpart needs its own authority.
+
+LLR-167 remains one brief-validity contract with separate verification purposes:
+selection and proposal binding, strict filling, failed versus blank assembly,
+route bindings and all shipped routing, ordinary-worker separation, report/census/
+cluster freshness and committed-output correspondence. TC-161's corrected
+all-routed/IF-075/Full wording is cumulative source already present, not missing
+new authoring. Full proof acceptance remains subject to the unresolved uses.
+
+IF-175 now states refresh-only disposal, exact carrier mapping, raw pre-publication
+readers and distinct read-only/reset traversal. IF-175 and IF-180 remain Drafted;
+IF-180's first approval belongs to WI-618 and IF-175 keeps its existing owner.
+LLR-210, SR-183 through SR-186 and TC-208 through TC-211 remain Drafted riders,
+with their separate owners including WI-606 unchanged. The absorption inventory
+was inspected as an inventory; those complete rider contents have not received
+an absorption judgment here. WI-601/WI-603/WI-605 remain restructured history,
+not accepted or complete. WI-623 holds the transferred cumulative amendment scope.
+
+Every PC-BATCH-USES proposal remains an obligation for the complete reanchor and
+later implementation review. Preserve immutable reports and rollback; quarantine
+and rename recovery; deterministic first-WI admission; sequential exclusive turns;
+held/delegated approval distinctions; ordinary parallelism; prelaunch/premutation
+refusal; truthful completion and collision-safe evidence. Historical multi-WI
+claims remain readable. File batches and review train names are distinct from
+executable multi-WI assignments. Preserve concurrency-v2's ruled history and the
+required dated supersession pointer after acceptance, including the grouping,
+old authority and program-cost passages. Migration readers and fixtures await
+the separate supported-upgrade-window ruling. No test deletion is licensed by a
+term hit, an absent old citation, this classification or a source APPROVE.
+
+## Record and continuation boundary
+
+WI-623 remains the owner of the entire transferred amendment scope under OI-88.
+Keep the existing typed complete-scope continuation and all original Context.
+Its reanchor independently settles every meaning-changing use and whole-file
+changed cell; any newly established corrective source/test work receives its
+own authority before selection. The authorized retrospective input must be delivered and independently reviewed
+within this pending turn before the publisher can consume even a truthful
+zero-effect RETURN. It does not grant authority to mint a substitute WI or
+publisher, close the spec manually, or start another control window.
+
+The all-return Approval payload carries every supplied cell-to-blob map and
+binds this verdict's immutable commit; it omits impact and absorption tables.
+Only the existing primary publisher can perform a terminal move and successor
+allocation after actual independent review and final candidate validation.
+The coordinator remains paused. Registry cells, Status, snapshots, batch code
+and tests remain unchanged. No push or main merge is authorized.
+
+Prompt integrity: the complete delivered UTF-8 prompt's SHA-256 is
+34222f4c32c60e6ecbdc846d219b7913e0173cc3d98f6c4e5fc717008f5b6143,
+verified before inspection and required again before each commit. Instruction
+sections were read through EOF. The embedded Approval maps were parsed and
+compared with the derived row/cell/blob evidence; the queued spec matches its
+supplied copy. These are identity checks, not semantic impact acceptance.
+The full impact population remains UNJUDGED. No authoring-session testimony was
+used to infer intent. No byte-budgeted document is edited and no new owner
+permission is requested. This verdict is the session record home.
+
+## Validation
+
+On the inspected checkout plus this verdict, `.venv/bin/python
+scripts/check_smoke_budget.py --mode enforce` executed the declared
+`python -m pytest -q -n auto -m smoke` command and reported:
+
+```text
+1696 passed, 4 skipped in 53.22s
+smoke wall-clock budget: 53.4s vs 90s budget -> within
+```
+
+`check_docs.py --root . --stale` exited zero: `1568 doc(s), 2524 intra-repo
+link(s), 0 broken (1 orphan warning(s))`, with stale-link hints.
+`check_trajectory.py --root . --strict` exited zero with existing warnings,
+including the expected queued-WI/result-trailer reconciliation warning: that
+trailer does not authorize a manual close. The verdict rollup was checked
+through its owning generator. No registry, snapshot or product change is made;
+no new regression test or Full-suite result is claimed by this record-only
+rework. The independent review and complete semantic acceptance remain owed.
+Previous round results remain historical, not this session's test executions.
