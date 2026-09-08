@@ -1,0 +1,58 @@
+# agent session log — written by scripts/agent_common.py
+# session: 025
+# date: 2026-09-07 20:20
+# train: contract_split
+# base: c492da3dd0e6
+# phase: REVIEW-A
+# primary-turn:
+# judgment:
+# candidate:
+# wi: WI-623
+# model: gpt-6-astra
+# guardrails:
+# outcome: COMMITTED
+# commits: b954b8f4..b86d1cfd
+# tokens:
+# cost-usd:
+# wall-secs: 334
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 2851
+# prompt-template: override:REVIEW-A
+# prompt-sha: sha256:630e5783a0cb
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# invocation-id: 70057e256b8d410d8c7ce4c0f06976d4
+# attempt-id: contract_split@c492da3dd0e6247610bf0af116305e989d1d17f7
+# source-event:
+# role: REVIEW-A
+# provider: OPENAI
+# requested-model: gpt-6-astra
+# reported-model:
+# tier: strong
+# roster-row: OPENAI-ASTRA
+# started-at: 2026-09-08T01:14:55Z
+# ended-at: 2026-09-08T01:20:29Z
+# input-tokens:
+# output-tokens:
+# reasoning-tokens:
+# raw-usage:
+# usage-scope: unknown
+# usage-source: unknown
+# usage-status: unavailable
+# ---
+Committed only the [verdict](/Users/diytechy/Documents/ai-template/docs/reviews/contract_split/025-REVIEW-A-8f6397d.md) as `b86d1cfd`.
+
+**CHANGES-REQUESTED — 2 findings:** missing bound ADJUDICATE session provenance blocks publication; the judgment also misstates changed-cell coverage.
+
+Both instruments passed; 60 targeted tests passed. Coordinator remains paused.
