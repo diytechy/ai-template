@@ -1,0 +1,56 @@
+# agent session log — written by scripts/agent_common.py
+# session: 021
+# date: 2026-09-07 18:23
+# train: contract_split
+# base: c492da3dd0e6
+# phase: REVIEW-A
+# primary-turn:
+# judgment:
+# candidate:
+# wi: WI-623
+# model: gpt-6-astra
+# guardrails:
+# outcome: COMMITTED
+# commits: af5dec26..1261b129
+# tokens:
+# cost-usd:
+# wall-secs: 262
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 5890
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:39086c6509e1
+# timeout:
+# heterogeneity: relaxed
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# invocation-id: 8336c22972e64ebabcd2fe04aa499f52
+# attempt-id: contract_split@c492da3dd0e6247610bf0af116305e989d1d17f7
+# source-event:
+# role: REVIEW-A
+# provider: OPENAI
+# requested-model: gpt-6-astra
+# reported-model:
+# tier: strong
+# roster-row: OPENAI-ASTRA
+# started-at: 2026-09-07T23:19:13Z
+# ended-at: 2026-09-07T23:23:35Z
+# input-tokens:
+# output-tokens:
+# reasoning-tokens:
+# raw-usage:
+# usage-scope: unknown
+# usage-source: unknown
+# usage-status: unavailable
+# ---
+Committed verdict as `1261b129`: **CHANGES-REQUESTED**, one blocker—the required diff is empty, preventing independent review.
+
+Harness passed. The commit hook was bypassed for the verdict-only commit after generated-rollup freshness failed; this limitation is recorded in the verdict.

@@ -1,0 +1,56 @@
+# agent session log — written by scripts/agent_common.py
+# session: 019
+# date: 2026-09-07 18:04
+# train: contract_split
+# base: c492da3dd0e6
+# phase: REVIEW-A
+# primary-turn:
+# judgment:
+# candidate:
+# wi: WI-623
+# model: gpt-6-astra
+# guardrails:
+# outcome: COMMITTED
+# commits: b8eb6ef5..38db0e27
+# tokens:
+# cost-usd:
+# wall-secs: 149
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 5890
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:deed5943cba7
+# timeout:
+# heterogeneity: relaxed
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# invocation-id: 74d4d85b51e34a9bb5a9a6fc6f9b91ae
+# attempt-id: contract_split@c492da3dd0e6247610bf0af116305e989d1d17f7
+# source-event:
+# role: REVIEW-A
+# provider: OPENAI
+# requested-model: gpt-6-astra
+# reported-model:
+# tier: strong
+# roster-row: OPENAI-ASTRA
+# started-at: 2026-09-07T23:02:28Z
+# ended-at: 2026-09-07T23:04:58Z
+# input-tokens:
+# output-tokens:
+# reasoning-tokens:
+# raw-usage:
+# usage-scope: unknown
+# usage-source: unknown
+# usage-status: unavailable
+# ---
+Committed verdict as `38db0e27`: **CHANGES-REQUESTED**, one blocker.
+
+The prescribed diff was empty because HEAD equaled `contract_split`; candidate-specific review was therefore unavailable. Both requested harness runs passed. The verdict-only commit bypassed the stale generated-rollup hook.
