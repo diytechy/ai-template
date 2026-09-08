@@ -1,0 +1,61 @@
+# agent session log — written by scripts/agent_common.py
+# session: 031
+# date: 2026-09-07 21:16
+# train: contract_split
+# base: c492da3dd0e6
+# phase: REVIEW-A
+# primary-turn:
+# judgment:
+# candidate:
+# wi: WI-623
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: ca5b30b0..3822584e
+# tokens:
+# cost-usd:
+# wall-secs: 762
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 2851
+# prompt-template: override:REVIEW-A
+# prompt-sha: sha256:5d552ba36ad3
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# invocation-id: 963aa289691a44d09f9695d92678b17a
+# attempt-id: contract_split@c492da3dd0e6247610bf0af116305e989d1d17f7
+# source-event:
+# role: REVIEW-A
+# provider: OPENAI
+# requested-model: gpt-5.6-sol
+# reported-model:
+# tier: medium
+# roster-row: OPENAI-SOL
+# started-at: 2026-09-08T02:03:27Z
+# ended-at: 2026-09-08T02:16:09Z
+# input-tokens:
+# output-tokens:
+# reasoning-tokens:
+# raw-usage:
+# usage-scope: unknown
+# usage-source: unknown
+# usage-status: unavailable
+# ---
+APPROVE — zero findings.
+
+Committed only [031-REVIEW-A-ca5b30b.md](/Users/diytechy/Documents/ai-template/docs/reviews/contract_split/031-REVIEW-A-ca5b30b.md) as `3822584e`.
+
+- `check.py --jobs 0`: `RESULT: PASS` — 1696 passed, 4 skipped; 54.6s.
+- `trace.py --strict-integrity`: `orphans=0 integrity=0`.
+- Disposable publication projection confirmed zero registry Status/snapshot effects.
+- Coordinator remains paused; Deliverable and mechanical close remain coordinator-owned.

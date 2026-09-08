@@ -18,3 +18,4 @@ identity). This is the human's reading of the same evidence.
 | 21 | REVIEW-A | `d055da9` | CHANGES-REQUESTED | 1 | `021-REVIEW-A-d055da9-relaxed.md` |
 | 23 | REVIEW-A | `b064550` | APPROVE | 1 | `023-REVIEW-A-b064550.md` |
 | 25 | REVIEW-A | `8f6397d` | CHANGES-REQUESTED | 2 | `025-REVIEW-A-8f6397d.md` |
+| 31 | REVIEW-A | `ca5b30b` | APPROVE | 0 | `031-REVIEW-A-ca5b30b.md` |
