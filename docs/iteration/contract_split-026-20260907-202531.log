@@ -1,0 +1,454 @@
+# agent session log — written by scripts/agent_common.py
+# session: 026
+# date: 2026-09-07 20:33
+# train: contract_split
+# base: c492da3dd0e6
+# phase: ADJUDICATE
+# primary-turn: WI-623-c492da3dd0e6247610bf0af116305e989d1d17f7
+# judgment: docs/reviews/contract_split/026-ADJUDICATE-9dabd29.md
+# candidate: 9dabd29a453002050b5ef7ec1214e488ab5f135b
+# wi: WI-623
+# model: gpt-6-astra
+# guardrails:
+# outcome: ERROR
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs: 227
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 1401960
+# prompt-template: kit:ADJUDICATE
+# prompt-sha: sha256:3705bcc02f83
+# timeout:
+# heterogeneity:
+# exit-code: 1
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# invocation-id: b09307ac7c0b4ec6b301dd1eeb379189
+# attempt-id: contract_split@c492da3dd0e6247610bf0af116305e989d1d17f7
+# source-event:
+# role: ADJUDICATE
+# provider: OPENAI
+# requested-model: gpt-6-astra
+# reported-model:
+# tier: strong
+# roster-row: OPENAI-ASTRA
+# started-at: 2026-09-08T01:29:14Z
+# ended-at: 2026-09-08T01:33:02Z
+# input-tokens:
+# output-tokens:
+# reasoning-tokens:
+# raw-usage:
+# usage-scope: unknown
+# usage-source: unknown
+# usage-status: unavailable
+# ---
+PROMPT-DELIVERY {"transport": "content-addressed-file", "complete_prompt": "/Users/diytechy/Documents/ai-template/out/run-logs/wi-623/prompt-files/3705bcc02f83a5eede274b91040f20c0437107e940775eb2aa8ed9264c83c767.txt", "sha256": "3705bcc02f83a5eede274b91040f20c0437107e940775eb2aa8ed9264c83c767", "bytes": 1403482, "characters": 1401960, "real_cli": "/Users/diytechy/.local/node/bin/codex", "argv": ["exec", "-c", "model_reasoning_effort=medium", "--model", "gpt-6-astra", "--dangerously-bypass-approvals-and-sandbox", "--output-last-message", "/var/folders/4t/pl51qcfd6ws5dh9rh120ndgc0000gp/T/codex-lastmsg-b_wtir6a.txt"], "model_request": "The complete assigned prompt is in the local UTF-8 file /Users/diytechy/Documents/ai-template/out/run-logs/wi-623/prompt-files/3705bcc02f83a5eede274b91040f20c0437107e940775eb2aa8ed9264c83c767.txt. Its SHA-256 is 3705bcc02f83a5eede274b91040f20c0437107e940775eb2aa8ed9264c83c767. Before inspection, calculate and verify that full-file hash. If inaccessible or mismatched, refuse approval and report the integrity failure. Verify the hash again before committing. This is file delivery of the full prompt, not a summary or reduced scope. Read and follow its complete instructions using file tools, then inspect evidence as those instructions require. Continue reading sequential sections until all instructions are available; not-yet-read does not mean unreadable. The full task governs what to do with unjudged evidence, including any truthful zero-effect RETURN/REWORK; this transport adds no completion or refusal protocol. Read in bounded sections to avoid tool-output truncation. Do not treat a hash or inventory as semantic review. This delivery request adds no approval authority and does not change the task, candidate, route, or required checks.\n"}
+Reading prompt from stdin...
+OpenAI Codex v0.153.4
+--------
+workdir: /Users/diytechy/Documents/ai-template
+model: gpt-6-astra
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 01a07ea2-38b8-7f61-b533-4646f4d497e6
+--------
+user
+The complete assigned prompt is in the local UTF-8 file /Users/diytechy/Documents/ai-template/out/run-logs/wi-623/prompt-files/3705bcc02f83a5eede274b91040f20c0437107e940775eb2aa8ed9264c83c767.txt. Its SHA-256 is 3705bcc02f83a5eede274b91040f20c0437107e940775eb2aa8ed9264c83c767. Before inspection, calculate and verify that full-file hash. If inaccessible or mismatched, refuse approval and report the integrity failure. Verify the hash again before committing. This is file delivery of the full prompt, not a summary or reduced scope. Read and follow its complete instructions using file tools, then inspect evidence as those instructions require. Continue reading sequential sections until all instructions are available; not-yet-read does not mean unreadable. The full task governs what to do with unjudged evidence, including any truthful zero-effect RETURN/REWORK; this transport adds no completion or refusal protocol. Read in bounded sections to avoid tool-output truncation. Do not treat a hash or inventory as semantic review. This delivery request adds no approval authority and does not change the task, candidate, route, or required checks.
+
+codex
+I’ll verify the prompt file’s SHA-256 before reading it, then read the full instructions in bounded sections.
+
+exec
+/bin/zsh -lc 'shasum -a 256 /Users/diytechy/Documents/ai-template/out/run-logs/wi-623/prompt-files/3705bcc02f83a5eede274b91040f20c0437107e940775eb2aa8ed9264c83c767.txt' in /Users/diytechy/Documents/ai-template
+ succeeded in 0ms:
+3705bcc02f83a5eede274b91040f20c0437107e940775eb2aa8ed9264c83c767  /Users/diytechy/Documents/ai-template/out/run-logs/wi-623/prompt-files/3705bcc02f83a5eede274b91040f20c0437107e940775eb2aa8ed9264c83c767.txt
+
+exec
+/bin/zsh -lc 'wc -l -c out/run-logs/wi-623/prompt-files/3705bcc02f83a5eede274b91040f20c0437107e940775eb2aa8ed9264c83c767.txt CLAUDE.md' in /Users/diytechy/Documents/ai-template
+ succeeded in 0ms:
+    8378 1403482 out/run-logs/wi-623/prompt-files/3705bcc02f83a5eede274b91040f20c0437107e940775eb2aa8ed9264c83c767.txt
+     134    8009 CLAUDE.md
+    8512 1411491 total
+
+exec
+/bin/zsh -lc "sed -n '1,160p' CLAUDE.md" in /Users/diytechy/Documents/ai-template
+ succeeded in 0ms:
+# CLAUDE.md — Working in this template repo
+
+This repo is a **meta-project**: its product is the reusable kit in
+[`project-trajectory/`](project-trajectory/) that *other* repos copy in to run a
+gated, requirement-traced development process. So work here improves templates
+and scripts, not a downstream application.
+
+> Looking for the agent guide that ships **to** new projects? That's
+> [`project-trajectory/AGENTS.template.md`](project-trajectory/AGENTS.template.md)
+> (scaffolds to `AGENTS.md`, with thin `CLAUDE.md`/`GEMINI.md` stubs pointing at
+> it). Don't confuse the two: this file governs editing the kit; that one governs
+> using the kit.
+
+> **`OWNER_SCRATCHPAD.md` is owner-only** — never read, cite, or act on it. It
+> holds the human owner's free-form notes; the working surfaces are
+> `docs/status.md`, the registries, and `docs/log.md`.
+
+---
+
+## What we're optimizing for
+
+The canonical purpose statement is the `PROJECT-VISION:` tag opening the root
+[README.md](README.md) — the same one-home pattern the kit ships downstream.
+In short: the kit exists to make downstream code **maintainable and
+trustworthy** — readable for humans and agents alike, deeply tested, and
+advanced only through explicit approval gates. Every change here should make
+
+[... 4604 line(s) elided — full stream in out/run-logs/ ...]
+
+    started = time.monotonic()
+    try:
+        result = runner(argv, root, timeout, **kwargs)
+    except BaseException as exc:
+        # BaseException, not Exception: a Ctrl-C in an attached sitting must
+        # leave a log with its wall-secs/ended-at filled, not blank columns.
+        metrics.update(_result_accounting({}))
+        metrics.update(
+            {
+                "ended-at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "wall-secs": int(round(time.monotonic() - started)),
+                "exit-code": "",
+                "timeout": "",
+                "usage-source": "unknown",
+                "usage-status": "unavailable",
+                "usage-scope": "unknown",
+                "error": type(exc).__name__,
+            }
+        )
+        raise
+    code, output, timed_out = result
+    metrics.update(
+        {
+            "ended-at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "wall-secs": int(round(time.monotonic() - started)),
+            "exit-code": code,
+            "timeout": timed_out
+            if isinstance(timed_out, str)
+            else "wall"
+            if timed_out
+            else "",
+        }
+    )
+    metrics.update(_result_accounting(parse_json_result(output)))
+    return result
+#!/usr/bin/env python3
+"""WI-281 — the smoke commit bar's wall-clock budget check (CI-facing).
+
+The per-commit smoke tier (docs/stack.ini [tiers] smoke) must run within the
+seconds budget declared in docs/stack.ini [smoke-budget] — a smoke test answers
+"is it basically alive?", not "re-run most of the full suite". WI-281 split the
+budget in two: the ALWAYS-ON deterministic membership ratchet
+(tests/test_smoke_budget.py) is the machine-independent floor; THIS is the
+wall-clock half. It defaults to `--mode warn` for LOCAL convenience (a budget
+breach prints a WARNING). CI uses `--mode enforce` (exit 1 on budget breach).
+A fresh run always propagates test failure, regardless of the budget mode.
+
+WHY ENFORCE, RE-ARGUED 2026-08-21 — the previous justification was seven times
+off and had never been re-measured. It read: "startup-dominated, not core-bound
+— ~7.5 s at 24 cores, ~8.1 s at 4, ~10.5 s at 2 (WI-281 rework, 2026-07-23,
+3.11.9) — so the 60 s budget keeps ~5x headroom on any real runner and a breach
+means the tier stopped being a smoke test, not runner noise." Every premise in
+that sentence is false at HEAD. RE-MEASURED, this box (24 cores, 3.11.9,
+`-n auto`, warm, three runs in one sitting): 59.59 / 59.07 / 59.98 s, against
+a 60 s budget — 0.98-1.0x, not 0.2x. The wider record agrees: of 17 smoke wall
+times in docs/log.d/2026-08-20-program-grind.md, 12 exceed 60 s (up to 142.9),
+CLAUDE.md records 54.9 / 64.0 / 55.7, and the 2026-08-21 review measured
+55.46 / 57.14 / 64.6.
+
+So the honest argument for enforcing is NOT headroom — there is none. It is
+that the tier is AT its budget: every test added to it now spends a resource
+that is already exhausted, and the breach this check reports is real
+information about that, whichever cause produced it. What must NOT be read off
+a breach any more is the diagnosis "a heavy module slipped back in": at 1.0x,
+runner contention alone can cross the line, so a breach says LOOK, not
+RE-TIER. THE BUDGET VALUE DOES NOT MOVE on this measurement — one box is one
+data point, and moving a budget to fit the machine it embarrasses is how a
+budget stops meaning anything. Whether 60 s should be enforced locally, or
+redefined as a CI target, is the owner's dial and is queued (2026-08-21 close,
+Q-3); this docstring records the measurement, not a decision.
+
+Usage:
+  # time a fresh smoke run and compare (local convenience, or a CI lane):
+  python scripts/check_smoke_budget.py [--mode warn|enforce]
+  # evaluate an already-measured elapsed time (CI times the step, feeds it here):
+  python scripts/check_smoke_budget.py --elapsed 42.5 [--mode warn|enforce]
+
+Stdlib-only, cross-platform (a meta-repo dev/CI tool, like scripts/dev-setup).
+"""
+
+import argparse
+import configparser
+import os
+import shlex
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+STACK_INI = ROOT / "docs" / "stack.ini"
+
+
+def _profile():
+    # Mirror check.py's parser: interpolation=None keeps command values literal
+    # (a `%` needs no escaping), utf-8-sig tolerates a Notepad BOM.
+    cp = configparser.ConfigParser(interpolation=None)
+    cp.read(STACK_INI, encoding="utf-8-sig")
+    return cp
+
+
+def declared_seconds(cp):
+    return float(cp["smoke-budget"]["seconds"])
+
+
+def smoke_argv(cp):
+    """The declared smoke command: [product] test + the [tiers] smoke selector,
+    with {py} bound to this interpreter — so this times exactly the bar sessions
+    run (`python -m pytest -q -n auto -m smoke`), read from the single source."""
+    test = cp.get("product", "test", fallback="{py} -m pytest -q -n auto")
+    tier = cp.get("tiers", "smoke", fallback="-m smoke")
+    argv = shlex.split(test) + shlex.split(tier)
+    return [sys.executable if tok == "{py}" else tok for tok in argv]
+
+
+def _annotate(level, message):
+    """A GitHub Actions annotation when running in CI; harmless plain text else."""
+    if os.environ.get("GITHUB_ACTIONS"):
+        print("::{}::{}".format(level, message))
+
+
+def evaluate(elapsed, budget, mode):
+    """Report the verdict and return an exit code. warn -> always 0 (a WARNING
+    line on breach); enforce -> 1 on breach."""
+    over = elapsed > budget
+    verdict = "OVER" if over else "within"
+    print(
+        "smoke wall-clock budget: {:.1f}s vs {:.0f}s budget -> {}".format(
+            elapsed, budget, verdict
+        )
+    )
+    if not over:
+        return 0
+    msg = (
+        "smoke tier took {:.1f}s, over its {:.0f}s budget (docs/stack.ini "
+        "[smoke-budget]). Re-tier a heavy module into conftest.SLOW_MODULES, or "
+        "re-stamp the budget with the reason in the log.".format(elapsed, budget)
+    )
+    if mode == "enforce":
+        _annotate("error", msg)
+        print("FAIL (enforce): " + msg, file=sys.stderr)
+        return 1
+    _annotate("warning", msg)
+    print("WARN: " + msg)
+    return 0
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description="Smoke-tier wall-clock budget check.")
+    ap.add_argument(
+        "--elapsed",
+        type=float,
+        default=None,
+        help="evaluate this already-measured wall time (seconds) instead of "
+        "running the smoke tier.",
+
+exec
+/bin/zsh -lc "sed -n '1,90p' out/run-logs/wi-623/resume-note.txt; tail -20 out/run-logs/wi-623/resume-output-3.txt; rg -n '026|ADJUDICATE' out/run-logs/wi-623/provenance-check.txt" in /Users/diytechy/Documents/ai-template
+ exited 1 in 0ms:
+Resolve the two findings in
+docs/reviews/contract_split/025-REVIEW-A-8f6397d.md under the same pending turn
+WI-623-c492da3dd0e6247610bf0af116305e989d1d17f7. This invocation must produce
+actual ADJUDICATE session provenance with the primary-turn, judgment and
+candidate bindings populated, then bind the all-RETURN Approval evidence to
+that judgment. Correct the evidence wording: every actually changed cell is
+covered by the complete supplied decision maps, and those maps also retain
+unchanged cells; do not claim the two sets are equal. Preserve all 52 maps,
+zero acceptance, the complete semantic continuation, the separately drafted
+resume-deadlock repair, and every owner/reservation. The next REVIEW-A receives
+the owner-authorized exact base-to-HEAD comparison through the session-local
+prompt override. Keep the coordinator paused; do not start a control window,
+delete batch code/tests, push, or merge main.
+intake: re-pointed queued/WI-604-adjudicate-llr-210-tc-208.md's edge(s) WI-610 -> WI-612
+intake: re-pointed queued/WI-606-adjudicate-sr-184-sr-185-sr.md's edge(s) WI-610 -> WI-612
+intake: minted WI-612 at docs/work/queued/WI-612-redistribute-publication-respo.md
+intake: re-pointed queued/WI-604-adjudicate-llr-210-tc-208.md's edge(s) WI-619 -> WI-620
+intake: re-pointed queued/WI-606-adjudicate-sr-184-sr-185-sr.md's edge(s) WI-619 -> WI-620
+intake: re-pointed queued/WI-618-review-the-first-approval-of-t.md's edge(s) WI-619 -> WI-620
+intake: minted WI-620 at docs/work/queued/WI-620-correct-counterpart-proof-mapp.md
+
+exec
+/bin/zsh -lc "ps -p 55563 -o pid=,ppid=,command=; rg -n 'subject|forged-subject|unwritable_status|scope_and_unjudged|def test_real_return_publish|def test_real_first_approval' project-trajectory/scripts/primary_publication.py tests/test_primary_publication.py tests/test_primary_approval.py" in /Users/diytechy/Documents/ai-template
+ succeeded in 0ms:
+55563 90789 /Library/Frameworks/Python.framework/Versions/3.13/Resources/Python.app/Contents/MacOS/Python out/run-logs/wi-623/run_resume.py
+project-trajectory/scripts/primary_publication.py:175:def _subject(turn):
+project-trajectory/scripts/primary_publication.py:207:            _subject(turn), TRAILER, turn["turn"], cand, tree
+project-trajectory/scripts/primary_publication.py:252:    if body.partition("\n")[0] != _subject(turn):
+tests/test_primary_publication.py:185:def test_real_return_publish_and_completion_replay(tmp_path, monkeypatch, product_bar):
+tests/test_primary_publication.py:554:        "forged-subject",
+tests/test_primary_publication.py:565:def test_real_first_approval_snapshot_and_successor_are_one_commit(
+tests/test_primary_publication.py:589:    if carrier_fault == "forged-subject":
+tests/test_primary_publication.py:590:        message = "unreviewed publication subject\n" + message.partition("\n")[2]
+tests/test_primary_publication.py:632:        carrier_fault == "forged-subject"
+tests/test_primary_publication.py:655:def test_unwritable_status_is_a_publication_and_carrier_refusal(tmp_path, monkeypatch):
+tests/test_primary_approval.py:212:def test_scope_and_unjudged_absorption_refuse(tmp_path):
+
+exec
+/bin/zsh -lc "sed -n '1,100p' docs/reviews/primary/WI-623-c492da3dd0e6247610bf0af116305e989d1d17f7/turn.toml; rg -n '"'^def registry_rows|''^def parse_approval|''^def parse_dispositions'"' project-trajectory/scripts/primary_approval.py project-trajectory/scripts/intake.py" in /Users/diytechy/Documents/ai-template
+ succeeded in 0ms:
+version = 1
+turn = "WI-623-c492da3dd0e6247610bf0af116305e989d1d17f7"
+wi = "WI-623"
+base = "c492da3dd0e6247610bf0af116305e989d1d17f7"
+primary_branch = "contract_split"
+primary_root = "/Users/diytechy/Documents/ai-template"
+spec = "docs/work/queued/WI-623-adjudicate-complete-combined.md"
+proposal_spec_blob = "e86549cf33a95cc8f28e56317b64608bae04462b"
+scope = ["LLR-058", "LLR-061", "LLR-123", "LLR-140", "LLR-144", "LLR-149", "LLR-150", "LLR-151", "LLR-152", "LLR-153", "LLR-154", "LLR-158", "LLR-161", "LLR-167", "LLR-183", "LLR-207", "SR-024", "SR-033", "SR-043", "SR-052", "SR-053", "SR-054", "SR-111", "SR-112", "SR-129", "SR-144", "SR-146", "SR-147", "SR-148", "SR-149", "SR-156", "SR-161", "SR-162", "SR-167", "SR-175", "SR-176", "SR-177", "TC-058", "TC-061", "TC-138", "TC-143", "TC-144", "TC-145", "TC-146", "TC-147", "TC-148", "TC-153", "TC-154", "TC-156", "TC-161", "TC-178", "TC-205"]
+
+[registry_blobs]
+"docs/requirements/components.toml" = "dfb9e077586659afbd4d9b2f636f891976add9e2"
+"docs/requirements/external.toml" = "179dcd21854d08b4b0e366bc96e2e3fd076522e2"
+"docs/requirements/interfaces.toml" = "859ee33324e1e0c49236d238c2557381f7ae998c"
+"docs/requirements/low-level-requirements.toml" = "84025ee1c94181d75f0c9993f862fbe7fde3ab15"
+"docs/requirements/stakeholder-needs.toml" = "abf6c3ab7dcbf6df38efaecbf2188948b4f4cb9e"
+"docs/requirements/system-requirements.toml" = "aabc4dc1cba0781d2e5ba1f2bf8b16c5c60d7e43"
+"docs/test/test-cases.toml" = "075f61a0ccfbbb014e34adab30adf953c22b1972"
+
+[approved_blobs]
+"docs/archive/last_approved/docs/requirements/components.toml" = "cf67e1134ebd7690603b407e0a0d61d4bc10b062"
+"docs/archive/last_approved/docs/requirements/external.toml" = "179dcd21854d08b4b0e366bc96e2e3fd076522e2"
+"docs/archive/last_approved/docs/requirements/interfaces.toml" = "0b060fb818b03ab5b3413787bbb2f8f059931af3"
+"docs/archive/last_approved/docs/requirements/low-level-requirements.toml" = "1ec0ab08fcea5f7dd638651e4281322bbd031705"
+"docs/archive/last_approved/docs/requirements/stakeholder-needs.toml" = "abf6c3ab7dcbf6df38efaecbf2188948b4f4cb9e"
+"docs/archive/last_approved/docs/requirements/system-requirements.toml" = "435d8ce708795a5e3f9451ff0d171824b2b3c452"
+"docs/archive/last_approved/docs/test/test-cases.toml" = "ca71cc09e6093c5c5ff299e8d077453c967140d2"
+project-trajectory/scripts/primary_approval.py:58:def parse_approval_payload(text):
+project-trajectory/scripts/primary_approval.py:169:def registry_rows(root, blob, registry):
+project-trajectory/scripts/intake.py:1221:def parse_dispositions(text, where):
+
+exec
+/bin/zsh -lc "sed -n '7978,8035p' out/run-logs/wi-623/prompt-files/3705bcc02f83a5eede274b91040f20c0437107e940775eb2aa8ed9264c83c767.txt" in /Users/diytechy/Documents/ai-template
+ succeeded in 0ms:
+--- AMENDED CELLS (before/after, per row) ---
+- SR SR-024 (chain of SR-024)
+  - Rationale
+    - before: Realizes SN-002 — dimensional coverage is generated from the SR's declared inputs, not hand-listed. Hat-derived (hat.TEST-ENGINEER): systematic expansion reduces the risk that a dimensional combination is omitted, which is the charter's coverage half. Generation does NOT answer the charter's second half: showing that an enforcer fails when it should is demonstrated by negative or planted-failure tests, and a hand-listed negative case can demonstrate it. Those negative tests remain a separate obligation, not this row's.
+    - after: Realizes SN-002 — dimensional coverage is generated from the SR's declared inputs, not hand-listed. Systematic expansion reduces the risk that a dimensional combination is omitted, which is the charter's coverage half. Generation does NOT answer the charter's second half: showing that an enforcer fails when it should is demonstrated by negative or planted-failure tests, and a hand-listed negative case can demonstrate it. Those negative tests remain a separate obligation, not this row's.
+- LLR LLR-061 (chain of SR-026)
+  - Detail
+    - before: Replaces internal --track assumptions with explicit --wi/--train/worktree assignment; assembles the worker prompt from AGENTS.md + WI row + SpecRef + predecessor context + train diff + rework finding (never the generated status surface); collision-safe per-assignment logs/review evidence naming the exact reviewed commit; the --track lane machinery is retired outright. The assignment is the branch integrate.py's claim cut, and the session tag defaults to the branch name; the prompt never includes docs/status.md; a worker branch never edits root status, another branch's claims, the root log or generated artifacts; the result channel is committed trailer evidence (WI: / Blocked-WI: + BlockRef:).
+    - after: Replaces internal --track assumptions with explicit --wi/--train/worktree assignment; assembles the worker prompt from AGENTS.md + WI row + SpecRef + predecessor context + train diff + rework finding (never the generated status surface), plus the one assigned row with its id, title, SpecRef and completion state, derived from the SAME two-part completion predicate as worker completion - a committed WI: trailer AND the spec gone from active/<branch>/. Empty or multi-item assignments refuse before a session starts; the --wi input names one WI and has no semicolon-list form; collision-safe per-assignment logs/review evidence naming the exact reviewed commit; the --track lane machinery is retired outright. The assignment is the branch integrate.py's claim cut, and the session tag defaults to the branch name; the prompt never includes docs/status.md; a worker branch never edits root status, another branch's claims, the root log or generated artifacts; the result channel is committed trailer evidence (WI: / Blocked-WI: + BlockRef:).
+- TC TC-061 (chain of SR-026)
+  - Method
+    - before: Run two concurrent workers from explicit --wi/--train/worktree assignments; assert no lane-local status/next/run-state file, non-colliding logs/review evidence naming the exact reviewed commit, no root-truth mutation, and --track refused as an unknown flag (retired).
+    - after: Run two concurrent workers from explicit single-WI --wi/--train/worktree assignments; refuse empty or multi-WI assignments before provider launch; require the assigned row's identity, SpecRef and completion state in its prompt; assert no lane-local status/next/run-state file, non-colliding logs/review evidence naming the exact reviewed commit, no root-truth mutation, and --track refused as an unknown flag (retired).
+- SR SR-033 (chain of SR-033)
+  - Rationale
+    - before: Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. Hat-derived (hat.PERFORMANCE), and no wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did.
+    - after: Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did.
+- SR SR-043 (chain of SR-043)
+  - Rationale
+    - before: Realizes SN-006 (a walk-away run stays safe — bounded, supervised fan-out with the override held by the human, not the model) and SN-012 (opt-in: absent/off is a vacuous allow, so a non-adopter pays nothing). Supervision, not security — a model that can edit files can remove the hook (adapted from stop-subagent-fanout, MIT; spec docs/archive/INTEGRATION_PLAN.md Phase 4). Hat-derived (hat.SECURITY): C-SEC-2 asks that the irreversible actions an unattended run can take be enumerated, each naming the dial or human authority that permits it — which is this row exactly, for the one action that starts further actors. A direct hit, and the reason this row is not accretion: its parentage was real and lived only in SN-006's `why` cell until the safety half moved into that need's normative text at this same pass. WHY THE FAIL-OPEN ARM IS DELIBERATE: SN-006 asks that the unattended layer keep moving and surface to the human only where it cannot proceed, so a gate that wedges every tool on its own bug is the failure this clause was written against; what an error never relaxes is the human-held override itself, which the model cannot set.
+    - after: Realizes SN-006 (a walk-away run stays safe — bounded, supervised fan-out with the override held by the human, not the model) and SN-012 (opt-in: absent/off is a vacuous allow, so a non-adopter pays nothing). Supervision, not security — a model that can edit files can remove the hook (adapted from stop-subagent-fanout, MIT; spec docs/archive/INTEGRATION_PLAN.md Phase 4). C-SEC-2 asks that the irreversible actions an unattended run can take be enumerated, each naming the dial or human authority that permits it — which is this row exactly, for the one action that starts further actors. A direct hit, and the reason this row is not accretion: its parentage was real and lived only in SN-006's `why` cell until the safety half moved into that need's normative text at this same pass. WHY THE FAIL-OPEN ARM IS DELIBERATE: SN-006 asks that the unattended layer keep moving and surface to the human only where it cannot proceed, so a gate that wedges every tool on its own bug is the failure this clause was written against; what an error never relaxes is the human-held override itself, which the model cannot set.
+- SR SR-052 (chain of SR-052)
+  - Rationale
+    - before: Realizes SN-024 and SN-023 — an accessibility bar left unstated silently reads as no bar at all, so the obligation is stated here even though its clauses were not measurable when the row was written. They since became so, one clause at a time, which is why this row's method is mechanical: the thresholds are the child rows' and the acceptance is their chain. Hat-derived (hat.ACCESSIBILITY): keyboard operability, an accessible name per element, colour never the only channel, and a readable contrast floor are the charter's own subject, and no other lens in the roster names a measurable perceptual threshold — the UX pair reaches robustness (it does not overflow), never legibility. That dependency is CLOSED: the ACCESSIBILITY charter is ruled `always`, so the lens this row derives from is put to every decomposition — and it had already reached this row once SN-023 carried the `a11y` tag, which is why the gap is narrower than the unmeasurable-clauses opening suggests.
+    - after: Realizes SN-024 and SN-023 — an accessibility bar left unstated silently reads as no bar at all, so the obligation is stated here even though its clauses were not measurable when the row was written. They since became so, one clause at a time, which is why this row's method is mechanical: the thresholds are the child rows' and the acceptance is their chain. Keyboard operability, an accessible name per element, colour never the only channel, and a readable contrast floor are the charter's own subject, and no other lens in the roster names a measurable perceptual threshold — the UX pair reaches robustness (it does not overflow), never legibility. That dependency is CLOSED: the ACCESSIBILITY charter is ruled `always`, so the lens this row derives from is put to every decomposition — and it had already reached this row once SN-023 carried the `a11y` tag, which is why the gap is narrower than the unmeasurable-clauses opening suggests.
+- SR SR-053 (chain of SR-053)
+  - Rationale
+    - before: Realizes SN-024 and SN-023 — how alike is alike enough is subjective at the margins, which is why this row states the coherence property and lets each clause of it be pinned separately rather than pinning the whole to one threshold and pinning the wrong thing. Every clause is pinned, so the method is mechanical and the acceptance is the child chain. Fan-out re-stamp: the child count is the anchor census of the uniformity bar as it was first written — five anchors, three of them leaving a mechanized residue — not a decision count; this row states one cross-view coherence property, and every child exists because an anchor was bound to a test rather than because a second contract was merged in. Hat-derived (hat.CONSISTENCY): one meaning given two treatments across tabs, emitters and states is that charter's failure class verbatim, and it is the only lens in the roster that asks it; the charter is ruled in, so this row has a deriving lens. The narrower reading survives the ruling and is the one to re-open if the charter is ever cut: no stakeholder need states cross-view coherence, so the lens — not a need — is what reaches this row.
+    - after: Realizes SN-024 and SN-023 — how alike is alike enough is subjective at the margins, which is why this row states the coherence property and lets each clause of it be pinned separately rather than pinning the whole to one threshold and pinning the wrong thing. Every clause is pinned, so the method is mechanical and the acceptance is the child chain. Fan-out re-stamp: the child count is the anchor census of the uniformity bar as it was first written — five anchors, three of them leaving a mechanized residue — not a decision count; this row states one cross-view coherence property, and every child exists because an anchor was bound to a test rather than because a second contract was merged in. One meaning given two treatments across tabs, emitters and states is that charter's failure class verbatim, and it is the only lens in the roster that asks it; the charter is ruled in, so this row has a deriving lens. The narrower reading survives the ruling and is the one to re-open if the charter is ever cut: no stakeholder need states cross-view coherence, so the lens — not a need — is what reaches this row.
+- SR SR-054 (chain of SR-054)
+  - Rationale
+    - before: Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded one-time judgement rather than on a standing re-judgement — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Hat-derived (hat.UX-DESIGNER + hat.UX-ENGINEER): findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today.
+    - after: Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded one-time judgement rather than on a standing re-judgement — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clip
+[... byte cap hit — full stream in out/run-logs/ ...]
+in the refusal. The amendment arm covers two seams: IF-124, the `last_approved` baseline read - the brief carries the snapshot as its anchor, only approved cells reach the judge, and with no snapshot the brief holds and says FIRST APPROVAL rather than fabricating an anchor; and IF-127, the lazily imported re-attestation model.
+    - after: Drive the real loop against a fake agent CLI over throwaway git repos, one per routed brief, and capture what the session was actually handed. Assert the composed brief carries each slot's real derivation (the lane's report verbatim, the closed spec, the commit facts; the live census joined to the TC row and to the obligation it covers), that no `{slot}` survives in the output, and that the typed verdict line the brief demands is written to the path the brief named and committed with the result trailer. Then drive the refusals: a declared brief with no per-close report, a report with no typed `commit_range`, and a census that has come clean each remain HELD with the reason printed and never take the blank-Brief route. Pin the discriminator: two rows with an identical SpecRef and different declared `Brief` cells compose differently. Pin every shipped brief as routed and the retired conflict brief as absent from shipped routing. The amendment arm covers two seams: IF-124, the `last_approved` baseline read - the brief carries the snapshot as its anchor, only approved cells reach the judge, and with no snapshot the brief holds and says FIRST APPROVAL rather than fabricating an anchor; and IF-075, the lazily imported re-attestation model. Run each brief through the in-process primary engine and assert its immutable turn record binds the queued WI, primary branch/root, proposal spec, live/snapshot registry blobs and exact frontmatter scope; the resulting review evidence binds the full candidate after Approval/Dispositions additions. Drive a blank-Brief adjudication and assert its generic primary judgment assignment names the bound verdict path and contains no claim, branch, model-side close or snapshot instruction; ordinary non-adjudication work still receives its worker assignment and no legacy adjudication-worker context is retained. Any changed binding stales the result, and verdict-only commits leave snapshots, Status, queue and watermark unchanged.
+  - Tier
+    - before: Smoke
+    - after: Full
+- SR SR-147 (chain of SR-147)
+  - Rationale
+    - before: THE ROW STATES ONE OBLIGATION, and the migration history - the two prior carriers and the cutover - is no part of it: normative history and a merged decision have no place at the requirement tier, and a rationale is where that account may live. The two-carrier split has no recorded rationale and costs on both sides. Reading 32 need rows takes ~166 code lines across 14 functions in 8 modules - six bespoke scanners, two of them F5 twins pinned by nothing but a docstring, which have already drifted once and rendered a phantom root in the dashboard - while reading all 436 SR+LLR+TC rows takes csv.DictReader. CSV also cannot represent the cells that actually exist: five hold a literal pipe, 552 hold commas, the longest is 1,553 characters, and an embedded newline has no representation at all. A structured carrier turns three integrity rules into properties of the parse - a duplicate id becomes a decode error, a ref list becomes a typed array (retiring the split-on-whitespace rule that read `and` as an orphan), and an empty cell becomes an absent key, so `unset` and `set to empty` stop being the same value. The converter is the migration's evidence, not its convenience: SR-129's 140-cell lesson is that an unproven representation change is exactly where a registry silently loses cells. ONE ROW because the single-carrier claim and its converter-proof are one contract — the converter is the migration's evidence — and the converter's mechanics already decompose to this row's LLR chain; splitting would separate a claim from the proof that makes it checkable. Hat-derived (hat.TEST-ENGINEER): the single-carrier claim is checkable only because the converter proves it cell-for-cell BEFORE the authority flip — the charter refuses an obligation whose enforcer has never been shown to bite, and a carrier change is precisely where a silent loss hides.
+    - after: THE ROW STATES ONE OBLIGATION, and the migration history - the two prior carriers and the cutover - is no part of it: normative history and a merged decision have no place at the requirement tier, and a rationale is where that account may live. The two-carrier split has no recorded rationale and costs on both sides. Reading 32 need rows takes ~166 code lines across 14 functions in 8 modules - six bespoke scanners, two of them F5 twins pinned by nothing but a docstring, which have already drifted once and rendered a phantom root in the dashboard - while reading all 436 SR+LLR+TC rows takes csv.DictReader. CSV also cannot represent the cells that actually exist: five hold a literal pipe, 552 hold commas, the longest is 1,553 characters, and an embedded newline has no representation at all. A structured carrier turns three integrity rules into properties of the parse - a duplicate id becomes a decode error, a ref list becomes a typed array (retiring the split-on-whitespace rule that read `and` as an orphan), and an empty cell becomes an absent key, so `unset` and `set to empty` stop being the same value. The converter is the migration's evidence, not its convenience: SR-129's 140-cell lesson is that an unproven representation change is exactly where a registry silently loses cells. ONE ROW because the single-carrier claim and its converter-proof are one contract — the converter is the migration's evidence — and the converter's mechanics already decompose to this row's LLR chain; splitting would separate a claim from the proof that makes it checkable. The single-carrier claim is checkable only because the converter proves it cell-for-cell BEFORE the authority flip — the charter refuses an obligation whose enforcer has never been shown to bite, and a carrier change is precisely where a silent loss hides.
+- SR SR-148 (chain of SR-148)
+  - AcceptanceCriteria
+    - before: A ready adjudication row admits ahead of every other class, the ruled rank table unchanged (--explain still reports it) and non-adjudication rows keeping their relative order; an unresolved handback is selected before spine or implementation work, and processing it either resolves the record or mints a provenance-linked successor exactly once; with no unresolved handback, only the earliest incomplete spine tier is eligible; implementation work is ineligible while any required test case remains unlaid; at human_approval_through = 0 no spine tier produces a human hold, each higher level holds exactly its documented cumulative tiers, and a human-held attestation still drains and surfaces with the adjudication row waiting behind the stop; every selection records the chosen class, source identifier and hold decision. Two resumes over the same tracked state select the same eligible set in the same order; an item with missing or contradictory declared inputs is excluded with a stated reason while disjoint classified work stays eligible; no prose surface participates in the derivation; the ordering and exclusion reasons are exposed for replay. A fresh scaffold ships no next-wi/run-phase pointer and is parallel-by-default; no live instruction or executable surface reads, writes, validates, generates or links such a pointer; a build-out lane's phase resolves from its branch name with no pointer file; an upgraded or resynced repository that once carried such a pointer carries neither pointer file after the migration and no live dependency on either survives, so the deletion holds for a migrated repository and not only for a fresh scaffold; the status snapshot regenerates mechanically and its freshness is gated.
+    - after: Each admission assigns exactly one work item, including exclusive spine admission; an ordinary frontier may fill several lanes through separate single-item assignments. A ready adjudication row admits ahead of every other class, the ruled rank table unchanged (--explain still reports it) and non-adjudication rows keeping their relative order; an unresolved handback is selected before spine or implementation work, and processing it either resolves the record or mints a provenance-linked successor exactly once; with no unresolved handback, only the earliest incomplete spine tier is eligible; implementation work is ineligible while any required test case remains unlaid; at human_approval_through = 0 no spine tier produces a human hold, each higher level holds exactly its documented cumulative tiers, and a human-held attestation still drains and surfaces with the adjudication row waiting behind the stop; every selection records the chosen class, source identifier and hold decision. Two resumes over the same tracked state select the same eligible set in the same order; an item with missing or contradictory declared inputs is excluded with a stated reason while disjoint classified work stays eligible; no prose surface participates in the derivation; the ordering and exclusion reasons are exposed for replay. A fresh scaffold ships no next-wi/run-phase pointer and is parallel-by-default; no live instruction or executable surface reads, writes, validates, generates or links such a pointer; a build-out lane's phase resolves from its branch name with no pointer file; an upgraded or resynced repository that once carried such a pointer carries neither pointer file after the migration and no live dependency on either survives, so the deletion holds for a migrated repository and not only for a fresh scaffold; the status snapshot regenerates mechanically and its freshness is gated.
+  - Rationale
+    - before: Without one precedence rule, the same repository can resume into implementation while returned obligations or prerequisite requirement tiers remain unresolved. That produces work against stale intent and makes repeated resumes select different next actions. A recorded selection class, source record and hold decision provide replayable evidence of the choice. ONE SR PER (need, property): the loop's work-selection invariant — what the next work derives from, in what order, and that no hand-curated pointer surface participates in it — is stated here and nowhere else, so no second row can drift from it. An explicit three-way partition was rejected: the partition already existed textually and still produced duplicated acceptance. The no-pointer obligation is stated for a migrated repository as well as a fresh scaffold, and the migrated half is the one that matters most: a fresh scaffold never had the files to keep, while an upgraded repository can retain the retired authority files and still pass. Fan-out re-stamp: this row states one decision — what an unattended run's next work derives from and in what order — and its children are the successive stages of that one selection, not separable contracts; the width is the deliberate consolidation of three rows that stated the same invariant into one, so re-splitting to satisfy the bound would restore the duplication the consolidation removed.
+    - after: Without one precedence rule, the same repository can resume into implementation while returned obligations or prerequisite requirement tiers remain unresolved. That produces work against stale intent and makes repeated resumes select different next actions. A recorded selection class, source record and hold decision provide replayable evidence of the choice. ONE SR PER (need, property): the loop's work-selection invariant — what the next work derives from, in what order, and that no hand-curated pointer surface participates in it — is stated here and nowhere else, so no second row can drift from it. An explicit three-way partition was rejected: the partition already existed textually and still produced duplicated acceptance. The no-pointer obligation is stated for a migrated repository as well as a fresh scaffold, and the migrated half is the one that matters most: a fresh scaffold never had the files to keep, while an upgraded repository can retain the retired authority files and still pass. Fan-out re-stamp: this row states one decision — what an unattended run's next work derives from and in what order — and its children are the successive stages of that one selection, not separable contracts; the width is the deliberate consolidation of three rows that stated the same invariant into one, so re-splitting to satisfy the bound would restore the duplication the consolidation removed. The uniqueness claim concerns selection precedence; the admission cardinality here and executable-claim cardinality in SR-156 constrain different boundaries of the same single-WI contract.
+  - Requirement
+    - before: The delivered loop content shall select the work an unattended run does next from the repository's tracked registries and git history alone, in this order: ready adjudication rows first, as a stable partition applied at admission rather than by renumbering the ruled rank table; then unresolved handback records; then the earliest incomplete spine tier in SN-to-SR-to-LLR-to-TC order; then implementation work after test-case layout is complete — with the eligible set and its order deterministic, an item whose declared safety, policy or plan-mode inputs are missing, undeclared or contradictory failing closed for that item alone, human holds applied only from the declared approval level, nothing admitted past a human-held stop, no prose surface and no predefined track in the derivation, no hand-curated next-work or run-phase pointer surface shipped for any live instruction or executable surface to read, write, validate, generate or link, and the status surface a session reads generated and freshness-gated rather than hand-copied.
+    - after: The delivered loop content shall select from the repository's tracked registries and git history alone exactly one work item for each assignment an unattended run admits, in this order: ready adjudication rows first, as a stable partition applied at admission rather than by renumbering the ruled rank table; then unresolved handback records; then the earliest incomplete spine tier in SN-to-SR-to-LLR-to-TC order; then implementation work after test-case layout is complete — with the eligible set and its order deterministic, an item whose declared safety, policy or plan-mode inputs are missing, undeclared or contradictory failing closed for that item alone, human holds applied only from the declared approval level, nothing admitted past a human-held stop, no prose surface and no predefined track in the derivation, no hand-curated next-work or run-phase pointer surface shipped for any live instruction or executable surface to read, write, validate, generate or link, and the status surface a session reads generated and freshness-gated rather than hand-copied.
+- LLR LLR-058 (chain of SR-148)
+  - Title
+    - before: WI-DAG frontier + deterministic traincar ordering
+    - after: WI-DAG dependency-ready frontier
+- LLR LLR-123 (chain of SR-148)
+  - Detail
+    - before: Orders eligible traincars by (gate, Priority desc, downstream-dependent count desc, hard-path desc, first WI id). The downstream-dependent count is transitive and the path length is the remaining hard-path length; the order is identical across ready --explain, ready --format json and simulate --jobs 1's serial schedule.
+
+exec
+/bin/zsh -lc "sed -n '8030,8065p' out/run-logs/wi-623/prompt-files/3705bcc02f83a5eede274b91040f20c0437107e940775eb2aa8ed9264c83c767.txt" in /Users/diytechy/Documents/ai-template
+ succeeded in 0ms:
+  - Requirement
+    - before: The delivered loop content shall close a lane that cannot finish into a TERMINAL partial state that merges like any other branch, with one immutable per-close report naming the claimed outcome, the reason, the commit range and the keep/discard split — refusing a report that declares neither a split nor an explicit deferral, and refusing a second close of the same event rather than overwriting the first.
+    - after: The delivered loop content shall close a lane that cannot finish into a TERMINAL partial state that merges like any other branch, with one immutable per-close report naming the claimed outcome, the reason, the commit range and the keep/discard split — refusing a report that declares neither a split nor an explicit deferral, and refusing a second close of the same event rather than overwriting the first and refusing a close of a lane whose claim is other than one work item.
+- LLR LLR-144 (chain of SR-144)
+  - Detail
+    - before: close_partial: commits the lane's work as-is, moves each claimed spec to the TERMINAL partial/ (nothing re-claims it, so nothing strands) and writes ONE IMMUTABLE per-close report under docs/handbacks/ naming the claimed outcome, the reason, the commit range and the keep/discard split. The report is the close EVENT's identity — immutable so it never moves, unique so a second close is a second document — which is what dissolves the starvation class a mutable dedup proxy re-opens. A second close is refused rather than overwriting the first, and any refusal restores every report the call wrote; the terminal partial/ move alone is the anti-livelock property — the spec never returns to queued/, so the driver cannot claim, hand back and re-claim the same row forever. quarantine: the red arm - reverts the product paths to the merge base and keeps the failing diff as a bar-inert .patch under docs/work/handback/, reading `git diff --name-status -z` as three-field RECORDS so a rename cannot revert the wrong path, checking every git return code, and restoring rather than reporting when a revert step fails. Both leave the branch finished, so integrate.branch_outcomes reads the outcome off the spec's DIRECTORY - complete/=merged, cancelled/=cancelled, any open folder=handback - and every lane ends in a merge.
+    - after: close_partial refuses a branch whose active directory holds other than exactly one claimed spec before writing any report or changing repository state. For a single-spec branch it commits the lane's work as-is, moves the one claimed spec to the TERMINAL partial/ (nothing re-claims it, so nothing strands) and writes ONE IMMUTABLE per-close report under docs/handbacks/ naming the claimed outcome, the reason, the commit range and the keep/discard split. The report is the close EVENT's identity — immutable so it never moves, unique so a second close is a second document — which is what dissolves the starvation class a mutable dedup proxy re-opens. A second close is refused rather than overwriting the first, and any refusal restores the report the single-WI call created and leaves claim and terminal state unchanged; the terminal partial/ move alone is the anti-livelock property — the spec never returns to queued/, so the driver cannot claim, hand back and re-claim the same row forever. quarantine: the red arm - reverts the product paths to the merge base and keeps the failing diff as a bar-inert .patch under docs/work/handback/, reading `git diff --name-status -z` as three-field RECORDS so a rename cannot revert the wrong path, checking every git return code, and restoring rather than reporting when a revert step fails. Both leave the branch finished, so integrate.branch_outcomes reads the outcome off the spec's DIRECTORY - complete/=merged, cancelled/=cancelled, any open folder=handback - and every lane ends in a merge.
+- LLR LLR-161 (chain of SR-144)
+  - Detail
+    - before: `close_partial` writes the report FIRST (it is the event's identity), refuses when one already exists, and restores EVERY report this call wrote on any refusal — so a multi-spec lane cannot half-close. `intake._close_drafts` titles the disposition on the report PATH and nothing else, and says so LOUDLY when a terminal spec has no report rather than minting zero rows quietly. Every partial and cancelled close earns exactly one disposition row — a re-sweep mints none, a genuinely second close is a second report and so a second row, and a disposition row never mints a disposition for itself (refused at both ends); a complete close is spot-checked at the declared rate rather than gated; continuing partial work drafts a successor carrying explicit lineage that survives the id change, never re-opening a terminal row.
+    - after: `close_partial` writes the report FIRST (it is the event's identity), refuses when one already exists, and restores the report this single-WI call created on any refusal, leaving claim and terminal state unchanged. `intake._close_drafts` titles the disposition on the report PATH and nothing else, and says so LOUDLY when a terminal spec has no report rather than minting zero rows quietly. Every partial and cancelled close earns exactly one disposition row — a re-sweep mints none, a genuinely second close is a second report and so a second row, and a disposition row never mints a disposition for itself (refused at both ends); a complete close is spot-checked at the declared rate rather than gated; continuing partial work drafts a successor carrying explicit lineage that survives the id change, never re-opening a terminal row.
+- LLR LLR-167 (chain of SR-144)
+  - Detail
+    - before: The row's DECLARED `Brief` cell selects the template (`intake` writes it at every adjudication mint); `compose` fills it through `prompts.fill`'s strict both-ways check and `agent_loop.session_body` is the single fork BOTH routing arms take, so a claimed adjudication row gets the same brief whether or not a routing registry is configured. Each assembler returns `(values, None)` or `(None, reason)` and NEVER a partial: `disposition_values` walks SpecRef -> the closed spec -> its immutable per-close report -> that report's TYPED `commit_range` -> `git log`/`--name-status` clipped at the declared 80 lines, and refuses the clean-close spot-check arm because it writes no report; `red_tc_values` RE-RUNS `dispatch.red_tc_census` rather than remembering it, joins each line through `dispatch.parse_red_tc` to the TC row's Method/Expected/Evidence and to the SR/LLR text its targets name, and refuses a census that has come clean. A refusal falls back to the worker assignment and PRINTS why. `conflict` and `amendment` are deliberately unrouted, each with its missing derivation named in the module header.
+    - after: The row's DECLARED `Brief` cell selects the template (`intake` writes it at every adjudication mint); `compose` fills it through `prompts.fill`'s strict both-ways check and the primary adjudication turn calls the same `agent_loop.session_body` review engine in process for BOTH routing arms, passing the designated primary root, queued WI, unique turn identity, primary base, candidate tree identity, declared scope and already-held lock explicitly, so every route receives the same bound brief without a worktree or branch. A blank-Brief adjudication instead receives a generic primary judgment assignment bound to that turn, WI, base, candidate and scope and naming its verdict path; it contains no claim, branch, model-side close or snapshot instruction. A declared brief whose assembler fails remains HELD and never takes the blank-Brief route. Ordinary non-adjudication work keeps its worker assignment, and no legacy adjudication-worker context remains. Each assembler returns `(values, None)` or `(None, reason)` and NEVER a partial: `disposition_values` walks SpecRef -> the closed spec -> its immutable per-close report -> that report's TYPED `commit_range` -> `git log`/`--name-status` clipped at the declared 80 lines, and refuses the clean-close spot-check arm because it writes no report; `red_tc_values` RE-RUNS `dispatch.red_tc_census` rather than remembering it, joins each line through `dispatch.parse_red_tc` to the TC row's Method/Expected/Evidence and to the SR/LLR text its targets name, and refuses a census that has come clean. EVERY shipped brief is routed: `conflict` was RETIRED rather than filled (it had a template and a verdict grammar and never a mint, an assembler or a reader for the `needs=` its own grammar demanded), and `consolidate_values` composes the consolidation brief from the row's `Adjudicates` cluster re-derived LIVE - every row of that cluster or none, and a cluster whose overlap has dissolved refuses rather than briefing a session about a contradiction that no longer exists. The committed verdict names that turn and exact candidate. A snapshot/live difference is evidence for semantic comparison and never approval by itself.
+- TC TC-138 (chain of SR-144)
+  - Method
+    - before: Run the handback suite: a partial close moves each claimed spec to the terminal partial/ and writes its immutable per-close report under docs/handbacks/, leaves the branch finished, is CLEAN under the real trajectory check (R-A exempts partial — the spec's definition is deliberately byte-identical), refuses a second close without residue, and is LOUD when a terminal spec has no report; a close writes NO blockref because the partial/ folder is itself terminal (the anti-livelock property is the move, not a queued-plus-blockref marker), while an existing Deliverable survives the move; a branch trunk holds no claim for is refused. The quarantine arm reverts the product paths and keeps the failing diff as a bar-inert .patch, reverts a RENAME correctly (the --name-status -z stream read as records, not pairs - mutation-proven), leaves the handback bookkeeping alone, refuses when the red is not the lane's own code, and restores rather than reports when a revert step fails.
+    - after: Run the handback suite: an empty or multi-spec active claim refuses partial close before any report or state change, leaving all claimed specs intact; a partial close moves the one claimed spec to the terminal partial/ and writes its immutable per-close report under docs/handbacks/, leaves the branch finished, is CLEAN under the real trajectory check (R-A exempts partial — the spec's definition is deliberately byte-identical), refuses a second close without residue, and is LOUD when a terminal spec has no report; a close writes NO blockref because the partial/ folder is itself terminal (the anti-livelock property is the move, not a queued-plus-blockref marker), while an existing Deliverable survives the move; a branch trunk holds no claim for is refused. The quarantine arm reverts the product paths and keeps the failing diff as a bar-inert .patch, reverts a RENAME correctly (the --name-status -z stream read as records, not pairs - mutation-proven), leaves the handback bookkeeping alone, refuses when the red is not the lane's own code, and restores rather than reports when a revert step fails.
+- TC TC-156 (chain of SR-144)
+  - Method
+    - before: Run the handback suite over real git worktrees: a partial close is clean under the REAL trajectory check (not a stub), a terminal spec with no report is loud, a second close is refused and leaves no residue, and the disposition is keyed on the report path so a re-sweep mints nothing.
+    - after: Run the handback suite over real git worktrees: a partial close is clean under the REAL trajectory check (not a stub), a terminal spec with no report is loud, a second close is refused and leaves no residue, an injected refusal after creating the single report restores it and leaves the claim/terminal state unchanged, and the disposition is keyed on the report path so a re-sweep mints nothing.
+- TC TC-161 (chain of SR-144)
+  - Method
+    - before: Drive the real loop against a fake agent CLI over throwaway git repos, one per routed brief, and capture what the session was actually handed. Assert the composed brief carries each slot's real derivation (the lane's report verbatim, the closed spec, the commit facts; the live census joined to the TC row and to the obligation it covers), that no `{slot}` survives in the output, and that the typed verdict line the brief demands is written to the path the brief named and committed with the result trailer. Then drive the refusals: a clean close (no per-close report), a report with no typed `commit_range`, and a census that has come clean each fall back to the worker assignment with the reason printed. Pin the discriminator: two rows with an identical SpecRef and different declared `Brief` cells compose differently. Pin the two unrouted briefs as unrouted, naming themselves in the refusal. The amendment arm covers two seams: IF-124, the `last_approved` baseline read - the brief carries the snapshot as its anchor, only approved cells reach the judge, and with no snapshot the brief holds and says FIRST APPROVAL rather than fabricating an anchor; and IF-127, the lazily imported re-attestation model.
+    - after: Drive the real loop against a fake agent CLI over throwaway git repos, one per routed brief, and capture what the session was actually handed. Assert the composed brief carries each slot's real derivation (the lane's report verbatim, the closed spec, the commit facts; the live census joined to the TC row and to the obligation it covers), that no `{slot}` survives in the output, and that the typed verdict line the brief demands is written to the path the brief named and committed with the result trailer. Then drive the refusals: a declared brief with no per-close report, a report with no typed `commit_range`, and a census that has come clean each remain HELD with the reason printed and never take the blank-Brief route. Pin the discriminator: two rows with an identical SpecRef and different declared `Brief` cells compose differently. Pin every shipped brief as routed and the retired conflict brief as absent from shipped routing. The amendment arm covers two seams: IF-124, the `last_approved` baseline read - the brief carries the snapshot as its anchor, only approved cells reach the judge, and with no snapshot the brief holds and says FIRST APPROVAL rather than fabricating an anchor; and IF-075, the lazily imported re-attestation model. Run each brief through the in-process primary engine and assert its immutable turn record binds the queued WI, primary branch/root, proposal spec, live/snapshot registry blobs and exact frontmatter scope; the resulting review evidence binds the full candidate after Approval/Dispositions additions. Drive a blank-Brief adjudication and assert its generic primary judgment assignment names the bound verdict path and contains no claim, branch, model-side close or snapshot instruction; ordinary non-adjudication work still receives its worker assignment and no legacy adjudication-worker context is retained. Any changed binding stales the result, and verdict-only commits leave snapshots, Status, queue and watermark unchanged.
+  - Tier
+    - before: Smoke
+    - after: Full
+- SR SR-146 (chain of SR-146)
+  - Rationale
+    - before: Prose steers the sessions this loop launches and had been reviewable only by reading Python source, which makes the process trusted rather than inspectable. The audit trail is the part that makes the move useful rather than cosmetic: without a per-session digest, "which instruction did this session see" stays an inference. (The argv-vs-shell-string transport decision is design, and lives one tier down in LLR-163.) Hat-derived (hat.SECURITY): C-SEC-5 requires that content composed for dispatch to an external model runner carry a DECLARED inclusion rule rather than an implicit one — a prompt assembled inside source is an unreviewed egress path no write-side gate covers, and shipping it as a reviewable file with a digest is what makes that rule readable.
+    - after: Prose steers the sessions this loop launches and had been reviewable only by reading Python source, which makes the process trusted rather than inspectable. The audit trail is the part that makes the move useful rather than cosmetic: without a per-session digest, "which instruction did this session see" stays an inference. (The argv-vs-shell-string transport decision is design, and lives one tier down in LLR-163.) C-SEC-5 requires that content composed for dispatch to an external model runner carry a DECLARED inclusion rule rather than an implicit one — a prompt assembled inside source is an unreviewed egress path no write-side gate covers, and shipping it as a reviewable file with a digest is what makes that rule readable.
+- LLR LLR-167 (chain of SR-146)
+  - Detail
+
+ERROR: Selected model is at capacity. Please try a different model.
+ERROR: Selected model is at capacity. Please try a different model.
+tokens used
+152,359
