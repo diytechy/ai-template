@@ -1,5 +1,12 @@
 # docs/plans/ — live plan documents
 
+**Open for owner ruling:**
+[`2026-09-20-validation-gap-and-the-assumption-tier.md`](2026-09-20-validation-gap-and-the-assumption-tier.md)
+— proposes typing each boundary crossing as `design` or `effect`, and recording
+the domain assumptions that bridge them as a fourth row kind in the frame
+registry, so the step from "zero orphans" to "a reviewer trusts it" becomes
+something a test can attach to. Carries its own impact survey and staging.
+
 The live planning surface. **Start at
 [`2026-08-15-review-package.md`](2026-08-15-review-package.md)** — the one
 document the pending review sitting runs from; the 2026-08-15 plan set

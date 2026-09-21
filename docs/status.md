@@ -28,6 +28,12 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   then the [redesign execution record](ai-template-redesign-2026-09-05-codex/EXECUTION-RECORD.md).
   Recheck Git and the generated frontier before choosing work; earlier handoffs
   and sitting checklists are historical context.
+- **Awaiting owner ruling — the validation gap:** read
+  [the assumption-tier proposal](plans/2026-09-20-validation-gap-and-the-assumption-tier.md).
+  It asks for a frame ruling (the frame is LOCKED), so nothing may be built from
+  it until the owner answers its §9. Its step 1 — typing each `B-##` crossing
+  `design`/`effect` — is separable and costs four edits; steps 2+ re-pin
+  `tests/test_external_frame.py` and need the sitting.
 - **Next implementation:** resolve the existing SR-161 per-decomposition
   perspective-record gap and complete TC-211's normal sample. Follow the
   existing artifact adjudication route for the Drafted amendments; passing an
