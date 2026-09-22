@@ -3,10 +3,12 @@
 **Status: PROPOSAL. Not a ruling.** It asks for one, because it changes the
 frame that [`external.toml`](../requirements/external.toml) declares LOCKED.
 
-**Owner answers to §9 recorded 2026-09-21** — four answered (one in principle),
-three open or deferred. Q1's answer opened a wider thread about auxiliary
-systems, developed in §10. Recording an answer is not the ruling; §§1–8 are
-unchanged by any of it.
+**Owner answers to §9 recorded 2026-09-21** — five answered (one in principle),
+two open or deferred after a second pass the same day. Q1's answer opened the
+enablement/verification thread in §10, which in turn resolved Q6 as posed and
+**retired §6(f)'s separate treatment of the rig** in favour of one row kind at
+two weights (§10.2). Recording an answer is not the ruling; §§1–8 are unchanged
+by any of it.
 
 **What it proposes, in one sentence.** The kit records what the system must do
 at its own interface and tests that exhaustively; it does not record the
@@ -453,11 +455,17 @@ The same small number of expensive probes, now aimed at the stable thing.
 That is (a)'s pyramid with its rungs named: **the rig is the element level, and
 the fidelity check is what buys the right to run few R-probes.**
 
-**It needs no vocabulary beyond §4.2 and §4.3.** The rig is an `enabling`
-entity. Its crossings are ordinary `B-##` rows carrying `frame = "design"`.
-What is left over is one `[assumption.DA-###]` whose `bridges_from` is the rig's
-crossing, `bridges_to` the real effect, `holds_when` the rig's ODD, and
-`falsified_by` the calibration probe. No fourth `frame` value, no new row kind.
+**It needs no vocabulary beyond §4.2 and §4.3.** What is left over is one
+`[assumption.DA-###]` whose `bridges_from` is the rig's crossing, `bridges_to`
+the real effect, `holds_when` the rig's ODD, and `falsified_by` the calibration
+probe. No fourth `frame` value, no new row kind.
+
+> **Superseded in part, 2026-09-21 (§10.2/§10.4).** This paragraph originally
+> made the rig an `enabling` *entity* with `B-##` crossings of its own. That is
+> wrong for an in-tree rig, which is not outside the boundary: a rig we build is
+> an `IF` row realizing an **existing** crossing, named from the `DA` row's
+> optional `realized_by`. Only an *external* enabling system — a hosted
+> simulator, a CI service — is an `EXT` row. The rest of (f) stands.
 
 **The credibility caveat is (e)'s, unchanged.** A verdict inherits the
 credibility of the rig that produced it — which is exactly why NASA-STD-7009's
@@ -806,7 +814,11 @@ the owner has decided and the next sitting may build on it; `DEFERRED` and
    > **Owner, 2026-09-21 — OPEN; the same question as Q1.** Stated by the
    > owner as: *how do we differentiate the deliverable system the user
    > experiences from the components that exist to maintain and deploy it?*
-   > Held until §10 resolves.
+   > **Second pass, same day — answered as posed: neither.** A rig built by
+   > this team is in-tree, so it is an `IF` row realizing an existing crossing
+   > plus a `DA` row carrying its fidelity — it adds no `B-##` row and does not
+   > re-pin the crossing count. See §10.4. The *classification* question behind
+   > it is resolved in §10.3; what remains open is the `EXT-001` re-draw.
 
 7. **Does any of this ship downstream in v1, or is it dogfooded here first?**
    Given the template/instance sync constraint and the 20 bytes free in
@@ -818,94 +830,208 @@ the owner has decided and the next sitting may build on it; `DEFERRED` and
 
 ---
 
-## 10. The auxiliary-system thread (OPEN)
+## 10. Enablement, verification, and the auxiliary systems (OPEN)
 
-Recorded 2026-09-21 from the owner's answer to Q1, which turned out to be the
-same question as Q6. **This is a sketch of an unfinished argument, not a
-proposal.** The owner has said they will return to it in detail; it is written
-down here so the next sitting starts from it instead of re-deriving it.
+Recorded 2026-09-21 from the owner's answers to Q1 and Q6, then extended the
+same day. **Still a sketch, not a proposal** — but the second pass resolved more
+than the first, and two of its findings are checkable against the code today.
 
-### The claim
+### 10.1 The chain
 
-Every designed system has auxiliaries. They sit under the designer's control,
-they are not shipped, and they are not the product — yet they are tightly
-coupled to it and they carry real requirements about how the product is
-maintained and delivered. The owner names at least four kinds:
+The owner's frame, in one line:
 
-| kind | this repo's instance | shipped? | may carry TCs? |
+```
+effect  <->  translation | rig  <->  boundary interface  <->  design
+```
+
+- A **translation** converts an effect into a design boundary and **is an
+  assumption**. It enables validation by *claiming* the conversion holds.
+- A **rig** converts an effect into a design boundary and **is a system**. It
+  enables validation by *performing* the conversion — simulating the effect and
+  putting the output against a rubric — on a more complex basis than an
+  assumption can carry.
+
+Both are enabling components; neither is shipped. Other supporting systems
+(deployment, procurement, the test plumbing) sit alongside them, also under
+design control and also absent from what a user experiences. The owner's
+position is that those need no further typing here, and that is right: this
+section only has to be correct about the ones that **bridge to an effect**.
+
+### 10.2 Translation and rig are one construct at two weights
+
+This is the simplification the second pass bought, and it **retires the separate
+treatment §6(f) gave the rig**.
+
+A translation and a rig do the same job in the same place, and differ only in
+whether the bridge is *asserted* or *built*. So they are one row kind — §4.2's
+`[assumption.DA-###]` — with an optional cell naming the system when one exists:
+
+```toml
+[assumption.DA-002]
+bridges_from = "B-##"
+bridges_to   = "EXT-003"
+realized_by  = "IF-###"    # OPTIONAL. Present = rig. Absent = translation.
+```
+
+The idiom is already in the file next door. `interfaces.toml` carries
+`interface_from_external` / `interface_to_external` naming the `B-##` a row
+realizes, and states the rule this cell should copy — *"a row with neither key
+is an internal seam, and that ABSENCE is the statement."* A `DA` row with no
+`realized_by` is a pure claim and says so by omission.
+
+**Cost: one optional key on a row kind §4.2 already proposes.** It adds nothing
+to §7.3(b)'s eight edits.
+
+### 10.3 The discriminator is a fidelity claim — and the owner's naming is better
+
+The first pass cut *"a rig may carry TCs, plumbing may not"* on the grounds that
+a rig makes a falsifiable fidelity claim and plumbing makes none. The owner's
+naming for that cut — **enablement versus verification** — is better and should
+be the shipped wording.
+
+One correction to how it is drawn: these are **not siblings**. Deployment, test
+infrastructure and rigs are all *enabling* in 15288's sense. **Verification is a
+role some enabling systems play**, identified by whether the system stands
+underneath a fidelity claim. Which gives the cheapest possible typing:
+
+> **A rig is an enabling system named in some `DA` row's `realized_by`.
+> Everything else under design control and not shipped is supporting
+> enablement.**
+
+No new column and no new vocabulary — the classification is **derived** from the
+assumption set. The trade to note: a derived classification cannot be queried
+before the `DA` rows exist, so *"list our rigs"* is unanswerable at Step 1 and
+answerable at Step 3. Acceptable, and the same shape as `B-02` being reported
+unrealized today — a deliberate state, visible rather than hidden.
+
+### 10.4 Where a rig actually lives — and what that does to Q6
+
+Q6 asked whether a rig's crossing gets a `B-##` row. **The second pass says
+neither option as posed, and the reason is mechanical.**
+
+`external.toml` holds *external* entities. A rig this team builds lives **in the
+repo** — `FAKE_AGENT` in `tests/`, the render runner in
+`scripts/dashboard-shots/`. An in-tree thing is not outside the boundary, so it
+is not an `EXT` row and it manufactures no new crossing. What it is is an **`IF`
+row**: `interfaces.toml` refuses a row whose owner *and* far side are both
+`external:` parties precisely because such a row **has no in-tree endpoint** —
+and a rig, by construction, has one.
+
+So the discrimination the owner is reaching for is **already enforced**:
+
+| | in-tree endpoint? | representable as an `IF` row? | therefore |
 |---|---|---|---|
-| the system the user experiences | the process and its scripts, as run | yes | yes |
-| the test **rig** — a modelled stand-in under design control | `FAKE_AGENT`, the render-shot runner | no | **maybe** |
-| the test **infrastructure** itself | pytest wiring, `conftest.py`, fixtures | no | **no** |
-| **deployment / delivery** | `EXT-002` (Template), bootstrap, resync | no | maybe |
+| **translation** | no — it is a claim about the world | no; `trace.py --strict` refuses it | must be a `DA` row |
+| **rig** | yes — the rig is code we wrote | yes, realizing an existing crossing | an `IF` row, plus the `DA` row stating its fidelity |
 
-— and notes that in other projects the list extends to procurement,
-warehousing, and anything else standing between a finished design and a user's
-experience of it.
+**Consequence for Q6: rigs add no `B-##` rows, and `test_external_frame.py`'s
+crossing count is not re-pinned by them at all.** An *external* enabling system —
+a hosted simulator, a CI service — would be an `EXT` row in the empty `enabling`
+class. A rig we build is not.
 
-### The rule the owner drew, and why it is the load-bearing part
+**One thing this exposes, which should not be smoothed over.** `FAKE_AGENT`
+stands in for `EXT-005` across **`REL-003`** — a *relationship*, not a crossing,
+exactly like the `REL-001` gap in §1. So what the model rig rigs is not in the
+frame as a crossing today, and an `IF` row pointed at it would have nothing to
+realize. That is §1's finding reached from the other end, and it is evidence
+**for** Q2 rather than against this model.
 
-> *"The rig MIGHT have test cases; the test infrastructure itself would not."*
+### 10.5 The self-derivation limit
 
-That sentence is the one to keep. It **bounds the recursion** — otherwise every
-harness needs a harness — and it does so on a criterion this proposal can
-already express: **a rig makes a fidelity claim, and a fidelity claim is
-falsifiable; test infrastructure makes no claim about the world, it only runs
-things.** So §6(f)'s `DA-###` is the right instrument for the first and is
-simply inapplicable to the second. It is the same cut as `S ∧ W ⊨ R`: the rig
-contributes a W term, the plumbing contributes none.
+The owner's finding, recorded: **this repo cannot dogfood its own development
+scripts.** It has been tried repeatedly; executing the same scripts that are
+being modified does not yield a usable result.
 
-### Where it collides with the frame as it stands
+Worth generalizing, because the reason is what this section is about:
 
-Three specific places, all checkable against the file today:
+> **A rig derived from the system under test cannot falsify assumptions the two
+> share.**
 
-1. **`EXT-001` already bundles three of the four.** Its description folds in
-   *"shell, git client, OS, Python, editors, test runner, LLM runners"* — so the
-   session entity currently carries the human, the dev environment, the test
-   infrastructure **and** the model runner in one row. Q1's *yes* splits the
-   human out; the owner's answer implies the rig and the infrastructure come out
-   too. That is a considerably larger re-draw than Q1 looked like on its own,
-   and it re-opens the count `test_external_frame.py` pins.
+Self-execution is that failure at its limit — the rig *is* the system, the
+shared-assumption set is total, and so the rig can falsify nothing. That is why
+it never works, and it turns the owner's experience into a rule that applies to
+every rig rather than to this one situation. It is also the standing argument
+for why `FAKE_AGENT` is the right shape: a **scripted stand-in that does not run
+the real thing** shares no assumptions with what it replaces. The owner's remark
+that a rig *"might be derived by the system itself"* names the risk axis
+exactly — derivation is cheap, and it buys correlated blind spots.
 
-2. **`enabling` is one word for at least three different things.** ISO 15288
-   puts rig, infrastructure and deployment in a single class, and §4.3 treats
-   that empty slot as the clean home for all of them. The owner's cut says they
-   differ in exactly the property this proposal cares about — whether a TC may
-   point at them. If that holds, either `enabling` needs subdividing, or the
-   verification obligation has to hang off something other than `class`.
+**Scope, stated so it is not over-read.** The finding is about **self-execution
+of scripts under modification**. It is *not* a retraction of Q1's rationale,
+which was about the kit being able to state and test its own validation story —
+a different claim, still standing. And CLAUDE.md's existing self-application
+boundary (*"no product launch"*) is the same instinct already written down; this
+extends it rather than contradicting it.
+
+### 10.6 The boundary diagram is derived — so the redraw is a row change
+
+The owner asks for the boundary diagram to change. The useful fact: **there is
+no diagram to edit.** `gen_trajectory.py` derives the System-context view from
+`external.toml` into the How-SW tab (`context_block(frame_context(root), ...)`,
+WI-455) — *"the depth-0 frame: who is outside, what crosses, and the
+external-to-external flows the system is not a party to."* **Editing rows is
+editing the diagram**, and there is no second artifact to keep in sync.
+
+The target the owner described, as a sketch for the sitting to rule on:
+
+| row | change | why |
+|---|---|---|
+| `EXT-001` Development session | **narrow** — keep the environment and working copy, drop the human | Q1, answered yes |
+| *new* Human operator | **add**, `operational` | gives this repo its first `effect` crossing (§9 Q1) |
+| `EXT-005` Model provider | keep external; make its **rigged** status legible | the owner: *"the LLM agent, while external, is rigged in this setting"* |
+| `EXT-002` Template | unchanged | already the delivery auxiliary, already typed (§10.7) |
+| `EXT-003` Adopter | unchanged | the effect side |
+| test infrastructure | **not shown** | the owner: inherent to defining a system, not a frame element |
+| rigs | **not entities** | in-tree, so `IF` + `DA` rows (§10.4) |
+
+The open piece is how *"rigged"* renders. `EXT-005` stays one external entity
+either way; what changes is that a `DA` row now names the rig standing in for
+it, and the derived view would have to read that to show it. **Whether
+`context_block` learns to draw the rigged relation is a dashboard question and
+should not hold up the frame decision** — the rows are true before the view can
+render them.
+
+### 10.7 Where this still collides with the frame as it stands
+
+1. **`EXT-001` already bundles three of the four kinds.** Its description folds
+   in *"shell, git client, OS, Python, editors, test runner, LLM runners"* — the
+   human, the dev environment, the test infrastructure **and** the model runner
+   in one row. Q1's *yes* pulls the human out; §10.6 pulls the frame further.
+   Still the largest single edit in this thread, and it re-pins
+   `test_external_frame.py`.
+
+2. **~~`enabling` is one word for three things~~ — RESOLVED by §10.3.** It stays
+   one class; verification is a *role*, derived from `realized_by`. No
+   subdivision needed.
 
 3. **The delivery auxiliary already exists, typed from the other end.**
    `EXT-002` (Template) *is* the packaging/delivery auxiliary, and its note
-   already records the frame-relativity the owner is reaching for: *"From an
-   adopter's frame this package is their enabling system."* So the deployment
-   row is not missing — it is present, classed `deliverable`, and correct from
-   this repo's side. Any taxonomy that lands has to **absorb** that row rather
-   than add a second one beside it.
+   already records the frame-relativity this thread keeps reaching for: *"From
+   an adopter's frame this package is their enabling system."* Any taxonomy that
+   lands must **absorb** that row, not add a second beside it.
 
-### The degenerate case this repo is
+### 10.8 The degenerate case this repo is
 
-Worth stating plainly before anyone generalizes from here. **This kit's product
-*is* test infrastructure.** `CLAUDE.md` declares the traced product to be
-`project-trajectory/scripts` **and `tests/`** — so the thing the owner's rule
-would class as untestable plumbing is, in this repo, shipped product that must
-carry TCs. The auxiliary/product split is clean for an application and
-entangled here.
+**This kit's product *is* test infrastructure.** CLAUDE.md declares the traced
+product to be `project-trajectory/scripts` **and `tests/`** — so the thing
+§10.3's rule would class as supporting enablement is, here, shipped product that
+must carry TCs.
 
-That makes this repo a **poor place to validate the taxonomy and a good place to
-stress it**: any rule that cannot explain why `tests/` is product here and
-plumbing downstream is not yet the rule. My reading of the resolution — offered
-for the owner to accept or reject, not assumed — is that the split is
-**frame-relative, exactly as `EXT-002`'s note already says it is.** Auxiliary
-is a role a system plays with respect to a declared system-of-interest, not an
-intrinsic property, and this repo's system-of-interest is the kit, for which the
-harness is deliverable content.
+My reading of the resolution, offered rather than assumed: the split is
+**frame-relative, exactly as `EXT-002`'s note already says.** Auxiliary is a
+role a system plays with respect to a declared system-of-interest, not an
+intrinsic property — and this repo's system-of-interest is the kit, for which
+the harness is deliverable content. §10.5 is the same relativity seen from the
+operational side: the scripts are product when they are the thing being built,
+and cannot simultaneously be the rig that tests that build.
 
 ### What this does not change
 
-Nothing in §§1–8. The auxiliary question is about *which entities exist and how
-they are classed*; the `S ∧ W ⊨ R` argument, the `frame` column and the
-assumption row are indifferent to its answer. **§8's step 1 in particular stays
-executable today** — typing the five existing `B-##` rows does not wait on this.
+Nothing in §§1–8. This thread is about *which entities exist, how they are
+classed, and where the bridge is recorded*; the `S ∧ W ⊨ R` argument, the
+`frame` column and the assumption row are indifferent to its answer. **§8's step
+1 in particular stays executable today** — typing the five existing `B-##` rows
+does not wait on any of this.
 
 ---
 
