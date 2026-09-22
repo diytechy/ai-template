@@ -927,6 +927,28 @@ before the `DA` rows exist, so *"list our rigs"* is unanswerable at Step 1 and
 answerable at Step 3. Acceptable, and the same shape as `B-02` being reported
 unrealized today — a deliberate state, visible rather than hidden.
 
+> **Corrected by the owner, 2026-09-21.** Two passes of this section drifted
+> into treating verification as a *property of certain enabling systems* —
+> and worse, the first pass wrote that test infrastructure *"would not"* carry
+> test cases. The owner's position, and it is the right one: **every enabling
+> system needs verification around it, not only the delivered product.
+> Verification has a hand in every step, which is why it sits *outside* the
+> classification rather than inside it** — even where a rig heavily supports it.
+>
+> This repo is its own proof: `tests/` verifies the harness, and CLAUDE.md
+> traces `tests/` as product. Three axes were being run together, and they are
+> independent:
+>
+> | axis | applies to | recorded as |
+> |---|---|---|
+> | **is it verified?** | *everything* — product and every enabling system alike | ordinary tests |
+> | **does it discharge a spine requirement?** | whatever a requirement is written about | a TC with `Verifies` |
+> | **does it stand in for something else?** | rigs only | a `DA` row's fidelity claim |
+>
+> Only the third is what makes a rig a rig. The recursion-bounding worry that
+> motivated the original cut is answered by the *second* axis, not the first:
+> everything gets tested; not everything earns a row in the traced spine.
+
 ### 10.4 Where a rig stands — the party/crossing distinction
 
 **Correction to the first pass, from the owner: a rig *does* connect to the
@@ -959,10 +981,29 @@ tie-back **is** the rig connected to the `EXT` interface. The earlier table's
 | a **translation** | no | no — it is a claim, not a port | a `DA` row alone |
 
 **Q6's answer is unchanged by the correction:** rigs add no `B-##` rows and do
-not re-pin `test_external_frame.py`'s count, because they realize crossings that
-already exist rather than manufacturing new ones. An *external* enabling system —
-a hosted simulator, a CI service — would still be an `EXT` row in the empty
-`enabling` class.
+not re-pin the *crossing* count, because they realize crossings that already
+exist rather than manufacturing new ones.
+
+> **Second correction, 2026-09-21 (§12.4).** The clause that followed — *"only
+> an **external** enabling system would be an `EXT` row"* — was wrong, and the
+> reasoning behind it (*in-tree, therefore not an entity*) does not hold. **An
+> enabling system is normally something the developing organization owns**;
+> that is what the class is for in 15288. And this frame **already holds a
+> non-external row**: `EXT-002` (Template) is `deliverable`, an output of the
+> system rather than a party outside it, and its own note records that the
+> class was *"an ADDITION to the class vocabulary"* for exactly that reason.
+>
+> So the frame is already two planes, and `class` already separates them:
+> `operational` / `interoperating` are the **operating** plane, genuinely
+> outside; `deliverable` / `enabling` are the **evolution** plane — ours, not
+> part of what a user experiences. A rig belongs in the second as an `EXT` row
+> with `class = "enabling"`.
+>
+> **What this does change:** rigs add *entity* rows, so
+> `test_external_frame.py:87-114` **is** re-pinned on its entity count, though
+> still not on its crossing count. The `IF` + `DA` machinery of this section
+> stands unaltered — the entity row is what makes the rig *visible* at depth-0;
+> the `IF` row is still what connects it to the crossing.
 
 ### 10.4.1 The "nearly" is the fidelity assumption
 
@@ -1123,6 +1164,53 @@ intrinsic property — and this repo's system-of-interest is the kit, for which
 the harness is deliverable content. §10.5 is the same relativity seen from the
 operational side: the scripts are product when they are the thing being built,
 and cannot simultaneously be the rig that tests that build.
+
+### 10.9 Does `enabling` include deployment? — and the stage axis underneath
+
+**Yes.** In 15288 an enabling system supports a system-of-interest during one or
+more **life-cycle stages** without being part of the delivered solution, and the
+canonical list spans development environment, production system, test system,
+training system, support/maintenance system and disposal system. Deployment is
+the enabling system for the **Transition** process — the standard's name for
+installing a system into its operational environment. It is a deliberately broad
+umbrella, which is why the owner's instinct that these things differ has to be
+expressed *inside* the class (§10.3) rather than by rejecting it.
+
+The structure worth taking from the standard is that enabling systems are
+organized **by the stage they support**, and the owner's four kinds fall out of
+that axis directly:
+
+| kind | stage it enables |
+|---|---|
+| rig | Development — Verification/Validation specifically |
+| test infrastructure | Development |
+| deployment / delivery | **Transition** |
+| procurement, warehousing | Production, Support |
+
+**But stage does not decide the TC question**, so it is a taxonomy and not a
+gate: deployment and rigs sit in different stages and both may carry test cases,
+while test infrastructure shares a stage with the rig. §10.3's axes do that
+work. If both are wanted they are orthogonal descriptors — and only the one that
+gates something is worth recording.
+
+**Other vocabulary, if one word proves too coarse.** *Transition* (15288) for
+deployment specifically; **ILS** (Integrated Logistics Support) as the
+sustainment umbrella, whose **PHS&T** — Packaging, Handling, Storage &
+Transportation — is the established term for the procurement/warehousing kind;
+**support equipment** / **TMDE** for fielded rigs; **deployment pipeline**
+(Humble & Farley) and *platform engineering* for the software-native forms.
+Recommendation: keep `enabling` as the class and take *Transition* if a standard
+word is wanted for deployment, since it is in the standard already cited and
+does not drag defense-logistics vocabulary into a software kit. **Owner,
+2026-09-21: descriptors taken tentatively — the semantics are not yet
+satisfying**, so treat this table as placed, not settled.
+
+> **Verify before ruling.** The definition, the stage list and the process name
+> above are given from knowledge, not from the text of the standard. Since
+> 15288 is load-bearing in §4.3 and here, the clause should be checked against
+> the actual document — particularly the exact wording of the enabling-system
+> definition and whether the 2023 edition renamed any stage — before any of it
+> is cited in a ruling.
 
 ### What this does not change
 
@@ -1302,6 +1390,168 @@ can name, recorded so the next pass does not mistake this section for closure.
    *non-rig* equipment performs it too, all the time, and is simply trusted.
    That trusted layer has no home in the frame and probably needs none — but
    "probably needs none" is not yet an argument.
+
+---
+
+## 12. Redrawing depth-0 as the operating frame (owner direction, 2026-09-21)
+
+### 12.1 The stance change, and why it unblocks §1
+
+The owner's direction: draw the depth-0 frame **with respect to the system in
+its normal operating environment — an adopter's repo — rather than as a
+delivered output of this one.**
+
+That is a change of stance before it is a change of rows, and it is the change
+that unblocks §1. The present frame is a **delivery** frame: `EXT-002` is the
+package, `B-05` is the moment it leaves, and **87% of the SRs are stated at that
+one crossing.** Validation cannot attach to a delivery frame, because *delivery
+is not where any effect happens* — which is §1's finding reached from the other
+direction. Drawn as an operating frame, the crossings the needs are written
+about are the crossings the frame actually holds.
+
+The owner expects this to change the frame less than it sounds, and that is
+worth stating plainly, because "re-draw the depth-0 frame" reads as expensive:
+**`B-05` does not go away, and the 69 SRs stated at it are not re-pointed.** The
+package still leaves the system. What changes is that its departure stops being
+the *only* modelled crossing and stops being the one the stakeholder needs are
+read against.
+
+### 12.2 The human's two edges — and what they turn out to be
+
+The owner's one structural addition: the human interacts with **the development
+session (really just a computer)** *as well as* with the system.
+
+Those two edges already exist in the frame, unrecognised, and naming them is the
+strongest single piece of evidence this proposal has found:
+
+| edge | what it is | existing row |
+|---|---|---|
+| human → **session** → system | the mediated path: the human edits a cell, the computer writes it, the hook floor admits it | `B-01`, governed writes in |
+| human → **system** | the direct path: the human's *judgment* — rulings, attestations, Status flips | `B-02`, authority in |
+
+And `B-02` is the crossing `interfaces.toml` singles out:
+
+> *"ONE CROSSING IS DELIBERATELY REALIZED BY NOTHING: `B-02` (authority in —
+> rulings, attestations and Status flips) **has no port of its own.** Authority
+> enters as CONTENT on B-01's write path: a human edits a Status cell and
+> commits, and the hook floor admits that write as it admits any other."*
+
+Read that again under §3's criterion. The system can observe *that a Status cell
+changed*. It cannot observe *that a human judged*. The phenomenon the need names
+is not shared; only its proxy is.
+
+> **`B-02` is this repo's first `effect` crossing, and its "realized by nothing"
+> status is not a quirk of the schema — it is what an effect crossing looks like
+> from inside a design frame.**
+
+It has no port because **ports are design-frame objects and authority is not a
+design-frame phenomenon.** This also answers §9 Q1's worry that splitting the
+human out might leave the model "correct and inert here": it does not. Pulling
+the human out gives `B-02` an owner, `frame = "effect"`, and a first `DA` row
+that is already load-bearing in the gate machinery —
+
+```toml
+assumption = """A changed Status cell means a human actually exercised the
+                judgment that Status asserts."""
+```
+
+— which is precisely what `Attest` and the attested-vs-mechanized split exist to
+protect, stated for the first time as something falsifiable.
+
+### 12.3 Inside: the registry as the surface the human acts on
+
+The owner asks that the component view show **the spine / registry database the
+human acts on.** It exists: `CMP-006` *"W1 Registry & conformance"* — *"the
+spine and everything that decides whether it holds"* — with `CMP-009` *"W4 Human
+& adopter surfaces"* as the read side (*"everything a person or an adopting repo
+reads or runs"*).
+
+So the depth-0 → component story is already coherent and needs no new rows: the
+human's two edges land on `CMP-006` (write, via the session) and `CMP-009`
+(read, directly). What is missing is only that the derived view does not
+currently connect a depth-0 crossing to the component that serves it.
+
+### 12.4 The rigs, the second plane, and the emulation edge
+
+The owner's remaining doubt is the sharpest part of the direction: the pretend
+AI *"is just emulating a real external LLM system"*, so it should not appear
+inside the design a user experiences — yet it **must** appear, because it is
+part of the design under control, and because *"it mirrors / emulates a real
+external system, there must be a way for it to relate back to that external
+system."* The owner's proposed rendering: a different colour, or a dotted
+outline, showing that a component **has a maintained virtualized counterpart** —
+surfaced at level-0 alongside the other enabling systems, because *"they aren't
+a part of the design the end user experiences, but they are a part of the full
+system in evolution."*
+
+That last phrase is the frame's missing axis, and it resolves §10.4's error.
+**Depth-0 has two planes, and `class` already separates them:**
+
+| plane | classes | holds |
+|---|---|---|
+| **operating** — what the user experiences | `operational`, `interoperating` | the human, the session, the real model provider |
+| **evolution** — ours, not experienced | `deliverable`, `enabling` | the Template, the rigs, the delivery path |
+
+The precedent is already in the file: `EXT-002` is `deliverable` — an *output*,
+not a party outside — and its note records that the class was *"an ADDITION to
+the class vocabulary"* because the outward-facing three did not fit. The frame
+has therefore never been purely "who is outside"; it has been "the frame in
+which this system exists," and the second plane has simply been half-populated.
+
+**The data the rendering needs is one cell.** The emulation relation is not a
+crossing and not a relationship — it is an identity claim between two entities,
+so it belongs on the rig's own row:
+
+```toml
+[entity.EXT-006]
+name     = "Scripted model runner (rig)"
+class    = "enabling"
+emulates = "EXT-005"          # NEW - the row this one stands in for
+status   = "Approved"
+```
+
+From that one cell the derived view gets everything the owner described: draw
+`EXT-006` in the evolution plane, dot or tint it, and run a dotted edge to
+`EXT-005`. And `EXT-005` can then be rendered as *"has a maintained virtualized
+counterpart"* by reading the inverse — no second cell, no hand-maintained list.
+
+**`emulates` also gives the fidelity assumption its natural anchor.** §11.3 has
+the seam citing the assumption; here the *entity pair* is the thing the
+assumption is about. A rig row with `emulates` and no `DA` row is a virtualized
+component whose fidelity nobody has stated — a warn-first `trace.py` finding in
+the house idiom, and a better-targeted one than §8's step 4, because it fires on
+a rig's existence rather than on an assumption's incompleteness.
+
+### 12.5 The proposed frame, and what it costs
+
+A sketch for the sitting, not a ruling. Changes only:
+
+| row | change | plane |
+|---|---|---|
+| *new* Human operator | **add**, `operational`; owns `B-02` (`frame = "effect"`) | operating |
+| `EXT-001` Development session | **narrow** to the computer: shell, editor, OS, git client, working copy; owns `B-01` | operating |
+| `EXT-005` Model provider | unchanged; gains an inbound `emulates` from the rig | operating |
+| `EXT-002` Template | unchanged | evolution |
+| `EXT-003` Adopter | unchanged; but see the open point below | operating |
+| *new* Scripted model runner | **add**, `enabling`, `emulates = "EXT-005"` | evolution |
+| *new* Scaffold rig | **add**, `enabling` — emulates a fresh operating environment, not a party (§10.4.2) | evolution |
+| test infrastructure | **not shown** — the owner: inherent to defining a system | — |
+
+**Cost, honestly.** `test_external_frame.py:87-114` pins *exactly* 4 entities,
+4 crossings and 3 relationships, and the test's own docstring says it **is
+expected to be edited by a sitting and by nothing else**. This re-draw changes
+the entity count (4 → 7) and gives `B-02` an owner. That is the sitting Q1 was
+always going to require; it is not additional cost created here. **The crossing
+count is untouched, and no SR's `boundary_refs` are re-pointed.**
+
+**One open point the sketch does not settle.** In an operating frame, what is
+`EXT-003` (Adopter)? The adopting *team* is the human operator — the same party,
+seen from the delivery frame instead of the operating one. Either `EXT-003`
+merges into the human operator row and `REL-001` moves to the evolution plane
+as a Transition-stage concern (§10.9), or it stays and the frame carries the
+same party twice under two names. The first is cleaner and is the larger change;
+this is Q2 wearing different clothes, and it should be decided with Q2 rather
+than beside it.
 
 ---
 
