@@ -760,6 +760,14 @@ the owner has decided and the next sitting may build on it; `DEFERRED` and
 
    > **Owner, 2026-09-21 — DEFERRED, dependent on Q1.** Expected to fall out of
    > the re-drawn breakdown rather than to be decided on its own.
+   >
+   > **Evidence added the same day (§10.4.2), still deferred.** The registry's
+   > own rule — *"wanting [a realizing IF row] means what you have is a boundary
+   > crossing"* — makes this checkable rather than a matter of preference, and
+   > the check returns *crossing* for both relationships: `FAKE_AGENT` rigs
+   > `REL-003`, and the `scaffold` fixture has been rigging `REL-001` since
+   > before the frame was drawn. The decision stays the owner's; what is gone is
+   > the option of settling it by taste.
 
 3. **`frame` vocabulary: two values or three?** `coincident` costs a word and
    buys an explicit claim. The alternative is two values plus the convention
@@ -904,37 +912,113 @@ before the `DA` rows exist, so *"list our rigs"* is unanswerable at Step 1 and
 answerable at Step 3. Acceptable, and the same shape as `B-02` being reported
 unrealized today — a deliberate state, visible rather than hidden.
 
-### 10.4 Where a rig actually lives — and what that does to Q6
+### 10.4 Where a rig stands — the party/crossing distinction
 
-Q6 asked whether a rig's crossing gets a `B-##` row. **The second pass says
-neither option as posed, and the reason is mechanical.**
+**Correction to the first pass, from the owner: a rig *does* connect to the
+external interface.** That is the whole point of one. A rig is virtualizing the
+external party, so it presents the interface that party presents; a rubric run
+at that boundary is a rubric run on the interface **the user acts through and
+sees effects from**, which is exactly why rig evidence is validation-flavoured
+rather than merely more verification. The first pass said "a rig is an `IF` row,
+not an `EXT` row" in a way that read as pushing the rig *away* from the
+boundary. It does not.
 
-`external.toml` holds *external* entities. A rig this team builds lives **in the
-repo** — `FAKE_AGENT` in `tests/`, the render runner in
-`scripts/dashboard-shots/`. An in-tree thing is not outside the boundary, so it
-is not an `EXT` row and it manufactures no new crossing. What it is is an **`IF`
-row**: `interfaces.toml` refuses a row whose owner *and* far side are both
-`external:` parties precisely because such a row **has no in-tree endpoint** —
-and a rig, by construction, has one.
+What makes both statements true is a distinction the registry already draws:
 
-So the discrimination the owner is reaching for is **already enforced**:
+> **A rig is not a *party*. It occupies a *crossing*.**
 
-| | in-tree endpoint? | representable as an `IF` row? | therefore |
+`external.toml` separates the two on purpose — `[entity.EXT-###]` is *"who is
+outside"*, `[boundary.B-##]` is *"what crosses, from the SYSTEM's point of
+view"*. The rig does not become the external entity (we built it; claiming
+otherwise would misstate design authority). It stands **in that entity's
+position at the crossing** — and the mechanism for "an in-tree row standing at
+an external crossing" already exists and is named:
+`interface_from_external` / `interface_to_external`. So an `IF` row with a
+tie-back **is** the rig connected to the `EXT` interface. The earlier table's
+*therefore* column obscured that; the rows themselves were right.
+
+| | is the external party? | stands at the crossing? | recorded as |
 |---|---|---|---|
-| **translation** | no — it is a claim about the world | no; `trace.py --strict` refuses it | must be a `DA` row |
-| **rig** | yes — the rig is code we wrote | yes, realizing an existing crossing | an `IF` row, plus the `DA` row stating its fidelity |
+| the real entity | yes | yes | `[entity.EXT-###]` |
+| a **rig** we build | no — we hold design authority over it | **yes** | an `IF` row tying back to that `B-##` |
+| a **translation** | no | no — it is a claim, not a port | a `DA` row alone |
 
-**Consequence for Q6: rigs add no `B-##` rows, and `test_external_frame.py`'s
-crossing count is not re-pinned by them at all.** An *external* enabling system —
-a hosted simulator, a CI service — would be an `EXT` row in the empty `enabling`
-class. A rig we build is not.
+**Q6's answer is unchanged by the correction:** rigs add no `B-##` rows and do
+not re-pin `test_external_frame.py`'s count, because they realize crossings that
+already exist rather than manufacturing new ones. An *external* enabling system —
+a hosted simulator, a CI service — would still be an `EXT` row in the empty
+`enabling` class.
 
-**One thing this exposes, which should not be smoothed over.** `FAKE_AGENT`
-stands in for `EXT-005` across **`REL-003`** — a *relationship*, not a crossing,
-exactly like the `REL-001` gap in §1. So what the model rig rigs is not in the
-frame as a crossing today, and an `IF` row pointed at it would have nothing to
-realize. That is §1's finding reached from the other end, and it is evidence
-**for** Q2 rather than against this model.
+### 10.4.1 The "nearly" is the fidelity assumption
+
+The owner's own hedge is the most useful sentence in this thread: a rig stands
+at *"the same interface (or nearly the same)"* — and wonders whether that
+**nearly** is why it cannot simply *be* the external row.
+
+It is, and the consequence is a rule this proposal was missing:
+
+> **The delta between the rig's interface and the real party's interface IS the
+> fidelity assumption. A `DA` row should state the delta, not the resemblance.**
+
+If a rig presented *exactly* the external interface it would be
+indistinguishable from the real party, there would be no gap, and the `DA` row
+would be vacuous. The gap is therefore not a defect of the rig — it is the rig's
+**content as evidence**, and the thing the assumption row exists to hold.
+
+This also supplies the positive construction §4.2 lacked. That section warns,
+via Cobleigh, that an over-strong `W` is a defect, but says nothing about how to
+write a good one. The delta framing says how:
+
+| weak — states the resemblance | strong — states the delta |
+|---|---|
+| *"the contact model grips like the real gripper"* | *"the contact model omits deformation and stick-slip; above ~X N the sim over-reports grip"* |
+| *"the fake runner behaves like a model CLI"* | *"the fake runner reproduces argv/stdin, exit codes and commit effects; it reproduces no judgment, so nothing about prompt quality is evidenced here"* |
+
+The right-hand column is falsifiable, bounds its own ODD, and tells a reader
+what the rig does **not** cover — which is the cell `obstacle` and
+`falsified_by` then hang off naturally.
+
+### 10.4.2 Applying the rig test to Q2
+
+The first pass flagged that `FAKE_AGENT` stands in for `EXT-005` across
+**`REL-003`** — a *relationship*, not a crossing — so an `IF` row pointed at it
+would have nothing to realize. With the correction above, that is no longer a
+loose end. **It is a decision procedure, and it is the registry's own:**
+
+> *"A relationship carries NO interface vocabulary, deliberately: it is not a
+> crossing and must never grow a realizing IF row. **Wanting one means what you
+> have is a boundary crossing.**"* — `external.toml:20-22`
+
+A rig realizes a crossing. So **building a rig at a relationship is precisely
+the "wanting one" that rule names**, and the rule's own answer is that the
+relationship was a crossing. That converts Q2 from a matter of taste into
+something checkable: *is there a rig standing there?*
+
+Run the check and both relationships answer:
+
+- **`REL-003`** (session → model provider) — `FAKE_AGENT` stands there today.
+- **`REL-001`** (Template → Adopter), the one Q2 actually asks about — **a rig
+  stands there too, and has all along.** `tests/conftest.py:1-7` states the
+  design outright: *"The tests exercise the scripts the way a downstream user
+  would: bootstrap a real scaffold in a temp dir and run the actual commands."*
+  The `scaffold` fixture materializes the delivered package and then **plays the
+  adopter**, running the adopted toolkit in a synthetic repo —
+  `test_bootstrap` (full scaffold bootstraps), `test_old_kit_resync` (scaffold
+  at an old kit commit, sync forward), and the scaffold-driven gate modules.
+  That is a virtualized `EXT-003`.
+
+Worth splitting carefully, because overclaiming here would be easy. Materializing
+the package is **`B-05`** — ordinary verification of an output that genuinely
+leaves the system. It is the *second* half that is the rig: running the harness
+as an adopter would and judging that it comes up green. And SN-001's acceptance
+is already written at that far side — *"produces a scaffold whose harness runs
+green out of the box"* — so the need's own acceptance reaches across `REL-001`
+even though the frame says the system is not a party to it.
+
+**This does not decide Q2**, which is the owner's and is deferred pending Q1.
+What it does is remove the option of deciding it by preference: the frame
+declares relationships un-realizable, the suite has been realizing this one since
+before the frame was drawn, and one of those two has to move.
 
 ### 10.5 The self-derivation limit
 
