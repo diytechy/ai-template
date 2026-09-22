@@ -3,6 +3,11 @@
 **Status: PROPOSAL. Not a ruling.** It asks for one, because it changes the
 frame that [`external.toml`](../requirements/external.toml) declares LOCKED.
 
+**Owner answers to §9 recorded 2026-09-21** — four answered (one in principle),
+three open or deferred. Q1's answer opened a wider thread about auxiliary
+systems, developed in §10. Recording an answer is not the ruling; §§1–8 are
+unchanged by any of it.
+
 **What it proposes, in one sentence.** The kit records what the system must do
 at its own interface and tests that exhaustively; it does not record the
 assumptions that carry those interface facts up to the human outcomes its needs
@@ -172,15 +177,26 @@ Three reasons this is the right shape:
 
 Not authority alone — you *do* hold design authority over the pixels, and none
 at all over whether the user understood them. The criterion is **observability
-by the system**, which is Jackson's shared-phenomena test:
+by the system and whatever has been built to watch it**, which is Jackson's
+shared-phenomena test:
 
-> A crossing is `design` if the system can detect that it happened.
-> It is `effect` if the need names an outcome there that the system cannot see.
+> A crossing is `design` if the system, or a rig built to observe it, can
+> detect that it happened. It is `effect` if the need names an outcome there
+> that nothing built can see.
 
 This makes the central claim countable rather than rhetorical: **the V&V gap is
 the set of phenomena a requirement names that the system cannot observe.** "The
 gap grows with complexity" stops being a slogan and becomes something a row can
 be measured against.
+
+**`frame` records a position, not a property.** Observability is not intrinsic
+to a crossing; it is a function of what has been built to watch it, so a row can
+**move** from `effect` to `design` when someone builds the rig. That is a
+feature rather than a wobble — it makes the column a measure of instrumentation
+coverage instead of a permanent verdict, and makes *"we moved a crossing into
+the design frame"* a reportable result. §6(f) is the mechanism, and its
+price: moving a row does not delete that row's assumption, it **replaces** it
+with a fidelity assumption that has to be written as one.
 
 ---
 
@@ -270,10 +286,19 @@ And the slot already exists: `entity.class` is a closed vocabulary of
 `operational | enabling | interoperating | deliverable`, and **`enabling` has
 zero rows in this repo.** The declared vocabulary anticipated this and nothing
 ever filled it — while `EXT-005` ("Model provider API(s) / CLI(s)") is exactly a
-plant the kit depends on and cannot simulate.
+plant the kit depends on.
+
+One correction to make before that row is written: **EXT-005's protocol is
+already simulated; its judgment is not.** `FAKE_AGENT`
+(`tests/test_agent_loop.py:34`) is a scripted stand-in runner — it records each
+invocation and the model it was handed, then performs the next action from an
+`actions.txt` script (`commit` / `done` / `blocked` / `noop`) in the repo it was
+launched in. That is what makes the loop tests deterministic, and it is the half
+worth faking. The judgment half should stay un-simulated: a model good enough to
+stand in for a model is circular. The split is worth stating on the row.
 
 So: **two boundary types, one entity class, one new row kind.** Not three
-boundaries.
+boundaries. (What fills the `enabling` class, and what it costs, is §6(f).)
 
 ---
 
@@ -286,7 +311,7 @@ currently collects one.
 |---|---|---|---|---|
 | **1** | **S** | the design crossing | cheap | every commit — *this is all 194 TCs today* |
 | **2** | **W** | the assumption itself | cheap-to-moderate — *free where it is expressible as a metamorphic relation (§6c)* | continuous |
-| **3** | **R through W** | the effect crossing, via a translation layer | expensive | sparse, sampled — *and see the limit in §6* |
+| **3** | **R through W** | the effect crossing, via a translation layer | expensive — *unless a rig moves the crossing (§6f), which splits the cost rather than removing it* | sparse, sampled — *and see the limit in §6* |
 
 Obligation **2** is the new idea and the important one. Tests of W are often not
 software tests at all — they are measurements of the world, monitors, sampled
@@ -298,13 +323,14 @@ process", and it fails in the same direction.
 
 Obligation **3** is validation proper, and it is expensive by nature. The point
 of the proposal is **not** to make it cheap. It is to make it *rare and
-targeted* by putting obligation 2 underneath it.
+targeted* by putting obligation 2 underneath it — and, where a rig can be built,
+to change **what the expensive probe is aimed at** (§6f).
 
 ---
 
 ## 6. Why this is affordable
 
-Three mechanisms, in the order they matter.
+The mechanisms, in the order they matter.
 
 **(a) The probe count is bounded by the assumptions, not by the input space.**
 Validation gets unaffordable when you try to sample R directly, because R lives
@@ -382,6 +408,108 @@ top rung is full validation and every lower rung is a declared distance from it.
 Eight factors is far too heavy for this kit. The transferable part is the
 *shape*: a small ordinal, and a rule that the required level is set by
 consequence rather than by ambition. §7 proposes the minimal version.
+
+**(f) The boundary can be moved: a rig manufactures a design crossing.**
+Everything above takes the design/effect split as given. It is not given — it is
+the current position of the instrumentation (§3), and instrumentation has become
+far cheaper to build than the test-design conventions around it assume. This is
+the mechanism that changes what the other five are worth.
+
+The move: **add an enabling system (§4.3) that renders the effect observable,
+and the crossing it manufactures is `design` by construction** — it was built to
+be watched. Two instances, one from each end of the span this kit already claims
+(`CMP.category = "physical"` exists today):
+
+- A UI requirement's effect is *"the panel reads clearly."* Nothing at the API
+  boundary sees that, so the TC stops at the DOM. Render the pixels and hand
+  them to a vision model against a rubric, and a judgment of legibility becomes
+  an observable event. **What made this impossible before was not that the
+  effect was unobservable — it is that nothing rendered it.** Suites stop short
+  of the pixels because they were designed when no judge existed downstream of
+  them, and the convention outlived the constraint.
+- A manipulation requirement's effect is *"the apple is gripped."* Software
+  alone commands a current curve. A simulated arm with a contact model and a
+  simulated apple makes *grasp succeeded* an observable event — and variance in
+  mass, friction and pose can be injected far more cheaply than the
+  corresponding real-world scenarios can be staged.
+
+**What it buys, and what it does not.** It does not make the real phenomenon
+observable. It manufactures a crossing against a *model* of the world and makes
+**that** observable. So W does not disappear; it is **replaced**:
+
+| the assumption before the rig | the assumption after |
+|---|---|
+| *"zero orphans ⟹ a reviewer trusts the chain"* | *"a model judging the rendered artifact against rubric R judges as a human would"* |
+| *"this current curve ⟹ the apple is gripped"* | *"the contact model grips like the real gripper does"* |
+
+That exchange is the whole point, and it is strongly favourable. The left column
+is untestable in principle. The right column is a **fidelity** assumption —
+bounded, stated, and testable by calibration against reality. The rate is good
+because of *what changes how often*: the product changes every commit, the rig
+changes yearly. So obligation 3 (§5) **splits** rather than shrinking — cheap
+and continuous against the rig, expensive and sparse against the rig's fidelity.
+The same small number of expensive probes, now aimed at the stable thing.
+
+That is (a)'s pyramid with its rungs named: **the rig is the element level, and
+the fidelity check is what buys the right to run few R-probes.**
+
+**It needs no vocabulary beyond §4.2 and §4.3.** The rig is an `enabling`
+entity. Its crossings are ordinary `B-##` rows carrying `frame = "design"`.
+What is left over is one `[assumption.DA-###]` whose `bridges_from` is the rig's
+crossing, `bridges_to` the real effect, `holds_when` the rig's ODD, and
+`falsified_by` the calibration probe. No fourth `frame` value, no new row kind.
+
+**The credibility caveat is (e)'s, unchanged.** A verdict inherits the
+credibility of the rig that produced it — which is exactly why NASA-STD-7009's
+CAS scores *input pedigree* and *results robustness* as factors separate from
+validation. And the limit below stands without amendment: **a green run against
+a rig is not evidence the fidelity assumption holds; only a red one is evidence
+that it does not.**
+
+### What this repo already built, and the row it is missing
+
+The mechanism is live here and unrecorded. `render-dashboard-critique`
+screenshots `PROJECT_STATE.html` across a declared width/theme/tab matrix so
+that a critique judges pixels instead of ~790 KB of markup; the critique
+contract in `PROCESS_OPTIONS.md` already obliges a perceptual TC to name its
+**artifact recipe** beside its rubric; `llm-vision-convergence-loop` requires
+two consecutive approvals at one content hash. That is a rig, a declared ODD and
+a repeatability control — with **no assumption row behind any of them.**
+
+It also answers the re-evaluation worry directly: *a rendered panel changes
+easily, so what happens to its test case?* **The TC does not pin the pixels; it
+pins the rubric — and the contract already rules that the rubric derives from
+the SN/SR intent and never from the TC.** The anchor therefore sits *above* the
+artifact: a redesign re-runs the judgment instead of invalidating the case,
+`G#`/`B#` anchors accumulate as new failure modes are found, and the lax-TC
+ratchet fires if a CHANGES-REQUESTED round closes with no change to the TC
+prose, the test logic, or the rubric. The artifact is allowed to churn because
+the bar is not stored in it.
+
+What nothing does today is treat **the judge itself** as an assumption. No
+check notices when a model revision silently shifts what the critic approves.
+That row could be written immediately, and it is the most dogfoodable one in the
+proposal:
+
+```toml
+[assumption.DA-002]
+bridges_from = "B-##"        # the render rig's crossing - pixels, observable
+bridges_to   = "EXT-003"
+assumption   = """A vision model judging the rendered dashboard against the
+                  rubric reaches the verdict a human reviewer would."""
+holds_when   = """The model is image-capable; the rubric carries its accumulated
+                  anchors; the artifact is a static render at a declared
+                  width/theme."""
+obstacle     = """A model revision shifts judgment silently; or the rubric
+                  overfits to anchors accumulated under one model's eye."""
+falsified_by = "TC-###"      # a periodic human Attest sample that disagrees
+status       = "Drafted"
+```
+
+Note what that row does **not** claim. It does not assert that a model covers
+the human axis — the caution below rules that out and still does. It states the
+claim, bounds it, and names the sample that would refute it, which is the only
+honest form available for a human-axis assumption.
 
 ### The honest limit on sparse sampling
 
@@ -596,6 +724,10 @@ concept that rides existing rungs perfectly well.
 
 ## 9. Open questions for the owner
 
+Answers recorded inline, dated, with their standing marked. `ANSWERED` means
+the owner has decided and the next sitting may build on it; `DEFERRED` and
+`OPEN` mean it may not.
+
 1. **Does the human come out of `EXT-001`?** `EXT-001`'s own note calls this an
    open follow-on. Under this proposal it is decisive: if the human stays folded
    into "Development session", this repo has **no `effect` crossing at all** and
@@ -604,20 +736,49 @@ concept that rides existing rungs perfectly well.
    able to dogfood its own validation story. It is also the more invasive
    change.
 
+   > **Owner, 2026-09-21 — ANSWERED: yes, and wider than asked.** The human
+   > comes out. The owner also re-opens the *system breakdown* around it: every
+   > design has **auxiliaries** — a test rig, the test infrastructure itself,
+   > the deployment/delivery path — which are under design control, are not
+   > shipped with the product, and do not trace to an effect, yet carry implied
+   > requirements and tightly-coupled interfaces. Developed in **§10**; the
+   > owner will return to it in more detail.
+
 2. **Does `REL-001` become a crossing?** §1's finding is that the kit's
    stakeholder value lands across a relationship declared not-a-party. Either
    that ruling stands — and the kit accepts that it cannot validate its central
    claim, recorded as such — or `REL-001` is re-framed as an `effect` crossing
    and the frame grows. Both are defensible; drifting between them is not.
 
+   > **Owner, 2026-09-21 — DEFERRED, dependent on Q1.** Expected to fall out of
+   > the re-drawn breakdown rather than to be decided on its own.
+
 3. **`frame` vocabulary: two values or three?** `coincident` costs a word and
    buys an explicit claim. The alternative is two values plus the convention
    that a single row may be cited by both kinds of requirement.
+
+   > **Owner, 2026-09-21 — ANSWERED: three values; keep `coincident`.** Noting
+   > that ordinary software crossings will reach for it often. One idea
+   > recorded but **not adopted**: coincidence might be *derivable from
+   > topology* — a `B-##` running straight from an external entity into the
+   > design is coincident, whereas a crossing reached only through a
+   > translating layer is not. The owner pushed that to its end (*"does the
+   > `B-` interface need to exist at all?"*) and landed on keeping the explicit
+   > row: **differentiating is worth the word.** Consistent with the standing
+   > doctrine that an empty cell asserts nothing — a derived value would assert
+   > something nobody wrote.
 
 4. **How heavy is the evidence descriptor?** A 0–4 CAS-style ordinal is
    defensible and citable; a three-value `assumed | sampled | monitored` is
    cheaper and probably enough for a kit this size. My recommendation is the
    three-value form, with the CAS cited as where to go if a project needs more.
+
+   > **Owner, 2026-09-21 — ANSWERED: take the recommendation.** The three-value
+   > `assumed | sampled | monitored` descriptor, CAS cited as the escalation
+   > path. Recorded honestly: the owner notes the impact is hard to appreciate
+   > from here, so this is agreement to the cheap option, **not** a finding that
+   > the heavy one was wrong. If the descriptor starts carrying weight, this is
+   > the answer to revisit first.
 
 5. **Does a W-test supplement, or may it stand alone?** (§7.1.) The `IF-###`
    precedent says a TC citing only off-spine ids is an orphan. My reading is
@@ -626,10 +787,125 @@ concept that rides existing rungs perfectly well.
    it"* does not obviously discharge any single SR, so this needs deciding
    rather than defaulting.
 
-6. **Does any of this ship downstream in v1, or is it dogfooded here first?**
+   > **Owner, 2026-09-21 — OPEN, leaning stand-alone.** Against my reading
+   > above. Consequence if it holds: the `IF-###` precedent does **not**
+   > transfer, and `coherence.py`'s supplement rule needs a deliberate
+   > exception rather than a second tenant — which un-does most of §7.1's
+   > "this is cheap because the mechanism exists" argument. That cost is not
+   > yet surveyed.
+
+6. **Does a rig's crossing get a `B-##` row, or stay out of the frame?**
+   (§6(f).) Giving the render rig a boundary row puts an *enabling* system into
+   a registry that has so far held only the system's own crossings — and
+   `test_external_frame.py:87-114` pins the crossing count, so this is a
+   sitting either way. The alternative is to leave the rig unregistered and let
+   the assumption row carry the whole bridge: cheaper, but it forfeits the
+   "which crossings are instrumented" count that §3's mutable-`frame` reading
+   exists to buy.
+
+   > **Owner, 2026-09-21 — OPEN; the same question as Q1.** Stated by the
+   > owner as: *how do we differentiate the deliverable system the user
+   > experiences from the components that exist to maintain and deploy it?*
+   > Held until §10 resolves.
+
+7. **Does any of this ship downstream in v1, or is it dogfooded here first?**
    Given the template/instance sync constraint and the 20 bytes free in
    `AGENTS.template.md`, shipping the schema and holding the enforcement is the
    low-risk path.
+
+   > **Owner, 2026-09-21 — ANSWERED in principle: yes, it ships.** Conditional
+   > on the details being nailed down first — which §10 and Q5 currently block.
+
+---
+
+## 10. The auxiliary-system thread (OPEN)
+
+Recorded 2026-09-21 from the owner's answer to Q1, which turned out to be the
+same question as Q6. **This is a sketch of an unfinished argument, not a
+proposal.** The owner has said they will return to it in detail; it is written
+down here so the next sitting starts from it instead of re-deriving it.
+
+### The claim
+
+Every designed system has auxiliaries. They sit under the designer's control,
+they are not shipped, and they are not the product — yet they are tightly
+coupled to it and they carry real requirements about how the product is
+maintained and delivered. The owner names at least four kinds:
+
+| kind | this repo's instance | shipped? | may carry TCs? |
+|---|---|---|---|
+| the system the user experiences | the process and its scripts, as run | yes | yes |
+| the test **rig** — a modelled stand-in under design control | `FAKE_AGENT`, the render-shot runner | no | **maybe** |
+| the test **infrastructure** itself | pytest wiring, `conftest.py`, fixtures | no | **no** |
+| **deployment / delivery** | `EXT-002` (Template), bootstrap, resync | no | maybe |
+
+— and notes that in other projects the list extends to procurement,
+warehousing, and anything else standing between a finished design and a user's
+experience of it.
+
+### The rule the owner drew, and why it is the load-bearing part
+
+> *"The rig MIGHT have test cases; the test infrastructure itself would not."*
+
+That sentence is the one to keep. It **bounds the recursion** — otherwise every
+harness needs a harness — and it does so on a criterion this proposal can
+already express: **a rig makes a fidelity claim, and a fidelity claim is
+falsifiable; test infrastructure makes no claim about the world, it only runs
+things.** So §6(f)'s `DA-###` is the right instrument for the first and is
+simply inapplicable to the second. It is the same cut as `S ∧ W ⊨ R`: the rig
+contributes a W term, the plumbing contributes none.
+
+### Where it collides with the frame as it stands
+
+Three specific places, all checkable against the file today:
+
+1. **`EXT-001` already bundles three of the four.** Its description folds in
+   *"shell, git client, OS, Python, editors, test runner, LLM runners"* — so the
+   session entity currently carries the human, the dev environment, the test
+   infrastructure **and** the model runner in one row. Q1's *yes* splits the
+   human out; the owner's answer implies the rig and the infrastructure come out
+   too. That is a considerably larger re-draw than Q1 looked like on its own,
+   and it re-opens the count `test_external_frame.py` pins.
+
+2. **`enabling` is one word for at least three different things.** ISO 15288
+   puts rig, infrastructure and deployment in a single class, and §4.3 treats
+   that empty slot as the clean home for all of them. The owner's cut says they
+   differ in exactly the property this proposal cares about — whether a TC may
+   point at them. If that holds, either `enabling` needs subdividing, or the
+   verification obligation has to hang off something other than `class`.
+
+3. **The delivery auxiliary already exists, typed from the other end.**
+   `EXT-002` (Template) *is* the packaging/delivery auxiliary, and its note
+   already records the frame-relativity the owner is reaching for: *"From an
+   adopter's frame this package is their enabling system."* So the deployment
+   row is not missing — it is present, classed `deliverable`, and correct from
+   this repo's side. Any taxonomy that lands has to **absorb** that row rather
+   than add a second one beside it.
+
+### The degenerate case this repo is
+
+Worth stating plainly before anyone generalizes from here. **This kit's product
+*is* test infrastructure.** `CLAUDE.md` declares the traced product to be
+`project-trajectory/scripts` **and `tests/`** — so the thing the owner's rule
+would class as untestable plumbing is, in this repo, shipped product that must
+carry TCs. The auxiliary/product split is clean for an application and
+entangled here.
+
+That makes this repo a **poor place to validate the taxonomy and a good place to
+stress it**: any rule that cannot explain why `tests/` is product here and
+plumbing downstream is not yet the rule. My reading of the resolution — offered
+for the owner to accept or reject, not assumed — is that the split is
+**frame-relative, exactly as `EXT-002`'s note already says it is.** Auxiliary
+is a role a system plays with respect to a declared system-of-interest, not an
+intrinsic property, and this repo's system-of-interest is the kit, for which the
+harness is deliverable content.
+
+### What this does not change
+
+Nothing in §§1–8. The auxiliary question is about *which entities exist and how
+they are classed*; the `S ∧ W ⊨ R` argument, the `frame` column and the
+assumption row are indifferent to its answer. **§8's step 1 in particular stays
+executable today** — typing the five existing `B-##` rows does not wait on this.
 
 ---
 
