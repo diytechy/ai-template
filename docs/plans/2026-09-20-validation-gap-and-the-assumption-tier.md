@@ -191,6 +191,12 @@ the set of phenomena a requirement names that the system cannot observe.** "The
 gap grows with complexity" stops being a slogan and becomes something a row can
 be measured against.
 
+> **Bounded 2026-09-21 (§11.1).** Read that as *a lower bound* on the gap, not
+> the whole of it. Observability is one of **two** sources of W: a seam whose
+> far side **interprets** rather than computes — an LLM, an adopting team — is
+> fully observable and still carries W, because seeing the exchange does not
+> tell you the answer was right. `frame` classifies the first source only.
+
 **`frame` records a position, not a property.** Observability is not intrinsic
 to a crossing; it is a function of what has been built to watch it, so a row can
 **move** from `effect` to `design` when someone builds the rig. That is a
@@ -228,6 +234,15 @@ is approved by the same authority, it changes only by ruling, and it belongs
 beside the crossings it bridges. **Putting it here avoids a new registry file
 and a new stage predicate entirely** — the conservative option, and the one the
 file's own logic asks for.
+
+> **Re-argued 2026-09-21 (§11.4).** That is a reason for putting the rows in
+> *this file*; it is not a reason for them being rows at all, which the owner
+> challenged directly. The load-bearing answer is narrower: **W needs an id so
+> that W-evidence can be counted separately from S-evidence.** `Verifies` takes
+> ids, so an assumption stated as a *cell* on a boundary row cannot be cited by
+> a TC — and §5's three obligations collapse into one counter the moment they
+> share an id. §11.3 also drops `bridges_from` in favour of the seam citing the
+> assumption, which removes a duplicated edge.
 
 ```toml
 [assumption.DA-001]
@@ -1116,6 +1131,177 @@ classed, and where the bridge is recorded*; the `S ∧ W ⊨ R` argument, the
 `frame` column and the assumption row are indifferent to its answer. **§8's step
 1 in particular stays executable today** — typing the five existing `B-##` rows
 does not wait on any of this.
+
+---
+
+## 11. Are assumptions a tier, or a cell? (owner challenge, 2026-09-21)
+
+The owner's challenge, stated fairly, because it is the strongest one made
+against §4.2 so far:
+
+> *A user is always working* through *something that translates — a person
+> operates a computer, the computer turns their intent into cells in the spine
+> registries, the tooling acts on those. So the translation is not a special
+> case, it is everywhere. And it is ultimately boundaries and relationships that*
+> *"make an assumption about how another system will interpret complex
+> information." Even an `IF` row facing an LLM assumes a non-deterministic
+> judgment on its input. So why a separate row kind — why not just expand the
+> boundary definition with what it assumes about an ambiguous far side?*
+
+The challenge is right about the diagnosis and, I will argue, backwards on the
+remedy — but the diagnosis forces a correction to §3 that matters more than the
+remedy does.
+
+### 11.1 The correction: W has two sources, not one
+
+§3 derives the entire V&V gap from **observability** — *"the set of phenomena a
+requirement names that the system cannot observe."* That is incomplete, and the
+owner's LLM example is the counter-example that shows it:
+
+**An `IF` row facing a model is fully observable and still unverifiable.** The
+system can see the call happen, see what it sent, and see what came back. Every
+phenomenon is shared. And none of that says the answer was *right*, because the
+far side **interpreted** rather than computed.
+
+So there are two independent properties, and the doc has been running them
+together:
+
+| axis | question | if "no" |
+|---|---|---|
+| **observability** (§3) | can the system detect that the crossing happened? | the crossing is `effect`; W bridges to it |
+| **determinism** | does the far side *compute*, or *interpret*? | seeing the crossing does not tell you it was right; W covers the interpretation |
+
+Observability asks *can I see it*. Determinism asks *does seeing it tell me it
+is correct*. They are orthogonal, and **W attaches to either.** This is exactly
+the oracle problem that §6(c) already cites (Barr et al. 2015) — the doc quoted
+it as a reason validation is expensive and never connected it to the frame. It
+belongs in the frame: a seam with no oracle carries W whether or not it sits at
+the boundary.
+
+**Consequence for §3:** the `frame` column stays correct and stays worth adding,
+but it no longer classifies every source of W. A crossing can be `design`,
+`coincident`, and still assumption-laden. The countable claim in §3 should be
+read as *a* lower bound on the gap, not the whole of it.
+
+### 11.2 The pervasiveness is real, and it is priced
+
+Counted, not estimated. `interfaces.toml` holds **167 rows**, and the external
+parties they name are:
+
+```
+41  external:downstream     the adopting team - interprets
+ 5  external:               (unqualified)
+ 4  external:git            computes
+ 4  external:agent          the model runner - interprets
+ 3  external:run            computes
+ 1  external:upstream
+```
+
+So the interpreting far sides are roughly **45 of 167 rows, ~27%** — not
+universal, as the owner's "always" would suggest, but far more than the ~16
+effect-side assumptions §6(a)'s affordability argument was sized against. The
+challenge is therefore materially correct: **assumptions are not confined to
+effect crossings, and §6(a)'s "twelve assumptions, twelve probes" was priced too
+cheaply.**
+
+### 11.3 Why pervasiveness argues *for* rows, not cells
+
+Here is where I think the remedy inverts. If the assumption were a cell on the
+boundary or `IF` row, then the claim *"the far side interprets rather than
+computes, so its output requires judgement rather than comparison"* would be
+written **45 times**. Those 45 copies would drift, would each need their own
+falsifier, and could not be narrowed in one place when the ODD is restricted
+(§6d).
+
+That is precisely the situation this repo's own doctrine addresses:
+
+> *"Where two or more existing outputs already overlap, restructure so each
+> behavior has exactly one home — never an original plus a near-copy."*
+> — PROCESS.md §3, the 0→A→B rule
+
+**A pervasive assumption is the strongest possible argument for giving it an
+id.** One row, one status, one `holds_when` to narrow, one `falsified_by` — and
+45 seams citing it. Stated as cells it is 45 near-copies of one claim; stated as
+a row it has one home. The owner's observation that assumptions are everywhere
+is the reason they cannot be cells.
+
+**This does flip the citation direction, and that fixes a duplication the owner
+was right to sense.** §4.2's `bridges_from` / `bridges_to` re-declares an edge
+the `B` and `IF` rows already declare. Better: the **seam cites the
+assumption**, exactly as an SR cites `boundary_refs` today —
+
+```toml
+[boundary.B-05]
+frame       = "design"
+rests_on    = ["DA-001"]      # NEW - the assumptions this crossing's claims need
+```
+
+— leaving the `DA` row to carry only what the seam does not already know: the
+effect side it reaches, the ODD, the obstacle, the falsifier. `bridges_from`
+becomes derivable and should be dropped. **This is a real simplification of
+§4.2 and it came out of the challenge.**
+
+### 11.4 The second reason, which is decisive on its own
+
+Even if an assumption were attached to exactly one seam and never shared, it
+would still need an id — because **§8 step 3 requires a test case to cite it,
+and `Verifies` takes ids, not cells.**
+
+If a W-test cites the boundary instead, then a TC verifying the crossing's
+*contract* and a TC verifying the crossing's *assumption* become
+indistinguishable. §5's three obligations collapse back into one counter, and
+§1's finding — *194 test cases and all 194 of them test the machine* — becomes
+unsayable. The whole document exists to make that split countable. **W needs an
+id so that W-evidence can be counted separately from S-evidence.** That is a
+better justification for the row kind than the one §4.2 gives ("a fourth
+statement about the same frame"), and §4.2 should be re-argued on it.
+
+### 11.5 Which assumptions become rows — the filter the doc lacked
+
+The owner's keyboard example exposes a genuine hole. *The computer translates
+the user's intent into cells in the registries* is true, is an assumption, and
+obviously should not be a row. The doc had no rule for stopping. Two, proposed:
+
+1. **The obstacle test — primary, and self-checking.** An assumption earns a row
+   when you can write a **non-silly `obstacle`** for it (§6b). If the negation is
+   not a failure mode anyone would plan against, there is no row. *"The keyboard
+   emits characters other than those pressed"* fails. *"A team green-scaffolds,
+   never fills a registry, and operates a spine that says nothing"* passes. This
+   uses a cell §4.2 already proposes and needs no new machinery.
+2. **The interpretation trigger — where to go looking.** Wherever the far side
+   interprets rather than computes (§11.1), *suspect* an assumption. A detector
+   for where to search, never a rule that every such seam yields a row.
+
+Behind both sits NASA-STD-7009's rule, already cited at §6(e): **credibility
+proportional to the risk of the decision the evidence supports.** The keyboard
+assumption carries no decision risk. The scaffold assumption carries all of
+SN-001's.
+
+### 11.6 What is still not captured
+
+The owner says pieces are missing, and that is correct — these are the ones I
+can name, recorded so the next pass does not mistake this section for closure.
+
+1. **Blast radius is unmodelled.** If 41 seams cite one assumption and it is
+   falsified, 41 seams are affected at once. Nothing in the proposal expresses
+   that, and a shared `DA` row makes the coupling invisible in exactly the way a
+   shared dependency does.
+2. **Chained assumptions.** If a crossing rests on `DA-001` and `DA-001` itself
+   rests on another assumption, does `W` compose? Jackson's formalism takes `W`
+   as a flat conjunction and says nothing about depth. The owner's
+   user→device→registry→tooling chain is precisely a chain, so this is not
+   hypothetical.
+3. **Interpretation is graded, and the frame treats it as binary.** A seam using
+   constrained decoding against a JSON schema is far more deterministic than a
+   free-prose critique — the kit ships `structured-output-contract` as a skill
+   *specifically* to move a seam along that axis. The frame should be able to
+   record that a seam was **hardened**, and today it cannot. This is the most
+   actionable of the three.
+4. **Where the translating equipment itself belongs.** §10.1 types a rig as a
+   system that performs the conversion, but the owner's point is that
+   *non-rig* equipment performs it too, all the time, and is simply trusted.
+   That trusted layer has no home in the frame and probably needs none — but
+   "probably needs none" is not yet an argument.
 
 ---
 
