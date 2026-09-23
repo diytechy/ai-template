@@ -1225,7 +1225,7 @@ build on it; `OPEN` means it may not.
 | — | Orientation, the adopter, and the reversed rulings | **DECIDED:** operating frame, two planes, `EXT-003` dropped, 13u reversed (§5). `REL-003`, hosted CI and 13o **to recheck** at the sitting (§5.2). |
 | — | Two chains | **Agreed 2026-09-22:** WHERE is `EXT ← [B] ← DA ← IF ← SS`, with the DA or the IF optional but not both; WHY is `Stakeholder ← SN ← DA` (or `← IF`). An SS is stated over an IF or a DA, never a bare bundle, except the package-wide class (§6.2). The stakeholder is not in the WHERE chain. |
 | — | Hats | **Agreed 2026-09-22:** a hat is a lens that constrains, not a stakeholder; five outcomes per piece; `speaks_for` on voice hats (§6.5). |
-| Q9 | Rename SR to SS (system specification)? | **DECIDED: prose now, prefix later.** Docs call the tier "the specification" now; the `SR-` prefix stays until a separate, deliberate adopter migration (§6.2). |
+| Q9 | Rename SR to SS (system specification)? | **DECIDED: prose now, prefix later.** Docs call the tier "the specification" now; the `SR-` prefix stays until a separate, deliberate adopter migration (§6.2). Note: in conventional SRS usage *specification* names the document and its entries are *requirements*, so "system requirement" is the standard entry name. That leaves "prefix never" open as the likely outcome (appendix). |
 | Q10 | Derive `frame` from which rows exist, instead of writing it? | **DECIDED: write it, check the derivation.** Q3's explicit word stands; a check compares it with the derivation (no DA = coincident, IF + DA = bridged, DA without IF = effect). Whether to drop the written value is decided later (§5.7). |
 | Q11 | Does an SS reach its need through its IF / DA, or keep authored `sn_refs`? | **DECIDED: derive, allow narrowing.** An SS inherits its needs from what it is stated over, and may add its own `sn_refs` to narrow where an IF serves several needs. Measure needs-per-IF once the links exist (§6.2). |
 | Q12 | Where does a stakeholder live? | **DECIDED: a small stakeholder list.** Named rows, likely in `stakeholder-needs.toml`; each SN cites one, hats' `speaks_for` points at one, and a stakeholder may optionally link to an EXT party (§6.2, §6.5). |
@@ -1255,6 +1255,40 @@ Recorded so this section is not mistaken for closure.
 **Verify before ruling.** The 15288 definition of an enabling system, its stage
 list and the Transition process name are given from knowledge, not from the text.
 Check them against the 2023 edition before citing any of it in a ruling.
+
+---
+
+## Appendix — the conventional SRS, mapped
+
+A cross-check against the usual outline of a System Requirements Specification
+(SRS): *what* the system must do and how well, without *how* it is built. The
+model above covers every element. Nothing here proposes a change.
+
+| SRS element | where it lives in this model |
+|---|---|
+| Purpose, scope, definitions | the README's `PROJECT-VISION:` tag, each need's Scope, `PROCESS.md` |
+| System context | the depth-0 frame (§5), becoming a derived view (§5.7) |
+| Major functions | needs and components |
+| User characteristics | the stakeholder list (Q12) |
+| Constraints | `performance-budgets.csv`, the dependency ledger, `stack.ini`, and hat-produced constraints (§6.5) |
+| **Assumptions** | **the DA rows. Empty in the kit today: the gap §1 found.** |
+| Functional / non-functional | implicit in how an SS originated: see below |
+| Interface requirements | IF rows, which an SS is stated over (§6.2) |
+| Exclusions (no design detail) | the SR / LLR split, and SN-033's check that needs name no mechanism |
+
+**Assumptions are a standard section, not an invention of this proposal.** The
+conventional outline gives them their own slot, so §1's finding is also a gap
+against ordinary practice. IEEE 830 (since superseded by ISO/IEC/IEEE 29148) is
+recalled as having an "assumptions and dependencies" section; that is from
+memory, so check the text before citing it.
+
+**No functional / non-functional category.** The split is binary and adds
+nothing the kit cannot already read. SRs carry an optional `aspect` (a closed,
+cross-cutting review grouping — process, trajectory, unattended-loop,
+connectivity, perf, portability; filled on 31 of 79, never gated), and the
+non-functional kind are what hats produce as constraints (§6.5).
+
+**Lifecycle is an enabling system** (§8.1), not yet exercised by a project.
 
 ---
 
