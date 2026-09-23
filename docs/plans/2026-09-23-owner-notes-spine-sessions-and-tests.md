@@ -8,13 +8,13 @@ records what the repo does today (with anchors), what the note would change,
 the trade-offs, and a recommendation. Nothing here is built; the questions in §5
 are for the owner.
 
-**Revised twice after adversarial review (2026-09-23, §6).** Two codex Sol
-reviews (reasoning effort high) found 15, then 6 problems. The first rejected the
+**Revised three times after adversarial review (2026-09-23, §6).** Three codex
+Sol reviews (reasoning effort high) found 15, then 6, then 3 problems. The first rejected the
 draft as a decision basis: it had the approval-authority question wrong, inferred
 a test split the registry does not contain, and understated what several
-recommendations need. The second confirmed those fixes and found six residual
-problems. Every finding was checked against the code; all held, and each is
-applied below.
+recommendations need. The second and third confirmed the earlier fixes and
+found six, then three, residual problems. Every finding was checked against the
+code; all held, and each is applied below.
 
 **Who this is for.** The owner, as a decision document. Each section keeps the
 owner's note number, so a note maps to exactly one place.
@@ -231,12 +231,20 @@ defects they exist to catch. Where "descend only when something changed or
 failed" *is* the right economics is expensive, judgment-based verification
 (§2.3).
 
-**Recommendation.**
-1. Keep every test in the commit bar that is there today.
-2. If test level matters, **first give each TC a primary verification purpose**
-   (or split mixed TCs where that is honest), then measure the populations —
-   before any ordering or conditional policy.
-3. Reconciling the 41 tier disagreements is **not a data cleanup**. Moving slow
+**Recommendation — a three-way decision, and the cheap branch is the
+recommended one.**
+
+| option | what it takes |
+|---|---|
+| **(a) drop the ordering idea** — keep every test in the commit bar, as today | nothing |
+| (b) add a primary-purpose field to every TC and backfill it | an **approval-bearing** migration: unknown columns default to approved content (`acceptance_record.py:212-219`), and 184 of the 194 TCs are Approved, so up to 184 rows are judged by hand and re-attested — plus carrier, template, renderer and check changes; or splitting mixed TCs into new ids |
+| (c) a different carrier for test purpose, outside the approved cells | a design, and an argument for why it is not approval-bearing |
+
+**Recommend (a).** The saving the note hopes for is small — every test already
+runs in the bar — and (b)'s cost is close to a whole-registry re-attestation.
+Revisit only if a measured benefit appears.
+
+Separately: reconciling the 41 tier disagreements is **not a data cleanup**. Moving slow
    evidence into smoke can break the 60-second budget; changing an approved TC's
    tier amends an approved row and needs re-attestation; and the TC-to-test
    relation is many-to-many, so no trivial derived mapping exists. Decide
@@ -359,16 +367,39 @@ file" is not expressible in codex's sandbox modes.
 
 | role | behaviour | tools |
 |---|---|---|
-| REVIEW-A, REVIEW-B, CRITIQUE, PROBE | judge and report | **output-only**: no bypass flag, the provider's read-only mode; the verdict is returned as output and the orchestrator records it |
+| REVIEW-A, REVIEW-B, CRITIQUE, PROBE | judge and report — but a reviewer also **runs the harness and drives real code paths** (`reviewer.template.md:39-41`) | **non-mutating, not read-only**: it must still execute tests and write temporary files; what it must not change is the tree under review (below) |
 | BUILD | writes code and rows | full |
 | DESIGN-CHECK | a **rework** session: its commit is the rework and arms the next review (`PROCESS_OPTIONS.md:1128-1139`; `agent_loop.py:3047-3061`) | full |
 | ADJUDICATE | performs the approval act: the verdict, the scoped Status flips, the snapshot, the dispositions and close — the writes §3.5 keeps it doing | bounded write |
 
-1. **Provider-specific command construction per role** is part of this item:
-   the bypass flag is removed for the output-only roles.
-2. Recording an output-only role's verdict is **not** an approval act, so the
-   orchestrator writing it raises none of §3.5's authority problems. The
-   adjudicator keeps its own reviewed writes.
+**Why "read-only" is the wrong tool for reviewers.** The third review was
+right: a reviewer must run the harness, so a read-only sandbox (or a
+`Read,Grep,Glob` allow-list) stops it doing its job; and the loop treats a
+missing verdict file as a failed draw that is cooled and rerouted
+(`agent_loop.py:2552-2573`). The verdict file is also a ruled carrier: OI-76
+makes the gate consume round files from logged reviewer sessions, bound to the
+tree they reviewed.
+
+**The simpler mechanism: a disposable copy.** Run each review-type session in a
+**throwaway worktree at the same commit** as the tree under review. It can run
+anything and write anywhere; when it ends, the coordinator collects its verdict
+file, commits it into the lane beside the scoreboard and trailer it already
+writes (`agent_loop.py:2726-2744`), and discards the copy. So:
+
+- no provider-specific sandbox is needed to stop reviewers editing the tree —
+  their edits never reach it;
+- the verdict is still the logged reviewer session's own file, bound to the same
+  tree SHA — **OI-76's attestation is preserved**; what changes is only who
+  commits the file (the coordinator, not the reviewer), which should be recorded
+  as a small amendment to OI-76's workflow;
+- a malformed or missing verdict keeps today's failure semantics (a failed draw).
+
+It costs a disposable-worktree step in the coordinator, the collection and
+commit, and tests on each supported provider. Dropping the bypass flag for these
+roles becomes optional hardening rather than the mechanism.
+
+The adjudicator keeps its own reviewed writes; design-check and build keep full
+tools.
 3. A declared **phase → skills** map, named in the brief, so discovery can be
    switched off for review roles.
 
@@ -495,8 +526,12 @@ prose would rot; the kit's stable vocabulary is tiers (*quick*, *medium*,
    note's "only down-tier" would retire it; that is a policy change, not a
    clarification.
 2. Prose names **tiers, not models**.
-3. **Never from review, critique, design-check or adjudication sessions** — and
-   with §3.3's restricted command construction those roles cannot spawn anyway.
+3. **Never from review, critique, design-check or adjudication sessions.** This
+   is **prose, not enforcement**, until item 4's design lands: no role is denied
+   spawn tools today, and a disposable worktree (§3.3) stops edits, not fan-out.
+   Denying spawn tools per provider (Claude's `--tools` allow-list is separate
+   from its restricted mode; codex and opencode need their own) is part of that
+   design, with fail-closed tests per provider.
 4. **Budgets need an observability design first.** Provider-neutral accounting
    assumes a boundary the session engine does not have: `subagent_gate` sees only
    Claude's `Task`/`Agent`, codex routes have no structured stream, and a
@@ -611,11 +646,11 @@ validating structured output is owed too.
 | S2 | LLR → design expectation: prose now, prefix a separate later decision; no edits to old logs? | yes (§1.2) |
 | S3 | Design constraints: each a need, canonical in the need; the provenance anchor on the need, not the stakeholder row; schema ruled with the stakeholder list? | yes (§1.3) |
 | S4 | Retired rows: keep deletion, and amend D-4 to add a structured retirement fragment in `docs/log.d/`, with the deleting commit resolved at render time? | yes (§1.4) |
-| S5 | Test level: give TCs a primary verification purpose before any ordering policy; treat the 41 tier disagreements as a priced migration, not a cleanup? | yes (§2.2) |
+| S5 | Test level: drop the SR-first ordering idea (a purpose field would re-attest up to 184 approved TCs); treat the 41 tier disagreements as a priced migration? | (a) (§2.2) |
 | S6 | Observation tests: design an event-triggered runner (state, owner, failure semantics) before approving triggers? | yes (§2.3) |
 | S7 | One session service (act / keep / record), with WI-551 landing through it? | yes (§3.1) |
 | S8 | Telemetry parity: a raw telemetry stream or structured output for codex and opencode, a provider column, and tokens kept distinct from context occupancy? | yes (§3.2) |
-| S9 | Roles split by behaviour: reviewers, critics and probes output-only; build, design-check and adjudicate keep their writes? | yes (§3.3) |
+| S9 | Reviewers, critics and probes run in a disposable worktree at the same commit, with the coordinator committing their verdict (a small amendment to OI-76's workflow); build, design-check and adjudicate keep their writes? | yes (§3.3) |
 | S10 | Retention: the adjudicator's lands; builder retention a separate ruled experiment; reviewers never? | yes (§3.4) |
 | S11 | Keep the adjudicator's reviewed commit as the approval act; a mechanical trigger only as its own ruling with authenticated issuance? | yes (§3.5) |
 | S12 | Fan-out: rule on peer-tier delegation; tiers not models; never from review roles; budgets only after an observability design? | yes (§3.6) |
@@ -673,3 +708,19 @@ problems; each was checked and applied.
 | 4 | provider-neutral fan-out budgets assume machinery that does not exist | §3.6: contingent on an observability design |
 | 5 | constraint provenance had two candidate homes across the two plans | §1.3, and the assumption-tier plan §6.2 |
 | 6 | an all-tier absolutes rule needs a per-tier matrix; TCs have no reason cell | §1.1 tier matrix, TCs excluded |
+
+### 6.3 Round 3 — codex Sol, reasoning effort high (2026-09-23)
+
+Verdict: *"NOT YET SOUND — S9/S12 still assume an unbuilt portable restriction
+and verdict-recording mechanism, while S5 omits a near-whole-registry approval
+migration."* It reproduced every count and confirmed the round-2 corrections
+match the implementation, and found three residual problems; each was checked
+and applied.
+
+| # | finding (short) | where it landed |
+|---|---|---|
+| 1 | reviewers must run the harness and commit a tree-bound verdict (OI-76); read-only breaks that | §3.3: a disposable worktree at the same commit; the coordinator commits the verdict |
+| 2 | "those roles cannot spawn anyway" was false | §3.6: prose until the observability design, with per-provider spawn denial in it |
+| 3 | a TC purpose field is an approval-bearing migration of up to 184 approved rows | §2.2: a three-way decision; recommend dropping the ordering idea |
+
+The applied fixes were not put through a fourth round.
