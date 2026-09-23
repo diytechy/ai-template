@@ -31,10 +31,13 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 - **Awaiting owner ruling — the validation gap:** read
   [the assumption-tier proposal](plans/2026-09-20-validation-gap-and-the-assumption-tier.md).
   It asks for a frame ruling (the frame is LOCKED). Start at its "model at a
-  glance"; the owner's answers are in its §11. Every question is answered;
-  what remains is the sitting, which also reverses parts of sitting 2 (its §5.2). **Nothing
-  is built before the sitting**: the old separable step 1 is folded into it, and
-  every step re-pins `tests/test_external_frame.py` or depends on one that does.
+  glance"; decisions are in its §11. **Revised after an adversarial Sol review
+  (2026-09-23, its §11.2):** six earlier answers are REOPENED with proposed
+  replacements, and Q16–Q18 are new — all awaiting the owner's review. A
+  mockup of the resulting depth-0 view is in `docs/plans/mockups/`. The sitting
+  also reverses parts of sitting 2 (its §5.2). **Nothing is built before the
+  sitting**, and every step re-pins `tests/test_external_frame.py` or depends on
+  one that does.
 - **Next implementation:** resolve the existing SR-161 per-decomposition
   perspective-record gap and complete TC-211's normal sample. Follow the
   existing artifact adjudication route for the Drafted amendments; passing an
