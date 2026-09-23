@@ -228,6 +228,10 @@ crossing into the design frame"* a reportable result. The price: moving a row
 does not delete its assumption, it **replaces** it with a fidelity assumption
 that has to be written down.
 
+If the boundary becomes a derived view (§5.7), `frame` can be derived from which
+rows exist rather than written on the bundle. That is Q10, and it would revisit
+Q3.
+
 ### The candidates, assessed
 
 | candidate | verdict |
@@ -384,6 +388,55 @@ returns. Relationships 3 → **2**, or 1 if `REL-003` becomes a crossing. No SR'
 from `B-05` to the read crossing. Next ids from `docs/id-watermark`: `EXT-006`,
 `B-09`, `REL-005`. Costs are in §9.3.
 
+### 5.7 The boundary as a derived view
+
+A `B` row is a bundle: the collection of signals that pass between the system
+and one party in one direction. Once each IF says which party it attaches to,
+the bundles can be derived rather than hand-maintained. Grouping by party and
+direction, against the live rows:
+
+| today | party, direction |
+|---|---|
+| `B-01` governed writes | `EXT-001`, in |
+| `B-02` authority | `EXT-001`, in ← **collides with `B-01`** |
+| `B-04` verdicts | `EXT-001`, out |
+| `B-05` template | `EXT-002`, out |
+
+Today `B-01` and `B-02` would merge. After the redraw (§5.6), `B-02` belongs to
+the human operator and `B-01` to the session, and every pair is unique,
+including the read crossing. So the derivation reproduces the redrawn frame
+exactly. Where two bundles carry different signals to one party in one
+direction, an optional `bundle` label on the IF separates them.
+
+The pattern already exists here: `components.derived.toml` is generated from
+the rows that carry the obligation (*"do not hand-edit"*).
+
+**What derivation needs:**
+
+- **IFs name a party, not a bundle.** The 44 tie-backs convert mechanically,
+  since each `B` has one entity. But 41 IFs name `"external:downstream
+  adopter"` as free text, and that is the entity §5.5 drops. Reassigning them to
+  the human operator or the operating environment is judgment, row by row.
+- **An effect with no IF enters through its DA.** The authority crossing has no
+  IF by design, so its DA names the party and direction itself (§6.2).
+- **Some of `B`'s content is not derivable:** the `carries` intent, ruling notes
+  such as `B-04`'s honest-limit paragraph, and approval status. The prose and
+  status move to the EXT row, one entry per direction.
+- **`frame` becomes derivable too:** an IF with no DA is coincident, an IF with
+  a DA is bridged by an assumption, and a DA with no IF is effect. That would
+  revisit Q3's decision to keep `coincident` explicit (Q10).
+
+**Two steps, so the second is a separate decision:**
+
+1. **Keep the `B` rows, add the IF → party links, and check each `B` against
+   its derived bundle.** A mismatch is a finding, which also tests whether the
+   derivation holds.
+2. **Once that check has held, drop the rows and generate the view.** `B` ids
+   are cited 87 times in `system-requirements.toml` alone, and also in the
+   rulings, the shipped `external.template.toml` and `test_external_frame.py`.
+   This step is an adopter migration and a bigger change to the LOCKED frame
+   than the redraw itself.
+
 ---
 
 ## 6. The assumption row
@@ -411,61 +464,111 @@ Two reasons, either sufficient:
    one `holds_when` and one falsifier, citing the seams it covers, is
    PROCESS.md §3's 0→A→B rule applied to W.
 
-### 6.2 Where it sits, and which need it answers
+### 6.2 Two chains: where it sits, and why it exists
 
-**A DA is a sibling of the SR.** Both sit at a crossing, and both answer a
-need. An SR carries `boundary_refs` (where it sits) and `sn_refs` (which need
-it discharges). A DA carries the same two links for the same two reasons:
+The assumption sits between a bundle and the interfaces that measure it. The
+need it serves sits on a separate chain, because a stakeholder need not touch
+the system at all.
 
 ```
-                SN-002  "a reviewer can trust the chain"               R
-               /                                        \
-  SR  "the strict check reports zero orphans"     DA  "zero orphans ⟹ a reviewer trusts it"
-  (S — the system's behaviour)                    (W — what the world must do for S to deliver R)
-               \                                        /
-                the read crossing — where the human reads the spine    where both SIT
-                  │
-                LLR → TC   (verify S)          TC (verify W — §7 obligation 2)
+WHERE          EXT ◄── [B] ◄── DA ◄── IF ◄── SS ◄── LLR ◄── TC      measured through an assumption
+               EXT ◄── [B] ◄───────── IF ◄── SS                     no DA: coincident
+               EXT ◄── [B] ◄── DA ◄───────── SS                     no IF: clearly assumed (authority)
+
+WHY    Stakeholder ◄── SN ◄── DA        (or ◄── IF, when no DA is needed)
 ```
 
-The crossing says *where* the assumption applies. That is the boundary between
-the system and a world that is often non-deterministic, and it is the right
-home. But one crossing serves many needs: `B-05` carries 69 SRs across most of
-the needs, and the read crossing will carry several. So the crossing cannot say
-*which argument* the assumption completes. `sn_refs` does. With both links, a
-need's whole argument — its S and its W — is one query.
+`SS` is the SR tier: the specification in Jackson's terms (§2). Whether the
+name and prefix change is Q9 (§11). `[B]` is the bundle, derived from the rows
+that attach to it (§5.7). The input side is drawn; the output side mirrors it.
 
-**The spine keeps `SN → SR`.** Routing SN → B → SR would lose which subset of
-a crossing's SRs discharges a need, and would rewrite the strict orphan check.
+**The rule behind the WHERE chain.** An SS must be testable, so **it is stated
+over a defined interface (an IF) or a clearly stated assumption (a DA), never a
+bare bundle.** This sharpens 13s (sitting-2 §3R), which already allowed a
+bundle *"as long as it's broken down or clearly stated in the component
+details."* The IFs are that breakdown; the SS now says which piece it is about.
+The recursion 13s ruled stays clean: an SS cites IFs that attach to a party,
+and an LLR cites the internal seams (124 of the 167 IFs today).
 
-The row, in `external.toml` for now (placement is Q8, §11):
+**The DA does not create the IF.** The IF is designed and exists regardless.
+The DA states *why that IF's reading stands in for the effect at the party*,
+and names the IFs it measures the effect through. When there is nothing to
+measure through, as at the authority crossing, it names none, and attaches to
+the party directly.
+
+**Not every IF needs a DA.** A deterministic interface, like `subagent_gate`'s
+exit code 0/2, is its own effect: that is `coincident`. Forcing a DA onto it
+produces a row with no obstacle worth writing, which fails §6.3's filter. The
+absence of a DA asserts coincidence, the same way `interfaces.toml` already
+treats an absent tie-back as a statement.
+
+**The stakeholder is not in the WHERE chain.** A need can belong to someone who
+never touches the system: SN-038 (*"an adopter can determine why every file
+supplied by the kit exists"*) is one, and a legal or regulatory voice is
+another. A stakeholder is sometimes also a party (the human operator is both),
+but that is an optional link, not a rule. Needs carry no stakeholder field today
+(Q12).
+
+**Where the need link comes from.** The DA carries `sn_refs`. When there is no
+DA, the IF carries them. An SS reaches its need through whatever it is stated
+over. An assumption *supports* a need rather than satisfying it: the need is
+met by S ∧ W together, and the WHY chain records both halves.
+
+That granularity is a judgment call, recorded as Q11. An IF that serves several
+needs passes all of them to every SS citing it. That is much finer than going
+through the party — the human operator will be the stakeholder for ~24 of the
+27 needs, so an SS traced through the party would appear to serve all 24, and
+the coverage check would report full coverage that means nothing (SN-002's
+failure mode, built into the schema). Through the IF it is typically one to
+three needs. It cannot be measured yet, because no IF cites a need today; the
+proposal is to derive by default, let an SS narrow with its own `sn_refs`
+where an IF is shared, and measure needs-per-IF once the links exist.
+
+**The wiring this replaces**, for reference:
+
+| row | links today |
+|---|---|
+| SR (79) | `sn_refs` → SN, `boundary_refs` → B; **no link to any IF** |
+| IF (167) | tie-back → B for 44 (39 to `B-05`, 4 to `B-04`, 1 in from `B-01`); 124 internal; none for `B-02`, by design |
+| LLR (192) | `sr_refs` → SR, plus `component`, `module`; no link to any IF |
+| TC (194) | `verifies` → SR / LLR; 8 also cite an IF |
+
+An SR and its IFs meet only at `B` today, so an SR at `B-05` does not say which
+of the 39 interfaces it is about.
+
+**One stated exception.** SR-031, SR-034, SR-035 and SR-114 are the ruled
+"package-wide property" class: a property of every delivered capability at
+once. They apply to every IF in the Template's bundle, so they stay stated
+against the bundle, as an exception named in the rule rather than a gap in it.
+
+The row:
 
 ```toml
 [assumption.DA-###]
-sn_refs       = ["SN-002"]
-boundary_refs = ["B-##"]        # the read crossing
-assumption    = """A spine the strict check passes with zero orphans is one a
-                   reviewer can rely on: each row says something, and the links
-                   between rows are the ones a reviewer would draw."""
-holds_when    = """Rows are authored under the spine-authoring question list;
-                   the reviewer reads the generated views, not raw TOML."""
-obstacle      = """Every row resolves and every row says nothing: an
-                   orphan-free, semantically vacuous spine."""
-falsified_by  = "TC-###"        # the signal that would show this is false
-status        = "Drafted" | "Approved"
+sn_refs      = ["SN-002"]
+measured_at  = ["IF-###"]       # the strict check's report, as rendered for reading
+assumption   = """A spine the strict check passes with zero orphans is one a
+                  reviewer can rely on: each row says something, and the links
+                  between rows are the ones a reviewer would draw."""
+holds_when   = """Rows are authored under the spine-authoring question list;
+                  the reviewer reads the generated views, not raw TOML."""
+obstacle     = """Every row resolves and every row says nothing: an
+                  orphan-free, semantically vacuous spine."""
+falsified_by = "TC-###"         # the signal that would show this is false
+status       = "Drafted" | "Approved"
 ```
 
-A rig's fidelity row adds one cell, `realized_by = "EXT-###"`, naming the rig
-entity (§8.2). Present means a rig performs the bridge; absent means a
-translation, a pure claim. The DA names both sides already, so there is no
-`bridges_to`. For an interpreting far side, the assumption is about the seam
-itself. With two interpreting systems facing each other, it is about the pair,
-and direction adds nothing.
+When `measured_at` is empty, the row names the party and direction itself
+(`entity = "EXT-###"`, `direction = "in"`), because there is no IF to derive
+them from. A rig's fidelity row adds `realized_by = "EXT-###"`, naming the rig
+entity (§8.2). There is no `bridges_to` and no `boundary_refs`: both are
+derivable from the IFs, or stated once on an unmeasured row.
 
-**One rule replaces the dropped cell.** A DA that cites only `design` crossings
-and no interpreting seam is a finding: either the frame is missing the crossing
-where its need's outcome lands, or the assumption is misplaced. `REL-001` and
-the read edge were both found this way.
+**One rule replaces the dropped cells.** A need whose stakeholder is a party
+that none of its DAs or IFs reach is a finding: either the frame is missing an
+interface, or the need names the wrong stakeholder. `REL-001` and the read edge
+were both found this way, by hand. With a stakeholder link on the need (Q12)
+the check is mechanical.
 
 Three cells are borrowed, each with a standard behind it:
 
@@ -475,7 +578,8 @@ Three cells are borrowed, each with a standard behind it:
   it (§7(d)).
 - **`obstacle` is van Lamsweerde & Letier's obstacle**: the negation of a goal,
   requirement **or assumption**, refined until it reaches conditions satisfiable
-  in the domain. It is a *generator*, not a comment (§7(b)).
+  in the domain. It is a *generator*, not a comment (§7(b)), and hats are what
+  drive the generator (§6.5).
 - **`falsified_by` is the falsifier.** REAssuRE's monitored **claims** (Welsh,
   Sawyer & Bencomo, ASE 2011) and UL 4600's **Safety Performance Indicators**
   converge on it. The rule both imply is worth adopting outright, as a
@@ -487,27 +591,31 @@ Two more rows the redraw makes available at once:
 
 ```toml
 [assumption.DA-###]
-sn_refs       = ["SN-001"]
-boundary_refs = ["B-04", "B-##"]   # guardrail verdicts; the read crossing
-assumption    = """A scaffold whose harness runs green is one an adopting team
-                   can actually work in: the profile fits their stack, and the
-                   registries they must fill are discoverable without reading
-                   the kit's source."""
-holds_when    = """The team's stack is one of the shipped profiles, and the team
-                   reads ADOPTING.md before first use."""
-obstacle      = """A team green-scaffolds, never fills a registry, and operates
-                   a spine that resolves and says nothing."""
+sn_refs      = ["SN-001"]
+measured_at  = ["IF-###"]       # the harness verdict the operator reads
+assumption   = """A scaffold whose harness runs green is one an adopting team
+                  can actually work in: the profile fits their stack, and the
+                  registries they must fill are discoverable without reading
+                  the kit's source."""
+holds_when   = """The team's stack is one of the shipped profiles, and the team
+                  reads ADOPTING.md before first use."""
+obstacle     = """A team green-scaffolds, never fills a registry, and operates
+                  a spine that resolves and says nothing."""
 
 [assumption.DA-###]
-sn_refs       = ["SN-004"]
-boundary_refs = ["B-02"]
-assumption    = """A changed Status cell means a human actually exercised the
-                   judgment that Status asserts."""
+sn_refs      = ["SN-004"]
+measured_at  = []               # nothing measures judgment
+entity       = "EXT-###"        # the human operator
+direction    = "in"
+assumption   = """A changed Status cell means a human actually exercised the
+                  judgment that Status asserts."""
 ```
 
 The second is what `Attest` and the attested-vs-mechanized split exist to
-protect, stated for the first time as something falsifiable. It has **no
-falsifier yet** (§11), which is exactly what the rule above would flag.
+protect, stated for the first time as something falsifiable. It is the
+authority crossing's whole content: with no IF, the DA *is* how that bundle
+exists in the derived view. It has **no falsifier yet** (§11), which is exactly
+what the falsifier rule would flag.
 
 ### 6.3 Which assumptions become rows
 
@@ -548,6 +656,52 @@ Two rules, one from each side:
 
 The right-hand column is falsifiable, bounds its own ODD, and tells a reader what
 the rig does **not** cover. `obstacle` and `falsified_by` hang off it naturally.
+
+### 6.5 Hats: the lens applied to each piece
+
+Stakeholders and hats do different jobs, and `hats.toml` already says so:
+
+> *"A HAT IS NOT A PERSON AND NOT A STAKEHOLDER ROW. It is a QUESTION that must
+> be put to every decomposition it applies to. A domain expert may have no needs
+> of their own, yet their perspective constrains someone else's need — that
+> constraint is what a hat carries."*
+
+- A **stakeholder** owns an outcome. It is where SNs come from.
+- A **hat** owns a failure class (`asks` + `listens_for`). It is where
+  constraints come from.
+
+They overlap in one place. Some hats are a stakeholder's voice used as a lens
+(FIRST-RUN-ADOPTER, UX-DESIGNER); others are disciplines with no needs of their
+own (SECURITY, CROSS-PLATFORM, LEGAL). An optional `speaks_for = <stakeholder>`
+on the voice hats records that. It also settles FIRST-RUN-ADOPTER's loose end
+(§9.3c): it was anchored to `EXT-003`, a **party**, when it should name a
+**stakeholder** — the same conflation §6.2 separates.
+
+**A hat constrains the specification; it does not always create a
+requirement.** The data already behaves that way: 77 of the 79 SRs carry
+`hat_refs`, and the package-wide property SRs (SR-031/034/035/114) are
+hat-shaped constraints stated once for a whole bundle. Applied to the pieces of
+the WHERE chain, a hat produces one of five things:
+
+| a hat applied to… | produces |
+|---|---|
+| any row, and it does not bite | a recorded "not applicable" |
+| an IF or SS | a **constraint**: a tightened acceptance clause on the existing SS (`hat_refs`) |
+| a whole bundle | a **cross-cutting property**: one SS against the bundle (the package-wide class) |
+| a gap nobody stated | a **new SS** — the rare case |
+| a DA | an **obstacle**: the hat's `listens_for` is a failure class. UNATTENDED-OPS asking *"what happens when its input is missing, stale, or half-written?"* writes the DA's `obstacle` cell. |
+
+The last row is the strongest fit: §7(b) says obstacles are *generated, not
+imagined*, and hats are the generator.
+
+The table is also a schema for a record `hats.toml` says is missing: *"WHAT IS
+NOT BUILT YET … the per-decomposition RECORD of which hats were applied and
+what each produced."* It is related to the SN-036 coverage record already in
+status.md's unfiled follow-ups.
+
+**The one real change:** hats fire today on SN → SR decomposition, keyed on
+work-item and need tags. Firing them per DA or IF means those rows need tags,
+or the composer runs per bundle.
 
 ---
 
@@ -704,7 +858,7 @@ of them new interfaces:
 |---|---|
 | the real party | `[entity.EXT-###]`, operating plane |
 | the rig, as a system | `[entity.EXT-###]`, `class = "enabling"`, `emulates = "EXT-###"` — evolution plane |
-| the interface both plug into | the **existing** `IF` / `B-##` rows, unchanged |
+| the interface both plug into | the **existing** `IF` rows, unchanged |
 | its fidelity | a DA with `realized_by` naming the rig entity |
 
 A rig costs one entity row, one cell and one DA. It adds no `IF` and no `B-##`
@@ -811,7 +965,7 @@ dogfoodable row in the proposal:
 ```toml
 [assumption.DA-###]
 sn_refs       = ["SN-023", "SN-024"]
-boundary_refs = ["B-##"]        # the read crossing
+measured_at   = ["IF-###"]      # the rendered view, on the read crossing
 realized_by   = "EXT-###"       # the render critic
 assumption    = """A vision model judging the rendered dashboard against the
                    rubric reaches the verdict a human reviewer would."""
@@ -914,9 +1068,27 @@ The four above, plus `OFFSPINE_KEYS` (new `DA-ID`), `OFFSPINE_TABLE`
 (`test_dogfood_sync.py:433` asserts `set(floors) == set(TOML_REGISTRIES)`), and
 `trace.py:920-928` `_offspine_ids` for the id watermark. The watermark is not
 optional: the missing-watermark hole has happened here twice (IF-121/122 and
-OI-26). Then behaviour: `trace.py` must resolve the DA's `sn_refs` and
-`boundary_refs` the way it resolves an SR's. **No edits to `B` or `IF` rows**:
-the DA points at them, not the other way round.
+OI-26). Then behaviour: `trace.py` must resolve the DA's `sn_refs`,
+`measured_at` and, on an unmeasured row, `entity`.
+
+**(d) SS stated over an IF or a DA (§6.2) — a schema change that ships**
+
+- The SR schema gains a citation of the IFs or DAs it is stated over. It ships
+  to adopters, so it needs a resync entry.
+- All 79 SRs are re-annotated. The 69 at `B-05` each choose among its 39 tie-back
+  IFs. 13s anticipated exactly this work: *"it should help to expose if there
+  are some other issues in the way this system has been decomposed."*
+- IFs gain a party link (§5.7) and, where no DA covers them, `sn_refs`. The 44
+  tie-backs convert mechanically; the 41 `"external:downstream adopter"` rows
+  need judgment.
+- `boundary_refs` on the SR becomes derivable, except for the package-wide
+  property exception.
+
+**(e) Dropping the `B` rows (§5.7 step 2) — a separate decision**
+
+The 87 `B` citations in `system-requirements.toml`, the rulings,
+`external.template.toml`, `test_external_frame.py` and the context-view
+generator all move to the derived bundle. An adopter migration.
 
 **(c) The frame redraw (§5.6) — a sitting**
 
@@ -930,8 +1102,8 @@ the DA points at them, not the other way round.
   13n's reasoning, and each needs rewriting in the same sitting.
 - `tests/test_hats.py:885-900` names `EXT-003 Adopter` as the entity the
   FIRST-RUN-ADOPTER review hat speaks for. WI-453 re-pointed the hat's predicate
-  away from the id, so nothing breaks, but the hat needs a new anchor, plausibly
-  the human operator on first run.
+  away from the id, so nothing breaks, but the hat needs a new anchor: a
+  stakeholder via `speaks_for`, not a party (§6.5).
 - `docs/log.md` and the sitting-2 plan cite `EXT-003` and 13u historically. They
   are records and stay as written.
 
@@ -996,17 +1168,24 @@ person-facing needs. They exist today as the unstated gap between each `need`
 and its `acceptance`, so this is transcription, not invention. Warn-only;
 nothing gates. Expect this step alone to surface real defects.
 
-**Step 3 — let test cases verify an assumption.** Allow `DA-###` as a `Verifies`
+**Step 3 — state each SS over an IF or a DA.** The §9.3d schema change: IFs
+gain their party link and, where no DA covers them, `sn_refs`; each SS cites
+what it is stated over; each `B` row is checked against its derived bundle
+(§5.7 step 1). Settle Q11 first. Warn-only.
+
+**Step 4 — let test cases verify an assumption.** Allow `DA-###` as a `Verifies`
 target (settle Q5 first, §9.1) and add the evidence descriptor (§7(e)). Start
 with the metamorphic subset (§7(c)), which is nearly free.
 
-**Step 4 — the warn-first findings.** `trace.py` warns on:
+**Step 5 — the warn-first findings.** `trace.py` warns on:
 - an `Approved` DA with no `falsified_by` (§6.2);
 - a rig row with `emulates` and no DA naming it (§8.3);
-- a DA that cites only `design` crossings and no interpreting seam (§6.2).
+- a need whose stakeholder is a party none of its DAs or IFs reach (§6.2);
+- an SS stated over a bare bundle, outside the package-wide exception (§6.2);
+- a `B` row that differs from its derived bundle (§5.7).
 
-**Step 5 — the gate, if wanted.** The vision promises work built *"test-first
-with explicit approval gates so you can trust what ships."* Steps 2–4 only
+**Step 6 — the gate, if wanted.** The vision promises work built *"test-first
+with explicit approval gates so you can trust what ships."* Steps 2–5 only
 warn, so without this step DA rows are optional documentation. The gate:
 **`DevStg-Tests` requires every need to have at least one DA, or a recorded
 waiver stating that its SRs alone deliver it** — the need-level form of
@@ -1015,6 +1194,10 @@ lives: a gate keyed on SRs at `effect` crossings would check only the handful
 at `B-02` and pass SN-001 and SN-002. **The only step that costs an adopter
 anything mandatory; opt-in with an applies-when**, per the proportionality
 doctrine.
+
+**Step 7 — generate the boundary, if the check has held.** Drop the `B` rows
+and derive the view (§5.7 step 2, §9.3e). An adopter migration, decided on its
+own.
 
 **Not proposed: a new stage rung.** The recursion already oscillates Reqs↔Arch,
 and this concept rides existing rungs.
@@ -1037,7 +1220,12 @@ build on it; `OPEN` means it may not.
 | Q7 | Does this ship downstream in v1? | **DECIDED in principle: yes**, once Q5, Q8 and the sitting have nailed down the details. |
 | Q8 | Do DA rows live in `external.toml` or beside the SRs? | **OPEN.** Cost favours `external.toml`; one-or-more rows per need in a LOCKED file argues against (§9.2). |
 | — | Orientation, the adopter, and the reversed rulings | **DECIDED:** operating frame, two planes, `EXT-003` dropped, 13u reversed (§5). `REL-003`, hosted CI and 13o **to recheck** at the sitting (§5.2). |
-| — | DA shape | **Agreed 2026-09-22:** `sn_refs` + `boundary_refs`; no `bridges_to`; the spine keeps `SN → SR` (§6.2). |
+| — | Two chains | **Agreed 2026-09-22:** WHERE is `EXT ← [B] ← DA ← IF ← SS`, with the DA or the IF optional but not both; WHY is `Stakeholder ← SN ← DA` (or `← IF`). An SS is stated over an IF or a DA, never a bare bundle, except the package-wide class (§6.2). The stakeholder is not in the WHERE chain. |
+| — | Hats | **Agreed 2026-09-22:** a hat is a lens that constrains, not a stakeholder; five outcomes per piece; `speaks_for` on voice hats (§6.5). |
+| Q9 | Rename SR to SS (system specification)? | **OPEN.** Right term (Jackson's S), but the `SR-` prefix runs through every script and adopter registry (§6.2). |
+| Q10 | Derive `frame` from which rows exist, instead of writing it? | **OPEN.** Follows from the derived boundary (§5.7); revisits Q3. |
+| Q11 | Does an SS reach its need through its IF / DA, or keep authored `sn_refs`? | **OPEN.** Derived is finer than through the party and not yet measurable (§6.2). |
+| Q12 | Where does a stakeholder live? | **OPEN.** Needs carry no stakeholder field today; hats' `speaks_for` needs one to point at (§6.2, §6.5). |
 | — | Enabling-system stage vocabulary | **Tentative.** Placed, not settled (§8.1). |
 
 ### Still not captured
@@ -1045,7 +1233,7 @@ build on it; `OPEN` means it may not.
 Recorded so this section is not mistaken for closure.
 
 1. **Blast radius.** If 41 seams share one assumption and it is falsified, 41
-   seams are affected at once. The DA's `boundary_refs` makes the list visible;
+   seams are affected at once. The DA's `measured_at` makes the list visible;
    nothing yet acts on it.
 2. **Chained assumptions.** The user → device → registry → tooling chain is a
    chain of assumptions. Jackson takes `W` as a flat conjunction and says nothing
