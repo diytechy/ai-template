@@ -101,11 +101,16 @@ def derive(mock, ifs, srs):
                 ties.setdefault(iid, set()).add(row[col])
     for iid, change in mock.get("retie", {}).items():
         ties[iid] = {change["to"]}
-    measured_ifs = {i for row in das.values() for i in row.get("measured_at", [])}
+    # The allocation lives on the IF row (Arch-owned), never on the approved DA.
+    bridged_by = mock.get("if_bridged_by", {})
+    bridges = {}
+    for iid, refs in bridged_by.items():
+        for d in refs:
+            bridges.setdefault(d, []).append(iid)
     waived_ifs = mock.get("if_coincident", {})
 
     def if_class(iid):
-        if iid in measured_ifs:
+        if bridged_by.get(iid):
             return "bridged"
         return "coincident" if iid in waived_ifs else "unclassified"
 
@@ -132,16 +137,28 @@ def derive(mock, ifs, srs):
             ok = all(bnds[b]["entity"] == target for b in row["effect_at"])
             reach[d] = (ok, "fidelity: lands on the emulated party " + target)
         else:
-            bad = [
+            # Coverage both ways, never a Cartesian product: every need it serves
+            # is reached by SOME bundle it lands on, and every bundle it lands on
+            # reaches SOME need it serves.
+            served = sorted(needs_of.get(d, []))
+            unreached = [
                 sn
-                for sn in sorted(needs_of.get(d, []))
-                if not all(reaches(b, parties_of_need(sn)) for b in row["effect_at"])
+                for sn in served
+                if not any(reaches(b, parties_of_need(sn)) for b in row["effect_at"])
             ]
+            idle = [
+                b
+                for b in row["effect_at"]
+                if not any(reaches(b, parties_of_need(sn)) for sn in served)
+            ]
+            ok = not unreached and not idle
             reach[d] = (
-                not bad,
-                "lands on its stakeholders' party"
-                if not bad
-                else "does not reach the stakeholder of " + ", ".join(bad),
+                ok,
+                "every served need reached; every landing bundle serves one"
+                if ok
+                else "unreached: {}; idle bundles: {}".format(
+                    ", ".join(unreached) or "none", ", ".join(idle) or "none"
+                ),
             )
 
     bundles = []
@@ -234,6 +251,7 @@ def derive(mock, ifs, srs):
         needs_of=needs_of,
         need_stk=need_stk,
         reach=reach,
+        bridges=bridges,
         sr_class=sr_class,
         multi=multi,
         checks=checks,
@@ -637,7 +655,8 @@ def tables(mock, model, needs):
                 esc(r["obstacle"]),
                 esc(r["falsifier"]),
                 "{} / {}".format(esc(r["status"]), esc(r["standing"])),
-                ", ".join(code(i) for i in r.get("measured_at", [])),
+                "assumed — no evidencing TC yet",
+                ", ".join(code(i) for i in sorted(model["bridges"].get(d, []))),
             )
         )
     rig_rows = [
@@ -745,7 +764,8 @@ def tables(mock, model, needs):
                 "Obstacle",
                 "Falsifier",
                 "Status / standing",
-                "Measured at (extension)",
+                "Evidence (derived)",
+                "Bridges IFs (extension)",
             ),
             da_rows,
             "Assumption table, horizontally scrollable",
@@ -864,7 +884,7 @@ def page(mock, ifs, srs, needs):
         "<code>stakeholder-needs.toml</code>. It shows the How tab's "
         "System-context section as the assumption-tier plan "
         "(<code>docs/plans/2026-09-20-validation-gap-and-the-assumption-tier.md</code>, "
-        "after review round 2) would leave it. The LOCKED <code>external.toml</code> "
+        "after review round 3) would leave it. The LOCKED <code>external.toml</code> "
         "and the live dashboard are unchanged. Ids above the live watermark are "
         "proposed.</div>\n"
         "<h2>System context (the depth-0 view)</h2>\n"

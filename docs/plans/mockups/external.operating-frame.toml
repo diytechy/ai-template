@@ -3,7 +3,7 @@
 #
 # The depth-0 view as the assumption-tier plan
 # (docs/plans/2026-09-20-validation-gap-and-the-assumption-tier.md, after review
-# round 2) would leave it once the sitting applies it. The live, LOCKED frame is
+# round 3) would leave it once the sitting applies it. The live, LOCKED frame is
 # docs/requirements/external.toml, and it is unchanged. Ids above the live
 # watermark (EXT-006, B-09, B-10, IF-180) are PROPOSED ids, minted here only so
 # the mockup can draw them; the sitting mints the real ones.
@@ -15,7 +15,7 @@
 # plus proposed cells on live rows the mockup cannot edit:
 #   [sr_da_refs] [sr_coincident] [sr_repoint]   SR cells (§6.2, §5.1)
 #   [need_stakeholder_refs]                      SN cells (§6.2)
-#   [retie] [if_coincident]                      IF cells (extension, §9)
+#   [retie] [if_bridged_by] [if_coincident]      IF cells (extension, §9)
 
 # --- external.toml: parties (frame comes from their bundles, §5.1) -----------------
 
@@ -101,23 +101,24 @@ status = "Approved"
 name = "Scripted model runner"
 emulates = "EXT-005"
 description = """FAKE_AGENT (tests/test_agent_loop.py): answers the runner contract (IF-041) from a script. Reproduces protocol, not judgment."""
+status = "Drafted"
 
 [rig.RIG-02]
 name = "Scaffold rig"
 emulates = "EXT-001"
 description = """The scaffold fixture (tests/conftest.py): a fresh operating environment in a temp dir, driven the way a downstream user would."""
+status = "Drafted"
 
 [rig.RIG-03]
 name = "Render critic"
 emulates = "EXT-006"
 description = """render-dashboard-critique plus a vision model: judges the rendered views against a rubric, standing in for the human reader."""
+status = "Drafted"
 
 # --- assumptions.toml: assumptions ---------------------------------------------------
-# measured_at is the extension's allocation (§9), filled at DevStg-Arch.
 
 [assumption.DA-001]
 effect_at = ["B-09"]
-measured_at = ["IF-013", "IF-180"]
 assumption = """A spine the strict check passes with zero orphans is one a reviewer can rely on: each row says something, and the links are the ones a reviewer would draw."""
 holds_when = """Rows are authored under the spine-authoring question list; the reviewer reads the generated views, not raw TOML."""
 obstacle = """Every row resolves and every row says nothing: an orphan-free, semantically vacuous spine."""
@@ -127,7 +128,6 @@ standing = "active"
 
 [assumption.DA-002]
 effect_at = ["B-01", "B-09"]
-measured_at = ["IF-013", "IF-014"]
 assumption = """A scaffold whose harness runs green is one an adopting team can actually work in."""
 holds_when = """The team's stack is one of the shipped profiles, and the team reads ADOPTING.md before first use."""
 obstacle = """A team green-scaffolds, never fills a registry, and operates a spine that resolves and says nothing."""
@@ -137,7 +137,6 @@ standing = "active"
 
 [assumption.DA-003]
 effect_at = ["B-02"]
-measured_at = ["IF-134"]
 assumption = """A changed Status cell on a human-held rung means a human actually exercised the judgment that Status asserts."""
 holds_when = """The row's rung is at or below the human_approval_through dial."""
 obstacle = """A Status change on a human-held rung arrives in a commit the unattended loop authored."""
@@ -147,7 +146,6 @@ standing = "active"
 
 [assumption.DA-004]
 effect_at = ["B-01"]
-measured_at = ["IF-134", "IF-135"]
 assumption = """A write the local hook floor admitted was checked: the floor was not bypassed, or a re-run of the same bar agrees."""
 holds_when = """Commits are not made with --no-verify, or a re-run of the bar away from the session is in place."""
 obstacle = """git commit --no-verify admits an unchecked write, and nothing re-runs the bar."""
@@ -157,7 +155,6 @@ standing = "active"
 
 [assumption.DA-005]
 effect_at = ["B-09"]
-measured_at = ["IF-041", "IF-015"]
 assumption = """The model runner follows the runner contract — prompt on stdin, the documented exit codes, commits in the expected form — so the work the owner sees is the work the loop asked for."""
 holds_when = """A runner and model listed in docs/agents.toml, at the pinned CLI version."""
 obstacle = """A provider CLI update changes exit-code or commit behaviour; every loop requirement citing this assumption loses its premise at once."""
@@ -167,7 +164,6 @@ standing = "active"
 
 [assumption.DA-006]
 effect_at = ["B-10"]
-measured_at = ["IF-041"]
 realized_by = "RIG-01"
 assumption = """The scripted runner reproduces argv/stdin, exit codes and commit effects of a real runner; it reproduces no judgment, so nothing about prompt quality is evidenced by it."""
 holds_when = """Loop tests that assert protocol behaviour, not model output."""
@@ -178,7 +174,6 @@ standing = "active"
 
 [assumption.DA-007]
 effect_at = ["B-01", "B-04"]
-measured_at = ["IF-014"]
 realized_by = "RIG-02"
 assumption = """A synthetic scaffold in a temp dir behaves like a fresh adopter repository for the checks the suite runs."""
 holds_when = """The same shipped profile, a clean Python 3.11+, git on PATH."""
@@ -189,7 +184,6 @@ standing = "active"
 
 [assumption.DA-008]
 effect_at = ["B-09"]
-measured_at = ["IF-180"]
 realized_by = "RIG-03"
 assumption = """A vision model judging the rendered dashboard against the rubric reaches the verdict a human reviewer would."""
 holds_when = """An image-capable model; the rubric carries its accumulated anchors; a static render at a declared width and theme."""
@@ -203,18 +197,22 @@ standing = "active"
 [stakeholder.STK-01]
 name = "Repo owner / operator"
 party = "EXT-006"
+status = "Drafted"
 
 [stakeholder.STK-02]
 name = "Reviewer"
 party = "EXT-006"
+status = "Drafted"
 
 [stakeholder.STK-03]
 name = "Adopting team"
 party = "EXT-006"
+status = "Drafted"
 
 [stakeholder.STK-04]
 name = "Kit maintainers"
 party = "EXT-006"
+status = "Drafted"
 
 [need_stakeholder_refs]
 "SN-001" = ["STK-03"]
@@ -271,6 +269,16 @@ party = "EXT-006"
 "IF-074" = { to = "B-09" }
 "IF-041" = { to = "B-10" }
 "IF-180" = { to = "B-09", new = "gen_trajectory → PROJECT_STATE.html (proposed row; the dashboard has no IF row today, only its exit code IF-011)" }
+
+[if_bridged_by]
+# The allocation lives on the IF row (Arch-owned), not on the approved assumption (§9).
+"IF-013" = ["DA-001", "DA-002"]
+"IF-014" = ["DA-002", "DA-007"]
+"IF-015" = ["DA-005"]
+"IF-041" = ["DA-005", "DA-006"]
+"IF-134" = ["DA-003", "DA-004"]
+"IF-135" = ["DA-004"]
+"IF-180" = ["DA-001", "DA-008"]
 
 [if_coincident]
 "IF-020" = "subagent_gate's exit code is the gate's decision: the reading is the outcome."

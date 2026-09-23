@@ -31,13 +31,13 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 - **Awaiting owner ruling — the validation gap:** read
   [the assumption-tier proposal](plans/2026-09-20-validation-gap-and-the-assumption-tier.md).
   It asks for a frame ruling (the frame is LOCKED). Start at its "model at a
-  glance"; decisions are in its §11. **Revised after an adversarial Sol review
-  (2026-09-23, its §11.2):** six earlier answers are REOPENED with proposed
-  replacements, and Q16–Q18 are new — all awaiting the owner's review. A
-  mockup of the resulting depth-0 view is in `docs/plans/mockups/`. The sitting
-  also reverses parts of sitting 2 (its §5.2). **Nothing is built before the
-  sitting**, and every step re-pins `tests/test_external_frame.py` or depends on
-  one that does.
+  glance"; decisions are in its §12. **Revised after adversarial Sol reviews
+  (2026-09-23, logged in its §12):** several earlier answers are REOPENED with
+  proposed replacements and new questions are open — all awaiting the owner's
+  review. It is now a core (the assumption tier) plus an extension (interface
+  allocation at DevStg-Arch). A mockup of the resulting depth-0 view is in
+  `docs/plans/mockups/`. The sitting also reverses parts of sitting 2 (its
+  §5.2). **Nothing is built before the sitting.**
 - **Awaiting owner review — notes on spine, sessions and tests:** its sister
   [plan](plans/2026-09-23-owner-notes-spine-sessions-and-tests.md) takes the
   owner's 2026-09-23 notes one by one against what the repo already does, and
