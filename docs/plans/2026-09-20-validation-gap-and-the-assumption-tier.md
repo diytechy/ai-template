@@ -6,6 +6,12 @@ The owner has answered most of its questions (§11). Those answers set the
 direction the next sitting builds on. They are not the ruling itself, and
 `external.toml` is unedited.
 
+**It reverses part of sitting 2.** The direction taken here — the human as
+their own entity, the frame drawn around the system in operation — undoes two
+premises that several 2026-08-13 rulings rest on. §5.2 lists each one and
+what happens to it, so the sitting reverses them deliberately rather than by
+drift.
+
 **What it proposes, in one sentence.** The kit records what the system must do
 at its own interface and tests that exhaustively; it does not record the
 assumptions that carry those interface facts up to the human outcomes its needs
@@ -59,7 +65,7 @@ in which the question can even be posed.
 
 | tier | rows | stated about |
 |---|---|---|
-| SN | 16 | a human outcome — 15 of 16 say "can trust", "can believe", "can navigate", "can recognize", "an adopting team can add" |
+| SN | 27 | a human outcome for 24 of them — a team, reviewer, reader, owner, stakeholder or person; the other three (SN-006, SN-025, SN-029) are about an agent or an autonomous run |
 | SR | 79 | the package and its interfaces |
 | LLR | 192 | modules |
 | TC | 194 | the package and its interfaces |
@@ -77,17 +83,23 @@ All 79 SRs carry `boundary_refs`, and the distribution is stark:
 
 **87% of this repo's system requirements are stated at one crossing: the moment
 the package leaves.** But nothing the package *does* for anyone happens there.
-It happens where a person operates the adopted kit. In today's frame that person
-sits inside `EXT-003` (Adopter), which can only be reached across `REL-001`. The
-registry defines that relationship as *"external-to-external, the system NOT a
-party"*, and says it *"must never grow a realizing IF row."*
+It happens where a person operates the adopted kit, and today's frame puts both
+of the needs above out of reach:
 
-**So the crossing where this kit's stakeholder value lands was ruled outside the
-frame.** Not by accident — the reasoning in `REL-002`'s and `B-04`'s notes is
-careful and defensible on its own terms. The present frame is a **delivery**
-frame, and delivery is not where any effect happens. The consequence is that
-there is nowhere for validation to attach, which is why there are 194 test cases
-and all 194 of them test the machine. §5 redraws the frame so that there is.
+- SN-001's team sits inside `EXT-003` (Adopter), reachable only across
+  `REL-001` — *"external-to-external, the system NOT a party"*, which *"must
+  never grow a realizing IF row."*
+- SN-002's reviewer reads the spine through `PROJECT_STATE.html` and the other
+  generated surfaces, which ruling 13u declared *"NOT system outputs"* and
+  folded into `REL-002`.
+
+**So the crossings where this kit's stakeholder value lands were ruled outside
+the frame.** Not by accident — the reasoning behind them is careful and
+consistent (§5.2 traces it to one premise). The present frame is a
+**delivery** frame, and delivery is not where any effect happens. The
+consequence is that there is nowhere for validation to attach, which is why
+there are 194 test cases and all 194 of them test the machine. §5 redraws the
+frame so that there is.
 
 ---
 
@@ -112,6 +124,9 @@ S  ∧  W  ⊨  R
 rationale; it is a premise the argument depends on, and a false W makes a
 perfectly verified S deliver nothing. The kit currently verifies S to a high
 standard, states R honestly at the need tier, and leaves W entirely implicit.
+
+In the kit's tiers: **R is the SN, S is the set of SRs, and W is what this
+proposal adds.**
 
 The practical consequence is the one that motivated this proposal: **the cost of
 iteration scales with the size of the W gap.** If the only way to learn whether
@@ -159,9 +174,8 @@ external parties they name are:
  1  external:upstream
 ```
 
-Roughly **45 of 167 seams (~27%) face a far side that interprets.** Not
-universal, but far more than the ~16 need-level assumptions alone would suggest.
-That count prices §7(a).
+Roughly **45 of 167 seams (~27%) face a far side that interprets** — more
+assumptions than one per need would suggest. That count prices §7(a).
 
 ---
 
@@ -235,15 +249,41 @@ that has to be written down.
 The frame used to be oriented toward the system as **the entire package that
 developed the product**. That is still partly true. It is now oriented toward
 **the system the user experiences, as well as the enabling system that develops
-and delivers it.** The normal operating environment is an adopter's repo.
+and delivers it.** The normal operating environment is an adopter's repo, and
+the system is the kit as it runs there.
 
-The change does less damage than "redraw the depth-0 frame" suggests. **`B-05`
-does not go away, and the 69 SRs stated at it are not re-pointed.** The package
-still leaves the system. What changes is that its departure stops being the
-*only* modelled crossing and stops being the one the stakeholder needs are read
-against.
+`B-05` does not go away, and the 69 SRs stated at it are not re-pointed. The
+package still leaves the system. What changes is that its departure stops being
+the *only* modelled crossing and stops being the one the stakeholder needs are
+read against.
 
-### 5.2 Two planes, which `class` already separates
+### 5.2 The sitting-2 rulings this reverses
+
+Sitting 2 (2026-08-13) drew the present frame on two premises, both in its own
+words:
+
+- **13k** — the human and the loop are one entity: *"who-holds-authority is
+  policy and record, never an entity split."*
+- **13n** — the delivery frame: *"the system is the act of creating the
+  guardrails and template contents … just because it happens to USE them as
+  well doesn't mean they are each inputs into the system."*
+
+This proposal reverses both. The human comes out (§5.4), and the system is the
+kit in operation (§5.1). The rulings built on those premises follow:
+
+| ruling / row | what it says | rests on | under this direction |
+|---|---|---|---|
+| **13u** — `B-03` removed | `PROJECT_STATE.html`, `open-items.html`, `docs/status.md` and `docs/gate` are *"not system outputs"* | 13k, 13n — the sitting doc itself says a separate human *"should be a deliberate reversal of 13k"* | **falls.** The human reading the spine is a crossing (§5.4). New id; `B-03` stays spent. |
+| **`REL-002`** flow and notes | self-adoption; invoking `agent-resume` is *"NOT an input"*; carries 13u's surfacing | 13n, 13u | **shrinks** to the bare hand-off of the Template into an environment (§5.5) |
+| **`REL-003`**, and `IF-041`'s note | model providers *"touch the SESSION, never the system"*; the runner invocation *"crosses no boundary of this system"* | 13n | **probably becomes a crossing.** In operation the kit's own loop invokes the provider. §8.4's `FAKE_AGENT` already treats it as one. |
+| **`B-04` note** — hosted CI cut (`EXT-004`, `B-06`, `B-07`) | *"a hosted runner is an ADOPTER's boundary … what the system delivers is a METHOD"* | 13n, the adopter entity | **recheck.** Both premises are gone; hosted CI may return as an `interoperating` party. |
+| **13o** — `B-08` removed | `check_vendored` *"is run by the development environment, not an input"* | 13n | **recheck**, on the same reasoning |
+
+The first two are certain: their own text names the premise. The last three
+are "premise gone, re-examine", not "reversed" — this proposal has read only
+the sitting-2 summaries of their reasoning, not the full log entries.
+
+### 5.3 Two planes, which `class` already separates
 
 | plane | classes | holds |
 |---|---|---|
@@ -261,17 +301,17 @@ An enabling system is normally something the developing organization **owns**.
 That is what the class is for in 15288. So an in-tree rig is an `EXT` row with
 `class = "enabling"`: being built here does not keep it off the frame.
 
-### 5.3 The human's two edges
+### 5.4 The human's three edges
 
-The human interacts with **the development session** (really just a computer)
-*and* with the system. Both edges already exist in the frame:
+The human touches the system three ways, not one:
 
-| edge | what it is | existing row |
+| edge | what it is | row |
 |---|---|---|
-| human → **session** → system | the mediated path: the human edits a cell, the computer writes it, the hook floor admits it | `B-01`, governed writes in |
-| human → **system** | the direct path: the human's *judgment* — rulings, attestations, Status flips | `B-02`, authority in |
+| human → **session** → system | **write, mediated**: the human edits a cell, the computer writes it, the hook floor admits it | `B-01`, governed writes in |
+| human → **system** | **authority**: rulings, attestations, Status flips | `B-02`, authority in |
+| system → **human** | **read**: the spine and the views generated from it — the dashboard, open items, status, gate reports | **new crossing**, out — the old `B-03` content, returned |
 
-`B-02` is the crossing `interfaces.toml` singles out:
+**Authority.** `interfaces.toml` singles `B-02` out:
 
 > *"ONE CROSSING IS DELIBERATELY REALIZED BY NOTHING: `B-02` (authority in —
 > rulings, attestations and Status flips) **has no port of its own.** Authority
@@ -285,63 +325,64 @@ observe *that a human judged*. Only the proxy is shared.
 > status is what an effect crossing looks like from inside a design frame.**
 > Ports are design-frame objects, and authority is not a design-frame phenomenon.
 
-Its first assumption row is one the gate machinery already depends on:
+**Read.** This is where SN-002 lands: the reviewer trusts the chain by reading
+it. The system can see that it rendered a view. It cannot see that the reader
+understood it, or that the understanding was right. So this crossing is also
+`effect`, and it is where the render rig (§8.4) stands in for the reader.
 
-```toml
-assumption = """A changed Status cell means a human actually exercised the
-                judgment that Status asserts."""
-```
+Left inside `EXT-001`, the human gives this repo no `effect` crossing at all,
+and the model would be correct and inert here. On the inside, the write and
+authority edges land on `CMP-006` *"W1 Registry & conformance"*, and the read
+edge on `CMP-009` *"W4 Human & adopter surfaces"*. What is missing is only that
+the derived view does not yet connect a depth-0 crossing to the component that
+serves it.
 
-That is what `Attest` and the attested-vs-mechanized split exist to protect,
-stated for the first time as something falsifiable. It is also why the human has
-to come out of `EXT-001`: left folded in, this repo would have no `effect`
-crossing at all, and the model would be correct and inert here.
-
-On the inside, the two edges land on components that already exist: `CMP-006`
-*"W1 Registry & conformance"* (write, via the session) and `CMP-009` *"W4 Human
-& adopter surfaces"* (read, directly). What is missing is only that the derived
-view does not yet connect a depth-0 crossing to the component that serves it.
-
-### 5.4 The adopter is dropped
+### 5.5 The adopter is dropped
 
 `EXT-003` was *"the downstream team + repo"*. The operating frame already splits
 that pair: **the team is the human operator**, and **the repo is the operating
 environment the frame is drawn in**. Nothing is left for a third row to name.
 
-- **`REL-001` collapses into `REL-002`.** `REL-002` (Template → `EXT-001`) is
-  already the adoption edge, drawn from the operating side. Its flow reads
-  *"this repository's own session adopts the same delivered content"*, and its
-  note says the workflow is adopted *"exactly as an adopter's would be."* With
-  the adopter gone, `REL-001` would state the same hand-off twice.
-- **The value §1 located across `REL-001` now lands on `B-01` and `B-02`**, the
-  human operator's own crossings, which are crossings of the system.
+- **One adoption hand-off remains.** Stripped of 13n and 13u (§5.2), `REL-002`
+  is only *the Template is installed into an operating environment* — the
+  Transition-stage hand-off (§8.1), in the evolution plane. `REL-001` said the
+  same thing about a different repo, and in the operating frame "which repo" is
+  not a party. One relationship carries it.
+- **The value §1 located across relationships lands on crossings.** SN-001's
+  team works through `B-01`, `B-04` and the read crossing; SN-002's reviewer
+  reads through the read crossing.
 - **`EXT-003` is spent and never re-minted**, following the
   `B-06`/`B-07`/`EXT-004` precedent in `external.toml`.
 
-### 5.5 The proposed frame
+### 5.6 The proposed frame
 
 The boundary view is **derived**: `gen_trajectory.py` builds the System-context
 view from `external.toml` (`context_block(frame_context(root), ...)`, WI-455).
-**Editing rows is editing the diagram.** There is no second artifact to keep in
-sync.
+**Editing rows is editing the diagram.**
 
 | row | change | plane |
 |---|---|---|
-| *new* Human operator | **add**, `operational`; owns `B-02` (`frame = "effect"`) | operating |
-| `EXT-001` Development session | **narrow** to the computer: shell, editor, OS, git client, working copy; owns `B-01` | operating |
-| `EXT-005` Model provider | unchanged; gains an inbound `emulates` from its rig | operating |
+| *new* Human operator | **add**, `operational`; owns `B-02` and the read crossing | operating |
+| `EXT-001` Development session | **narrow** to the computer: shell, editor, OS, git client, working copy; owns `B-01`, `B-04` | operating |
+| `EXT-005` Model provider | stays; `REL-003` likely becomes a crossing (§5.2); gains an inbound `emulates` | operating |
 | `EXT-002` Template | unchanged | evolution |
-| `EXT-003` Adopter | **dropped** (§5.4) | — |
+| `EXT-003` Adopter | **dropped** (§5.5) | — |
 | *new* Scripted model runner | **add**, `enabling`, `emulates = "EXT-005"` | evolution |
-| *new* Scaffold rig | **add**, `enabling`; emulates a fresh operating environment, not a party | evolution |
+| *new* Scaffold rig | **add**, `enabling`; emulates a fresh operating environment | evolution |
+| *new* Render critic | **add**, `enabling`, `emulates` the human operator's reading | evolution |
+| *new* read crossing | **add**, out, `frame = "effect"` | — |
 | test infrastructure | **not shown** — inherent to defining a system, not a frame element | — |
 
 `EXT-001` is the largest edit. Its description today folds in *"shell, git
 client, OS, Python, editors, test runner, LLM runners"*: the human, the
 environment, the test infrastructure **and** the model runner in one row.
 
-**Count changes:** entities 4 → 6, relationships 3 → 2, crossings unchanged, and
-`B-02` gains an owner. No SR's `boundary_refs` is re-pointed. Costs are in §9.3.
+**Counts.** Entities 4 → **7** (one dropped, one human, three rigs).
+Crossings 4 → **5**, or more if `REL-003` becomes a crossing or hosted CI
+returns. Relationships 3 → **2**, or 1 if `REL-003` becomes a crossing. No SR's
+`boundary_refs` is re-pointed, though SRs about the generated surfaces may move
+from `B-05` to the read crossing. Next ids from `docs/id-watermark`: `EXT-006`,
+`B-09`, `REL-005`. Costs are in §9.3.
 
 ---
 
@@ -367,46 +408,64 @@ Two reasons, either sufficient:
    interprets, so its output needs judgement rather than comparison"* would be
    written ~45 times (§3). The copies would drift, each would need its own
    falsifier, and none could be narrowed in one place. One row with one status,
-   one `holds_when` and one falsifier, cited by 45 seams, is PROCESS.md §3's
-   0→A→B rule applied to W.
+   one `holds_when` and one falsifier, citing the seams it covers, is
+   PROCESS.md §3's 0→A→B rule applied to W.
 
-### 6.2 The row, and where it lives
+### 6.2 Where it sits, and which need it answers
 
-A fourth row kind in `external.toml`, beside the three it describes:
+**A DA is a sibling of the SR.** Both sit at a crossing, and both answer a
+need. An SR carries `boundary_refs` (where it sits) and `sn_refs` (which need
+it discharges). A DA carries the same two links for the same two reasons:
+
+```
+                SN-002  "a reviewer can trust the chain"               R
+               /                                        \
+  SR  "the strict check reports zero orphans"     DA  "zero orphans ⟹ a reviewer trusts it"
+  (S — the system's behaviour)                    (W — what the world must do for S to deliver R)
+               \                                        /
+                the read crossing — where the human reads the spine    where both SIT
+                  │
+                LLR → TC   (verify S)          TC (verify W — §7 obligation 2)
+```
+
+The crossing says *where* the assumption applies. That is the boundary between
+the system and a world that is often non-deterministic, and it is the right
+home. But one crossing serves many needs: `B-05` carries 69 SRs across most of
+the needs, and the read crossing will carry several. So the crossing cannot say
+*which argument* the assumption completes. `sn_refs` does. With both links, a
+need's whole argument — its S and its W — is one query.
+
+**The spine keeps `SN → SR`.** Routing SN → B → SR would lose which subset of
+a crossing's SRs discharges a need, and would rewrite the strict orphan check.
+
+The row, in `external.toml` for now (placement is Q8, §11):
 
 ```toml
 [assumption.DA-###]
-bridges_to   = "EXT-###"       # the effect side — where R lands (Human operator)
-realized_by  = "IF-###"        # OPTIONAL. Present = a rig performs the bridge.
-                               #           Absent  = a translation, a pure claim.
-assumption   = """A scaffold whose harness runs green is one an adopting team
-                  can actually work in: the profile fits their stack, and the
-                  registries they must fill are discoverable without reading
-                  the kit's source."""
-holds_when   = """The team's stack is one of the shipped profiles, and the team
-                  reads ADOPTING.md before first use."""
-obstacle     = """A team green-scaffolds, never fills a registry, and operates
-                  a spine that resolves and says nothing."""
-falsified_by = "TC-###"        # the signal that would show this is false
-status       = "Drafted" | "Approved"
+sn_refs       = ["SN-002"]
+boundary_refs = ["B-##"]        # the read crossing
+assumption    = """A spine the strict check passes with zero orphans is one a
+                   reviewer can rely on: each row says something, and the links
+                   between rows are the ones a reviewer would draw."""
+holds_when    = """Rows are authored under the spine-authoring question list;
+                   the reviewer reads the generated views, not raw TOML."""
+obstacle      = """Every row resolves and every row says nothing: an
+                   orphan-free, semantically vacuous spine."""
+falsified_by  = "TC-###"        # the signal that would show this is false
+status        = "Drafted" | "Approved"
 ```
 
-The **seam cites the assumption**, the way an SR cites `boundary_refs`:
+A rig's fidelity row adds one cell, `realized_by = "EXT-###"`, naming the rig
+entity (§8.2). Present means a rig performs the bridge; absent means a
+translation, a pure claim. The DA names both sides already, so there is no
+`bridges_to`. For an interpreting far side, the assumption is about the seam
+itself. With two interpreting systems facing each other, it is about the pair,
+and direction adds nothing.
 
-```toml
-[boundary.B-05]
-frame    = "design"
-rests_on = ["DA-001"]          # the assumptions this crossing's claims need
-```
-
-So the `DA` row does not re-declare an edge the `B` and `IF` rows already hold.
-It carries only what the seam does not know: the effect side, the ODD, the
-obstacle and the falsifier.
-
-`realized_by` copies an idiom already in `interfaces.toml`: a row with neither
-`interface_from_external` nor `interface_to_external` *"is an internal seam,
-and that ABSENCE is the statement."* A `DA` row with no `realized_by` is a pure
-claim, and says so by omission.
+**One rule replaces the dropped cell.** A DA that cites only `design` crossings
+and no interpreting seam is a finding: either the frame is missing the crossing
+where its need's outcome lands, or the assumption is misplaced. `REL-001` and
+the read edge were both found this way.
 
 Three cells are borrowed, each with a standard behind it:
 
@@ -424,11 +483,31 @@ Three cells are borrowed, each with a standard behind it:
 
   > **An assumption with no declared falsifier is an untested assumption.**
 
-**Why `external.toml` and not a new file** (costed in §9.2): the file already
-holds three row kinds *"because they are one statement"*. An assumption is a
-fourth statement about the same frame, approved by the same authority and
-changed only by ruling. Putting it there skips a new registry file and a new
-stage predicate entirely.
+Two more rows the redraw makes available at once:
+
+```toml
+[assumption.DA-###]
+sn_refs       = ["SN-001"]
+boundary_refs = ["B-04", "B-##"]   # guardrail verdicts; the read crossing
+assumption    = """A scaffold whose harness runs green is one an adopting team
+                   can actually work in: the profile fits their stack, and the
+                   registries they must fill are discoverable without reading
+                   the kit's source."""
+holds_when    = """The team's stack is one of the shipped profiles, and the team
+                   reads ADOPTING.md before first use."""
+obstacle      = """A team green-scaffolds, never fills a registry, and operates
+                   a spine that resolves and says nothing."""
+
+[assumption.DA-###]
+sn_refs       = ["SN-004"]
+boundary_refs = ["B-02"]
+assumption    = """A changed Status cell means a human actually exercised the
+                   judgment that Status asserts."""
+```
+
+The second is what `Attest` and the attested-vs-mechanized split exist to
+protect, stated for the first time as something falsifiable. It has **no
+falsifier yet** (§11), which is exactly what the rule above would flag.
 
 ### 6.3 Which assumptions become rows
 
@@ -501,8 +580,8 @@ The mechanisms that make this affordable, in the order they matter:
 Sampling R directly is unaffordable because R lives over the world. Sampling W
 bounds the work by the number of assumptions written down, not `2^n` over an
 input space. That is why W has to be rows, not prose. The number is larger than
-the ~16 need-level assumptions (§3 counts ~45 interpreting seams), so shared
-rows (§6.1) are what keep it bounded.
+one per need (§3 counts ~45 interpreting seams), so shared rows (§6.1) are what
+keep it bounded.
 
 The same allocation rule is normative in aerospace structures as the
 **building-block approach**: FAA AC 20-107B requires tests "at the coupon,
@@ -593,7 +672,7 @@ product. Three independent axes:
 |---|---|---|
 | **is it verified?** | *everything*, product and every enabling system alike | ordinary tests |
 | **does it discharge a spine requirement?** | whatever a requirement is written about | a TC with `Verifies` |
-| **does it stand in for something else?** | rigs only | an `emulates` cell and a `DA` row's fidelity claim |
+| **does it stand in for something else?** | rigs only | an `emulates` cell and a fidelity DA |
 
 Only the third makes a rig a rig. Everything gets tested; not everything earns a
 row in the traced spine.
@@ -610,24 +689,26 @@ effect  <->  translation | rig  <->  boundary interface  <->  design
 ```
 
 - A **translation** converts an effect into a design boundary by *claiming* the
-  conversion holds. It is a `DA` row alone.
+  conversion holds. It is a DA alone.
 - A **rig** converts it by *performing* the conversion: simulating the effect
-  and putting the output against a rubric. It is a `DA` row with `realized_by`.
+  and putting the output against a rubric. It is a DA with `realized_by`.
 
-A rig **is not the external party. It stands at that party's crossing.** It
-presents the interface the party presents, so a rubric run there is a rubric run
-on the interface the user acts through, which is why rig evidence counts toward
-validation and not only verification. The registry already has every piece:
+**A rig plugs into an interface that already exists.** It presents the same
+interface as the party it replaces, so the system's side is unchanged; only
+what is plugged into the far side changes. That is also why rig evidence counts
+toward validation and not only verification: a rubric run there runs on the
+interface the user acts through. The registry records it in three places, none
+of them new interfaces:
 
 | | recorded as |
 |---|---|
 | the real party | `[entity.EXT-###]`, operating plane |
 | the rig, as a system | `[entity.EXT-###]`, `class = "enabling"`, `emulates = "EXT-###"` — evolution plane |
-| the rig at the crossing | an `IF` row with `interface_from_external` / `interface_to_external` tying back to the existing `B-##` |
-| its fidelity | a `DA` row with `realized_by` naming that `IF` row |
+| the interface both plug into | the **existing** `IF` / `B-##` rows, unchanged |
+| its fidelity | a DA with `realized_by` naming the rig entity |
 
-Rigs realize crossings that already exist, so they add entity rows but **no
-`B-##` rows**.
+A rig costs one entity row, one cell and one DA. It adds no `IF` and no `B-##`
+rows.
 
 **What a rig buys.** It does not make the real phenomenon observable. It makes
 a *model* of the world observable, so W is **replaced**, not removed:
@@ -676,39 +757,44 @@ and does not hold up the frame decision: the rows are true before the view can
 render them.
 
 `emulates` also anchors the fidelity assumption. **A rig row with `emulates` and
-no `DA` row** is a virtualized component whose fidelity nobody has stated: a
-warn-first `trace.py` finding that fires on the rig's existence.
+no DA naming it in `realized_by`** is a virtualized component whose fidelity
+nobody has stated: a warn-first `trace.py` finding that fires on the rig's
+existence.
 
 ### 8.4 The rigs this repo already runs
 
-**The scripted model runner.** `FAKE_AGENT` (`tests/test_agent_loop.py:34`)
-records each invocation and the model it was handed, then performs the next
-action from an `actions.txt` script (`commit` / `done` / `blocked` / `noop`).
-**It simulates `EXT-005`'s protocol, not its judgment**, and that is the right
-split: a model good enough to stand in for a model is circular. The split
-belongs in its `DA` row as the delta (§6.4).
+**The scripted model runner.** `IF-041` is the runner contract: `agent_session`
+invokes the agent CLI headless, the prompt on stdin. `FAKE_AGENT`
+(`tests/test_agent_loop.py:34`) answers that same contract: it records each
+invocation and the model it was handed, then performs the next action from an
+`actions.txt` script (`commit` / `done` / `blocked` / `noop`). **It simulates
+`EXT-005`'s protocol, not its judgment**, and that is the right split: a model
+good enough to stand in for a model is circular. The split belongs in its DA as
+the delta (§6.4). `IF-041`'s note says the invocation *"crosses no boundary of
+this system"*; that is 13n's reasoning, and the tie-back it lacks arrives with
+`REL-003`'s re-examination (§5.2).
 
 **The scaffold rig.** `tests/conftest.py:1-7`: *"The tests exercise the scripts
 the way a downstream user would: bootstrap a real scaffold in a temp dir and run
 the actual commands."* Materializing the package is `B-05`, ordinary
 verification of an output. The *second* half is the rig: running the adopted
 toolkit in a synthetic repo and judging that it comes up green, which emulates a
-fresh operating environment. SN-001's acceptance is written at exactly that far
-side.
+fresh operating environment through the harness's existing interfaces. SN-001's
+acceptance is written at exactly that far side.
 
-This was the evidence that decided the old `REL-001` question. The registry's
-own rule — *"a relationship ... must never grow a realizing IF row. **Wanting one
-means what you have is a boundary crossing**"* (`external.toml:20-22`) — and a
-rig that had been standing at `REL-001` since before the frame was drawn could
-not both hold. Dropping the adopter (§5.4) resolves it: the scaffold rig
-emulates the operating environment, which is an entity, not a relationship.
+That rig also settled the old `REL-001` question. The registry's own rule —
+*"a relationship ... must never grow a realizing IF row. **Wanting one means
+what you have is a boundary crossing**"* (`external.toml:20-22`) — could not
+coexist with a rig that had been standing at `REL-001` since before the frame
+was drawn. Dropping the adopter (§5.5) resolves it.
 
-**The render rig.** `render-dashboard-critique` screenshots `PROJECT_STATE.html`
-across a declared width/theme/tab matrix so a critique judges pixels, not ~790 KB
-of markup. The critique contract in `PROCESS_OPTIONS.md` already makes a
-perceptual TC name its **artifact recipe** beside its rubric, and
-`llm-vision-convergence-loop` requires two consecutive approvals at one content
-hash. That is a rig, a declared ODD and a repeatability control, with **no
+**The render critic.** `render-dashboard-critique` screenshots
+`PROJECT_STATE.html` across a declared width/theme/tab matrix so a critique
+judges pixels, not ~790 KB of markup. The critique contract in
+`PROCESS_OPTIONS.md` already makes a perceptual TC name its **artifact recipe**
+beside its rubric, and `llm-vision-convergence-loop` requires two consecutive
+approvals at one content hash. That is a rig standing in for the human reader
+at the read crossing, a declared ODD and a repeatability control, with **no
 assumption row behind any of them.**
 
 It also answers *"a rendered panel changes easily, so what happens to its test
@@ -724,17 +810,18 @@ dogfoodable row in the proposal:
 
 ```toml
 [assumption.DA-###]
-bridges_to   = "EXT-###"     # Human operator
-realized_by  = "IF-###"      # the render rig at its crossing
-assumption   = """A vision model judging the rendered dashboard against the
-                  rubric reaches the verdict a human reviewer would."""
-holds_when   = """The model is image-capable; the rubric carries its accumulated
-                  anchors; the artifact is a static render at a declared
-                  width/theme."""
-obstacle     = """A model revision shifts judgment silently; or the rubric
-                  overfits to anchors accumulated under one model's eye."""
-falsified_by = "TC-###"      # a periodic human Attest sample that disagrees
-status       = "Drafted"
+sn_refs       = ["SN-023", "SN-024"]
+boundary_refs = ["B-##"]        # the read crossing
+realized_by   = "EXT-###"       # the render critic
+assumption    = """A vision model judging the rendered dashboard against the
+                   rubric reaches the verdict a human reviewer would."""
+holds_when    = """The model is image-capable; the rubric carries its accumulated
+                   anchors; the artifact is a static render at a declared
+                   width/theme."""
+obstacle      = """A model revision shifts judgment silently; or the rubric
+                   overfits to anchors accumulated under one model's eye."""
+falsified_by  = "TC-###"        # a periodic human Attest sample that disagrees
+status        = "Drafted"
 ```
 
 It does not claim a model covers the human axis (§7's limit rules that out). It
@@ -774,8 +861,11 @@ check that warns, then errors under `--strict` at DevStg-Tests+.
 If a W-test supplements, `DA-###` is a second tenant in that mechanism. If it
 may stand alone (Q5, §11), the precedent does **not** transfer, and the
 supplement rule needs a deliberate exception. That cost is not yet surveyed.
+`sn_refs` on the DA weakens the case for supplementing: the objection *"it no
+longer says which requirement it discharges"* does not apply to a row that
+names its need directly.
 
-### 9.2 Why the rows belong in `external.toml`
+### 9.2 Where the rows live
 
 A **new registry file** costs **13 mandatory edits**, including a new
 `kitlib/ladder.py` rung, a `spine_rules` predicate, a `DECLARED_INPUTS` entry, a
@@ -795,6 +885,13 @@ reaches `check.py` stage selection, every `from-stage` in `stack.ini`,
 - `test_dogfood_sync.TOML_REGISTRIES` is keyed by **ID column, not path**
   (`:246-252`), because `external.toml` already carries three tiers on one path.
 
+**But `sn_refs` reopens the question (Q8).** The original argument was that an
+assumption is *"a fourth statement about the same frame"*, changed only by
+ruling. A row that answers a need is SR-shaped, and there will be one or more
+per need. Kept in `external.toml`, every new assumption becomes a change to a
+LOCKED file. The cost argument still favours it; the governance argument now
+cuts the other way.
+
 ### 9.3 The edit list
 
 **(a) `frame` column on boundary rows — 4 mandatory edits**
@@ -808,8 +905,7 @@ reaches `check.py` stage selection, every `from-stage` in `stack.ini`,
 
 Then behaviour: `trace.py:526+` `ENUM_FIELDS` for the closed vocabulary (the `B`
 tier's enums ride the **advisory** pipe, so a bad value warns and never fails —
-`test_external_frame.py:371`), and the five live rows. `rests_on` follows the
-same four-edit path.
+`test_external_frame.py:371`), and the four live rows.
 
 **(b) `[assumption.DA-###]` row kind — 8 mandatory edits**
 
@@ -818,22 +914,26 @@ The four above, plus `OFFSPINE_KEYS` (new `DA-ID`), `OFFSPINE_TABLE`
 (`test_dogfood_sync.py:433` asserts `set(floors) == set(TOML_REGISTRIES)`), and
 `trace.py:920-928` `_offspine_ids` for the id watermark. The watermark is not
 optional: the missing-watermark hole has happened here twice (IF-121/122 and
-OI-26). `realized_by` is one optional key and adds nothing to the count.
+OI-26). Then behaviour: `trace.py` must resolve the DA's `sn_refs` and
+`boundary_refs` the way it resolves an SR's. **No edits to `B` or `IF` rows**:
+the DA points at them, not the other way round.
 
-**(c) The frame redraw (§5.5) — a sitting**
+**(c) The frame redraw (§5.6) — a sitting**
 
 - `tests/test_external_frame.py:87-114` pins *exactly* 4 entities, 4 crossings
   and 3 relationships plus the spent-id gaps, and `:128-146` pins every `status`
   to `Approved`. Its docstring says it **is expected to be edited by a sitting
-  and by nothing else**. The redraw moves entities 4 → 6 and relationships
-  3 → 2, adds `EXT-003` to the spent ids, and adds `emulates` to the entity
-  schema. Crossings stay at 4.
+  and by nothing else**. The redraw re-pins all three counts, adds `EXT-003` to
+  the spent ids, and adds `emulates` to the entity schema.
+- **The reversed rulings (§5.2) carry prose with them.** `REL-002`'s flow and
+  notes, `EXT-005`'s description, `IF-041`'s note and `B-04`'s note each state
+  13n's reasoning, and each needs rewriting in the same sitting.
 - `tests/test_hats.py:885-900` names `EXT-003 Adopter` as the entity the
   FIRST-RUN-ADOPTER review hat speaks for. WI-453 re-pointed the hat's predicate
-  away from the id, so nothing breaks, but the hat loses its entity and needs a
-  new anchor, plausibly the human operator on first run.
-- `docs/log.md` and the sitting-2 plan cite `EXT-003` historically. They are
-  records and stay as written.
+  away from the id, so nothing breaks, but the hat needs a new anchor, plausibly
+  the human operator on first run.
+- `docs/log.md` and the sitting-2 plan cite `EXT-003` and 13u historically. They
+  are records and stay as written.
 
 ### 9.4 What will actually hurt
 
@@ -883,31 +983,38 @@ Not part of this proposal; recorded because the survey found them.
 Each step is useful alone, and each later step assumes only the earlier ones.
 
 **Step 1 — type the crossings.** Add `frame` to the boundary schema; set it on
-the five `B-##` rows and the template's example rows. **Four edits (§9.3a); no
+the four `B-##` rows and the template's example rows. **Four edits (§9.3a); no
 new row kind, no predicate, no requirement touched, no test re-pinned.** Every
 SR is classified for free, and *"which of our requirements can we actually
 observe?"* becomes answerable. Executable today, independent of everything
 below.
 
-**Step 2 — redraw the frame and record the assumptions.** The sitting: the
-§5.5 rows (§9.3c), plus the `[assumption.DA-###]` row kind (§9.3b) and
-`rests_on`. Write the W rows for the 16 SNs and for `B-02`. They exist today as
-the unstated gap between each `need` and its `acceptance`, so this is
-transcription, not invention. Warn-only; nothing gates. Expect this step alone to
-surface real defects.
+**Step 2 — redraw the frame and record the assumptions.** The sitting:
+reverse the §5.2 rulings deliberately, land the §5.6 rows (§9.3c), and add the
+DA row kind (§9.3b), with Q8 settled first. Write the DA rows for the 24
+person-facing needs. They exist today as the unstated gap between each `need`
+and its `acceptance`, so this is transcription, not invention. Warn-only;
+nothing gates. Expect this step alone to surface real defects.
 
 **Step 3 — let test cases verify an assumption.** Allow `DA-###` as a `Verifies`
 target (settle Q5 first, §9.1) and add the evidence descriptor (§7(e)). Start
 with the metamorphic subset (§7(c)), which is nearly free.
 
-**Step 4 — the warn-first findings.** `trace.py` warns on an `Approved`
-assumption with no `falsified_by`, and on a rig row with `emulates` and no `DA`
-row (§8.3).
+**Step 4 — the warn-first findings.** `trace.py` warns on:
+- an `Approved` DA with no `falsified_by` (§6.2);
+- a rig row with `emulates` and no DA naming it (§8.3);
+- a DA that cites only `design` crossings and no interpreting seam (§6.2).
 
-**Step 5 — the gate, if wanted.** `DevStg-Tests` requires every `effect`-framed
-SR to reach an assumption, or carry a recorded waiver. **The only step that costs
-an adopter anything mandatory; opt-in with an applies-when**, per the
-proportionality doctrine.
+**Step 5 — the gate, if wanted.** The vision promises work built *"test-first
+with explicit approval gates so you can trust what ships."* Steps 2–4 only
+warn, so without this step DA rows are optional documentation. The gate:
+**`DevStg-Tests` requires every need to have at least one DA, or a recorded
+waiver stating that its SRs alone deliver it** — the need-level form of
+`coincident`. It is keyed on the **need**, because that is where the argument
+lives: a gate keyed on SRs at `effect` crossings would check only the handful
+at `B-02` and pass SN-001 and SN-002. **The only step that costs an adopter
+anything mandatory; opt-in with an applies-when**, per the proportionality
+doctrine.
 
 **Not proposed: a new stage rung.** The recursion already oscillates Reqs↔Arch,
 and this concept rides existing rungs.
@@ -921,23 +1028,25 @@ build on it; `OPEN` means it may not.
 
 | # | question | standing |
 |---|---|---|
-| Q1 | Does the human come out of `EXT-001`? | **DECIDED: yes** (§5.3). The answer widened into the enabling-systems thread (§8). |
-| Q2 | Does `REL-001` become a crossing? | **DISSOLVED** by dropping the adopter (§5.4): the value it guarded lands on `B-01`/`B-02`. My reading of the owner's decision to drop the adopter. |
+| Q1 | Does the human come out of `EXT-001`? | **DECIDED: yes** (§5.4). The answer widened into the enabling-systems thread (§8). |
+| Q2 | Does `REL-001` become a crossing? | **DISSOLVED** by dropping the adopter (§5.5): the value it guarded lands on the operator's crossings. My reading of the owner's decision to drop the adopter. |
 | Q3 | `frame` vocabulary: two values or three? | **DECIDED: three**, keep `coincident` (§4). Deriving coincidence from topology considered and not adopted. |
 | Q4 | How heavy is the evidence descriptor? | **DECIDED: `assumed \| sampled \| monitored`**, CAS as the escalation path (§7(e)). Agreement to the cheap option, not a finding that the heavy one was wrong; revisit first if the descriptor starts carrying weight. |
-| Q5 | Does a W-test supplement an SR citation, or may it stand alone? | **OPEN, leaning stand-alone.** If so, the `IF-###` precedent does not transfer (§9.1), and that cost is unsurveyed. |
-| Q6 | Does a rig's crossing get a `B-##` row? | **DECIDED: no.** A rig is an `enabling` entity with `emulates`, an `IF` row at the existing crossing, and a `DA` row (§8.2). |
-| Q7 | Does this ship downstream in v1? | **DECIDED in principle: yes**, once Q5 and the sitting have nailed down the details. |
-| — | The frame's orientation and the adopter | **DECIDED:** operating frame, two planes; `EXT-003` dropped (§5). |
+| Q5 | Does a W-test supplement an SR citation, or may it stand alone? | **OPEN, leaning stand-alone.** `sn_refs` on the DA strengthens that lean (§9.1); the cost of the exception is unsurveyed. |
+| Q6 | Does a rig get its own crossing? | **DECIDED: no.** A rig is an `enabling` entity with `emulates`, plugged into the existing interface, with a fidelity DA (§8.2). |
+| Q7 | Does this ship downstream in v1? | **DECIDED in principle: yes**, once Q5, Q8 and the sitting have nailed down the details. |
+| Q8 | Do DA rows live in `external.toml` or beside the SRs? | **OPEN.** Cost favours `external.toml`; one-or-more rows per need in a LOCKED file argues against (§9.2). |
+| — | Orientation, the adopter, and the reversed rulings | **DECIDED:** operating frame, two planes, `EXT-003` dropped, 13u reversed (§5). `REL-003`, hosted CI and 13o **to recheck** at the sitting (§5.2). |
+| — | DA shape | **Agreed 2026-09-22:** `sn_refs` + `boundary_refs`; no `bridges_to`; the spine keeps `SN → SR` (§6.2). |
 | — | Enabling-system stage vocabulary | **Tentative.** Placed, not settled (§8.1). |
 
 ### Still not captured
 
 Recorded so this section is not mistaken for closure.
 
-1. **Blast radius.** If 41 seams cite one assumption and it is falsified, 41
-   seams are affected at once. A shared `DA` row makes that coupling invisible,
-   the way a shared dependency does.
+1. **Blast radius.** If 41 seams share one assumption and it is falsified, 41
+   seams are affected at once. The DA's `boundary_refs` makes the list visible;
+   nothing yet acts on it.
 2. **Chained assumptions.** The user → device → registry → tooling chain is a
    chain of assumptions. Jackson takes `W` as a flat conjunction and says nothing
    about depth.
@@ -945,10 +1054,12 @@ Recorded so this section is not mistaken for closure.
    decoding against a JSON schema is far more deterministic than free-prose
    critique, and the kit ships `structured-output-contract` specifically to move
    a seam along that axis. The frame cannot record that a seam was **hardened**.
-   The most actionable of the four.
 4. **The trusted translating layer.** Non-rig equipment performs translation all
    the time and is simply trusted. It probably needs no home in the frame, but
    "probably" is not yet an argument.
+5. **The authority DA has no falsifier.** *"A changed Status cell means a human
+   judged"* is the first row this repo would write, and nothing yet names the
+   signal that would show a Status flip made without judgment.
 
 **Verify before ruling.** The 15288 definition of an enabling system, its stage
 list and the Transition process name are given from knowledge, not from the text.
