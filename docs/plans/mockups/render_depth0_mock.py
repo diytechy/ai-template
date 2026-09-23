@@ -237,6 +237,22 @@ def derive(mock, ifs, srs):
             ", ".join(multi) + " — to be split" if multi else "none",
         ),
         (
+            "Rigs Approved — a fidelity assumption counts only once its rig is",
+            all(r.get("status") == "Approved" for r in rigs.values()),
+            ", ".join(
+                "{} {}".format(k, r.get("status", "no status")) for k, r in rigs.items()
+            )
+            + " — approved with the assumptions at C4",
+        ),
+        (
+            "Stakeholders Approved — the reach check reads only approved rows",
+            all(s.get("status") == "Approved" for s in stks.values()),
+            ", ".join(
+                "{} {}".format(k, s.get("status", "no status")) for k, s in stks.items()
+            )
+            + " — approved with the needs at C1",
+        ),
+        (
             "Extension: boundary IFs classified (bridged or coincident)",
             unclassified_ifs == 0,
             "{} unclassified — the allocation work at DevStg-Arch".format(

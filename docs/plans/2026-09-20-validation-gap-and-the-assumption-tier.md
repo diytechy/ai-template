@@ -6,10 +6,11 @@ The owner has answered most of its questions (§12). Those answers set the
 direction the next sitting builds on. They are not the ruling itself, and
 `external.toml` is unedited.
 
-**Revised three times after adversarial review (2026-09-23, §12.2–§12.4).**
-Three codex Sol reviews (reasoning effort high) found 24, then 18, then 5
-problems; the third judged the draft *"NOT YET SOUND"* on five specific points,
-all applied here. Every finding was checked against the code before being
+**Revised four times after adversarial review (2026-09-23, §12.2–§12.5).**
+Four codex Sol reviews (reasoning effort high) found 24, 18, 5 and 7 problems.
+The last two judged the draft *"NOT YET SOUND"* on specific points — by then
+implementation-level: result carriers, snapshot parsing, stage placement. All
+are applied here; the round-4 fixes were not put through a fifth round. Every finding was checked against the code before being
 applied. The second review showed the first revision had over-reached — it moved interfaces ahead of
 requirements on the stage ladder and recreated a bundle-level scalar — so this
 draft splits the proposal in two:
@@ -49,7 +50,7 @@ CORE
   evidence    TC ── verifies ──► SR / LLR      TC ── assumption_refs ──► DA
 
 EXTENSION (at DevStg-Arch, where interfaces live)
-  IF ── realizes ──► SR[]     each boundary interface names the requirement(s) it realizes
+  IF ⇢ SR                     the requirement a seam answers, REACHED through its owner (as today)
   IF ── bridged_by ──► DA[]   the assumptions that carry this interface's reading to an outcome
   IF ── coincident ──         else an explicit waiver; else unclassified
 ```
@@ -533,10 +534,16 @@ description = """FAKE_AGENT: answers the runner contract from a script;
 status      = "Drafted"
 ```
 
-**Rig and stakeholder rows carry `status`**, because `emulates` and `party` are
-load-bearing: they decide fidelity and reach. And since each of those files
-then holds two approvable tiers (assumptions and rigs; needs and stakeholders),
-snapshot authorization must be keyed by **tier**, not by file (§10.1).
+**Rig and stakeholder rows carry `status`, and it is wired**, because
+`emulates` and `party` are load-bearing: they decide fidelity and reach.
+
+| tier | approved at | in which act | the gate relies on it when |
+|---|---|---|---|
+| rig | DevStg-Boundary, with the assumptions | the same brief and batch as the DAs (C4) — a fidelity DA and its rig are judged together | a fidelity DA counts only if its rig is Approved |
+| stakeholder | DevStg-Needs, with the needs — human-held here | the needs' approval act (C1) | the reach check reads only Approved stakeholder rows |
+
+Each of those files then holds two approvable tiers (assumptions and rigs; needs
+and stakeholders), so approval must be tier-specific, not file-wide (§10.1).
 
 **`da_refs`, when present, is non-empty.** An empty list asserts nothing and is
 treated as absent.
@@ -688,14 +695,26 @@ standing is derived from **results**:
 |---|---|
 | `assumed` | no TC evidences it |
 | `specified` | a TC evidences it, but there is no current passing result |
-| `sampled` / `monitored` | a current passing result exists, from a TC whose `sampling` cell says which |
+| `monitored` | a current passing result from an automated or monitoring TC |
+| `sampled` | a current passing result from a sampled TC — a human probe or a measurement |
 
-"Current" means two different things by kind. An **automated** assumption TC
-joins the existing tree-bound suite verdict (`docs/test/evidence`, written by the
-harness for one tree). A **sampled or monitored** TC — a human probe, a
-measurement — records a dated outcome and declares its freshness (`max_age`),
-because a human sample cannot be re-run per tree. The gate (§11, C5) accepts an
-assumption only with a current passing result or a recorded `accepted_risk`.
+**Where results live.** An automated assumption TC joins the existing
+tree-bound suite verdict (`docs/test/evidence`). A sampled or monitored
+observation cannot be re-run per tree, and putting it on the approved TC would
+mix the test's specification with its results and force a re-attestation after
+every sample. So observations get **their own result record**, keyed by TC:
+outcome, when it was observed, by whom or what, and when it expires. The TC keeps
+only its policy — `sampling` and `max_age`. A stale record makes the standing
+`specified` again; a failing one is falsification evidence against the
+assumption.
+
+**A passing sparse sample does not satisfy the gate by itself.** The limit below
+says so — *a passed sparse probe is not evidence that an assumption holds* — so
+the gate cannot count it as if it were. An assumption whose only evidence is
+`sampled` clears the gate (§11, C5) only with one of: a declared sampling model
+and threshold that justifies a positive claim (sample size, acceptance rule); a
+`holds_when` narrowed until an automated check covers it; or a recorded
+`accepted_risk`. Sparse samples keep their real job: falsification.
 An assumption-only TC may belong to several phases, as the SRs citing its
 assumption may; `derive_stage` already places one TC in several phase groups.
 
@@ -853,10 +872,16 @@ could cite them; the second review was right that this approves architecture
 before the requirements it serves. So the link is made **from the architecture
 side, at the architecture rung**:
 
-- **An IF names the requirement(s) it realizes** (`realizes = ["SR-###", …]`),
-  child citing parent across rungs — the same direction as today's tie-back to a
-  bundle. A non-empty list; more than one SR requires a sharing waiver on the IF
-  (below).
+- **The requirement a seam answers is already derived — keep it that way.**
+  `interfaces.toml` rules that an IF row states no requirement: *"the requirement
+  this seam answers to is REACHED through the owner — the design rows whose
+  `module` names it, or the `Implements:` line in its header — and is not stated
+  on the row"*, and a requirement-reference cell is a retired strict finding. The
+  third revision proposed a `realizes` cell; the fourth review was right that it
+  would reverse that rule and give the relation two homes. So the extension uses
+  the derived relation: IF owner → the design rows naming that module → their
+  SRs. An IF may reach several SRs that way, which is fine: the relation is
+  "answers to", not "is defined by".
 - **An IF names the assumptions that bridge its reading** (`bridged_by =
   ["DA-###"]`). The allocation lives on the **IF row**, which is approved at
   DevStg-Arch, so the Arch approval owns both edges. The previous draft put
@@ -868,25 +893,22 @@ side, at the architecture rung**:
   *coincident* (an explicit waiver cell on the IF), or *unclassified* (a
   finding).
 
-**One requirement per interface, without synthetic interfaces.** The house rule
-is *"a single interface or method is fully defined by exactly one requirement"*,
-with a recorded-waiver valve for rare exceptions. 69 SRs sit on `B-05` against
-39 `B-05` IFs. Minting ~30 IF rows to satisfy the count would create synthetic
-interfaces, and each real IF carries a contract body beside its code and a
-contract test (PROCESS.md:1181-1208). So the allocation maps SRs to **real
-seams** first; where several independently testable properties constrain one
-real seam, the IF lists all of them in `realizes` and carries a recorded sharing
-waiver; new IF rows are minted only for genuine seams — the dashboard itself is one (§5.4). All 167 IF rows are
+**No synthetic interfaces.** 69 SRs sit on `B-05` against 39 `B-05` IFs, and
+each real IF carries a contract body beside its code and a contract test
+(PROCESS.md:1181-1208). New IF rows are minted only for genuine seams — the
+dashboard itself is one (§5.4) — never to match a count. All 167 IF rows are
 still Drafted, so their approvals are owed regardless.
 
-**An SR needs an explicit form**, because at the extension's gate an SR realized
-by no interface must not look the same as one that is meant to rest only on an
-assumption: `form = "interface" | "assumption" | "package-wide"`, a closed cell.
-Absence is a finding, not a default.
+**An SR carries an explicit form** — introduced in the core (C2, §10.2k) so it
+rides the same re-attestation batch, and used here: an SR reached by no
+interface must not look the same as one meant to rest only on an assumption.
+`form = "interface" | "assumption" | "package-wide"`, a closed cell; absence is
+a finding, not a default.
 
 **What the extension adds to the gate** (§11, C5): every SR of form
-`interface` is realized by at least one boundary IF, and each such IF is
-`coincident`, or is bridged by an assumption the SR also cites.
+`interface` is reached by at least one boundary IF through the derived relation,
+and each such IF is `coincident`, or is bridged by an assumption the SR also
+cites.
 
 ---
 
@@ -916,15 +938,24 @@ also settles:
 - the **lock**: `external.toml`'s rows keep changing only by ruling; DA rows
   follow ordinary Boundary-rung approval.
 
-**But a separate file is not enough on its own, so the ledger is keyed by
-tier.** The third review found the same coalescing one level down:
+**But a separate file is not enough on its own: approval must be
+tier-specific.** The third review found the same coalescing one level down:
 `assumptions.toml` holds assumptions *and* rigs, and `stakeholder-needs.toml`
-would hold needs *and* stakeholders, so approving a DA could authorize drift in a
-rig row, and an SN approval drift in a stakeholder row. The fix is small and
-general: key the snapshot authorization ledger by **(path, id column)** instead
-of path. `SNAPSHOT_TIERS` is already a list of `(path, id column)` pairs; only
-the ledger's key changes (`baseline_snapshot.py:565-583`, `:660-667`). It also
-removes the same hazard from `external.toml`'s three tiers, which exists today.
+would hold needs *and* stakeholders. The fourth review showed the fix is larger
+than re-keying a ledger: the approval identity is a registry path end to end —
+`--approves <path>=<ref>` is parsed per path (`baseline_snapshot.py:277-304`),
+the refusal compares path names (`:644-675`), authorization selects whole
+registries (`:785-854`), and the writer copies the whole file (`:857-890`).
+
+Two ways out, to be chosen at the sitting:
+
+| option | what it takes | also fixes |
+|---|---|---|
+| **tier-specific approval identity** — path plus id column, through parsing, refusal, write scope and stamping; the whole file is copied only after every other tier in it is shown to have no unapproved drift | a real change to `baseline_snapshot` and its tests | the same hazard in `external.toml`'s three tiers, which exists today |
+| **one tier per file** — rigs and stakeholders in their own files | two more registries, each with the new-registry machinery of §10.2b | nothing beyond the new tiers |
+
+The first is the general fix and the recommendation; the second is simpler if
+the sitting prefers not to touch the snapshot machinery.
 
 **Internal assumptions** — the owner's case of an LLM *inside* the system
 handing structured output to a script — are **design-tier** assumptions: they
@@ -988,27 +1019,35 @@ threaded through admission, or a commit-time refusal.
 checked by the commit-msg hook — the prerequisite for the authority assumption's
 falsifier.
 
-**(j) Tier-keyed snapshot authorization** — the ledger keyed by (path, id
-column), §10.1.
+**(j) Tier-specific approval identity** (or one tier per file), §10.1.
 
-**(k) Re-attesting the approved rows C2 and C3 touch.** Adding `da_refs` or a
-`coincident` waiver to an approved SR, or `assumption_refs` and `sampling` to an
-approved TC, amends an approved row: the acceptance classifier fails safe and
-treats an unclassified column as approved content
-(`acceptance_record.py:296-302`), and PROCESS.md requires amended approved cells
-to be re-read and re-copied. So each new cell is classified explicitly (argument
-content → approved content, reviewed), and the touched SRs and TCs go through a
-**re-attestation batch before activation** — up to all 79 SRs and every TC that
-gains an `assumption_refs`. That human review is the largest single cost of the
-core, and it is why C2's writing and C4's activation are separate steps.
+**(k) Classifying the new cells, and re-attesting what is approved content.**
+The acceptance classifier fails safe: an unclassified column is approved content
+(`acceptance_record.py:296-302`). But link cells have a ruled home among the
+**traced** cells — `SN-Refs`, `Boundary-Refs` and `Hat-Refs` on SRs, `Verifies`
+on TCs — which do not arm a re-attestation (`acceptance_record.py:236-270`). So
+each new cell is classified explicitly:
 
-**(l) Evidence results.** Assumption TCs join the tree-bound evidence record;
-sampled and monitored TCs gain a dated outcome and a `max_age` (§7).
+| cell | class | consequence |
+|---|---|---|
+| SR `da_refs`, SN `stakeholder_refs`, TC `assumption_refs` | **traced** — pointers, like `SN-Refs` and `Verifies` | no re-attestation; a changed `da_refs` routes to adjudication, as a re-pointed `SR-Refs` does |
+| SR `coincident` waiver, SR `form`, TC `sampling`, TC `max_age` | **approved** — prose or policy the row now asserts | the rows that gain them are re-attested |
+
+So the batch before activation is the SRs that gain a `coincident` waiver or a
+`form`, and the TCs that gain a `sampling` policy — not every row a link touches.
+`form` moves from the extension into C2 so it rides the same SR batch rather than
+opening a second one. That is still the core's largest human cost, and the
+reason C2's writing and C4's activation are separate steps.
+
+**(l) Evidence results.** Automated assumption TCs join the tree-bound evidence
+record; sampled and monitored observations get their own result record keyed by
+TC (outcome, observed-at, provenance, expiry), with a writer, validation, stale
+and failure behaviour, and the gate as its reader (§7).
 
 ### 10.3 The edit list — extension
 
-- IF `realizes` (a list, with a sharing waiver above one), IF `bridged_by`, the
-  per-IF `coincident` waiver, SR `form`.
+- IF `bridged_by` and the per-IF `coincident` waiver; the derived IF → SR
+  relation used as it is today (SR `form` has moved into the core, §10.2k).
 - **All 79 SRs mapped to real seams**, with recorded waivers where seams are
   shared and new IF rows only for genuine seams — each with its contract body,
   its contract test and its approval.
@@ -1053,32 +1092,43 @@ step assumes only the earlier ones.
 
 **C1 — the sitting.** Reverse the §5.2 rulings deliberately; land the §5.6 rows
 (§10.2a); create `assumptions.toml` and the stakeholder list with their stage
-arms **off** (§10.2b–c, f).
+arms **off** (§10.2b–c, f); approve the stakeholder rows with the needs, as a
+human-held act.
 
-**C2 — write the assumptions.** DA rows derived from the person-facing needs —
-each a new Drafted claim — and, on every SR, `da_refs` or a `coincident`
-waiver. **Warn-only, genuinely:** the arms are off, so nothing moves the derived
+**C2 — write the assumptions.** DA and rig rows derived from the person-facing
+needs — each a new Drafted claim — and, on every SR, `da_refs` or a `coincident`
+waiver, and its `form`. **Warn-only, genuinely:** the arms are off, so nothing moves the derived
 stage.
 
 **C3 — evidence.** `assumption_refs` and `sampling` on TCs, and result records
 for them (§10.2e, l); start with the metamorphic subset (§7(c)).
 
-**C4 — activation.** First the **re-attestation batch** for the SRs and TCs C2
-and C3 amended (§10.2k). Then switch the stage arms on: the derived stage
-regresses to Boundary until the assumptions are Approved, so state that, and
-approve them as one batch through their brief (§10.2g), under the moved dial and
-its enforcement (§10.2h), with tier-keyed snapshots in place (§10.2j).
+**C4 — activation.** First the **re-attestation batch** for the SRs and TCs
+whose approved content C2 and C3 changed (§10.2k). Then switch the stage arms
+on: the derived stage regresses to Boundary until the assumptions and rigs are
+Approved, so state that, and approve them as one batch through their brief
+(§10.2g), under the moved dial and its enforcement (§10.2h), with tier-specific
+approval in place (§10.2j).
 
 **Findings, from C2 on** — warn-only: the §6.2 checks; a `falsified` assumption,
 reported with every SR and TC that cites it; an Approved, active assumption that
 is only `assumed` or `specified`; a Status change on a human-held rung in a
 commit carrying the loop trailer (once §10.2i exists).
 
-**C5 — the gate, if wanted.** Path-level: for every SR, either its `coincident`
-waiver holds, or each assumption it cites is **Approved**, **active**, lands on
-its stakeholder's party (or a mediating one), and has a **current passing
-result** or a recorded `accepted_risk` (§7). With the extension, also per
-realizing boundary IF (§9). The
+**C5 — the gate, if wanted — split by rung, so it cannot deadlock.** Passing
+results exist only after the harness runs, so evidence cannot gate an early rung.
+
+- **At DevStg-Boundary — maturity only:** for every SR, either its `coincident`
+  waiver holds, or each assumption it cites is **Approved** and **active**,
+  lands on its stakeholders' party (or a mediating one), and — if a fidelity
+  assumption — names an Approved rig.
+- **At DevStg-Release — evidence, after the harness:** each of those assumptions
+  has a **current passing result** of the right kind (§7: `monitored`, or
+  `sampled` with a justified sampling model) or a recorded `accepted_risk`. This
+  sits beside the existing Release input, `docs/test/evidence`, which the harness
+  writes after a passing run.
+
+With the extension, the Boundary half also runs per reached boundary IF (§9). The
 vision promises work built *"test-first with explicit approval gates so you can
 trust what ships"*; without this step, the assumption rows are optional
 documentation. Opt-in, with an applies-when.
@@ -1120,12 +1170,16 @@ revision this document now proposes, for the owner to accept or reject.
 | Q15 | Does `external.toml`'s lock cover assumption rows? | **MOOT** under Q8's revision: they live elsewhere. |
 | Q16 | Two frames in one view? | **NEW (reviews 1, 2).** Kit and delivery frames; membership a `system` cell on the bundle; Transition the only lifecycle hand-off (§5.1). |
 | Q17 | Boundary IFs approved at DevStg-Boundary? | **WITHDRAWN (review 2):** it put architecture before requirements. Interface allocation happens at DevStg-Arch instead (§9). |
-| Q18 | One SR per interface — mint the missing IFs? | **REVISED (review 2):** map SRs to real seams; share one seam under a recorded waiver; mint only genuine seams (§9). |
+| Q18 | One SR per interface — mint the missing IFs? | **REVISED (reviews 2, 4):** no `realizes` cell and no minting to a count — the IF → SR relation stays derived through the owner, as today; new IF rows only for genuine seams (§9). |
 | Q19 | `mediates` on the session? | **NEW (review 2).** One cell lets an outcome on a session bundle count as the human's (§5.4). |
 | Q20 | Activate the stage arms as a separate step? | **NEW (review 2).** Yes, so writing Drafted assumptions does not regress the stage by surprise (§11, C4). |
 | Q21 | Key snapshot authorization by tier, not by file? | **NEW (review 3).** Yes — a small change to `baseline_snapshot`'s ledger key, which also fixes the same hazard in `external.toml` today (§10.1). |
 | Q22 | Evidence as a current passing result, not a TC's existence? | **NEW (review 3).** Yes — tree-bound for automated assumption TCs, dated with a `max_age` for sampled and monitored ones (§7). |
-| Q23 | Re-attest the approved SRs and TCs that C2 and C3 amend, before activation? | **NEW (review 3).** Yes — the largest human cost of the core (§10.2k). |
+| Q23 | Re-attest the approved SRs and TCs that C2 and C3 amend, before activation? | **REVISED (review 4).** Only approved-content cells re-attest; link cells are traced, like `SN-Refs` and `Verifies` (§10.2k). |
+| Q24 | How does sampled evidence count? | **NEW (review 4).** As falsification only, unless a declared sampling model justifies a positive claim, `holds_when` is narrowed, or the risk is accepted (§7). |
+| Q25 | Where do sampled and monitored results live? | **NEW (review 4).** In their own result record keyed by TC, not on the approved TC (§7, §10.2l). |
+| Q26 | Tier-specific approval identity, or one tier per file? | **NEW (review 4).** Recommended: tier-specific identity, which also fixes `external.toml` today (§10.1). |
+| Q27 | Where does the gate sit? | **NEW (review 4).** Split: maturity at DevStg-Boundary, evidence at DevStg-Release (§11, C5). |
 | — | Orientation, the adopter, the reversed rulings | **DECIDED**; traced 2026-09-22 (§5.2). |
 | — | Bundles | **REVISED:** authored identities; membership derived; not deleted (§5.7). |
 | — | Hats | **Agreed, narrowed:** four positive outcomes; no "not applicable" record (§6.5). |
@@ -1214,7 +1268,36 @@ Non-blocking notes also applied: multi-phase placement for assumption-only TCs
 assumption serves (§6.2); and, in the mockup, a per-interface `bridged_by` and a
 reach check that no longer takes a Cartesian product.
 
-### 12.5 Formerly "not captured" — closed or scheduled (owner, 2026-09-23)
+### 12.5 Review round 4 — codex Sol, reasoning effort high (2026-09-23)
+
+Verdict: *"NOT YET SOUND — the core still lacks a coherent positive-evidence and
+approval path, while the extension's allocation authority and full
+re-attestation cost remain unresolved."* It confirmed the round-3 corrections
+hold — the Arch-owned `bridged_by`, preserved `sn_refs`, re-attestation before
+activation — and that the two-frame `system` cell, required `effect_at`,
+`bridged_by` and the explicit unclassified state are internally coherent. Seven
+findings; each checked against the code and applied. **These fixes were not put
+through a fifth round.**
+
+| # | finding (short) | where it landed |
+|---|---|---|
+| 1 | the gate accepted a passing sparse sample the plan says proves nothing | §7; §11 C5 (Q24) |
+| 2 | rig and stakeholder statuses were unwired | §6.2 approval table; §11 C1, C4 |
+| 3 | no carrier for sampled or monitored results | §7, §10.2l (Q25) |
+| 4 | re-keying the ledger is not enough: approval identity is a path end to end | §10.1 (Q26) |
+| 5 | `realizes` reverses the rule that an IF states no requirement | §9: use the derived relation |
+| 6 | the re-attestation cost was incomplete — and link cells are traced, not approved | §10.2k (Q23 revised) |
+| 7 | an evidence gate at an early rung would deadlock | §11 C5 split by rung (Q27) |
+
+**Where the loop was stopped, and why.** The finding counts ran 24, 18, 5, 7. The
+first two rounds found design flaws; the last two found implementation-level
+specification gaps — which carrier, which parser, which rung. Those are the
+sitting's and the implementation's to settle against real code, and a fifth
+round would keep finding the next level of detail. The owner should read the
+round-4 fixes as the proposal's current position, not as independently
+verified.
+
+### 12.6 Formerly "not captured" — closed or scheduled (owner, 2026-09-23)
 
 1. **Blast radius → a field and a report.** One assumption covers every seam
    where the kit consumes model output (*"the model runner follows the runner
