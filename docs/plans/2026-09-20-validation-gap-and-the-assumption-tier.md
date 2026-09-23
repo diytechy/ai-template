@@ -8,7 +8,8 @@ two open or deferred after a second pass the same day. Q1's answer opened the
 enablement/verification thread in §10, which in turn resolved Q6 as posed and
 **retired §6(f)'s separate treatment of the rig** in favour of one row kind at
 two weights (§10.2). Recording an answer is not the ruling; §§1–8 are unchanged
-by any of it.
+by any of it. **2026-09-22:** the adopter is dropped (§12.6). That supersedes
+§1's placement of the value at `EXT-003` (not its finding) and dissolves Q2.
 
 **What it proposes, in one sentence.** The kit records what the system must do
 at its own interface and tests that exhaustively; it does not record the
@@ -783,6 +784,12 @@ the owner has decided and the next sitting may build on it; `DEFERRED` and
    > `REL-003`, and the `scaffold` fixture has been rigging `REL-001` since
    > before the frame was drawn. The decision stays the owner's; what is gone is
    > the option of settling it by taste.
+   >
+   > **Owner, 2026-09-22 — DISSOLVED by dropping the adopter (§12.6).** With
+   > `EXT-003` gone, `REL-001` collapses into `REL-002`, and the value §1 placed
+   > across it lands on `B-01`/`B-02`, which are the system's own crossings. The
+   > question no longer has an object. The dissolution is my reading of the
+   > owner's decision, marked as such in §12.6.
 
 3. **`frame` vocabulary: two values or three?** `coincident` costs a word and
    buys an explicit claim. The alternative is two values plus the convention
@@ -1532,7 +1539,7 @@ A sketch for the sitting, not a ruling. Changes only:
 | `EXT-001` Development session | **narrow** to the computer: shell, editor, OS, git client, working copy; owns `B-01` | operating |
 | `EXT-005` Model provider | unchanged; gains an inbound `emulates` from the rig | operating |
 | `EXT-002` Template | unchanged | evolution |
-| `EXT-003` Adopter | unchanged; but see the open point below | operating |
+| `EXT-003` Adopter | ~~unchanged~~ **dropped** — the team is the human operator, the repo is the environment (§12.6) | — |
 | *new* Scripted model runner | **add**, `enabling`, `emulates = "EXT-005"` | evolution |
 | *new* Scaffold rig | **add**, `enabling` — emulates a fresh operating environment, not a party (§10.4.2) | evolution |
 | test infrastructure | **not shown** — the owner: inherent to defining a system | — |
@@ -1540,7 +1547,8 @@ A sketch for the sitting, not a ruling. Changes only:
 **Cost, honestly.** `test_external_frame.py:87-114` pins *exactly* 4 entities,
 4 crossings and 3 relationships, and the test's own docstring says it **is
 expected to be edited by a sitting and by nothing else**. This re-draw changes
-the entity count (4 → 7) and gives `B-02` an owner. That is the sitting Q1 was
+the entity count (4 → 7; **6** once the adopter is dropped, §12.6) and gives
+`B-02` an owner. That is the sitting Q1 was
 always going to require; it is not additional cost created here. **The crossing
 count is untouched, and no SR's `boundary_refs` are re-pointed.**
 
@@ -1552,6 +1560,61 @@ as a Transition-stage concern (§10.9), or it stays and the frame carries the
 same party twice under two names. The first is cleaner and is the larger change;
 this is Q2 wearing different clothes, and it should be decided with Q2 rather
 than beside it.
+
+> **Owner, 2026-09-22 — ANSWERED: the adopter is dropped.** Recorded in §12.6
+> with what it moves.
+
+### 12.6 The adopter is dropped — the orientation, and what it moves (owner, 2026-09-22)
+
+The owner's statement of the orientation, which is the reason as well as the
+ruling: before, the frame was oriented toward the system as **the entire
+package that developed the product**. That is still true to an extent, but the
+orientation is now toward **the system the user experiences, in addition to the
+enabling system.** That is §12.4's two planes stated as intent rather than
+discovered in the `class` column: the operating plane is now the primary
+subject, and the evolution plane is kept, not demoted.
+
+Under that orientation `EXT-003` has nothing left to name. It was *"the
+downstream team + repo"* (sitting 2's row), and the operating frame already
+splits that pair: **the team is the human operator**, and **the repo is the
+operating environment the frame is drawn in**. Neither needs a third row.
+
+What that moves, as I read it. The owner may correct any of these; only the
+drop itself is the owner's words:
+
+1. **`REL-001` collapses into `REL-002`. It does not move to the evolution
+   plane.** §12.5 offered "moves to evolution" as the alternative. It is not
+   needed: `REL-002` (Template → `EXT-001`) already *is* the adoption edge, drawn
+   from the operating side. Its flow is *"this repository's own session adopts
+   the same delivered content"*, and its note says the workflow is adopted
+   *"exactly as an adopter's would be."* With the adopter gone, `REL-001` states
+   the same hand-off a second time. That makes the entity count 4 → **6** (not
+   §12.5's 7), and the relationship count 3 → **2**.
+2. **Q2 dissolves rather than being decided.** §1 put the stakeholder value at
+   `EXT-003`, which could only be reached across a relationship the system is
+   not a party to. In the operating frame the value lands on the human
+   operator's crossings, `B-01` (mediated) and `B-02` (direct, `effect`).
+   Those are **the system's own crossings**. So "does `REL-001` become a
+   crossing?" stops being a question, because the need it guarded now has a
+   crossing. §1's finding stands as the reason for the change; only its
+   location of the value (at `EXT-003`) is superseded.
+3. **The "rigging `REL-001`" evidence from §10.4.2 moves with it.** The
+   `scaffold` fixture emulates *a fresh operating environment*, which is how
+   §12.5 already typed the scaffold rig. Its fidelity assumption points at the
+   operating environment (`EXT-001` narrowed), not at a relationship.
+4. **One further cost, not in §12.5's list.** `tests/test_hats.py:885-900`
+   names `EXT-003 Adopter` as the entity the FIRST-RUN-ADOPTER review hat
+   speaks for. The hat's predicate was re-pointed by WI-453 and does not key on
+   the id, so nothing breaks. But the hat loses its entity, and the sitting
+   should give it a new anchor: plausibly the human operator on first run.
+   `docs/log.md` and the sitting-2 plan cite `EXT-003` historically. They are
+   records, not live references, and stay as written. Because the id is spent,
+   **it is never re-minted**, following the `B-06`/`B-07`/`EXT-004` precedent in
+   `external.toml`.
+
+**Still open, unchanged by this:** Q5 (W-test stand-alone), and the sitting
+itself. The frame is `LOCKED`, and `test_external_frame.py` pins its counts.
+This records the direction; it does not edit `external.toml`.
 
 ---
 
