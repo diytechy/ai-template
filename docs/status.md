@@ -31,7 +31,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 - **Awaiting owner ruling — the validation gap:** read
   [the assumption-tier proposal](plans/2026-09-20-validation-gap-and-the-assumption-tier.md).
   It asks for a frame ruling (the frame is LOCKED). Start at its "model at a
-  glance"; the owner's answers are in its §11. Q8, Q13–Q15 and the sitting stay
+  glance"; the owner's answers are in its §11. Q8 and the sitting stay
   open, and the sitting also reverses parts of sitting 2 (its §5.2). **Nothing
   is built before the sitting**: the old separable step 1 is folded into it, and
   every step re-pins `tests/test_external_frame.py` or depends on one that does.

@@ -572,7 +572,9 @@ joined, but the join is **many-to-many**, and it carries its own evidence:
    apart (§6.1).
 
 It is a row *kind*, not a new registry: `[assumption.DA-###]` rows sit in an
-existing file (§9.2).
+existing file, chosen by where their IF sits (§9.2). Most sit at the boundary,
+but not all: an interpreting part *inside* the system, such as an embedded
+model handing structured output to a script, puts W on an internal seam.
 
 **The stakeholder is not in the WHERE chain.** A need can belong to someone who
 never touches the system: SN-038 (*"an adopter can determine why every file
@@ -594,9 +596,10 @@ in exactly one place per SS. An SS inherits all the needs its DA names, which
 is much finer than going through the party — the human operator will be the
 stakeholder for ~24 of the 27 needs, and a link through the party would make
 every SS at the human appear to serve all 24 (SN-002's failure mode, built into
-the schema). Two edge cases are open (Q13): an SS over a DA-carrying IF that
-serves a need the DA does not name, and an SS stated over two IFs of which only
-one carries a DA.
+the schema). The two edge cases stay strict (Q13): an SS over a DA-carrying IF
+that serves a need the DA does not name means the DA is incomplete, so the need
+is added to the DA; an SS stated over two IFs of which only one carries a DA
+bundles two kinds of interface, so it is split, per 13s's one-shall guideline.
 
 **The wiring this replaces**, for reference:
 
@@ -1133,7 +1136,32 @@ approves an assumption**, because off-spine approval follows each registry's
 rung (`docs/process.toml`, OI-30 D3: `external` → DevStg-Boundary, `interfaces`
 and `components` → DevStg-Arch).
 
-**Recommendation (Q8): `external.toml`.** The owner has ruled that DAs are
+**Not every DA sits at the boundary.** The owner's case: an LLM *inside* the
+system, handing structured output to a mechanical script. That seam is internal,
+yet it carries W — *"the model structures its output so the script can decode
+it"* — because the far side interprets (§3's determinism axis). It is not rare
+downstream: any bought-in part that interprets (an embedded model, a sensor, a
+third-party parser; the kit's `PART` registry already holds such parts) puts W
+on an internal seam. In this repo the model is `EXT-005`, outside, and
+`REL-003` becomes a crossing (§5.2), so the case does not arise here yet. And
+an internal seam is defined at DevStg-Arch, **after** the Boundary rung, so a
+DA on it cannot be approved at Boundary: its IF does not exist yet.
+
+**Recommendation (Q8): the DA's home and rung follow the IF it measures
+through.** One row kind, two homes, mirroring 13s's recursion (an SS against a
+boundary IF, an LLR against an internal seam):
+
+| the DA measures through… | home | approved at |
+|---|---|---|
+| an IF attached to a party (boundary) | `external.toml` | DevStg-Boundary |
+| an internal seam | `interfaces.toml` | DevStg-Arch, with the seam |
+
+Cost of the second home: `interfaces.toml` is not in `DECLARED_INPUTS`, so the
+stage fingerprint would not see those rows until it is added, which is needed
+only once a gate reads DAs (step 6). The kit's `structured-output-contract`
+skill is the hardening move for exactly this seam ("Still not captured" item 3).
+
+**For boundary DAs: `external.toml`.** The owner has ruled that those DAs are
 approved at **DevStg-Boundary**: *approving the boundary and the assumptions that
 make that boundary possible are the same act* (a later rename to something like
 `DevStg-BoundaryAssumptions` is possible). `external.toml` is the one file
@@ -1143,16 +1171,15 @@ DevStg-Arch and is not fingerprinted.
 
 Two consequences to accept with it:
 
-- **Who approves, in this repo.** The dial is `human_approval_through =
-  "DevStg-Needs"`, so the Boundary rung, and with it DA approval, is not
-  human-held here. That is the dial's job, not the file's. But it means the loop
-  may approve assumptions about the world — the §8.5 concern — unless the dial
-  moves to DevStg-Boundary (Q14).
+- **Who approves, in this repo.** The dial was `human_approval_through =
+  "DevStg-Needs"`, which let the loop approve assumptions about the world — the
+  §8.5 concern. The owner has decided to move it to DevStg-Boundary (Q14), so
+  boundary DAs are human-approved. Internal-seam DAs, at DevStg-Arch, stay under
+  ordinary review.
 - **The lock's scope.** `external.toml`'s header says *"its rows change only by a
-  recorded ruling."* DA rows are one or more per need and will change far more
-  often than entities and crossings. Either the lock is narrowed to the entity,
-  boundary and relationship rows, with DA rows following ordinary Boundary-rung
-  approval, or every assumption edit needs a ruling (Q15).
+  recorded ruling."* The owner has decided to narrow it (Q15): entity, boundary
+  and relationship rows change only by ruling; DA rows follow ordinary
+  Boundary-rung approval under the dial.
 
 ### 9.3 The edit list
 
@@ -1281,8 +1308,10 @@ will cite IFs rather than bundles, so it is folded into step 1.
 
 **Step 1 — the sitting.** Reverse the §5.2 rulings deliberately; land the §5.6
 rows (§9.3c) with `frame` on the redrawn bundles (§9.3a); add the DA row kind
-to `external.toml` at the DevStg-Boundary rung (§9.3b; Q8, Q14, Q15); add the
-stakeholder list (§9.3f).
+to `external.toml` at the DevStg-Boundary rung, narrowing the file's lock to
+the frame rows (§9.3b; Q8, Q15); move `human_approval_through` to
+DevStg-Boundary (Q14); add the stakeholder list (§9.3f). The internal-seam home
+in `interfaces.toml` (Q8) waits until a seam needs it.
 
 **Step 2 — write the assumptions.** DA rows for the 24 person-facing needs, each
 measured at the IFs it bridges. They exist today as the unstated gap between
@@ -1349,7 +1378,7 @@ build on it; `OPEN` means it may not.
 | Q5 | Does a W-test supplement an SR citation, or may it stand alone? | **DECIDED: stand alone, for DA ids only.** A DA names its needs, so a TC verifying one says what it serves; `coherence.py`'s supplement rule gains a narrow exception, not a general loosening (§9.1). |
 | Q6 | Does a rig get its own crossing? | **DECIDED: no.** A rig is an `enabling` entity with `emulates`, plugged into the existing interface, with a fidelity DA (§8.2). |
 | Q7 | Does this ship downstream in v1? | **DECIDED in principle: yes**, once the sitting has nailed down the details. Adopter migration and resync documentation are deferred until this repo's model is firm (§10). |
-| Q8 | Which existing file holds the DA rows? | **RECOMMENDED: `external.toml`**, the one fingerprinted file on the DevStg-Boundary rung the owner chose for DA approval. Not a new registry, and not IF fields: the DA–IF join is many-to-many and needs its own id (§6.2, §9.2). Awaiting confirmation. |
+| Q8 | Which existing file holds the DA rows? | **PROPOSED: home and rung follow the IF.** Boundary DAs in `external.toml` at DevStg-Boundary (owner: *"in many ways I like external.toml"*); DAs on internal seams, like an embedded LLM feeding a script, in `interfaces.toml` at DevStg-Arch, since the seam does not exist until then (§9.2). Awaiting confirmation. |
 | — | Orientation, the adopter, and the reversed rulings | **DECIDED:** operating frame, two planes, `EXT-003` dropped, 13u reversed (§5). **Traced 2026-09-22:** `REL-003` and 13o reversed; the hosted-CI cut (2026-08-16q) partly reversed — design control survives but does not keep the runner off the frame (§5.2). Whether hosted CI and the vendored-doc upstream return as parties is open. |
 | — | Two chains | **Agreed 2026-09-22:** WHERE is `EXT ← [B] ← IF ← SS`, with an optional DA on the IF (many-to-many); every DA measures through at least one IF, authority included (`IF-134`). WHY is `Stakeholder ← SN ← DA`, or `← SS` when its IF carries no DA. An SS is stated over an IF, never a bare bundle, except the package-wide class (§6.2). |
 | — | Hats | **Agreed 2026-09-22:** a hat is a lens that constrains, not a stakeholder; five outcomes per piece; `speaks_for` on voice hats (§6.5). |
@@ -1360,9 +1389,9 @@ build on it; `OPEN` means it may not.
 | — | DA approval rung | **DECIDED: DevStg-Boundary.** Approving the boundary and the assumptions that make it possible are the same act; a later rename such as `DevStg-BoundaryAssumptions` is possible (§9.2). |
 | — | Step 1 | **DECIDED:** folded into the sitting; nothing is built before it (§10). |
 | — | Packaging | **DECIDED:** split into packages for the sitting; a model-at-a-glance summary opens the doc. |
-| Q13 | Need-link edge cases | **OPEN.** (a) An SS over a DA-carrying IF that serves a need the DA does not name. (b) An SS over two IFs, only one carrying a DA (§6.2). |
-| Q14 | Should DA approval be human-held here? | **OPEN.** With the dial at `DevStg-Needs`, the loop may approve DAs, and so its own assumptions about the world (§8.5, §9.2). |
-| Q15 | Does `external.toml`'s lock cover DA rows? | **OPEN.** Narrow the lock to entity, boundary and relationship rows, or require a ruling for every assumption edit (§9.2). |
+| Q13 | Need-link edge cases | **DECIDED: fix the DA or split the SS.** A need the DA does not name is added to the DA; an SS over mixed IFs is split (§6.2). |
+| Q14 | Should DA approval be human-held here? | **DECIDED: move `human_approval_through` to `DevStg-Boundary`.** The human approves the frame and its boundary assumptions; SRs and below stay under ordinary review. When the dial changes is open (§9.2). |
+| Q15 | Does `external.toml`'s lock cover DA rows? | **DECIDED: narrow the lock.** Entity, boundary and relationship rows change only by ruling; DA rows follow Boundary-rung approval under the dial (§9.2). |
 | — | Enabling-system stage vocabulary | **Tentative.** Placed, not settled; the standard wording is now verified (§8.1). |
 
 ### Still not captured
