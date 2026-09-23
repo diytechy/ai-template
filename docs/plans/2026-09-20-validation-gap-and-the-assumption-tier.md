@@ -632,7 +632,7 @@ holds_when   = """Rows are authored under the spine-authoring question list;
 obstacle     = """Every row resolves and every row says nothing: an
                   orphan-free, semantically vacuous spine."""
 falsified_by = "TC-###"         # the signal that would show this is false
-status       = "Drafted" | "Approved"
+status       = "Drafted" | "Approved" | "Falsified"
 ```
 
 A rig's fidelity row adds `realized_by = "EXT-###"`, naming the rig entity
@@ -712,6 +712,10 @@ assumption, and should obviously not be a row. The stopping rule:
    computes (§3), *suspect* an assumption. This says where to look; it does not
    mean every such seam yields a row.
 
+The same filter covers the trusted layer — the OS, git, the terminal, the
+interpreter. Where their failure is implausible there is no row; where it is
+plausible and costly, a hat asks how the system responds (§6.5).
+
 Behind both sits NASA-STD-7009's rule: **credibility proportional to the risk of
 the decision the evidence supports.** The keyboard assumption carries no decision
 risk. The scaffold assumption carries all of SN-001's.
@@ -737,6 +741,12 @@ Two rules, one from each side:
 
 The right-hand column is falsifiable, bounds its own ODD, and tells a reader what
 the rig does **not** cover. `obstacle` and `falsified_by` hang off it naturally.
+
+- **Hardening narrows the DA.** When an interpreting seam is hardened — say,
+  schema-constrained output checked by a validator — the checked part moves
+  into S, and the DA is rewritten to state only what remains assumed (*"the
+  content is right"*, not *"the output parses and is right"*). There is no
+  separate field for hardening; the narrower row is the record.
 
 ### 6.5 Hats: the lens applied to each piece
 
@@ -1159,7 +1169,7 @@ boundary IF, an LLR against an internal seam):
 Cost of the second home: `interfaces.toml` is not in `DECLARED_INPUTS`, so the
 stage fingerprint would not see those rows until it is added, which is needed
 only once a gate reads DAs (step 6). The kit's `structured-output-contract`
-skill is the hardening move for exactly this seam ("Still not captured" item 3).
+skill is the hardening move for exactly this seam (§6.4).
 
 **For boundary DAs: `external.toml`.** The owner has ruled that those DAs are
 approved at **DevStg-Boundary**: *approving the boundary and the assumptions that
@@ -1335,6 +1345,8 @@ Start with the metamorphic subset (§7(c)), which is nearly free.
   IF of that party (§6.2);
 - an SS stated over a bare bundle, outside the package-wide exception (§6.2);
 - an SS whose need link breaks the one-place rule (§6.2);
+- a `Falsified` DA, reported with every IF, SS and TC it reaches (§11, closed item 1);
+- a Status change on a human-held rung in a loop-authored commit — the authority DA's falsifier (§6.2).
 - a `B` row that differs from its derived bundle, or a written `frame` that
   differs from the implied one (§4, §5.7).
 
@@ -1395,27 +1407,41 @@ build on it; `OPEN` means it may not.
 | Q15 | Does `external.toml`'s lock cover DA rows? | **DECIDED: narrow the lock.** Entity, boundary and relationship rows change only by ruling; DA rows follow Boundary-rung approval under the dial (§9.2). |
 | — | Enabling-system stage vocabulary | **Tentative.** Placed, not settled; the standard wording is now verified (§8.1). |
 
-### Still not captured
+### Formerly "not captured" — closed or scheduled (owner, 2026-09-23)
 
-Recorded so this section is not mistaken for closure.
-
-1. **Blast radius.** If 41 seams share one assumption and it is falsified, 41
-   seams are affected at once. The DA's `measured_at` makes the list visible;
-   nothing yet acts on it.
-2. **Chained assumptions.** The user → device → registry → tooling chain is a
-   chain of assumptions. Jackson takes `W` as a flat conjunction and says nothing
-   about depth.
-3. **Interpretation is graded; the frame treats it as binary.** Constrained
-   decoding against a JSON schema is far more deterministic than free-prose
-   critique, and the kit ships `structured-output-contract` specifically to move
-   a seam along that axis. The frame cannot record that a seam was **hardened**.
-4. **The trusted translating layer.** Non-rig equipment performs translation all
-   the time and is simply trusted. It probably needs no home in the frame, but
-   "probably" is not yet an argument.
-5. **The authority DA's falsifier is named but not built.** Scoped to
-   human-held rungs (§6.2), its falsifier is a Status change on a human-held
-   rung in a loop-authored commit. Whether an existing guard already detects
-   that has not been checked.
+1. **Blast radius → a status and a report (step 5).** Example: one DA covers
+   every seam where the kit consumes model output (*"the model runner follows
+   the runner contract"*, measured at `IF-041` and its neighbours). A provider
+   changes its CLI's exit codes; the DA is false, and every SS over those IFs
+   loses part of its argument at once. `measured_at` already lists them. Added:
+   a `Falsified` DA status, and a derived report — *DA falsified → these IFs →
+   these SSs → these TCs no longer prove their need.*
+2. **Chained assumptions → closed, no machinery.** An SS emits something that
+   crosses another IF with its own DA, so a need's argument is the conjunction
+   of every DA on its path: Jackson's flat conjunction is enough. Assumptions
+   only surface possible gaps, and depth does not change the response. Item 1's
+   report walks the chain anyway.
+3. **Graded interpretation → closed by authoring rule (§6.4).** A hardened seam
+   moves part of W into S: with schema-constrained output and a validator,
+   *"the output parses"* becomes checked, and only *"its content is right"*
+   stays assumed. No field records the hardening; the seam gets a narrower DA.
+   Testing the remaining content half is a judge-and-rubric job, triggered by
+   events such as a model change rather than every run — which the render
+   critic's `holds_when` already expresses.
+4. **The trusted layer → closed by §6.3 and §6.5.** Everything outside design
+   scope that carries our signals (OS, git, terminal, interpreter) is handled
+   where a boundary is broken down, in proportion to risk. Implausible failure:
+   the obstacle test gives no row. Plausible and costly: a hat such as
+   UNATTENDED-OPS or INTEGRITY-RECOVERABILITY asks what happens when the input
+   is missing or corrupt, and the answer is an SS (detect and respond) or a DA
+   (knowingly assume). Precedent: running with git off PATH exposed a hook
+   defect (WI-333, recorded in `conftest.py`).
+5. **The authority DA's falsifier → a step-5 finding.** Prevention exists: the
+   dispatcher routes attestation and gate work on human-held tiers to *surface*
+   rather than execute (`dispatch.py` `_kind_action`). No after-the-fact
+   detection was found. Added: *a Status change on a human-held rung, in a
+   loop-authored commit, is a finding* — the check that makes the assumption
+   testable.
 
 **Standards, verified 2026-09-22.** The 15288:2023 definition (3.15), the stage
 names (via 24748-1:2024) and the Transition process (6.4.10) were checked against
