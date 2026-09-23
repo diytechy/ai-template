@@ -10,10 +10,12 @@ System-context view's drawing primitives, so the page reads as the How tab
 would after the sitting.
 
 Everything the view shows beyond the authored rows is DERIVED here, the way a
-real generator would have to derive it: bundle membership from IF tie-backs,
-each boundary IF's class (bridged / coincident / unclassified), each bundle's
-kind (effect / design) from DA `effect_at`, and each DA's needs from the live
-`sn_refs` of the SRs that cite it.
+real generator would have to derive it: each bundle's frame from its `system`
+cell and each party's frames from its bundles; bundle membership from IF
+tie-backs; which assumptions land on each bundle; each assumption's needs from
+the live `sn_refs` of the SRs citing it; whether each assumption lands on its
+stakeholders' party (or a party that mediates for it); how every live SR is
+classified; and, for the extension, each boundary IF's class.
 
 Run from the repo root:  python docs/plans/mockups/render_depth0_mock.py
 Delete this folder once the sitting has built the real view.
@@ -42,21 +44,21 @@ MOCK = HERE / "external.operating-frame.toml"
 OUT = HERE / "depth0-operating-frame.html"
 REQ = ROOT / "docs" / "requirements"
 
-OPERATING = ("operational", "interoperating")
 G = {
     "gutter": 250.0,
     "entw": 224.0,
     "sysx": 720.0,
     "sysw": 236.0,
-    "lane": 80.0,
+    "lane": 88.0,
     "top": 100.0,
     "width": 1000.0,
     "gap": 72.0,
-    "cardpad": 27.0,
+    "cardpad": 29.0,
     "carrymax": 58,
     "namemax": 30,
 }
 HEADS = {"in": (False, True), "out": (True, False), "inout": (True, True)}
+FRAMES = ("kit", "delivery")
 
 
 def cut(text, budget):
@@ -64,8 +66,8 @@ def cut(text, budget):
     return text if len(text) <= budget else text[: budget - 1] + "…"
 
 
-def frame_of(row):
-    return "operating" if row["class"] in OPERATING else "delivery"
+def code(x):
+    return "<code>{}</code>".format(esc(x))
 
 
 def load():
@@ -83,7 +85,15 @@ def load():
 
 def derive(mock, ifs, srs):
     """The read model, computed from rows alone."""
-    ents = mock["entity"]
+    ents, bnds = mock["entity"], mock["boundary"]
+    das, rigs = mock.get("assumption", {}), mock.get("rig", {})
+
+    # Frames: a bundle's is its `system` cell; a party's is the set of its bundles'.
+    frames_of = {e: set() for e in ents}
+    for b in bnds.values():
+        frames_of[b["entity"]].add(b["system"])
+
+    # Extension: bundle membership from IF tie-backs, and each IF's class.
     ties = {}
     for iid, row in ifs.items():
         for col in ("interface_from_external", "interface_to_external"):
@@ -91,128 +101,152 @@ def derive(mock, ifs, srs):
                 ties.setdefault(iid, set()).add(row[col])
     for iid, change in mock.get("retie", {}).items():
         ties[iid] = {change["to"]}
-    das = mock.get("assumption", {})
-    waivers = mock.get("coincident", {})
-    bridged = {i for row in das.values() for i in row["measured_at"]}
+    measured_ifs = {i for row in das.values() for i in row.get("measured_at", [])}
+    waived_ifs = mock.get("if_coincident", {})
 
     def if_class(iid):
-        if iid in bridged:
+        if iid in measured_ifs:
             return "bridged"
-        return "coincident" if iid in waivers else "unclassified"
+        return "coincident" if iid in waived_ifs else "unclassified"
 
+    # Why: SR -> DA (proposed da_refs), SR -> SN (live), SN -> STK -> party.
     cited_by, needs_of = {}, {}
-    for sr, refs in mock.get("sr_cites", {}).items():
+    for sr, refs in mock.get("sr_da_refs", {}).items():
         for d in refs:
             cited_by.setdefault(d, []).append(sr)
             needs_of.setdefault(d, set()).update(srs.get(sr, {}).get("sn_refs", []))
-    party_of_need = {
-        sn: stk["party"]
-        for stk in mock.get("stakeholder", {}).values()
-        for sn in stk["needs"]
-    }
+    stks = mock.get("stakeholder", {})
+    need_stk = mock.get("need_stakeholder_refs", {})
+
+    def parties_of_need(sn):
+        return {stks[s]["party"] for s in need_stk.get(sn, []) if stks[s].get("party")}
+
+    def reaches(bundle_id, parties):
+        ent = bnds[bundle_id]["entity"]
+        return ent in parties or ents[ent].get("mediates") in parties
+
+    reach = {}
+    for d, row in das.items():
+        if row.get("realized_by"):
+            target = rigs[row["realized_by"]]["emulates"]
+            ok = all(bnds[b]["entity"] == target for b in row["effect_at"])
+            reach[d] = (ok, "fidelity: lands on the emulated party " + target)
+        else:
+            bad = [
+                sn
+                for sn in sorted(needs_of.get(d, []))
+                if not all(reaches(b, parties_of_need(sn)) for b in row["effect_at"])
+            ]
+            reach[d] = (
+                not bad,
+                "lands on its stakeholders' party"
+                if not bad
+                else "does not reach the stakeholder of " + ", ".join(bad),
+            )
 
     bundles = []
-    for bid, b in mock["boundary"].items():
+    for bid, b in bnds.items():
         members = sorted(i for i, bs in ties.items() if bid in bs)
-        classes = {i: if_class(i) for i in members}
-        landing = sorted(d for d, row in das.items() if bid in row["effect_at"])
-        measured = sorted(
-            d for d, row in das.items() if set(row["measured_at"]) & set(members)
-        )
         bundles.append(
             dict(
                 b,
                 id=bid,
-                frame=frame_of(ents[b["entity"]]),
                 ifs=members,
-                classes=classes,
-                landing=landing,
-                measured=measured,
-                kind="effect" if landing else "design",
+                classes={i: if_class(i) for i in members},
+                landing=sorted(d for d, row in das.items() if bid in row["effect_at"]),
             )
         )
-    by_id = {b["id"]: b for b in bundles}
 
-    adopter = sorted(
-        iid
-        for iid, row in ifs.items()
-        if any(
-            "downstream adopter" in str(x)
-            for x in [row.get("owner", "")]
-            + list(row.get("consumers") or [])
-            + list(row.get("requestors") or [])
-        )
-    )
-    rigs = sorted(e for e, r in ents.items() if r.get("emulates"))
+    # Every live SR: its classification, and its frame from its (re-pointed) bundles.
+    repoint = mock.get("sr_repoint", {})
+    frame_of_bundle = {bid: b["system"] for bid, b in bnds.items()}
+    sr_class, sr_frames = {}, {}
+    for sr, row in srs.items():
+        if sr in mock.get("sr_da_refs", {}):
+            sr_class[sr] = "cites assumptions"
+        elif sr in mock.get("sr_coincident", {}):
+            sr_class[sr] = "coincident"
+        else:
+            sr_class[sr] = "unclassified"
+        cited = repoint.get(sr, row.get("boundary_refs", []))
+        sr_frames[sr] = {frame_of_bundle[b] for b in cited if b in frame_of_bundle}
+    multi = sorted(sr for sr, fs in sr_frames.items() if len(fs) > 1)
+
+    counts = {}
+    for c in sr_class.values():
+        counts[c] = counts.get(c, 0) + 1
     fidelity = {row.get("realized_by") for row in das.values()}
-    derived_needs = sorted({sn for ns in needs_of.values() for sn in ns})
-    unreached = [
-        sn
-        for sn in derived_needs
-        if not any(
-            by_id[b]["frame"] == "operating"
-            for d, ns in needs_of.items()
-            if sn in ns
-            for b in das[d]["effect_at"]
-        )
-    ]
-    unclassified = sum(
+    unclassified_ifs = sum(
         1 for b in bundles for c in b["classes"].values() if c == "unclassified"
     )
     checks = [
         (
-            "Every DA is cited by at least one SR",
+            "Every assumption is cited by at least one SR",
             all(d in cited_by for d in das),
-            ", ".join(sorted(d for d in das if d not in cited_by))
-            or "{} DA rows, all cited".format(len(das)),
+            "{} assumptions".format(len(das)),
         ),
         (
-            "Every DA names a falsifier",
+            "Every assumption names a falsifier",
             all(row.get("falsifier") for row in das.values()),
-            "the falsifier is prose; evidence links live on TCs (assumption_refs)",
+            "prose; evidence links live on TCs (assumption_refs)",
         ),
         (
-            "Every rig has a fidelity DA naming it",
-            all(e in fidelity for e in rigs),
+            "Every rig has a fidelity assumption naming it",
+            all(r in fidelity for r in rigs),
             ", ".join(rigs),
         ),
         (
-            "Every DA lands on a declared bundle and measures declared IFs",
-            all(
-                all(b in by_id for b in row["effect_at"])
-                and all(i in ties for i in row["measured_at"])
-                for row in das.values()
+            "Every assumption lands on its stakeholders' party, or a party mediating "
+            "for it (fidelity: on the emulated party)",
+            all(ok for ok, _ in reach.values()),
+            "; ".join(
+                "{}: {}".format(d, why) for d, (ok, why) in reach.items() if not ok
+            )
+            or "all {} assumptions".format(len(das)),
+        ),
+        (
+            "Every need an assumption serves has a stakeholder",
+            all(need_stk.get(sn) for ns in needs_of.values() for sn in ns),
+            "via the proposed stakeholder_refs",
+        ),
+        (
+            "Every SR cites assumptions or states it is coincident",
+            counts.get("unclassified", 0) == 0,
+            ", ".join("{} {}".format(v, k) for k, v in sorted(counts.items())),
+        ),
+        (
+            "No SR spans both frames",
+            not multi,
+            ", ".join(multi) + " — to be split" if multi else "none",
+        ),
+        (
+            "Extension: boundary IFs classified (bridged or coincident)",
+            unclassified_ifs == 0,
+            "{} unclassified — the allocation work at DevStg-Arch".format(
+                unclassified_ifs
             ),
-            "effect_at and measured_at resolve",
-        ),
-        (
-            "Every need a DA serves reaches an operating-frame bundle",
-            not unreached,
-            ", ".join(unreached) or ", ".join(derived_needs),
-        ),
-        (
-            "Every need a DA serves has a stakeholder on the list",
-            all(sn in party_of_need for sn in derived_needs),
-            ", ".join(sn for sn in derived_needs if sn not in party_of_need)
-            or "all listed",
-        ),
-        (
-            "Boundary IFs still unclassified (neither bridged nor coincident)",
-            unclassified == 0,
-            "{} — the classification work of step 3".format(unclassified),
         ),
     ]
-    return bundles, cited_by, needs_of, party_of_need, adopter, checks
+    return dict(
+        bundles=bundles,
+        frames_of=frames_of,
+        cited_by=cited_by,
+        needs_of=needs_of,
+        need_stk=need_stk,
+        reach=reach,
+        sr_class=sr_class,
+        multi=multi,
+        checks=checks,
+    )
 
 
-def layout(mock, bundles):
-    """Lanes top to bottom: the operating frame (its parties' bundles, then the
-    parties still open), a gap, then the delivery frame (the deliverable's
-    bundle, then the rigs, which cross nothing)."""
+def layout(mock, model):
+    """Lanes top to bottom: the kit frame (its parties' bundles, then the parties
+    still open), a gap, then the delivery frame (the Template's bundle, then the
+    rigs, which cross nothing)."""
     by_party = {}
-    for b in bundles:
-        by_party.setdefault(b["entity"], []).append(b)
-    ents = mock["entity"]
+    for b in model["bundles"]:
+        by_party.setdefault((b["entity"], b["system"]), []).append(b)
     rows, spans, bands, y = [], {}, [], G["top"]
 
     def place(key, lane_bundles):
@@ -223,21 +257,23 @@ def layout(mock, bundles):
             y += G["lane"]
         spans[key] = (first, y - G["lane"])
 
-    for name in ("operating", "delivery"):
+    for frame in FRAMES:
         start = y
-        for e, r in ents.items():
-            if frame_of(r) == name:
-                place(e, by_party.get(e))
-        if name == "operating":
+        for e in mock["entity"]:
+            if frame in model["frames_of"][e]:
+                place(e, by_party.get((e, frame)))
+        if frame == "kit":
             for key in mock.get("open", {}):
                 place("open:" + key, None)
-        bands.append((name, start, y - G["lane"]))
+        else:
+            for key in mock.get("rig", {}):
+                place("rig:" + key, None)
+        bands.append((frame, start, y - G["lane"]))
         y += G["gap"]
     return rows, spans, bands, y - G["gap"] + 30.0
 
 
 def card(key, mock, y0, y1):
-    ents = mock["entity"]
     x, w = G["gutter"], G["entw"]
     y, h = y0 - G["cardpad"], (y1 - y0) + 2 * G["cardpad"]
     cx, cy = x + w / 2, (y0 + y1) / 2
@@ -245,13 +281,23 @@ def card(key, mock, y0, y1):
         o = mock["open"][key[5:]]
         name, sub, kls = o["name"], "open at the sitting", "ctxent ghost"
         tip = o["name"] + " — open at the sitting: " + o["why"]
+    elif key.startswith("rig:"):
+        rid = key[4:]
+        r = mock["rig"][rid]
+        name, sub, kls = (
+            r["name"],
+            rid + " · rig · emulates " + r["emulates"],
+            "ctxent rig",
+        )
+        tip = "{} — {} (rig, emulates {}): {}".format(
+            rid, r["name"], r["emulates"], r["description"]
+        )
     else:
-        r = ents[key]
-        kls = "ctxent" + (" rig" if r.get("emulates") else "")
-        kls += "" if frame_of(r) == "operating" else " evo"
+        r = mock["entity"][key]
+        kls = "ctxent" + (" evo" if r["class"] == "deliverable" else "")
         sub = key + " · " + r["class"]
-        if r.get("emulates"):
-            sub += " · emulates " + r["emulates"]
+        if r.get("mediates"):
+            sub += " · mediates " + r["mediates"]
         name = r["name"]
         tip = "{} — {} ({}): {}".format(key, name, r["class"], r["description"])
     return (
@@ -273,44 +319,44 @@ def card(key, mock, y0, y1):
         cx,
         esc(cut(name, G["namemax"])),
         cx,
-        esc(cut(sub, 40)),
+        esc(cut(sub, 42)),
     )
 
 
-def summary(b):
+def if_summary(b):
     counts = {}
     for c in b["classes"].values():
         counts[c] = counts.get(c, 0) + 1
-    ifs = (
-        " · ".join(
+    return (
+        "IFs: "
+        + " · ".join(
             "{} {}".format(counts[k], k)
             for k in ("bridged", "coincident", "unclassified")
             if counts.get(k)
         )
-        or "no IF of its own"
+        if counts
+        else "no IF of its own"
     )
-    if b["landing"]:
-        ifs += " · outcome of " + ", ".join(b["landing"])
-    return ifs
 
 
 def wire(b, y):
     x1, x2 = G["gutter"] + G["entw"] + 6.0, G["sysx"] - 6.0
     start, end = HEADS.get(b["direction"], (False, False))
-    kls = "ctxcross fx-" + b["kind"] + ("" if b["ifs"] else " unrealized")
-    label = "{} · {} · {}".format(b["id"], b["direction"], b["kind"])
-    tip = (
-        "{} ({}, {}) — {} | interfaces: {} | assumptions measured here: {} "
-        "| outcome of: {}"
-    ).format(
+    kls = "ctxcross" + (" lands" if b["landing"] else "")
+    kls += "" if b["ifs"] else " unrealized"
+    lands = (
+        "outcome of " + ", ".join(b["landing"])
+        if b["landing"]
+        else "no assumption lands here"
+    )
+    tip = "{} ({}, {} frame) — {} | {} | interfaces: {}".format(
         b["id"],
         b["direction"],
-        b["kind"],
+        b["system"],
         b["carries"],
+        lands,
         ", ".join("{} ({})".format(i, c) for i, c in b["classes"].items())
         or "none of its own",
-        ", ".join(b["measured"]) or "none",
-        ", ".join(b["landing"]) or "none",
     )
     mx = (x1 + x2) / 2
     return (
@@ -318,7 +364,8 @@ def wire(b, y):
         '<path class="ctxwire" d="M{:.1f},{:.1f} L{:.1f},{:.1f}"{}/>'
         '<text class="ctxwlab" x="{:.1f}" y="{:.1f}" text-anchor="middle">{}</text>'
         '<text class="ctxwsub" x="{:.1f}" y="{:.1f}" text-anchor="middle">{}</text>'
-        '<text class="ctxwda" x="{:.1f}" y="{:.1f}" text-anchor="middle">{}</text></g>'
+        '<text class="ctxwda" x="{:.1f}" y="{:.1f}" text-anchor="middle">{}</text>'
+        '<text class="ctxwif" x="{:.1f}" y="{:.1f}" text-anchor="middle">{}</text></g>'
     ).format(
         kls,
         esc(b["id"]),
@@ -331,13 +378,16 @@ def wire(b, y):
         + (' marker-end="url(#ctxarrow)"' if end else ""),
         mx,
         y - 9.0,
-        esc(label),
+        esc("{} · {}".format(b["id"], b["direction"])),
         mx,
         y + 14.0,
         esc(cut(b["carries"], G["carrymax"])),
         mx,
         y + 28.0,
-        esc(cut(summary(b), G["carrymax"] + 6)),
+        esc(cut(lands, G["carrymax"] + 6)),
+        mx,
+        y + 41.0,
+        esc(cut(if_summary(b) + "  (extension)", G["carrymax"] + 10)),
     )
 
 
@@ -392,18 +442,15 @@ def system_card(y0, y1, name, sub1, sub2, tip, kls):
     )
 
 
-def svg(mock, bundles):
-    rows, spans, bands, height = layout(mock, bundles)
-    ents = mock["entity"]
+def svg(mock, model):
+    rows, spans, bands, height = layout(mock, model)
     das = mock.get("assumption", {})
-    parts, systems = [], []
     labels = {
-        "operating": "OPERATING FRAME — the kit, in operation (system-of-interest)",
-        "delivery": (
-            "DELIVERY FRAME — this repository's build and release (enabling system)"
-        ),
+        "kit": "KIT FRAME — the kit, in operation (system-of-interest)",
+        "delivery": "DELIVERY FRAME — this repository's build and release",
     }
-    for name, y0, y1 in bands:
+    parts, systems = [], []
+    for frame, y0, y1 in bands:
         parts.append(
             # The label sits just right of the gutter, above the band's first
             # card, so no gutter arc crosses it.
@@ -411,22 +458,21 @@ def svg(mock, bundles):
             'height="{:.1f}" rx="10"/><text x="{:.1f}" y="{:.1f}">{}</text></g>'.format(
                 y0 - 62.0,
                 G["width"] - 24.0,
-                (y1 - y0) + 98.0,
+                (y1 - y0) + 100.0,
                 G["gutter"] + 4.0,
                 y0 - 42.0,
-                labels[name],
+                labels[frame],
             )
         )
-        lanes = [y for _k, b, y in rows if b and b["frame"] == name]
-        if name == "operating":
-            n = sum(1 for b in bundles if b["frame"] == name)
+        lanes = [y for _k, b, y in rows if b and b["system"] == frame]
+        if frame == "kit":
             systems.append(
                 system_card(
                     min(lanes),
                     max(lanes),
                     "the kit",
                     "in operation",
-                    "{} bundle(s) · {} assumption(s)".format(n, len(das)),
+                    "{} bundles · {} assumptions".format(len(lanes), len(das)),
                     "The system-of-interest: the kit as it runs in a repository.",
                     "ctxsys",
                 )
@@ -458,15 +504,15 @@ def svg(mock, bundles):
             )
         )
     n = len(arcs)
-    for j, (eid, r) in enumerate(e for e in ents.items() if e[1].get("emulates")):
+    for j, (rid, r) in enumerate(mock.get("rig", {}).items()):
         arcs.append(
             arc(
                 "ctxemu",
-                spans[eid],
+                spans["rig:" + rid],
                 spans[r["emulates"]],
                 n + j,
                 "emulates",
-                "{} emulates {}: {}".format(eid, r["emulates"], r["description"]),
+                "{} emulates {}: {}".format(rid, r["emulates"], r["description"]),
             )
         )
     wires = [wire(b, y) for _k, b, y in rows if b]
@@ -497,23 +543,24 @@ MOCK_STYLE = (
     "#sw .ctxplane text{fill:var(--muted);font-size:var(--nsub);font-weight:700;"
     "letter-spacing:.06em;}"
     "#sw .ctxent.evo rect{fill:var(--bg);}"
-    "#sw .ctxent.rig rect{stroke:var(--accent);stroke-dasharray:2 3;"
+    "#sw .ctxent.rig rect{fill:var(--bg);stroke:var(--accent);stroke-dasharray:2 3;"
     "stroke-width:1.6;}"
     "#sw .ctxent.ghost rect{fill:none;stroke-dasharray:6 4;filter:none;}"
     "#sw .ctxent.ghost .ctxname{fill:var(--muted);}"
     "#sw .ctxsys.evo rect{fill:var(--surface);stroke:var(--slot);stroke-width:2;}"
     "#sw .ctxsys.evo .ctxsysname,#sw .ctxsys.evo .ctxsyssub{fill:var(--text);}"
-    "#sw .fx-effect .ctxwire{stroke:var(--accent);stroke-width:2.6;}"
-    "#sw .fx-effect .ctxwlab{fill:var(--accent);}"
+    "#sw .ctxcross.lands .ctxwire{stroke:var(--accent);stroke-width:2.6;}"
+    "#sw .ctxcross.lands .ctxwlab{fill:var(--accent);}"
     "#sw .ctxwda{fill:var(--muted);font-size:var(--nsub);font-style:italic;}"
+    "#sw .ctxwif{fill:var(--muted);font-size:var(--nsub);opacity:.75;}"
     "#sw .ctxemu path{fill:none;stroke:var(--accent);stroke-width:1.8;"
     "stroke-dasharray:1 5;stroke-linecap:round;}"
     "#sw .ctxemu text{fill:var(--accent);font-size:var(--nsub);font-weight:700;}"
     "#sw .ctxemu-head{fill:var(--accent);}"
-    "#sw .legend i.effect{background:none;height:0;border-top:3px solid var(--accent);}"
-    "#sw .legend i.design{background:none;height:0;border-top:2px solid var(--muted);}"
+    "#sw .legend i.lands{background:none;height:0;border-top:3px solid var(--accent);}"
+    "#sw .legend i.plain{background:none;height:0;border-top:2px solid var(--muted);}"
     "#sw .legend i.emu{background:none;height:0;border-top:2px dotted var(--accent);}"
-    "#sw .legend i.rigk{background:var(--surface);border:1.5px dashed var(--accent);}"
+    "#sw .legend i.rigk{background:var(--bg);border:1.5px dashed var(--accent);}"
     "#sw .legend i.evo{background:var(--bg);border:1px solid var(--border);}"
     "#sw .legend i.evosys{background:var(--surface);border:2px solid var(--slot);}"
     ".mockbanner{border:2px dashed var(--accent);border-radius:10px;padding:.8rem 1rem;"
@@ -530,37 +577,35 @@ def need_text(needs, sn):
     return cut(raw.replace("**", ""), 90)
 
 
-def code(x):
-    return "<code>{}</code>".format(esc(x))
-
-
-def tables(mock, bundles, derived, needs):
-    cited_by, needs_of, party_of_need, adopter, checks = derived
-    ents = mock["entity"]
-    das = mock.get("assumption", {})
+def tables(mock, model, needs):
+    ents, das = mock["entity"], mock.get("assumption", {})
+    stks = mock.get("stakeholder", {})
     names = {e: r["name"] for e, r in ents.items()}
+
+    def mark(ok):
+        return "<span class='ok'>✓</span>" if ok else "<span class='bad'>✗</span>"
+
     bundle_rows = []
-    for b in bundles:
+    for b in model["bundles"]:
         by_class = {}
         for i, c in b["classes"].items():
             by_class.setdefault(c, []).append(i)
-        members = "<br>".join(
-            "{}: {}".format(c, ", ".join(code(i) for i in by_class[c]))
-            for c in ("bridged", "coincident", "unclassified")
-            if c in by_class
-        )
         bundle_rows.append(
             (
                 code(b["id"]),
                 "{}<br><span class='sub'>{}</span>".format(
                     esc(names.get(b["entity"], b["entity"])), esc(b["entity"])
                 ),
-                esc(b["frame"]),
+                esc(b["system"]),
                 esc(b["direction"]),
-                "<strong>{}</strong>".format(esc(b["kind"])),
-                members or "<span class='sub'>none of its own</span>",
-                ", ".join(code(d) for d in b["measured"]),
-                ", ".join(code(d) for d in b["landing"]),
+                ", ".join(code(d) for d in b["landing"])
+                or "<span class='sub'>none — nothing asserted</span>",
+                "<br>".join(
+                    "{}: {}".format(c, ", ".join(code(i) for i in by_class[c]))
+                    for c in ("bridged", "coincident", "unclassified")
+                    if c in by_class
+                )
+                or "<span class='sub'>none of its own</span>",
                 esc(b["carries"]),
             )
         )
@@ -570,36 +615,81 @@ def tables(mock, bundles, derived, needs):
             "<span title='{}'>{}</span> → {}".format(
                 esc(need_text(needs, sn)),
                 code(sn),
-                esc(party_of_need.get(sn, "no stakeholder")),
+                ", ".join(
+                    "{} ({})".format(s, stks[s].get("party", "—"))
+                    for s in model["need_stk"].get(sn, [])
+                )
+                or "no stakeholder",
             )
-            for sn in sorted(needs_of.get(d, []))
+            for sn in sorted(model["needs_of"].get(d, []))
         )
+        ok, why = model["reach"][d]
         da_rows.append(
             (
                 code(d),
-                ", ".join(code(s) for s in cited_by.get(d, [])),
+                ", ".join(code(s) for s in model["cited_by"].get(d, [])),
                 need_cells,
-                ", ".join(code(i) for i in r["measured_at"]),
                 ", ".join(code(b) for b in r["effect_at"]),
+                "{} {}".format(mark(ok), esc(why)),
                 code(r["realized_by"]) if r.get("realized_by") else "",
                 esc(r["assumption"]),
                 esc(r["holds_when"]),
                 esc(r["obstacle"]),
                 esc(r["falsifier"]),
                 "{} / {}".format(esc(r["status"]), esc(r["standing"])),
+                ", ".join(code(i) for i in r.get("measured_at", [])),
             )
         )
+    rig_rows = [
+        (
+            code(rid),
+            esc(r["name"]),
+            code(r["emulates"]),
+            ", ".join(
+                code(d) for d, row in das.items() if row.get("realized_by") == rid
+            ),
+            esc(r["description"]),
+        )
+        for rid, r in mock.get("rig", {}).items()
+    ]
     party_rows = [
         (
             code(e),
             esc(r["name"]),
             esc(r["class"]),
-            esc(frame_of(r)),
-            code(r["emulates"]) if r.get("emulates") else "",
+            esc(", ".join(sorted(model["frames_of"][e]))),
+            code(r["mediates"]) if r.get("mediates") else "",
             esc(r["description"]),
             esc(r["status"]),
         )
         for e, r in ents.items()
+    ]
+    stk_rows = [
+        (
+            code(s),
+            esc(r["name"]),
+            code(r["party"]) if r.get("party") else "",
+            ", ".join(
+                code(sn) for sn, refs in sorted(model["need_stk"].items()) if s in refs
+            ),
+        )
+        for s, r in stks.items()
+    ]
+    sr_by_class = {}
+    for sr, c in sorted(model["sr_class"].items()):
+        sr_by_class.setdefault(c, []).append(sr)
+    sr_rows = [
+        (
+            esc(c),
+            str(len(srs)),
+            ", ".join(code(s) for s in srs)
+            if c != "unclassified"
+            else "<span class='sub'>the remaining SRs — C2's work</span>",
+        )
+        for c, srs in sorted(sr_by_class.items())
+    ]
+    waiver_rows = [
+        (code(sr), esc(why)) for sr, why in mock.get("sr_coincident", {}).items()
     ]
     rel_rows = [
         (
@@ -607,98 +697,108 @@ def tables(mock, bundles, derived, needs):
             "{} → {}".format(esc(names[r["from"]]), esc(names[r["to"]])),
             esc(r["kind"]),
             esc(r["flow"]),
-            esc(r["status"]),
         )
         for rid, r in mock.get("relationship", {}).items()
     ]
-    waiver_rows = [
-        (code(iid), esc(why)) for iid, why in mock.get("coincident", {}).items()
-    ]
-    retie_rows = [
-        (
-            code(iid),
-            code(ch["to"]),
-            esc(ch.get("new", "re-tied from its live bundle")),
-        )
+    ext_rows = [
+        (code(iid), code(ch["to"]), esc(ch.get("new", "re-tied from its live bundle")))
         for iid, ch in mock.get("retie", {}).items()
+    ] + [
+        (code(iid), "coincident", esc(why))
+        for iid, why in mock.get("if_coincident", {}).items()
     ]
     open_rows = [(esc(o["name"]), esc(o["why"])) for o in mock.get("open", {}).values()]
-    check_rows = [
-        (
-            esc(name),
-            "<span class='ok'>✓</span>" if ok else "<span class='bad'>✗</span>",
-            esc(detail),
-        )
-        for name, ok, detail in checks
-    ]
+    check_rows = [(esc(n), mark(ok), esc(det)) for n, ok, det in model["checks"]]
     return (
         _ctx_table(
-            "<h3>Bundles</h3>\n<p class='cap'>Authored identities (§5.7); "
-            "membership <em>derived</em> from <code>interfaces.toml</code> "
-            "tie-backs after the re-ties below. Each member IF is classified — "
-            "<em>bridged</em> when a DA measures through it, <em>coincident</em> "
-            "when it carries an explicit waiver, <em>unclassified</em> otherwise. "
-            "A bundle is <em>effect</em> when some DA names it in "
-            "<code>effect_at</code> (§4).</p>\n",
+            "<h3>Bundles</h3>\n<p class='cap'>Authored identities (§5.7), each "
+            "declaring the system it crosses into. <em>No label is put on a "
+            "bundle</em> (§4): the view shows which assumptions land there, and "
+            "— for the extension — how its interfaces are classified.</p>\n",
             (
                 "Bundle",
                 "Party",
                 "Frame",
                 "Dir",
-                "Kind (derived)",
-                "Interfaces, by class",
-                "DAs measured here",
-                "DAs landing here",
+                "Assumptions landing here",
+                "Interfaces by class (extension)",
                 "Carries",
             ),
             bundle_rows,
             "Bundle table, horizontally scrollable",
         )
         + _ctx_table(
-            "<h3>Assumptions</h3>\n<p class='cap'>DA rows (§6.2). The needs are "
-            "<em>derived</em>: the live <code>sn_refs</code> of the SRs that cite "
-            "the DA through their proposed <code>da_refs</code>, each resolved to "
-            "its stakeholder's party. Maturity and validity are separate "
-            "fields.</p>\n",
+            "<h3>Assumptions</h3>\n<p class='cap'>DA rows (§6.2). Needs are "
+            "<em>derived</em> from the live <code>sn_refs</code> of the SRs that "
+            "cite the assumption; each need resolves to its stakeholders and their "
+            "party. The reach column checks <code>effect_at</code> against that "
+            "party (or a party mediating for it).</p>\n",
             (
                 "DA",
                 "Cited by",
-                "Needs (derived) → party",
-                "Measured at",
+                "Needs → stakeholders (party)",
                 "Effect at",
+                "Reach",
                 "Rig",
                 "Assumption",
                 "Holds when",
                 "Obstacle",
                 "Falsifier",
                 "Status / standing",
+                "Measured at (extension)",
             ),
             da_rows,
             "Assumption table, horizontally scrollable",
         )
         + _ctx_table(
-            "<h3>Parties and outputs</h3>\n",
-            ("Row", "Name", "Class", "Frame", "Emulates", "Description", "State"),
+            "<h3>Rigs</h3>\n<p class='cap'>Rows in <code>assumptions.toml</code>, "
+            "not frame parties: the frame's <code>enabling</code> class means a "
+            "runtime dependency (§5.3).</p>\n",
+            ("Rig", "Name", "Emulates", "Fidelity assumption", "Description"),
+            rig_rows,
+            "Rig table, horizontally scrollable",
+        )
+        + _ctx_table(
+            "<h3>SRs, by how their argument is carried</h3>\n<p class='cap'>Over "
+            "all live SRs. <em>Unclassified</em> is unknown, never coincidence "
+            "(§4).</p>\n",
+            ("Classification", "SRs", "Which"),
+            sr_rows,
+            "SR classification table, horizontally scrollable",
+        )
+        + _ctx_table(
+            "<h3>Coincident waivers on SRs</h3>\n",
+            ("SR", "Why its S alone delivers its needs"),
+            waiver_rows,
+            "SR waiver table, horizontally scrollable",
+        )
+        + _ctx_table(
+            "<h3>Parties</h3>\n",
+            ("Party", "Name", "Class", "Frames", "Mediates", "Description", "State"),
             party_rows,
             "Party table, horizontally scrollable",
         )
         + _ctx_table(
-            "<h3>The link between the frames</h3>\n",
-            ("Relationship", "Between", "Kind", "Flow", "State"),
+            "<h3>Stakeholders</h3>\n<p class='cap'>The proposed list (Q12); each "
+            "need cites its stakeholders (<code>stakeholder_refs</code>).</p>\n",
+            ("Stakeholder", "Name", "Party", "Needs citing it"),
+            stk_rows,
+            "Stakeholder table, horizontally scrollable",
+        )
+        + _ctx_table(
+            "<h3>The lifecycle hand-off between the frames</h3>\n<p class='cap'>"
+            "Transition is the only lifecycle link; emulation edges and "
+            "assumptions whose evidence and outcome sit in different frames also "
+            "cross, and are drawn as what they are.</p>\n",
+            ("Relationship", "Between", "Kind", "Flow"),
             rel_rows,
             "Relationship table, horizontally scrollable",
         )
         + _ctx_table(
-            "<h3>Coincident waivers (proposed cells on boundary IFs)</h3>\n",
-            ("Interface", "Why the reading is the outcome"),
-            waiver_rows,
-            "Waiver table, horizontally scrollable",
-        )
-        + _ctx_table(
-            "<h3>Interface re-ties the redraw implies</h3>\n",
-            ("Interface", "Now ties to", "Note"),
-            retie_rows,
-            "Re-tie table, horizontally scrollable",
+            "<h3>Extension: interface re-ties and coincident waivers</h3>\n",
+            ("Interface", "Change", "Note"),
+            ext_rows,
+            "Extension table, horizontally scrollable",
         )
         + _ctx_table(
             "<h3>Open at the sitting</h3>\n",
@@ -708,9 +808,7 @@ def tables(mock, bundles, derived, needs):
         )
         + _ctx_table(
             "<h3>Checks the mockup ran</h3>\n<p class='cap'>What a later "
-            "generator would compute from the rows. {} interface rows still name "
-            "the dropped adopter as a far side and need re-pointing by judgment "
-            "(§5.7); the mockup leaves them where they are.</p>\n".format(len(adopter)),
+            "generator would compute from the rows.</p>\n",
             ("Check", "Result", "Detail"),
             check_rows,
             "Check table, horizontally scrollable",
@@ -719,37 +817,38 @@ def tables(mock, bundles, derived, needs):
 
 
 def page(mock, ifs, srs, needs):
-    bundles, *derived = derive(mock, ifs, srs)
+    model = derive(mock, ifs, srs)
     head = gen_trajectory.HTML_TEMPLATE.template
     css = head[head.index("<style>") : head.index("</style></head>") + len("</style>")]
     spent = ", ".join(code(i) for i in mock["spent"]["ids"])
     legend = (
         '<div class="legend">'
-        '<span><i class="ctxkey sys"></i>system-of-interest (in operation)</span>'
-        '<span><i class="ctxkey evosys"></i>delivery system (enabling)</span>'
-        '<span><i class="ctxkey party"></i>operating party</span>'
-        '<span><i class="ctxkey evo"></i>delivery-frame output</span>'
-        '<span><i class="ctxkey rigk"></i>rig (emulates a party)</span>'
-        '<span><i class="ctxkey effect"></i>effect bundle</span>'
-        '<span><i class="ctxkey design"></i>design bundle</span>'
+        '<span><i class="ctxkey sys"></i>the kit, in operation</span>'
+        '<span><i class="ctxkey evosys"></i>delivery system</span>'
+        '<span><i class="ctxkey party"></i>party</span>'
+        '<span><i class="ctxkey evo"></i>the Template</span>'
+        '<span><i class="ctxkey rigk"></i>rig</span>'
+        '<span><i class="ctxkey lands"></i>an assumption lands here</span>'
+        '<span><i class="ctxkey plain"></i>nothing asserted</span>'
         '<span><i class="ctxkey unreal"></i>no IF of its own</span>'
-        '<span><i class="ctxkey emu"></i>emulation edge</span>'
-        '<span><i class="ctxkey rel"></i>Transition hand-off</span>'
+        '<span><i class="ctxkey emu"></i>emulates</span>'
+        '<span><i class="ctxkey rel"></i>Transition</span>'
         "</div>\n"
     )
-    live = "live frame: 4 entities · 4 crossings · 3 relationships · 0 assumptions"
-    ops = sum(1 for b in bundles if b["frame"] == "operating")
+    kit = sum(1 for b in model["bundles"] if b["system"] == "kit")
     proposed = (
-        "{} rows (entities and outputs) · {} bundles ({} operating, {} delivery) · "
-        "{} relationship · {} assumptions"
+        "{} parties · {} bundles ({} kit, {} delivery) · {} relationship · "
+        "{} assumptions · {} rigs"
     ).format(
         len(mock["entity"]),
-        len(bundles),
-        ops,
-        len(bundles) - ops,
+        len(model["bundles"]),
+        kit,
+        len(model["bundles"]) - kit,
         len(mock.get("relationship", {})),
         len(mock.get("assumption", {})),
+        len(mock.get("rig", {})),
     )
+    live = "live frame: 4 entities · 4 crossings · 3 relationships"
     return (
         "<!doctype html>\n<html lang='en'><head><meta charset='utf-8'>\n"
         "<meta name='viewport' content='width=device-width, initial-scale=1'>\n"
@@ -762,19 +861,20 @@ def page(mock, ifs, srs, needs):
         "Rendered from <code>docs/plans/mockups/external.operating-frame.toml</code> "
         "by <code>render_depth0_mock.py</code>, joined with the live "
         "<code>interfaces.toml</code>, <code>system-requirements.toml</code> and "
-        "<code>stakeholder-needs.toml</code>. It shows the How tab's System-context "
-        "section as the assumption-tier plan "
+        "<code>stakeholder-needs.toml</code>. It shows the How tab's "
+        "System-context section as the assumption-tier plan "
         "(<code>docs/plans/2026-09-20-validation-gap-and-the-assumption-tier.md</code>, "
-        "revised after review) would leave it. The LOCKED <code>external.toml</code> "
+        "after review round 2) would leave it. The LOCKED <code>external.toml</code> "
         "and the live dashboard are unchanged. Ids above the live watermark are "
         "proposed.</div>\n"
         "<h2>System context (the depth-0 view)</h2>\n"
         "<p class='cap'><strong>" + esc(proposed) + "</strong> (" + esc(live) + "). "
         "Two systems-of-interest in one view: the kit in operation above, and "
-        "below it the delivery system that builds, verifies and releases it. The "
-        "Transition hand-off is the only link. Every wire is a bundle: an "
-        "authored identity whose interfaces are derived and classified. Spent ids, "
-        "never re-minted: "
+        "below it the delivery system that builds, verifies and releases it. Each "
+        "bundle declares which system it crosses into. A highlighted wire is one "
+        "where an assumption's outcome lands; the faint last line on each wire "
+        "is the extension's interface classification. Spent ids, never "
+        "re-minted: "
         + spent
         + ".</p>\n"
         + CTX_STYLE
@@ -782,9 +882,9 @@ def page(mock, ifs, srs, needs):
         + "<div class='tablescroll' {}>".format(
             _hscroll("Depth-0 view mockup, horizontally scrollable")
         )
-        + "<div class='context'>{}</div></div>\n".format(svg(mock, bundles))
+        + "<div class='context'>{}</div></div>\n".format(svg(mock, model))
         + legend
-        + tables(mock, bundles, derived, needs)
+        + tables(mock, model, needs)
         + "</div></main></body></html>\n"
     )
 

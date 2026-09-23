@@ -2,32 +2,22 @@
 # render_depth0_mock.py beside it.
 #
 # The depth-0 view as the assumption-tier plan
-# (docs/plans/2026-09-20-validation-gap-and-the-assumption-tier.md, revised
-# after review round 1) would leave it once the sitting applies it. The live,
-# LOCKED frame is docs/requirements/external.toml, and it is unchanged. Ids above
-# the live watermark (EXT-006+, B-09+, IF-180) are PROPOSED ids, minted here only
-# so the mockup can draw them; the sitting mints the real ones.
+# (docs/plans/2026-09-20-validation-gap-and-the-assumption-tier.md, after review
+# round 2) would leave it once the sitting applies it. The live, LOCKED frame is
+# docs/requirements/external.toml, and it is unchanged. Ids above the live
+# watermark (EXT-006, B-09, B-10, IF-180) are PROPOSED ids, minted here only so
+# the mockup can draw them; the sitting mints the real ones.
 #
-# Shape follows the plan:
-#   [entity]      parties and outputs; `class` puts each in the operating or the
-#                 delivery frame (§5.1); a rig carries `emulates` (§8.3).
-#   [boundary]    bundles: authored identity rows (§5.7). No written frame
-#                 column any more: a bundle is `effect` when some DA names it in
-#                 `effect_at`, otherwise `design` (§4). Membership is derived
-#                 from interfaces.toml tie-backs, after the re-ties below.
-#   [relationship] the Transition hand-off, the only link between the frames.
-#   [assumption]  DA rows (§6.2): measured_at and effect_at (both required),
-#                 falsifier (prose), status (maturity) and standing (validity).
-#                 No sn_refs: a DA's needs derive from the SRs citing it.
-#   [sr_cites]    the proposed `da_refs` of some live SRs — enough for the
-#                 mockup to derive each DA's needs from the live sn_refs.
-#   [coincident]  proposed `coincident` waiver cells on boundary IFs (§4).
-#   [stakeholder] the proposed stakeholder list (Q12), as far as the reach
-#                 check needs it.
-#   [retie]       IF tie-back changes the redraw implies.
-#   [open]        parties the sitting still has to decide (§5.2).
+# One file stands in for three proposed homes:
+#   external.toml          [entity] [boundary] [relationship]
+#   assumptions.toml       [assumption] [rig]            (a new registry, §10.1)
+#   stakeholder-needs.toml [stakeholder] and each need's stakeholder_refs
+# plus proposed cells on live rows the mockup cannot edit:
+#   [sr_da_refs] [sr_coincident] [sr_repoint]   SR cells (§6.2, §5.1)
+#   [need_stakeholder_refs]                      SN cells (§6.2)
+#   [retie] [if_coincident]                      IF cells (extension, §9)
 
-# --- operating frame: the kit, as it runs in a repository -------------------------
+# --- external.toml: parties (frame comes from their bundles, §5.1) -----------------
 
 [entity.EXT-006]
 name = "Human operator"
@@ -38,7 +28,8 @@ status = "Proposed"
 [entity.EXT-001]
 name = "Development session"
 class = "operational"
-description = """The computer, narrowed (§5.6): shell, editor, OS, git client, Python, test runner and the working copy in its hands — the operating environment. The human is no longer inside it."""
+mediates = "EXT-006"
+description = """The computer, narrowed: shell, editor, OS, git client, Python, test runner and the working copy — the operating environment. It carries the human's writes and shows the human its verdicts (mediates)."""
 status = "Approved"
 
 [entity.EXT-005]
@@ -47,87 +38,86 @@ class = "interoperating"
 description = """The model services and runners, primary and reviewer alike. Invoked by the kit's own loop, so REL-003 becomes a bundle (§5.2)."""
 status = "Approved"
 
-# --- delivery frame: this repository's build-and-release -------------------------
-
 [entity.EXT-002]
 name = "Template"
 class = "deliverable"
 description = """The delivered package, emitted at B-05. From an adopter's frame, their enabling system."""
 status = "Approved"
 
-[entity.EXT-007]
-name = "Scripted model runner"
-class = "enabling"
-emulates = "EXT-005"
-description = """FAKE_AGENT (tests/test_agent_loop.py): answers the runner contract (IF-041) from a script. Reproduces protocol, not judgment."""
-status = "Proposed"
-
-[entity.EXT-008]
-name = "Scaffold rig"
-class = "enabling"
-emulates = "EXT-001"
-description = """The scaffold fixture (tests/conftest.py): a fresh operating environment in a temp dir, driven the way a downstream user would."""
-status = "Proposed"
-
-[entity.EXT-009]
-name = "Render critic"
-class = "enabling"
-emulates = "EXT-006"
-description = """render-dashboard-critique plus a vision model: judges the rendered views against a rubric, standing in for the human reader."""
-status = "Proposed"
-
-# --- bundles: authored identities ---------------------------------------------------
+# --- external.toml: bundles, each declaring its system-of-interest -------------------
 
 [boundary.B-02]
 entity = "EXT-006"
 direction = "in"
+system = "kit"
 carries = """Authority: rulings, attestations and Status flips. No IF of its own; its proxy arrives as a commit through IF-134."""
 status = "Approved"
 
 [boundary.B-09]
 entity = "EXT-006"
 direction = "out"
-carries = """Read: the spine and the views generated from it (dashboard, open items, status, gate reports), as the operator reads them. 13u's B-03 content, returned."""
+system = "kit"
+carries = """Read: the spine and the views generated from it (dashboard, open items, status, gate reports). 13u's B-03 content, returned."""
 status = "Proposed"
 
 [boundary.B-01]
 entity = "EXT-001"
 direction = "in"
+system = "kit"
 carries = """Governed writes: edits admitted only through the git hook floor."""
 status = "Approved"
 
 [boundary.B-04]
 entity = "EXT-001"
 direction = "out"
+system = "kit"
 carries = """Guardrail verdicts: hook-floor accept/reject and subagent_gate allow/deny."""
 status = "Approved"
 
 [boundary.B-10]
 entity = "EXT-005"
 direction = "inout"
+system = "kit"
 carries = """The loop invoking a model runner: prompt and brief out on stdin; output, exit code and commits back."""
 status = "Proposed"
 
 [boundary.B-05]
 entity = "EXT-002"
 direction = "out"
+system = "delivery"
 carries = """THE TEMPLATE: the packaged deliverable, emitted by the delivery system."""
 status = "Approved"
-
-# --- the link between the frames ---------------------------------------------------
 
 [relationship.REL-002]
 from = "EXT-002"
 to = "EXT-001"
 kind = "hands-off"
-flow = """The Transition hand-off: the Template installed into an operating environment. Absorbs REL-001; stripped of 13n/13u's self-adoption content (§5.5)."""
+flow = """Transition: the Template installed into an operating environment — the only lifecycle hand-off between the frames. Absorbs REL-001."""
 status = "Approved"
 
-# --- assumptions -------------------------------------------------------------------
+# --- assumptions.toml: rigs -----------------------------------------------------------
+
+[rig.RIG-01]
+name = "Scripted model runner"
+emulates = "EXT-005"
+description = """FAKE_AGENT (tests/test_agent_loop.py): answers the runner contract (IF-041) from a script. Reproduces protocol, not judgment."""
+
+[rig.RIG-02]
+name = "Scaffold rig"
+emulates = "EXT-001"
+description = """The scaffold fixture (tests/conftest.py): a fresh operating environment in a temp dir, driven the way a downstream user would."""
+
+[rig.RIG-03]
+name = "Render critic"
+emulates = "EXT-006"
+description = """render-dashboard-critique plus a vision model: judges the rendered views against a rubric, standing in for the human reader."""
+
+# --- assumptions.toml: assumptions ---------------------------------------------------
+# measured_at is the extension's allocation (§9), filled at DevStg-Arch.
 
 [assumption.DA-001]
-measured_at = ["IF-013", "IF-180"]
 effect_at = ["B-09"]
+measured_at = ["IF-013", "IF-180"]
 assumption = """A spine the strict check passes with zero orphans is one a reviewer can rely on: each row says something, and the links are the ones a reviewer would draw."""
 holds_when = """Rows are authored under the spine-authoring question list; the reviewer reads the generated views, not raw TOML."""
 obstacle = """Every row resolves and every row says nothing: an orphan-free, semantically vacuous spine."""
@@ -136,8 +126,8 @@ status = "Drafted"
 standing = "active"
 
 [assumption.DA-002]
-measured_at = ["IF-013", "IF-014"]
 effect_at = ["B-01", "B-09"]
+measured_at = ["IF-013", "IF-014"]
 assumption = """A scaffold whose harness runs green is one an adopting team can actually work in."""
 holds_when = """The team's stack is one of the shipped profiles, and the team reads ADOPTING.md before first use."""
 obstacle = """A team green-scaffolds, never fills a registry, and operates a spine that resolves and says nothing."""
@@ -146,18 +136,18 @@ status = "Drafted"
 standing = "active"
 
 [assumption.DA-003]
-measured_at = ["IF-134"]
 effect_at = ["B-02"]
+measured_at = ["IF-134"]
 assumption = """A changed Status cell on a human-held rung means a human actually exercised the judgment that Status asserts."""
 holds_when = """The row's rung is at or below the human_approval_through dial."""
 obstacle = """A Status change on a human-held rung arrives in a commit the unattended loop authored."""
-falsifier = """A commit authored by the loop that changes a Status cell on a human-held rung."""
+falsifier = """A commit carrying the loop's provenance trailer that changes a Status cell on a human-held rung."""
 status = "Drafted"
 standing = "active"
 
 [assumption.DA-004]
-measured_at = ["IF-134", "IF-135"]
 effect_at = ["B-01"]
+measured_at = ["IF-134", "IF-135"]
 assumption = """A write the local hook floor admitted was checked: the floor was not bypassed, or a re-run of the same bar agrees."""
 holds_when = """Commits are not made with --no-verify, or a re-run of the bar away from the session is in place."""
 obstacle = """git commit --no-verify admits an unchecked write, and nothing re-runs the bar."""
@@ -166,19 +156,19 @@ status = "Drafted"
 standing = "active"
 
 [assumption.DA-005]
+effect_at = ["B-09"]
 measured_at = ["IF-041", "IF-015"]
-effect_at = ["B-10"]
-assumption = """The model runner follows the runner contract: it reads the prompt on stdin, exits with the documented codes, and commits in the expected form."""
+assumption = """The model runner follows the runner contract — prompt on stdin, the documented exit codes, commits in the expected form — so the work the owner sees is the work the loop asked for."""
 holds_when = """A runner and model listed in docs/agents.toml, at the pinned CLI version."""
-obstacle = """A provider CLI update changes exit-code or commit behaviour; every loop requirement over these IFs loses its premise at once."""
+obstacle = """A provider CLI update changes exit-code or commit behaviour; every loop requirement citing this assumption loses its premise at once."""
 falsifier = """A routed session whose exit code or commit shape falls outside the documented contract."""
 status = "Drafted"
 standing = "active"
 
 [assumption.DA-006]
-measured_at = ["IF-041"]
 effect_at = ["B-10"]
-realized_by = "EXT-007"
+measured_at = ["IF-041"]
+realized_by = "RIG-01"
 assumption = """The scripted runner reproduces argv/stdin, exit codes and commit effects of a real runner; it reproduces no judgment, so nothing about prompt quality is evidenced by it."""
 holds_when = """Loop tests that assert protocol behaviour, not model output."""
 obstacle = """A real runner behaviour the script does not model (partial writes, streaming, timeouts) that the loop depends on."""
@@ -187,9 +177,9 @@ status = "Drafted"
 standing = "active"
 
 [assumption.DA-007]
-measured_at = ["IF-014"]
 effect_at = ["B-01", "B-04"]
-realized_by = "EXT-008"
+measured_at = ["IF-014"]
+realized_by = "RIG-02"
 assumption = """A synthetic scaffold in a temp dir behaves like a fresh adopter repository for the checks the suite runs."""
 holds_when = """The same shipped profile, a clean Python 3.11+, git on PATH."""
 obstacle = """An adopter environment property the temp dir lacks (existing hooks, CRLF settings, a monorepo layout)."""
@@ -198,9 +188,9 @@ status = "Drafted"
 standing = "active"
 
 [assumption.DA-008]
-measured_at = ["IF-180"]
 effect_at = ["B-09"]
-realized_by = "EXT-009"
+measured_at = ["IF-180"]
+realized_by = "RIG-03"
 assumption = """A vision model judging the rendered dashboard against the rubric reaches the verdict a human reviewer would."""
 holds_when = """An image-capable model; the rubric carries its accumulated anchors; a static render at a declared width and theme."""
 obstacle = """A model revision shifts judgment silently; or the rubric overfits to anchors accumulated under one model's eye."""
@@ -208,9 +198,45 @@ falsifier = """A periodic human Attest sample that disagrees with the critic's v
 status = "Drafted"
 standing = "active"
 
-# --- proposed da_refs on live SRs (their sn_refs are read from the live registry) ---
+# --- stakeholder-needs.toml: the stakeholder list, and each need's stakeholder_refs ---
 
-[sr_cites]
+[stakeholder.STK-01]
+name = "Repo owner / operator"
+party = "EXT-006"
+
+[stakeholder.STK-02]
+name = "Reviewer"
+party = "EXT-006"
+
+[stakeholder.STK-03]
+name = "Adopting team"
+party = "EXT-006"
+
+[stakeholder.STK-04]
+name = "Kit maintainers"
+party = "EXT-006"
+
+[need_stakeholder_refs]
+"SN-001" = ["STK-03"]
+"SN-002" = ["STK-02"]
+"SN-004" = ["STK-01"]
+"SN-005" = ["STK-01"]
+"SN-006" = ["STK-01"]
+"SN-007" = ["STK-04"]
+"SN-008" = ["STK-02"]
+"SN-009" = ["STK-03"]
+"SN-010" = ["STK-02"]
+"SN-012" = ["STK-01"]
+"SN-023" = ["STK-02"]
+"SN-024" = ["STK-02"]
+"SN-025" = ["STK-01"]
+"SN-027" = ["STK-01"]
+"SN-028" = ["STK-01"]
+"SN-029" = ["STK-01"]
+
+# --- proposed SR cells (the live SR rows cannot be edited by a mockup) --------------
+
+[sr_da_refs]
 "SR-157" = ["DA-001"]
 "SR-010" = ["DA-002", "DA-007"]
 "SR-140" = ["DA-003"]
@@ -227,36 +253,18 @@ standing = "active"
 "SR-053" = ["DA-008"]
 "SR-054" = ["DA-008"]
 
-# --- proposed coincident waivers on boundary IFs (§4) ----------------------------
+[sr_coincident]
+"SR-174" = "Work-item ids are allocated from the watermark: an id that is never re-issued is the outcome itself."
 
-[coincident]
-"IF-020" = "subagent_gate's exit code is the gate's decision: the reading is the outcome."
-"IF-169" = "the JSON decision line is the verdict the agent CLI acts on."
-"IF-144" = "check's severity token is the verdict itself."
+[sr_repoint]
+# boundary_refs the redraw re-points (§5.1): SRs about the views move to the read bundle.
+"SR-052" = ["B-09"]
+"SR-053" = ["B-09"]
+"SR-054" = ["B-09"]
+"SR-168" = ["B-09"]
+"SR-169" = ["B-09"]
 
-# --- the stakeholder list (Q12), as far as the reach check needs it -------------
-
-[stakeholder.STK-01]
-name = "Repo owner / operator"
-party = "EXT-006"
-needs = ["SN-004", "SN-005", "SN-006", "SN-012", "SN-025", "SN-027", "SN-028", "SN-029"]
-
-[stakeholder.STK-02]
-name = "Reviewer"
-party = "EXT-006"
-needs = ["SN-002", "SN-008", "SN-010", "SN-023", "SN-024"]
-
-[stakeholder.STK-03]
-name = "Adopting team"
-party = "EXT-006"
-needs = ["SN-001", "SN-009"]
-
-[stakeholder.STK-04]
-name = "Kit maintainers"
-party = "EXT-006"
-needs = ["SN-007"]
-
-# --- IF tie-back changes the redraw implies (applied before deriving bundles) ----
+# --- extension (§9): proposed IF cells ------------------------------------------------
 
 [retie]
 "IF-164" = { to = "B-09" }
@@ -264,7 +272,12 @@ needs = ["SN-007"]
 "IF-041" = { to = "B-10" }
 "IF-180" = { to = "B-09", new = "gen_trajectory → PROJECT_STATE.html (proposed row; the dashboard has no IF row today, only its exit code IF-011)" }
 
-# --- parties still open at the sitting (§5.2) ----------------------------------
+[if_coincident]
+"IF-020" = "subagent_gate's exit code is the gate's decision: the reading is the outcome."
+"IF-169" = "the JSON decision line is the verdict the agent CLI acts on."
+"IF-144" = "check's severity token is the verdict itself."
+
+# --- open at the sitting, and spent ids ---------------------------------------------
 
 [open.hosted-ci]
 name = "Hosted CI"
