@@ -228,9 +228,11 @@ crossing into the design frame"* a reportable result. The price: moving a row
 does not delete its assumption, it **replaces** it with a fidelity assumption
 that has to be written down.
 
-If the boundary becomes a derived view (§5.7), `frame` can be derived from which
-rows exist rather than written on the bundle. That is Q10, and it would revisit
-Q3.
+`frame` stays written, per Q3. Once DAs and IFs link to each other (§6.2),
+the rows also imply a value: no DA means coincident, an IF with a DA is bridged
+by an assumption, and a DA with no IF is effect. A check compares the written
+value with the implied one, and a mismatch is a finding. Whether the written
+value can eventually be dropped is left for later (Q10).
 
 ### The candidates, assessed
 
@@ -422,9 +424,10 @@ the rows that carry the obligation (*"do not hand-edit"*).
 - **Some of `B`'s content is not derivable:** the `carries` intent, ruling notes
   such as `B-04`'s honest-limit paragraph, and approval status. The prose and
   status move to the EXT row, one entry per direction.
-- **`frame` becomes derivable too:** an IF with no DA is coincident, an IF with
-  a DA is bridged by an assumption, and a DA with no IF is effect. That would
-  revisit Q3's decision to keep `coincident` explicit (Q10).
+- **`frame` stays written and is checked against the rows (Q10):** an IF with
+  no DA implies coincident, an IF with a DA implies bridged, and a DA with no IF
+  implies effect. If the bundle rows are dropped in step 2, the written value
+  moves to the EXT row with the prose.
 
 **Two steps, so the second is a separate decision:**
 
