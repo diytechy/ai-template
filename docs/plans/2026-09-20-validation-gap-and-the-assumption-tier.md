@@ -1147,7 +1147,7 @@ on an internal seam. In this repo the model is `EXT-005`, outside, and
 an internal seam is defined at DevStg-Arch, **after** the Boundary rung, so a
 DA on it cannot be approved at Boundary: its IF does not exist yet.
 
-**Recommendation (Q8): the DA's home and rung follow the IF it measures
+**Decided (Q8): the DA's home and rung follow the IF it measures
 through.** One row kind, two homes, mirroring 13s's recursion (an SS against a
 boundary IF, an LLR against an internal seam):
 
@@ -1171,9 +1171,10 @@ DevStg-Arch and is not fingerprinted.
 
 Two consequences to accept with it:
 
-- **Who approves, in this repo.** The dial was `human_approval_through =
-  "DevStg-Needs"`, which let the loop approve assumptions about the world — the
-  §8.5 concern. The owner has decided to move it to DevStg-Boundary (Q14), so
+- **Who approves, in this repo.** The dial is `human_approval_through =
+  "DevStg-Needs"`, which would let the loop approve assumptions about the world —
+  the §8.5 concern. The owner has decided to move it to DevStg-Boundary at the
+  sitting (Q14), so
   boundary DAs are human-approved. Internal-seam DAs, at DevStg-Arch, stay under
   ordinary review.
 - **The lock's scope.** `external.toml`'s header says *"its rows change only by a
@@ -1378,7 +1379,7 @@ build on it; `OPEN` means it may not.
 | Q5 | Does a W-test supplement an SR citation, or may it stand alone? | **DECIDED: stand alone, for DA ids only.** A DA names its needs, so a TC verifying one says what it serves; `coherence.py`'s supplement rule gains a narrow exception, not a general loosening (§9.1). |
 | Q6 | Does a rig get its own crossing? | **DECIDED: no.** A rig is an `enabling` entity with `emulates`, plugged into the existing interface, with a fidelity DA (§8.2). |
 | Q7 | Does this ship downstream in v1? | **DECIDED in principle: yes**, once the sitting has nailed down the details. Adopter migration and resync documentation are deferred until this repo's model is firm (§10). |
-| Q8 | Which existing file holds the DA rows? | **PROPOSED: home and rung follow the IF.** Boundary DAs in `external.toml` at DevStg-Boundary (owner: *"in many ways I like external.toml"*); DAs on internal seams, like an embedded LLM feeding a script, in `interfaces.toml` at DevStg-Arch, since the seam does not exist until then (§9.2). Awaiting confirmation. |
+| Q8 | Which existing file holds the DA rows? | **DECIDED: home and rung follow the IF.** Boundary DAs in `external.toml` at DevStg-Boundary; DAs on internal seams, like an embedded LLM feeding a script, in `interfaces.toml` at DevStg-Arch, added when a real seam needs it (§9.2). |
 | — | Orientation, the adopter, and the reversed rulings | **DECIDED:** operating frame, two planes, `EXT-003` dropped, 13u reversed (§5). **Traced 2026-09-22:** `REL-003` and 13o reversed; the hosted-CI cut (2026-08-16q) partly reversed — design control survives but does not keep the runner off the frame (§5.2). Whether hosted CI and the vendored-doc upstream return as parties is open. |
 | — | Two chains | **Agreed 2026-09-22:** WHERE is `EXT ← [B] ← IF ← SS`, with an optional DA on the IF (many-to-many); every DA measures through at least one IF, authority included (`IF-134`). WHY is `Stakeholder ← SN ← DA`, or `← SS` when its IF carries no DA. An SS is stated over an IF, never a bare bundle, except the package-wide class (§6.2). |
 | — | Hats | **Agreed 2026-09-22:** a hat is a lens that constrains, not a stakeholder; five outcomes per piece; `speaks_for` on voice hats (§6.5). |
@@ -1390,7 +1391,7 @@ build on it; `OPEN` means it may not.
 | — | Step 1 | **DECIDED:** folded into the sitting; nothing is built before it (§10). |
 | — | Packaging | **DECIDED:** split into packages for the sitting; a model-at-a-glance summary opens the doc. |
 | Q13 | Need-link edge cases | **DECIDED: fix the DA or split the SS.** A need the DA does not name is added to the DA; an SS over mixed IFs is split (§6.2). |
-| Q14 | Should DA approval be human-held here? | **DECIDED: move `human_approval_through` to `DevStg-Boundary`.** The human approves the frame and its boundary assumptions; SRs and below stay under ordinary review. When the dial changes is open (§9.2). |
+| Q14 | Should DA approval be human-held here? | **DECIDED: move `human_approval_through` to `DevStg-Boundary`, at the sitting**, in the same ruling that adds DA rows. SRs and below stay under ordinary review (§9.2). |
 | Q15 | Does `external.toml`'s lock cover DA rows? | **DECIDED: narrow the lock.** Entity, boundary and relationship rows change only by ruling; DA rows follow Boundary-rung approval under the dial (§9.2). |
 | — | Enabling-system stage vocabulary | **Tentative.** Placed, not settled; the standard wording is now verified (§8.1). |
 
