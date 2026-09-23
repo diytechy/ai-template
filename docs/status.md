@@ -30,8 +30,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   and sitting checklists are historical context.
 - **Awaiting owner ruling — the validation gap:** read
   [the assumption-tier proposal](plans/2026-09-20-validation-gap-and-the-assumption-tier.md).
-  It asks for a frame ruling (the frame is LOCKED), so nothing may be built from
-  it until the owner answers its §9. Its step 1 — typing each `B-##` crossing
+  It asks for a frame ruling (the frame is LOCKED). The owner's answers are in
+  its §11; Q5 and the sitting stay open, so nothing past step 1 may be built. Its step 1 — typing each `B-##` crossing
   `design`/`effect` — is separable and costs four edits; steps 2+ re-pin
   `tests/test_external_frame.py` and need the sitting.
 - **Next implementation:** resolve the existing SR-161 per-decomposition
