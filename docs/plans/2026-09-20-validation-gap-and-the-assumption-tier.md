@@ -1222,10 +1222,10 @@ build on it; `OPEN` means it may not.
 | — | Orientation, the adopter, and the reversed rulings | **DECIDED:** operating frame, two planes, `EXT-003` dropped, 13u reversed (§5). `REL-003`, hosted CI and 13o **to recheck** at the sitting (§5.2). |
 | — | Two chains | **Agreed 2026-09-22:** WHERE is `EXT ← [B] ← DA ← IF ← SS`, with the DA or the IF optional but not both; WHY is `Stakeholder ← SN ← DA` (or `← IF`). An SS is stated over an IF or a DA, never a bare bundle, except the package-wide class (§6.2). The stakeholder is not in the WHERE chain. |
 | — | Hats | **Agreed 2026-09-22:** a hat is a lens that constrains, not a stakeholder; five outcomes per piece; `speaks_for` on voice hats (§6.5). |
-| Q9 | Rename SR to SS (system specification)? | **OPEN.** Right term (Jackson's S), but the `SR-` prefix runs through every script and adopter registry (§6.2). |
-| Q10 | Derive `frame` from which rows exist, instead of writing it? | **OPEN.** Follows from the derived boundary (§5.7); revisits Q3. |
-| Q11 | Does an SS reach its need through its IF / DA, or keep authored `sn_refs`? | **OPEN.** Derived is finer than through the party and not yet measurable (§6.2). |
-| Q12 | Where does a stakeholder live? | **OPEN.** Needs carry no stakeholder field today; hats' `speaks_for` needs one to point at (§6.2, §6.5). |
+| Q9 | Rename SR to SS (system specification)? | **DECIDED: prose now, prefix later.** Docs call the tier "the specification" now; the `SR-` prefix stays until a separate, deliberate adopter migration (§6.2). |
+| Q10 | Derive `frame` from which rows exist, instead of writing it? | **DECIDED: write it, check the derivation.** Q3's explicit word stands; a check compares it with the derivation (no DA = coincident, IF + DA = bridged, DA without IF = effect). Whether to drop the written value is decided later (§5.7). |
+| Q11 | Does an SS reach its need through its IF / DA, or keep authored `sn_refs`? | **DECIDED: derive, allow narrowing.** An SS inherits its needs from what it is stated over, and may add its own `sn_refs` to narrow where an IF serves several needs. Measure needs-per-IF once the links exist (§6.2). |
+| Q12 | Where does a stakeholder live? | **DECIDED: a small stakeholder list.** Named rows, likely in `stakeholder-needs.toml`; each SN cites one, hats' `speaks_for` points at one, and a stakeholder may optionally link to an EXT party (§6.2, §6.5). |
 | — | Enabling-system stage vocabulary | **Tentative.** Placed, not settled (§8.1). |
 
 ### Still not captured
