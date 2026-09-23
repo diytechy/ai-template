@@ -30,11 +30,11 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   and sitting checklists are historical context.
 - **Awaiting owner ruling — the validation gap:** read
   [the assumption-tier proposal](plans/2026-09-20-validation-gap-and-the-assumption-tier.md).
-  It asks for a frame ruling (the frame is LOCKED). The owner's answers are in
-  its §11; Q5, Q8 and the sitting stay open (the sitting also reverses
-  parts of sitting 2 — its §5.2), so nothing past step 1 may be built. Its step 1 — typing each `B-##` crossing
-  `design`/`effect` — is separable and costs four edits; steps 2+ re-pin
-  `tests/test_external_frame.py` and need the sitting.
+  It asks for a frame ruling (the frame is LOCKED). Start at its "model at a
+  glance"; the owner's answers are in its §11. Q8, Q13–Q15 and the sitting stay
+  open, and the sitting also reverses parts of sitting 2 (its §5.2). **Nothing
+  is built before the sitting**: the old separable step 1 is folded into it, and
+  every step re-pins `tests/test_external_frame.py` or depends on one that does.
 - **Next implementation:** resolve the existing SR-161 per-decomposition
   perspective-record gap and complete TC-211's normal sample. Follow the
   existing artifact adjudication route for the Drafted amendments; passing an
