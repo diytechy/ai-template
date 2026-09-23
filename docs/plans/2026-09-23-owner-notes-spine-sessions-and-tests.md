@@ -8,11 +8,13 @@ records what the repo does today (with anchors), what the note would change,
 the trade-offs, and a recommendation. Nothing here is built; the questions in §5
 are for the owner.
 
-**Revised after an adversarial review (2026-09-23, §6).** A codex Sol review
-(reasoning effort high) rejected the first draft as a decision basis: it had the
-approval-authority question wrong, inferred a test split the registry does not
-contain, and understated what several recommendations need. Every finding was
-checked against the code; all held, and each is applied below.
+**Revised twice after adversarial review (2026-09-23, §6).** Two codex Sol
+reviews (reasoning effort high) found 15, then 6 problems. The first rejected the
+draft as a decision basis: it had the approval-authority question wrong, inferred
+a test split the registry does not contain, and understated what several
+recommendations need. The second confirmed those fixes and found six residual
+problems. Every finding was checked against the code; all held, and each is
+applied below.
 
 **Who this is for.** The owner, as a decision document. Each section keeps the
 owner's note number, so a note maps to exactly one place.
@@ -67,11 +69,17 @@ Broad words — *any*, *all*, *no* — will fire constantly without a suppressio
 rule, so a naive term list would be noise.
 
 **Recommendation.**
-1. Extend the check to the **normative and acceptance cells of every spine
-   tier**, not just SR acceptance, warn-first.
-2. Reuse the **existing waiver grammar**, `recorded waiver: <reason>`, in each
-   tier's existing reason cell (`why` on a need, `Rationale` on an SR) — no second
-   waiver vocabulary.
+1. Extend the check beyond SR acceptance, warn-first, tier by tier:
+
+   | tier | cells scanned | waiver lives in |
+   |---|---|---|
+   | need | `need`, `acceptance` | `why` |
+   | system requirement | `requirement`, `acceptance_criteria` | `rationale` |
+   | design expectation (LLR) | `detail` | `rationale` |
+   | test case | **not scanned** — a TC states a method, not an obligation (`trace_text.py:889-891`), and it has no reason cell; adding one would be a schema migration for no gain | — |
+
+2. Reuse the **existing waiver grammar**, `recorded waiver: <reason>`, in the
+   cell above — no second waiver vocabulary.
 3. Define the suppression predicate before shipping: an absolute is satisfied
    when it names its domain from a closed list (a registry, an id space, a
    declared set), and the tokenization is documented. What cannot be decided
@@ -138,8 +146,11 @@ pointer cannot live in the need cell.
 **Recommendation.**
 1. Each design constraint becomes a need, stated in stakeholder language, whose
    stakeholder is the owner.
-2. The owner's constraints document is provenance only; the need cites it in a
-   separate cell, not in its text.
+2. The owner's constraints document is provenance only. The need cites the
+   specific constraint's anchor in a separate cell, not in its text — **on the
+   need, not on the stakeholder row**, because the provenance is per constraint,
+   not per stakeholder. The assumption-tier plan's stakeholder list (its §6.2)
+   was revised to match, so there is one home.
 3. Hats reference the need, not the prose.
 4. Priced separately and ruled with the assumption-tier plan's stakeholder list
    (its Q12): the new need cells, their carrier and template entries, dogfood
@@ -160,11 +171,23 @@ that they cannot supply it: the watermark holds only high-water marks,
 `docs/declared-absences` is a path-and-reason list, git history can be shallow or
 squashed downstream, and the log's forwarding maps are prose.
 
-**Recommendation.** Keep deletion. Record a **structured, append-only retirement
-event at deletion time** — id, date, the commit that removed it, the successor
-if any, the reason — in a file outside the live registries, so D-4 holds. The
-dashboard renders it. Retirements before the file existed show as *unknown*
-rather than guessed.
+**Recommendation — an explicit, small amendment to D-4.** Keep deletion; add a
+structured retirement record. D-4 says history lives in *"git and the log"*, so a
+new structured record is a third home, and the owner should see it as an
+amendment rather than a clarification. The lightest form keeps it inside the
+existing log: a **structured fragment in `docs/log.d/`**, written in the same
+commit as the deletion, with a fixed shape — id, date, successor if any, reason.
+Two details follow:
+
+- **No self-referential hash.** A commit cannot contain its own hash, so the
+  record does not store the deleting commit; the dashboard resolves it at render
+  time from git when history is available (`git log` over the fragment), and
+  shows *unknown* in a shallow or squashed clone.
+- **Append-only by check**, not by trust: a warn-first finding when a retirement
+  fragment is edited after it lands, and when a spent id has no fragment from the
+  day the rule starts. Retirements before then show as *unknown*.
+
+It costs a fragment shape, a check, a renderer, and a template/resync entry.
 
 ---
 
@@ -332,15 +355,20 @@ command templates carry the bypass flags, so restriction means building each
 provider's command differently per role. And "read-only except for one verdict
 file" is not expressible in codex's sandbox modes.
 
-**Recommendation.**
-1. **Provider-specific command construction per role** — part of this item, not
-   a follow-on: restricted roles (REVIEW-A/B, CRITIQUE, DESIGN-CHECK, PROBE,
-   ADJUDICATE) drop the bypass flag and get their provider's read-only mode;
-   BUILD keeps full tools.
-2. **Restricted sessions never write files.** They return their verdict as
-   output (stdout or the last message), and the **orchestrator** validates it and
-   writes the verdict file. That is least privilege without per-path sandbox
-   rules.
+**Recommendation — split roles by what they do, not by what they are called:**
+
+| role | behaviour | tools |
+|---|---|---|
+| REVIEW-A, REVIEW-B, CRITIQUE, PROBE | judge and report | **output-only**: no bypass flag, the provider's read-only mode; the verdict is returned as output and the orchestrator records it |
+| BUILD | writes code and rows | full |
+| DESIGN-CHECK | a **rework** session: its commit is the rework and arms the next review (`PROCESS_OPTIONS.md:1128-1139`; `agent_loop.py:3047-3061`) | full |
+| ADJUDICATE | performs the approval act: the verdict, the scoped Status flips, the snapshot, the dispositions and close — the writes §3.5 keeps it doing | bounded write |
+
+1. **Provider-specific command construction per role** is part of this item:
+   the bypass flag is removed for the output-only roles.
+2. Recording an output-only role's verdict is **not** an approval act, so the
+   orchestrator writing it raises none of §3.5's authority problems. The
+   adjudicator keeps its own reviewed writes.
 3. A declared **phase → skills** map, named in the brief, so discovery can be
    switched off for review roles.
 
@@ -469,9 +497,15 @@ prose would rot; the kit's stable vocabulary is tiers (*quick*, *medium*,
 2. Prose names **tiers, not models**.
 3. **Never from review, critique, design-check or adjudication sessions** — and
    with §3.3's restricted command construction those roles cannot spawn anyway.
-4. Budget and record fan-out **in the outer orchestrator**, provider-neutral. The
-   Claude hook remains useful supervision for Claude routes, and the prose should
-   call it Claude-only and *"supervision, not security"*.
+4. **Budgets need an observability design first.** Provider-neutral accounting
+   assumes a boundary the session engine does not have: `subagent_gate` sees only
+   Claude's `Task`/`Agent`, codex routes have no structured stream, and a
+   successful codex call returns only its last message. So a fan-out budget is
+   contingent on a separate design — the spawn boundary, how a budget is
+   inherited, per-provider adapters, what happens when a spawn cannot be observed
+   (including whether native in-session delegation is disabled then). Until then,
+   the prose rules (1–3) carry it, and the Claude hook stays as Claude-only
+   *"supervision, not security"*.
 
 ### 3.7 Who plans, who builds, who reviews (note 3)
 
@@ -573,18 +607,18 @@ validating structured output is owed too.
 
 | # | question | recommendation |
 |---|---|---|
-| S1 | Extend the absolutes check to every tier's normative and acceptance cells, reusing `recorded waiver:`, with a defined suppression rule; run OI-37's sweep? | yes (§1.1) |
+| S1 | Extend the absolutes check per the tier matrix (TCs excluded), reusing `recorded waiver:`, with a defined suppression rule; run OI-37's sweep? | yes (§1.1) |
 | S2 | LLR → design expectation: prose now, prefix a separate later decision; no edits to old logs? | yes (§1.2) |
-| S3 | Design constraints: each a need, canonical in the need; the owner document as provenance only; schema ruled with the stakeholder list? | yes (§1.3) |
-| S4 | Retired rows: keep deletion, and record structured retirement events from now on, outside the registries? | yes (§1.4) |
+| S3 | Design constraints: each a need, canonical in the need; the provenance anchor on the need, not the stakeholder row; schema ruled with the stakeholder list? | yes (§1.3) |
+| S4 | Retired rows: keep deletion, and amend D-4 to add a structured retirement fragment in `docs/log.d/`, with the deleting commit resolved at render time? | yes (§1.4) |
 | S5 | Test level: give TCs a primary verification purpose before any ordering policy; treat the 41 tier disagreements as a priced migration, not a cleanup? | yes (§2.2) |
 | S6 | Observation tests: design an event-triggered runner (state, owner, failure semantics) before approving triggers? | yes (§2.3) |
 | S7 | One session service (act / keep / record), with WI-551 landing through it? | yes (§3.1) |
 | S8 | Telemetry parity: a raw telemetry stream or structured output for codex and opencode, a provider column, and tokens kept distinct from context occupancy? | yes (§3.2) |
-| S9 | Per-role command construction: restricted roles drop the bypass flag, and the orchestrator writes their verdicts? | yes (§3.3) |
+| S9 | Roles split by behaviour: reviewers, critics and probes output-only; build, design-check and adjudicate keep their writes? | yes (§3.3) |
 | S10 | Retention: the adjudicator's lands; builder retention a separate ruled experiment; reviewers never? | yes (§3.4) |
 | S11 | Keep the adjudicator's reviewed commit as the approval act; a mechanical trigger only as its own ruling with authenticated issuance? | yes (§3.5) |
-| S12 | Fan-out: rule on peer-tier delegation; tiers not models; never from review roles; budgeted in the orchestrator? | yes (§3.6) |
+| S12 | Fan-out: rule on peer-tier delegation; tiers not models; never from review roles; budgets only after an observability design? | yes (§3.6) |
 | S13 | Plan and build: independent review with the planner's intent as a conformance checklist? | (c) (§3.7) |
 | S14 | Operation count: define the measure first; paired and reported, never a lone gate? | yes (§4.1) |
 | S15 | The guard rule in PROCESS.md, linked from the prompts, not in the vendored skill? | yes (§4.2) |
@@ -596,7 +630,9 @@ settle before migrations.
 
 ---
 
-## 6. Review round 1 — codex Sol, reasoning effort high (2026-09-23)
+## 6. Review log
+
+### 6.1 Round 1 — codex Sol, reasoning effort high (2026-09-23)
 
 Verdict: *"REJECT as a decision basis in its current form. The approval-authority
 reversal, nonexistent SR/DE test split, and retention/tool-control assumptions
@@ -620,3 +656,20 @@ each checked against the code; all held.
 | 13 | codex's usage line is discarded before it could be parsed | §3.2 |
 | 14 | the planner as a review leg is neither cost-neutral nor independent | §3.7 |
 | 15 | the existing public-symbol count is not an operation count | §4.1 |
+
+### 6.2 Round 2 — codex Sol, reasoning effort high (2026-09-23)
+
+A convergence round. Verdict: *"NOT YET SOUND — S9 contradicts two implemented
+mutating roles, while S4 and S12 still assume ruling compatibility or
+orchestration machinery the repository does not have."* It reproduced the
+round-1 counts and confirmed the round-1 fixes landed, and found six residual
+problems; each was checked and applied.
+
+| # | finding (short) | where it landed |
+|---|---|---|
+| 1 | the adjudicator cannot be read-only: it performs the approval act's writes | §3.3 roles by behaviour |
+| 2 | design-check is a mutating rework role | §3.3 |
+| 3 | a retirement record amends D-4, and a commit cannot contain its own hash | §1.4: an explicit amendment; hash resolved at render time |
+| 4 | provider-neutral fan-out budgets assume machinery that does not exist | §3.6: contingent on an observability design |
+| 5 | constraint provenance had two candidate homes across the two plans | §1.3, and the assumption-tier plan §6.2 |
+| 6 | an all-tier absolutes rule needs a per-tier matrix; TCs have no reason cell | §1.1 tier matrix, TCs excluded |
