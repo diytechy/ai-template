@@ -62,7 +62,12 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `uncovered=0`); the archived [2026-08-01 handoff §6](archive/history/handoff-2026-08-01.md)
   findings; the [spine-restructure-2026-08-08.md](spine-restructure-2026-08-08.md)
   residues (§7 items 2/4/5 need a destination); PROCESS.md §4's stale
-  "ordinal `0`–`4`" approval dial.
+  "ordinal `0`–`4`" approval dial; **owner intake 2026-09-22:** the self-test
+  suite should fail fast when its dev toolchain is missing, and name the run
+  menu's setup action as the fix. Today a missing pytest-xdist dies on
+  `unrecognized arguments: -n`. This depends on the root launchers SN-034/SN-035
+  require, which do not exist yet, and needs stepping through as a requirement
+  before it is built.
 - **Conventions:** [specs/README.md](specs/README.md) · [rubrics/README.md](rubrics/README.md) · partial closes [handbacks/](handbacks/README.md).
 
 ## Current State
