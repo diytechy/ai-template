@@ -2,10 +2,14 @@
 
 **Open for owner ruling:**
 [`2026-09-20-validation-gap-and-the-assumption-tier.md`](2026-09-20-validation-gap-and-the-assumption-tier.md)
-— proposes typing each boundary crossing as `design` or `effect`, and recording
-the domain assumptions that bridge them as a fourth row kind in the frame
-registry, so the step from "zero orphans" to "a reviewer trusts it" becomes
-something a test can attach to. Carries its own impact survey and staging.
+— proposes recording the domain assumptions that carry interface facts up to
+the human outcomes needs are written about, as rows the requirements cite, and
+redrawing the depth-0 view as two frames (the kit in operation, and the system
+that delivers it). Revised after an adversarial review; carries its own impact
+survey, staging and a rendered mockup ([`mockups/`](mockups/)).
+Its sister, [`2026-09-23-owner-notes-spine-sessions-and-tests.md`](2026-09-23-owner-notes-spine-sessions-and-tests.md)
+— the owner's 2026-09-23 notes on spine authoring, sessions and test strategy,
+each set against what the repo already does, with fifteen questions.
 
 The live planning surface. **Start at
 [`2026-08-15-review-package.md`](2026-08-15-review-package.md)** — the one
