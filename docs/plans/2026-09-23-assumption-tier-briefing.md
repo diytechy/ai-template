@@ -163,7 +163,22 @@ exactly where the person experiences the rejection.
 | C. A second, human-facing copy of each session bundle | Twice the bundles for one path, with nothing to tell the copies apart (§5.4). |
 | **D. One `mediates = "EXT-006"` cell on `EXT-001` (recommended)** | The reach check accepts a session bundle for a human need. Scope: only the session mediates, and only for the human operator. The risk is that it accepts *any* session bundle, so the assumption's own text still has to say how the person is reached. |
 
-**You:** asked for an example (above). **Pending.**
+**Clarification: no LLM is involved.** After the narrowing, `EXT-001` is only
+the computer and the working copy; the model provider is its own entity
+(`EXT-005`). With `mediates` set, the outcome *does* count as reaching you, and
+that is the recommendation. The question is only whether to add the cell. It
+is needed because the reach check is a mechanical rule that compares party ids:
+without the cell it sees "session ≠ human" and flags the assumption.
+
+**The cell's real limit: it can't tell whether you were there.** During an
+unattended overnight `agent-resume` run, the hook floor rejects a loop write at
+`B-04` and no one is at the terminal. The assumption "the person sees the
+rejection" still passes the reach check, because the check proves the
+assumption points at the right place, not that a person was present. So that
+assumption's `holds_when` has to say "while a person is attending the session".
+
+**You:** asked for an example (above), then whether an LLM is the mediator (no).
+**Pending.**
 
 ### Q20. When do the new checks start moving the project stage?
 
@@ -181,9 +196,27 @@ would drop it three rungs.
 |---|---|
 | A. On from the first row | Writing the first draft assumption drops the stage from Tests to Boundary without warning, and every later draft keeps it there until the batch is approved. |
 | B. Never on | Assumptions never gate anything. They stay documentation, which is the state the plan exists to end. |
-| **C. Off until a deliberate activation step (recommended)** | Rows are written warn-only (C2, C3). Activation (C4) re-attests the affected SRs and TCs, switches the arms on, states the regression in advance, and approves the assumptions and rigs as one batch. |
+| C. Off until a deliberate activation step (the plan) | Rows are written warn-only (C2, C3). Activation (C4) re-attests the affected SRs and TCs, switches the arms on, states the regression in advance, and approves the assumptions and rigs as one batch. |
+| D. Put the assumption arm at DevStg-Arch | The drop is smaller (Tests to Arch), but requirements would be approved before the assumptions they rest on, which reverses your ruling that the boundary and its assumptions are approved together. The review batch is the same size. |
+| **E. Off, then approve and activate in the same commit (proposed 2026-09-23)** | The batch is reviewed while the arms are still off. Its approvals and the arm switch land in one reviewed commit, so no commit ever reads below DevStg-Tests. |
 
-**You:** asked which checks (above). **Pending.**
+**What a drop does and doesn't do.**
+
+- **DevStg-Tests is rung 5 of 0–7.** It means requirements and module
+  requirements are settled and the test set is in work. Impl and Release sit
+  above it.
+- **A drop un-approves nothing.** The stage is derived as a minimum over the
+  rows, so it jumps straight back once the batch is approved.
+- **The review effort is the batch, whichever rung you pick:** the assumptions
+  and rigs, the SRs that gain a `coincident` waiver or a `form`, and the TCs
+  that gain a `sampling` policy. Nothing already approved is re-reviewed.
+- **A visible drop does switch checks off.** Checks are selected "at or above"
+  the current stage (`check.py:1324`), and a Boundary reading is floored to
+  DevStg-Reqs for selection. While the stage reads low, the checks for the
+  higher rungs stop running. That is the strongest reason for option E.
+
+**You:** asked which checks (above); prefer a smaller drop than to Tests' worth
+of review. **Pending** a choice of E.
 
 ### Q22 + Q25. What counts as evidence for an assumption, and where does it live?
 
@@ -222,8 +255,12 @@ That leaves one sub-choice open:
   critic evidences nothing;
 - (iii) allow LLM verdicts only as falsifiers, like sparse samples.
 
-**You:** acceptable if mechanical; asked about expiry (above). **Pending** the
-LLM sub-choice.
+**You:** option (i), the rig route, with a default expiry. Whoever writes the
+test (usually the LLM) proposes its `max_age`, and it's approved with the TC.
+There's a mechanical floor of **7 days**: a shorter `max_age` is refused. An
+expiry only reverts the evidence to *specified*; it never falsifies. So a badly
+tuned value costs a re-sample, not a wrong verdict, and values can be retuned
+after the first expiries. **Decided.**
 
 ### Q24. How does a sparse human sample count?
 
@@ -235,6 +272,33 @@ Random 5-user studies catch anywhere from 55% to 99% of known problems
 | A. A passing sample counts as positive evidence | The gate can be passed by luck, and the high variance stays hidden. |
 | B. Human-axis assumptions never gate | Honest but hollow: 24 of the 27 needs are human outcomes, so most of the tier would stay documentation. |
 | **C. Samples can only falsify; three routes to clear the gate (recommended)** | A declared sampling model with an acceptance rule; a `holds_when` narrowed until an automated check covers it; or a recorded `accepted_risk`. |
+
+**A worked example (SN-001, an adopting team gets a working process).**
+
+- **The assumption:** "A team that scaffolds the kit and follows
+  `ADOPTING.md` reaches its first filled, approved registry row without reading
+  the kit's source."
+- **The sample:** three people try it, and all three succeed. That doesn't
+  show the assumption holds. Even if one team in four would fail, three
+  successes in a row happen 42% of the time (0.75³).
+- **If one of the three fails,** that is real evidence: the assumption is false
+  as stated. The DA is marked `falsified`, and the report lists every SR and TC
+  that leaned on it.
+- **So what clears the gate?** One of three honest positions:
+  1. **A sampling model:** "30 fresh attempts, at most 1 failure", which
+     supports a claim of roughly 90%+. Too costly for people.
+  2. **Narrow the claim:** `holds_when` becomes "the team runs the scaffold's
+     quickstart unchanged". The scaffold rig then runs that quickstart in CI on
+     every commit, which is automated evidence. The price is that the claim now
+     says nothing about teams that deviate.
+  3. **Accept the risk:** `accepted_risk = "No adopter population to sample
+     yet; revisit at the first external adopter or any failed sample."` You
+     sign it when you approve the DA.
+- **Likely in practice:** 2 and 3 together. Automate the part that can be
+  automated, and knowingly accept the rest.
+
+The gate doesn't demand proof. It demands that each assumption states which of
+those positions it takes.
 
 **What a closer look is likely to turn up.**
 
