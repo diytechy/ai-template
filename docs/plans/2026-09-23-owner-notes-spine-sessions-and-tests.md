@@ -399,12 +399,11 @@ per-provider code it removes, following PROCESS.md §3's 0→A→B rule:
   `invoke_and_persist`, and S8's adopted schema is written there;
 - **provider differences** live in one adapter per provider (argument
   building, output and usage parsing), not scattered through role code;
-- S9's disposable-worktree step and S10's retention are service operations,
-  not per-role additions.
+- S10's retention is a service operation, not a per-role addition.
 - **Schema-neutral, so it can proceed now** (review 5): the service ships with
   today's recorded fields. S8's adopted schema later changes only the record
-  step's writer, and S9's and S10's operations are added when they are
-  cleared. Nothing in S7 waits on them.
+  step's writer, and S10's operation is added when it is cleared. Nothing in S7
+  waits on them.
 
 The loop's C901 complexity pin (`tests/test_complexity_ratchet.py`) still
 applies: decompose, don't re-stamp.
@@ -523,6 +522,26 @@ get out of hand.** Proposed guardrails: pilot on **one** role (REVIEW-A) before
 the others; build the disposable-worktree step once, inside the session service
 (§3.1), not per role; and measure the added time and disk per review. If the
 pilot costs more than it saves, stop.
+
+**Owner ruling (2026-09-23): verify, don't isolate.** The disposable worktree,
+its pilot and both prerequisites below are **withdrawn**. The owner's model:
+a reviewer works and commits in the lane as today, so OI-76 is unchanged; the
+lane is then locked, and the adjudicator's final pass verifies the worktree's
+state before setting the flag that triggers the mechanical merge (§3.5). What
+makes that verification mechanical:
+
+- a check refuses a reviewer-authored commit that touches anything but its own
+  verdict file;
+- a tree left dirty after a review session is flagged;
+- the adjudicator's pass on the locked lane reads both before setting the
+  merge flag.
+
+This removes the per-provider worktree machinery the owner worried could get
+out of hand. It depends on the lane commits carrying who authored them, which
+the loop's session trailers are the start of; confirming they identify the
+reviewer role is part of the work.
+
+*Withdrawn, kept for the record:*
 
 **Two prerequisites before the pilot (review 5):**
 
@@ -648,6 +667,12 @@ the second is where OI-45's objection bites:
 
 **Recommend (i)** if the goal is one commit per work item. It keeps a
 mechanical layer and leaves the approval act where it is.
+
+**The owner's model, stated with S9's ruling (2026-09-23):** the adjudicator
+reviews the locked lane and, in its reviewed commit, sets the flag that
+activates the mechanical merge. That is (i): the flag rides the approval act
+the adjudicator already makes, and the merge that follows is mechanical. It is
+not (ii), because no script writes an approval.
 
 ### 3.6 Fanning out to other models (note 3)
 
@@ -841,24 +866,24 @@ may proceed as written; `CONDITIONAL` means decided with the stated condition;
 | S4 | Retired rows: keep deletion, and amend D-4 to add a structured retirement fragment in `docs/log.d/`? (§1.4) | **CONDITIONAL**: yes, provided the fragments are lookup-only for agents (stated in PROCESS.md, not AGENTS). |
 | S5 | Test level: keep every test in the commit bar (a); optionally let builders run a module's own tests first as an inner loop (d), never as the bar; reconcile the 41 tier disagreements as a priced migration? (§2.2) | **RE-POSED** with the owner's module-scoped idea as (d) and (e). Recommend (a) plus optional (d); not (e), which reverses the test-impact ruling. |
 | S6 | Observation tests: evaluate triggers only at checkpoints (work-item merge, phase close, release), "content change" meaning changed since last judged, sharing the assumption tier's result record? (§2.3) | **RE-POSED** after the owner flagged per-iteration firing as unstable. One freshness model: the shared record's judged-state digest, or `max_age`, whichever trips first. Design jointly with the assumption tier, before its C3. |
-| S7 | One session service (act / keep / record), with WI-551 landing through it? (§3.1) | **DECIDED**: (a), with the owner's direction to consolidate as far as possible: shared stages over per-role or per-provider code. It is schema-neutral and proceeds now: S8's schema, S9's worktree step and S10's retention are added to it when each is cleared. |
+| S7 | One session service (act / keep / record), with WI-551 landing through it? (§3.1) | **DECIDED**: (a), with the owner's direction to consolidate as far as possible: shared stages over per-role or per-provider code. It is schema-neutral and proceeds now: S8's schema and S10's retention are added to it when each is cleared. |
 | S8 | Telemetry: run one bounded research pass on each routed CLI's structured usage output and a published schema, then adopt that schema, with a provider column and tokens kept distinct from context occupancy? (§3.2) | **RE-POSED**: adopt existing conventions rather than design one. Awaiting a go for the research pass. |
-| S9 | Reviewers, critics and probes run in a disposable worktree at the same commit, with the coordinator committing their verdict? (§3.3) | **CONDITIONAL**: agreed in practice; pilot on REVIEW-A first, built once in the session service. Blocked on S16 and S17. |
+| S9 | How are reviewers kept from changing the work they review? (§3.3) | **DECIDED 2026-09-23: verify, don't isolate.** Reviewers work and commit in the lane as today (OI-76 unchanged); a check refuses a reviewer commit touching anything but its verdict file and flags a dirty tree; the adjudicator verifies on the locked lane before setting the merge flag. Replaces the disposable-worktree proposal. |
 | S10 | Retention: the adjudicator's lands; builder retention a separate ruled experiment; reviewers never? (§3.4) | **DECIDED**: yes. |
-| S11 | One trunk commit per work item: squash the lane in the mechanical merge, keeping the adjudicator's reviewed commit as the approval act inside it (i), or a machine approval writer (ii)? (§3.5) | **RE-POSED**: the owner holds that a mechanical layer is right. Recommend (i), after checking what is keyed to lane commit hashes and whether the claim commit can fold in. (ii) stays its own ruling under OI-45. |
+| S11 | One trunk commit per work item: squash the lane in the mechanical merge, keeping the adjudicator's reviewed commit as the approval act inside it (i), or a machine approval writer (ii)? (§3.5) | **RE-POSED**, leaning (i): the owner's model has the adjudicator's reviewed commit set the merge flag and the merge follow mechanically, which is (i). Still to check: what is keyed to lane commit hashes, and whether the claim commit can fold in. (ii) stays its own ruling under OI-45. |
 | S12 | Fan-out: rule on peer-tier delegation; tiers, not models; never from review roles; budgets only after an observability design? (§3.6) | **DECIDED in principle.** |
 | S13 | Builder bias: the planner writes the work item's Done-when before the build, and a lane that edits its own Done-when is flagged to the reviewer and adjudicator? (§3.7) | **RE-POSED** from option (c): the reviewer already judges against Done-when; what is left is who writes it and whether the builder can move it. |
 | S14 | Operation count: park as research; if pursued, executed operations over a declared workload, reported beside the caps, never a gate? (§4.1) | **RE-POSED**: the owner rejected public-symbol counts and framed it as execution cost. |
 | S15 | The guard rule in PROCESS.md, linked from the prompts, not in the vendored skill? (§4.2) | **DECIDED**: yes. |
-| S16 | Amend OI-76 so the coordinator, not the reviewer, commits a reviewer's verdict file, keeping its binding to the logged session and the reviewed tree? (§3.3) | **OPEN** (review 5). A prerequisite of S9's pilot. |
-| S17 | S9's pilot stop rule: what added wall time, as a share of the median review round, stops the pilot? (§3.3) | **OPEN** (review 5). The measures are proposed; the threshold is the owner's. |
+| S16 | Amend OI-76 so the coordinator, not the reviewer, commits a reviewer's verdict file? (§3.3) | **WITHDRAWN 2026-09-23**: S9's ruling keeps reviewers committing their own verdicts. |
+| S17 | S9's pilot stop rule? (§3.3) | **WITHDRAWN 2026-09-23**: no pilot under S9's ruling. |
 
 **Order, revised.** Now: S15, S2, S1 (prose and a warn-only check). With the
 assumption-tier sitting: S3. Designed together before the assumption tier's
 C3: S6. Once the research pass lands: S8, which gates any retention beyond the
-adjudicator. S7 proceeds now and is schema-neutral; S9 follows once S16 and S17 are
-ruled; S11's checks fold into that work, since the merge slot is in the same
-code.
+adjudicator. S7 proceeds now and is schema-neutral; S9's reviewer-commit check
+and S11's merge flag and squash fold into the same work, since both sit on the
+lane-to-trunk path.
 
 ---
 

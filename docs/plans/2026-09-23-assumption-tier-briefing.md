@@ -390,10 +390,14 @@ written.**
 
 ## 4. Options assessed
 
-**Approval identity (Q21, Q26; §10.1).** `assumptions.toml` holds two tiers
-(assumptions and rigs), and `stakeholder-needs.toml` would hold needs and
-stakeholders. Approval is keyed by file end to end, so approving one tier would
-approve the other.
+**Approval identity (Q21, Q26; §10.1). Decided: row-level refusal.** Each
+row has its own Status, but the "last approved" snapshot is refreshed per
+file, and today a refresh is refused only when a file has drifted text and no
+approval at all (`baseline_snapshot.py:667`). So approving one row silently
+copies other rows' unapproved edits into the snapshot. Your ruling: an
+approval refuses to refresh while any other row in the file has drifted
+approved text that the act doesn't itself approve. The two options the plan
+weighed, now not needed:
 
 | option | cost | also fixes | verdict |
 |---|---|---|---|
@@ -445,8 +449,8 @@ defined or clearly assumed.
 
 ## 6. Recommended path (§11)
 
-1. **C1, the sitting:** rule Q28 first (hosted CI, vendored upstream); reverse
-   the rulings above, redraw the frames, create `assumptions.toml` and the
+1. **C1, the sitting:** reverse the rulings above, redraw the frames with
+   hosted CI as an external party (Q28), create `assumptions.toml` and the
    stakeholder list with their stage arms **off**; land the sister plan's S3
    provenance cell if it is ruled with Q12.
 2. **C2, write the DAs,** each a new Drafted claim. Every SR gets `da_refs` or
@@ -468,18 +472,8 @@ DevStg-Boundary.
 
 ## Decisions waiting on you
 
-Regenerated from the plan's §12.1 after review round 5:
-
-1. **Q20, reconfirm:** a visible drop would switch off three checks, including
-   `smoke`, not two. Option E avoids the drop entirely.
-2. **Q26:** tier-specific approval identity (recommended) or one tier per file.
-   Q21 is superseded by it.
-3. **Q28:** do hosted CI and the vendored-doc upstream return to the frame? A
-   prerequisite of the C1 redraw.
-4. **Q29:** does `accepted_risk` expire or reopen on a trigger, or stay until
-   edited?
-5. **Q30:** adopt the standards' enabling-system and stage vocabulary (low
-   stakes).
-6. **Confirm the plan's revisions** marked REVISED: Q18 (no interface minting,
-   the relation stays derived) and the bundle rows (kept as named rows,
-   membership derived).
+Regenerated from the plan's §12.1 after your answers of 2026-09-23:
+**none in this plan.** Q18, Q20, Q26, Q28, Q29, Q30 and the bundle rows are
+decided. What remains is the sitting itself (C1), which formally changes the
+LOCKED frame, and the sister plan's re-posed items (S3, S5, S6, S8, S11, S13,
+S14).

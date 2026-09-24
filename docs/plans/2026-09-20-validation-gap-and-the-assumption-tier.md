@@ -412,7 +412,8 @@ environment**.
 | *new* Human operator | **add**, `operational` | kit |
 | `EXT-001` Development session | **narrow** to the computer and working copy; `mediates = "EXT-006"` | kit |
 | `EXT-005` Model provider | stays; `REL-003` becomes a bundle | kit |
-| hosted CI, vendored-doc upstream | **open** (§5.2) | kit |
+| hosted CI | **add**, external party under new ids (Q28; `EXT-004`, `B-06`, `B-07` stay spent) | kit |
+| vendored-doc upstream | **not drawn** until a repo vendors something (Q28; `B-08` stays spent) | — |
 | `EXT-002` Template | unchanged | delivery |
 | `EXT-003` Adopter | **dropped** (§5.5) | — |
 | `B-01`, `B-02`, `B-04` | `system = "kit"`; `B-02` re-pointed to the human | kit |
@@ -723,6 +724,11 @@ the gate cannot count it as if it were. An assumption whose only evidence is
 and threshold that justifies a positive claim (sample size, acceptance rule); a
 `holds_when` narrowed until an automated check covers it; or a recorded
 `accepted_risk`. Sparse samples keep their real job: falsification.
+
+**`accepted_risk` reopens on triggers** (Q29): a failed sample, a change to the
+text of a need the assumption serves, or a change to the assumption's own text
+returns its evidence standing to unproven until the risk is re-accepted or
+evidence arrives. There is no clock: a risk does not lapse because time passed.
 An assumption-only TC may belong to several phases, as the SRs citing its
 assumption may; `derive_stage` already places one TC in several phase groups.
 
@@ -962,8 +968,17 @@ Two ways out, to be chosen at the sitting:
 | **tier-specific approval identity** — path plus id column, through parsing, refusal, write scope and stamping; the whole file is copied only after every other tier in it is shown to have no unapproved drift | a real change to `baseline_snapshot` and its tests | the same hazard in `external.toml`'s three tiers, which exists today |
 | **one tier per file** — rigs and stakeholders in their own files | two more registries, each with the new-registry machinery of §10.2b | nothing beyond the new tiers |
 
-The first is the general fix and the recommendation; the second is simpler if
-the sitting prefers not to touch the snapshot machinery.
+**Owner ruling (Q26, 2026-09-23): neither — row-level refusal.** Each row
+already carries its own Status, and the snapshot copy is the owner's asserted
+definition of the file. What the copy must not do is carry an edit the owner
+never saw. Today a refresh is refused only when a file has drifted approved text
+and **no** approval in the act (`baseline_snapshot.py:667`); once any row in the
+file flips, every drifted row is copied with it. The ruling: an approval act
+refuses to refresh a file's snapshot while any **other** row in it has drifted
+approved text that the act does not itself approve or re-attest. Each drifted
+row must be explicitly in the act. This works for any number of tiers in one
+file, so neither option above is needed, and it closes the same gap in
+`external.toml` today.
 
 **Internal assumptions** — the owner's case of an LLM *inside* the system
 handing structured output to a script — are **design-tier** assumptions: they
@@ -1031,7 +1046,7 @@ threaded through admission, or a commit-time refusal.
 checked by the commit-msg hook — the prerequisite for the authority assumption's
 falsifier.
 
-**(j) Tier-specific approval identity** (or one tier per file), §10.1.
+**(j) Row-level refusal** in `baseline_snapshot`'s refresh check (Q26, §10.1).
 
 **(k) Classifying the new cells, and re-attesting what is approved content.**
 The acceptance classifier fails safe: an unclassified column is approved content
@@ -1102,8 +1117,8 @@ model is firm.
 Nothing is built before the sitting. Each step is useful alone, and each later
 step assumes only the earlier ones.
 
-**C1 — the sitting.** First rule Q28 (hosted CI and the vendored-doc upstream),
-since the redraw depends on it. Reverse the §5.2 rulings deliberately; land the §5.6 rows
+**C1 — the sitting.** Reverse the §5.2 rulings deliberately; land the §5.6 rows,
+including hosted CI as an external party under new ids (Q28)
 (§10.2a); create `assumptions.toml` and the stakeholder list with their stage
 arms **off** (§10.2b–c, f); approve the stakeholder rows with the needs, as a
 human-held act. If the owner rules the sister plan's S3 with Q12, the
@@ -1126,7 +1141,7 @@ owner reviews two batches: the **re-attestation batch** for the SRs and TCs whos
 approved content C2 and C3 changed (§10.2k), and the **assumptions and rigs**
 through their brief (§10.2g). One commit then carries the re-attestations, the
 DA and rig approvals and the arm switch, under the moved dial and its
-enforcement (§10.2h), with tier-specific approval in place (§10.2j). No
+enforcement (§10.2h), with row-level refusal in place (§10.2j). No
 committed tree reads a regression. If one did, `check.py` would deselect its
 three DevStg-Tests steps (`smoke`, `design-flows`, `trajectory`; this repo's
 `smoke` step is declared in `docs/stack.ini`) for the window.
@@ -1199,23 +1214,23 @@ revision this document now proposes, for the owner to accept or reject.
 | Q15 | Does `external.toml`'s lock cover assumption rows? | **MOOT** under Q8's revision: they live elsewhere. |
 | Q16 | Two frames in one view? | **DECIDED 2026-09-23** (owner: *"let's see how it looks"*; raised by reviews 1, 2). Kit and delivery frames; membership a `system` cell on the bundle; Transition the only lifecycle hand-off (§5.1). |
 | Q17 | Boundary IFs approved at DevStg-Boundary? | **WITHDRAWN (review 2):** it put architecture before requirements. Interface allocation happens at DevStg-Arch instead (§9). |
-| Q18 | One SR per interface — mint the missing IFs? | **REVISED (reviews 2, 4):** no `realizes` cell and no minting to a count — the IF → SR relation stays derived through the owner, as today; new IF rows only for genuine seams (§9). |
+| Q18 | One SR per interface — mint the missing IFs? | **DECIDED 2026-09-23** (owner confirmed the revision of reviews 2, 4): no `realizes` cell and no minting to a count — the IF → SR relation stays derived through the owner, as today; new IF rows only for genuine seams (§9). |
 | Q19 | `mediates` on the session? | **DECIDED 2026-09-23** (raised by review 2). It only stops the reach check reading the session's crossings as not the human's; it changes no sign-off. Whether an assumption needs a person present is judged at its human-held approval, through `holds_when`; no attendance cell. Revisit if a DA is falsified by an unattended event. One cell lets an outcome on a session bundle count as the human's (§5.4). |
-| Q20 | Activate the stage arms as a separate step? | **DECIDED 2026-09-23, amended** (raised by review 2): the batch is reviewed with the arms off, and its approvals and the arm switch land in ONE commit, so no committed tree reads the regression; a visible drop would deselect `check.py`'s three DevStg-Tests steps (`smoke`, `design-flows`, `trajectory`) for the window. The owner chose this on a miscount of two steps without `smoke` (review 5); the corrected count strengthens the choice, but the owner should reconfirm. Yes, so writing Drafted assumptions does not regress the stage by surprise (§11, C4). |
+| Q20 | Activate the stage arms as a separate step? | **DECIDED 2026-09-23, amended, reconfirmed** (raised by review 2): the batch is reviewed with the arms off, and its approvals and the arm switch land in ONE commit, so no committed tree reads the regression (§11, C4). The owner first chose this on a miscount of two deselected steps; review 5 corrected it to three (`smoke`, `design-flows`, `trajectory`), and the owner reconfirmed. |
 | Q21 | Key snapshot authorization by tier, not by file? | **SUPERSEDED by Q26** (review 5): review 4 showed re-keying the ledger is not enough, because approval identity is a path end to end (§10.1). |
 | Q22 | Evidence as a current passing result, not a TC's existence? | **DECIDED 2026-09-23** (raised by review 3). LLM verdicts count only through the rig route (§8.3). Yes — tree-bound for automated assumption TCs, dated with a `max_age` for sampled and monitored ones (§7). |
 | Q23 | Re-attest the approved SRs and TCs that C2 and C3 amend, before activation? | **DECIDED 2026-09-23, on condition it is documented**: each new cell's class recorded in `acceptance_record.py`'s classification table and mirrored in `registry-machinery-reference.md` §10 (revised by review 4). Only approved-content cells re-attest; link cells are traced, like `SN-Refs` and `Verifies` (§10.2k). |
 | Q24 | How does sampled evidence count? | **DECIDED 2026-09-23** (raised by review 4). As falsification only, unless a declared sampling model justifies a positive claim, `holds_when` is narrowed, or the risk is accepted (§7). |
 | Q25 | Where do sampled and monitored results live? | **DECIDED 2026-09-23** (raised by review 4). `max_age` is proposed by the TC's author, approved with the TC, and mechanically floored at 7 days; expiry reverts to `specified`, never `falsified`. In their own result record keyed by TC, not on the approved TC (§7, §10.2l). |
-| Q26 | Tier-specific approval identity, or one tier per file? | **NEW (review 4).** Recommended: tier-specific identity, which also fixes `external.toml` today (§10.1). |
+| Q26 | Tier-specific approval identity, or one tier per file? | **DECIDED 2026-09-23: neither — row-level refusal** (raised by review 4): a snapshot refresh refuses while any other row in the file has drifted approved text the act does not approve or re-attest (§10.1). |
 | Q27 | Where does the gate sit? | **DECIDED 2026-09-23, on condition it is checked**: this repo enables C5 (raised by review 4). Split: maturity at DevStg-Boundary, evidence at DevStg-Release (§11, C5). |
 | — | Orientation, the adopter, the reversed rulings | **DECIDED**; traced 2026-09-22 (§5.2). |
-| — | Bundles | **REVISED:** authored identities; membership derived; not deleted (§5.7). |
+| — | Bundles | **DECIDED 2026-09-23** (owner confirmed the revision): authored identities; membership derived; not deleted (§5.7). |
 | — | Hats | **Agreed, narrowed:** four positive outcomes; no "not applicable" record (§6.5). |
 | — | Enabling-system stage vocabulary | Now Q30. |
-| Q28 | Do hosted CI (spent `EXT-004`, `B-06`, `B-07`) and the vendored-doc upstream (spent `B-08`) return to the frame, under new ids? | **OPEN** (review 5). A prerequisite of C1's redraw (§5.2, §5.6). |
-| Q29 | Does `accepted_risk` carry an expiry or a re-review trigger (for example: reopen on a failed sample, or when the need's text changes), or is a recorded risk permanent until someone edits it? | **OPEN** (review 5). Likely the route most human-axis assumptions take (§7). |
-| Q30 | Adopt 15288's enabling-system and 24748-1's stage vocabulary in the kit's prose (§8.1)? | **OPEN** (review 5), low stakes; settle before any prose or schema uses the words. |
+| Q28 | Do hosted CI (spent `EXT-004`, `B-06`, `B-07`) and the vendored-doc upstream (spent `B-08`) return to the frame, under new ids? | **DECIDED 2026-09-23** (raised by review 5): hosted CI is drawn as an external party under new ids — outside design control is what makes it external, not a reason to leave it undrawn; the vendored upstream is not drawn until a repo vendors something (§5.6). |
+| Q29 | Does `accepted_risk` carry an expiry or a re-review trigger, or is a recorded risk permanent until someone edits it? | **DECIDED 2026-09-23** (raised by review 5): it reopens on triggers — a failed sample, a change to a served need's text, or a change to the assumption's text; no clock (§7). |
+| Q30 | Adopt 15288's enabling-system and 24748-1's stage vocabulary in the kit's prose (§8.1)? | **DECIDED 2026-09-23** (raised by review 5): "enabling system" is adopted for the delivery frame; the six life-cycle stage names are not, since the kit has its own DevStg ladder. |
 
 ### 12.2 Review round 1 — codex Sol, reasoning effort high (2026-09-23)
 
