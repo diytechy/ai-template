@@ -177,8 +177,24 @@ rejection" still passes the reach check, because the check proves the
 assumption points at the right place, not that a person was present. So that
 assumption's `holds_when` has to say "while a person is attending the session".
 
-**You:** asked for an example (above), then whether an LLM is the mediator (no).
-**Pending.**
+**Surfacing the edge mechanically (proposed 2026-09-23).** The kit already has
+an ADVISORY severity that reports and never gates. Two layers:
+
+1. **Static, buildable with the core.** A closed cell on the DA,
+   `attendance = "required" | "not-required"`, is required whenever the DA
+   reaches its stakeholder only through `mediates`. An advisory lists every DA
+   marked `required`: "reaches the person only through the session, and holds
+   only while someone is attending". This avoids matching words in
+   `holds_when`, which would be fragile.
+2. **Dynamic, later.** Once loop provenance exists (§10.2i), the advisory can
+   also report how often the bundle's events happened in unattended loop runs,
+   for example "most of this bundle's events this month had no one attending".
+   This needs a record of those events, which I haven't found today; it would
+   be scoped with §10.2i.
+
+**You:** asked for an example (above), whether an LLM is the mediator (no),
+and for a mechanical "near the edge" signal (above). **Pending** a yes on the
+advisory.
 
 ### Q20. When do the new checks start moving the project stage?
 
@@ -210,13 +226,26 @@ would drop it three rungs.
 - **The review effort is the batch, whichever rung you pick:** the assumptions
   and rigs, the SRs that gain a `coincident` waiver or a `form`, and the TCs
   that gain a `sampling` policy. Nothing already approved is re-reviewed.
-- **A visible drop does switch checks off.** Checks are selected "at or above"
-  the current stage (`check.py:1324`), and a Boundary reading is floored to
-  DevStg-Reqs for selection. While the stage reads low, the checks for the
-  higher rungs stop running. That is the strongest reason for option E.
+- **A visible drop switches off two checks, for the length of the window.**
+  `check.py` selects its steps "at or above" the current stage
+  (`check.py:1324`), and a Boundary reading is floored to DevStg-Reqs for
+  selection. Of `check.py`'s 28 steps:
+  - 13 start at DevStg-Needs and keep running at any stage.
+  - 2 start at DevStg-Tests (`design-flows`, `trajectory`). **These are the
+    ones a drop from Tests would switch off.**
+  - 13 start at DevStg-Impl. They aren't selected at Tests today either, so a
+    drop changes nothing for them.
 
-**You:** asked which checks (above); prefer a smaller drop than to Tests' worth
-of review. **Pending** a choice of E.
+  The kit's own pytest commit bar isn't stage-selected and runs regardless.
+- **Ordinary drafts can't cause a drop.** The selection stage is derived over
+  settled rows only; drafts are excluded (WI-498, `check.py` `resolve_plan`).
+  The drop happens in one case: a brand-new registry that exists but has no
+  approved row yet, which the boundary rung reads as "the frame is declared and
+  not yet approved" (`spine_rules.boundary_incomplete`). Option E never creates
+  that state in a committed tree.
+
+**You:** asked which checks (above); preferred a smaller drop. Chose E, "we'll
+see how it goes". **Decided.**
 
 ### Q22 + Q25. What counts as evidence for an assumption, and where does it live?
 
