@@ -2,8 +2,9 @@
 
 **Derived summary, not a source.** A listening-order digest of
 [`2026-09-20-validation-gap-and-the-assumption-tier.md`](2026-09-20-validation-gap-and-the-assumption-tier.md)
-as of commit `e7ca23e0` (after review round 4): its open questions, conflicts,
-assessed options and recommendations. The plan is authoritative; where the two
+after review round 5 and the owner's answers of 2026-09-23: its open
+questions, conflicts, assessed options and recommendations. Decision states are
+copied from the plan's §12.1. The plan is authoritative; where the two
 differ, the plan wins. Each point names the plan section to dig into. IDs are
 kept for lookup and expanded in parentheses; row meanings are quoted from
 [`external.toml`](../requirements/external.toml).
@@ -222,17 +223,20 @@ would drop it three rungs.
 - **The review effort is the batch, whichever rung you pick:** the assumptions
   and rigs, the SRs that gain a `coincident` waiver or a `form`, and the TCs
   that gain a `sampling` policy. Nothing already approved is re-reviewed.
-- **A visible drop switches off two checks, for the length of the window.**
+- **A visible drop switches off three checks, for the length of the window.**
   `check.py` selects its steps "at or above" the current stage
   (`check.py:1324`), and a Boundary reading is floored to DevStg-Reqs for
-  selection. Of `check.py`'s 28 steps:
-  - 13 start at DevStg-Needs and keep running at any stage.
-  - 2 start at DevStg-Tests (`design-flows`, `trajectory`). **These are the
-    ones a drop from Tests would switch off.**
-  - 13 start at DevStg-Impl. They aren't selected at Tests today either, so a
+  selection. With this repo's own profile (`docs/stack.ini`) loaded,
+  `check.py` has 34 steps:
+  - 12 start at DevStg-Needs and keep running at any stage.
+  - 3 start at DevStg-Tests: `smoke` (this repo's per-commit regression bar,
+    declared in `docs/stack.ini`), `design-flows` and `trajectory`. **These
+    are the ones a drop from Tests would switch off.**
+  - 19 start at DevStg-Impl. They aren't selected at Tests today either, so a
     drop changes nothing for them.
 
-  The kit's own pytest commit bar isn't stage-selected and runs regardless.
+  An earlier version of this briefing said two of 28, having counted without
+  the repo's profile; review round 5 caught it.
 - **Ordinary drafts can't cause a drop.** The selection stage is derived over
   settled rows only; drafts are excluded (WI-498, `check.py` `resolve_plan`).
   The drop happens in one case: a brand-new registry that exists but has no
@@ -241,7 +245,8 @@ would drop it three rungs.
   that state in a committed tree.
 
 **You:** asked which checks (above); preferred a smaller drop. Chose E, "we'll
-see how it goes". **Decided.**
+see how it goes". **Decided**, on the two-check count. With `smoke` included
+the case for E is stronger, but **please reconfirm**.
 
 ### Q22 + Q25. What counts as evidence for an assumption, and where does it live?
 
@@ -258,9 +263,11 @@ see how it goes". **Decided.**
   and test trees). It goes stale the moment any of that changes
   (`kitlib/evidence.py:21-33`). Automated assumption tests inherit this.
 - **Sampled and monitored results carry a `max_age`.** It's a policy cell on
-  each TC, set per test and approved with it. The plan fixes no values: a human
-  probe of the adopter experience might be good for a release cycle, a CI
-  monitor for a week. Past `max_age`, the assumption's evidence reverts to
+  each TC, set per test and approved with it. Its only fixed value is your
+  7-day floor: a human probe of the adopter experience might be good for a
+  release cycle, a CI monitor for a week. The record also stores a digest of
+  what it judged, so a check is due again when that changes or `max_age`
+  passes, whichever is first; the sister plan's S6 uses the same rule. Past `max_age`, the assumption's evidence reverts to
   *specified*. A failing result counts as falsification evidence.
 
 **Your condition: produced mechanically, outside an LLM.** Automated and
@@ -403,7 +410,8 @@ defined or clearly assumed.
 - Minting IFs to match the count (69 SRs on `B-05` vs 39 `B-05` IFs) was
   **rejected**: new IFs only for genuine seams, such as the dashboard, which
   has no IF row today.
-- **Adopted:** allocation at DevStg-Arch. Each boundary IF names the DAs that
+- **Proposed** (Q18 is REVISED, awaiting your confirmation): allocation at
+  DevStg-Arch. Each boundary IF names the DAs that
   bridge it (`bridged_by`), or carries a `coincident` waiver, or is flagged
   unclassified.
 
@@ -437,25 +445,41 @@ defined or clearly assumed.
 
 ## 6. Recommended path (§11)
 
-1. **C1, the sitting:** reverse the rulings above, redraw the frames, create
-   `assumptions.toml` and the stakeholder list with their stage arms **off**.
+1. **C1, the sitting:** rule Q28 first (hosted CI, vendored upstream); reverse
+   the rulings above, redraw the frames, create `assumptions.toml` and the
+   stakeholder list with their stage arms **off**; land the sister plan's S3
+   provenance cell if it is ruled with Q12.
 2. **C2, write the DAs,** each a new Drafted claim. Every SR gets `da_refs` or
    a `coincident` waiver, plus its `form` (interface, assumption or
    package-wide). Warn-only.
-3. **C3, evidence:** `assumption_refs` and `sampling` on TCs, starting with
-   metamorphic tests (cheap, oracle-free).
-4. **C4, activation:** re-attest the changed SRs and TCs, switch the arms on,
-   accept the stage regression, approve DAs and rigs as one batch.
-5. **C5, the gate,** opt-in.
+3. **C3, evidence:** `assumption_refs`, `sampling` and `max_age` (7-day floor)
+   on TCs, and result records with a judged-state digest, starting with
+   metamorphic tests (cheap, oracle-free). Designed with the sister plan's S6.
+4. **C4, activation, in one commit:** review the re-attestation batch and the
+   DAs and rigs while the arms are off; then one commit carries the
+   re-attestations, the approvals and the arm switch. No committed regression.
+5. **C5, the gate:** opt-in for adopters, **enabled here** (your Q27 condition).
 6. **E, the interface extension,** any time after C4.
+7. **T, terminology,** any time: the SR prose wording (Q9) and LLR → design
+   expectation (sister S2).
 
 **Not proposed:** a new stage rung; deleting `B` rows; moving interfaces to
 DevStg-Boundary.
 
 ## Decisions waiting on you
 
-1. Accept or reject the five reopened answers (Q3/Q10, Q5, Q6, Q8, Q11).
-2. Answer the pending new questions: Q19 (`mediates`), Q20 (activation),
-   Q22/Q25 (the LLM sub-choice), and Q21/Q26 below.
-3. Choose tier-specific approval identity or one tier per file.
-4. Decide whether hosted CI and the vendored-doc upstream return to the frame.
+Regenerated from the plan's §12.1 after review round 5:
+
+1. **Q20, reconfirm:** a visible drop would switch off three checks, including
+   `smoke`, not two. Option E avoids the drop entirely.
+2. **Q26:** tier-specific approval identity (recommended) or one tier per file.
+   Q21 is superseded by it.
+3. **Q28:** do hosted CI and the vendored-doc upstream return to the frame? A
+   prerequisite of the C1 redraw.
+4. **Q29:** does `accepted_risk` expire or reopen on a trigger, or stay until
+   edited?
+5. **Q30:** adopt the standards' enabling-system and stage vocabulary (low
+   stakes).
+6. **Confirm the plan's revisions** marked REVISED: Q18 (no interface minting,
+   the relation stays derived) and the bundle rows (kept as named rows,
+   membership derived).

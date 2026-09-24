@@ -89,6 +89,8 @@ rule, so a naive term list would be noise.
    question in the spine-authoring skill.
 4. Run the OI-37 sweep the ruling asked for, needs first, as its own work item.
 
+**Owner response (2026-09-23):** *"I'm okay with the recommendation."*
+
 ### 1.2 LLRs become design expectations (note 3)
 
 > *"LLRs become design expectations (DE) because they truly are not
@@ -118,6 +120,10 @@ decision.
   header edits would.
 - If the prefix changes later, follow UN → SN: keep the numbers, no legacy
   bridge, historical quotes untouched, and rename the rung with it.
+
+**Owner response (2026-09-23):** *"Okay with the recommendation."* It ships in
+the assumption-tier plan's terminology package (its §11 T), with Q9's SR
+wording.
 
 ### 1.3 Design constraints as stakeholder needs (note 3)
 
@@ -341,6 +347,10 @@ included. The recommendation is revised:
   that expiry reverts evidence to *specified* and never falsifies. This runner
   reads and writes that record, so there is one home for "when was this last
   judged". The two plans design it once, before the assumption tier's C3.
+- **One freshness model.** The shared record stores a digest of the state it
+  judged. At a checkpoint the check is due when that digest no longer matches
+  what it reads, or when its `max_age` has passed, whichever comes first.
+  Automated evidence stays tree-bound in `docs/test/evidence`, as today.
 
 ---
 
@@ -391,6 +401,10 @@ per-provider code it removes, following PROCESS.md §3's 0→A→B rule:
   building, output and usage parsing), not scattered through role code;
 - S9's disposable-worktree step and S10's retention are service operations,
   not per-role additions.
+- **Schema-neutral, so it can proceed now** (review 5): the service ships with
+  today's recorded fields. S8's adopted schema later changes only the record
+  step's writer, and S9's and S10's operations are added when they are
+  cleared. Nothing in S7 waits on them.
 
 The loop's C901 complexity pin (`tests/test_complexity_ratchet.py`) still
 applies: decompose, don't re-stamp.
@@ -510,6 +524,19 @@ the others; build the disposable-worktree step once, inside the session service
 (§3.1), not per role; and measure the added time and disk per review. If the
 pilot costs more than it saves, stop.
 
+**Two prerequisites before the pilot (review 5):**
+
+- **An OI-76 amendment, ruled by the owner (S16).** OI-76 binds the verdict
+  to the logged reviewer session and the tree it reviewed; the pilot changes
+  who *commits* that file (the coordinator, not the reviewer).
+- **A measurable stop rule (S17).** Proposed: over the first 10 REVIEW-A
+  rounds, record per round the added wall time and disk, failed draws, and
+  any reviewer write that would have reached the tree. The pilot succeeds
+  when no reviewer write reaches the tree and failed draws do not rise; it
+  stops when the added wall time exceeds a threshold the owner sets, as a
+  share of the median round. The coordinator records the numbers; the owner
+  decides.
+
 ### 3.4 Sessions that outlive one work item (notes 1 and 2)
 
 > *"Session would be based on component, and might be refreshed to keep the cache
@@ -551,6 +578,8 @@ OI-69 and leave behind most of its safety machinery.
 | reviewers, critics, design-check | never — independence is the point |
 
 The verdict keeps crossing sessions as explicit text in every case.
+
+**Owner response (2026-09-23):** *"Agreed with the recommendation."*
 
 ### 3.5 Where the adjudicator's approval happens, and what triggers it (note 2)
 
@@ -662,6 +691,9 @@ prose would rot; the kit's stable vocabulary is tiers (*quick*, *medium*,
    (including whether native in-session delegation is disabled then). Until then,
    the prose rules (1–3) carry it, and the Claude hook stays as Claude-only
    *"supervision, not security"*.
+
+**Owner response (2026-09-23):** *"I'm okay with the recommendation in
+principle."*
 
 ### 3.7 Who plans, who builds, who reviews (note 3)
 
@@ -791,6 +823,8 @@ Two consequences to state with it: the kit's registries are hand-edited files on
 disk, so validating them is owed; and a model's output is a boundary, so
 validating structured output is owed too.
 
+**Owner response (2026-09-23):** *"Agreed."*
+
 ---
 
 ## 5. Questions for the owner
@@ -802,26 +836,29 @@ may proceed as written; `CONDITIONAL` means decided with the stated condition;
 | # | question | standing |
 |---|---|---|
 | S1 | Extend the absolutes check per the tier matrix (TCs excluded), reusing `recorded waiver:`, with a defined suppression rule; run OI-37's sweep? (§1.1) | **DECIDED**: yes. |
-| S2 | LLR → design expectation: prose now, prefix a separate later decision; no edits to old logs? (§1.2) | **DECIDED**: yes. Consistent with the assumption-tier plan's Q9. |
-| S3 | Design constraints: each is a need whose stakeholder is the owner, canonical in the need; provenance anchor on the need; **no hat becomes a stakeholder**; schema ruled with the stakeholder list? (§1.3) | **RE-POSED** after the owner asked whether hats become stakeholders (they don't). Rule with the assumption-tier sitting (its C1, Q12). |
+| S2 | LLR → design expectation: prose now, prefix a separate later decision; no edits to old logs? (§1.2) | **DECIDED**: yes. Ships in the assumption-tier plan's terminology package (its §11 T), with Q9. |
+| S3 | Design constraints: each is a need whose stakeholder is the owner, canonical in the need; provenance anchor on the need; **no hat becomes a stakeholder**; schema ruled with the stakeholder list? (§1.3) | **RE-POSED** after the owner asked whether hats become stakeholders (they don't). Rule with the assumption-tier sitting; if ruled, the provenance cell lands in its C1. |
 | S4 | Retired rows: keep deletion, and amend D-4 to add a structured retirement fragment in `docs/log.d/`? (§1.4) | **CONDITIONAL**: yes, provided the fragments are lookup-only for agents (stated in PROCESS.md, not AGENTS). |
 | S5 | Test level: keep every test in the commit bar (a); optionally let builders run a module's own tests first as an inner loop (d), never as the bar; reconcile the 41 tier disagreements as a priced migration? (§2.2) | **RE-POSED** with the owner's module-scoped idea as (d) and (e). Recommend (a) plus optional (d); not (e), which reverses the test-impact ruling. |
-| S6 | Observation tests: evaluate triggers only at checkpoints (work-item merge, phase close, release), "content change" meaning changed since last judged, sharing the assumption tier's result record? (§2.3) | **RE-POSED** after the owner flagged per-iteration firing as unstable. Design jointly with the assumption tier, before its C3. |
-| S7 | One session service (act / keep / record), with WI-551 landing through it? (§3.1) | **DECIDED**: (a), with the owner's direction to consolidate as far as possible: shared stages over per-role or per-provider code. S8's schema, S9's worktree step and S10's retention land in it. |
+| S6 | Observation tests: evaluate triggers only at checkpoints (work-item merge, phase close, release), "content change" meaning changed since last judged, sharing the assumption tier's result record? (§2.3) | **RE-POSED** after the owner flagged per-iteration firing as unstable. One freshness model: the shared record's judged-state digest, or `max_age`, whichever trips first. Design jointly with the assumption tier, before its C3. |
+| S7 | One session service (act / keep / record), with WI-551 landing through it? (§3.1) | **DECIDED**: (a), with the owner's direction to consolidate as far as possible: shared stages over per-role or per-provider code. It is schema-neutral and proceeds now: S8's schema, S9's worktree step and S10's retention are added to it when each is cleared. |
 | S8 | Telemetry: run one bounded research pass on each routed CLI's structured usage output and a published schema, then adopt that schema, with a provider column and tokens kept distinct from context occupancy? (§3.2) | **RE-POSED**: adopt existing conventions rather than design one. Awaiting a go for the research pass. |
-| S9 | Reviewers, critics and probes run in a disposable worktree at the same commit, with the coordinator committing their verdict? (§3.3) | **CONDITIONAL**: agreed in practice; pilot on REVIEW-A first, built once in the session service, with a stop rule if it costs more than it saves. |
+| S9 | Reviewers, critics and probes run in a disposable worktree at the same commit, with the coordinator committing their verdict? (§3.3) | **CONDITIONAL**: agreed in practice; pilot on REVIEW-A first, built once in the session service. Blocked on S16 and S17. |
 | S10 | Retention: the adjudicator's lands; builder retention a separate ruled experiment; reviewers never? (§3.4) | **DECIDED**: yes. |
 | S11 | One trunk commit per work item: squash the lane in the mechanical merge, keeping the adjudicator's reviewed commit as the approval act inside it (i), or a machine approval writer (ii)? (§3.5) | **RE-POSED**: the owner holds that a mechanical layer is right. Recommend (i), after checking what is keyed to lane commit hashes and whether the claim commit can fold in. (ii) stays its own ruling under OI-45. |
 | S12 | Fan-out: rule on peer-tier delegation; tiers, not models; never from review roles; budgets only after an observability design? (§3.6) | **DECIDED in principle.** |
 | S13 | Builder bias: the planner writes the work item's Done-when before the build, and a lane that edits its own Done-when is flagged to the reviewer and adjudicator? (§3.7) | **RE-POSED** from option (c): the reviewer already judges against Done-when; what is left is who writes it and whether the builder can move it. |
 | S14 | Operation count: park as research; if pursued, executed operations over a declared workload, reported beside the caps, never a gate? (§4.1) | **RE-POSED**: the owner rejected public-symbol counts and framed it as execution cost. |
 | S15 | The guard rule in PROCESS.md, linked from the prompts, not in the vendored skill? (§4.2) | **DECIDED**: yes. |
+| S16 | Amend OI-76 so the coordinator, not the reviewer, commits a reviewer's verdict file, keeping its binding to the logged session and the reviewed tree? (§3.3) | **OPEN** (review 5). A prerequisite of S9's pilot. |
+| S17 | S9's pilot stop rule: what added wall time, as a share of the median review round, stops the pilot? (§3.3) | **OPEN** (review 5). The measures are proposed; the threshold is the owner's. |
 
 **Order, revised.** Now: S15, S2, S1 (prose and a warn-only check). With the
 assumption-tier sitting: S3. Designed together before the assumption tier's
 C3: S6. Once the research pass lands: S8, which gates any retention beyond the
-adjudicator. S7 and S9 still reshape the session path together, and S11's
-checks fold into that work, since the merge slot is in the same code.
+adjudicator. S7 proceeds now and is schema-neutral; S9 follows once S16 and S17 are
+ruled; S11's checks fold into that work, since the merge slot is in the same
+code.
 
 ---
 
@@ -884,3 +921,19 @@ and applied.
 | 3 | a TC purpose field is an approval-bearing migration of up to 184 approved rows | §2.2: a three-way decision; recommend dropping the ordering idea |
 
 The applied fixes were not put through a fourth round.
+
+### 6.4 Round 4 — codex Sol, reasoning effort high (2026-09-23)
+
+A decisions check across both plans and the briefing after the owner's answers
+(logged in full in the assumption-tier plan's §12.7). The findings that touch
+this plan, each checked and applied:
+
+| # | finding (short) | where it landed |
+|---|---|---|
+| 1 | S6's "changed since last judged" had no judged state in the shared record | §2.3 one freshness model; assumption-tier §7 |
+| 2 | S3's provenance cell was scheduled in neither plan | S3 row; assumption-tier C1 |
+| 3 | S2 had no implementation package | S2 row; assumption-tier §11 T |
+| 4 | S7 was DECIDED while containing unresolved S8, S9 and S10 | §3.1: schema-neutral, proceeds now |
+| 5 | S9's stop rule had no measure, threshold or owner | §3.3; S17 |
+| 6 | S9 needed an OI-76 amendment with no question | §3.3; S16 |
+| 7 | S1, S2, S10, S12, S15 were DECIDED with no recorded owner response | responses added at the end of §1.1, §1.2, §3.4, §3.6, §4.2 |

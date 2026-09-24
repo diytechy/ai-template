@@ -22,6 +22,10 @@ draft splits the proposal in two:
   be defined or clearly assumed, as an allocation made at the architecture rung,
   where interfaces actually live.
 
+**A fifth Sol review (2026-09-23, §12.7)** checked the owner's decisions of
+that day for open points and false premises; its findings are applied, and
+the owner questions it raised are Q28–Q30.
+
 Owner answers the reviews overturned are marked **REOPENED** with a proposed
 replacement (§12.1), never silently changed.
 
@@ -703,9 +707,13 @@ tree-bound suite verdict (`docs/test/evidence`). A sampled or monitored
 observation cannot be re-run per tree, and putting it on the approved TC would
 mix the test's specification with its results and force a re-attestation after
 every sample. So observations get **their own result record**, keyed by TC:
-outcome, when it was observed, by whom or what, and when it expires. The TC keeps
-only its policy — `sampling` and `max_age`. A stale record makes the standing
-`specified` again; a failing one is falsification evidence against the
+outcome, when it was observed, by whom or what, when it expires, and a digest
+of the state it judged (the rows and artifacts the check reads). The TC keeps
+only its policy — `sampling` and `max_age`, which may not be under seven days
+(Q25). **One freshness model:** a record is stale when it passes its expiry,
+or when, at a checkpoint, the digest of what the check reads no longer matches
+the judged digest (the sister plan's S6 uses the same rule and record). A stale
+record makes the standing `specified` again; a failing one is falsification evidence against the
 assumption.
 
 **A passing sparse sample does not satisfy the gate by itself.** The limit below
@@ -984,17 +992,21 @@ here twice), the carrier maps (`spine_carrier` / `migrate_carrier`, which must
 invert and match in length), the schema of record, the template, and resolution
 of `effect_at`, `realized_by`, `emulates` and SR `da_refs`.
 
-**(c) Stage arms — present, but off until activation.** The fold returns
-Boundary before it can reach any later rung (`spine_rules.py:633-652`), so a
-Drafted assumption in the Boundary arm regresses a repo's derived stage the
-moment it is written. The arm therefore ships **off** and is switched on in a
-deliberate activation step (§11, C4), with the regression and the approval batch
-stated up front.
+**(c) Stage arms — present, but off until activation.** Drafted rows are
+excluded from the selection stage (`derive_stage.py:183-190`), so a later
+draft never lowers it. The exception is a registry that exists with **no**
+settled row: the Boundary predicate reads that as a frame declared and not yet
+approved (`spine_rules.py:492-496`), and the fold returns Boundary before any
+later rung (`spine_rules.py:633-652`). A new `assumptions.toml` is exactly that
+registry until its first rows are Approved. The arm therefore ships **off**, and
+is switched on in the same commit that approves the first batch (§11, C4), so
+no committed tree reads the regression.
 
 **(d) SR cells.** `da_refs` and the `coincident` waiver; `sn_refs` and
 `boundary_refs` untouched.
 
-**(e) Evidence on TCs.** `assumption_refs` and `sampling`; `Verifies` becomes
+**(e) Evidence on TCs.** `assumption_refs`, `sampling` and `max_age` (validated
+against a seven-day floor, Q25); `Verifies` becomes
 conditionally required (`trace.py:445-454`, `coherence.py:91-104`); phase
 inheritance for assumption-only TCs; `assumption_refs` in stage-change
 attribution (`derive_stage.py:288-294`), the acceptance record, the census, the
@@ -1090,32 +1102,44 @@ model is firm.
 Nothing is built before the sitting. Each step is useful alone, and each later
 step assumes only the earlier ones.
 
-**C1 — the sitting.** Reverse the §5.2 rulings deliberately; land the §5.6 rows
+**C1 — the sitting.** First rule Q28 (hosted CI and the vendored-doc upstream),
+since the redraw depends on it. Reverse the §5.2 rulings deliberately; land the §5.6 rows
 (§10.2a); create `assumptions.toml` and the stakeholder list with their stage
 arms **off** (§10.2b–c, f); approve the stakeholder rows with the needs, as a
-human-held act.
+human-held act. If the owner rules the sister plan's S3 with Q12, the
+constraint-provenance cell on needs lands here too: the cell, its carrier and
+template entries, validation, rendering and dogfood sync.
 
 **C2 — write the assumptions.** DA and rig rows derived from the person-facing
 needs — each a new Drafted claim — and, on every SR, `da_refs` or a `coincident`
 waiver, and its `form`. **Warn-only, genuinely:** the arms are off, so nothing moves the derived
 stage.
 
-**C3 — evidence.** `assumption_refs` and `sampling` on TCs, and result records
-for them (§10.2e, l); start with the metamorphic subset (§7(c)).
+**C3 — evidence.** `assumption_refs`, `sampling` and `max_age` on TCs, with the
+seven-day floor checked mechanically; result records carrying the judged-state
+digest (§7, §10.2e, l). `sampling` and `max_age` are approved content, so the TCs
+that gain them join C4's re-attestation batch. Start with the metamorphic subset
+(§7(c)). Designed together with the sister plan's S6 runner.
 
-**C4 — activation.** First the **re-attestation batch** for the SRs and TCs
-whose approved content C2 and C3 changed (§10.2k). Then switch the stage arms
-on: the derived stage regresses to Boundary until the assumptions and rigs are
-Approved, so state that, and approve them as one batch through their brief
-(§10.2g), under the moved dial and its enforcement (§10.2h), with tier-specific
-approval in place (§10.2j).
+**C4 — activation, in one reviewed commit (Q20).** With the arms still off, the
+owner reviews two batches: the **re-attestation batch** for the SRs and TCs whose
+approved content C2 and C3 changed (§10.2k), and the **assumptions and rigs**
+through their brief (§10.2g). One commit then carries the re-attestations, the
+DA and rig approvals and the arm switch, under the moved dial and its
+enforcement (§10.2h), with tier-specific approval in place (§10.2j). No
+committed tree reads a regression. If one did, `check.py` would deselect its
+three DevStg-Tests steps (`smoke`, `design-flows`, `trajectory`; this repo's
+`smoke` step is declared in `docs/stack.ini`) for the window.
 
 **Findings, from C2 on** — warn-only: the §6.2 checks; a `falsified` assumption,
 reported with every SR and TC that cites it; an Approved, active assumption that
 is only `assumed` or `specified`; a Status change on a human-held rung in a
 commit carrying the loop trailer (once §10.2i exists).
 
-**C5 — the gate, if wanted — split by rung, so it cannot deadlock.** Passing
+**C5 — the gate — split by rung, so it cannot deadlock.** Opt-in for adopters,
+with an applies-when; **enabled in this repository**, which is Q27's condition.
+The switch's home is settled with C5's implementation, and turning it on here
+is part of C5, not a later option. Passing
 results exist only after the harness runs, so evidence cannot gate an early rung.
 
 - **At DevStg-Boundary — maturity only:** for every SR, either its `coincident`
@@ -1131,12 +1155,17 @@ results exist only after the harness runs, so evidence cannot gate an early rung
 With the extension, the Boundary half also runs per reached boundary IF (§9). The
 vision promises work built *"test-first with explicit approval gates so you can
 trust what ships"*; without this step, the assumption rows are optional
-documentation. Opt-in, with an applies-when.
+documentation.
 
 **E — the extension**, at any point after C4: interface allocation at
 DevStg-Arch (§9, §10.3).
 
 **Hats per piece** can land any time after C1's stakeholder list.
+
+**T — terminology**, any time: one prose pass for the SR wording (Q9) and
+LLR → design expectation (the sister plan's S2), with one PROCESS.md glossary
+line each. Id prefixes and rung names are unchanged; changing them is a
+separate later decision.
 
 **Not proposed:** a new stage rung; deleting the `B` rows; moving interfaces to
 DevStg-Boundary.
@@ -1172,8 +1201,8 @@ revision this document now proposes, for the owner to accept or reject.
 | Q17 | Boundary IFs approved at DevStg-Boundary? | **WITHDRAWN (review 2):** it put architecture before requirements. Interface allocation happens at DevStg-Arch instead (§9). |
 | Q18 | One SR per interface — mint the missing IFs? | **REVISED (reviews 2, 4):** no `realizes` cell and no minting to a count — the IF → SR relation stays derived through the owner, as today; new IF rows only for genuine seams (§9). |
 | Q19 | `mediates` on the session? | **DECIDED 2026-09-23** (raised by review 2). It only stops the reach check reading the session's crossings as not the human's; it changes no sign-off. Whether an assumption needs a person present is judged at its human-held approval, through `holds_when`; no attendance cell. Revisit if a DA is falsified by an unattended event. One cell lets an outcome on a session bundle count as the human's (§5.4). |
-| Q20 | Activate the stage arms as a separate step? | **DECIDED 2026-09-23, amended** (raised by review 2): the batch is reviewed with the arms off, and its approvals and the arm switch land in ONE commit, so no committed tree reads the regression; a visible drop would deselect `check.py`'s DevStg-Tests steps for the window. Yes, so writing Drafted assumptions does not regress the stage by surprise (§11, C4). |
-| Q21 | Key snapshot authorization by tier, not by file? | **NEW (review 3).** Yes — a small change to `baseline_snapshot`'s ledger key, which also fixes the same hazard in `external.toml` today (§10.1). |
+| Q20 | Activate the stage arms as a separate step? | **DECIDED 2026-09-23, amended** (raised by review 2): the batch is reviewed with the arms off, and its approvals and the arm switch land in ONE commit, so no committed tree reads the regression; a visible drop would deselect `check.py`'s three DevStg-Tests steps (`smoke`, `design-flows`, `trajectory`) for the window. The owner chose this on a miscount of two steps without `smoke` (review 5); the corrected count strengthens the choice, but the owner should reconfirm. Yes, so writing Drafted assumptions does not regress the stage by surprise (§11, C4). |
+| Q21 | Key snapshot authorization by tier, not by file? | **SUPERSEDED by Q26** (review 5): review 4 showed re-keying the ledger is not enough, because approval identity is a path end to end (§10.1). |
 | Q22 | Evidence as a current passing result, not a TC's existence? | **DECIDED 2026-09-23** (raised by review 3). LLM verdicts count only through the rig route (§8.3). Yes — tree-bound for automated assumption TCs, dated with a `max_age` for sampled and monitored ones (§7). |
 | Q23 | Re-attest the approved SRs and TCs that C2 and C3 amend, before activation? | **DECIDED 2026-09-23, on condition it is documented**: each new cell's class recorded in `acceptance_record.py`'s classification table and mirrored in `registry-machinery-reference.md` §10 (revised by review 4). Only approved-content cells re-attest; link cells are traced, like `SN-Refs` and `Verifies` (§10.2k). |
 | Q24 | How does sampled evidence count? | **DECIDED 2026-09-23** (raised by review 4). As falsification only, unless a declared sampling model justifies a positive claim, `holds_when` is narrowed, or the risk is accepted (§7). |
@@ -1183,7 +1212,10 @@ revision this document now proposes, for the owner to accept or reject.
 | — | Orientation, the adopter, the reversed rulings | **DECIDED**; traced 2026-09-22 (§5.2). |
 | — | Bundles | **REVISED:** authored identities; membership derived; not deleted (§5.7). |
 | — | Hats | **Agreed, narrowed:** four positive outcomes; no "not applicable" record (§6.5). |
-| — | Enabling-system stage vocabulary | **Tentative**; standard wording verified (§8.1). |
+| — | Enabling-system stage vocabulary | Now Q30. |
+| Q28 | Do hosted CI (spent `EXT-004`, `B-06`, `B-07`) and the vendored-doc upstream (spent `B-08`) return to the frame, under new ids? | **OPEN** (review 5). A prerequisite of C1's redraw (§5.2, §5.6). |
+| Q29 | Does `accepted_risk` carry an expiry or a re-review trigger (for example: reopen on a failed sample, or when the need's text changes), or is a recorded risk permanent until someone edits it? | **OPEN** (review 5). Likely the route most human-axis assumptions take (§7). |
+| Q30 | Adopt 15288's enabling-system and 24748-1's stage vocabulary in the kit's prose (§8.1)? | **OPEN** (review 5), low stakes; settle before any prose or schema uses the words. |
 
 ### 12.2 Review round 1 — codex Sol, reasoning effort high (2026-09-23)
 
@@ -1316,6 +1348,35 @@ verified.
 **Standards, verified 2026-09-22.** The 15288:2023 definition (3.15), the stage
 names (24748-1:2024) and the Transition process (6.4.10) were checked against the
 standards' free previews and SEBoK.
+
+### 12.7 Review round 5 — codex Sol, reasoning effort high (2026-09-23)
+
+A decisions check, run after the owner's answers of the same day, across this
+plan, the sister plan and the derived briefing. Verdict: *"OPEN POINTS REMAIN —
+Q20 rests on false stage-selection facts, while several cross-plan dependencies
+and conditional decisions still lack executable resolution paths."* 18 findings
+(3 BLOCKER, 11 MAJOR, 4 MINOR), each checked against the code; all held. It
+confirmed the day's other factual claims (the selection stage excludes drafts,
+the reviewer's Done-when mapping, the test-impact ruling, the separate claim
+commit, value-bound evidence, the traced/approved split's home). Those that
+touch this plan:
+
+| # | finding (short) | where it landed |
+|---|---|---|
+| 1 | §10.2c said any Drafted assumption regresses the stage; only a registry with no settled row does | §10.2c |
+| 2 | C4 still described a visible regression, contradicting Q20's single commit | §11 C4 |
+| 3 | a drop deselects three steps, not two: this repo's `smoke` step (`docs/stack.ini`) starts at DevStg-Tests; 34 steps in all | §11 C4, Q20 (reconfirm) |
+| 4 | hosted CI and the vendored-doc upstream had no question | Q28, a C1 prerequisite |
+| 5 | S6 and Q25 had no shared freshness model; the record held no judged state | §7 digest; C3 |
+| 6 | the sister plan's S3 provenance cell was scheduled nowhere | §11 C1 |
+| 7 | Q9's SR prose rename had no package | §11 T |
+| 8 | Q25's `max_age` and its floor were missing from C3 | §10.2e, §11 C3 |
+| 9 | Q27's condition had no activation step | §11 C5 |
+| 10 | `accepted_risk`'s expiry had no question | Q29 |
+| 11 | enabling-system vocabulary was "tentative" with no question | Q30 |
+| 12 | Q21 still read as a small change, though Q26 superseded it | Q21 |
+
+The sister plan's findings are in its §6.4; the briefing's were fixed there.
 
 ---
 

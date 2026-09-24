@@ -31,10 +31,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 - **Awaiting owner ruling — the validation gap:** read
   [the assumption-tier proposal](plans/2026-09-20-validation-gap-and-the-assumption-tier.md).
   It asks for a frame ruling (the frame is LOCKED). Start at its "model at a
-  glance"; decisions are in its §12. **Revised after adversarial Sol reviews
-  (2026-09-23, logged in its §12):** several earlier answers are REOPENED with
-  proposed replacements and new questions are open — all awaiting the owner's
-  review. It is now a core (the assumption tier) plus an extension (interface
+  glance"; decisions are in its §12. **Owner answered most questions
+  2026-09-23; a fifth Sol review (its §12.7) then raised Q28–Q30.** Still owed:
+  reconfirm Q20, Q26, Q28, Q29, Q30, and confirm the REVISED Q18 and bundle
+  rows. It is now a core (the assumption tier) plus an extension (interface
   allocation at DevStg-Arch). A mockup of the resulting depth-0 view is in
   `docs/plans/mockups/`. The sitting also reverses parts of sitting 2 (its
   §5.2). **Nothing is built before the sitting.**
@@ -42,7 +42,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   [plan](plans/2026-09-23-owner-notes-spine-sessions-and-tests.md) takes the
   owner's 2026-09-23 notes one by one against what the repo already does, and
   ends in questions S1–S15. The owner responded 2026-09-23: §5 is re-posed
-  (decided, conditional or re-posed). Nothing in it is built.
+  (decided, conditional or re-posed; review 4 added open S16–S17). Nothing in it is built.
 - **Next implementation:** resolve the existing SR-161 per-decomposition
   perspective-record gap and complete TC-211's normal sample. Follow the
   existing artifact adjudication route for the Drafted amendments; passing an
