@@ -473,7 +473,10 @@ DevStg-Boundary.
 ## Decisions waiting on you
 
 Regenerated from the plan's §12.1 after your answers of 2026-09-23:
-**none in this plan.** Q18, Q20, Q26, Q28, Q29, Q30 and the bundle rows are
-decided. What remains is the sitting itself (C1), which formally changes the
-LOCKED frame, and the sister plan's re-posed items (S3, S5, S6, S8, S11, S13,
-S14).
+Q18, Q20, Q26, Q28, Q29, Q30 and the bundle rows are decided. An adopter
+cross-check on 2026-09-24 **reopened two**: Q16's `system` values, which mean
+nothing in an adopter's repo, and Q6's rig rows, which can't describe an
+adopter's own stand-ins. Both are in the
+[owner review pack](2026-09-24-owner-review-pack.md) (A1, A4), which is where
+the next review starts. After that comes the sitting itself (C1), which
+formally changes the LOCKED frame.

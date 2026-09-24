@@ -304,8 +304,11 @@ runs in it. A party appears in the frame of each bundle it has.
 through* the kit in operation: the human's source edits reach the repository
 through the same hook floor as any governed write (`B-01`). So the delivery
 frame's inputs are not drawn a second time; its only crossing is the Template
-leaving. For an adopter only the kit frame exists, and the Template arrives
-through Transition as their enabling system (`EXT-002`'s own note says so).
+leaving. **For an adopter the orientation flips:** its own product is the
+system-of-interest, and the kit in operation is part of its enabling system;
+the Template arrives through Transition (`EXT-002`'s own note says so). The
+`system` values an adopter writes are REOPENED on this ground (Q16; the
+[owner review pack](2026-09-24-owner-review-pack.md) A1).
 
 **Links between the frames, typed.** Transition — the Template installed into an
 operating environment — is the only **lifecycle** hand-off. Other edges also
@@ -997,7 +1000,10 @@ it **is expected to be edited by a sitting and by nothing else**. New cells:
 note. FIRST-RUN-ADOPTER's `EXT-003` anchor (`tests/test_hats.py:885-900`) moves
 to a `speaks_for` stakeholder.
 
-**(b) `assumptions.toml` — a new registry, no new rung.** The 13-edit new-registry
+**(b) `assumptions.toml` — a new registry, no new rung, with an applies-when:**
+it applies only where `external.toml` exists, and the unclassified-SR finding
+is conditional on it. Without a frame no valid assumption can be written, since
+`effect_at` must name a bundle (adopter check, 2026-09-24). The 13-edit new-registry
 survey included a new ladder rung; this needs none, because its rows join
 existing rungs' predicates. What it does need: `DECLARED_INPUTS`
 (`kitlib/stage.py:144`), `bootstrap.MAPPING`, the snapshot tiers
@@ -1202,7 +1208,7 @@ revision this document now proposes, for the owner to accept or reject.
 | Q3 | `frame` vocabulary: two values or three? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by reviews 1, 2).** Three words kept, `coincident` explicit — on the SR in the core, on the IF in the extension. No word on a bundle (§4). |
 | Q4 | How heavy is the evidence descriptor? | **DECIDED: `assumed \| sampled \| monitored`** — now homed as TC `sampling`, `assumed` derived (§7). |
 | Q5 | May a W-test stand alone? | **DECIDED 2026-09-23 (owner accepted the revision), intent kept.** Yes, through TC `assumption_refs`; `Verifies` conditionally required (§7). |
-| Q6 | Does a rig get its own crossing? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by review 2).** Still no crossing — and no entity either: `enabling` means a runtime dependency, so rigs are rows in `assumptions.toml` with `emulates` (§5.3). |
+| Q6 | Does a rig get its own crossing? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by review 2).** Still no crossing — and no entity either: `enabling` means a runtime dependency, so rigs are rows in `assumptions.toml` with `emulates` (§5.3). **REOPENED 2026-09-24 (adopter check):** `emulates` can name only an external party, while an adopter's stand-ins mostly emulate its own parts, and "rig" means real hardware in hardware projects; proposed: widen `emulates`, name the plugged interface, rename the row kind ([review pack](2026-09-24-owner-review-pack.md) A4). |
 | Q7 | Does this ship downstream in v1? | **DECIDED in principle: yes**; schema migration deferred, gate optional (§10.4). |
 | Q8 | Where do assumption rows live? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by reviews 1, 2).** A dedicated `assumptions.toml`: in `external.toml` an assumption approval would re-bless drift in the LOCKED frame rows (§10.1). Internal assumptions: direction recorded, nothing built. |
 | Q9 | Rename SR to SS? | **DECIDED: prose now, prefix later** — "prefix never" likely. |
@@ -1212,7 +1218,7 @@ revision this document now proposes, for the owner to accept or reject.
 | Q13 | Need-link edge cases | **DISSOLVED** by Q11's revision. |
 | Q14 | Should assumption approval be human-held here? | **DECIDED: move the dial to DevStg-Boundary at the sitting** — with enforcement that does not exist yet (§10.2h). |
 | Q15 | Does `external.toml`'s lock cover assumption rows? | **MOOT** under Q8's revision: they live elsewhere. |
-| Q16 | Two frames in one view? | **DECIDED 2026-09-23** (owner: *"let's see how it looks"*; raised by reviews 1, 2). Kit and delivery frames; membership a `system` cell on the bundle; Transition the only lifecycle hand-off (§5.1). |
+| Q16 | Two frames in one view? | **DECIDED 2026-09-23** (owner: *"let's see how it looks"*; raised by reviews 1, 2). Kit and delivery frames; membership a `system` cell on the bundle; Transition the only lifecycle hand-off (§5.1). **REOPENED 2026-09-24 (adopter check):** `kit | delivery` means nothing in an adopter's repo, whose system-of-interest is its own product; proposed `operation | delivery` ([review pack](2026-09-24-owner-review-pack.md) A1). |
 | Q17 | Boundary IFs approved at DevStg-Boundary? | **WITHDRAWN (review 2):** it put architecture before requirements. Interface allocation happens at DevStg-Arch instead (§9). |
 | Q18 | One SR per interface — mint the missing IFs? | **DECIDED 2026-09-23** (owner confirmed the revision of reviews 2, 4): no `realizes` cell and no minting to a count — the IF → SR relation stays derived through the owner, as today; new IF rows only for genuine seams (§9). |
 | Q19 | `mediates` on the session? | **DECIDED 2026-09-23** (raised by review 2). It only stops the reach check reading the session's crossings as not the human's; it changes no sign-off. Whether an assumption needs a person present is judged at its human-held approval, through `holds_when`; no attendance cell. Revisit if a DA is falsified by an unattended event. One cell lets an outcome on a session bundle count as the human's (§5.4). |
@@ -1392,6 +1398,19 @@ touch this plan:
 | 12 | Q21 still read as a small change, though Q26 superseded it | Q21 |
 
 The sister plan's findings are in its §6.4; the briefing's were fixed there.
+
+### 12.8 Adopter cross-check and research (2026-09-24)
+
+After the owner's answers, four read-only passes prepared the next review: an
+adopter cross-check (GilbertCore, a robotics repo at kit `0fc58fb`), CLI
+token-usage research, and code facts for the sister plan's open items. Their
+results, options and recommendations are in the
+[owner review pack](2026-09-24-owner-review-pack.md). For this plan: Q16 and Q6 are REOPENED
+(pack A1, A4); §5.1's adopter sentence is corrected; `assumptions.toml` gains an
+applies-when (§10.2b). The adopter's shape is far behind the kit (2,260 kit
+commits; no `external.toml`, TOML spine or snapshot yet), so the C1, C3 and E
+resync entries must name those prerequisites. No id prefix or cell name
+collides.
 
 ---
 
