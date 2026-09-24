@@ -1155,15 +1155,15 @@ revision this document now proposes, for the owner to accept or reject.
 |---|---|---|
 | Q1 | Does the human come out of `EXT-001`? | **DECIDED: yes** (§5.4). |
 | Q2 | Does `REL-001` become a crossing? | **DISSOLVED** by dropping the adopter (§5.5). |
-| Q3 | `frame` vocabulary: two values or three? | **REOPENED (reviews 1, 2).** Three words kept, `coincident` explicit — on the SR in the core, on the IF in the extension. No word on a bundle (§4). |
+| Q3 | `frame` vocabulary: two values or three? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by reviews 1, 2).** Three words kept, `coincident` explicit — on the SR in the core, on the IF in the extension. No word on a bundle (§4). |
 | Q4 | How heavy is the evidence descriptor? | **DECIDED: `assumed \| sampled \| monitored`** — now homed as TC `sampling`, `assumed` derived (§7). |
-| Q5 | May a W-test stand alone? | **REOPENED, intent kept.** Yes, through TC `assumption_refs`; `Verifies` conditionally required (§7). |
-| Q6 | Does a rig get its own crossing? | **REOPENED (review 2).** Still no crossing — and no entity either: `enabling` means a runtime dependency, so rigs are rows in `assumptions.toml` with `emulates` (§5.3). |
+| Q5 | May a W-test stand alone? | **DECIDED 2026-09-23 (owner accepted the revision), intent kept.** Yes, through TC `assumption_refs`; `Verifies` conditionally required (§7). |
+| Q6 | Does a rig get its own crossing? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by review 2).** Still no crossing — and no entity either: `enabling` means a runtime dependency, so rigs are rows in `assumptions.toml` with `emulates` (§5.3). |
 | Q7 | Does this ship downstream in v1? | **DECIDED in principle: yes**; schema migration deferred, gate optional (§10.4). |
-| Q8 | Where do assumption rows live? | **REOPENED (reviews 1, 2).** A dedicated `assumptions.toml`: in `external.toml` an assumption approval would re-bless drift in the LOCKED frame rows (§10.1). Internal assumptions: direction recorded, nothing built. |
+| Q8 | Where do assumption rows live? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by reviews 1, 2).** A dedicated `assumptions.toml`: in `external.toml` an assumption approval would re-bless drift in the LOCKED frame rows (§10.1). Internal assumptions: direction recorded, nothing built. |
 | Q9 | Rename SR to SS? | **DECIDED: prose now, prefix later** — "prefix never" likely. |
-| Q10 | Derive `frame`, or write it? | **REOPENED (reviews 1, 2).** Nothing is written on a bundle; `coincident` is written where it holds; the rest is derived (§4). |
-| Q11 | Where does an SR's need link come from? | **REOPENED (review 1).** The SR keeps `sn_refs`; it adds `da_refs`; an assumption's needs are derived (§6.2). |
+| Q10 | Derive `frame`, or write it? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by reviews 1, 2).** Nothing is written on a bundle; `coincident` is written where it holds; the rest is derived (§4). |
+| Q11 | Where does an SR's need link come from? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by review 1).** The SR keeps `sn_refs`; it adds `da_refs`; an assumption's needs are derived (§6.2). |
 | Q12 | Where does a stakeholder live? | **DECIDED: a small list** in `stakeholder-needs.toml`, cited by needs (`stakeholder_refs`) (§6.2). |
 | Q13 | Need-link edge cases | **DISSOLVED** by Q11's revision. |
 | Q14 | Should assumption approval be human-held here? | **DECIDED: move the dial to DevStg-Boundary at the sitting** — with enforcement that does not exist yet (§10.2h). |

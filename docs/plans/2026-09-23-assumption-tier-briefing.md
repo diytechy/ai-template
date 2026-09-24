@@ -118,8 +118,8 @@ Adopter) merges into the single Transition hand-off. The id is spent.
 | Q6 (does a rig get its own crossing?) | no | agreed, and **no entity either**: the frame's `enabling` class means a runtime dependency, so rigs become `[rig]` rows in `assumptions.toml`, each naming the party it `emulates` | §5.3 |
 | Q5 (may a test of an assumption stand alone?) | yes | intent kept, through a new TC `assumption_refs` field; `Verifies` (which points only at SR/LLR) is required only when that is absent | §7 |
 
-Q8 and Q11 run directly against what you said and need your explicit
-acceptance.
+**Owner accepted all five revisions, 2026-09-23** — recorded as DECIDED in the
+plan's §12.1, including Q8 and Q11, which reverse the original answers.
 
 ## 3. New questions, each with a recommendation (§12.1)
 
