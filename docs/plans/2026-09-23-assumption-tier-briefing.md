@@ -121,35 +121,176 @@ Adopter) merges into the single Transition hand-off. The id is spent.
 **Owner accepted all five revisions, 2026-09-23** — recorded as DECIDED in the
 plan's §12.1, including Q8 and Q11, which reverse the original answers.
 
-## 3. New questions, each with a recommendation (§12.1)
+## 3. New questions, as choices (§12.1)
 
-- **Q16, two frames in one view.** The **kit** frame (the kit in operation in
-  a repo) and the **delivery** frame (this repo's build and release, emitting
-  the Template through `B-05`). Membership is a `system` cell on each bundle,
-  not a property of the party, because the human and the model provider take
-  part in both (§5.1).
-- **Q19, a `mediates` cell on `EXT-001`** (the narrowed development session,
-  now just the machine and working copy), so an outcome landing on a session
-  bundle counts as the human's (§5.4).
-- **Q20, switch the stage arms on as a separate step.** Otherwise the first
-  Drafted DA regresses the derived stage to Boundary by surprise (§10.2c,
-  §11 C4).
-- **Q22, evidence is a passing result, not the existence of a test.**
-  Automated results join `docs/test/evidence`. Sampled and monitored
-  observations get their own dated record with an expiry (Q25), kept off the
-  approved TC (§7, §10.2l).
-- **Q24, sampled evidence can only falsify.** A passing sparse sample proves
-  nothing (5-user studies catch 55–99% of known problems). A DA backed only by
-  samples clears the gate only with a declared sampling model, a narrowed
-  `holds_when` (the conditions under which the claim holds), or a recorded
-  `accepted_risk` (§7).
-- **Q27, split the gate.** Maturity (DAs Approved and not falsified) is checked
-  at DevStg-Boundary; evidence (current passing results) at DevStg-Release,
-  after the harness has run. A single early gate would deadlock (§11 C5).
-- **Q23, re-attest only approved-content cells.** `coincident`, `form`,
-  `sampling` and `max_age` count as content. Link cells (`da_refs`,
-  `assumption_refs`, `stakeholder_refs`) are traced pointers like `SN-Refs`, and
-  don't re-arm approval (§10.2k).
+Each one is set out as a question with its alternatives, what each alternative
+costs, the plan's recommendation, and your response (2026-09-23). Items marked
+**pending** are waiting on the answer given with them.
+
+### Q16. How many frames does the depth-0 view draw?
+
+| option | consequence |
+|---|---|
+| A. One delivery frame (today) | The crossings where a person gets value (reading the dashboard, operating the loop) stay outside the frame, so no assumption can land on them. This is the gap itself. |
+| B. One operating frame only | There, the installed Template *is* the system, so it can't also be the system's output: `B-05` (the Template leaving) has nowhere to sit (review 1, finding 1). |
+| **C. Two frames, kit and delivery (recommended)** | The kit in operation sits beside this repo's build and release. Each bundle carries a `system` cell, and a party can appear in both frames. Cost: the frame redraw, and sorting the 69 `B-05` SRs by subject (§5.1). |
+
+**You:** agreed; see how it looks. **Decided.**
+
+### Q19. How does an outcome that lands on the session count as the human's?
+
+The narrowed `EXT-001` (development session) is just the computer and the
+working copy, and the human becomes a separate entity. But the human never
+touches the repo directly. Their edits travel through `B-01` (governed writes)
+and the verdicts come back through `B-04` (hook-floor accept/reject), and the
+party of both bundles is the *session*, not the human. The plan's reach check
+requires an assumption to land on a bundle whose party is the stakeholder's
+own party.
+
+**Example.** A privacy need (SN-009) is a human outcome: *my private data never
+lands in the repo.* The hook floor rejecting a commit is observable at `B-04`.
+The assumption that carries that rejection to the human is something like
+*"when the floor rejects a write, the person sees the reason and does not route
+around it"*. That assumption lands on `B-04`, which is the session's bundle.
+Without a link, the reach check says "this assumption lands on the computer,
+not on the person the need is about" and flags it, even though the terminal is
+exactly where the person experiences the rejection.
+
+| option | consequence |
+|---|---|
+| A. No link | Every assumption about what a person experiences through their terminal fails the reach check, or has to be forced onto `B-02` (authority) or the read bundle, where it doesn't happen. |
+| B. Make the human the party of `B-01` and `B-04` | Erases the distinction the redraw exists for: the machine writes and returns verdicts, and the person is behind it. |
+| C. A second, human-facing copy of each session bundle | Twice the bundles for one path, with nothing to tell the copies apart (§5.4). |
+| **D. One `mediates = "EXT-006"` cell on `EXT-001` (recommended)** | The reach check accepts a session bundle for a human need. Scope: only the session mediates, and only for the human operator. The risk is that it accepts *any* session bundle, so the assumption's own text still has to say how the person is reached. |
+
+**You:** asked for an example (above). **Pending.**
+
+### Q20. When do the new checks start moving the project stage?
+
+"The checks" are the stage arms: the rules in `derive_stage` that stop the
+derived stage at a rung while any row it depends on is Drafted
+(`spine_rules.py:643-652`). The proposal adds two:
+
+- a Drafted **assumption or rig** holds the stage at DevStg-Boundary;
+- a Drafted **stakeholder** row holds it at DevStg-Needs.
+
+This repo is at DevStg-Tests (`docs/stage`), so the first Drafted assumption
+would drop it three rungs.
+
+| option | consequence |
+|---|---|
+| A. On from the first row | Writing the first draft assumption drops the stage from Tests to Boundary without warning, and every later draft keeps it there until the batch is approved. |
+| B. Never on | Assumptions never gate anything. They stay documentation, which is the state the plan exists to end. |
+| **C. Off until a deliberate activation step (recommended)** | Rows are written warn-only (C2, C3). Activation (C4) re-attests the affected SRs and TCs, switches the arms on, states the regression in advance, and approves the assumptions and rigs as one batch. |
+
+**You:** asked which checks (above). **Pending.**
+
+### Q22 + Q25. What counts as evidence for an assumption, and where does it live?
+
+| option | consequence |
+|---|---|
+| A. A test case existing counts (the first draft) | Contradicts PROCESS.md: `Approved` blesses a row's text, never that its tests pass. |
+| B. Results written on the test-case row | Mixes the test's specification with its results, and every new sample re-arms a re-attestation of an approved row. |
+| **C. Results only, in result records (recommended)** | Automated results join `docs/test/evidence`. Sampled and monitored observations get their own record, keyed by TC: outcome, observed-at, by whom or what, and expiry. |
+
+**Expiry, as proposed.**
+
+- **Automated results have no clock.** The existing evidence record is bound
+  *by value* to the content it ran on (the spine registries plus the product
+  and test trees). It goes stale the moment any of that changes
+  (`kitlib/evidence.py:21-33`). Automated assumption tests inherit this.
+- **Sampled and monitored results carry a `max_age`.** It's a policy cell on
+  each TC, set per test and approved with it. The plan fixes no values: a human
+  probe of the adopter experience might be good for a release cycle, a CI
+  monitor for a week. Past `max_age`, the assumption's evidence reverts to
+  *specified*. A failing result counts as falsification evidence.
+
+**Your condition: produced mechanically, outside an LLM.** Automated and
+monitored results are written by a script that ran the check, so they meet the
+condition. Two cases don't:
+
+- a **human sample** is produced by a person. Recording it (an `Attest`) is
+  mechanical; producing it isn't.
+- the **render critic** (a vision model judging the dashboard, §8.3) *is* an
+  LLM producing a verdict. The plan admits it only through a rig row plus a
+  fidelity assumption that a periodic human sample can falsify.
+
+That leaves one sub-choice open:
+
+- (i) accept the plan's rig route for LLM verdicts;
+- (ii) exclude LLM-produced results from evidence entirely, so the render
+  critic evidences nothing;
+- (iii) allow LLM verdicts only as falsifiers, like sparse samples.
+
+**You:** acceptable if mechanical; asked about expiry (above). **Pending** the
+LLM sub-choice.
+
+### Q24. How does a sparse human sample count?
+
+Random 5-user studies catch anywhere from 55% to 99% of known problems
+(Faulkner 2003), so a clean small sample says little. A failure says a lot.
+
+| option | consequence |
+|---|---|
+| A. A passing sample counts as positive evidence | The gate can be passed by luck, and the high variance stays hidden. |
+| B. Human-axis assumptions never gate | Honest but hollow: 24 of the 27 needs are human outcomes, so most of the tier would stay documentation. |
+| **C. Samples can only falsify; three routes to clear the gate (recommended)** | A declared sampling model with an acceptance rule; a `holds_when` narrowed until an automated check covers it; or a recorded `accepted_risk`. |
+
+**What a closer look is likely to turn up.**
+
+1. **`accepted_risk` is the weakest link as specified.** It's an optional
+   free-text cell with no expiry and no review date. Your signature on it comes
+   only through the assumption's own approval (human-held under Q14). Most rows
+   will probably take this route, so it may want an expiry or a re-review
+   trigger, for example reopening whenever a sample fails or the need's text
+   changes.
+2. **Narrowing `holds_when` can hollow out the claim.** This is the mirror of
+   the plan's rule that an over-strong assumption is a defect: an operating
+   domain so narrow that no real use falls inside it. A reviewer has to ask
+   whether the narrowed claim still serves the need.
+3. **A real sampling model is heavy** for human probes. It fits measurements
+   and rigs better. In practice the sampling-model route is for machines, and
+   the other two routes are for people.
+
+**You:** agreed; it's a trade-off between risk and a tenable path. **Decided.**
+
+### Q27. Where does the assumption gate sit?
+
+| option | consequence |
+|---|---|
+| A. One gate at DevStg-Boundary, for maturity and evidence | Deadlocks: passing results exist only after the harness runs, many rungs later. |
+| B. One gate at DevStg-Release | Drafted or falsified assumptions pass through every earlier rung unchecked. |
+| **C. Split (recommended)** | Maturity is checked at DevStg-Boundary: Approved, not falsified, landing on the right party, and a fidelity assumption naming an Approved rig. Evidence is checked at DevStg-Release. |
+
+**Your condition: it's checked.** The gate (C5) is **opt-in**, with an
+applies-when. So "checked" means this repo enables it, and then `derive_stage`
+enforces both halves on every commit bar. Until C5 is on, both halves are
+warn-only.
+
+**You:** okay if checked. **Decided, on condition that this repo enables C5.**
+
+### Q23. Which new cells force re-approval when they change?
+
+| option | consequence |
+|---|---|
+| A. All new cells are approved content (the fail-safe default) | Every row a link touches re-arms a re-attestation. This is the 148-row noise `Boundary-Refs` was classified out of. |
+| B. All new cells are traced | Policy cells like `sampling`, `max_age` and the `coincident` waiver would change without your sign-off. |
+| **C. Split (recommended)** | Pointers (`da_refs`, `assumption_refs`, `stakeholder_refs`) are traced, and a changed `da_refs` routes to adjudication, as `SR-Refs` does. Prose and policy (`coincident`, `form`, `sampling`, `max_age`) are approved content. |
+
+**Your condition: documented, and where does documentation end?** It ends at
+one home and one mirror:
+
+- **The home** is the classification table in `acceptance_record.py`
+  (`SPINE_TRACED_CELLS` / `SPINE_APPROVED_CELLS`). Every existing cell's ruling
+  already carries its reason inline there.
+- **The mirror** is `docs/registry-machinery-reference.md` §10 ("the
+  traced-vs-approved cell split").
+
+The new cells get one line each in both places, in the same change. Nothing in
+the AGENTS or PROCESS prose restates it.
+
+**You:** okay if documented. **Decided, on condition that both entries are
+written.**
 
 ## 4. Options assessed
 
@@ -225,6 +366,7 @@ DevStg-Boundary.
 ## Decisions waiting on you
 
 1. Accept or reject the five reopened answers (Q3/Q10, Q5, Q6, Q8, Q11).
-2. Rule on the new questions (Q16, Q19–Q27).
+2. Answer the pending new questions: Q19 (`mediates`), Q20 (activation),
+   Q22/Q25 (the LLM sub-choice), and Q21/Q26 below.
 3. Choose tier-specific approval identity or one tier per file.
 4. Decide whether hosted CI and the vendored-doc upstream return to the frame.

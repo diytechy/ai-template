@@ -1168,18 +1168,18 @@ revision this document now proposes, for the owner to accept or reject.
 | Q13 | Need-link edge cases | **DISSOLVED** by Q11's revision. |
 | Q14 | Should assumption approval be human-held here? | **DECIDED: move the dial to DevStg-Boundary at the sitting** — with enforcement that does not exist yet (§10.2h). |
 | Q15 | Does `external.toml`'s lock cover assumption rows? | **MOOT** under Q8's revision: they live elsewhere. |
-| Q16 | Two frames in one view? | **NEW (reviews 1, 2).** Kit and delivery frames; membership a `system` cell on the bundle; Transition the only lifecycle hand-off (§5.1). |
+| Q16 | Two frames in one view? | **DECIDED 2026-09-23** (owner: *"let's see how it looks"*; raised by reviews 1, 2). Kit and delivery frames; membership a `system` cell on the bundle; Transition the only lifecycle hand-off (§5.1). |
 | Q17 | Boundary IFs approved at DevStg-Boundary? | **WITHDRAWN (review 2):** it put architecture before requirements. Interface allocation happens at DevStg-Arch instead (§9). |
 | Q18 | One SR per interface — mint the missing IFs? | **REVISED (reviews 2, 4):** no `realizes` cell and no minting to a count — the IF → SR relation stays derived through the owner, as today; new IF rows only for genuine seams (§9). |
 | Q19 | `mediates` on the session? | **NEW (review 2).** One cell lets an outcome on a session bundle count as the human's (§5.4). |
 | Q20 | Activate the stage arms as a separate step? | **NEW (review 2).** Yes, so writing Drafted assumptions does not regress the stage by surprise (§11, C4). |
 | Q21 | Key snapshot authorization by tier, not by file? | **NEW (review 3).** Yes — a small change to `baseline_snapshot`'s ledger key, which also fixes the same hazard in `external.toml` today (§10.1). |
 | Q22 | Evidence as a current passing result, not a TC's existence? | **NEW (review 3).** Yes — tree-bound for automated assumption TCs, dated with a `max_age` for sampled and monitored ones (§7). |
-| Q23 | Re-attest the approved SRs and TCs that C2 and C3 amend, before activation? | **REVISED (review 4).** Only approved-content cells re-attest; link cells are traced, like `SN-Refs` and `Verifies` (§10.2k). |
-| Q24 | How does sampled evidence count? | **NEW (review 4).** As falsification only, unless a declared sampling model justifies a positive claim, `holds_when` is narrowed, or the risk is accepted (§7). |
+| Q23 | Re-attest the approved SRs and TCs that C2 and C3 amend, before activation? | **DECIDED 2026-09-23, on condition it is documented**: each new cell's class recorded in `acceptance_record.py`'s classification table and mirrored in `registry-machinery-reference.md` §10 (revised by review 4). Only approved-content cells re-attest; link cells are traced, like `SN-Refs` and `Verifies` (§10.2k). |
+| Q24 | How does sampled evidence count? | **DECIDED 2026-09-23** (raised by review 4). As falsification only, unless a declared sampling model justifies a positive claim, `holds_when` is narrowed, or the risk is accepted (§7). |
 | Q25 | Where do sampled and monitored results live? | **NEW (review 4).** In their own result record keyed by TC, not on the approved TC (§7, §10.2l). |
 | Q26 | Tier-specific approval identity, or one tier per file? | **NEW (review 4).** Recommended: tier-specific identity, which also fixes `external.toml` today (§10.1). |
-| Q27 | Where does the gate sit? | **NEW (review 4).** Split: maturity at DevStg-Boundary, evidence at DevStg-Release (§11, C5). |
+| Q27 | Where does the gate sit? | **DECIDED 2026-09-23, on condition it is checked**: this repo enables C5 (raised by review 4). Split: maturity at DevStg-Boundary, evidence at DevStg-Release (§11, C5). |
 | — | Orientation, the adopter, the reversed rulings | **DECIDED**; traced 2026-09-22 (§5.2). |
 | — | Bundles | **REVISED:** authored identities; membership derived; not deleted (§5.7). |
 | — | Hats | **Agreed, narrowed:** four positive outcomes; no "not applicable" record (§6.5). |
