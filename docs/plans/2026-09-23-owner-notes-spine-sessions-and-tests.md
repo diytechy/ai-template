@@ -376,6 +376,25 @@ included. The recommendation is revised:
 | **keep** — resume by id, keep warm, reset | adjudicator patch only | land WI-551 *through* the service, so keep-warm is recorded like any session |
 | **record** — telemetry for every call | two wrappers | fold into one (the 0→A→B rule) |
 
+**Owner response (2026-09-23): option (a), "refactor as much as possible to
+reduce individual or custom code components."** So the service is the one path
+for every session, and the refactor's measure is how much per-role and
+per-provider code it removes, following PROCESS.md §3's 0→A→B rule:
+
+- **act:** a role differs only in data (brief, route, tier, tool set), never in
+  its own launch code;
+- **keep:** WI-551 lands through the service; the keep-warm ping is an ordinary
+  recorded call, not a direct `run_session` call;
+- **record:** one writer replaces the loop's in-line logging and
+  `invoke_and_persist`, and S8's adopted schema is written there;
+- **provider differences** live in one adapter per provider (argument
+  building, output and usage parsing), not scattered through role code;
+- S9's disposable-worktree step and S10's retention are service operations,
+  not per-role additions.
+
+The loop's C901 complexity pin (`tests/test_complexity_ratchet.py`) still
+applies: decompose, don't re-stamp.
+
 ### 3.2 Token usage (note 1)
 
 > *"At each session call, the token usage gets appended to a session log
@@ -788,7 +807,7 @@ may proceed as written; `CONDITIONAL` means decided with the stated condition;
 | S4 | Retired rows: keep deletion, and amend D-4 to add a structured retirement fragment in `docs/log.d/`? (§1.4) | **CONDITIONAL**: yes, provided the fragments are lookup-only for agents (stated in PROCESS.md, not AGENTS). |
 | S5 | Test level: keep every test in the commit bar (a); optionally let builders run a module's own tests first as an inner loop (d), never as the bar; reconcile the 41 tier disagreements as a priced migration? (§2.2) | **RE-POSED** with the owner's module-scoped idea as (d) and (e). Recommend (a) plus optional (d); not (e), which reverses the test-impact ruling. |
 | S6 | Observation tests: evaluate triggers only at checkpoints (work-item merge, phase close, release), "content change" meaning changed since last judged, sharing the assumption tier's result record? (§2.3) | **RE-POSED** after the owner flagged per-iteration firing as unstable. Design jointly with the assumption tier, before its C3. |
-| S7 | One session service (act / keep / record), with WI-551 landing through it? (§3.1) | **OPEN**: no response yet. |
+| S7 | One session service (act / keep / record), with WI-551 landing through it? (§3.1) | **DECIDED**: (a), with the owner's direction to consolidate as far as possible: shared stages over per-role or per-provider code. S8's schema, S9's worktree step and S10's retention land in it. |
 | S8 | Telemetry: run one bounded research pass on each routed CLI's structured usage output and a published schema, then adopt that schema, with a provider column and tokens kept distinct from context occupancy? (§3.2) | **RE-POSED**: adopt existing conventions rather than design one. Awaiting a go for the research pass. |
 | S9 | Reviewers, critics and probes run in a disposable worktree at the same commit, with the coordinator committing their verdict? (§3.3) | **CONDITIONAL**: agreed in practice; pilot on REVIEW-A first, built once in the session service, with a stop rule if it costs more than it saves. |
 | S10 | Retention: the adjudicator's lands; builder retention a separate ruled experiment; reviewers never? (§3.4) | **DECIDED**: yes. |
