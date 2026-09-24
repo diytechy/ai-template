@@ -177,24 +177,20 @@ rejection" still passes the reach check, because the check proves the
 assumption points at the right place, not that a person was present. So that
 assumption's `holds_when` has to say "while a person is attending the session".
 
-**Surfacing the edge mechanically (proposed 2026-09-23).** The kit already has
-an ADVISORY severity that reports and never gates. Two layers:
+**What `mediates` is and isn't.** It isn't sign-off: who must approve an
+assumption is Q14's dial, and your approval is required. It only fixes a false
+alarm in the automatic reach check, which otherwise reads your terminal's
+crossings as "the computer's, not the person's".
 
-1. **Static, buildable with the core.** A closed cell on the DA,
-   `attendance = "required" | "not-required"`, is required whenever the DA
-   reaches its stakeholder only through `mediates`. An advisory lists every DA
-   marked `required`: "reaches the person only through the session, and holds
-   only while someone is attending". This avoids matching words in
-   `holds_when`, which would be fragile.
-2. **Dynamic, later.** Once loop provenance exists (§10.2i), the advisory can
-   also report how often the bundle's events happened in unattended loop runs,
-   for example "most of this bundle's events this month had no one attending".
-   This needs a record of those events, which I haven't found today; it would
-   be scoped with §10.2i.
+**Residual, accepted knowingly.** The check can't tell whether a person was
+present. An assumption that holds only while someone is attending passes it
+anyway, so that judgment rests on your sign-off: its `holds_when` must say so.
+An attendance cell with an advisory list was considered and dropped as
+machinery your sign-off already covers. **Revisit if** an assumption is ever
+falsified because an event happened unattended.
 
-**You:** asked for an example (above), whether an LLM is the mediator (no),
-and for a mechanical "near the edge" signal (above). **Pending** a yes on the
-advisory.
+**You:** add `mediates`; no attendance cell or advisory; "no harm in seeing
+where this leads". **Decided.**
 
 ### Q20. When do the new checks start moving the project stage?
 
