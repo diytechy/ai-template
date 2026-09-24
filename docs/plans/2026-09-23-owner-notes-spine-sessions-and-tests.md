@@ -16,6 +16,8 @@ recommendations need. The second and third confirmed the earlier fixes and
 found six, then three, residual problems. Every finding was checked against the
 code; all held, and each is applied below.
 
+**Owner responses, 2026-09-23.** The owner answered most questions; each response sits at the end of its section, and §5 is re-posed from them.
+
 **Who this is for.** The owner, as a decision document. Each section keeps the
 owner's note number, so a note maps to exactly one place.
 
@@ -156,6 +158,21 @@ pointer cannot live in the need cell.
    (its Q12): the new need cells, their carrier and template entries, dogfood
    sync, and whichever renderer or check consumes them.
 
+**Owner response (2026-09-23): "doesn't this then surface each hat as a
+stakeholder?"** No, and the recommendation is sharpened so it can't. There are
+three separate things:
+
+| thing | what it is | example |
+|---|---|---|
+| **stakeholder** | who owns an outcome: one row each | the owner; the adopting team; a reviewer |
+| **need** | what a stakeholder owns, and **a design constraint is one of these** | *"a reader two years later can tell why a piece of code exists"*, stakeholder = the owner |
+| **hat** | a question put to each decomposition (`hats.toml`: *"a HAT IS NOT A PERSON AND NOT A STAKEHOLDER ROW"*) | MAINTAINER asks *"can a reader two years from now tell why this exists?"* |
+
+So the owner is **one** stakeholder with many constraint-needs; no hat gains a
+stakeholder row. A hat that applies a constraint cites that need. A hat gets
+`speaks_for` only when it voices a real stakeholder (FIRST-RUN-ADOPTER speaks
+for the adopting team, assumption-tier plan §6.5).
+
 ### 1.4 Retired rows: a registry space, or git? (note 3)
 
 **Today.** Supersession is deletion (`docs/repo-lock.md:348-352`, D-4: *"A
@@ -188,6 +205,14 @@ Two details follow:
   day the rule starts. Retirements before then show as *unknown*.
 
 It costs a fragment shape, a check, a renderer, and a template/resync entry.
+
+**Owner response (2026-09-23): acceptable, on condition that agents don't go
+diving into history just because it exists.** Retirement fragments are for
+**lookup, not browsing**: an agent that meets a spent id reads that id's
+fragment, and never surveys the set. Only the dashboard renderer reads them all.
+This goes in the kit's list of reference-not-working surfaces, beside
+`docs/archive/`. It is prose; nothing can mechanically stop a session reading a
+file. Its home is PROCESS.md, because `AGENTS.template.md` has 20 B of headroom.
 
 ---
 
@@ -251,6 +276,22 @@ Separately: reconciling the 41 tier disagreements is **not a data cleanup**. Mov
    separately what the meta-repo's budget partition means against the shipped
    tier contract, then price the migration.
 
+**Owner response (2026-09-23): a new idea. If a work item only touches one
+module, run only the test suites around that module.** This is test-impact
+selection, which the kit has **ruled against** as the commit bar
+(`PROCESS_OPTIONS.md:2037-2041`): *"a missed transitive dependency passes
+silently and the coverage floor breaks"*. The sanctioned cheap layer is the
+smoke tier, which runs in about 28 s against its 60 s budget (CLAUDE.md). So
+the saving is small and the risk is a silent green. Two ways it could still
+enter:
+
+| option | what it is | cost |
+|---|---|---|
+| (d) **an inner loop only** | the builder runs the module's own tests first for fast feedback; the smoke bar still runs before every commit | nothing is weakened; the gain is a few seconds per iteration |
+| (e) **replace the bar** | a module-scoped subset is the commit bar | reverses the ruling; a change that breaks another module through a shared import commits green |
+
+(d) is harmless and optional; (e) is not recommended.
+
 ### 2.3 How often observation tests run (note 3)
 
 > *"Sometimes the test is just checking the design (observation), how often does
@@ -281,6 +322,25 @@ state it judged; who owns firing it; what a red result blocks; and how it
 interacts with release. The Drafted and incomplete Inspection rows are resolved
 separately. The assumption-tier plan's event-triggered rubric checks are the
 same rule.
+
+**Owner response (2026-09-23): "what does content change mean? Each iteration
+of a new feature, even before a review completes? That's unstable, because a
+review may surface issues a test doesn't."** As first drafted, yes: a content
+hash changes on every commit that touches what the check reads, mid-work-item
+included. The recommendation is revised:
+
+- **Triggers are evaluated only at stable checkpoints:** a work item merging to
+  trunk after review and adjudication, phase close, and release. Never per
+  commit inside a lane.
+- **"Content change" means different from the state the check last judged**,
+  compared at the checkpoint, so a feature's intermediate iterations never
+  fire it.
+- **One result record, shared with the assumption tier.** The assumption-tier
+  plan has decided (its Q22, Q25) that judgment-based evidence lives in a result
+  record keyed by TC, with an author-proposed `max_age` of at least 7 days, and
+  that expiry reverts evidence to *specified* and never falsifies. This runner
+  reads and writes that record, so there is one home for "when was this last
+  judged". The two plans design it once, before the assumption tier's C3.
 
 ---
 
@@ -339,6 +399,28 @@ do not request structured output, and opencode's telemetry is unverified.
 3. **Distinguish per-call tokens from live context occupancy.** A cumulative
    token count is not how full a context is; nothing that resets sessions (§3.4)
    may use the first as the second.
+
+**Owner response (2026-09-23): "this isn't a novel problem. Isn't there
+existing research on CLIs, cache hits, and recording fresh versus cached tokens?
+Do we need to spawn researchers?"** Agreed that it isn't novel, so the
+recommendation changes from designing a log format to **adopting existing
+conventions**. Prior art to confirm (from memory, not yet verified here):
+
+- OpenTelemetry's generative-AI semantic conventions define token-usage
+  attributes;
+- Claude Code can export OpenTelemetry metrics with token counts split by type
+  (input, output, cache read, cache creation);
+- codex's non-interactive JSON output reports usage, including cached input
+  tokens;
+- community tools (usage analysers over Claude Code's local logs, and
+  multi-provider proxies) already normalise these across providers.
+
+**Proposed: one bounded research pass, not a team.** One question: for each
+routed CLI (Claude Code, codex, opencode), what structured usage does it emit
+(fresh input, cache read, cache write, output, reasoning), how is it captured
+non-interactively, and which published schema should the index adopt? Output: a
+field map plus one recorded fixture per CLI. S8 then becomes "adopt that
+schema", and the §3.2 items become its implementation.
 
 ### 3.3 Fewer tools per role, and skills handled mechanically (note 1)
 
@@ -402,6 +484,12 @@ The adjudicator keeps its own reviewed writes; design-check and build keep full
 tools.
 3. A declared **phase → skills** map, named in the brief, so discovery can be
    switched off for review roles.
+
+**Owner response (2026-09-23): agreed in practice, with a worry that it could
+get out of hand.** Proposed guardrails: pilot on **one** role (REVIEW-A) before
+the others; build the disposable-worktree step once, inside the session service
+(§3.1), not per role; and measure the added time and disk per review. If the
+pilot costs more than it saves, stop.
 
 ### 3.4 Sessions that outlive one work item (notes 1 and 2)
 
@@ -499,6 +587,20 @@ authenticated human act. It would recreate the laundering surface OI-45 removed.
 4. Take session "locking" as retention (§3.4) plus the existing exclusive
    admission — no new lock.
 
+**Owner response (2026-09-23): "a mechanical layer is still the right
+method, so that a work item lands fully in a single commit to the working
+branch, not several (changes + status + iteration)."** That separates two
+things the note ran together. The first is compatible with everything above;
+the second is where OI-45's objection bites:
+
+| option | what is mechanical | the approval act | cost |
+|---|---|---|---|
+| **(i) squash on merge** | the merge slot squashes the lane (changes, the adjudicator's status-and-snapshot commit, the iteration logs) into **one** trunk commit per work item | unchanged: the adjudicator's reviewed commit, carried inside the squash | anything keyed to a lane commit's hash (trailers, handback reports, a verdict's recorded revision) points at commits that are no longer in trunk's history unless the lane branch is kept; each record needs checking. The **claim commit** also lands on trunk separately, because other lanes must see the claim (`integrate.py:700-704`); in this one-lane repo it could perhaps fold in, which needs checking |
+| (ii) a machine approval writer | a script flips Status from a verdict | moves to the script | OI-45: *"what recorded human act authorizes a machine to move the approval record"*; its own ruling (item 3 above) |
+
+**Recommend (i)** if the goal is one commit per work item. It keeps a
+mechanical layer and leaves the approval act where it is.
+
 ### 3.6 Fanning out to other models (note 3)
 
 > *"Need to update prose for fanning out carefully — only delegate to lower tier
@@ -567,6 +669,21 @@ right that this is neither cost-neutral (a strong-tier route) nor independent.
 **Recommendation: (c).** (d) only where a work item is marked plan-heavy and the
 strong-tier cost is measured first.
 
+**Owner response (2026-09-23): "builder bias is still the main concern.
+Shouldn't the work item ultimately contain the expectation the reviewer can
+reference?"** Largely, it already does. The reviewer brief makes each work
+item's spec **Done-when** list the checklist (*"map each spec Done-when item to
+its covering test or call it UNCOVERED"*), and forbids the builder's
+self-assessment (*"Do NOT read or trust the implementer's own session notes"*,
+`reviewer.template.md:39`). What is **not** ruled is who writes Done-when, and
+whether the builder can change it:
+
+- the planner writes Done-when **before** the build starts;
+- a lane whose own diff edits its spec's Done-when is flagged to the reviewer
+  and the adjudicator, since that is the builder moving the goalposts.
+
+That is option (c), made concrete. S13 is re-posed on those two points.
+
 ---
 
 ## 4. Code-quality doctrine
@@ -604,6 +721,25 @@ tracks real consolidation findings. Only then add a component join and a trend
 store. Whatever it becomes, it is a **paired, reported** signal beside the
 complexity and size caps, never a lone gate.
 
+**Owner response (2026-09-23): "not even sure how it should be assessed. Code
+is minimised when the number of clock cycles falls, because that implies a
+simpler execution stream over the envelope, and even that is hard to evaluate
+across the distribution of pathways. Certainly not public APIs, since those
+still allow internal call abuse."** That moves the measure from static to
+**dynamic**:
+
+| candidate | what it counts | problem |
+|---|---|---|
+| public symbols (today, reported) | module-level names | rejected by the owner: internal call abuse is invisible to it |
+| static call graph | distinct callable operations | counts what *could* run, not what does |
+| **executed operations over a declared workload** | calls or bytecode instructions actually run (stdlib `cProfile` on Python 3.11) | the workload must stand in for the real distribution of paths; the test suite is not that distribution; noisy between runs |
+| wall-clock or CPU time | cycles, as the owner framed it | dominated by I/O and machine noise; cheaper is not the same as simpler |
+
+No candidate is ready. The honest recommendation is to **park it as a research
+item**. If it is pursued, the measure is executed operations over a declared,
+versioned workload, reported as a trend beside the existing caps, and never a
+gate.
+
 ### 4.2 When a guard is owed (note 3)
 
 > *"Need to emphasize to reviewers and builders - don't build a guard if the
@@ -640,28 +776,33 @@ validating structured output is owed too.
 
 ## 5. Questions for the owner
 
-| # | question | recommendation |
-|---|---|---|
-| S1 | Extend the absolutes check per the tier matrix (TCs excluded), reusing `recorded waiver:`, with a defined suppression rule; run OI-37's sweep? | yes (§1.1) |
-| S2 | LLR → design expectation: prose now, prefix a separate later decision; no edits to old logs? | yes (§1.2) |
-| S3 | Design constraints: each a need, canonical in the need; the provenance anchor on the need, not the stakeholder row; schema ruled with the stakeholder list? | yes (§1.3) |
-| S4 | Retired rows: keep deletion, and amend D-4 to add a structured retirement fragment in `docs/log.d/`, with the deleting commit resolved at render time? | yes (§1.4) |
-| S5 | Test level: drop the SR-first ordering idea (a purpose field would re-attest up to 184 approved TCs); treat the 41 tier disagreements as a priced migration? | (a) (§2.2) |
-| S6 | Observation tests: design an event-triggered runner (state, owner, failure semantics) before approving triggers? | yes (§2.3) |
-| S7 | One session service (act / keep / record), with WI-551 landing through it? | yes (§3.1) |
-| S8 | Telemetry parity: a raw telemetry stream or structured output for codex and opencode, a provider column, and tokens kept distinct from context occupancy? | yes (§3.2) |
-| S9 | Reviewers, critics and probes run in a disposable worktree at the same commit, with the coordinator committing their verdict (a small amendment to OI-76's workflow); build, design-check and adjudicate keep their writes? | yes (§3.3) |
-| S10 | Retention: the adjudicator's lands; builder retention a separate ruled experiment; reviewers never? | yes (§3.4) |
-| S11 | Keep the adjudicator's reviewed commit as the approval act; a mechanical trigger only as its own ruling with authenticated issuance? | yes (§3.5) |
-| S12 | Fan-out: rule on peer-tier delegation; tiers not models; never from review roles; budgets only after an observability design? | yes (§3.6) |
-| S13 | Plan and build: independent review with the planner's intent as a conformance checklist? | (c) (§3.7) |
-| S14 | Operation count: define the measure first; paired and reported, never a lone gate? | yes (§4.1) |
-| S15 | The guard rule in PROCESS.md, linked from the prompts, not in the vendored skill? | yes (§4.2) |
+Re-posed after the owner's responses of 2026-09-23. `DECIDED` means the work
+may proceed as written; `CONDITIONAL` means decided with the stated condition;
+`RE-POSED` means the response changed the question, which is restated here.
 
-**Suggested order**, cheapest and most independent first: S15, S2 and S1 are
-prose and a warn-first check; S7 and S9 reshape the session path together; S8
-precedes any retention beyond the adjudicator (S10); S5 and S6 are designs to
-settle before migrations.
+| # | question | standing |
+|---|---|---|
+| S1 | Extend the absolutes check per the tier matrix (TCs excluded), reusing `recorded waiver:`, with a defined suppression rule; run OI-37's sweep? (§1.1) | **DECIDED**: yes. |
+| S2 | LLR → design expectation: prose now, prefix a separate later decision; no edits to old logs? (§1.2) | **DECIDED**: yes. Consistent with the assumption-tier plan's Q9. |
+| S3 | Design constraints: each is a need whose stakeholder is the owner, canonical in the need; provenance anchor on the need; **no hat becomes a stakeholder**; schema ruled with the stakeholder list? (§1.3) | **RE-POSED** after the owner asked whether hats become stakeholders (they don't). Rule with the assumption-tier sitting (its C1, Q12). |
+| S4 | Retired rows: keep deletion, and amend D-4 to add a structured retirement fragment in `docs/log.d/`? (§1.4) | **CONDITIONAL**: yes, provided the fragments are lookup-only for agents (stated in PROCESS.md, not AGENTS). |
+| S5 | Test level: keep every test in the commit bar (a); optionally let builders run a module's own tests first as an inner loop (d), never as the bar; reconcile the 41 tier disagreements as a priced migration? (§2.2) | **RE-POSED** with the owner's module-scoped idea as (d) and (e). Recommend (a) plus optional (d); not (e), which reverses the test-impact ruling. |
+| S6 | Observation tests: evaluate triggers only at checkpoints (work-item merge, phase close, release), "content change" meaning changed since last judged, sharing the assumption tier's result record? (§2.3) | **RE-POSED** after the owner flagged per-iteration firing as unstable. Design jointly with the assumption tier, before its C3. |
+| S7 | One session service (act / keep / record), with WI-551 landing through it? (§3.1) | **OPEN**: no response yet. |
+| S8 | Telemetry: run one bounded research pass on each routed CLI's structured usage output and a published schema, then adopt that schema, with a provider column and tokens kept distinct from context occupancy? (§3.2) | **RE-POSED**: adopt existing conventions rather than design one. Awaiting a go for the research pass. |
+| S9 | Reviewers, critics and probes run in a disposable worktree at the same commit, with the coordinator committing their verdict? (§3.3) | **CONDITIONAL**: agreed in practice; pilot on REVIEW-A first, built once in the session service, with a stop rule if it costs more than it saves. |
+| S10 | Retention: the adjudicator's lands; builder retention a separate ruled experiment; reviewers never? (§3.4) | **DECIDED**: yes. |
+| S11 | One trunk commit per work item: squash the lane in the mechanical merge, keeping the adjudicator's reviewed commit as the approval act inside it (i), or a machine approval writer (ii)? (§3.5) | **RE-POSED**: the owner holds that a mechanical layer is right. Recommend (i), after checking what is keyed to lane commit hashes and whether the claim commit can fold in. (ii) stays its own ruling under OI-45. |
+| S12 | Fan-out: rule on peer-tier delegation; tiers, not models; never from review roles; budgets only after an observability design? (§3.6) | **DECIDED in principle.** |
+| S13 | Builder bias: the planner writes the work item's Done-when before the build, and a lane that edits its own Done-when is flagged to the reviewer and adjudicator? (§3.7) | **RE-POSED** from option (c): the reviewer already judges against Done-when; what is left is who writes it and whether the builder can move it. |
+| S14 | Operation count: park as research; if pursued, executed operations over a declared workload, reported beside the caps, never a gate? (§4.1) | **RE-POSED**: the owner rejected public-symbol counts and framed it as execution cost. |
+| S15 | The guard rule in PROCESS.md, linked from the prompts, not in the vendored skill? (§4.2) | **DECIDED**: yes. |
+
+**Order, revised.** Now: S15, S2, S1 (prose and a warn-only check). With the
+assumption-tier sitting: S3. Designed together before the assumption tier's
+C3: S6. Once the research pass lands: S8, which gates any retention beyond the
+adjudicator. S7 and S9 still reshape the session path together, and S11's
+checks fold into that work, since the merge slot is in the same code.
 
 ---
 

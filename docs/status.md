@@ -41,7 +41,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 - **Awaiting owner review — notes on spine, sessions and tests:** its sister
   [plan](plans/2026-09-23-owner-notes-spine-sessions-and-tests.md) takes the
   owner's 2026-09-23 notes one by one against what the repo already does, and
-  ends in questions S1–S15. Nothing in it is built.
+  ends in questions S1–S15. The owner responded 2026-09-23: §5 is re-posed
+  (decided, conditional, re-posed, one open). Nothing in it is built.
 - **Next implementation:** resolve the existing SR-161 per-decomposition
   perspective-record gap and complete TC-211's normal sample. Follow the
   existing artifact adjudication route for the Drafted amendments; passing an
