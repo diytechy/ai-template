@@ -20,12 +20,13 @@ pass: each answer gets recorded back into the plan's decision table, as before.
 - a code-facts pass on the lane-to-trunk path (S9, S11);
 - a code-facts pass on S3, S5, S6, S13 and S14.
 
-Key claims were spot-checked against the code before writing this. Anything a
-pass could not verify is marked *(unverified)*.
+Key claims were spot-checked against the code before writing this, and a codex
+Sol cross-check (2026-09-24) then verified the pack; its corrections are applied
+(see the end). Anything not verified is marked *(unverified)*.
 
 **Suggested order.**
 
-1. **Part A** — four decided items the adopter check reopens.
+1. **Part A** — decided items the adopter check reopens (three) or flags (one).
 2. **Part B** — the seven re-posed items.
 3. **Part C** — defects found along the way (no decision; file or not).
 4. **Part D** — what the kit can learn from GilbertCore (optional reading).
@@ -76,21 +77,21 @@ A retirement fragment would be folded and removed on the next refresh.
 | (b) Let them fold into `log.md`; the check and renderer read `log.md` | No new path, but "lookup-only" becomes a search through a 60,000-line log. |
 | (c) A separate registry file | A new registry, with its own machinery. |
 
-### A3. S2's "design expectation" clashes with "expectation" in the needs tier
+### A3. S2's "design expectation" overlaps with ordinary use of "expectation" (flagged, not reopened)
 
 **What was decided.** Call LLRs "design expectations" in prose (SP §1.2;
 consistent with Q9).
 
-**The problem.** The kit's own needs template already uses the word for needs:
-*"a failure-mode expectation"* (`stakeholder-needs.template.toml:16`, `:78`).
-GilbertCore has 13 "edge-case expectation" needs. The same word would name two
-tiers.
+**The overlap.** The kit's needs template uses the word in ordinary language
+inside need rows (*"a failure-mode expectation"*,
+`stakeholder-needs.template.toml:16`, `:78`), and GilbertCore titles a group of
+need rows "Edge-case expectations". Neither is the name of a formal tier, so
+this is a wording overlap, not two tiers sharing a name.
 
 | option | consequence |
 |---|---|
-| **(a) A different name for the LLR tier (recommended)** | Candidates: "design commitments", "design rules", "design detail". No clash in either repo. |
-| (b) Keep "design expectation" and rename the needs usage | Touches the needs template and every adopter's needs prose. |
-| (c) Keep both | One word, two tiers. |
+| **(a) Keep "design expectation", with a glossary line (recommended)** | Your decision stands; the glossary says the tier name is "design expectation" and that "expectation" in a need row is ordinary English. |
+| (b) Choose a different LLR name | "design commitments", "design rules" or "design detail" avoid the overlap entirely, at the cost of revisiting a decided name. |
 
 ### A4. Rig rows can't describe an adopter's stand-ins (Q6, AT §5.3)
 
@@ -109,11 +110,17 @@ an external party.
    rig, the tabletop rig, the bench rig). A row saying a rig emulates the rig
    reads backwards.
 
+**A timing constraint any widening must respect.** Stand-ins are approved with
+the assumptions at DevStg-Boundary, but components and interfaces are approved
+later, at DevStg-Arch. A Boundary-approved row can't point at something that
+doesn't exist yet. And the plan has already decided (Q8) that internal
+assumptions are a later, design-tier id space with nothing built now.
+
 | option | consequence |
 |---|---|
-| **(a) Widen and rename (recommended)** | `emulates` may name an entity, component or interface, and may list several; add a field naming the interface the stand-in plugs into. Rename the row kind to `standin` (or `surrogate`). |
-| (b) Widen only | Fixes scope; the word still reads backwards in hardware projects. |
-| (c) Keep, and build the design-tier assumption space first | The internal case waits for a later id space. |
+| **(a) Rename now; internal stand-ins go to the design tier (recommended)** | Rename the row kind to `standin` (or `surrogate`) and let `emulates` list several external parties. Stand-ins for an adopter's own parts wait for the design-tier assumption space at DevStg-Arch, which must then be built before adopters like GilbertCore need it. Consistent with Q8. |
+| (b) Allow component and interface targets now, approving those stand-ins at DevStg-Arch | Serves hardware adopters sooner, but splits one row kind across two rungs and pulls part of the deferred internal scope forward. |
+| (c) Keep as decided | External-only, and "rig" still reads backwards in hardware projects. |
 
 **Two smaller naming notes from the same check.** `form = "package-wide"`
 misreads where "package" means a software package; `system-wide` or
@@ -136,19 +143,24 @@ adjudicator's reviewed commit setting a merge flag.
 - **Squash contradicts an owner ruling in force.** RULING-6: *"Product changes
   reach the trunk only through the integrator's merge, made `--no-ff` so merges
   are distinguishable in history. Mechanized: a check flags any non-merge trunk
-  commit…"* (`concurrency-restructure.md:224-230`). The audit
-  (`integrate.py:2897`) would flag every squash commit, and the dispatcher
-  treats a failing audit as fatal (`dispatch.py:780-782`).
+  commit…"* (`concurrency-restructure.md:224-230`). The audit runs after each
+  integration run over that run's `base..HEAD` window (`integrate.py:2806-2824`)
+  and flags first-parent non-merge commits touching anything outside the
+  bookkeeping and generated surfaces (`:2897-2934`). A squash commit carrying
+  product changes, made by the integrator in that window, is exactly that, and
+  the dispatcher treats a failing audit as fatal (`dispatch.py:780-782`).
 - **It breaks two live code paths.** Lane cleanup uses `git branch -d`, which
   refuses a squash-merged branch (`integrate.py:2071-2074`), and a partial close
   records lane commit ranges that stop resolving once the lane is gone
   (`kitlib/station.py`, `adjudicate_brief.py:303-331`). An approved LLR
   (LLR-140) and interface IF-080 specify `--no-ff`.
-- **The kit has recorded this hazard itself** (RESYNC_PACK: *"Do not squash
-  away an active lane's claim history"*; repo-lock D-1).
-- **Even squashed, a work item is three trunk commits:** claim, merge, and the
-  post-merge intake mint (for example WI-580: `1af07567`, `dc36375f`,
-  `48fbcaa5`).
+- **The kit has warned against history rewrites generally** (repo-lock D-1:
+  a squash merge *"destroys every recorded sha at once"*).
+- **Even squashed, trunk keeps more than one commit around a work item:** a
+  claim commit (which may batch several work items, `integrate.py:700-704`),
+  the merge, and a post-merge intake mint when intake has drafts to mint
+  (`intake.py:2042-2051`). WI-580, for example, produced three: `1af07567`,
+  `dc36375f`, `48fbcaa5`.
 - **The claim can't fold in.** The merge queue, crash-resume and the frontier
   all read the claim from trunk. "One lane" isn't declared anywhere; the
   template ships `lanes = 2`.
@@ -160,15 +172,23 @@ adjudicator's reviewed commit setting a merge flag.
   adjudication work item (the 2026-09-01 ruling), and a non-adjudication lane
   that flips Status is refused (`integrate.py:1129-1168`).
 
-| option | consequence |
-|---|---|
-| **(a) Keep `--no-ff`; read trunk with `git log --first-parent` (recommended)** | Trunk already reads as one merge per work item (plus its claim and mint), with the lane's detail one level down. No ruling changes, nothing breaks. If the claim and mint commits are the noise, a dashboard or log view can group them by work item. |
-| (b) Squash, with an explicit RULING-6 amendment | Needs: amending RULING-6, LLR-140 and IF-080; reworking cleanup and partial-close records; keeping lane refs (for example `refs/lanes/*`) so hash-keyed records resolve; a RESYNC entry. |
-| (c) A machine approval writer | Unchanged: its own ruling under OI-45. |
+**First, which goal?** Your words were *"a work item lands fully in a single
+commit to the working branch, not multiple (changes + status + iteration)"*.
+That can mean either:
 
-**Your stated goal was one commit per work item on the working branch.**
-Option (a) gives that view without rewriting history. If you want the trunk's
-*actual* commit count reduced, it has to be (b), and it's a large change.
+- **a readable history**: trunk *reads* as one entry per work item; or
+- **an actual single commit**: trunk *contains* one commit per work item.
+
+| option | meets | consequence |
+|---|---|---|
+| **(a) Keep `--no-ff`; read trunk with `git log --first-parent`, grouped by work item** | readable history only | No ruling changes and nothing breaks. The claim and any mint stay as separate trunk commits, so a view (dashboard or log) groups them with their merge. Does **not** meet the actual-single-commit reading. |
+| (b) Squash the lane, amending RULING-6 | neither fully | The lane collapses to one commit, but the claim (possibly shared with other work items) and a conditional mint remain separate. Needs: amending RULING-6, LLR-140 and IF-080; reworking cleanup and partial-close records; keeping lane refs (for example `refs/lanes/*`) so hash-keyed records resolve; a RESYNC entry. |
+| (d) Squash **and** redesign the claim and mint | actual single commit | Everything in (b), plus: the claim moves off trunk (the merge queue, crash-resume, exclusive admission and the frontier all read it from trunk today, and batched claims must split), and the mint folds into the merge slot's commit. The largest change here, touching several rulings. |
+| (c) A machine approval writer | — | Unchanged: its own ruling under OI-45. |
+
+**Recommendation:** if the goal is a readable history, (a). If it is an actual
+single commit, only (d) delivers it, and it is a large redesign that should be
+its own plan before any ruling.
 
 ### B2. S9 — "verify, don't isolate": what the check keys on, and who verifies
 
@@ -184,7 +204,8 @@ that touches anything but its verdict file.
   reviewers carry no trailer.
 - **What *is* reliable:** the coordinator records each session's phase and its
   exact commit range (`# phase:`, `# commits: before..after`) in the session
-  log (`agent_loop.py:4014-4019`). The check can key on that: for a REVIEW
+  log: the range is taken at `agent_loop.py:3906-3909`, the fields assembled at
+  `:3295-3343`, and the header written at `agent_common.py:2565-2585`. The check can key on that: for a REVIEW
   session, the range must add exactly its verdict file.
 - **No dirty-tree check runs per session.** Leftover edits from a reviewer
   could be committed by the next build session under its name.
@@ -199,6 +220,7 @@ that touches anything but its verdict file.
 |---|---|
 | Key the check on the coordinator's recorded session range and phase (not on authors, subjects or trailers)? | Yes. |
 | Run it twice: right after each review session, and again at merge from the committed session logs? | Yes. The second makes it evidence, not trust. |
+| Check for a dirty tree right after each review session (you ruled that it must be flagged), and on failure: fail the review draw, or refuse and stop the lane? | Check immediately, since only then can leftovers be attributed to the reviewer; fail the draw (the existing failed-draw path), so the review is re-run clean. |
 | On a build lane, is the "final pass" the merge ladder's mechanical check (no adjudicator), or should build lanes gain an adjudicator step? | The merge ladder. Adding an adjudicator to every build lane is a much larger change. |
 
 ### B3. S13 — builder bias and Done-when
@@ -263,7 +285,8 @@ judged" by a stored digest; one record shared with the assumption tier.
   gap is the vision's own two headline promises, **readable, maintainable
   code** and **test-first**, which have no need row at all. Others:
   - one fact, one home;
-  - right-size the solution;
+  - right-size the *code* (SN-012 right-sizes the process, not the code, so
+    this is only partly covered);
   - scope is a promise;
   - fail loudly;
   - no provenance in living cells;
@@ -279,8 +302,9 @@ judged" by a stored digest; one record shared with the assumption tier.
 
 | option | consequence |
 |---|---|
-| **(a) Proceed at the assumption-tier sitting, starting with the vision's two headline promises, as a general "provenance" pointer column (recommended)** | A sizeable authoring and re-attestation batch, but it closes the biggest gap first. |
-| (b) Only the ~9 constraint needs that already exist get a provenance cell | Cheap, but leaves the vision's headline promises unowned. |
+| **(a) Phased (recommended):** at the sitting, add the general "provenance" pointer column and the vision's two headline needs; publish the wider census of ~25–30 prose constraints for a later, separate ruling | Closes the biggest gap now at small cost; the large batch is decided on a published list, not in advance. |
+| (b) All at once at the sitting | Every uncovered constraint becomes a need in one batch: a sizeable authoring and re-attestation load. |
+| (c) Only the ~9 constraint needs that already exist get a provenance cell | Cheapest, but leaves the vision's headline promises unowned. |
 
 ### B6. S8 — token telemetry: the research result
 
@@ -292,8 +316,9 @@ judged" by a stored digest; one record shared with the assumption tier.
   - opencode: `run --format json`.
 - **The codex and opencode routes throw it away today.** On a successful codex
   call, `run_session` replaces the captured stream with the `-o` text, so every
-  usage field is blank. Only 27 of 188 codex logs hold any token line, all from
-  failed sessions.
+  usage field is blank. Only 27 of 188 codex logs hold any token line; the
+  successful ones among them predate the current `-o` capture (for example
+  `docs/iteration/071-20260714-232536.log`), and the rest are failed sessions.
 - **The three CLIs disagree on what "input tokens" means.** Claude and opencode
   count cached tokens separately; codex counts them inside input. One column
   would hold two incompatible numbers.
@@ -339,8 +364,11 @@ to run while iterating.
 - **What fits:** counting executed calls with `cProfile` over one of those
   declared commands, as a warn-only trend in `check_perf.py`. That needs no new
   comparator, dependency or gate.
-- **The limit:** instruction-level counting (closer to "clock cycles") needs
-  Python 3.12+, above the kit's 3.11 floor.
+- **The limit:** instruction-level counting is possible on the kit's 3.11 floor
+  (`sys.settrace` with per-opcode events), but it is very slow; Python 3.12's
+  `sys.monitoring` is the cheaper way. Either counts Python bytecode, not CPU
+  cycles, so it approximates your "clock cycles" framing rather than
+  measuring it.
 - **Recommendation:** keep it parked as research. If pursued, it is one more
   performance-budget metric, never a gate.
 
@@ -367,19 +395,23 @@ research surfaced. Each can be filed as a work item.
 
 GilbertCore's household-safety needs are verified only in simulation, which is
 exactly the gap the assumption tier addresses. The assumption tier fits a
-physical robot better than it fits the kit. GilbertCore already does several
-things the plan only proposes:
+physical robot better than it fits the kit. What GilbertCore **implements**,
+and what it only **intends**:
 
-1. **A mechanical check that a stand-in plugs into the real interface.** CI
-   compares the simulated and real graphs, and only whitelisted edge nodes may
-   differ. The plan asserts this for rigs but never checks it.
-2. **Gate on the characterized simulation, not the idealized one.** CI runs
-   suites both ways and gates on the characterized one: a concrete use of a
-   fidelity delta.
-3. **Record once, replay on every commit.** A dated hardware capture is
-   processed by tree-bound automated tests. The plan's result record should
-   allow "tree-bound result over a dated recorded input", not force it into
-   *sampled*.
+1. **Implemented: a check that a stand-in plugs into the real interface.** A
+   smoke-suite test compares the simulated and real graphs; only whitelisted
+   edge nodes may differ (`tests/test_manifest_compile_sr001.py:43-58`). The
+   plan asserts this for rigs but never checks it.
+2. **Intended, not built: gate on the characterized simulation, not the
+   idealized one.** Its design notes plan to run suites both ways and gate on
+   the characterized one (`docs/whiteboard/10-simulation-and-dev-workflows.md:59`);
+   its CI runs ordinary smoke, full and release tiers today. Still a concrete
+   way to state a fidelity delta.
+3. **Partly built: record once, replay.** A dated hardware capture is replayed
+   by an automated test, but only at the release tier, and it skips when no
+   recorded session is present (`tests/test_session_replay_sr038.py`). The
+   plan's result record should still allow "a tree-bound result over a dated
+   recorded input" rather than forcing it into *sampled*.
 4. **An honest "blocked: hardware absent" result.** The plan's evidence states
    have no "due, but the rig or hardware isn't attached".
 5. **Machine-readable operating envelopes.** 40 of 44 SRs carry a
@@ -402,3 +434,26 @@ consequences for the plans:
 No id prefix or cell name collides, and every kit-owned script there is
 byte-identical to the kit at its stamp, so the session-service work arrives as
 a plain overwrite.
+
+---
+
+## Cross-check record
+
+A codex Sol cross-check (reasoning effort high, 2026-09-24) verified this pack
+against both repositories: 5 BLOCKER, 6 MAJOR and 2 MINOR findings. It
+confirmed Part A's A1, A2 and A4 diagnoses, Part B's code facts and counts
+except those corrected below, and every Part C defect. Applied:
+
+- B1 now separates "a readable history" from "an actual single commit", adds the
+  one option that delivers the latter (d), states the audit's exact trigger, and
+  no longer claims every work item is three commits.
+- A3 is a wording overlap, not a tier clash; downgraded from reopened to
+  flagged.
+- A4 exposes the Boundary/Arch timing and the deferred internal-assumption scope.
+- Part D separates what GilbertCore implements from what it intends.
+- B2 adds the dirty-tree decision; B5 adds a phased option; B6 and B7 correct
+  two facts.
+
+One finding was not applied as stated: it said SN-012 already owns
+"right-size the solution". SN-012 right-sizes the *process*; the prose
+constraint is about code. The pack now says "partly covered".
