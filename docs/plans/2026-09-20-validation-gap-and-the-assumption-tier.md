@@ -1198,10 +1198,11 @@ DevStg-Arch (§9, §10.3).
 
 **Hats per piece** can land any time after C1's stakeholder list.
 
-**T — terminology**, any time: one prose pass for the SR wording (Q9) and
-LLR → design expectation (the sister plan's S2), with one PROCESS.md glossary
-line each. Id prefixes and rung names are unchanged; changing them is a
-separate later decision.
+**T — terminology**, any time: one prose pass for the SR wording (Q9:
+*system specification*) and LLR → design expectation (the sister plan's S2),
+with one PROCESS.md glossary line each. Id prefixes and rung names are
+unchanged here; the prefix rename (`SR-` → `SS-`, `LLR-` → `DE-`) is a
+deferred work item taken last (Q9, 2026-09-24).
 
 **Not proposed:** a new stage rung; deleting the `B` rows; moving interfaces to
 DevStg-Boundary.
@@ -1226,7 +1227,7 @@ revision this document now proposes, for the owner to accept or reject.
 | Q6 | Does a rig get its own crossing? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by review 2).** Still no crossing — and no entity either: `enabling` means a runtime dependency, so rigs are rows in `assumptions.toml` with `emulates` (§5.3). **Revised 2026-09-24** (reopened by the adopter check; owner accepted [review pack](2026-09-24-owner-review-pack.md) A4, naming the row): the row kind is `surrogate` (`[surrogate.SUR-##]`), since "rig" names the real hardware in hardware projects; `emulates` lists one or more external parties; surrogates for an adopter's own parts wait for the design-tier assumption space (Q8), to be built before hardware adopters need it. Two naming fixes ride with it: SR `form` `package-wide` → `cross-cutting`, and the derived evidence ladder is the **evidence level**, leaving `standing` to validity. |
 | Q7 | Does this ship downstream in v1? | **DECIDED in principle: yes**; schema migration deferred, gate optional (§10.4). |
 | Q8 | Where do assumption rows live? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by reviews 1, 2).** A dedicated `assumptions.toml`: in `external.toml` an assumption approval would re-bless drift in the LOCKED frame rows (§10.1). Internal assumptions: direction recorded, nothing built. |
-| Q9 | Rename SR to SS? | **DECIDED: prose now, prefix later** — "prefix never" likely. |
+| Q9 | Rename SR to SS? | **DECIDED: prose now, prefix later.** The prose name, ruled 2026-09-24: **system specification**. The prefix rename is now wanted, taken last: `SR-` → `SS-` with `LLR-` → `DE-`, applied globally, archives included, as a deferred, lowest-priority work item (owner, 2026-09-24; §11 T). |
 | Q10 | Derive `frame`, or write it? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by reviews 1, 2).** Nothing is written on a bundle; `coincident` is written where it holds; the rest is derived (§4). |
 | Q11 | Where does an SR's need link come from? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by review 1).** The SR keeps `sn_refs`; it adds `da_refs`; an assumption's needs are derived (§6.2). |
 | Q12 | Where does a stakeholder live? | **DECIDED: a small list** in `stakeholder-needs.toml`, cited by needs (`stakeholder_refs`) (§6.2). |
