@@ -50,7 +50,7 @@ CORE
   WHY         Stakeholder ◄── SN ◄── SR                   (stakeholder_refs, sn_refs: unchanged direction)
   W           SR ── da_refs ──► DA ── effect_at ──► [B]   the bundle where the outcome lands
               SR ── coincident ──   "its S alone delivers its needs"  (the explicit alternative)
-  rigs        RIG ── emulates ──► EXT          a fidelity DA names its rig (realized_by)
+  surrogates  SUR ── emulates ──► EXT[]        a fidelity DA names its surrogate (realized_by)
   evidence    TC ── verifies ──► SR / LLR      TC ── assumption_refs ──► DA
 
 EXTENSION (at DevStg-Arch, where interfaces live)
@@ -66,7 +66,7 @@ EXTENSION (at DevStg-Arch, where interfaces live)
   boundary at DevStg-Boundary, activated deliberately (§6.2, §10).
 - **Each SR either cites the assumptions its argument needs or states that its
   S alone delivers its needs** — absence is unknown, never coincidence (§4).
-- **Rigs are rows beside the assumptions**, not `enabling` parties: the frame's
+- **Surrogates are rows beside the assumptions**, not `enabling` parties: the frame's
   `enabling` means a runtime dependency (§5.3).
 
 **The work, in packages** (§11; all wait for the sitting):
@@ -260,8 +260,8 @@ where it is true:
   assumptions land there and how its interfaces are classified — counts and
   edges, not a label. A bundle where nothing lands asserts nothing.
 
-**A rig does not move an outcome.** A rig observes a *model* of the world, not
-the world (§8.2). The outcome stays where `effect_at` says; the rig adds a
+**A surrogate does not move an outcome.** A surrogate observes a *model* of the world, not
+the world (§8.2). The outcome stays where `effect_at` says; the surrogate adds a
 fidelity assumption and cheaper evidence beside it.
 
 ### The candidates, assessed
@@ -314,7 +314,7 @@ own build and release (Q16).
 
 **Links between the frames, typed.** Transition — the Template installed into an
 operating environment — is the only **lifecycle** hand-off. Other edges also
-cross the frames and are drawn as what they are: a rig's `emulates` edge to the
+cross the frames and are drawn as what they are: a surrogate's `emulates` edge to the
 party it stands in for, and an assumption measured in one frame whose outcome
 lands in the other.
 
@@ -355,20 +355,30 @@ last three were traced to their full log entries (`docs/log.md:1510-1566`,
 asserts `B-06`, `B-07` and `EXT-004` are absent, so any return is re-pinned
 under the same ruling.
 
-### 5.3 Rigs are not `enabling` parties
+### 5.3 Surrogates are not `enabling` parties
 
-The first revision recorded each rig as an `EXT` row with `class = "enabling"`.
+The first revision recorded each surrogate as an `EXT` row with `class = "enabling"`.
 The second review found that misreads the vocabulary: the frame defines
 `enabling` as *"something the system depends on to run"* (`external.toml:41-46`)
-— a runtime dependency — not 15288's enabling system. A test rig is neither a
+— a runtime dependency — not 15288's enabling system. A test surrogate is neither a
 party outside the system nor something it runs on.
 
-So rigs become their own rows, beside the assumptions whose fidelity they carry
-(`[rig.RIG-##]` in `assumptions.toml`, §6.2): a name, the party it `emulates`,
+So surrogates become their own rows, beside the assumptions whose fidelity they carry
+(`[surrogate.SUR-##]` in `assumptions.toml`, §6.2): a name, the parties it `emulates`,
 and a description. The view still draws them — in the delivery frame, with a
 dotted edge to the party each emulates — which is what the owner asked for: *"a
 component has a maintained virtualized counterpart."* The frame's `class`
 vocabulary keeps its meaning, and the entity count does not grow by three.
+
+**The row kind is `surrogate`, and it emulates only external parties** (Q6,
+2026-09-24). It was first called a *rig*, which in a hardware project names the
+real hardware (a stereo rig, a bench rig), so a row reading "the rig emulates
+the rig" ran backwards; earlier records say *rig*. `emulates` may list several
+external parties. A surrogate for an adopter's **own** parts (a simulated plant,
+a software-in-the-loop runtime) cannot be written here: surrogates are approved
+at DevStg-Boundary, and the components and interfaces such a row would name are
+approved later, at DevStg-Arch. Those wait for the design-tier assumption space
+Q8 deferred, which must be built before a hardware adopter needs it.
 
 ### 5.4 The human's three edges
 
@@ -424,7 +434,7 @@ environment**.
 | `B-01`, `B-02`, `B-04` | `system = "operation"`; `B-02` re-pointed to the human | operation |
 | *new* read bundle, *new* model-runner bundle | **add**, `system = "operation"` | operation |
 | `B-05` | `system = "delivery"` | delivery |
-| rigs | **not frame rows** — `[rig]` rows in `assumptions.toml` (§5.3) | drawn in delivery |
+| surrogates | **not frame rows** — `[surrogate]` rows in `assumptions.toml` (§5.3) | drawn in delivery |
 
 **Counts.** Entities 4 → **4** (the human added, the adopter dropped). Bundles 4
 → **6** (read, model runner). Relationships 3 → **1** (`REL-001` merged,
@@ -434,7 +444,7 @@ environment**.
 
 `B` rows stay as authored identity rows — id, party, direction, `system`,
 `carries`, status — because two things need a stable subject to cite: the
-package-wide SRs (SR-031, SR-034, SR-035, SR-114) and every assumption's
+cross-cutting SRs (SR-031, SR-034, SR-035, SR-114) and every assumption's
 `effect_at`. Their **membership** is derived from IF tie-backs, as the dashboard
 already derives it (`frame_context`'s `realized_by`). The redraw re-points some
 tie-backs (the generated surfaces to the read bundle; the runner invocation
@@ -509,8 +519,8 @@ its needs derive to SN-002 and SN-025, and it lands on the read bundle.
 not a bundle — the human has two — so the assumption must say where its outcome
 lands. The bundle's party must be the served needs' stakeholder party, or a
 party that `mediates` for it (§5.4). The one exception is a **fidelity**
-assumption, which names its rig (`realized_by = "RIG-##"`) and lands on the
-emulated party's bundle: its claim is about the rig matching the real party, not
+assumption, which names its surrogate (`realized_by = "SUR-##"`) and lands on the
+emulated party's bundle: its claim is about the surrogate matching the real party, not
 about a stakeholder's outcome.
 
 **Maturity and validity are separate fields.** An Approved assumption can later
@@ -533,26 +543,26 @@ need, not on the stakeholder row (the sister plan, §1.3). A need that an
 assumption serves must have at least one stakeholder with a `party`, or the
 reach check has nothing to check.
 
-**Rig rows** sit in the same registry:
+**Surrogate rows** sit in the same registry:
 
 ```toml
-[rig.RIG-##]
+[surrogate.SUR-##]
 name        = "Scripted model runner"
-emulates    = "EXT-005"
+emulates    = ["EXT-005"]     # one or more external parties
 description = """FAKE_AGENT: answers the runner contract from a script;
                  reproduces protocol, not judgment."""
 status      = "Drafted"
 ```
 
-**Rig and stakeholder rows carry `status`, and it is wired**, because
+**Surrogate and stakeholder rows carry `status`, and it is wired**, because
 `emulates` and `party` are load-bearing: they decide fidelity and reach.
 
 | tier | approved at | in which act | the gate relies on it when |
 |---|---|---|---|
-| rig | DevStg-Boundary, with the assumptions | the same brief and batch as the DAs (C4) — a fidelity DA and its rig are judged together | a fidelity DA counts only if its rig is Approved |
+| surrogate | DevStg-Boundary, with the assumptions | the same brief and batch as the DAs (C4) — a fidelity DA and its surrogate are judged together | a fidelity DA counts only if its surrogate is Approved |
 | stakeholder | DevStg-Needs, with the needs — human-held here | the needs' approval act (C1) | the reach check reads only Approved stakeholder rows |
 
-Each of those files then holds two approvable tiers (assumptions and rigs; needs
+Each of those files then holds two approvable tiers (assumptions and surrogates; needs
 and stakeholders), so approval must be tier-specific, not file-wide (§10.1).
 
 **`da_refs`, when present, is non-empty.** An empty list asserts nothing and is
@@ -602,7 +612,7 @@ note already records, now as a row.
 - an SR with neither `da_refs` nor a `coincident` waiver — *unclassified*;
 - a DA that no SR cites, with no `falsifier`, or with an `effect_at` whose party
   is neither the served stakeholder's party nor a party that mediates for it;
-- a rig no fidelity DA names;
+- a surrogate no fidelity DA names;
 - a need whose stakeholder is a kit-frame party, where none of its SRs sits on a
   kit bundle and no assumption it rests on lands on one — the frame is missing a
   bundle, or the need names the wrong stakeholder (`REL-001` and the read edge
@@ -636,7 +646,7 @@ through its own approval brief (§10.2).
 - **An over-strong W is a defect, not safety** (Cobleigh, Giannakopoulou &
   Păsăreanu, TACAS 2003): an assumption broad enough to make the entailment
   trivially true has moved the problem, not solved it.
-- **For a rig, state the delta, not the resemblance.** The *"nearly"* in *"the
+- **For a surrogate, state the delta, not the resemblance.** The *"nearly"* in *"the
   same interface (or nearly the same)"* is the fidelity assumption.
 
 | weak — states the resemblance | strong — states the delta |
@@ -665,7 +675,7 @@ four things:
 | a hat applied to… | produces |
 |---|---|
 | an SR | a **constraint**: a tightened acceptance clause (`hat_refs`) |
-| a whole bundle | a **cross-cutting property**: one SR against the bundle (the package-wide class) |
+| a whole bundle | a **cross-cutting property**: one SR against the bundle (the `cross-cutting` form) |
 | a gap nobody stated | a **new SR** — the rare case |
 | a DA | an **obstacle**: UNATTENDED-OPS asking *"what happens when its input is missing, stale, or half-written?"* writes the DA's `obstacle` cell |
 
@@ -685,7 +695,7 @@ currently collects one systematically.
 |---|---|---|---|---|
 | **1** | **S** | a TC that `verifies` an SR or LLR | cheap | every commit — nearly all 194 TCs today |
 | **2** | **W** | a TC whose `assumption_refs` names the DA | cheap-to-moderate — *free where it is a metamorphic relation, (c)* | continuous or event-triggered |
-| **3** | **R through W** | the bundle where the outcome lands, via a translation or a rig | expensive — *a rig splits the cost rather than removing it (§8.2)* | sparse, sampled — *see the limit below* |
+| **3** | **R through W** | the bundle where the outcome lands, via a translation or a surrogate | expensive — *a surrogate splits the cost rather than removing it (§8.2)* | sparse, sampled — *see the limit below* |
 
 **W-evidence has its own field.** `Verifies` means SR or LLR everywhere — the
 trace forest, the SR → LLR → TC matrix, phase grouping (`derive_stage.py:144-151`)
@@ -698,10 +708,10 @@ record's classification, the census and the reports (§10.2).
 **Evidence is a result, not a test's existence.** The third review was right
 that a TC *specifying* a check is not evidence: PROCESS.md says *"`Approved` says
 the row's TEXT is blessed and says nothing about tests passing — whether they
-pass is the harness's answer, never a cell's."* So an assumption's evidence
-standing is derived from **results**:
+pass is the harness's answer, never a cell's."* So an assumption's **evidence
+level** is derived from **results** (the `standing` cell names only validity):
 
-| standing | derived when |
+| evidence level | derived when |
 |---|---|
 | `assumed` | no TC evidences it |
 | `specified` | a TC evidences it, but there is no current passing result |
@@ -719,7 +729,7 @@ only its policy — `sampling` and `max_age`, which may not be under seven days
 (Q25). **One freshness model:** a record is stale when it passes its expiry,
 or when, at a checkpoint, the digest of what the check reads no longer matches
 the judged digest (the sister plan's S6 uses the same rule and record). A stale
-record makes the standing `specified` again; a failing one is falsification evidence against the
+record makes the evidence level `specified` again; a failing one is falsification evidence against the
 assumption.
 
 **A passing sparse sample does not satisfy the gate by itself.** The limit below
@@ -732,7 +742,7 @@ and threshold that justifies a positive claim (sample size, acceptance rule); a
 
 **`accepted_risk` reopens on triggers** (Q29): a failed sample, a change to the
 text of a need the assumption serves, or a change to the assumption's own text
-returns its evidence standing to unproven until the risk is re-accepted or
+returns its evidence level to unproven until the risk is re-accepted or
 evidence arrives. There is no clock: a risk does not lapse because time passed.
 An assumption-only TC may belong to several phases, as the SRs citing its
 assumption may; `derive_stage` already places one TC in several phase groups.
@@ -772,13 +782,13 @@ discovery, not a coverage claim.** Faulkner (2003) found random 5-user sets
 caught anywhere from **55% to 99%** of known problems; Schmettow (2012) shows
 discovery is over-dispersed. So **a passed sparse probe is not evidence that an
 assumption holds; only a failed one is evidence that it does not** — and the
-same holds for a green run against a rig. If a human-axis assumption is
+same holds for a green run against a surrogate. If a human-axis assumption is
 load-bearing, the honest options are to restrict the ODD or accept a recorded
 risk.
 
 ---
 
-## 8. Enabling systems and rigs
+## 8. Enabling systems and surrogates
 
 ### 8.1 Enablement, and where verification sits
 
@@ -800,46 +810,46 @@ verification around it: `tests/` verifies the harness, and CLAUDE.md traces
 |---|---|---|
 | **is it verified?** | *everything* | ordinary tests |
 | **does it discharge a spine requirement?** | whatever a requirement is written about | a TC with `verifies` |
-| **does it stand in for something else?** | rigs only | a rig row with `emulates`, and a fidelity DA |
+| **does it stand in for something else?** | surrogates only | a surrogate row with `emulates`, and a fidelity DA |
 
-### 8.2 Translation and rig: one construct at two weights
+### 8.2 Translation and surrogate: one construct at two weights
 
 - A **translation** converts an effect into something the system can check by
   *claiming* the conversion holds: a DA alone.
-- A **rig** converts it by *performing* the conversion — simulating the effect
+- A **surrogate** converts it by *performing* the conversion — simulating the effect
   and putting the output against a rubric: a DA with `realized_by`.
 
-**A rig plugs into an interface that already exists.** It presents the same
+**A surrogate plugs into an interface that already exists.** It presents the same
 interface as the party it replaces; only what is plugged into the far side
-changes. It costs one rig row and one fidelity DA — no new interface, no bundle,
+changes. It costs one surrogate row and one fidelity DA — no new interface, no bundle,
 no entity.
 
-**What a rig buys, and what it does not.** It does not make the real phenomenon
+**What a surrogate buys, and what it does not.** It does not make the real phenomenon
 observable, so **the outcome stays where the served assumption's `effect_at`
 says**. It makes a *model* of the world observable, and the evidence gets
 cheaper:
 
-| the assumption before the rig | the assumption after |
+| the assumption before the surrogate | the assumption after |
 |---|---|
 | *"zero orphans ⟹ a reviewer trusts the chain"* | *"a model judging the rendered artifact against rubric R judges as a human would"* |
 | *"this current curve ⟹ the apple is gripped"* | *"the contact model grips like the real gripper does"* |
 
 The left column is untestable in principle; the right is a **fidelity**
 assumption — bounded, and testable by calibration. The product changes every
-commit and the rig changes yearly, so obligation 3 **splits**: cheap and
-continuous against the rig, expensive and sparse against the rig's fidelity.
+commit and the surrogate changes yearly, so obligation 3 **splits**: cheap and
+continuous against the surrogate, expensive and sparse against the surrogate's fidelity.
 
-### 8.3 The rigs this repo already runs
+### 8.3 The surrogates this repo already runs
 
-| rig | emulates | what it is | fidelity delta |
+| surrogate | emulates | what it is | fidelity delta |
 |---|---|---|---|
 | **Scripted model runner** | `EXT-005` | `FAKE_AGENT` (`tests/test_agent_loop.py:34`) answers `IF-041`'s runner contract from an `actions.txt` script | reproduces protocol, not judgment — *a model good enough to stand in for a model is circular* |
-| **Scaffold rig** | `EXT-001` | the scaffold fixture (`tests/conftest.py:1-7`): *"bootstrap a real scaffold in a temp dir and run the actual commands"* — the narrowed session is the operating environment | an adopter property the temp dir lacks (existing hooks, CRLF settings, a monorepo layout) |
+| **Scaffold surrogate** | `EXT-001` | the scaffold fixture (`tests/conftest.py:1-7`): *"bootstrap a real scaffold in a temp dir and run the actual commands"* — the narrowed session is the operating environment | an adopter property the temp dir lacks (existing hooks, CRLF settings, a monorepo layout) |
 | **Render critic** | `EXT-006` | `render-dashboard-critique` plus a vision model over declared width/theme/tab renders; two consecutive approvals at one content hash | a model revision shifting judgment silently; a rubric overfit to one model's eye |
 
-The scaffold rig also settled the old `REL-001` question: the registry's rule
+The scaffold surrogate also settled the old `REL-001` question: the registry's rule
 that a relationship *"must never grow a realizing IF row. **Wanting one means
-what you have is a boundary crossing**"* could not coexist with a rig that had
+what you have is a boundary crossing**"* could not coexist with a surrogate that had
 been standing at `REL-001` since before the frame was drawn.
 
 What nothing does today is treat **the judge** as an assumption:
@@ -847,7 +857,7 @@ What nothing does today is treat **the judge** as an assumption:
 ```toml
 [assumption.DA-###]
 effect_at    = ["B-##"]         # the read bundle — the emulated party's
-realized_by  = "RIG-##"         # the render critic
+realized_by  = "SUR-##"         # the render critic
 assumption   = """A vision model judging the rendered dashboard against the
                   rubric reaches the verdict a human reviewer would."""
 holds_when   = """An image-capable model; the rubric carries its accumulated
@@ -865,10 +875,10 @@ Cited by SR-052, SR-053 and SR-054 (SN-023, SN-024).
 This repo cannot dogfood its own development scripts: executing the scripts
 being modified has repeatedly failed to give a usable result. The general rule:
 
-> **A rig derived from the system under test cannot falsify assumptions the two
+> **A surrogate derived from the system under test cannot falsify assumptions the two
 > share.**
 
-Self-execution is the limit case: the rig *is* the system, and can falsify
+Self-execution is the limit case: the surrogate *is* the system, and can falsify
 nothing. It is also why `FAKE_AGENT` has the right shape: a scripted stand-in
 that does not run the real thing shares no assumptions with it.
 
@@ -921,7 +931,7 @@ still Drafted, so their approvals are owed regardless.
 **An SR carries an explicit form** — introduced in the core (C2, §10.2k) so it
 rides the same re-attestation batch, and used here: an SR reached by no
 interface must not look the same as one meant to rest only on an assumption.
-`form = "interface" | "assumption" | "package-wide"`, a closed cell; absence is
+`form = "interface" | "assumption" | "cross-cutting"`, a closed cell; absence is
 a finding, not a default.
 
 **What the extension adds to the gate** (§11, C5): every SR of form
@@ -949,7 +959,7 @@ boundary and relationship rows. A dedicated file gets its own ledger entry. It
 also settles:
 
 - the **one-path-per-id-column** rule of `test_dogfood_sync.TOML_REGISTRIES`
-  (`:246-312`) — `DA-ID` and `RIG-ID` get one path each;
+  (`:246-312`) — `DA-ID` and `SUR-ID` get one path each;
 - the **approval act**: `acceptance_record.OUTSIDE_THE_APPROVAL_ACT` puts
   `external.toml` outside the approval-act rung by ruling; a new registry joins
   one side deliberately — proposed: inside, with its own approval brief (§10.2),
@@ -959,7 +969,7 @@ also settles:
 
 **But a separate file is not enough on its own: approval must be
 tier-specific.** The third review found the same coalescing one level down:
-`assumptions.toml` holds assumptions *and* rigs, and `stakeholder-needs.toml`
+`assumptions.toml` holds assumptions *and* surrogates, and `stakeholder-needs.toml`
 would hold needs *and* stakeholders. The fourth review showed the fix is larger
 than re-keying a ledger: the approval identity is a registry path end to end —
 `--approves <path>=<ref>` is parsed per path (`baseline_snapshot.py:277-304`),
@@ -971,7 +981,7 @@ Two ways out, to be chosen at the sitting:
 | option | what it takes | also fixes |
 |---|---|---|
 | **tier-specific approval identity** — path plus id column, through parsing, refusal, write scope and stamping; the whole file is copied only after every other tier in it is shown to have no unapproved drift | a real change to `baseline_snapshot` and its tests | the same hazard in `external.toml`'s three tiers, which exists today |
-| **one tier per file** — rigs and stakeholders in their own files | two more registries, each with the new-registry machinery of §10.2b | nothing beyond the new tiers |
+| **one tier per file** — surrogates and stakeholders in their own files | two more registries, each with the new-registry machinery of §10.2b | nothing beyond the new tiers |
 
 **Owner ruling (Q26, 2026-09-23): neither — row-level refusal.** Each row
 already carries its own Status, and the snapshot copy is the owner's asserted
@@ -1133,7 +1143,7 @@ human-held act. If the owner rules the sister plan's S3 with Q12, the
 constraint-provenance cell on needs lands here too: the cell, its carrier and
 template entries, validation, rendering and dogfood sync.
 
-**C2 — write the assumptions.** DA and rig rows derived from the person-facing
+**C2 — write the assumptions.** DA and surrogate rows derived from the person-facing
 needs — each a new Drafted claim — and, on every SR, `da_refs` or a `coincident`
 waiver, and its `form`. **Warn-only, genuinely:** the arms are off, so nothing moves the derived
 stage.
@@ -1146,9 +1156,9 @@ that gain them join C4's re-attestation batch. Start with the metamorphic subset
 
 **C4 — activation, in one reviewed commit (Q20).** With the arms still off, the
 owner reviews two batches: the **re-attestation batch** for the SRs and TCs whose
-approved content C2 and C3 changed (§10.2k), and the **assumptions and rigs**
+approved content C2 and C3 changed (§10.2k), and the **assumptions and surrogates**
 through their brief (§10.2g). One commit then carries the re-attestations, the
-DA and rig approvals and the arm switch, under the moved dial and its
+DA and surrogate approvals and the arm switch, under the moved dial and its
 enforcement (§10.2h), with row-level refusal in place (§10.2j). No
 committed tree reads a regression. If one did, `check.py` would deselect its
 three DevStg-Tests steps (`smoke`, `design-flows`, `trajectory`; this repo's
@@ -1168,7 +1178,7 @@ results exist only after the harness runs, so evidence cannot gate an early rung
 - **At DevStg-Boundary — maturity only:** for every SR, either its `coincident`
   waiver holds, or each assumption it cites is **Approved** and **active**,
   lands on its stakeholders' party (or a mediating one), and — if a fidelity
-  assumption — names an Approved rig.
+  assumption — names an Approved surrogate.
 - **At DevStg-Release — evidence, after the harness:** each of those assumptions
   has a **current passing result** of the right kind (§7: `monitored`, or
   `sampled` with a justified sampling model) or a recorded `accepted_risk`. This
@@ -1210,7 +1220,7 @@ revision this document now proposes, for the owner to accept or reject.
 | Q3 | `frame` vocabulary: two values or three? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by reviews 1, 2).** Three words kept, `coincident` explicit — on the SR in the core, on the IF in the extension. No word on a bundle (§4). |
 | Q4 | How heavy is the evidence descriptor? | **DECIDED: `assumed \| sampled \| monitored`** — now homed as TC `sampling`, `assumed` derived (§7). |
 | Q5 | May a W-test stand alone? | **DECIDED 2026-09-23 (owner accepted the revision), intent kept.** Yes, through TC `assumption_refs`; `Verifies` conditionally required (§7). |
-| Q6 | Does a rig get its own crossing? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by review 2).** Still no crossing — and no entity either: `enabling` means a runtime dependency, so rigs are rows in `assumptions.toml` with `emulates` (§5.3). **REOPENED 2026-09-24 (adopter check):** `emulates` can name only an external party, while an adopter's stand-ins mostly emulate its own parts, and "rig" means real hardware in hardware projects; proposed: widen `emulates`, name the plugged interface, rename the row kind ([review pack](2026-09-24-owner-review-pack.md) A4). |
+| Q6 | Does a rig get its own crossing? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by review 2).** Still no crossing — and no entity either: `enabling` means a runtime dependency, so rigs are rows in `assumptions.toml` with `emulates` (§5.3). **Revised 2026-09-24** (reopened by the adopter check; owner accepted [review pack](2026-09-24-owner-review-pack.md) A4, naming the row): the row kind is `surrogate` (`[surrogate.SUR-##]`), since "rig" names the real hardware in hardware projects; `emulates` lists one or more external parties; surrogates for an adopter's own parts wait for the design-tier assumption space (Q8), to be built before hardware adopters need it. Two naming fixes ride with it: SR `form` `package-wide` → `cross-cutting`, and the derived evidence ladder is the **evidence level**, leaving `standing` to validity. |
 | Q7 | Does this ship downstream in v1? | **DECIDED in principle: yes**; schema migration deferred, gate optional (§10.4). |
 | Q8 | Where do assumption rows live? | **DECIDED 2026-09-23 (owner accepted the revision; reopened by reviews 1, 2).** A dedicated `assumptions.toml`: in `external.toml` an assumption approval would re-bless drift in the LOCKED frame rows (§10.1). Internal assumptions: direction recorded, nothing built. |
 | Q9 | Rename SR to SS? | **DECIDED: prose now, prefix later** — "prefix never" likely. |
@@ -1226,7 +1236,7 @@ revision this document now proposes, for the owner to accept or reject.
 | Q19 | `mediates` on the session? | **DECIDED 2026-09-23** (raised by review 2). It only stops the reach check reading the session's crossings as not the human's; it changes no sign-off. Whether an assumption needs a person present is judged at its human-held approval, through `holds_when`; no attendance cell. Revisit if a DA is falsified by an unattended event. One cell lets an outcome on a session bundle count as the human's (§5.4). |
 | Q20 | Activate the stage arms as a separate step? | **DECIDED 2026-09-23, amended, reconfirmed** (raised by review 2): the batch is reviewed with the arms off, and its approvals and the arm switch land in ONE commit, so no committed tree reads the regression (§11, C4). The owner first chose this on a miscount of two deselected steps; review 5 corrected it to three (`smoke`, `design-flows`, `trajectory`), and the owner reconfirmed. |
 | Q21 | Key snapshot authorization by tier, not by file? | **SUPERSEDED by Q26** (review 5): review 4 showed re-keying the ledger is not enough, because approval identity is a path end to end (§10.1). |
-| Q22 | Evidence as a current passing result, not a TC's existence? | **DECIDED 2026-09-23** (raised by review 3). LLM verdicts count only through the rig route (§8.3). Yes — tree-bound for automated assumption TCs, dated with a `max_age` for sampled and monitored ones (§7). |
+| Q22 | Evidence as a current passing result, not a TC's existence? | **DECIDED 2026-09-23** (raised by review 3). LLM verdicts count only through the surrogate route (§8.3). Yes — tree-bound for automated assumption TCs, dated with a `max_age` for sampled and monitored ones (§7). |
 | Q23 | Re-attest the approved SRs and TCs that C2 and C3 amend, before activation? | **DECIDED 2026-09-23, on condition it is documented**: each new cell's class recorded in `acceptance_record.py`'s classification table and mirrored in `registry-machinery-reference.md` §10 (revised by review 4). Only approved-content cells re-attest; link cells are traced, like `SN-Refs` and `Verifies` (§10.2k). |
 | Q24 | How does sampled evidence count? | **DECIDED 2026-09-23** (raised by review 4). As falsification only, unless a declared sampling model justifies a positive claim, `holds_when` is narrowed, or the risk is accepted (§7). |
 | Q25 | Where do sampled and monitored results live? | **DECIDED 2026-09-23** (raised by review 4). `max_age` is proposed by the TC's author, approved with the TC, and mechanically floored at 7 days; expiry reverts to `specified`, never `falsified`. In their own result record keyed by TC, not on the approved TC (§7, §10.2l). |
