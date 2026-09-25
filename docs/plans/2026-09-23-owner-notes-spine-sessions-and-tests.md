@@ -354,6 +354,22 @@ included. The recommendation is revised:
 - **One freshness model.** The shared record stores a digest of the state it
   judged. At a checkpoint the check is due when that digest no longer matches
   what it reads, or when its `max_age` has passed, whichever comes first.
+
+**Owner ruling (2026-09-24): the checkpoints are work-item merge and release**
+([review pack](2026-09-24-owner-review-pack.md) B4). Phase close is not a code
+event, so it joins only if it gets a defined trigger. The owner's concern was an
+LLM judging on every work item, and the design never does that:
+
+- **The check at a checkpoint is mechanical:** a hash of the files each
+  observation TC declares it reads, compared with the digest stored beside its
+  last result. A work item that touches none of those files changes nothing.
+- **A due TC mints one re-judge work item**, and the mint skips a title already
+  queued, so many merges touching one TC's inputs still produce one run. The
+  LLM, or the person, runs only when that item is picked up.
+- **The declared inputs are the impact analysis**, chosen by the TC's author
+  and reviewed with the TC: TC-055 declares the dashboard generator, its
+  template and the rubric, not the rendered page, which changes whenever the
+  registries do.
   Automated evidence stays tree-bound in `docs/test/evidence`, as today.
 
 ---
@@ -909,7 +925,7 @@ may proceed as written; `CONDITIONAL` means decided with the stated condition;
 | S3 | Design constraints: each is a need whose stakeholder is the owner, canonical in the need; provenance anchor on the need; **no hat becomes a stakeholder**; schema ruled with the stakeholder list? (§1.3) | **RE-POSED** after the owner asked whether hats become stakeholders (they don't). Rule with the assumption-tier sitting; if ruled, the provenance cell lands in its C1. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B5. |
 | S4 | Retired rows: keep deletion, and amend D-4 to add a structured retirement fragment in `docs/log.d/`? (§1.4) | **CONDITIONAL**: yes, provided the fragments are lookup-only for agents (stated in PROCESS.md, not AGENTS). **Home revised 2026-09-24** (reopened because `trunk_step` compiles and deletes every top-level `docs/log.d/*.md`; owner accepted [review pack](2026-09-24-owner-review-pack.md) A2): the fragments live in `docs/log.d/retired/`, which the non-recursive fold skips; the template gains an `orphans-allow` line for it. |
 | S5 | Test level: keep every test in the commit bar (a); optionally let builders run a module's own tests first as an inner loop (d), never as the bar; reconcile the 41 tier disagreements as a priced migration? (§2.2) | **RE-POSED** with the owner's module-scoped idea as (d) and (e). Recommend (a) plus optional (d); not (e), which reverses the test-impact ruling. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B7. |
-| S6 | Observation tests: evaluate triggers only at checkpoints (work-item merge, phase close, release), "content change" meaning changed since last judged, sharing the assumption tier's result record? (§2.3) | **RE-POSED** after the owner flagged per-iteration firing as unstable. One freshness model: the shared record's judged-state digest, or `max_age`, whichever trips first. Design jointly with the assumption tier, before its C3. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B4. |
+| S6 | Observation tests: evaluate triggers only at checkpoints (work-item merge, phase close, release), "content change" meaning changed since last judged, sharing the assumption tier's result record? (§2.3) | **DECIDED 2026-09-24** ([review pack](2026-09-24-owner-review-pack.md) B4): the checkpoints are work-item merge and release; phase close joins only with a defined trigger. At a checkpoint the check is a mechanical hash of each TC's declared inputs; a due TC mints one deduplicated re-judge item, so no LLM runs at the check. One freshness model: the shared record's judged-state digest, or `max_age`, whichever trips first. Design jointly with the assumption tier, before its C3. |
 | S7 | One session service (act / keep / record), with WI-551 landing through it? (§3.1) | **DECIDED**: (a), with the owner's direction to consolidate as far as possible: shared stages over per-role or per-provider code. It is schema-neutral and proceeds now: S8's schema and S10's retention are added to it when each is cleared. |
 | S8 | Telemetry: run one bounded research pass on each routed CLI's structured usage output and a published schema, then adopt that schema, with a provider column and tokens kept distinct from context occupancy? (§3.2) | **RE-POSED**: adopt existing conventions rather than design one. Awaiting a go for the research pass. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B6. |
 | S9 | How are reviewers kept from changing the work they review? (§3.3) | **DECIDED 2026-09-23: verify, don't isolate.** Reviewers work and commit in the lane as today (OI-76 unchanged); a check refuses a reviewer commit touching anything but its verdict file and flags a dirty tree; the adjudicator verifies on the locked lane before setting the merge flag. Replaces the disposable-worktree proposal. **Mechanism decided 2026-09-24** ([review pack](2026-09-24-owner-review-pack.md) B2): the check keys on the coordinator's recorded session phase and commit range (a REVIEW session's range adds exactly its verdict file), not on authors, subjects or trailers; it runs right after each review session and again in the merge ladder, re-derived from the committed session logs, so crashes, resumes and later rewrites are caught; a dirty tree is checked immediately after each review session and fails the draw, so the review re-runs clean; on a build lane with no Drafted rows the final pass is the merge ladder's mechanical check (`_merge_refusal`), and lanes that draft rows gain the adjudicator under S11's direction. |
