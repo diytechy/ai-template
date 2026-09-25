@@ -947,3 +947,6 @@ I suppose it may be no different from what is already formulated functionally.  
 - Controlled reviews / plan sessions with arbitration when necessary.
 
 If you look at how things here have grown, esspecially with the numerous test cases and potentially low level requirements that are not necessary in their current form to close the vision, how would you redesign it to meet the vision and stakeholder needs?  What do you think the current gaps are?  What other tools exist that could be leveraged for objectives that have gotten uniquely developed here?  If you think a rewrite would be cleaner and more consolodated, feel free to create a detailed implimentation breakdown.
+
+##########################
+
