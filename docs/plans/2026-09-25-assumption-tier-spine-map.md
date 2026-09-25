@@ -110,6 +110,8 @@ dial (Q14, a setting, in the sitting commit).
 | # | tier | rows | Sol review | stand-in verdict |
 |---|---|---|---|---|
 | 1 | SN + SR | SN-041–SN-044, SR-187–SR-219 | NOT YET SOUND: 1 blocker, 6 major, 1 minor; all applied | APPROVE-WITH-CHANGES: 1 blocker, 7 major, 6 minor, all applied; fixes CONFIRMED with one residual major (SR-217's quantifier) and three minor, all applied. The later SR-207/SR-208 scoping is confirmed with iteration 2. |
+| 2 | LLR | LLR-211–LLR-258 (LLR-253 deleted) | NOT YET SOUND: 2 blockers, 10 major, 1 minor; all applied | APPROVE-WITH-CHANGES: 2 major, 6 minor, all applied; CONFIRMED with one residual major (the evidence tier rule), applied |
+| 3 | TC | TC-212–TC-251 | NOT YET SOUND: 2 blockers, 11 major, 1 minor; all applied | APPROVE-WITH-CHANGES: 1 major, 4 minor, all applied |
 
 ## 6. Assumptions and critical decisions
 
@@ -194,9 +196,11 @@ it. Numbered so the owner can answer by number.
   derivation would break the single evidence-driven Release producer and read a
   file the stage may not read. This is an LLR choice, recorded here because it
   fixes what "gate" means in three SRs.
-- **D17 — Firing review perspectives per assumption is design.** AT §6.5 notes
-  that hats fire per assumption only with assumption tags or a composer per
-  bundle. That mechanism is an LLR under SR-214, not a row of its own.
+- **D17 — Firing review perspectives per assumption is not built.** AT §6.5
+  notes that hats fire per assumption only with assumption tags or a composer
+  per bundle. A design row for it (LLR-253) was deleted in review, because no
+  requirement asks for per-assumption applicability; the obstacle's provenance
+  cell (SR-214) does not need it. A later requirement would carry it.
 - **D18 — SR-207 stops at the tiers the kit compares.** Need-text drift is
   not detected anywhere, and the owner kept that detector deferred (OI-85).
   Row-level refusal therefore covers every tier compared with a recorded copy,
@@ -208,3 +212,57 @@ it. Numbered so the owner can answer by number.
   hook, so the refusal comes where the loop's code commits and again at the merge.
 - **D20 — The stand-in authorized SN-042's amendment** (D6) as the owner's
   stand-in. It is recorded as the stand-in's act, not the owner's signature.
+- **D21 — Pure rules live beside the checker, not in it.** The frame and
+  need-tier rules are in a new `frame_rules.py` and the assumption-tier rules in
+  `assumption_rules.py`, both pure join modules like `coherence.py`. `trace.py`
+  keeps only composition, file reads and the brief, because it is held to an
+  exact size ratchet.
+- **D22 — An observation test case is one recorded as not automated.** SR-198
+  first defined the class by method. The rows disagree on method today, so the
+  one reliable marker is the Automated cell. OWNER-RESERVED: this admits manual
+  and demonstration cases to lifetimes, declared inputs and re-judging, a wider
+  class than S6's inspection, critique and attestation. No live row changes.
+- **D23 — Automated assumption evidence follows the cumulative tier
+  contract.** The harness's evidence record is whole-suite and names no case.
+  A full-tier record proves Smoke and Full cases; a release or all record proves
+  every case. A narrower, failing or other-tree record proves nothing.
+- **D24 — The sampling model is two checked cells.** A sample size of at least
+  one and a non-empty acceptance rule, since free text would let any string
+  unlock sampled evidence at release. Whether the rule justifies the claim is
+  judged when the test case is approved, not by the gate.
+- **D25 — Reach is judged need by need.** SR-195 was rewritten so an
+  assumption shared by two needs cannot reach one and silently miss the other.
+- **D26 — An accepted risk is anchored to an approval act.** Re-accepting a
+  risk is re-attesting the assumption in an act, which moves the anchor even
+  when no text changes. Failing samples are ordered by commit ancestry, not by
+  clock.
+- **D27 — The need-frame gap reads a stakeholder's own party.** A mediating
+  party does not bring a need into scope, because SR-188 does not say so.
+- **D28 — The approval act is deferred, and nothing is flipped.** The chains
+  are complete and reviewed, but approving them refreshes the whole record copy
+  of the requirement and design-row files. Twenty approved rows there carry
+  amendments the record has not caught up with: seventeen requirement rationales
+  that WI-547's adjudicator already ruled CLARITY (obligation unchanged), SR-162,
+  which no adjudication has read, and LLR-061 and LLR-167, whose adjudications
+  are queued. Refreshing now would bless SR-162 and the two design rows unread,
+  which the owner ruled against when choosing row-level refusal. The act is a
+  work item that waits for those three adjudications, and it re-anchors the
+  seventeen on WI-547's recorded verdict.
+- **D29 — SR-178 promises need-text drift reporting that is not built.**
+  An approved requirement says a moved need is reported; the owner deferred
+  building that when ruling OI-85. OWNER-RESERVED: fund the detector, or amend
+  and re-attest SR-178. Outside this grind.
+- **D30 — Hooks are opt-in, and unset in this checkout.** The commit floor that
+  SR-019 and SR-209 rely on does not run here unless `core.hooksPath` is set,
+  so the merge-slot re-check is this repository's only enforcement of the
+  loop-trailer and held-status rules. For the owner to know; no ruling needed.
+- **D31 — Test placement follows the per-commit tier.** The smoke selector is
+  per module, so each Smoke test case sits in a fast module and each Full one in
+  a module registered as slow. New slow modules to register when built:
+  `test_frame_system`, `test_stakeholders`, `test_assumptions_registry`,
+  `test_observation_writer`, `test_accepted_risk`, `test_assumption_gate`,
+  `test_loop_provenance`, `test_rejudge`, `test_check_readability`,
+  `test_check_test_first`. The new fast modules hold in-memory rule tests only.
+- **D32 — Every interface reaching an interface-form requirement must pass.**
+  SR-212 now fails each invalid reaching interface even when another passes,
+  and names an unreached requirement without inventing an interface.
