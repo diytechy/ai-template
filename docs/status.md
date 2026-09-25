@@ -24,8 +24,9 @@ supervisor prompt at the owner's request). Backward-looking homes:
 status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **RESUME HERE:** start with [handoff-2026-09-06.md](handoff-2026-09-06.md),
-  then the [redesign execution record](ai-template-redesign-2026-09-05-codex/EXECUTION-RECORD.md).
+- **RESUME HERE:** start with [handoff-2026-09-24.md](handoff-2026-09-24.md):
+  its read order, then the C1 sitting package it describes. The redesign's
+  remaining threads keep their context in [handoff-2026-09-06.md](handoff-2026-09-06.md).
   Recheck Git and the generated frontier before choosing work; earlier handoffs
   and sitting checklists are historical context.
 - **Assumption tier — the sitting (C1) is next:** every question in

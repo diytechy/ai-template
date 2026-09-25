@@ -108,3 +108,19 @@ findings (5 MAJOR, 2 MINOR), all applied:
   occupancy;
 - this fragment records the bar's result instead of promising it;
 - WI-608's citation and WI-607's over-length title are corrected.
+
+**After the review (same session).**
+
+- **More owner rulings:** Q9's prose name for SR rows is "system
+  specification"; the id prefix rename (`SR-` to `SS-`, `LLR-` to `DE-`) is
+  wanted as a deferred, lowest-priority item, taken last, global, archives
+  included; S12 keeps peer-tier delegation.
+- **Filed:** WI-612, the trunk bookkeeping staging hazard, at the owner's
+  request; WI-613 to WI-624, every decided, unfiled sister-plan item; and
+  WI-625, the prefix rename, deferred. WI-551 now needs WI-620, the session
+  service, per S7. The strict check is clean; the shared-spec advisory rose to
+  124 warnings, because the check compares spec files, not sections.
+- **Resume surface:** `docs/handoff-2026-09-24.md` is the new resume map, with
+  the C1 sitting package first. `status.md`, `docs/README.md` and the root
+  README point at it; the 2026-09-06 handoff remains the redesign threads'
+  context.
