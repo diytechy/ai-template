@@ -198,9 +198,11 @@ squashed downstream, and the log's forwarding maps are prose.
 structured retirement record. D-4 says history lives in *"git and the log"*, so a
 new structured record is a third home, and the owner should see it as an
 amendment rather than a clarification. The lightest form keeps it inside the
-existing log: a **structured fragment in `docs/log.d/`**, written in the same
-commit as the deletion, with a fixed shape — id, date, successor if any, reason.
-Two details follow:
+existing log: a **structured fragment in `docs/log.d/retired/`**, written in
+the same commit as the deletion, with a fixed shape — id, date, successor if
+any, reason. The subdirectory matters: `trunk_step.py` folds every top-level
+`docs/log.d/*.md` into `log.md` and deletes it, and its glob does not recurse
+(S4, 2026-09-24). Two details follow:
 
 - **No self-referential hash.** A commit cannot contain its own hash, so the
   record does not store the deleting commit; the dashboard resolves it at render
@@ -210,7 +212,8 @@ Two details follow:
   fragment is edited after it lands, and when a spent id has no fragment from the
   day the rule starts. Retirements before then show as *unknown*.
 
-It costs a fragment shape, a check, a renderer, and a template/resync entry.
+It costs a fragment shape, a check, a renderer, an `orphans-allow` line for
+the subdirectory, and a template/resync entry.
 
 **Owner response (2026-09-23): acceptable, on condition that agents don't go
 diving into history just because it exists.** Retirement fragments are for
@@ -863,7 +866,7 @@ may proceed as written; `CONDITIONAL` means decided with the stated condition;
 | S1 | Extend the absolutes check per the tier matrix (TCs excluded), reusing `recorded waiver:`, with a defined suppression rule; run OI-37's sweep? (§1.1) | **DECIDED**: yes. |
 | S2 | LLR → design expectation: prose now, prefix a separate later decision; no edits to old logs? (§1.2) | **DECIDED**: yes. Ships in the assumption-tier plan's terminology package (its §11 T), with Q9. **Flagged 2026-09-24** (not reopened): "expectation" also appears as ordinary wording inside need rows, in the kit's needs template and in adopters; recommended: keep the name with a glossary line ([review pack](2026-09-24-owner-review-pack.md) A3). |
 | S3 | Design constraints: each is a need whose stakeholder is the owner, canonical in the need; provenance anchor on the need; **no hat becomes a stakeholder**; schema ruled with the stakeholder list? (§1.3) | **RE-POSED** after the owner asked whether hats become stakeholders (they don't). Rule with the assumption-tier sitting; if ruled, the provenance cell lands in its C1. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B5. |
-| S4 | Retired rows: keep deletion, and amend D-4 to add a structured retirement fragment in `docs/log.d/`? (§1.4) | **CONDITIONAL**: yes, provided the fragments are lookup-only for agents (stated in PROCESS.md, not AGENTS). **REOPENED 2026-09-24:** `trunk_step` compiles and deletes every top-level `docs/log.d/*.md`, so the fragments would vanish; proposed `docs/log.d/retired/` ([review pack](2026-09-24-owner-review-pack.md) A2). |
+| S4 | Retired rows: keep deletion, and amend D-4 to add a structured retirement fragment in `docs/log.d/`? (§1.4) | **CONDITIONAL**: yes, provided the fragments are lookup-only for agents (stated in PROCESS.md, not AGENTS). **Home revised 2026-09-24** (reopened because `trunk_step` compiles and deletes every top-level `docs/log.d/*.md`; owner accepted [review pack](2026-09-24-owner-review-pack.md) A2): the fragments live in `docs/log.d/retired/`, which the non-recursive fold skips; the template gains an `orphans-allow` line for it. |
 | S5 | Test level: keep every test in the commit bar (a); optionally let builders run a module's own tests first as an inner loop (d), never as the bar; reconcile the 41 tier disagreements as a priced migration? (§2.2) | **RE-POSED** with the owner's module-scoped idea as (d) and (e). Recommend (a) plus optional (d); not (e), which reverses the test-impact ruling. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B7. |
 | S6 | Observation tests: evaluate triggers only at checkpoints (work-item merge, phase close, release), "content change" meaning changed since last judged, sharing the assumption tier's result record? (§2.3) | **RE-POSED** after the owner flagged per-iteration firing as unstable. One freshness model: the shared record's judged-state digest, or `max_age`, whichever trips first. Design jointly with the assumption tier, before its C3. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B4. |
 | S7 | One session service (act / keep / record), with WI-551 landing through it? (§3.1) | **DECIDED**: (a), with the owner's direction to consolidate as far as possible: shared stages over per-role or per-provider code. It is schema-neutral and proceeds now: S8's schema and S10's retention are added to it when each is cleared. |
