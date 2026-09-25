@@ -486,6 +486,30 @@ non-interactively, and which published schema should the index adopt? Output: a
 field map plus one recorded fixture per CLI. S8 then becomes "adopt that
 schema", and the §3.2 items become its implementation.
 
+**Owner ruling (2026-09-24): adopt the OpenTelemetry GenAI conventions**
+([review pack](2026-09-24-owner-review-pack.md) B6; the research pass ran
+2026-09-23 with one live fixture per CLI). S7's record step writes:
+
+- the OTel GenAI usage names, **pinned to a commit** (every name is still
+  *Development* status and the conventions moved repository in June 2026), in
+  their inclusive form: `input_tokens` counts cached input for every provider;
+- **fresh input as a derived field**, one formula for every provider, and the
+  **raw usage verbatim**, so a wrong mapping is re-derived, never lost;
+- **provider and CLI columns**, naming which adapter mapped the row; the
+  columns are the same for every provider, and a field a CLI does not report
+  is empty (not reported), not zero;
+- **billed tokens and context occupancy in separate columns** (cost and
+  occupancy stay kit fields; OTel has neither);
+- `exec --json` on the codex route and `run --format json` on the opencode
+  route, so their usage is captured at all;
+- OTel exporters optional.
+
+The owner asked whether other conventions deserved research. The pass compared
+OTel GenAI with local-log readers (ccusage, tokscale); OpenInference, the
+OpenAI/LiteLLM usage shape and Langfuse's usage model were not compared. The
+owner adopted OTel without that pass: the raw record makes a later switch a
+rename and re-derivation.
+
 ### 3.3 Fewer tools per role, and skills handled mechanically (note 1)
 
 > *"Ignores skills because that can be handled mechanically? Tool minimization?
@@ -939,7 +963,7 @@ may proceed as written; `CONDITIONAL` means decided with the stated condition;
 | S5 | Test level: keep every test in the commit bar (a); optionally let builders run a module's own tests first as an inner loop (d), never as the bar; reconcile the 41 tier disagreements as a priced migration? (§2.2) | **RE-POSED** with the owner's module-scoped idea as (d) and (e). Recommend (a) plus optional (d); not (e), which reverses the test-impact ruling. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B7. |
 | S6 | Observation tests: evaluate triggers only at checkpoints (work-item merge, phase close, release), "content change" meaning changed since last judged, sharing the assumption tier's result record? (§2.3) | **DECIDED 2026-09-24** ([review pack](2026-09-24-owner-review-pack.md) B4): the checkpoints are work-item merge and release; phase close joins only with a defined trigger. At a checkpoint the check is a mechanical hash of each TC's declared inputs; a due TC mints one deduplicated re-judge item, so no LLM runs at the check. One freshness model: the shared record's judged-state digest, or `max_age`, whichever trips first. Design jointly with the assumption tier, before its C3. |
 | S7 | One session service (act / keep / record), with WI-551 landing through it? (§3.1) | **DECIDED**: (a), with the owner's direction to consolidate as far as possible: shared stages over per-role or per-provider code. It is schema-neutral and proceeds now: S8's schema and S10's retention are added to it when each is cleared. |
-| S8 | Telemetry: run one bounded research pass on each routed CLI's structured usage output and a published schema, then adopt that schema, with a provider column and tokens kept distinct from context occupancy? (§3.2) | **RE-POSED**: adopt existing conventions rather than design one. Awaiting a go for the research pass. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B6. |
+| S8 | Telemetry: run one bounded research pass on each routed CLI's structured usage output and a published schema, then adopt that schema, with a provider column and tokens kept distinct from context occupancy? (§3.2) | **DECIDED 2026-09-24** ([review pack](2026-09-24-owner-review-pack.md) B6): adopt the OTel GenAI usage names, pinned to a commit, inclusive form; fresh input derived; raw usage verbatim; provider and CLI columns; billed tokens and context occupancy separate; JSON output on the codex and opencode routes; exporters optional. Lands in S7's record step (§3.2). |
 | S9 | How are reviewers kept from changing the work they review? (§3.3) | **DECIDED 2026-09-23: verify, don't isolate.** Reviewers work and commit in the lane as today (OI-76 unchanged); a check refuses a reviewer commit touching anything but its verdict file and flags a dirty tree; the adjudicator verifies on the locked lane before setting the merge flag. Replaces the disposable-worktree proposal. **Mechanism decided 2026-09-24** ([review pack](2026-09-24-owner-review-pack.md) B2): the check keys on the coordinator's recorded session phase and commit range (a REVIEW session's range adds exactly its verdict file), not on authors, subjects or trailers; it runs right after each review session and again in the merge ladder, re-derived from the committed session logs, so crashes, resumes and later rewrites are caught; a dirty tree is checked immediately after each review session and fails the draw, so the review re-runs clean; on a build lane with no Drafted rows the final pass is the merge ladder's mechanical check (`_merge_refusal`), and lanes that draft rows gain the adjudicator under S11's direction. |
 | S10 | Retention: the adjudicator's lands; builder retention a separate ruled experiment; reviewers never? (§3.4) | **DECIDED**: yes. |
 | S11 | One trunk commit per work item: squash the lane in the mechanical merge, keeping the adjudicator's reviewed commit as the approval act inside it (i), or a machine approval writer (ii)? (§3.5) | **DIRECTION 2026-09-24, plan before ruling** ([review pack](2026-09-24-owner-review-pack.md) B1, option d): an actual single trunk commit per work item, not a grouped view of several. A dedicated plan settles the claim from lane branches, batching, in-lane adjudication in the merge slot, held-rung rows, held partials, the folded mint, kept lane refs, and the amendments (§3.5); nothing is built before it is ruled. (ii) stays its own ruling under OI-45. |
