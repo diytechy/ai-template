@@ -792,6 +792,18 @@ whether the builder can change it:
 
 That is option (c), made concrete. S13 is re-posed on those two points.
 
+**Owner ruling (2026-09-24): two rules** ([review pack](2026-09-24-owner-review-pack.md) B3).
+No new role:
+
+- **Every claimable work item has a Done-when**, written before claim by
+  whoever files it; a work item without one is not claimable.
+- **At merge, each Done-when item's text at claim is compared with its text at
+  merge**, ticks and trailing evidence stripped, and any change is flagged to
+  the reviewer and the adjudicator, following the precedent of amended
+  approved spine text minting an adjudication row (`intake.py:2188`). If S11's
+  plan moves the claim off trunk, "at claim" is the spec at the lane's fork
+  point.
+
 ---
 
 ## 4. Code-quality doctrine
@@ -904,7 +916,7 @@ may proceed as written; `CONDITIONAL` means decided with the stated condition;
 | S10 | Retention: the adjudicator's lands; builder retention a separate ruled experiment; reviewers never? (§3.4) | **DECIDED**: yes. |
 | S11 | One trunk commit per work item: squash the lane in the mechanical merge, keeping the adjudicator's reviewed commit as the approval act inside it (i), or a machine approval writer (ii)? (§3.5) | **DIRECTION 2026-09-24, plan before ruling** ([review pack](2026-09-24-owner-review-pack.md) B1, option d): an actual single trunk commit per work item, not a grouped view of several. A dedicated plan settles the claim from lane branches, batching, in-lane adjudication in the merge slot, held-rung rows, held partials, the folded mint, kept lane refs, and the amendments (§3.5); nothing is built before it is ruled. (ii) stays its own ruling under OI-45. |
 | S12 | Fan-out: rule on peer-tier delegation; tiers, not models; never from review roles; budgets only after an observability design? (§3.6) | **DECIDED in principle.** |
-| S13 | Builder bias: the planner writes the work item's Done-when before the build, and a lane that edits its own Done-when is flagged to the reviewer and adjudicator? (§3.7) | **RE-POSED** from option (c): the reviewer already judges against Done-when; what is left is who writes it and whether the builder can move it. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B3. |
+| S13 | Builder bias: the planner writes the work item's Done-when before the build, and a lane that edits its own Done-when is flagged to the reviewer and adjudicator? (§3.7) | **DECIDED 2026-09-24: two rules** ([review pack](2026-09-24-owner-review-pack.md) B3): every claimable work item has a Done-when, written before claim by whoever files it; at merge, each item's text at claim and at merge is compared (ticks and trailing evidence stripped) and a change is flagged to the reviewer and adjudicator. No new role (§3.7). |
 | S14 | Operation count: park as research; if pursued, executed operations over a declared workload, reported beside the caps, never a gate? (§4.1) | **RE-POSED**: the owner rejected public-symbol counts and framed it as execution cost. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B7. |
 | S15 | The guard rule in PROCESS.md, linked from the prompts, not in the vendored skill? (§4.2) | **DECIDED**: yes. |
 | S16 | Amend OI-76 so the coordinator, not the reviewer, commits a reviewer's verdict file? (§3.3) | **WITHDRAWN 2026-09-23**: S9's ruling keeps reviewers committing their own verdicts. |
