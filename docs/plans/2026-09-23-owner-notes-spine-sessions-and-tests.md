@@ -115,7 +115,8 @@ decision.
 
 - Docs, prompts and the dashboard call the tier **design expectations**; one
   glossary line in PROCESS.md records that *`LLR-###` rows are design
-  expectations (the prefix is historical)*.
+  expectations (the prefix is historical)*, and that "expectation" inside a
+  need row is ordinary English, not the tier (S2, 2026-09-24).
 - **Do not edit old logs.** They are records; one glossary line does what 1,070
   header edits would.
 - If the prefix changes later, follow UN → SN: keep the numbers, no legacy
@@ -864,7 +865,7 @@ may proceed as written; `CONDITIONAL` means decided with the stated condition;
 | # | question | standing |
 |---|---|---|
 | S1 | Extend the absolutes check per the tier matrix (TCs excluded), reusing `recorded waiver:`, with a defined suppression rule; run OI-37's sweep? (§1.1) | **DECIDED**: yes. |
-| S2 | LLR → design expectation: prose now, prefix a separate later decision; no edits to old logs? (§1.2) | **DECIDED**: yes. Ships in the assumption-tier plan's terminology package (its §11 T), with Q9. **Flagged 2026-09-24** (not reopened): "expectation" also appears as ordinary wording inside need rows, in the kit's needs template and in adopters; recommended: keep the name with a glossary line ([review pack](2026-09-24-owner-review-pack.md) A3). |
+| S2 | LLR → design expectation: prose now, prefix a separate later decision; no edits to old logs? (§1.2) | **DECIDED**: yes. Ships in the assumption-tier plan's terminology package (its §11 T), with Q9. **Flag closed 2026-09-24** ([review pack](2026-09-24-owner-review-pack.md) A3): "expectation" also appears as ordinary wording about needs (the needs template's comments, an adopter's heading); the owner keeps the name, and the glossary line also says the ordinary word is not the tier. "Design specification" was weighed and not taken: "spec" already names a work item's scope document, and AT §2's S is the SRs. |
 | S3 | Design constraints: each is a need whose stakeholder is the owner, canonical in the need; provenance anchor on the need; **no hat becomes a stakeholder**; schema ruled with the stakeholder list? (§1.3) | **RE-POSED** after the owner asked whether hats become stakeholders (they don't). Rule with the assumption-tier sitting; if ruled, the provenance cell lands in its C1. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B5. |
 | S4 | Retired rows: keep deletion, and amend D-4 to add a structured retirement fragment in `docs/log.d/`? (§1.4) | **CONDITIONAL**: yes, provided the fragments are lookup-only for agents (stated in PROCESS.md, not AGENTS). **Home revised 2026-09-24** (reopened because `trunk_step` compiles and deletes every top-level `docs/log.d/*.md`; owner accepted [review pack](2026-09-24-owner-review-pack.md) A2): the fragments live in `docs/log.d/retired/`, which the non-recursive fold skips; the template gains an `orphans-allow` line for it. |
 | S5 | Test level: keep every test in the commit bar (a); optionally let builders run a module's own tests first as an inner loop (d), never as the bar; reconcile the 41 tier disagreements as a priced migration? (§2.2) | **RE-POSED** with the owner's module-scoped idea as (d) and (e). Recommend (a) plus optional (d); not (e), which reverses the test-impact ruling. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B7. |
