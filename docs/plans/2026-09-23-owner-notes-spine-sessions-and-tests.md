@@ -1007,12 +1007,14 @@ may proceed as written; `CONDITIONAL` means decided with the stated condition;
 | S16 | Amend OI-76 so the coordinator, not the reviewer, commits a reviewer's verdict file? (§3.3) | **WITHDRAWN 2026-09-23**: S9's ruling keeps reviewers committing their own verdicts. |
 | S17 | S9's pilot stop rule? (§3.3) | **WITHDRAWN 2026-09-23**: no pilot under S9's ruling. |
 
-**Order, revised.** Now: S15, S2, S1 (prose and a warn-only check). With the
+**Order, revised 2026-09-24.** Now: S15, S2, S1 (prose and a warn-only
+check), S5's inner-loop map, and S14's flag-axis count. With the
 assumption-tier sitting: S3. Designed together before the assumption tier's
-C3: S6. Once the research pass lands: S8, which gates any retention beyond the
-adjudicator. S7 proceeds now and is schema-neutral; S9's reviewer-commit check
-folds into the same work. S11 gets its own plan first; since it rewrites the
-lane-to-trunk path S9's check sits on, the two are designed together.
+C3: S6. S7 proceeds now and writes S8's adopted schema in its record step; S8
+still gates any retention beyond the adjudicator. S11 gets its own plan first;
+since it rewrites the lane-to-trunk path S9's check sits on, the two are
+designed together. Research before anything is built: S14's duplicate-stage
+detection.
 
 ---
 

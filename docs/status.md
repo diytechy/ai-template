@@ -28,26 +28,22 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   then the [redesign execution record](ai-template-redesign-2026-09-05-codex/EXECUTION-RECORD.md).
   Recheck Git and the generated frontier before choosing work; earlier handoffs
   and sitting checklists are historical context.
-- **Owner review next — start at the
-  [owner review pack](plans/2026-09-24-owner-review-pack.md):** it gathers
-  every open decision on the two plans below, with researched facts, in the
-  order to take them (three reopened decisions and one flagged, seven re-posed items, seven
-  defects to file or not). Record each answer in its plan's decision table.
-- **Awaiting owner ruling — the validation gap:** read
-  [the assumption-tier proposal](plans/2026-09-20-validation-gap-and-the-assumption-tier.md).
-  It asks for a frame ruling (the frame is LOCKED); decisions are in its §12.
-  The owner answered all questions 2026-09-23; an adopter check (2026-09-24,
-  its §12.8) reopened Q6 and Q16. Then the sitting itself (C1). It is a core
-  (the assumption tier) plus an extension (interface
-  allocation at DevStg-Arch). A mockup of the resulting depth-0 view is in
-  `docs/plans/mockups/`. The sitting also reverses parts of sitting 2 (its
-  §5.2). **Nothing is built before the sitting.**
-- **Awaiting owner review — notes on spine, sessions and tests:** its sister
-  [plan](plans/2026-09-23-owner-notes-spine-sessions-and-tests.md) takes the
-  owner's 2026-09-23 notes one by one against what the repo already does, and
-  ends in questions S1–S15. The owner responded 2026-09-23 (§5); S4 was
-  reopened and S2 flagged 2026-09-24 and seven items are re-posed (the review pack).
-  Nothing in it is built.
+- **Assumption tier — the sitting (C1) is next:** every question in
+  [the assumption-tier plan](plans/2026-09-20-validation-gap-and-the-assumption-tier.md)
+  §12.1 is ruled (Q6 and Q16 revised 2026-09-24: `surrogate` rows, bundle
+  `system = "operation" | "delivery"`). It is a core (the assumption tier)
+  plus an extension (interface allocation at DevStg-Arch). The sitting also
+  lands the sister plan's S3 (a provenance column on needs and the vision's two
+  headline needs) and reverses parts of sitting 2 (its §5.2). The depth-0
+  mockup in `docs/plans/mockups/` still renders the old `kit` value.
+  **Nothing is built before the sitting.**
+- **Sister plan — one plan still owed:** every question in the
+  [notes on spine, sessions and tests](plans/2026-09-23-owner-notes-spine-sessions-and-tests.md)
+  §5 is ruled except S11, whose direction (one trunk commit per work item)
+  needs its own plan before any ruling; design S9's reviewer-commit check with
+  it. S7's session service proceeds and writes S8's adopted OTel schema; S6 is
+  designed with the assumption tier before its C3; S14's flag-axis count
+  proceeds, its duplicate-detection research first.
 - **Next implementation:** resolve the existing SR-161 per-decomposition
   perspective-record gap and complete TC-211's normal sample. Follow the
   existing artifact adjudication route for the Drafted amendments; passing an
