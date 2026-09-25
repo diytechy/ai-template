@@ -1078,3 +1078,434 @@ verification = "Inspection"
 status = "Drafted"
 phase = 5
 aspect = "process"
+
+[requirement.SR-187]
+title = "Each boundary crossing belongs to one declared system of interest"
+sn_refs = ["SN-037", "SN-043"]
+boundary_refs = ["B-05"]
+hat_refs = ["FIRST-RUN-ADOPTER"]
+requirement = "The delivered harness shall read, for each boundary crossing of the declared frame, which of two systems of interest it belongs to — the system in operation or the system that builds and delivers it — reporting a crossing that declares neither."
+rationale = """A stakeholder's outcome lands where a person meets the system in use, so an assumption carrying a system reading to that outcome needs a crossing of the system in operation to land on; a frame drawn only around the system that builds and delivers the kit had to leave those crossings out, and the assumptions serving its needs would have nowhere to land. The value sits on the crossing rather than on the party because one party takes part in both systems — the operator develops the kit and also runs it. The closed pair means the same in every adopting repository, where the system in operation is that repository's own product. A crossing with no value is reported rather than refused, so a frame written before the cell existed keeps passing when an adopter upgrades."""
+acceptance_criteria = "Each boundary crossing carries one value from the closed pair; a value outside the pair fails the check naming the crossing; a crossing carrying no value is reported without failing the check, naming it; a project declaring no frame is vacuous."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-188]
+title = "A need met in operation has a requirement or assumption reaching an operation crossing"
+sn_refs = ["SN-037", "SN-043"]
+boundary_refs = ["B-05"]
+requirement = "Where an approved stakeholder of a stakeholder need is a party with a crossing in the system in operation, the delivered harness shall report the need when none of its requirements references an operation crossing and no assumption those requirements rely on lands on one."
+rationale = """A need about what a person experiences while the system runs, answered only by requirements stated at the crossings of the system that builds and delivers it, means the frame has no crossing where the outcome lands. That is how a frame can leave out the very crossings where its stakeholders' value arrives and still pass every reference check. Nothing else joins a need's stakeholder to the frame, so this report is the one place the gap shows."""
+acceptance_criteria = "Only approved stakeholders are read; a need whose approved stakeholder's party has an operation crossing, none of whose requirements names an operation crossing and none of whose relied-on assumptions lands on one, is reported without failing the check, naming the need and its stakeholder; a need meeting either condition produces no report; a need whose stakeholders declare no party produces no report; a project declaring no frame, no stakeholder list or no system-of-interest values is vacuous."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-189]
+title = "Each need resolves to the declared stakeholders whose outcome it is"
+sn_refs = ["SN-044"]
+boundary_refs = ["B-05"]
+hat_refs = ["PRODUCT-FITNESS"]
+requirement = "The delivered harness shall resolve each stakeholder need's stakeholder references against the declared stakeholder list, and each stakeholder's party against the declared frame, reporting a need that names no stakeholder."
+rationale = """A need with no named owner has nobody who can confirm it is still wanted, and a stakeholder's party is what lets the need's outcome be placed on the frame. The link lives on the need, pointing at the stakeholder, so the relation has one home; a short list beside the needs keeps the stakeholders where the rows citing them already are, rather than in a registry of their own. A stakeholder is not a review perspective: a stakeholder owns an outcome, while a perspective owns a question put to each decomposition, so no perspective becomes a stakeholder row."""
+acceptance_criteria = "Each declared stakeholder carries a name, a description, an optional party and a maturity from the spine's closed vocabulary; a need reference naming an undeclared stakeholder, or a stakeholder party naming an undeclared entity, fails the check naming the row; a need naming no stakeholder is reported without failing the check, naming it; a stakeholder with no party is valid; changing a need's stakeholder references re-opens no attestation, while changing a stakeholder's name, description or party re-opens that stakeholder's; a project declaring no stakeholder list is vacuous."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-190]
+title = "A need's source pointer resolves to a document and anchor"
+sn_refs = ["SN-044"]
+boundary_refs = ["B-05"]
+hat_refs = ["MAINTAINER"]
+requirement = "Where a stakeholder need records the document it was drawn from, the delivered harness shall resolve that pointer to an existing file and anchor."
+rationale = """A need drawn from a longer document — an owner's statement of design constraints, an adopter's needs catalog — drifts from it unseen unless the need says where it came from. The need stays the canonical obligation and the document is its provenance, so the pointer takes a cell of its own instead of a place in the need's text, which is kept free of repository paths so a stakeholder can read it. A pointer that does not resolve is the same rot as a dead link, and fails the same way."""
+acceptance_criteria = "A pointer whose file or anchor does not exist fails the check naming the need and the pointer; a resolving pointer passes; a need with no pointer is valid; the pointer cell is outside the rule that keeps provenance out of living cells, while every other cell of the need stays held to that rule and to the rule keeping repository paths out of need text; changing the pointer re-opens no attestation."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-191]
+title = "Domain assumptions are rows of their own"
+sn_refs = ["SN-043"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER"]
+requirement = "Where a project declares its frame, the delivered process shall hold each domain assumption that a requirement's argument relies on as a row of its own stating where its outcome lands, what it assumes, the conditions under which it holds, the obstacle under which it fails, its maturity and its validity."
+rationale = """A requirement states what the system does at its own interface, and a stakeholder need states what a person experiences; between them sits a claim about the world, and a false one makes a fully verified system deliver nothing. Unrecorded, the claim cannot be tested. A row gives it an id, so evidence about it is counted apart from evidence about the system's behavior, and one row cited wherever the claim applies replaces the same sentence written into every requirement it touches. The rows live apart from the frame, whose rows change only by ruling, so approving an assumption never carries unrelated drift in the frame's rows with it. Maturity and validity are separate fields because an approved assumption can later be shown false. Without a declared frame there is no crossing for an assumption to land on, so the tier applies only where a frame is declared."""
+acceptance_criteria = "Each assumption row carries the crossings where its outcome lands, the assumption, its holding conditions, its obstacle, a maturity from the spine's closed vocabulary and a validity of active or falsified, and optionally a falsifying signal and an accepted risk; a landing crossing that is not declared, a missing required cell, or a value outside its closed vocabulary fails the check naming the row and the cell; an assumption id, once spent, is never issued again; an assumption's approval is recorded as every other approval of approved content is; a project declaring no frame is vacuous."
+priority = "M"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-192]
+title = "A test stand-in for an outside party is a surrogate row naming the parties it emulates"
+sn_refs = ["SN-043"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER"]
+requirement = "The delivered process shall record each stand-in that answers for an external party in tests as a surrogate row naming the external parties it emulates, cited by the assumption that states its fidelity."
+rationale = """A stand-in for an outside party — a scripted model runner, a fresh scaffold in a temporary directory, a model judging a render in place of a person — is evidence only as far as it matches the party it replaces, and that match is itself an assumption. Recording the stand-in with its fidelity assumption lets cheap, continuous evidence against the stand-in sit beside sparse evidence that the stand-in still matches. A stand-in is not a frame entity, whose enabling class means something the system depends on to run. Stand-ins for a project's own parts would name components approved at a later rung than the one that approves this row, so they belong to design-tier assumptions and are not accepted here."""
+acceptance_criteria = "A surrogate names one or more emulated parties, each a declared external entity, otherwise the check fails naming the surrogate; a fidelity assumption names exactly one surrogate and lands on a crossing of a party that surrogate emulates, otherwise the check fails naming the assumption; a surrogate no assumption names is reported without failing the check; a surrogate carries a maturity from the spine's closed vocabulary; a surrogate id, once spent, is never issued again."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-193]
+title = "Each requirement cites its assumptions or records why it needs none"
+sn_refs = ["SN-043"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER"]
+requirement = "The delivered harness shall report each system requirement that neither cites the assumptions its argument relies on nor records why its own specification alone delivers its needs."
+rationale = """An empty cell asserts nothing, so a requirement citing no assumption cannot be read as one that needs none: the absence is unknown, and only an explicit waiver says the system's own behavior is the outcome. The need link stays on the requirement, because one interface serves several arguments and inheriting needs through an assumption would give a requirement the needs of an assumption it merely shares a seam with. Reporting rather than failing keeps the classification a worklist until the gate that relies on it is enabled."""
+acceptance_criteria = "A requirement citing one or more assumptions, each a declared assumption, is classified bridged; a requirement recording a waiver that states why its specification alone delivers its needs is classified coincident; a requirement with neither is reported as unclassified without failing the check; an empty citation list counts as no citation; a citation naming an undeclared assumption fails the check naming the requirement; a requirement carrying both a citation and a waiver is reported without failing the check; the requirement's need references are unchanged, and an assumption's needs are derived from the requirements citing it; changing the citations re-opens no attestation, while declaring or changing the waiver re-opens the requirement's; a project with no assumption registry is vacuous."
+priority = "M"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-194]
+title = "Each requirement declares its form"
+sn_refs = ["SN-043", "SN-037"]
+boundary_refs = ["B-05"]
+requirement = "The delivered harness shall report each system requirement that declares no form from the closed set of three: met at an interface, resting on an assumption, or a cross-cutting property of the whole system."
+rationale = """A requirement reached by no interface looks the same as one meant to rest only on an assumption unless the row says which it is, so a missing interface hides behind a legitimate exception. A closed cell whose absence is reported, rather than a default, keeps the omission visible. A property of every delivered capability at once is met at no single seam, which is why it is the third form rather than a kind of interface."""
+acceptance_criteria = "A requirement carrying one of the three forms passes; one carrying none is reported without failing the check, naming it; a value outside the set fails the check naming the row; declaring or changing the form re-opens the requirement's attestation; a project with no assumption registry is vacuous."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-195]
+title = "An assumption lands where the stakeholders it serves are"
+sn_refs = ["SN-043", "SN-044"]
+boundary_refs = ["B-05"]
+hat_refs = ["PRODUCT-FITNESS"]
+requirement = "The delivered harness shall report an assumption whose landing crossing belongs to a party that is neither the party of a stakeholder whose need the assumption serves nor a party that mediates for that stakeholder, except a fidelity assumption landing on a crossing of the party its surrogate emulates."
+rationale = """An assumption exists to carry a system reading to a stakeholder's outcome, so it has to land where that stakeholder is — directly, or through a party that carries the stakeholder's writes and shows them the system's verdicts, as a development session does for its operator. A landing anywhere else bridges to no one the need names. The served needs are derived through the requirements citing the assumption, so the need link keeps its one home on the requirement. Only approved stakeholders are read, because a stakeholder still in draft has not been agreed as anyone's. A fidelity assumption is the exception, because its claim is about a stand-in matching an outside party rather than about a stakeholder's outcome."""
+acceptance_criteria = "An assumption's served needs are derived from the requirements citing it and never recorded on the assumption; a landing crossing whose party is the party of an approved stakeholder of a served need, or a party the frame records as mediating for that party, passes; any other landing crossing is reported without failing the check, naming the assumption, the crossing and the need; a fidelity assumption is judged against its surrogate's emulated parties instead; an assumption serving a need none of whose approved stakeholders declares a party is reported as unreachable; a recorded mediation naming an undeclared entity fails the check naming the party; an assumption no requirement cites is not judged here."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-196]
+title = "An assumption no requirement cites, or nothing could falsify, is reported"
+sn_refs = ["SN-043"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER"]
+requirement = "The delivered harness shall report an assumption that no system requirement cites or that declares no falsifying signal."
+rationale = """An assumption no requirement relies on is documentation with no argument behind it, and one with no stated falsifier cannot be tested, because nothing says which observation would show it false. Both are worklist items rather than failures: an assumption is often written before the requirement that will cite it, and a falsifier sometimes needs a signal that does not exist yet."""
+acceptance_criteria = "An assumption cited by no requirement is reported, naming it; an assumption with no falsifying signal is reported, naming it; a Drafted assumption is reported exactly as an approved one is; neither report fails the check."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-197]
+title = "A test case evidences assumptions in a field of its own"
+sn_refs = ["SN-043"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER", "CONSISTENCY"]
+requirement = "The delivered harness shall accept a test case that evidences assumptions in place of, or beside, the requirements and design rows it verifies, placing a test case that evidences only assumptions in every phase of the requirements that cite them."
+rationale = """Evidence about an assumption is not evidence about the system's behavior, and counting both in one field would merge the two obligations the argument separates: that the system does what its requirements say, and that what they say reaches the outcome. A separate reference keeps the verified-requirement join exactly what it was, and lets a test of an assumption stand alone where no requirement is its subject. Every reader that counts evidence has to make the same split, or two views of one test case disagree about what it proves. Phase follows the requirements that rely on the assumption, because an assumption has no phase of its own."""
+acceptance_criteria = "A test case naming only assumptions is valid and is not an orphan; a test case naming no requirement, design row or assumption is an orphan; an assumption reference naming an undeclared assumption fails the check naming the test case; an assumption-only test case belongs to each phase of the requirements citing its assumptions; wherever evidence is counted, assumption evidence is counted apart from requirement evidence; changing the assumption references re-opens no attestation."
+priority = "M"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-198]
+title = "An observation test declares what it reads, how long its result holds, and how it samples"
+sn_refs = ["SN-043", "SN-024", "SN-008"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER", "PERFORMANCE"]
+requirement = "The delivered harness shall report an observation test case that omits the inputs its judgment reads, its result lifetime or, where it evidences an assumption, its sampling policy, and refuse one declaring a lifetime shorter than seven days or a sampling policy outside the closed pair of sampled and monitored."
+rationale = """An observation — a person reading a render, a critique of a rendered view, a measurement taken across an adopter's first week — cannot be rerun for every tree, so its result is trusted only while the state it judged is unchanged, and for a declared time. Declaring the inputs it reads is what lets a changed input make the result stale without a model call; the lifetime floor keeps a judgment from being demanded more often than it can honestly be taken. The author proposes the lifetime and the row's approval accepts it, because how fast a premise can change is a judgment about the world. A sampled result supports a positive claim only under a stated sampling model, so the model is declared where a project wants that claim. Omissions are reported rather than refused so observation tests written before these cells existed keep passing on upgrade; the declarations are approved content because they state how the row's claim is kept current."""
+acceptance_criteria = "A test case is an observation test case when it verifies a requirement by inspection, critique or attestation, or evidences an assumption without an automated check; each declares the inputs its judgment reads and a result lifetime in days, one evidencing an assumption also declares a sampling policy of sampled or monitored, and a sampled one may declare a sampling model stating a sample size and an acceptance rule; an omitted input list, lifetime or policy is reported without failing the check, naming the row; a lifetime under seven days or a policy outside the pair fails the check naming the row; an automated test case declares none of these; declaring or changing any of them re-opens the test case's attestation."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-199]
+title = "Observation results are recorded apart from their test case"
+sn_refs = ["SN-043", "SN-008", "SN-024"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER"]
+requirement = "The delivered process shall record each observation result apart from its test case, with its outcome, when it was observed, who or what observed it, when it expires and a digest of the inputs it judged."
+rationale = """Keeping a result on the approved test case would mix what the test is with what it last found, and would force the row's re-attestation after every sample. A result carries what it judged — the digest of the rows and artifacts its test case declares it reads — so a later change to those inputs makes it stale without a clock, and it carries an expiry so it cannot stand forever. One record serves assumption observations and the verdicts of inspection, critique and attestation tests alike, so all of them share one freshness rule. Automated tests need no such record: their results join the harness's tree-bound evidence record."""
+acceptance_criteria = "An observation record names its observation test case and carries an outcome of pass or fail, an observation time, the person or process that observed, an expiry no later than the test case's declared lifetime after the observation, and the digest of the test case's declared inputs as judged, which is empty where the test case declares no inputs; a record missing any of these, naming a test case that is not an observation test case, or expiring later than the lifetime allows, is refused when written and fails the check when found; writing a record never edits the test case; a partly written record is never read as a result."
+priority = "M"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-200]
+title = "An assumption's evidence level is derived from current results"
+sn_refs = ["SN-043", "SN-008"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER"]
+requirement = "The delivered harness shall derive each assumption's evidence level from current results alone, treating a result as not current once it expires or once the digest of its test case's declared inputs differs from the digest it judged."
+rationale = """Approval blesses a row's text and says nothing about whether it holds, so whether an assumption is evidenced is a property of results and never of a cell. One freshness rule — expiry or a changed judged state, whichever comes first — serves both assumption results and the re-judging of observation tests, so the two never disagree about what is stale. Expiry returns the level to specified rather than to falsified, because an old pass is missing evidence, not contrary evidence."""
+acceptance_criteria = "An assumption with no evidencing test case reads assumed; one whose evidencing test cases have no current passing result reads specified; a current passing result from an automated or monitoring test case reads monitored; a current passing result from a sampled test case reads sampled; an expired result, or one whose judged digest differs from the current digest of its test case's declared inputs, reads specified and never falsified; an automated assumption test case's result is read from the harness's tree-bound evidence record; no cell sets the level; an approved, active assumption reading assumed or specified is reported without failing the check, naming it."
+priority = "M"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-201]
+title = "A falsified assumption is reported with everything that relies on it"
+sn_refs = ["SN-043", "SN-008"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER"]
+requirement = "When an assumption is recorded as falsified, or an observation result evidencing it fails, the delivered harness shall report every system requirement and test case that relies on it."
+rationale = """One assumption can sit under many requirements — every seam where the system consumes a model's output rests on the model runner honoring its contract — so when it is shown false, each of them loses part of its argument at once. Reporting the whole set turns one falsification into a worklist instead of a search. A failing sample is evidence against the assumption, but recording it as false is a judgment, so the report never flips the validity cell itself."""
+acceptance_criteria = "A falsified assumption is reported with the requirements citing it, the needs they serve and the test cases evidencing it, each affected row listed once; a failing observation result is reported as falsification evidence against its assumption without changing the assumption's validity cell; an active assumption with no failing result produces no report; the report does not fail the check until the gate that relies on assumptions is enabled."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-202]
+title = "An accepted risk reopens on a failed sample or on any change to what it was accepted for"
+sn_refs = ["SN-043", "SN-029"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER"]
+requirement = "When a sample for an assumption relied on under an accepted risk fails, or the text of the assumption or of a need it served when the risk was accepted changes after that acceptance, the delivered harness shall read the assumption as unproven until the risk is accepted again or current evidence arrives."
+rationale = """A recorded accepted risk is a judgment about a particular assumption serving particular needs, so it cannot outlive a change to either, nor a sample showing the assumption failing. Binding the acceptance to the texts as they stood when it was made is what keeps a later, separate re-approval of a changed need from silently carrying the old risk forward. A clock would reopen it for no reason and teach readers to re-accept by reflex, so time alone never reopens it. Accepting again is a reviewed approval, like the first acceptance."""
+acceptance_criteria = "An assumption with a recorded accepted risk and no current evidence is read as covered by that risk; the acceptance is bound to the assumption's text and to the text of each need it served at the moment the risk was accepted; a failed sample, or any later change to a bound text — including one later re-approved on its own — reads the assumption as unproven and is reported naming the trigger; accepting the risk again in a reviewed approval, or a current passing result, restores it; the passage of time alone never reopens it."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-203]
+title = "The approval brief presents each assumption with its argument"
+sn_refs = ["SN-029", "SN-043"]
+boundary_refs = ["B-05"]
+hat_refs = ["UX-DESIGNER"]
+requirement = "The delivered approval brief shall present each assumption and surrogate awaiting approval with the requirements citing it, the needs it serves, the crossings its outcome lands on, its evidence and its falsifier."
+rationale = """An assumption is approved for what it lets the requirements claim, so the approver's decision is whether those requirements may rely on it. The brief therefore leads with the citing requirements and the needs they reach, then gives the assumption's evidence and what would show it false; judged apart from its citing rows, an assumption is approved in the abstract. The spine's existing brief renders only requirements, design rows and test cases. A fidelity assumption and its surrogate are judged together because each is meaningless without the other."""
+acceptance_criteria = "For each assumption in the batch the brief shows its cells, the requirements citing it with their text, the needs derived through them, each landing crossing with its party, its evidencing test cases with its current evidence level, and its falsifier; a fidelity assumption is shown beside its surrogate and the surrogate's emulated parties; a surrogate in the batch is shown with the assumptions naming it; a brief for a batch holding no assumption or surrogate is unchanged; the brief is generated from the registries and never hand-copied."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-204]
+title = "The assumption tier joins the stage at its first approval, each tier read on its own"
+sn_refs = ["SN-004", "SN-043"]
+boundary_refs = ["B-05"]
+hat_refs = ["CONSISTENCY"]
+requirement = "While the assumption, surrogate or stakeholder tier holds an approved row, the delivered stage derivation shall read that tier's rows at its rung — assumptions and surrogates at the boundary rung, stakeholders at the needs rung — reading each tier's status apart from the other tiers that share its registry file."
+rationale = """A new registry holding only Drafted rows reads, to the boundary rung, as a frame declared and not approved, so reading it before its first approval would lower the derived stage of every committed tree in between. Reading a tier only once one of its rows is approved puts the switch in the commit that approves the first batch, so no committed tree reads that drop, and it needs no separate setting that could disagree with the rows. The start of reading and the per-tier reading are one contract: from the moment a tier is read at all it has to be read on its own, or the first approval in a shared file would answer for every other tier in it, and two readers of one file would disagree about what a status covers."""
+acceptance_criteria = "While a tier has no approved row, none of its rows moves the derived stage, including a registry that exists holding only Drafted rows; once a tier has an approved row, a Drafted row of that tier holds its rung in the live reading, while the settled reading excludes Drafted rows as it does for every tier; no setting turns a tier on or off; the status of one tier's rows never answers for another tier in the same file."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+aspect = "process"
+
+[requirement.SR-205]
+title = "With the assumption gate on, the boundary rung requires approved, active assumptions that reach their stakeholders"
+sn_refs = ["SN-043", "SN-004"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER"]
+requirement = "Where the assumption gate is enabled, the delivered harness shall fail the boundary gate for each system requirement not recorded as coincident that cites no assumption or cites an assumption which is not approved, not active, does not reach the stakeholders of its needs, or is a fidelity assumption naming a surrogate that is not approved."
+rationale = """Without a gate the assumption rows are optional documentation: a requirement could cite a draft, a falsified premise or one landing nowhere its stakeholders are, and still pass. At the boundary rung only maturity can be judged, because test results do not exist until the harness has run; evidence is the release rung's question. The gate is opt-in because it asks for a written argument behind every requirement, a cost a small project may rightly decline."""
+acceptance_criteria = "With the gate enabled, a requirement recorded as coincident passes; a requirement whose every cited assumption is approved, active, reaching and, for a fidelity assumption, backed by an approved surrogate passes; a requirement citing no assumption and carrying no waiver fails; any other cited assumption fails the boundary gate naming the requirement, the assumption and the unmet condition; with the gate disabled the same conditions are advisory; the gate is enabled or disabled by one declared setting; a project declaring no frame is vacuous."
+priority = "M"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-206]
+title = "With the assumption gate on, release requires current evidence or an accepted risk for every relied-on assumption"
+sn_refs = ["SN-043", "SN-004", "SN-008"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER"]
+requirement = "Where the assumption gate is enabled, the delivered harness shall fail the release gate for each assumption a system requirement relies on that has neither a current passing result of the kind its evidencing test cases declare nor a recorded accepted risk, counting a sampled result only under a declared sampling model."
+rationale = """A passed sparse sample shows only that a problem was not found in that sample — small random panels find anywhere from about half to nearly all of the known problems — so it can falsify an assumption but cannot prove one, and the gate accepts it only where a declared sampling model justifies a positive claim. The honest alternatives are to narrow the assumption's holding conditions until an automated check covers it, or to accept the risk on the record. Evidence is judged at release because that is the one rung where results exist."""
+acceptance_criteria = "With the gate enabled, an assumption with a current passing monitored or automated result passes; one whose only current passing result is sampled passes only where its test case declares a sampling model with a sample size and an acceptance rule; one with a recorded accepted risk that has not reopened passes; any other relied-on assumption fails the release gate naming it and what is missing; with the gate disabled the same conditions are advisory; results are read as recorded after the harness ran."
+priority = "M"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-207]
+title = "An approval act refuses to carry drift it does not itself approve"
+sn_refs = ["SN-029"]
+boundary_refs = ["B-02"]
+hat_refs = ["SECURITY"]
+requirement = "The kit shall refuse to refresh a registry's acceptance record in an approval act while any row of that registry that the act neither approves nor re-attests has approved text differing from its recorded copy."
+rationale = """The recorded copy is the approver's asserted definition of the whole file, so refreshing it copies every row as it now stands. While any single approval in an act was enough to refresh the file, one row's approval silently blessed every other row's unreviewed edit. Refusing row by row keeps the copy to what someone saw, and it works for any number of tiers in one file, where splitting files or keying approvals by tier would each have needed a new approval identity through the whole approval path. Stakeholder needs stay outside this rule until their own text is compared with a recorded copy, which this row does not add."""
+acceptance_criteria = "An approval act whose registry holds a row outside the act with approved text differing from its recorded copy is refused, naming each such row and cell; adding that row to the act, as an approval or a re-attestation, clears the refusal and every row it clears is named in the act's record; a registry with no such row refreshes as before; the rule holds for every tier whose rows are compared with their recorded copies, including tiers that share one registry file, so one tier's approval never carries another tier's drift."
+priority = "M"
+verification = "Test"
+status = "Drafted"
+phase = 6
+aspect = "process"
+
+[requirement.SR-208]
+title = "The loop never changes a status the approval level holds for a human"
+sn_refs = ["SN-029"]
+boundary_refs = ["B-02"]
+hat_refs = ["SECURITY"]
+requirement = "Where the declared approval level holds an off-spine registry's rung for a human, the delivered loop shall refuse any change it makes to that registry's status cells before the change lands on trunk."
+rationale = """The approval level names the rungs a human still approves, and an automated approval of the spine's own rows is already refused. The frame, assumption, surrogate and component registries carry status cells of their own that no automated path was stopped from changing, because the one setting that would stop it defaults to allowing. A policy that declares a rung human-held without refusing the automated path is a claim, not a control."""
+acceptance_criteria = "With the rung held, a change the loop or a dispatched session makes to a status cell of that registry, including a row added or removed with a status, is refused naming the registry, the row and the rung, at the commit where the loop's own code commits and again when a lane merges, so a refused change never lands on trunk; with the rung released the change proceeds; a registry whose rung cannot be read is treated as held; a human's own reviewed commit is not governed by this rule."
+priority = "M"
+verification = "Test"
+status = "Drafted"
+phase = 6
+aspect = "process"
+
+[requirement.SR-209]
+title = "Every commit the loop makes carries a checked provenance trailer"
+sn_refs = ["SN-029", "SN-005"]
+boundary_refs = ["B-01", "B-04"]
+hat_refs = ["SECURITY", "UNATTENDED-OPS"]
+requirement = "When the unattended loop creates a commit, the delivered commit floor shall refuse it unless it carries a valid provenance trailer naming the loop and its session."
+rationale = """A status change on a human-held rung can be told apart from a human's only if every loop-made commit says it is one. Trailers the loop writes today appear on some of its commits and nothing checks them, so a missing one proves nothing. The condition is who made the commit, not when: a person committing in another checkout while the loop runs is not the loop. Refusing the unmarked loop commit at the floor makes the mark total, which is what lets a later check treat its absence as meaningful. The floor is local and a determined bypass defeats it, which is why the history check stands behind it."""
+acceptance_criteria = "Every process the loop starts carries a marker the commit floor reads, so a commit made from a loop-started process is known as the loop's; such a commit with no trailer, or with a malformed one, is refused naming the commit's subject; a commit made by a process the loop did not start needs no trailer and passes, even while the loop is running; the same validity rule applies wherever the commit floor runs."
+priority = "M"
+verification = "Test"
+status = "Drafted"
+phase = 6
+aspect = "process"
+
+[requirement.SR-210]
+title = "A loop commit that changes a human-held status is reported"
+sn_refs = ["SN-029", "SN-043"]
+boundary_refs = ["B-02"]
+hat_refs = ["SECURITY"]
+requirement = "The delivered harness shall report each commit carrying the loop's provenance trailer that changes a status cell on a rung the declared approval level holds for a human."
+rationale = """A changed status on a human-held rung is supposed to mean that a human judged. The one observation that would show otherwise is such a change arriving in a commit the loop made, and checking the committed history for it turns that premise into something the harness can falsify rather than trust."""
+acceptance_criteria = "Over the committed history, each commit carrying the trailer that changes a status cell on a human-held rung is one advisory line naming the commit, the row and the rung; a status change on a released rung, or in a commit without the trailer, produces no line; a rung is judged against the approval level declared in that commit's own tree."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+aspect = "process"
+
+[requirement.SR-211]
+title = "Each boundary interface is bridged or coincident"
+sn_refs = ["SN-037", "SN-043"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER"]
+requirement = "The delivered harness shall report each interface realizing a boundary crossing that neither names the assumptions carrying its reading to an outcome nor records why its reading is the outcome."
+rationale = """A requirement is testable only if the interface it is met at is defined or its reading is clearly assumed. The allocation is recorded on the interface, which is approved at the architecture rung where interfaces are, so an assumption approved earlier at the boundary rung is never edited to point at a seam approved later. The requirement a seam answers stays derived through the interface's owner, because stating it on the interface would give that relation a second home."""
+acceptance_criteria = "A boundary interface naming one or more assumptions, each declared, is bridged; one recording a waiver is coincident; one with neither is reported without failing the check, naming it; a named assumption that is not declared fails the check naming the interface; an internal interface is out of scope; no requirement reference is recorded on the interface; changing the named assumptions re-opens no attestation, while declaring or changing the waiver re-opens the interface's."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-212]
+title = "With the assumption gate on, interface-form requirements are reached and bridged at the architecture rung"
+sn_refs = ["SN-037", "SN-043"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER"]
+requirement = "Where the assumption gate is enabled, the delivered harness shall fail the architecture gate for each system requirement of interface form that no boundary interface reaches, or that a reaching boundary interface neither records as coincident nor bridges by an assumption the requirement also cites."
+rationale = """A requirement meant to be met at an interface is not testable until that interface exists and its reading is either the outcome or carried by an assumption the requirement itself relies on. Judging it at the architecture rung keeps interfaces after the requirements they answer. Minting interface rows to match a count would produce seams with no contract behind them, so the check reports the gap rather than inventing the seam."""
+acceptance_criteria = "A requirement of interface form reached, through the modules its design rows name, by at least one boundary interface, each such interface coincident or bridged by an assumption the requirement cites, passes; one reached by none, or by an interface bridged only by assumptions the requirement does not cite, fails the architecture gate naming the requirement and the interface; requirements of the other two forms are out of scope; with the gate disabled the same conditions are advisory."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-213]
+title = "A review perspective that voices a stakeholder resolves to that stakeholder"
+sn_refs = ["SN-036"]
+boundary_refs = ["B-05"]
+hat_refs = ["MAINTAINER"]
+requirement = "The delivered harness shall resolve each review perspective's recorded stakeholder against the declared stakeholder list, reporting a perspective that names an undeclared stakeholder."
+rationale = """Derived through the maintainer's lens rather than from a need's text: a reader who meets a perspective years later has to be able to tell why it exists. Some perspectives are a stakeholder's voice used as a lens — the first-time adopter's question is the adopting team's — and recording which stakeholder a perspective speaks for lets it be re-pointed or retired when that stakeholder changes; an anchor to a frame party instead breaks when the party is dropped. The link is optional because a perspective owns a question, not an outcome, and most perspectives voice no one."""
+acceptance_criteria = "A perspective recording a declared stakeholder passes; one recording an undeclared stakeholder fails the check naming both; a perspective recording none is valid; a stakeholder is never recorded as a perspective; a project declaring no stakeholder list is vacuous."
+priority = "C"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-214]
+title = "An assumption's obstacle records the perspectives that raised it"
+sn_refs = ["SN-036", "SN-043"]
+boundary_refs = ["B-05"]
+requirement = "The delivered harness shall resolve each assumption's recorded obstacle perspectives against the declared review perspectives, reporting a perspective that is not declared."
+rationale = """An obstacle is what a perspective's question produces when put to an assumption — asking what happens when an input is missing, stale or half-written writes one directly — so recording which perspective raised it shows a reviewer which failure classes have been put to the assumption. Only positive provenance is recorded, because a per-perspective record of not applying would have no reader."""
+acceptance_criteria = "An assumption naming declared perspectives passes; one naming a perspective that is not declared fails the check naming the assumption and the perspective; an empty cell is valid and reads as not recorded, never as no perspective applied; changing the cell re-opens no attestation."
+priority = "C"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-215]
+title = "At a checkpoint, a changed or expired observation test is queued once for re-judging"
+sn_refs = ["SN-024", "SN-008", "SN-043"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER", "PERFORMANCE"]
+requirement = "When a work item merges or a release is prepared, the delivered harness shall file one re-judge work item for each observation test case whose declared inputs changed since its last result or whose last result expired, never filing a second while one is open."
+rationale = """A judgment made by inspection, critique or observation holds only for the state it looked at, and nothing re-fires it once that state moves. Hashing each test case's declared inputs at a merge or a release costs no model call, so the expensive part — the re-judgment — runs only when something it looked at changed or its result aged out, and one open item per test case keeps a busy week from filing the same judgment many times."""
+acceptance_criteria = "At a work-item merge and at release preparation, each observation test case has its declared inputs hashed; one whose digest differs from its last result's judged digest, or whose last result has expired, or which has no result yet, gets exactly one open re-judge work item naming it and what changed; an unchanged, unexpired one gets none; a later checkpoint while that item is open adds none; the check runs no model; an observation test case declaring no inputs is judged by its expiry alone."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-216]
+title = "Each change is measured by the project's declared readability measures, and a worsening is reported with the part it worsens"
+sn_refs = ["SN-041"]
+boundary_refs = ["B-05"]
+hat_refs = ["MAINTAINER"]
+requirement = "When a change is submitted for acceptance, the delivered harness shall report together every worsening that the project's declared readability and structure measures find in the parts the change touches, naming each measure and part."
+rationale = """Code stays readable only if getting worse is visible when it happens; a report after the fact arrives once other work is already built on the worse code. Each measure keeps its own requirement and its own stamped baseline — cognitive complexity against a per-function baseline is one — and this row gathers what they find for the change in front of the reviewer, so no measure's comparison is restated here. A project with no declared measure has nothing to report, and that is itself reported, because the need's promise cannot be met by silence. Reporting rather than refusing keeps the process proportionate: a project opts a measure into gating when it wants that cost."""
+acceptance_criteria = "For a change, each measure the project declares is run over the parts the change touches, each against its own stamped baseline; every worsening any of them finds is reported in one place, naming the measure, the part and the size of the change; a change no measure worsens produces no worsening line; a project that declares no measure is reported once as measuring nothing, without failing the check; the report refuses the change only where the project has declared that measure gating."
+priority = "M"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-217]
+title = "A requirement implemented before its test cases were approved is reported"
+sn_refs = ["SN-042"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER"]
+requirement = "The delivered harness shall report each system requirement approved after the project's declared starting point any of whose test cases was approved after its implementation first landed on trunk, reading the order from the committed history."
+rationale = """Tests written after the code tend to describe what the code does rather than what was required, so the order is the evidence that a passing run means the requirement is met. The stage ladder puts test cases before implementation for a project as a whole, but not requirement by requirement, and the committed history is the one record of order that no cell can restate after the fact. Code declaring which requirement or design row it implements is the one event that marks an implementation landing. A requirement's approval is its entry into scope, so judging only requirements approved after a declared starting point keeps a project that adopts the rule from being judged on history written before it; a project that declares none is judged whole."""
+acceptance_criteria = "A requirement's implementation first lands in the earliest commit on trunk that adds code declaring it implements the requirement or one of its design rows; a test case's approval is the earliest commit in which it reads approved; a requirement approved after the declared starting point with a test case approved after its implementation landed is reported naming the requirement, the implementation commit and each such test case's approval commit; one all of whose test cases were approved before its implementation landed, or whose implementation has not landed, produces no report; a project declaring no starting point is judged over its whole history; history too shallow or rewritten to show the order is reported as unreadable, never as a pass; the order is never read from a cell."
+priority = "M"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-218]
+title = "The state view shows, for each need, the assumptions it relies on and their evidence"
+sn_refs = ["SN-043", "SN-023"]
+boundary_refs = ["B-05"]
+hat_refs = ["UX-DESIGNER", "ACCESSIBILITY"]
+requirement = "The delivered state view shall show, for each stakeholder need, the assumptions its requirements rely on, with each assumption's validity and evidence level."
+rationale = """The need promises that a reviewer can see what each outcome relies on and whether it has been checked. The per-assumption reports and the approval brief answer other questions — what is wrong now, and what is being approved — and neither lets a reviewer start from an outcome. Deriving the view from the registries and results keeps it from going stale the way a hand-written summary does, and marking a failed or unevidenced premise in words as well as color keeps the signal readable for a reader who does not see color."""
+acceptance_criteria = "For each need the view lists every assumption cited by the need's requirements, once, with its validity, its evidence level and the requirements citing it; a need whose requirements are all coincident shows that; a need with an unclassified requirement shows the gap; a falsified assumption, or one relied on with no current evidence, is marked in text as well as by any color; the view is generated from the registries and results, never hand-maintained; a project with no assumption registry shows no assumption section."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-219]
+title = "A requirement's system of interest is derived from its crossings, and one spanning both is reported"
+sn_refs = ["SN-037"]
+boundary_refs = ["B-05"]
+hat_refs = ["CONSISTENCY"]
+requirement = "The delivered harness shall derive each system requirement's system of interest from the crossings its boundary references name, reporting a requirement whose crossings belong to both systems."
+rationale = """Where a requirement sits follows from the crossings it names, so writing it on the requirement as well would give the fact a second home that can disagree with the first. A requirement naming crossings of both systems states one obligation about two systems of interest, whose halves are verified against different parties; reporting it is how such a row gets split."""
+acceptance_criteria = "A requirement whose crossings all belong to one system is placed in that system; one naming crossings of both is reported without failing the check, naming the requirement and a crossing from each system; a crossing that declares no system places nothing, so a requirement is placed by its other crossings; the placement is never recorded on the requirement; a project declaring no frame is vacuous."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6

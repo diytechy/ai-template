@@ -302,3 +302,33 @@ priority = "S"
 need = """**Scope: template (adopters + this repo).** A stakeholder can obtain a repeatable explanation for why the system was divided into its chosen components, based on the system's declared inputs, outputs and internal signal trade-offs rather than an unrecorded model judgment."""
 why = """A component breakdown invented free-form by a model (or a person) leaves no record of the alternatives weighed, so the next reviser cannot tell load-bearing boundaries from accidents. Deriving the partition from the system's own declared inputs and outputs, against a declared objective, leaves evidence the choice can be re-examined against."""
 acceptance = """A decomposition run records the candidate partitions considered, the declared objective and constraints they were scored against, the selected partition, and a comparison a reviewer can reproduce; the human names the components and rules the final choice; the record is kept with the architecture, not in session prose."""
+
+[need.SN-041]
+status = "Drafted"
+priority = "M"
+need = """**Scope: template (adopters + this repo).** A person reading a project's code or analytics long after it was written can understand what each part does and why it exists, and can change one part without having to understand or rework unrelated parts."""
+why = """The vision promises code and analytics that stay readable and correct over the long run. Code that only its author can follow gets rewritten instead of changed, each rewrite drops behavior nobody wrote down, and each later change costs more than the one before."""
+acceptance = """A reader new to a sampled part of the code can say what it does and why it exists from the code and the records linked to it, without asking its author. Each change is measured against the project's declared readability and structure measures before it is accepted, and a change that worsens one is reported with the part it worsens."""
+
+[need.SN-042]
+status = "Drafted"
+priority = "M"
+need = """**Scope: template (adopters + this repo).** The owner can rely on every required behavior being checked by tests written from its requirement before the behavior was built, rather than by tests written afterwards to fit what was built."""
+why = """Tests written after the code tend to describe what the code does instead of what was required, so a passing run stops being evidence that the requirement is met, and the approval gates stop meaning what the vision promises."""
+acceptance = """Each requirement's test cases are defined and approved before its implementation is accepted, and the project record shows that order for every requirement approved after the project adopts this rule; an implementation accepted ahead of its test cases is reported."""
+
+[need.SN-043]
+status = "Drafted"
+tags = ["templates"]
+priority = "M"
+need = """**Scope: template (adopters + this repo).** A reviewer can see, for each stakeholder outcome, what its delivery relies on beyond the system's own checked behavior, and whether each of those premises has itself been checked."""
+why = """A system can pass every check on its own behavior and still fail the people it serves, because the step from what the system does to what they experience rests on premises nobody wrote down. An unwritten premise cannot be tested, so a false one surfaces only when a stakeholder is let down, and every requirement that relied on it has lost part of its argument without anyone seeing it."""
+acceptance = """Each premise that a requirement relies on beyond the system's own behavior is recorded once, with where its outcome lands, the conditions it holds under, what would break it and the observation that would show it false, and each requirement either names the premises it relies on or states why its own behavior alone delivers its needs. Each premise shows whether a current result evidences it; a premise relied on without evidence is visible as such, and a premise shown false is reported with every requirement that relied on it."""
+
+[need.SN-044]
+status = "Drafted"
+tags = ["templates"]
+priority = "S"
+need = """**Scope: template (adopters + this repo).** A stakeholder can find the needs that are theirs, and a reader can check a need against the document it was drawn from."""
+why = """A need with no named owner has nobody who can confirm it is still wanted, and a need drawn from a longer statement of constraints drifts from it unseen; either way, what the requirements serve stops being what anyone asked for."""
+acceptance = """Each need names the declared stakeholder or stakeholders whose outcome it is, and each declared stakeholder states which outside party it is where that is known. A need drawn from another document points at the place it was drawn from, and that pointer resolves. A need naming no stakeholder, or one that is not declared, is reported."""

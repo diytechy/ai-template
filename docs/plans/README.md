@@ -13,7 +13,10 @@ each set against what the repo already does, with fifteen questions.
 Their first sitting's decision surface is
 [`2026-09-25-c1-sitting-package.md`](2026-09-25-c1-sitting-package.md): the
 frame rows, the reversed rulings, the stakeholder rows and the two headline
-needs the owner signs at C1, and how the sitting is run.
+needs the owner signs at C1, and how the sitting is run. The spine derived from
+the plan while the owner is away, with every assumption and decision taken on
+the way, is recorded in
+[`2026-09-25-assumption-tier-spine-map.md`](2026-09-25-assumption-tier-spine-map.md).
 
 The live planning surface. **Start at
 [`2026-08-15-review-package.md`](2026-08-15-review-package.md)** — the one
