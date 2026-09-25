@@ -24,20 +24,20 @@ supervisor prompt at the owner's request). Backward-looking homes:
 status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **RESUME HERE:** start with [handoff-2026-09-24.md](handoff-2026-09-24.md):
-  its read order, then the C1 sitting package it describes. The redesign's
+- **RESUME HERE:** start with [handoff-2026-09-24.md](handoff-2026-09-24.md)'s
+  read order, then the C1 sitting package below. The redesign's
   remaining threads keep their context in [handoff-2026-09-06.md](handoff-2026-09-06.md).
   Recheck Git and the generated frontier before choosing work; earlier handoffs
   and sitting checklists are historical context.
-- **Assumption tier — the sitting (C1) is next:** every question in
-  [the assumption-tier plan](plans/2026-09-20-validation-gap-and-the-assumption-tier.md)
-  §12.1 is ruled (Q6 and Q16 revised 2026-09-24: `surrogate` rows, bundle
-  `system = "operation" | "delivery"`). It is a core (the assumption tier)
-  plus an extension (interface allocation at DevStg-Arch). The sitting also
-  lands the sister plan's S3 (a provenance column on needs and the vision's two
-  headline needs) and reverses parts of sitting 2 (its §5.2). The depth-0
-  mockup in `docs/plans/mockups/` still renders the old `kit` value.
-  **Nothing is built before the sitting.**
+- **Assumption tier — the C1 sitting package is prepared and awaits the
+  owner:** [plans/2026-09-25-c1-sitting-package.md](plans/2026-09-25-c1-sitting-package.md)
+  states what the owner signs, including the frame rows, the reversed rulings,
+  the stakeholder rows and the two headline needs. Its "What the owner
+  answers" section has three items: whether to sign first or build first with
+  the arms off, how the two headline needs are approved without lowering the
+  derived stage, and the text itself. Nothing is built or filed until those are
+  answered. The depth-0 mockup in `docs/plans/mockups/` still renders the old
+  `kit` value.
 - **Sister plan — one plan still owed:** every question in the
   [notes on spine, sessions and tests](plans/2026-09-23-owner-notes-spine-sessions-and-tests.md)
   §5 is ruled except S11, whose direction (one trunk commit per work item)

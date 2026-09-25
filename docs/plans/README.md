@@ -10,6 +10,10 @@ survey, staging and a rendered mockup ([`mockups/`](mockups/)).
 Its sister, [`2026-09-23-owner-notes-spine-sessions-and-tests.md`](2026-09-23-owner-notes-spine-sessions-and-tests.md)
 — the owner's 2026-09-23 notes on spine authoring, sessions and test strategy,
 each set against what the repo already does, with fifteen questions.
+Their first sitting's decision surface is
+[`2026-09-25-c1-sitting-package.md`](2026-09-25-c1-sitting-package.md): the
+frame rows, the reversed rulings, the stakeholder rows and the two headline
+needs the owner signs at C1, and how the sitting is run.
 
 The live planning surface. **Start at
 [`2026-08-15-review-package.md`](2026-08-15-review-package.md)** — the one
