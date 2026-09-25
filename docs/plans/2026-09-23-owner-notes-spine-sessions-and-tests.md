@@ -180,6 +180,18 @@ stakeholder row. A hat that applies a constraint cites that need. A hat gets
 `speaks_for` only when it voices a real stakeholder (FIRST-RUN-ADOPTER speaks
 for the adopting team, assumption-tier plan §6.5).
 
+**Owner ruling (2026-09-24): phased** ([review pack](2026-09-24-owner-review-pack.md) B5).
+A census found about 25–30 constraints stated in prose with no need row, the
+largest gap being the vision's own headline promises. So:
+
+- **At the assumption-tier sitting (its C1):** add a general provenance pointer
+  column on needs, declared exempt from the provenance rule as `Module` and
+  `Evidence` are, and general enough to take an adopter's existing catalog
+  column (GilbertCore's `Catalog`); and add the vision's two headline needs,
+  **readable, maintainable code** and **test-first**, stakeholder the owner.
+- **Later, separately:** publish the census of the remaining prose constraints
+  for its own ruling, rather than deciding the batch in advance.
+
 ### 1.4 Retired rows: a registry space, or git? (note 3)
 
 **Today.** Supersession is deletion (`docs/repo-lock.md:348-352`, D-4: *"A
@@ -922,7 +934,7 @@ may proceed as written; `CONDITIONAL` means decided with the stated condition;
 |---|---|---|
 | S1 | Extend the absolutes check per the tier matrix (TCs excluded), reusing `recorded waiver:`, with a defined suppression rule; run OI-37's sweep? (§1.1) | **DECIDED**: yes. |
 | S2 | LLR → design expectation: prose now, prefix a separate later decision; no edits to old logs? (§1.2) | **DECIDED**: yes. Ships in the assumption-tier plan's terminology package (its §11 T), with Q9. **Flag closed 2026-09-24** ([review pack](2026-09-24-owner-review-pack.md) A3): "expectation" also appears as ordinary wording about needs (the needs template's comments, an adopter's heading); the owner keeps the name, and the glossary line also says the ordinary word is not the tier. "Design specification" was weighed and not taken: "spec" already names a work item's scope document, and AT §2's S is the SRs. |
-| S3 | Design constraints: each is a need whose stakeholder is the owner, canonical in the need; provenance anchor on the need; **no hat becomes a stakeholder**; schema ruled with the stakeholder list? (§1.3) | **RE-POSED** after the owner asked whether hats become stakeholders (they don't). Rule with the assumption-tier sitting; if ruled, the provenance cell lands in its C1. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B5. |
+| S3 | Design constraints: each is a need whose stakeholder is the owner, canonical in the need; provenance anchor on the need; **no hat becomes a stakeholder**; schema ruled with the stakeholder list? (§1.3) | **DECIDED 2026-09-24: phased** ([review pack](2026-09-24-owner-review-pack.md) B5). No hat becomes a stakeholder. At the assumption-tier sitting (its C1): a general provenance pointer column on needs, and the vision's two headline needs (readable, maintainable code; test-first). The census of the remaining ~25–30 prose constraints is published for a later, separate ruling. |
 | S4 | Retired rows: keep deletion, and amend D-4 to add a structured retirement fragment in `docs/log.d/`? (§1.4) | **CONDITIONAL**: yes, provided the fragments are lookup-only for agents (stated in PROCESS.md, not AGENTS). **Home revised 2026-09-24** (reopened because `trunk_step` compiles and deletes every top-level `docs/log.d/*.md`; owner accepted [review pack](2026-09-24-owner-review-pack.md) A2): the fragments live in `docs/log.d/retired/`, which the non-recursive fold skips; the template gains an `orphans-allow` line for it. |
 | S5 | Test level: keep every test in the commit bar (a); optionally let builders run a module's own tests first as an inner loop (d), never as the bar; reconcile the 41 tier disagreements as a priced migration? (§2.2) | **RE-POSED** with the owner's module-scoped idea as (d) and (e). Recommend (a) plus optional (d); not (e), which reverses the test-impact ruling. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B7. |
 | S6 | Observation tests: evaluate triggers only at checkpoints (work-item merge, phase close, release), "content change" meaning changed since last judged, sharing the assumption tier's result record? (§2.3) | **DECIDED 2026-09-24** ([review pack](2026-09-24-owner-review-pack.md) B4): the checkpoints are work-item merge and release; phase close joins only with a defined trigger. At a checkpoint the check is a mechanical hash of each TC's declared inputs; a due TC mints one deduplicated re-judge item, so no LLM runs at the check. One freshness model: the shared record's judged-state digest, or `max_age`, whichever trips first. Design jointly with the assumption tier, before its C3. |

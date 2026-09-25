@@ -1139,9 +1139,12 @@ step assumes only the earlier ones.
 including hosted CI as an external party under new ids (Q28)
 (§10.2a); create `assumptions.toml` and the stakeholder list with their stage
 arms **off** (§10.2b–c, f); approve the stakeholder rows with the needs, as a
-human-held act. If the owner rules the sister plan's S3 with Q12, the
-constraint-provenance cell on needs lands here too: the cell, its carrier and
-template entries, validation, rendering and dogfood sync.
+human-held act. The sister plan's S3 (ruled phased, 2026-09-24) lands here
+too: a general provenance pointer column on needs (the cell, its carrier and
+template entries, validation, rendering and dogfood sync), and the vision's two
+headline needs, readable and maintainable code and test-first, approved with
+the needs. The census of the remaining prose constraints is published for a
+later ruling, not built here.
 
 **C2 — write the assumptions.** DA and surrogate rows derived from the person-facing
 needs — each a new Drafted claim — and, on every SR, `da_refs` or a `coincident`
