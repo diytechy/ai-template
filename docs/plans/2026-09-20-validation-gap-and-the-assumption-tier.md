@@ -45,8 +45,8 @@ resulting depth-0 view is in [`mockups/`](mockups/depth0-operating-frame.html).
 ```
 CORE
   frames      each bundle [B] declares which system it crosses into:
-                system = "kit"       the kit in operation — the system-of-interest
-                system = "delivery"  this repository's build and release, emitting the Template
+                system = "operation"  the system in use — the system-of-interest (here, the kit in operation)
+                system = "delivery"   the system that builds and delivers it (here, this repository's build and release)
   WHY         Stakeholder ◄── SN ◄── SR                   (stakeholder_refs, sn_refs: unchanged direction)
   W           SR ── da_refs ──► DA ── effect_at ──► [B]   the bundle where the outcome lands
               SR ── coincident ──   "its S alone delivers its needs"  (the explicit alternative)
@@ -291,14 +291,16 @@ draws two, linked by the hand-off between them:
 
 | frame | system-of-interest | its crossings |
 |---|---|---|
-| **kit** | the kit, as it runs in a repository (this one included) | writes, verdicts, authority, reading, the model runner |
+| **operation** | the system in use: here, the kit as it runs in a repository (this one included) | writes, verdicts, authority, reading, the model runner |
 | **delivery** | this repository's build and release — the kit's enabling system in 15288's sense | the Template leaving (`B-05`) |
 
-**Frame membership is a cell on the bundle**, `system = "kit" | "delivery"`, not
+**Frame membership is a cell on the bundle**, `system = "operation" | "delivery"`, not
 a property of the party. The second review showed why: `class` describes a
 party's role, not a frame, and the same actors take part in both frames here —
 the human develops the kit and operates it; the model provider builds it and
-runs in it. A party appears in the frame of each bundle it has.
+runs in it. A party appears in the frame of each bundle it has. The values are
+adopter-neutral (Q16): they mean the same in every repo, and "kit" names the
+operation frame only in this repo's prose.
 
 **A stated simplification for this repository.** Here, development *is done
 through* the kit in operation: the human's source edits reach the repository
@@ -306,9 +308,9 @@ through the same hook floor as any governed write (`B-01`). So the delivery
 frame's inputs are not drawn a second time; its only crossing is the Template
 leaving. **For an adopter the orientation flips:** its own product is the
 system-of-interest, and the kit in operation is part of its enabling system;
-the Template arrives through Transition (`EXT-002`'s own note says so). The
-`system` values an adopter writes are REOPENED on this ground (Q16; the
-[owner review pack](2026-09-24-owner-review-pack.md) A1).
+the Template arrives through Transition (`EXT-002`'s own note says so). Its
+`operation` bundles are its own product in use, and its `delivery` bundles its
+own build and release (Q16).
 
 **Links between the frames, typed.** Transition — the Template installed into an
 operating environment — is the only **lifecycle** hand-off. Other edges also
@@ -412,15 +414,15 @@ environment**.
 
 | row | change | frame(s) |
 |---|---|---|
-| *new* Human operator | **add**, `operational` | kit |
-| `EXT-001` Development session | **narrow** to the computer and working copy; `mediates = "EXT-006"` | kit |
-| `EXT-005` Model provider | stays; `REL-003` becomes a bundle | kit |
-| hosted CI | **add**, external party under new ids (Q28; `EXT-004`, `B-06`, `B-07` stay spent) | kit |
+| *new* Human operator | **add**, `operational` | operation |
+| `EXT-001` Development session | **narrow** to the computer and working copy; `mediates = "EXT-006"` | operation |
+| `EXT-005` Model provider | stays; `REL-003` becomes a bundle | operation |
+| hosted CI | **add**, external party under new ids (Q28; `EXT-004`, `B-06`, `B-07` stay spent) | operation |
 | vendored-doc upstream | **not drawn** until a repo vendors something (Q28; `B-08` stays spent) | — |
 | `EXT-002` Template | unchanged | delivery |
 | `EXT-003` Adopter | **dropped** (§5.5) | — |
-| `B-01`, `B-02`, `B-04` | `system = "kit"`; `B-02` re-pointed to the human | kit |
-| *new* read bundle, *new* model-runner bundle | **add**, `system = "kit"` | kit |
+| `B-01`, `B-02`, `B-04` | `system = "operation"`; `B-02` re-pointed to the human | operation |
+| *new* read bundle, *new* model-runner bundle | **add**, `system = "operation"` | operation |
 | `B-05` | `system = "delivery"` | delivery |
 | rigs | **not frame rows** — `[rig]` rows in `assumptions.toml` (§5.3) | drawn in delivery |
 
@@ -1218,7 +1220,7 @@ revision this document now proposes, for the owner to accept or reject.
 | Q13 | Need-link edge cases | **DISSOLVED** by Q11's revision. |
 | Q14 | Should assumption approval be human-held here? | **DECIDED: move the dial to DevStg-Boundary at the sitting** — with enforcement that does not exist yet (§10.2h). |
 | Q15 | Does `external.toml`'s lock cover assumption rows? | **MOOT** under Q8's revision: they live elsewhere. |
-| Q16 | Two frames in one view? | **DECIDED 2026-09-23** (owner: *"let's see how it looks"*; raised by reviews 1, 2). Kit and delivery frames; membership a `system` cell on the bundle; Transition the only lifecycle hand-off (§5.1). **REOPENED 2026-09-24 (adopter check):** `kit | delivery` means nothing in an adopter's repo, whose system-of-interest is its own product; proposed `operation | delivery` ([review pack](2026-09-24-owner-review-pack.md) A1). |
+| Q16 | Two frames in one view? | **DECIDED 2026-09-23** (owner: *"let's see how it looks"*; raised by reviews 1, 2). Operation and delivery frames; membership a `system` cell on the bundle; Transition the only lifecycle hand-off (§5.1). **Values revised 2026-09-24** (reopened by the adopter check; owner accepted [review pack](2026-09-24-owner-review-pack.md) A1): `system = "operation" \| "delivery"`, adopter-neutral, since an adopter's system-of-interest is its own product; "kit" names the operation frame only in this repo's prose. The depth-0 mockup in `mockups/` still renders the old `kit` value. |
 | Q17 | Boundary IFs approved at DevStg-Boundary? | **WITHDRAWN (review 2):** it put architecture before requirements. Interface allocation happens at DevStg-Arch instead (§9). |
 | Q18 | One SR per interface — mint the missing IFs? | **DECIDED 2026-09-23** (owner confirmed the revision of reviews 2, 4): no `realizes` cell and no minting to a count — the IF → SR relation stays derived through the owner, as today; new IF rows only for genuine seams (§9). |
 | Q19 | `mediates` on the session? | **DECIDED 2026-09-23** (raised by review 2). It only stops the reach check reading the session's crossings as not the human's; it changes no sign-off. Whether an assumption needs a person present is judged at its human-held approval, through `holds_when`; no attendance cell. Revisit if a DA is falsified by an unattended event. One cell lets an outcome on a session bundle count as the human's (§5.4). |
