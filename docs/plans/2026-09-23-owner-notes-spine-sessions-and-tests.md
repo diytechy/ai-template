@@ -361,8 +361,8 @@ hash changes on every commit that touches what the check reads, mid-work-item
 included. The recommendation is revised:
 
 - **Triggers are evaluated only at stable checkpoints:** a work item merging to
-  trunk after review and adjudication, phase close, and release. Never per
-  commit inside a lane.
+  trunk after review and adjudication, and release; phase close only once it
+  has a defined trigger (S6, ruled below). Never per commit inside a lane.
 - **"Content change" means different from the state the check last judged**,
   compared at the checkpoint, so a feature's intermediate iterations never
   fire it.
@@ -510,7 +510,11 @@ schema", and the §3.2 items become its implementation.
 - **billed tokens and context occupancy in separate columns** (cost and
   occupancy stay kit fields; OTel has neither);
 - `exec --json` on the codex route and `run --format json` on the opencode
-  route, so their usage is captured at all;
+  route, so their usage is captured at all; WI-606 turns these on now and keeps
+  the raw usage verbatim, without mapping it;
+- two defects of today's Claude mapping (pack C2) are fixed in S7's adapter,
+  not separately: `reasoning-tokens` reads a field no CLI emits, and
+  `reported-model` goes blank beside a background model;
 - OTel exporters optional.
 
 The owner asked whether other conventions deserved research. The pass compared
@@ -731,13 +735,17 @@ the second is where OI-45's objection bites:
 | (ii) a machine approval writer | a script flips Status from a verdict | moves to the script | OI-45: *"what recorded human act authorizes a machine to move the approval record"*; its own ruling (item 3 above) |
 
 **Recommend (i)** if the goal is one commit per work item. It keeps a
-mechanical layer and leaves the approval act where it is.
+mechanical layer and leaves the approval act where it is. *(Superseded
+2026-09-24: under (i) the claim and the mint stay separate trunk commits, so
+it does not deliver one commit per work item; the owner chose option (d), in
+the direction below.)*
 
 **The owner's model, stated with S9's ruling (2026-09-23):** the adjudicator
 reviews the locked lane and, in its reviewed commit, sets the flag that
 activates the mechanical merge. That is (i): the flag rides the approval act
 the adjudicator already makes, and the merge that follows is mechanical. It is
-not (ii), because no script writes an approval.
+not (ii), because no script writes an approval. The 2026-09-24 direction below
+supersedes reading it as (i).
 
 **Owner direction (2026-09-24): one trunk commit per work item, planned before
 it is ruled** ([review pack](2026-09-24-owner-review-pack.md) B1, option d). The

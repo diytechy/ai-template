@@ -1,6 +1,6 @@
 +++
 id = "WI-607"
-title = "Route only on a committed verdict: read_verdict reads the file from disk whether or not it was committed (review pack C3)"
+title = "Route only on a committed verdict: read_verdict parses the file on disk, committed or not (review pack C3)"
 workstream = "unattended"
 specref = "docs/plans/2026-09-24-owner-review-pack.md#part-c--defects-found-along-the-way"
 buildtier = "medium"

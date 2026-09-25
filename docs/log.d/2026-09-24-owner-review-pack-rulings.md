@@ -76,6 +76,35 @@ other capped file was edited.
   64 already present plus the 21 shared-spec pairs above).
 - `check_docs.py --root . --stale`: **OK**, 1479 docs, 0 broken links, 3
   orphan warnings, all present before this session.
-- Commit bar (smoke + `check_smoke_budget.py --mode enforce`): **still
-  running at this commit**, committed at the owner's request; its result is
-  recorded in a follow-up commit, not claimed here.
+- Commit bar (smoke + `check_smoke_budget.py --mode enforce`): still
+  running when `4c4a91ae` was committed at the owner's request; its result
+  is recorded below.
+
+**Commit bar, on this machine.**
+
+- Results: smoke **1681 passed, 3 skipped** (264.6 s, then 236.3 s on the
+  budget check's own run).
+- Seconds: **FAIL**. `check_smoke_budget.py --mode enforce` measured 237.7 s
+  against the 60 s budget. This box has 8 logical cores, and a codex review
+  was running alongside the second run. The changes are documentation and
+  registry filings only and cannot move the tier's timing; one machine is one
+  data point, so the budget was not re-stamped.
+
+<!-- fig: cmd="python -m pytest -q -n auto -m smoke; python scripts/check_smoke_budget.py --mode enforce" rev=4c4a91ae -->
+
+**Cross-provider review.** A codex Sol review (reasoning effort medium, the
+read-only sandbox, 225,090 tokens) of `d8998c27..4c4a91ae` verified all six
+claims the session added (the S11 claim and batching facts, the mint's title
+dedupe, the census's whole-body hashing, the intake staging hazard, the
+providers' cached-token semantics, the S13 precedent) and returned 7
+findings (5 MAJOR, 2 MINOR), all applied:
+
+- the sister plan's §3.5 recommendation of (i) and §2.3's phase-close
+  checkpoint are marked superseded by the S11 and S6 rulings;
+- WI-606 captures raw codex and opencode usage without mapping it, and Claude's
+  two parse defects move to S7's adapter (the S8 ruling), so there is one
+  mapping, not two;
+- WI-541 now waits on WI-605, so the retention check reads corrected
+  occupancy;
+- this fragment records the bar's result instead of promising it;
+- WI-608's citation and WI-607's over-length title are corrected.

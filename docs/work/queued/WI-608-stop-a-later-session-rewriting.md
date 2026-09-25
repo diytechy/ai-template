@@ -15,8 +15,8 @@ filed by the owner from the
 review pack's Part C.
 
 The implementer-touch check excludes the train's own review folder, and the
-gate reads each round file at the branch tip (`kitlib/verdict.py:854`,
-`integrate.py:1460-1468`). So a later build session could edit an earlier
+gate reads each round file at the branch tip (`integrate.py:1386` through
+`kitlib/verdict.py:854`). So a later build session could edit an earlier
 round's verdict file, and the gate would read the edited text. That would
 undermine SR-154's independence: a verdict from a session that did not author
 the work.
