@@ -69,3 +69,24 @@ spine map §6 for the owner's return; none holds a gate or blocks a queue.
   --strict` clean; `trace.py --strict-integrity` 0 integrity, 0 orphans; the
   open-items view regenerated.
   <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=a7d5ad8b -->
+
+### Work items filed, and the resume surface
+
+- **Filed by hand** (the tree was committed first, and intake's mint was not
+  used because of its staging hazard): WI-627 to WI-640, the build of the chains,
+  each gated on the approval act so its test cases are approved before its code
+  lands; WI-641, adjudicating SR-162's amended rationale; WI-642, the approval
+  act, needing WI-641, WI-601 and WI-603; WI-643, the C1 sitting commit; and
+  WI-644, the sweep of the nine rows restating a reversed ruling. The WI
+  watermark was raised with `trace.py --bump-ids`, and the trunk views were
+  regenerated with `trunk_step.py --regen`.
+- **Resume surface:** `docs/handoff-2026-09-25.md` replaces the 2026-09-24
+  handoff; `docs/status.md`, the root README and `docs/README.md` point at it.
+- **Byte deltas on budgeted files:** `docs/status.md`, one bullet replaced and
+  one reworded (128 lines, within its declared 160); no capped file edited.
+- **Commit bar for the filings:** smoke **1681 passed, 3 skipped** in 154.9 s;
+  seconds **FAIL** against the 60 s budget on this machine, recorded and not
+  re-stamped. `check_docs --stale` OK (0 broken); `check_trajectory --strict`
+  clean (641 work items; advisory shared-spec and shared-requirement pairs only);
+  `derive_stage --check` up to date at DevStg-Tests.
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=c47143d4 -->
