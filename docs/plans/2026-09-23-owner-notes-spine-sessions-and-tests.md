@@ -314,6 +314,15 @@ enter:
 
 (d) is harmless and optional; (e) is not recommended.
 
+**Owner ruling (2026-09-24): (a) plus (d), with a spine-derived map**
+([review pack](2026-09-24-owner-review-pack.md) B7). While iterating, a builder
+is pointed at the tests the spine links to its module: the module's LLRs, the
+TCs verifying them, and their evidence files, which covers all 82 modules. File
+names alone (`tests/test_<module>*.py`) would find only about 11% of the tests
+that exercise a module. The smoke bar still runs before every commit. The 41
+tier disagreements are a separate item, priced later: first decide what this
+repo's budget partition means against the shipped tier contract.
+
 ### 2.3 How often observation tests run (note 3)
 
 > *"Sometimes the test is just checking the design (observation), how often does
@@ -912,6 +921,30 @@ item**. If it is pursued, the measure is executed operations over a declared,
 versioned workload, reported as a trend beside the existing caps, and never a
 gate.
 
+**Owner ruling (2026-09-24): pursue it, re-scoped from cycles to structure**
+([review pack](2026-09-24-owner-review-pack.md) B7). The goal is less
+complexity and right-sized modules: interfaces reduced to one source of truth,
+mutually exclusive boolean flags packed into enum states, and a stage shared by
+two modules extracted rather than repeated. Two modules processing A→B→C and
+A→B→D express four stages; extracting A→B makes it three (PROCESS.md §3's 0→A→B
+rule, measured). So:
+
+- **Now: a flag-axis count**, warn-only: functions taking two or more boolean
+  parameters, and call sites passing boolean literals, as the candidates for an
+  enum state. It also counters the table's first gaming move, fusing functions
+  behind a mode flag.
+- **Research first: duplicated-stage detection.** Today's census hashes whole
+  function bodies, so a shared prefix inside two different functions is
+  invisible, and exact matching misses small deviations; the torn-down gate
+  (D-7) also showed 93% of findings were accepted idioms. A bounded pass
+  validates call-sequence fingerprints (the ordered operations a function
+  invokes) and near-miss similarity against past consolidation findings as
+  ground truth, measuring recall and noise, with a judged-once ledger so an
+  accepted idiom is never raised again. Nothing is adopted before it is
+  measured; any result is a reported burn-down number, never a gate.
+- Interface single-source-of-truth stays with the spine redesign, not this
+  measure.
+
 ### 4.2 When a guard is owed (note 3)
 
 > *"Need to emphasize to reviewers and builders - don't build a guard if the
@@ -960,7 +993,7 @@ may proceed as written; `CONDITIONAL` means decided with the stated condition;
 | S2 | LLR → design expectation: prose now, prefix a separate later decision; no edits to old logs? (§1.2) | **DECIDED**: yes. Ships in the assumption-tier plan's terminology package (its §11 T), with Q9. **Flag closed 2026-09-24** ([review pack](2026-09-24-owner-review-pack.md) A3): "expectation" also appears as ordinary wording about needs (the needs template's comments, an adopter's heading); the owner keeps the name, and the glossary line also says the ordinary word is not the tier. "Design specification" was weighed and not taken: "spec" already names a work item's scope document, and AT §2's S is the SRs. |
 | S3 | Design constraints: each is a need whose stakeholder is the owner, canonical in the need; provenance anchor on the need; **no hat becomes a stakeholder**; schema ruled with the stakeholder list? (§1.3) | **DECIDED 2026-09-24: phased** ([review pack](2026-09-24-owner-review-pack.md) B5). No hat becomes a stakeholder. At the assumption-tier sitting (its C1): a general provenance pointer column on needs, and the vision's two headline needs (readable, maintainable code; test-first). The census of the remaining ~25–30 prose constraints is published for a later, separate ruling. |
 | S4 | Retired rows: keep deletion, and amend D-4 to add a structured retirement fragment in `docs/log.d/`? (§1.4) | **CONDITIONAL**: yes, provided the fragments are lookup-only for agents (stated in PROCESS.md, not AGENTS). **Home revised 2026-09-24** (reopened because `trunk_step` compiles and deletes every top-level `docs/log.d/*.md`; owner accepted [review pack](2026-09-24-owner-review-pack.md) A2): the fragments live in `docs/log.d/retired/`, which the non-recursive fold skips; the template gains an `orphans-allow` line for it. |
-| S5 | Test level: keep every test in the commit bar (a); optionally let builders run a module's own tests first as an inner loop (d), never as the bar; reconcile the 41 tier disagreements as a priced migration? (§2.2) | **RE-POSED** with the owner's module-scoped idea as (d) and (e). Recommend (a) plus optional (d); not (e), which reverses the test-impact ruling. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B7. |
+| S5 | Test level: keep every test in the commit bar (a); optionally let builders run a module's own tests first as an inner loop (d), never as the bar; reconcile the 41 tier disagreements as a priced migration? (§2.2) | **DECIDED 2026-09-24** ([review pack](2026-09-24-owner-review-pack.md) B7): (a) plus (d), the inner loop using a spine-derived map (module → LLRs → TCs → evidence files); the smoke bar unchanged before every commit; not (e). The 41 tier disagreements are a separate item, priced later. |
 | S6 | Observation tests: evaluate triggers only at checkpoints (work-item merge, phase close, release), "content change" meaning changed since last judged, sharing the assumption tier's result record? (§2.3) | **DECIDED 2026-09-24** ([review pack](2026-09-24-owner-review-pack.md) B4): the checkpoints are work-item merge and release; phase close joins only with a defined trigger. At a checkpoint the check is a mechanical hash of each TC's declared inputs; a due TC mints one deduplicated re-judge item, so no LLM runs at the check. One freshness model: the shared record's judged-state digest, or `max_age`, whichever trips first. Design jointly with the assumption tier, before its C3. |
 | S7 | One session service (act / keep / record), with WI-551 landing through it? (§3.1) | **DECIDED**: (a), with the owner's direction to consolidate as far as possible: shared stages over per-role or per-provider code. It is schema-neutral and proceeds now: S8's schema and S10's retention are added to it when each is cleared. |
 | S8 | Telemetry: run one bounded research pass on each routed CLI's structured usage output and a published schema, then adopt that schema, with a provider column and tokens kept distinct from context occupancy? (§3.2) | **DECIDED 2026-09-24** ([review pack](2026-09-24-owner-review-pack.md) B6): adopt the OTel GenAI usage names, pinned to a commit, inclusive form; fresh input derived; raw usage verbatim; provider and CLI columns; billed tokens and context occupancy separate; JSON output on the codex and opencode routes; exporters optional. Lands in S7's record step (§3.2). |
@@ -969,7 +1002,7 @@ may proceed as written; `CONDITIONAL` means decided with the stated condition;
 | S11 | One trunk commit per work item: squash the lane in the mechanical merge, keeping the adjudicator's reviewed commit as the approval act inside it (i), or a machine approval writer (ii)? (§3.5) | **DIRECTION 2026-09-24, plan before ruling** ([review pack](2026-09-24-owner-review-pack.md) B1, option d): an actual single trunk commit per work item, not a grouped view of several. A dedicated plan settles the claim from lane branches, batching, in-lane adjudication in the merge slot, held-rung rows, held partials, the folded mint, kept lane refs, and the amendments (§3.5); nothing is built before it is ruled. (ii) stays its own ruling under OI-45. |
 | S12 | Fan-out: rule on peer-tier delegation; tiers, not models; never from review roles; budgets only after an observability design? (§3.6) | **DECIDED in principle.** |
 | S13 | Builder bias: the planner writes the work item's Done-when before the build, and a lane that edits its own Done-when is flagged to the reviewer and adjudicator? (§3.7) | **DECIDED 2026-09-24: two rules** ([review pack](2026-09-24-owner-review-pack.md) B3): every claimable work item has a Done-when, written before claim by whoever files it; at merge, each item's text at claim and at merge is compared (ticks and trailing evidence stripped) and a change is flagged to the reviewer and adjudicator. No new role (§3.7). |
-| S14 | Operation count: park as research; if pursued, executed operations over a declared workload, reported beside the caps, never a gate? (§4.1) | **RE-POSED**: the owner rejected public-symbol counts and framed it as execution cost. Facts and options: [review pack](2026-09-24-owner-review-pack.md) B7. |
+| S14 | Operation count: park as research; if pursued, executed operations over a declared workload, reported beside the caps, never a gate? (§4.1) | **DECIDED 2026-09-24: pursue, re-scoped** ([review pack](2026-09-24-owner-review-pack.md) B7): the aim is structural (shared stages extracted, flags packed into enums), not cycles. Now: a warn-only flag-axis count. First researched: duplicated-stage detection by call-sequence fingerprints and near-miss similarity, validated against past consolidation findings, with a judged-once ledger. Never a gate (§4.1). |
 | S15 | The guard rule in PROCESS.md, linked from the prompts, not in the vendored skill? (§4.2) | **DECIDED**: yes. |
 | S16 | Amend OI-76 so the coordinator, not the reviewer, commits a reviewer's verdict file? (§3.3) | **WITHDRAWN 2026-09-23**: S9's ruling keeps reviewers committing their own verdicts. |
 | S17 | S9's pilot stop rule? (§3.3) | **WITHDRAWN 2026-09-23**: no pilot under S9's ruling. |
