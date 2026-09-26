@@ -375,8 +375,11 @@ def test_meta_repo_phases_match_an_independent_derivation():
     # A deliberate SNAPSHOT of the meta-repo's own derived phase, so a silent
     # phase drift reds here rather than passing unnoticed. Bump it when a
     # approval legitimately advances the phase (4 -> 5 at the 2026-08-13
-    # re-attest sitting, which approved the last draft SNs and SR-137..149).
-    assert record["phase"] == 5
+    # re-attest sitting, which approved the last draft SNs and SR-137..149;
+    # 5 -> 6 at the 2026-09-25 phase-6 approval act, cbb6649f, which approved
+    # the assumption tier's chains SN-041..044, SR-187..219, LLR-211..258 and
+    # TC-212..251).
+    assert record["phase"] == 6
     # ...and the RETIRED counter is absent from the record. `modified=` left with
     # `is_modified` at D-9 step 7 (a count of a value the closed enum no longer
     # admits is a count of an integrity error, not of a pending state), and the

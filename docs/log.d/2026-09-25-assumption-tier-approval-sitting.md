@@ -139,3 +139,9 @@ queue.
   integrity; `CURRENT.md` fresh; `approval-immutable` ok; `derive_stage
   --check` up to date at DevStg-Tests; the open-items view up to date.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=f537fc53 -->
+- **Follow-up, a stale pin the act left red:** `tests/test_spine_rules.py::
+  test_meta_repo_phases_match_an_independent_derivation` snapshots the
+  meta-repo's derived phase, and the act moved it 5 -> 6. The module sits
+  outside the per-commit tier, so none of this sitting's commit bars ran it;
+  the WI-627..WI-628 builders found it red at 76a235bb. Bumped to 6 with the
+  reason, as the test's own comment asks, in a separate commit.
