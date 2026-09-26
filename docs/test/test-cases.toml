@@ -2573,7 +2573,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-250]
-verifies = ["SR-217", "LLR-257"]
+verifies = ["SR-217", "LLR-257", "IF-198", "IF-199"]
 level = "Integration"
 method = "Driven on real git repositories, in a module registered as slow. A requirement whose test cases were all approved before the first commit adding an Implements line for it produces nothing. Implementation landing is found both through a line naming the requirement and through a line naming one of its design rows, and the earlier of the two is the landing. A requirement with two test cases approved after that landing is reported naming the requirement, the implementation commit and both approval commits. A commit that approves one test case while withdrawing another still records the approval. A requirement with no implementation produces nothing. A declared start after a requirement's approval excludes it; no declared start judges the whole history. A test case added already Approved counts at its birth. A shallow clone, a start commit that does not exist, and a start not on first-parent history are each reported unreadable, never passing. Order is read only from commits, never from a cell. The step lists as warn-only in the harness plan."
 tier = "Full"

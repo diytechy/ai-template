@@ -1340,7 +1340,7 @@ component = "CMP-008"
 
 [interface.IF-102]
 owner = "scripts/spine_carrier"
-requestors = ["scripts/trace", "scripts/acceptance_record", "scripts/check_trajectory", "scripts/gen_arch_map", "scripts/plan_coverage", "scripts/spine_rules", "scripts/traj_status"]
+requestors = ["scripts/trace", "scripts/acceptance_record", "scripts/check_trajectory", "scripts/gen_arch_map", "scripts/plan_coverage", "scripts/spine_rules", "scripts/traj_status", "scripts/check_test_first"]
 channel = "call"
 data = "spine_carrier.load / resolve / stem / carriers / rows_from_text; rows under today's column names, None on a TOML decode error"
 version = "v1"
@@ -1857,6 +1857,27 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """source - assumption_rules consumes nothing but the row vocabulary it reads from kitlib.spine: rows in, findings out, with no I/O, no git and no filesystem."""
+
+[interface.IF-198]
+rationale = """The order runs as a built-in harness step, so the harness reads it back the way it reads every step: by exit code, with the report on stdout for the reviewer. Warn-only means the exit stays 0 for a finding and for a history the order cannot be read from, because the order is evidence a reviewer weighs; a project that rules it a gate says so with `--strict`, and the shipped step does not."""
+owner = "scripts/check_test_first"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 for every report: none, a finding, an unreadable history or an unreadable declared start · 1 only under --strict, for any of them but none"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+
+[interface.IF-199]
+rationale = """An implementation lands where a commit adds a line declaring it, and a line declares an implementation exactly when the back-link grammar says it does. Calling the grammar the reverse-coverage scan and the module map already read keeps all three agreeing on what a declaration is; a second copy of the rule in the history reader would be a second answer waiting to drift."""
+owner = "scripts/gen_arch_map"
+requestors = ["scripts/check_test_first"]
+channel = "call"
+data = "backlink_ids(line) -> the spine ids one line declares · IMPLEMENTS_MARKER · BACKLINK_EXTS"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """cross-component crossing declared per the architecture rule: check_test_first is CMP-007 and gen_arch_map is CMP-006/CMP-009."""
 
 [interface.IF-200]
 rationale = """An observation test case's declaration is judged by the same pure join layer as the assumption tier, beside it rather than inside the tier's entry point, because the declaration applies to every case the harness cannot rerun whether or not the frame declares a crossing; drawing the seam here keeps the checker growing by composition lines alone while the rules stay testable on in-memory rows."""

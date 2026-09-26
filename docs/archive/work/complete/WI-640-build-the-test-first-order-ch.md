@@ -2,13 +2,32 @@
 id = "WI-640"
 title = "Build the test-first order check over committed history (SR-217)"
 workstream = "scripts"
-specref = "docs/plans/2026-09-25-assumption-tier-spine-map.md#3-plan-coverage"
+specref = ""
 sr_refs = ["SR-217"]
 needs = ["WI-642"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 4
 +++
+
+## Deliverable
+
+- `check_test_first.py` (IF-198, IF-199) and check.py's built-in
+  `test-first` step, warn-only: a requirement's implementation landing (an
+  `Implements:` line naming it or one of its design rows) read from
+  first-parent history against its test cases' approval commits, each late
+  approval reported naming both commits.
+- The `[checks] test_first_since` start gates only which requirements are
+  judged; test-case approvals are read over the whole readable history
+  (Sol's blocker). An approval the TOML history cannot date exactly is
+  bounded at or before the cutover and reported unread unless the bound
+  settles the order (arbitration ruling 7); an unread requirement fails
+  `--strict`. Test-case membership is read at the tip and disclosed as such:
+  association timing is OI-87.
+- `PROCESS_ONLY_KEYS` types the start; PROCESS.md names the step beside the
+  TDD rule (+191 bytes).
+- Amended, status left Approved, for the joint adjudication: LLR-257
+  `detail`. This repository reports `test-first: OK` from its declared start.
 
 ## Context
 

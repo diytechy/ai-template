@@ -106,8 +106,8 @@ Marker pairs (the templates ship with them):
     <!-- BEGIN GENERATED CLI REFERENCE -->  ... <!-- END GENERATED CLI REFERENCE -->  (required per --cli-doc)
     <!-- BEGIN GENERATED INTERFACE REFERENCE --> ... <!-- END GENERATED INTERFACE REFERENCE --> (required per --contracts-doc)
 
-Contracts: IF-010, IF-028, IF-117, IF-131, IF-132, IF-150 — the interface seams
-this module declares (process.md §8; rows of record in
+Contracts: IF-010, IF-028, IF-117, IF-131, IF-132, IF-150, IF-199 — the
+interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
 Contract IF-010: this generator's own invocation surface. `--doc`, `--cli-doc` and
@@ -156,6 +156,14 @@ Contract IF-150: the freshness and parse verdict the harness reads back. 0 says
     `--cli-doc` or `--contracts-doc` target is vacuous and exits 0, while an
     absent `--doc` target, a `--doc` file missing its MODULE MAP marker pair,
     and no `--doc` at all are hard refusals with a message on stderr.
+Contract IF-199: the back-link GRAMMAR, offered for reading history.
+    `backlink_ids(line)` returns the spine ids one line of text declares, and
+    `IMPLEMENTS_MARKER` and `BACKLINK_EXTS` name the declaration token and the
+    file types the reverse-coverage scan reads. A caller applying them to the
+    lines a commit adds counts exactly what the coverage scan and the map
+    count, so an implementation's landing read from history cannot disagree
+    with either about what a declaration is. The function is pure: text in,
+    ids out.
 """
 
 import argparse

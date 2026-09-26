@@ -249,6 +249,16 @@ Contracts (interfaces): IF-006
 | `--exclude` | repo-relative glob of source files to skip (repeatable) |
 | `--strict` | exit nonzero when stubs are found (default: warn-first, exit 0) |
 
+### `scripts/check_test_first`
+_check_test_first.py — the test-first order, read from committed history._
+Contracts (interfaces): IF-198
+
+| Option | Help |
+|---|---|
+| `--root` | repo root (default: cwd) |
+| `--src` | the declared source surface a landing is read under (default: src; the harness passes docs/stack.ini [paths] src) |
+| `--strict` | print FAIL and exit 1 for a finding, or for a history or declared start that cannot be read (the shipped step omits it: warn-only) |
+
 ### `scripts/check_trajectory`
 _Validate the work-item registry — stdlib only._
 Contracts (interfaces): IF-009, IF-056, IF-082, IF-083, IF-084
@@ -294,7 +304,7 @@ Contracts (interfaces): IF-050, IF-165
 
 ### `scripts/gen_arch_map`
 _The module/function AST walk behind the DERIVED architecture (WI-455)._
-Contracts (interfaces): IF-010, IF-028, IF-117, IF-131, IF-132, IF-150
+Contracts (interfaces): IF-010, IF-028, IF-117, IF-131, IF-132, IF-150, IF-199
 
 | Option | Help |
 |---|---|

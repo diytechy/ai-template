@@ -295,6 +295,9 @@ SLOW_MODULES = frozenset(
         # WI-632 (TC-234): the accepted risk's approval act read from real git
         # repositories, a shallow clone among them.
         "test_accepted_risk",  # git init/commit/clone per case
+        # WI-640 (TC-250): the test-first order exists only in commits, so every
+        # case builds a real git history (a shallow clone, a merge) to read it.
+        "test_check_test_first",  # git init + a commit per step, per case
     }
 )
 

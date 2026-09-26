@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
 | `CLAUDE.md` | **8,500** | 7,975 | 2026-09-04 | +89: WI-580 aligns mid-phase close with the phase cadence |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,519 | 2026-09-26 | WI-628 PROCESS row restamp |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,528 | 2026-09-26 | WI-640 PROCESS row restamp |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill
 about 9%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
@@ -45,7 +45,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 89,009 | 2026-09-26 | **+19** WI-628: a need's `source` joins the pointer columns the provenance rule exempts |
+| `project-trajectory/PROCESS.md` | 89,200 | 2026-09-26 | **+191** WI-640: the test-first rule names the warn-only `test-first` history step and its start |
 | `project-trajectory/PROCESS_OPTIONS.md` | 189,549 | 2026-09-26 | **+14** WI-612: the claim's refusal list names a dirty path it must write, not a dirty tree |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped

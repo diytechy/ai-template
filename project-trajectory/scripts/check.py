@@ -239,6 +239,7 @@ COVERAGE_JSON = Path("coverage.json")
 # The built-in plan's own step names. A project-declared `[step:<name>]` in
 # docs/stack.ini may not shadow one — that would silently append a second step
 # under a kit name, not replace the kit step. Keep in sync with steps() below.
+# Implements: SR-217, LLR-257
 BUILTIN_STEP_NAMES = frozenset(
     {
         "format",
@@ -255,6 +256,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "design-flows",
         "trajectory",
         "backlink-coverage",
+        "test-first",
         "trajectory-map",
         "status-map",
         "open-items",
@@ -656,6 +658,9 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         "--src",
         src,
     ]
+    # The test-first order (SR-217) reads each landing under the same declared
+    # source surface the back-link scan above reads; its root is this cwd.
+    order_cmd = [sys.executable, str(_SCRIPTS / "check_test_first.py"), "--src", src]
     if stage != ALL and at_or_above(stage, _kitladder.STAGE_IMPL):
         traj_cmd.append("--strict")
         vocab_cmd.append("--strict")
@@ -940,6 +945,17 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_IMPL,
             "process",
         ),
+        # The test-first order (SR-217): each requirement approved after the
+        # declared `[checks] test_first_since`, with a test case approved after
+        # its first `Implements:` line landed, read from history. AT EVERY RUNG,
+        # unlike backlink-coverage above, because the gap it reads is the one
+        # the ladder leaves: the ladder orders tests before code for the project
+        # as a whole, so a repo whose derived stage still reads DevStg-Tests can
+        # already hold implemented requirements, and an Impl-threshold step
+        # would stay silent through exactly that window. WARN-ONLY ALWAYS, like
+        # need-form: no `--strict` here, because the order is evidence for a
+        # reviewer, and making it refuse a commit is a project's own ruling.
+        ("test-first", (), order_cmd, _kitladder.STAGE_NEEDS, "process"),
         # (The `arch-map` committed-map freshness step retired at WI-455:
         # the module map is DERIVED live from the source AST by its readers,
         # so there is no committed docs/architecture.md block left to drift.

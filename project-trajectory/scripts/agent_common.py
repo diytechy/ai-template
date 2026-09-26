@@ -332,6 +332,12 @@ PROCESS_ONLY_KEYS = {
     # believes it declared. That reader is deliberately quiet (a threshold has
     # no conservative default to fail toward); this table is where it gets loud.
     ("checks", "backlink_coverage_min"): "int",
+    # The test-first order's declared start, a commit id (SR-217). Its reader
+    # (`kitlib.config.process_check_text`) refuses a non-string, but only into
+    # the warn-only step's own output; a bare `test_first_since = 20260926`
+    # would read as an unjudged history nobody is made to look at, so the
+    # guarded entry points refuse it here.
+    ("checks", "test_first_since"): "str",
 }
 
 # Dials whose value must also fall in a RANGE. Out of range is refused rather

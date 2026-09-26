@@ -494,7 +494,9 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   written; the SN→SR→LLR→TC spine is *what* it must satisfy — it operates within
   the traceability discipline, not instead of it. The exit criteria below
   (coverage, every in-scope SR Approved) are what that loop drives toward.
-  Format/lint clean; every source module parses
+  The warn-only `test-first` step reads that order from history: an SR approved
+  after `[checks] test_first_since` (empty: all history) with a TC approved
+  after its code landed is reported. Format/lint clean; every source module parses
   (`gen_arch_map.py --strict-parse`); the **full** test tier passes; coverage ≥
   `COVERAGE_THRESHOLD`; registry **schema** holds (required fields non-empty,
   `Verification`/`Tier` in vocabulary — `trace.py --strict-schema`); every

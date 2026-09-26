@@ -584,3 +584,32 @@ coordinator integrates in the handoff's order.
   open-items view up to date. Seconds **FAIL** at 195.0 s against 60 s,
   idle (OI-92), recorded, not re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=1be5ca08 -->
+
+### WI-640 lands — the test-first order check over committed history
+
+- **Follow-up dc3f8c6b** (Sol's blocker): test-case approvals read over the
+  whole readable history, the declared start gating only requirement
+  eligibility; `PROCESS_ONLY_KEYS` types `test_first_since`; PROCESS.md names
+  the step (89,009 -> 89,200 bytes, +191, watched). Red: 9 failed, 59 passed.
+  The LLR-257 amendment widened beyond the ruling: an approval the TOML
+  history cannot date exactly is bounded at or before the cutover.
+- **Sol on dc3f8c6b** (`sol-wi640-fix.md`) and **ruling 7:** the pre-TOML
+  bound stands (approved LLR-257 already refused that history; reading CSV
+  approvals is not owed); TC-250 unamended. **Second follow-up 3fab9c4f:** an
+  unread requirement asserted to fail `--strict`; the README, template and
+  RESYNC wording qualified.
+- **Integrated** by squash (base b14d1808). Conflicts: the bootstrap
+  docstring file list (each side added one script), `SLOW_MODULES`,
+  IF-198/199 placed between IF-190 and IF-200, `bootstrap.py` size 1673 +1
+  -> 1674, watermark, RESYNC entry re-anchored `[since ae3d625e]`.
+- **Amended, status left Approved, for the joint adjudication:** LLR-257
+  `detail`.
+- **Commit bar:** smoke **1949 passed, 3 skipped** in 163.1 s; the touched
+  modules (`test_check_test_first`, `test_bootstrap`, `test_dogfood_sync`,
+  `test_rule_sync`, `test_resync_pack`, `test_process_config`) **217 passed,
+  1 skipped**; `check_test_first` on this repository OK from its declared
+  start; `check_docs --stale` OK; `check_trajectory --strict` clean;
+  `trace.py --strict-integrity` 0 integrity; `CURRENT.md` current; the
+  open-items view up to date. Seconds **FAIL** at 164.3 s against 60 s,
+  idle (OI-92), recorded, not re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=ae3d625e -->

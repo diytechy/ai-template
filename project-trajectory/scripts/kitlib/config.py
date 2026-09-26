@@ -2,9 +2,11 @@
 
 TWO READERS, ONE THEME: `first_declared_line` (and its two adapters) for the
 one-word `docs/<dial>` files, and `process_check` for a `[checks]` toggle in
-`docs/process.toml`. They are the two halves of the SN-028 dual-read window —
-the same question asked of the legacy file and of the TOML that supersedes it —
-so a caller resolving a dial reaches for exactly one module.
+`docs/process.toml` (with `process_check_text` beside it for a `[checks]` key
+whose value is text, such as a declared start commit). They are the two halves
+of the SN-028 dual-read window — the same question asked of the legacy file
+and of the TOML that supersedes it — so a caller resolving a dial reaches for
+exactly one module.
 
 THE BEHAVIOUR THAT HAD FIVE HOMES (census 2026-08-12, `repo-lock.md` §8.2;
 confirmed independently by the 2026-08-19 review, H-09). A declared-policy file
@@ -38,6 +40,7 @@ from pathlib import Path
 __all__ = [
     "first_declared_line",
     "process_check",
+    "process_check_text",
     "read_declared",
     "read_declared_lower",
     "utf8_console",
@@ -113,6 +116,47 @@ def process_check(root, key):
     if value is None:
         return None
     return value if isinstance(value, bool) else True
+
+
+def process_check_text(root, key):
+    """One text-valued `[checks]` key out of `docs/process.toml` — a commit id,
+    say — or None when the file declares nothing for it.
+
+    A SECOND READER BESIDE `process_check`, NOT A MODE OF IT, because the two
+    fail in opposite directions. A toggle has a conservative answer to fall back
+    on when it cannot be read (ON: the check keeps running). A declared text
+    has none: a start commit the file meant but this reader cannot see is not
+    "no start", and treating it as one would judge a different history than the
+    one declared. So an unparseable file, or a value that is not a string,
+    RAISES and the caller says what it could not do; it never guesses.
+
+    An empty or blank string is the same statement as an absent key: the
+    shipped template declares the key visibly at `""`, and that must read as
+    "nothing declared" rather than as a value to act on.
+
+    Contract:
+      Inputs:  root: path-like repo root; key: the `[checks]` key to read
+      Outputs: str | None — the declared text, stripped; None if undeclared
+               or empty
+      Raises:  ValueError — the file is present but does not parse, or the
+               key holds something other than a string
+    """
+    path = Path(root) / "docs" / "process.toml"
+    if not path.is_file():
+        return None
+    try:
+        data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
+        raise ValueError("{} does not parse: {}".format(path, exc)) from exc
+    table = data.get("checks")
+    value = table.get(key) if isinstance(table, dict) else None
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError(
+            "{} [checks] {} = {!r} is not a string".format(path, key, value)
+        )
+    return value.strip() or None
 
 
 def read_declared(path, default):

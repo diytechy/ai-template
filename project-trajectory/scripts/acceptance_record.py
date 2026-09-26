@@ -625,6 +625,37 @@ def staged_approval_acts(root, base="HEAD", head=None):
     return out
 
 
+def rows_at(root, rev, rel_path, id_col):
+    """`{id: row}` of one spine registry at commit `rev`, or `{}` when the
+    registry is absent there under either carrier — `_spine_rows_at`, the row
+    reader behind every two-tree scan in this module, offered for a walk along
+    history (`check_test_first.first_approval_commits`).
+
+    Public so a history reader parses a row the way the approval-act refusal
+    does, through the same carrier resolution and the same `-000` filter,
+    rather than growing a second reader of the registries at a revision."""
+    return _spine_rows_at(root, rev + ":", rel_path, id_col)
+
+
+def approval_acts_between(registry, before_rows, after_rows):
+    """The approval acts `after_rows` perform against `before_rows`, in
+    `staged_approval_acts`' record shape: every row that crossed into an
+    approval claim (`flip`) or arrived already making one (`born`).
+
+    THE HISTORY FORM OF THE SAME RULE. `staged_approval_acts` reads its two
+    sides from two trees; a walk along trunk carries each commit's rows forward
+    as the next commit's before side, so it asks the question of two row maps
+    instead and reads each registry once per commit that touches it. The act
+    itself is `_approval_act` in both, so the history and the lane refusal
+    cannot disagree about which change blessed a row."""
+    acts = []
+    for rid, row in after_rows.items():
+        act = _approval_act(registry, rid, before_rows.get(rid), row)
+        if act:
+            acts.append(act)
+    return acts
+
+
 # How `git diff --name-status` letters read as the ACT a branch performed on the
 # snapshot. Worded from the letter rather than assumed, because the record is
 # read by a human deciding why their merge stopped, and a branch that DELETES a

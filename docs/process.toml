@@ -240,3 +240,11 @@ subagent_gate = "off"
 # `0` for a fresh adopter (this is a VALUE this repo's own instance has earned,
 # not a STRUCTURE change) and carries the full reasoning.
 backlink_coverage_min = 50
+# The test-first order's declared start (SR-217; the shipped template's comment
+# on this key is the canonical doc). This repo declares the PARENT of the
+# phase-6 approval act (cbb6649f, WI-642), so that act is the first commit after
+# the start: the assumption tier's chains it approved count as approved after
+# the start, and are judged by the rule they include. Requirements approved
+# before it predate the rule and are not judged; read whole, the history
+# reports requirements whose code predates the rule.
+test_first_since = "f537fc531dd37b372259ba84f8836a290d1efddb"

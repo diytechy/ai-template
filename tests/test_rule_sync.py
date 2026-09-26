@@ -1141,6 +1141,11 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         # the check on its first run in every fresh scaffold, which is the
         # precise defect OI-42 documents about the rule it measures.
         "backlink_coverage_min": 0,
+        # EIGHTH, added by SR-217 (WI-640), and the first TEXT value here: the
+        # test-first order's declared start, a commit id. Empty declares no
+        # start, so a fresh scaffold is judged over its whole history, which
+        # is its whole history under the rule.
+        "test_first_since": "",
     }
     # And this repo's own instance declares the same six KEYS — the structure
     # that must not drift (CLAUDE.md: "VALUES may diverge … STRUCTURE must not").
@@ -1162,6 +1167,11 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         # tags landed, never because the bar came down; docs/process.toml's own
         # comment and docs/log.d/2026-08-20-program-grind.md carry the figure.
         "backlink_coverage_min": 50,
+        # WI-640 (SR-217): this repo's history predates the rule and reaches
+        # back before the TOML registries, so it declares the start at the
+        # PARENT of the phase-6 approval act (cbb6649f): the chains that act
+        # approved are the first judged by the rule they include.
+        "test_first_since": "f537fc531dd37b372259ba84f8836a290d1efddb",
     }
     assert live["checks"] == {**checks, **OWNER_DIALS}
     # AND THE README'S DIAL TABLE, whose third column is this repo's own value
@@ -1207,6 +1217,29 @@ def test_the_backlink_bar_is_type_checked_where_its_reader_stays_quiet(tmp_path)
     )
     assert gam.read_backlink_min(tmp_path) == 50
     assert ac.config_conflicts(docs) == []
+
+
+def test_the_test_first_start_is_type_checked_as_text(tmp_path):
+    """SR-217's `[checks] test_first_since` is a commit id, so TEXT. Its reader
+    (`kitlib.config.process_check_text`) refuses a non-string rather than
+    guessing, which reaches only the warn-only step's own output; the loud half
+    for the three guarded entry points is `config_conflicts`, exactly as for
+    the backlink bar above."""
+    ac = load_script("agent_common")
+    assert ac.PROCESS_ONLY_KEYS[("checks", "test_first_since")] == "str"
+    docs = tmp_path / "docs"
+    docs.mkdir(parents=True)
+    for bad in ("true", "20260926"):
+        (docs / "process.toml").write_text(
+            "[checks]\ntest_first_since = {}\n".format(bad), encoding="utf-8"
+        )
+        findings = ac.config_conflicts(docs)
+        assert any("test_first_since" in f for f in findings), bad
+    for good in ('""', '"f537fc531dd37b372259ba84f8836a290d1efddb"'):
+        (docs / "process.toml").write_text(
+            "[checks]\ntest_first_since = {}\n".format(good), encoding="utf-8"
+        )
+        assert ac.config_conflicts(docs) == [], good
 
 
 def test_the_migration_table_and_the_converter_name_the_same_six():

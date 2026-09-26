@@ -300,3 +300,30 @@ subagent_gate = "off"
 # that error can only RAISE the score — false passes, never false failures — so
 # a number near your bar deserves a look at what is carrying it.
 backlink_coverage_min = 0
+# THE TEST-FIRST ORDER'S DECLARED START (SR-217), a commit id. The `test-first`
+# step (`check_test_first.py`, warn-only, at every rung) reports each
+# requirement approved AFTER this commit that has a test case approved after its
+# implementation first landed on trunk, which is the first commit adding a
+# back-link line naming the requirement or one of its design rows. Both events
+# are read from the committed history, never from a cell.
+#
+# WHY A START, AND WHY IT SHIPS EMPTY. A project adopting the rule has history
+# written before it, and judging that history would report every requirement
+# whose code came first under a rule nobody had agreed yet. Declare the commit
+# the rule starts after (typically the parent of the commit that approves your
+# first requirements under it), and only requirements approved after it are
+# judged. `""` declares no start and the whole history is judged, which is
+# right for a project that has kept the order since its first commit.
+#
+# The start scopes only WHICH REQUIREMENTS are judged: test-case approvals are
+# read over the whole history, so a test case approved after the code landed is
+# late even when both came before the start.
+#
+# A start the history cannot honour is reported UNREADABLE, never passed: a
+# commit that no longer exists, one that never stood on trunk's first-parent
+# line, a shallow clone, or a start before the TOML registries (registries
+# still under the older carrier are unreadable too). An approval the TOML
+# history cannot date exactly still settles the order when it falls at or
+# before the landing (a requirement's own, at or before the start); otherwise
+# it is reported as an order that cannot be read.
+test_first_since = ""

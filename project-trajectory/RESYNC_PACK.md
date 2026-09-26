@@ -5561,6 +5561,49 @@ its content (the finding names the name it must carry), and expect a record
 judging a registry row outside the spine and frame tiers to read stale once:
 record a fresh sample.
 
+### A requirement implemented before its test cases were approved is reported [since ae3d625e]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `scripts/check_test_first.py` reads, from trunk's
+first-parent history, when each requirement's implementation first landed (the
+earliest commit adding a back-link line under `[paths] src` that names the
+requirement or one of its design rows) and when each of its test cases was first
+approved, and reports each requirement with a test case approved after the
+landing, naming the requirement, the implementation commit and each late
+approval commit (SR-217). `check.py` gains a built-in `test-first` step that runs
+it at every rung, warn-only: a finding never fails the harness, and `--strict`
+on the script is the promotion for a project that wants one. A shallow clone, a
+declared start that names no commit, never stood on trunk's first-parent line
+or precedes the TOML registries, and registries still under an older carrier
+are reported as unreadable, never as a pass. Judged requirements are those
+approved after `[checks] test_first_since` in `docs/process.toml`, a new key the
+template ships as `""`, which judges the whole history; the start scopes only
+the requirements, and test-case approvals are read over the whole history. An
+approval the TOML history cannot date exactly (a row already approved when its
+registry moved to TOML, or moved into `Approved` from a retired status word)
+still settles the order when it falls at or before the landing (a requirement's
+own, at or before the start); otherwise it is reported as an order that cannot
+be read, never passed. `acceptance_record.py` gains `rows_at` and
+`approval_acts_between`, and `kitlib/config.py` gains `process_check_text`, the
+string reader the key is read with.
+
+**What to do.** Re-sync `scripts/check_test_first.py`, `scripts/check.py`,
+`scripts/acceptance_record.py`, `scripts/kitlib/config.py` and
+`scripts/gen_arch_map.py` together: the new step is built into `check.py`, so a
+`check.py` without the script beside it fails that step. Re-sync
+`scripts/agent_common.py` with them: its config check now refuses a
+`test_first_since` that is not a string. Add `test_first_since = ""` to the
+`[checks]` section of your own `docs/process.toml`; the template's comment on
+the key explains it. Then decide
+where the rule starts for you. If your requirements were written after their
+code, or your history reaches back before your registries moved to TOML, the
+whole-history reading will report that history, or orders it cannot read, on
+every run. Set the key to the parent of the commit that approves your first
+requirements under the rule, in a reviewed commit, so that everything approved
+from there on is judged and nothing before it is. A project whose CI clones
+shallowly sees an unreadable line from this step until it fetches full history.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
