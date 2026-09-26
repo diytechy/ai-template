@@ -5202,6 +5202,41 @@ a path the regeneration writes (the prose of `docs/status.md`, say) is now
 named while it is dirty rather than overwritten or committed by a claim or
 mint: commit it first.
 
+### The snapshot refresh refuses row by row, and `--reattests` names re-attested rows [since 76a235bb]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `intake.py snapshot` used to decide authority per registry:
+one `Status` flip anywhere in a registry, or an `--approves <registry>=<ref>`
+naming it, let the refresh copy every approved amendment in that registry, so
+approving one row silently blessed another row's unreviewed edit. It now decides
+per row. The refresh is refused while any row of a registry it would copy has
+approved text that differs from its recorded copy and is neither flipped into
+approval by the act nor named in the new `--reattests <ROW-ID>[,<ROW-ID>...]`
+flag. A recorded approved row deleted from the live registry counts too: the
+refusal names it as removed, and naming it in `--reattests` is how an act
+blesses the removal. `--approves` still copies the registry it names and records
+its ref, but it clears no row. The refusal lists every such row and cell, with
+no five-row cap. Re-attested ids are written into the snapshot's README stamp
+beside the refs. An id that names no live or recorded row is refused, and so is
+`--reattests` on a first signing (`--seed`, or the repair of a record that does
+not parse), which copies the whole tree and writes no stamp. The rule covers
+every tier compared with its recorded copy, including the three tiers that share
+`external.toml`. Needs are still not compared.
+
+**What to do.** Re-sync `scripts/baseline_snapshot.py`, `scripts/intake.py`,
+`prompts/adjudicate-amendment.template.md`,
+`prompts/adjudicate-first-approval.template.md`, `prompts/CATALOG.md` and
+`skills/gate-advance/SKILL.md` together. `intake.py` calls
+`baseline_snapshot.parse_reattests` and `act_summary` and fails without them. No
+registry changes. If you have a script or habit that re-anchors an amended
+approved row with `intake.py snapshot --approves <registry>=<ref>`, it is now
+refused naming the row: add `--reattests <that row>`, having read its changed
+cells, and keep `--approves` only if you want the ref in the stamp. If a refresh
+you expected to pass is now refused naming a row you did not rule on, that
+row's amendment is still unreviewed. Rule on it, or revert it, before the
+refresh. Do not add it to `--reattests` just to get past the refusal.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

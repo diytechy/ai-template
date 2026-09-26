@@ -147,3 +147,34 @@ Not in the phase-6 chains, but ahead of WI-638, which files through the mint.
   to date. Seconds **FAIL** at 710.9 s against 60 s (D10; three builders and a
   full-suite run were loading the box), recorded, not re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=2be2894f -->
+
+### WI-635 — row-level refusal in the snapshot refresh
+
+- **Built:** an act refuses while any drifted approved row it neither flips
+  nor names with the new `--reattests` stands in a registry it copies.
+  `--approves` clears no row. A removed approved row counts as drifted.
+  `--reattests` is validated before every copy and refused on a first signing.
+  The rule iterates `SNAPSHOT_TIERS`. Prompts, the gate-advance skill and the
+  reference docs say `--reattests`.
+- **Tests first:** `tests/test_baseline_snapshot.py`: red 24 failed, 47 passed
+  (TC-240 subset 13 failed, 3 passed, the 3 vacuous or regression pins named
+  in the builder's report); green 71 passed. After the rework, 12 new cases red
+  11 of 12 before the fix, green after. Two tests in `test_trace_briefs.py`
+  that re-anchored with `--approves` alone were red at the first commit and
+  now name their row.
+- **Sol review:** NOT YET SOUND, 1 blocker (a removed approved row was
+  invisible) and 2 major (the seed path; the assumption tiers not yet
+  exercised). The first two were fixed. The third is sequenced: the tests pick
+  up any tier added to `SNAPSHOT_TIERS`, and WI-629's Done-when now requires the
+  recorded run.
+- **Merge:** after WI-612; the `RESYNC_PACK.md` conflict was resolved by keeping
+  both entries. `intake.py` auto-merged; the size ratchet holds.
+- **Resume surface:** the handoff's `--approves` trap is rewritten for
+  row-level refusal.
+
+- **Commit bar:** smoke **1696 passed, 3 skipped** in 560.2 s; `check_docs
+  --stale` OK; `check_trajectory --strict` clean; `trace.py --strict-integrity`
+  0 integrity; `CURRENT.md` fresh; the prompt catalogue fresh; the open-items
+  view up to date. Seconds **FAIL** at 562.6 s against 60 s (D10), recorded,
+  not re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=c429dd0c -->

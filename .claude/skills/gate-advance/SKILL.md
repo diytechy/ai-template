@@ -135,9 +135,10 @@ ACCEPTOR's procedure, not an author's:
   `CURRENT.md`, mint that sitting's dated copy — `python
   scripts/trace.py --mint-approval-brief <slug>` — and commit it alongside the
   approving `Status`/snapshot change. Blessing the amendment
-  is `python scripts/intake.py snapshot` in the reviewed commit: the copy IS
-  the signature now, so without it the record of what was blessed does not
-  move. If the amendment invalidated the evidence, that is the harness's
+  is `python scripts/intake.py snapshot --reattests <ROW-ID>[,...]` in the
+  reviewed commit, naming each row read: the copy IS the signature now, so
+  without it the record of what was blessed does not move, and the refresh
+  refuses any drifted row neither flipped nor named. If the amendment invalidated the evidence, that is the harness's
   problem to report and not a Status value. Record the ruling in the log's
   Decisions, like any approval. The amendment itself is the authoring lane's
   to make; the RE-COPY is the acceptor's (the ruling above), so amend and

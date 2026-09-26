@@ -53,9 +53,9 @@ per-close document*, and the rule refuses a second close of the same event rathe
 than overwriting the first. Read "a close no one can read is indistinguishable
 from a run that finished" as the general test: silence must not be a success
 signal. `baseline_snapshot.refresh_refusal` is the same instinct one tier up — a
-refresh that would absorb approved text is refused unless a `Status` flip or an
-explicit `--approves` ref authorises it, so the record of what a human blessed
-cannot be quietly rewritten.
+refresh that would absorb a row's drifted approved text is refused unless that
+row's own `Status` flip or an explicit `--reattests` naming it authorises it, so
+the record of what a human blessed cannot be quietly rewritten.
 
 ## Application
 

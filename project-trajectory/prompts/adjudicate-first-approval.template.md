@@ -92,6 +92,8 @@ If the answer is APPROVE, perform the act — it is yours, and nothing downstrea
 {approves_rows}
 
    If you RETURNED every row a token covers, DROP that token. Naming a registry you flipped nothing in re-anchors its live text — text this act did not bless — and the merge refuses the whole commit as a snapshot WIDENED without an approved row. Keep a token when at least ONE of its rows is approved: the copy takes the registry whole, and the rows you returned stay `Drafted` inside it, which is what they are.
+
+   If the snapshot REFUSES, naming a row you did not flip, that row is an APPROVED one whose text drifted from its recorded copy: an amendment another act owes a verdict on. Your flips approve your rows only, and `--approves` clears no row, so the copy cannot carry it. Do not name it with `--reattests` — re-attesting text you did not judge is the laundering the refusal exists to stop. This is the one case where you stop before the approval commit: leave the flips uncommitted and report the refusal.
 3. Commit those two together as one reviewed commit. That commit IS the approval.
 
 If the answer is RETURN, change NO registry cell. Draft the follow-up work in a `## Dispositions` section of this row's own spec — one fenced ```toml block per draft — and intake mints it at this row's merge. Do not file the row yourself; a lane that mints an id is refused at the merge slot.

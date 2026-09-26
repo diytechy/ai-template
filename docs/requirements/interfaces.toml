@@ -1549,7 +1549,7 @@ notes = """cross-component crossing declared per the architecture rule: this mod
 owner = "scripts/baseline_snapshot"
 requestors = ["scripts/intake"]
 channel = "call"
-data = "copy_live, load_all, rows_for, exists, stamp, is_drifted, unanchored_findings"
+data = "copy_live, parse_approves, parse_reattests, act_summary, load_all, rows_for, exists, stamp, is_drifted, unanchored_findings"
 version = "v1"
 status = "Drafted"
 

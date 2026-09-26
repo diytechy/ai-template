@@ -22,3 +22,4 @@ priority = 3
 - Each new test module that drives git, subprocesses or a scaffold (the spine map's D31 names them) is added to `tests/conftest.py`'s `SLOW_MODULES` in the same change, or it silently joins the per-commit tier; in-memory rule tests stay in the per-commit tier.
 - A kit script or registry template that ships to adopters is in `bootstrap.MAPPING`, and a schema change has a resync-pack entry naming what an adopter must do.
 - The commit bar and `trace.py --strict-integrity` pass, and nothing in the change approves a spine row.
+- TC-240's snapshot cases (`tests/test_baseline_snapshot.py`, parametrized from `baseline_snapshot.SNAPSHOT_TIERS` at collection, WI-635) run for `DA-ID` and `SUR-ID` once LLR-220 adds those tiers, and the run is recorded: until then TC-240's assumption and surrogate clause has no evidence.

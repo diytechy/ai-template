@@ -705,14 +705,17 @@ def test_a_closed_window_is_a_no_op(tmp_path):
 
     THE COPY NAMES ITS AUTHORITY SINCE 2026-08-20. This amendment moves approved
     text under a row that is already `Approved` — the D-9 ladder's own shape, and
-    the one the authority gate makes a human declare (`--approves`), because it
-    is indistinguishable from laundering without the declaration."""
+    the one the authority gate makes a human declare, because it is
+    indistinguishable from laundering without the declaration. Since SR-207 the
+    declaration names the ROW (`--reattests`); the registry's ref alone clears
+    none of its rows."""
     _run_git, _rev, write = _approval_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
     write("Approved", sr_req="The system shall do the AMENDED thing.")
     load_script("baseline_snapshot").copy_live(
         tmp_path,
         approves={"docs/requirements/system-requirements.toml": "the sitting"},
+        reattests={"SR-001"},
     )
     proc = _check(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -738,12 +741,14 @@ def test_a_flip_WITHOUT_a_copy_leaves_the_row_drifted(tmp_path):
     assert "## SR-001" in proc.stdout
     assert "before: The system shall do the thing." in proc.stdout
     assert "after: The system shall do the AMENDED thing." in proc.stdout
-    # ...and the copy is what clears it — carrying the ref that names the act,
-    # since 2026-08-20: absorbing approved text under a standing approval is the
-    # one refresh that cannot be told from laundering without a human saying so.
+    # ...and the copy is what clears it — naming the row it re-attests (SR-207;
+    # a ref for the act rides beside it since 2026-08-20): absorbing approved
+    # text under a standing approval is the one refresh that cannot be told from
+    # laundering without a human saying so.
     load_script("baseline_snapshot").copy_live(
         tmp_path,
         approves={"docs/requirements/system-requirements.toml": "the sitting"},
+        reattests={"SR-001"},
     )
     after = run_py(
         [SCRIPTS / "trace.py", "--root", tmp_path, "--approve", "modified"],
