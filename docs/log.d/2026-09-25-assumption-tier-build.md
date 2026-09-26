@@ -505,3 +505,38 @@ coordinator integrates in the handoff's order.
   open-items view up to date. Seconds **FAIL** at 760.8 s against 60 s
   (OI-92), recorded, not re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=06ba0b1b -->
+
+### WI-637 lands — interface bridging, a perspective's speaks_for and obstacle perspectives
+
+- **Follow-up 5478622e:** checker-level regressions drive
+  `trace.load_registries` -> `analyze` -> `exit_code` -> the report for an
+  undeclared `speaks_for` and a no-roster `ObstacleHats`; each of four
+  wiring removals (the load, the argument, the composition, the metric
+  condition) turned one red. The report counts hat findings whenever any
+  exists.
+- **Integrated** by cherry-picking 6defae22 and applying 5478622e onto
+  WI-631's landed form. Conflicts additive as before; the
+  `registry-machinery-reference.md` rows merged cell by cell (WI-637's
+  `BridgedBy`/`Coincident` text and WI-630's `Mediates` text do not
+  overlap); `Contracts: IF-190, IF-200, IF-201, IF-208`; RESYNC entry
+  re-anchored `[since 8d25242f]`.
+- **Integrator's fix:** WI-630, WI-631 and WI-637 each fit `analyze`'s
+  240-line composer budget alone and together put it at 253
+  (`test_trace_coherence::test_analyze_is_a_composer_and_stays_one`). The
+  tier's routing moved to one private composer beside it,
+  `trace._assumption_findings`, instead of raising the budget: `analyze` 236
+  lines, `trace.py` size re-stamped 3501 -> 3512 with the reason.
+- No approved-row cell changed.
+- **Commit bar:** first smoke **1 failed, 1842 passed, 3 skipped** (the
+  composer budget); after the fix smoke **1843 passed, 3 skipped** in
+  533.0 s; the touched modules (`test_hats`, `test_trace_interfaces`,
+  `test_trace`, `test_trace_golden`, `test_dogfood_sync`, `test_rule_sync`,
+  `test_resync_pack`, `test_bootstrap`) **344 passed, 2 skipped** before the
+  fix and `test_trace`, `test_trace_golden`, `test_trace_interfaces`
+  **103 passed, 1 skipped** after it; `check_docs --stale` OK;
+  `check_trajectory --strict` clean; `trace.py --strict-integrity` 0
+  integrity; `CURRENT.md` current; the open-items view up to date. Seconds
+  **FAIL** at 535.2 s against 60 s with no builder running: on this 4-core
+  box the tier does not fit 60 s even idle (OI-92), recorded, not
+  re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=8d25242f -->

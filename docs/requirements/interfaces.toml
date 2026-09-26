@@ -159,6 +159,19 @@
 #
 #   component        OPTIONAL — the `CMP-###` this seam belongs to.
 #
+#   bridged_by / coincident
+#                    OPTIONAL, and read only on a row with a tie-back above: a
+#                    boundary seam's reading reaches a stakeholder's outcome
+#                    either through claims about the world, `bridged_by` naming
+#                    those assumptions (`DA-###` in `assumptions.toml`), or
+#                    because its reading IS the outcome, `coincident` saying
+#                    why. A boundary row with neither is one `trace.py`
+#                    advisory; a `bridged_by` entry no assumption row declares
+#                    is a `trace.py --strict` finding. No live row carries
+#                    either yet: the assumption rows they would name are later
+#                    reviewed content, so each boundary row here is one
+#                    advisory until then.
+#
 #   notes            OPTIONAL free prose about the row. A reason cell: argument,
 #                    never citation. Honesty valve — the word `source` (produces
 #                    output, consumes nothing declared) or `sink` (consumes,
@@ -1866,3 +1879,14 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """source - the derivation reads requirement rows alone, with no I/O; the stage derivation places an assumption-only test case by it and the census counts assumption evidence by it."""
+
+[interface.IF-208]
+rationale = """Two of the assumption tier's rules resolve a cell against another registry and land in classes the tier entry point does not return: an interface's bridging assumptions join the interface findings, and an assumption's obstacle perspectives join the dangling-hat findings. Keeping both in the pure rule module, beside the rows they read, lets the checker compose each into its own class by one line, and keeps the rules testable on in-memory rows."""
+owner = "scripts/assumption_rules"
+requestors = ["scripts/trace"]
+channel = "call"
+data = "interface_bridge_findings -> (failures, advisories); obstacle_hat_findings -> failures"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """source - assumption_rules consumes nothing but the row vocabulary it reads from kitlib.spine: rows in, findings out, with no I/O, no git and no filesystem."""

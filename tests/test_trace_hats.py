@@ -35,6 +35,8 @@ confused with "looked at nothing".
 
 from __future__ import annotations
 
+import types
+
 from conftest import ROOT, load_script, make_minimal_project, run_py
 
 trace = load_script("trace")
@@ -111,24 +113,24 @@ def test_the_rule_is_vacuous_without_a_roster():
 
 
 def test_an_absent_roster_file_reads_as_no_names(tmp_path):
-    assert trace.load_hat_names(tmp_path) == set()
+    assert trace.load_hat_names(tmp_path) == (set(), {})
 
 
 def test_an_unparseable_roster_is_vacuous_not_loud(tmp_path):
     write_roster(tmp_path, "[hat.SECURITY\nthis will not parse = = =\n")
     # Deliberately NOT a raise: this is a findings pass, not the roster's load
     # path. `hats.py` is what refuses a broken roster, loudly, to every composer.
-    assert trace.load_hat_names(tmp_path) == set()
+    assert trace.load_hat_names(tmp_path) == (set(), {})
 
 
 def test_a_well_formed_roster_yields_its_names(tmp_path):
     write_roster(tmp_path)
-    assert trace.load_hat_names(tmp_path) == {"SECURITY", "MAINTAINER"}
+    assert trace.load_hat_names(tmp_path) == ({"SECURITY", "MAINTAINER"}, {})
 
 
 def test_a_roster_whose_hat_table_is_not_a_table_is_vacuous(tmp_path):
     write_roster(tmp_path, 'hat = "not a table"\n')
-    assert trace.load_hat_names(tmp_path) == set()
+    assert trace.load_hat_names(tmp_path) == (set(), {})
 
 
 # --- 3. coverage never gates --------------------------------------------------
@@ -256,7 +258,7 @@ def test_the_live_roster_resolves_every_hat_the_live_spine_cites():
     # Not a fixture — the kit's own registries. A backfilled attribution naming
     # a hat this repo does not declare would be exactly the rot the cell exists
     # to make visible.
-    names = trace.load_hat_names(ROOT)
+    names, _speaks_for = trace.load_hat_names(ROOT)
     assert names, "the kit declares a roster; an empty read means the path moved"
     reg = trace.load_registries(ROOT / "docs")
     findings, _ = trace.hat_findings(reg.srs, reg.llrs, names)
@@ -288,3 +290,186 @@ def test_an_undeclared_hat_reds_a_real_run_under_strict(scaffold):
     ok = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert ok.returncode == 0, ok.stdout + ok.stderr
     assert "FINDING (hat)" not in ok.stdout
+
+
+# --- a perspective's `speaks_for`, resolved against the stakeholder list -------
+# (SR-213; TC-245, the rule half.) The roster's shape is `hats.py`'s to judge
+# (tests/test_hats.py); what the checker answers is whether the stakeholder a
+# perspective speaks for is DECLARED. `load_hat_names` hands the map back beside
+# the names, because the checker may not import `hats`.
+
+SPEAKING_ROSTER = (
+    ROSTER
+    + """
+[hat.FIRST-RUN-ADOPTER]
+applies_when = "always"
+asks = "Can a new adopter complete this from the shipped guidance?"
+listens_for = "A requirement satisfiable only with undocumented knowledge."
+speaks_for = "STK-01"
+"""
+)
+
+
+def test_the_roster_read_returns_each_speaks_for_beside_the_names(tmp_path):
+    write_roster(tmp_path, SPEAKING_ROSTER)
+    names, speaks_for = trace.load_hat_names(tmp_path)
+    assert names == {"SECURITY", "MAINTAINER", "FIRST-RUN-ADOPTER"}
+    # Only the perspective that records one appears: most voice no one.
+    assert speaks_for == {"FIRST-RUN-ADOPTER": "STK-01"}
+
+
+def test_a_declared_stakeholder_passes():
+    findings, _ = trace.hat_findings(
+        [],
+        [],
+        {"FIRST-RUN-ADOPTER"},
+        speaks_for={"FIRST-RUN-ADOPTER": "STK-01"},
+        stakeholders={"STK-01", "STK-02"},
+    )
+    assert findings == []
+
+
+def test_an_undeclared_stakeholder_fails_naming_the_hat_and_the_stakeholder():
+    findings, _ = trace.hat_findings(
+        [],
+        [],
+        {"FIRST-RUN-ADOPTER", "MAINTAINER"},
+        speaks_for={"FIRST-RUN-ADOPTER": "STK-09", "MAINTAINER": "STK-01"},
+        stakeholders={"STK-01"},
+    )
+    assert len(findings) == 1, findings
+    assert "FIRST-RUN-ADOPTER" in findings[0], findings[0]
+    assert "STK-09" in findings[0], findings[0]
+    assert "speaks_for" in findings[0], findings[0]
+
+
+def test_a_hat_with_no_speaks_for_passes():
+    findings, _ = trace.hat_findings(
+        [], [], {"SECURITY", "MAINTAINER"}, speaks_for={}, stakeholders={"STK-01"}
+    )
+    assert findings == []
+
+
+def test_with_no_stakeholder_list_the_speaks_for_rule_produces_nothing():
+    # The SAME map that fails above against a declared list is silent with no
+    # list at all: a project declaring no stakeholders has no one to resolve.
+    for stakeholders in (set(), None):
+        findings, _ = trace.hat_findings(
+            [],
+            [],
+            {"FIRST-RUN-ADOPTER"},
+            speaks_for={"FIRST-RUN-ADOPTER": "STK-09"},
+            stakeholders=stakeholders,
+        )
+        assert findings == [], (stakeholders, findings)
+
+
+# --- both perspective rules, through the checker's own load and compose -------
+# (SR-213, SR-214.) The rule cases above and in tests/test_assumption_rules.py
+# call `hat_findings` and `obstacle_hat_findings` directly, so they stay green
+# if `load_registries` stops reading a hat's `speaks_for` or `analyze` stops
+# composing either rule. These drive the checker in process over a tree on
+# disk: the registries are loaded, analyzed, gated and reported the way a
+# `--strict` run does, so a finding that never reaches the `hat` class, the
+# exit code or the report's summary count reds here.
+
+STAKEHOLDERS = """
+[stakeholder.STK-01]
+name = "Adopting team"
+description = "A team that adds the package to its own work."
+party = "EXT-001"
+status = "Approved"
+"""
+
+# The party the stakeholder names, declared so the tree is otherwise clean:
+# a strict exit of 1 below is then the hat class's alone.
+PARTY = """
+[entity.EXT-001]
+name = "Downstream adopter"
+class = "operational"
+description = "The team that adopts the package."
+status = "Drafted"
+"""
+
+
+def _speaking(stakeholder):
+    return (
+        "[hat.FIRST-RUN-ADOPTER]\n"
+        'applies_when = "always"\n'
+        'asks = "Can a new adopter complete this from the shipped guidance?"\n'
+        'listens_for = "A requirement satisfiable only with undocumented '
+        'knowledge."\n'
+        'speaks_for = "{}"\n'.format(stakeholder)
+    )
+
+
+def _assumption(obstacle_hats=None):
+    text = (
+        "[assumption.DA-001]\n"
+        'assumption = "An adopter reads the shipped guide first."\n'
+        'status = "Drafted"\n'
+    )
+    if obstacle_hats is not None:
+        text += "obstacle_hats = {}\n".format(
+            "[" + ", ".join('"{}"'.format(n) for n in obstacle_hats) + "]"
+        )
+    return text
+
+
+def _check(root, roster, assumption):
+    """Load, analyze, gate and report `root` as `trace.py --strict` does:
+    `(hat findings, strict exit code, report text)`. `roster` None means the
+    project declares no hats roster."""
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "stakeholder-needs.toml").write_text(STAKEHOLDERS, encoding="utf-8")
+    (req / "external.toml").write_text(PARTY, encoding="utf-8")
+    (req / "assumptions.toml").write_text(assumption, encoding="utf-8")
+    if roster is None:
+        (req / "hats.toml").unlink(missing_ok=True)
+    else:
+        write_roster(root, roster)
+    reg = trace.load_registries(root / "docs")
+    flags = trace.AnalysisFlags()
+    findings = trace.analyze(reg, flags)
+    gate = types.SimpleNamespace(strict=True, strict_integrity=False)
+    forest = trace.build_forest(
+        reg.sn_ids, reg.srs, reg.llrs, reg.tcs, findings.orphan_ids, reg.sn_draft
+    )
+    report = trace.render_report(reg, findings, flags, forest)
+    return findings.hat_dangling, trace.exit_code(findings, gate), report
+
+
+def test_the_checker_loads_and_fails_an_undeclared_speaks_for(tmp_path):
+    hat, code, report = _check(tmp_path, _speaking("STK-09"), _assumption())
+    assert len(hat) == 1, hat
+    assert "FIRST-RUN-ADOPTER" in hat[0] and "STK-09" in hat[0], hat
+    assert code == 1
+    assert "| Hat findings | 1 |" in report, report
+    # The SAME roster voicing the declared stakeholder passes.
+    hat, code, report = _check(tmp_path, _speaking("STK-01"), _assumption())
+    assert hat == [] and code == 0, hat
+    assert "| Hat findings | 0 |" in report, report
+
+
+def test_the_checker_fails_and_counts_an_obstacle_perspective_with_no_roster(
+    tmp_path,
+):
+    hat, code, report = _check(tmp_path, None, _assumption(["SECURITY"]))
+    assert len(hat) == 1, hat
+    assert "DA-001" in hat[0] and "SECURITY" in hat[0], hat
+    assert code == 1
+    # No roster, and still summarized: a strict failure listed in the report's
+    # section must carry its count in the metric table too.
+    assert "| Hat findings | 1 |" in report, report
+    assert "| Declared hats | 0 |" in report, report
+    # An empty cell with no roster is not recorded, and fails nothing; with no
+    # roster and no finding the metric rows stay out.
+    hat, code, report = _check(tmp_path, None, _assumption())
+    assert hat == [] and code == 0, hat
+    assert "Hat findings" not in report, report
+
+
+def test_the_checker_passes_an_obstacle_perspective_the_roster_declares(tmp_path):
+    hat, code, _ = _check(tmp_path, ROSTER, _assumption(["SECURITY"]))
+    assert hat == [] and code == 0, hat

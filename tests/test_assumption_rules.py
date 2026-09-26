@@ -946,3 +946,56 @@ def test_the_template_example_case_ships_every_declaration_key():
         assert key in SPINE.SPINE_TIER_KEYS["TC-ID"], key
     columns = {CARRIER.SPINE_COLUMN[k] for k in keys}
     assert columns == set(DECLARATION_CELLS)
+
+
+# --- an assumption's obstacle perspectives (SR-214; TC-246) --------------------
+# `ObstacleHats` records which declared perspective raised the obstacle, a list
+# kept apart from `Hat-Refs` (attribution). It resolves against the roster's
+# names, which the checker reads and hands in; with no roster it is handed an
+# empty set, and every name is then undeclared.
+
+ROSTER = {"SECURITY", "UNATTENDED-OPS"}
+
+
+def test_an_assumption_naming_declared_perspectives_passes(rules):
+    das = [_da("DA-001", ObstacleHats="SECURITY;UNATTENDED-OPS")]
+    assert rules.obstacle_hat_findings(das, ROSTER) == []
+
+
+def test_an_undeclared_perspective_fails_naming_the_assumption_and_the_name(rules):
+    das = [
+        _da("DA-001", ObstacleHats="SECURITY;SECRUITY"),
+        _da("DA-002", ObstacleHats="UNATTENDED-OPS"),
+    ]
+    failures = rules.obstacle_hat_findings(das, ROSTER)
+    assert len(failures) == 1, failures
+    assert _named(failures, "DA-001", "SECRUITY", "ObstacleHats"), failures
+
+
+@pytest.mark.parametrize("cell", [None, "", "  ", " ; "])
+def test_an_empty_cell_reads_as_not_recorded_and_produces_nothing(rules, cell):
+    row = _da("DA-001")
+    if cell is not None:
+        row["ObstacleHats"] = cell
+    assert rules.obstacle_hat_findings([row], ROSTER) == []
+
+
+def test_with_no_roster_every_named_perspective_is_undeclared(rules):
+    das = [_da("DA-001", ObstacleHats="SECURITY;MAINTAINER")]
+    failures = rules.obstacle_hat_findings(das, set())
+    assert len(failures) == 2, failures
+    assert _named(failures, "DA-001", "SECURITY"), failures
+    assert _named(failures, "DA-001", "MAINTAINER"), failures
+
+
+@pytest.mark.parametrize("cell", [None, "", "  "])
+def test_with_no_roster_an_empty_cell_still_produces_nothing(rules, cell):
+    row = _da("DA-001")
+    if cell is not None:
+        row["ObstacleHats"] = cell
+    assert rules.obstacle_hat_findings([row], set()) == []
+
+
+def test_the_example_row_is_never_judged_for_its_perspectives(rules):
+    example = _da("DA-000", ObstacleHats="NO-SUCH-HAT")
+    assert rules.obstacle_hat_findings([example], set()) == []

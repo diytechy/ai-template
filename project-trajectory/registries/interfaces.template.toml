@@ -104,6 +104,21 @@
 #
 # component — OPTIONAL `CMP-###` membership tag.
 #
+# bridged_by / coincident — OPTIONAL, and read only on a BOUNDARY row (one with
+# a tie-back above). A boundary seam's reading reaches a stakeholder's outcome
+# either through claims about the world, or because the reading IS the outcome:
+#
+#     bridged_by = ["DA-###"]   the assumptions (docs/requirements/assumptions.toml)
+#                               carrying this seam's reading to an outcome
+#     coincident = "..."        why this seam's reading is the outcome itself
+#
+# A boundary row with neither is one `trace.py` advisory naming it; a
+# `bridged_by` entry naming an assumption the registry does not declare is a
+# `trace.py --strict` finding. `bridged_by` is a pointer (moving it re-opens no
+# approval); `coincident` is a statement the row makes, so declaring or changing
+# it re-opens the row's. No requirement id goes here: the requirement a seam
+# answers is reached through its owner, as above.
+#
 # notes — OPTIONAL free prose; argument, never citation. Honesty valve: the
 # FIRST word `source` (produces output, consumes nothing declared) marks the
 # row's owner, `sink` (consumes, produces nothing) marks its far side,
@@ -135,5 +150,7 @@ version = "v1"
 status = "Drafted"
 interface_from_external = "B-000"
 interface_to_external = "B-000"
+bridged_by = ["DA-000"]
+coincident = "WHY this seam's reading IS the stakeholder's outcome, when no assumption stands between them - a boundary row keeps bridged_by OR this, and the example carries both only because a template declares every column the schema states."
 component = "CMP-000"
 notes = """`carried_by` here names IF-000 only because a template declares every column the schema states and IF-000 is the only id in this file - a row may NOT carry itself, and the check says so. DELETE the key unless this seam really rides a larger one. Honesty valve: put the word source (produces output, consumes nothing declared) or sink (consumes, produces nothing) here to silence the missing-seam coverage warn - source marks this row's owner, sink marks its consumers. The example carries BOTH tie-back keys because a template declares every column the schema states - a real row carries only the crossing direction(s) it realizes, and MOST rows carry neither, so delete them unless this row really realizes a declared boundary crossing. A tie-back on an internal seam is the one error this schema cannot catch for you: a crossing id that resolves is indistinguishable from a crossing id that belongs."""

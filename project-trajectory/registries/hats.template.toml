@@ -48,9 +48,9 @@
 #                  failure is refused as ceremony — if you cannot say what goes
 #                  wrong when nobody wears it, delete the row.
 #
-# ONE OPTIONAL KEY, beyond the three required ones (`scripts/hats.py`
-# OPTIONAL_KEYS): a row may ALSO carry `knowledge`, a list of repo-relative
-# paths or pack names the hat's perspective draws on, e.g.
+# TWO OPTIONAL KEYS, beyond the three required ones (`scripts/hats.py`
+# OPTIONAL_KEYS). The first: a row may ALSO carry `knowledge`, a list of
+# repo-relative paths or pack names the hat's perspective draws on, e.g.
 #
 #     knowledge = ["docs/knowledge/security-review.md"]
 #
@@ -59,9 +59,19 @@
 # a non-empty list of non-empty strings; `hats.py` refuses a bare string, an
 # empty list, or a non-string entry, naming `knowledge` in the refusal. Any
 # OTHER key stays refused as unknown — this does not loosen the strict
-# posture, it names the one exception to it. Nothing in this shipped template
+# posture, it names the exceptions to it. Nothing in this shipped template
 # declares `knowledge` on any row: filling it in is the same owner-editing act
 # as everything else here, once you have knowledge packs worth citing.
+#
+# The second: `speaks_for`, the ONE stakeholder whose voice this perspective
+# is, by its id in your needs file's stakeholder list (`STK-##`). Some hats are
+# a stakeholder's question used as a lens, and naming whose lets you re-point
+# or retire the hat when that stakeholder changes. Most hats voice no one, so
+# leave it off them. `hats.py` refuses anything but one well-formed `STK-##`
+# id, and `trace.py --strict` fails a `speaks_for` naming a stakeholder your
+# list does not declare (with no list, nothing is checked). The one example
+# below is COMMENTED OUT on FIRST-RUN-ADOPTER: uncomment it only once your list
+# declares the adopting team, under whatever id you gave it.
 #
 # ABSENCE IS OPT-OUT, MALFORMED IS A REFUSAL. Delete this file and every
 # composer proceeds without hats; leave it here broken and the composer
@@ -110,6 +120,7 @@ listens_for = """A decomposition that spends a secret, or takes an action nothin
 # widening this charter does not silently change a project's chosen predicates.
 [hat.FIRST-RUN-ADOPTER]
 applies_when = 'tags contains "scripts" or tags contains "templates" or tags contains "process"'
+# speaks_for = "STK-01"  # the adopting team, once your stakeholder list declares it
 asks = """Can a new or upgrading adopter complete this using the shipped guidance while preserving project-owned content, policy meaning, accepted evidence and unfinished work?"""
 listens_for = """A requirement satisfiable only with undocumented project knowledge, or an upgrade that breaks supported callers, changes preserved content's meaning, loses accepted evidence or strands unfinished work."""
 

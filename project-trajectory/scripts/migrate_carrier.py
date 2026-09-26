@@ -162,6 +162,9 @@ REF_COLS = {
     # what the cell already meant.
     "Requestors",
     "Consumers",
+    # SR-211: an interface's bridging assumptions, DA ids, which hold no
+    # separator.
+    "BridgedBy",
 }
 # SR-198: an observation case's lifetime in days and its sample size are whole
 # numbers. A value that does not parse is preserved as text, as for `Phase`, so
@@ -263,6 +266,9 @@ KEY = {
     "Consumers": "consumers",
     "InterfaceFromExternal": "interface_from_external",
     "InterfaceToExternal": "interface_to_external",
+    # SR-211: a boundary interface's bridging assumptions (its waiver is the
+    # shared `Coincident`, above). Never converted from a legacy carrier.
+    "BridgedBy": "bridged_by",
     # components (WI-443). `Notes`/`SupersededBy` are ALREADY above.
     "Name": "name",
     "Category": "category",

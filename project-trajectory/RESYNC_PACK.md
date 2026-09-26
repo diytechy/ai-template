@@ -5436,6 +5436,43 @@ fast what the case reads can change, and declaring them re-opens the case's
 approval. A case whose `verifies` was empty now fails only when it also names no
 assumption.
 
+### Boundary interfaces name their bridging assumptions, a perspective the stakeholder it voices, an assumption its obstacle's perspectives [since 8d25242f]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The interface tier gains two optional cells, read only on a
+row with a tie-back (`interface_from_external` / `interface_to_external`):
+`bridged_by`, the assumptions (`DA-###`) carrying the seam's reading to a
+stakeholder's outcome, and `coincident`, why its reading is the outcome itself
+(SR-211). `trace.py` checks them through two new rules in
+`scripts/assumption_rules.py`: a `bridged_by` entry naming an assumption the
+registry does not declare fails `--strict` as an interface finding, and a
+boundary row with neither cell is one advisory naming it, whether or not you
+have adopted the assumption tier. Moving `bridged_by` re-opens no approval;
+declaring or changing `coincident` re-opens the row's. The hats roster gains
+an optional `speaks_for`, one stakeholder id (`STK-##`) whose voice the
+perspective is (SR-213): `hats.py` refuses anything but one well-formed id, and
+`trace.py --strict` fails one naming a stakeholder your needs file's list does
+not declare (with no list, nothing is checked). An assumption's `obstacle_hats`
+now resolves against the roster (SR-214): a name the roster does not declare,
+and every name when you have no roster, fails `--strict` as a hat finding; an
+empty cell is fine. `trace.load_hat_names` now returns a pair, the names and
+the `speaks_for` map, and `trace.hat_findings` takes `speaks_for` and
+`stakeholders` keyword arguments.
+
+**What to do.** Re-sync `scripts/assumption_rules.py`, `scripts/trace.py`,
+`scripts/hats.py`, `scripts/kitlib/spine.py`, `scripts/spine_carrier.py` and
+`scripts/migrate_carrier.py` together: `trace.py` imports the two new rules.
+Read `registries/interfaces.template.toml` for the two interface cells and
+`registries/hats.template.toml` for `speaks_for`; your own registries and roster
+gain nothing. If code of yours calls `trace.load_hat_names`, unpack the pair.
+Then expect one advisory per interface row carrying a tie-back: it is the
+worklist of seams whose reading nobody has yet tied to an outcome. Clearing it
+is a judgement about your own seams, so do it in reviewed commits: name the
+assumptions in `bridged_by` once they are rows of your assumptions registry, or
+state in `coincident` why the seam's reading is the outcome. Give a perspective
+a `speaks_for` only once your stakeholder list declares that stakeholder.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

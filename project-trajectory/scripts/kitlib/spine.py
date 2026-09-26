@@ -712,6 +712,13 @@ OFFSPINE_KEYS = {
         "status",
         "interface_from_external",
         "interface_to_external",
+        # A boundary interface's bridging (SR-211): `bridged_by` names the
+        # assumptions carrying its reading to an outcome, a POINTER into the
+        # assumptions registry; `coincident` records why its reading IS the
+        # outcome, a statement the row makes (the requirement tier's key, one
+        # column repo-wide). Read only on a row with a tie-back above.
+        "bridged_by",
+        "coincident",
         "component",
         "notes",
     ),

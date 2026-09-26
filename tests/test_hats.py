@@ -1316,3 +1316,67 @@ def test_multiline_roster_text_cannot_mint_a_markdown_heading(tmp_path):
     assert "\n" not in hat["asks"]
     block = hats.brief_block([hat])
     assert "\n## " not in block and not block.startswith("## ")
+
+
+# --- the optional `speaks_for` key (SR-213; TC-245, the loader half) ----------
+# A perspective that is a stakeholder's voice used as a lens records which
+# stakeholder it speaks for, as ONE `STK-##` id. The loader judges the SHAPE
+# (one well-formed id); whether that stakeholder is declared is the checker's
+# resolution, pinned in tests/test_trace_hats.py. Driven on in-memory rows
+# through the one row-level validator `load` itself calls.
+
+_WHERE = "hats.toml: [hat.FIRST-RUN-ADOPTER]"
+
+
+def _row(**extra):
+    row = {"applies_when": "always", "asks": "q", "listens_for": "f"}
+    row.update(extra)
+    return row
+
+
+def test_a_well_formed_speaks_for_loads_and_is_surfaced():
+    hat = hats._hat_from_row("FIRST-RUN-ADOPTER", _row(speaks_for=" STK-01 "), _WHERE)
+    assert hat["speaks_for"] == "STK-01"
+    assert hats._validate_speaks_for("STK-12", _WHERE) == "STK-12"
+
+
+def test_a_hat_with_no_speaks_for_carries_no_such_key():
+    # Absent stays absent: most perspectives voice no one, and a defaulted ""
+    # would read as a stakeholder named by nobody.
+    hat = hats._hat_from_row("MAINTAINER", _row(), _WHERE)
+    assert "speaks_for" not in hat
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "",  # present and empty
+        "   ",  # whitespace only
+        "STK-1x",  # not an id
+        "SN-001",  # an id, of the wrong registry
+        "STK-01;STK-02",  # two stakeholders: the key names ONE
+        ["STK-01"],  # a list, even of one
+        1,  # not a string at all
+    ],
+)
+def test_a_malformed_speaks_for_is_refused_by_the_loader_naming_the_key(value):
+    with pytest.raises(hats.HatsError, match="`speaks_for`"):
+        hats._hat_from_row("FIRST-RUN-ADOPTER", _row(speaks_for=value), _WHERE)
+
+
+def test_an_unknown_key_beside_speaks_for_is_still_refused():
+    with pytest.raises(hats.HatsError, match=r"unknown key\(s\) voices"):
+        hats._hat_from_row(
+            "FIRST-RUN-ADOPTER", _row(speaks_for="STK-01", voices="STK-01"), _WHERE
+        )
+
+
+def test_the_file_loader_reads_speaks_for_through_the_same_validator(tmp_path):
+    text = (
+        '[hat.FIRST-RUN-ADOPTER]\napplies_when = "always"\nasks = "q"\n'
+        'listens_for = "f"\nspeaks_for = "STK-02"\n'
+    )
+    (hat,) = hats.load(_write(tmp_path, text))
+    assert hat["speaks_for"] == "STK-02"
+    with pytest.raises(hats.HatsError, match="`speaks_for`"):
+        hats.load(_write(tmp_path, text.replace('"STK-02"', '"the adopting team"')))

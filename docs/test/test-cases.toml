@@ -2507,7 +2507,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-244]
-verifies = ["SR-211", "LLR-250"]
+verifies = ["SR-211", "LLR-250", "IF-208"]
 level = "Integration"
 method = "interface_bridge_findings driven through the traceability check. A boundary interface naming declared assumptions is bridged; one with a waiver is coincident; one with neither is one advisory naming it; one naming an undeclared assumption fails the strict run naming the interface. An internal interface, one with no from- or to-external tie-back, is not judged. A requirement-reference cell on an interface row is still refused by the existing retired-cell rule."
 tier = "Full"
@@ -2529,7 +2529,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-246]
-verifies = ["SR-214", "LLR-252"]
+verifies = ["SR-214", "LLR-252", "IF-208"]
 level = "Unit"
 method = "obstacle_hat_findings called with a roster: an assumption naming declared hats passes; one naming an unknown hat fails naming the assumption and the name; an empty cell produces nothing. Called with no roster: an assumption naming any hat fails naming it, and an empty cell still produces nothing."
 tier = "Smoke"

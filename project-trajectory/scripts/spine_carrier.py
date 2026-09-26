@@ -433,6 +433,9 @@ OFFSPINE_COLUMN = {
     # keys it as itself, and `trace.interface_findings` names the row.
     "interface_from_external": "InterfaceFromExternal",
     "interface_to_external": "InterfaceToExternal",
+    # A boundary interface's bridging assumptions (SR-211), DA ids. Its waiver
+    # is the requirement tier's `coincident`, declared ONCE in SPINE_COLUMN.
+    "bridged_by": "BridgedBy",
     # external (EXT-###/B-##/REL-###, the depth-0 frame; WI-442, sitting-2
     # §1R). Shared columns already declared above (`name`, `notes`) are NOT
     # repeated — one column name, one meaning, repo-wide (D-3).

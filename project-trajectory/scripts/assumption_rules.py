@@ -43,6 +43,12 @@ silent (SR-191's applies-when). And the requirement-side reports ask nothing of
 a project that has not adopted the tier: until the registry holds a real
 assumption row, no requirement is asked for a citation or a form. Every
 adopter is scaffolded the blank form, so the file existing is not adoption.
+The two rules at the end of this module stand apart (IF-208) and wait for
+neither: each boundary interface is asked whether assumptions bridge it or its
+reading is the outcome (SR-211), and each assumption's obstacle perspectives
+are resolved against the hats roster (SR-214), because neither requirement
+states such a condition, and a pointer into nothing is wrong wherever it is
+written.
 
 Rows are the carrier's column-keyed dicts (`DA-ID`, `EffectAt`, `SUR-ID`,
 `Emulates`, `SR-ID`, `DA-Refs`, `EXT-ID`, `B-ID`, `Entity`), exactly as
@@ -54,8 +60,8 @@ Stdlib only. A plain sibling of `scripts/`, not a `kitlib` module, for the
 reason `coherence.py` records: these are the checker's rules, and the
 scaffolder has no business importing them.
 
-Contracts: IF-190, IF-200, IF-201 — the seams this module declares (process.md
-§8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-190, IF-200, IF-201, IF-208 — the seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-190: the assumption tier's rule surface `trace.py` imports. Rows in,
     findings out, and nothing else: no I/O, no git, no filesystem, no argv.
@@ -98,6 +104,19 @@ Contract IF-201: the one derivation of an assumption's citing requirements,
     read by the stage derivation and the red-TC census. Pure over requirement
     rows in the carrier's column names; a `-000` row contributes nothing, and a
     requirement citing no assumption appears nowhere in the map.
+
+Contract IF-208: the tier's two pointer rules that land in OTHER classes, which
+    `trace.py` imports beside the tier entry point and composes itself. Rows in,
+    findings out, on the same terms as IF-190. `interface_bridge_findings(ifs,
+    das)` returns `(failures, advisories)` over boundary interfaces alone
+    (a from- or to-external tie-back): the failures, a `BridgedBy` entry naming
+    an undeclared assumption, join the interface class and `--strict`'s exit
+    code; the advisories, a boundary interface with neither `BridgedBy` nor
+    `Coincident`, ride the warn pipe. `obstacle_hat_findings(das, hat_names)`
+    returns failures, each an `ObstacleHats` entry the roster names in
+    `hat_names` do not hold, joining the dangling-hat class; an empty
+    `hat_names` means no roster, so every named perspective fails. Neither
+    waits for a declared crossing or a real assumption row.
 """
 
 import re
@@ -926,3 +945,79 @@ def sampling_model_declared(tc):
         and _whole_at_least(_cell(tc, "SampleSize"), 1)
         and bool(_cell(tc, "AcceptanceRule"))
     )
+
+
+def _crossings(row):
+    """The boundary crossings an interface row realizes: its from- and
+    to-external tie-backs. Empty for an internal seam."""
+    return refs(row.get("InterfaceFromExternal")) + refs(row.get("InterfaceToExternal"))
+
+
+def interface_bridge_findings(ifs, das):
+    """SR-211's interface rule, as `(failures, advisories)`.
+
+    Reads only BOUNDARY interfaces, those with a from- or to-external tie-back:
+    an internal seam realizes no crossing, so no outcome hangs on its reading.
+    A boundary interface naming declared assumptions in `BridgedBy` is bridged,
+    and one recording in `Coincident` why its reading is the outcome is
+    coincident; neither is reported.
+
+    FAILURES: a `BridgedBy` entry naming an assumption the registry does not
+    declare, naming the interface and the id; the caller joins it to the
+    interface class, which fails `--strict`. ADVISORIES: a boundary interface
+    with neither cell, one line naming it, on the warn pipe.
+
+    No requirement reference is read or asked for: the requirement a seam
+    answers stays derived through its owner, and stating it on the row would
+    give that relation a second home.
+
+    Implements: SR-211, LLR-250
+    """
+    declared = dict(_real(das, "DA-ID"))
+    failures, advisories = [], []
+    for iid, row in _real(ifs, "IF-ID"):
+        crossings = _crossings(row)
+        if not crossings:
+            continue
+        bridging = refs(row.get("BridgedBy"))
+        failures += [
+            "IF {} BridgedBy names {}, which is not a declared assumption".format(
+                iid, did
+            )
+            for did in bridging
+            if did not in declared
+        ]
+        if not bridging and not _cell(row, "Coincident"):
+            advisories.append(
+                "IF {} realizes boundary crossing {} but names no assumption in "
+                "BridgedBy carrying its reading to an outcome, and records no "
+                "Coincident waiver saying why its reading is the outcome".format(
+                    iid, ", ".join(crossings)
+                )
+            )
+    return failures, advisories
+
+
+def obstacle_hat_findings(das, hat_names):
+    """SR-214's provenance rule: each perspective an assumption's
+    `ObstacleHats` names is a declared hat, as failures naming the assumption
+    and the name. The caller joins them to the dangling-hat class, which fails
+    `--strict`.
+
+    `hat_names` is the roster's names as the checker read them, or an empty
+    set when the project has no roster; every named perspective is then
+    undeclared, since a cell pointing into a roster that does not exist points
+    at nothing. An empty cell is valid and produces nothing: it reads as NOT
+    RECORDED, never as "no perspective applied". The cell is kept apart from
+    `Hat-Refs`, which records attribution, because this one records which
+    perspective's question raised the obstacle.
+
+    Implements: SR-214, LLR-252
+    """
+    return [
+        "assumption {} ObstacleHats names {}, which is not a perspective the "
+        "hats roster declares".format(did, name)
+        for did, row in _real(das, "DA-ID")
+        for name in refs(row.get("ObstacleHats"))
+        if name not in hat_names
+    ]

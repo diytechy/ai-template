@@ -168,7 +168,14 @@ REQUIRED_KEYS = ("applies_when", "asks", "listens_for")
 # enforced), e.g. `knowledge = ["docs/knowledge/security-review.md"]`. Minimal
 # shape deliberately: a list of non-empty strings, nothing richer, because
 # nothing downstream yet reads more than "which packs does this hat cite."
-OPTIONAL_KEYS = ("knowledge",)
+#
+# `speaks_for` — the ONE stakeholder (`STK-##`, the needs file's stakeholder
+# list) whose voice this perspective is, e.g. `speaks_for = "STK-01"`. Some
+# perspectives are a stakeholder's question used as a lens, and recording whose
+# lets the hat be re-pointed or retired when that stakeholder changes; most
+# voice no one, so the key is optional. The shape is judged here; whether the
+# stakeholder is DECLARED is `trace.py`'s resolution (`hat_findings`).
+OPTIONAL_KEYS = ("knowledge", "speaks_for")
 
 
 def _validate_knowledge(value, where):
@@ -200,9 +207,36 @@ def _validate_knowledge(value, where):
     return cleaned
 
 
+# One stakeholder id, as the needs file spells its stakeholder tables.
+_STK_ID_RE = re.compile(r"^STK-\d+$")
+
+
+def _validate_speaks_for(value, where):
+    """`speaks_for` is ONE well-formed stakeholder id (`STK-##`), returned
+    stripped, or absent entirely. A list is refused even when it holds one id,
+    and so is a `;`-joined pair: a perspective is one stakeholder's voice, and a
+    lens speaking for several speaks for none of them in particular. An empty
+    value is refused for `knowledge`'s reason — indistinguishable from a typo
+    that dropped the id.
+
+    Implements: SR-213, LLR-251"""
+    text = value.strip() if isinstance(value, str) else None
+    if not text or not _STK_ID_RE.match(text):
+        raise HatsError(
+            "{}: `speaks_for` must be one stakeholder id, `STK-##` (got {!r}) — "
+            "omit the key for a perspective that voices no stakeholder".format(
+                where, value
+            )
+        )
+    return text
+
+
 # One validator per optional key, keyed the same way REQUIRED_KEYS' loop reads
 # them — the row-level split (`_hat_from_row`) is the only caller.
-OPTIONAL_KEY_VALIDATORS = {"knowledge": _validate_knowledge}
+OPTIONAL_KEY_VALIDATORS = {
+    "knowledge": _validate_knowledge,
+    "speaks_for": _validate_speaks_for,
+}
 
 # The context fields `applies_when` may name, split by the operators they admit.
 SCALAR_FIELDS = ("scope", "kind")

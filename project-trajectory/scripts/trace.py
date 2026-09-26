@@ -225,6 +225,8 @@ try:
     from assumption_rules import assumption_reach_advisories, need_frame_gap_advisories
 
     from assumption_rules import observation_tc_findings
+
+    from assumption_rules import interface_bridge_findings, obstacle_hat_findings
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -270,6 +272,8 @@ except ImportError:  # pragma: no cover - in-process fallback
     from assumption_rules import assumption_reach_advisories, need_frame_gap_advisories
 
     from assumption_rules import observation_tc_findings
+
+    from assumption_rules import interface_bridge_findings, obstacle_hat_findings
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -2131,7 +2135,11 @@ HAT_ROSTER_REL = "docs/requirements/hats.toml"
 
 
 def load_hat_names(root):
-    """The declared hat NAMES from `docs/requirements/hats.toml`, as a set.
+    """`(names, speaks_for)` from `docs/requirements/hats.toml`: the declared
+    hat NAMES as a set, and `{hat name: stakeholder id}` for each hat recording
+    the stakeholder it speaks for (SR-213). Most hats record none, so the map
+    is usually empty; it rides this read because the checker may not import
+    `hats` (below), and a third reader of the roster would be one too many.
 
     A SECOND READER OF THAT FILE, DELIBERATELY, AND THE SPLIT IS WHAT MAKES IT
     SAFE. `hats.py` is the roster's owner and the only validator of its CONTENT —
@@ -2150,16 +2158,29 @@ def load_hat_names(root):
     `Hat-Refs` in the repo as dangling. A file that exists and will not parse
     yields the empty set too — LOUDLY WRONG IS NOT AVAILABLE HERE, because this
     is an advisory-and-findings pass, not the roster's load path, and `hats.py`
-    raises `HatsError` on that same file the moment any composer touches it."""
+    raises `HatsError` on that same file the moment any composer touches it.
+    The `speaks_for` SHAPE is that module's to judge too: a non-blank value is
+    carried here as text, stripped, and resolving it is `hat_findings`' job.
+
+    Implements: SR-213, LLR-251"""
     path = Path(root) / HAT_ROSTER_REL
     if not path.exists():
-        return set()
+        return set(), {}
     try:
         data = tomllib.loads(path.read_text(encoding="utf-8"))
     except (OSError, tomllib.TOMLDecodeError):
-        return set()
+        return set(), {}
     table = data.get("hat")
-    return set(table) if isinstance(table, dict) else set()
+    if not isinstance(table, dict):
+        return set(), {}
+    speaks_for = {
+        name: row["speaks_for"].strip()
+        for name, row in table.items()
+        if isinstance(row, dict)
+        and isinstance(row.get("speaks_for"), str)
+        and row["speaks_for"].strip()
+    }
+    return set(table), speaks_for
 
 
 def effective_hats(row, sr_by_id):
@@ -2185,7 +2206,22 @@ def effective_hats(row, sr_by_id):
     return sorted(own)
 
 
-def hat_findings(srs, llrs, hat_names, sr_by_id=None):
+def _speaks_for_findings(speaks_for, stakeholders):
+    """Each hat whose `speaks_for` names a stakeholder the list does not
+    declare, naming the hat and the stakeholder. Vacuous with no stakeholder
+    list: a project that declares no stakeholders has none to resolve."""
+    if not stakeholders:
+        return []
+    return [
+        f"hat {name} speaks_for names {stk}, which is not a declared stakeholder"
+        for name, stk in sorted((speaks_for or {}).items())
+        if stk not in stakeholders
+    ]
+
+
+def hat_findings(
+    srs, llrs, hat_names, sr_by_id=None, speaks_for=None, stakeholders=None
+):
     """SR/LLR `Hat-Refs` resolution, as `(findings, advisories)` — the pair shape
     `frame_findings` documents.
 
@@ -2215,7 +2251,15 @@ def hat_findings(srs, llrs, hat_names, sr_by_id=None):
     answer for the SR tier and an over-report for the LLR tier.
 
     Vacuous with no roster: absence is opt-out for the whole hats layer, so a
-    project that declares no perspectives has no name a row could fail to cite."""
+    project that declares no perspectives has no name a row could fail to cite.
+
+    A PERSPECTIVE'S `speaks_for` RESOLVES HERE TOO (SR-213): `speaks_for` maps
+    each hat to the stakeholder it voices, as `load_hat_names` read it, and
+    `stakeholders` is the declared stakeholder ids. One naming an undeclared
+    stakeholder is a finding in this same class, the same existence check one
+    registry over; with no stakeholder list it is vacuous.
+
+    Implements: SR-213, LLR-251"""
     findings, advisories = [], []
     if not hat_names:
         return findings, advisories
@@ -2230,6 +2274,7 @@ def hat_findings(srs, llrs, hat_names, sr_by_id=None):
                     findings.append(
                         f"{label} {r[id_col]} Hat-Refs references unknown hat {x}"
                     )
+    findings += _speaks_for_findings(speaks_for, stakeholders)
     rows = list(srs) + list(llrs)
     total = len(rows)
     uncovered = sum(
@@ -2300,11 +2345,12 @@ def tieback_findings(ifs, bifs):
 
 def _hat_report_section(hat_names, findings):
     """The report's declared-perspectives section, or nothing when the project
-    declares no roster. A HELPER rather than a branch inside `render_report` for
+    declares no roster and nothing names a hat (an assumption's obstacle
+    perspectives still fail with no roster, and are listed). A HELPER rather than a branch inside `render_report` for
     the reason `_frame_report_section` below is one: that assembler is already at
     the complexity ratchet's ceiling, and a section that renders conditionally is
     exactly the shape this file has agreed to lift out of it."""
-    if not hat_names:
+    if not (hat_names or findings):
         return []
     body = (
         [f"- {f}" for f in findings]
@@ -4583,6 +4629,7 @@ class Registries:
     sn_integrity: list
     provenance_allow: tuple
     hat_names: set
+    hat_speaks_for: dict
 
 
 @dataclass(frozen=True)
@@ -4805,6 +4852,7 @@ def load_registries(docs):
             }
             for n in sn_needs
         ]
+    hat_names, hat_speaks_for = load_hat_names(docs.parent)
     return Registries(
         docs=docs,
         raw_srs=raw_srs,
@@ -4849,8 +4897,10 @@ def load_registries(docs):
         provenance_allow=load_provenance_allow(docs.parent),
         # The hats ROSTER's name set, read here for the same reason the allow file
         # is: analyze() is the pure pass over loaded rows, and a registry a cell
-        # resolves AGAINST is an input to load, not a finding (WI-484).
-        hat_names=load_hat_names(docs.parent),
+        # resolves AGAINST is an input to load, not a finding (WI-484). Each
+        # hat's `speaks_for` rides the same read (SR-213).
+        hat_names=hat_names,
+        hat_speaks_for=hat_speaks_for,
     )
 
 
@@ -5005,6 +5055,41 @@ def aspect_counts(srs):
     return counts
 
 
+def _assumption_findings(reg, srs, tcs, ifs, exts, bifs):
+    """The assumption tier's findings as `analyze` composes them, returned as
+    `(frame, integrity, interface, advisories)`: each list joins the class of
+    the same name there.
+
+    Split out of `analyze` so it stays a composer within its line budget
+    (`test_trace_coherence`). Every rule is the pure siblings' (D21); this only
+    routes each result to its class: the tier entry point where the frame
+    declares a crossing (SR-191..SR-196), each cited assumption's reach need by
+    need (SR-195) and a need met in operation that nothing answers at an
+    operation crossing (SR-188), both warn-only; an observation test case's
+    declaration (SR-198), with or without a frame; and a boundary interface's
+    bridging assumptions or waiver (SR-211), an undeclared assumption joining
+    the interface class.
+    """
+    frame, integrity, advisories = assumption_tier_findings(
+        srs, reg.das, reg.surs, exts, bifs
+    )
+    advisories = (
+        advisories
+        + assumption_reach_advisories(
+            reg.das, srs, reg.sn_needs, reg.stks, exts, bifs, reg.surs
+        )
+        + need_frame_gap_advisories(reg.sn_needs, reg.stks, srs, bifs, reg.das)
+    )
+    observation_failures, observation_advisories = observation_tc_findings(tcs)
+    bridge_failures, bridge_advisories = interface_bridge_findings(ifs, reg.das)
+    return (
+        frame,
+        integrity + observation_failures,
+        bridge_failures,
+        advisories + observation_advisories + bridge_advisories,
+    )
+
+
 def analyze(reg, args):
     """The whole checker pass over loaded registries: orphan rules, off-spine
     back-link/membership checks, the --require-verified status criterion
@@ -5065,8 +5150,16 @@ def analyze(reg, args):
     # contents. The coverage and unattributed-hat halves are advisories and never
     # gate.
     hat_dangling, hat_advisories = hat_findings(
-        srs, llrs, reg.hat_names, {r["SR-ID"]: r for r in srs}
+        srs,
+        llrs,
+        reg.hat_names,
+        {r["SR-ID"]: r for r in srs},
+        speaks_for=reg.hat_speaks_for,
+        stakeholders={r["STK-ID"] for r in reg.stks},
     )
+    # An assumption's obstacle perspectives (SR-214) resolve against the same
+    # roster, and an undeclared one joins this same class.
+    hat_dangling += obstacle_hat_findings(reg.das, reg.hat_names)
     # A crossing's system of interest (SR-187) and a requirement's derived one
     # (SR-219): an out-of-pair value joins the frame class, the rest warn.
     system_failures, system_advisories = frame_system_findings(bifs)
@@ -5116,24 +5209,13 @@ def analyze(reg, args):
     raw = {"SR": reg.raw_srs, "LLR": reg.raw_llrs, "TC": reg.raw_tcs}
     real = {"SR": srs, "LLR": llrs, "TC": tcs}
     integrity = integrity_sweep(reg, raw)
-    # The assumption tier (SR-191..SR-196), where the frame declares a crossing:
-    # each of its three lists joins the class its rules name.
-    tier_frame, tier_integrity, tier_advisories = assumption_tier_findings(
-        srs, reg.das, reg.surs, exts, bifs
+    tier_frame, tier_integrity, tier_interface, tier_advisories = _assumption_findings(
+        reg, srs, tcs, ifs, exts, bifs
     )
     frame_backlink_findings += tier_frame
     integrity += tier_integrity
+    interface_backlink_findings += tier_interface
     interface_advisories += tier_advisories
-    # Each cited assumption's reach, need by need (SR-195), and a need met in
-    # operation that nothing answers at an operation crossing (SR-188): warn.
-    interface_advisories += assumption_reach_advisories(
-        reg.das, srs, reg.sn_needs, reg.stks, exts, bifs, reg.surs
-    ) + need_frame_gap_advisories(reg.sn_needs, reg.stks, srs, bifs, reg.das)
-
-    # An observation test case's declaration (SR-198), with or without a frame.
-    observation_failures, observation_advisories = observation_tc_findings(tcs)
-    integrity += observation_failures
-    interface_advisories += observation_advisories
     placeholders = placeholder_sweep(raw, reg.sn_md) if flags.no_placeholders else []
     schema = schema_sweep(real) if flags.strict_schema else []
     # Warn-only, always on: comparative AcceptanceCriteria terms with no pinned
@@ -5375,7 +5457,10 @@ def render_report(reg, findings, args, forest):
                 f"| Declared hats | {len(hat_names)} |",
                 f"| Hat findings | {len(hat_dangling)} |",
             ]
-            if hat_names
+            # A hat finding is counted even with no roster: an assumption's
+            # obstacle perspectives fail then, and a strict failure must not
+            # stand without its summary line.
+            if hat_names or hat_dangling
             else []
         )
         + [

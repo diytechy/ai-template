@@ -15,7 +15,9 @@ the SN status vocabulary, the Drafted exemptions and the approved-phase
 completeness rule.
 """
 
-from conftest import make_minimal_project, record_ids, run_py
+import pytest
+
+from conftest import SCRIPTS, make_minimal_project, record_ids, run_py
 
 
 # --- WI-056: the IF-### interface-seam tier (process.md §8) ---------------------
@@ -976,3 +978,249 @@ def test_tc_citing_only_seam_ids_is_an_orphan(scaffold):
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 1
     assert "TC TC-001 cites only seam id(s)" in _report(scaffold)
+
+
+# --- SR-211: each boundary interface is bridged or coincident (TC-244) ---------
+# A seam that REALIZES a boundary crossing (a from- or to-external tie-back)
+# either names the assumptions carrying its reading to an outcome (`bridged_by`)
+# or records why its reading IS the outcome (`coincident`). Neither is a worklist
+# line, never a gate; a bridging assumption nobody declared is a dangling
+# reference, and gates. Internal seams are out of scope. Driven through the
+# checker on ONE scaffold per worker (module-scoped: every case rewrites the
+# whole interface registry before it runs), because each case is one registry
+# state and the bootstrap is the cost.
+
+BRIDGE_FRAME = """
+[entity.EXT-001]
+name = "Downstream adopter"
+class = "operational"
+description = "The team that adopts the package."
+status = "Drafted"
+
+[boundary.B-01]
+entity = "EXT-001"
+direction = "in"
+carries = "the adopter's request"
+system = "operation"
+status = "Drafted"
+"""
+
+BRIDGE_ASSUMPTION = """
+[assumption.DA-001]
+effect_at = ["B-01"]
+assumption = "An adopter reads the shipped guide before running the scaffold."
+holds_when = "The adopter installs from the published package."
+obstacle = "The adopter copies the scripts without the guide."
+status = "Drafted"
+standing = "active"
+"""
+
+
+def _bridge_if(iid, **cells):
+    """One clean seam (the shape `_if_row` pins as clean) plus `cells`, each
+    written as TOML verbatim: a list or a quoted string."""
+    lines = [
+        "[interface.{}]".format(iid),
+        'owner = "src/demo"',
+        'consumers = ["external:git"]',
+        'channel = "call"',
+        'data = "reads the ref state"',
+        'version = "v1"',
+        'status = "Drafted"',
+    ]
+    lines += ["{} = {}".format(k, v) for k, v in cells.items()]
+    return "\n".join(lines) + "\n"
+
+
+BRIDGED = _bridge_if(
+    "IF-001", interface_from_external='"B-01"', bridged_by='["DA-001"]'
+)
+COINCIDENT = _bridge_if(
+    "IF-002",
+    interface_to_external='"B-01"',
+    coincident='"The report the adopter reads IS the outcome they asked for."',
+)
+NEITHER = _bridge_if("IF-003", interface_from_external='"B-01"')
+
+
+@pytest.fixture(scope="module")
+def bridge_project(tmp_path_factory):
+    root = tmp_path_factory.mktemp("bridge")
+    proc = run_py([SCRIPTS / "bootstrap.py", "--dest", root], cwd=root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    make_minimal_project(root)
+    req = root / "docs" / "requirements"
+    (req / "external.toml").write_text(BRIDGE_FRAME, encoding="utf-8")
+    (req / "assumptions.toml").write_text(BRIDGE_ASSUMPTION, encoding="utf-8")
+    return root
+
+
+def _bridge_run(root, *blocks):
+    """`--strict` over exactly `blocks` as the interface registry."""
+    (root / "docs" / "requirements" / "interfaces.toml").write_text(
+        "\n".join(blocks), encoding="utf-8"
+    )
+    record_ids(root)
+    return run_py(["scripts/trace.py", "--strict"], cwd=root)
+
+
+def _bridge_lines(stdout):
+    """Every line the bridging rule could have written: it names an interface
+    and one of the two cells."""
+    return [
+        line
+        for line in stdout.splitlines()
+        if "IF-00" in line and ("BridgedBy" in line or "Coincident" in line)
+    ]
+
+
+def test_a_bridged_and_a_coincident_boundary_interface_pass_silently(bridge_project):
+    proc = _bridge_run(bridge_project, BRIDGED, COINCIDENT)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert _bridge_lines(proc.stdout) == [], proc.stdout
+
+
+def test_a_boundary_interface_with_neither_is_one_advisory_naming_it(bridge_project):
+    proc = _bridge_run(bridge_project, BRIDGED, COINCIDENT, NEITHER)
+    # Reported, never gated: the strict run still passes.
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    lines = _bridge_lines(proc.stdout)
+    assert len(lines) == 1, lines
+    assert lines[0].startswith("WARNING (advisory)"), lines
+    assert "IF-003" in lines[0], lines
+
+
+def test_an_undeclared_bridging_assumption_fails_the_strict_run_naming_the_interface(
+    bridge_project,
+):
+    dangling = _bridge_if(
+        "IF-005", interface_to_external='"B-01"', bridged_by='["DA-001", "DA-404"]'
+    )
+    proc = _bridge_run(bridge_project, BRIDGED, COINCIDENT, dangling)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    lines = _bridge_lines(proc.stdout)
+    assert len(lines) == 1, lines
+    assert lines[0].startswith("FINDING (interface)"), lines
+    assert "IF-005" in lines[0] and "DA-404" in lines[0], lines
+
+
+def test_an_internal_interface_is_not_judged(bridge_project):
+    # No tie-back, so no crossing is realized: neither cell is asked for, and
+    # even a bridging assumption nobody declared is not read. The SAME cell on a
+    # boundary seam fails (the case above), so this silence is scope, not a
+    # rule that reads nothing.
+    internal = _bridge_if("IF-004", bridged_by='["DA-404"]')
+    bare = _bridge_if("IF-006")
+    proc = _bridge_run(bridge_project, BRIDGED, internal, bare)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert _bridge_lines(proc.stdout) == [], proc.stdout
+
+
+def test_a_requirement_reference_on_an_interface_is_still_refused(bridge_project):
+    # The requirement a seam answers stays derived through its owner: bridging
+    # adds no requirement cell, and the retired one is still the wrong shape.
+    with_req = BRIDGED + 'req_refs = ["SR-001"]\n'
+    proc = _bridge_run(bridge_project, with_req, COINCIDENT)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    report = _report(bridge_project)
+    assert "carries the retired `req_refs` cell (set on IF-001)" in report, report
+    assert _bridge_lines(proc.stdout) == [], proc.stdout
+
+
+# --- the IF-208 seam's hat half, through the delivered checker ----------------
+# (SR-213, SR-214.) The rule tests in tests/test_trace_hats.py and
+# tests/test_assumption_rules.py call `hat_findings` and `obstacle_hat_findings`
+# directly, so they stay green if the checker stops reading a hat's
+# `speaks_for` or stops composing the obstacle rule. These cases drive
+# `trace.py --strict` itself: each reference must become a strict `hat`
+# finding, fail the run and be counted in the report. The needs move onto the
+# TOML carrier so the stakeholder list exists beside them.
+
+HAT_NEEDS = """
+[stakeholder.STK-01]
+name = "Adopting team"
+description = "A team that adds the package to its own work."
+party = "EXT-001"
+status = "Approved"
+
+[need.SN-001]
+status = "Approved"
+need = "Add two numbers."
+why = "Demo."
+priority = "M"
+acceptance = "Adding one and two gives three."
+stakeholder_refs = ["STK-01"]
+"""
+
+
+def _speaking_roster(stakeholder):
+    return (
+        "[hat.FIRST-RUN-ADOPTER]\n"
+        'applies_when = "always"\n'
+        'asks = "Can a new adopter complete this from the shipped guidance?"\n'
+        'listens_for = "A requirement satisfiable only with undocumented '
+        'knowledge."\n'
+        'speaks_for = "{}"\n'.format(stakeholder)
+    )
+
+
+@pytest.fixture(scope="module")
+def hat_project(tmp_path_factory):
+    root = tmp_path_factory.mktemp("hats")
+    proc = run_py([SCRIPTS / "bootstrap.py", "--dest", root], cwd=root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    make_minimal_project(root)
+    req = root / "docs" / "requirements"
+    (req / "stakeholder-needs.md").unlink()
+    (req / "stakeholder-needs.toml").write_text(HAT_NEEDS, encoding="utf-8")
+    (req / "external.toml").write_text(BRIDGE_FRAME, encoding="utf-8")
+    return root
+
+
+def _hat_run(root, roster, assumption):
+    """`--strict` with `roster` as the hats roster (None deletes it) and
+    `assumption` as the whole assumptions registry."""
+    req = root / "docs" / "requirements"
+    hats_toml = req / "hats.toml"
+    if roster is None:
+        hats_toml.unlink(missing_ok=True)
+    else:
+        hats_toml.write_text(roster, encoding="utf-8")
+    (req / "assumptions.toml").write_text(assumption, encoding="utf-8")
+    record_ids(root)
+    return run_py(["scripts/trace.py", "--strict"], cwd=root)
+
+
+def _hat_findings(stdout):
+    return [line for line in stdout.splitlines() if line.startswith("FINDING (hat)")]
+
+
+def test_an_undeclared_speaks_for_fails_the_strict_checker_run(hat_project):
+    proc = _hat_run(hat_project, _speaking_roster("STK-09"), BRIDGE_ASSUMPTION)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    found = _hat_findings(proc.stdout)
+    assert len(found) == 1, proc.stdout
+    assert "FIRST-RUN-ADOPTER" in found[0] and "STK-09" in found[0], found
+    assert "| Hat findings | 1 |" in _report(hat_project)
+    # The SAME roster voicing the declared stakeholder passes.
+    ok = _hat_run(hat_project, _speaking_roster("STK-01"), BRIDGE_ASSUMPTION)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    assert _hat_findings(ok.stdout) == [], ok.stdout
+
+
+def test_an_obstacle_perspective_with_no_roster_fails_and_is_counted(hat_project):
+    obstacle = BRIDGE_ASSUMPTION + 'obstacle_hats = ["SECURITY"]\n'
+    proc = _hat_run(hat_project, None, obstacle)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    found = _hat_findings(proc.stdout)
+    assert len(found) == 1, proc.stdout
+    assert "DA-001" in found[0] and "SECURITY" in found[0], found
+    # No roster, and still summarized: the count and the listed finding both
+    # reach the report, or a strict failure would stand with no summary line.
+    report = _report(hat_project)
+    assert "| Hat findings | 1 |" in report, report
+    assert "## Declared perspectives" in report, report
+    # An empty cell with no roster is not recorded, and fails nothing.
+    ok = _hat_run(hat_project, None, BRIDGE_ASSUMPTION)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    assert _hat_findings(ok.stdout) == [], ok.stdout
