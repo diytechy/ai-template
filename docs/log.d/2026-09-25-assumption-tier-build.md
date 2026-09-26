@@ -294,3 +294,35 @@ Fable (medium) arbiter for disagreements.
   recorded, not re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=b14d1808 -->
 
+### WI-645 — TC-061 and TC-161 brought up to their amended design rows
+
+- **Built:** `TC-061.method` and `TC-161.method` re-drafted so each clause is
+  held by a named test in its evidence file; `amendment_values` and
+  `first_approval_values` named on LLR-167's `code_symbol`; the stale
+  "unrouted brief" docstring and comments corrected. No behavior change, so
+  no red run: both evidence modules ran before and after (44 and 57 passed).
+- **Sol review** (the first this session, after the owner's re-login and a
+  Windows sandbox fix, `-c windows.sandbox="elevated"`): NOT YET SOUND, one
+  major, TC-161 still `Smoke` while its method drives git and subprocesses and
+  its module is slow. Fixed by amending the tier to Full.
+- **Amended approved cells, status left Approved and nothing re-anchored:**
+  TC-061 `method`, TC-161 `method` and `tier`. They join the wave's joint
+  amendment adjudication with LLR-167 (WI-646 and the follow-up that corrects
+  its "falls back" clause).
+- **Stacked builds, and the review wait:** codex was unauthorized from session
+  start until the owner logged in again, so the builds of WI-629, WI-630,
+  WI-631, WI-632, WI-636, WI-637, WI-640, WI-646 and WI-647 were cut one or two
+  deep on unreviewed bases to keep the critical path moving; nothing merged
+  unreviewed. Each stack was then reviewed as one chain.
+- **Commit bar:** smoke **1 failed, 1692 passed, 3 skipped, 4 errors** in
+  954.5 s; all five in `tests/test_wi_convert.py`, caused by the integrator's
+  own close: the Deliverable edit wrote the archived spec with CRLF line
+  endings, which the spec parser refuses. Converted to LF; the module re-ran
+  **22 passed**; `git ls-files --eol` shows no stray CRLF. The slow evidence
+  modules (`test_adjudicate_brief`, `test_agent_loop_worker`) **101 passed**.
+  `check_docs --stale` OK; `check_trajectory --strict` clean; `trace.py
+  --strict-integrity` 0 integrity; `CURRENT.md` fresh; the open-items view up
+  to date. Seconds **FAIL** at 956.7 s against 60 s (D10; eight builders were
+  loading the box), recorded, not re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=938348c1 -->
+

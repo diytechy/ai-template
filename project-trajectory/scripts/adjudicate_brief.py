@@ -451,7 +451,10 @@ def amendment_values(root, row):
     exactly, rather than fabricating an anchor (rule 1) or rendering a
     before/after with an empty before (rule 2). The stamp itself is advisory:
     off git, or before the snapshot's own commit lands, it is empty and the
-    baseline line simply omits the date."""
+    baseline line simply omits the date.
+
+    Implements: SR-146, LLR-167
+    """
     import trace as tr
 
     root = Path(root)
@@ -722,7 +725,10 @@ def first_approval_values(root, row):
     commit owes, derived from the registries the RELEASED rows live in.
     Building it here rather than leaving it to the session is the difference
     between an act that records its own scope and one that names whatever the
-    session remembered to type."""
+    session remembered to type.
+
+    Implements: SR-146, LLR-167
+    """
     import trace as tr
 
     root = Path(root)

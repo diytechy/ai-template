@@ -17,9 +17,12 @@ importantly — the two properties that make the seam safe to have at all:
     (an amended test-case row and a red-TC census row both cite the TC
     registry) and inferring from the Title is the `NEEDS-HUMAN` fold.
 
-The two unrouted templates are pinned as unrouted ON PURPOSE: a test that
-asserted they compose would be asserting that a slot got filled with something,
-which is the failure mode.
+Every shipped brief is routed, and that is pinned both ways: the routed set
+equals the shipped set, and a row declaring a brief the kit no longer ships
+refuses as an unknown one. What stays pinned ON PURPOSE is the refusal: a row
+whose declared brief cannot be filled in full is HELD for a human rather than
+composed, because a test that accepted a brief with a slot filled by something
+would be asserting the failure mode.
 """
 
 import csv
@@ -353,7 +356,7 @@ def test_a_target_with_no_normative_text_refuses(tmp_path):
     assert "LLR-001" in why and "placeholder" in why
 
 
-# --- the discriminator, and the two briefs that stay unrouted ------------------
+# --- the discriminator, and every shipped brief routed ------------------------
 
 
 def test_the_discriminator_is_the_declared_cell_not_the_specref(tmp_path):
@@ -1201,9 +1204,9 @@ def test_an_adjudication_row_declaring_no_brief_still_builds(tmp_path):
 def test_a_well_formed_typed_line_is_accepted_for_every_brief(tmp_path, brief, line):
     """The grammar lives beside the assemblers because the brief and the verdict
     it demands are ONE contract — a template whose enum moved and a checker that
-    did not is the drift this table prevents. All four briefs are covered,
-    including the one with no assembler: an unrouted brief still has a verdict
-    shape. `consolidate` appears twice because both of its counters are
+    did not is the drift this table prevents. Four of the five routed briefs
+    are covered here; the first-approval grammar is pinned beside its own arm
+    above. `consolidate` appears twice because both of its counters are
     required on EVERY alternative, not only on the one that uses them."""
     path = tmp_path / "v.md"
     path.write_text("- [MINOR] a finding -> why -> the change\n" + line + "\n")

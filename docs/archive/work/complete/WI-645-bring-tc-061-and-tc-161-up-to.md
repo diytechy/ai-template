@@ -2,13 +2,41 @@
 id = "WI-645"
 title = "Bring TC-061 and TC-161 up to their amended design rows, and name the two brief assemblers no design row names"
 workstream = "requirements"
-specref = "docs/test/test-cases.toml"
+specref = ""
 sr_refs = ["SR-026", "SR-146"]
 needs = ["WI-642"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 4
 +++
+
+## Deliverable
+
+Built by a builder session in its own worktree, reviewed, and squash-merged.
+No behavior changed.
+
+- `TC-061.method` and `TC-161.method` re-drafted to what their evidence files
+  drive: each clause is held by a named test in
+  `tests/test_agent_loop_worker.py` or `tests/test_adjudicate_brief.py`. Two
+  corrections beyond the spec's list: a declared brief that cannot be filled
+  is HELD for a human (the old "falls back to the worker assignment" is
+  disproved by the tests), and the re-attestation model's seam is IF-075
+  (IF-127 was merged into it).
+- `TC-161.tier` moved from Smoke to Full on review: its method drives real
+  git repositories, subprocesses and loop sessions, and its evidence module is
+  registered slow.
+- `amendment_values` and `first_approval_values` joined LLR-167's
+  `code_symbol` (a traced cell), with `Implements:` back-links.
+- `tests/test_adjudicate_brief.py`'s module docstring and section comments no
+  longer say any shipped brief is unrouted (text only).
+- The three amended cells on approved rows (TC-061 and TC-161 `method`,
+  TC-161 `tier`) are left for an amendment adjudication; no approval record
+  was refreshed.
+
+Review: codex Sol (medium), NOT YET SOUND, one major (TC-161's tier), fixed.
+The builder's out-of-scope findings (LLR-167 still says a refusal falls back;
+LLR-167 names `dispatch.*` for the census; stale routing prose) are filed for
+the follow-up amendment.
 
 ## Context
 
