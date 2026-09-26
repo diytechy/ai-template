@@ -2109,3 +2109,487 @@ automated = "Yes"
 evidence = """tests/test_phase_rule.py::test_the_committed_baseline_is_a_settled_IMPL_spine; tests/test_phase_rule.py::test_a_lowering_edit_in_the_STANDING_phase_FIRES; tests/test_phase_rule.py::test_the_same_edit_with_a_NEW_phase_tag_PASSES; tests/test_phase_rule.py::test_an_ALREADY_OPEN_LOWER_phase_also_satisfies_the_rule; tests/test_phase_rule.py::test_the_LLREQS_to_ARCH_decrease_is_EXEMPT; tests/test_phase_rule.py::test_a_TWO_RUNG_decrease_that_merely_ENDS_at_Arch_is_NOT_exempt; tests/test_phase_rule.py::test_a_COMPONENT_ONLY_decrease_FIRES; tests/test_phase_rule.py::test_a_BOUNDARY_ONLY_decrease_FIRES; tests/test_phase_rule.py::test_a_REDRAFTED_child_in_the_standing_phase_FIRES; tests/test_phase_rule.py::test_a_NEW_DRAFT_cannot_lower_the_effective_stage_AT_ALL; tests/test_phase_rule.py::test_without_git_the_rule_has_NOTHING_TO_SAY; tests/test_phase_rule.py::test_the_CLI_is_WARN_FIRST_and_STRICT_promotes; tests/test_phase_rule.py::test_THIS_repo_does_not_fire_the_rule"""
 status = "Approved"
 phase = 5
+
+[test.TC-208]
+verifies = ["SR-157", "LLR-210"]
+level = "Integration"
+method = """Two claims, because the row makes two. THE SELECTION, driven on hand-built rows with no repository: the queue digest moves for each of the four fields that change the question and stands still for the two that do not; a malformed digest cell reads as no recorded digest; each of the two new signals fires where the pair producer is blind and the module signal does not fire on a bare module name; two disjoint overlapping pairs make ONE candidate set. THE MEMORY AND THE CLOSE, driven on a real repository: a queue with an overlapping cluster mints exactly one row and the same queue again mints nothing; a station holding any judgement mints nothing; a queue state a consolidation already judged mints nothing even after that row goes terminal; a verdict absorbing three rows lands all three in the fourth terminal folder with the one-line Deliverable naming the successor and their scope text unchanged, the successor superseding all three, and the census silent afterwards; a cluster row claimed between mint and close refuses the close BY NAME; queue-with-edge writes the hard needs edge and return-to-draft moves the row back with the finding quoted."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-210 (parent SR-157)"
+automated = "Yes"
+evidence = """tests/test_consolidate.py::test_the_queue_digest_covers_the_four_fields_that_change_the_question; tests/test_consolidate.py::test_a_malformed_digests_cell_reads_as_no_recorded_digest; tests/test_consolidate.py::test_a_shared_open_item_edge_is_a_commissioning_signal; tests/test_consolidate.py::test_the_module_signal_reads_both_the_llr_join_and_the_row_prose; tests/test_consolidate.py::test_the_module_signal_does_not_fire_on_a_bare_module_name; tests/test_consolidate.py::test_two_disjoint_overlapping_pairs_make_one_candidate_set; tests/test_consolidate.py::test_no_row_is_minted_beside_another_judgement; tests/test_consolidate.py::test_a_queue_state_that_has_been_judged_is_never_judged_again; tests/test_consolidate.py::test_a_consolidations_own_successor_does_not_seed_the_next_census; tests/test_consolidate.py::test_re_absorbing_a_row_a_consolidation_minted_is_refused_by_name; tests/test_consolidate.py::test_a_malformed_verdict_block_refuses_and_never_defaults; tests/test_consolidate.py::test_the_close_refuses_a_row_that_left_the_queue_by_name; tests/test_consolidate.py::test_an_absorbed_rows_scope_text_is_byte_identical_and_specref_kept; tests/test_consolidate_close.py::test_the_census_mints_one_row_and_refuses_a_second_while_it_is_pending; tests/test_consolidate_close.py::test_a_consolidate_verdict_absorbs_its_cluster_end_to_end; tests/test_consolidate_close.py::test_the_close_refuses_by_name_when_an_absorbed_row_was_claimed; tests/test_consolidate_close.py::test_queue_with_edge_writes_the_hard_needs_edge; tests/test_consolidate_close.py::test_return_to_draft_moves_the_row_back_with_the_finding_quoted"""
+status = "Drafted"
+phase = 5
+
+[test.TC-209]
+verifies = ["SR-184"]
+level = "Inspection"
+method = "Follow the Critique acceptance provenance inspection in docs/test/inspection-procedures.md#critique-acceptance-provenance-inspection; inspect a complete record, an abnormal record missing reviewer/rubric/intent/anchor, and a fully populated record whose rubric is copied from the verifying TC without independent SN/SR derivation."
+tier = "Release"
+expected = "Complete independently derived provenance is accepted; each missing field or TC-copied rubric without independent SN/SR derivation is an Inspection finding; artifact quality remains Critique's judgment."
+automated = "No"
+evidence = "docs/test/inspection-procedures.md#critique-acceptance-provenance-inspection-result"
+status = "Drafted"
+phase = 5
+
+[test.TC-210]
+verifies = ["SR-185"]
+level = "Inspection"
+method = "Follow the requirement and interface counterpart review inspection in docs/test/inspection-procedures.md#requirement-and-interface-counterpart-review-inspection; inspect a semantic change record and an abnormal reference-existence-only record."
+tier = "Release"
+expected = "The counterpart decision is explicit; reference-existence evidence alone is found insufficient."
+automated = "No"
+evidence = "docs/test/inspection-procedures.md#requirement-and-interface-counterpart-review-inspection-result"
+status = "Drafted"
+phase = 5
+
+[test.TC-211]
+verifies = ["SR-186"]
+level = "Inspection"
+method = "Follow the decomposition proportionality inspection in docs/test/inspection-procedures.md#decomposition-proportionality-inspection; inspect the complete chain and an extra paraphrasing child."
+tier = "Release"
+expected = "A child within a required tier with no independent decision or verification purpose is an Inspection finding; otherwise the review records that independent value and why further splitting stops."
+automated = "No"
+evidence = "docs/test/inspection-procedures.md#decomposition-proportionality-inspection-result"
+status = "Drafted"
+phase = 5
+
+[test.TC-212]
+verifies = ["SR-187", "LLR-211", "LLR-212"]
+level = "Integration"
+method = "Driven through the traceability check on scaffold frames, in a module registered as slow. A crossing declaring operation and one declaring delivery produce no frame finding. A crossing declaring a value outside the pair fails the strict run naming the crossing. A crossing declaring nothing prints one advisory naming it while the strict exit stays 0. A frame file with no crossing, and a project with no frame file at all, each produce neither. The shipped template's example crossing carries the cell, and the three-leg dogfood key comparison passes with the key present on the template, the live frame and the schema."
+tier = "Full"
+expected = "Satisfies SR-187's acceptance: one value from the closed pair per crossing; an out-of-pair value fails naming the crossing; a missing value is reported without failing; no frame is vacuous."
+automated = "Yes"
+evidence = "tests/test_frame_system.py"
+status = "Approved"
+phase = 6
+
+[test.TC-213]
+verifies = ["SR-219", "LLR-213"]
+level = "Unit"
+method = "crossing_systems and sr_system_advisories called on in-memory rows. Requirements naming only operation crossings, and only delivery crossings, produce no advisory. A requirement naming one crossing of each system produces one advisory naming it and one crossing from each system. A requirement naming a crossing with no system and an operation crossing produces nothing. With no crossings at all every requirement produces nothing. The input rows are compared before and after the call to show nothing is written."
+tier = "Smoke"
+expected = "Satisfies SR-219's acceptance: a requirement placed by its crossings, one spanning both systems reported naming a crossing from each, a crossing with no system placing nothing, no placement recorded on the requirement, no frame vacuous."
+automated = "Yes"
+evidence = "tests/test_frame_rules.py"
+status = "Approved"
+phase = 6
+
+[test.TC-214]
+verifies = ["SR-188", "LLR-214"]
+level = "Unit"
+method = "need_frame_gap_advisories called on in-memory needs, stakeholders, requirements, crossings and assumptions. A need whose approved stakeholder's own party has an operation crossing, with no requirement naming an operation crossing and no cited assumption landing on one, is reported naming the need and its stakeholder. Adding a requirement on an operation crossing clears it; so does an assumption landing on one instead. A need whose stakeholder's party has no operation crossing of its own, but is mediated by an entity that does, is out of scope and produces nothing. A Drafted stakeholder is not read. A stakeholder with no party produces nothing. Each vacuous input (no frame, no stakeholder list, no system values) produces nothing."
+tier = "Smoke"
+expected = "Satisfies SR-188's acceptance: only approved stakeholders read; the gap reported once per need naming its stakeholder; either condition clears it; no party and each vacuous state produce no report."
+automated = "Yes"
+evidence = "tests/test_assumption_rules.py"
+status = "Approved"
+phase = 6
+
+[test.TC-215]
+verifies = ["SR-189", "LLR-215", "LLR-216"]
+level = "Integration"
+method = "Driven on a scaffold whose needs file carries a stakeholder table. A need citing an undeclared stakeholder, a stakeholder whose party names an undeclared entity, and a stakeholder missing its name, description or status, each fail the strict run naming the row. A need citing no stakeholder prints one advisory. A stakeholder with no party is valid. A stakeholder status outside the closed vocabulary fails the always-on integrity floor. A stakeholder id above the watermark is refused as unallocated. A need id quoted inside a stakeholder's description does not join the need universe. The dogfood key comparison covers the stakeholder table. A needs file with no stakeholder table produces none of these."
+tier = "Full"
+expected = "Satisfies SR-189's acceptance: stakeholder rows carry name, description, optional party and a closed maturity; undeclared references fail naming the row; a need naming none is reported without failing; no stakeholder list is vacuous."
+automated = "Yes"
+evidence = "tests/test_stakeholders.py"
+status = "Approved"
+phase = 6
+
+[test.TC-216]
+verifies = ["SR-190", "LLR-217"]
+level = "Integration"
+method = "Driven through the traceability check. A need whose source names a missing file fails the strict run naming the need and the entry; one naming an existing file and a missing anchor fails the same way; a resolving entry passes; a need with no source produces nothing. A source cell holding a repository path raises no provenance advisory, while a work-item citation planted in turn in the need, why and acceptance cells is still reported in each, and a path in the need cell is still reported by the need-form check."
+tier = "Full"
+expected = "Satisfies SR-190's acceptance: an unresolving file or anchor fails naming the need and pointer; a resolving one passes; no pointer is valid; the pointer cell is outside the provenance rule while the need's other cells stay under it."
+automated = "Yes"
+evidence = "tests/test_trace_rules.py"
+status = "Approved"
+phase = 6
+
+[test.TC-217]
+verifies = ["SR-191", "LLR-218", "LLR-219"]
+level = "Integration"
+method = "Driven on a scaffold with a declared frame and an assumptions registry. A row missing each required cell in turn, a status outside the closed vocabulary, a standing outside active and falsified, and a landing crossing that is not declared, each fail the strict run naming the row and the cell. A complete row passes. A DA or SUR id above its watermark mark is refused. The template's example rows are inert. A fresh scaffold receives the registry as a blank form through the scaffold mapping and passes the strict check. A project with no frame file produces no finding from an assumptions registry."
+tier = "Full"
+expected = "Satisfies SR-191's acceptance: required cells and closed vocabularies enforced naming row and cell; undeclared landing fails; spent ids never reissued; no declared frame is vacuous."
+automated = "Yes"
+evidence = "tests/test_assumptions_registry.py"
+status = "Approved"
+phase = 6
+
+[test.TC-218]
+verifies = ["SR-191", "SR-192", "LLR-220"]
+level = "Integration"
+method = "Driven on real git repositories, once for an assumption row and once for a surrogate row. A lane whose merge delta flips the row to Approved is refused at the merge slot by name. An approval commit that approves the row and refreshes the record passes the mirror rule and writes the registry's copy. The approved row amended afterwards is reported as drifted from its copy. Before the first approval the registry has no copy and the unanchored-record rule reports nothing for it."
+tier = "Full"
+expected = "Satisfies SR-191's acceptance clause that an assumption's approval is recorded as every other approval of approved content is, and the same for surrogates under SR-192."
+automated = "Yes"
+evidence = "tests/test_baseline_snapshot.py"
+status = "Approved"
+phase = 6
+
+[test.TC-219]
+verifies = ["SR-192", "LLR-221"]
+level = "Unit"
+method = "surrogate_findings called on in-memory rows. A surrogate emulating a declared entity passes; one emulating an undeclared id or a component id, one with an empty emulates list, and one missing its name, description or status each fail naming the surrogate. A fidelity assumption naming an undeclared surrogate fails; one landing on a crossing of an entity its surrogate does not emulate fails naming the assumption; one landing on an emulated entity's crossing passes. A surrogate no assumption names produces one advisory. A surrogate status outside the closed vocabulary fails the integrity floor."
+tier = "Smoke"
+expected = "Satisfies SR-192's acceptance: emulated parties resolve to declared entities; a fidelity assumption names one surrogate and lands on an emulated party's crossing; an unnamed surrogate is reported without failing; a closed maturity."
+automated = "Yes"
+evidence = "tests/test_assumption_rules.py"
+status = "Approved"
+phase = 6
+
+[test.TC-220]
+verifies = ["SR-193", "LLR-222", "LLR-223"]
+level = "Unit"
+method = "sr_classification_advisories and da_citing_srs called on in-memory rows. A requirement citing declared assumptions is bridged; one with a waiver is coincident; one with neither is reported unclassified; one with both is reported; an empty or whitespace-only citation list counts as absent; a citation naming an undeclared assumption is a failure naming the requirement. da_citing_srs returns each assumption's citing requirements, and the served needs read through them match the requirements' SN-Refs. No assumptions registry makes every call vacuous. The template's example requirement carries both new keys."
+tier = "Smoke"
+expected = "Satisfies SR-193's acceptance: bridged, coincident, unclassified and both classified as stated; an undeclared citation fails; need references unchanged and an assumption's needs derived; no registry is vacuous."
+automated = "Yes"
+evidence = "tests/test_assumption_rules.py"
+status = "Approved"
+phase = 6
+
+[test.TC-221]
+verifies = ["SR-194", "LLR-224"]
+level = "Unit"
+method = "sr_form_findings called on in-memory requirements. Each of the three forms passes; no form is one advisory naming the requirement; a value outside the three fails the always-on integrity class naming the row. With no assumptions registry no form is asked for."
+tier = "Smoke"
+expected = "Satisfies SR-194's acceptance: three forms pass, none is reported without failing, an out-of-set value fails naming the row, no registry is vacuous."
+automated = "Yes"
+evidence = "tests/test_assumption_rules.py"
+status = "Approved"
+phase = 6
+
+[test.TC-222]
+verifies = ["SR-189", "SR-190", "SR-193", "SR-194", "SR-197", "SR-198", "SR-211", "SR-214", "LLR-225"]
+level = "Integration"
+method = "Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation."
+tier = "Smoke"
+expected = "Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell re-opens its row's."
+automated = "Yes"
+evidence = "tests/test_acceptance_record.py"
+status = "Approved"
+phase = 6
+
+[test.TC-223]
+verifies = ["SR-195", "LLR-226", "LLR-227"]
+level = "Unit"
+method = "mediation_findings, reaching_parties and assumption_reach_advisories called on in-memory rows. A mediates naming an undeclared entity, or the entity itself, fails. An assumption landing on its served need's approved stakeholder's party passes; landing on a party that mediates for it passes. An assumption serving two needs whose one landing crossing reaches only the first is reported naming the assumption and the second need; a landing crossing reaching neither need is reported naming the assumption and the crossing. A fidelity assumption landing on its surrogate's emulated party passes and elsewhere is reported. A served need with no party-bearing approved stakeholder is reported unreachable. A Drafted stakeholder's party is not read. An uncited assumption produces nothing."
+tier = "Smoke"
+expected = "Satisfies SR-195's acceptance: served needs derived, never recorded; direct and mediated landings pass; a served need no crossing reaches, and a crossing reaching no served need, are each reported; fidelity judged against emulated parties; unreachable reported; bad mediation fails; uncited not judged."
+automated = "Yes"
+evidence = "tests/test_assumption_rules.py"
+status = "Approved"
+phase = 6
+
+[test.TC-224]
+verifies = ["SR-196", "LLR-228"]
+level = "Unit"
+method = "uncited_assumption_advisories and no_falsifier_advisories called on in-memory rows, each assumption both Drafted and Approved. An assumption no requirement cites is reported once; one with an empty falsifier is reported once; a cited assumption with a falsifier produces nothing. The strict exit is unchanged by either report."
+tier = "Smoke"
+expected = "Satisfies SR-196's acceptance: uncited and falsifier-less assumptions each reported, Drafted as Approved, without failing the check."
+automated = "Yes"
+evidence = "tests/test_assumption_rules.py"
+status = "Approved"
+phase = 6
+
+[test.TC-225]
+verifies = ["SR-197", "LLR-229"]
+level = "Unit"
+method = "The schema and citation rules called on in-memory test cases. A case naming only assumptions is valid and not an orphan; a case naming neither requirements, design rows nor assumptions is reported verifying nothing; a case naming an undeclared assumption fails naming the case; a case with neither Verifies nor Assumption-Refs is refused by the schema rule, while one with Assumption-Refs alone is not. The template's example case carries the key."
+tier = "Smoke"
+expected = "Satisfies SR-197's acceptance: an assumption-only case is valid; an empty case is an orphan; an undeclared assumption fails naming the case."
+automated = "Yes"
+evidence = "tests/test_trace_coherence.py"
+status = "Approved"
+phase = 6
+
+[test.TC-226]
+verifies = ["SR-197", "LLR-230"]
+level = "Integration"
+method = "_phase_groups called with a requirement in phase 5 and one in phase 6, both citing one assumption, and a test case naming only that assumption: the case appears in both phase groups. A case whose assumption no requirement cites appears in none. Driven on a git repository, a change to a case's Assumption-Refs between HEAD and the working tree is attributed to the case's phases by the stage-change attribution."
+tier = "Full"
+expected = "Satisfies SR-197's acceptance clause placing an assumption-only case in each phase of the requirements citing its assumptions."
+automated = "Yes"
+evidence = "tests/test_derive_stage.py"
+status = "Approved"
+phase = 6
+
+[test.TC-227]
+verifies = ["SR-197", "LLR-231"]
+level = "Unit"
+method = "assumption_evidence_rows, the forest builder, the red-TC census and the report metrics called in memory on a spine holding a requirement-only case, an assumption-only case and a case citing both. The assumption-only case is listed under the assumption-evidence group, not the verifying-nothing bucket; the census and the report count assumption evidence apart from requirement evidence, with the both-citing case counted once in each; the verified-requirement join, the matrix and the triangle rule give the same answers as with the assumption references removed."
+tier = "Smoke"
+expected = "Satisfies SR-197's acceptance clause that wherever evidence is counted, assumption evidence is counted apart from requirement evidence."
+automated = "Yes"
+evidence = "tests/test_evidence_partition.py"
+status = "Approved"
+phase = 6
+
+[test.TC-228]
+verifies = ["SR-198", "LLR-232", "LLR-233"]
+level = "Unit"
+method = "is_observation_tc, observation_tc_findings and sampling_model_declared called on in-memory test cases. A case whose Automated reads No is an observation case and one reading Yes is not. An observation case missing inputs, missing max_age, or, when it cites assumptions, missing a sampling policy is one advisory per omission naming it. A max_age of 6 fails and 7 passes; a max_age of 7.5 or a word fails; a sampling value outside sampled and monitored fails. For the sampling model: a sample size of 0, of 2.5 or a word fails; an empty or whitespace acceptance rule fails; a size without a rule, and a rule without a size, fail; a sampled case with neither is valid but not model-declared; a sampled case with a size of 5 and a non-empty rule is model-declared. An automated case carrying any of the declaration cells is an advisory. The template's example case ships every key."
+tier = "Smoke"
+expected = "Satisfies SR-198's acceptance: observation cases defined by the one marker; omissions reported without failing; a lifetime under seven days, an out-of-pair policy or a malformed sampling model fails naming the row; automated cases declare none."
+automated = "Yes"
+evidence = "tests/test_assumption_rules.py"
+status = "Approved"
+phase = 6
+
+[test.TC-229]
+verifies = ["SR-199", "LLR-234"]
+level = "Unit"
+method = "The record module exercised in a temporary directory. A record with every field round-trips; a record missing any one field, or cut off mid-file, parses to nothing; an outcome outside pass and fail, an observed_at or expires not in the canonical UTC form, an expiry earlier than the observation, and an empty or whitespace provenance each parse to nothing; a leading-dot file is never read; latest returns the newest by observation time; an empty judged digest is valid. write_atomic is driven with the replace step failing twice with a permission error and then succeeding, and with it failing every time, which raises after the bounded retries and leaves no partial record readable."
+tier = "Smoke"
+expected = "Satisfies SR-199's acceptance clauses on the record's fields, the empty digest for a case declaring no inputs, and a partly written record never read as a result."
+automated = "Yes"
+evidence = "tests/test_observation_record.py"
+status = "Approved"
+phase = 6
+
+[test.TC-230]
+verifies = ["SR-199", "LLR-235"]
+level = "Integration"
+method = "The writer run as a command on a scaffold, in a module registered as slow. It refuses an undeclared case, an automated case, an outcome outside the pair, a missing provenance, and an expiry later than the observation time plus the case's max_age, writing nothing each time. With no expiry given it writes the observation time plus max_age. The test-case registry's bytes are unchanged after every run. The inputs digest is equal for a declared input stored with LF and with CRLF line endings, and changes when its content changes; a registry row id among the inputs is digested from that row's cells. Recording a sample leaves the stage fingerprint and the release evidence binding unchanged. A fresh scaffold receives the writer and the record module."
+tier = "Full"
+expected = "Satisfies SR-199's acceptance: a malformed or out-of-policy record refused when written; writing never edits the test case."
+automated = "Yes"
+evidence = "tests/test_observation_writer.py"
+status = "Approved"
+phase = 6
+
+[test.TC-231]
+verifies = ["SR-199", "LLR-236"]
+level = "Integration"
+method = "Driven through the traceability check on a scaffold with records on disk, in a module registered as slow. An unparseable record file, one whose observed_at is not canonical UTC, one whose expiry precedes its observation, one with an empty provenance, a record naming an undeclared case, one naming an automated case, and one expiring later than its case allows, each fail the strict run naming the file. A leading-dot file is ignored. A well-formed record produces nothing."
+tier = "Full"
+expected = "Satisfies SR-199's acceptance clause that a malformed or out-of-policy record found on disk fails the check."
+automated = "Yes"
+evidence = "tests/test_observation_writer.py"
+status = "Approved"
+phase = 6
+
+[test.TC-232]
+verifies = ["SR-200", "LLR-237"]
+level = "Unit"
+method = "evidence_level and tier_covers driven table-first over in-memory assumptions, cases, records and a suite proof. No citing case gives assumed. A citing case with no result gives specified. For an automated case: a passing record for this tree at the full tier gives monitored for a Smoke or Full case and specified for a Release case; at the release or all tier it gives monitored for every case; a failing record gives specified; a passing record bound to another tree gives specified. A current passing sampled observation gives sampled and a monitored one monitored. An expired record, and one whose judged digest differs from the current inputs digest, give specified and never touch the standing cell. A case declaring no inputs is judged by expiry alone. An approved, active assumption reading assumed or specified is one advisory; a Drafted one is not reported."
+tier = "Smoke"
+expected = "Satisfies SR-200's acceptance: the four levels derived from current results alone; expiry and a changed judged state read specified, never falsified; automated results read from the tree-bound record under the cumulative tier contract; no cell sets the level; the approved-but-unevidenced advisory."
+automated = "Yes"
+evidence = "tests/test_assumption_rules.py"
+status = "Approved"
+phase = 6
+
+[test.TC-233]
+verifies = ["SR-201", "LLR-238"]
+level = "Unit"
+method = "falsification_worklist called on in-memory rows. A falsified assumption cited by two requirements serving three needs, with two evidencing cases, lists each requirement, need and case exactly once. An active assumption with a failing latest record is listed as falsification evidence and its standing cell is unchanged. An active assumption with no failing record produces nothing. With the gate setting on, a falsified assumption is not listed a second time beside the boundary gate's failure."
+tier = "Smoke"
+expected = "Satisfies SR-201's acceptance: the falsified assumption's requirements, needs and cases each listed once; a failing result reported without changing validity; no failure, no report."
+automated = "Yes"
+evidence = "tests/test_assumption_rules.py"
+status = "Approved"
+phase = 6
+
+[test.TC-234]
+verifies = ["SR-202", "LLR-239"]
+level = "Integration"
+method = "Driven on a real git repository, in a module registered as slow. An assumption with an accepted risk is approved in an act; with no evidence it reads covered. Amending a need it serves, then re-approving that need in a later commit, still reads it unproven and names the need. Amending the assumption's own text reads it unproven. A failing record added in a commit after the acceptance act reads it unproven, whatever its observation timestamp says. After each of these, two restorations are checked separately: an act that re-attests the assumption with its text unchanged re-binds the risk and it reads covered; and, without any new act, a current passing observation for one of its evidencing cases makes it evidenced rather than covered. Advancing the test clock by a year changes nothing. A shallow clone missing the acceptance act reads unproven with the reason stated."
+tier = "Full"
+expected = "Satisfies SR-202's acceptance: the acceptance bound to the texts at acceptance; any later change, even one re-approved on its own, reopens it naming the trigger; a reviewed re-acceptance or a current passing result restores it; time alone never reopens it."
+automated = "Yes"
+evidence = "tests/test_accepted_risk.py"
+status = "Approved"
+phase = 6
+
+[test.TC-235]
+verifies = ["SR-203", "LLR-240"]
+level = "Integration"
+method = "The approval brief rendered for a scope holding an assumption, a fidelity assumption with its surrogate, and a lone surrogate. Each assumption's section lists its citing requirements with their text first, then the needs derived through them, each landing crossing with its entity, its evidencing cases with their current level, and its falsifier; the fidelity assumption appears beside its surrogate and the surrogate's emulated entities; the lone surrogate appears with the assumptions naming it. A batch holding only assumptions is rendered and its freshness is checked. A brief for a batch with no assumption or surrogate is byte-identical to the stored golden brief."
+tier = "Full"
+expected = "Satisfies SR-203's acceptance: each assumption presented with its citing requirements, derived needs, landing crossings and parties, evidence level and falsifier; fidelity beside its surrogate; a batch without assumptions unchanged; generated, never hand-copied."
+automated = "Yes"
+evidence = "tests/test_trace_briefs.py"
+status = "Approved"
+phase = 6
+
+[test.TC-236]
+verifies = ["SR-204", "LLR-241"]
+level = "Integration"
+method = "The stage derived over spines in memory and over a scaffold. A registry holding only Drafted assumptions, surrogates or stakeholders moves neither the settled nor the live stage. After one assumption is Approved, a second Drafted one holds DevStg-Boundary in the live reading and not in the settled one; the same for surrogates once one surrogate is Approved, and for a Drafted stakeholder at DevStg-Needs once one stakeholder is Approved. The two tiers sharing the assumptions file stay apart: an Approved assumption beside a Drafted surrogate leaves the surrogate tier inactive and the stage unmoved, and an Approved surrogate beside a Drafted assumption leaves the assumption tier inactive. A Drafted stakeholder beside approved needs does not count as a drafted need, and an approved stakeholder does not settle a Drafted need. The derivation reads no policy file, as the existing stage-input pin requires, and the declared-input audit finds the assumptions registry among the files it reads; the new maturity tables equal the check's enum vocabulary."
+tier = "Full"
+expected = "Satisfies SR-204's acceptance: no approved row, no effect; after the first approval, drafts hold the rung in the live reading only; no setting turns a tier on; one tier's status never answers for another in the same file."
+automated = "Yes"
+evidence = "tests/test_derive_stage.py"
+status = "Approved"
+phase = 6
+
+[test.TC-237]
+verifies = ["SR-205", "LLR-242"]
+level = "Integration"
+method = "The assumption-gate step driven on a scaffold. With no frame file the step reports nothing even with the setting on. With the setting absent or off, every condition below prints as an advisory and the step passes. With it on: a coincident requirement passes; one citing only approved, active, reaching assumptions passes; an unclassified requirement fails, including every non-coincident requirement when a frame exists and no assumptions registry does; citing a Drafted assumption, a falsified one, one the reach check reports, and a fidelity assumption whose surrogate is Drafted, each fail naming the requirement, the assumption and the condition. The step's plan listing shows it at the DevStg-Boundary threshold and in the built-in step set. The derived stage is identical with the setting on and off."
+tier = "Full"
+expected = "Satisfies SR-205's acceptance: with the gate on, coincident or fully maturity-backed requirements pass and every other case fails naming requirement, assumption and condition; with it off, advisory; one declared setting."
+automated = "Yes"
+evidence = "tests/test_assumption_gate.py; tests/test_check_harness.py"
+status = "Approved"
+phase = 6
+
+[test.TC-238]
+verifies = ["SR-206", "LLR-243"]
+level = "Integration"
+method = "The assumption-evidence step driven on a scaffold with the setting on, in a module registered as slow. A relied-on assumption with a current passing monitored or automated result passes. One whose only current passing result is sampled passes when its case declares a valid sampling model — a whole-number sample size of at least one and a non-empty acceptance rule — and fails when the case declares none, a size of 0, or a size without a rule. One with an accepted risk that has not reopened passes, and one whose risk has reopened fails. Each failure names the assumption and what is missing. With the setting off the same cases are advisories. The step lists at the DevStg-Release threshold, and the approval-level pin on the single release producer still holds."
+tier = "Full"
+expected = "Satisfies SR-206's acceptance: current monitored or automated evidence, a sampled result under a declared sampling model, or an unreopened accepted risk passes; anything else fails naming the assumption; advisory with the gate off."
+automated = "Yes"
+evidence = "tests/test_assumption_gate.py"
+status = "Approved"
+phase = 6
+
+[test.TC-239]
+verifies = ["SR-212", "LLR-244"]
+level = "Integration"
+method = "The interface-allocation step driven on a scaffold with the setting on, in a module registered as slow. An interface-form requirement reached, through its design rows' module, by a boundary interface recorded coincident passes; one reached by an interface bridged by an assumption the requirement cites passes. One reached only by an interface bridged by other assumptions fails naming the requirement and that interface. One reached by no boundary interface fails naming the requirement and stating that none reaches it. One reached by two interfaces, one valid and one bridged only by uncited assumptions, fails naming the invalid interface. Assumption-form and cross-cutting requirements are not judged. With the setting off the same cases are advisories. The step lists at the DevStg-Arch threshold, and the stage fold still takes no interface parameter."
+tier = "Full"
+expected = "Satisfies SR-212's acceptance: a requirement passes only when at least one boundary interface reaches it and each reaching interface is coincident or bridged by an assumption it cites; an unreached one fails naming it, an invalid reaching interface fails naming both; other forms out of scope; advisory with the gate off."
+automated = "Yes"
+evidence = "tests/test_assumption_gate.py"
+status = "Approved"
+phase = 6
+
+[test.TC-240]
+verifies = ["SR-207", "LLR-245"]
+level = "Integration"
+method = "Driven on real git repositories through the snapshot command, parameterized over every row-compared tier: requirements, design rows, test cases, interfaces, components, the frame's entities, crossings and relationships, assumptions and surrogates. For each, an act approving row A while row B of the same tier carries drifted approved text is refused naming B and the cell; naming the registry alone in the approves option does not clear B; adding B through the re-attests option clears it, and the act's record names B. In a file holding two tiers, drift in one tier refuses an act approving a row of the other. A registry with no drifted row outside the act refreshes as before. Seven drifted rows are all named, with none cut off. A drifted need is not covered."
+tier = "Full"
+expected = "Satisfies SR-207's acceptance: a drifted row outside the act refuses the refresh naming row and cell; adding it clears the refusal and is named in the record; no drift refreshes as before; every compared tier covered, including tiers sharing a file."
+automated = "Yes"
+evidence = "tests/test_baseline_snapshot.py"
+status = "Approved"
+phase = 6
+
+[test.TC-241]
+verifies = ["SR-208", "LLR-246"]
+level = "Integration"
+method = "Driven on real git repositories with the dial holding DevStg-Boundary. A lane whose range changes a frame or assumption status, or adds or removes a row carrying one, is refused at the merge slot naming the registry, the row and the rung. The same change on a released rung merges. A registry missing from the rung map is held. With the loop marker set, the held-status pre-commit step refuses the same change in the index; without the marker, a person's commit passes. The claim writer, the mint bookkeeping writer, the handback residue writer and the telemetry writer each refuse, before writing, a tree that carries such a change."
+tier = "Full"
+expected = "Satisfies SR-208's acceptance: a held status change is refused naming registry, row and rung where the loop commits and again at the merge, so it never lands on trunk; released rungs pass; an unreadable rung is held; a human's commit is not governed."
+automated = "Yes"
+evidence = "tests/test_integrate_admission.py"
+status = "Approved"
+phase = 6
+
+[test.TC-242]
+verifies = ["SR-209", "LLR-247", "LLR-248"]
+level = "Integration"
+method = "The trailer helpers unit-tested: format and parse round-trip, the last trailer wins, and a missing, malformed or other-session trailer is refused naming the subject. A child process started by the dispatcher and by the loop's main entry sees the marker; the launcher scripts never set it. Driven on real git repositories: with the marker set, the commit-msg hook refuses a commit with no trailer and passes one with a valid trailer; without the marker a commit passes. The merge ladder refuses a lane whose range holds a plumbing commit without the trailer. The claim, refresh, merge, bookkeeping, handback-close and telemetry writers each produce messages carrying the trailer, and a refused telemetry commit is reported."
+tier = "Full"
+expected = "Satisfies SR-209's acceptance: every loop-started process carries the marker; a loop commit without a valid trailer is refused naming its subject; a commit from a process the loop did not start passes even while the loop runs; the same rule wherever the floor runs."
+automated = "Yes"
+evidence = "tests/test_loop_provenance.py; tests/test_pre_commit_hook.py"
+status = "Approved"
+phase = 6
+
+[test.TC-243]
+verifies = ["SR-210", "LLR-249"]
+level = "Integration"
+method = "Driven on a real git repository, in a module registered as slow, with a history of three trunk commits — a loop-trailer commit changing a status on a rung its own tree's dial holds, one changing a status on a released rung, and one changing a held status without the trailer — plus a merged lane whose inner trailer-carrying commit changes a held status. The first trunk commit and the lane commit are reported, each once, naming the commit, the row and the rung; the merge commit itself is not reported. A root commit is compared with the empty tree. Raising the dial in a later commit does not change the verdict on earlier commits. A commit whose policy file has no dial is judged as most-held and prints no legacy warning. The pure dial comparison is unit-tested on each rung."
+tier = "Full"
+expected = "Satisfies SR-210's acceptance: each trailer-carrying commit changing a held status reported naming commit, row and rung; released rungs and commits without the trailer produce nothing; the rung judged against that commit's own dial."
+automated = "Yes"
+evidence = "tests/test_loop_provenance.py"
+status = "Approved"
+phase = 6
+
+[test.TC-244]
+verifies = ["SR-211", "LLR-250"]
+level = "Integration"
+method = "interface_bridge_findings driven through the traceability check. A boundary interface naming declared assumptions is bridged; one with a waiver is coincident; one with neither is one advisory naming it; one naming an undeclared assumption fails the strict run naming the interface. An internal interface, one with no from- or to-external tie-back, is not judged. A requirement-reference cell on an interface row is still refused by the existing retired-cell rule."
+tier = "Full"
+expected = "Satisfies SR-211's acceptance: bridged, coincident and neither classified as stated; an undeclared assumption fails naming the interface; internal interfaces out of scope; no requirement reference on the interface."
+automated = "Yes"
+evidence = "tests/test_trace_interfaces.py"
+status = "Approved"
+phase = 6
+
+[test.TC-245]
+verifies = ["SR-213", "LLR-251"]
+level = "Unit"
+method = "The roster loader and the hat rule driven on in-memory rosters. A hat whose speaks_for is a well-formed STK id loads, and one with a malformed value is refused by the loader; an unknown key is still refused. Resolved against a stakeholder list, a declared stakeholder passes and an undeclared one fails naming the hat and the stakeholder. A hat with no speaks_for passes. With no stakeholder list the rule produces nothing."
+tier = "Smoke"
+expected = "Satisfies SR-213's acceptance: a declared stakeholder passes, an undeclared one fails naming both, none is valid, no stakeholder list is vacuous."
+automated = "Yes"
+evidence = "tests/test_hats.py; tests/test_trace_hats.py"
+status = "Approved"
+phase = 6
+
+[test.TC-246]
+verifies = ["SR-214", "LLR-252"]
+level = "Unit"
+method = "obstacle_hat_findings called with a roster: an assumption naming declared hats passes; one naming an unknown hat fails naming the assumption and the name; an empty cell produces nothing. Called with no roster: an assumption naming any hat fails naming it, and an empty cell still produces nothing."
+tier = "Smoke"
+expected = "Satisfies SR-214's acceptance: declared perspectives pass, an undeclared one fails naming assumption and perspective, an empty cell reads as not recorded."
+automated = "Yes"
+evidence = "tests/test_assumption_rules.py"
+status = "Approved"
+phase = 6
+
+[test.TC-247]
+verifies = ["SR-215", "LLR-254"]
+level = "Integration"
+method = "checkpoint_drafts driven on a real git repository. An observation case whose declared input changed since its latest record gets one draft naming it and the input; one whose record expired gets one; one with no record gets one; an unchanged, unexpired one gets none; a case declaring no inputs is judged by expiry and absence alone. An open re-judge item for a case, found by its typed cells, suppresses a second draft; a closed item in the archive with an identical title does not. Inputs are read at the given revision: an uncommitted edit to an input changes nothing. No agent command is spawned."
+tier = "Full"
+expected = "Satisfies SR-215's acceptance: a changed, expired or unjudged observation case gets exactly one open re-judge item naming it and what changed; an unchanged one gets none; an open item suppresses another; no model runs; a case with no inputs judged by expiry."
+automated = "Yes"
+evidence = "tests/test_rejudge.py"
+status = "Approved"
+phase = 6
+
+[test.TC-248]
+verifies = ["SR-215", "LLR-255"]
+level = "Integration"
+method = "Driven through intake on a real git repository. A merged work item whose merge changes an observation case's declared input mints one re-judge item; a second merge while that item is open mints none. The release subcommand mints for a case whose record expired, and the generated release checklist carries a required item naming that command and the number of due cases. Minting runs through the mint path's checks, and a checkout holding an unrelated uncommitted edit keeps it."
+tier = "Full"
+expected = "Satisfies SR-215's acceptance at both checkpoints: a work-item merge and release preparation each file one re-judge item per due case and never a second while one is open."
+automated = "Yes"
+evidence = "tests/test_rejudge.py; tests/test_intake.py"
+status = "Approved"
+phase = 6
+
+[test.TC-249]
+verifies = ["SR-216", "LLR-256"]
+level = "Integration"
+method = "Driven on a real git repository, in a module registered as slow, whose stack profile declares the complexity measure with a stamped baseline. A staged change that raises one function's complexity prints one line naming the measure, the function and the delta; untouched functions are not measured; a change worsening nothing prints no worsening line. With a second measure adapter injected, a change worsening one part under each measure prints both lines in the one report. A profile declaring no measure prints one line saying nothing is measured and exits 0. With a measure declared gating, its worsening exits nonzero; declared reporting-only, it exits 0. The complexity adapter calls the complexity module's own comparison, asserted by identity. On a claimed branch the change is read from the merge base."
+tier = "Full"
+expected = "Satisfies SR-216's acceptance: each declared measure run over the touched parts against its own baseline; every worsening reported in one place naming measure, part and size; no measures reported once without failing; refusal only where a measure is declared gating."
+automated = "Yes"
+evidence = "tests/test_check_readability.py"
+status = "Approved"
+phase = 6
+
+[test.TC-250]
+verifies = ["SR-217", "LLR-257"]
+level = "Integration"
+method = "Driven on real git repositories, in a module registered as slow. A requirement whose test cases were all approved before the first commit adding an Implements line for it produces nothing. Implementation landing is found both through a line naming the requirement and through a line naming one of its design rows, and the earlier of the two is the landing. A requirement with two test cases approved after that landing is reported naming the requirement, the implementation commit and both approval commits. A commit that approves one test case while withdrawing another still records the approval. A requirement with no implementation produces nothing. A declared start after a requirement's approval excludes it; no declared start judges the whole history. A test case added already Approved counts at its birth. A shallow clone, a start commit that does not exist, and a start not on first-parent history are each reported unreadable, never passing. Order is read only from commits, never from a cell. The step lists as warn-only in the harness plan."
+tier = "Full"
+expected = "Satisfies SR-217's acceptance: implementation landing and test-case approval read from history; each test case approved after the implementation reported naming both commits; a declared start scopes it; unreadable history never passes; order never read from a cell."
+automated = "Yes"
+evidence = "tests/test_check_test_first.py"
+status = "Approved"
+phase = 6
+
+[test.TC-251]
+verifies = ["SR-218", "LLR-258"]
+level = "Integration"
+method = "The dashboard generated on a scaffold with needs, requirements, assumptions and records. Each need's detail lists every assumption its requirements cite, once, with its standing, its evidence level and the requirements citing it; a need whose requirements are all coincident says so; a need with an unclassified requirement shows the gap; a falsified assumption and one with no current evidence each carry a text label, asserted on the markup with styling removed. With no assumptions registry the generated page is byte-identical to the stored golden page."
+tier = "Full"
+expected = "Satisfies SR-218's acceptance: per need, each relied-on assumption once with validity, evidence level and citing requirements; coincident and unclassified shown; falsified and unevidenced marked in text; generated; no registry, no section."
+automated = "Yes"
+evidence = "tests/test_traj_views.py"
+status = "Approved"
+phase = 6

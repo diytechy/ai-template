@@ -304,21 +304,21 @@ why = """A component breakdown invented free-form by a model (or a person) leave
 acceptance = """A decomposition run records the candidate partitions considered, the declared objective and constraints they were scored against, the selected partition, and a comparison a reviewer can reproduce; the human names the components and rules the final choice; the record is kept with the architecture, not in session prose."""
 
 [need.SN-041]
-status = "Drafted"
+status = "Approved"
 priority = "M"
 need = """**Scope: template (adopters + this repo).** A person reading a project's code or analytics long after it was written can understand what each part does and why it exists, and can change one part without having to understand or rework unrelated parts."""
 why = """The vision promises code and analytics that stay readable and correct over the long run. Code that only its author can follow gets rewritten instead of changed, each rewrite drops behavior nobody wrote down, and each later change costs more than the one before."""
 acceptance = """A reader new to a sampled part of the code can say what it does and why it exists from the code and the records linked to it, without asking its author. Each change is measured against the project's declared readability and structure measures before it is accepted, and a change that worsens one is reported with the part it worsens."""
 
 [need.SN-042]
-status = "Drafted"
+status = "Approved"
 priority = "M"
 need = """**Scope: template (adopters + this repo).** The owner can rely on every required behavior being checked by tests written from its requirement before the behavior was built, rather than by tests written afterwards to fit what was built."""
 why = """Tests written after the code tend to describe what the code does instead of what was required, so a passing run stops being evidence that the requirement is met, and the approval gates stop meaning what the vision promises."""
 acceptance = """Each requirement's test cases are defined and approved before its implementation is accepted, and the project record shows that order for every requirement approved after the project adopts this rule; an implementation accepted ahead of its test cases is reported."""
 
 [need.SN-043]
-status = "Drafted"
+status = "Approved"
 tags = ["templates"]
 priority = "M"
 need = """**Scope: template (adopters + this repo).** A reviewer can see, for each stakeholder outcome, what its delivery relies on beyond the system's own checked behavior, and whether each of those premises has itself been checked."""
@@ -326,7 +326,7 @@ why = """A system can pass every check on its own behavior and still fail the pe
 acceptance = """Each premise that a requirement relies on beyond the system's own behavior is recorded once, with where its outcome lands, the conditions it holds under, what would break it and the observation that would show it false, and each requirement either names the premises it relies on or states why its own behavior alone delivers its needs. Each premise shows whether a current result evidences it; a premise relied on without evidence is visible as such, and a premise shown false is reported with every requirement that relied on it."""
 
 [need.SN-044]
-status = "Drafted"
+status = "Approved"
 tags = ["templates"]
 priority = "S"
 need = """**Scope: template (adopters + this repo).** A stakeholder can find the needs that are theirs, and a reader can check a need against the document it was drawn from."""

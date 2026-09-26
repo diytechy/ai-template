@@ -2162,7 +2162,7 @@ tier = "Full"
 expected = "Satisfies SR-187's acceptance: one value from the closed pair per crossing; an out-of-pair value fails naming the crossing; a missing value is reported without failing; no frame is vacuous."
 automated = "Yes"
 evidence = "tests/test_frame_system.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-213]
@@ -2173,7 +2173,7 @@ tier = "Smoke"
 expected = "Satisfies SR-219's acceptance: a requirement placed by its crossings, one spanning both systems reported naming a crossing from each, a crossing with no system placing nothing, no placement recorded on the requirement, no frame vacuous."
 automated = "Yes"
 evidence = "tests/test_frame_rules.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-214]
@@ -2184,7 +2184,7 @@ tier = "Smoke"
 expected = "Satisfies SR-188's acceptance: only approved stakeholders read; the gap reported once per need naming its stakeholder; either condition clears it; no party and each vacuous state produce no report."
 automated = "Yes"
 evidence = "tests/test_assumption_rules.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-215]
@@ -2195,7 +2195,7 @@ tier = "Full"
 expected = "Satisfies SR-189's acceptance: stakeholder rows carry name, description, optional party and a closed maturity; undeclared references fail naming the row; a need naming none is reported without failing; no stakeholder list is vacuous."
 automated = "Yes"
 evidence = "tests/test_stakeholders.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-216]
@@ -2206,7 +2206,7 @@ tier = "Full"
 expected = "Satisfies SR-190's acceptance: an unresolving file or anchor fails naming the need and pointer; a resolving one passes; no pointer is valid; the pointer cell is outside the provenance rule while the need's other cells stay under it."
 automated = "Yes"
 evidence = "tests/test_trace_rules.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-217]
@@ -2217,7 +2217,7 @@ tier = "Full"
 expected = "Satisfies SR-191's acceptance: required cells and closed vocabularies enforced naming row and cell; undeclared landing fails; spent ids never reissued; no declared frame is vacuous."
 automated = "Yes"
 evidence = "tests/test_assumptions_registry.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-218]
@@ -2228,7 +2228,7 @@ tier = "Full"
 expected = "Satisfies SR-191's acceptance clause that an assumption's approval is recorded as every other approval of approved content is, and the same for surrogates under SR-192."
 automated = "Yes"
 evidence = "tests/test_baseline_snapshot.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-219]
@@ -2239,7 +2239,7 @@ tier = "Smoke"
 expected = "Satisfies SR-192's acceptance: emulated parties resolve to declared entities; a fidelity assumption names one surrogate and lands on an emulated party's crossing; an unnamed surrogate is reported without failing; a closed maturity."
 automated = "Yes"
 evidence = "tests/test_assumption_rules.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-220]
@@ -2250,7 +2250,7 @@ tier = "Smoke"
 expected = "Satisfies SR-193's acceptance: bridged, coincident, unclassified and both classified as stated; an undeclared citation fails; need references unchanged and an assumption's needs derived; no registry is vacuous."
 automated = "Yes"
 evidence = "tests/test_assumption_rules.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-221]
@@ -2261,7 +2261,7 @@ tier = "Smoke"
 expected = "Satisfies SR-194's acceptance: three forms pass, none is reported without failing, an out-of-set value fails naming the row, no registry is vacuous."
 automated = "Yes"
 evidence = "tests/test_assumption_rules.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-222]
@@ -2272,7 +2272,7 @@ tier = "Smoke"
 expected = "Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell re-opens its row's."
 automated = "Yes"
 evidence = "tests/test_acceptance_record.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-223]
@@ -2283,7 +2283,7 @@ tier = "Smoke"
 expected = "Satisfies SR-195's acceptance: served needs derived, never recorded; direct and mediated landings pass; a served need no crossing reaches, and a crossing reaching no served need, are each reported; fidelity judged against emulated parties; unreachable reported; bad mediation fails; uncited not judged."
 automated = "Yes"
 evidence = "tests/test_assumption_rules.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-224]
@@ -2294,7 +2294,7 @@ tier = "Smoke"
 expected = "Satisfies SR-196's acceptance: uncited and falsifier-less assumptions each reported, Drafted as Approved, without failing the check."
 automated = "Yes"
 evidence = "tests/test_assumption_rules.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-225]
@@ -2305,7 +2305,7 @@ tier = "Smoke"
 expected = "Satisfies SR-197's acceptance: an assumption-only case is valid; an empty case is an orphan; an undeclared assumption fails naming the case."
 automated = "Yes"
 evidence = "tests/test_trace_coherence.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-226]
@@ -2316,7 +2316,7 @@ tier = "Full"
 expected = "Satisfies SR-197's acceptance clause placing an assumption-only case in each phase of the requirements citing its assumptions."
 automated = "Yes"
 evidence = "tests/test_derive_stage.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-227]
@@ -2327,7 +2327,7 @@ tier = "Smoke"
 expected = "Satisfies SR-197's acceptance clause that wherever evidence is counted, assumption evidence is counted apart from requirement evidence."
 automated = "Yes"
 evidence = "tests/test_evidence_partition.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-228]
@@ -2338,7 +2338,7 @@ tier = "Smoke"
 expected = "Satisfies SR-198's acceptance: observation cases defined by the one marker; omissions reported without failing; a lifetime under seven days, an out-of-pair policy or a malformed sampling model fails naming the row; automated cases declare none."
 automated = "Yes"
 evidence = "tests/test_assumption_rules.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-229]
@@ -2349,7 +2349,7 @@ tier = "Smoke"
 expected = "Satisfies SR-199's acceptance clauses on the record's fields, the empty digest for a case declaring no inputs, and a partly written record never read as a result."
 automated = "Yes"
 evidence = "tests/test_observation_record.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-230]
@@ -2360,7 +2360,7 @@ tier = "Full"
 expected = "Satisfies SR-199's acceptance: a malformed or out-of-policy record refused when written; writing never edits the test case."
 automated = "Yes"
 evidence = "tests/test_observation_writer.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-231]
@@ -2371,7 +2371,7 @@ tier = "Full"
 expected = "Satisfies SR-199's acceptance clause that a malformed or out-of-policy record found on disk fails the check."
 automated = "Yes"
 evidence = "tests/test_observation_writer.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-232]
@@ -2382,7 +2382,7 @@ tier = "Smoke"
 expected = "Satisfies SR-200's acceptance: the four levels derived from current results alone; expiry and a changed judged state read specified, never falsified; automated results read from the tree-bound record under the cumulative tier contract; no cell sets the level; the approved-but-unevidenced advisory."
 automated = "Yes"
 evidence = "tests/test_assumption_rules.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-233]
@@ -2393,7 +2393,7 @@ tier = "Smoke"
 expected = "Satisfies SR-201's acceptance: the falsified assumption's requirements, needs and cases each listed once; a failing result reported without changing validity; no failure, no report."
 automated = "Yes"
 evidence = "tests/test_assumption_rules.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-234]
@@ -2404,7 +2404,7 @@ tier = "Full"
 expected = "Satisfies SR-202's acceptance: the acceptance bound to the texts at acceptance; any later change, even one re-approved on its own, reopens it naming the trigger; a reviewed re-acceptance or a current passing result restores it; time alone never reopens it."
 automated = "Yes"
 evidence = "tests/test_accepted_risk.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-235]
@@ -2415,7 +2415,7 @@ tier = "Full"
 expected = "Satisfies SR-203's acceptance: each assumption presented with its citing requirements, derived needs, landing crossings and parties, evidence level and falsifier; fidelity beside its surrogate; a batch without assumptions unchanged; generated, never hand-copied."
 automated = "Yes"
 evidence = "tests/test_trace_briefs.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-236]
@@ -2426,7 +2426,7 @@ tier = "Full"
 expected = "Satisfies SR-204's acceptance: no approved row, no effect; after the first approval, drafts hold the rung in the live reading only; no setting turns a tier on; one tier's status never answers for another in the same file."
 automated = "Yes"
 evidence = "tests/test_derive_stage.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-237]
@@ -2437,7 +2437,7 @@ tier = "Full"
 expected = "Satisfies SR-205's acceptance: with the gate on, coincident or fully maturity-backed requirements pass and every other case fails naming requirement, assumption and condition; with it off, advisory; one declared setting."
 automated = "Yes"
 evidence = "tests/test_assumption_gate.py; tests/test_check_harness.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-238]
@@ -2448,7 +2448,7 @@ tier = "Full"
 expected = "Satisfies SR-206's acceptance: current monitored or automated evidence, a sampled result under a declared sampling model, or an unreopened accepted risk passes; anything else fails naming the assumption; advisory with the gate off."
 automated = "Yes"
 evidence = "tests/test_assumption_gate.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-239]
@@ -2459,7 +2459,7 @@ tier = "Full"
 expected = "Satisfies SR-212's acceptance: a requirement passes only when at least one boundary interface reaches it and each reaching interface is coincident or bridged by an assumption it cites; an unreached one fails naming it, an invalid reaching interface fails naming both; other forms out of scope; advisory with the gate off."
 automated = "Yes"
 evidence = "tests/test_assumption_gate.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-240]
@@ -2470,7 +2470,7 @@ tier = "Full"
 expected = "Satisfies SR-207's acceptance: a drifted row outside the act refuses the refresh naming row and cell; adding it clears the refusal and is named in the record; no drift refreshes as before; every compared tier covered, including tiers sharing a file."
 automated = "Yes"
 evidence = "tests/test_baseline_snapshot.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-241]
@@ -2481,7 +2481,7 @@ tier = "Full"
 expected = "Satisfies SR-208's acceptance: a held status change is refused naming registry, row and rung where the loop commits and again at the merge, so it never lands on trunk; released rungs pass; an unreadable rung is held; a human's commit is not governed."
 automated = "Yes"
 evidence = "tests/test_integrate_admission.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-242]
@@ -2492,7 +2492,7 @@ tier = "Full"
 expected = "Satisfies SR-209's acceptance: every loop-started process carries the marker; a loop commit without a valid trailer is refused naming its subject; a commit from a process the loop did not start passes even while the loop runs; the same rule wherever the floor runs."
 automated = "Yes"
 evidence = "tests/test_loop_provenance.py; tests/test_pre_commit_hook.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-243]
@@ -2503,7 +2503,7 @@ tier = "Full"
 expected = "Satisfies SR-210's acceptance: each trailer-carrying commit changing a held status reported naming commit, row and rung; released rungs and commits without the trailer produce nothing; the rung judged against that commit's own dial."
 automated = "Yes"
 evidence = "tests/test_loop_provenance.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-244]
@@ -2514,7 +2514,7 @@ tier = "Full"
 expected = "Satisfies SR-211's acceptance: bridged, coincident and neither classified as stated; an undeclared assumption fails naming the interface; internal interfaces out of scope; no requirement reference on the interface."
 automated = "Yes"
 evidence = "tests/test_trace_interfaces.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-245]
@@ -2525,7 +2525,7 @@ tier = "Smoke"
 expected = "Satisfies SR-213's acceptance: a declared stakeholder passes, an undeclared one fails naming both, none is valid, no stakeholder list is vacuous."
 automated = "Yes"
 evidence = "tests/test_hats.py; tests/test_trace_hats.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-246]
@@ -2536,7 +2536,7 @@ tier = "Smoke"
 expected = "Satisfies SR-214's acceptance: declared perspectives pass, an undeclared one fails naming assumption and perspective, an empty cell reads as not recorded."
 automated = "Yes"
 evidence = "tests/test_assumption_rules.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-247]
@@ -2547,7 +2547,7 @@ tier = "Full"
 expected = "Satisfies SR-215's acceptance: a changed, expired or unjudged observation case gets exactly one open re-judge item naming it and what changed; an unchanged one gets none; an open item suppresses another; no model runs; a case with no inputs judged by expiry."
 automated = "Yes"
 evidence = "tests/test_rejudge.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-248]
@@ -2558,7 +2558,7 @@ tier = "Full"
 expected = "Satisfies SR-215's acceptance at both checkpoints: a work-item merge and release preparation each file one re-judge item per due case and never a second while one is open."
 automated = "Yes"
 evidence = "tests/test_rejudge.py; tests/test_intake.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-249]
@@ -2569,7 +2569,7 @@ tier = "Full"
 expected = "Satisfies SR-216's acceptance: each declared measure run over the touched parts against its own baseline; every worsening reported in one place naming measure, part and size; no measures reported once without failing; refusal only where a measure is declared gating."
 automated = "Yes"
 evidence = "tests/test_check_readability.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-250]
@@ -2580,7 +2580,7 @@ tier = "Full"
 expected = "Satisfies SR-217's acceptance: implementation landing and test-case approval read from history; each test case approved after the implementation reported naming both commits; a declared start scopes it; unreadable history never passes; order never read from a cell."
 automated = "Yes"
 evidence = "tests/test_check_test_first.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-251]
@@ -2591,5 +2591,5 @@ tier = "Full"
 expected = "Satisfies SR-218's acceptance: per need, each relied-on assumption once with validity, evidence level and citing requirements; coincident and unclassified shown; falsified and unevidenced marked in text; generated; no registry, no section."
 automated = "Yes"
 evidence = "tests/test_traj_views.py"
-status = "Drafted"
+status = "Approved"
 phase = 6

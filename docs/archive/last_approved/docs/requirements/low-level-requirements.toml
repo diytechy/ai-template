@@ -2233,7 +2233,7 @@ title = "The crossing's system cell: schema, carrier and template"
 module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/registries/external.template.toml"
 code_symbol = "SYSTEM_VALUES/OFFSPINE_KEYS/OFFSPINE_COLUMN/KEY"
 detail = "kitlib/spine.py declares SYSTEM_VALUES = (\"operation\", \"delivery\") once and adds `system` to OFFSPINE_KEYS[\"B-ID\"]; spine_carrier.OFFSPINE_COLUMN maps system -> System and migrate_carrier.KEY carries the exact inverse, so the carrier's reader and writer maps stay a bijection. The template's B-000 example row carries `system = \"operation\"`, so the dogfood key rule sees the key shipped on every leg. A live frame carries the cell on its crossings only in the reviewed commit that also updates the frame's pinning test, because the frame changes by ruling."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2243,7 +2243,7 @@ title = "Crossing system findings: an unknown value fails the frame check, a mis
 module = "project-trajectory/scripts/frame_rules.py;project-trajectory/scripts/trace.py"
 code_symbol = "frame_system_findings"
 detail = "frame_rules.py is a pure join module beside coherence.py for the frame and need-tier rules: it reads no file, and trace.analyze composes its producers, so trace.py grows only by the composition lines. frame_system_findings(bifs) returns (failures, advisories): a `system` value outside SYSTEM_VALUES is a failure naming the crossing and joins the frame class that fails --strict; a crossing carrying no value is an advisory naming it and joins the warn pipe. The frame schema tier stays warn-only, so the vocabulary is judged here and nowhere else. Vacuous when the frame declares no crossing."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2253,7 +2253,7 @@ title = "A requirement's derived system of interest, and the mixed-system adviso
 module = "project-trajectory/scripts/frame_rules.py"
 code_symbol = "sr_system_advisories/crossing_systems"
 detail = "crossing_systems(bifs) maps each crossing id to its declared system, leaving out a crossing with none. sr_system_advisories(srs, bifs) reads each requirement's Boundary-Refs through that map; a requirement whose mapped systems include both values is one advisory naming it and one crossing from each system. Crossings with no system contribute nothing, so the requirement is placed by its other crossings. Nothing is written back to a requirement cell: the placement is recomputed on every run."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2263,7 +2263,7 @@ title = "The need-frame gap advisory"
 module = "project-trajectory/scripts/assumption_rules.py"
 code_symbol = "need_frame_gap_advisories"
 detail = "need_frame_gap_advisories(needs, stks, srs, bifs, das) reads only Approved stakeholder rows. A need is in scope when the party of one of its approved stakeholders is itself the entity of an operation crossing; a party that only mediates for such an entity does not bring the need into scope. It is reported when none of the requirements naming it in SN-Refs references an operation crossing and none of the assumptions those requirements cite in DA-Refs lands on one. The module is a pure sibling of coherence.py: it joins rows, reads no file and is composed by trace.analyze into the warn pipe. Vacuous when the frame, the stakeholder list or every system value is absent."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2273,7 +2273,7 @@ title = "The stakeholder tier and the need's stakeholder references: schema, car
 module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/scripts/trace.py;project-trajectory/registries/stakeholder-needs.template.toml"
 code_symbol = "OFFSPINE_TABLE/OFFSPINE_KEYS/SPINE_TIER_KEYS/sn_all_ids/_offspine_ids"
 detail = "spine_carrier.OFFSPINE_TABLE gains \"STK-ID\": \"stakeholder\" and kitlib/spine.OFFSPINE_KEYS[\"STK-ID\"] = (name, description, party, status); the need tier's SPINE_TIER_KEYS[\"SN-ID\"] gains stakeholder_refs, mapped to Stakeholder-Refs and listed in migrate_carrier.REF_COLS, with party mapped to Party. The template ships an STK-000 row and an SN-000 row citing it. The STK space joins trace.WATERMARK_SPACES and _offspine_ids, with lines in the live watermark and its template, and the dogfood registry list gains the stakeholder table on the needs path with its floor. sn_all_ids scrapes need ids from the need tables only, so a need id quoted in a stakeholder's prose never joins the need universe."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2283,7 +2283,7 @@ title = "Stakeholder resolution and required-cell findings"
 module = "project-trajectory/scripts/frame_rules.py"
 code_symbol = "stakeholder_findings/STK_REQUIRED"
 detail = "stakeholder_findings(sn_needs, stks, exts) returns (failures, advisories). A stakeholder missing any STK_REQUIRED cell (name, description, status) or carrying a status outside the spine's closed vocabulary, a need's stakeholder_refs entry, split on ';', naming an undeclared STK id, and a stakeholder party naming an undeclared EXT id are failures, composed into the frame class so they fail wherever the frame check runs, not only under --strict-schema. A need naming no stakeholder is an advisory. Stakeholder rows are loaded by their own id column, so their status never mixes with the needs' draft state. Vacuous when the needs file declares no stakeholder table."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2293,7 +2293,7 @@ title = "The need's source pointer: cell, resolution and its place outside the p
 module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/scripts/frame_rules.py;project-trajectory/scripts/trace.py;project-trajectory/scripts/trace_text.py"
 code_symbol = "need_source_findings/PROVENANCE_ADVISORY_COLS"
 detail = "The need tier gains `source`, a list of repository-relative targets written path#anchor and mapped to Source. trace.main reads each named document's anchors once, through the kit's one markdown anchor reader, and passes them to frame_rules.need_source_findings, which fails --strict naming the need and the entry when the file does not exist or the anchor is not among its anchors; entries split on ';' only, because a target never holds one. The cell is left out of trace_text's scanned need cells (PROVENANCE_ADVISORY_COLS keeps need, why and acceptance only) and named in the pointer-column comment beside Module and Evidence; the kit's written provenance rule lists it among the pointer columns too. The need-form check keeps scanning the need cell alone."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2303,7 +2303,7 @@ title = "The assumptions registry: tiers, schema, carrier, template and scaffold
 module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/scripts/bootstrap.py;project-trajectory/registries/assumptions.template.toml"
 code_symbol = "OFFSPINE_TABLE/OFFSPINE_KEYS/MAPPING"
 detail = "A new registry at docs/requirements/assumptions.toml with two tiers keyed by their own id columns: OFFSPINE_TABLE[\"DA-ID\"] = \"assumption\" with keys effect_at (a list of crossing ids), assumption, holds_when, obstacle, falsifier, accepted_risk, realized_by, obstacle_hats, status and standing; OFFSPINE_TABLE[\"SUR-ID\"] = \"surrogate\" with name, emulates (a list of entity ids), description and status. List keys join migrate_carrier.REF_COLS. The template carries a DA-000 row landing on B-000 and a SUR-000 row emulating EXT-000, every key present so the dogfood rule sees each one shipped; bootstrap.MAPPING scaffolds it for every profile that scaffolds the frame, and its docstring list names it. The dogfood registry list gains both tiers on the one path with their floors."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2313,7 +2313,7 @@ title = "Assumption row findings: required cells, vocabularies, landing resoluti
 module = "project-trajectory/scripts/assumption_rules.py;project-trajectory/scripts/trace.py"
 code_symbol = "assumption_row_findings/STANDING_VALUES/DA_REQUIRED"
 detail = "assumption_rules.assumption_row_findings(das, bifs) fails, in the frame class composed by trace.analyze, on an assumption missing any DA_REQUIRED cell (effect_at, assumption, holds_when, obstacle, status, standing), on a status outside the spine's closed vocabulary or a standing outside STANDING_VALUES = (\"active\", \"falsified\"), and on an effect_at entry naming an undeclared crossing. It runs outside --strict-schema, which only reaches the Impl rung, so the rows fail wherever the frame check runs. DA and SUR join trace.WATERMARK_SPACES and _offspine_ids, with lines in the live watermark and its template, so a spent id is never issued again. Vacuous when no frame is declared or the registry holds only example rows."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2323,7 +2323,7 @@ title = "Assumptions and surrogates in the acceptance record, inside the approva
 module = "project-trajectory/scripts/acceptance_record.py;project-trajectory/scripts/baseline_snapshot.py"
 code_symbol = "SNAPSHOTTED/SNAPSHOT_TIERS/APPROVAL_ACT_CSVS"
 detail = "baseline_snapshot.SNAPSHOTTED gains the assumptions registry and SNAPSHOT_TIERS its two (path, id column) pairs, so an approved assumption or surrogate is compared with its recorded copy like every other recorded row. acceptance_record.APPROVAL_ACT_CSVS gains the same pairs: the registry sits inside the approval act, so a lane's merge is refused if its delta approves an assumption, and the act that does approve one rides its own reviewed commit. The first copy is written only in that approval commit, never seeded earlier, so the unanchored-record rule never reads the registry as missing from its record."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2333,7 +2333,7 @@ title = "Surrogate findings: required cells, emulated parties, fidelity naming, 
 module = "project-trajectory/scripts/assumption_rules.py"
 code_symbol = "surrogate_findings/SUR_REQUIRED"
 detail = "surrogate_findings(surs, das, exts, bifs) returns (failures, advisories). A surrogate missing any SUR_REQUIRED cell (name, emulates, description, status), with an empty emulates list, with a status outside the closed vocabulary, or with an emulates entry naming an undeclared entity is a failure; so is an assumption whose realized_by names an undeclared surrogate, and a fidelity assumption none of whose effect_at crossings belongs to an entity its surrogate emulates. A surrogate no assumption names in realized_by is an advisory. Component and interface ids are not accepted in emulates, because only entity ids resolve there."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2343,7 +2343,7 @@ title = "The requirement's assumption citations and coincident waiver: schema, c
 module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/registries/system-requirements.template.toml"
 code_symbol = "SPINE_TIER_KEYS/SPINE_COLUMN/KEY"
 detail = "The requirement tier gains da_refs (a list, mapped to DA-Refs and listed in migrate_carrier.REF_COLS) and coincident (free text, mapped to Coincident). coincident is declared once in the column map and shared with the interface tier, as the one-key-one-column rule requires. The template's SR-000 row carries both keys so the dogfood rule sees them shipped."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2353,7 +2353,7 @@ title = "The requirement classification advisories"
 module = "project-trajectory/scripts/assumption_rules.py"
 code_symbol = "sr_classification_advisories/da_citing_srs"
 detail = "sr_classification_advisories(srs, das) returns (failures, advisories). A non-empty DA-Refs whose every entry is a declared assumption classifies the requirement bridged; a non-empty Coincident classifies it coincident; neither is an advisory naming it unclassified; both is an advisory naming it; an entry naming an undeclared assumption is a failure. An empty or whitespace-only list counts as absent. da_citing_srs(srs) returns {DA id: [SR ids]}, the one derivation of an assumption's citing requirements, from which its served needs are read through SN-Refs; nothing records needs on the assumption. Vacuous when the assumptions registry is absent."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2363,7 +2363,7 @@ title = "The requirement's form cell and its findings"
 module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/scripts/assumption_rules.py;project-trajectory/registries/system-requirements.template.toml"
 code_symbol = "FORM_VALUES/sr_form_findings"
 detail = "kitlib/spine.py declares FORM_VALUES = (\"interface\", \"assumption\", \"cross-cutting\") and the requirement tier gains `form`, mapped to Form and shipped on SR-000. assumption_rules.sr_form_findings(srs) makes a value outside FORM_VALUES a failure composed into the always-on integrity class, naming the row, and a requirement with no form an advisory naming it. Vacuous when the assumptions registry is absent, so a repo that never adopts the tier is never asked for a form."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2373,7 +2373,7 @@ title = "Each new cell's class: traced or approved content"
 module = "project-trajectory/scripts/acceptance_record.py"
 code_symbol = "SPINE_TRACED_CELLS/SPINE_APPROVED_CELLS/OFFSPINE_TRACED_CELLS"
 detail = "SPINE_TRACED_CELLS gains the pointers: DA-Refs on requirements, Assumption-Refs on test cases, and Stakeholder-Refs and Source on needs. SPINE_APPROVED_CELLS gains the statements: Coincident and Form on requirements, and Inputs, MaxAge, Sampling, SampleSize and AcceptanceRule on test cases. A new OFFSPINE_TRACED_CELLS gives off-spine registries the split they lack today, where every cell counts as approved: BridgedBy on interfaces and ObstacleHats on assumptions are traced. Every other new off-spine cell stays approved content — an interface's Coincident, a stakeholder's name, description and party, a crossing's System, an entity's Mediates, and every other assumption and surrogate cell — because each states something the row asserts rather than pointing at another row. The registry machinery reference's traced-versus-approved table mirrors these classes, and the staged-trajectory test that requires every live and template column to be classified covers them."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2383,7 +2383,7 @@ title = "The mediates cell on frame entities"
 module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/scripts/frame_rules.py;project-trajectory/registries/external.template.toml"
 code_symbol = "mediation_findings"
 detail = "The entity tier gains an optional `mediates`, one entity id, mapped to Mediates and shipped on EXT-000. frame_rules.mediation_findings(exts) fails, in the frame class, when it names an undeclared entity or the entity itself. The cell grants no authority and moves no sign-off: its one reader is the reach check. It is approved content of the entity row, like the frame's other cells."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2393,7 +2393,7 @@ title = "The reach check, need by need"
 module = "project-trajectory/scripts/assumption_rules.py"
 code_symbol = "assumption_reach_advisories/reaching_parties"
 detail = "reaching_parties(needs, stks, exts) returns, per need, the parties of its Approved stakeholders plus every entity whose `mediates` names one of them. For each assumption cited by at least one requirement, assumption_reach_advisories derives its served needs through da_citing_srs and SN-Refs and evaluates every (served need, landing crossing) pair: a served need that no landing crossing reaches is reported naming the assumption and the need, and a landing crossing that reaches none of the served needs is reported naming the assumption and the crossing. A fidelity assumption, one with realized_by, is judged against its surrogate's emulates list instead of the needs' parties. A served need with no party-bearing approved stakeholder is reported as unreachable. Uncited assumptions are skipped."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2403,7 +2403,7 @@ title = "Uncited-assumption and missing-falsifier advisories"
 module = "project-trajectory/scripts/assumption_rules.py"
 code_symbol = "uncited_assumption_advisories/no_falsifier_advisories"
 detail = "uncited_assumption_advisories(das, srs) names each assumption absent from da_citing_srs; no_falsifier_advisories(das) names each assumption whose falsifier is empty. Both read Drafted and Approved rows alike and return advisories only, composed into the warn pipe."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2413,7 +2413,7 @@ title = "The test case's assumption references and the conditional Verifies"
 module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/scripts/trace.py;project-trajectory/scripts/coherence.py;project-trajectory/registries/test-cases.template.toml"
 code_symbol = "tc_citation_findings/_tc_verifies_required"
 detail = "The test-case tier gains assumption_refs, a list mapped to Assumption-Refs, listed in REF_COLS and shipped on TC-000. Verifies leaves REQUIRED_FIELDS and becomes conditionally required through _tc_verifies_required, beside the existing rule that an automated case names its evidence: it is required unless Assumption-Refs is non-empty. coherence.tc_citation_findings takes the declared assumption ids and reports a case as verifying nothing only when both cells are empty; an Assumption-Refs entry naming an undeclared assumption is a failure there."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2423,7 +2423,7 @@ title = "Assumption-only test cases join the phases of the requirements citing t
 module = "project-trajectory/scripts/derive_stage.py"
 code_symbol = "_phase_groups/_ATTRIBUTED_ROWS"
 detail = "_phase_groups(srs, llrs, tcs, da_srs=None) takes the da_citing_srs map; a test case with Assumption-Refs joins each phase label of every requirement citing any assumption it names, so one case can sit in several phases, as a case citing several requirements already can. _ATTRIBUTED_ROWS adds Assumption-Refs to the test case's attributed cells, so a change to it is attributed to a phase like a change to Verifies."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2433,7 +2433,7 @@ title = "Assumption evidence counted apart in the forest, the census and the rep
 module = "project-trajectory/scripts/trace.py;project-trajectory/scripts/census.py"
 code_symbol = "assumption_evidence_rows/build_forest/red_tc_census"
 detail = "assumption_evidence_rows(tcs) partitions test cases into requirement evidence and assumption evidence; a case citing both is counted once in each. build_forest renders assumption-only cases under an 'assumption evidence' group instead of the verifying-nothing bucket; census.red_tc_census counts them apart; the report's metric block gains an assumption-evidence count beside the requirement-evidence count. The verified-requirement join, the matrix and the triangle rule keep reading Verifies alone."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2443,7 +2443,7 @@ title = "The observation test case's declaration cells"
 module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/registries/test-cases.template.toml"
 code_symbol = "SAMPLING_VALUES/MAX_AGE_FLOOR_DAYS/SPINE_TIER_KEYS/SPINE_COLUMN"
 detail = "kitlib/spine.py declares SAMPLING_VALUES = (\"sampled\", \"monitored\") and MAX_AGE_FLOOR_DAYS = 7. The test-case tier gains inputs (a list of repository paths or registry row ids the judgment reads, mapped to Inputs and listed in REF_COLS), max_age (whole days, mapped to MaxAge and listed in INT_COLS), sampling (mapped to Sampling), and the sampling model as two flat cells, since the carrier refuses nested tables: sample_size (a whole number, mapped to SampleSize and listed in INT_COLS) and acceptance_rule (text, mapped to AcceptanceRule). TC-000 ships every key."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2453,7 +2453,7 @@ title = "Which test case is an observation test case, and its declaration findin
 module = "project-trajectory/scripts/assumption_rules.py"
 code_symbol = "is_observation_tc/observation_tc_findings/sampling_model_declared"
 detail = "is_observation_tc(tc) reads the Automated cell alone: a case whose Automated reads No is an observation test case, the one marker covering every judgment the harness cannot rerun, since the Level and Verification cells disagree across rows. observation_tc_findings(tcs) returns (failures, advisories): an observation case with no inputs, no max_age, or, when it carries Assumption-Refs, no sampling policy is an advisory naming the row; a max_age below MAX_AGE_FLOOR_DAYS or not a whole number, a sampling value outside SAMPLING_VALUES, a sample_size that is not a whole number of at least one, an acceptance_rule that is empty or whitespace, and one of the two model cells without the other, are failures composed into the always-on integrity class naming the row; an automated case carrying any of these cells is an advisory. sampling_model_declared(tc) is true only for a sampled case carrying both model cells valid; whether the rule justifies the claim is judged when the case is approved."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2465,7 +2465,7 @@ module = "project-trajectory/scripts/kitlib/observation.py"
 code_symbol = "OBSERVATIONS_DIR/FIELDS/OUTCOMES/parse/read_records/latest/write_atomic/parse_utc"
 detail = "A kitlib module that imports no sibling script, in the pattern of kitlib/evidence.py. One TOML file per record under docs/test/observations/, named <TC id>.<observed-at in UTC, colon-free>.toml, so records written on different lanes never collide. FIELDS = (tc, outcome, observed_at, provenance, expires, judged); OUTCOMES = (pass, fail); `judged` is the inputs digest and is the empty string for a test case declaring no inputs. parse_utc accepts only the canonical form YYYY-MM-DDTHH:MM:SSZ. parse(text) returns None unless every field is present, observed_at and expires parse through parse_utc, expires is not earlier than observed_at, provenance is non-empty after trimming, and outcome is in OUTCOMES, so a truncated or hand-mangled file is never a result. read_records(root) skips any name with a leading dot, which is the temporary name write_atomic writes before os.replace; write_atomic retries a Windows PermissionError on the replace a bounded number of times, then raises. latest(records, tc) returns the newest record by observed_at."
 rationale = "The record's atomicity and the Windows replace behaviour are this row's own: a crash mid-write must leave no readable half-record, and a replace can be refused while another process holds the target on Windows, which the requirement states nowhere."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2475,7 +2475,7 @@ title = "The observation writer"
 module = "project-trajectory/scripts/record_observation.py;project-trajectory/scripts/bootstrap.py"
 code_symbol = "build_observation/record_refusal/inputs_digest/main"
 detail = "record_observation.py --tc TC-### --outcome pass|fail --by <provenance> [--expires <UTC>] resolves the test case from the registry, refuses an undeclared test case or one that is not an observation test case, an outcome outside OUTCOMES, a missing provenance, and an expiry later than observed_at plus the case's max_age; with no --expires it writes observed_at plus max_age. inputs_digest(root, inputs) folds each declared input in declared order as name, NUL, SHA-256 of its LF-normalized bytes, the fold kitlib/stage uses; a registry row id is digested as that row's cells as the carrier reads them. The writer calls write_atomic and never opens the test-case registry for writing. bootstrap.MAPPING ships the script and the kitlib module; the directory is not a declared stage input, so recording a sample never makes the stage's fingerprint or the release evidence stale."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2485,7 +2485,7 @@ title = "Records found on disk are checked"
 module = "project-trajectory/scripts/assumption_rules.py;project-trajectory/scripts/trace.py"
 code_symbol = "observation_record_findings"
 detail = "trace.main reads the records once after analyze, which stays free of file reads, and observation_record_findings(records, raw_files, tcs) fails --strict naming the file for a file that does not parse by kitlib.observation.parse, including a non-canonical observed_at or expires, an expiry before the observation and an empty provenance; for a record naming an undeclared or automated test case; and for an expiry later than observed_at plus the case's max_age. A file with a leading-dot name is never read."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2495,7 +2495,7 @@ title = "The evidence level, derived from current results"
 module = "project-trajectory/scripts/assumption_rules.py"
 code_symbol = "evidence_level/result_current/tier_covers/EVIDENCE_LEVELS/LEVEL_ASSUMED/LEVEL_SPECIFIED/LEVEL_MONITORED/LEVEL_SAMPLED"
 detail = "evidence_level(da, tcs, records, suite_proof, digests) returns one of EVIDENCE_LEVELS. No case citing the assumption in Assumption-Refs gives assumed. The harness's evidence record is whole-suite and names no case, so an automated case is current and passing only when that record holds for this tree, its outcome is a pass, and tier_covers(record tier, case Tier) holds under the kit's cumulative tier contract: a full record runs Smoke and Full cases, and a release or all record runs every case. A record that fails, is bound to another tree, or runs a narrower tier gives specified. An observation case is current when its latest record passes, has not expired, and its judged digest equals the digest of the case's declared inputs now; a case declaring no inputs is judged by expiry alone. monitored comes from a current passing automated or monitored case, sampled from a current passing sampled one, and anything else with an evidencing case is specified. An expired or stale record lowers the level to specified and never sets the standing cell. An approved, active assumption reading assumed or specified is an advisory naming it."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2505,7 +2505,7 @@ title = "The falsification worklist"
 module = "project-trajectory/scripts/assumption_rules.py"
 code_symbol = "falsification_worklist"
 detail = "falsification_worklist(das, srs, tcs, records) takes each assumption whose standing reads falsified, or whose latest observation record for any evidencing case failed, and lists the requirements citing it (da_citing_srs), the needs those requirements name, and the test cases citing it in Assumption-Refs, each row once. A failing record is reported as falsification evidence and never writes the standing cell. The list is advisory; with the gate enabled, a falsified assumption fails through the boundary gate's not-active condition instead, so it is never counted twice."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2515,7 +2515,7 @@ title = "An accepted risk bound to the approval act that accepted it"
 module = "project-trajectory/scripts/assumption_rules.py;project-trajectory/scripts/baseline_snapshot.py"
 code_symbol = "accepted_risk_state/risk_acceptance_act"
 detail = "risk_acceptance_act(root, da_id) is the latest commit whose approval-act record names the assumption, as approved or re-attested, while its accepted_risk is non-empty; re-accepting a risk is re-attesting the row in an act, so it moves the anchor even when no byte of the row changes. Only where no act names the row does it fall back to the first commit at which accepted_risk took its current value. accepted_risk_state compares, at that commit and now, the assumption's cells other than status and accepted_risk, and the need and acceptance cells of each need it served then, derived through that commit's requirements; any difference reads the assumption unproven and is an advisory naming the trigger, and a later re-approval of a changed need does not clear it, because the comparison is with the acceptance act, not the latest recorded copy. A failing observation record added in a commit that is not an ancestor of the acceptance act also reads it unproven, ordered by commit ancestry rather than by clock. Time is never read. History too shallow to find the act reads unproven with the reason stated."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2525,7 +2525,7 @@ title = "The assumption section of the approval brief"
 module = "project-trajectory/scripts/assumption_rules.py;project-trajectory/scripts/trace.py"
 code_symbol = "assumption_chain/assumption_brief_lines"
 detail = "assumption_rules.assumption_chain(da_id, reg) gathers an assumption's cells, its citing requirements with their text, the needs derived through them, each landing crossing with its entity, its evidencing cases with the current evidence level, its falsifier, and, for a fidelity assumption, its surrogate with the emulated entities. trace.assumption_brief_lines renders it before reattest_lines' early return, citing requirements and needs first. --approve accepts DA and SUR ids and a reserved `assumptions` scope; approval_check counts an assumption owed approval as an open window, so a batch holding only assumptions is rendered and freshness-checked. A batch with none renders byte-identically to the stored no-assumption golden brief."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2535,7 +2535,7 @@ title = "The stage reads the assumption, surrogate and stakeholder tiers from th
 module = "project-trajectory/scripts/spine_rules.py;project-trajectory/scripts/derive_stage.py;project-trajectory/scripts/kitlib/stage.py"
 code_symbol = "tier_active/assumption_incomplete/stakeholders_incomplete/DA_MATURITY/SUR_MATURITY/STK_MATURITY"
 detail = "load_spine loads each tier by its own id column, so stakeholder rows never share the needs' draft set, and returns das, surs and stks. tier_active(rows) is true once any row reads Approved; no setting exists. spine_stage gains das, surs and stks (keyword, default empty): at the needs check, an active stakeholder tier with a Drafted row holds DevStg-Needs; at the boundary check, an active assumption or surrogate tier with a Drafted row holds DevStg-Boundary. A tier with no approved row is not active and holds nothing. derive_stage's settled branch filters the three tiers' drafts as it does every tier's, and counts them in `drafted`. kitlib/stage.DECLARED_INPUTS gains the assumptions registry; the needs file is already declared. The maturity tables equal trace's enum vocabulary, as the approval-level test pins for the existing ones."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2545,7 +2545,7 @@ title = "The boundary half of the assumption gate"
 module = "project-trajectory/scripts/assumption_rules.py;project-trajectory/scripts/check.py;project-trajectory/scripts/kitlib/config.py"
 code_symbol = "boundary_gate_findings/assumption_gate_enabled/BUILTIN_STEP_NAMES"
 detail = "boundary_gate_findings(srs, das, surs, reach, have_frame) returns nothing when have_frame is false. With a frame, it fails each requirement with no Coincident whose DA-Refs is empty, or that cites an assumption which is not Approved, whose standing is not active, which the reach check reports, or whose realized_by surrogate is not Approved; each finding names the requirement, the assumption and the unmet condition. A frame with no assumptions registry therefore fails every requirement not recorded coincident, since enabling the gate asks for the argument. assumption_gate_enabled(docs) reads [checks] assumption_gate from the policy file, where an absent or unreadable key reads off. check.py gains a built-in step `assumption-gate` at the DevStg-Boundary threshold, named in BUILTIN_STEP_NAMES; with the gate off the same findings print as advisories and the step passes. The findings never enter the stage derivation."
-status = "Drafted"
+status = "Approved"
 component = "CMP-007"
 phase = 6
 
@@ -2555,7 +2555,7 @@ title = "The release half of the assumption gate"
 module = "project-trajectory/scripts/assumption_rules.py;project-trajectory/scripts/check.py"
 code_symbol = "release_gate_findings"
 detail = "release_gate_findings(das, srs, levels, risks, tcs) fails each assumption cited by at least one requirement whose evidence level is neither monitored nor sampled, or is sampled while none of its current sampled cases passes sampling_model_declared, and whose accepted risk is empty or reopened. check.py gains a built-in step `assumption-evidence` at the DevStg-Release threshold, gated by the same setting and reading the records written after the harness ran. The stage's single release producer, the harness evidence verdict, is left untouched."
-status = "Drafted"
+status = "Approved"
 component = "CMP-007"
 phase = 6
 
@@ -2565,7 +2565,7 @@ title = "The architecture half: interface-form requirements reached and bridged"
 module = "project-trajectory/scripts/assumption_rules.py;project-trajectory/scripts/check.py"
 code_symbol = "module_srs/if_reached_srs/interface_form_gate_findings"
 detail = "module_srs(llrs) maps each normalized design Module to the requirements its rows name in SR-Refs, with norm_module as the one normalizer. if_reached_srs(ifs, llrs) maps each boundary interface, one carrying a from- or to-external tie-back, through its owner to those requirements. interface_form_gate_findings judges each requirement whose form is interface against every boundary interface reaching it: one reached by none fails naming the requirement and stating that no boundary interface reaches it; each reaching interface with no Coincident whose BridgedBy shares no assumption with the requirement's DA-Refs fails naming the requirement and that interface, so one valid interface never excuses another invalid one. check.py gains a built-in step `interface-allocation` at the DevStg-Arch threshold, gated by the same setting. The relation is derived here and never recorded on an interface, and the stage fold gains no interface parameter."
-status = "Drafted"
+status = "Approved"
 component = "CMP-007"
 phase = 6
 
@@ -2575,7 +2575,7 @@ title = "Row-level refusal in the snapshot refresh"
 module = "project-trajectory/scripts/baseline_snapshot.py;project-trajectory/scripts/intake.py"
 code_symbol = "refresh_refusal/_unattested_rows/parse_reattests"
 detail = "refresh_refusal computes, per registry, the absorbed rows (approved text drifted from the recorded copy) minus the rows the act flips minus the rows named by --reattests, and refuses while that set is non-empty; naming a registry in --approves no longer clears its other rows. _refusal_text lists every such row and cell, with no cap. parse_reattests reads comma-separated row ids, and intake.py snapshot gains --reattests. The act's record stamps the re-attested ids beside the approvals. The two snapshot tests that pin the old any-flip-authorizes-the-file behaviour change with it, since that behaviour is the one this row removes. The rule covers every tier in SNAPSHOT_TIERS, including the frame's three tiers and the assumptions registry's two; the needs file is outside SNAPSHOT_TIERS and stays outside."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2585,7 +2585,7 @@ title = "Refusing a loop-made status change on a held off-spine registry, at eve
 module = "project-trajectory/scripts/acceptance_record.py;project-trajectory/scripts/integrate.py;project-trajectory/scripts/intake.py;project-trajectory/scripts/handback.py;project-trajectory/scripts/agent_common.py;project-trajectory/scripts/check.py"
 code_symbol = "staged_status_moves/held_status_refusal/_held_status_refusal/_claim_locked/_bookkeeping_commit/_commit_residue_as_is/commit_telemetry/APPROVAL_RUNGS"
 detail = "staged_status_moves(root, base, head) reports every change to a status cell of an off-spine registry between two trees or between HEAD and the index, rows added or removed with a status included. held_status_refusal(dial, moves) refuses each move whose registry rung the dial holds, per agent_common.APPROVAL_RUNGS, which gains the assumptions registry at DevStg-Boundary; an unmapped registry reads held. Every loop writer runs it on the exact tree it is about to write, immediately before its commit or commit-tree: integrate._claim_locked, intake._bookkeeping_commit, every handback commit including _commit_residue_as_is, and agent_common.commit_telemetry. integrate._merge_refusal runs it again over the lane's whole range after the approval-act refusal, which also catches the commits an AI session makes itself. A check step `held-status` in the pre-commit failing set, armed only when the loop marker is set, covers a session commit made through the hook. A person's commit, made with no loop marker, is not judged."
-status = "Drafted"
+status = "Approved"
 component = "CMP-008"
 phase = 6
 
@@ -2595,7 +2595,7 @@ title = "The loop provenance trailer and the loop marker"
 module = "project-trajectory/scripts/kitlib/provenance.py;project-trajectory/scripts/dispatch.py;project-trajectory/scripts/agent_loop.py"
 code_symbol = "LOOP_TRAILER/LOOP_SESSION_ENV/format_loop_trailer/parse_loop_trailer/loop_trailer_refusal"
 detail = "kitlib/provenance.py, importing no sibling script, declares LOOP_TRAILER = \"Loop-Session\" and LOOP_SESSION_ENV = \"KIT_LOOP_SESSION\". format_loop_trailer(session) renders the trailer line; parse_loop_trailer(message) returns the last trailer's session or None; loop_trailer_refusal(message, session) names the commit subject when the trailer is missing, malformed, or names another session. dispatch.run and agent_loop.main outside interactive mode set the marker in their own process environment once per run, never in a launcher script, so child sessions inherit it and a person's shell does not."
-status = "Drafted"
+status = "Approved"
 component = "CMP-008"
 phase = 6
 
@@ -2605,7 +2605,7 @@ title = "Every loop writer carries the trailer, and the floor checks it"
 module = "project-trajectory/scripts/integrate.py;project-trajectory/scripts/intake.py;project-trajectory/scripts/handback.py;project-trajectory/scripts/agent_common.py;project-trajectory/hooks/commit-msg"
 code_symbol = "_claim_locked/_bookkeeping_commit/commit_telemetry/_loop_trailer_refusal"
 detail = "The claim, refresh, merge, bookkeeping, handback-close and telemetry writers append format_loop_trailer to their messages. The commit-msg hook runs loop_trailer_refusal when the loop marker is set. integrate._loop_trailer_refusal, in the merge ladder, re-checks every commit in the lane's range, since plumbing commits and --no-verify commits never reach the hook and hooks are opt-in per checkout. commit_telemetry reports a refused telemetry commit instead of swallowing it."
-status = "Drafted"
+status = "Approved"
 component = "CMP-008"
 phase = 6
 
@@ -2615,7 +2615,7 @@ title = "Loop commits that changed a held status, found in history"
 module = "project-trajectory/scripts/kitlib/authority.py;project-trajectory/scripts/acceptance_record.py;project-trajectory/scripts/check_trajectory.py"
 code_symbol = "dial_from_config/holds_under/committed_status_moves/loop_held_status_findings"
 detail = "kitlib/authority.py holds a pure dial comparison: dial_from_config(table) reads human_approval_through from a parsed policy table, an absent or legacy value reading as the most-held rung with no printed warning; holds_under(dial, rung) compares on the ladder. APPROVAL_RUNGS and the spine rung map move there and agent_common re-exports them. acceptance_record.committed_status_moves(root, rev) lists status moves between rev and its first parent across the spine and off-spine registries. check_trajectory.loop_held_status_findings visits every non-merge commit reachable from trunk, lane commits included, once each; a merge commit is skipped because its changes are those of the commits it merges, each visited on its own, and a root commit is diffed against the empty tree. For each commit carrying the loop trailer it judges the moves against the dial in that commit's own policy file; each hit is one advisory naming the commit, the row and the rung."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2625,7 +2625,7 @@ title = "An interface's bridging assumptions and coincident waiver"
 module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/scripts/assumption_rules.py;project-trajectory/registries/interfaces.template.toml"
 code_symbol = "interface_bridge_findings"
 detail = "The interface tier gains bridged_by (a list of assumption ids, mapped to BridgedBy and listed in REF_COLS) and the shared coincident cell; IF-000 ships both. assumption_rules.interface_bridge_findings(ifs, das) reads only boundary interfaces, those with a from- or to-external tie-back: a BridgedBy entry naming an undeclared assumption is a failure composed into the interface class; one with neither cell is an advisory naming it. No requirement reference is added to the interface row: the requirement a seam answers stays derived through its owner."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2635,7 +2635,7 @@ title = "A review perspective's speaks_for, validated and resolved"
 module = "project-trajectory/scripts/hats.py;project-trajectory/scripts/trace.py;project-trajectory/registries/hats.template.toml"
 code_symbol = "_validate_speaks_for/load_hat_names/hat_findings"
 detail = "hats.OPTIONAL_KEYS gains speaks_for, validated by _validate_speaks_for as one STK id. trace cannot import hats, so load_hat_names also returns the speaks_for map, and hat_findings reports a speaks_for naming an undeclared stakeholder in the dangling-hat class that fails --strict, naming the perspective and the stakeholder. The template shows the key on one commented example."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2645,7 +2645,7 @@ title = "An assumption's obstacle perspectives, resolved against the roster"
 module = "project-trajectory/scripts/assumption_rules.py"
 code_symbol = "obstacle_hat_findings"
 detail = "obstacle_hat_findings(das, hat_names) reads each assumption's obstacle_hats, a list kept distinct from hat_refs because hat_refs records attribution while this records which perspective raised the obstacle. trace passes the roster's names, read by load_hat_names, or an empty set when the project has no roster. A name absent from the roster, including every name when there is no roster, is a failure composed into the dangling-hat class naming the assumption and the name; an empty cell is valid and produces nothing."
-status = "Drafted"
+status = "Approved"
 component = "CMP-006"
 phase = 6
 
@@ -2655,7 +2655,7 @@ title = "The checkpoint re-judge decision"
 module = "project-trajectory/scripts/rejudge.py"
 code_symbol = "observation_test_cases/checkpoint_drafts/_open_rejudge"
 detail = "A pure sibling of consolidate.py that intake imports. observation_test_cases(root, rev) reads the observation cases at a revision. checkpoint_drafts(root, rev, checkpoint) digests each case's declared inputs as read from git at that revision, not from the working tree, and drafts one re-judge work item for each case whose digest differs from its latest record's judged digest, whose latest record has expired, or which has no record. A case declaring no inputs is judged by expiry and absence alone. _open_rejudge(rows, tc) finds an open re-judge item for the case by its typed cells, never by title, because a title match would also find the closed items in the archive. A draft names the case and what changed, and its title carries the case id and the digest prefix. No model runs."
-status = "Drafted"
+status = "Approved"
 component = "CMP-008"
 phase = 6
 
@@ -2665,7 +2665,7 @@ title = "The merge and release checkpoints file the re-judge items"
 module = "project-trajectory/scripts/intake.py;project-trajectory/scripts/gen_release_checklist.py"
 code_symbol = "intake_after_merge/mint_rejudge/_cmd_rejudge/_rejudge_checklist_line"
 detail = "intake_after_merge adds rejudge.checkpoint_drafts(root, after, \"merge\") to its drafts inside the held merge slot, so the check runs once per merged work item. mint_rejudge(root, rev, checkpoint) files them through _mint, and `intake.py rejudge --checkpoint release` is the release-preparation entry. Release preparation is a person's act, so the release checklist, a view that may not import intake, carries a required item from _rejudge_checklist_line naming that command and the count of due observation cases, read through rejudge's pure decision. The minted row's brief and verdict entries are added where its kind requires them. Filing goes through the mint path's staging, which has to stage and restore only what it wrote before this runs in a checkout holding uncommitted edits."
-status = "Drafted"
+status = "Approved"
 component = "CMP-008"
 phase = 6
 
@@ -2675,7 +2675,7 @@ title = "The per-change readability report"
 module = "project-trajectory/scripts/check_readability.py;project-trajectory/scripts/bootstrap.py"
 code_symbol = "MEASURES/changed_parts/worsened_findings/main"
 detail = "check_readability.py reads the declared measures from a [readability] section of the stack profile, a list of measure names. MEASURES maps each name to an adapter that runs that measure's own comparison over the changed parts only; the complexity adapter reuses check_complexity's census, baseline reader and comparison rather than copying them. A measure cannot join until it can name the part it worsened. changed_parts reads the change as the index against HEAD, or merge-base to tip on a claimed branch. worsened_findings prints one line per worsening naming the measure, the part and the delta; a profile declaring no measure prints one line saying nothing is measured. The exit is nonzero only for a worsening in a measure the profile declares gating. A [step:readability] runs it, bootstrap.MAPPING ships it, and the stack-profile contract names the section."
-status = "Drafted"
+status = "Approved"
 component = "CMP-007"
 phase = 6
 
@@ -2685,7 +2685,7 @@ title = "The test-first order, read from history"
 module = "project-trajectory/scripts/check_test_first.py;project-trajectory/scripts/acceptance_record.py;project-trajectory/scripts/kitlib/config.py;project-trajectory/scripts/check.py"
 code_symbol = "first_approval_commits/first_implementation_commits/history_unreadable/test_first_findings/BUILTIN_STEP_NAMES"
 detail = "The start is [checks] test_first_since, a commit id, read by a string reader beside process_check. first_approval_commits walks trunk's first-parent history oldest first, from the start or from the root when none is declared, and for each commit touching the test-case or requirement registry parses the registry on both sides through acceptance_record's row reader, recording each row's first transition to Approved; a row born Approved counts at its birth. A count-based pickaxe is not used, because a commit approving one row while withdrawing another nets to zero. first_implementation_commits finds, for each requirement and its design rows, the earliest first-parent commit adding an `Implements:` line naming one of them, read with the back-link grammar gen_arch_map defines. test_first_findings reports each requirement approved after the start with a test case approved after its implementation first landed, naming the requirement, the implementation commit and each such approval commit. history_unreadable reports a shallow clone, a start commit that no longer exists or is not a first-parent ancestor of trunk, and history from before the TOML registries, as unreadable, never as a pass; a rewrite that keeps the start on trunk is read as the history it now is. check.py gains a warn-only built-in step `test-first`."
-status = "Drafted"
+status = "Approved"
 component = "CMP-007"
 phase = 6
 
@@ -2695,6 +2695,6 @@ title = "The per-need assumption view"
 module = "project-trajectory/scripts/traj_parse.py;project-trajectory/scripts/rendering/traj_views.py"
 code_symbol = "need_assumptions/need_assumption_block"
 detail = "traj_parse.need_assumptions(root) derives, for each need, the assumptions cited by its requirements, each once, with its standing, its evidence level from assumption_rules.evidence_level and the requirements citing it, and marks a need with an unclassified requirement and one whose requirements are all coincident. traj_views.need_assumption_block renders that list into the need's detail panel in the spine view; a falsified assumption, and one relied on with no current evidence, carries a text label as well as its color. With no assumptions registry the block is empty and the page is byte-identical to today's."
-status = "Drafted"
+status = "Approved"
 component = "CMP-009"
 phase = 6

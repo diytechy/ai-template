@@ -201,6 +201,19 @@ chasing it.
   a chain describing machinery that is not built. Read a row's state as a
   statement about the registry, and read this list for what an adopter can
   actually run.
+- **Approved at the 2026-09-25 sitting, commissioned rather than shipped** —
+  four needs whose chains are approved down to test cases, with none of their
+  machinery built yet
+  ([the assumption-tier spine map](docs/plans/2026-09-25-assumption-tier-spine-map.md)).
+  The owner's stand-in signed them, and the owner's re-attestation is owed:
+  - Code and analytics a later reader can understand, and change one part of
+    without reworking unrelated parts (SN-041).
+  - Every required behavior checked by tests written from its requirement
+    before the behavior was built (SN-042).
+  - For each stakeholder outcome, the premises its delivery relies on beyond
+    the system's own behavior, each recorded and itself checked (SN-043).
+  - Each need naming its stakeholders and the document it was drawn from
+    (SN-044).
 
 ## The registries & trace artifacts — one map
 

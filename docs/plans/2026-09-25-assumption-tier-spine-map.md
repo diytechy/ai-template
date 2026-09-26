@@ -118,6 +118,10 @@ dial (Q14, a setting, in the sitting commit).
 Each entry: what was decided, why, and what the owner would change to reverse
 it. Numbered so the owner can answer by number.
 
+**Owner's rulings, 2026-09-25:** D1, D11, D12 and D28 "Agreed". D28's deferral
+then ended at the phase-6 approval act (WI-642), once its three adjudications
+were ruled. The rest stay as marked below.
+
 - **D1 — Scope.** "The full plan and work items in scope" is read as the
   assumption-tier plan in full, plus the sister-plan items it pulls in (S3 at
   C1, S6 designed with C3). The other queued sister-plan items are separate work

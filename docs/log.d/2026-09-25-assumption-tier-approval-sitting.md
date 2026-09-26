@@ -66,3 +66,76 @@ queue.
   clean; `trace.py --strict-integrity` 0 integrity; `CURRENT.md` fresh; the
   open-items view up to date.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=71844466 -->
+
+### The phase-6 approval act (WI-642)
+
+- **Who approved what.** The four needs, SN-041 to SN-044, are on the rung
+  the owner holds (`human_approval_through = "DevStg-Needs"`). They were signed
+  by the owner's **stand-in**, a Fable (medium) agent reading the phase-6
+  brief at this sitting, as the owner directed. They are not the owner's own
+  signature. The 33 requirements, 47 design rows and 40 test cases sit on
+  released rungs and are approved on the LLM verdicts: codex Sol's per-tier
+  reviews and the earlier stand-in's per-tier approvals (spine map §5),
+  confirmed at this sitting. Stand-in verdict: `SITTING: APPROVE`, every need
+  approved and the chains confirmed. Every SR cites one of the four needs or an
+  approved need; every SR has a design row and a test case; every design row
+  has a test case.
+- **Owed by the owner (re-attestation):**
+  - **D6/D20, SN-042's acceptance, first.** As the owner accepted it (the C1
+    package): "…the project record shows that order for every requirement;
+    …". As approved: "…the project record shows that order for every
+    requirement approved after the project adopts this rule; …". A one-line
+    ruling keeps or reverts the narrowing.
+  - **D2:** SN-043 and SN-044 are new needs no owner has signed.
+  - **D5:** SN-041's first acceptance sentence is answered by a later
+    assumption row, not by an SR.
+  - Still reserved: D8, D14, D22 (spine map §6).
+- **D3, stated plainly:** the needs flip without `stakeholder_refs` or
+  `source`. SN-044's own acceptance is met only once the C1 sitting commit
+  (WI-643) writes them, after the build ships the keys.
+- **The act.** One commit flips 124 rows (`status` only; each row's other
+  cells compared equal before and after). The dated brief
+  `docs/ratify/2026-09-25-phase6-assumption-tier.md` is minted from the fresh
+  `CURRENT.md` at the act's parent. The stand-in read the `trace.py --approve
+  6` rendering, and that rendering is byte-identical at the act's parent. The
+  snapshot copies the four spine records. The design-row and test-case records
+  are authorised by their Status moves. The requirements and needs records are
+  named with `--approves`, because the tool refuses to absorb drifted approved
+  text that a Status flip alone does not cover, and it never infers a needs
+  approval. Checked after the copy: each record equals live. The only moved
+  cells on existing rows are the 124 status flips and 18 SR `rationale` cells:
+  the seventeen ruled CLARITY at WI-547, WI-593 and WI-599, and SR-162 ruled
+  CLARITY at WI-641. LLR-061 and LLR-167 were re-anchored in the previous
+  commit. Collateral rows (SR-183..SR-186, TC-208..TC-211) arrive Drafted,
+  not as approvals.
+- **Stage:** the headline stays **DevStg-Tests** (settled), and phase 6 reads
+  DevStg-Impl; the derived current phase is now 6.
+  <!-- fig: cmd="python project-trajectory/scripts/derive_stage.py --root ." rev=f537fc53 -->
+- **Deviation, `test_first_since`: not set by this act.** WI-642 asked for
+  "this commit", which a commit cannot name. SR-217 judges requirements
+  "approved after" the start, so the right value is the act's **parent**,
+  f537fc53 (the stand-in flagged this). The key cannot be declared yet:
+  `tests/test_rule_sync.py` holds this repo's `[checks]` keys equal to the
+  shipped template's, and the template gains the key only with WI-640. A first
+  attempt declared it and the smoke tier failed on exactly that rule, so the
+  value is recorded in WI-640's spec instead, and WI-640 sets it when it ships
+  the key.
+- **README:** the four approved needs gained inventory bullets, marked
+  commissioned rather than shipped. `check_docs` fails an approved Must/Should
+  need no README bullet cites.
+- **Sol review of the staged act:** NOT YET SOUND, 2 blockers (close WI-642
+  in the act and leave a truthful next-work surface; the README bullets) and 1
+  minor (the snapshot stamp now says which verdict covers which rows). All
+  applied. It also confirmed the flip, the record's absorption and the needs'
+  `--approves`. It judged the `test_first_since` key acceptable; the test
+  above overrules that.
+- **Closed:** WI-642, in the act commit. The status bullet, the handoff's
+  resume map and the spine map §6 (the owner's rulings) point at the build.
+- **Commit bar for the act:** smoke **1681 passed, 3 skipped** in 178.1 s
+  (with the `test_first_since` key removed; with it, one failure in
+  `test_rule_sync`, above); seconds **FAIL** at 178.9 s against 60 s (D10),
+  recorded, not re-stamped. `check_docs --stale` OK (0 broken);
+  `check_trajectory --strict` clean; `trace.py --strict-integrity` 0
+  integrity; `CURRENT.md` fresh; `approval-immutable` ok; `derive_stage
+  --check` up to date at DevStg-Tests; the open-items view up to date.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=f537fc53 -->

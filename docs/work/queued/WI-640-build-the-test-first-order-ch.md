@@ -12,7 +12,7 @@ priority = 4
 
 ## Context
 
-`check_test_first.py` and a warn-only step; the declared start is `[checks] test_first_since`. This repository declares its start at the approval act of these chains, so the chains themselves are judged by it. Design rows: LLR-257. Test cases: TC-250. Derivation and decisions: `docs/plans/2026-09-25-assumption-tier-spine-map.md`.
+`check_test_first.py` and a warn-only step; the declared start is `[checks] test_first_since`. This repository declares its start at the approval act of these chains, so the chains themselves are judged by it. WI-642 could not declare the key: `tests/test_rule_sync.py` holds this repo's `[checks]` keys equal to the template's, and the template gains the key only here. This item ships the key and sets this repository's value to `f537fc531dd37b372259ba84f8836a290d1efddb`, the phase-6 act's parent, so the act's approvals fall after the start (SR-217 judges requirements "approved after" it). Design rows: LLR-257. Test cases: TC-250. Derivation and decisions: `docs/plans/2026-09-25-assumption-tier-spine-map.md`.
 
 ## Done-when
 
