@@ -463,7 +463,7 @@ interface_to_external = "B-05"
 owner = "docs/stack.ini"
 consumers = ["scripts/check", "external:downstream adopter"]
 channel = "file"
-data = "sections: paths, product, tiers, coverage, arch-map, step:NAME"
+data = "sections: paths, product, tiers, coverage, arch-map, readability, step:NAME"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -1790,3 +1790,35 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """source - frame_rules consumes NOTHING by design: rows in, findings out, with no I/O, no git and no filesystem, which is what lets every rule be driven on in-memory rows."""
+
+[interface.IF-187]
+rationale = """The report runs as a declared step, so the harness reads it back the way it reads every project step: by exit code, with the lines on stdout for the reviewer. Refusing only where the profile declares a measure gating keeps the report proportionate: a project pays for a refusal once it has opted into one, and a misspelt name or an unreadable change is reported rather than refused, because neither is a worsening."""
+owner = "scripts/check_readability"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "1 only when a gating measure worsened · 0 otherwise: no or only reporting worsenings, no or an unknown measure, an empty or unreadable change"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+
+[interface.IF-188]
+rationale = """The readability report measures complexity through the census's own scoring, naming, baseline reader and comparison, so a function the report calls worse is one the complexity step calls worse; a second copy of any of them would be a second answer waiting to disagree."""
+owner = "scripts/check_complexity"
+requestors = ["scripts/check_readability"]
+channel = "call"
+data = "census, functions, read_baseline, compare, BASELINE, DEFAULT_THRESHOLD"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+notes = """source - check_complexity consumes no other module's surface: its inputs are the source trees it scores and the baseline file it writes itself."""
+
+[interface.IF-189]
+rationale = """On a claimed branch the change under review is everything since the lane's integration base, and the loop already owns that answer; a second merge-base rule in the gatekeeper would be a second answer to the same question."""
+owner = "scripts/agent_common"
+requestors = ["scripts/check_readability"]
+channel = "call"
+data = "default_base(root) -> the integration base a claimed branch's change is read from, or None when its claim history is unreadable"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """cross-component crossing declared per the architecture rule: check_readability is CMP-007 and agent_common is CMP-008. The import is deferred into the claimed-branch path, so a trunk run of the report loads nothing from the coordinator's primitives."""

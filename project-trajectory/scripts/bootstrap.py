@@ -66,7 +66,7 @@ What it creates in the destination:
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.toml                  <- registries/test-cases.template.toml
     scripts/trace.py, trace_text.py, spine_rules.py, derive_stage.py, record_test_evidence.py, check.py, check_flows.py, check_docs.py, check_perf.py,
-    scripts/check_stubs.py, check_coverage.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
+    scripts/check_stubs.py, check_coverage.py, check_readability.py, check_complexity.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py, gen_components.py
     scripts/traj_display.py, traj_parse.py, traj_status.py
     scripts/rendering/{traj_graph.py,traj_render.py,traj_views.py,traj_panels.py,traj_context.py}
@@ -2047,6 +2047,13 @@ MAPPING = [
     ("scripts/check_perf.py", "scripts/check_perf.py"),
     ("scripts/check_stubs.py", "scripts/check_stubs.py"),
     ("scripts/check_coverage.py", "scripts/check_coverage.py"),
+    # The per-change readability report (WI-639): the stack profile's
+    # [step:readability] runs it on every scaffold. Its complexity measure calls
+    # check_complexity's census and comparison through an unguarded import, so
+    # the census ships beside it — a scaffold with the report and not the
+    # census could not run the one measure the profile declares.
+    ("scripts/check_readability.py", "scripts/check_readability.py", "SR-216"),
+    ("scripts/check_complexity.py", "scripts/check_complexity.py", "SR-183"),
     ("scripts/check_privacy.py", "scripts/check_privacy.py"),
     ("scripts/check_vendored.py", "scripts/check_vendored.py"),
     # The retired-vocabulary enforcer (OI-21). Shipped, not kit-only: an adopter

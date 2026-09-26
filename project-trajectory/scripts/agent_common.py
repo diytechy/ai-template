@@ -22,8 +22,8 @@ unchanged). The session engine (agent_loop) and the serial integrator
 agent_loop re-exports the names it historically exposed, so its public
 surface is unchanged. Stdlib only, Python 3.11+, Windows/POSIX.
 
-Contracts: IF-065 — the interface seam this module declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
+Contracts: IF-065, IF-189 — the interface seams this module declares (process.md
+§8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-065: the shared coordinator primitives the session engine and the
     serial integrator both stand on. The typed exit codes and `END_STATES`; the
@@ -41,6 +41,12 @@ Contract IF-065: the shared coordinator primitives the session engine and the
     run-state write. The names
     were extracted verbatim and `agent_loop` re-exports every historical one, so
     this layer adds a home without changing a public surface.
+Contract IF-189: `default_base(root)`, the integration base a claimed branch's
+    change is read from by the per-change readability report: the merge base of
+    HEAD with the trunk in a linked worktree, the durable claim commit when the
+    checkout is the lane branch itself, HEAD for a manual lane with no claim
+    record, and None when a claimed history cannot be read — which the caller
+    treats as an unreadable change rather than an empty one.
 """
 
 import datetime

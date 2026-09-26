@@ -116,6 +116,7 @@ Contracts (interfaces): IF-013, IF-040, IF-144
 
 ### `scripts/check_complexity`
 _check_complexity.py — the stdlib cognitive-complexity + SLOC census._
+Contracts (interfaces): IF-188
 
 | Option | Help |
 |---|---|
@@ -227,6 +228,14 @@ Contracts (interfaces): IF-005, IF-032, IF-043, IF-148
 | `--author` | check the commit author email (git var GIT_AUTHOR_IDENT) against the exempt allowlist; a private author blocks (privacy layer only) |
 | `--message` | scan a commit-message file (wired into .githooks/commit-msg) |
 | `--root` | repo root (default: current directory) |
+
+### `scripts/check_readability`
+_check_readability.py — the per-change readability report over declared measures._
+Contracts (interfaces): IF-187
+
+| Option | Help |
+|---|---|
+| `--root` | repo root (default: cwd) |
 
 ### `scripts/check_stubs`
 _No-stub / substance detector: flag implementations that only *exist* (process.md §4 DevStg-Impl)._

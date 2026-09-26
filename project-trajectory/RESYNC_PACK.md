@@ -5129,6 +5129,41 @@ unchanged. Each of its crossings now prints one advisory until you add
 your own frame, so make it in a reviewed commit rather than in bulk. A project
 with no `external.toml` hears nothing.
 
+### Each change is measured by the declared readability measures [since 76a235bb]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A new step script, `scripts/check_readability.py`, reads the
+change under review (the index against HEAD, or on a claimed work branch the
+merge base to the tip) and runs each measure `docs/stack.ini` declares in a new
+`[readability]` section over the parts that change touches (SR-216). Every
+worsening prints on one line naming the measure, the part and the size of the
+change. `measures` lists what runs; `gating` lists the declared measures whose
+worsening refuses the change (exit 1), and it ships empty, so the report never
+refuses until you say so. Nothing else refuses: a measure name no adapter
+knows, or a gating name `measures` does not declare, prints a WARN line naming
+it, and a change that cannot be read (no repository, an unreadable claim
+history) prints a SKIP line per measure; both exit 0. A profile declaring no
+measure is told so in one line. The one measure shipped is `complexity`: cognitive complexity per touched
+function under your `[paths]` `src` and `tests` roots (the kit's own `scripts/`
+are not measured), through `scripts/check_complexity.py`'s own census and
+comparison, against `docs/complexity-baseline`. That census now ships too (it was kit-only),
+because the report imports it. The template gains `[readability]` with
+`measures = complexity` and its first active step, `[step:readability]`, from
+`DevStg-Impl`.
+
+**What to do.** Re-sync `scripts/check_readability.py` and
+`scripts/check_complexity.py` (both new to you) together: the report does not
+import without the census. Your `docs/stack.ini` is yours and a re-sync leaves
+it alone, so nothing runs until you add the two sections from the template:
+`[readability]` with the measures you want (`measures =` empty is a declared
+choice that prints one line per run; a non-Python stack should leave it empty,
+since `complexity` reads Python only) and `[step:readability]` with the command
+path your checkout uses. With no `docs/complexity-baseline`, every touched
+function over the threshold reports as new debt; stamp one first if you would
+rather see only what a change makes worse:
+`python scripts/check_complexity.py --root . --include "src/**/*.py" --include "tests/**/*.py" --restamp`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

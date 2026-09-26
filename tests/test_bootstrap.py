@@ -128,6 +128,8 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/record_test_evidence.py",
         "scripts/check_doc_refs.py",
         "scripts/check_figures.py",
+        "scripts/check_readability.py",
+        "scripts/check_complexity.py",
         "scripts/check_need_form.py",
         "scripts/check_privacy.py",
         "scripts/check_vendored.py",

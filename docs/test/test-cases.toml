@@ -2562,7 +2562,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-249]
-verifies = ["SR-216", "LLR-256"]
+verifies = ["SR-216", "LLR-256", "IF-187", "IF-188", "IF-189"]
 level = "Integration"
 method = "Driven on a real git repository, in a module registered as slow, whose stack profile declares the complexity measure with a stamped baseline. A staged change that raises one function's complexity prints one line naming the measure, the function and the delta; untouched functions are not measured; a change worsening nothing prints no worsening line. With a second measure adapter injected, a change worsening one part under each measure prints both lines in the one report. A profile declaring no measure prints one line saying nothing is measured and exits 0. With a measure declared gating, its worsening exits nonzero; declared reporting-only, it exits 0. The complexity adapter calls the complexity module's own comparison, asserted by identity. On a claimed branch the change is read from the merge base."
 tier = "Full"

@@ -53,3 +53,50 @@ spine map §6, and none holds a gate or blocks a queue.
   --strict-integrity` 0 integrity; `CURRENT.md` fresh; the open-items view up
   to date.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=cbb6649f -->
+
+### Builders in parallel, and the worktree base
+
+From WI-639 on, each item is built by a builder session in its own git worktree
+under the session scratchpad, cut at the trunk's tip, with one shared brief (the
+conventions WI-627 surfaced). The integrator reviews each commit with codex
+Sol, squash-merges it onto `refactor_again`, closes the spec, regenerates and
+runs the bar. The harness's own worktree isolation was tried first and dropped:
+it cut the worktrees from the default branch's July commit (3abeb636), 2,948
+commits behind; those builders were stopped before they committed anything and
+their worktrees deleted. A session limit then interrupted all four builders
+mid-work, and each resumed from its own worktree.
+
+### WI-639 — the per-change readability report
+
+- **Built:** `check_readability.py` over a new `[readability]` profile section
+  and `[step:readability]`; the complexity adapter reuses `check_complexity`'s
+  census, now factored as `functions()`, rather than copying it. This repo
+  declares `measures = complexity` with no gating.
+- **Tests first:** `tests/test_check_readability.py` (TC-249, slow): red `2
+  failed, 9 errors`; green 12, then 15 after the rework.
+- **Deviations, accepted at review:** `check_complexity.py` now ships to
+  adopters (the shipped report imports it); the template carries its first
+  active `[step:]`, and the template-plan identity tests exclude exactly it; the
+  measure covers the profile's source and test roots only.
+- **Sol review:** NOT YET SOUND, 1 blocker: the build exited 2 on an unknown
+  name and 1 on an unreadable change, against approved LLR-256's "nonzero only
+  for a worsening in a gating measure". The code was conformed rather than the
+  row amended. And 1 major: the merge-base test could not tell merge-base from
+  the previous commit, now mutation-checked against both wrong readings. Both
+  fixed in the builder's rework.
+- **Seams:** IF-187, IF-188, IF-189; watermark IF 180 -> 189. `bootstrap.py`
+  ratchet 1666 -> 1668 (two MAPPING rows).
+- **Findings for later filing** (not in scope): trace's IF-owner reachability
+  advisory does not split `;`-joined `module` cells and builds
+  `scripts/scripts/<mod>` keys, so IF-187 gets a false advisory;
+  `check_complexity.py --mode enforce` already fails at 76a235bb
+  (`route_session` 37 -> 38, stale `traj_*` paths after the `rendering/` move).
+
+- **Commit bar:** smoke **1696 passed, 3 skipped** in 408.1 s; `check.py
+  --run-step readability` PASS ("no worsening"); `check_docs --stale` OK;
+  `check_trajectory --strict` clean; `trace.py --strict-integrity` 0 integrity;
+  `CURRENT.md` fresh; the open-items view up to date. Seconds **FAIL** at 411.8 s
+  against 60 s (D10; four builders were loading the box), recorded, not
+  re-stamped. The builder's run of the affected slow modules (467 passed, 2
+  skipped; then 51 after the rework) stands for the identical squashed tree.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=76a235bb -->

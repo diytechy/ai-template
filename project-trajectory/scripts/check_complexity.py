@@ -33,6 +33,18 @@ sessions re-stamp; it matches the extension-less house data files under `docs/`
 never be one; the escape hatch is this one reviewed central file, because a
 scattered opt-out self-replicates as new code copies it.
 
+Contracts: IF-188 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-188: the complexity measure's own parts, which the per-change
+    readability report calls instead of copying. `census(root, includes)`
+    scores every function under `root`; `functions(tree)` is its naming rule,
+    one `(qualified name, node)` per census row; `read_baseline(path)` reads
+    the stamped debt; `compare(over, old)` returns `(grew, improved)`.
+    `BASELINE` and `DEFAULT_THRESHOLD` are the carrier path and the threshold a
+    baseline is stamped at. The caller holds no copy of any of them, so a
+    function the report calls worse is one this census calls worse.
+
 Implements: SR-183, LLR-206
 """
 
@@ -325,6 +337,16 @@ def _collect(node, prefix, out):
             _collect(child, prefix, out)
 
 
+def functions(tree):
+    """`[(qualified name, node)]` — one per census row, named exactly as the
+    census names it. Public because a per-change reader must ask WHICH rows a
+    changed line falls in, and a second naming walk would be a second answer
+    to `Class.method` that could disagree with the baseline's keys."""
+    found = []
+    _collect(tree, "", found)
+    return found
+
+
 def _bound(node, names):
     """Names bound in module (or block) scope, descending through control flow
     the same way `_collect` does but never into a def/class body — whose names
@@ -369,8 +391,7 @@ def census(root, includes):
         text = path.read_text(encoding="utf-8")
         tree = ast.parse(text)
         lines, docs = text.splitlines(), _doc_lines(tree)
-        found = []
-        _collect(tree, "", found)
+        found = functions(tree)
         rows += [(rel, n, cognitive(f), sloc(f, lines, docs)) for n, f in found]
         modules.append((rel, len(_public(tree)), len(lines)))
     return sorted(rows), sorted(modules)

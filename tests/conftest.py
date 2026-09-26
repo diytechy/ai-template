@@ -262,6 +262,9 @@ SLOW_MODULES = frozenset(
         # itself is pinned in-process in test_check_complexity.py, which stays in
         # the commit bar; only the subprocess CLI half is re-tiered here.
         "test_check_complexity_cli",  # check_complexity.py driven as a subprocess
+        # WI-639 (TC-249): the per-change readability report needs a real git
+        # history (a staged change, a claimed branch in a linked worktree).
+        "test_check_readability",  # git init/commit/worktree per case
         # WI-543 rework (REVIEW-A): the SR-163 mapping-purpose checker's CLI
         # drives. Each case spawns gen_arch_map.py --mapping-purpose as a
         # subprocess (real interpreter startup) to prove the delivered command is

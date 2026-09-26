@@ -50,11 +50,15 @@ def test_reference_profile_matches_builtin_plan_every_tier():
     # The scaffolded stack.ini declares check.py's own built-in commands, so a
     # profile-driven plan and the built-in (profile=None) plan are identical for
     # every gate/tier — the "profile-absent behavior is byte-identical" contract.
+    # The one declared difference is the readability report's step (SR-216),
+    # which is a `[step:]` by design and so exists only where it is declared;
+    # the test below pins that it is the ONLY one.
     reference = _profile((KIT / "stack.ini.template").read_text(encoding="utf-8"))
     for tier in ("smoke", "full", "release", "all"):
         for gate in ("DevStg-Reqs", "DevStg-Impl", "all"):
             builtin = check.steps(80, tier, gate)
             profiled = check.steps(80, tier, gate, None, reference)
+            profiled = [s for s in profiled if s[0] != "readability"]
             assert _plan_sig(builtin) == _plan_sig(profiled), (tier, gate)
 
 
@@ -87,13 +91,21 @@ def test_meta_repo_declares_parallel_test_command_but_template_opts_out():
 
 def test_absent_profile_list_matches_reference_profile(scaffold):
     # End-to-end: deleting docs/stack.ini falls back to the built-ins, and the
-    # printed plan is identical to the one the reference profile produces.
+    # printed plan is identical to the one the reference profile produces —
+    # but for the declared readability step (SR-216), which exists only where
+    # the profile declares it.
     with_profile = run_py(["scripts/check.py", "--gate", "all", "--list"], cwd=scaffold)
     assert with_profile.returncode == 0, with_profile.stdout + with_profile.stderr
     (scaffold / "docs" / "stack.ini").unlink()
     without = run_py(["scripts/check.py", "--gate", "all", "--list"], cwd=scaffold)
     assert without.returncode == 0, without.stdout + without.stderr
-    assert without.stdout == with_profile.stdout
+    declared = [
+        line
+        for line in with_profile.stdout.splitlines()
+        if not line.startswith("  - readability ")
+    ]
+    assert len(declared) == len(with_profile.stdout.splitlines()) - 1
+    assert without.stdout.splitlines() == declared
 
 
 # --- --list reflects the profile ----------------------------------------------
@@ -344,17 +356,17 @@ def test_extra_step_bad_gate_and_layer_fail_loudly(scaffold):
     assert "layer" in (bad_layer.stdout + bad_layer.stderr)
 
 
-def test_reference_profile_has_no_active_extra_step():
-    # The shipped stack.ini's [step:] example is COMMENTED, so the reference
+def test_reference_profile_declares_only_the_readability_step():
+    # The shipped stack.ini's [step:] examples are COMMENTED, so the reference
     # profile still equals the built-in plan (guards the byte-identity contract
-    # above against a stray uncommented example line).
+    # above against a stray uncommented example line). Its one active step is
+    # the per-change readability report (SR-216), part of the delivered harness.
     reference = _profile((KIT / "stack.ini.template").read_text(encoding="utf-8"))
-    assert (
-        check.extra_steps(
-            reference, {"py": "py", "src": "s", "tests": "t", "coverage": "80"}
-        )
-        == []
+    declared = check.extra_steps(
+        reference, {"py": "py", "src": "s", "tests": "t", "coverage": "80"}
     )
+    assert [s[0] for s in declared] == ["readability"]
+    assert declared[0][2] == ["py", "scripts/check_readability.py", "--root", "."]
 
 
 # --- --run-step (the hook's format delegation) --------------------------------

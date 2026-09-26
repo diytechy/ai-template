@@ -6,7 +6,9 @@
 # scripts/setup.* delegate to it instead of restating a command — so a stack
 # swap becomes editing THIS file, not hunting the same command across six
 # copies (the single-source rule the kit preaches). Delete the file to fall
-# back to check.py's built-in Python-reference defaults (identical to below).
+# back to check.py's built-in Python-reference defaults (identical to below,
+# except the readability report, which runs only where [step:readability] is
+# declared — so deleting the file stops changes being measured).
 #
 # Placeholders expanded inside the commands:
 #   {py}          the Python interpreter running check.py, so the venv python is
@@ -94,6 +96,35 @@ mode = symbols
 # files mode only — whitespace-separated comment tokens whose first line is a
 # file's summary, when yours isn't one of the defaults (# // --):
 # comment-prefixes = # // --
+
+# --- Readability measures: the per-change report ------------------------------
+# scripts/check_readability.py reads the CHANGE under review — the index against
+# HEAD, or on a claimed work branch the merge base to the tip — runs each
+# measure named here over the parts that change touches, and prints every
+# worsening in one place with the measure, the part and the size of the change.
+#   measures  what runs, in order (space- or comma-separated). Empty is a
+#             declared choice: the step says "nothing is measured" on every run.
+#   gating    the declared measures whose worsening REFUSES the change (exit 1).
+#             Empty = report only. Gate a measure once you trust its
+#             false-positive rate on your own code.
+# The measures the kit ships:
+#   complexity  cognitive complexity of each touched FUNCTION under the [paths]
+#               src and tests roots (scripts/check_complexity.py; the kit's own
+#               scripts/ are not your code and are not measured), against
+#               docs/complexity-baseline; one over the threshold with no baseline
+#               row reports as new debt. PYTHON ONLY — a non-Python stack empties
+#               `measures`. Stamp a baseline over the same roots:
+#               python scripts/check_complexity.py --root . --include "src/**/*.py" --include "tests/**/*.py" --restamp
+[readability]
+measures = complexity
+gating =
+
+# The step that runs the report: the one ACTIVE [step:] this file ships, because
+# measuring each change is part of the delivered harness, not an optional gate.
+# It never refuses a change unless `gating` above says so.
+[step:readability]
+command = {py} scripts/check_readability.py --root .
+from-stage = DevStg-Impl
 
 # --- Generated-artifact set (the trunk lane's declared ownership, §5.2) -------
 # The COMPLETE set of generated/derived artifacts the TRUNK LANE owns
