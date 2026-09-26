@@ -244,3 +244,18 @@ Not in the phase-6 chains, but ahead of WI-638, which files through the mint.
   to date. Seconds **FAIL** at 824.5 s against 60 s (D10), recorded, not
   re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=0c2228b1 -->
+
+### Session end (2026-09-26): the resume surface
+
+- **Wrapped up at the owner's request**, with the builds of WI-627, WI-639,
+  WI-612, WI-635 and WI-628, and the WI-648 adjudication, landed. The
+  full-suite run started at 2be2894f was stopped unfinished; the full suite is
+  owed. The merged builder worktrees and branches were removed.
+- **Resume surface:** `docs/handoff-2026-09-26.md` replaces the 2026-09-25
+  handoff, and `docs/status.md`, the root README and `docs/README.md` point at
+  it. The builder brief every builder is handed is now
+  `docs/plans/2026-09-26-assumption-tier-builder-brief.md`.
+- **Byte deltas on budgeted files this session:** `PROCESS_OPTIONS.md` +14 and
+  `PROCESS.md` +19 (both watched, re-stamped); the byte-budget-guard skill
+  4,613 -> 4,519 (capped at 5,000). No other capped file edited.
+

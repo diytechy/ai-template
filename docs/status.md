@@ -24,19 +24,19 @@ supervisor prompt at the owner's request). Backward-looking homes:
 status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **RESUME HERE:** start with [handoff-2026-09-25.md](handoff-2026-09-25.md)'s
+- **RESUME HERE:** start with [handoff-2026-09-26.md](handoff-2026-09-26.md)'s
   read order. The redesign's remaining threads keep their context in
   [handoff-2026-09-06.md](handoff-2026-09-06.md). Recheck Git and the generated
   frontier before choosing work; earlier handoffs and sitting checklists are
   historical context.
-- **Assumption tier — the chains are approved; the build is next:** the
-  owner ruled the [C1 sitting package](plans/2026-09-25-c1-sitting-package.md)
-  (build first with the arms off), and the phase-6 chains it implies are
+- **Assumption tier — the build is under way:** the phase-6 chains are
   approved down to test cases
   ([spine map](plans/2026-09-25-assumption-tier-spine-map.md)), the needs by
-  the owner's stand-in. Build them test-first, in the generated frontier's
-  order, so every test case was approved before its code lands; the C1 sitting
-  commit and the reversal sweep follow. The owner owes re-attestations and the
+  the owner's stand-in, and the build proceeds test-first, one builder
+  worktree per item in the generated frontier's order, each handed the
+  [builder brief](plans/2026-09-26-assumption-tier-builder-brief.md). The C1
+  sitting commit and the reversal sweep follow it. The full unfiltered suite is
+  owed before any phase close. The owner owes re-attestations and the
   reserved rulings (the handoff's list). The depth-0 mockup in
   `docs/plans/mockups/` still renders the old `kit` value.
 - **Sister plan — one plan still owed:** every question in the
