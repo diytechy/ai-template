@@ -49,3 +49,20 @@ queue.
   `check_trajectory --strict` clean after clearing the closed specs' `specref`
   (its R-F rule caught the first close); `trace.py --strict-integrity` 0
   integrity, 0 orphans; the open-items view up to date.
+
+### The re-anchor of LLR-061 and LLR-167
+
+- **Act:** `intake.py snapshot --approves
+  "docs/requirements/low-level-requirements.toml=WI-601+WI-603"`, in its own
+  commit after both verdicts, as the amendment brief's aftermath requires for a
+  released rung. The copy is scoped to the design-row record. Checked after the
+  copy: the record equals the live registry, and the only attesting cells it
+  absorbed are LLR-061's and LLR-167's `detail`, the two cells the verdicts
+  ruled. The rest is file-scope collateral: 48 Drafted rows (not approvals) and
+  traced `module` and `code_symbol` cells (non-attesting by ruling, §A5.1).
+- **Commit bar for the re-anchor:** smoke **1681 passed, 3 skipped** in
+  155.9 s; seconds **FAIL** at 156.6 s against 60 s (D10), recorded, not
+  re-stamped. `check_docs --stale` OK (0 broken); `check_trajectory --strict`
+  clean; `trace.py --strict-integrity` 0 integrity; `CURRENT.md` fresh; the
+  open-items view up to date.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=71844466 -->

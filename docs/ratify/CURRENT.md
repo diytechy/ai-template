@@ -60,23 +60,6 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
   - before: Realizes SN-002 — dimensional coverage is generated from the SR's declared inputs, not hand-listed. Hat-derived (hat.TEST-ENGINEER): systematic expansion reduces the risk that a dimensional combination is omitted, which is the charter's coverage half. Generation does NOT answer the charter's second half: showing that an enforcer fails when it should is demonstrated by negative or planted-failure tests, and a hand-listed negative case can demonstrate it. Those negative tests remain a separate obligation, not this row's.
   - after: Realizes SN-002 — dimensional coverage is generated from the SR's declared inputs, not hand-listed. Systematic expansion reduces the risk that a dimensional combination is omitted, which is the charter's coverage half. Generation does NOT answer the charter's second half: showing that an enforcer fails when it should is demonstrated by negative or planted-failure tests, and a hand-listed negative case can demonstrate it. Those negative tests remain a separate obligation, not this row's.
 
-## SR-026 — Coordinator resumes headless
-
-> **Requirement.** The delivered coordinator shall resume headless with stdin closed, never blocking on a prompt: a worker resumes from its explicit claimed assignment plus the committed trailer evidence on its branch, and the integrator derives claim and queue state from trunk history alone — the generated status surface never a session input.
-
-> **Rationale.** Realizes SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run. The acceptance is deliberately narrower than it once was: it had carried two obligations the shall never stated - transient-limit backoff and stall abort - and an acceptance cell cannot mint a requirement. Both were MINTED rather than deleted, because each describes live behaviour worth keeping: SR-171 and SR-172. An unattended run blocked on a prompt is indistinguishable from a hung one and holds its lane until a human notices. Keeping a separate serial resume path beside the dispatcher was rejected: two authorities over one decision drift, and the divergence surfaces as a run that resumes differently depending on how it was started.
-
-
-### LLR LLR-061
-_approved — re-attestation owed_
-- **Detail**
-  - before: Replaces internal --track assumptions with explicit --wi/--train/worktree assignment; assembles the worker prompt from AGENTS.md + WI row + SpecRef + predecessor context + train diff + rework finding (never the generated status surface); collision-safe per-assignment logs/review evidence naming the exact reviewed commit; the --track lane machinery is retired outright. The assignment is the branch integrate.py's claim cut, and the session tag defaults to the branch name; the prompt never includes docs/status.md; a worker branch never edits root status, another branch's claims, the root log or generated artifacts; the result channel is committed trailer evidence (WI: / Blocked-WI: + BlockRef:).
-  - after: Replaces internal --track assumptions with explicit --wi/--train/worktree assignment; assembles the worker prompt from AGENTS.md + WI row + SpecRef + predecessor context + train diff + rework finding (never the generated status surface), plus - on a lane claimed with more than one row - every assigned row with its id, title, SpecRef and walk state (built / started, not closed / this session's focus / not started), taken from the SAME two-part completion predicate the walk itself reads - a committed WI: trailer AND the spec gone from active/<branch>/ - so the brief can never call a row the walk will return to `built`, and a batch session's brief names the whole claim rather than only the row it walked to; collision-safe per-assignment logs/review evidence naming the exact reviewed commit; the --track lane machinery is retired outright. The assignment is the branch integrate.py's claim cut, and the session tag defaults to the branch name; the prompt never includes docs/status.md; a worker branch never edits root status, another branch's claims, the root log or generated artifacts; the result channel is committed trailer evidence (WI: / Blocked-WI: + BlockRef:).
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: build_worker_assignment/worker_prompt
-  - after: build_worker_assignment/worker_prompt/assignment_block
-
 ## SR-033 — Release checklist generation
 
 > **Requirement.** The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate.
@@ -113,26 +96,6 @@ _traced — routes to adjudication_
   - before: Realizes SN-024 and SN-023 — an accessibility bar left unstated silently reads as no bar at all, so the obligation is stated here even though its clauses were not measurable when the row was written. They since became so, one clause at a time, which is why this row's method is mechanical: the thresholds are the child rows' and the acceptance is their chain. Hat-derived (hat.ACCESSIBILITY): keyboard operability, an accessible name per element, colour never the only channel, and a readable contrast floor are the charter's own subject, and no other lens in the roster names a measurable perceptual threshold — the UX pair reaches robustness (it does not overflow), never legibility. That dependency is CLOSED: the ACCESSIBILITY charter is ruled `always`, so the lens this row derives from is put to every decomposition — and it had already reached this row once SN-023 carried the `a11y` tag, which is why the gap is narrower than the unmeasurable-clauses opening suggests.
   - after: Realizes SN-024 and SN-023 — an accessibility bar left unstated silently reads as no bar at all, so the obligation is stated here even though its clauses were not measurable when the row was written. They since became so, one clause at a time, which is why this row's method is mechanical: the thresholds are the child rows' and the acceptance is their chain. Keyboard operability, an accessible name per element, colour never the only channel, and a readable contrast floor are the charter's own subject, and no other lens in the roster names a measurable perceptual threshold — the UX pair reaches robustness (it does not overflow), never legibility. That dependency is CLOSED: the ACCESSIBILITY charter is ruled `always`, so the lens this row derives from is put to every decomposition — and it had already reached this row once SN-023 carried the `a11y` tag, which is why the gap is narrower than the unmeasurable-clauses opening suggests.
 
-### LLR LLR-101
-- **Module**
-  - before: project-trajectory/scripts/traj_render.py
-  - after: project-trajectory/scripts/rendering/traj_render.py
-
-### LLR LLR-108
-- **Module**
-  - before: project-trajectory/scripts/traj_render.py;project-trajectory/scripts/gen_trajectory.py
-  - after: project-trajectory/scripts/rendering/traj_render.py;project-trajectory/scripts/gen_trajectory.py
-
-### LLR LLR-113
-- **Module**
-  - before: project-trajectory/scripts/traj_render.py
-  - after: project-trajectory/scripts/rendering/traj_render.py
-
-### LLR LLR-114
-- **Module**
-  - before: project-trajectory/scripts/traj_render.py
-  - after: project-trajectory/scripts/rendering/traj_render.py
-
 ## SR-053 — Dashboard UI uniformity (rubric-adjudicated)
 
 > **Requirement.** The state view the delivered generators produce shall read as one system across its tabs and views: one type scale and spacing rhythm; one status/phase/type color vocabulary applied consistently wherever the same concept renders; uniform node, edge, legend, and detail-panel styling across the SVG emitters; the same interaction idiom (expand, hover, detail) wherever the same structure appears.
@@ -145,41 +108,6 @@ _traced — routes to adjudication_
   - before: Realizes SN-024 and SN-023 — how alike is alike enough is subjective at the margins, which is why this row states the coherence property and lets each clause of it be pinned separately rather than pinning the whole to one threshold and pinning the wrong thing. Every clause is pinned, so the method is mechanical and the acceptance is the child chain. Fan-out re-stamp: the child count is the anchor census of the uniformity bar as it was first written — five anchors, three of them leaving a mechanized residue — not a decision count; this row states one cross-view coherence property, and every child exists because an anchor was bound to a test rather than because a second contract was merged in. Hat-derived (hat.CONSISTENCY): one meaning given two treatments across tabs, emitters and states is that charter's failure class verbatim, and it is the only lens in the roster that asks it; the charter is ruled in, so this row has a deriving lens. The narrower reading survives the ruling and is the one to re-open if the charter is ever cut: no stakeholder need states cross-view coherence, so the lens — not a need — is what reaches this row.
   - after: Realizes SN-024 and SN-023 — how alike is alike enough is subjective at the margins, which is why this row states the coherence property and lets each clause of it be pinned separately rather than pinning the whole to one threshold and pinning the wrong thing. Every clause is pinned, so the method is mechanical and the acceptance is the child chain. Fan-out re-stamp: the child count is the anchor census of the uniformity bar as it was first written — five anchors, three of them leaving a mechanized residue — not a decision count; this row states one cross-view coherence property, and every child exists because an anchor was bound to a test rather than because a second contract was merged in. One meaning given two treatments across tabs, emitters and states is that charter's failure class verbatim, and it is the only lens in the roster that asks it; the charter is ruled in, so this row has a deriving lens. The narrower reading survives the ruling and is the one to re-open if the charter is ever cut: no stakeholder need states cross-view coherence, so the lens — not a need — is what reaches this row.
 
-### LLR LLR-102
-- **Module**
-  - before: project-trajectory/scripts/traj_render.py
-  - after: project-trajectory/scripts/rendering/traj_render.py
-
-### LLR LLR-103
-- **Module**
-  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_render.py
-  - after: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/rendering/traj_render.py
-
-### LLR LLR-104
-- **Module**
-  - before: project-trajectory/scripts/traj_panels.py
-  - after: project-trajectory/scripts/rendering/traj_panels.py
-
-### LLR LLR-106
-- **Module**
-  - before: project-trajectory/scripts/traj_render.py
-  - after: project-trajectory/scripts/rendering/traj_render.py
-
-### LLR LLR-107
-- **Module**
-  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_render.py;project-trajectory/scripts/traj_views.py
-  - after: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/rendering/traj_render.py;project-trajectory/scripts/rendering/traj_views.py
-
-### LLR LLR-109
-- **Module**
-  - before: project-trajectory/scripts/traj_render.py
-  - after: project-trajectory/scripts/rendering/traj_render.py
-
-### LLR LLR-110
-- **Module**
-  - before: project-trajectory/scripts/traj_render.py
-  - after: project-trajectory/scripts/rendering/traj_render.py
-
 ## SR-054 — Dashboard usability (rubric-adjudicated)
 
 > **Requirement.** The state view the delivered generators produce shall support its core reading tasks with low friction: a first-time reviewer finds the project state, the next work, and how the parts connect, each within one tab switch; views default to a legible density (start-collapsed per the greater-than-3 rule) and reveal detail without losing context; labels stay readable at default zoom with no clipped or overlapping text.
@@ -191,46 +119,6 @@ _traced — routes to adjudication_
 - **Rationale**
   - before: Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded one-time judgement rather than on a standing re-judgement — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Hat-derived (hat.UX-DESIGNER + hat.UX-ENGINEER): findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today.
   - after: Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded one-time judgement rather than on a standing re-judgement — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today.
-
-### LLR LLR-055
-- **Module**
-  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_views.py
-  - after: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/rendering/traj_views.py
-
-### LLR LLR-099
-- **Module**
-  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_panels.py;project-trajectory/scripts/traj_render.py
-  - after: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/rendering/traj_panels.py;project-trajectory/scripts/rendering/traj_render.py
-
-### LLR LLR-100
-- **Module**
-  - before: project-trajectory/scripts/traj_render.py
-  - after: project-trajectory/scripts/rendering/traj_render.py
-
-### LLR LLR-105
-- **Module**
-  - before: project-trajectory/scripts/traj_render.py
-  - after: project-trajectory/scripts/rendering/traj_render.py
-
-### LLR LLR-115
-- **Module**
-  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_panels.py
-  - after: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/rendering/traj_panels.py
-
-### LLR LLR-116
-- **Module**
-  - before: project-trajectory/scripts/traj_render.py
-  - after: project-trajectory/scripts/rendering/traj_render.py
-
-### LLR LLR-119
-- **Module**
-  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_render.py;project-trajectory/scripts/traj_panels.py
-  - after: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/rendering/traj_render.py;project-trajectory/scripts/rendering/traj_panels.py
-
-### LLR LLR-120
-- **Module**
-  - before: project-trajectory/scripts/traj_graph.py
-  - after: project-trajectory/scripts/rendering/traj_graph.py
 
 ## SR-111 — Kit-version stamp
 
@@ -280,16 +168,6 @@ _traced — routes to adjudication_
   - before: Five successive dedup mechanisms leaked because each reconstructed the return event from a MUTABLE proxy; a document that never moves dissolves the class instead of mitigating it. The refusals are what make "immutable" a property rather than a claim. The split is a field because its absence once merged rejected code onto trunk: silence about it is different from saying "I could not judge", and only silence is unactionable. Hat-derived (hat.UNATTENDED-OPS): a claim a dead lane never releases is C-UNA-3's deadlocked-until-morning case, and the immutable per-close record is C-UNA-5's answer to a failure that pages nobody — a close no one can read is externally indistinguishable from a run that finished.
   - after: Five successive dedup mechanisms leaked because each reconstructed the return event from a MUTABLE proxy; a document that never moves dissolves the class instead of mitigating it. The refusals are what make "immutable" a property rather than a claim. The split is a field because its absence once merged rejected code onto trunk: silence about it is different from saying "I could not judge", and only silence is unactionable. A claim a dead lane never releases is C-UNA-3's deadlocked-until-morning case, and the immutable per-close record is C-UNA-5's answer to a failure that pages nobody — a close no one can read is externally indistinguishable from a run that finished.
 
-### LLR LLR-167
-_approved — re-attestation owed_
-- **Detail**
-  - before: The row's DECLARED `Brief` cell selects the template (`intake` writes it at every adjudication mint); `compose` fills it through `prompts.fill`'s strict both-ways check and `agent_loop.session_body` is the single fork BOTH routing arms take, so a claimed adjudication row gets the same brief whether or not a routing registry is configured. Each assembler returns `(values, None)` or `(None, reason)` and NEVER a partial: `disposition_values` walks SpecRef -> the closed spec -> its immutable per-close report -> that report's TYPED `commit_range` -> `git log`/`--name-status` clipped at the declared 80 lines, and refuses the clean-close spot-check arm because it writes no report; `red_tc_values` RE-RUNS `dispatch.red_tc_census` rather than remembering it, joins each line through `dispatch.parse_red_tc` to the TC row's Method/Expected/Evidence and to the SR/LLR text its targets name, and refuses a census that has come clean. A refusal falls back to the worker assignment and PRINTS why. `conflict` and `amendment` are deliberately unrouted, each with its missing derivation named in the module header.
-  - after: The row's DECLARED `Brief` cell selects the template (`intake` writes it at every adjudication mint); `compose` fills it through `prompts.fill`'s strict both-ways check and `agent_loop.session_body` is the single fork BOTH routing arms take, so a claimed adjudication row gets the same brief whether or not a routing registry is configured. Each assembler returns `(values, None)` or `(None, reason)` and NEVER a partial: `disposition_values` walks SpecRef -> the closed spec -> its immutable per-close report -> that report's TYPED `commit_range` -> `git log`/`--name-status` clipped at the declared 80 lines, and refuses the clean-close spot-check arm because it writes no report; `red_tc_values` RE-RUNS `dispatch.red_tc_census` rather than remembering it, joins each line through `dispatch.parse_red_tc` to the TC row's Method/Expected/Evidence and to the SR/LLR text its targets name, and refuses a census that has come clean. A refusal falls back to the worker assignment and PRINTS why. EVERY shipped brief is routed: `conflict` was RETIRED rather than filled (it had a template and a verdict grammar and never a mint, an assembler or a reader for the `needs=` its own grammar demanded), and `consolidate_values` composes the consolidation brief from the row's `Adjudicates` cluster re-derived LIVE - every row of that cluster or none, and a cluster whose overlap has dissolved refuses rather than briefing a session about a contradiction that no longer exists.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: compose/disposition_values/red_tc_values
-  - after: compose/disposition_values/red_tc_values/consolidate_values
-
 ## SR-146 — Prompts are reviewable files with a per-session audit trail
 
 > **Requirement.** Every prompt the delivered loop launches shall be a shipped, reviewable file with strictly filled slots — listed by digest in a freshness-gated generated catalogue, each session recording which template it used and the fingerprint of what it rendered to.
@@ -302,16 +180,6 @@ _traced — routes to adjudication_
   - before: Prose steers the sessions this loop launches and had been reviewable only by reading Python source, which makes the process trusted rather than inspectable. The audit trail is the part that makes the move useful rather than cosmetic: without a per-session digest, "which instruction did this session see" stays an inference. (The argv-vs-shell-string transport decision is design, and lives one tier down in LLR-163.) Hat-derived (hat.SECURITY): C-SEC-5 requires that content composed for dispatch to an external model runner carry a DECLARED inclusion rule rather than an implicit one — a prompt assembled inside source is an unreviewed egress path no write-side gate covers, and shipping it as a reviewable file with a digest is what makes that rule readable.
   - after: Prose steers the sessions this loop launches and had been reviewable only by reading Python source, which makes the process trusted rather than inspectable. The audit trail is the part that makes the move useful rather than cosmetic: without a per-session digest, "which instruction did this session see" stays an inference. (The argv-vs-shell-string transport decision is design, and lives one tier down in LLR-163.) C-SEC-5 requires that content composed for dispatch to an external model runner carry a DECLARED inclusion rule rather than an implicit one — a prompt assembled inside source is an unreviewed egress path no write-side gate covers, and shipping it as a reviewable file with a digest is what makes that rule readable.
 
-### LLR LLR-167
-_approved — re-attestation owed_
-- **Detail**
-  - before: The row's DECLARED `Brief` cell selects the template (`intake` writes it at every adjudication mint); `compose` fills it through `prompts.fill`'s strict both-ways check and `agent_loop.session_body` is the single fork BOTH routing arms take, so a claimed adjudication row gets the same brief whether or not a routing registry is configured. Each assembler returns `(values, None)` or `(None, reason)` and NEVER a partial: `disposition_values` walks SpecRef -> the closed spec -> its immutable per-close report -> that report's TYPED `commit_range` -> `git log`/`--name-status` clipped at the declared 80 lines, and refuses the clean-close spot-check arm because it writes no report; `red_tc_values` RE-RUNS `dispatch.red_tc_census` rather than remembering it, joins each line through `dispatch.parse_red_tc` to the TC row's Method/Expected/Evidence and to the SR/LLR text its targets name, and refuses a census that has come clean. A refusal falls back to the worker assignment and PRINTS why. `conflict` and `amendment` are deliberately unrouted, each with its missing derivation named in the module header.
-  - after: The row's DECLARED `Brief` cell selects the template (`intake` writes it at every adjudication mint); `compose` fills it through `prompts.fill`'s strict both-ways check and `agent_loop.session_body` is the single fork BOTH routing arms take, so a claimed adjudication row gets the same brief whether or not a routing registry is configured. Each assembler returns `(values, None)` or `(None, reason)` and NEVER a partial: `disposition_values` walks SpecRef -> the closed spec -> its immutable per-close report -> that report's TYPED `commit_range` -> `git log`/`--name-status` clipped at the declared 80 lines, and refuses the clean-close spot-check arm because it writes no report; `red_tc_values` RE-RUNS `dispatch.red_tc_census` rather than remembering it, joins each line through `dispatch.parse_red_tc` to the TC row's Method/Expected/Evidence and to the SR/LLR text its targets name, and refuses a census that has come clean. A refusal falls back to the worker assignment and PRINTS why. EVERY shipped brief is routed: `conflict` was RETIRED rather than filled (it had a template and a verdict grammar and never a mint, an assembler or a reader for the `needs=` its own grammar demanded), and `consolidate_values` composes the consolidation brief from the row's `Adjudicates` cluster re-derived LIVE - every row of that cluster or none, and a cluster whose overlap has dissolved refuses rather than briefing a session about a contradiction that no longer exists.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: compose/disposition_values/red_tc_values
-  - after: compose/disposition_values/red_tc_values/consolidate_values
-
 ## SR-147 — One machine-parseable carrier for the requirement spine
 
 > **Requirement.** The delivered harness shall hold every spine tier in one machine-parseable representation, reached by a migration proven cell-for-cell over the live registries before the new representation becomes authoritative.
@@ -323,23 +191,6 @@ _traced — routes to adjudication_
 - **Rationale**
   - before: THE ROW STATES ONE OBLIGATION, and the migration history - the two prior carriers and the cutover - is no part of it: normative history and a merged decision have no place at the requirement tier, and a rationale is where that account may live. The two-carrier split has no recorded rationale and costs on both sides. Reading 32 need rows takes ~166 code lines across 14 functions in 8 modules - six bespoke scanners, two of them F5 twins pinned by nothing but a docstring, which have already drifted once and rendered a phantom root in the dashboard - while reading all 436 SR+LLR+TC rows takes csv.DictReader. CSV also cannot represent the cells that actually exist: five hold a literal pipe, 552 hold commas, the longest is 1,553 characters, and an embedded newline has no representation at all. A structured carrier turns three integrity rules into properties of the parse - a duplicate id becomes a decode error, a ref list becomes a typed array (retiring the split-on-whitespace rule that read `and` as an orphan), and an empty cell becomes an absent key, so `unset` and `set to empty` stop being the same value. The converter is the migration's evidence, not its convenience: SR-129's 140-cell lesson is that an unproven representation change is exactly where a registry silently loses cells. ONE ROW because the single-carrier claim and its converter-proof are one contract — the converter is the migration's evidence — and the converter's mechanics already decompose to this row's LLR chain; splitting would separate a claim from the proof that makes it checkable. Hat-derived (hat.TEST-ENGINEER): the single-carrier claim is checkable only because the converter proves it cell-for-cell BEFORE the authority flip — the charter refuses an obligation whose enforcer has never been shown to bite, and a carrier change is precisely where a silent loss hides.
   - after: THE ROW STATES ONE OBLIGATION, and the migration history - the two prior carriers and the cutover - is no part of it: normative history and a merged decision have no place at the requirement tier, and a rationale is where that account may live. The two-carrier split has no recorded rationale and costs on both sides. Reading 32 need rows takes ~166 code lines across 14 functions in 8 modules - six bespoke scanners, two of them F5 twins pinned by nothing but a docstring, which have already drifted once and rendered a phantom root in the dashboard - while reading all 436 SR+LLR+TC rows takes csv.DictReader. CSV also cannot represent the cells that actually exist: five hold a literal pipe, 552 hold commas, the longest is 1,553 characters, and an embedded newline has no representation at all. A structured carrier turns three integrity rules into properties of the parse - a duplicate id becomes a decode error, a ref list becomes a typed array (retiring the split-on-whitespace rule that read `and` as an orphan), and an empty cell becomes an absent key, so `unset` and `set to empty` stop being the same value. The converter is the migration's evidence, not its convenience: SR-129's 140-cell lesson is that an unproven representation change is exactly where a registry silently loses cells. ONE ROW because the single-carrier claim and its converter-proof are one contract — the converter is the migration's evidence — and the converter's mechanics already decompose to this row's LLR chain; splitting would separate a claim from the proof that makes it checkable. The single-carrier claim is checkable only because the converter proves it cell-for-cell BEFORE the authority flip — the charter refuses an obligation whose enforcer has never been shown to bite, and a carrier change is precisely where a silent loss hides.
-
-## SR-148 — Autonomous loop work selection: what it derives from, and in what order
-
-> **Requirement.** The delivered loop content shall select the work an unattended run does next from the repository's tracked registries and git history alone, in this order: ready adjudication rows first, as a stable partition applied at admission rather than by renumbering the ruled rank table; then unresolved handback records; then the earliest incomplete spine tier in SN-to-SR-to-LLR-to-TC order; then implementation work after test-case layout is complete — with the eligible set and its order deterministic, an item whose declared safety, policy or plan-mode inputs are missing, undeclared or contradictory failing closed for that item alone, human holds applied only from the declared approval level, nothing admitted past a human-held stop, no prose surface and no predefined track in the derivation, no hand-curated next-work or run-phase pointer surface shipped for any live instruction or executable surface to read, write, validate, generate or link, and the status surface a session reads generated and freshness-gated rather than hand-copied.
-
-> **Rationale.** Without one precedence rule, the same repository can resume into implementation while returned obligations or prerequisite requirement tiers remain unresolved. That produces work against stale intent and makes repeated resumes select different next actions. A recorded selection class, source record and hold decision provide replayable evidence of the choice. ONE SR PER (need, property): the loop's work-selection invariant — what the next work derives from, in what order, and that no hand-curated pointer surface participates in it — is stated here and nowhere else, so no second row can drift from it. An explicit three-way partition was rejected: the partition already existed textually and still produced duplicated acceptance. The no-pointer obligation is stated for a migrated repository as well as a fresh scaffold, and the migrated half is the one that matters most: a fresh scaffold never had the files to keep, while an upgraded repository can retain the retired authority files and still pass. Fan-out re-stamp: this row states one decision — what an unattended run's next work derives from and in what order — and its children are the successive stages of that one selection, not separable contracts; the width is the deliberate consolidation of three rows that stated the same invariant into one, so re-splitting to satisfy the bound would restore the duplication the consolidation removed.
-
-
-### LLR LLR-167
-_approved — re-attestation owed_
-- **Detail**
-  - before: The row's DECLARED `Brief` cell selects the template (`intake` writes it at every adjudication mint); `compose` fills it through `prompts.fill`'s strict both-ways check and `agent_loop.session_body` is the single fork BOTH routing arms take, so a claimed adjudication row gets the same brief whether or not a routing registry is configured. Each assembler returns `(values, None)` or `(None, reason)` and NEVER a partial: `disposition_values` walks SpecRef -> the closed spec -> its immutable per-close report -> that report's TYPED `commit_range` -> `git log`/`--name-status` clipped at the declared 80 lines, and refuses the clean-close spot-check arm because it writes no report; `red_tc_values` RE-RUNS `dispatch.red_tc_census` rather than remembering it, joins each line through `dispatch.parse_red_tc` to the TC row's Method/Expected/Evidence and to the SR/LLR text its targets name, and refuses a census that has come clean. A refusal falls back to the worker assignment and PRINTS why. `conflict` and `amendment` are deliberately unrouted, each with its missing derivation named in the module header.
-  - after: The row's DECLARED `Brief` cell selects the template (`intake` writes it at every adjudication mint); `compose` fills it through `prompts.fill`'s strict both-ways check and `agent_loop.session_body` is the single fork BOTH routing arms take, so a claimed adjudication row gets the same brief whether or not a routing registry is configured. Each assembler returns `(values, None)` or `(None, reason)` and NEVER a partial: `disposition_values` walks SpecRef -> the closed spec -> its immutable per-close report -> that report's TYPED `commit_range` -> `git log`/`--name-status` clipped at the declared 80 lines, and refuses the clean-close spot-check arm because it writes no report; `red_tc_values` RE-RUNS `dispatch.red_tc_census` rather than remembering it, joins each line through `dispatch.parse_red_tc` to the TC row's Method/Expected/Evidence and to the SR/LLR text its targets name, and refuses a census that has come clean. A refusal falls back to the worker assignment and PRINTS why. EVERY shipped brief is routed: `conflict` was RETIRED rather than filled (it had a template and a verdict grammar and never a mint, an assembler or a reader for the `needs=` its own grammar demanded), and `consolidate_values` composes the consolidation brief from the row's `Adjudicates` cluster re-derived LIVE - every row of that cluster or none, and a cluster whose overlap has dissolved refuses rather than briefing a session about a contradiction that no longer exists.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: compose/disposition_values/red_tc_values
-  - after: compose/disposition_values/red_tc_values/consolidate_values
 
 ## SR-149 — Retired-vocabulary refusal in authored surfaces
 
@@ -360,12 +211,8 @@ _traced — routes to adjudication_
 > **Rationale.** Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (queue-overlap visibility). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Deliberate pair (census F6): the PB-format invariant itself is SR-015's; this row's decomposition carries the checker. Fan-out re-stamp: the delivered contract is one — a named, row-and-cell-attributed finding at a declared severity, gating or advisory — while the rule inventory it ranges over is open by this row's own acceptance ("a rule added at one of those sites is in this row's scope by default"), so the child count tracks the number of declared rules rather than the number of decisions this row makes, and would climb back through any bound a split bought.
 
 
-### LLR LLR-160
-- **CodeSymbol**
-  - before: queue_conflict_findings/_title_tokens
-  - after: queue_conflict_pairs/queue_conflict_findings/_title_tokens
-
-### LLR LLR-210 — ADDED since the snapshot, Drafted — never approved
+### LLR LLR-210 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **LLR-ID**: LLR-210
 - **SR-Refs**: SR-157
 - **Title**: The consolidation census: which queued rows are one work item, and the memory that stops the question being re-asked
