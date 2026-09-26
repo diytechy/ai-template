@@ -745,9 +745,18 @@ When an **`Approved`** spine row is amended, `staged_spine_amendments` in
 
 | Registry | **Traced** (amend freely) | **Approved** (opens a re-attest window) |
 |---|---|---|
-| SR | `SN-Refs`, `Boundary-Refs`, `Hat-Refs`, `Phase`, `Aspect`, `Lifecycle` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification` |
+| SR | `SN-Refs`, `Boundary-Refs`, `Hat-Refs`, `Phase`, `Aspect`, `Lifecycle`, `DA-Refs` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification`, `Coincident`, `Form` |
 | LLR | `Module`, `CodeSymbol`, `TestRefs`, `Component`, `Phase`, `SR-Refs`, `Hat-Refs` | `Title`, `Detail`, `Rationale` |
-| TC | `Verifies`, `Evidence`, `Automated`, `Phase` | `Method`, `Expected`, `Parameters`, `Level`, `Tier` |
+| TC | `Verifies`, `Evidence`, `Automated`, `Phase`, `Assumption-Refs` | `Method`, `Expected`, `Parameters`, `Level`, `Tier`, `Inputs`, `MaxAge`, `Sampling`, `SampleSize`, `AcceptanceRule` |
+| SN | `Stakeholder-Refs`, `Source` | every other need cell (the residual) |
+| IF (off-spine) | `BridgedBy` | every other interface cell, `Coincident` included (the residual) |
+| DA (off-spine) | `ObstacleHats` | every other assumption cell, and every surrogate cell (the residual) |
+
+The two off-spine rows are `acceptance_record.OFFSPINE_TRACED_CELLS`. Every
+cell neither table names is approved content through the residual — a
+stakeholder's `Name`, `Description` and `Party`, a crossing's `System` and an
+entity's `Mediates` among them. A traced cell is a pointer at another row; an
+approved one states something the row asserts.
 
 **Why it exists:** WI-280 moved code, 19 LLR `Module` cells followed it, 11
 owning SRs flipped off `Approved`, the gate dropped, and it cost an approve

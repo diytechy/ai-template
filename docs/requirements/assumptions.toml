@@ -1,0 +1,20 @@
+# docs/requirements/assumptions.toml — THE CLAIMS ABOUT THE WORLD this kit's
+# requirements rely on, and the stand-ins that answer for outside parties in its
+# tests. The shipped blank form, with every cell explained, is
+# project-trajectory/registries/assumptions.template.toml.
+#
+# TWO ROW KINDS, ONE FILE:
+#
+#   [assumption.DA-###]   a domain assumption a requirement's argument relies on
+#   [surrogate.SUR-###]   a stand-in for outside parties in tests, named by the
+#                         assumption stating its fidelity
+#
+# EMPTY BY DESIGN, FOR NOW. The tier and its checks ship first; this
+# repository's own assumption and surrogate rows are written and approved in a
+# later reviewed act. Until a real assumption row exists, the requirement
+# classification and form reports stay silent here, as they do in any project
+# that has not adopted the tier.
+#
+# The record of what was approved (`docs/archive/last_approved/`) holds no copy
+# of this file yet, and must not be given one early: the first copy is written
+# by the approval act that approves this file's first row.

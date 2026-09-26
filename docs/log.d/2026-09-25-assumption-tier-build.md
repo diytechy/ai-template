@@ -416,3 +416,35 @@ coordinator integrates in the handoff's order.
   open-items view up to date. Seconds **FAIL** at 1270.4 s against 60 s
   (OI-92; four builders were loading the box), recorded, not re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=1e20f9fb -->
+
+### WI-629 lands — the assumptions registry, surrogates, requirement classification and form
+
+- **Follow-up 6271c4b0** (the predecessor's uncommitted work, verified and
+  finished by a fresh builder in the same worktree): TC-222 to Full in the
+  slow module `tests/test_cell_classes.py` (ruling 1); `sr_form_findings(srs)`
+  one-argument per LLR-224, adoption decided in `assumption_tier_findings`;
+  the missing-copy exception narrowed to the assumptions registry
+  (`FIRST_COPY_AT_APPROVAL`), with a conviction test that an established
+  registry deleted with its copy is still reported. Red, taken by restoring
+  5453f920's scripts: the form tests 6 failed; the ESTABLISHED cases 3 failed,
+  1 passed (the SR-copy case the old code already reported, because SR has an
+  approved row).
+- **Integrated** by squash (base b14d1808). Conflicts: `docs/id-watermark`
+  (highest marks; `--bump-ids` rewrote it), `RESYNC_PACK.md` (both entries,
+  landing order; WI-629's re-anchored `[since 26c086dd]`).
+- **Amended, status left Approved, for the joint adjudication:** TC-222
+  `tier`. Traced pointer moved: TC-222 `evidence`.
+- **Smoke membership re-stamped 1702 -> 1810** in `docs/stack.ini`: the
+  +38 in-process pure-rule tests put the tier at a measured 1740; reason in
+  the stamp's comment. The seconds budget is not moved.
+- **Commit bar:** smoke **1 failed, 1736 passed, 3 skipped** in 2065.7 s,
+  the failure being the membership ratchet above, then
+  `test_smoke_budget.py` **3 passed** after the re-stamp; the touched slow
+  modules (`test_assumptions_registry`, `test_cell_classes`,
+  `test_baseline_snapshot`, `test_bootstrap`, `test_module_size_ratchet`,
+  `test_resync_pack`, `test_trace`) **246 passed, 1 skipped**;
+  `check_docs --stale` OK; `check_trajectory --strict` clean; `trace.py
+  --strict-integrity` 0 integrity; `CURRENT.md` current; the open-items view
+  up to date. Seconds **FAIL** at 2073.8 s against 60 s (OI-92; four builders
+  loading the box), recorded, not re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=26c086dd -->

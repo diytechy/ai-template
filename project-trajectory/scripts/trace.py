@@ -220,6 +220,7 @@ try:
     )
     from frame_rules import frame_system_findings, sr_system_advisories
     from frame_rules import need_source_findings, source_documents, stakeholder_findings
+    from assumption_rules import assumption_tier_findings
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -260,6 +261,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     )
     from frame_rules import frame_system_findings, sr_system_advisories
     from frame_rules import need_source_findings, source_documents, stakeholder_findings
+    from assumption_rules import assumption_tier_findings
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -836,10 +838,15 @@ WATERMARK = "docs/id-watermark"
 # tiers in external.toml — added by the sitting-3 item-17 ruling after the
 # 2026-08-16q cut spent B-06/B-07/EXT-004 with nothing mechanical to stop a
 # later re-mint). STK is the stakeholder list on the needs file (SR-189), hand-
-# authored like the frame's. Keyed off ID_PATTERNS so a space added there cannot
-# be silently exempt here — tests/test_id_watermark.py pins the set.
+# authored like the frame's, and DA/SUR the assumptions registry's two tiers
+# (SR-191, SR-192), hand-authored the same way. Keyed off ID_PATTERNS so a space
+# added there cannot be silently exempt here — tests/test_id_watermark.py pins
+# the set.
 WATERMARK_SPACES = tuple(
-    sorted(set(ID_PATTERNS) | {"SN", "WI", "OI", "DP", "B", "EXT", "REL", "STK"})
+    sorted(
+        set(ID_PATTERNS)
+        | {"SN", "WI", "OI", "DP", "B", "EXT", "REL", "STK", "DA", "SUR"}
+    )
 )
 _WATERMARK_LINE = re.compile(r"^([A-Z]+)\s*=\s*(\d+)\s*$")
 _ANY_ID = re.compile(r"^([A-Z]+)-(\d+)$")
@@ -926,7 +933,8 @@ def _offspine_ids(docs):
 
     The stakeholder list (`STK-##`) joined with the tier itself: it shares the
     needs file, and is read here by its own id column exactly as the frame's
-    three tiers share `external.toml`.
+    three tiers share `external.toml`. The assumptions registry's two tiers
+    (`DA-###`, `SUR-###`) joined with the registry, on one path the same way.
 
     Implements: SR-189, LLR-215"""
     # interfaces + components joined the TOML carrier at WI-443, which un-wired
@@ -946,6 +954,8 @@ def _offspine_ids(docs):
         ("docs/requirements/external.toml", "B-ID"),
         ("docs/requirements/external.toml", "REL-ID"),
         ("docs/requirements/stakeholder-needs.toml", "STK-ID"),
+        ("docs/requirements/assumptions.toml", "DA-ID"),
+        ("docs/requirements/assumptions.toml", "SUR-ID"),
     ):
         for row in spine_carrier.load(docs.parent / rel, id_col):
             match = _ANY_ID.match(str(row.get(id_col) or "").strip())
@@ -4484,6 +4494,8 @@ class Registries:
     bifs: list
     rels: list
     stks: list
+    das: list
+    surs: list
     sn_ids: set
     sn_draft: set
     sn_meta: dict
@@ -4641,6 +4653,12 @@ def load_registries(docs):
     raw_stks = spine_carrier.load(
         docs / "requirements" / "stakeholder-needs.toml", "STK-ID"
     )
+    # Optional ASSUMPTIONS REGISTRY (SR-191, SR-192): its two tiers, one `load`
+    # each by id column like the frame's, the `-000` examples dropped. Absent
+    # file -> [] twice, and the tier is silent.
+    assumptions = docs / "requirements" / "assumptions.toml"
+    das = spine_carrier.load(assumptions, "DA-ID", keep_examples=False)
+    surs = spine_carrier.load(assumptions, "SUR-ID", keep_examples=False)
 
     # The working sets exclude template example rows (ids ending "-000") so a
     # fresh scaffold has nothing to orphan; the raw lists above keep them for the
@@ -4738,6 +4756,8 @@ def load_registries(docs):
         bifs=bifs,
         rels=rels,
         stks=stks,
+        das=das,
+        surs=surs,
         sn_ids=sn_ids,
         sn_draft=sn_draft,
         sn_meta=sn_meta,
@@ -5014,6 +5034,14 @@ def analyze(reg, args):
     raw = {"SR": reg.raw_srs, "LLR": reg.raw_llrs, "TC": reg.raw_tcs}
     real = {"SR": srs, "LLR": llrs, "TC": tcs}
     integrity = integrity_sweep(reg, raw)
+    # The assumption tier (SR-191..SR-196), where the frame declares a crossing:
+    # each of its three lists joins the class its rules name.
+    tier_frame, tier_integrity, tier_advisories = assumption_tier_findings(
+        srs, reg.das, reg.surs, exts, bifs
+    )
+    frame_backlink_findings += tier_frame
+    integrity += tier_integrity
+    interface_advisories += tier_advisories
     placeholders = placeholder_sweep(raw, reg.sn_md) if flags.no_placeholders else []
     schema = schema_sweep(real) if flags.strict_schema else []
     # Warn-only, always on: comparative AcceptanceCriteria terms with no pinned

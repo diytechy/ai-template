@@ -247,7 +247,11 @@ SPINE_TABLE = {
 # stakeholder list whose rows those needs cite. `load(stakeholder-needs.toml,
 # "STK-ID")` returns exactly the stakeholders, and the need readers below read
 # `NEED_TABLE` alone, so a stakeholder's status never joins the needs' draft set.
-# Implements: SR-189, LLR-215
+#
+# THE ASSUMPTIONS REGISTRY IS TWO ENTRIES ON ONE PATH (SR-191, SR-192):
+# `assumptions.toml` carries the domain assumptions and the surrogates their
+# fidelity assumptions name, each tier under its own id column.
+# Implements: SR-189, SR-191, SR-192, LLR-215, LLR-218
 OFFSPINE_TABLE = {
     "OI-ID": "open_item",
     "Id": "agent",
@@ -257,6 +261,8 @@ OFFSPINE_TABLE = {
     "B-ID": "boundary",
     "REL-ID": "relationship",
     "STK-ID": "stakeholder",
+    "DA-ID": "assumption",
+    "SUR-ID": "surrogate",
 }
 REGISTRY_TABLE = dict(SPINE_TABLE, **OFFSPINE_TABLE)
 
@@ -273,6 +279,7 @@ REGISTRY_TABLE = dict(SPINE_TABLE, **OFFSPINE_TABLE)
 # This is the exact inverse of `migrate_carrier.KEY` (the writer), and
 # tests/test_rule_sync.py pins the two as inverses so a column can never be
 # renamed on one side of the conversion only.
+# Implements: SR-193, LLR-222
 SPINE_COLUMN = {
     "title": "Title",
     "sn_refs": "SN-Refs",
@@ -318,6 +325,12 @@ SPINE_COLUMN = {
     "source": "Source",
     "phase": "Phase",
     "aspect": "Aspect",
+    # The requirement's assumption citations and its waiver (SR-193), and its
+    # form (SR-194). `coincident` is declared ONCE, here, and an interface row's
+    # waiver reads the same column: one key, one column name, repo-wide (D-3).
+    "da_refs": "DA-Refs",
+    "coincident": "Coincident",
+    "form": "Form",
     "superseded_by": "SupersededBy",
     "lifecycle": "Lifecycle",
     "detail": "Detail",
@@ -439,6 +452,18 @@ OFFSPINE_COLUMN = {
     # stakeholders (STK-##, SR-189): the declared frame entity a stakeholder is.
     # `name`, `description` and `status` are shared columns, declared above.
     "party": "Party",
+    # the assumptions registry (DA-###, SUR-###; SR-191, SR-192). `status`,
+    # `standing`, `name` and `description` are shared columns, declared
+    # elsewhere in this map.
+    "effect_at": "EffectAt",
+    "assumption": "Assumption",
+    "holds_when": "HoldsWhen",
+    "obstacle": "Obstacle",
+    "falsifier": "Falsifier",
+    "accepted_risk": "AcceptedRisk",
+    "realized_by": "RealizedBy",
+    "obstacle_hats": "ObstacleHats",
+    "emulates": "Emulates",
     # components (CMP-###, process-options.md "Component layer"; WI-443).
     "name": "Name",
     "category": "Category",

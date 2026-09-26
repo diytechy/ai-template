@@ -1,0 +1,52 @@
+# assumptions.template.toml — THE CLAIMS ABOUT THE WORLD your requirements rely
+# on, and the stand-ins that answer for outside parties in your tests. Copy to
+# docs/requirements/assumptions.toml and replace the `-000` example rows
+# (trace.py ignores any id ending `-000`, so they are inert until deleted).
+#
+# WHY THIS FILE EXISTS. A requirement states what your system does at its own
+# boundary; a stakeholder need states what a person experiences. Between them
+# sits a claim about the world — "the reviewer reads the brief before
+# approving" — and if it is false, a fully verified system still delivers
+# nothing. Written down as a row, the claim gets an id: evidence about it is
+# counted apart from evidence about your system, and one row cited wherever the
+# claim applies replaces the same sentence copied into every requirement.
+#
+# TWO ROW KINDS, ONE FILE:
+#   [assumption.DA-###]   a domain assumption a requirement's argument relies on
+#   [surrogate.SUR-###]   a stand-in for outside parties in your tests (a
+#                         scripted model run, a fresh scaffold in a temporary
+#                         directory), named by the assumption stating how
+#                         faithfully it stands in
+#
+# A requirement cites its assumptions in `da_refs`, or records in `coincident`
+# why its own specification alone delivers its needs (the system's output IS the
+# outcome). An assumption's needs are never written here: they are read through
+# the requirements citing it.
+#
+# STATUS is the spine's maturity, `Drafted` | `Approved` | `Founded`, and an
+# approval is a reviewed act like every other: a work lane never approves a row
+# here. STANDING is the assumption's validity, `active` | `falsified`, and is
+# separate from its maturity because an approved assumption can later be shown
+# false.
+#
+# APPLIES-WHEN: the tier is read only where docs/requirements/external.toml
+# declares a boundary crossing, since an assumption's outcome lands on one.
+# A project with no frame hears nothing from this file.
+
+[assumption.DA-000]
+effect_at = ["B-000"]  # REQUIRED. The boundary crossing(s) in external.toml where this assumption's outcome lands; each must be a declared crossing.
+assumption = "EXAMPLE - delete on first real entry. What you take to be true about the world, in one testable sentence."
+holds_when = "REQUIRED. The conditions under which the assumption holds."
+obstacle = "REQUIRED. The circumstance under which it fails — what would have to happen for it to be false."
+falsifier = "OPTIONAL, but reported when absent: the observable signal that would show the assumption false. With none, nothing can test it."
+accepted_risk = "OPTIONAL. The risk you accept while the assumption stands unproven, stated when you choose to proceed without evidence."
+realized_by = "SUR-000"  # OPTIONAL. On a FIDELITY assumption only: the one surrogate this row says is faithful. The row must land on a crossing of a party that surrogate emulates.
+obstacle_hats = ["SECURITY"]  # OPTIONAL. The declared perspective(s) in docs/requirements/hats.toml the obstacle came from, by roster name. A pointer: moving it re-opens no approval.
+status = "Drafted"
+standing = "active"
+
+[surrogate.SUR-000]
+name = "EXAMPLE - delete on first real entry"
+emulates = ["EXT-000"]  # REQUIRED, at least one. The declared entities in external.toml this stand-in answers for — entity ids only, never a component or an interface.
+description = "REQUIRED. What the stand-in is and how your tests use it. Its fidelity is not claimed here: an assumption naming it in `realized_by` states that, so the match can be tested."
+status = "Drafted"

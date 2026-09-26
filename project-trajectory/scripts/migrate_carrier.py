@@ -141,6 +141,13 @@ REF_COLS = {
     "Hat-Refs",
     # SR-189: a need's stakeholders, STK ids, which hold no separator.
     "Stakeholder-Refs",
+    # SR-193: a requirement's assumptions; SR-191/SR-192: an assumption's
+    # landing crossings and obstacle perspectives, a surrogate's emulated
+    # parties. Every entry is an id or a hat name, which holds no separator.
+    "DA-Refs",
+    "EffectAt",
+    "ObstacleHats",
+    "Emulates",
     "Verifies",
     "SupersededBy",
     "WI-Refs",
@@ -156,6 +163,7 @@ INT_COLS = {"Phase"}
 # column -> TOML key. EXPLICIT, never derived: a derivation turns `SR-ID` into
 # `s_r_i_d`, and the column name is a repo-wide term (D-3) that deserves a
 # stated mapping rather than a regex nobody can predict.
+# Implements: SR-193, LLR-222
 KEY = {
     "Title": "title",
     "SN-Refs": "sn_refs",
@@ -279,6 +287,22 @@ KEY = {
     "Party": "party",
     "Stakeholder-Refs": "stakeholder_refs",
     "Source": "source",
+    # the requirement's assumption citations, waiver and form (SR-193, SR-194)
+    # and the assumptions registry's own cells (SR-191, SR-192). Never
+    # converted from a legacy carrier; declared as the writer half of the one
+    # pinned bijection.
+    "DA-Refs": "da_refs",
+    "Coincident": "coincident",
+    "Form": "form",
+    "EffectAt": "effect_at",
+    "Assumption": "assumption",
+    "HoldsWhen": "holds_when",
+    "Obstacle": "obstacle",
+    "Falsifier": "falsifier",
+    "AcceptedRisk": "accepted_risk",
+    "RealizedBy": "realized_by",
+    "ObstacleHats": "obstacle_hats",
+    "Emulates": "emulates",
 }
 
 

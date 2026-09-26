@@ -17,7 +17,8 @@ Contract IF-039: the blank registry TEMPLATES a scaffold is built from — one
 
 One template per registry tier: the spine (stakeholder needs, system
 requirements, low-level requirements, test cases), the off-spine registries
-(interfaces, external, components, hats, open items, performance budgets) and
+(interfaces, external, assumptions, components, hats, open items, performance
+budgets) and
 the optional ones (procurement, assets, repos, work items). They are **forms,
 not data** — an adopting repo fills its own copies, and this kit's own filled
 instance lives in `docs/requirements/` and `docs/test/`. Every template carries a

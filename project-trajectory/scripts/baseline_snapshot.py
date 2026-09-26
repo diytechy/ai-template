@@ -209,6 +209,12 @@ README = "README.md"
 # names one of its rows. A spine-only approval no longer re-copies these files,
 # so it can no longer re-seal whatever off-spine drift happened to be live at
 # that moment.
+#
+# THE ASSUMPTIONS REGISTRY JOINED LAST (SR-191, SR-192), and its copy is not
+# seeded early: a record signed before the registry existed holds no copy of
+# it, and the first copy is written by the approval act that approves the
+# registry's first row (`FIRST_COPY_AT_APPROVAL` below).
+# Implements: SR-191, SR-192, LLR-220
 SNAPSHOTTED = (
     "docs/requirements/stakeholder-needs.toml",
     "docs/requirements/system-requirements.toml",
@@ -217,17 +223,29 @@ SNAPSHOTTED = (
     "docs/requirements/interfaces.toml",
     "docs/requirements/external.toml",
     "docs/requirements/components.toml",
+    "docs/requirements/assumptions.toml",
 )
+
+# The registries whose FIRST COPY rides the act approving their first row
+# (LLR-220): they joined `SNAPSHOTTED` after records were already signed, so a
+# signed record may lawfully lack them. `unanchored_findings` excuses such a
+# registry's absence from the record only while no live row of it claims
+# approval; every other registry missing from a standing record is a hole,
+# whatever its live rows claim, because a registry deleted together with its
+# copy leaves no row claiming anything. Nothing else may join this tuple.
+FIRST_COPY_AT_APPROVAL = ("docs/requirements/assumptions.toml",)
 
 # The needs registry reads through its own carrier pair (`.toml`/`.md`) and has
 # no id COLUMN — needs are dicts keyed `id`. Named separately so the row-keyed
 # loop below never has to special-case a path.
 NEEDS_REL = SNAPSHOTTED[0]
 
-# `(registry path, id column)` for every ROW-KEYED tier. Eight tiers over five
+# `(registry path, id column)` for every ROW-KEYED tier. Ten tiers over six
 # files: `external.toml` carries entities, boundary crossings and relationships
 # in one file because they are one statement, and each is its own tier with its
-# own id column (`spine_carrier.OFFSPINE_TABLE`).
+# own id column (`spine_carrier.OFFSPINE_TABLE`); `assumptions.toml` carries the
+# assumptions and the surrogates the same way.
+# Implements: SR-191, SR-192, LLR-220
 SNAPSHOT_TIERS = (
     ("docs/requirements/system-requirements.toml", "SR-ID"),
     ("docs/requirements/low-level-requirements.toml", "LLR-ID"),
@@ -237,6 +255,8 @@ SNAPSHOT_TIERS = (
     ("docs/requirements/external.toml", "EXT-ID"),
     ("docs/requirements/external.toml", "B-ID"),
     ("docs/requirements/external.toml", "REL-ID"),
+    ("docs/requirements/assumptions.toml", "DA-ID"),
+    ("docs/requirements/assumptions.toml", "SUR-ID"),
 )
 
 # The Status value that CLAIMS approval-or-above. ONE MEMBER since D-9 step 5
@@ -1249,6 +1269,26 @@ def drifted_cells(rel, id_col, live_row, snapshot_rows):
     )["approved"]
 
 
+def _missing_registry_findings(rel, live):
+    """The finding for a registry the record lacks, as a list.
+
+    Always one line for an established registry. For a registry in
+    `FIRST_COPY_AT_APPROVAL`, none while no live row of it claims approval: its
+    first copy is the approval act's to write, so its absence before then is
+    the record's honest state. Split out of `unanchored_findings`, whose walk
+    it would otherwise push past the complexity bar."""
+    first_copy_pending = rel in FIRST_COPY_AT_APPROVAL and not any(
+        _claims_approval(row) for row in live
+    )
+    if first_copy_pending:
+        return []
+    return [
+        "{} is missing from the {} snapshot — the snapshot exists, so a "
+        "registry absent from it is a gap in the record of what was "
+        "approved, not a repo that has approved nothing".format(rel, SNAPSHOT_DIR)
+    ]
+
+
 def unanchored_findings(root, snapshot=None):
     """The successor to repo-lock D-9's "approved-with-no-anchor is an ERROR" —
     and, since migration step 7, an ERROR in fact.
@@ -1262,13 +1302,18 @@ def unanchored_findings(root, snapshot=None):
 
     VACUOUS UNTIL THE SNAPSHOT HOLDS A REGISTRY. Once it holds one, a registry
     MISSING from beside it is itself reported here — a half-copied record is a
-    record with a hole, which is the state worth being loud about.
+    record with a hole, which is the state worth being loud about. The one
+    exception is a registry that joined the record after it was first signed
+    (`FIRST_COPY_AT_APPROVAL`: the assumptions registry, SR-191): its first
+    copy is written by the act approving its first row, so until a live row of
+    it claims approval its absence is not reported, since reporting it would
+    demand a copy no act may write.
 
     The vacuum is "no registry" rather than "no directory", and the distinction
     is not academic: `bootstrap.py` SCAFFOLDS `docs/archive/last_approved/` with
     its README and nothing else, deliberately ("an empty snapshot is the HONEST
     state for a repo that has approved nothing yet"), so a directory test would
-    report all eight tiers missing in EVERY fresh adopter repo on day one — the
+    report every tier missing in EVERY fresh adopter repo on day one — the
     reds-everything failure the arming note below exists to avoid, shipped
     downstream. Caught when this producer was first wired to `trace.py`
     (adversarial round 2, 2026-08-15): until then nothing called this, so
@@ -1296,17 +1341,12 @@ def unanchored_findings(root, snapshot=None):
         return []  # scaffolded-but-unsigned: the pre-signing state, honestly
     out = []
     for rel, id_col in SNAPSHOT_TIERS:
+        live = spine_carrier.load(Path(root) / rel, id_col, keep_examples=False)
         if spine_carrier.resolve(base / rel) is None:
-            out.append(
-                "{} is missing from the {} snapshot — the snapshot exists, so a "
-                "registry absent from it is a gap in the record of what was "
-                "approved, not a repo that has approved nothing".format(
-                    rel, SNAPSHOT_DIR
-                )
-            )
+            out += _missing_registry_findings(rel, live)
             continue
         before = rows_for(snapshot, rel, id_col)
-        for row in spine_carrier.load(Path(root) / rel, id_col, keep_examples=False):
+        for row in live:
             rid = str(row.get(id_col) or "").strip()
             if not rid or not _claims_approval(row):
                 continue

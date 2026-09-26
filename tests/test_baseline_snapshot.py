@@ -691,11 +691,14 @@ _SHARED = _shared_file_pairs()
 
 def test_the_row_rule_is_driven_over_EVERY_compared_tier():
     """The parameter lists ARE `SNAPSHOT_TIERS`, and hold every tier TC-240
-    names that exists today. The assumptions registry's two tiers join the list
-    when that registry is built; nothing here names them, so nothing here can
-    drift from the table that decides which rows are compared."""
+    names: the spine's three, interfaces, components, the frame's three, and
+    the assumptions registry's two (assumptions and surrogates, which share one
+    file). The cases below take their parameters from the table itself, so
+    nothing here can drift from the table that decides which rows are
+    compared."""
     assert [tuple(p.values) for p in _TIERS] == list(SNAP.SNAPSHOT_TIERS)
     named = {"SR-ID", "LLR-ID", "TC-ID", "IF-ID", "CMP-ID", "EXT-ID", "B-ID", "REL-ID"}
+    named |= {"DA-ID", "SUR-ID"}
     assert named <= {col for _rel, col in SNAP.SNAPSHOT_TIERS}
     assert _SHARED, "no registry holds two tiers, so the shared-file case is vacuous"
 
@@ -1213,6 +1216,33 @@ def test_a_registry_missing_from_an_EXISTING_snapshot_is_reported(tmp_path):
     assert any("is missing from the" in f and SR_REL in f for f in found), found
 
 
+@pytest.mark.parametrize(
+    "rel,with_live",
+    [
+        pytest.param(SR_REL, True, id="SR-copy-deleted"),
+        pytest.param(SR_REL, False, id="SR-deleted-with-its-copy"),
+        pytest.param(IF_REL, True, id="IF-copy-deleted-no-approved-row"),
+        pytest.param(IF_REL, False, id="IF-deleted-with-its-copy"),
+    ],
+)
+def test_an_ESTABLISHED_registry_missing_from_the_record_is_ALWAYS_reported(
+    tmp_path, rel, with_live
+):
+    """The no-copy-before-first-approval exception belongs to the registry that
+    joined the record after it was first signed, and to it alone. For an
+    established registry the hole is reported whatever its live rows claim:
+    deleting the registry together with its copy leaves no row claiming
+    approval, and a rule reading only the claims would let the deletion erase
+    its own evidence."""
+    assert SNAP.FIRST_COPY_AT_APPROVAL == (ASSUMPTIONS_REL,)
+    root = _seeded(tmp_path)
+    (SNAP.snapshot_root(root) / rel).unlink()
+    if not with_live:
+        (root / rel).unlink()
+    found = SNAP.unanchored_findings(root)
+    assert any("is missing from the" in f and rel in f for f in found), found
+
+
 def test_an_unparseable_snapshot_REFUSES_rather_than_reading_as_empty(tmp_path):
     """`None` and `{}` are opposite claims. An empty read here means "no row was
     ever approved", which turns a broken file into a clean bill on every row.
@@ -1629,3 +1659,100 @@ def test_intake_snapshot_subcommand_seeds_then_refreshes(tmp_path):
     again = run_py([SCRIPTS / "intake.py", "--root", str(root), "snapshot"], cwd=root)
     assert again.returncode == 0, again.stdout + again.stderr
     assert "SEEDED" not in again.stdout
+
+
+# --- the assumptions registry inside the approval act (SR-191, SR-192, LLR-220;
+# TC-218) -----------------------------------------------------------------------
+# The registry holds two approvable tiers, and each is recorded exactly as every
+# other approved row is: a lane may not approve one, the act that does rides its
+# own reviewed commit and writes the registry's first copy, and an amendment
+# afterwards is drift from that copy. The record here predates the registry, as
+# it does in any repository that signed before adopting the tier, so the first
+# copy is the approval act's.
+
+ASSUMPTIONS_REL = "docs/requirements/assumptions.toml"
+_AR = load_script("acceptance_record")
+
+# One real row per tier, in the tier's own cells, and the approved cell an
+# amendment afterwards moves.
+_TIER_ROWS = {
+    "DA-ID": (
+        "DA-9001",
+        "assumption",
+        '\n[assumption.DA-9001]\neffect_at = ["B-01"]\n'
+        'assumption = "Row X"\nholds_when = "Always."\nobstacle = "Never."\n'
+        'status = "Drafted"\nstanding = "active"\n',
+        "Assumption",
+    ),
+    "SUR-ID": (
+        "SUR-9001",
+        "description",
+        '\n[surrogate.SUR-9001]\nname = "A stand-in"\nemulates = ["EXT-001"]\n'
+        'description = "Row X"\nstatus = "Drafted"\n',
+        "Description",
+    ),
+}
+_ASSUMPTION_TIERS = [
+    pytest.param(ASSUMPTIONS_REL, col, id=col) for col in ("DA-ID", "SUR-ID")
+]
+
+
+def _without_the_registry(root):
+    """`_git_tree`'s prepare hook: the record is signed before the registry
+    exists, so the tree it seeds carries none."""
+    path = root / ASSUMPTIONS_REL
+    if path.is_file():
+        path.unlink()
+
+
+def _head(run_git):
+    return run_git("rev-parse", "HEAD").stdout.strip()
+
+
+@pytest.mark.parametrize("rel,id_col", _ASSUMPTION_TIERS)
+def test_an_assumption_tier_row_is_approved_only_inside_the_approval_act(
+    tmp_path, rel, id_col
+):
+    rid, key, block, cell = _TIER_ROWS[id_col]
+    assert (rel, id_col) in SNAP.SNAPSHOT_TIERS
+    assert (rel, id_col) in _AR.APPROVAL_ACT_CSVS
+    root, run_git = _git_tree(tmp_path, _without_the_registry)
+    assert not (SNAP.snapshot_root(root) / rel).exists()
+    _append(root, rel, block)
+    run_git("add", "-A")
+    run_git("commit", "-m", "draft the row")
+    drafted = _head(run_git)
+
+    # Before the first approval the registry has no copy, and the
+    # unanchored-record rule reports nothing for it.
+    assert [f for f in SNAP.unanchored_findings(root) if rel in f or rid in f] == []
+
+    # A LANE whose delta approves the row is refused at the merge slot, by name.
+    _rewrite(root, rel, 'status = "Drafted"', 'status = "Approved"')
+    run_git("add", "-A")
+    run_git("commit", "-m", "a lane approves the row")
+    refusal = _AR.merge_approval_refusal(root, drafted, _head(run_git), [], False)
+    assert refusal and rid in refusal and rel in refusal, refusal
+    # ...and an approval with no copy behind it is the hole the rule reports.
+    assert any(rel in f for f in SNAP.unanchored_findings(root))
+    run_git("reset", "-q", "--hard", drafted)
+
+    # THE APPROVAL ACT: the flip and the record's refresh in one reviewed
+    # commit, which writes the registry's first copy and passes the mirror.
+    _rewrite(root, rel, 'status = "Drafted"', 'status = "Approved"')
+    written = SNAP.copy_live(root)
+    assert "{}/{}".format(SNAP.SNAPSHOT_DIR, rel) in written, written
+    run_git("add", "-A")
+    assert CT.staged_snapshot_findings(root) == []
+    run_git("commit", "-m", "approve the row")
+    assert CT.committed_snapshot_findings(root) == []
+    assert SNAP.unanchored_findings(root) == []
+    assert (SNAP.snapshot_root(root) / rel).read_bytes() == (root / rel).read_bytes()
+
+    # The approved row amended afterwards is drift from its copy.
+    _rewrite(root, rel, '{} = "Row X"'.format(key), '{} = "Row X, amended"'.format(key))
+    record = SNAP.rows_for(SNAP.load_all(root), rel, id_col)
+    (live,) = _SPINE_CARRIER.load(root / rel, id_col, keep_examples=False)
+    assert SNAP.is_drifted(rel, id_col, live, record)
+    assert set(SNAP.drifted_cells(rel, id_col, live, record)) == {cell}
+    assert "{} {}: {}".format(rel, rid, cell) in SNAP.refresh_refusal(root)

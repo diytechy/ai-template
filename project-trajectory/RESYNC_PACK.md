@@ -5299,6 +5299,65 @@ before the upgrade has no `Adjudicates` cell, so its brief now refuses and the
 loop holds the row for a human. Add `adjudicates = ["<id>", ...]` to that spec's
 frontmatter, listing the row ids its title names, or rule on it by hand.
 
+### The assumptions registry, and each requirement's assumption citations and form [since 26c086dd]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A new registry, `docs/requirements/assumptions.toml`, holds
+two tiers beside the frame (SR-191, SR-192): `[assumption.DA-###]` rows, the
+claims about the world a requirement's argument relies on (`effect_at`
+crossings, `assumption`, `holds_when`, `obstacle`, `falsifier`,
+`accepted_risk`, `realized_by`, `obstacle_hats`, `status`, and `standing`:
+`active` | `falsified`), and `[surrogate.SUR-###]` rows, the stand-ins that
+answer for outside parties in tests (`name`, `emulates` entity ids,
+`description`, `status`). The requirement tier gains three optional cells:
+`da_refs`, the assumptions it relies on; `coincident`, why its own
+specification alone delivers its needs; and `form`, one of `interface` |
+`assumption` | `cross-cutting` (SR-193, SR-194). `trace.py` checks them through
+a new pure module, `scripts/assumption_rules.py`, which it imports unguarded,
+and only where `external.toml` declares a crossing. An assumption missing a
+required cell, with a status or standing outside its vocabulary, or landing on
+an undeclared crossing, and a requirement citing an undeclared assumption,
+join the frame findings and fail `--strict`. A surrogate missing a cell,
+emulating anything but a declared entity, or with a status outside the
+vocabulary, a fidelity assumption naming an undeclared surrogate, two
+surrogates, or none of its surrogate's parties, and a `form` outside the three
+fail the `--strict-integrity` floor. Once the registry holds a real assumption
+row, a requirement citing nothing and recording no waiver, one doing both, one
+with no form, an uncited assumption, one with no falsifier and a surrogate no
+assumption names are each one advisory. The id watermark gains `DA` and `SUR`
+spaces. The registry joins the approval record (`intake.py snapshot` copies it,
+and `--reattests` takes `DA-`/`SUR-` ids) and the approval act, so a lane's
+merge approving an assumption or a surrogate is refused. The amendment
+classifier names the new cells: a requirement's `DA-Refs`, a test case's
+`Assumption-Refs`, a need's `Stakeholder-Refs` and `Source`, an interface's
+`BridgedBy` and an assumption's `ObstacleHats` are traced, and moving one
+re-opens no approval; a requirement's `Coincident` and `Form` and a test case's
+`Inputs`, `MaxAge`, `Sampling`, `SampleSize` and `AcceptanceRule` are approved
+content. A signed record may lack the assumptions registry: its absence is
+reported only once a live row of it claims approval, since the act approving
+its first row writes its first copy. Every other registry missing from the
+record is still reported.
+
+**What to do.** Re-sync `scripts/assumption_rules.py` (new), `scripts/trace.py`,
+`scripts/kitlib/spine.py`, `scripts/spine_carrier.py`,
+`scripts/migrate_carrier.py`, `scripts/acceptance_record.py`,
+`scripts/baseline_snapshot.py` and `scripts/bootstrap.py` together: `trace.py`
+fails to import without the new module. Read
+`registries/system-requirements.template.toml` for the three new requirement
+cells; your own registry gains nothing. Then run
+`python scripts/trace.py --bump-ids` once and commit `docs/id-watermark`: the
+integrity floor, which the pre-commit hook runs, refuses a watermark with no
+`DA` or `SUR` line until you do. Copy `registries/assumptions.template.toml` to
+`docs/requirements/assumptions.toml` when you adopt the tier; a project without
+the file, or with only its `-000` rows, hears nothing. From your first real
+assumption row on, each requirement is asked to cite its assumptions or record
+a waiver, and to declare its form: a judgement about your own requirements, so
+make it in reviewed commits rather than in bulk. Approve assumption and
+surrogate rows the way you approve requirements, and never copy the registry
+into `docs/archive/last_approved/` by hand: the act approving its first row
+writes the first copy.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

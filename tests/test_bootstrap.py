@@ -62,6 +62,9 @@ def test_scaffold_contains_expected_files(scaffold):
         # Scaffolded unconditionally beside interfaces.toml, and inert until its
         # `-000` rows are replaced.
         "docs/requirements/external.toml",
+        # WI-629: the assumptions registry beside the frame, inert until its
+        # `-000` rows are replaced.
+        "docs/requirements/assumptions.toml",
         # SN-036 / OI-19: the hats roster ships with CONTENT (thirteen starting
         # perspectives since WI-453), so a fresh scaffold's planner brief
         # carries questions on day one rather than a blank form.
@@ -190,6 +193,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/pending.py",
         "scripts/coherence.py",
         "scripts/frame_rules.py",
+        "scripts/assumption_rules.py",
         "scripts/acceptance_record.py",
         "scripts/agent_session.py",
         "scripts/agent_common.py",

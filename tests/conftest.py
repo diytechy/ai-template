@@ -282,6 +282,12 @@ SLOW_MODULES = frozenset(
         # WI-628 (TC-215): the stakeholder list driven through trace.py on
         # bootstrapped scaffolds, one scaffold and subprocess run per case.
         "test_stakeholders",  # scaffold + trace.py subprocess per case
+        # WI-629 (TC-217): the assumptions registry driven through trace.py on
+        # bootstrapped scaffolds; the pure rules stay in test_assumption_rules.py.
+        "test_assumptions_registry",  # scaffold + trace.py subprocess per case
+        # WI-629 (TC-222): each new cell's class, read by the amendment
+        # classifier across two commits of a real git repository.
+        "test_cell_classes",  # git init/commit per module
     }
 )
 

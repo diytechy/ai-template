@@ -42,7 +42,8 @@ One id-keyed TOML file per tier, hand-authored and machine-read. The spine is
 [`system-requirements.toml`](system-requirements.toml) →
 [`low-level-requirements.toml`](low-level-requirements.toml), verified by the
 test cases in [`../test/`](../test/). Beside it sit the off-spine registries:
-the system frame ([`external.toml`](external.toml)), the seams
+the system frame ([`external.toml`](external.toml)), the domain assumptions
+and the test surrogates ([`assumptions.toml`](assumptions.toml)), the seams
 ([`interfaces.toml`](interfaces.toml)), the components
 ([`components.toml`](components.toml) and its derived counterpart), the
 perspectives ([`hats.toml`](hats.toml)), the owner decisions

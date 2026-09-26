@@ -10,7 +10,7 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 
 _The off-spine registries above carry no per-row rendering in this brief; since WI-571 `intake.py snapshot` copies one only when its own `Status` moves or `--approves` names it, but a re-SEED still blesses the whole tree. What it would absorb, changed since the snapshot:_
 
-- `docs/requirements/interfaces.toml` — 15 changed, 10 added, 1 removed since the snapshot; ruling(s): none cited.
+- `docs/requirements/interfaces.toml` — 15 changed, 11 added, 1 removed since the snapshot; ruling(s): none cited.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): none cited.
 
 
@@ -417,3 +417,139 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Evidence**: docs/test/inspection-procedures.md#decomposition-proportionality-inspection-result
 - **Status**: Drafted
 - **Phase**: 5
+
+## SR-189 — Each need resolves to the declared stakeholders whose outcome it is
+
+> **Requirement.** The delivered harness shall resolve each stakeholder need's stakeholder references against the declared stakeholder list, and each stakeholder's party against the declared frame, reporting a need that names no stakeholder.
+
+> **Rationale.** A need with no named owner has nobody who can confirm it is still wanted, and a stakeholder's party is what lets the need's outcome be placed on the frame. The link lives on the need, pointing at the stakeholder, so the relation has one home; a short list beside the needs keeps the stakeholders where the rows citing them already are, rather than in a registry of their own. A stakeholder is not a review perspective: a stakeholder owns an outcome, while a perspective owns a question put to each decomposition, so no perspective becomes a stakeholder row.
+
+
+### TC TC-222
+_approved — re-attestation owed_
+- **Tier**
+  - before: Smoke
+  - after: Full
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_acceptance_record.py
+  - after: tests/test_cell_classes.py
+
+## SR-190 — A need's source pointer resolves to a document and anchor
+
+> **Requirement.** Where a stakeholder need records the document it was drawn from, the delivered harness shall resolve that pointer to an existing file and anchor.
+
+> **Rationale.** A need drawn from a longer document — an owner's statement of design constraints, an adopter's needs catalog — drifts from it unseen unless the need says where it came from. The need stays the canonical obligation and the document is its provenance, so the pointer takes a cell of its own instead of a place in the need's text, which is kept free of repository paths so a stakeholder can read it. A pointer that does not resolve is the same rot as a dead link, and fails the same way.
+
+
+### TC TC-222
+_approved — re-attestation owed_
+- **Tier**
+  - before: Smoke
+  - after: Full
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_acceptance_record.py
+  - after: tests/test_cell_classes.py
+
+## SR-193 — Each requirement cites its assumptions or records why it needs none
+
+> **Requirement.** The delivered harness shall report each system requirement that neither cites the assumptions its argument relies on nor records why its own specification alone delivers its needs.
+
+> **Rationale.** An empty cell asserts nothing, so a requirement citing no assumption cannot be read as one that needs none: the absence is unknown, and only an explicit waiver says the system's own behavior is the outcome. The need link stays on the requirement, because one interface serves several arguments and inheriting needs through an assumption would give a requirement the needs of an assumption it merely shares a seam with. Reporting rather than failing keeps the classification a worklist until the gate that relies on it is enabled.
+
+
+### TC TC-222
+_approved — re-attestation owed_
+- **Tier**
+  - before: Smoke
+  - after: Full
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_acceptance_record.py
+  - after: tests/test_cell_classes.py
+
+## SR-194 — Each requirement declares its form
+
+> **Requirement.** The delivered harness shall report each system requirement that declares no form from the closed set of three: met at an interface, resting on an assumption, or a cross-cutting property of the whole system.
+
+> **Rationale.** A requirement reached by no interface looks the same as one meant to rest only on an assumption unless the row says which it is, so a missing interface hides behind a legitimate exception. A closed cell whose absence is reported, rather than a default, keeps the omission visible. A property of every delivered capability at once is met at no single seam, which is why it is the third form rather than a kind of interface.
+
+
+### TC TC-222
+_approved — re-attestation owed_
+- **Tier**
+  - before: Smoke
+  - after: Full
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_acceptance_record.py
+  - after: tests/test_cell_classes.py
+
+## SR-197 — A test case evidences assumptions in a field of its own
+
+> **Requirement.** The delivered harness shall accept a test case that evidences assumptions in place of, or beside, the requirements and design rows it verifies, placing a test case that evidences only assumptions in every phase of the requirements that cite them.
+
+> **Rationale.** Evidence about an assumption is not evidence about the system's behavior, and counting both in one field would merge the two obligations the argument separates: that the system does what its requirements say, and that what they say reaches the outcome. A separate reference keeps the verified-requirement join exactly what it was, and lets a test of an assumption stand alone where no requirement is its subject. Every reader that counts evidence has to make the same split, or two views of one test case disagree about what it proves. Phase follows the requirements that rely on the assumption, because an assumption has no phase of its own.
+
+
+### TC TC-222
+_approved — re-attestation owed_
+- **Tier**
+  - before: Smoke
+  - after: Full
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_acceptance_record.py
+  - after: tests/test_cell_classes.py
+
+## SR-198 — An observation test declares what it reads, how long its result holds, and how it samples
+
+> **Requirement.** The delivered harness shall report an observation test case that omits the inputs its judgment reads, its result lifetime or, where it evidences an assumption, its sampling policy, and refuse one declaring a lifetime shorter than seven days or a sampling policy outside the closed pair of sampled and monitored.
+
+> **Rationale.** An observation — a person reading a render, a critique of a rendered view, a measurement taken across an adopter's first week — cannot be rerun for every tree, so its result is trusted only while the state it judged is unchanged, and for a declared time. Declaring the inputs it reads is what lets a changed input make the result stale without a model call; the lifetime floor keeps a judgment from being demanded more often than it can honestly be taken. The author proposes the lifetime and the row's approval accepts it, because how fast a premise can change is a judgment about the world. A sampled result supports a positive claim only under a stated sampling model, so the model is declared where a project wants that claim. Omissions are reported rather than refused so observation tests written before these cells existed keep passing on upgrade; the declarations are approved content because they state how the row's claim is kept current.
+
+
+### TC TC-222
+_approved — re-attestation owed_
+- **Tier**
+  - before: Smoke
+  - after: Full
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_acceptance_record.py
+  - after: tests/test_cell_classes.py
+
+## SR-211 — Each boundary interface is bridged or coincident
+
+> **Requirement.** The delivered harness shall report each interface realizing a boundary crossing that neither names the assumptions carrying its reading to an outcome nor records why its reading is the outcome.
+
+> **Rationale.** A requirement is testable only if the interface it is met at is defined or its reading is clearly assumed. The allocation is recorded on the interface, which is approved at the architecture rung where interfaces are, so an assumption approved earlier at the boundary rung is never edited to point at a seam approved later. The requirement a seam answers stays derived through the interface's owner, because stating it on the interface would give that relation a second home.
+
+
+### TC TC-222
+_approved — re-attestation owed_
+- **Tier**
+  - before: Smoke
+  - after: Full
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_acceptance_record.py
+  - after: tests/test_cell_classes.py
+
+## SR-214 — An assumption's obstacle records the perspectives that raised it
+
+> **Requirement.** The delivered harness shall resolve each assumption's recorded obstacle perspectives against the declared review perspectives, reporting a perspective that is not declared.
+
+> **Rationale.** An obstacle is what a perspective's question produces when put to an assumption — asking what happens when an input is missing, stale or half-written writes one directly — so recording which perspective raised it shows a reviewer which failure classes have been put to the assumption. Only positive provenance is recorded, because a per-perspective record of not applying would have no reader.
+
+
+### TC TC-222
+_approved — re-attestation owed_
+- **Tier**
+  - before: Smoke
+  - after: Full
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_acceptance_record.py
+  - after: tests/test_cell_classes.py

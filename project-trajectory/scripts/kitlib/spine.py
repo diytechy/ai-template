@@ -88,6 +88,7 @@ __all__ = [
     "OFFSPINE_KEYS",
     "REGISTRY_KEYS",
     "SYSTEM_VALUES",
+    "FORM_VALUES",
     "toml_string",
     "toml_value",
     "toml_fields",
@@ -545,7 +546,7 @@ def sn_cited_ids(srs):
 # here first — which is the same discipline `spine_carrier.SPINE_COLUMN` (the
 # key -> column-name map, which stays with the carrier that reads columns)
 # already carries, for the same reason.
-# Implements: SR-189, LLR-215
+# Implements: SR-189, SR-193, LLR-215, LLR-222
 SPINE_TIER_KEYS = {
     # THE NEED TIER, post-unification. `status` is the ONE maturity field (the
     # `kind`/`attestation`/`amended` trio it replaced is deleted, not renamed).
@@ -588,6 +589,14 @@ SPINE_TIER_KEYS = {
         "status",
         "phase",
         "aspect",
+        # The requirement's assumption citations (SR-193): `da_refs` names the
+        # assumptions its argument relies on, a POINTER into the assumptions
+        # registry; `coincident` records why its own specification alone
+        # delivers its needs, and `form` (SR-194) says how it is met, one of
+        # FORM_VALUES below. Those two are statements the row makes.
+        "da_refs",
+        "coincident",
+        "form",
     ),
     "LLR-ID": (
         "sr_refs",
@@ -622,7 +631,7 @@ SPINE_TIER_KEYS = {
 # against each other for every entry of REGISTRY_KEYS, so adding a column to
 # `open-items` or `agents` is a reviewed edit HERE first, exactly as it is for a
 # spine tier.
-# Implements: SR-189, LLR-215
+# Implements: SR-189, SR-191, SR-192, LLR-215, LLR-218
 OFFSPINE_KEYS = {
     "OI-ID": (
         "title",
@@ -715,6 +724,30 @@ OFFSPINE_KEYS = {
     # Keyed by its own id column, as the frame's three tiers share
     # `external.toml`, so its rows never mix with the needs' own.
     "STK-ID": ("name", "description", "party", "status"),
+    # THE ASSUMPTIONS REGISTRY (SR-191, SR-192), two tiers on one path the way
+    # the frame's three share `external.toml`. An assumption states where its
+    # outcome lands (`effect_at`, crossing ids), what it assumes, when it holds,
+    # the obstacle under which it fails and what would show it false; `status`
+    # is the spine's maturity and `standing` its validity, active or falsified,
+    # because an approved assumption can later be shown false. `realized_by`
+    # names the one surrogate a fidelity assumption is about, `obstacle_hats`
+    # the perspectives its obstacle came from. A surrogate is a stand-in for
+    # outside parties in tests, and `emulates` names them (entity ids). Neither
+    # tier records needs: an assumption's needs are derived from the
+    # requirements citing it.
+    "DA-ID": (
+        "effect_at",
+        "assumption",
+        "holds_when",
+        "obstacle",
+        "falsifier",
+        "accepted_risk",
+        "realized_by",
+        "obstacle_hats",
+        "status",
+        "standing",
+    ),
+    "SUR-ID": ("name", "emulates", "description", "status"),
 }
 REGISTRY_KEYS = dict(SPINE_TIER_KEYS, **OFFSPINE_KEYS)
 
@@ -725,6 +758,13 @@ REGISTRY_KEYS = dict(SPINE_TIER_KEYS, **OFFSPINE_KEYS)
 # judge is `frame_rules.frame_system_findings`, which reads this tuple.
 # Implements: SR-187, LLR-211
 SYSTEM_VALUES = ("operation", "delivery")
+
+# THE THREE FORMS A REQUIREMENT TAKES (SR-194): met at an interface, resting on
+# an assumption, or a property of the whole system that no single seam meets.
+# Declared here beside the tier schema that carries the `form` cell; the one
+# judge is `assumption_rules.sr_form_findings`, which reads this tuple.
+# Implements: SR-194, LLR-224
+FORM_VALUES = ("interface", "assumption", "cross-cutting")
 
 
 # ---------------------------------------------------------------------------

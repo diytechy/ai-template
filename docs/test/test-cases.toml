@@ -2210,7 +2210,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-217]
-verifies = ["SR-191", "LLR-218", "LLR-219"]
+verifies = ["SR-191", "LLR-218", "LLR-219", "IF-190"]
 level = "Integration"
 method = "Driven on a scaffold with a declared frame and an assumptions registry. A row missing each required cell in turn, a status outside the closed vocabulary, a standing outside active and falsified, and a landing crossing that is not declared, each fail the strict run naming the row and the cell. A complete row passes. A DA or SUR id above its watermark mark is refused. The template's example rows are inert. A fresh scaffold receives the registry as a blank form through the scaffold mapping and passes the strict check. A project with no frame file produces no finding from an assumptions registry."
 tier = "Full"
@@ -2268,10 +2268,10 @@ phase = 6
 verifies = ["SR-189", "SR-190", "SR-193", "SR-194", "SR-197", "SR-198", "SR-211", "SR-214", "LLR-225"]
 level = "Integration"
 method = "Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation."
-tier = "Smoke"
+tier = "Full"
 expected = "Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell re-opens its row's."
 automated = "Yes"
-evidence = "tests/test_acceptance_record.py"
+evidence = "tests/test_cell_classes.py"
 status = "Approved"
 phase = 6
 

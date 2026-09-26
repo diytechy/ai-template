@@ -316,6 +316,18 @@ TOML_REGISTRIES = {
         "registries/stakeholder-needs.template.toml",
         "stakeholder",
     ),
+    # WI-629 (SR-191, SR-192) — the assumptions registry's two tiers on one
+    # path, the frame's three-tiers-one-path shape again.
+    "DA-ID": (
+        "docs/requirements/assumptions.toml",
+        "registries/assumptions.template.toml",
+        "assumption",
+    ),
+    "SUR-ID": (
+        "docs/requirements/assumptions.toml",
+        "registries/assumptions.template.toml",
+        "surrogate",
+    ),
 }
 KIT = ROOT / "project-trajectory"
 
@@ -326,7 +338,10 @@ KIT = ROOT / "project-trajectory"
 # on its own: both tests below fail once the live table exists, so the commit
 # that writes the rows must drop the entry here, which arms the live leg and its
 # floor.
-LIVE_ROWS_PENDING = frozenset({"STK-ID"})
+# The assumptions registry ships EMPTY here the same way: its assumption and
+# surrogate rows are later reviewed content, and the commit that writes them
+# drops its two entries.
+LIVE_ROWS_PENDING = frozenset({"STK-ID", "DA-ID", "SUR-ID"})
 
 
 def _toml_keys(path, table):
@@ -455,6 +470,11 @@ def test_the_live_registries_carry_more_than_the_template_example(tmp_path):
         # person); "more than the example" is still the property. Held back by
         # LIVE_ROWS_PENDING until this repository's rows are written.
         "STK-ID": 1,
+        # An assumption is one claim about the world, and a surrogate one
+        # stand-in; "more than the example" is the property here too. Held back
+        # by LIVE_ROWS_PENDING until this repository's rows are written.
+        "DA-ID": 1,
+        "SUR-ID": 1,
     }
     assert set(floors) == set(TOML_REGISTRIES), "a registry joined with no floor"
     for id_col, (live_rel, _tmpl, table) in TOML_REGISTRIES.items():

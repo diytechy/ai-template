@@ -36,6 +36,7 @@ What it creates in the destination:
     docs/requirements/low-level-requirements.toml
     docs/requirements/interfaces.toml          <- registries/interfaces.template.toml
     docs/requirements/external.toml            <- registries/external.template.toml
+    docs/requirements/assumptions.toml         <- registries/assumptions.template.toml
     docs/requirements/performance-budgets.csv  <- registries/performance-budgets.template.csv
     docs/requirements/procurement.csv          <- registries/procurement.template.csv
     docs/requirements/assets.csv               <- registries/assets.template.csv
@@ -1698,7 +1699,7 @@ _utf8_console = _kitconfig.utf8_console
 
 
 # (source relative to KIT, destination relative to --dest)
-# Implements: SR-010, LLR-010
+# Implements: SR-010, SR-191, SR-192, LLR-010, LLR-218
 MAPPING = [
     # Agent guide: full content in AGENTS.md, thin stubs for tools that prefer
     # their own filename. All three copied unconditionally (see module docstring).
@@ -1870,6 +1871,10 @@ MAPPING = [
         "SR-159",
     ),
     ("registries/external.template.toml", "docs/requirements/external.toml"),
+    # The assumptions registry beside the frame it lands on (SR-191, SR-192):
+    # every profile that scaffolds the frame scaffolds it, inert until its
+    # `-000` rows are replaced.
+    ("registries/assumptions.template.toml", "docs/requirements/assumptions.toml"),
     (
         "registries/performance-budgets.template.csv",
         "docs/requirements/performance-budgets.csv",
@@ -2259,6 +2264,9 @@ MAPPING = [
     # a requirement's derived one, pure joins beside coherence.py. trace.py
     # imports it unguarded, so a scaffold without it cannot run the checker.
     ("scripts/frame_rules.py", "scripts/frame_rules.py"),
+    # The assumption tier's rules (WI-629), the same kind of pure sibling: trace.py
+    # imports it unguarded, so a scaffold without it cannot run the checker.
+    ("scripts/assumption_rules.py", "scripts/assumption_rules.py"),
     # The acceptance record (WI-521 slice 1): the two-tree spine comparison and
     # the snapshot mirror — which cells are attested, whether their text has
     # moved away from the copy recording its acceptance, and that the copy is

@@ -2,13 +2,36 @@
 id = "WI-629"
 title = "Build the assumptions registry, surrogates, requirement classification and form (SR-191..SR-194, SR-196)"
 workstream = "scripts"
-specref = "docs/plans/2026-09-25-assumption-tier-spine-map.md#3-plan-coverage"
+specref = ""
 sr_refs = ["SR-191", "SR-192", "SR-193", "SR-194", "SR-196"]
 needs = ["WI-642"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+- `docs/requirements/assumptions.toml` (assumption and surrogate tiers, keyed
+  `DA-###` / `SUR-###`) with its shipped template and scaffold mapping; the
+  requirement tier's `da_refs`, `coincident` and `form` cells; carrier maps
+  both ways; DA and SUR in the id watermark, the snapshot's compared tiers and
+  the approval act.
+- `assumption_rules.py` behind one entry point (IF-190): frame-class row
+  failures, integrity-floor surrogate and form failures, and the
+  classification, form, uncited and falsifier advisories. The tier is silent
+  with no declared crossing; `sr_form_findings(srs)` is the one-argument pure
+  rule LLR-224 names, and the entry point asks no form until a real
+  assumption row exists.
+- A registry missing from the signed record is always reported, except the
+  assumptions registry (`baseline_snapshot.FIRST_COPY_AT_APPROVAL`) while no
+  live row of it claims approval.
+- Each new cell's traced-or-approved class in the amendment classifier; TC-222
+  moved to the slow module `tests/test_cell_classes.py`.
+- Amended, status left Approved, for the joint adjudication: TC-222 `tier`
+  Smoke -> Full (arbitration ruling 1). Traced pointer moved: TC-222
+  `evidence`.
+- Ships empty here: this repository's trace output is unchanged.
 
 ## Context
 

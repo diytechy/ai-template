@@ -141,13 +141,22 @@ SPINE_CSVS = (
 # warn's and the intake mint's universe (`intake.py`, `check_trajectory.py`
 # re-export), and silently widening those is the side effect the comment above
 # refuses. Only the refusal walk reads this one.
+#
+# THE ASSUMPTIONS REGISTRY'S TWO TIERS JOIN IT (SR-191, SR-192). An assumption
+# or a surrogate is approved content recorded like every other, and approving
+# one means reading the requirements that rely on it, which one lane does not
+# hold: a lane's merge approving one is refused, and the act that does approve
+# one rides its own reviewed commit.
+# Implements: SR-191, SR-192, LLR-220
 APPROVAL_ACT_CSVS = SPINE_CSVS + (
     ("docs/requirements/stakeholder-needs.toml", "SN-ID"),
+    ("docs/requirements/assumptions.toml", "DA-ID"),
+    ("docs/requirements/assumptions.toml", "SUR-ID"),
 )
 
 # THE OTHER SIDE OF THAT BOUNDARY, DECLARED RATHER THAN LEFT AS AN ABSENCE.
-# `baseline_snapshot.SNAPSHOTTED` names seven registries whose `Status` a
-# snapshot anchors; `APPROVAL_ACT_CSVS` above names the four the refusal walks.
+# `baseline_snapshot.SNAPSHOTTED` names eight registries whose `Status` a
+# snapshot anchors; `APPROVAL_ACT_CSVS` above names the five the refusal walks.
 # The remaining three are OUT OF SCOPE OF THE APPROVAL-ACT RUNG, and that is a
 # ruling rather than an oversight: the interface, external-frame and component
 # registries are OFF-SPINE, their approval cells are governed by OI-30 D3, and
@@ -244,9 +253,24 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
 # hat re-point restates which lens the row is attributable to and moves no
 # obligation. If phase 5's amend-without-flip arm ever wants that routing, it is
 # one line — added on evidence, not in advance.
+#
+# THE ASSUMPTION TIER'S POINTERS JOIN IT (LLR-225), on the same argument: a
+# requirement's `DA-Refs` and a test case's `Assumption-Refs` name rows in
+# another registry, and a need's `Stakeholder-Refs` and `Source` name the
+# stakeholders it serves and the document it was drawn from. Each re-points
+# without moving anything the row asserts.
+# Implements: SR-189, SR-190, SR-193, SR-197, LLR-225
 SPINE_TRACED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
-        {"SN-Refs", "Boundary-Refs", "Hat-Refs", "Phase", "Aspect", "Lifecycle"}
+        {
+            "SN-Refs",
+            "Boundary-Refs",
+            "Hat-Refs",
+            "Phase",
+            "Aspect",
+            "Lifecycle",
+            "DA-Refs",
+        }
     ),
     # `SR-Refs` is here BY RULING (WI-388, closing WI-380 REVIEW-A finding 3 —
     # the cell §A5.1 left unclassified): it is the same shape of pointer as
@@ -268,13 +292,20 @@ SPINE_TRACED_CELLS = {
         }
     ),
     "docs/test/test-cases.toml": frozenset(
-        {"Verifies", "Evidence", "Automated", "Phase"}
+        {"Verifies", "Evidence", "Automated", "Phase", "Assumption-Refs"}
+    ),
+    "docs/requirements/stakeholder-needs.toml": frozenset(
+        {"Stakeholder-Refs", "Source"}
     ),
 }
 # The approved half. (The SR tier's `SupersededBy` column — approved by ruling
 # at WI-388 — retired with the supersession tombstone class, D-4 ruling
 # 2026-08-14b; the CMP registry's own SupersededBy is a separate, still-owed
-# item.)
+# item.) The assumption tier's STATEMENTS join it by name rather than by the
+# residual (LLR-225): a requirement's `Coincident` waiver and `Form`, and a test
+# case's declared `Inputs`, `MaxAge`, `Sampling`, `SampleSize` and
+# `AcceptanceRule`, each a claim the row makes.
+# Implements: SR-193, SR-194, SR-198, LLR-225
 SPINE_APPROVED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
         {
@@ -285,14 +316,42 @@ SPINE_APPROVED_CELLS = {
             "Permutations",
             "Priority",
             "Verification",
+            "Coincident",
+            "Form",
         }
     ),
     "docs/requirements/low-level-requirements.toml": frozenset(
         {"Title", "Detail", "Rationale"}
     ),
     "docs/test/test-cases.toml": frozenset(
-        {"Method", "Expected", "Parameters", "Level", "Tier"}
+        {
+            "Method",
+            "Expected",
+            "Parameters",
+            "Level",
+            "Tier",
+            "Inputs",
+            "MaxAge",
+            "Sampling",
+            "SampleSize",
+            "AcceptanceRule",
+        }
     ),
+}
+
+# THE OFF-SPINE REGISTRIES' TRACED HALF (LLR-225). Until this table no
+# off-spine registry declared one, so every off-spine cell counted as approved
+# through the residual. Two cells are pointers: an interface's `BridgedBy`
+# names the assumptions bridging it, and an assumption's `ObstacleHats` names
+# the perspectives its obstacle came from. Every other off-spine cell stays
+# approved content (an interface's `Coincident`, a stakeholder's name,
+# description and party, a crossing's `System`, an entity's `Mediates`, and the
+# rest of the assumption and surrogate cells), because each states something
+# the row asserts rather than pointing at another row.
+# Implements: SR-211, SR-214, LLR-225
+OFFSPINE_TRACED_CELLS = {
+    "docs/requirements/interfaces.toml": frozenset({"BridgedBy"}),
+    "docs/requirements/assumptions.toml": frozenset({"ObstacleHats"}),
 }
 
 
@@ -327,7 +386,8 @@ def traced_cells(csv_path):
     and would make every TC amendment warn about a cell that tier does not
     have)."""
     key = spine_carrier.stem(csv_path)
-    traced = {spine_carrier.stem(k): v for k, v in SPINE_TRACED_CELLS.items()}
+    tables = SPINE_TRACED_CELLS | OFFSPINE_TRACED_CELLS
+    traced = {spine_carrier.stem(k): v for k, v in tables.items()}
     return traced.get(key, frozenset())
 
 
@@ -538,7 +598,8 @@ def staged_approval_acts(root, base="HEAD", head=None):
     form of this question.
 
     ITS UNIVERSE IS `APPROVAL_ACT_CSVS`, the four SPINE registries — SN, SR,
-    LLR, TC — and not `SPINE_CSVS`, which is the amendment warn's three. SN is
+    LLR, TC — and the assumptions registry's two tiers, and not `SPINE_CSVS`,
+    which is the amendment warn's three. SN is
     covered because it is a spine tier carrying the same `status` vocabulary and
     is the half of DevStg-Reqs the human-approval dial holds, so a lane flipping
     a need is the worst case of this act rather than an exempt one (round 028).
@@ -739,8 +800,8 @@ def lane_approval_refusal(root, base, head, delta=None):
         "{} performs an APPROVAL ACT in its own delta - and the approval act is "
         "the ADJUDICATOR's, on the serial trunk side, never a work lane's (owner "
         "ruling 2026-09-01; PROCESS.md §4). A lane AUTHORS `Drafted` "
-        "SN/SR/LLR/TC rows and AMENDS their cell text; in those four spine "
-        "registries it does not "
+        "SN/SR/LLR/TC rows and assumption and surrogate rows, and AMENDS their "
+        "cell text; in those registries it does not "
         "flip a `Status` into `Approved`/`Founded` or mint a row already "
         "claiming one, and it does not write {}/. Approving means reading the "
         "row's whole chain, which one "
