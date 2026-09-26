@@ -417,6 +417,9 @@ OFFSPINE_COLUMN = {
     "description": "Description",
     "entity": "Entity",
     "carries": "Carries",
+    # `system` (WI-627, SR-187): the crossing's system of interest, one of
+    # `kitlib.spine.SYSTEM_VALUES`. The inverse lives in migrate_carrier.KEY.
+    "system": "System",
     "from": "From",
     "to": "To",
     "kind": "Kind",

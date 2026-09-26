@@ -5106,6 +5106,29 @@ landed 26 commits after the entry above was anchored.
 3. **Nothing to migrate in your registries.** The `Digests` column and the
    `restructured` folder are unchanged from the entry above.
 
+### A boundary crossing names its system of interest [since cbb6649f]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A boundary crossing in `docs/requirements/external.toml` gains
+an optional `system` cell from the closed pair `operation` | `delivery`: the
+system in use, or the system that builds and delivers it (SR-187). The checker
+reads it through a new pure module, `scripts/frame_rules.py`, which `trace.py`
+imports unguarded. A value outside the pair joins the frame findings and fails
+`--strict`; a crossing with no value is one advisory naming it and never moves
+the exit code. A requirement's system is derived from the crossings its
+`Boundary-Refs` name, and one naming crossings of both systems is an advisory
+(SR-219). Nothing is written back to a requirement.
+
+**What to do.** Re-sync `scripts/frame_rules.py` (new), `scripts/trace.py`,
+`scripts/kitlib/spine.py`, `scripts/spine_carrier.py`,
+`scripts/migrate_carrier.py` and `registries/external.template.toml` together:
+`trace.py` fails to import without the new module. Your frame keeps working
+unchanged. Each of its crossings now prints one advisory until you add
+`system = "operation"` or `system = "delivery"` to it. That is a judgement about
+your own frame, so make it in a reviewed commit rather than in bulk. A project
+with no `external.toml` hears nothing.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -1779,3 +1779,14 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """The rollup generator's off-trunk refusal (7ea3cce7, LLR-208's exclusive-writer clause enforced) asks agent_common which branch is the trunk — the one home for that question, shared with the loop's brief composer and the worker preflight — instead of re-deriving it from `git worktree list` a second time. The import is deferred into the refusal so `--check` pays nothing. Declared 2026-09-05 by the supervising session after the DevStg-Impl gate's cross-component ERROR."""
+
+[interface.IF-180]
+rationale = """The frame and need-tier rules are a pure join layer beside the coherence rules, so the checker composes them and stays their only caller; drawing the seam here keeps the checker growing by composition lines alone while the rules stay testable on in-memory rows."""
+owner = "scripts/frame_rules"
+requestors = ["scripts/trace"]
+channel = "call"
+data = "gating: frame_system_findings failures; advisory: frame_system_findings advisories, sr_system_advisories; data: crossing_systems"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """source - frame_rules consumes NOTHING by design: rows in, findings out, with no I/O, no git and no filesystem, which is what lets every rule be driven on in-memory rows."""

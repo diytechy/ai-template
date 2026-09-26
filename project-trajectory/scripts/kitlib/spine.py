@@ -85,6 +85,7 @@ __all__ = [
     "SPINE_TIER_KEYS",
     "OFFSPINE_KEYS",
     "REGISTRY_KEYS",
+    "SYSTEM_VALUES",
     "toml_string",
     "toml_value",
     "toml_fields",
@@ -648,10 +649,21 @@ OFFSPINE_KEYS = {
     # registry and THIS map per id column, so a column added to crossings
     # cannot leak into entities.
     "EXT-ID": ("name", "class", "description", "status", "absorbs", "notes"),
-    "B-ID": ("entity", "direction", "carries", "status", "absorbs", "notes"),
+    # `system` (WI-627, SR-187): which system of interest the crossing belongs
+    # to, from the closed pair SYSTEM_VALUES below. Optional on the row; a
+    # crossing without it is an advisory (`frame_rules.frame_system_findings`).
+    "B-ID": ("entity", "direction", "carries", "system", "status", "absorbs", "notes"),
     "REL-ID": ("from", "to", "kind", "flow", "status", "absorbs", "notes"),
 }
 REGISTRY_KEYS = dict(SPINE_TIER_KEYS, **OFFSPINE_KEYS)
+
+# THE TWO SYSTEMS OF INTEREST one frame holds (SR-187, LLR-211): the system in
+# OPERATION, and the system that builds and DELIVERS it. A boundary crossing's
+# `system` cell names one of them. Declared once, here, because the frame's
+# schema tier is warn-only and judges no vocabulary for this cell: the one
+# judge is `frame_rules.frame_system_findings`, which reads this tuple.
+# Implements: SR-187, LLR-211
+SYSTEM_VALUES = ("operation", "delivery")
 
 
 # ---------------------------------------------------------------------------

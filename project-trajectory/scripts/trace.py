@@ -218,6 +218,7 @@ try:
         spine_orphan_findings,
         status_criterion_findings,
     )
+    from frame_rules import frame_system_findings, sr_system_advisories
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -256,6 +257,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         spine_orphan_findings,
         status_criterion_findings,
     )
+    from frame_rules import frame_system_findings, sr_system_advisories
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -4911,9 +4913,12 @@ def analyze(reg, args):
     hat_dangling, hat_advisories = hat_findings(
         srs, llrs, reg.hat_names, {r["SR-ID"]: r for r in srs}
     )
+    # A crossing's system of interest (SR-187) and a requirement's derived one
+    # (SR-219): an out-of-pair value joins the frame class, the rest warn.
+    system_failures, system_advisories = frame_system_findings(bifs)
     frame_backlink_findings = (
         frame_findings(exts, bifs, rels) + tieback_findings(ifs, bifs) + sr_frame
-    )
+    ) + system_failures
     # The IF/CMP schema tier and the IF `Contract` negative rules (WI-443 / OI-14
     # part B) — ALWAYS ON and ALWAYS WARN. They ride the interface advisory pipe
     # rather than `schema` on purpose: `schema` joins the --strict failure set,
@@ -4927,6 +4932,8 @@ def analyze(reg, args):
         + schema_advisories("B", bifs)
         + schema_advisories("REL", rels)
         + sr_frame_advisories
+        + system_advisories
+        + sr_system_advisories(srs, bifs)
         + hat_advisories
         + if_data_advisories(ifs, docs.parent)
         + if_note_advisories(ifs, prov_allow)

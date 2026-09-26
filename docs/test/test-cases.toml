@@ -2166,7 +2166,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-213]
-verifies = ["SR-219", "LLR-213"]
+verifies = ["SR-219", "LLR-213", "IF-180"]
 level = "Unit"
 method = "crossing_systems and sr_system_advisories called on in-memory rows. Requirements naming only operation crossings, and only delivery crossings, produce no advisory. A requirement naming one crossing of each system produces one advisory naming it and one crossing from each system. A requirement naming a crossing with no system and an operation crossing produces nothing. With no crossings at all every requirement produces nothing. The input rows are compared before and after the call to show nothing is written."
 tier = "Smoke"

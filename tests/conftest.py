@@ -270,6 +270,9 @@ SLOW_MODULES = frozenset(
         # only the subprocess half is re-tiered here, the test_check_complexity_cli
         # split's precedent.
         "test_mapping_purpose_cli",  # gen_arch_map --mapping-purpose as a subprocess
+        # WI-627 (TC-212): a crossing's system cell driven through trace.py on
+        # bootstrapped scaffolds; the pure rules stay in test_frame_rules.py.
+        "test_frame_system",  # scaffold + trace.py subprocess per case
     }
 )
 

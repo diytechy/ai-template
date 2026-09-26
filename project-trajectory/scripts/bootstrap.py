@@ -2241,6 +2241,10 @@ MAPPING = [
     # the carrier sweeps and the report in one 553-line function. trace.py
     # imports it unguarded, so a scaffold without it cannot run the checker.
     ("scripts/coherence.py", "scripts/coherence.py"),
+    # The frame and need-tier rules (WI-627): a crossing's system of interest and
+    # a requirement's derived one, pure joins beside coherence.py. trace.py
+    # imports it unguarded, so a scaffold without it cannot run the checker.
+    ("scripts/frame_rules.py", "scripts/frame_rules.py"),
     # The acceptance record (WI-521 slice 1): the two-tree spine comparison and
     # the snapshot mirror — which cells are attested, whether their text has
     # moved away from the copy recording its acceptance, and that the copy is
