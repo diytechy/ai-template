@@ -30,3 +30,16 @@ Advisory registry joins (WI-388; never gating):
 
 ### Pending open items whose WI-Refs touch this row's kin (premise risk)
 - OI-82 (pending): WI-572 moved the first-approval act to the adjudicator and filtered the minted population by the human-approval dial at both adjudication ends (intake's mint a…
+
+## Done-when
+
+- OI-82 is ruled in `docs/requirements/open-items.toml`, naming the option
+  chosen.
+- `trace.py --approve modified`, and the `docs/ratify/CURRENT.md` it renders,
+  show the population the ruling names, reading the dial through the existing
+  `agent_common.human_approves_spine`; `SPINE_APPROVAL_RUNGS` is unchanged and
+  no new copy of the rung table exists.
+- A test drives the command on a scaffold with one held rung and one released
+  rung and shows each rendered as the ruling says.
+- PROCESS_OPTIONS.md's description of the owner's approval surface states the
+  ruled behaviour, and the commit bar passes.

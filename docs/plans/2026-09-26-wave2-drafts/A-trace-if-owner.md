@@ -29,6 +29,10 @@ IN SCOPE: split `;`-joined `Module` cells wherever the owner join reads them,
 fix the doubled source prefix, and test both with an owner reached each way.
 NOT IN SCOPE: changing what counts as reaching the spine.
 
+Land with or after draft I: once `;`-joined cells are split, a design row
+that lists `bootstrap.py` without naming anything in it would count as
+reaching the owner `scripts/bootstrap` (`interfaces.toml` ~353).
+
 ## Done-when
 
 - A test with an owner named only inside a `;`-joined `Module` cell, and one

@@ -26,3 +26,21 @@ adjudicator's):** if this row authors or amends spine rows (SR/LLR/TC), leave
 them `Drafted`; do NOT flip any `Status`, and do NOT run `intake.py snapshot`
 or write `docs/archive/last_approved/` on this lane. The flip and the
 snapshot are performed on trunk by the adjudication arm once it ships.
+
+## Done-when
+
+- A disposition draft carries its open item as a typed `[open_item]` table
+  whose `one_line`, `blast_radius`, `options` and `recommendation` are all
+  required and non-empty, and `intake` refuses, by name, the bare scalar form
+  and a table missing any cell.
+- `intake._mint_open_item` writes those cells verbatim, so a minted row has the
+  shape of a hand-filed pending row and `gen_open_items.py` renders it with no
+  special case.
+- `prompts/adjudicate-disposition.template.md`, and any sibling brief that
+  mentions `open_item`, documents the table and says the adjudicator authors
+  the brief; `prompts/CATALOG.md` is regenerated.
+- `tests/test_intake.py` pins the accepted table, both refusals and the
+  open-item edge still gating the successor, and the log fragment names the
+  two rows minted thin before the fix (plan §3 item 5).
+- The commit bar passes, and nothing in the change flips a spine row's
+  `Status` or writes the approval snapshot.

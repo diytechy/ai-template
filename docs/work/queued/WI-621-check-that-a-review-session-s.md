@@ -25,8 +25,16 @@ right after a review session fails the draw through the existing failed-draw
 path, so the review re-runs clean. On a build lane with no Drafted rows, the
 merge ladder is the final pass. S11's single-commit plan rewrites the
 lane-to-trunk path this sits on, so design it with that plan if the plan lands
-first. Related: WI-607 (routing on an uncommitted verdict) and WI-608 (a later
-session rewriting an earlier round).
+first. Related: WI-608 (a later session rewriting an earlier round).
+
+ABSORBED from WI-607 (the routing side): `read_verdict`
+(`agent_loop.py` ~1072) parses the verdict file on disk whether or not the
+reviewer committed it, while the merge gate reads committed round files at
+the branch tip, so the loop can route (approve, re-route, re-critique) on a
+verdict the gate cannot see. The dirty-tree arm above is the mechanism: an
+uncommitted verdict fails the draw, so it is never read. Apply it to the
+critique arm too, which also calls `read_verdict`, rather than adding a
+second check.
 
 ## Done-when
 
@@ -36,5 +44,10 @@ session rewriting an earlier round).
   and refuses by name.
 - A dirty tree right after a review session fails the draw, and the review
   re-runs clean.
-- Tests drive a clean review, an extra file, a dirty tree, and a merge whose
-  log records a bad range.
+- The loop routes on a verdict only as committed on the lane, in both the
+  review and the critique arms; an uncommitted verdict file is treated as no
+  verdict (the failed-draw path).
+- Tests drive a clean review, an extra file, a dirty tree, a merge whose
+  log records a bad range, and a review and a critique session that each
+  write but do not commit their verdict, showing the loop does not route on
+  it.

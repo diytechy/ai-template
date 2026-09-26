@@ -14,7 +14,9 @@ priority = 3
 `[step:complexity]` step is red at any gate run. It first failed at 76a235bb.
 Three kinds of finding:
 
-- growth: `route_session` cognitive 37 -> 38;
+- growth: `route_session` cognitive 37 -> 38, `trace.load_registries` 39 ->
+  42, and a new unbaselined `tests/test_bookkeeping._whole_tree_git_calls`
+  (25) (measured at HEAD by the backlog audit);
 - improvements the ratchet wants re-stamped downward in the commit that made
   them (for example `agent_loop.run_iteration` 18 -> 16,
   `baseline_snapshot.refresh_ledger` 23 -> 21, `dispatch._advance` 20 -> 18);
@@ -24,8 +26,8 @@ Three kinds of finding:
   moved under `rendering/`).
 
 IN SCOPE: re-stamp the improvements downward; re-point or delete the rows
-whose function moved or went; for `route_session`, either reduce it back to
-37 or re-stamp it upward with a reason a reader can argue with, and record
+whose function moved or went; for each growth (`route_session`, `load_registries`,
+`_whole_tree_git_calls`), either reduce it or re-stamp it upward with a reason a reader can argue with, and record
 which in the log. Find why the per-commit bar did not catch the drift (the
 ratchet test's tier, or a step the bar skips) and say so in the Deliverable.
 

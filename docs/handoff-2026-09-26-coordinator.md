@@ -115,29 +115,32 @@ This wave drafts amendments to approved rows, with status left Approved:
 | LLR-246, LLR-248 | `detail` | WI-636 follow-up |
 | a TC covering the bookkeeping isolation tests | per WI-647's follow-up | WI-647 follow-up |
 
-Draft K also carries LLR-167's two false clauses, and draft H (LLR-140,
-LLR-154, TC-144) belongs in the same sitting. Under row-level refusal, any
-snapshot act refuses while these stand unnamed. So once the wave lands, one
-**independent** adjudicator session (a subagent that did not direct the
-amendments) rules them from the amendment brief. It files the verdict, and
-one `intake.py snapshot --reattests <ids>` re-anchors them. Do this before
-the C1 sitting commit (WI-643).
+Draft K also drafts LLR-167's two false clauses, LLR-140, LLR-154 and
+TC-144's misplaced clause (it absorbed the former draft H), and files the
+joint adjudication. Under row-level refusal, any snapshot act refuses while
+these stand unnamed. So once the wave lands, one **independent** adjudicator
+session (a subagent that did not direct the amendments) rules them from the
+amendment brief. It files the verdict, and one `intake.py snapshot
+--reattests <ids>` re-anchors them. Do this before the C1 sitting commit
+(WI-643).
 
 ## After the wave
 
 - **File the drafts** in [plans/2026-09-26-wave2-drafts/](plans/2026-09-26-wave2-drafts/K-llr167-amend.md)
-  (A, B, C, E, F, G, H, I, J, K, L, N; ids from `trace.py --bump-ids`).
-  Also file the census-routing follow-up (ruling 2).
-- **Backlog audit, awaiting the owner's go-ahead:**
-  - Cancel WI-596 and WI-597, which WI-635 made obsolete.
-  - Rewrite WI-551 as WI-620's keep operation.
-  - Merge WI-607 into WI-621, WI-611 into WI-606, and draft H into K.
-  - Re-scope WI-539, WI-581 and WI-582 to what remains.
-  - Lower WI-541 and WI-551 from P7.
-  - Mark WI-644 `spine`.
-  - Backfill Done-when on the twelve items that lack one.
-  - Widen draft B: `trace.load_registries` 39 → 42, and
-    `test_bookkeeping._whole_tree_git_calls`.
+  (A, B, C, E, F, G, I, J, K, L, N, O; ids from `trace.py --bump-ids`).
+  O is the census-routing follow-up (ruling 2); A lands with or after I.
+- **Backlog cleanup: applied** at the owner's go-ahead, from a read-only
+  audit.
+  - Cancelled WI-596 and WI-597 (WI-635 made them obsolete).
+  - Merged WI-607 into WI-621 (extended to the critique arm), WI-611 into
+    WI-606, and draft H into K.
+  - Rewrote WI-551 as WI-620's keep operation.
+  - Re-scoped WI-539, WI-581 and WI-582 to what remains.
+  - Lowered WI-541 and WI-551 to P3; marked WI-644 `spine`.
+  - Backfilled Done-when on the ten live items that lacked one.
+  - Pointed WI-623 at the readability report's measures, and widened draft B.
+  - Sequencing: do WI-609, WI-613 and WI-614 in one sitting before WI-615's
+    prose pass (they share PROCESS.md's byte budget and the role prompts).
 - **Then build** WI-633, WI-634 and WI-638, the C1 sitting commit (WI-643),
   and the reversal sweep (WI-644), in the generated frontier's order.
 - **Interface ids:**
@@ -147,21 +150,20 @@ the C1 sitting commit (WI-643).
 
 ## For the owner
 
-- **Still owed:** re-attest SN-041 to SN-044 (D6/D20 first, then D2 and D5),
-  and the reserved D8, D14, D22, D29, D30 and D10. D10 is the smoke tier:
-  it ran 285–957 s against a 60 s budget this session.
-- **SR-217 association timing (ruling 5):** a test case should count as a
-  requirement's from the first commit where it reads approved AND names the
-  requirement or one of its design rows. Today a test case attached after
-  the code landed inherits its earlier approval date. This changes SR-217,
-  LLR-257 and TC-250, and sits under SN-042's reserved rule. Decide it with
-  D6.
-- **SR-211 (WI-637):** every boundary interface with neither `bridged_by`
-  nor `coincident` is advised, 43 on this repository, with no "until adopted"
-  clause. Sol judged this intended; say if you want the requirement-side
-  vacuity instead.
-- **The backlog cleanup above**, and the stakeholder-status double report
-  (morning handoff).
+Every decision the owner owes is now an open item in
+`docs/requirements/open-items.toml`, rendered with its options and
+recommendation in [open-items.html](open-items.html) and projected into the
+status page:
+
+- **OI-86:** re-attest the stand-in's signatures on SN-041 to SN-044 (D6/D20
+  first, then D2 and D5). The need tier has no drift detector, so nothing
+  else surfaces this.
+- **OI-87:** SR-217's association timing (ruling 5), to rule with OI-86.
+- **OI-88 to OI-92:** the reserved D8, D14, D22, D29 and D10. D30 needs no
+  ruling.
+- **OI-93:** the stakeholder-status double report.
+- **OI-94:** SR-211's missing "until adopted" clause (43 advisories here).
+- **OI-82:** still pending from before.
 
 ## Traps (new this session)
 

@@ -2,11 +2,22 @@
 id = "WI-597"
 title = "Stop the snapshot refusal's opening line claiming nothing authorises an act whose next line names what it authorises"
 workstream = "process"
-specref = "docs/archive/work/complete/WI-591-spot-check-the-clean-close-of.md"
+specref = ""
 buildtier = "quick"
 priority = 3
 safety_class = "ordinary"
 +++
+
+## Deliverable
+
+CANCELLED as DONE ELSEWHERE (backlog audit, owner go-ahead 2026-09-26).
+
+WI-635 (e123eb6d) rewrote both lines this row targets: the header now reads
+"…for rows this act neither approves nor re-attests:" and the scoped arm
+"This act WRITES …", and `tests/test_baseline_snapshot.py` asserts on the
+header text, the pin this row asked for. Prose elsewhere that still tells a
+user to run `intake.py snapshot` without naming `--reattests` is drafted
+separately (the wave-2 draft G).
 
 ## Context
 

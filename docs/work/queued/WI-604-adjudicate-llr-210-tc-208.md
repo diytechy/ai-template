@@ -26,3 +26,17 @@ in ONE reviewed commit on this lane) or RETURN with findings, drafting
 the follow-up in a `## Dispositions` section of THIS spec — intake mints
 it at this row's merge (drafts-not-mints, R1). The approval act is
 YOURS: a work lane's merge is refused if it performs one.
+
+## Done-when
+
+- A verdict is committed under `docs/reviews/` at the path the brief names
+  (`NNN-ADJUDICATE-<sha>.md` in this lane's folder), with one `APPROVE` or
+  `RETURN` line for each of LLR-210 and TC-208 and exactly one
+  `OUTCOME: APPROVE|RETURN rows=2` line, in a commit carrying this row's `WI:`
+  trailer.
+- Each approved row's `Status` moves from `Drafted` to `Approved` with no other
+  registry cell changed, and `intake.py snapshot --approves` names only the
+  registries holding an approved row, in one reviewed commit after the verdict
+  commit.
+- Each returned row keeps every cell byte-exact, and this spec's
+  `## Dispositions` section drafts its follow-up.

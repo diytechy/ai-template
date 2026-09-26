@@ -20,6 +20,12 @@ burn-down number beside the size and complexity caps, like
 fusing unrelated functions behind a mode flag, which would lower a duplicate
 count. Duplicated-stage detection is a separate research item.
 
+Build it as a measure of the per-change readability report
+(`check_readability.py`, the `[readability]` profile's `measures`), not as a
+standalone census: SR-216 requires every worsening the declared measures find
+to be reported together, and the report already carries the complexity
+measure beside which this one belongs.
+
 ## Done-when
 
 - A stdlib check reports, per module, the functions taking two or more boolean

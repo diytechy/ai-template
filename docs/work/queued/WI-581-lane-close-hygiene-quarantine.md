@@ -1,6 +1,6 @@
 +++
 id = "WI-581"
-title = "Lane-close hygiene: quarantine spares monotone and record paths, integrate.lock declared, approval brief regenerated"
+title = "Lane-close hygiene: quarantine spares monotone and record paths, integrate.lock declared"
 workstream = "process"
 needs = ["~WI-579"]
 specref = "docs/plans/2026-08-31-verdict-record-and-queue-blockers.md#2-the-other-things-that-stopped-the-queue"
@@ -18,12 +18,28 @@ Minted by the owner-directed backlog restructure of 2026-09-02 (plan of record `
 path (`dispatch._refresh_or_quarantine`, the unload residue set, the trunk
 step's regeneration list). One quick lane instead of three.
 
+**Re-scoped 2026-09-26 (owner-approved backlog audit).** WI-560's item 3,
+regenerating the approval brief, landed in `dc395734` as the trunk step's
+`approval-brief` regeneration step, so it and its quote leave scope. Re-read in
+the code, the rest is still open: the revert WI-561 names now runs in
+`handback.quarantine`, whose `BOOKKEEPING` exemption
+(`project-trajectory/scripts/handback.py`) spares `docs/work/`, `docs/log.d/`
+and `docs/handbacks/` but neither `docs/id-watermark` nor `docs/reviews/`; and
+`integrate._RESIDUE_OUT_FILES` declares `out/review-owed` and
+`out/agent-loop.lock` but not `out/integrate.lock`.
+
 ## Done-when
 
-1. WI-561 Done-when 1–3 below, as written.
-2. WI-562 Done-when 1 and 3 below, as written.
-3. WI-560 Done-when 3 below, as written.
-4. Full suite green.
+- `handback.quarantine`'s revert leaves `docs/id-watermark` (and any other path
+  monotone by contract) as the lane left it, and the reverted tree passes
+  registry-integrity (WI-561 item 1).
+- The revert keeps `docs/reviews/` as a record path, beside `docs/log.d/` and
+  the handback report it already keeps (WI-561 item 2).
+- `out/integrate.lock` is in `integrate._RESIDUE_OUT_FILES`, with the same
+  test-and-fixture treatment `out/agent-loop.lock` received (WI-562 item 1).
+- Tests drive both revert exclusions on a scaffold quarantine and the lock on
+  an unload, and the full suite stays green with no other residue class
+  regressing (WI-561 item 3, WI-562 item 3).
 
 ### From WI-561 (Done-when, verbatim)
 
@@ -41,11 +57,3 @@ step's regeneration list). One quick lane instead of three.
 1. `out/integrate.lock` is declared in the unload residue set, with the
    same test-and-fixture treatment the agent-loop lock received.
 3. The full suite stays green; no other residue class regresses.
-
-### From WI-560 (Done-when 3 and 4, verbatim — item 4 is shared with WI-579 and WI-580)
-
-3. The trunk step regenerates the approval brief (`CURRENT.md`) after a
-   merge that touched it, the same way the trunk lane owns every other
-   generated artifact — a following lane is never redded by staleness it
-   did not cause.
-4. Tests drive all three.

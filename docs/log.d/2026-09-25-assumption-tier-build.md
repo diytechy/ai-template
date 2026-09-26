@@ -351,3 +351,42 @@ Fable (medium) arbiter for disagreements.
   60 s (D10), recorded, not re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=5c546358 -->
 
+### The owner's decisions as open items, and the backlog cleanup (2026-09-26)
+
+At the owner's request, before resuming from the coordinator's handoff.
+
+- **Open items OI-86 to OI-94** (`docs/requirements/open-items.toml`, the
+  OI watermark 85 -> 94), each with options, blast radius and a
+  recommendation: the stand-in's re-attestations of SN-041..SN-044 (OI-86;
+  the need tier has no drift detector, so neither the approval brief nor the
+  open-items view surfaced them), SR-217's association timing (OI-87), the
+  reserved D8, D14, D22, D29 and D10 (OI-88..OI-92), the stakeholder-status
+  double report (OI-93) and SR-211's missing vacuity (OI-94). D30 needs no
+  ruling. The spine map §6 and the handoff point at them.
+- **Backlog cleanup**, from a read-only audit of the 41 unstarted items, the
+  deferred one and the drafts, each verdict checked against code or commits:
+  cancelled WI-596 and WI-597 (WI-635 removed their premise and wording);
+  merged WI-607 into WI-621 (extended to the critique arm) and WI-611 into
+  WI-606; rewrote WI-551 as WI-620's keep operation; re-scoped WI-539, WI-581
+  and WI-582 to what remains (WI-582's satisfied `needs` removed); lowered
+  WI-541 and WI-551 from P7 to P3; marked WI-644 `spine`; backfilled
+  Done-when on ten items (WI-536 and WI-539 also gained the Context their
+  bodies lacked); pointed WI-623 at the readability report's measures. The
+  drafts: H folded into K (one amendment adjudication for the LLR registry),
+  B widened, O added (census routing, ruling 2).
+- **Deviation:** a stray re-run of the integrator's cleanup script doubled
+  the four cancelled specs' Deliverable and one WI-606 bullet before the
+  moves; found by count and removed, each spec verified to one Deliverable
+  and one Context heading.
+- **Findings, not acted on:** OI-82 and WI-577 attribute the "Surfaces to the
+  owner" table row to PROCESS_OPTIONS.md §2a; it is §2a of
+  `docs/plans/2026-09-01-approval-act-adjudicator-only.md`. WI-545's first
+  obligation (re-point the size ratchet's debt owner from WI-521) has not
+  happened; its Done-when now requires it.
+- **Commit bar:** smoke **1697 passed, 3 skipped** in 398.3 s (a second run
+  on the same tree; the first's result line was not captured and it measured
+  440.8 s); `check_docs --stale` OK; `check_trajectory --strict` clean (645
+  work items, 25 cancelled); `trace.py --strict-integrity` 0 integrity;
+  `CURRENT.md` fresh; the open-items view up to date; `docs/status.md` 140 of
+  its 160 lines. Seconds **FAIL** (D10, now OI-92), recorded, not re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=afacb371 -->

@@ -39,3 +39,15 @@ observes it. Whether `TC-206.method` needs a sentence for the widened arm is the
 successor's call after the test lands; `TC-206` and `LLR-208` are `Approved`, so
 any cell edit is a re-draft and an approval act belongs to the adjudication that
 follows, never to the lane.
+
+## Done-when
+
+- `test_regen_skips_absent_artifact_families` asserts, for every `REGEN_STEPS`
+  row, its `ok` line or its named skip on a bare scaffold, reading the table
+  rather than a literal list of names; the `verdict-rollup` skip notice is among
+  them.
+- `test_regen_runs_in_declared_dependency_order` asserts that the executed
+  order is the declared order across every row, not a sampled subsequence.
+- A row added to `REGEN_STEPS` is covered by both arms with no edit to the test.
+- `trunk_step.py` is unchanged, both arms still run on an empty temporary tree,
+  and the commit bar passes with no spine row's `Status` changed.

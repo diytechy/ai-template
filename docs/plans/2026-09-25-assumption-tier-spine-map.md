@@ -122,6 +122,12 @@ it. Numbered so the owner can answer by number.
 then ended at the phase-6 approval act (WI-642), once its three adjudications
 were ruled. The rest stay as marked below.
 
+**Carried as open items (2026-09-26):** the stand-in's re-attestations
+(D2, D5, D6/D20) as OI-86, and the reserved D8, D14, D22, D29 and D10 as
+OI-88 to OI-92, so each is on the owner's decision surface
+(`docs/open-items.html`) with its options and recommendation. D30 needs no
+ruling.
+
 - **D1 — Scope.** "The full plan and work items in scope" is read as the
   assumption-tier plan in full, plus the sister-plan items it pulls in (S3 at
   C1, S6 designed with C3). The other queued sister-plan items are separate work

@@ -6,7 +6,7 @@ specref = "docs/plans/2026-09-25-c1-sitting-package.md#22-rows-elsewhere-that-re
 sr_refs = ["SR-151", "SR-152", "SR-175"]
 needs = ["WI-643"]
 buildtier = "medium"
-safety_class = "ordinary"
+safety_class = "spine"
 priority = 4
 +++
 

@@ -2,11 +2,24 @@
 id = "WI-596"
 title = "The anchoring copy's absorb ledger: the first-approval brief and the approval act's record name every drifted Approved row a whole-file snapshot re-blesses"
 workstream = "process"
-specref = "docs/reviews/wi-590-adjudicate-llr-207-llr-208/008-REVIEW-A-9671078.md"
+specref = ""
 buildtier = "medium"
 priority = 3
 safety_class = "ordinary"
 +++
+
+## Deliverable
+
+CANCELLED as OBSOLETE (backlog audit, owner go-ahead 2026-09-26).
+
+Its premise is that an approval act copies a registry whole and so re-blesses
+drifted Approved rows nothing names ("copied both files whole, so all 14 now
+read as blessed with nothing naming them"). WI-635 removed that path
+(e123eb6d): the snapshot act now refuses while any drifted approved row it
+neither flips nor names with `--reattests` stands in a registry it copies,
+`--approves` clears no row, and the record's stamp names the re-attested ids.
+A drifted row can no longer be absorbed silently, so the absorb ledger this
+row would render has nothing left to list.
 
 ## Context
 

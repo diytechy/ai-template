@@ -1,12 +1,11 @@
 +++
 id = "WI-582"
-title = "The WI-552 residual sweep: schedule-trace seam declared, needs read from the parsed value, stage-currency test exemption"
+title = "The WI-552 residual sweep: the schedule-trace seam's test case, the validate docstring, the stage-currency exemption"
 workstream = "process"
 specref = "docs/archive/work/complete/WI-563-spot-check-the-clean-close-of.md"
 buildtier = "medium"
 priority = 4
 safety_class = "spine"
-needs = ["WI-579", "WI-580"]
 supersedes = "WI-564;WI-565;WI-576"
 +++
 
@@ -21,8 +20,29 @@ out whole"; that argument covers WI-564 too, and WI-576 rides along as the
 third quick item. `OI-77` is RULED ((a): read the parsed value), so nothing
 here waits on a ruling any more. WI-564 was declared `ordinary` but its likely
 exit authors a covering TC row, and writing `docs/test/test-cases.toml` is
-spine authoring — so this row declares `spine`, runs exclusive, and is batched
-with whatever the pending amendment adjudication (WI-578) drafts.
+spine authoring — so this row declares `spine` and runs exclusive.
+
+**Re-scoped 2026-09-26 (owner-approved backlog audit) to what remains.** Two
+parts have landed and leave scope: IF-176 declares the schedule→trace seam
+(`8d751573`), which cleared WI-564's `--strict` ERROR; and
+`intake._SPEC_NEEDS_RE` and the dead `intake._OI_ID_RE` went when `needs` came
+to be read from the parsed value (`77612fb2`; see "Remaining WI-582 work" in
+`docs/ai-template-redesign-2026-09-05-codex/P2A-EXECUTION.md`). Re-read in the
+code, three items remain:
+
+1. IF-176's covering test case: `docs/if-tc-coverage-allow` still lists
+   IF-176, to close when a TC cites `load_oi_status` resolving a real
+   open-items registry, including the absent-registry answer.
+2. The `check_trajectory.validate` docstring still says a `None` `known_ois`
+   leaves an OI edge to the scheduler's fail-closed `waiting`, while the code
+   coerces `None` to `frozenset()`, which makes every OI edge a dangling-edge
+   ERROR.
+3. WI-576's exemption: `test_this_repo_s_committed_stage_is_current` in
+   `tests/test_derive_stage.py` still asserts the recorded fingerprint on every
+   branch.
+
+`needs` no longer names `WI-579` and `WI-580`: both are complete, and the edges
+only kept this spine row from ranking ahead of them.
 
 **Standing constraint (owner ruling 2026-09-01, the approval act is the
 adjudicator's):** any IF or TC row this lane authors is left `Drafted`; do NOT
@@ -32,17 +52,18 @@ minted at this row's merge performs the act.
 
 ## Done-when
 
-1. WI-564's scope below: the schedule→trace seam declared (or the membership
-   retagged), `check_trajectory.py --strict` exit 0 on the ERROR line, the
-   process finding recorded in this row's Deliverable.
-2. WI-565's scope below: the `_SPEC_NEEDS_RE` residual applied per OI-77's
-   ruling (read the parsed `needs` value, never re-match the text), plus the
-   two cosmetics.
-3. WI-576's scope below: the committed-stage currency test gains the
-   work-branch exemption its `derive_stage --check` twin has, green on a work
-   branch that amends a settled spine row and still red on trunk with a stale
-   `docs/stage`.
-4. Full suite green.
+- A test drives `schedule.load_oi_status` against a real open-items registry
+  and an absent one, a TC row citing it and IF-176 is authored `Drafted`, and
+  IF-176's line leaves `docs/if-tc-coverage-allow`.
+- `check_trajectory.validate`'s docstring states what the code does with
+  `known_ois=None`.
+- `test_this_repo_s_committed_stage_is_current` gains the work-branch exemption
+  its `derive_stage --check` twin has, through the same branch test `check.py`
+  already uses, and a test shows it green on a work branch that amends a
+  settled spine row and still red on trunk with a stale `docs/stage`.
+- The Deliverable records the process finding WI-564's scope names below, and
+  `check_trajectory.py --strict` and the full suite pass with no spine row's
+  `Status` flipped.
 
 ### From WI-564 (scope, verbatim)
 

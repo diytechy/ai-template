@@ -2,11 +2,22 @@
 id = "WI-607"
 title = "Route only on a committed verdict: read_verdict parses the file on disk, committed or not (review pack C3)"
 workstream = "unattended"
-specref = "docs/plans/2026-09-24-owner-review-pack.md#part-c--defects-found-along-the-way"
+specref = ""
 buildtier = "medium"
 priority = 4
 safety_class = "ordinary"
 +++
+
+## Deliverable
+
+CANCELLED as MERGED into WI-621 (backlog audit, owner go-ahead 2026-09-26).
+
+This row asked for the routing side to be designed "so the uncommitted verdict
+cannot be read, rather than adding a second check beside S9's". WI-621 is
+S9's check, and its dirty-tree arm ("a dirty tree right after a review session
+fails the draw") already makes an uncommitted verdict fail the draw. WI-621's
+scope now carries this row's routing clause and its test, extended to the
+critique arm, which also calls `read_verdict`.
 
 ## Context
 
