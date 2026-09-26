@@ -259,3 +259,38 @@ Not in the phase-6 chains, but ahead of WI-638, which files through the mint.
   `PROCESS.md` +19 (both watched, re-stamped); the byte-budget-guard skill
   4,613 -> 4,519 (capped at 5,000). No other capped file edited.
 
+### Session resumed (2026-09-26): the owed full suite, and a second wave of builders
+
+Resumed from `docs/handoff-2026-09-26.md` on the owner's direction: run the
+full unfiltered suite first and fix or report what it finds, then continue
+the build in the handoff's order. Reviews stay codex Sol (medium), with a
+Fable (medium) arbiter for disagreements.
+
+- **The full suite at b14d1808**, in a detached worktree: **1 failed, 3771
+  passed, 14 skipped** in 4128.6 s (1:08:48) on this 4-core, 8-thread box.
+  <!-- fig: cmd="python -m pytest -q -n 4" rev=b14d1808 -->
+  The failure was `tests/test_check_docs.py::test_meta_repo_has_zero_unexplained_orphans`:
+  `docs/Inspiration.md` and `docs/external-skills/architect/{SKILL,PROVENANCE}.md`,
+  added by the owner's 1e3178fd (2026-09-20), had no path from an entry root.
+  The per-commit bar reads orphans as warnings, so only the full suite's
+  strict test saw it, six days late. Fixed by linking them from the `docs/`
+  folder map rather than by an allow-list glob, which would have accepted the
+  orphaning instead of repairing it.
+- **Builders started before the suite finished**, a deviation from the
+  owner's order: the suite's early modules read as a three-hour run, so the
+  four ready items (WI-629, WI-636, WI-640, WI-645) were built in worktrees
+  cut at b14d1808 while it ran, and nothing merged until the suite was
+  handled. It finished in 69 minutes.
+- **Codex's login was revoked** (`refresh_token_invalidated`) at session
+  start, so no Sol review could run; the owner was notified to log in again.
+  The catch-up review of WI-648's verdict, which the last session left
+  unreviewed, waits with the rest.
+
+- **Commit bar (the orphan fix):** smoke **1697 passed, 3 skipped** in
+  284.2 s; the orphan test passes; `check_docs --stale` OK (0 broken, 1 orphan
+  warning); `check_trajectory --strict` clean; `trace.py --strict-integrity`
+  0 integrity; `CURRENT.md` fresh; the open-items view up to date. Seconds
+  **FAIL** at 285.4 s against 60 s (D10; two builders were loading the box),
+  recorded, not re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=b14d1808 -->
+

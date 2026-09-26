@@ -45,3 +45,9 @@ against an explicit proposal base; its [P9R record](ai-template-redesign-2026-09
 explains the conservative fallback and evidence limits. It is a meta-repo tool;
 the commit bar in the `session-protocol` skill and CI/phase-close Full checks
 still apply.
+
+Research leads are collected in [`Inspiration.md`](Inspiration.md), an intake
+map rather than an adoption record. An external skill held for review, and not
+shipped, keeps its copy under `external-skills/`: the
+[Architect candidate](external-skills/architect/SKILL.md), with its
+[provenance and review notes](external-skills/architect/PROVENANCE.md).
