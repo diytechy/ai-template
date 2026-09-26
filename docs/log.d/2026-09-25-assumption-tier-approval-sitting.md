@@ -1,0 +1,51 @@
+## 2026-09-25 — The assumption tier's approval sitting: three adjudications, a re-anchor and the phase-6 act
+
+An attended sitting on `refactor_again` after the owner returned and ruled the
+[spine map](../plans/2026-09-25-assumption-tier-spine-map.md)'s D1, D11, D12 and
+D28 ("Agreed"), then directed the handoff's order: WI-641, WI-601 and WI-603,
+then the approval act WI-642. Reviews are codex Sol (medium). A Fable (medium)
+agent arbitrates any disagreement between this session and a reviewer.
+
+Deferred open items: none — the owner-reserved decisions stay numbered in the
+spine map §6 (D8, D10, D14, D22, D29, D30), and none holds a gate or blocks a
+queue.
+
+### The three adjudications
+
+- **Verdicts:** WI-641 `CLARITY rows=1` (SR-162: one stale clause dropped from
+  its rationale); WI-601 `MEANING rows=1` (LLR-061: the multi-row assignment
+  block); WI-603 `MEANING rows=1` (LLR-167: `amendment` routed, `conflict`
+  retired, the consolidation assembler added). Each file is under
+  `docs/reviews/wi-6NN-*/001-ADJUDICATE-f263118.md`. Both MEANING rows were
+  judged blessable (within their parent SRs, true of the code, driven by
+  named tests). Their re-attestation is the joint re-anchor below.
+- **Sol review:** NOT YET SOUND, 1 blocker, 2 major, 2 minor. It confirmed
+  every row call and the re-anchor's safety. Applied: the anchor now names each
+  registry's own copy (27a30842 for requirements, 2e1197fd for design rows)
+  rather than the brief's directory-wide stamp; "re-attested" now waits for the
+  copy; the blessing wording is exact; LLR-253 is out of the collateral range.
+  One correction to Sol: the requirements copy was last written at 27a30842,
+  not the 580df781 it named.
+- **Arbitration (the blocker):** Sol held that each verdict must rule all
+  twenty rows its brief rendered. The Fable arbiter ruled for the scoped count,
+  on WI-566's reviewed correction and WI-573. Nothing parses the `rows=` number,
+  and ruling twenty rows three times would put MEANING on seventeen rows already
+  ruled CLARITY three times. Each verdict now carries WI-566's "excluded from
+  the count" section.
+- **Filed by hand:** WI-645, WI-603's disposition under its drafted title
+  (TC-061 and TC-161 lag their amended design rows, and two routed assemblers are
+  named by no design row), needing WI-642; WI-646, the brief defect (whole-tree
+  rendering, directory-wide stamp), needing WI-645. Watermark raised with
+  `trace.py --bump-ids`.
+- **Deviation:** the three rows were ruled in an attended sitting, not claimed
+  through the integrator into lanes, since the loop is paused. Specs were
+  closed with `spec_move.py` straight from `queued/`.
+- **Commit bar for the adjudications:** smoke **1681 passed, 3 skipped** in
+  164.8 s.
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=f2631182 -->
+  Seconds **FAIL**: `check_smoke_budget.py --mode enforce` measured 164.7 s
+  against the 60 s budget (spine map D10, this 8-core machine), recorded and not
+  re-stamped. `check_docs --stale` OK (0 broken, 4 orphan warnings);
+  `check_trajectory --strict` clean after clearing the closed specs' `specref`
+  (its R-F rule caught the first close); `trace.py --strict-integrity` 0
+  integrity, 0 orphans; the open-items view up to date.
