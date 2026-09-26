@@ -1090,7 +1090,7 @@ component = "CMP-008"
 
 [interface.IF-081]
 owner = "scripts/trunk_step"
-consumers = ["scripts/integrate", "scripts/intake", "external:downstream adopter"]
+consumers = ["scripts/integrate", "scripts/bookkeeping", "external:downstream adopter"]
 channel = "exit-code"
 data = "0 all clean · 1 any failure, the offending file named"
 version = "v1"
@@ -1100,7 +1100,7 @@ component = "CMP-008"
 
 [interface.IF-155]
 owner = "scripts/trunk_step"
-requestors = ["scripts/integrate", "scripts/intake", "external:downstream adopter"]
+requestors = ["scripts/integrate", "scripts/bookkeeping", "external:downstream adopter"]
 channel = "cli"
 data = "--compile-log · --regen · neither = both, compile first; --root and --dry-run on either"
 version = "v1"
@@ -1790,6 +1790,17 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """source - frame_rules consumes NOTHING by design: rows in, findings out, with no I/O, no git and no filesystem, which is what lets every rule be driven on in-memory rows."""
+
+[interface.IF-186]
+rationale = """The claim and the intake mint are the loop's two trunk-side writers and both run in the primary checkout, where the owner's uncommitted work also lives. One helper owning the whole write sequence - plan the write set, refuse a dirty path inside it before writing, commit exactly what changed there from a temporary index, advance trunk by compare-and-swap, restore only the step's own writes on a refusal - keeps both callers from sweeping in or discarding an edit outside the step's write set, instead of two copies of a whole-tree sequence each guarded separately."""
+owner = "scripts/bookkeeping"
+requestors = ["scripts/integrate", "scripts/intake"]
+channel = "call"
+data = "commit(root, scope, write, message, label, before_advance) -> (sha, refusal)"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """Every refusal is a return value; an exception from the step propagates with the restore's report attached. A path outside the scope is never touched or committed. A path inside it is guarded at the pre-check only: an owner edit landing on one during the helper's run can be swept into the commit, overwritten by the regeneration's status splice, or restored over on a refusal. The window is the helper's own duration and only for in-scope paths. Once the step has written, a refusal leaves any in-scope path whose file no longer matches what the step wrote and names it, restoring the rest. Every path the trunk step's regeneration may write joins the scope, because every bookkeeping commit folds the regeneration in."""
 
 [interface.IF-187]
 rationale = """The report runs as a declared step, so the harness reads it back the way it reads every project step: by exit code, with the lines on stdout for the reviewer. Refusing only where the profile declares a measure gating keeps the report proportionate: a project pays for a refusal once it has opted into one, and a misspelt name or an unreadable change is reported rather than refused, because neither is a worsening."""

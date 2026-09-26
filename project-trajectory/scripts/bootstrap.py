@@ -84,6 +84,8 @@ What it creates in the destination:
                                                 handback + its bar-inert quarantine; WI-387)
     scripts/spec_move.py                       (the link-aware spec-move ritual:
                                                 move + relink as one operation; WI-393)
+    scripts/bookkeeping.py                     (the one trunk bookkeeping commit the
+                                                claim and the mint share; WI-612)
     scripts/intake.py                          (the unified trunk-side intake mint:
                                                 three triggers + drafts-not-mints,
                                                 the context block, the gate-policy
@@ -2215,6 +2217,11 @@ MAPPING = [
     # handback.py's return import it unguarded; workers run its CLI for the
     # terminal close moves and the spec-of-record archival.
     ("scripts/spec_move.py", "scripts/spec_move.py"),
+    # The ONE trunk bookkeeping commit (WI-612): stage exactly what the claim or
+    # the mint wrote, restore only that on a refusal, advance trunk without a
+    # whole-tree reset. integrate.py and intake.py import it unguarded, so a
+    # scaffold without it cannot claim or mint.
+    ("scripts/bookkeeping.py", "scripts/bookkeeping.py"),
     # The unified trunk-side intake mint (WI-388, concurrency-v2 §A5.2;
     # rulings R1/R3): a WI id is created only by a human trunk commit or this
     # helper. integrate.py's post-merge arm and dispatch.py's empty-frontier

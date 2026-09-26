@@ -19,7 +19,7 @@
 [derived]
 components = 4
 design_rows = 239
-seam_rows = 171
+seam_rows = 172
 requirements_placed = 106
 requirements_unplaced = 6
 seams_unplaced = 0
@@ -273,7 +273,6 @@ seam_boundary_refs = [
   "IF-077",
   "IF-078",
   "IF-079",
-  "IF-081",
   "IF-082",
   "IF-083",
   "IF-084",
@@ -304,7 +303,6 @@ seam_boundary_refs = [
   "IF-150",
   "IF-152",
   "IF-153",
-  "IF-155",
   "IF-159",
   "IF-161",
   "IF-163",
@@ -312,6 +310,7 @@ seam_boundary_refs = [
   "IF-176",
   "IF-177",
   "IF-178",
+  "IF-186",
 ]
 
 [component_view.CMP-007]
@@ -607,6 +606,7 @@ modules = [
   "project-trajectory/scripts/agent_loop.py",
   "project-trajectory/scripts/agent_route.py",
   "project-trajectory/scripts/agent_session.py",
+  "project-trajectory/scripts/bookkeeping.py",
   "project-trajectory/scripts/census.py",
   "project-trajectory/scripts/check.py",
   "project-trajectory/scripts/consolidate.py",
@@ -656,6 +656,7 @@ seam_internal_refs = [
   "IF-155",
   "IF-173",
   "IF-175",
+  "IF-186",
 ]
 seam_boundary_refs = [
   "IF-001",

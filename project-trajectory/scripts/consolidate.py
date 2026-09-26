@@ -1204,6 +1204,19 @@ def archive_absorbed(root, minted):
     return moved, None
 
 
+def archive_scope(root, minted):
+    """Every path `archive_absorbed(root, minted)` would write, read before it
+    writes one: `(paths, None)`, or `([], refusal)` - the same preflight refusal,
+    reached before the mint writes anything rather than after. The absorbed rows'
+    moves plus every link those moves rewrite (`spec_move.planned_writes`); the
+    mint's bookkeeping commit plans its scope from it (WI-612)."""
+    plan, refusal = _archive_plan(root, minted)
+    if refusal:
+        return [], refusal
+    moves = [(src, dest) for _successor, _dead, src, dest, _text in plan]
+    return spec_move.planned_writes(root, moves), None
+
+
 def _archive_plan(root, minted):
     """`([(successor, dead_id, src, dest, new_text)], None)` for every absorbed
     row, or `([], refusal)` naming the first that cannot be moved.

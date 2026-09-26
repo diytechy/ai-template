@@ -184,6 +184,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/lane.py",
         "scripts/handback.py",
         "scripts/intake.py",
+        "scripts/bookkeeping.py",
         "scripts/census.py",
         "scripts/consolidate.py",
         "scripts/pending.py",

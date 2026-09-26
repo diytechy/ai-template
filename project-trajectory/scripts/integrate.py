@@ -114,8 +114,9 @@ Contract IF-080: this module's CLI is the local integration seam, and each
     subcommand's refusal is the contract. `claim` performs the serial trunk
     claim — a queued spec moves to `docs/work/active/<branch>/` in one
     bookkeeping commit and the branch is cut from that commit — refusing
-    before it writes anything on a declared pause, a dirty tree, an existing
-    branch, an unsafe branch name, a non-ordinary spec or an off-frontier row.
+    before it writes anything on a declared pause, a dirty path it must write,
+    an existing branch, an unsafe branch name, a non-ordinary spec or an
+    off-frontier row.
     `refresh` runs the station refresh on a claimed branch. `integrate` is the
     serial fail-closed merge queue: a `--no-ff` merge onto a candidate
     worktree, the trunk step folded in, then the DECLARED bar on the composed
@@ -160,6 +161,7 @@ import tomllib
 from pathlib import Path
 
 import agent_common as ac
+import bookkeeping
 import score_reviews
 import spec_move
 from kitlib import verdict as kverdict
@@ -660,8 +662,9 @@ def _claim_refusal(root, wi_ids, branch):
                 paused.get("since", ""), paused.get("reason", "")
             )
         )
-    if ac.working_tree_dirty(root):
-        return "the trunk working tree is dirty - a claim is a clean serial commit"
+    # No clean-trunk rung (WI-612): the claim commits exactly what it writes,
+    # through `bookkeeping.commit`, whose pre-check refuses by name the dirty
+    # paths it must write - and dirt anywhere else is the owner's to keep.
     code, _ = ac.git(root, "rev-parse", "--verify", "--quiet", "refs/heads/" + branch)
     if code == 0 and not _abandoned_claim(root, wi_ids, branch):
         return "branch {} already exists".format(branch)
@@ -716,12 +719,13 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
     said two and was wrong (REVIEW-A round 1, driven).
 
     1. Before `commit-tree`. The spec is already `git mv`d and the regen output
-       already staged, so a crash here leaves a DIRTY TRUNK with the spec
+       already written, so a crash here leaves a DIRTY TRUNK with the spec
        moved and no branch. That window is unchanged by the inversion (the old
        order had it too) and it is not this function's to close: the next
-       claim's `working_tree_dirty` rung refuses it by name, and dispatch.py's
-       cycle-top check turns it into EXIT_PREFLIGHT. Hand repair, but LOUD and
-       already fronted.
+       bookkeeping commit refuses by name wherever its own write set overlaps
+       the residue (the regenerated artifacts always do), and dispatch.py's
+       cycle-top check turns any residue into EXIT_PREFLIGHT. Hand repair, but
+       LOUD and already fronted.
     2. Between `git branch` and the trunk advance - THE WINDOW THE INVERSION
        MOVES, and the entire reason the driver's `_stranded_claims` existed. TRUNK
        FIRST left a claim no lane could reach: the spec sat in
@@ -751,12 +755,12 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
     Implements: SR-156, LLR-140, LLR-151
     """
     wi_ids = [wi_ids] if isinstance(wi_ids, str) else list(wi_ids)
-    # The ladder runs BEFORE the lock for the same reason `integrate` checks
-    # dirt before `_slot`: taking the lock creates its own untracked file, and
-    # the ladder's clean-trunk rung must not refuse over it on a repo whose
-    # ignore rules predate out/. The lock protects the WRITES; the reads it
-    # leaves outside cannot race a live dispatcher, because a live dispatcher
-    # makes the acquisition below fail outright.
+    # The ladder runs BEFORE the lock: the lock protects the WRITES, and the
+    # reads it leaves outside cannot race a live dispatcher, because a live
+    # dispatcher makes the acquisition below fail outright. The lock's own file
+    # sits outside every bookkeeping scope, so the claim commit never stages it
+    # on a repo whose ignore rules predate out/ (WI-381's hazard, no longer
+    # un-staged after the fact).
     refusal = _claim_refusal(root, wi_ids, branch)
     if refusal:
         return fail(refusal)
@@ -774,95 +778,59 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
 
 def _claim_locked(root, wi_ids, branch):
     """`claim` past its ladder, with the dispatch lock settled — the write
-    sequence itself."""
-    refusal = _drop_abandoned(root, branch)
-    if refusal:
-        return fail(refusal)
-    dest_dir = root / ACTIVE / branch
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    # The move is the link-aware ritual (WI-393), not a bare `git mv`: the
-    # spec's own relative links rebase onto active/<branch>/ and every inbound
-    # link follows the move, all inside this one claim commit — the 2026-08-01
-    # claim that broke the backlog plan's row links is the driven instance.
-    # A batch is the same ritual per spec, all staged into the ONE commit.
+    sequence itself, through the ONE trunk bookkeeping commit the intake mint
+    also uses (`bookkeeping.commit`, WI-612).
+
+    The claim's write set is planned before anything moves: each spec's
+    `queued/ -> active/<branch>/` pair and every file the link-aware move will
+    rewrite (`spec_move.planned_writes`), with the declared regeneration joined
+    by the helper. So a dirty path the claim must write refuses by name, and an
+    uncommitted edit anywhere else is neither swept into the claim commit nor
+    discarded by its refusal."""
+    moves = []
     for wi_id in wi_ids:
         spec = _queued_spec(root, wi_id)
-        _touched, refusal = spec_move.move_spec(
-            root,
-            spec.relative_to(root).as_posix(),
-            (dest_dir / spec.name).relative_to(root).as_posix(),
-        )
+        dest = "{}/{}/{}".format(ACTIVE, branch, spec.name)
+        moves.append((spec.relative_to(root).as_posix(), dest))
+
+    def write():
+        refusal = _drop_abandoned(root, branch)
         if refusal:
-            ac.git(root, "reset", "--hard", "HEAD")
-            return fail("the claim move failed (tree restored): {}".format(refusal))
-    # The claim changes the registry, which is a generated-artifact input, so
-    # the regeneration folds into the claim commit (RULING-6: claims and
-    # regeneration are the one bookkeeping lane) - otherwise the claim is
-    # blocked by its own freshness floor, which the acceptance run proved live.
-    code, out = _run(
-        [
-            str(ac.harness_python(root)),
-            str(SCRIPTS / "trunk_step.py"),
-            "--root",
-            ".",
-            "--regen",
-        ],
-        root,
-    )
-    if code != 0:
-        ac.git(root, "reset", "--hard", "HEAD")
-        return fail(
-            "claim regeneration failed (tree restored):\n{}".format(
-                ac._failure_tail(out)
-            )
-        )
-    ac.git(root, "add", "-A")
-    # The dispatch lock's own file must never ride the claim commit: on a repo
-    # whose ignore rules predate out/ the `add -A` above sweeps it in, and the
-    # hand-path release then unlinks a now-TRACKED file (WI-381). `reset --`
-    # restores the index entry to HEAD's view — unstaged when HEAD has none,
-    # untouched when a repo deliberately tracks one.
-    ac.git(
-        root,
-        "reset",
-        "-q",
-        "--",
-        ac.dispatch_lock_path(root).relative_to(root).as_posix(),
-    )
+            return refusal
+        # The move is the link-aware ritual (WI-393), not a bare `git mv`: the
+        # spec's own relative links rebase onto active/<branch>/ and every
+        # inbound link follows the move, all inside this one claim commit — the
+        # 2026-08-01 claim that broke the backlog plan's row links is the driven
+        # instance. A batch is the same ritual per spec, in the ONE commit. The
+        # claim changes the registry, a generated-artifact input, so the helper
+        # folds the regeneration in (RULING-6: claims and regeneration are the
+        # one bookkeeping lane) - otherwise the claim is blocked by its own
+        # freshness floor, which the acceptance run proved live.
+        for src, dest in moves:
+            _touched, refusal = spec_move.move_spec(root, src, dest)
+            if refusal:
+                return "the claim move failed: {}".format(refusal)
+        return None
 
-    def restore(reason, detail):
-        ac.git(root, "reset", "--hard", "HEAD")
-        return fail("{} (trunk restored):\n{}".format(reason, ac._failure_tail(detail)))
+    def cut(commit):
+        # The branch BEFORE trunk moves (§A3). Should the trunk advance still
+        # fail after this, the branch holds a claim trunk never took, which is
+        # the abandoned-claim shape the next claim re-cuts.
+        code, out = ac.git(root, "branch", branch, commit)
+        return None if code == 0 else "branch cut failed:\n" + ac._failure_tail(out)
 
-    code, tree = ac.git(root, "write-tree")
-    if code != 0 or not tree.strip():
-        return restore("the claim tree could not be named", tree)
-    code, commit = ac.git(
+    _sha, refusal = bookkeeping.commit(
         root,
-        "commit-tree",
-        tree.strip(),
-        "-p",
-        _head(root),
-        "-m",
+        spec_move.planned_writes(root, moves),
+        write,
         "{}\n\nThe §2.3 claim with its regeneration folded in, written BEFORE the\nbranch and before trunk moves onto it (§A3): a crash between the two\nwrites leaves at worst an orphan branch this claim re-cuts, never a\nclaim no lane can reach.".format(
             _claim_subject(wi_ids, branch)
         ),
+        label="the claim",
+        before_advance=cut,
     )
-    if code != 0 or not commit.strip():
-        return restore("the claim commit object could not be written", commit)
-    commit = commit.strip()
-    code, out = ac.git(root, "branch", branch, commit)
-    if code != 0:
-        return restore("branch cut failed", out)
-    code, out = ac.git(root, "reset", "--hard", commit)
-    if code != 0:
-        # The branch is already correct, so this leaves the benign shape the
-        # inversion exists to produce - not a state anyone has to repair.
-        return fail(
-            "the trunk advance onto claim commit {} failed; {} holds the claim "
-            "and trunk did not move, which is the abandoned-claim shape a "
-            "re-claim resolves:\n{}".format(commit[:10], branch, out)
-        )
+    if refusal:
+        return fail(refusal)
     print(
         "integrate: claimed {} on {} (branch cut + trunk advance)".format(
             ";".join(wi_ids), branch
@@ -2796,8 +2764,11 @@ def integrate(root, tier, branches=None):
     # Dirty check BEFORE the lock: the lock file itself is untracked (and
     # gitignored - out/integrate.lock in the shipped template), so taking it
     # first would make the queue refuse itself on any repo whose ignore rules
-    # predate it.
-    if ac.working_tree_dirty(root):
+    # predate it. The owner-only paths are read past (WI-612), as the
+    # dispatcher's tick-top check and resume and done detection read past them:
+    # the owner's scratchpad is never a lane's deliverable, the merge touches
+    # no path it names, and a mid-edit note must not stop the loop.
+    if ac.substantive_working_tree_dirty(root):
         return fail("the trunk working tree is dirty - the queue needs a clean trunk")
     lock_err = _slot(root)
     if isinstance(lock_err, str) and lock_err:

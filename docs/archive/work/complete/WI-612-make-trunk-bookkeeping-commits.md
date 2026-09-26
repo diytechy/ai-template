@@ -2,11 +2,51 @@
 id = "WI-612"
 title = "Make trunk bookkeeping commits stage and restore only what they wrote, so uncommitted edits survive"
 workstream = "unattended"
-specref = "docs/concurrency-restructure.md#23-the-claim-protocol-serial-on-the-trunk"
+specref = ""
 buildtier = "medium"
 priority = 5
 safety_class = "ordinary"
 +++
+
+## Deliverable
+
+Built test-first from this spec's Done-when by a builder session in its own
+worktree, reviewed, and squash-merged.
+
+- `scripts/bookkeeping.py`, one shared helper both writers call (IF-186):
+  `commit(root, scope, write, message, *, label, before_advance)`. The scope is
+  the step's planned paths plus every file `trunk_step --regen` writes
+  (`REGEN_STEPS` rows now name their writes). Any dirt inside the scope refuses
+  by name before anything is written. The step's writes and the regeneration
+  run, the in-scope changes are committed from a temporary index seeded from
+  HEAD, and trunk advances by a compare-and-swap `update-ref`. No `add -A`,
+  `reset --hard` or `clean` remains on these paths.
+- The claim (`integrate._claim_locked`) and the intake mint (`_mint`, split
+  into scope, write and message) commit through it; the claim's whole-tree
+  clean rung is gone. `spec_move.planned_writes` and
+  `consolidate.archive_scope` compute their scopes from the same traversal
+  the writes use.
+- The dispatcher's tick-top stop and the merge slot now use
+  `substantive_working_tree_dirty`, so the owner's scratchpad no longer stops
+  the loop.
+- Honest contract: an owner edit landing on an IN-SCOPE path while the helper
+  runs can still be swept in, overwritten or restored over. A restore leaves,
+  and names, any in-scope path edited after the step wrote it, and a failed
+  restore is attached to the re-raised exception. The isolated build that
+  would close most of that window is WI-647.
+- Tests: `tests/test_bookkeeping.py` (registered slow) plus cases in
+  `test_integrate.py` and `test_dispatch.py`; 8 red before the build, and the
+  follow-up's cases red against the first cut or under mutation.
+- Six approved rows stated the old behaviour and were amended in their
+  attesting cells (LLR-140, LLR-143, LLR-151 `detail`; TC-132, TC-144, TC-145
+  `method`). Their adjudication is WI-648.
+
+Review: codex Sol (medium) NOT YET SOUND, 1 blocker and 3 major, 1 minor. The
+blocker (an owner edit to an in-scope path during the step) was arbitrated by a
+Fable agent, ruling B: an honest contract and a leave-and-name restore now, and
+the isolated build as WI-647. The rest were fixed: a restore failure
+surfaced, pre-check tests that count writes, the six amendments, and the
+`PROCESS_OPTIONS.md` byte re-stamp.
 
 ## Context
 

@@ -1411,10 +1411,13 @@ def run(root, args, worker=None, tier="all"):
         # the run's own end under a pause is `_paused_exit`, reached only with
         # the station idle and nothing parked.
         paused = ac.tracked_pause(root / "docs")
-        # The claim rung's clean-trunk refusal, hoisted to the tick top so the
-        # PARKED-resume path meets it too; with lanes live it only freezes
-        # admission (their own merges refuse on dirt by themselves).
-        dirty = ac.working_tree_dirty(root)
+        # The clean-trunk refusal at the tick top, so the PARKED-resume path
+        # meets it too; with lanes live it only freezes admission (their own
+        # merges refuse on dirt by themselves). The owner-only paths are read
+        # past (WI-612), as resume and done detection already read past them:
+        # the owner's scratchpad is never a lane's deliverable, and no
+        # bookkeeping commit stages it, so a mid-edit note is not residue.
+        dirty = ac.substantive_working_tree_dirty(root)
         if dirty and not table:
             _say(
                 "the trunk working tree is dirty - claims, resumes and merges "

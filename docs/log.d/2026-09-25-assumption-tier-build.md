@@ -100,3 +100,50 @@ mid-work, and each resumed from its own worktree.
   re-stamped. The builder's run of the affected slow modules (467 passed, 2
   skipped; then 51 after the rework) stands for the identical squashed tree.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=76a235bb -->
+
+### WI-612 — trunk bookkeeping commits stage and restore only what they wrote
+
+Not in the phase-6 chains, but ahead of WI-638, which files through the mint.
+
+- **Built:** `scripts/bookkeeping.py` (IF-186), the one helper the claim and
+  the intake mint commit through. It refuses by name on dirt in the step's
+  scope before anything is written. It commits the in-scope changes from a
+  temporary index seeded from HEAD and advances trunk with a compare-and-swap
+  `update-ref`. `REGEN_STEPS` rows name their writes. The dispatcher's and the
+  merge slot's clean-trunk checks ignore `OWNER_ONLY_PATHS`.
+- **Tests first:** `tests/test_bookkeeping.py` (slow) plus cases in
+  `test_integrate.py` and `test_dispatch.py`: 8 red, then green. Affected
+  modules: 468 passed, 2 skipped; after the rework 269 passed, 1 skipped.
+- **Sol review:** NOT YET SOUND, 1 blocker, 3 major, 1 minor. The blocker, a
+  time-of-check/time-of-use race on an in-scope path the owner edits during the
+  step, went to a Fable arbiter, which ruled B. The Done-when is met as
+  written, and an isolated build would only narrow the window, not close it.
+  The arbiter also corrected the integrator's proposed late drift refusal:
+  that refusal's own restore would destroy the edit it had detected. So the
+  helper's contract states the window honestly, and its restore leaves and
+  names any in-scope path edited after the step wrote it. The isolated build is
+  filed as WI-647, after WI-636. The majors were fixed: a failed restore rides
+  the re-raised exception; the pre-check tests count writes, and a mutation
+  proves it; six approved rows amended.
+- **Amended approved rows**, status left Approved and nothing re-anchored:
+  LLR-140, LLR-143, LLR-151 `detail`; TC-132, TC-144, TC-145 `method`. Their
+  adjudication is filed as WI-648.
+- **Bytes:** `PROCESS_OPTIONS.md` 189,535 -> 189,549 (+14; "a dirty path it
+  must write", not "a dirty tree"), re-stamped in the byte-budget-guard skill's
+  three copies. The skill's own baseline is 4,613 -> 4,533.
+- **Merge:** squashed onto the trunk after WI-639. Resolved: the watermark (IF
+  189, the higher), interfaces (IF-186 before IF-187..189), the RESYNC entries
+  (both kept, oldest first) and the `bootstrap.py` ratchet (1666 + 2 + 1 = 1669).
+- **Findings for later filing:** the `[generated]` list in the shipped stack
+  profile lags what the regeneration writes; the regeneration reads the working
+  tree, so an uncommitted generator input shapes committed artifacts; a relink
+  can rewrite the owner's scratchpad, so a dirty scratchpad refuses that claim
+  by name; LLR-140 still lists a safety-class rung WI-381 deleted.
+
+- **Commit bar:** smoke **1696 passed, 3 skipped** in 706.8 s;
+  `tests/test_bookkeeping.py` 9 passed on the merged tree; `check_docs --stale`
+  OK; `check_trajectory --strict` clean (645 work items); `trace.py
+  --strict-integrity` 0 integrity; `CURRENT.md` fresh; the open-items view up
+  to date. Seconds **FAIL** at 710.9 s against 60 s (D10; three builders and a
+  full-suite run were loading the box), recorded, not re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=2be2894f -->

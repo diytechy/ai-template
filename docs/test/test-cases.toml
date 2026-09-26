@@ -1290,7 +1290,7 @@ phase = 4
 [test.TC-132]
 verifies = ["SR-156", "LLR-140"]
 level = "Unit"
-method = """Run the integrator suite: each claim refusal fires by name and the green claim moves the spec and cuts the branch; finished-branch detection keys on the tree; the verdict gate refuses absent, CHANGES-REQUESTED and stale-APPROVE verdicts and passes a fresh APPROVE; a missing or empty bar declaration refuses; the window audit flags a non-merge product commit and passes a bookkeeping-only window; one end-to-end claim->work->close->integrate run fast-forwards the trunk to a --no-ff merge commit."""
+method = """Run the integrator suite: each claim refusal fires by name (a dirty path the claim must write among them, refused before anything moves) and the green claim moves the spec and cuts the branch; finished-branch detection keys on the tree; the verdict gate refuses absent, CHANGES-REQUESTED and stale-APPROVE verdicts and passes a fresh APPROVE; a missing or empty bar declaration refuses; the window audit flags a non-merge product commit and passes a bookkeeping-only window; one end-to-end claim->work->close->integrate run fast-forwards the trunk to a --no-ff merge commit."""
 tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-140 detail contract"
 automated = "Yes"
@@ -1411,7 +1411,7 @@ phase = 4
 [test.TC-144]
 verifies = ["SR-156", "LLR-150"]
 level = "Integration"
-method = """Run the dispatch loop suite on real git repos with the real bar: a spine batch claims as one commit and its worker receives both ids together, ordinary work admitted only after the window closes; a NEEDS-HUMAN worker hands back, the lane's refresh runs as its own subprocess and the branch merges; a red refresh quarantines a merges-nothing branch once and stops the run for a done-asserting one; an attended gate row drains and exits 0 with the approvals banner; the empty-frontier ladder hands the gap census to the intake mint (rows minted in one bookkeeping commit, driven by the same run, deduped on the next idle pass) and counts rung-2 cards off the shared pending read; pause/dirty-trunk/stall/crash-resume keep their serial-loop contracts at lanes=1."""
+method = """Run the dispatch loop suite on real git repos with the real bar: a spine batch claims as one commit and its worker receives both ids together, ordinary work admitted only after the window closes; a NEEDS-HUMAN worker hands back, the lane's refresh runs as its own subprocess and the branch merges; a red refresh quarantines a merges-nothing branch once and stops the run for a done-asserting one; an attended gate row drains and exits 0 with the approvals banner; the empty-frontier ladder hands the gap census to the intake mint (rows minted in one bookkeeping commit, driven by the same run, deduped on the next idle pass) and counts rung-2 cards off the shared pending read; pause/dirty-trunk/stall/crash-resume keep their serial-loop contracts at lanes=1, the dirty-trunk stop reading past a change confined to the owner's scratchpad (agent_common.OWNER_ONLY_PATHS)."""
 tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-150 detail contract"
 automated = "Yes"
@@ -1420,9 +1420,9 @@ status = "Approved"
 phase = 4
 
 [test.TC-145]
-verifies = ["SR-156", "LLR-151"]
+verifies = ["SR-156", "LLR-151", "IF-186"]
 level = "Unit"
-method = """Run the integrator claim suite: a spine claim succeeds on an idle station (the deleted safety-class arm, red-then-green); a hand claim while another holder has the dispatch lock refuses naming the lock and leaves the queue untouched, while dispatch_lock_held=True proceeds; a spine batch claims as ONE bookkeeping commit whose subject joins the ids and whose specs all land in active/<branch>/; every pre-existing single-WI claim contract (abandoned-claim re-cut, relink oracle, minted-id rung, bookkeeping-commit audit) holds unchanged."""
+method = """Run the integrator claim suite: a spine claim succeeds on an idle station (the deleted safety-class arm, red-then-green); a hand claim while another holder has the dispatch lock refuses naming the lock and leaves the queue untouched, while dispatch_lock_held=True proceeds; a spine batch claims as ONE bookkeeping commit whose subject joins the ids and whose specs all land in active/<branch>/; the claim commits through the shared bookkeeping helper (IF-186) and refuses by name a dirty path it must write - the spec it moves among them - where it once refused any dirty tree; every other pre-existing single-WI claim contract (abandoned-claim re-cut, relink oracle, minted-id rung, bookkeeping-commit audit) holds unchanged."""
 tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-151 detail contract"
 automated = "Yes"

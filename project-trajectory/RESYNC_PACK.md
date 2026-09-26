@@ -5164,6 +5164,44 @@ function over the threshold reports as new debt; stamp one first if you would
 rather see only what a change makes worse:
 `python scripts/check_complexity.py --root . --include "src/**/*.py" --include "tests/**/*.py" --restamp`.
 
+### Trunk bookkeeping commits stage and restore only what they wrote [since 76a235bb]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The claim (`integrate.py claim`) and the intake mint used to
+treat the whole primary checkout as theirs: `git add -A` swept any uncommitted
+file into the claim or mint commit, and a refusal ran `git reset --hard HEAD`
+(the mint also `git clean -fd -- docs/work`), discarding it. Both now commit
+through one new module, `scripts/bookkeeping.py`. It takes the step's planned
+write set (the moved specs and every file the link-aware move rewrites, or the
+mint's `docs/work/` tree, the watermark and what it archives) plus every path
+`trunk_step.py --regen` writes (each `REGEN_STEPS` row now names its writes;
+`regen_writes()` lists them), refuses BY NAME any uncommitted edit inside that
+set before writing anything, commits exactly the paths the step changed from a
+temporary index, and advances trunk with `update-ref`. A refusal restores those
+paths and nothing else. So the claim no longer refuses a dirty trunk as such: it
+refuses a dirty path it must write, and leaves every other edit where it was (a
+staged one stays staged). Inside the write set the guard is that pre-check
+alone: an edit landing on one of its paths WHILE a claim or mint runs can be
+committed with it, regenerated over, or restored over on a refusal - except
+that an edit made after the step has written is left in place and named when
+the step then refuses. `spec_move.py` gains `planned_writes` and `consolidate.py`
+`archive_scope`, the plans the two callers hand over. Separately, the
+dispatcher's tick-top clean-trunk check and the merge slot's (`integrate.py
+integrate`) now read past `OWNER_SCRATCHPAD.md`, as resume and done detection
+already did, so a dirty scratchpad no longer stops the loop.
+
+**What to do.** Re-sync `scripts/bookkeeping.py` (new), `scripts/integrate.py`,
+`scripts/intake.py`, `scripts/trunk_step.py`, `scripts/spec_move.py`,
+`scripts/consolidate.py`, `scripts/dispatch.py` and `scripts/bootstrap.py`
+together: `integrate.py` and `intake.py` fail to import without the new module. Nothing in your registries
+changes. If a script or runbook of yours relied on a claim refusing ANY dirt,
+note that it now refuses only dirt the claim would write or commit; the
+dispatcher still refuses any other dirt at the top of a tick. A hand edit to
+a path the regeneration writes (the prose of `docs/status.md`, say) is now
+named while it is dirty rather than overwritten or committed by a claim or
+mint: commit it first.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

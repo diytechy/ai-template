@@ -503,7 +503,14 @@ def _open_items(root):
     )
 
 
-# (name, applies(root) -> bool, argv(root) -> list, why-skipped).
+# (name, applies(root) -> bool, argv(root) -> list, why-skipped, writes).
+#
+# `writes` is every repo-relative path (a `/`-terminated one is a prefix) the
+# step's generator may write. It is what the trunk bookkeeping commit plans
+# its scope from (`regen_writes`, WI-612): a regeneration folded into a claim
+# or a mint must be committed path by path, never swept in by `git add -A`,
+# so a generator that starts writing a new file names it here or leaves it
+# dirty behind every bookkeeping commit.
 #
 # DEPENDENCY ORDER, and every edge in it is real (the arch-map step retired
 # at WI-455 — the module map derives live from the source AST, so there is no
@@ -536,48 +543,56 @@ REGEN_STEPS = (
         lambda root: (Path(root) / "docs" / "okf").is_dir(),
         _cmd("gen_okf.py"),
         "docs/okf/ absent",
+        ("docs/okf/",),
     ),
     (
         "derived-stage",
         _has("docs/stage"),
         _cmd("derive_stage.py"),
         "docs/stage absent",
+        ("docs/stage",),
     ),
     (
         "trajectory",
         _work_registry,
         _cmd("gen_trajectory.py"),
         "no work-item registry (docs/work/ or work-items.csv)",
+        ("PROJECT_STATE.html",),
     ),
     (
         "status",
         _status_block,
         _cmd("gen_trajectory.py", "--status"),
         "docs/status.md absent or carries no generated-status markers",
+        ("docs/status.md",),
     ),
     (
         "open-items",
         _open_items,
         _cmd("gen_open_items.py"),
         "neither docs/requirements/open-items.{toml,csv} nor docs/open-items.html",
+        ("docs/open-items.html",),
     ),
     (
         "component-view",
         _components,
         _cmd("gen_components.py"),
         "neither docs/requirements/components.{toml,csv} nor the derived view",
+        ("docs/requirements/components.derived.toml",),
     ),
     (
         "cli-reference",
         _cli_reference,
         _cli_reference_cmd,
         "docs/cli-reference.md absent or carries no CLI REFERENCE markers",
+        (CLI_REFERENCE_REL,),
     ),
     (
         "interface-reference",
         _interface_reference,
         _interface_reference_cmd,
         "docs/interface-reference.md absent or carries no INTERFACE REFERENCE markers",
+        (INTERFACE_REFERENCE_REL,),
     ),
     # OI-76: the per-review-scope verdict rollup. A LEAF like open-items — it
     # reads the round files and nothing reads it back — so its position is free;
@@ -590,6 +605,7 @@ REGEN_STEPS = (
         _has("docs/reviews"),
         _cmd("gen_verdict_rollup.py", "--trunk-step"),
         "docs/reviews/ absent",
+        ("docs/reviews/rollup/",),
     ),
     # The live approval brief (`docs/ratify/CURRENT.md`, declared `approve` in
     # docs/stack.ini [generated]). It projects the registry against the
@@ -607,8 +623,18 @@ REGEN_STEPS = (
         _has("docs/ratify/CURRENT.md"),
         _cmd("trace.py", "--approve", "modified", "--out", "docs/ratify/CURRENT.md"),
         "docs/ratify/CURRENT.md absent",
+        ("docs/ratify/CURRENT.md",),
     ),
 )
+
+
+def regen_writes():
+    """Every path (a `/`-terminated one is a prefix) a `--regen` may write,
+    across every step whether or not it applies to this repo: the regeneration's
+    share of the write set the trunk bookkeeping commit plans before it writes
+    anything (`bookkeeping.commit`, WI-612). A step that does not apply writes
+    nothing, so naming its path costs nothing but a refusal while it is dirty."""
+    return sorted({path for *_step, writes in REGEN_STEPS for path in writes})
 
 
 def regen(root, dry_run=False):
@@ -620,7 +646,7 @@ def regen(root, dry_run=False):
     Implements: SR-148, SR-170, LLR-060, LLR-124
     Implements: SR-173, LLR-142
     """
-    for name, applies, argv, why in REGEN_STEPS:
+    for name, applies, argv, why, _writes in REGEN_STEPS:
         if not applies(root):
             print("trunk_step: regen — skipping {} ({}).".format(name, why))
             continue

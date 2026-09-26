@@ -56,14 +56,16 @@ kind (trigger c) set `buildtier`; deeper review is reached by a drafted
 follow-up carrying `planmode = "dual"` — never by a second kind (`arbiter` is
 not used as a kind name; the dual-plan arbiter owns that word).
 
-The mint commit mirrors the claim's bookkeeping shape (`integrate._claim_locked`):
-regenerate the declared artifacts (RULING-6 — the registry changed, so the
-regeneration folds into the same bookkeeping commit), `add -A`, un-stage the
-dispatch lock file, then `write-tree`/`commit-tree` onto HEAD. All-or-nothing:
-any refusal restores trunk and mints NOTHING, and every derived title is
-deterministic (the amendment title carries its sha pair), so a recovery re-run
-— `python intake.py sweep --before <sha> --after <sha>` — is idempotent by
-exact-title dedup.
+The mint commits through the ONE trunk bookkeeping commit the claim also uses
+(`bookkeeping.commit`, WI-612): its write set is planned before anything is
+written, the declared artifacts are regenerated (RULING-6 — the registry
+changed, so the regeneration folds into the same bookkeeping commit), and
+exactly the paths it wrote are committed, so the owner's uncommitted work in the
+checkout is neither swept in nor discarded. All-or-nothing: any refusal restores
+what the mint wrote and mints NOTHING, and every derived title is deterministic
+(the amendment title carries its sha pair), so a recovery re-run — `python
+intake.py sweep --before <sha> --after <sha>` — is idempotent by exact-title
+dedup.
 
 Contracts: IF-090 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
@@ -116,13 +118,13 @@ except ImportError:  # pragma: no cover - in-process fallback
 import acceptance_record
 import agent_common as ac
 import baseline_snapshot
+import bookkeeping
 import census
 import consolidate
 import schedule
 import trace
 import wi_convert
 
-SCRIPTS = Path(__file__).resolve().parent
 WORK = "docs/work"
 # Terminal history's home since WI-504 (OI-55 ruled (a)): `complete/`,
 # `cancelled/` and `partial/` moved out of the active workspace, one directory
@@ -2003,19 +2005,52 @@ def _pre_mint_refusal(drafts, subject_verb, registry):
 def _supersede_source_refusal(root, drafts, subject_verb):
     """Prevalidate every existing dependency edit before the mint writes.
 
-    Planned ids match the later allocation because this is the serial trunk
-    mint: each canonical successor write advances `next_wi_id` by exactly one.
-    They shape the lineage groups only; parsed source decides every edit."""
-    first_id = int(next_wi_id(root).split("-", 1)[1])
+    Planned ids (`_planned_ids`) shape the lineage groups only; parsed source
+    decides every edit."""
     planned = [
-        ("WI-{:03d}".format(first_id + i), supersedes_ids(draft.get("supersedes")))
-        for i, draft in enumerate(drafts)
+        (wi_id, supersedes_ids(draft.get("supersedes")))
+        for wi_id, draft in zip(_planned_ids(root, drafts), drafts)
     ]
     try:
         _apply_supersedes(root, planned, apply=False)
     except ValueError as exc:
         return "{}: {}; nothing minted".format(subject_verb, exc)
     return None
+
+
+def _planned_ids(root, drafts):
+    """The ids the mint will allocate, one per draft, in draft order. They match
+    the later allocation because this is the serial trunk mint: each canonical
+    successor write advances `next_wi_id` by exactly one."""
+    first_id = int(next_wi_id(root).split("-", 1)[1])
+    return ["WI-{:03d}".format(first_id + i) for i in range(len(drafts))]
+
+
+def _mint_scope(root, drafts):
+    """Every path the mint may write, planned BEFORE it writes one: `(scope,
+    None)` or `(None, refusal)`. The bookkeeping commit refuses by name a dirty
+    path inside it, then commits exactly what changed there (WI-612).
+
+    The registry directory is taken WHOLE. The mint's writes land all over it
+    (the drafted specs, the re-pointed dependents, the absorbed rows leaving
+    `queued/`), and it is also the mint's INPUT: the next id and the title dedup
+    are read off it, so an uncommitted edit anywhere in it is refused rather than
+    allocated against. Outside it the plan is exact: the watermark, the
+    open-items registry when a draft owes an open item, and a consolidation's
+    archive moves with every link they rewrite - whose preflight refusal now
+    lands here, before the first write, instead of after it."""
+    absorbing = [
+        (wi_id, supersedes_ids(draft.get("supersedes")))
+        for wi_id, draft in zip(_planned_ids(root, drafts), drafts)
+        if draft.get("consolidated")
+    ]
+    archived, refusal = consolidate.archive_scope(root, absorbing)
+    if refusal:
+        return None, refusal
+    scope = [WORK + "/", trace.WATERMARK] + archived
+    if any(str(draft.get("open_item") or "").strip() for draft in drafts):
+        scope.append(_live_registry(root, OPEN_ITEMS_REL))
+    return scope, None
 
 
 def _write_draft(root, draft, registry, subject_verb):
@@ -2041,8 +2076,8 @@ def _write_draft(root, draft, registry, subject_verb):
 
 def _mint(root, drafts, subject_verb):
     """Write every draft as a queued spec, then ONE bookkeeping commit.
-    `([(wi_id, relpath)], refusal)`; all-or-nothing — a refusal restores trunk
-    and reports zero minted."""
+    `([(wi_id, relpath)], refusal)`; all-or-nothing — a refusal restores what
+    the mint wrote and reports zero minted."""
     root = Path(root)
     registry = ac.read_spec_rows(root / WORK)
     titles = {r["Title"] for r in registry if r.get("Title")}
@@ -2054,7 +2089,27 @@ def _mint(root, drafts, subject_verb):
     ) or _supersede_source_refusal(root, drafts, subject_verb)
     if refusal:
         return [], refusal
+    scope, refusal = _mint_scope(root, drafts)
+    if refusal:
+        return [], refusal
     minted = []
+    _sha, refusal = bookkeeping.commit(
+        root,
+        scope,
+        lambda: _write_mint(root, drafts, registry, subject_verb, minted),
+        lambda: _mint_message(minted, subject_verb),
+        label="the intake mint",
+    )
+    if refusal:
+        return [], refusal
+    for wi_id, rel in minted:
+        _say("minted {} at {}".format(wi_id, rel))
+    return minted, None
+
+
+def _write_mint(root, drafts, registry, subject_verb, minted):
+    """The mint's own writes, appending each `(wi_id, relpath)` to `minted`: a
+    refusal or None. The caller's bookkeeping commit owns the restore."""
     lineage = []
     # ...and the CONSOLIDATION subset of it. Every successor's lineage is
     # re-pointed; only a consolidation's is ARCHIVED, because only a
@@ -2066,9 +2121,7 @@ def _mint(root, drafts, subject_verb):
     for draft in drafts:
         written, refusal = _write_draft(root, draft, registry, subject_verb)
         if refusal:
-            ac.git(root, "reset", "--hard", "HEAD")
-            ac.git(root, "clean", "-fd", "--", WORK)
-            return [], refusal
+            return refusal
         wi_id, rel, absorbed = written
         minted.append((wi_id, rel))
         lineage.append((wi_id, absorbed))
@@ -2084,99 +2137,34 @@ def _mint(root, drafts, subject_verb):
     # order is forced: the re-point above needs them still OPEN (`_open_specs`
     # skips a terminal row), and their Deliverable names a successor whose id
     # was allocated in the loop above. No-op for every mint that absorbs
-    # nothing, which is every mint but a consolidation's.
+    # nothing, which is every mint but a consolidation's. ALL OR NOTHING: an
+    # absorbed row that cannot be archived would leave the successor's lineage
+    # cell naming a row it did not absorb, so the whole mint is rolled back
+    # rather than committed half-done.
     moved, refusal = consolidate.archive_absorbed(root, absorbing)
     if refusal:
-        # ALL OR NOTHING, and the restore is why this refusal can be late: an
-        # absorbed row that cannot be archived would leave the successor's
-        # lineage cell naming a row it did not absorb, so the whole mint is
-        # rolled back rather than committed half-done.
-        ac.git(root, "reset", "--hard", "HEAD")
-        ac.git(root, "clean", "-fd", "--", WORK)
-        return [], refusal
+        return refusal
     for dead_id, successor, dest in moved:
         _say("restructured {} into {} at {}".format(dead_id, successor, dest))
     # RAISE THE MARK IN THE SAME COMMIT that files the specs. A mint that
     # allocates an id without recording it leaves the mark behind the tree, and
     # trace.py's integrity pass reads that as "an id was allocated past the
-    # mark" — correctly, because it was. Safe against a later refusal: the
-    # restore path is `git reset --hard HEAD`, whole-tree, so a bump written
-    # before a refusal is reverted with the spec it was minted for.
+    # mark" — correctly, because it was. Safe against a later refusal: the mark
+    # is inside the mint's planned scope, so the restore reverts it with the
+    # spec it was minted for.
     trace.bump_watermark(root)
-    refusal = _bookkeeping_commit(
-        root,
-        "mint: {} - {} (WI-388 intake; bookkeeping)".format(
-            ";".join(w for w, _ in minted), subject_verb
-        ),
-    )
-    if refusal:
-        return [], refusal
-    for wi_id, rel in minted:
-        _say("minted {} at {}".format(wi_id, rel))
-    return minted, None
-
-
-def _bookkeeping_commit(root, subject):
-    """The claim-shaped bookkeeping commit (`integrate._claim_locked`'s write
-    sequence, without the branch cut): regenerate the declared artifacts (the
-    registry changed — RULING-6 folds regeneration into the bookkeeping lane),
-    stage everything but the dispatch lock file, and commit via
-    write-tree/commit-tree onto HEAD. A refusal restores trunk."""
-    import subprocess
-
-    def restore(reason, detail):
-        ac.git(root, "reset", "--hard", "HEAD")
-        ac.git(root, "clean", "-fd", "--", WORK)
-        return "the intake mint {} (trunk restored):\n{}".format(
-            reason, ac._failure_tail(detail)
-        )
-
-    proc = subprocess.run(
-        [
-            str(ac.harness_python(root)),
-            str(SCRIPTS / "trunk_step.py"),
-            "--root",
-            ".",
-            "--regen",
-        ],
-        cwd=str(root),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-    if proc.returncode != 0:
-        return restore("regeneration failed", (proc.stdout or "") + (proc.stderr or ""))
-    ac.git(root, "add", "-A")
-    ac.git(
-        root,
-        "reset",
-        "-q",
-        "--",
-        ac.dispatch_lock_path(root).relative_to(root).as_posix(),
-    )
-    code, tree = ac.git(root, "write-tree")
-    if code != 0 or not tree.strip():
-        return restore("could not name its tree", tree)
-    code, commit = ac.git(
-        root,
-        "commit-tree",
-        tree.strip(),
-        "-p",
-        ac.head_sha(root),
-        "-m",
-        "{}\n\nThe WI-388 unified intake mint (docs/concurrency-v2.md §A5.2; rulings\nR1/R3): a WI id is created only by a human trunk commit or this helper -\nlanes never mint. Derived description, no model in the path; the\nregeneration folds in per RULING-6.".format(
-            subject
-        ),
-    )
-    if code != 0 or not commit.strip():
-        return restore("could not write its commit", commit)
-    code, out = ac.git(root, "reset", "--hard", commit.strip())
-    if code != 0:
-        return "the intake mint commit {} exists but trunk did not advance:\n{}".format(
-            commit.strip()[:10], ac._failure_tail(out)
-        )
     return None
+
+
+def _mint_message(minted, subject_verb):
+    """The mint commit's message, built once the ids are allocated."""
+    return (
+        "mint: {} - {} (WI-388 intake; bookkeeping)\n\nThe WI-388 unified intake "
+        "mint (docs/concurrency-v2.md §A5.2; rulings\nR1/R3): a WI id is created "
+        "only by a human trunk commit or this helper -\nlanes never mint. Derived "
+        "description, no model in the path; the\nregeneration folds in per "
+        "RULING-6.".format(";".join(w for w, _ in minted), subject_verb)
+    )
 
 
 def intake_after_merge(root, before, after, outcomes=None, branch=""):

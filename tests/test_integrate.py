@@ -90,15 +90,20 @@ def test_claim_refuses_while_the_tracked_pause_is_present(tmp_path, capsys):
     assert "wi-401" not in _branches(root)
 
 
-def test_claim_refuses_a_dirty_trunk(tmp_path, capsys):
-    # A claim is a clean serial commit: claiming on a dirty trunk would sweep
-    # whatever a human left lying around into the bookkeeping commit.
+def test_claim_refuses_a_dirty_path_it_must_write(tmp_path, capsys):
+    # A claim commits exactly what it writes (WI-612), so dirt ELSEWHERE is the
+    # owner's and stays out of it (tests/test_bookkeeping.py) - but a hand edit
+    # to the very spec the claim moves would ride the move into the claim
+    # commit. It refuses by name before anything moves.
     root = claim_repo(tmp_path)
-    (root / "scratch.txt").write_text("uncommitted\n", encoding="utf-8")
+    spec = root / "docs" / "work" / "queued" / "WI-401-widget.md"
+    edited = spec.read_text(encoding="utf-8") + "\nA note in progress.\n"
+    spec.write_text(edited, encoding="utf-8", newline="\n")
 
     assert integ.claim(root, "WI-401", "wi-401") == 1
-    assert "working tree is dirty" in capsys.readouterr().err
-    assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
+    assert "docs/work/queued/WI-401-widget.md" in capsys.readouterr().err
+    assert spec.read_text(encoding="utf-8") == edited
+    assert not (root / "docs" / "work" / "active").exists()
     assert "wi-401" not in _branches(root)
 
 

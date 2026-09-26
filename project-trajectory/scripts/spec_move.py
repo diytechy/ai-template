@@ -222,13 +222,8 @@ def _relink_inbound_links(root, moves):
     if not moves:
         return []
     remap = {src: dest for src, dest in moves}
-    root = Path(root)
     touched = []
-    for path in sorted(root.rglob("*.md")):
-        parts = path.relative_to(root).parts
-        if ".git" in parts or "node_modules" in parts:
-            continue
-        rel = path.relative_to(root).as_posix()
+    for path, rel in _markdown_files(root):
         doc_dir = posixpath.dirname(rel)
         changed = _rewrite_md_links(
             path,
@@ -237,6 +232,47 @@ def _relink_inbound_links(root, moves):
         if changed:
             touched.append(rel)
     return touched
+
+
+def _markdown_files(root):
+    """`(path, repo-relative posix path)` for every markdown file the inbound
+    redirect visits - ONE traversal, shared by the ritual and its plan
+    (`planned_writes`), so the two cannot disagree about which files exist."""
+    root = Path(root)
+    for path in sorted(root.rglob("*.md")):
+        parts = path.relative_to(root).parts
+        if ".git" in parts or "node_modules" in parts:
+            continue
+        yield path, path.relative_to(root).as_posix()
+
+
+def planned_writes(root, moves):
+    """Every repo-relative path `move_spec` would write for `moves`
+    (`[(src_rel, dest_rel)]`, the destination naming its file), computed BEFORE
+    anything moves: each source it removes, each destination it creates, and
+    every file whose inbound link it would redirect.
+
+    The planning half of the ritual, for a caller that must know its write set
+    up front: the trunk bookkeeping commit refuses by name a dirty path it would
+    have to write, before writing anything (WI-612), and a relink target can
+    only be found by reading every markdown file. It asks the redirect's own
+    question (`expected_relink`) over the redirect's own traversal, so the plan
+    and the write cannot disagree about which files change."""
+    if not moves:
+        return []
+    remap = {
+        str(src).replace("\\", "/"): str(dest).replace("\\", "/") for src, dest in moves
+    }
+    planned = set(remap) | set(remap.values())
+    for path, rel in _markdown_files(root):
+        try:
+            with path.open("r", encoding="utf-8", newline="") as fh:
+                text = fh.read()
+        except (OSError, UnicodeDecodeError):
+            continue  # the ritual skips such a file too (`_rewrite_md_links`)
+        if expected_relink(text, posixpath.dirname(rel), remap) != text:
+            planned.add(rel)
+    return sorted(planned)
 
 
 def expected_relink(text, doc_dir, remap):

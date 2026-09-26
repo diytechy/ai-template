@@ -276,6 +276,9 @@ SLOW_MODULES = frozenset(
         # WI-627 (TC-212): a crossing's system cell driven through trace.py on
         # bootstrapped scaffolds; the pure rules stay in test_frame_rules.py.
         "test_frame_system",  # scaffold + trace.py subprocess per case
+        # WI-612: the shared trunk bookkeeping commit driven through real claims
+        # and mints, each running the real trunk_step --regen subprocess.
+        "test_bookkeeping",  # real git repos + the real regen per claim/mint
     }
 )
 

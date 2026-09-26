@@ -301,8 +301,8 @@ def _no_recursion_refusal(root, branch, specs):
 
 def _restore(wt, written, refusal):
     """Un-write every report this close produced, then return `refusal` — the
-    same restore-on-refusal shape `_revert` and the mint's
-    `_bookkeeping_commit` use. Leaving a staged report behind would leave the
+    same restore-on-refusal shape `_revert` and the trunk's
+    `bookkeeping.commit` use. Leaving a staged report behind would leave the
     lane DIRTY (§5.6 refuses to GC one) and would leave a record on disk for a
     close that did not happen."""
     for rel in reversed(written):
@@ -471,8 +471,8 @@ def close_partial(root, branch, reason, fields=None):
         # "scope definitions never change; only whether they were delivered".
         _touched, refusal = spec_move.move_spec(wt, src_rel, rel)
         if refusal:
-            # RESTORE, like every sibling refusal path (`_revert`, the mint's
-            # `_bookkeeping_commit`). Leaving the staged report behind would
+            # RESTORE, like every sibling refusal path (`_revert`, the trunk's
+            # `bookkeeping.commit`). Leaving the staged report behind would
             # leave the lane DIRTY — which §5.6 refuses to GC — and would leave
             # a report on disk for a close that did not happen.
             return None, _restore(

@@ -2703,10 +2703,10 @@ spine is **deliberately singular** (§10): `trace.py --strict` still demands
 docs/work/active/<branch>/` in one bookkeeping commit and cuts the worker
 branch from it. Claims are atomic and race-free because the claim commit is
 serial trunk history — no reservation refs, no journal; `git log` is the
-record. The claim refuses loudly while paused, on a dirty tree, when the
-branch exists, on an unsafe name, for a non-ordinary class, or off the
-frontier. The closing merge itself carries the move `active/<branch>/ →
-archive/`.
+record. The claim refuses loudly while paused, on a dirty path it must
+write, when the branch exists, on an unsafe name, for a non-ordinary class,
+or off the frontier. The closing merge itself carries the move
+`active/<branch>/ → archive/`.
 
 **Concurrency classes (§3).** Declared per-spec: `ordinary` runs in
 parallel (the declared `modules` touch-set is a co-scheduling *hint* —

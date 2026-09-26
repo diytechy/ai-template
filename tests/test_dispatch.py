@@ -272,6 +272,27 @@ def test_drive_refuses_a_dirty_trunk_before_resuming(tmp_path, capfd):
     assert worker.calls == []
 
 
+def test_a_dirty_owner_scratchpad_does_not_stop_the_drive(tmp_path, capfd):
+    # WI-612: the owner-only paths are the owner's, edited continuously and
+    # never a lane's deliverable. Resume and done detection already read past
+    # them; the tick-top clean-trunk refusal now does too, so the parked lane
+    # resumes (and stalls on this do-nothing worker) instead of the run
+    # stopping at the preflight over the owner's notes.
+    root = parked_repo(tmp_path)
+    pad = root / drv.ac.OWNER_ONLY_PATHS[0]
+    pad.write_text("owner notes\n", encoding="utf-8", newline="\n")
+    _commit(root, "the owner's scratchpad", when=T_LATER)
+    pad.write_text("owner notes, mid-edit\n", encoding="utf-8", newline="\n")
+    worker = Recorder(outcomes=(0, 0))
+
+    rc = drv.run(root, drive_args(stall_limit=2), worker=worker)
+    err = capfd.readouterr().err
+    assert "working tree is dirty" not in err
+    assert rc == 4 and "STALL" in err
+    assert worker.calls == [("wi-401", ("WI-401",)), ("wi-401", ("WI-401",))]
+    assert pad.read_text(encoding="utf-8") == "owner notes, mid-edit\n"
+
+
 def test_drive_empty_frontier_drains_and_exits_zero(tmp_path, capfd):
     # A finished queue is SUCCESS: the drained banner at exit 0 (the done-when
     # names this outcome explicitly — an empty frontier is not an error).
