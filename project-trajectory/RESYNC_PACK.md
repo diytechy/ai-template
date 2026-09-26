@@ -5392,6 +5392,50 @@ in a reviewed commit. A gap advisory is answered by a requirement on an
 operation crossing, or by an assumption landing on one, not by moving the
 stakeholder.
 
+### Test cases evidence assumptions, and observation test cases declare what they read, how long they hold and how they sample [since 06ba0b1b]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The test-case tier gains six optional cells. `assumption_refs`
+names the domain assumptions a case evidences, in place of or beside what its
+`verifies` names (SR-197). `verifies` is no longer required when
+`assumption_refs` names something: a case naming only assumptions is valid and
+is not an orphan, a case naming neither is still reported as verifying nothing,
+and an `assumption_refs` id that no `[assumption.DA-###]` row declares is an
+orphan finding naming the case. An assumption-only case sits in the phase of
+every requirement citing one of its assumptions, and a change to its
+`assumption_refs` is attributed like a change to `verifies`. The report's metric
+table gains a requirement-evidence and an assumption-evidence count once any
+case cites an assumption, and the traceability outline lists an assumption-only
+case under an `(assumption evidence)` group; the orphan rules, the matrix and
+the triangle rule still read `verifies` alone. A case recorded as
+`automated = "No"` is an observation test case (SR-198): it declares `inputs`
+(the repository paths and row ids its judgment reads), `max_age` (whole days its
+result holds, at least 7) and, where it cites assumptions, `sampling` (`sampled`
+| `monitored`); a sampled one may add a sampling model as `sample_size` (a whole
+number, at least 1) with `acceptance_rule`. An omitted `inputs`, `max_age` or
+`sampling` is one advisory naming the case; a lifetime under 7 days or not a
+whole number, a policy outside the pair, a sample size under 1 or not a whole
+number, a blank acceptance rule, or one model cell without the other fails the
+`--strict-integrity` floor naming the case. An automated case carrying any of
+the five declaration cells is an advisory. The rules are in
+`scripts/assumption_rules.py`, which `scripts/derive_stage.py` and
+`scripts/census.py` now also import. The five declaration cells are approved
+content, and `assumption_refs` is a traced pointer.
+
+**What to do.** Re-sync `scripts/assumption_rules.py`, `scripts/trace.py`,
+`scripts/coherence.py`, `scripts/census.py`, `scripts/derive_stage.py`,
+`scripts/kitlib/spine.py`, `scripts/spine_carrier.py` and
+`scripts/migrate_carrier.py` together, and read
+`registries/test-cases.template.toml` for the six new cells; your own registry
+gains nothing, since each cell is optional. After re-syncing, every existing
+case recorded as `automated = "No"` reports its missing `inputs` and `max_age`,
+two advisories per case and never a failure: add them as a reviewed change to
+each case, because the lifetime and the list of inputs are judgments about how
+fast what the case reads can change, and declaring them re-opens the case's
+approval. A case whose `verifies` was empty now fails only when it also names no
+assumption.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

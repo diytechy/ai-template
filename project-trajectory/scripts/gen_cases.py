@@ -217,13 +217,14 @@ def emit_csv_rows(cases, args, strategy, param_str):
     # registries take). Header order is the template's key order.
     print(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,"
-        "Evidence,Status,Phase"
+        "Evidence,Status,Phase,Assumption-Refs,Inputs,MaxAge,Sampling,"
+        "SampleSize,AcceptanceRule"
     )
     for c in cases:
         print(
             'TC-xxx,{},Unit,{} combination,{},"{}",'
             '"Satisfies {} AcceptanceCriteria",Yes,(fill: evidence ref),'
-            "Drafted,".format(
+            "Drafted,,,,,,,".format(
                 args.id or "SR-xxx",
                 strategy,
                 args.tier,

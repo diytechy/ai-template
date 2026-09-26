@@ -2,9 +2,11 @@
 
 The sibling of `frame_rules.py`, and built the same way: every rule here is a
 JOIN ACROSS ROWS, it reads no file, and `trace.analyze` composes it and stays
-its only caller. `trace.py` is held to an exact size ratchet, so the tier's
-rules land here and `trace.py` grows by the composition lines alone (spine map
-D21).
+the only caller of its rules. `trace.py` is held to an exact size ratchet, so
+the tier's rules land here and `trace.py` grows by the composition lines alone
+(spine map D21). Two other readers take one derivation from here and no rule:
+the stage derivation and the red-TC census read `da_citing_srs`, because an
+assumption's citing requirements are what place and count its evidence.
 
 What the tier records. A requirement states what the system does at its own
 boundary and a stakeholder need what a person experiences; between them sits a
@@ -25,6 +27,16 @@ link stays on the requirement: an assumption's needs are derived from the
 requirements citing it (`da_citing_srs`), and nothing records them on the
 assumption.
 
+EVIDENCE FOR AN ASSUMPTION IS A TEST CASE (SR-197): its `Assumption-Refs` name
+the assumptions it evidences, in place of or beside what its `Verifies` names.
+And many such tests are OBSERVATIONS (a person reading a render, a measurement
+across an adopter's first week) that the harness cannot rerun. A test case
+recorded as not automated declares the inputs its judgment reads, how many days
+its result holds, and, evidencing an assumption, how it samples (SR-198), so a
+changed input or an expired lifetime can make the result stale without anyone
+re-judging it. Those declarations are judged here too; they apply to every
+observation case, with or without a frame.
+
 WHERE THE TIER APPLIES. An assumption's outcome lands on a boundary crossing,
 so with no declared crossing there is nothing to land on and the whole tier is
 silent (SR-191's applies-when). And the requirement-side reports ask nothing of
@@ -42,8 +54,8 @@ Stdlib only. A plain sibling of `scripts/`, not a `kitlib` module, for the
 reason `coherence.py` records: these are the checker's rules, and the
 scaffolder has no business importing them.
 
-Contracts: IF-190 — the seam this module declares (process.md §8; row of record
-in docs/requirements/interfaces.toml).
+Contracts: IF-190, IF-200, IF-201 — the seams this module declares (process.md
+§8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-190: the assumption tier's rule surface `trace.py` imports. Rows in,
     findings out, and nothing else: no I/O, no git, no filesystem, no argv.
@@ -71,17 +83,48 @@ Contract IF-190: the assumption tier's rule surface `trace.py` imports. Rows in,
     `spine_carrier.load_needs`' rows. `reaching_parties(needs, stks, exts)` is
     their data read: each need id mapped to the set of entities a crossing
     must belong to in order to reach it.
+
+Contract IF-200: the observation test declaration's rules `trace.py` imports.
+    Rows in, findings out, with no I/O. `observation_tc_findings(tcs)` returns
+    `(failures, advisories)`: the failures join the always-on
+    `--strict-integrity` floor and the advisories ride the warn pipe, each
+    naming its row. It applies whatever the frame declares. Two reads ride the
+    same seam: `is_observation_tc(tc)`, true when the `Automated` cell reads
+    No, and `sampling_model_declared(tc)`, true only for a sampled case whose
+    sample size and acceptance rule are both valid. A `-000` row is never
+    judged.
+Contract IF-201: the one derivation of an assumption's citing requirements,
+    `da_citing_srs(srs) -> {assumption id: [requirement ids]}` in row order,
+    read by the stage derivation and the red-TC census. Pure over requirement
+    rows in the carrier's column names; a `-000` row contributes nothing, and a
+    requirement citing no assumption appears nowhere in the map.
 """
 
+import re
+
 try:
-    from kitlib.spine import FORM_VALUES, STATUS_VALUES, is_example, refs
+    from kitlib.spine import (
+        FORM_VALUES,
+        MAX_AGE_FLOOR_DAYS,
+        SAMPLING_VALUES,
+        STATUS_VALUES,
+        is_example,
+        refs,
+    )
     from kitlib.spine import is_approved, is_founded
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
     from pathlib import Path
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from kitlib.spine import FORM_VALUES, STATUS_VALUES, is_example, refs
+    from kitlib.spine import (
+        FORM_VALUES,
+        MAX_AGE_FLOOR_DAYS,
+        SAMPLING_VALUES,
+        STATUS_VALUES,
+        is_example,
+        refs,
+    )
     from kitlib.spine import is_approved, is_founded
 
 # THE ASSUMPTION ROW'S REQUIRED CELLS (SR-191), in the carrier's column names.
@@ -108,6 +151,15 @@ SUR_REQUIRED = ("Name", "Emulates", "Description", "Status")
 # specification delivers its needs; `unclassified`: neither; `both`: a citation
 # and a waiver at once, which contradict each other.
 SR_CLASSES = ("bridged", "coincident", "unclassified", "both")
+
+# AN OBSERVATION CASE'S DECLARATION CELLS (SR-198), in the carrier's column
+# names: the cells an automated case has no use for, since the harness reruns
+# it and nothing it produces goes stale by age.
+OBSERVATION_CELLS = ("Inputs", "MaxAge", "Sampling", "SampleSize", "AcceptanceRule")
+
+# A whole number of days or samples, written in digits: `7.5`, `seven` and `-3`
+# are not. The carrier hands an integer cell over as its text.
+_WHOLE = re.compile(r"[0-9]+")
 
 
 def _cell(row, column):
@@ -725,3 +777,152 @@ def need_frame_gap_advisories(needs, stks, srs, bifs, das):
                 )
             )
     return out
+
+
+def is_observation_tc(tc):
+    """Whether a test case is an OBSERVATION: a judgment the harness cannot
+    rerun, recorded as such by its `Automated` cell reading No.
+
+    THE ONE MARKER, and deliberately not the `Level` or the requirement's
+    `Verification`: those cells disagree across rows (a manual inspection is
+    filed at more than one level), while every case the harness cannot rerun
+    says so in `Automated`. So manual and demonstration cases are observations
+    too, and declare how long their results hold.
+
+    Implements: SR-198, LLR-233
+    """
+    return _cell(tc, "Automated").lower() == "no"
+
+
+def _whole_at_least(value, floor):
+    """Whether a cell reads as a whole number of at least `floor`."""
+    return bool(_WHOLE.fullmatch(value)) and int(value) >= floor
+
+
+def _present(row, column):
+    """Whether a cell holds anything, whitespace included.
+
+    THE CARRIER RULE: an absent key IS an empty cell (`kitlib.spine`). The TOML
+    carrier refuses an explicit `""` at load and the migration drops empty
+    cells, so an empty cell here is an absent one, on every carrier alike;
+    reading key presence instead would make a legacy carrier's empty column
+    declare the optional sampling model on every row. A whitespace-only cell
+    was written and says nothing, so it is present, and the rule reading it
+    judges it blank."""
+    return (row.get(column) or "") != ""
+
+
+def _model_failures(tid, row):
+    """The sampling model's failures for one case: each malformed cell, and
+    one of the two cells without the other."""
+    out = []
+    size, rule = _cell(row, "SampleSize"), _cell(row, "AcceptanceRule")
+    if _present(row, "SampleSize") and not _whole_at_least(size, 1):
+        out.append(
+            "TC {} SampleSize={!r} is not a whole number of at least 1 — a "
+            "sampling model's size counts the samples judged".format(tid, size)
+        )
+    if _present(row, "AcceptanceRule") and not rule:
+        out.append(
+            "TC {} AcceptanceRule is empty — a sampling model states what a "
+            "passing sample is".format(tid)
+        )
+    if _present(row, "SampleSize") != _present(row, "AcceptanceRule"):
+        has, lacks = ("SampleSize", "AcceptanceRule")
+        if not _present(row, "SampleSize"):
+            has, lacks = lacks, has
+        out.append(
+            "TC {} declares {} without {} — a sampling model is both cells or "
+            "neither".format(tid, has, lacks)
+        )
+    return out
+
+
+def _declaration_failures(tid, row):
+    """One case's malformed declaration cells: a lifetime that is not a whole
+    number of days at the floor, a policy outside the pair, and the model."""
+    out = []
+    max_age, sampling = _cell(row, "MaxAge"), _cell(row, "Sampling")
+    if max_age and not _whole_at_least(max_age, MAX_AGE_FLOOR_DAYS):
+        out.append(
+            "TC {} MaxAge={!r} is not a whole number of days of at least {} — "
+            "a judgment is not demanded more often than it can honestly be "
+            "taken".format(tid, max_age, MAX_AGE_FLOOR_DAYS)
+        )
+    if sampling and sampling not in SAMPLING_VALUES:
+        out.append(
+            "TC {} Sampling={!r} is outside its closed vocabulary ({})".format(
+                tid, sampling, " | ".join(SAMPLING_VALUES)
+            )
+        )
+    return out + _model_failures(tid, row)
+
+
+def _omissions(tid, row):
+    """One observation case's omitted declarations, one advisory each."""
+    wanted = [("Inputs", "the inputs its judgment reads"), ("MaxAge", "its lifetime")]
+    if refs(row.get("Assumption-Refs")):
+        wanted.append(("Sampling", "its sampling policy, sampled | monitored"))
+    return [
+        "TC {} is an observation test case declaring no {} ({}) — declare it "
+        "so its result can go stale".format(tid, column, what)
+        for column, what in wanted
+        if not refs(row.get(column))
+    ]
+
+
+def observation_tc_findings(tcs):
+    """SR-198's declaration rules, as `(failures, advisories)`, each naming the
+    row.
+
+    ADVISORIES: an observation case (`is_observation_tc`) omitting `Inputs`,
+    `MaxAge`, or, when it cites assumptions, `Sampling`, one line per omission.
+    Reported rather than refused, so observation cases written before these
+    cells existed keep passing. And an AUTOMATED case carrying any
+    `OBSERVATION_CELLS` cell, one line per cell: the harness reruns it, so the
+    declaration says nothing about it.
+
+    FAILURES, bound for the always-on integrity floor: a `MaxAge` that is not a
+    whole number of days of at least `MAX_AGE_FLOOR_DAYS`, a `Sampling` outside
+    `SAMPLING_VALUES`, a `SampleSize` that is not a whole number of at least
+    one, an `AcceptanceRule` of whitespace alone, and one of those two model
+    cells without the other, on an observation case. An empty cell is an
+    absent one (the carrier rule, `_present`). An automated case's
+    stray cell is the advisory above and nothing more: its values declare
+    nothing, so judging them would fail a row for a cell it should not carry.
+
+    Whether a sampling model is adequate for its claim is judged when the case
+    is approved, never here. The template's `-000` row is never judged.
+
+    Implements: SR-198, LLR-233
+    """
+    failures, advisories = [], []
+    for tid, row in _real(tcs, "TC-ID"):
+        if is_observation_tc(row):
+            failures += _declaration_failures(tid, row)
+            advisories += _omissions(tid, row)
+            continue
+        advisories += [
+            "TC {} is automated but declares {} — only an observation test case "
+            "declares what it reads, how long its result holds and how it "
+            "samples".format(tid, column)
+            for column in OBSERVATION_CELLS
+            if _present(row, column)
+        ]
+    return failures, advisories
+
+
+def sampling_model_declared(tc):
+    """Whether a case declares a usable SAMPLING MODEL: it is `sampled`, and its
+    sample size (a whole number of at least one) and its acceptance rule (not
+    empty) are both valid. A sampled result supports a positive claim only under
+    a stated model; a monitored case, or a sampled one with neither cell, has
+    declared none.
+
+    Implements: SR-198, LLR-233
+    """
+    return (
+        _cell(tc, "Sampling") == "sampled"
+        and _whole_at_least(_cell(tc, "SampleSize"), 1)
+        and bool(_cell(tc, "AcceptanceRule"))
+    )

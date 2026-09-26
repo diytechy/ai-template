@@ -148,6 +148,11 @@ REF_COLS = {
     "EffectAt",
     "ObstacleHats",
     "Emulates",
+    # SR-197: the assumptions a test case evidences; SR-198: the repository
+    # paths and row ids an observation case's judgment reads. Neither holds a
+    # separator.
+    "Assumption-Refs",
+    "Inputs",
     "Verifies",
     "SupersededBy",
     "WI-Refs",
@@ -158,12 +163,16 @@ REF_COLS = {
     "Requestors",
     "Consumers",
 }
-INT_COLS = {"Phase"}
+# SR-198: an observation case's lifetime in days and its sample size are whole
+# numbers. A value that does not parse is preserved as text, as for `Phase`, so
+# `assumption_rules.observation_tc_findings` can name it rather than the
+# conversion dropping it.
+INT_COLS = {"Phase", "MaxAge", "SampleSize"}
 
 # column -> TOML key. EXPLICIT, never derived: a derivation turns `SR-ID` into
 # `s_r_i_d`, and the column name is a repo-wide term (D-3) that deserves a
 # stated mapping rather than a regex nobody can predict.
-# Implements: SR-193, LLR-222
+# Implements: SR-193, SR-197, SR-198, LLR-222
 KEY = {
     "Title": "title",
     "SN-Refs": "sn_refs",
@@ -304,6 +313,15 @@ KEY = {
     "RealizedBy": "realized_by",
     "ObstacleHats": "obstacle_hats",
     "Emulates": "emulates",
+    # the test case's assumption evidence (SR-197) and an observation case's
+    # declaration (SR-198). Never converted from a legacy carrier; declared as
+    # the writer half of the one pinned bijection.
+    "Assumption-Refs": "assumption_refs",
+    "Inputs": "inputs",
+    "MaxAge": "max_age",
+    "Sampling": "sampling",
+    "SampleSize": "sample_size",
+    "AcceptanceRule": "acceptance_rule",
 }
 
 

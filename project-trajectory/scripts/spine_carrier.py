@@ -279,7 +279,7 @@ REGISTRY_TABLE = dict(SPINE_TABLE, **OFFSPINE_TABLE)
 # This is the exact inverse of `migrate_carrier.KEY` (the writer), and
 # tests/test_rule_sync.py pins the two as inverses so a column can never be
 # renamed on one side of the conversion only.
-# Implements: SR-193, LLR-222
+# Implements: SR-193, SR-197, SR-198, LLR-222, LLR-232
 SPINE_COLUMN = {
     "title": "Title",
     "sn_refs": "SN-Refs",
@@ -346,6 +346,15 @@ SPINE_COLUMN = {
     "tier": "Tier",
     "component": "Component",
     "notes": "Notes",
+    # The test case's assumption evidence (SR-197) and an observation case's
+    # declaration (SR-198): what it reads, how many days its result holds, how
+    # it samples, and its sampling model as two flat cells.
+    "assumption_refs": "Assumption-Refs",
+    "inputs": "Inputs",
+    "max_age": "MaxAge",
+    "sampling": "Sampling",
+    "sample_size": "SampleSize",
+    "acceptance_rule": "AcceptanceRule",
 }
 
 # The batch-2 half of the same vocabulary. `title`/`status`/`tier`/`notes` are

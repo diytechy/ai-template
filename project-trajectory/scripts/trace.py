@@ -223,6 +223,8 @@ try:
     from assumption_rules import assumption_tier_findings
     from frame_rules import mediation_findings
     from assumption_rules import assumption_reach_advisories, need_frame_gap_advisories
+
+    from assumption_rules import observation_tc_findings
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -266,6 +268,8 @@ except ImportError:  # pragma: no cover - in-process fallback
     from assumption_rules import assumption_tier_findings
     from frame_rules import mediation_findings
     from assumption_rules import assumption_reach_advisories, need_frame_gap_advisories
+
+    from assumption_rules import observation_tc_findings
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -452,9 +456,10 @@ REQUIRED_FIELDS = {
         "Status",
     ],
     "LLR": ["LLR-ID", "SR-Refs", "Title", "Module", "CodeSymbol", "Detail", "Status"],
+    # `Verifies` is required CONDITIONALLY, so it lives in `schema_findings`
+    # beside the other conditional rule (`_tc_verifies_required`, SR-197).
     "TC": [
         "TC-ID",
-        "Verifies",
         "Level",
         "Method",
         "Tier",
@@ -1897,6 +1902,20 @@ def sn_integrity_findings(sn_text):
     return out
 
 
+def _tc_verifies_required(row):
+    """Whether a test case must name what it verifies: unless its
+    `Assumption-Refs` names an assumption it evidences instead.
+
+    A test of an assumption can stand alone where no requirement is its subject,
+    so requiring `Verifies` everywhere would force it to cite a requirement it
+    does not test. A case naming neither is still refused, and the citation
+    rule (`coherence.tc_citation_findings`) reports it as verifying nothing.
+
+    Implements: SR-197, LLR-229
+    """
+    return not refs(row.get("Assumption-Refs"))
+
+
 def schema_findings(label, rows):
     """Empty required fields and out-of-vocabulary Verification/Tier values, over
     the real (non-placeholder) rows of one registry.
@@ -1919,6 +1938,10 @@ def schema_findings(label, rows):
                     f"{label} {rid} has {col}={val!r} (allowed: "
                     f"{', '.join(sorted(allowed))})"
                 )
+        # A TC names what it verifies unless it evidences assumptions instead.
+        verifies = (r.get("Verifies") or "").strip()
+        if label == "TC" and not verifies and _tc_verifies_required(r):
+            out.append(f"TC {rid} has empty required field Verifies")
         # A TC claiming Automated=Yes must
         # cite its Evidence (pytest node / path / procedure link) — a
         # claimed-automated test with no cited location is a soft false-green.
@@ -3167,11 +3190,49 @@ def spine_chain(sr_id, srs, llrs_by_sr, tcs_by_ref):
     return out
 
 
+def assumption_evidence_rows(tcs):
+    """`(requirement evidence, assumption evidence)`: the test cases naming
+    something in `Verifies`, and those naming something in `Assumption-Refs`,
+    each in input order. A case citing both is counted once in each; one citing
+    neither is in neither.
+
+    THE ONE PARTITION every evidence count reads (SR-197). Evidence that an
+    assumption holds is not evidence that the system does what its requirements
+    say, so a count merging the two would answer neither question; and two views
+    splitting the same case differently would disagree about what it proves.
+    The readers that ask whether a requirement is verified (the orphan rules,
+    the matrix, the triangle rule) read `Verifies` alone and never come here.
+
+    Implements: SR-197, LLR-231
+    """
+    requirement = [t for t in tcs if refs(t.get("Verifies"))]
+    assumption = [t for t in tcs if refs(t.get("Assumption-Refs"))]
+    return requirement, assumption
+
+
+def evidence_metric_rows(tcs):
+    """The report's two evidence counts, requirement and assumption evidence,
+    as metric-table lines; `[]` when no case evidences an assumption, so a
+    project that never adopts the tier renders the report it always did."""
+    requirement, assumption = assumption_evidence_rows(tcs)
+    if not assumption:
+        return []
+    return [
+        f"| Test cases — requirement evidence | {len(requirement)} |",
+        f"| Test cases — assumption evidence | {len(assumption)} |",
+    ]
+
+
 def build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
     """The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for
     rows with no valid parent. Shared by the text outline and the HTML tree.
     `sn_draft` (section-as-state, §4a) labels those SNs `Drafted` so the views
-    flag them like a `Status=Drafted` SR/LLR/TC row."""
+    flag them like a `Status=Drafted` SR/LLR/TC row.
+
+    A case evidencing only assumptions has no requirement to hang under, and it
+    is not verifying nothing: it gets a group of its own (SR-197).
+
+    Implements: SR-197, LLR-231"""
     llrs_by_sr = _bucket_by_ref(llrs, "SR-Refs")
     tcs_by_ref = _bucket_by_ref(tcs, "Verifies")
     srs_by_sn = _bucket_by_ref(srs, "SN-Refs")
@@ -3218,13 +3279,27 @@ def build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
         roots.append(
             _group("(LLRs with no SR parent)", [llr_node(lr) for lr in rootless_llrs])
         )
-    valid = sr_ids | llr_ids
-    rootless_tcs = [t for t in tcs if not valid & set(refs(t.get("Verifies")))]
-    if rootless_tcs:
-        roots.append(
-            _group("(TCs verifying nothing valid)", [tc_node(t) for t in rootless_tcs])
-        )
+    for label, rows in _unheld_tc_groups(tcs, sr_ids | llr_ids):
+        roots.append(_group(label, [tc_node(t) for t in rows]))
     return roots
+
+
+def _unheld_tc_groups(tcs, valid):
+    """The test cases no valid requirement or design row holds, as the forest's
+    synthetic groups `[(label, rows)]`, an empty group dropped. A case evidencing
+    only assumptions is not verifying nothing, so it has a group of its own."""
+    _requirement, assumption = assumption_evidence_rows(tcs)
+    assumed_only = [t for t in assumption if not refs(t.get("Verifies"))]
+    nothing = [
+        t
+        for t in tcs
+        if not valid & set(refs(t.get("Verifies"))) and t not in assumed_only
+    ]
+    groups = (
+        ("(assumption evidence)", assumed_only),
+        ("(TCs verifying nothing valid)", nothing),
+    )
+    return [(label, rows) for label, rows in groups if rows]
 
 
 def _flag_suffix(node):
@@ -4953,8 +5028,9 @@ def analyze(reg, args):
     sr_ids = {r["SR-ID"] for r in srs}
     llr_ids = {r["LLR-ID"] for r in llrs}
 
+    da_ids = {r["DA-ID"] for r in reg.das}
     orphans, orphan_ids = spine_orphan_findings(
-        srs, llrs, tcs, ifs, sr_ids, llr_ids, reg.sn_ids, reg.sn_draft
+        srs, llrs, tcs, ifs, sr_ids, llr_ids, reg.sn_ids, reg.sn_draft, da_ids
     )
     module_ids = llr_module_ids(llrs)
     budget_findings = budget_backlink_findings(reg.pbs, sr_ids | llr_ids | module_ids)
@@ -5053,6 +5129,11 @@ def analyze(reg, args):
     interface_advisories += assumption_reach_advisories(
         reg.das, srs, reg.sn_needs, reg.stks, exts, bifs, reg.surs
     ) + need_frame_gap_advisories(reg.sn_needs, reg.stks, srs, bifs, reg.das)
+
+    # An observation test case's declaration (SR-198), with or without a frame.
+    observation_failures, observation_advisories = observation_tc_findings(tcs)
+    integrity += observation_failures
+    interface_advisories += observation_advisories
     placeholders = placeholder_sweep(raw, reg.sn_md) if flags.no_placeholders else []
     schema = schema_sweep(real) if flags.strict_schema else []
     # Warn-only, always on: comparative AcceptanceCriteria terms with no pinned
@@ -5221,6 +5302,9 @@ def render_report(reg, findings, args, forest):
             f"| System requirements (SR) | {len(srs)} |",
             f"| Low-level requirements (LLR) | {len(llrs)} |",
             f"| Test cases (TC) | {len(tcs)} |",
+        ]
+        + evidence_metric_rows(tcs)
+        + [
             f"| Orphans | {len(orphans)} |",
             f"| Integrity findings | {len(integrity)} |",
             f"| Approved SRs — mechanized (Test) | {len(mechanized_verified)} |",

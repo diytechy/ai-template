@@ -534,3 +534,136 @@ def test_this_repo_s_committed_stage_is_current():
     assert recorded["stage"] in ladder.LADDER_RUNGS
     assert recorded["fingerprint"] == kitstage.fingerprint(ROOT, memo=None)
     assert DS.read(ROOT)["source"] == "recorded"
+
+
+# --- TC-226: an assumption-only case joins its requirements' phases (SR-197) ---
+# An assumption has no phase of its own; a test case evidencing one belongs to
+# every phase of the requirements whose arguments rely on it (LLR-230).
+
+
+def _row(id_col, rid, **cells):
+    return dict({id_col: rid}, **cells)
+
+
+PHASED = [
+    _row("SR-ID", "SR-001", Phase="5", **{"DA-Refs": "DA-001", "SN-Refs": "SN-001"}),
+    _row("SR-ID", "SR-002", Phase="6", **{"DA-Refs": "DA-001", "SN-Refs": "SN-001"}),
+]
+
+
+def _placed(groups, tid):
+    return sorted(
+        label
+        for label, (_s, _l, tcs) in groups.items()
+        if tid in [t["TC-ID"] for t in tcs]
+    )
+
+
+def test_an_assumption_only_case_joins_each_phase_citing_its_assumption():
+    tcs = [
+        _row("TC-ID", "TC-001", **{"Assumption-Refs": "DA-001"}),
+        _row("TC-ID", "TC-002", **{"Assumption-Refs": "DA-009"}),
+    ]
+    da_srs = DS.assumption_rules.da_citing_srs(PHASED)
+    groups = DS._phase_groups(PHASED, [], tcs, da_srs)
+    assert _placed(groups, "TC-001") == ["5", "6"]
+    # A case whose assumption no requirement cites is placed in no phase.
+    assert _placed(groups, "TC-002") == []
+    # Without the map the call reads exactly as it did before the parameter.
+    assert _placed(DS._phase_groups(PHASED, [], tcs), "TC-001") == []
+
+
+def test_the_stage_map_places_the_case_itself():
+    """`_stage_map` derives the map from the requirements it is handed, so a
+    Drafted assumption-only case holds BOTH phases' live reading at Tests."""
+    srs = [dict(r, Status="Approved", Verification="Test") for r in PHASED]
+    llrs = [
+        _row("LLR-ID", "LLR-001", **{"SR-Refs": "SR-001", "Status": "Approved"}),
+        _row("LLR-ID", "LLR-002", **{"SR-Refs": "SR-002", "Status": "Approved"}),
+    ]
+    tcs = [
+        _row("TC-ID", "TC-001", Verifies="SR-001;LLR-001", Status="Approved"),
+        _row("TC-ID", "TC-002", Verifies="SR-002;LLR-002", Status="Approved"),
+        _row("TC-ID", "TC-003", Status="Drafted", **{"Assumption-Refs": "DA-001"}),
+    ]
+    spine = dict(
+        srs=srs,
+        llrs=llrs,
+        tcs=tcs,
+        sn_ids={"SN-001"},
+        sn_draft=set(),
+        bifs=[],
+        cmps=[],
+        have_bifs=False,
+        have_cmps=False,
+    )
+    _live, per_phase = DS._stage_map(spine, settled=False)
+    assert per_phase == {"5": ladder.STAGE_TESTS, "6": ladder.STAGE_TESTS}
+    spine["tcs"] = tcs[:2]
+    _live, per_phase = DS._stage_map(spine, settled=False)
+    assert per_phase == {"5": ladder.STAGE_IMPL, "6": ladder.STAGE_IMPL}
+
+
+def _toml_spine(root, assumption):
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "test").mkdir(parents=True, exist_ok=True)
+    (req / "stakeholder-needs.md").write_text(
+        "# Stakeholder needs\n\n## SN-001 — A demo need [Approved]\n\nBody.\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    srs = "".join(
+        '[requirement.{}]\ntitle = "T"\nsn_refs = ["SN-001"]\nrequirement = "r"\n'
+        'rationale = "why"\nacceptance_criteria = "ac"\npriority = "M"\n'
+        'verification = "Test"\nstatus = "Approved"\nphase = {}\n'
+        'da_refs = ["{}"]\n\n'.format(sid, phase, did)
+        for sid, phase, did in (("SR-001", 5, "DA-001"), ("SR-002", 6, "DA-002"))
+    )
+    (req / "system-requirements.toml").write_text(srs, encoding="utf-8", newline="\n")
+    (req / "low-level-requirements.toml").write_text("", encoding="utf-8")
+    (root / "docs" / "test" / "test-cases.toml").write_text(
+        '[test.TC-003]\nlevel = "Unit"\nmethod = "m"\ntier = "Full"\n'
+        'expected = "e"\nautomated = "No"\nstatus = "Approved"\n'
+        'assumption_refs = ["{}"]\n'.format(assumption),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
+def test_a_moved_assumption_reference_is_attributed_to_the_case_s_phases(tmp_path):
+    import subprocess
+
+    from conftest import pin_autocrlf
+
+    def git(*args):
+        subprocess.run(
+            ["git", "-C", str(tmp_path), *args], check=True, capture_output=True
+        )
+
+    git("init", "-q")
+    git("config", "user.email", "t@example.com")
+    git("config", "user.name", "T")
+    git("config", "commit.gpgsign", "false")
+    pin_autocrlf(tmp_path)
+    _toml_spine(tmp_path, "DA-001")
+    git("add", "-A")
+    git("commit", "-q", "-m", "state")
+    _toml_spine(tmp_path, "DA-002")
+
+    before = DS._spine_at(tmp_path, "HEAD")
+    live = DS.spine_rules.load_spine(tmp_path / "docs")
+    changed = DS._changed_rows(live, DS._by_id(before))
+    assert [(rid, key, moved) for rid, key, _row, moved in changed] == [
+        ("TC-003", "tcs", "Assumption-Refs DA-001 -> DA-002")
+    ]
+
+    def phases(spine):
+        da_srs = DS.assumption_rules.da_citing_srs(spine["srs"])
+        return _placed(
+            DS._phase_groups(spine["srs"], spine["llrs"], spine["tcs"], da_srs),
+            "TC-003",
+        )
+
+    assert phases(before) == ["5"]
+    assert phases(live) == ["6"]

@@ -10,7 +10,7 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 
 _The off-spine registries above carry no per-row rendering in this brief; since WI-571 `intake.py snapshot` copies one only when its own `Status` moves or `--approves` names it, but a re-SEED still blesses the whole tree. What it would absorb, changed since the snapshot:_
 
-- `docs/requirements/interfaces.toml` — 15 changed, 11 added, 1 removed since the snapshot; ruling(s): WI-629.
+- `docs/requirements/interfaces.toml` — 15 changed, 13 added, 1 removed since the snapshot; ruling(s): WI-629, WI-630.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): none cited.
 
 
@@ -503,6 +503,16 @@ _traced — routes to adjudication_
   - before: tests/test_acceptance_record.py
   - after: tests/test_cell_classes.py
 
+### TC TC-226
+- **Verifies**
+  - before: SR-197;LLR-230
+  - after: SR-197;LLR-230;IF-201
+
+### TC TC-227
+- **Verifies**
+  - before: SR-197;LLR-231
+  - after: SR-197;LLR-231;IF-201
+
 ## SR-198 — An observation test declares what it reads, how long its result holds, and how it samples
 
 > **Requirement.** The delivered harness shall report an observation test case that omits the inputs its judgment reads, its result lifetime or, where it evidences an assumption, its sampling policy, and refuse one declaring a lifetime shorter than seven days or a sampling policy outside the closed pair of sampled and monitored.
@@ -519,6 +529,11 @@ _traced — routes to adjudication_
 - **Evidence**
   - before: tests/test_acceptance_record.py
   - after: tests/test_cell_classes.py
+
+### TC TC-228
+- **Verifies**
+  - before: SR-198;LLR-232;LLR-233
+  - after: SR-198;LLR-232;LLR-233;IF-200
 
 ## SR-211 — Each boundary interface is bridged or coincident
 

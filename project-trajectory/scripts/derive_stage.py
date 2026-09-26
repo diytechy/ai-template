@@ -73,10 +73,16 @@ from pathlib import Path
 # one place because of it. Same guarded idiom the rest of the kit uses: run as a
 # subprocess this script's own dir is sys.path[0], and the fallback covers an
 # in-process import (a test) whose sys.path does not yet carry scripts/.
+#
+# And `assumption_rules`, for its one derivation of an assumption's citing
+# requirements, which is what places a test case evidencing assumptions in its
+# phases (SR-197; IF-201).
 try:
+    import assumption_rules
     import spine_rules
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import assumption_rules
     import spine_rules
 
 try:
@@ -116,7 +122,7 @@ def _phase_label(row):
     return (row.get("Phase") or "").strip() or "(default)"
 
 
-def _phase_groups(srs, llrs, tcs):
+def _phase_groups(srs, llrs, tcs, da_srs=None):
     """`{phase-label: (srs, llrs, tcs)}` — the rows each phase's stage is derived
     from.
 
@@ -126,7 +132,16 @@ def _phase_groups(srs, llrs, tcs):
     its own cell says, and a mislabelled child cannot hide a phase's undecomposed
     requirement. A TC that cites only its LLR (a legal shape) is resolved back to
     that LLR's SRs for the same reason: otherwise a Drafted TC in that shape lands
-    in no phase at all."""
+    in no phase at all.
+
+    AN ASSUMPTION HAS NO PHASE OF ITS OWN (SR-197). `da_srs` is
+    `assumption_rules.da_citing_srs` over the requirements: a TC naming
+    assumptions in `Assumption-Refs` joins the phase of every requirement citing
+    one of them, so a case evidencing only an assumption sits in each phase whose
+    argument relies on it, as a case citing several requirements already can.
+    `None` places a TC by `Verifies` alone.
+
+    Implements: SR-197, LLR-230"""
     by_phase = {}
     sr_phase = {}
     for row in srs:
@@ -147,6 +162,10 @@ def _phase_groups(srs, llrs, tcs):
             for s in llr_srs.get(ref, [ref]):
                 if s in sr_phase:
                     labels.add(sr_phase[s])
+        for did in spine_rules.refs(row.get("Assumption-Refs")):
+            labels.update(
+                sr_phase[s] for s in (da_srs or {}).get(did, ()) if s in sr_phase
+            )
         for label in labels:
             by_phase.setdefault(label, ([], [], []))[2].append(row)
     return by_phase
@@ -204,7 +223,7 @@ def _stage_map(spine, settled, evidence_passed=False):
         evidence_passed=evidence_passed,
     )
     overall = spine_rules.spine_stage(srs, llrs, tcs, **frame)
-    groups = _phase_groups(srs, llrs, tcs)
+    groups = _phase_groups(srs, llrs, tcs, assumption_rules.da_citing_srs(srs))
     per_phase = {}
     for label in sorted(live_labels):
         group = groups.get(label)
@@ -285,10 +304,15 @@ def read(root):
 # The BEFORE side already carried these rows — `_spine_at` materializes the
 # whole declared input set at `rev` — so this is an attribution fix, not a new
 # read.
+#
+# A TEST CASE'S `Assumption-Refs` IS ONE OF THOSE CELLS (SR-197): it places the
+# case in the phases of the requirements citing its assumptions (`_phase_groups`),
+# so a change to it is attributed like a change to `Verifies`.
+# Implements: SR-197, LLR-230
 _ATTRIBUTED_ROWS = (
     ("SR-ID", "srs", ("Status", "SN-Refs", "Verification")),
     ("LLR-ID", "llrs", ("Status", "SR-Refs")),
-    ("TC-ID", "tcs", ("Status", "Verifies")),
+    ("TC-ID", "tcs", ("Status", "Verifies", "Assumption-Refs")),
     ("B-ID", "bifs", ("Status",)),
     ("CMP-ID", "cmps", ("Status", "Standing")),
 )

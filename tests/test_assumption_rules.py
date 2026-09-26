@@ -752,3 +752,197 @@ def test_a_bad_mediation_joins_the_frame_class(trace, tmp_path):
     lines = _named(findings.frame_backlink_findings, "EXT-004", "EXT-009")
     assert len(lines) == 1, findings.frame_backlink_findings
     assert _pipes_holding(findings, lines[0]) == ["frame_backlink_findings"]
+
+
+# --- TC-228: the observation test case's declaration (SR-198, LLR-232, LLR-233)
+# A test case recorded as not automated is a judgment the harness cannot rerun.
+# It declares the inputs its judgment reads and how long its result holds, and,
+# where it evidences an assumption, how it samples. Omissions are advisories;
+# malformed values fail the integrity floor naming the row.
+
+
+def _obs(tid="TC-001", **cells):
+    """A complete observation case verifying a requirement: every omission
+    advisory is satisfied, so a case below changes one cell at a time."""
+    row = {
+        "TC-ID": tid,
+        "Verifies": "SR-001",
+        "Automated": "No",
+        "Inputs": "docs/test/report.md;SR-001",
+        "MaxAge": "30",
+    }
+    row.update(cells)
+    return {k: v for k, v in row.items() if v is not None}
+
+
+def _sampled(tid="TC-001", **cells):
+    """A complete observation case evidencing an assumption, sampled."""
+    base = {"Assumption-Refs": "DA-001", "Sampling": "sampled"}
+    base.update(cells)
+    return _obs(tid, **base)
+
+
+DECLARATION_CELLS = ("Inputs", "MaxAge", "Sampling", "SampleSize", "AcceptanceRule")
+
+
+def test_the_one_marker_is_the_automated_cell(rules):
+    assert rules.is_observation_tc({"TC-ID": "TC-001", "Automated": "No"})
+    assert not rules.is_observation_tc({"TC-ID": "TC-001", "Automated": "Yes"})
+
+
+def test_the_vocabulary_and_the_floor_are_declared_in_the_schema_module():
+    assert SPINE.SAMPLING_VALUES == ("sampled", "monitored")
+    assert SPINE.MAX_AGE_FLOOR_DAYS == 7
+
+
+def test_a_complete_observation_case_produces_nothing(rules):
+    assert rules.observation_tc_findings([_obs(), _sampled("TC-002")]) == ([], [])
+
+
+@pytest.mark.parametrize(
+    "row, cell",
+    [
+        (_obs(Inputs=None), "Inputs"),
+        (_obs(MaxAge=None), "MaxAge"),
+        (_sampled(Sampling=None), "Sampling"),
+    ],
+)
+def test_each_omission_is_one_advisory_naming_the_row(rules, row, cell):
+    failures, advisories = rules.observation_tc_findings([row])
+    assert failures == []
+    assert len(advisories) == 1, advisories
+    assert "TC-001" in advisories[0] and cell in advisories[0]
+
+
+def test_a_case_citing_no_assumption_is_not_asked_for_a_sampling_policy(rules):
+    assert rules.observation_tc_findings([_obs(Sampling=None)]) == ([], [])
+
+
+@pytest.mark.parametrize(
+    "max_age, fails", [("6", True), ("7", False), ("7.5", True), ("seven", True)]
+)
+def test_the_lifetime_is_a_whole_number_of_days_at_least_seven(rules, max_age, fails):
+    failures, advisories = rules.observation_tc_findings([_obs(MaxAge=max_age)])
+    assert advisories == []
+    assert bool(failures) is fails, failures
+    if fails:
+        assert len(failures) == 1 and "TC-001" in failures[0]
+        assert "MaxAge" in failures[0]
+
+
+@pytest.mark.parametrize("policy", ["sampled", "monitored"])
+def test_both_sampling_policies_pass(rules, policy):
+    assert rules.observation_tc_findings([_sampled(Sampling=policy)]) == ([], [])
+
+
+def test_a_policy_outside_the_pair_fails_naming_the_row(rules):
+    failures, _ = rules.observation_tc_findings([_sampled(Sampling="random")])
+    assert len(failures) == 1 and "TC-001" in failures[0]
+    assert "Sampling" in failures[0]
+
+
+@pytest.mark.parametrize("size", ["0", "2.5", "five"])
+def test_a_sample_size_that_is_not_a_whole_number_of_at_least_one_fails(rules, size):
+    row = _sampled(SampleSize=size, AcceptanceRule="Every sampled reader passes.")
+    failures, _ = rules.observation_tc_findings([row])
+    assert len(failures) == 1 and "TC-001" in failures[0], failures
+    assert "SampleSize" in failures[0]
+    assert not rules.sampling_model_declared(row)
+
+
+# THE CARRIER RULE decides what "empty" means here: an absent key IS an empty
+# cell (kitlib/spine.py). The TOML carrier refuses an explicit `""` at load and
+# the migration drops empty cells, so an empty acceptance rule is an ABSENT one,
+# judged by the pairing rule; only a whitespace-only rule was written and says
+# nothing, and that is the rule's own failure.
+
+
+def test_an_empty_rule_beside_a_size_is_a_size_without_a_rule(rules):
+    # Empty is absent (the carrier rule), so the size stands alone.
+    row = _sampled(SampleSize="5", AcceptanceRule="")
+    failures, _ = rules.observation_tc_findings([row])
+    assert failures == [
+        "TC TC-001 declares SampleSize without AcceptanceRule — a sampling "
+        "model is both cells or neither"
+    ]
+    assert not rules.sampling_model_declared(row)
+
+
+@pytest.mark.parametrize("size", ["5", None])
+def test_a_whitespace_only_rule_fails_as_empty_with_or_without_a_size(rules, size):
+    # Whitespace is not an empty cell under the carrier rule: it was written, and
+    # it says nothing, so it fails as the rule's own finding either way.
+    row = _sampled(SampleSize=size, AcceptanceRule="   ")
+    failures, _ = rules.observation_tc_findings([row])
+    expected = [
+        "TC TC-001 AcceptanceRule is empty — a sampling model states what a "
+        "passing sample is"
+    ]
+    if size is None:
+        # The written rule stands alone, so the pairing rule names it too.
+        expected.append(
+            "TC TC-001 declares AcceptanceRule without SampleSize — a sampling "
+            "model is both cells or neither"
+        )
+    assert failures == expected
+    assert not rules.sampling_model_declared(row)
+
+
+def test_an_empty_rule_alone_is_valid_and_declares_no_model(rules):
+    # Empty is absent (the carrier rule): a sampled case with neither model cell
+    # is the valid state, and a legacy carrier's empty column must not make the
+    # optional sampling model mandatory.
+    row = _sampled(AcceptanceRule="")
+    assert rules.observation_tc_findings([row]) == ([], [])
+    assert not rules.sampling_model_declared(row)
+
+
+def test_a_size_without_a_rule_and_a_rule_without_a_size_fail(rules):
+    size_only = _sampled("TC-001", SampleSize="5")
+    rule_only = _sampled("TC-002", AcceptanceRule="Every sampled reader passes.")
+    failures, _ = rules.observation_tc_findings([size_only, rule_only])
+    assert len(failures) == 2, failures
+    assert "TC-001" in failures[0] and "TC-002" in failures[1]
+
+
+def test_a_sampled_case_with_no_model_is_valid_but_not_model_declared(rules):
+    row = _sampled()
+    assert rules.observation_tc_findings([row]) == ([], [])
+    assert not rules.sampling_model_declared(row)
+
+
+def test_a_sampled_case_with_a_size_and_a_rule_is_model_declared(rules):
+    row = _sampled(SampleSize="5", AcceptanceRule="Four of five readers pass.")
+    assert rules.observation_tc_findings([row]) == ([], [])
+    assert rules.sampling_model_declared(row)
+    # The model belongs to a SAMPLED result: a monitored case carrying the same
+    # two cells has declared no sampling model.
+    monitored = dict(row, Sampling="monitored")
+    assert not rules.sampling_model_declared(monitored)
+
+
+@pytest.mark.parametrize("cell", DECLARATION_CELLS)
+def test_an_automated_case_carrying_a_declaration_cell_is_an_advisory(rules, cell):
+    value = {"MaxAge": "30", "SampleSize": "5", "Sampling": "sampled"}.get(cell, "x")
+    row = {"TC-ID": "TC-001", "Verifies": "SR-001", "Automated": "Yes", cell: value}
+    failures, advisories = rules.observation_tc_findings([row])
+    assert failures == []
+    assert len(advisories) == 1 and "TC-001" in advisories[0], advisories
+    assert cell in advisories[0]
+
+
+def test_the_example_case_is_never_judged(rules):
+    assert rules.observation_tc_findings([_obs("TC-000", MaxAge="1")]) == ([], [])
+
+
+def test_the_template_example_case_ships_every_declaration_key():
+    template = tomllib.loads(
+        (KIT / "registries" / "test-cases.template.toml").read_text(encoding="utf-8")
+    )
+    example = template["test"]["TC-000"]
+    keys = ("inputs", "max_age", "sampling", "sample_size", "acceptance_rule")
+    for key in keys:
+        assert key in example, sorted(example)
+        assert key in SPINE.SPINE_TIER_KEYS["TC-ID"], key
+    columns = {CARRIER.SPINE_COLUMN[k] for k in keys}
+    assert columns == set(DECLARATION_CELLS)

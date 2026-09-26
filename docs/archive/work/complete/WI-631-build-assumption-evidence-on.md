@@ -2,13 +2,34 @@
 id = "WI-631"
 title = "Build assumption evidence on test cases and the observation test declaration (SR-197, SR-198)"
 workstream = "scripts"
-specref = "docs/plans/2026-09-25-assumption-tier-spine-map.md#3-plan-coverage"
+specref = ""
 sr_refs = ["SR-197", "SR-198"]
 needs = ["WI-629"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 4
 +++
+
+## Deliverable
+
+- The test-case tier's `assumption_refs` (traced) and an observation case's
+  `inputs`, `max_age`, `sampling`, `sample_size`, `acceptance_rule`;
+  `Verifies` required only when `Assumption-Refs` is empty; an undeclared
+  assumption fails naming the case.
+- `derive_stage` places an assumption-only case in the phase of every
+  requirement citing its assumptions (`assumption_rules.da_citing_srs`,
+  IF-201).
+- `trace.assumption_evidence_rows` is the one partition of evidence; the
+  report and `census.red_tc_census(assumptions=True)` count assumption
+  evidence apart. `gap_census` states that the assumption half is not on the
+  dispatch seam (arbitration ruling 2).
+- `assumption_rules.observation_tc_findings` (IF-200): omissions advise,
+  malformed lifetime, policy or sampling model fail the integrity floor. An
+  empty `AcceptanceRule` reads as absent, the carrier's rule (ruling 6, which
+  reversed c6a43dd9's key-presence reading); a whitespace-only one fails.
+- This repository's five observation cases gain two advisories each (no
+  `Inputs`, no `MaxAge`).
+- No approved-row cell changed.
 
 ## Context
 

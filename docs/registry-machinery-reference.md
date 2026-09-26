@@ -351,21 +351,27 @@ hidden.
 
 ## 5. TC — Test Cases
 
-**11 columns.** The evidence tier.
+**17 columns.** The evidence tier.
 
 | Column | Required | Vocabulary / default | Effect |
 |---|---|---|---|
 | `TC-ID` | ✔ | `TC-<digits>` | Join key; the same three integrity rules. |
-| `Verifies` | ✔ | `;`-joined **SR / LLR / IF** ids | The downward join. Empty → orphan ("verifies nothing"); unknown token → orphan; **only IF ids** → orphan (a seam citation *supplements*, never replaces, the spine citation). |
+| `Verifies` | ✔* | `;`-joined **SR / LLR / IF** ids | The downward join. Empty with `Assumption-Refs` also empty → orphan ("verifies nothing"); unknown token → orphan; **only IF ids** → orphan (a seam citation *supplements*, never replaces, the spine citation). *Required unless `Assumption-Refs` names something (`_tc_verifies_required`). |
 | `Level` | ✔ | **open** (`Unit`, …) | Required non-empty; the value is never validated. |
 | `Method` | ✔ | **open** | Required non-empty; the value is never validated. |
 | `Tier` | ✔ | **closed**: `Smoke`, `Full`, `Release` | The only closed TC vocabulary. Wrong value → schema finding. Selects release-checklist items (§9.5); **not** joined to the pytest marker that selects tests — see §12.2. |
 | `Parameters` | ✘ | `param=a; other=x` | Read as the artifact recipe in the critique brief. Not validated. |
 | `Expected` | ✔ | cite the AcceptanceCriteria **by id** | Approved prose. |
-| `Automated` | ✔ | `Yes` / `No` (open) | **Conditional rule:** `Yes` + empty `Evidence` → schema finding ("a claimed-automated test with no cited location is a soft false-green"). |
+| `Automated` | ✔ | `Yes` / `No` (open) | **Conditional rule:** `Yes` + empty `Evidence` → schema finding ("a claimed-automated test with no cited location is a soft false-green"). `No` marks an **observation test case**, which declares the five cells below `Phase` (`assumption_rules.is_observation_tc`). |
 | `Evidence` | ✘* | pytest node / path / procedure link | *Required only when `Automated=Yes`. |
 | `Status` | ✔ | closed, as SR | `Drafted` → DevStg-Below. Otherwise does not gate (same as LLR). |
 | `Phase` | ✘ | digit-parseable | = the max Phase of what it verifies. Same arming rule. |
+| `Assumption-Refs` | ✘ | `DA-###` ids | The assumptions the case evidences (SR-197). Unknown id → orphan naming the case. An assumption-only case joins the phase of every SR citing its assumptions, sits under `(assumption evidence)` in the outline, and is counted apart in the report and the red-TC census (`trace.assumption_evidence_rows`); the orphan rules, the matrix and the triangle rule read `Verifies` alone. Traced. |
+| `Inputs` | ✘ | `;`-joined paths / row ids | Observation cases: what the judgment reads (SR-198). Omitted → advisory. On an automated case → advisory. |
+| `MaxAge` | ✘ | whole days, ≥ 7 | Observation cases: how long the result holds. Omitted → advisory; under 7 or not whole → integrity finding. On an automated case → advisory. |
+| `Sampling` | ✘ | **closed**: `sampled`, `monitored` | Observation cases citing assumptions. Omitted → advisory; other value → integrity finding. On an automated case → advisory. |
+| `SampleSize` | ✘ | whole number, ≥ 1 | A sampled case's model, with `AcceptanceRule`: both or neither, else integrity finding; under 1 or not whole → integrity finding. |
+| `AcceptanceRule` | ✘ | text | The model's passing rule; whitespace-only → integrity finding; empty is absent. Its adequacy is judged at approval. |
 
 ### 5.1 The SR/LLR/TC triangle rule
 

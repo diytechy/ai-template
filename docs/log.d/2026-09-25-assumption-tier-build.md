@@ -469,3 +469,39 @@ coordinator integrates in the handoff's order.
   open-items view up to date. Seconds **FAIL** at 1412.8 s against 60 s
   (OI-92; builders loading the box), recorded, not re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=b0e693ac -->
+
+### WI-631 lands — assumption evidence on test cases, and the observation declaration
+
+- **Follow-up 4b7b18f2** (ruling 6): an empty `AcceptanceRule` reads as
+  absent again, reversing c6a43dd9's key-presence reading; each case asserts
+  its exact findings. Red against c6a43dd9's rules: 2 failed, 67 passed (the
+  two whitespace cases are the kept strengthening, green under both).
+- **Integrated** by cherry-picking 378a49e9 and applying c6a43dd9 +
+  4b7b18f2 onto WI-630's landed form. Conflicts, all additive (WI-630 and
+  WI-631 each appended contracts, imports and rule sections to
+  `assumption_rules.py`, `trace.py` and `test_assumption_rules.py`): both
+  sides kept, WI-630 first; the two `kitlib.spine` import hunks merged;
+  `trace.py`'s size ratchet summed (3425 +8 +34 -> 3467, confirmed by the
+  ratchet test); `docs/id-watermark` highest marks; RESYNC entry
+  re-anchored `[since 06ba0b1b]`.
+- **Integrator's fix:** `gen_cases.py`'s legacy CSV paste header lacked the
+  six test-case keys WI-631 added to the template
+  (`test_gen_cases::test_csv_format_stays_available_for_the_legacy_carrier`
+  failed on the merged tree: 11 columns against 17); header and row
+  extended in template order.
+- **Smoke membership re-stamped 1810 -> 1890** (measured 1816: WI-630's and
+  WI-631's in-process rule tests), reason in the stamp's comment.
+- No approved-row cell changed.
+- **Commit bar:** smoke **2 failed, 1811 passed, 3 skipped** in 758.2 s:
+  the CSV header and the membership ratchet, both fixed above;
+  `test_gen_cases` **9 passed** after. The touched modules
+  (`test_smoke_budget`, `test_evidence_partition`, `test_trace_coherence`,
+  `test_trace_golden`, `test_trace`, `test_dogfood_sync`, `test_rule_sync`,
+  `test_resync_pack`, `test_bootstrap`) **241 passed, 2 skipped**, with
+  `test_derive_stage` erroring at collection under xdist (the known
+  lone-module `kitlib` import, draft L) and **21 passed** run with
+  `-p no:xdist`. `check_docs --stale` OK; `check_trajectory --strict` clean;
+  `trace.py --strict-integrity` 0 integrity; `CURRENT.md` current; the
+  open-items view up to date. Seconds **FAIL** at 760.8 s against 60 s
+  (OI-92), recorded, not re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=06ba0b1b -->

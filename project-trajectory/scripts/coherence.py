@@ -70,8 +70,8 @@ except ImportError:  # pragma: no cover - in-process fallback
     )
 
 
-def tc_citation_findings(tcs, spine_ids, ifs):
-    """Every TC-`Verifies` orphan rule, as ``[(at_fault_id, finding), ...]``.
+def tc_citation_findings(tcs, spine_ids, ifs, da_ids=frozenset()):
+    """Every TC citation orphan rule, as ``[(at_fault_id, finding), ...]``.
 
     The vocabulary is SR/LLR spine ids **plus** `IF-###` seam ids (WI-065). The
     seam-TC rule (process-options.md "Intra-repo interfaces & the architecture
@@ -85,15 +85,26 @@ def tc_citation_findings(tcs, spine_ids, ifs):
     Two rules keep the widened vocabulary from becoming a hole: an unresolvable
     IF token is as wrong as an unknown SR, and a seam citation **supplements**
     the spine citation — a TC naming only seam ids no longer says which
-    requirement it discharges."""
+    requirement it discharges.
+
+    A TC MAY EVIDENCE ASSUMPTIONS INSTEAD (SR-197). `Assumption-Refs` names the
+    domain assumptions it evidences, resolved against `da_ids`, the declared
+    assumption rows; an entry naming anything else fails here, naming the TC.
+    A TC is reported as verifying nothing only when BOTH cells are empty: a
+    test of an assumption can stand alone where no requirement is its subject,
+    and it is evidence all the same. The seam rule reads `Verifies` alone, so a
+    seam cited beside an assumption still owes the requirement it discharges.
+
+    Implements: SR-197, LLR-229"""
     if_ids = {r["IF-ID"] for r in ifs}
     out = []
     for r in tcs:
         tid = r["TC-ID"]
         verified = refs(r.get("Verifies"))
-        if not verified:
+        assumed = refs(r.get("Assumption-Refs"))
+        if not verified and not assumed:
             out.append((tid, f"TC {tid} verifies nothing"))
-        elif not spine_ids & set(verified):
+        elif verified and not spine_ids & set(verified):
             out.append(
                 (
                     tid,
@@ -105,6 +116,15 @@ def tc_citation_findings(tcs, spine_ids, ifs):
         for x in verified:
             if x not in spine_ids and x not in if_ids:
                 out.append((tid, f"TC {tid} references unknown {x}"))
+        out += [
+            (
+                tid,
+                f"TC {tid} Assumption-Refs names {x}, which is not a declared "
+                "assumption",
+            )
+            for x in assumed
+            if x not in da_ids
+        ]
     return out
 
 
@@ -178,7 +198,9 @@ def _sn_orphan_findings(sn_ids, sr_sn_refs, sn_draft):
     ]
 
 
-def spine_orphan_findings(srs, llrs, tcs, ifs, sr_ids, llr_ids, sn_ids, sn_draft):
+def spine_orphan_findings(
+    srs, llrs, tcs, ifs, sr_ids, llr_ids, sn_ids, sn_draft, da_ids=frozenset()
+):
     """The child-completeness and parent-resolution rules over the four spine
     tiers: an SR with no LLR / no TC / no SN, an LLR with no SR parent / no TC,
     a TC citing an id that does not exist, and an SN nothing cites. Pure.
@@ -192,6 +214,11 @@ def spine_orphan_findings(srs, llrs, tcs, ifs, sr_ids, llr_ids, sn_ids, sn_draft
     Emission ORDER — SR, LLR, TC, SN — is the report's and the console's, and
     tests compare it, so the concatenation below is load-bearing, not stylistic.
 
+    `da_ids` is the declared assumption rows, which a TC's `Assumption-Refs`
+    resolve against (`tc_citation_findings`); empty, every citation of one is
+    unknown. The child-completeness rules read `Verifies` alone: evidence about
+    an assumption is not a test of the requirement relying on it.
+
     Implements: SR-157, LLR-201
     """
     llr_sr_refs = {x for r in llrs for x in refs(r.get("SR-Refs"))}
@@ -199,7 +226,7 @@ def spine_orphan_findings(srs, llrs, tcs, ifs, sr_ids, llr_ids, sn_ids, sn_draft
     pairs = (
         _sr_orphan_findings(srs, llr_sr_refs, tc_refs, sn_ids)
         + _llr_orphan_findings(llrs, sr_ids, tc_refs)
-        + tc_citation_findings(tcs, sr_ids | llr_ids, ifs)
+        + tc_citation_findings(tcs, sr_ids | llr_ids, ifs, da_ids)
         + _sn_orphan_findings(sn_ids, sn_cited_ids(srs), sn_draft)
     )
     return [f for _, f in pairs], {rid for rid, _ in pairs}

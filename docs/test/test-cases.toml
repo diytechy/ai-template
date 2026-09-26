@@ -2309,7 +2309,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-226]
-verifies = ["SR-197", "LLR-230"]
+verifies = ["SR-197", "LLR-230", "IF-201"]
 level = "Integration"
 method = "_phase_groups called with a requirement in phase 5 and one in phase 6, both citing one assumption, and a test case naming only that assumption: the case appears in both phase groups. A case whose assumption no requirement cites appears in none. Driven on a git repository, a change to a case's Assumption-Refs between HEAD and the working tree is attributed to the case's phases by the stage-change attribution."
 tier = "Full"
@@ -2320,7 +2320,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-227]
-verifies = ["SR-197", "LLR-231"]
+verifies = ["SR-197", "LLR-231", "IF-201"]
 level = "Unit"
 method = "assumption_evidence_rows, the forest builder, the red-TC census and the report metrics called in memory on a spine holding a requirement-only case, an assumption-only case and a case citing both. The assumption-only case is listed under the assumption-evidence group, not the verifying-nothing bucket; the census and the report count assumption evidence apart from requirement evidence, with the both-citing case counted once in each; the verified-requirement join, the matrix and the triangle rule give the same answers as with the assumption references removed."
 tier = "Smoke"
@@ -2331,7 +2331,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-228]
-verifies = ["SR-198", "LLR-232", "LLR-233"]
+verifies = ["SR-198", "LLR-232", "LLR-233", "IF-200"]
 level = "Unit"
 method = "is_observation_tc, observation_tc_findings and sampling_model_declared called on in-memory test cases. A case whose Automated reads No is an observation case and one reading Yes is not. An observation case missing inputs, missing max_age, or, when it cites assumptions, missing a sampling policy is one advisory per omission naming it. A max_age of 6 fails and 7 passes; a max_age of 7.5 or a word fails; a sampling value outside sampled and monitored fails. For the sampling model: a sample size of 0, of 2.5 or a word fails; an empty or whitespace acceptance rule fails; a size without a rule, and a rule without a size, fail; a sampled case with neither is valid but not model-declared; a sampled case with a size of 5 and a non-empty rule is model-declared. An automated case carrying any of the declaration cells is an advisory. The template's example case ships every key."
 tier = "Smoke"

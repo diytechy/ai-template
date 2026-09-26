@@ -49,6 +49,7 @@ import re
 from pathlib import Path
 
 import agent_common as ac
+import assumption_rules
 import schedule
 
 
@@ -62,7 +63,12 @@ def gap_census(root):
     gap-closure rows with derived descriptions — no model anywhere in the path,
     and the mint dedupes so one gap can never mint twice. Returns finding
     strings; [] when the registries are complete (or absent — a scaffold with
-    no spine yet has no gaps to name)."""
+    no spine yet has no gaps to name).
+
+    It carries the red-TC census's REQUIREMENT half only. The assumption half
+    (`red_tc_census(..., assumptions=True)`) is deliberately not on this seam
+    until its routing is decided: whether a red assumption-evidence case mints
+    a row, and of what kind, is policy no requirement states yet."""
     import trace as tr
 
     reg = tr.load_registries(Path(root) / "docs")
@@ -84,6 +90,11 @@ def gap_census(root):
 # distinct prefix rather than by growing the seam a second shape. `intake.
 # _census_drafts` routes on exactly this token; nothing else parses the line.
 RED_TC_PREFIX = "red TC "
+
+# The ASSUMPTION-EVIDENCE half of the same rung (SR-197), counted apart: a
+# prefix of its own, so `parse_red_tc`, the requirement half's one reader, never
+# takes one of these lines for one of its own.
+RED_ASSUMPTION_TC_PREFIX = "red assumption TC "
 
 # The three statuses this rung does NOT call red, each because another rung
 # owns it. Stated as exemptions because Status was an open vocabulary when this
@@ -119,7 +130,7 @@ RED_TC_PREFIX = "red TC "
 _TC_NOT_RED = frozenset({"approved", "drafted", "founded"})
 
 
-def red_tc_census(root, reg=None):
+def red_tc_census(root, reg=None, *, assumptions=False):
     """LLR-159: TEST CASES LEFT RED UNDER A CLAIMED IMPLEMENTATION.
 
     A TC that is not `Approved` is ordinary unfinished work — unless something
@@ -146,7 +157,21 @@ def red_tc_census(root, reg=None):
     it would double-count. Same for `partial`/`cancelled` closers — see
     `_implemented_ids`.
 
-    Implements: SR-148, LLR-159
+    ASSUMPTION EVIDENCE IS COUNTED APART (SR-197), through the one partition
+    `trace.assumption_evidence_rows`. By default this is the REQUIREMENT half:
+    the cases naming something in `Verifies`, judged on those targets alone, so
+    a case that also evidences an assumption is judged here on what it verifies.
+    With `assumptions=True` it is the ASSUMPTION half instead: a case outside
+    the exempt statuses naming assumptions whose citing requirements
+    (`assumption_rules.da_citing_srs`) are ALL claimed built — the work relying
+    on the premise is closed, and the evidence for the premise is red. A case
+    citing both is counted once in each half, and its lines carry their own
+    prefix (`RED_ASSUMPTION_TC_PREFIX`), so the disposition brief, which reads
+    only the requirement half, is never handed a premise as a requirement. The
+    assumption half is not on the dispatch seam (`gap_census`) until its
+    routing is decided, so today it mints nothing.
+
+    Implements: SR-148, SR-197, LLR-159, LLR-231
     """
 
     import trace as tr
@@ -157,8 +182,11 @@ def red_tc_census(root, reg=None):
     claimed = _implemented_ids(root)
     if not claimed:
         return []
+    requirement, assumption = tr.assumption_evidence_rows(reg.tcs)
+    if assumptions:
+        return _red_assumption_census(assumption, reg.srs, claimed)
     census = []
-    for row in reg.tcs:
+    for row in requirement:
         tc_id = (row.get("TC-ID") or "").strip()
         status = (row.get("Status") or "").strip().lower()
         if not tc_id or tc_id.endswith("-000") or status in _TC_NOT_RED:
@@ -167,6 +195,38 @@ def red_tc_census(root, reg=None):
         if not targets or not all(t in claimed for t in targets):
             continue
         census.append(_red_tc_line(tc_id, status, targets))
+    return census
+
+
+def _red_assumption_census(rows, srs, claimed):
+    """The assumption half of `red_tc_census`: one line per assumption-evidence
+    case outside the exempt statuses whose named assumptions are relied on only
+    by requirements `claimed` built. An assumption no requirement cites claims
+    nothing, so a case naming only such assumptions is not red."""
+    citing = assumption_rules.da_citing_srs(srs)
+    census = []
+    for row in rows:
+        tc_id = (row.get("TC-ID") or "").strip()
+        status = (row.get("Status") or "").strip().lower()
+        if not tc_id or tc_id.endswith("-000") or status in _TC_NOT_RED:
+            continue
+        named = [
+            d for d in ac._refs(row.get("Assumption-Refs")) if not d.endswith("-000")
+        ]
+        relying = sorted({sid for d in named for sid in citing.get(d, [])})
+        if not relying or not set(relying) <= claimed:
+            continue
+        census.append(
+            "{}{} [{}] is {} while every requirement relying on it is claimed "
+            "built ({}): the premise their argument rests on has no green "
+            "evidence".format(
+                RED_ASSUMPTION_TC_PREFIX,
+                tc_id,
+                ";".join(named),
+                status or "unset",
+                ";".join(relying),
+            )
+        )
     return census
 
 

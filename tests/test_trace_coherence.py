@@ -298,3 +298,95 @@ def test_analyze_is_a_composer_and_stays_one():
     assert not [
         n for n in ast.walk(fn) if isinstance(n, ast.FunctionDef) and n is not fn
     ]
+
+
+# --- TC-225: a test case evidencing assumptions (SR-197, LLR-229) -------------
+# A test case may name, in `Assumption-Refs`, the domain assumptions it
+# evidences, in place of or beside the requirements and design rows in
+# `Verifies`. The citation rule reads both cells; the schema rule requires
+# `Verifies` only on a case that names no assumption.
+
+
+def _tc(tid, verifies="", assumptions=None, **cells):
+    row = {
+        "TC-ID": tid,
+        "Verifies": verifies,
+        "Level": "Unit",
+        "Method": "Call it.",
+        "Tier": "Smoke",
+        "Expected": "It answers.",
+        "Automated": "Yes",
+        "Evidence": "tests/test_it.py",
+        "Status": "Approved",
+    }
+    if assumptions is not None:
+        row["Assumption-Refs"] = assumptions
+    row.update(cells)
+    return row
+
+
+def test_a_case_naming_only_assumptions_is_valid_and_not_an_orphan(coherence):
+    tcs = [_tc("TC-001", assumptions="DA-001")]
+    assert coherence.tc_citation_findings(tcs, {"SR-001"}, [], {"DA-001"}) == []
+    orphans, ids = coherence.spine_orphan_findings(
+        [_sr("SR-001")],
+        [],
+        tcs + [_tc("TC-002", "SR-001")],
+        [],
+        {"SR-001"},
+        set(),
+        set(),
+        set(),
+        da_ids={"DA-001"},
+    )
+    assert not [f for f in orphans if "TC-001" in f], orphans
+    assert "TC-001" not in ids
+
+
+@pytest.mark.parametrize("empty", [None, "", "  "])
+def test_a_case_naming_nothing_is_reported_verifying_nothing(coherence, empty):
+    tcs = [_tc("TC-003", "", assumptions=empty)]
+    assert coherence.tc_citation_findings(tcs, {"SR-001"}, [], {"DA-001"}) == [
+        ("TC-003", "TC TC-003 verifies nothing")
+    ]
+
+
+def test_a_case_naming_an_undeclared_assumption_fails_naming_the_case(coherence):
+    tcs = [_tc("TC-004", "SR-001", assumptions="DA-001;DA-009")]
+    out = coherence.tc_citation_findings(tcs, {"SR-001"}, [], {"DA-001"})
+    assert len(out) == 1, out
+    tid, finding = out[0]
+    assert tid == "TC-004"
+    assert "TC-004" in finding and "DA-009" in finding and "DA-001" not in finding
+    # With no assumptions registry at all, every citation is undeclared.
+    assert coherence.tc_citation_findings(tcs, {"SR-001"}, [], set())
+
+
+def test_the_schema_rule_requires_verifies_only_without_assumption_refs(trace):
+    neither = _tc("TC-005", "")
+    alone = _tc("TC-006", "", assumptions="DA-001")
+    assert "Verifies" not in trace.REQUIRED_FIELDS["TC"]
+    assert trace._tc_verifies_required(neither)
+    assert not trace._tc_verifies_required(alone)
+    assert trace.schema_findings("TC", [neither]) == [
+        "TC TC-005 has empty required field Verifies"
+    ]
+    assert trace.schema_findings("TC", [alone]) == []
+    # A case naming both is held to nothing extra.
+    assert trace.schema_findings("TC", [_tc("TC-007", "SR-001", "DA-001")]) == []
+
+
+def test_the_template_example_case_carries_the_assumption_reference():
+    import tomllib
+
+    from conftest import KIT
+
+    spine = load_script("spine_carrier")
+    migrate = load_script("migrate_carrier")
+    template = tomllib.loads(
+        (KIT / "registries" / "test-cases.template.toml").read_text(encoding="utf-8")
+    )
+    assert "assumption_refs" in template["test"]["TC-000"]
+    assert "assumption_refs" in spine.REGISTRY_KEYS["TC-ID"]
+    assert spine.SPINE_COLUMN["assumption_refs"] == "Assumption-Refs"
+    assert "Assumption-Refs" in migrate.REF_COLS

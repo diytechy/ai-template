@@ -185,6 +185,8 @@ _The ruled cross-cutting review grouping. Counts only — never a gate; a row ca
 ### Interface endpoint advisories (warn-only)
 
 - IF endpoint coverage: 1 of 1 row(s) carry an endpoint that is not an arch-map module, so the cross-component rules are VACUOUS for them — 0 resolve to a file or directory in the tree, 1 are marked `external:`, 0 resolve to nothing
+- TC TC-002 is an observation test case declaring no Inputs (the inputs its judgment reads) — declare it so its result can go stale
+- TC TC-002 is an observation test case declaring no MaxAge (its lifetime) — declare it so its result can go stale
 
 ## Declared perspectives (hats; process.md §1)
 
@@ -197,6 +199,8 @@ None. Every in-scope approved SR is Approved (any method).
 ===STDOUT===
 WARNING (advisory): SR SR-002 AcceptanceCriteria uses 'identical' without a named predicate — say identical/equivalent *in what*, judged *how* (process.md §4 consistency review; heuristic, warn-only)
 WARNING (advisory): IF endpoint coverage: 1 of 1 row(s) carry an endpoint that is not an arch-map module, so the cross-component rules are VACUOUS for them — 0 resolve to a file or directory in the tree, 1 are marked `external:`, 0 resolve to nothing
+WARNING (advisory): TC TC-002 is an observation test case declaring no Inputs (the inputs its judgment reads) — declare it so its result can go stale
+WARNING (advisory): TC TC-002 is an observation test case declaring no MaxAge (its lifetime) — declare it so its result can go stale
 WARNING (advisory): CMP CMP-001 Knowledge ref 'docs/knowledge/missing-pack' names no pack (docs/knowledge/missing-pack.md)
 WARNING (advisory): LLR LLR-001 reads 'Drafted' but every citing TC is Approved — lift to Approved (the evidence already exists)
 WARNING (advisory): id-watermark monotonicity NOT checked — no committed docs/id-watermark to compare against (first commit, shallow clone, or off a work tree); the live-id and complete-space rules still ran
