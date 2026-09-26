@@ -326,3 +326,28 @@ Fable (medium) arbiter for disagreements.
   loading the box), recorded, not re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=938348c1 -->
 
+### Pause (2026-09-26): the second wave mid-review, handed to a coordinator
+
+- **Reviews ran as chains** once codex answered (the Windows read-only
+  sandbox needs `-c windows.sandbox="elevated"`; a first run without it was
+  refused by policy on every command and produced no review). All seven came
+  back NOT YET SOUND; the record and six arbitration rulings are in
+  `docs/reviews/2026-09-26-assumption-tier-wave2/`.
+- **Landed:** WI-645. **Ready:** WI-646 (reviewed, fixed). **Fixed, awaiting
+  rebase:** WI-630. **Follow-ups interrupted by a session limit, uncommitted
+  in their worktrees:** WI-629, WI-631, WI-632, WI-636, WI-637, WI-640.
+  **Not started:** WI-647's (it waits for WI-636's).
+- **Drafted, not filed:** twelve work items from the handoff's findings and
+  this wave's, preserved in `docs/plans/2026-09-26-wave2-drafts/`; a
+  backlog audit's cancellations, merges and re-scopes await the owner.
+- **Resume surface:** `docs/handoff-2026-09-26-coordinator.md`, written for a
+  coordinator that arbitrates and drives builders and Sol reviews; the status
+  surface and both READMEs point at it.
+- **Commit bar (the pause):** smoke **1697 passed, 3 skipped** in 188.1 s;
+  `check_docs --stale` OK (0 broken, after flattening the copied reviews'
+  absolute worktree links to plain `file:line` text); `check_trajectory
+  --strict` clean; `trace.py --strict-integrity` 0 integrity; `CURRENT.md`
+  fresh; the open-items view up to date. Seconds **FAIL** at 189.3 s against
+  60 s (D10), recorded, not re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=5c546358 -->
+

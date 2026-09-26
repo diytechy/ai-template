@@ -1,0 +1,12 @@
+NOT YET SOUND
+
+- **[blocker] LLR-140 was blessed although its live cell is false in two ways.** It still lists a `non-ordinary safety_class` refusal, but `_claim_refusal` explicitly says that arm was deleted and instead runs SpecRef and status-prose refusals (integrate.py, lines 650–685). More importantly, the newly added “commits only the paths the claim wrote” is too strong: `bookkeeping.commit` commits every changed path within its declared scope, and its contract expressly admits that a concurrent in-scope owner edit can be swept into the commit (bookkeeping.py, bookkeeping.py, WI-612). The tests establish preservation of unrelated, out-of-scope edits, not provenance of every committed in-scope change (test_bookkeeping.py). The verdict acknowledges the safety-class contradiction but nevertheless says “Every row is blessed” (verdict); operational whole-file snapshot granularity does not make a false approved row blessable.
+
+- **[major] TC-144’s new clause is exercised but is outside the row’s traced chain.** TC-144 verifies `SR-156, LLR-150`, while the scratchpad exception is owned by LLR-143 under SR-026 (test-cases.toml, low-level-requirements.toml, system-requirements.toml). `test_a_dirty_owner_scratchpad_does_not_stop_the_drive` proves the behavior (test_dispatch.py), but SR-156’s single-lane clause does not turn every dispatch behavior observed at `lanes=1` into an SR-156 obligation (system-requirements.toml). The verdict itself identifies this cross-chain placement but treats it as non-blocking (verdict).
+
+Checks with no finding:
+
+- **Scope:** `c429dd0c^..c429dd0c` and the `e20151c1^` archive baseline show exactly six approved attesting-cell changes: the three `detail` and three `method` cells. Other drift is traced pointers only: LLR-151 `module/code_symbol`; TC-145, TC-213 and TC-249 `verifies`.
+- **Classification:** all six changes are MEANING; none is CLARITY. Each narrows/adds/removes a behavioral obligation or required test case.
+- **Remaining implementation claims:** LLR-143, LLR-151, TC-132 and TC-145 match the cited code/tests. TC-144’s behavior is implemented, but housed under the wrong chain.
+- **Re-anchor:** `e20151c1` copied no additional approved attesting cells beyond the six; its other differences are the traced pointers above. The stamp names all six IDs exactly (README.md).

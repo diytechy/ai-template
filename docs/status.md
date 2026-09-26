@@ -24,7 +24,9 @@ supervisor prompt at the owner's request). Backward-looking homes:
 status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **RESUME HERE:** start with [handoff-2026-09-26.md](handoff-2026-09-26.md)'s
+- **RESUME HERE:** start with the coordinator's
+  [handoff-2026-09-26-coordinator.md](handoff-2026-09-26-coordinator.md), then
+  [handoff-2026-09-26.md](handoff-2026-09-26.md)'s
   read order. The redesign's remaining threads keep their context in
   [handoff-2026-09-06.md](handoff-2026-09-06.md). Recheck Git and the generated
   frontier before choosing work; earlier handoffs and sitting checklists are

@@ -1,0 +1,43 @@
+5453f920 NOT YET SOUND  
+378a49e9 NOT YET SOUND  
+df8053a9 NOT YET SOUND
+
+### 5453f920 — WI-629
+
+- **[blocker] TC-222 cannot satisfy both its approved method and D31.** The case requires real git repositories but remains Smoke (`docs/test/test-cases.toml:2270-2271`); its fixture actually initializes and commits a repository (`tests/test_acceptance_record.py:365-393`). This is not an in-memory Smoke test. Fix belongs to WI-629, but requires an attesting amendment: change TC-222 to Full, move its cases into a dedicated module, and register that module in `SLOW_MODULES`.
+
+- **[major] `sr_form_findings` violates LLR-224’s approved signature.** LLR-224 specifies `sr_form_findings(srs)` (`docs/requirements/low-level-requirements.toml:2365`), while the implementation takes `(srs, das)` and embeds adoption policy (`project-trajectory/scripts/assumption_rules.py:463-477`). The integrator’s view is correct: restore the one-argument pure rule and make `assumption_tier_findings` suppress it when the assumptions tier is unadopted. Fix belongs to WI-629.
+
+- **[major] LLR-220’s exception weakens missing-record detection for every tier.** `_missing_registry_findings` suppresses a missing snapshot registry whenever its live rows contain no approved row (`project-trajectory/scripts/baseline_snapshot.py:1254-1261`). If an existing registry and its snapshot copy are both deleted, `live=[]` and the former hole disappears. Restrict the no-copy-before-first-approval exception to the newly introduced assumptions registry; retain unconditional missing-registry reporting for established tiers. Fix belongs to WI-629.
+
+Other rulings: treating a scaffolded registry with no non-`-000` rows as “absent/unadopted” is faithful to the operational applies-when rule. The finding classes match the rows. The carrier maps are bijective, and the future columns are intentionally pre-classified by LLR-225. Neither `OFFSPINE_CENSUS_TIERS` nor `ROUTED_TRACED_CELLS` is required by these rows.
+
+### 378a49e9 — WI-631
+
+- **[major] The assumption half of the red-TC census is built but unreachable.** `red_tc_census(..., assumptions=True)` exists, but `gap_census` calls only the default requirement half (`project-trajectory/scripts/census.py:56-80`); the only production callers likewise omit the flag. Consequently LLR-231’s “counts them apart” never affects the dispatch census. Add the assumption half to `gap_census` and route its distinct prefix through intake with the appropriate assumption-evidence work-item semantics. Fix belongs to WI-631.
+
+- **[major] Explicitly empty `AcceptanceRule` is treated as absent, not invalid.** `_present` tests the value rather than key presence (`project-trajectory/scripts/assumption_rules.py:578-581`). Thus `{"AcceptanceRule": ""}` with no size is accepted as the valid “neither model cell” state, contrary to LLR-233/TC-228. The named test is weak for this case: `test_an_empty_or_whitespace_acceptance_rule_fails` always supplies `SampleSize`, so the empty-string variant can pass solely because of the unmatched-cell failure (`tests/test_assumption_rules.py:469-472`). Detect declared keys separately from nonblank values and assert an `AcceptanceRule` failure for an empty rule by itself. Fix belongs to WI-631.
+
+Other rulings: judging malformed declaration values only on observation cases follows LLR-233; automated cases receive one advisory per carried cell. Observation declarations applying without a frame is correct, and the upgrade’s two advisories per legacy observation are disclosed. No other reader of `REQUIRED_FIELDS` silently accepts empty `Verifies`; `schema_findings` owns the conditional check (`project-trajectory/scripts/trace.py:1939-1942`). The golden `+4` is exactly two advisory messages rendered in the report and stdout. Stage values remain unchanged; only the fingerprint changes.
+
+### df8053a9 — WI-632
+
+- **[blocker] Accepted-risk anchoring parses a surface explicitly defined as prose, and repeated same-day re-attestation can be missed.** The shipped record says “Nothing parses it” (`docs/archive/last_approved/README.md:3`), while `acceptance_record.py` still declares it “PARSED BY NOTHING” (`project-trajectory/scripts/acceptance_record.py:1044`). Nevertheless `_reattested_at` regex-parses added README lines (`project-trajectory/scripts/baseline_snapshot.py:1361-1363,1391-1401`). Its set difference also loses a second identical re-attestation line on the same day, so the latest act need not move the anchor as LLR-239 requires (`docs/requirements/low-level-requirements.toml:2512-2517`). Fix belongs to WI-632: write a typed approval-act record/ledger containing approved and re-attested row IDs, make `risk_acceptance_act` read that typed carrier, and leave README strictly human prose.
+
+- **[major] Registry-row input digests cover only a hand-picked subset of registry IDs.** LLR-235 promises any registry row ID is digested from its cells (`docs/requirements/low-level-requirements.toml:2477`), but `ROW_REGISTRIES` contains only SN/STK/SR/LLR/TC/IF/CMP/EXT/B/REL/DA/SUR (`project-trajectory/scripts/record_observation.py:94-106`). PB/PART/ASSET/REPO/OI/WI inputs become nonexistent path strings, so their row changes do not stale an observation. The test exercises only `SR-001` (`tests/test_observation_writer.py:196-214`). Derive the supported mapping from the registry machinery, adding special loaders where needed, and parameterize the test across every supported registry tier. Fix belongs to WI-632.
+
+- **[major] Record filenames are not validated against their contents.** LLR-234 requires `<TC>.<observed-at>.toml` (`docs/requirements/low-level-requirements.toml:2466`), but `read_files` accepts every non-dot `*.toml`, and `parse` validates only content (`project-trajectory/scripts/kitlib/observation.py:171-181,192-207`). A valid record stored as `arbitrary.toml` becomes evidence. Reject files whose basename differs from `record_name(record["tc"], record["observed_at"])`, and add a conviction test. Fix belongs to WI-632.
+
+- **[major] TC-229 is also outside its Smoke tier.** Its approved method explicitly uses a temporary directory and exercises atomic filesystem replacement (`docs/test/test-cases.toml:2347-2348`; `tests/test_observation_record.py:184,246-269`), while D31 permits only in-memory rule modules at Smoke. This requires a TC amendment to Full plus `test_observation_record` in `SLOW_MODULES`, or an amended method that can genuinely run in memory. Fix belongs to WI-632.
+
+Other rulings: excluding observation records from `kitlib.evidence.source_files` is necessary and safe for release-evidence stability. Placing `evidence_inputs` beside the writer is compatible with D21 because it owns I/O rather than pure policy. `now=None` is a harmless deterministic-test seam; `gate=False` is premature but backward-compatible pending SR-205. The four stated open choices are faithful: malformed on-disk records join integrity; no usable lifetime permits no record; an act without accepted risk does not prove acceptance; current automated/monitored evidence outranks sampled evidence.
+
+### CROSS-CHAIN
+
+- **[major] The fixes are mostly localized, except accepted-risk storage.** WI-629’s form-signature and snapshot fixes do not change WI-631/632 public data shapes. WI-631’s empty-rule fix affects WI-632’s sampling-model validation but not evidence-level signatures. WI-632’s typed act record must update bootstrap shipping, README/RESYNC documentation, its interface contract, snapshot tests, and TC-234.
+
+- **[major] The chain contains two internal rule contradictions:** TC-222 and TC-229 prescribe filesystem/git behavior while declaring Smoke; WI-632 parses an approval README whose standing contract says nothing parses it. These require amendments or a typed carrier, not additional guards.
+
+- **[minor] On this repository, the combined chain currently adds ten advisories—missing `Inputs` and `MaxAge` on TC-036, TC-055, TC-209, TC-210 and TC-211—and no new assumption-tier strict failure because the assumptions registry has no real rows. Derived stage values remain unchanged at `DevStg-Tests`; the committed fingerprint is stale at the tip, as expected for integrator regeneration. The unwired assumption census means the general chain still under-reports that class outside this checkout.
+
+The requested pytest command could not reach collection: the managed read-only environment provided no writable temporary directory, and pytest failed during capture initialization. Static imports and read-only derivation completed; `git diff --check` reported no whitespace errors.

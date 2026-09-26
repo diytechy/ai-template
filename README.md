@@ -67,7 +67,7 @@ chasing it.
 | [`project-trajectory/`](project-trajectory/) | The portable kit: the gated, requirement-traced development process plus all templates and runnable scripts. **This is the thing you copy into new repos.** |
 | [`project-trajectory/README.md`](project-trajectory/README.md) | Full contents + rationale for the kit. |
 | [`CLAUDE.md`](CLAUDE.md) | Guide for working **in this template repo** (developing the templates themselves). |
-| [`docs/status.md`](docs/status.md) · [current handoff](docs/handoff-2026-09-26.md) | Resume kit development: the assumption tier's build continues, the queued work, and the owner acts outstanding. |
+| [`docs/status.md`](docs/status.md) · [current handoff](docs/handoff-2026-09-26-coordinator.md) | Resume kit development: the assumption tier's build continues, the queued work, and the owner acts outstanding. |
 
 ## The kit's headline pieces
 
@@ -455,7 +455,7 @@ process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
 - Its current stage and frontier are derived into
   [`docs/status.md`](docs/status.md) and [`PROJECT_STATE.html`](PROJECT_STATE.html)
   from the live registries and [`docs/stage`](docs/stage). The
-  [current handoff](docs/handoff-2026-09-26.md) gives the read order, what is
+  [current handoff](docs/handoff-2026-09-26-coordinator.md) gives the read order, what is
   next, and the owner acts outstanding.
 
 ### Configuration at a glance (defaults vs. this repo)
