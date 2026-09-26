@@ -276,6 +276,7 @@ KEY = {
     "Entity": "entity",
     "Carries": "carries",
     "System": "system",
+    "Mediates": "mediates",
     "From": "from",
     "To": "to",
     "Kind": "kind",

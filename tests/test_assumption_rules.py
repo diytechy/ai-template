@@ -12,9 +12,19 @@ on (SR-191), a surrogate is a stand-in for an outside party in tests (SR-192),
 each requirement cites its assumptions or records why it needs none (SR-193)
 and declares its form (SR-194), and an assumption nothing cites or nothing
 could falsify is reported (SR-196).
+
+The tier's two reach rules ride here too, on the same in-memory rows: an
+assumption lands where each stakeholder it serves is, directly or through a
+party that mediates for it (SR-195, TC-223), and a need met in operation has a
+requirement or an assumption reaching an operation crossing (SR-188, TC-214).
+The one frame rule they need, a recorded mediation resolving, is
+`frame_rules.mediation_findings`, called here beside them. Which pipe those
+three join is pinned here too, by calling `trace.analyze` in-process on an
+empty registry: no scaffold, no subprocess.
 """
 
 import copy
+import dataclasses
 import tomllib
 
 import pytest
@@ -377,3 +387,368 @@ def test_the_example_rows_are_inert(rules):
     assert rules.assumption_row_findings([example], BIFS) == []
     sur = _sur("SUR-000", Emulates="EXT-000", Status="Bananas")
     assert rules.surrogate_findings([sur], [example], EXTS, BIFS) == ([], [])
+
+
+# --- the reach frame the TC-223 and TC-214 cases share -------------------------
+# EXT-001 is an operator's session with an operation crossing of its own; EXT-002
+# the delivered package, crossed by the delivery system alone; EXT-003 an
+# operator with no crossing of their own, reached only through EXT-004, a
+# session that carries their writes and shows them the system's verdicts.
+
+REACH_EXTS = [
+    {"EXT-ID": "EXT-001"},
+    {"EXT-ID": "EXT-002"},
+    {"EXT-ID": "EXT-003"},
+    {"EXT-ID": "EXT-004", "Mediates": "EXT-003"},
+]
+REACH_BIFS = [
+    {"B-ID": "B-01", "Entity": "EXT-001", "System": "operation"},
+    {"B-ID": "B-04", "Entity": "EXT-004", "System": "operation"},
+    {"B-ID": "B-05", "Entity": "EXT-002", "System": "delivery"},
+]
+
+
+def _stk(sid, party=None, status="Approved"):
+    row = {
+        "STK-ID": sid,
+        "Name": "Stakeholder " + sid,
+        "Description": "Owns an outcome of the system in use.",
+        "Status": status,
+    }
+    if party is not None:
+        row["Party"] = party
+    return row
+
+
+def _need(nid, *stakeholders):
+    """A need as `spine_carrier.load_needs` hands it over: lower-case keys, its
+    id under `id` and a list cell `;`-joined."""
+    return {"id": nid, "stakeholder_refs": ";".join(stakeholders)}
+
+
+REACH_STKS = [
+    _stk("STK-01", "EXT-001"),
+    _stk("STK-02", "EXT-003"),
+    _stk("STK-03"),
+]
+REACH_NEEDS = [
+    _need("SN-001", "STK-01"),
+    _need("SN-002", "STK-02"),
+    _need("SN-003", "STK-03"),
+]
+
+
+@pytest.fixture(scope="module")
+def frame_rules():
+    return load_script("frame_rules")
+
+
+def _reach(rules, das, srs, stks=REACH_STKS, surs=()):
+    return rules.assumption_reach_advisories(
+        das, srs, REACH_NEEDS, stks, REACH_EXTS, REACH_BIFS, list(surs)
+    )
+
+
+def _citing(sid, needs, das="DA-001", **cells):
+    row = {"SR-ID": sid, "SN-Refs": needs, "DA-Refs": das}
+    row.update(cells)
+    return row
+
+
+# --- TC-223: mediation_findings (SR-195, LLR-226) ------------------------------
+
+
+def test_a_mediation_naming_a_declared_other_entity_passes(frame_rules):
+    assert frame_rules.mediation_findings(REACH_EXTS) == []
+
+
+@pytest.mark.parametrize("empty", ["", "   "])
+def test_an_empty_mediation_is_no_mediation(frame_rules, empty):
+    exts = REACH_EXTS[:3] + [{"EXT-ID": "EXT-004", "Mediates": empty}]
+    assert frame_rules.mediation_findings(exts) == []
+
+
+def test_a_mediation_naming_an_undeclared_entity_fails_naming_both(frame_rules):
+    exts = REACH_EXTS[:3] + [{"EXT-ID": "EXT-004", "Mediates": "EXT-009"}]
+    failures = frame_rules.mediation_findings(exts)
+    assert len(failures) == 1 and _named(failures, "EXT-004", "EXT-009"), failures
+
+
+def test_a_mediation_naming_the_entity_itself_fails_naming_it(frame_rules):
+    exts = REACH_EXTS[:3] + [{"EXT-ID": "EXT-004", "Mediates": "EXT-004"}]
+    failures = frame_rules.mediation_findings(exts)
+    assert len(failures) == 1 and _named(failures, "EXT-004", "itself"), failures
+
+
+def test_the_example_entitys_mediation_is_inert(frame_rules):
+    exts = REACH_EXTS + [{"EXT-ID": "EXT-000", "Mediates": "EXT-404"}]
+    assert frame_rules.mediation_findings(exts) == []
+
+
+def test_the_entity_tier_ships_its_mediates_cell():
+    """One entity id, carried as `mediates` and read as `Mediates`, and shipped
+    on the template's example entity so the blank form shows it."""
+    assert "mediates" in SPINE.OFFSPINE_KEYS["EXT-ID"]
+    assert CARRIER.REGISTRY_COLUMN["mediates"] == "Mediates"
+    template = tomllib.loads(
+        (KIT / "registries" / "external.template.toml").read_text(encoding="utf-8")
+    )
+    assert "mediates" in template["entity"]["EXT-000"], sorted(
+        template["entity"]["EXT-000"]
+    )
+
+
+# --- TC-223: reaching_parties and the reach check (SR-195, LLR-227) ------------
+
+
+def test_reaching_parties_holds_each_needs_parties_and_their_mediators(rules):
+    """A need reaches its approved stakeholders' parties and every entity whose
+    `Mediates` names one of them; a need whose stakeholders declare no party
+    reaches nobody."""
+    assert rules.reaching_parties(REACH_NEEDS, REACH_STKS, REACH_EXTS) == {
+        "SN-001": {"EXT-001"},
+        "SN-002": {"EXT-003", "EXT-004"},
+        "SN-003": set(),
+    }
+
+
+@pytest.mark.parametrize("status", ["Approved", "Founded"])
+def test_landing_on_the_served_needs_stakeholders_party_passes(rules, status):
+    """`Founded` reads above `Approved` on the one ladder, so an agreed
+    stakeholder at either rung is read."""
+    stks = [_stk("STK-01", "EXT-001", status)] + REACH_STKS[1:]
+    das = [_da("DA-001", EffectAt="B-01")]
+    assert _reach(rules, das, [_citing("SR-001", "SN-001")], stks) == []
+
+
+def test_landing_on_a_party_that_mediates_for_it_passes(rules):
+    """SN-002's stakeholder is EXT-003, which has no crossing of its own; B-04
+    belongs to EXT-004, which mediates for it."""
+    das = [_da("DA-001", EffectAt="B-04")]
+    assert _reach(rules, das, [_citing("SR-001", "SN-002")]) == []
+
+
+def test_a_served_need_no_landing_reaches_is_reported_naming_it(rules):
+    """DA-001 serves SN-001 and SN-002 and lands on B-01 alone, which reaches
+    only the first: the second need is named, and B-01 is not."""
+    das = [_da("DA-001", EffectAt="B-01")]
+    advisories = _reach(rules, das, [_citing("SR-001", "SN-001;SN-002")])
+    assert len(advisories) == 1 and _named(advisories, "DA-001", "SN-002"), advisories
+    assert not _named(advisories, "SN-001") and not _named(advisories, "B-01")
+
+
+def test_a_landing_crossing_reaching_no_served_need_is_reported_naming_it(rules):
+    """B-01 reaches SN-001 and B-04 reaches SN-002; B-05 reaches neither."""
+    das = [_da("DA-001", EffectAt="B-01;B-04;B-05")]
+    advisories = _reach(rules, das, [_citing("SR-001", "SN-001;SN-002")])
+    assert len(advisories) == 1 and _named(advisories, "DA-001", "B-05"), advisories
+
+
+def test_the_served_needs_are_derived_and_never_recorded(rules):
+    """Needs served through two citing requirements are judged together, and
+    no row handed in is written to."""
+    das = [_da("DA-001", EffectAt="B-01")]
+    srs = [_citing("SR-001", "SN-001"), _citing("SR-002", "SN-002")]
+    before = copy.deepcopy((das, srs, REACH_NEEDS, REACH_STKS, REACH_EXTS))
+    advisories = _reach(rules, das, srs)
+    assert len(advisories) == 1 and _named(advisories, "DA-001", "SN-002"), advisories
+    assert (das, srs, REACH_NEEDS, REACH_STKS, REACH_EXTS) == before
+
+
+def test_a_fidelity_assumption_on_an_emulated_partys_crossing_passes(rules):
+    """Judged against its surrogate's emulated parties instead of the needs':
+    B-05 reaches none of SN-001's parties, but EXT-002 is the party its
+    surrogate stands in for."""
+    das = [_da("DA-001", EffectAt="B-05", RealizedBy="SUR-001")]
+    surs = [_sur(Emulates="EXT-002")]
+    assert _reach(rules, das, [_citing("SR-001", "SN-001")], surs=surs) == []
+
+
+def test_a_fidelity_assumption_landing_elsewhere_is_reported(rules):
+    """B-01 would reach SN-001's own party, and it does not count: a stand-in's
+    fidelity is a claim about the party it answers for."""
+    das = [_da("DA-001", EffectAt="B-01", RealizedBy="SUR-001")]
+    surs = [_sur(Emulates="EXT-002")]
+    advisories = _reach(rules, das, [_citing("SR-001", "SN-001")], surs=surs)
+    # Exactly two: the served need no landing reaches, and the idle landing.
+    unreached, idle = _named(advisories, "SN-001"), _named(advisories, "B-01")
+    assert len(advisories) == 2, advisories
+    assert len(unreached) == 1 and len(idle) == 1, advisories
+    assert unreached != idle, advisories
+    assert all(line.startswith("assumption DA-001 ") for line in advisories)
+
+
+@pytest.mark.parametrize("named", ["SUR-009", "SUR-001;SUR-002"])
+def test_a_fidelity_assumption_whose_surrogate_does_not_resolve_is_not_judged(
+    rules, named
+):
+    """An undeclared surrogate, or two where a fidelity assumption states the
+    match of exactly one, is `surrogate_findings`' reference failure. Reach is
+    not judged on top of it: there is no emulated party to judge against. B-04
+    is EXT-004's, which no surrogate here emulates, so any judgement at all
+    would report it."""
+    das = [_da("DA-001", EffectAt="B-04", RealizedBy=named)]
+    surs = [_sur(Emulates="EXT-002"), _sur("SUR-002", Emulates="EXT-002")]
+    srs = [_citing("SR-001", "SN-001")]
+    assert _reach(rules, das, srs, surs=surs) == []
+    failures, _advisories = rules.surrogate_findings(surs, das, REACH_EXTS, REACH_BIFS)
+    assert _named(failures, "DA-001"), failures
+
+
+def test_a_served_need_with_no_party_bearing_stakeholder_is_unreachable(rules):
+    das = [_da("DA-001", EffectAt="B-01")]
+    advisories = _reach(rules, das, [_citing("SR-001", "SN-003")])
+    assert _named(advisories, "DA-001", "SN-003", "unreachable"), advisories
+
+
+def test_a_drafted_stakeholders_party_is_not_read(rules):
+    """With STK-01 in draft, SN-001 has no agreed party, so the landing that
+    would reach it reaches nobody."""
+    stks = [_stk("STK-01", "EXT-001", "Drafted")] + REACH_STKS[1:]
+    assert rules.reaching_parties(REACH_NEEDS, stks, REACH_EXTS)["SN-001"] == set()
+    das = [_da("DA-001", EffectAt="B-01")]
+    advisories = _reach(rules, das, [_citing("SR-001", "SN-001")], stks)
+    assert _named(advisories, "DA-001", "SN-001", "unreachable"), advisories
+
+
+def test_an_uncited_assumption_is_not_judged(rules):
+    das = [_da("DA-001", EffectAt="B-05"), _da("DA-002", EffectAt="B-05")]
+    srs = [_citing("SR-001", "SN-001", das="", **{"Boundary-Refs": "B-01"})]
+    assert _reach(rules, das, srs) == []
+
+
+def test_the_reach_check_is_silent_with_no_crossing_declared(rules):
+    das = [_da("DA-001", EffectAt="B-05")]
+    srs = [_citing("SR-001", "SN-001;SN-003")]
+    assert (
+        rules.assumption_reach_advisories(
+            das, srs, REACH_NEEDS, REACH_STKS, REACH_EXTS, [], []
+        )
+        == []
+    )
+
+
+# --- TC-214: need_frame_gap_advisories (SR-188, LLR-214) -----------------------
+
+
+def _gap(rules, srs, das, stks=REACH_STKS, bifs=REACH_BIFS, needs=REACH_NEEDS):
+    return rules.need_frame_gap_advisories(needs, stks, srs, bifs, das)
+
+
+# SN-001's one requirement names the delivery crossing and cites an assumption
+# landing there too: nothing that answers the need reaches an operation crossing.
+GAP_SRS = [_citing("SR-001", "SN-001", **{"Boundary-Refs": "B-05"})]
+GAP_DAS = [_da("DA-001", EffectAt="B-05")]
+
+
+def test_a_need_met_in_operation_with_no_operation_crossing_is_reported(rules):
+    advisories = _gap(rules, GAP_SRS, GAP_DAS)
+    assert len(advisories) == 1 and _named(advisories, "SN-001", "STK-01"), advisories
+
+
+def test_the_gap_is_reported_once_per_need(rules):
+    stks = REACH_STKS + [_stk("STK-04", "EXT-001")]
+    needs = [_need("SN-001", "STK-01", "STK-04")]
+    advisories = _gap(rules, GAP_SRS, GAP_DAS, stks, needs=needs)
+    assert len(advisories) == 1, advisories
+    assert _named(advisories, "SN-001", "STK-01", "STK-04"), advisories
+
+
+def test_a_requirement_on_an_operation_crossing_clears_the_gap(rules):
+    srs = GAP_SRS + [
+        _citing("SR-002", "SN-001", das="", **{"Boundary-Refs": "B-01"}),
+    ]
+    assert _gap(rules, srs, GAP_DAS) == []
+
+
+def test_an_assumption_landing_on_an_operation_crossing_clears_the_gap(rules):
+    assert _gap(rules, GAP_SRS, [_da("DA-001", EffectAt="B-01")]) == []
+
+
+def test_a_need_reached_only_through_a_mediator_is_out_of_scope(rules):
+    """SN-002's stakeholder is EXT-003, which has no operation crossing of its
+    own; EXT-004 mediates for it and has one, and that does not bring the need
+    into scope."""
+    srs = [_citing("SR-001", "SN-002", **{"Boundary-Refs": "B-05"})]
+    assert _gap(rules, srs, GAP_DAS, needs=[REACH_NEEDS[1]]) == []
+
+
+def test_a_drafted_stakeholder_is_not_read(rules):
+    stks = [_stk("STK-01", "EXT-001", "Drafted")] + REACH_STKS[1:]
+    assert _gap(rules, GAP_SRS, GAP_DAS, stks) == []
+
+
+def test_a_stakeholder_with_no_party_produces_nothing(rules):
+    srs = [_citing("SR-001", "SN-003", **{"Boundary-Refs": "B-05"})]
+    assert _gap(rules, srs, GAP_DAS, needs=[REACH_NEEDS[2]]) == []
+
+
+def test_each_vacuous_input_produces_nothing(rules):
+    """No frame, no stakeholder list, and a frame whose crossings declare no
+    system value."""
+    unplaced = [{k: v for k, v in b.items() if k != "System"} for b in REACH_BIFS]
+    assert _gap(rules, GAP_SRS, GAP_DAS, bifs=[]) == []
+    assert _gap(rules, GAP_SRS, GAP_DAS, stks=[]) == []
+    assert _gap(rules, GAP_SRS, GAP_DAS, bifs=unplaced) == []
+
+
+# --- the composition: which pipe each report rides -----------------------------
+# The rules above return lists; which class a list joins is `trace.analyze`'s
+# decision, and it is the one that makes a report warn or fail. LLR-214 names
+# the checker as the composer of the gap advisory into the warn pipe, and the
+# reach check rides beside it, so both are pinned THROUGH `analyze`: in-process,
+# on an empty registry loaded from a blank directory with the frame, the
+# stakeholder, the need, the requirement and the assumption substituted in.
+
+
+@pytest.fixture(scope="module")
+def trace():
+    return load_script("trace")
+
+
+def _analyzed(trace, tmp_path, **rows):
+    """`trace.analyze` over an empty registry carrying only `rows`."""
+    empty = trace.load_registries(tmp_path / "docs")
+    return trace.analyze(dataclasses.replace(empty, **rows), trace.AnalysisFlags())
+
+
+def _pipes_holding(findings, line):
+    """The name of every list-valued `Findings` field holding `line`."""
+    return sorted(
+        f.name
+        for f in dataclasses.fields(findings)
+        if isinstance(getattr(findings, f.name), list)
+        and line in getattr(findings, f.name)
+    )
+
+
+def test_both_reach_reports_ride_the_warn_pipe_alone(trace, tmp_path):
+    """SN-001's one requirement names the delivery crossing and cites DA-001,
+    which lands there too: the reach check names DA-001 against SN-001, and the
+    gap advisory names SN-001. Each line is in the warn pipe and in no other
+    list, so neither can join a failure set without this test reddening."""
+    findings = _analyzed(
+        trace,
+        tmp_path,
+        srs=GAP_SRS,
+        exts=REACH_EXTS,
+        bifs=REACH_BIFS,
+        stks=REACH_STKS,
+        sn_needs=[REACH_NEEDS[0]],
+        das=GAP_DAS,
+    )
+    reach = _named(findings.interface_advisories, "assumption DA-001", "SN-001")
+    gap = _named(findings.interface_advisories, "need SN-001", "met in operation")
+    assert reach and gap, findings.interface_advisories
+    for line in reach + gap:
+        assert _pipes_holding(findings, line) == ["interface_advisories"], line
+
+
+def test_a_bad_mediation_joins_the_frame_class(trace, tmp_path):
+    """The frame class is what `--strict` fails on: a mediation naming an
+    undeclared entity lands there, and not in the warn pipe."""
+    exts = REACH_EXTS[:3] + [{"EXT-ID": "EXT-004", "Mediates": "EXT-009"}]
+    findings = _analyzed(trace, tmp_path, exts=exts, bifs=REACH_BIFS)
+    lines = _named(findings.frame_backlink_findings, "EXT-004", "EXT-009")
+    assert len(lines) == 1, findings.frame_backlink_findings
+    assert _pipes_holding(findings, lines[0]) == ["frame_backlink_findings"]

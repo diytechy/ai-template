@@ -5358,6 +5358,40 @@ surrogate rows the way you approve requirements, and never copy the registry
 into `docs/archive/last_approved/` by hand: the act approving its first row
 writes the first copy.
 
+### An entity may name the party it mediates for, and assumption reach and needs met in operation are reported [since b0e693ac]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** An entity in `docs/requirements/external.toml` gains an
+optional `mediates` cell: the one entity it acts for, carrying that party's
+writes into the system and showing it the system's verdicts, as a development
+session does for its operator (SR-195). One naming an undeclared entity or the
+row itself joins the frame findings and fails `--strict`. The cell grants no
+authority; its one reader is a new reach check. Where `external.toml` declares
+a crossing, each assumption a requirement cites is held to the needs it serves,
+which are derived through the citing requirements' `SN-Refs`, never recorded on
+the assumption. A crossing reaches a need when its entity is the party of one of
+the need's approved stakeholders, or mediates for that party. A served need no
+landing crossing reaches, a landing crossing that reaches none of the served
+needs, and a served need none of whose approved stakeholders declares a party
+are each one advisory. A fidelity assumption (`realized_by`) is judged against
+its surrogate's emulated parties instead. Separately, a need whose approved
+stakeholder's own party has an `operation` crossing is one advisory when none of
+its requirements names an operation crossing and none of the assumptions they
+cite lands on one (SR-188). Neither report moves the exit code.
+
+**What to do.** Re-sync `scripts/frame_rules.py`, `scripts/assumption_rules.py`,
+`scripts/trace.py`, `scripts/kitlib/spine.py`, `scripts/spine_carrier.py` and
+`scripts/migrate_carrier.py` together: `trace.py` imports the new functions
+unguarded. Read `registries/external.template.toml` for the new cell on the
+example entity; your own frame gains nothing and keeps passing. Nothing is
+reported until you have approved stakeholders with a `party` and crossings
+declaring `system = "operation"`, or assumptions a requirement cites. Which
+party mediates for which is a judgement about your own frame, so add `mediates`
+in a reviewed commit. A gap advisory is answered by a requirement on an
+operation crossing, or by an assumption landing on one, not by moving the
+stakeholder.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

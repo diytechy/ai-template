@@ -2,13 +2,29 @@
 id = "WI-630"
 title = "Build the reach check, the mediates cell and the need-frame gap advisory (SR-188, SR-195)"
 workstream = "scripts"
-specref = "docs/plans/2026-09-25-assumption-tier-spine-map.md#3-plan-coverage"
+specref = ""
 sr_refs = ["SR-188", "SR-195"]
 needs = ["WI-628", "WI-629"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 4
 +++
+
+## Deliverable
+
+- The entity tier's optional `mediates` cell (schema, both carrier maps,
+  template); `frame_rules.mediation_findings` fails an undeclared or
+  self-naming value in the frame class.
+- `assumption_rules.reaching_parties` and `assumption_reach_advisories`: each
+  cited assumption judged need by need, served needs derived through
+  `da_citing_srs` and SN-Refs; a fidelity assumption judged against its
+  surrogate's emulated parties only when `RealizedBy` resolves.
+- `assumption_rules.need_frame_gap_advisories`: a need met in operation with
+  no operation crossing.
+- Both reach reports composed by `trace.analyze` into the warn pipe (LLR-214,
+  arbitration ruling 3), with a test driving `trace.analyze` that fails if
+  either leaves it; IF-190's rationale reworded to match.
+- No approved-row cell changed.
 
 ## Context
 

@@ -63,16 +63,26 @@ Contract IF-190: the assumption tier's rule surface `trace.py` imports. Rows in,
     the requirement ids citing it, and `classify_srs(srs, das)` maps each
     requirement id to one of `SR_CLASSES`. A row whose id ends `-000` is the
     template's example and is never judged.
+    Two reach reports ride the same seam as advisories, composed by the checker
+    beside the tier: `assumption_reach_advisories(das, srs, needs, stks, exts,
+    bifs, surs)`, silent when `bifs` declares no crossing, and
+    `need_frame_gap_advisories(needs, stks, srs, bifs, das)`, silent with no
+    operation crossing or no agreed stakeholder. `needs` are
+    `spine_carrier.load_needs`' rows. `reaching_parties(needs, stks, exts)` is
+    their data read: each need id mapped to the set of entities a crossing
+    must belong to in order to reach it.
 """
 
 try:
     from kitlib.spine import FORM_VALUES, STATUS_VALUES, is_example, refs
+    from kitlib.spine import is_approved, is_founded
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
     from pathlib import Path
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib.spine import FORM_VALUES, STATUS_VALUES, is_example, refs
+    from kitlib.spine import is_approved, is_founded
 
 # THE ASSUMPTION ROW'S REQUIRED CELLS (SR-191), in the carrier's column names.
 # `Falsifier` is deliberately absent: an assumption is often written before the
@@ -469,3 +479,249 @@ def assumption_tier_findings(srs, das, surs, exts, bifs):
         + no_falsifier_advisories(das)
     )
     return frame, sur_failures + form_failures, advisories
+
+
+# --- reach: where an assumption lands, and where a need met in operation does --
+# A crossing REACHES a need when it belongs to the party of one of the need's
+# agreed stakeholders, or to a party the frame records as mediating for that
+# party (`Mediates` on an entity, judged by `frame_rules.mediation_findings`).
+# Two reports read that relation. The reach check (SR-195) holds each cited
+# assumption to the needs it serves, need by need, so an assumption shared by
+# two needs cannot reach one and silently miss the other. The need-frame gap
+# (SR-188) asks the frame itself whether a need whose stakeholder is a party in
+# operation has anything answering it at an operation crossing. Both ride the
+# warn pipe: each names a gap in an argument, not a malformed row.
+
+# The system in use, the member of `kitlib.spine.SYSTEM_VALUES` a need met in
+# operation lands in (the other is the system that builds and delivers it).
+_OPERATION = "operation"
+
+
+def _agreed_parties(stks):
+    """`{stakeholder id: party}` for each agreed stakeholder declaring a party:
+    `Approved`, or `Founded`, which reads above it on the one ladder. A
+    stakeholder still in draft has not been agreed as anyone's, so its party is
+    never read."""
+    return {
+        sid: _cell(row, "Party")
+        for sid, row in _real(stks, "STK-ID")
+        if _cell(row, "Party") and (is_approved(row) or is_founded(row))
+    }
+
+
+def reaching_parties(needs, stks, exts):
+    """`{need id: set of entity ids}`: the parties a crossing must belong to in
+    order to reach each need.
+
+    A need's parties are those of its agreed stakeholders (`stakeholder_refs`),
+    plus every entity whose `Mediates` names one of them: a development session
+    reaches its operator because it carries the operator's writes in and shows
+    them the system's verdicts. Mediation is one step, never a chain. A need
+    whose agreed stakeholders declare no party maps to an empty set, which is
+    how the reach check tells an unreachable need from an undeclared one.
+    `needs` are `spine_carrier.load_needs`' rows, lower-case keys and the id
+    under `id`.
+
+    Implements: SR-195, LLR-227
+    """
+    agreed = _agreed_parties(stks)
+    mediators = {}
+    for eid, row in _real(exts, "EXT-ID"):
+        target = _cell(row, "Mediates")
+        if target and target != eid:
+            mediators.setdefault(target, set()).add(eid)
+    out = {}
+    for nid, need in _real(needs, "id"):
+        direct = {agreed[s] for s in refs(need.get("stakeholder_refs")) if s in agreed}
+        out[nid] = direct.union(*(mediators.get(p, set()) for p in direct))
+    return out
+
+
+def _served_needs(srs, declared):
+    """`{assumption id: [need ids]}`: each cited assumption's served needs, read
+    through `da_citing_srs` and the citing requirements' `SN-Refs`, in order and
+    once each. A need `declared` does not hold is left out: a dangling `SN-Refs`
+    is the orphan rules' finding, and it has no stakeholders to reach."""
+    sn_of = {sid: refs(row.get("SN-Refs")) for sid, row in _real(srs, "SR-ID")}
+    out = {}
+    for did, citing in da_citing_srs(srs).items():
+        served = out.setdefault(did, [])
+        for nid in (n for sid in citing for n in sn_of[sid]):
+            if nid in declared and nid not in served:
+                served.append(nid)
+    return out
+
+
+def _emulated(row, surrogates):
+    """`(judged, parties)`: whether the reach check judges this assumption, and
+    the parties a fidelity assumption is judged against.
+
+    An assumption naming no surrogate is judged against its needs' parties
+    (`(True, None)`). A fidelity assumption whose `RealizedBy` resolves to
+    exactly one declared surrogate is judged against the parties that surrogate
+    emulates. One naming an undeclared surrogate, or several, is NOT judged
+    (`(False, None)`): that reference is `surrogate_findings`' failure, and
+    with no resolved stand-in there is no emulated party to judge against, so
+    a reach report on top would only restate the broken reference."""
+    named = refs(row.get("RealizedBy"))
+    if not named:
+        return True, None
+    if len(named) != 1 or named[0] not in surrogates:
+        return False, None
+    return True, set(refs(surrogates[named[0]].get("Emulates")))
+
+
+def _unreached_needs(did, landing, entity_of, reach, fidelity):
+    """One line per served need no landing crossing reaches; a need with no
+    party at all is named unreachable, since no landing could reach it."""
+    whose = (
+        "a party its surrogate emulates"
+        if fidelity
+        else "a party of the need's approved stakeholders or one mediating for it"
+    )
+    out = []
+    for nid, parties in reach.items():
+        if not parties and not fidelity:
+            out.append(
+                "assumption {} serves need {}, which is unreachable: no approved "
+                "stakeholder of it declares a party a crossing could belong "
+                "to".format(did, nid)
+            )
+        elif not any(entity_of[bid] in parties for bid in landing):
+            out.append(
+                "assumption {} serves need {}, but none of its landing crossings "
+                "belongs to {}".format(did, nid, whose)
+            )
+    return out
+
+
+def _idle_landings(did, landing, entity_of, reach, fidelity):
+    """One line per landing crossing that reaches none of the served needs."""
+    what = (
+        "belongs to no party its surrogate emulates"
+        if fidelity
+        else "reaches none of the needs it serves ({})".format(", ".join(reach))
+    )
+    return [
+        "assumption {} lands on {} ({}), which {}".format(
+            did, bid, entity_of[bid] or "no entity", what
+        )
+        for bid in landing
+        if not any(entity_of[bid] in parties for parties in reach.values())
+    ]
+
+
+def assumption_reach_advisories(das, srs, needs, stks, exts, bifs, surs):
+    """SR-195's reach check, need by need, as advisories.
+
+    For each assumption at least one requirement cites, its SERVED NEEDS are
+    derived through `da_citing_srs` and the citing requirements' `SN-Refs`, and
+    never read from the assumption. Every (served need, landing crossing) pair
+    is evaluated against `reaching_parties`: a served need no landing crossing
+    reaches is one advisory naming the assumption and the need, and a landing
+    crossing reaching none of the served needs is one naming the assumption and
+    the crossing. A served need none of whose approved stakeholders declares a
+    party is named unreachable.
+
+    A FIDELITY assumption, one naming a surrogate in `RealizedBy`, is judged
+    against the parties its surrogate emulates instead of the needs' parties:
+    its claim is that a stand-in matches an outside party, not that a
+    stakeholder's outcome lands. An uncited assumption is not judged here
+    (`uncited_assumption_advisories` reports it), nor is a fidelity assumption
+    whose `RealizedBy` does not resolve to exactly one declared surrogate
+    (`surrogate_findings` fails it), and a landing on an undeclared crossing is
+    left to `assumption_row_findings`, which fails it.
+    Silent when the frame declares no crossing (SR-191's applies-when).
+
+    Implements: SR-195, LLR-227
+    """
+    if not bifs:
+        return []
+    entity_of = {r["B-ID"]: _cell(r, "Entity") for r in bifs}
+    parties = reaching_parties(needs, stks, exts)
+    served_by = _served_needs(srs, parties)
+    surrogates = dict(_real(surs, "SUR-ID"))
+    out = []
+    for did, row in _real(das, "DA-ID"):
+        served = served_by.get(did)
+        judged, emulated = _emulated(row, surrogates)
+        if not served or not judged:
+            continue
+        landing = [bid for bid in refs(row.get("EffectAt")) if bid in entity_of]
+        fidelity = emulated is not None
+        reach = {nid: emulated if fidelity else parties[nid] for nid in served}
+        out += _unreached_needs(did, landing, entity_of, reach, fidelity)
+        out += _idle_landings(did, landing, entity_of, reach, fidelity)
+    return out
+
+
+def _answering_srs(srs):
+    """`{need id: [requirement rows]}`: the requirements naming each need in
+    their `SN-Refs`, in row order."""
+    out = {}
+    for _sid, row in _real(srs, "SR-ID"):
+        for nid in refs(row.get("SN-Refs")):
+            out.setdefault(nid, []).append(row)
+    return out
+
+
+def _reaches_operation(rows, operation, lands):
+    """Whether any of these requirements names an operation crossing in its
+    `Boundary-Refs`, or cites in `DA-Refs` an assumption landing on one."""
+    for row in rows:
+        if operation & set(refs(row.get("Boundary-Refs"))):
+            return True
+        if any(operation & lands.get(did, set()) for did in refs(row.get("DA-Refs"))):
+            return True
+    return False
+
+
+def need_frame_gap_advisories(needs, stks, srs, bifs, das):
+    """SR-188's need-frame gap, as advisories: one per need met in operation
+    that nothing answering it reaches an operation crossing for.
+
+    A need is IN SCOPE when the party of one of its approved stakeholders is
+    itself the entity of an operation crossing. A party that only mediates for
+    such an entity does not bring the need into scope: the rule reads the
+    stakeholder's own party, as SR-188 states it. An in-scope need is reported,
+    once, naming it and those stakeholders, when none of the requirements
+    naming it in `SN-Refs` names an operation crossing in `Boundary-Refs` and
+    none of the assumptions they cite in `DA-Refs` lands on one. That is the
+    one place the gap shows: a need about what a person experiences while the
+    system runs, answered only at the crossings of the system that builds and
+    delivers it, still passes every reference check. A need no requirement
+    names meets the condition as written and is reported too: nothing answers
+    it at an operation crossing either.
+
+    Only approved stakeholders are read (`Approved`, or `Founded` above it).
+    VACUOUS with no frame, no stakeholder list or no crossing declaring the
+    operation system.
+
+    Implements: SR-188, LLR-214
+    """
+    operation = {
+        r["B-ID"]: _cell(r, "Entity") for r in bifs if _cell(r, "System") == _OPERATION
+    }
+    agreed = _agreed_parties(stks)
+    if not operation or not agreed:
+        return []
+    crossings, in_operation = set(operation), set(operation.values())
+    lands = {did: set(refs(row.get("EffectAt"))) for did, row in _real(das, "DA-ID")}
+    answering = _answering_srs(srs)
+    out = []
+    for nid, need in _real(needs, "id"):
+        owners = [
+            s
+            for s in refs(need.get("stakeholder_refs"))
+            if agreed.get(s) in in_operation
+        ]
+        if owners and not _reaches_operation(answering.get(nid, []), crossings, lands):
+            out.append(
+                "need {} is met in operation by {}, but none of its requirements "
+                "names an operation crossing and none of the assumptions they cite "
+                "lands on one — the frame has no crossing where this outcome "
+                "lands".format(
+                    nid, ", ".join("{} ({})".format(s, agreed[s]) for s in owners)
+                )
+            )
+    return out

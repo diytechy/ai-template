@@ -90,7 +90,13 @@ def _stakeholder_lines(stdout):
 
 
 def test_a_declared_stakeholder_and_a_need_citing_it_are_clean(scaffold):
+    """Clean means the whole project: the need's one requirement names B-01,
+    the crossing in operation where its stakeholder's party is, so the
+    need-frame gap (SR-188) has nothing to report either."""
     _project(scaffold)
+    srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    header, row = srs.read_text(encoding="utf-8").splitlines()
+    srs.write_text("{},Boundary-Refs\n{},B-01\n".format(header, row), encoding="utf-8")
     proc = _run(scaffold, "--strict")
     assert _stakeholder_lines(proc.stdout) == [], proc.stdout
     assert proc.returncode == 0, proc.stdout

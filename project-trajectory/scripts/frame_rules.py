@@ -50,6 +50,8 @@ Contract IF-180: the frame and need-tier rule surface `trace.py` imports. Rows
     to None when it is not a file in the repository. Rows are the carrier's
     column-keyed dicts (the needs: `load_needs`' lower-case keys), and no
     function writes to a row it is handed.
+    `mediation_findings(exts)` returns gating failures: an entity's `Mediates`
+    naming an undeclared entity or the entity itself.
 """
 
 try:
@@ -281,4 +283,39 @@ def need_source_findings(sn_needs, anchors):
                     "need {} source {!r} names no anchor {} exposes — point at a "
                     "heading or an explicit id in it".format(nid, entry, path)
                 )
+    return out
+
+
+def mediation_findings(exts):
+    """SR-195's frame rule, as failures: an entity's `Mediates` names a
+    declared entity other than itself.
+
+    A party with no crossing of its own is reached through one that carries
+    its writes and shows it the system's verdicts, and `Mediates` records that
+    relation, one entity id. Its one reader is the assumption tier's reach
+    check (`assumption_rules.reaching_parties`); it grants no authority and
+    moves no sign-off. A mediation naming an undeclared entity, or the row
+    itself, would let a crossing reach a party the frame never agreed to, so
+    each FAILS naming the entity and the value, and the caller joins it to the
+    frame class beside the frame's other reference rules. An empty cell is no
+    mediation. The template's `-000` example is never judged.
+
+    Implements: SR-195, LLR-226
+    """
+    entities = {r["EXT-ID"] for r in exts}
+    out = []
+    for r in exts:
+        eid, target = r["EXT-ID"], (r.get("Mediates") or "").strip()
+        if not target or is_example(eid):
+            continue
+        if target == eid:
+            out.append(
+                f"entity {eid} Mediates names itself — a party mediates for "
+                "another entity, never for itself"
+            )
+        elif target not in entities:
+            out.append(
+                f"entity {eid} Mediates names {target}, which is not an entity "
+                "the frame declares"
+            )
     return out

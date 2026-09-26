@@ -448,3 +448,24 @@ coordinator integrates in the handoff's order.
   up to date. Seconds **FAIL** at 2073.8 s against 60 s (OI-92; four builders
   loading the box), recorded, not re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=26c086dd -->
+
+### WI-630 lands — the reach check, the mediates cell and the need-frame gap advisory
+
+- **Integrated** by cherry-picking its build commit b501e5f4 and applying
+  its follow-up d1665f5c (ruling 3: the reach reports stay composed by
+  `trace.analyze` into the warn pipe, pinned by a test driving it; IF-190's
+  rationale reworded; fidelity judged only when `RealizedBy` resolves; the
+  negative fidelity test asserts both findings) onto WI-629's landed form.
+  No conflict: the handoff's warning that it edits the moved TC-222 test
+  did not hold, since it touches neither `test_acceptance_record.py` nor
+  `test_cell_classes.py`. RESYNC entry re-anchored `[since b0e693ac]`.
+- No approved-row cell changed.
+- **Commit bar:** smoke **1769 passed, 3 skipped** in 1410.0 s; the touched
+  modules (`test_trace`, `test_cell_classes`, `test_resync_pack`,
+  `test_module_size_ratchet`, `test_dogfood_sync`, `test_rule_sync`)
+  **168 passed, 2 skipped**; `test_assumption_rules` + `test_stakeholders`
+  **87 passed**; `check_docs --stale` OK; `check_trajectory --strict` clean;
+  `trace.py --strict-integrity` 0 integrity; `CURRENT.md` current; the
+  open-items view up to date. Seconds **FAIL** at 1412.8 s against 60 s
+  (OI-92; builders loading the box), recorded, not re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=b0e693ac -->

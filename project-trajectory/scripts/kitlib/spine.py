@@ -713,7 +713,19 @@ OFFSPINE_KEYS = {
     # three-leg drift rule (tests/test_dogfood_sync.py) compares template, live
     # registry and THIS map per id column, so a column added to crossings
     # cannot leak into entities.
-    "EXT-ID": ("name", "class", "description", "status", "absorbs", "notes"),
+    # `mediates` (SR-195): the ONE entity this party acts for, carrying its
+    # writes into the system and showing it the system's verdicts, as a
+    # development session does for its operator. Optional; its one reader is
+    # the assumption tier's reach check, and it grants no authority.
+    "EXT-ID": (
+        "name",
+        "class",
+        "description",
+        "status",
+        "absorbs",
+        "notes",
+        "mediates",
+    ),
     # `system` (WI-627, SR-187): which system of interest the crossing belongs
     # to, from the closed pair SYSTEM_VALUES below. Optional on the row; a
     # crossing without it is an advisory (`frame_rules.frame_system_findings`).

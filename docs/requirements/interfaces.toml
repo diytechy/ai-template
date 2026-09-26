@@ -1785,7 +1785,7 @@ rationale = """The frame and need-tier rules are a pure join layer beside the co
 owner = "scripts/frame_rules"
 requestors = ["scripts/trace"]
 channel = "call"
-data = "gating: frame_system_findings, stakeholder_findings, need_source_findings; advisory: those two, sr_system_advisories; data: crossing_systems, source_documents"
+data = "gating: frame_system, stakeholder, need_source and mediation findings; advisory: the first two, sr_system_advisories; data: crossing_systems, source_documents"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
@@ -1835,11 +1835,11 @@ component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: check_readability is CMP-007 and agent_common is CMP-008. The import is deferred into the claimed-branch path, so a trunk run of the report loads nothing from the coordinator's primitives."""
 
 [interface.IF-190]
-rationale = """The assumption tier's rules are a pure join layer beside the frame rules, so the checker composes them and stays their only caller; drawing the seam here keeps the checker growing by composition lines alone while every rule stays testable on in-memory rows, and one tier entry point keeps the choice of which class each finding joins beside the rules that produce it."""
+rationale = """The assumption tier's rules are a pure join layer beside the frame rules, so the checker composes them and stays their only caller; drawing the seam here keeps the checker growing by composition lines alone while every rule stays testable on in-memory rows. One tier entry point owns the tier's classified findings, keeping the choice of which class each one joins beside the rules that produce it; the two reach reports ride the same seam as advisories, which the checker composes into its warn pipe itself."""
 owner = "scripts/assumption_rules"
 requestors = ["scripts/trace"]
 channel = "call"
-data = "assumption_tier_findings -> (frame, integrity, advisories); the six rules it composes; data: da_citing_srs, classify_srs"
+data = "assumption_tier_findings -> (frame, integrity, advisories), its six rules and the two reach reports; data: da_citing_srs, classify_srs, reaching_parties"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"

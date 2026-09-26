@@ -221,6 +221,8 @@ try:
     from frame_rules import frame_system_findings, sr_system_advisories
     from frame_rules import need_source_findings, source_documents, stakeholder_findings
     from assumption_rules import assumption_tier_findings
+    from frame_rules import mediation_findings
+    from assumption_rules import assumption_reach_advisories, need_frame_gap_advisories
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -262,6 +264,8 @@ except ImportError:  # pragma: no cover - in-process fallback
     from frame_rules import frame_system_findings, sr_system_advisories
     from frame_rules import need_source_findings, source_documents, stakeholder_findings
     from assumption_rules import assumption_tier_findings
+    from frame_rules import mediation_findings
+    from assumption_rules import assumption_reach_advisories, need_frame_gap_advisories
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -4996,6 +5000,8 @@ def analyze(reg, args):
     frame_backlink_findings = (
         frame_findings(exts, bifs, rels) + tieback_findings(ifs, bifs) + sr_frame
     ) + (system_failures + stk_failures)
+    # A recorded mediation (SR-195) resolves like the frame's other references.
+    frame_backlink_findings += mediation_findings(exts)
     # The IF/CMP schema tier and the IF `Contract` negative rules (WI-443 / OI-14
     # part B) — ALWAYS ON and ALWAYS WARN. They ride the interface advisory pipe
     # rather than `schema` on purpose: `schema` joins the --strict failure set,
@@ -5042,6 +5048,11 @@ def analyze(reg, args):
     frame_backlink_findings += tier_frame
     integrity += tier_integrity
     interface_advisories += tier_advisories
+    # Each cited assumption's reach, need by need (SR-195), and a need met in
+    # operation that nothing answers at an operation crossing (SR-188): warn.
+    interface_advisories += assumption_reach_advisories(
+        reg.das, srs, reg.sn_needs, reg.stks, exts, bifs, reg.surs
+    ) + need_frame_gap_advisories(reg.sn_needs, reg.stks, srs, bifs, reg.das)
     placeholders = placeholder_sweep(raw, reg.sn_md) if flags.no_placeholders else []
     schema = schema_sweep(real) if flags.strict_schema else []
     # Warn-only, always on: comparative AcceptanceCriteria terms with no pinned

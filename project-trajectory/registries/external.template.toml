@@ -27,6 +27,14 @@
 # written on the requirement. A value outside the pair fails the frame check; a
 # crossing that declares none is reported and fails nothing.
 #
+# MEDIATION, on an entity. A party with no crossing of its own can still be
+# reached through one that has: a development session carries its operator's
+# writes into the system and shows them the system's verdicts. An entity's
+# optional `mediates` cell names the ONE entity it acts for. Its one reader is
+# the assumption tier's reach check, which counts a crossing of the mediating
+# party as reaching that entity's stakeholders; it grants no authority. It must
+# name a declared entity other than the row itself, or the frame check fails.
+#
 # STATUS is the one maturity field — the SAME field and the same words the
 # spine uses — and every row carries it from the file's first commit: a frame
 # with no approval element cannot be approved, and the stage rung that reads it
@@ -49,6 +57,7 @@ description = """One party outside your system. `class` is a CLOSED vocabulary: 
 status = "Drafted"
 absorbs = "optional provenance: the earlier ids this row folded in, so a re-drawn frame loses nothing"
 notes = "optional"
+mediates = "optional: the one EXT-### this party acts for, carrying its writes in and showing it the system's verdicts"
 
 [boundary.B-000]
 entity = "EXT-000"
