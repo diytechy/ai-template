@@ -221,3 +221,26 @@ Not in the phase-6 chains, but ahead of WI-638, which files through the mint.
   to date. Seconds **FAIL** at 430.2 s against 60 s (D10), recorded, not
   re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=e123eb6d -->
+
+### WI-648 — the six rows WI-612 amended, adjudicated and re-anchored
+
+- **Verdict:** `MEANING rows=6` by an independent adjudicator session (the
+  integrator had directed the amendments, so it did not judge them), all six
+  blessable. It checked scope by diffing every key of all 239 LLR and 234 TC
+  rows against the record, confirmed the new text against the code, and ran the
+  suites the cases name (141 and 36 passed). Recorded at 0c2228b1. No Sol
+  review of this verdict: the session was wrapping up, and the next session
+  may run one.
+- **Re-anchor:** `intake.py snapshot --reattests
+  LLR-140,LLR-143,LLR-151,TC-132,TC-144,TC-145`, the first use of WI-635's
+  row-level refusal. It copied two records and stamped the six ids.
+- **Found, not acted on:** LLR-140's stale safety-class rung (predates the
+  amendment); `tests/test_bookkeeping.py` cited by no test case's Evidence;
+  LLR-154's "declared generated set" no longer matches the mint's scope.
+
+- **Commit bar (the re-anchor):** smoke **1697 passed, 3 skipped** in 822.4 s;
+  `check_docs --stale` OK; `check_trajectory --strict` clean; `trace.py
+  --strict-integrity` 0 integrity; `CURRENT.md` fresh; the open-items view up
+  to date. Seconds **FAIL** at 824.5 s against 60 s (D10), recorded, not
+  re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=0c2228b1 -->

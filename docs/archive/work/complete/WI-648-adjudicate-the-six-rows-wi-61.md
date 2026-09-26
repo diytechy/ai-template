@@ -2,13 +2,38 @@
 id = "WI-648"
 title = "adjudicate: LLR-140, LLR-143, LLR-151, TC-132, TC-144, TC-145 - approved cells amended by WI-612's bookkeeping helper; judge whether scope moved"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 sr_refs = ["SR-156"]
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
 priority = 2
 +++
+
+## Deliverable
+
+Ruled by an independent adjudicator session from the kit's amendment brief,
+against the record written at cbb6649f:
+
+    VERDICT: MEANING rows=6
+
+All six amended rows (LLR-140, LLR-143, LLR-151 `detail`; TC-132, TC-144,
+TC-145 `method`) change what a builder or a test must do, and all six were
+judged blessable: true of the code at c429dd0c, exercised by the tests their
+cases name (the adjudicator ran them), and within SR-156 (SR-026 for LLR-143).
+The verdict is `docs/reviews/wi-648-adjudicate-the-six-rows-wi-61/001-ADJUDICATE-c429dd0.md`
+(0c2228b1).
+
+Re-anchored in its own commit with `intake.py snapshot --reattests
+LLR-140,LLR-143,LLR-151,TC-132,TC-144,TC-145`, the first act under WI-635's
+row-level refusal. It copied the design-row and test-case records only, and
+stamped the six ids.
+
+Not acted on, recorded in the verdict: LLR-140 still lists a
+"non-ordinary safety_class" rung that WI-381 deleted and omits two it added
+(unamended text, byte-identical in the record; it needs its own authoring
+amendment); no test case's Evidence cites `tests/test_bookkeeping.py`; LLR-154
+still says the mint commits "the declared generated set".
 
 ## Context
 
