@@ -692,11 +692,10 @@ def adjudication_approval_refusal(scope, delta):
         )
     outside = [act for act in acts if act["id"] not in scope]
     acted_registries = {act["registry"] for act in acts}
-    snapshot_registries = {
-        line.partition(" ")[2][len(SNAPSHOT_DIR) + 1 :]
-        for line in snapshot_files
-        if line.partition(" ")[2] != SNAPSHOT_DIR + "/README.md"
+    written = {
+        line.partition(" ")[2][len(SNAPSHOT_DIR) + 1 :] for line in snapshot_files
     }
+    snapshot_registries = written - SNAPSHOT_OWN_FILES
     widened = sorted(snapshot_registries - acted_registries)
     missing = sorted(acted_registries - snapshot_registries)
     if not outside and not widened and not missing:
@@ -1041,9 +1040,17 @@ def staged_hat_refs_findings(root):
 # the behavioural pin the D-7 ruling requires.
 SNAPSHOT_DIR = "docs/archive/last_approved"
 
-# The snapshot's prose stamp: rendered for a human, PARSED BY NOTHING, and so
-# the one file under the snapshot root with no live counterpart to mirror.
+# The snapshot's prose stamp: rendered for a human, PARSED BY NOTHING, and with
+# no live counterpart to mirror.
 SNAPSHOT_README = "README.md"
+
+# The snapshot's act ledger (`baseline_snapshot.ACTS`, restated for the reason
+# the directory is, and pinned equal by tests/test_baseline_snapshot.py): the
+# typed record of each approval act, and like the README a file with no live
+# counterpart. These two are the snapshot's own files; every other file under
+# the root is a registry copy the mirror rules compare with live.
+SNAPSHOT_ACTS = "acts.toml"
+SNAPSHOT_OWN_FILES = frozenset({SNAPSHOT_README, SNAPSHOT_ACTS})
 
 
 def _snapshot_survives(root, new_rev):
@@ -1117,10 +1124,11 @@ def staged_snapshot_findings(root, base="HEAD", head=None):
     for name in sorted(n for n in staged_names if n.startswith(prefix)):
         live_rel = name[len(prefix) :]
         # The README is PROSE (design §F8) — a stamp for a human, parsed by
-        # nothing, with no live counterpart to mirror. Excluding it by name
-        # rather than by "no counterpart exists" keeps a genuinely missing
+        # nothing — and the act ledger is the snapshot's own record of its
+        # acts; neither has a live counterpart to mirror. Excluding them by
+        # name rather than by "no counterpart exists" keeps a genuinely missing
         # registry loud.
-        if live_rel == SNAPSHOT_README:
+        if live_rel in SNAPSHOT_OWN_FILES:
             continue
         snap_text = _git(root, ["show", new_rev + name])
         live_text = _git(root, ["show", new_rev + live_rel])
@@ -1222,10 +1230,10 @@ def committed_snapshot_findings(root):
         if not name.startswith(prefix):
             continue
         live_rel = name[len(prefix) :]
-        # The README is prose with no live counterpart (design §F8), exactly as
-        # in the staged rule — excluded by name so a genuinely missing registry
+        # The README and the act ledger have no live counterpart, exactly as in
+        # the staged rule — excluded by name so a genuinely missing registry
         # stays loud.
-        if live_rel == SNAPSHOT_README:
+        if live_rel in SNAPSHOT_OWN_FILES:
             continue
         pairs.append((name, live_rel, rev))
         specs += ["{}:{}".format(rev, name), "{}:{}".format(rev, live_rel)]

@@ -493,6 +493,18 @@ Contracts (interfaces): IF-058
 | `command` | print the happy-path walk |
 | `--budget` |  |
 
+### `scripts/record_observation`
+_Record one observation result — the one writer of `docs/test/observations/`._
+Contracts (interfaces): IF-215
+
+| Option | Help |
+|---|---|
+| `--tc` | the observation test case, TC-### |
+| `--outcome` | pass \| fail |
+| `--by` | who or what observed: a person, a role, a process |
+| `--expires` | when the result stops holding, YYYY-MM-DDTHH:MM:SSZ; at most the case's max_age after now (default: exactly that) |
+| `--root` | repo root (default: .) |
+
 ### `scripts/record_test_evidence`
 _Record the test evidence — the harness driver that makes `DevStg-Release`_
 

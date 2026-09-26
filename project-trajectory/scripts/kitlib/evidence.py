@@ -51,6 +51,8 @@ verdict every consumer calls. The dependency runs one way only (`stage` imports
 import configparser
 from pathlib import Path
 
+from .observation import OBSERVATIONS_DIR
+
 # --- THE FILES ----------------------------------------------------------------
 EVIDENCE_FILE = "docs/test/evidence"
 STACK_FILE = "docs/stack.ini"
@@ -115,9 +117,15 @@ def source_files(root):
     wide surface (`src = .` is legal, and a single-package project may well write
     it). Including it would make the binding a function of a file that must
     CONTAIN that binding — no value could ever satisfy it, so the rung would be
-    unreachable for exactly the adopters whose layout is simplest."""
+    unreachable for exactly the adopters whose layout is simplest.
+
+    AND SO ARE THE OBSERVATION RECORDS (SR-199), on the same wide surface: a
+    sample of a test the harness cannot rerun says nothing about whether the
+    suite passed on this tree, and binding the claim to them would make every
+    recorded sample stale the release evidence."""
     base = Path(root)
     evidence_path = (base / EVIDENCE_FILE).resolve()
+    observations = (base / OBSERVATIONS_DIR).resolve()
     found = {}
     stack = base / STACK_FILE
     if stack.is_file():
@@ -131,7 +139,8 @@ def source_files(root):
                 continue
             if any(part in _SKIP_DIRS for part in item.parts):
                 continue
-            if item.resolve() == evidence_path:
+            resolved = item.resolve()
+            if resolved == evidence_path or observations in resolved.parents:
                 continue
             try:
                 rel = item.relative_to(base).as_posix()

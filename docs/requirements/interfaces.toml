@@ -1890,3 +1890,58 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """source - assumption_rules consumes nothing but the row vocabulary it reads from kitlib.spine: rows in, findings out, with no I/O, no git and no filesystem."""
+
+[interface.IF-214]
+rationale = """An observation result is kept apart from its test case, one file per result, so recording a sample never edits an approved row; one shipped module owns the file's format, its strict reader and its atomic write, and the writer and the checker both go through it, so neither can read half a record as a result or disagree with the other about what a record is."""
+owner = "scripts/kitlib/observation"
+consumers = ["scripts/record_observation", "scripts/assumption_rules", "scripts/baseline_snapshot", "scripts/kitlib/evidence"]
+channel = "file"
+data = "one TOML record per result: tc, outcome pass | fail, observed_at and expires in canonical UTC, provenance, judged inputs digest"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """source - the module consumes only the shipped package's TOML string emitter. The records live under docs/test/observations/, one file named by its case and its colon-free UTC instant, so records written on different lanes never collide; a leading-dot name is the temporary file of a write in progress and is never read. The directory is not a declared stage input and lies outside the release evidence's source surface, so recording a sample moves neither."""
+
+[interface.IF-215]
+rationale = """A result the harness cannot produce needs one sanctioned writer, which judges a record before it exists: the same format and policy rules the checker applies to a record it finds, so a refused record is never written and a written one never fails the check. The module's second face is the checker's read of what judging the records needs - the records, the digests of the inputs as they stand, the suite's evidence record and each accepted risk's act - so the writer and the reader digest one way and the checker grows by composition lines alone."""
+owner = "scripts/record_observation"
+requestors = ["external:downstream adopter", "scripts/trace"]
+channel = "cli"
+data = "--tc --outcome pass|fail --by [--expires] [--root]: one record or a REFUSED line and exit 1; evidence_inputs, inputs_digest for trace"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """No tie-back: the argv comes IN from the adopter's own session, and the frame declares no IN crossing for an invocation - recording a sample is the session's own act. The command never opens the test-case registry for writing."""
+
+[interface.IF-216]
+rationale = """The observation records are judged, and turned into an assumption's evidence level, a falsification worklist and an accepted risk's reading, by the same pure join layer as the rest of the assumption tier; the checker reads every file and every commit these rules need and hands them in, so the rules stay testable on in-memory rows and the checker grows by composition lines alone."""
+owner = "scripts/assumption_rules"
+requestors = ["scripts/trace", "scripts/record_observation"]
+channel = "call"
+data = "observation_evidence_findings -> (integrity, advisories); record_policy_problem, evidence_level, falsification_worklist, accepted_risk_state"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """The rules read no file, no clock but the instant they are handed, and no git: the records, the suite's evidence record, the inputs digests and each accepted risk's act arrive already read. The writer reads the one policy rule, record_policy_problem, so its refusal and the checker's finding are one statement."""
+
+[interface.IF-217]
+rationale = """An accepted risk is bound to the approval act that accepted it, and only the history of the acceptance record says which act that was; the module that writes the record is the one that reads it back, so the reading follows the record's own format and the pure rule compares texts it never has to find."""
+owner = "scripts/baseline_snapshot"
+requestors = ["scripts/record_observation"]
+channel = "call"
+data = "risk_acceptance_act(root, da_id) -> (commit, reason); risk_acceptance_view -> act, reason, assumption, srs, needs, known"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """Read-only and off-clock: an act is found by the entry it added to the act ledger (IF-220), naming the row approved or re-attested, never by the snapshot's prose stamp, and a failed sample is ordered by whether the act's tree held it. A shallow clone whose window holds no such act answers no anchor, with the reason stated."""
+
+[interface.IF-220]
+rationale = """Re-accepting a risk is re-attesting its row, and a re-attestation moves no cell of the recorded copies, so which rows an approval act named must be written somewhere a reader may parse; the snapshot's stamp is prose that nothing parses. One typed entry per act, numbered, keeps two acts naming the same rows on the same day distinct, so the latest act always moves an accepted risk's anchor. The module that writes the record appends the entry in the same act and is the one that reads it back."""
+owner = "scripts/baseline_snapshot"
+consumers = ["scripts/acceptance_record", "external:downstream adopter"]
+channel = "file"
+data = "the act ledger acts.toml beside the snapshot copies: [[act]] seq (a positive integer, unique and increasing in file order), date (an ISO day), approved = [row ids], reattested = [row ids]"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """Appended by every snapshot act that copied a registry, the first signing included, and by none that copied nothing. A malformed ledger is refused whole, never read in part: the snapshot act refuses before it moves any byte of the record, trace.py reports it on the always-on integrity floor, and risk_acceptance_act returns no anchor with the reason. risk_acceptance_act reads the entries a commit added by comparing entry numbers with its parent's. The acceptance record's mirror rules skip the file by name, as they skip the prose stamp, since it copies no live registry; the adopter commits it with the act's copies."""

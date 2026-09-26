@@ -293,3 +293,21 @@ def test_an_off_spine_status_flip_is_not_the_act_this_rung_refuses(tmp_path):
     assert (
         acceptance_record.lane_approval_refusal(tmp_path, "HEAD~1", "HEAD") is None
     ), "an off-spine flip is outside the ruled scope of this rung"
+
+
+def test_the_snapshot_files_that_mirror_no_registry_widen_no_approval():
+    """An adjudicated first approval may write the snapshot's prose stamp and
+    its act ledger beside the copies of the registries it approves in: neither
+    is a registry, so neither widens the act past its scope."""
+    sr = "docs/requirements/system-requirements.toml"
+    snap = acceptance_record.SNAPSHOT_DIR + "/"
+    delta = (
+        [{"id": "SR-001", "registry": sr}],
+        [
+            "rewrote " + snap + sr,
+            "rewrote " + snap + acceptance_record.SNAPSHOT_README,
+            "rewrote " + snap + acceptance_record.SNAPSHOT_ACTS,
+        ],
+        None,
+    )
+    assert acceptance_record.adjudication_approval_refusal({"SR-001"}, delta) is None

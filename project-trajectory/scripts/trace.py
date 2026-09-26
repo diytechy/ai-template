@@ -227,6 +227,8 @@ try:
     from assumption_rules import observation_tc_findings
 
     from assumption_rules import interface_bridge_findings, obstacle_hat_findings
+    from assumption_rules import observation_evidence_findings
+    import record_observation
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -274,6 +276,8 @@ except ImportError:  # pragma: no cover - in-process fallback
     from assumption_rules import observation_tc_findings
 
     from assumption_rules import interface_bridge_findings, obstacle_hat_findings
+    from assumption_rules import observation_evidence_findings
+    import record_observation
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -6223,6 +6227,16 @@ def main():
     findings.frame_backlink_findings += need_source_findings(
         reg.sn_needs, need_source_anchors(docs.parent, reg.sn_needs)
     )
+    # The observation records and what they evidence (SR-199..SR-202): the
+    # records, digests and acts are read here, once, for the same reason; a
+    # malformed or out-of-policy record joins the integrity floor, the rest the
+    # warn pipe.
+    inputs = record_observation.evidence_inputs(docs.parent, reg.tcs, reg.das, reg.bifs)
+    observed, observed_advisories = observation_evidence_findings(
+        reg.srs, reg.das, reg.tcs, reg.sn_needs, reg.bifs, **inputs
+    )
+    findings.integrity += observed
+    findings.interface_advisories += observed_advisories
     # The id-watermark rules read the FILESYSTEM and GIT, so they cannot live in
     # analyze() — that function's contract is "Pure … No I/O", and the whole
     # value of the contract is that it stays true. Integrity-class all the same:
@@ -6296,9 +6310,10 @@ def main():
     # commits already made. The gap between them was a working laundering step —
     # a forged copy committed with the hook bypassed was seen once, in a run
     # nobody had to make, and never again. Same pipe, because it is still one
-    # property: every approval rode a copy, and every copy is a copy.
+    # property: every approval rode a copy, and every copy is a copy. The
+    # record's own producer also reports a malformed act ledger (WI-632).
     findings.snapshot_findings = (
-        baseline_snapshot.unanchored_findings(wm_root)
+        baseline_snapshot.record_findings(wm_root)
         + check_trajectory.staged_snapshot_findings(wm_root)
         + check_trajectory.committed_snapshot_findings(wm_root)
     )

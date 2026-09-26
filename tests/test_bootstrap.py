@@ -109,17 +109,18 @@ def test_scaffold_contains_expected_files(scaffold):
         # The shared helper package (WI-448) — every module, because a
         # PARTIAL copy is the failure mode: the scripts import
         # `kitlib.config` / `kitlib.evidence` / `kitlib.git` / `kitlib.ladder` /
-        # `kitlib.registry` / `kitlib.secret_classes` / `kitlib.spine` /
-        # `kitlib.stage` / `kitlib.station` by name, so a missing module
-        # ImportErrors on the scaffold's first check rather than degrading.
-        # `test_the_common_package_ships_complete` asserts the set EXACTLY
-        # against the kit; these ten rows are the spot-check that keeps the
+        # `kitlib.observation` / `kitlib.registry` / `kitlib.secret_classes` /
+        # `kitlib.spine` / `kitlib.stage` / `kitlib.station` by name, so a
+        # missing module ImportErrors on the scaffold's first check rather than
+        # degrading. `test_the_common_package_ships_complete` asserts the set
+        # EXACTLY against the kit; these eleven rows are the spot-check that keeps the
         # expectation readable beside the other scripts.
         "scripts/kitlib/__init__.py",
         "scripts/kitlib/config.py",
         "scripts/kitlib/evidence.py",
         "scripts/kitlib/git.py",
         "scripts/kitlib/ladder.py",
+        "scripts/kitlib/observation.py",
         "scripts/kitlib/registry.py",
         "scripts/kitlib/secret_classes.py",
         "scripts/kitlib/spine.py",
@@ -129,6 +130,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/spine_rules.py",
         "scripts/derive_stage.py",
         "scripts/record_test_evidence.py",
+        "scripts/record_observation.py",
         "scripts/check_doc_refs.py",
         "scripts/check_figures.py",
         "scripts/check_readability.py",

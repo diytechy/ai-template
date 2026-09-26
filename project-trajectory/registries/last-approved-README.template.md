@@ -1,9 +1,11 @@
 # `last_approved` — what the spine looked like when a human last blessed it
 
 **This file is prose. Nothing parses it.** Every machine fact about the
-snapshot comes from the copied registry files beside it, or from `git log` over
-this directory. That is deliberate: the mechanism this directory replaces was a
-ledger, and a stamp file that grew fields would quietly become one again.
+snapshot comes from the copied registry files beside it, from the act ledger
+`acts.toml` beside them, or from `git log` over this directory. That is
+deliberate: a stamp file that grew fields would quietly become a record every
+reader depends on without a declared format, so the one typed record of the
+approval acts lives in its own file.
 
 ## What is in here
 
@@ -19,6 +21,11 @@ docs/requirements/interfaces.toml
 docs/requirements/external.toml
 docs/requirements/components.toml
 ```
+
+Beside them, `acts.toml` holds one entry per approval act that copied a
+registry, the first signing included: its number, its day, the rows it carried
+into approval and the rows it re-attested. An accepted risk is anchored to the
+latest act naming its assumption there.
 
 Repo-relative paths are preserved under this root, so `git diff` and an
 ordinary text editor are all you need to read it. **If this directory contains
@@ -38,6 +45,8 @@ without copying the text it blessed.
 
 > In any commit that touches a file in this directory, that file must be
 > byte-identical to its live counterpart in that same commit.
+
+This README and `acts.toml` have no live counterpart and are exempt by name.
 
 `check_trajectory.staged_snapshot_findings` enforces it. A legitimate copy
 satisfies it always; a hand edit, a partial copy, and a copy-then-amend-live all

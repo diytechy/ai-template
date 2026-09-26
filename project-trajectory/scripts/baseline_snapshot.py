@@ -82,8 +82,8 @@ replaced wholesale at each signing and never migrated in place, and why the
 first seed happens AFTER the rename (step 6) and the UNANCHORED rule is armed
 only after that (step 7).
 
-Contracts: IF-123, IF-124, IF-125, IF-126 — the seams this module declares
-(process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-123, IF-124, IF-125, IF-126, IF-217, IF-220 — the seams this module
+declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-123: the `last_approved` baseline, write side and whole read side.
     `copy_live(root, seed=False, approves=None, reattests=None)` mirrors ONLY
@@ -111,7 +111,8 @@ Contract IF-123: the `last_approved` baseline, write side and whole read side.
     `SNAPSHOT_TIERS` tiers). Before every copy, a seed included, an id naming
     neither a live row nor a recorded one is refused, and so is any id at all
     on a first signing, which copies the whole tree and writes no stamp. The
-    refs and re-attested ids land in the snapshot's prose stamp, and
+    refs and re-attested ids land in the snapshot's prose stamp, every act that
+    copied a registry appends its entry to the act ledger (IF-220), and
     `act_summary` is the one line the CLI prints for the act. `load_all(root)`
     parses the snapshot into
     `{(stem, id column): {id: row}}`, returns None — never `{}` — when there is
@@ -146,6 +147,39 @@ Contract IF-126: the stamp read — `stamp(root)` and `SNAPSHOT_DIR` — so a
     derived from git and degrades to empty strings off a checkout, and this side
     never calls `copy_live`, because a generator that refreshed the baseline
     would erase the very lag it exists to report.
+Contract IF-217: the accepted risk's anchor, read from history.
+    `risk_acceptance_act(root, da_id)` returns `(commit, reason)`: the latest
+    commit whose approval act names the assumption — an act ledger entry that
+    commit added listing it approved or re-attested (IF-220) — while the
+    record's copy of the row there carries a non-empty `accepted_risk`; where no act names the row at
+    all, the first commit at which its live `accepted_risk` took its current
+    value. `(None, reason)` when no anchor can be read: history too shallow
+    (the repository is a shallow clone and the window holds no such act), acts
+    naming the row with no risk recorded, a value in no commit yet, or no git.
+    `risk_acceptance_view(root, da_id)` adds what the pure rule
+    (`assumption_rules.accepted_risk_state`) compares, as a dict: `act`,
+    `reason`, and at that commit the `assumption` row, the requirement rows
+    `srs`, the `needs` keyed by id and the `known` observation record names.
+    Read-only; no clock is read, and ancestry, not a timestamp, orders a record.
+Contract IF-220: the act ledger, `ACTS` under `SNAPSHOT_DIR`. A TOML file of
+    `[[act]]` entries, one appended by each `copy_live` that copied a registry
+    (the seed included) and none by an act that copied nothing: `seq`, an
+    integer one above the highest already present, so identical acts stay
+    distinct; `date`, the ISO day; `approved`, the sorted ids of the compared
+    tiers' rows the act carried into approval (a live row claiming approval
+    whose prior recorded copy did not, or that the record did not hold); and
+    `reattested`, the sorted ids its `reattests` named. FAILS CLOSED:
+    `acts_problems(text)` lists every fault (text that does not parse, a field
+    missing or mistyped, an id not of the kit's syntax, `seq` values not
+    unique and increasing in file order), and `parse_acts(text)` returns the
+    entries as dicts in file order, `[]` for no text, or raises
+    `ActLedgerError` — it never returns the entries it could read.
+    `read_acts(root)` reads the working tree's; `acts_findings(root)` reports
+    its faults as integrity findings, which `record_findings(root)` joins to
+    the unanchored ones for `trace.py --strict-integrity`; a
+    snapshot act on a malformed ledger is refused before it moves any byte of
+    the record, and `risk_acceptance_act` reads no anchor through one. The
+    README beside it stays prose; nothing parses it.
 """
 
 from __future__ import annotations
@@ -154,6 +188,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 # Sibling imports, the sanctioned idiom (see trace.py): run as a subprocess this
@@ -169,6 +204,9 @@ except ImportError:  # pragma: no cover - in-process fallback
     import spine_rules
     import spine_carrier
 
+from kitlib.observation import OBSERVATIONS_DIR
+from kitlib.spine import toml_fields
+
 # The snapshot's root, repo-relative. One generation only, never migrated in
 # place — git holds the history, and a snapshot edited forward would be a second
 # ledger of what was blessed. SCOPED SINCE WI-571: the seed copies the whole
@@ -178,11 +216,30 @@ except ImportError:  # pragma: no cover - in-process fallback
 # the act's scope untouched — see `copy_live`.
 SNAPSHOT_DIR = "docs/archive/last_approved"
 
-# The prose stamp's filename. Rendered for a human, PARSED BY NOTHING (design
-# §F8, repo-lock D-10's tripwire): every machine fact comes from the copied
-# files or from git, so this file can never quietly become the ledger the
-# mechanism replaced.
+# The prose stamp's filename. Rendered for a human (design §F8, repo-lock
+# D-10's tripwire) and parsed by nothing: every machine fact comes from the
+# copied files, from the act ledger below, or from git, so this file can never
+# quietly become a ledger a reader depends on.
 README = "README.md"
+
+# THE ACT LEDGER, beside the copies: one typed entry per approval act that
+# copied a registry, naming the rows it carried into approval and the rows it
+# re-attested. Re-accepting a risk is re-attesting its row, and a
+# re-attestation moves no cell a later reader could find in the copies, so the
+# act has to say which rows it named somewhere a reader may parse (SR-202,
+# LLR-239). Each entry carries its own sequence number, so two acts naming the
+# same rows on the same day are two entries and the later one is never read as
+# the earlier. Appended by `copy_live`, read by `risk_acceptance_act`; it
+# mirrors no live file, so the mirror rules skip it by name
+# (`acceptance_record.SNAPSHOT_ACTS`, pinned equal by the snapshot tests).
+ACTS = "acts.toml"
+
+_ACTS_HEADER = (
+    "# APPROVAL ACTS, appended by `intake.py snapshot` (baseline_snapshot.copy_live).\n"
+    "# One entry per act that copied a registry: the rows it carried into approval\n"
+    "# and the rows it re-attested. Do not edit; accepted risks are anchored to\n"
+    "# these entries, and git holds the commit each act landed in.\n"
+)
 
 # The registries a signing copies. FOUR SPINE plus THREE OFF-SPINE, and the
 # second group is not padding: `interfaces.toml` and `external.toml` carry
@@ -924,7 +981,8 @@ def _refusal_text(blocked, scope):
         "`Status` in the same tree (amend-plus-flip is approval); or, having read "
         "its changed cells, re-run with `intake.py snapshot --reattests "
         "<ROW-ID>[,<ROW-ID>...]` naming EACH row above (the ids are recorded into "
-        "the snapshot's README stamp, and `--approves <registry>=<ref>` may ride "
+        "the snapshot's README stamp and act ledger, and `--approves "
+        "<registry>=<ref>` may ride "
         "beside them to cite the sitting, log fragment or commit that ruled "
         "them — a row marked removed is blessed as a removal the same way); or "
         "revert the amendment or restore the removed row and leave the drift "
@@ -944,11 +1002,10 @@ def _record_approval(base, approves, copied_rels, reattests=frozenset()):
     re-attested beside the approvals, since a re-attestation moves no cell a
     later reader could find).
 
-    STILL PROSE, STILL PARSED BY NOTHING (design §F8, repo-lock D-10's
-    tripwire) — the line is a sentence a human reads, and no code in the kit
-    reads this file back. The whole point of recording it here rather than in a
-    field is that a field would be the ledger this mechanism replaced: the
-    machine facts stay in the copied files and in git."""
+    STILL PROSE (design §F8, repo-lock D-10's tripwire) — the line is a
+    sentence a human reads, and nothing parses it. The machine facts stay in
+    the copied files, in git, and in the act ledger `_record_act` appends to
+    beside it, which names the same re-attested rows in typed fields."""
     path = base / README
     reasons = []
     for rel in copied_rels:
@@ -968,8 +1025,9 @@ def _record_approval(base, approves, copied_rels, reattests=frozenset()):
         path.write_text(
             "# `last_approved` — the approval stamp\n\n"
             "**This file is prose. Nothing parses it.** Every machine fact about "
-            "the snapshot comes from the copied registry files beside it, or "
-            "from `git log` over this directory.\n\n"
+            "the snapshot comes from the copied registry files beside it, from "
+            "the act ledger `acts.toml`, or from `git log` over this "
+            "directory.\n\n"
             "## Refreshes recorded under an explicit approval\n\n"
             "Each line below records a refresh that copied a registry under "
             "authority — a `--approves` ref, rows named by `--reattests`, or a "
@@ -1179,6 +1237,7 @@ def copy_live(root, *, seed=False, approves=None, reattests=None):
             )
         # Before the directory exists, so a refused seed leaves no trace.
         _refuse_reattests(root, frozenset(reattests or ()), None, True)
+        standing = []
         base.mkdir(parents=True, exist_ok=True)
         to_copy = set(SNAPSHOTTED)  # the seed blesses the whole tree, once
         first_signing = True
@@ -1188,9 +1247,12 @@ def copy_live(root, *, seed=False, approves=None, reattests=None):
         # refreshing, whatever flag the caller passed. `--seed` against a
         # standing record is a mistake, and a mistake is exactly the thing that
         # must not sail past the check. `_refresh_targets` raises on refusal.
+        # The ledger first: a refusal must leave the record untouched.
+        standing = _standing_acts(root)
         to_copy, first_signing = _refresh_targets(
             root, approves, seed, base, frozenset(reattests or ())
         )
+    prior = _prior_record(root)
     written = []
     copied_rels = []
     for rel in SNAPSHOTTED:
@@ -1225,7 +1287,210 @@ def copy_live(root, *, seed=False, approves=None, reattests=None):
     # traced-only re-point) write no line.
     if not first_signing and copied_rels:
         _record_approval(base, approves or {}, copied_rels, frozenset(reattests or ()))
+    # Every act that copied a registry, the seed included, is an entry in the
+    # typed ledger: the one record of which rows it named that a reader parses.
+    if copied_rels:
+        _record_act(
+            base, standing, _approved_by_act(root, copied_rels, prior), reattests or ()
+        )
     return written
+
+
+def _prior_record(root):
+    """The record as it stood before this act copied anything, or None when it
+    does not read (the repair path): every approved row the act copies is then
+    one it carried into approval, as it is on a seed."""
+    try:
+        return load_all(root)
+    except SystemExit:
+        return None
+
+
+def _approved_by_act(root, copied_rels, prior):
+    """The ids of the compared tiers' rows, in the registries this act copied,
+    that it carried into approval: live rows claiming approval whose prior
+    recorded copy did not, or that the prior record did not hold."""
+    out = set()
+    for rel, id_col in SNAPSHOT_TIERS:
+        if rel not in copied_rels:
+            continue
+        before = rows_for(prior, rel, id_col)
+        for row in spine_carrier.load(Path(root) / rel, id_col, keep_examples=False):
+            rid = str(row.get(id_col) or "").strip()
+            if (
+                rid
+                and _claims_approval(row)
+                and not _claims_approval(before.get(rid) or {})
+            ):
+                out.add(rid)
+    return out
+
+
+class ActLedgerError(ValueError):
+    """The act ledger is malformed: `problems` names each fault. Raised by
+    `parse_acts` rather than returning the entries it could read, because an
+    act left out or misnumbered is an act a reader would silently miss."""
+
+    def __init__(self, problems):
+        super().__init__("; ".join(problems))
+        self.problems = list(problems)
+
+
+def _date_problem(value):
+    """Why `value` is not an act's ISO day, or "" when it is: a TOML date, or a
+    `YYYY-MM-DD` string as `_record_act` writes it."""
+    import datetime
+
+    if isinstance(value, datetime.datetime):
+        return "a date-time, not a day"
+    if isinstance(value, datetime.date):
+        return ""
+    if isinstance(value, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+        try:
+            datetime.date.fromisoformat(value)
+            return ""
+        except ValueError:
+            pass
+    return "{!r} is not an ISO day".format(value)
+
+
+def _entry_problems(n, entry, last_seq):
+    """The faults of the `n`th `[[act]]` entry, given the `seq` before it."""
+    where = "act entry {}".format(n)
+    if not isinstance(entry, dict):
+        return ["{} is not a table".format(where)]
+    out = []
+    seq = entry.get("seq")
+    if type(seq) is not int or seq < 1:
+        out.append("{}: `seq` must be a positive integer, got {!r}".format(where, seq))
+    elif last_seq is not None and seq <= last_seq:
+        out.append(
+            "{}: `seq` {} does not follow {} — numbers must be unique and "
+            "increase in file order".format(where, seq, last_seq)
+        )
+    if "date" not in entry:
+        out.append("{}: `date` is missing".format(where))
+    elif _date_problem(entry["date"]):
+        out.append("{}: `date` {}".format(where, _date_problem(entry["date"])))
+    for key in ("approved", "reattested"):
+        ids = entry.get(key)
+        if not isinstance(ids, list) or not all(isinstance(r, str) for r in ids):
+            out.append("{}: `{}` must be a list of row ids".format(where, key))
+            continue
+        bad = [r for r in ids if not _ROW_ID.fullmatch(r)]
+        if bad:
+            out.append("{}: `{}` holds non-ids {}".format(where, key, bad))
+    return out
+
+
+def acts_problems(text):
+    """Every fault of an act ledger's text, `[]` for a well-formed one or for
+    no text at all (no ledger). Fails CLOSED: text that does not parse, an
+    `act` that is not a list of tables, a missing or mistyped field (`seq` a
+    positive integer, `date` an ISO day, `approved` and `reattested` lists of
+    row ids), and `seq` values that are not unique and increasing in file
+    order, since acts are told apart by number alone.
+
+    Implements: SR-202, LLR-239"""
+    try:
+        data = tomllib.loads(text or "")
+    except tomllib.TOMLDecodeError as exc:
+        return ["does not parse as TOML ({})".format(exc)]
+    entries = data.get("act", [])
+    if not isinstance(entries, list):
+        return ["`act` is not a list of `[[act]]` entries"]
+    out = []
+    last_seq = None
+    for n, entry in enumerate(entries, 1):
+        out += _entry_problems(n, entry, last_seq)
+        if isinstance(entry, dict) and type(entry.get("seq")) is int:
+            last_seq = entry["seq"] if last_seq is None else max(last_seq, entry["seq"])
+    return out
+
+
+def parse_acts(text):
+    """The act ledger's entries as `{seq, date, approved, reattested}` dicts in
+    file order; `[]` for no text. RAISES `ActLedgerError` on a malformed ledger
+    (`acts_problems`) rather than returning the entries it could read."""
+    problems = acts_problems(text)
+    if problems:
+        raise ActLedgerError(problems)
+    return [
+        {
+            "seq": entry["seq"],
+            "date": str(entry["date"]),
+            "approved": list(entry["approved"]),
+            "reattested": list(entry["reattested"]),
+        }
+        for entry in tomllib.loads(text or "").get("act", [])
+    ]
+
+
+def _ledger_text(root):
+    """The working tree's act ledger text, or None without one."""
+    try:
+        return (snapshot_root(root) / ACTS).read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+
+def read_acts(root):
+    """The working tree's act ledger entries (`parse_acts`); `[]` without one.
+    Raises `ActLedgerError` on a malformed ledger."""
+    return parse_acts(_ledger_text(root))
+
+
+def acts_findings(root):
+    """The working tree's act ledger faults as INTEGRITY findings, each naming
+    the file: `trace.py` joins them to the record's other integrity rules on
+    the always-on `--strict-integrity` floor. `[]` without a ledger."""
+    path = "{}/{}".format(SNAPSHOT_DIR, ACTS)
+    return [
+        "{}: {} — the act ledger is refused whole until it is fixed".format(path, p)
+        for p in acts_problems(_ledger_text(root))
+    ]
+
+
+def record_findings(root):
+    """The record's own integrity findings, as `trace.py` joins them to the
+    always-on floor: every unanchored approval (`unanchored_findings`) and
+    every fault of the act ledger (`acts_findings`)."""
+    return unanchored_findings(root) + acts_findings(root)
+
+
+def _standing_acts(root):
+    """The standing ledger's entries, or REFUSED: an act must not start on a
+    ledger it cannot number its entry in. Called before the act moves any byte
+    of the record, so a refusal leaves the record exactly as it stood."""
+    try:
+        return read_acts(root)
+    except ActLedgerError as exc:
+        raise SystemExit(
+            "baseline_snapshot: REFUSED — {}/{} is malformed ({}); fix it before "
+            "recording another act in it. Nothing was copied.".format(
+                SNAPSHOT_DIR, ACTS, exc
+            )
+        ) from None
+
+
+def _record_act(base, standing, approved, reattested):
+    """Append one act's entry to the ledger, numbered one above the `standing`
+    entries `_standing_acts` read before the act began, creating the file with
+    its header when the record has none."""
+    path = base / ACTS
+    text = path.read_text(encoding="utf-8") if path.is_file() else _ACTS_HEADER
+    seq = max((a["seq"] for a in standing), default=0) + 1
+    entry = toml_fields(
+        [
+            ("seq", seq),
+            ("date", _today()),
+            ("approved", sorted(approved)),
+            ("reattested", sorted(reattested)),
+        ]
+    )
+    path.write_text(
+        text.rstrip("\n") + "\n\n[[act]]\n" + entry, encoding="utf-8", newline="\n"
+    )
 
 
 def is_drifted(rel, id_col, live_row, snapshot_rows):
@@ -1370,3 +1635,197 @@ def unanchored_findings(root, snapshot=None):
                     )
                 )
     return sorted(out)
+
+
+# --- THE ACCEPTED RISK'S ANCHOR (SR-202) ---------------------------------------
+# A recorded accepted risk is a judgment about one assumption serving particular
+# needs, made in an approval act, so it is bound to their texts as the act saw
+# them. The act is found in the history of the record this module writes: the
+# act ledger's entries name the acts, and the record's copy of the assumptions
+# registry at each says what risk it recorded. The comparison itself is
+# `assumption_rules.accepted_risk_state`, a pure rule; this side only reads git.
+
+ASSUMPTIONS_REL = "docs/requirements/assumptions.toml"
+_REQUIREMENTS_REL = "docs/requirements/system-requirements.toml"
+# The two readers the acceptance record's two-tree comparison already uses,
+# through the re-exports this module reads `split_changed_cells` by.
+_git = check_trajectory._git
+
+
+def _shallow_commits(root):
+    """The commits a shallow clone cut the parents from, as a set; empty for a
+    whole history. Their diff reads as if every file were added there, so no act
+    can be judged at one."""
+    path = _git(root, ["rev-parse", "--git-path", "shallow"])
+    if not path:
+        return frozenset()
+    shallow = Path(root) / path.strip()
+    try:
+        return frozenset(shallow.read_text(encoding="utf-8").split())
+    except OSError:
+        return frozenset()
+
+
+def _recorded_assumption(root, rev, da_id):
+    """The assumption's row in the record's copy at `rev`, or None."""
+    rows = check_trajectory._spine_rows_at(
+        root, rev + ":", SNAPSHOT_DIR + "/" + ASSUMPTIONS_REL, "DA-ID"
+    )
+    return rows.get(da_id)
+
+
+def _acts_at(root, sha):
+    """The act ledger entries the commit `sha` added: those whose `seq` its
+    parent's ledger does not hold, every entry at a root commit. Compared by
+    number, never by content, so a second act identical to the first is still
+    an act of its own."""
+    path = "{}/{}".format(SNAPSHOT_DIR, ACTS)
+    new = parse_acts(_git(root, ["show", "{}:{}".format(sha, path)]))
+    old = parse_acts(_git(root, ["show", "{}^:{}".format(sha, path)]))
+    held = {a["seq"] for a in old}
+    return [a for a in new if a["seq"] not in held]
+
+
+def _act_names(root, sha, da_id):
+    """Whether an act that landed at `sha` names the assumption, as approved or
+    as re-attested."""
+    return any(
+        da_id in act["approved"] or da_id in act["reattested"]
+        for act in _acts_at(root, sha)
+    )
+
+
+def _risk_first_written(root, da_id):
+    """The fallback anchor: the first commit at which the live row's
+    `accepted_risk` took its current value, walking back until it differs."""
+    live = {
+        str(r.get("DA-ID") or "").strip(): r
+        for r in spine_carrier.load(Path(root) / ASSUMPTIONS_REL, "DA-ID")
+    }.get(da_id) or {}
+    current = (live.get("AcceptedRisk") or "").strip()
+    log = _git(
+        root, ["log", "--format=%H", "--", *spine_carrier.carriers(ASSUMPTIONS_REL)]
+    )
+    anchor = None
+    for sha in (log or "").split():
+        row = check_trajectory._spine_rows_at(
+            root, sha + ":", ASSUMPTIONS_REL, "DA-ID"
+        ).get(da_id)
+        if row is None or (row.get("AcceptedRisk") or "").strip() != current:
+            break
+        anchor = sha
+    if anchor is None:
+        return None, (
+            "{}'s accepted risk is in no commit yet; commit it, or accept it in "
+            "an approval act".format(da_id)
+        )
+    return anchor, (
+        "no approval act names {}, so its risk is bound to {}, the first commit "
+        "at which it took its current value".format(da_id, anchor[:12])
+    )
+
+
+def risk_acceptance_act(root, da_id):
+    """`(commit, reason)`: the act an assumption's accepted risk is bound to.
+
+    The latest commit whose approval act names the assumption while its
+    recorded `accepted_risk` is non-empty. An act names it when the act ledger
+    entry it added lists the row approved or re-attested (`_acts_at`):
+    re-accepting a risk IS re-attesting the row in an act, so it moves the
+    anchor even when no byte of the row changes, and each act is its own entry,
+    so the latest act moves it even when an earlier one the same day named the
+    same rows in the same words. The README beside the ledger is prose and is
+    never read. Only where no act names the row at all does the anchor fall
+    back to the first commit at which its live `accepted_risk` took its current
+    value (`_risk_first_written`).
+
+    `(None, reason)` when no anchor can be read, each a reason the caller
+    states: a shallow clone whose window holds no such act, since the act may
+    lie beyond it; acts naming the row but none recording a risk, since
+    accepting one is an act of its own; an act ledger on the walk that is
+    malformed (`acts_problems`), since which acts it holds would be a guess;
+    or no git at all. Time is never read.
+
+    Implements: SR-202, LLR-239
+    """
+    log = _git(root, ["log", "--format=%H", "--", SNAPSHOT_DIR + "/" + ACTS])
+    if log is None:
+        return None, "git cannot read this repository's history"
+    shallow = _shallow_commits(root)
+    named = False
+    for sha in log.split():
+        if sha in shallow:
+            continue
+        # Every ledger on the walk is read whole: a malformed one cannot say
+        # which acts its commit added, so the anchor is refused, not guessed.
+        try:
+            names = _act_names(root, sha, da_id)
+        except ActLedgerError as exc:
+            return None, (
+                "the act ledger {}/{} at commit {} or its parent is malformed "
+                "({}); no approval act can be read until it is repaired".format(
+                    SNAPSHOT_DIR, ACTS, sha[:12], exc
+                )
+            )
+        row = _recorded_assumption(root, sha, da_id) if names else None
+        if row is None:
+            continue
+        named = True
+        if (row.get("AcceptedRisk") or "").strip():
+            return sha, "the approval act {} accepted its risk".format(sha[:12])
+    if shallow:
+        return None, (
+            "history too shallow to find the approval act accepting {}'s risk: "
+            "this is a shallow clone, and the act may lie beyond its window; "
+            "fetch the full history".format(da_id)
+        )
+    if named:
+        return None, (
+            "the approval acts naming {} recorded no accepted risk; accepting "
+            "one is re-attesting the row in an act".format(da_id)
+        )
+    return _risk_first_written(root, da_id)
+
+
+def _needs_at(root, sha):
+    """`{need id: need}` as the needs registry stood at `sha`, either carrier."""
+    for cand in spine_carrier.carriers(NEEDS_REL, spine_carrier.NEED_CARRIERS):
+        text = _git(root, ["show", "{}:{}".format(sha, cand)])
+        if text is not None:
+            needs = spine_carrier.needs_from_text(text)
+            return {str(n.get("id") or ""): n for n in needs if n.get("id")}
+    return {}
+
+
+def _records_at(root, sha):
+    """The observation record names the tree at `sha` held."""
+    out = _git(root, ["ls-tree", "-r", "--name-only", sha, "--", OBSERVATIONS_DIR])
+    return {Path(line).name for line in (out or "").splitlines() if line.strip()}
+
+
+def risk_acceptance_view(root, da_id):
+    """What `assumption_rules.accepted_risk_state` compares for one assumption,
+    as a dict: the anchor `act` and its `reason` (`risk_acceptance_act`), and,
+    at that commit, the `assumption` row, the requirement rows `srs` its served
+    needs are derived through, the `needs` keyed by id, and the observation
+    record names the tree held (`known`), which is what orders a failed sample
+    by ancestry rather than by the instant it names. Only `act` and `reason`
+    when there is no anchor.
+    """
+    act, reason = risk_acceptance_act(root, da_id)
+    if act is None:
+        return {"act": None, "reason": reason}
+    return {
+        "act": act,
+        "reason": reason,
+        "assumption": check_trajectory._spine_rows_at(
+            root, act + ":", ASSUMPTIONS_REL, "DA-ID"
+        ).get(da_id),
+        "srs": list(
+            check_trajectory._spine_rows_at(
+                root, act + ":", _REQUIREMENTS_REL, "SR-ID"
+            ).values()
+        ),
+        "needs": _needs_at(root, act),
+        "known": _records_at(root, act),
+    }

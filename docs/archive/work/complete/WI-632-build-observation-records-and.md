@@ -2,13 +2,33 @@
 id = "WI-632"
 title = "Build observation records, the evidence level, the falsification worklist and accepted-risk triggers (SR-199..SR-202)"
 workstream = "scripts"
-specref = "docs/plans/2026-09-25-assumption-tier-spine-map.md#3-plan-coverage"
+specref = ""
 sr_refs = ["SR-199", "SR-200", "SR-201", "SR-202"]
 needs = ["WI-631", "WI-635"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 4
 +++
+
+## Deliverable
+
+- `kitlib/observation.py` (IF-214): one TOML record per result under
+  `docs/test/observations/`, parsed only whole and only under the name
+  `record_name(tc, observed_at)` gives it; atomic write.
+- `record_observation.py` (IF-215): the one writer, refusing before it
+  writes; `inputs_digest` digests any registry row id from its cells, the
+  tier mapping derived from the registry machinery and tested against it.
+- `assumption_rules` (IF-216): the shared record policy, the evidence level
+  from current results, the falsification worklist and the accepted-risk
+  state; the unevidenced-assumption advisory.
+- `baseline_snapshot` (IF-217, IF-220): every snapshot act appends a typed
+  entry to the act ledger `docs/archive/last_approved/acts.toml` (seq, date,
+  approved, re-attested), and `risk_acceptance_act` reads that ledger, never
+  the prose README (arbitration ruling 8). A malformed ledger fails closed,
+  is reported on the integrity floor and refuses an act before the record
+  moves.
+- TC-229 stays Smoke (ruling 1). Traced pointer moved: TC-234 `verifies`
+  gains IF-220. No attesting cell changed.
 
 ## Context
 

@@ -288,6 +288,13 @@ SLOW_MODULES = frozenset(
         # WI-629 (TC-222): each new cell's class, read by the amendment
         # classifier across two commits of a real git repository.
         "test_cell_classes",  # git init/commit per module
+        # WI-632 (TC-230, TC-231): the observation writer and trace.py run as
+        # subprocesses over a bootstrapped scaffold; the record format stays
+        # in-memory in test_observation_record.py.
+        "test_observation_writer",  # scaffold + writer/trace.py subprocesses
+        # WI-632 (TC-234): the accepted risk's approval act read from real git
+        # repositories, a shallow clone among them.
+        "test_accepted_risk",  # git init/commit/clone per case
     }
 )
 

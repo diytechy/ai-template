@@ -66,7 +66,7 @@ What it creates in the destination:
     docs/knowledge/README.md                  <- knowledge/README.template.md
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.toml                  <- registries/test-cases.template.toml
-    scripts/trace.py, trace_text.py, spine_rules.py, derive_stage.py, record_test_evidence.py, check.py, check_flows.py, check_docs.py, check_perf.py,
+    scripts/trace.py, trace_text.py, spine_rules.py, derive_stage.py, record_test_evidence.py, record_observation.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_coverage.py, check_readability.py, check_complexity.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py, gen_components.py
     scripts/traj_display.py, traj_parse.py, traj_status.py
@@ -2019,6 +2019,12 @@ MAPPING = [
     # both import it now, so the must-be-whole rule applies on the very first
     # secrets-floor scan a scaffold runs.
     ("scripts/kitlib/secret_classes.py", "scripts/kitlib/secret_classes.py"),
+    # WI-632 added `observation`: the observation record's format, strict reader
+    # and atomic write (SR-199). `kitlib/evidence.py` above imports it (the
+    # records lie outside a release claim's surface), and `trace.py` and
+    # `record_observation.py` read and write through it, so the must-be-whole
+    # rule applies on the first check a scaffold runs.
+    ("scripts/kitlib/observation.py", "scripts/kitlib/observation.py"),
     ("scripts/trace.py", "scripts/trace.py"),
     # WI-329: trace.py imports its spine-row TEXT layer from this sibling, so a
     # scaffold missing it gets an ImportError on the first check. Copied
@@ -2046,6 +2052,11 @@ MAPPING = [
     # `DevStg-Release`. Shipped for that reason — a rung whose producer stayed in
     # the kit repo would be a rung no adopter could ever earn.
     ("scripts/record_test_evidence.py", "scripts/record_test_evidence.py"),
+    # The observation writer (SR-199): the only sanctioned writer of
+    # `docs/test/observations/`, and `trace.py` imports its inputs digest
+    # unguarded, so a scaffold without it can neither record a result nor run
+    # the checker.
+    ("scripts/record_observation.py", "scripts/record_observation.py"),
     ("scripts/check.py", "scripts/check.py"),
     ("scripts/check_flows.py", "scripts/check_flows.py"),
     ("scripts/check_docs.py", "scripts/check_docs.py"),

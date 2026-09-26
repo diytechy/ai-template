@@ -5473,6 +5473,94 @@ assumptions in `bridged_by` once they are rows of your assumptions registry, or
 state in `coincident` why the seam's reading is the outcome. Give a perspective
 a `speaks_for` only once your stakeholder list declares that stakeholder.
 
+### Observation results are recorded apart from their test case, and an assumption's evidence level, falsification worklist and accepted risk are read from them [since 1be5ca08]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A result of a test the harness cannot rerun (a case with
+`automated = "No"`) is now recorded by `scripts/record_observation.py --tc TC-###
+--outcome pass|fail --by "<who or what observed>" [--expires <UTC>]`, as one
+TOML file under `docs/test/observations/` named by the case and its UTC instant
+(SR-199). The record carries the case, the outcome, when it was observed, who
+or what observed it, when it expires (by default one `max_age` after the
+observation, and never later) and a digest of the inputs the case declares it
+reads; the test case itself is never written. The writer refuses, writing
+nothing, an undeclared or automated case, an outcome outside `pass | fail`, a
+missing provenance, a case declaring no usable `max_age` and an expiry past it.
+`trace.py` reads every record file on each run: one that is not a whole record,
+names an undeclared or automated case, or expires later than its case's
+lifetime allows fails the `--strict-integrity` floor naming the file. Where the
+frame declares a crossing, each assumption's evidence level (`assumed`,
+`specified`, `monitored`, `sampled`) is derived from current results alone — an
+automated case's result being your `docs/test/evidence` record, counted only
+when it holds for this tree and its tier runs the case's tier (a `full` record
+proves Smoke and Full cases; `release` or `all` proves every case) — and an
+approved, active assumption reading `assumed` or `specified` is an advisory
+(SR-200). A falsified assumption, or one whose evidencing case's latest record
+failed, is an advisory listing every requirement, need and case relying on it
+(SR-201). An assumption with a recorded `accepted_risk` reads covered until the
+assumption's text or the need or acceptance text of a need it served changes
+after the approval act that accepted the risk, or a failing record is added
+after that act; it then reads unproven, an advisory naming the trigger, until
+the risk is accepted again (re-attest the row with `intake.py snapshot
+--reattests DA-###` in a reviewed act) or a current passing result arrives
+(SR-202). That act is read from the history of `docs/archive/last_approved/`
+(since the entry below, from its typed act ledger). The records' directory is
+not a stage input and is left out of the release evidence's source surface, so
+recording a sample moves neither the stage nor a release claim.
+
+**What to do.** Re-sync `scripts/record_observation.py` and
+`scripts/kitlib/observation.py` (both new), with `scripts/kitlib/evidence.py`,
+`scripts/assumption_rules.py`, `scripts/baseline_snapshot.py` and
+`scripts/trace.py` together: `trace.py` imports the writer's digest and the
+record module unguarded, so a partial copy cannot run the checker. Nothing in
+your registries changes and no existing check fails. Record observation results
+only through the command, and commit the files it writes like any other
+evidence; never edit one, since a new sample is a new file. A case that should
+produce records needs `max_age` (and, to be judged stale when what it reads
+changes, `inputs`), which you may already have been advised to add. Keep full
+history where you rely on an accepted risk: in a shallow clone whose window
+does not reach the act that accepted it, the risk reads unproven with that
+reason stated.
+
+### Each snapshot act writes a typed act ledger, and an observation record must carry its own name [since 1be5ca08]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** Every `intake.py snapshot` act that copies a registry, the
+`--seed` included, now appends one entry to a new file beside the copies,
+`docs/archive/last_approved/acts.toml`: its number, its day, the rows it carried
+into approval and the rows its `--reattests` named. An accepted risk is
+anchored to the latest act whose entry names its assumption, read from that
+file's history; the snapshot's `README.md` is prose again and nothing parses
+it, so a hand-written stamp line anchors nothing, and two acts naming the same
+rows on the same day are two acts. The ledger is refused whole when it is
+malformed (a field missing or mistyped, an id that is not an id, entry numbers
+that repeat or fall): `trace.py` fails the `--strict-integrity` floor naming
+it, the next snapshot act refuses before it touches the record, and no accepted
+risk is anchored through it. The mirror rules skip `acts.toml` by name,
+as they skip the README. An observation record whose file name is not
+`<TC id>.<observed-at, colon-free>.toml` for the case and instant it carries is
+no longer a result: `trace.py` fails the `--strict-integrity` floor naming the
+file. And a declared input naming a row of any registry tier (open items,
+performance budgets, parts, assets, repos, work items and the rest, not only
+the spine and frame tiers) is digested from that row's cells, so an edit to the
+row makes the result stale.
+
+**What to do.** Re-sync `scripts/baseline_snapshot.py`,
+`scripts/acceptance_record.py`, `scripts/record_observation.py`,
+`scripts/kitlib/observation.py` and `scripts/assumption_rules.py` together, and
+the `registries/last-approved-README.template.md` text if you keep the shipped
+wording. Commit `acts.toml` with the copies in the act that writes it; it
+appears at your next act and needs no seeding; do not edit it by hand. If you rely on an accepted risk
+re-accepted before this change, re-attest its assumption once
+(`intake.py snapshot --reattests DA-###`) so an act names it in the ledger;
+until then its anchor falls back to the commit at which its `accepted_risk`
+took its current value. Rename any observation record whose name does not match
+its content (the finding names the name it must carry), and expect a record
+judging a registry row outside the spine and frame tiers to read stale once:
+record a fresh sample.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

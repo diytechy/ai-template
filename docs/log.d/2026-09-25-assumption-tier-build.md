@@ -540,3 +540,47 @@ coordinator integrates in the handoff's order.
   box the tier does not fit 60 s even idle (OI-92), recorded, not
   re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=8d25242f -->
+
+### WI-632 lands — observation records, the evidence level, the falsification worklist and accepted-risk triggers
+
+- **Follow-up f6538270** (Sol's chain A blocker and two majors): a typed act
+  ledger `docs/archive/last_approved/acts.toml`, one numbered entry per
+  snapshot act (the seed included), read by `risk_acceptance_act` in place
+  of the prose README it had regex-parsed (IF-220, new); the registry-row
+  digest mapping derived from the registry machinery and tested across
+  every tier; record filenames validated. Red: record 2 failed; the tier
+  tests 8 failed (OI, ASSET, MOD, PART, PB, REPO, WI and the misnamed file);
+  accepted-risk 2 failed; the ledger tests 5 failed.
+- **Sol on f6538270** (`sol-wi632-fix.md`) and **ruling 8:** the ledger was
+  unvalidated, so a duplicate `seq` would bring back the lost-act defect.
+  **Second follow-up 80380f4b:** `parse_acts` fails closed (18 malformed
+  cases), the ledger is read before any snapshot mutation (record
+  byte-identical after a refusal), a malformed ledger joins the integrity
+  floor through `baseline_snapshot.record_findings`; the digest census
+  derives its expected set (proved by planting a made-up registry CSV). Red:
+  21 failed; the accepted-risk refusal 1 failed.
+- **Integrated** by cherry-picking df8053a9 and applying f6538270 +
+  80380f4b onto WI-637's landed form. Conflicts additive; the test module's
+  docstring and imports merged by hand; `test_acceptance_record.py`: the
+  3-way apply re-introduced the TC-222 block WI-629 moved to
+  `test_cell_classes.py`, dropped again, keeping only WI-632's new test;
+  `trace.py` size 3512 +10 -> 3522 (ratchet confirmed); both WI-632 RESYNC
+  entries anchored `[since 1be5ca08]`.
+- **Smoke membership re-stamped 1890 -> 2030** (measured 1951), reason in
+  the stamp's comment.
+- Traced pointer moved: TC-234 `verifies` gains IF-220. No attesting cell
+  changed. **For the owner:** the ledger departs from the snapshot header's
+  argument against a ledger (design §F8); ruling 8 records why.
+- **Commit bar:** smoke **1 failed, 1947 passed, 3 skipped** in 194.3 s, the
+  failure the membership ratchet above, `test_smoke_budget` **3 passed**
+  after; the touched modules (`test_accepted_risk`, `test_baseline_snapshot`,
+  `test_observation_writer`, `test_bootstrap`, `test_trace`,
+  `test_trace_golden`, `test_dogfood_sync`, `test_rule_sync`,
+  `test_resync_pack`, `test_cell_classes`) **404 passed, 2 skipped**; the
+  fast ones (`test_assumption_rules`, `test_observation_record`,
+  `test_acceptance_record`, both ratchets, `test_trace_coherence`) **254
+  passed**; `check_docs --stale` OK; `check_trajectory --strict` clean;
+  `trace.py --strict-integrity` 0 integrity; `CURRENT.md` current; the
+  open-items view up to date. Seconds **FAIL** at 195.0 s against 60 s,
+  idle (OI-92), recorded, not re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=1be5ca08 -->

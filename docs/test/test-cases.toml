@@ -2342,7 +2342,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-229]
-verifies = ["SR-199", "LLR-234"]
+verifies = ["SR-199", "LLR-234", "IF-214"]
 level = "Unit"
 method = "The record module exercised in a temporary directory. A record with every field round-trips; a record missing any one field, or cut off mid-file, parses to nothing; an outcome outside pass and fail, an observed_at or expires not in the canonical UTC form, an expiry earlier than the observation, and an empty or whitespace provenance each parse to nothing; a leading-dot file is never read; latest returns the newest by observation time; an empty judged digest is valid. write_atomic is driven with the replace step failing twice with a permission error and then succeeding, and with it failing every time, which raises after the bounded retries and leaves no partial record readable."
 tier = "Smoke"
@@ -2353,7 +2353,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-230]
-verifies = ["SR-199", "LLR-235"]
+verifies = ["SR-199", "LLR-235", "IF-215"]
 level = "Integration"
 method = "The writer run as a command on a scaffold, in a module registered as slow. It refuses an undeclared case, an automated case, an outcome outside the pair, a missing provenance, and an expiry later than the observation time plus the case's max_age, writing nothing each time. With no expiry given it writes the observation time plus max_age. The test-case registry's bytes are unchanged after every run. The inputs digest is equal for a declared input stored with LF and with CRLF line endings, and changes when its content changes; a registry row id among the inputs is digested from that row's cells. Recording a sample leaves the stage fingerprint and the release evidence binding unchanged. A fresh scaffold receives the writer and the record module."
 tier = "Full"
@@ -2375,7 +2375,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-232]
-verifies = ["SR-200", "LLR-237"]
+verifies = ["SR-200", "LLR-237", "IF-216"]
 level = "Unit"
 method = "evidence_level and tier_covers driven table-first over in-memory assumptions, cases, records and a suite proof. No citing case gives assumed. A citing case with no result gives specified. For an automated case: a passing record for this tree at the full tier gives monitored for a Smoke or Full case and specified for a Release case; at the release or all tier it gives monitored for every case; a failing record gives specified; a passing record bound to another tree gives specified. A current passing sampled observation gives sampled and a monitored one monitored. An expired record, and one whose judged digest differs from the current inputs digest, give specified and never touch the standing cell. A case declaring no inputs is judged by expiry alone. An approved, active assumption reading assumed or specified is one advisory; a Drafted one is not reported."
 tier = "Smoke"
@@ -2397,7 +2397,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-234]
-verifies = ["SR-202", "LLR-239"]
+verifies = ["SR-202", "LLR-239", "IF-217", "IF-220"]
 level = "Integration"
 method = "Driven on a real git repository, in a module registered as slow. An assumption with an accepted risk is approved in an act; with no evidence it reads covered. Amending a need it serves, then re-approving that need in a later commit, still reads it unproven and names the need. Amending the assumption's own text reads it unproven. A failing record added in a commit after the acceptance act reads it unproven, whatever its observation timestamp says. After each of these, two restorations are checked separately: an act that re-attests the assumption with its text unchanged re-binds the risk and it reads covered; and, without any new act, a current passing observation for one of its evidencing cases makes it evidenced rather than covered. Advancing the test clock by a year changes nothing. A shallow clone missing the acceptance act reads unproven with the reason stated."
 tier = "Full"

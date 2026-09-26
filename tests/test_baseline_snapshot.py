@@ -23,6 +23,7 @@ carriers, whole-file copying and cell classification, and a hand-rolled
 two-row fixture would exercise none of them honestly.
 """
 
+import inspect
 import shutil
 import subprocess
 from pathlib import Path
@@ -310,6 +311,41 @@ def test_an_explicit_APPROVES_ref_authorises_it_and_is_RECORDED(tmp_path):
     SNAP.copy_live(root, approves={SR_REL: "log 2026-08-20"}, reattests={sid})
     stamp2 = (SNAP.snapshot_root(root) / SNAP.README).read_text(encoding="utf-8")
     assert "sitting-4" in stamp2 and "log 2026-08-20" in stamp2
+
+
+def test_each_act_is_a_typed_ledger_entry_naming_what_it_approved_and_re_attested(
+    tmp_path,
+):
+    """The act ledger beside the copies is the machine record of each approval
+    act (SR-202, LLR-239): which rows it approved and which it re-attested, one
+    entry per act. The README stays prose that nothing reads. Two acts naming
+    the same row in the same words on the same day are two entries, so the
+    later act is never mistaken for the earlier one."""
+    root = _seeded_with_a_drafted_sr(tmp_path)
+    draft_id, _draft = _first_row_at(root, "drafted")
+    sid, row = _first_row_at(root, "approved", {draft_id})
+    (seed,) = SNAP.read_acts(root)
+    assert sid in seed["approved"] and draft_id not in seed["approved"], seed
+    assert seed["reattested"] == []
+    _rewrite(root, SR_REL, 'status = "Drafted"', 'status = "Approved"')
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
+    SNAP.copy_live(root, reattests={sid})
+    _rewrite(root, SR_REL, row["Title"] + " (amended)", row["Title"] + " (twice)")
+    SNAP.copy_live(root, reattests={sid})
+    acts = SNAP.read_acts(root)
+    assert [(a["approved"], a["reattested"]) for a in acts[1:]] == [
+        ([draft_id], [sid]),
+        ([], [sid]),
+    ], acts
+    assert len({a["seq"] for a in acts}) == 3, acts
+    stamp = (SNAP.snapshot_root(root) / SNAP.README).read_text(encoding="utf-8")
+    assert "Nothing parses it" in stamp
+
+
+def test_an_act_that_copies_nothing_adds_no_ledger_entry(tmp_path):
+    root = _seeded(tmp_path)
+    SNAP.copy_live(root)  # a traced-only refresh: nothing moved, nothing copied
+    assert len(SNAP.read_acts(root)) == 1
 
 
 def test_a_DRAFTED_rows_amendment_is_not_absorption(tmp_path):
@@ -1454,7 +1490,8 @@ def test_the_snapshot_rules_are_ARMED_on_traces_INTEGRITY_floor():
     trace = load_script("trace")
     text = (SCRIPTS / "trace.py").read_text(encoding="utf-8")
     # WIRING: both producers are called, and both land in the integrity list.
-    assert "baseline_snapshot.unanchored_findings(" in text
+    assert "baseline_snapshot.record_findings(" in text
+    assert "unanchored_findings(root)" in inspect.getsource(SNAP.record_findings)
     assert "check_trajectory.staged_snapshot_findings(" in text
     assert "findings.integrity += findings.snapshot_findings" in text
     # ...and NOT in the advisory printer any more, which is the half that
@@ -1602,6 +1639,119 @@ def test_the_README_is_prose_and_is_exempt_from_the_mirror(tmp_path):
     (SNAP.snapshot_root(root) / "README.md").write_text("# stamp\n", encoding="utf-8")
     run_git("add", "-A")
     assert CT.staged_snapshot_findings(root) == []
+
+
+def test_the_act_ledger_is_exempt_from_the_mirror(tmp_path):
+    # The ledger is the snapshot's own record of its acts, with no live
+    # counterpart, so neither mirror rule compares it with one: the seed commit
+    # carrying it and a later act appending to it stay green.
+    root, run_git = _git_tree(tmp_path)
+    assert (SNAP.snapshot_root(root) / SNAP.ACTS).is_file()
+    assert CT.committed_snapshot_findings(root) == []
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (re-attested)")
+    SNAP.copy_live(root, reattests={sid})
+    run_git("add", "-A")
+    assert CT.staged_snapshot_findings(root) == []
+    run_git("commit", "-m", "an act")
+    assert CT.committed_snapshot_findings(root) == []
+
+
+def test_the_act_ledger_name_has_one_value_in_both_homes():
+    # `acceptance_record` restates the name for the reason it restates the
+    # directory: the import edge runs the other way.
+    assert load_script("acceptance_record").SNAPSHOT_ACTS == SNAP.ACTS
+
+
+# --- the act ledger fails CLOSED (second review of WI-632) --------------------
+# The accepted-risk anchor reads acts by their `seq`, so a ledger whose numbers
+# repeat loses the later act exactly as the prose-stamp reader did, and a cell
+# of the wrong type can crash the read. Any malformed ledger is refused whole:
+# the reader never guesses which entries to keep.
+
+_GOOD_ACT = (
+    '[[act]]\nseq = 1\ndate = "2026-09-26"\napproved = ["SR-001"]\nreattested = []\n'
+)
+_BAD_LEDGERS = {
+    "not TOML": "[[act]\nseq = 1\n",
+    "act not a list": 'act = "SR-001"\n',
+    "entry not a table": "act = [1]\n",
+    "duplicate seq": _GOOD_ACT + _GOOD_ACT,
+    "decreasing seq": _GOOD_ACT.replace("seq = 1", "seq = 2") + _GOOD_ACT,
+    "seq not an integer": _GOOD_ACT.replace("seq = 1", 'seq = "1"'),
+    "seq a boolean": _GOOD_ACT.replace("seq = 1", "seq = true"),
+    "seq below one": _GOOD_ACT.replace("seq = 1", "seq = 0"),
+    "seq missing": _GOOD_ACT.replace("seq = 1\n", ""),
+    "date missing": _GOOD_ACT.replace('date = "2026-09-26"\n', ""),
+    "date not a date": _GOOD_ACT.replace('"2026-09-26"', '"yesterday"'),
+    "date a datetime": _GOOD_ACT.replace('"2026-09-26"', "2026-09-26T10:00:00"),
+    "approved not a list": _GOOD_ACT.replace('["SR-001"]', '"SR-001"'),
+    "approved holds a number": _GOOD_ACT.replace('["SR-001"]', "[1]"),
+    "approved missing": _GOOD_ACT.replace('approved = ["SR-001"]\n', ""),
+    "reattested not a list": _GOOD_ACT.replace("reattested = []", "reattested = 3"),
+    "reattested missing": _GOOD_ACT.replace("reattested = []\n", ""),
+    "id not an id": _GOOD_ACT.replace('"SR-001"', '"sr 1"'),
+}
+
+
+@pytest.mark.parametrize("defect", sorted(_BAD_LEDGERS))
+def test_a_malformed_act_ledger_is_refused_whole(defect):
+    text = _BAD_LEDGERS[defect]
+    assert SNAP.acts_problems(text), defect
+    with pytest.raises(SNAP.ActLedgerError):
+        SNAP.parse_acts(text)
+
+
+def test_a_well_formed_act_ledger_parses_in_file_order():
+    second = _GOOD_ACT.replace("seq = 1", "seq = 3").replace(
+        'date = "2026-09-26"', "date = 2026-09-27"
+    )
+    text = _GOOD_ACT + "\n" + second
+    assert SNAP.acts_problems(text) == []
+    assert SNAP.parse_acts(text) == [
+        {"seq": 1, "date": "2026-09-26", "approved": ["SR-001"], "reattested": []},
+        {"seq": 3, "date": "2026-09-27", "approved": ["SR-001"], "reattested": []},
+    ]
+    assert SNAP.acts_problems("") == [] and SNAP.parse_acts(None) == []
+
+
+def test_a_malformed_ledger_refuses_the_act_before_the_record_moves(tmp_path):
+    """The refusal comes before any copy or stamp: a person fixes the ledger
+    and re-runs, and the record they fix is the record that stood."""
+    root = _seeded_with_a_drafted_sr(tmp_path)
+    ledger = SNAP.snapshot_root(root) / SNAP.ACTS
+    ledger.write_text(
+        ledger.read_text(encoding="utf-8") + "\n" + _GOOD_ACT, encoding="utf-8"
+    )
+    base = SNAP.snapshot_root(root)
+    before = {p: p.read_bytes() for p in base.rglob("*") if p.is_file()}
+    _rewrite(root, SR_REL, 'status = "Drafted"', 'status = "Approved"')
+    with pytest.raises(SystemExit) as refused:
+        SNAP.copy_live(root)
+    assert SNAP.ACTS in str(refused.value), refused.value
+    after = {p: p.read_bytes() for p in base.rglob("*") if p.is_file()}
+    assert after == before
+
+
+def test_a_malformed_ledger_REDS_A_REAL_STRICT_INTEGRITY_RUN(scaffold):
+    """Reported where the record's other integrity faults are: the always-on
+    `--strict-integrity` floor the pre-commit hook runs."""
+    sr = scaffold / SR_REL
+    sr.write_text(sr.read_text(encoding="utf-8") + _WORKED_SR, encoding="utf-8")
+    assert run_py(["scripts/trace.py", "--bump-ids"], cwd=scaffold).returncode == 0
+    seed = run_py(["scripts/intake.py", "snapshot", "--seed"], cwd=scaffold)
+    assert seed.returncode == 0, seed.stdout + seed.stderr
+    green = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert green.returncode == 0, green.stdout + green.stderr
+    ledger = SNAP.snapshot_root(scaffold) / SNAP.ACTS
+    ledger.write_text(
+        ledger.read_text(encoding="utf-8").replace("seq = 1", "seq = 0"),
+        encoding="utf-8",
+    )
+    red = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    out = red.stdout + red.stderr
+    assert red.returncode == 1, out
+    assert SNAP.ACTS in out and "integrity=1" in out, out
 
 
 def test_the_snapshot_dir_constant_has_one_value_in_both_homes():

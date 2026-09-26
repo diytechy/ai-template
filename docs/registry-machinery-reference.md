@@ -373,6 +373,21 @@ hidden.
 | `SampleSize` | ✘ | whole number, ≥ 1 | A sampled case's model, with `AcceptanceRule`: both or neither, else integrity finding; under 1 or not whole → integrity finding. |
 | `AcceptanceRule` | ✘ | text | The model's passing rule; whitespace-only → integrity finding; empty is absent. Its adequacy is judged at approval. |
 
+**An observation case's results are not cells.** Each is a record of its own,
+one file per result in the directory `kitlib.observation.OBSERVATIONS_DIR`
+names, written only by `record_observation.py` (SR-199): `tc`, `outcome`
+(`pass` or `fail`), `observed_at` and `expires` in canonical UTC,
+`provenance`, and `judged`, the digest of the case's `Inputs`.
+`trace.py` reads every record file: one that is not a whole record, names an
+undeclared or automated case, or expires later than `MaxAge` days after its
+observation is an **integrity** finding naming the file
+(`assumption_rules.observation_record_findings`); a leading-dot file is never
+read. Where the frame declares a crossing, the records feed three advisories:
+an approved, active assumption whose evidence level (derived from current
+results, never a cell) reads `assumed` or `specified`; the falsification
+worklist; and an accepted risk reopened since the act that accepted it (SR-200,
+SR-201, SR-202).
+
 ### 5.1 The SR/LLR/TC triangle rule
 
 A TC may cite an SR *and* an LLR together, so one test discharges both the "SR
