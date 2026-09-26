@@ -2,13 +2,28 @@
 id = "WI-646"
 title = "Scope the amendment brief to its own rows, and stamp the anchor copy per registry"
 workstream = "scripts"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 sr_refs = ["SR-146", "SR-148"]
 needs = ["WI-645"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 4
 +++
+
+## Deliverable
+
+- The amendment mint (`intake._amendment_drafts`) writes the rows it routes
+  as a typed `Adjudicates` cell; `adjudicate_brief.amendment_values`
+  intersects `trace.reattest_model` with that scope, renders a row under
+  several SRs once, and refuses an unscoped row and a scope none of whose rows
+  still differs, naming the rows.
+- `baseline_snapshot.stamp(root, registry=None)` answers per registry; the
+  brief's anchor line names each shown registry's own copy commit.
+- Amended, left Approved for the joint adjudication: LLR-167 `detail`, TC-161
+  `method` (its tier was already Full from WI-645).
+- Tests in `tests/test_adjudicate_brief.py`, seen failing first; the review
+  follow-up pinned the settled-row refusal on a live identical scoped row and
+  the two-registry anchor with differently dated copies.
 
 ## Context
 

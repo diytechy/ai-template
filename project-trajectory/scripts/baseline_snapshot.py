@@ -128,7 +128,10 @@ Contract IF-124: the anchor read a composed brief takes — `exists`, `stamp` an
     the honest response is a held first-approval question, never a before/after
     rendered with an empty before. `stamp` is ADVISORY and derived from git; off
     a checkout it returns empty strings rather than raising, so a missing date
-    costs a reader one line and nothing more.
+    costs a reader one line and nothing more. Named a registry, it answers for
+    that registry's copy alone, because a refresh copies only what its act
+    authorises and the directory's newest write is one copy's provenance, not
+    every copy's.
 Contract IF-125: the drift read — `load_all`, `rows_for`, `is_drifted` and
     `SNAPSHOT_DIR`, and never `copy_live`. Drift is asked only of a row that
     CLAIMS approval-or-above and is present in the snapshot; a row below
@@ -418,9 +421,27 @@ def exists(root):
     return snapshot_root(root).is_dir()
 
 
-def stamp(root):
-    """`(short rev, date)` of the commit that last wrote the snapshot, or
-    `("", "")` when there is none, git cannot answer, or this is not a checkout.
+# Every carrier a registry's copy can sit under: the spine pair and the needs
+# registry's markdown. A copy that moved carrier is still that registry's copy,
+# and a suffix a registry never had matches no commit.
+_COPY_SUFFIXES = tuple(
+    dict.fromkeys(spine_carrier.CARRIERS + spine_carrier.NEED_CARRIERS)
+)
+
+
+def stamp(root, registry=None):
+    """`(short rev, date)` of the commit that last wrote the snapshot — or, named
+    a `registry` (its live path, either carrier), the commit that last wrote
+    THAT registry's copy — or `("", "")` when there is none, git cannot answer,
+    or this is not a checkout.
+
+    PER REGISTRY WHEN A READER SHOWS ROWS OF ONE. A refresh copies only the
+    registries its act authorises (WI-571), so the copies in the directory were
+    written at different commits, and the directory's newest write names ONE
+    copy's provenance for all of them: an amendment brief judging requirement
+    rows named a commit that had copied the needs file alone. Unnamed, this
+    still answers for the directory, which is the right answer for a reader
+    naming the snapshot as a whole.
 
     ADVISORY, AND FROM GIT RATHER THAN FROM A FILE — deliberately. The stamp is
     a courtesy for a human reading a brief ("the baseline you are diffing
@@ -430,6 +451,14 @@ def stamp(root):
     context, and nothing computes anything from it."""
     if not exists(root):
         return "", ""
+    paths = (
+        [SNAPSHOT_DIR]
+        if registry is None
+        else [
+            "{}/{}".format(SNAPSHOT_DIR, rel)
+            for rel in spine_carrier.carriers(registry, _COPY_SUFFIXES)
+        ]
+    )
     try:
         proc = subprocess.run(
             [
@@ -440,7 +469,7 @@ def stamp(root):
                 "-1",
                 "--format=%h %cs",
                 "--",
-                SNAPSHOT_DIR,
+                *paths,
             ],
             capture_output=True,
             text=True,

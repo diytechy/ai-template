@@ -6,8 +6,9 @@ case and seen failing before the code that turns it green (SN-042's own rule).
 Reviews are codex Sol (medium); a Fable (medium) agent arbitrates any
 disagreement. Attended, on `refactor_again`, with the loop paused.
 
-Deferred open items: none — the owner-reserved decisions stay numbered in the
-spine map §6, and none holds a gate or blocks a queue.
+Deferred open items: OI-82, OI-86, OI-87, OI-88, OI-89, OI-90, OI-91, OI-92,
+OI-93, OI-94 — the owner's decisions this build surfaced, filed as open items
+on 2026-09-26 (the declaration read `none` before they were filed).
 
 ### WI-627 — a crossing's system of interest, and a requirement's derived one
 
@@ -390,3 +391,28 @@ At the owner's request, before resuming from the coordinator's handoff.
   `CURRENT.md` fresh; the open-items view up to date; `docs/status.md` 140 of
   its 160 lines. Seconds **FAIL** (D10, now OI-92), recorded, not re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=afacb371 -->
+
+### Coordinator session (2026-09-26): WI-646 lands
+
+Resumed from `docs/handoff-2026-09-26-coordinator.md` as coordinator: four
+builders at a time finish the interrupted follow-ups in their worktrees
+(WI-629, WI-636, WI-640, WI-631 first, then WI-637 and WI-632), while the
+coordinator integrates in the handoff's order.
+
+- **WI-646 integrated** by cherry-picking its own commits (0312d591,
+  91781421) without its stale WI-645 base. One conflict, TC-161: kept
+  WI-646's method (a superset of trunk's) with WI-645's `tier = "Full"`.
+  RESYNC entry re-anchored `[since 4aec3a2a]` -> `[since 1e20f9fb]`.
+- **Amended, status left Approved, for the joint adjudication:** LLR-167
+  `detail`, TC-161 `method` (already listed in the handoff's table).
+- **This fragment's deferred-open-items line** read `none` although it cites
+  OI-82 and OI-86..OI-94 since the owner's decisions were filed; corrected to
+  name them (`gen_open_items --check` flagged the contradiction).
+- **Commit bar:** smoke **1697 passed, 3 skipped** in 1261.6 s; the touched
+  modules (`test_adjudicate_brief`, `test_baseline_snapshot`,
+  `test_module_size_ratchet`, `test_resync_pack`) **159 passed**;
+  `check_docs --stale` OK (0 broken); `check_trajectory --strict` clean;
+  `trace.py --strict-integrity` 0 integrity; `CURRENT.md` current; the
+  open-items view up to date. Seconds **FAIL** at 1270.4 s against 60 s
+  (OI-92; four builders were loading the box), recorded, not re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=1e20f9fb -->

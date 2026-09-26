@@ -741,6 +741,10 @@ def _amendment_drafts(root, before, after):
                 stage_moved=_stage_moved(root, before, after),
             ),
             "sr_refs": _owning_srs(records),
+            # THE ACT'S SCOPE, `_first_approval_drafts`' cell for its reason:
+            # the brief re-derives its rows from a repo-wide model, so without
+            # this every amendment row was handed every drifted row in the tree.
+            "adjudicates": ids,
             "specref": records[0]["registry"],
             "context": _amendment_context(records),
         }

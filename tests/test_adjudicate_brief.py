@@ -656,7 +656,9 @@ def _amend(repo):
 
 def _amendment_repo(tmp_path):
     """A repo with a spine, an approved snapshot, an amended approved cell, and
-    the adjudication row `intake` would have minted for it."""
+    the adjudication row `intake` would have minted for it — scope included,
+    because the mint writes the rows it routes into `Adjudicates` and a row
+    without one is a row it can no longer produce."""
     repo = _spine_repo(tmp_path)
     baseline_snapshot.copy_live(repo, seed=True)
     _amend(repo)
@@ -668,11 +670,19 @@ def _amendment_repo(tmp_path):
                 "Title": "adjudicate: SR-001 - approved cell(s) amended",
                 "SafetyClass": "adjudication",
                 "Brief": "amendment",
+                "Adjudicates": "SR-001",
                 "SpecRef": "docs/requirements/system-requirements.toml",
             }
         ],
     )
     return repo
+
+
+# The amendment row as `intake` mints it: brief AND scope (`_fa_row`'s reason).
+def _am_row(**over):
+    row = {"WI-ID": "WI-301", "Brief": "amendment", "Adjudicates": "SR-001"}
+    row.update(over)
+    return row
 
 
 def test_the_amendment_brief_carries_the_snapshot_as_its_anchor(tmp_path):
@@ -681,7 +691,7 @@ def test_the_amendment_brief_carries_the_snapshot_as_its_anchor(tmp_path):
     # asserted — the before text is present, and it is labelled as not being
     # the thing under judgement.
     repo = _amendment_repo(tmp_path)
-    values, why = ab.amendment_values(repo, {"WI-ID": "WI-301", "Brief": "amendment"})
+    values, why = ab.amendment_values(repo, _am_row())
     assert why is None, why
     assert baseline_snapshot.SNAPSHOT_DIR in values["baseline"]
     assert "not the change under judgement" in values["baseline"]
@@ -702,7 +712,7 @@ def test_only_APPROVED_cells_reach_the_judge(tmp_path):
         ),
         encoding="utf-8",
     )
-    values, why = ab.amendment_values(repo, {"WI-ID": "WI-301", "Brief": "amendment"})
+    values, why = ab.amendment_values(repo, _am_row())
     # Stronger than "the cell is filtered out of the listing": a traced-only
     # change never makes the row DRIFT in the first place, so it does not reach
     # the model, the brief, or a judge. One ruling (§A5.1), enforced once.
@@ -719,7 +729,7 @@ def test_with_no_snapshot_the_brief_HOLDS_and_says_FIRST_APPROVAL(tmp_path):
     # neither.
     repo = _spine_repo(tmp_path)
     assert not baseline_snapshot.exists(repo)
-    values, why = ab.amendment_values(repo, {"WI-ID": "WI-301", "Brief": "amendment"})
+    values, why = ab.amendment_values(repo, _am_row())
     assert values is None
     assert "FIRST-APPROVAL" in why and "no accepted anchor" in why
 
@@ -735,7 +745,7 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
     # to go read mid-verdict, which is the shape that produces a session
     # confidently performing the owner's act.
     repo = _amendment_repo(tmp_path)
-    row = {"WI-ID": "WI-301", "Brief": "amendment"}
+    row = _am_row()
 
     set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
     values, why = ab.amendment_values(repo, row)
@@ -762,6 +772,255 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
         SCRIPTS.parent / "prompts" / "adjudicate-amendment.template.md"
     ).read_text(encoding="utf-8")
     assert "the mechanical tool's act, not yours" in template  # in the NOTES only
+
+
+# --- the amendment brief's scope and its per-registry anchor -----------------
+#
+# The same widening WI-572 closed for the first-approval arm, found live in this
+# one: `reattest_model` is REPO-WIDE, so an amendment row minted for one row
+# rendered every drifted approved row in the tree, and three adjudications that
+# each named one row were each handed the same twenty.
+
+_SR_002 = (
+    "SR-002,Subtracts,SN-001,The system shall subtract.,arithmetic,the "
+    "difference is right,Must,Test,Approved,P1,core\n"
+)
+SR_TOML = "docs/requirements/system-requirements.toml"
+TC_TOML = "docs/test/test-cases.toml"
+
+
+def _rev_short(repo):
+    return _git(repo, "rev-parse", "--short", "HEAD")
+
+
+def _two_drift_repo(tmp_path):
+    """An approved two-SR spine where an EARLIER merge's amendment to SR-002 is
+    still unadjudicated when THIS merge amends SR-001. `(repo, before, after)`,
+    `before..after` being this merge's delta."""
+    repo = _spine_repo(tmp_path)
+    srs = repo / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(srs.read_text(encoding="utf-8") + _SR_002, encoding="utf-8")
+    baseline_snapshot.copy_live(repo, seed=True)
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "the approved spine")
+    srs.write_text(
+        srs.read_text(encoding="utf-8").replace(
+            "The system shall subtract.", "The system shall subtract and round."
+        ),
+        encoding="utf-8",
+    )
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "an earlier merge amends SR-002")
+    before = _git(repo, "rev-parse", "HEAD")
+    _amend(repo)
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "this merge amends SR-001")
+    return repo, before, _git(repo, "rev-parse", "HEAD")
+
+
+def test_a_one_row_amendment_mint_renders_that_row_alone(tmp_path):
+    # The mint writes the rows it routes as the row's scope, and the brief
+    # renders the drift INSIDE that scope only. Driven through the real mint
+    # (`_amendment_drafts` over a two-commit delta, then `_draft_row`, the shape
+    # `_mint` writes) rather than a hand-built row, so the cell the brief reads
+    # is the cell the mint produced.
+    repo, before, after = _two_drift_repo(tmp_path)
+    drafts = intake._amendment_drafts(repo, before, after)
+    assert len(drafts) == 1
+    assert drafts[0]["adjudicates"] == ["SR-001"]
+    row = intake._draft_row("WI-301", drafts[0])
+    assert row["Adjudicates"] == "SR-001"
+    values, why = ab.amendment_values(repo, row)
+    assert why is None, why
+    assert re.findall(r"^- (?:SR|LLR|TC) (\S+)", values["rows"], re.M) == ["SR-001"]
+    assert "refuse floats" in values["rows"]
+    assert "subtract and round" not in values["rows"]
+    # The premise, or the assertion above is vacuous: SR-002 really has drifted
+    # from its copy, so a scope naming it renders it.
+    wide, why = ab.amendment_values(repo, dict(row, Adjudicates="SR-001;SR-002"))
+    assert why is None, why
+    assert "subtract and round" in wide["rows"]
+
+
+def test_an_amendment_row_with_no_declared_scope_is_REFUSED_not_widened(tmp_path):
+    # `first_approval_values`' WI-572 rule, applied to this arm: an empty cell
+    # is an unstated boundary, and reading it as "every drifted row in the tree"
+    # is the widening itself. So it fails toward the human, naming the cell.
+    repo = _amendment_repo(tmp_path)
+    values, why = ab.amendment_values(repo, _am_row(Adjudicates=""))
+    assert values is None
+    assert "declares no `Adjudicates` scope" in why, why
+    text, why = ab.compose(repo, _am_row(Adjudicates=""), repo / "docs/reviews/v.md")
+    assert text is None and "Adjudicates" in why
+
+
+def test_an_amendment_scope_that_no_longer_differs_REFUSES_by_naming_it(tmp_path):
+    # The scope BOUNDS the question and the live model ANSWERS it. The case that
+    # matters is a scoped row that STILL EXISTS, approved, and has been settled
+    # since the mint (re-anchored, or its amendment reverted) while ANOTHER row,
+    # outside the scope, still drifts: the repo-wide model is not empty, so only
+    # the intersection can tell that this act's question has no subject left.
+    # The refusal names the scope, so a human can tell "already ruled" from "the
+    # mint and the tree disagree".
+    repo = _spine_repo(tmp_path)
+    srs = repo / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(srs.read_text(encoding="utf-8") + _SR_002, encoding="utf-8")
+    baseline_snapshot.copy_live(repo, seed=True)
+    srs.write_text(
+        srs.read_text(encoding="utf-8").replace(
+            "The system shall subtract.", "The system shall subtract and round."
+        ),
+        encoding="utf-8",
+    )
+    # The premises, or the refusal below proves nothing: the scoped SR-001 is
+    # present, approved and byte-identical to its recorded copy...
+    copy = baseline_snapshot.snapshot_root(repo) / (
+        "docs/requirements/system-requirements.csv"
+    )
+
+    def sr_001(path):
+        return next(
+            line
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.startswith("SR-001,")
+        )
+
+    assert sr_001(srs) == sr_001(copy) and ",Approved," in sr_001(srs)
+    # ...and the drift OUTSIDE the scope is real: a scope naming it renders it.
+    outside, why = ab.amendment_values(repo, _am_row(Adjudicates="SR-002"))
+    assert why is None, why
+    assert "subtract and round" in outside["rows"]
+
+    values, why = ab.amendment_values(repo, _am_row(Adjudicates="SR-001"))
+    assert values is None
+    assert "(SR-001)" in why and "differs from its" in why, why
+    assert "SR-002" not in why, why
+    # A scope naming a row the spine no longer has refuses the same way.
+    values, why = ab.amendment_values(repo, _am_row(Adjudicates="SR-404"))
+    assert values is None and "(SR-404)" in why, why
+
+
+def test_an_amended_row_under_two_SRs_is_rendered_once(tmp_path):
+    # `reattest_model` groups by owning SR, so a row with two parents sits in
+    # two entries. Rendered per entry, a one-row mint showed its row twice and
+    # the verdict's `rows=N` could not be counted against the brief.
+    repo = _spine_repo(tmp_path)
+    req = repo / "docs" / "requirements"
+    srs = req / "system-requirements.csv"
+    srs.write_text(srs.read_text(encoding="utf-8") + _SR_002, encoding="utf-8")
+    llrs = req / "low-level-requirements.csv"
+    llrs.write_text(
+        llrs.read_text(encoding="utf-8").replace(
+            "LLR-001,SR-001,", "LLR-001,SR-001;SR-002,"
+        ),
+        encoding="utf-8",
+    )
+    baseline_snapshot.copy_live(repo, seed=True)
+    llrs.write_text(
+        llrs.read_text(encoding="utf-8").replace(
+            "add() returns a + b.", "add() returns a + b and refuses floats."
+        ),
+        encoding="utf-8",
+    )
+    values, why = ab.amendment_values(repo, _am_row(Adjudicates="LLR-001"))
+    assert why is None, why
+    headers = re.findall(r"^- (?:SR|LLR|TC) .*$", values["rows"], re.M)
+    assert len(headers) == 1, values["rows"]
+    # ...and the one line still says which chains it hangs under.
+    assert "SR-001" in headers[0] and "SR-002" in headers[0], headers
+    assert values["rows"].count("refuses floats") == 1
+
+
+def test_the_amendment_anchor_names_each_shown_registrys_own_copy(tmp_path):
+    # The stamp named the newest write ANYWHERE in the snapshot directory, so a
+    # judge ruling on a requirement was told the requirements text was blessed
+    # at a commit that copied a different registry. Measured live: cde260dd,
+    # which copied the needs file alone, stood for rows last copied at
+    # 27a30842 and 2e1197fd.
+    repo = _spine_repo(tmp_path)
+    baseline_snapshot.copy_live(repo, seed=True)
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "the seeding signature")
+    seeded = _rev_short(repo)
+    # A later act re-copies the TEST-CASE registry only (a traced move, so the
+    # copy is refused nothing), and it is now the newest write in the directory.
+    tcs = repo / "docs" / "test" / "test-cases.csv"
+    tcs.write_text(
+        tcs.read_text(encoding="utf-8").replace(",Approved,P1", ",Approved,P2"),
+        encoding="utf-8",
+    )
+    baseline_snapshot.copy_live(repo, approves={TC_TOML: "WI-9"})
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "a later act copies the TC registry")
+    tc_copy = _rev_short(repo)
+    # Scoped drift in BOTH tiers at once: an approved SR cell and an approved TC
+    # cell, whose copies were written at the two different commits above.
+    _amend(repo)
+    tcs.write_text(
+        tcs.read_text(encoding="utf-8").replace(
+            ",run pytest,", ",run pytest verbosely,"
+        ),
+        encoding="utf-8",
+    )
+    # The premise: the directory-wide stamp is the TC write, which is what the
+    # brief used to name for every row, the SR row included.
+    assert seeded != tc_copy
+    assert baseline_snapshot.stamp(repo)[0] == tc_copy
+    row = _am_row(Adjudicates="SR-001;TC-001")
+    text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
+    assert why is None, why
+    # Both rows really are shown, one from each tier...
+    assert "refuse floats" in text and "run pytest verbosely" in text
+    # ...and the anchor line pairs EACH shown registry with ITS copy's commit,
+    # and names nothing else. A brief stamping every registry with one copy's
+    # commit, whichever copy, fails this.
+    anchors = dict(re.findall(r"^  - (\S+): copied \S+ \(commit (\w+)\)$", text, re.M))
+    assert anchors == {SR_TOML: seeded, TC_TOML: tc_copy}, text
+    assert "not the change under judgement" in text
+
+
+def test_stamp_reads_one_registrys_copy_under_every_carrier(tmp_path):
+    # `stamp(root, registry)` asks git for the last commit that wrote the
+    # registry's copy under ANY carrier: the spine pair (`.toml`, `.csv`) and
+    # the needs registry's markdown-era `.md`. The fixtures above snapshot a
+    # CSV-backed spine, so the other two are driven here directly — the stamp
+    # is a read of git history and nothing else, so writing the copies by hand
+    # is exactly the input it sees.
+    repo = _repo(tmp_path)
+    snap = repo / baseline_snapshot.SNAPSHOT_DIR
+    req = snap / "docs" / "requirements"
+    req.mkdir(parents=True)
+
+    def commit(message):
+        _git(repo, "add", "-A")
+        _git(repo, "commit", "-q", "-m", message)
+        return _rev_short(repo)
+
+    (req / "system-requirements.csv").write_text(SPINE_SRS, encoding="utf-8")
+    commit("a CSV-era copy of the requirements")
+    (req / "system-requirements.csv").unlink()
+    (req / "system-requirements.toml").write_text("# cut over\n", encoding="utf-8")
+    commit("the carrier cutover")
+    # A later refresh that touches the TOML copy alone: a reader looking only
+    # under the old carrier would stop at the cutover.
+    (req / "system-requirements.toml").write_text("# refreshed\n", encoding="utf-8")
+    toml_copy = commit("a TOML-carrier refresh")
+    (req / "stakeholder-needs.md").write_text("# Needs\n", encoding="utf-8")
+    md_copy = commit("a markdown-era copy of the needs")
+    (snap / "README.md").write_text("stamp\n", encoding="utf-8")
+    newest = commit("a directory-level write naming no registry")
+
+    assert baseline_snapshot.stamp(repo)[0] == newest
+    rev, date = baseline_snapshot.stamp(repo, SR_TOML)
+    assert rev == toml_copy and date
+    # The live needs registry is TOML today; its copy is still the `.md` one,
+    # and either spelling of the registry finds it.
+    needs = "docs/requirements/stakeholder-needs"
+    assert baseline_snapshot.stamp(repo, needs + ".toml")[0] == md_copy
+    assert baseline_snapshot.stamp(repo, needs + ".md")[0] == md_copy
+    # A registry with no copy at all degrades to the empty stamp, never another
+    # registry's commit.
+    assert baseline_snapshot.stamp(repo, TC_TOML) == ("", "")
 
 
 # --- the first-approval brief (owner ruling 2026-09-01) -----------------------

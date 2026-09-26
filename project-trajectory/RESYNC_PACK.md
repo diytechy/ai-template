@@ -5273,6 +5273,32 @@ so write the list in a reviewed commit and approve its rows the way you approve
 needs. A needs registry still on the markdown carrier is untouched until you
 convert it.
 
+### The amendment brief shows only its own rows, and names each registry's copy [since 1e20f9fb]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The amendment adjudication row `intake` mints at a merge now
+carries an `Adjudicates` cell listing the rows it routes, as the first-approval
+row already did. Its brief (`adjudicate_brief.amendment_values`) renders only
+those rows' changed approved cells, each row once, where it used to render every
+drifted approved row in the tree. It refuses a row that declares no scope, and a
+scope none of whose rows still differs from its recorded copy, naming the rows.
+The brief's anchor line names, for each registry it shows, the commit that last
+wrote that registry's copy in `docs/archive/last_approved/`. It used to name the
+newest write anywhere in that directory, which is often the copy of another
+registry. `baseline_snapshot.stamp(root, registry)` takes the registry as an
+optional second argument, and `stamp(root)` answers as before. The `{rows}` and
+`{baseline}` notes in `prompts/adjudicate-amendment.template.md` say so; they are
+stripped before sending, so the catalogue digest does not move.
+
+**What to do.** Re-sync `scripts/adjudicate_brief.py`,
+`scripts/baseline_snapshot.py`, `scripts/intake.py` and
+`prompts/adjudicate-amendment.template.md` together: the brief calls `stamp`
+with two arguments. No registry changes. An amendment adjudication row minted
+before the upgrade has no `Adjudicates` cell, so its brief now refuses and the
+loop holds the row for a human. Add `adjudicates = ["<id>", ...]` to that spec's
+frontmatter, listing the row ids its title names, or rule on it by hand.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

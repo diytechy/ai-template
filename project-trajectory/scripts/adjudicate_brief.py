@@ -425,8 +425,8 @@ def _spine_excerpt(root, ids):
 
 
 def amendment_values(root, row):
-    """`({baseline, rows}, None)` for a spine row whose approved text moved after
-    it was approved, or `(None, reason)`.
+    """`({baseline, rows, aftermath}, None)` for the spine rows whose approved
+    text moved after they were approved, or `(None, reason)`.
 
     `{baseline}` is the SNAPSHOT STAMP, and the substitution is the whole point
     of this assembler existing. The slot asks for "the accepted anchor this diff
@@ -451,13 +451,39 @@ def amendment_values(root, row):
     exactly, rather than fabricating an anchor (rule 1) or rendering a
     before/after with an empty before (rule 2). The stamp itself is advisory:
     off git, or before the snapshot's own commit lands, it is empty and the
-    baseline line simply omits the date.
+    baseline line says so rather than naming a date.
+
+    WHICH ROWS IS THE ROW'S OWN `Adjudicates` SCOPE, intersected with the
+    model — `first_approval_values`' rule, for its reason. The model is
+    REPO-WIDE: it walks every SR, so a brief built from it alone handed each
+    amendment row every drifted approved row in the tree, and each verdict had
+    to count its own rows by hand and list the rest as excluded (three
+    adjudications that each named one row were each handed the same twenty).
+    The mint writes the rows it routes into the cell; the live model answers
+    for those rows only, so a row re-anchored since the mint drops out and a
+    scope with nothing left REFUSES by name. A row with NO scope refuses too:
+    reading the empty cell as "everything" is the widening itself.
+
+    THE ANCHOR IS STAMPED PER REGISTRY. A refresh copies only the registries
+    its act authorises, so the copies were written at different commits, and
+    the directory's newest write named one registry's copy as the provenance of
+    all of them. `{baseline}` names, for each registry shown, the commit that
+    last wrote ITS copy.
 
     Implements: SR-146, LLR-167
     """
     import trace as tr
 
     root = Path(root)
+    scope = adjudicates(row)
+    if not scope:
+        return None, (
+            "this amendment adjudication declares no `Adjudicates` scope, so the "
+            "rows the merge routed to it are unknown — and an unstated boundary "
+            "read as 'every drifted row in the repo' is the widening this cell "
+            "exists to make unrepresentable. Re-mint the row, or rule on it by "
+            "hand"
+        )
     if not baseline_snapshot.exists(root):
         return None, (
             "no {} snapshot exists yet, so nothing has been approved — every row "
@@ -467,53 +493,80 @@ def amendment_values(root, row):
         )
     reg = tr.load_registries(root / "docs")
     model = tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
-    if not model:
+    lines, tiers = _amended_rows(model, scope)
+    if not lines:
+        # One refusal for every way the SCOPED population empties, naming the
+        # scope: a repo-wide "nothing to judge" beside it would be two answers
+        # to one question (`first_approval_values`' rule).
         return None, (
-            "no spine row differs from its {} copy and none awaits a first "
-            "approval — there is nothing to judge".format(
-                baseline_snapshot.SNAPSHOT_DIR
+            "none of the {} row(s) this adjudication was minted over ({}) still "
+            "carries approved text that differs from its {} copy — re-anchored, "
+            "withdrawn or renumbered since the mint, awaiting a FIRST approval, "
+            "or moved only TRACED cells — so there is no amendment in its scope "
+            "to rule on".format(
+                len(scope), ", ".join(sorted(scope)), baseline_snapshot.SNAPSHOT_DIR
             )
         )
-    stamp_rev, stamp_date = baseline_snapshot.stamp(root)
-    baseline = (
-        "{}{} — the approved text as a human last blessed it. This is the text "
-        "BEFORE the change below; it is not the change under judgement, and it "
-        "could only have been written by copying a live registry in an approval "
-        "commit.".format(
-            baseline_snapshot.SNAPSHOT_DIR,
-            ", copied {} (commit {})".format(stamp_date, stamp_rev)
-            if stamp_rev
-            else " (not yet committed, so no copy stamp)",
-        )
-    )
-    lines, tiers = [], set()
+    return {
+        "baseline": _amendment_baseline(root, tiers),
+        "rows": "\n".join(lines),
+        "aftermath": _aftermath(root, tiers),
+    }, None
+
+
+def _amended_rows(model, scope):
+    """`(lines, tiers)`: the approved-cell before/after of each drifted row IN
+    `scope`, and the spine tiers those rows sit in.
+
+    ONE BLOCK PER ROW, naming every chain it hangs under. The model groups by
+    owning SR, so a row with two parents sits in two entries with the same
+    cells; rendered per entry, a one-row scope showed its row twice and the
+    verdict's `rows=N` could not be counted against the brief."""
+    chains, cells_of = {}, {}
     for entry in model:
         for chain_row in entry["rows"]:
             approved = chain_row.get("approved") or frozenset()
             cells = [c for c in chain_row["cells"] if c[0] in approved]
-            if not cells:
+            if chain_row["id"] not in scope or not cells:
                 continue
-            tiers.add(chain_row["kind"])
-            lines.append(
-                "- {} {} (chain of {})".format(
-                    chain_row["kind"], chain_row["id"], entry["id"]
-                )
+            key = (chain_row["kind"], chain_row["id"])
+            chains.setdefault(key, []).append(entry["id"])
+            cells_of[key] = cells
+    lines = []
+    for (kind, rid), sids in chains.items():
+        lines.append("- {} {} (chain of {})".format(kind, rid, ", ".join(sids)))
+        for name, before, after in cells_of[(kind, rid)]:
+            lines.append("  - {}".format(name))
+            lines.append("    - before: {}".format(before or "(empty)"))
+            lines.append("    - after: {}".format(after or "(empty)"))
+    return lines, {kind for kind, _rid in chains}
+
+
+def _amendment_baseline(root, tiers):
+    """`{baseline}`: the snapshot as the accepted anchor, with the commit that
+    last wrote the copy of EACH registry the listing shows — the provenance of
+    the text actually under judgement, in spine order."""
+    stamps = []
+    for tier, rel in _REGISTRY_OF.items():
+        if tier not in tiers:
+            continue
+        rev, date = baseline_snapshot.stamp(root, rel)
+        stamps.append(
+            "  - {}: {}".format(
+                rel,
+                "copied {} (commit {})".format(date, rev)
+                if rev
+                else "not yet committed, so no copy stamp",
             )
-            for name, before, after in cells:
-                lines.append("  - {}".format(name))
-                lines.append("    - before: {}".format(before or "(empty)"))
-                lines.append("    - after: {}".format(after or "(empty)"))
-    if not lines:
-        return None, (
-            "every selected row awaits a FIRST approval or moved only TRACED "
-            "cells — neither is a meaning-or-clarity question, so there is no "
-            "amendment to rule on"
         )
-    return {
-        "baseline": baseline,
-        "rows": "\n".join(lines),
-        "aftermath": _aftermath(root, tiers),
-    }, None
+    return (
+        "{} — the approved text as a human last blessed it, each registry's copy "
+        "as last written:\n{}\nThis is the text BEFORE the change below; it is "
+        "not the change under judgement, and it could only have been written by "
+        "copying a live registry in an approval commit.".format(
+            baseline_snapshot.SNAPSHOT_DIR, "\n".join(stamps)
+        )
+    )
 
 
 # The spine tier a chain row's `kind` names -> the registry it lives in. The
