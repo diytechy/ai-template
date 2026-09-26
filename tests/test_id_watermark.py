@@ -94,6 +94,10 @@ def test_every_id_space_is_covered_by_the_mark_file():
         "B",
         "EXT",
         "REL",
+        # The stakeholder list (the needs file's second tier, SR-189): its ids
+        # are hand-authored like the frame's, so a mint past the mark is the
+        # only signal a spent one is being handed out again.
+        "STK",
     }
     # ...and hold the derivation to it, so a registry added to ID_PATTERNS
     # without a mark row reds HERE rather than going silently unguarded.

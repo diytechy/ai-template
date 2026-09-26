@@ -20,3 +20,4 @@ Ruled 2026-09-25 (the C1 sitting package, `docs/plans/2026-09-25-c1-sitting-pack
 - The frame's pinning test reads 5 entities, 7 crossings and 1 relationship, with the spent ids asserted absent.
 - `tests/test_frame_system.py`'s three-leg comparison asserts `"system" in own` for this repository's frame, now that its crossings carry the cell (TC-212's live-frame leg; WI-627 left it passing without the key, as LLR-211 requires until this commit).
 - The commit bar, `trace.py --strict` and `check_trajectory.py --strict` pass.
+- `"STK-ID"` leaves `LIVE_ROWS_PENDING` in `tests/test_dogfood_sync.py` in the same commit that writes STK-01..STK-04 (WI-628's self-expiring exemption: both dogfood key tests fail once live stakeholder rows exist and the id is still listed).

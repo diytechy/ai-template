@@ -261,9 +261,11 @@ def _independent_meta_expectations():
     `spine_carrier`: the independence covers the carrier as well as the rung
     arithmetic — if the kit's own loader ever mis-read a `status` or a `phase`, a
     `want` side built on it would agree with the bug. The id UNIVERSE for needs is
-    a whole-TEXT scrape, because that is what `sn_all_ids` documents (an approved
-    prose mention counts exactly like a row); draft-ness is the `status` FIELD,
-    because under TOML it is a field and not section-as-state.
+    a token scrape over the NEED TABLES, because that is what `sn_all_ids`
+    documents (an approved prose mention inside a need counts exactly like a
+    row, while the stakeholder list sharing the file is never read); draft-ness
+    is the `status` FIELD, because under TOML it is a field and not
+    section-as-state.
 
     THE FRAME RUNGS CURRENTLY SHORT-CIRCUIT THE SPINE ONES: every CMP row in this
     repo is Drafted today, so `Arch` is the answer for every phase that gets past
@@ -271,7 +273,10 @@ def _independent_meta_expectations():
     repo right now. They are written anyway — the expectations must stay correct
     when the partition settles, not only for today's registry state."""
     needs_rel = "docs/requirements/stakeholder-needs.toml"
-    sn_text = _meta_text(needs_rel)
+    sn_text = "\n".join(
+        "{} {}".format(rid, " ".join(str(v) for v in cells.values()))
+        for rid, cells in _toml.loads(_meta_text(needs_rel)).get("need", {}).items()
+    )
     sn_ids = {u for u in _re.findall(r"\bSN-\d+\b", sn_text) if not u.endswith("-000")}
     sn_draft = {
         r["_id"]

@@ -13,8 +13,18 @@ belongs to (SR-187), and a requirement's system is DERIVED from the crossings
 its `Boundary-Refs` name (SR-219), recomputed on every run and never written
 back to the requirement.
 
+The NEED TIER's joins onto the frame live here too. The needs file carries a
+short STAKEHOLDER LIST beside its needs, naming who owns an outcome and which
+declared entity of the frame they are (`party`), and each need names its
+stakeholders (SR-189). A need may also point at the document it was drawn from
+(`source`, SR-190). Whether that document and its anchor exist is a filesystem
+question, so `trace.main` reads the anchors and hands them in, and the rule here
+only compares.
+
 Rows are the carrier's column-keyed dicts (`B-ID`, `System`, `SR-ID`,
-`Boundary-Refs`), exactly as `trace.load_registries` hands them over. Every
+`Boundary-Refs`, `STK-ID`, `Party`, `EXT-ID`), exactly as
+`trace.load_registries` hands them over, except the needs, which arrive from
+`spine_carrier.load_needs` with lower-case keys and their id under `id`. Every
 function returns plain finding strings, per `trace.frame_findings`' note on the
 pair shape.
 
@@ -31,18 +41,31 @@ Contract IF-180: the frame and need-tier rule surface `trace.py` imports. Rows
     failures join the frame class and `trace.py --strict`'s exit code, the
     advisories ride the warn pipe and never join a failure set.
     `sr_system_advisories(srs, bifs)` returns warn-only advisories, and
-    `crossing_systems(bifs)` returns a crossing-id to system map. Rows are the
-    carrier's column-keyed dicts, and no function writes to a row it is handed.
+    `crossing_systems(bifs)` returns a crossing-id to system map.
+    `stakeholder_findings(sn_needs, stks, exts)` returns `(failures,
+    advisories)` on the same two pipes. `source_documents(sn_needs)` returns
+    the sorted documents the needs' `source` cells name, and
+    `need_source_findings(sn_needs, anchors)` returns gating failures, where
+    `anchors` maps each of those documents to the set of anchors it exposes, or
+    to None when it is not a file in the repository. Rows are the carrier's
+    column-keyed dicts (the needs: `load_needs`' lower-case keys), and no
+    function writes to a row it is handed.
 """
 
 try:
-    from kitlib.spine import SYSTEM_VALUES, refs
+    from kitlib.spine import STATUS_VALUES, SYSTEM_VALUES, is_example, refs
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
     from pathlib import Path
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from kitlib.spine import SYSTEM_VALUES, refs
+    from kitlib.spine import STATUS_VALUES, SYSTEM_VALUES, is_example, refs
+
+# THE STAKEHOLDER ROW'S REQUIRED CELLS (SR-189), in the carrier's column names.
+# `Party` is deliberately absent: a stakeholder need not be an entity the frame
+# declares (a reviewer owns outcomes without being a party to a crossing).
+# Implements: SR-189, LLR-216
+STK_REQUIRED = ("Name", "Description", "Status")
 
 
 def _system(row):
@@ -122,4 +145,140 @@ def sr_system_advisories(srs, bifs):
                 f"{named} — a requirement belongs to one system; split it or "
                 "re-point a crossing"
             )
+    return out
+
+
+def _entries(cell):
+    """A pointer cell's entries, stripped. The carrier joins a TOML list on
+    `;`, and the split is on `;` ALONE: a `source` target may hold a comma or a
+    space in its path, and an STK id holds none of the three."""
+    return [e.strip() for e in (cell or "").split(";") if e.strip()]
+
+
+def _real_needs(sn_needs):
+    """`(id, need)` for each need that is not the template's `-000` example."""
+    for need in sn_needs:
+        nid = str(need.get("id") or "").strip()
+        if nid and not is_example(nid):
+            yield nid, need
+
+
+def _stakeholder_row_findings(row, entities):
+    """One stakeholder's own failures: a missing required cell, a status outside
+    the spine's vocabulary, a party naming no declared entity."""
+    sid, out = row["STK-ID"], []
+    missing = [c.lower() for c in STK_REQUIRED if not (row.get(c) or "").strip()]
+    if missing:
+        out.append(
+            "stakeholder {} has no {} — a stakeholder states who it is, which "
+            "outcomes it owns and its maturity".format(sid, " or ".join(missing))
+        )
+    status = (row.get("Status") or "").strip()
+    if status and status not in STATUS_VALUES:
+        out.append(
+            "stakeholder {} Status={!r} is outside the spine's closed vocabulary "
+            "({})".format(sid, status, " | ".join(sorted(STATUS_VALUES)))
+        )
+    party = (row.get("Party") or "").strip()
+    if party and party not in entities:
+        out.append(
+            "stakeholder {} Party names {}, which is not an entity the frame "
+            "declares".format(sid, party)
+        )
+    return out
+
+
+def stakeholder_findings(sn_needs, stks, exts):
+    """SR-189's stakeholder rules, as `(failures, advisories)`.
+
+    FAILURES, which the caller joins to the frame class so they fail wherever
+    the frame check runs rather than only under `--strict-schema`: a stakeholder
+    missing a `STK_REQUIRED` cell or carrying a status outside the spine's
+    closed vocabulary, a stakeholder whose `Party` names no declared entity,
+    and a need whose `stakeholder_refs` names an undeclared stakeholder. A
+    stakeholder with no party is valid.
+
+    ADVISORIES: a need naming no stakeholder, one line per need. It rides the
+    warn pipe, because a need with no named owner is unconfirmable rather than
+    wrong, and every need written before the list existed would otherwise fail
+    at once.
+
+    VACUOUS when the needs file declares no stakeholder (the `-000` example is
+    none): nothing is advised. A need that CITES a stakeholder is still held to
+    the list, so a reference written before its row fails naming both.
+
+    `stks` are the rows loaded by their own `STK-ID` column, so a stakeholder's
+    status never mixes with the needs' draft state.
+
+    Implements: SR-189, LLR-216
+    """
+    entities = {r["EXT-ID"] for r in exts}
+    failures = [f for r in stks for f in _stakeholder_row_findings(r, entities)]
+    declared = {r["STK-ID"] for r in stks}
+    advisories = []
+    for nid, need in _real_needs(sn_needs):
+        cited = _entries(need.get("stakeholder_refs"))
+        failures += [
+            "need {} stakeholder_refs names {}, which is not a declared "
+            "stakeholder".format(nid, ref)
+            for ref in cited
+            if ref not in declared
+        ]
+        if declared and not cited:
+            advisories.append(
+                "need {} names no stakeholder in stakeholder_refs — nobody is "
+                "recorded as the owner who can confirm it is still wanted".format(nid)
+            )
+    return failures, advisories
+
+
+def _target(entry):
+    """A `source` entry split into its document and its anchor, both stripped."""
+    path, _, anchor = entry.partition("#")
+    return path.strip(), anchor.strip()
+
+
+def source_documents(sn_needs):
+    """The distinct documents the needs' `source` cells name, sorted: the set
+    `trace.main` reads the anchors of, once each, before it calls
+    `need_source_findings`."""
+    return sorted(
+        {
+            _target(entry)[0]
+            for _nid, need in _real_needs(sn_needs)
+            for entry in _entries(need.get("source"))
+        }
+    )
+
+
+def need_source_findings(sn_needs, anchors):
+    """SR-190's pointer rule: each `source` entry, written `path#anchor`,
+    resolves to a file in the repository and to an anchor that file exposes.
+
+    `anchors` maps each document `source_documents` names to the set of
+    lower-case anchors it exposes (a heading's slug or an explicit id), or to
+    None when it is not a file in the repository. A failure names the need and
+    the entry, and the caller joins it to the frame class. An entry with no
+    anchor names none the document exposes, so it fails the same way. A need
+    with no `source` is valid. The cell is a POINTER, so it stays outside the
+    provenance rule that scans the need's prose.
+
+    Implements: SR-190, LLR-217
+    """
+    out = []
+    for nid, need in _real_needs(sn_needs):
+        for entry in _entries(need.get("source")):
+            path, anchor = _target(entry)
+            exposed = anchors.get(path)
+            if exposed is None:
+                out.append(
+                    "need {} source {!r} names no file in the repository".format(
+                        nid, entry
+                    )
+                )
+            elif anchor.lower() not in exposed:
+                out.append(
+                    "need {} source {!r} names no anchor {} exposes — point at a "
+                    "heading or an explicit id in it".format(nid, entry, path)
+                )
     return out

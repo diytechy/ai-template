@@ -178,3 +178,46 @@ Not in the phase-6 chains, but ahead of WI-638, which files through the mint.
   view up to date. Seconds **FAIL** at 562.6 s against 60 s (D10), recorded,
   not re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=c429dd0c -->
+
+### WI-628 — the stakeholder list and the needs' source pointer
+
+- **Built:** a `[stakeholder.STK-##]` tier in the needs file, loaded by its own
+  id column; each need's `stakeholder_refs` and `source`. `frame_rules` gains
+  `stakeholder_findings` and `need_source_findings`. `trace.analyze` composes
+  them: failures into the frame class, advisories into the warn pipe.
+  `STATUS_VALUES` moves to `kitlib.spine` so the pure module can read it. The
+  STK id space joins the watermark.
+- **Tests first:** `tests/test_stakeholders.py` (TC-215, slow) red 11 failed, 4
+  passed, the 4 vacuous no-finding cases. TC-216's cases in
+  `tests/test_trace_rules.py`: 2 red, 5 pinning existing behaviour. Green 57.
+  After the rework, the review's cases were added: 3 red (the carrier) and the
+  rest pinning behaviour already built.
+- **Sol review:** NOT YET SOUND, 2 major, 1 minor. A comment-only TOML needs
+  file read as markdown, so a need id in a comment joined the need universe;
+  the carrier now comes from the file's suffix. Tests now pin both status
+  findings, a citation with no table, and the source semantics. PROCESS.md +19
+  bytes was re-stamped at merge.
+- **Decision for the owner (spine map §6 style):** an out-of-vocabulary
+  stakeholder status prints twice under `--strict`, as an integrity finding
+  (TC-215) and as a frame finding (LLR-216), because the two approved rows
+  name different classes. An amendment choosing one would remove the
+  duplicate.
+- **Ratchet:** `trace.py` 3377 -> 3405 (+28: the composition, the stakeholder
+  loader, the enum sweep and the source-anchor read in `main`), re-stamped.
+- **Bytes:** PROCESS.md 88,990 -> 89,009 (+19), re-stamped in the
+  byte-budget-guard skill's three copies. The skill itself is 4,533 -> 4,519.
+- **Merge:** conflicts in `tests/conftest.py` (both slow modules kept) and
+  `RESYNC_PACK.md` (four entries, oldest first).
+- **Owed by WI-643:** retire `LIVE_ROWS_PENDING`'s `STK-ID` in the commit that
+  writes STK-01..04, now in its Done-when.
+- **Finding for later filing:** `spine_carrier.draft_ids_from_text` still
+  sniffs the needs carrier from content.
+
+- **Commit bar:** targeted modules (ratchets, rule and dogfood sync, resync
+  pack, skills sync, frame rules, spine rules, watermark, the byte-cap tests)
+  179 passed, 1 skipped; smoke **1697 passed, 3 skipped** in 427.8 s;
+  `check_docs --stale` OK; `check_trajectory --strict` clean; `trace.py
+  --strict-integrity` 0 integrity; `CURRENT.md` fresh; the open-items view up
+  to date. Seconds **FAIL** at 430.2 s against 60 s (D10), recorded, not
+  re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=e123eb6d -->

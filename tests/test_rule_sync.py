@@ -468,9 +468,9 @@ def test_the_sn_scrapes_answer_by_value():
     # equality loops retired with the copies; these are the SEMANTICS each
     # battery also pinned, which are claims about the RULE, not about the copies.
     #
-    # The scrape is WHOLE-TEXT: a prose-mentioned id is in the universe exactly
-    # like a table row (the registry-machinery-reference §2.1 sharp edge —
-    # approved + uncited caps the derived stage through the coverage rung).
+    # The scrape is a TOKEN scrape: a prose-mentioned id is in the universe
+    # exactly like a table row (the registry-machinery-reference §2.1 sharp edge
+    # — approved + uncited caps the derived stage through the coverage rung).
     # Drafted-section ids are INCLUDED; the draft/coverage split happens later,
     # on sn_draft_ids. Only -000 placeholders are excluded.
     assert KITSPINE.sn_all_ids("prose SN-010\n## Drafted\nSN-011 and SN-000\n") == {
@@ -484,6 +484,24 @@ def test_the_sn_scrapes_answer_by_value():
         "SN-005",
         "SN-006",
     }
+    # ...over the NEED TABLES only under TOML (SR-189): the stakeholder list
+    # shares the file, and a need id quoted in a stakeholder's description is
+    # not a need, while one quoted inside a need still is.
+    toml = (
+        '[stakeholder.STK-01]\ndescription = "raised SN-777"\n\n'
+        '[need.SN-005]\nneed = "supersedes SN-004"\n'
+    )
+    assert KITSPINE.sn_all_ids(toml) == {"SN-004", "SN-005"}
+    # THE CARRIER IS DECIDED BY THE FILE, NOT BY SNIFFING ITS TEXT. A TOML needs
+    # file that is empty or holds only comments is still TOML: an id named in a
+    # comment is not a need. Sniffed, such a file parses to nothing and read as
+    # the markdown carrier, whose whole-text scrape counted the comment.
+    assert KITSPINE.sn_all_ids("# mentioned SN-777 only\n", ".toml") == set()
+    assert KITSPINE.sn_all_ids("", ".toml") == set()
+    assert KITSPINE.sn_all_ids(toml, ".toml") == {"SN-004", "SN-005"}
+    # ...and the markdown carrier keeps its whole-text reading even where its
+    # text happens to parse as TOML (headings are TOML comments).
+    assert KITSPINE.sn_all_ids("## SN-005 is a heading\n", ".md") == {"SN-005"}
     # Every separator splits, and the function filters NOTHING itself: -000 rows
     # are excluded by the CALLER's row filter, and a Drafted SR's citation is
     # deliberately IN the set — the raw-view exemption the double-counting seam

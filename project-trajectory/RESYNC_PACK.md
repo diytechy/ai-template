@@ -5237,6 +5237,42 @@ you expected to pass is now refused naming a row you did not rule on, that
 row's amendment is still unreviewed. Rule on it, or revert it, before the
 refresh. Do not add it to `--reattests` just to get past the refusal.
 
+### The needs file gains a stakeholder list, and each need its stakeholders and source [since 76a235bb]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `docs/requirements/stakeholder-needs.toml` may carry a second
+tier beside its needs, `[stakeholder.STK-##]` rows with a `name`, a
+`description`, an optional `party` (an entity declared in `external.toml`) and a
+`status` from the spine's `Drafted | Approved | Founded` (SR-189). Each need
+gains two optional pointer cells: `stakeholder_refs`, the stakeholders whose
+outcome it is, and `source`, a list of `path#anchor` targets naming the document
+it was drawn from (SR-190). `trace.py` checks both through
+`scripts/frame_rules.py`. A stakeholder missing its name, description or status,
+one with a status outside the vocabulary or a party naming no declared entity, a
+need citing an undeclared stakeholder, and a `source` entry whose file or anchor
+does not exist each join the frame findings and fail `--strict`; a stakeholder
+status outside the vocabulary also fails the `--strict-integrity` floor. Once the
+list has a row, a need naming no stakeholder is one advisory. The id watermark
+gains an `STK` space. The need-id universe is now read from the `[need.*]`
+tables alone, so an SN id quoted in a stakeholder's description is not a need,
+and neither is one named only in a TOML comment. `source` joins the provenance
+rule's pointer columns (PROCESS.md §3).
+
+**What to do.** Re-sync `scripts/frame_rules.py`, `scripts/trace.py`,
+`scripts/trace_text.py`, `scripts/kitlib/spine.py`, `scripts/spine_carrier.py`
+and `scripts/migrate_carrier.py` together, and read
+`registries/stakeholder-needs.template.toml` for the two new cells and the
+example stakeholder row; your own needs file is yours and gains nothing. Then run
+`python scripts/trace.py --bump-ids` once and commit `docs/id-watermark`: the
+integrity floor, which the pre-commit hook runs, refuses a watermark with no
+`STK` line until you do. Nothing else moves until you write a stakeholder row. A
+project with no list hears nothing, and its needs keep passing without
+`stakeholder_refs`. Who owns which outcome is a judgement about your own project,
+so write the list in a reviewed commit and approve its rows the way you approve
+needs. A needs registry still on the markdown carrier is untouched until you
+convert it.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

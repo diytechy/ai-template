@@ -51,6 +51,23 @@
 # discover the install/first-run ones late; tag the non-runtime ones with
 # `lifecycle` (process.md §4 "Lifecycle phase").
 #
+# NAME WHOSE OUTCOME EACH NEED IS. The short STAKEHOLDER LIST below the needs
+# (`[stakeholder.STK-000]`) says who owns outcomes: a `name`, a `description` of
+# which outcomes are theirs, an optional `party` (the declared entity in
+# `external.toml` they are, which is what lets a need's outcome be placed on
+# the frame) and the same `status` field as every tier. Each need names its
+# owners in `stakeholder_refs`; once the list has a row, a need naming none is
+# reported, and a reference to an undeclared stakeholder always fails. A stakeholder owns an OUTCOME, which is
+# not the same thing as a review perspective in `hats.toml`, which owns a
+# QUESTION put to each decomposition: no perspective becomes a stakeholder row.
+#
+# SAY WHERE A NEED CAME FROM. When a need is drawn from a longer document (an
+# owner's statement of design constraints, a needs catalog), point at it in
+# `source`: a list of repository-relative `path#anchor` targets, each of which
+# must resolve to a file and one of its headings or ids. The need stays the
+# canonical obligation and the document its provenance, so the pointer lives in
+# its own cell and never in the need's text. Optional.
+#
 # CONSIDER THE COST, NOT JUST THE BEHAVIOR. Where the scope warrants it, also
 # capture non-functional needs — performance, memory/size, cost (unit/BOM,
 # licensing, cloud spend), reliability, security, observability — and route
@@ -63,6 +80,8 @@ why = """Why it matters — the consequence of NOT meeting it, in the stakeholde
 priority = "M"
 acceptance = "Acceptance intent: how we would know it is met."
 tags = ["EXAMPLE-domain"]
+stakeholder_refs = ["STK-000"]
+source = ["README.md#vision"]
 # `tags` (OPTIONAL — omit the key on an untagged need) names the DOMAINS a
 # need's OWN SUBJECT sits in, in the vocabulary the hats roster's
 # `applies_when` clauses evaluate (`hats.toml`, `tags contains "…"`). Tag a
@@ -71,6 +90,8 @@ tags = ["EXAMPLE-domain"]
 # because some hat once derived a row from it. Untagged is normal, not
 # incomplete: an `always` hat needs no tag to reach anything, and `tags` adds
 # no arithmetic.
+# `stakeholder_refs` and `source` are the two POINTERS described above: they
+# point at rows and documents, and are not part of the need's own text.
 
 # --- EDGE-CASE COVERAGE -------------------------------------------------------
 #
@@ -85,3 +106,16 @@ tags = ["EXAMPLE-domain"]
 #
 # Draft new needs with `status = "Drafted"`, then approve them to "Approved".
 # Empty is the normal steady state.
+
+# --- STAKEHOLDERS --------------------------------------------------------------
+#
+# One table per stakeholder, `[stakeholder.STK-000]`, ids numbered `STK-01`,
+# `STK-02`, ... . `party` is OPTIONAL: omit it for a stakeholder who is not an
+# entity of the frame. Approve a stakeholder the way you approve a need, by
+# moving its `status` in a reviewed commit.
+
+[stakeholder.STK-000]
+name = "_EXAMPLE_ — who owns an outcome, in a few words"
+description = """Which outcomes this stakeholder owns, and what they would lose if a need of theirs were dropped. Replace this row; the `-000` id is a placeholder the tooling ignores."""
+party = "EXT-000"
+status = "Approved"

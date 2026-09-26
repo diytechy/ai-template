@@ -36,5 +36,6 @@ REL = 4
 REPO = 0
 SN = 44
 SR = 219
+STK = 0
 TC = 251
 WI = 648

@@ -219,6 +219,7 @@ try:
         status_criterion_findings,
     )
     from frame_rules import frame_system_findings, sr_system_advisories
+    from frame_rules import need_source_findings, source_documents, stakeholder_findings
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -258,6 +259,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         status_criterion_findings,
     )
     from frame_rules import frame_system_findings, sr_system_advisories
+    from frame_rules import need_source_findings, source_documents, stakeholder_findings
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -513,7 +515,12 @@ REQUIRED_FIELDS = {
 # `Modified` leaves (snapshot drift, live beside it since step 4, is now the only
 # detector — owner ruling 2026-08-17m) and `Founded` enters. D-9's ruled ladder,
 # whole: Drafted -> Approved -> Founded.
-STATUS_VALUES = frozenset({"Drafted", "Approved", "Founded"})
+#
+# The VALUE lives in `kitlib.spine` beside the predicates that read its words,
+# and is bound here under its old name, so a pure sibling of this checker
+# (`frame_rules`, holding the stakeholder list to it) reads the same set without
+# importing the checker.
+STATUS_VALUES = _spine.STATUS_VALUES
 
 # The enum columns whose out-of-vocabulary findings are INTEGRITY-class, not
 # schema-class (D-9 migration correction C1). `schema_findings` only runs under
@@ -609,6 +616,10 @@ ENUM_FIELDS = {
         "Status": {"Drafted", "Approved"},
     },
     "REL": {"Status": {"Drafted", "Approved"}},
+    # The stakeholder list (SR-189) holds the spine's own ladder, since it is
+    # the needs file's second approvable tier; the always-on integrity floor
+    # reads it through `enum_integrity_findings` like every tier's Status.
+    "STK": {"Status": STATUS_VALUES},
 }
 
 # --- the IF `Contract` negative rules (WI-443, warn-first) --------------------
@@ -824,10 +835,11 @@ WATERMARK = "docs/id-watermark"
 # owner queue, DP is a plan-round directory, and B/EXT/REL are the depth-0 frame
 # tiers in external.toml — added by the sitting-3 item-17 ruling after the
 # 2026-08-16q cut spent B-06/B-07/EXT-004 with nothing mechanical to stop a
-# later re-mint). Keyed off ID_PATTERNS so a space added there cannot be
-# silently exempt here — tests/test_id_watermark.py pins the set.
+# later re-mint). STK is the stakeholder list on the needs file (SR-189), hand-
+# authored like the frame's. Keyed off ID_PATTERNS so a space added there cannot
+# be silently exempt here — tests/test_id_watermark.py pins the set.
 WATERMARK_SPACES = tuple(
-    sorted(set(ID_PATTERNS) | {"SN", "WI", "OI", "DP", "B", "EXT", "REL"})
+    sorted(set(ID_PATTERNS) | {"SN", "WI", "OI", "DP", "B", "EXT", "REL", "STK"})
 )
 _WATERMARK_LINE = re.compile(r"^([A-Z]+)\s*=\s*(\d+)\s*$")
 _ANY_ID = re.compile(r"^([A-Z]+)-(\d+)$")
@@ -910,7 +922,13 @@ def _offspine_ids(docs):
     Read through `spine_carrier` for the same reason `_spine_ids` does — a glob
     is un-wired by moving a file, a carrier resolve is not. `agents` is
     deliberately absent: its ids are names (`ANTHROPIC-FABLE`), not numbers, so
-    it holds no watermark space to lose."""
+    it holds no watermark space to lose.
+
+    The stakeholder list (`STK-##`) joined with the tier itself: it shares the
+    needs file, and is read here by its own id column exactly as the frame's
+    three tiers share `external.toml`.
+
+    Implements: SR-189, LLR-215"""
     # interfaces + components joined the TOML carrier at WI-443, which un-wired
     # them from `_csv_ids`' glob exactly as batch-2 did to open-items — found
     # the same way again (WI-454 minted IF-121/122 past a mark of 120 and got
@@ -927,6 +945,7 @@ def _offspine_ids(docs):
         ("docs/requirements/external.toml", "EXT-ID"),
         ("docs/requirements/external.toml", "B-ID"),
         ("docs/requirements/external.toml", "REL-ID"),
+        ("docs/requirements/stakeholder-needs.toml", "STK-ID"),
     ):
         for row in spine_carrier.load(docs.parent / rel, id_col):
             match = _ANY_ID.match(str(row.get(id_col) or "").strip())
@@ -2266,7 +2285,7 @@ def _frame_report_section(exts, bifs, rels, findings):
     declared — a named helper rather than another arm inside `render_report`,
     which the complexity ratchet holds at its committed count and which is
     already a long list-builder."""
-    if not (exts or bifs or rels):
+    if not (exts or bifs or rels or findings):
         return []
     body = (
         [
@@ -2278,6 +2297,28 @@ def _frame_report_section(exts, bifs, rels, findings):
         else ["- {}".format(f) for f in findings]
     )
     return ["", "## The depth-0 frame (external.toml resolution)", ""] + body
+
+
+def need_source_anchors(root, sn_needs):
+    """Each document the needs' `source` cells name -> the anchors it exposes,
+    or None when it is not a file inside the repository (SR-190).
+
+    The FILE READ half of the source-pointer rule, kept here because
+    `frame_rules` reads no file. Each document is read once, through the kit's
+    one markdown anchor reader (`check_docs.parse_doc`, behind
+    `check_trajectory.doc_anchors`), so a pointer and a markdown link agree on
+    what an anchor is. A file that is not markdown exposes no anchors. A target
+    outside the repository does not resolve, because the pointer is
+    repository-relative by definition."""
+    base = Path(root).resolve()
+    out = {}
+    for doc in source_documents(sn_needs):
+        path = (base / doc).resolve()
+        found = path.is_file() and path.is_relative_to(base)
+        out[doc] = (
+            (check_trajectory.doc_anchors(path) or frozenset()) if found else None
+        )
+    return out
 
 
 def contract_symbol_surface(root):
@@ -4429,6 +4470,7 @@ class Registries:
     raw_bifs: list
     raw_rels: list
     raw_sns: list
+    raw_stks: list
     srs: list
     llrs: list
     tcs: list
@@ -4441,6 +4483,7 @@ class Registries:
     exts: list
     bifs: list
     rels: list
+    stks: list
     sn_ids: set
     sn_draft: set
     sn_meta: dict
@@ -4592,6 +4635,12 @@ def load_registries(docs):
     raw_exts = spine_carrier.load(docs / "requirements" / "external.toml", "EXT-ID")
     raw_bifs = spine_carrier.load(docs / "requirements" / "external.toml", "B-ID")
     raw_rels = spine_carrier.load(docs / "requirements" / "external.toml", "REL-ID")
+    # Optional STAKEHOLDER LIST (SR-189), the needs file's second tier, loaded by
+    # its OWN id column so a stakeholder's status never joins the needs' draft
+    # set. Absent table -> [] and every stakeholder rule below is vacuous.
+    raw_stks = spine_carrier.load(
+        docs / "requirements" / "stakeholder-needs.toml", "STK-ID"
+    )
 
     # The working sets exclude template example rows (ids ending "-000") so a
     # fresh scaffold has nothing to orphan; the raw lists above keep them for the
@@ -4613,6 +4662,7 @@ def load_registries(docs):
     exts = [r for r in raw_exts if r.get("EXT-ID") and not is_example(r["EXT-ID"])]
     bifs = [r for r in raw_bifs if r.get("B-ID") and not is_example(r["B-ID"])]
     rels = [r for r in raw_rels if r.get("REL-ID") and not is_example(r["REL-ID"])]
+    stks = [r for r in raw_stks if r.get("STK-ID") and not is_example(r["STK-ID"])]
 
     sn_ids = set()
     sn_draft = set()
@@ -4632,7 +4682,7 @@ def load_registries(docs):
         # heading regexes) and one stray cp1252 byte must degrade, not crash
         # the gate chain (the C8 convention, applied to content reads too).
         sn_text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
-        sn_ids = sn_all_ids(sn_text)
+        sn_ids = sn_all_ids(sn_text, sn_md.suffix)
         # Section-as-state maturity (derived-gate §4a): SNs under a "draft" heading
         # are unapproved (DevStg-Below) and exempt from the "SN with no SR" child rule below.
         sn_draft = sn_draft_ids(sn_text)
@@ -4674,6 +4724,7 @@ def load_registries(docs):
         raw_bifs=raw_bifs,
         raw_rels=raw_rels,
         raw_sns=sn_rows,
+        raw_stks=raw_stks,
         srs=srs,
         llrs=llrs,
         tcs=tcs,
@@ -4686,6 +4737,7 @@ def load_registries(docs):
         exts=exts,
         bifs=bifs,
         rels=rels,
+        stks=stks,
         sn_ids=sn_ids,
         sn_draft=sn_draft,
         sn_meta=sn_meta,
@@ -4779,6 +4831,8 @@ def integrity_sweep(reg, raw):
     # `status = "Bananas"` on a need produced no finding at any bar. That is the
     # exact defect the LLR comment above records, one tier up.
     integrity += enum_integrity_findings("SN", reg.raw_sns)
+    # ...and the stakeholder list, the needs file's other approvable tier.
+    integrity += enum_integrity_findings("STK", reg.raw_stks)
     # The SN tier's duplicate protection (prose registry — see
     # sn_integrity_findings): integrity-class like a duplicated CSV id.
     integrity += reg.sn_integrity
@@ -4916,9 +4970,12 @@ def analyze(reg, args):
     # A crossing's system of interest (SR-187) and a requirement's derived one
     # (SR-219): an out-of-pair value joins the frame class, the rest warn.
     system_failures, system_advisories = frame_system_findings(bifs)
+    # The stakeholder list and the needs' references into it (SR-189): an
+    # incomplete stakeholder or a dangling reference joins the frame class too.
+    stk_failures, stk_advisories = stakeholder_findings(reg.sn_needs, reg.stks, exts)
     frame_backlink_findings = (
         frame_findings(exts, bifs, rels) + tieback_findings(ifs, bifs) + sr_frame
-    ) + system_failures
+    ) + (system_failures + stk_failures)
     # The IF/CMP schema tier and the IF `Contract` negative rules (WI-443 / OI-14
     # part B) — ALWAYS ON and ALWAYS WARN. They ride the interface advisory pipe
     # rather than `schema` on purpose: `schema` joins the --strict failure set,
@@ -4934,6 +4991,7 @@ def analyze(reg, args):
         + sr_frame_advisories
         + system_advisories
         + sr_system_advisories(srs, bifs)
+        + stk_advisories
         + hat_advisories
         + if_data_advisories(ifs, docs.parent)
         + if_note_advisories(ifs, prov_allow)
@@ -5952,6 +6010,11 @@ def main():
         return 0
 
     findings = analyze(reg, args)
+    # A need's source pointers (SR-190): the documents they name are read HERE,
+    # once each, because analyze() reads no file; the rule itself is pure.
+    findings.frame_backlink_findings += need_source_findings(
+        reg.sn_needs, need_source_anchors(docs.parent, reg.sn_needs)
+    )
     # The id-watermark rules read the FILESYSTEM and GIT, so they cannot live in
     # analyze() — that function's contract is "Pure … No I/O", and the whole
     # value of the contract is that it stays true. Integrity-class all the same:

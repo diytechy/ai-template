@@ -744,7 +744,7 @@ def load_spine(docs):
     sn_ids, sn_draft = set(), set()
     if sn_md is not None:
         text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
-        sn_ids = sn_all_ids(text)
+        sn_ids = sn_all_ids(text, sn_md.suffix)
         sn_draft = sn_draft_ids(text)
 
     # THE TWO OFF-SPINE REGISTRIES THE LADDER'S INSERTED RUNGS READ (OI-21). Both

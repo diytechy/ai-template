@@ -118,8 +118,8 @@ Stable, zero-padded, never reused.
   the thing under specification — a script, an artifact path, the rubric a
   `Critique` row is judged against — is the *subject*, not provenance. `trace.py`
   gates under `--strict` on a work-item id or a process-doc citation and warns on
-  the rest; pointer columns (`Module`, `CodeSymbol`, `TestRefs`, `Evidence`) are
-  out of scope by design.
+  the rest; pointer columns (`Module`, `CodeSymbol`, `TestRefs`, `Evidence`, a
+  need's `source`) are out of scope by design.
 - **One requirement, one `shall`** — exactly one obligation, one testable
   behavior, never a compound "and/or". The full quality bar and the statement
   pattern that carries it are stated once, just below the bullets.

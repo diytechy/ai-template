@@ -309,15 +309,31 @@ TOML_REGISTRIES = {
         "registries/external.template.toml",
         "relationship",
     ),
+    # WI-628 (SR-189) — the stakeholder list, the needs file's second tier, on
+    # the needs path under its own table: the frame's three-tiers-one-path shape.
+    "STK-ID": (
+        "docs/requirements/stakeholder-needs.toml",
+        "registries/stakeholder-needs.template.toml",
+        "stakeholder",
+    ),
 }
 KIT = ROOT / "project-trajectory"
+
+# Registries whose LIVE rows arrive in a later reviewed commit: the tier and its
+# template ship first, and this repository's own rows are written and approved
+# by the C1 sitting commit (WI-643). Until then the live leg is empty and only
+# the template leg (template keys == the schema) can bite. The allowance EXPIRES
+# on its own: both tests below fail once the live table exists, so the commit
+# that writes the rows must drop the entry here, which arms the live leg and its
+# floor.
+LIVE_ROWS_PENDING = frozenset({"STK-ID"})
 
 
 def _toml_keys(path, table):
     """The union of keys the rows of one TOML registry set. UNION, never
     intersection: an absent key is a legitimately empty cell on an individual
     row, so a column exists in the registry iff SOME row uses it."""
-    rows = tomllib.loads(path.read_text(encoding="utf-8"))[table]
+    rows = tomllib.loads(path.read_text(encoding="utf-8")).get(table, {})
     return {k for row in rows.values() for k in row}
 
 
@@ -399,7 +415,13 @@ def test_template_declares_every_key_the_live_registry_uses(id_col):
     live = _toml_keys(ROOT / live_rel, table)
     tmpl = _toml_keys(KIT / tmpl_rel, table)
     schema = set(CARRIER.REGISTRY_KEYS[id_col])
-    assert live, live_rel  # a registry with no rows would make this vacuous
+    if id_col in LIVE_ROWS_PENDING:
+        assert not live, "%s[%s] has rows now: drop it from LIVE_ROWS_PENDING" % (
+            live_rel,
+            table,
+        )
+    else:
+        assert live, live_rel  # a registry with no rows would make this vacuous
     assert schema, id_col  # ...and an empty schema would pass everything
     drift = registry_key_drift(tmpl, live, schema, CARRIER.REGISTRY_COLUMN)
     assert drift is None, "%s[%s]: %s" % (live_rel, table, drift)
@@ -429,10 +451,21 @@ def test_the_live_registries_carry_more_than_the_template_example(tmp_path):
         "EXT-ID": 1,
         "B-ID": 1,
         "REL-ID": 1,
+        # The stakeholder list is short by nature (who owns outcomes, not each
+        # person); "more than the example" is still the property. Held back by
+        # LIVE_ROWS_PENDING until this repository's rows are written.
+        "STK-ID": 1,
     }
     assert set(floors) == set(TOML_REGISTRIES), "a registry joined with no floor"
     for id_col, (live_rel, _tmpl, table) in TOML_REGISTRIES.items():
-        rows = tomllib.loads((ROOT / live_rel).read_text(encoding="utf-8"))[table]
+        text = (ROOT / live_rel).read_text(encoding="utf-8")
+        rows = tomllib.loads(text).get(table, {})
+        if id_col in LIVE_ROWS_PENDING:
+            assert not rows, "%s[%s] has rows now: drop it from LIVE_ROWS_PENDING" % (
+                live_rel,
+                table,
+            )
+            continue
         assert len(rows) > floors[id_col], "%s[%s]" % (live_rel, table)
 
 

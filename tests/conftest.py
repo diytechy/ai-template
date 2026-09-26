@@ -279,6 +279,9 @@ SLOW_MODULES = frozenset(
         # WI-612: the shared trunk bookkeeping commit driven through real claims
         # and mints, each running the real trunk_step --regen subprocess.
         "test_bookkeeping",  # real git repos + the real regen per claim/mint
+        # WI-628 (TC-215): the stakeholder list driven through trace.py on
+        # bootstrapped scaffolds, one scaffold and subprocess run per case.
+        "test_stakeholders",  # scaffold + trace.py subprocess per case
     }
 )
 

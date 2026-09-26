@@ -1516,3 +1516,170 @@ def test_verified_by_is_optional_and_its_pointer_must_resolve():
     # "unknown" — an SR is a plausible mistake and a confusing finding.
     fires = flags("SR-014")
     assert len(fires) == 1 and "not a TC-### or LLR-### id" in fires[0]
+
+
+# --- a need's source pointer (TC-216) ------------------------------------------
+# A need drawn from a longer document says where it came from in its own
+# `source` cell, a list of `path#anchor` targets (SR-190). Driven through the
+# checker on a scaffold whose needs sit on the TOML carrier: an unresolving
+# file or anchor fails `--strict` naming the need and the entry, a resolving
+# one passes, and the cell is a POINTER, so the provenance advisory never reads
+# it while it keeps reading the need's three prose cells.
+
+_SOURCE_NEED = """
+[need.SN-001]
+status = "Approved"
+need = "Add two numbers."
+why = "Demo."
+priority = "M"
+acceptance = "Adding one and two gives three."
+"""
+
+# A document whose one heading is the anchor the resolving entry names. Its
+# path carries a work-item id on purpose: were the source cell scanned, that
+# token is exactly what the provenance advisory reports.
+_ORIGIN_REL = "docs/origin/WI-123-notes.md"
+_ORIGIN = "# Notes\n\n## Design constraints\n\nThe numbers are integers.\n"
+
+
+def _source_project(scaffold, need=_SOURCE_NEED):
+    from conftest import record_ids
+
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    (req / "stakeholder-needs.md").unlink()
+    (req / "stakeholder-needs.toml").write_text(need, encoding="utf-8")
+    origin = scaffold / _ORIGIN_REL
+    origin.parent.mkdir(parents=True, exist_ok=True)
+    origin.write_text(_ORIGIN, encoding="utf-8")
+    record_ids(scaffold)
+
+
+def _with_source(entry):
+    return _SOURCE_NEED + 'source = ["{}"]\n'.format(entry)
+
+
+def _frame_findings(stdout, *needles):
+    return [
+        line
+        for line in stdout.splitlines()
+        if line.startswith("FINDING (frame)") and all(n in line for n in needles)
+    ]
+
+
+def test_a_source_naming_a_missing_file_fails_naming_the_need_and_entry(scaffold):
+    entry = "docs/origin/absent.md#design-constraints"
+    _source_project(scaffold, _with_source(entry))
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert _frame_findings(proc.stdout, "SN-001", entry), proc.stdout
+    assert proc.returncode == 1
+
+
+def test_a_source_naming_a_missing_anchor_fails_naming_the_need_and_entry(scaffold):
+    entry = _ORIGIN_REL + "#no-such-heading"
+    _source_project(scaffold, _with_source(entry))
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert _frame_findings(proc.stdout, "SN-001", entry), proc.stdout
+    assert proc.returncode == 1
+
+
+def test_a_source_with_no_anchor_fails_naming_the_need_and_entry(scaffold):
+    """The pointer is `path#anchor` by definition: an entry naming a real file
+    and no anchor resolves to no anchor, so it fails the same way."""
+    _source_project(scaffold, _with_source(_ORIGIN_REL))
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert _frame_findings(proc.stdout, "SN-001", _ORIGIN_REL), proc.stdout
+    assert proc.returncode == 1
+
+
+def test_an_anchor_into_a_non_markdown_file_fails_naming_the_need_and_entry(
+    scaffold,
+):
+    """Only a markdown document exposes anchors (its headings and explicit ids),
+    so an anchor into a source file names nothing that can be resolved."""
+    entry = "src/demo.py#add"
+    _source_project(scaffold, _with_source(entry))
+    assert (scaffold / "src" / "demo.py").is_file()
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert _frame_findings(proc.stdout, "SN-001", entry), proc.stdout
+    assert proc.returncode == 1
+
+
+def test_a_target_escaping_the_repository_fails_naming_the_need_and_entry(scaffold):
+    """The pointer is repository-relative: a target that climbs out of the
+    repository does not resolve even when the file it reaches exists and
+    carries the anchor."""
+    outside = scaffold.parent / (scaffold.name + "-outside.md")
+    outside.write_text(_ORIGIN, encoding="utf-8")
+    entry = "../{}#design-constraints".format(outside.name)
+    _source_project(scaffold, _with_source(entry))
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert _frame_findings(proc.stdout, "SN-001", entry), proc.stdout
+    assert proc.returncode == 1
+
+
+def test_a_resolving_source_passes(scaffold):
+    _source_project(scaffold, _with_source(_ORIGIN_REL + "#design-constraints"))
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert "FINDING (frame)" not in proc.stdout, proc.stdout
+    assert proc.returncode == 0, proc.stdout
+
+
+def test_a_need_with_no_source_produces_nothing(scaffold):
+    _source_project(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert "source" not in proc.stdout.lower(), proc.stdout
+    assert proc.returncode == 0, proc.stdout
+
+
+def test_the_source_cell_is_a_pointer_outside_the_provenance_rule(scaffold):
+    trace = load_script("trace")
+    entry = _ORIGIN_REL + "#design-constraints"
+    # Non-vacuous: the same text in a scanned cell IS a citation frame.
+    assert trace.provenance_tokens(entry, reason=True)
+    _source_project(scaffold, _with_source(entry))
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert "WI-123" not in proc.stdout, proc.stdout
+    assert proc.returncode == 0, proc.stdout
+
+
+def test_a_citation_in_each_prose_cell_of_a_need_is_still_reported(scaffold):
+    source = 'source = ["{}#design-constraints"]\n'.format(_ORIGIN_REL)
+    _source_project(scaffold, _SOURCE_NEED + source)
+    need_file = scaffold / "docs" / "requirements" / "stakeholder-needs.toml"
+    for cell, clean in (
+        ("need", "Add two numbers."),
+        ("why", "Demo."),
+        ("acceptance", "Adding one and two gives three."),
+    ):
+        planted = _SOURCE_NEED.replace(
+            '{} = "{}"'.format(cell, clean), '{} = "{} (WI-456)"'.format(cell, clean)
+        )
+        assert planted != _SOURCE_NEED, cell
+        need_file.write_text(planted + source, encoding="utf-8")
+        proc = run_py(["scripts/trace.py"], cwd=scaffold)
+        reported = [
+            line
+            for line in proc.stdout.splitlines()
+            if line.startswith("WARNING (advisory)")
+            and "SN SN-001 {} ".format(cell) in line
+            and "WI-456" in line
+        ]
+        assert reported, (cell, proc.stdout)
+
+
+def test_a_path_in_the_need_cell_is_still_reported_by_the_need_form_check(scaffold):
+    planted = _SOURCE_NEED.replace(
+        'need = "Add two numbers."', 'need = "Add two numbers, as docs/status.md says."'
+    )
+    _source_project(
+        scaffold, planted + 'source = ["{}#design-constraints"]\n'.format(_ORIGIN_REL)
+    )
+    proc = run_py(["scripts/check_need_form.py"], cwd=scaffold)
+    reported = [
+        line
+        for line in proc.stdout.splitlines()
+        if "SN-001" in line and "docs/status.md" in line
+    ]
+    assert reported, proc.stdout
+    assert _ORIGIN_REL not in proc.stdout, proc.stdout

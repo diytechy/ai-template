@@ -33,5 +33,6 @@ REL = 0
 REPO = 0
 SN = 0
 SR = 0
+STK = 0
 TC = 0
 WI = 0

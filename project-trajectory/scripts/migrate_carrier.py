@@ -139,6 +139,8 @@ REF_COLS = {
     # comma or semicolon (`hats.py` keys are upper-case, `-`-joined), so the
     # `trace_text.refs` split reads it back exactly as written.
     "Hat-Refs",
+    # SR-189: a need's stakeholders, STK ids, which hold no separator.
+    "Stakeholder-Refs",
     "Verifies",
     "SupersededBy",
     "WI-Refs",
@@ -271,6 +273,12 @@ KEY = {
     "Kind": "kind",
     "Flow": "flow",
     "Absorbs": "absorbs",
+    # the stakeholder list and the need's two pointers (SR-189, SR-190). Never
+    # converted from a legacy carrier (neither existed before TOML); declared
+    # because this map is the writer half of the one pinned bijection.
+    "Party": "party",
+    "Stakeholder-Refs": "stakeholder_refs",
+    "Source": "source",
 }
 
 

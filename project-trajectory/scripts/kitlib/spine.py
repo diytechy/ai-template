@@ -63,6 +63,7 @@ Stdlib only, and import-clean of the rest of `scripts/`, like every module here.
 import csv
 import io
 import re
+import tomllib
 
 __all__ = [
     "LLR_EXEMPT",
@@ -78,6 +79,7 @@ __all__ = [
     "is_drafted",
     "is_approved",
     "is_founded",
+    "STATUS_VALUES",
     "llr_exempt",
     "phase_num",
     "sn_all_ids",
@@ -342,6 +344,15 @@ def is_example(rid):
     return (rid or "").endswith("-000")
 
 
+# THE SPINE'S CLOSED STATUS VOCABULARY — the three words the predicates below
+# read, and the one ladder every tier's `Status` is held to (D-9's Drafted ->
+# Approved -> Founded; its history is recorded where `trace.py` binds it). Its
+# home is here rather than in the checker so a pure sibling of the checker can
+# hold a tier to it without importing the checker: `frame_rules` holds the
+# stakeholder list to it.
+STATUS_VALUES = frozenset({"Drafted", "Approved", "Founded"})
+
+
 def is_drafted(row):
     """A row in the pre-approval `Drafted` state.
 
@@ -425,21 +436,57 @@ def phase_num(row):
     return int(m.group()) if m else None
 
 
-def sn_all_ids(text):
-    """The SN id UNIVERSE: every `SN-###` token anywhere in a needs registry.
+def sn_all_ids(text, carrier=None):
+    """The SN id UNIVERSE: every `SN-###` token in a needs registry's NEED TABLES.
 
-    A WHOLE-TEXT scrape, so a prose mention counts exactly like a table row —
-    the sharp edge `registry-machinery-reference` §2.1 records (an approved,
-    uncited prose mention caps the derived stage through the coverage rung).
-    `-000` placeholders excluded. This scrape decides which ids BOTH the gate
-    derivation and the itemized orphan listing run their rules over, which is
-    why it may have only one definition.
+    A TOKEN scrape, so a prose mention inside a need counts exactly like a table
+    row — the sharp edge `registry-machinery-reference` §2.1 records (an
+    approved, uncited prose mention caps the derived stage through the coverage
+    rung). `-000` placeholders excluded. This scrape decides which ids BOTH the
+    gate derivation and the itemized orphan listing run their rules over, which
+    is why it may have only one definition.
+
+    THE NEED TABLES ONLY, under the TOML carrier. The needs file also carries
+    the stakeholder list (`[stakeholder.STK-##]`), whose descriptions may name
+    the needs a stakeholder owns; scraping the whole file would turn each such
+    mention into a need of its own, which then reads as approved and uncited
+    and caps the stage. So the scrape reads the `[need.*]` tables' ids and
+    cells and nothing else, and an id named only in a comment is not a need.
+    The legacy markdown carrier, which has no stakeholder list, keeps the
+    whole-text scrape it was written under.
+
+    THE CARRIER COMES FROM THE FILE, NOT FROM THE TEXT. `carrier` is the
+    resolved registry's suffix (`.toml` or `.md`), which every caller that read
+    a file knows. Sniffing cannot decide it: an empty or comment-only TOML file
+    parses to nothing, exactly like a markdown file of headings, and read as
+    markdown its comments would join the universe. A text-only caller (None)
+    still gets the sniff, where only a non-empty TOML document reads as TOML. A
+    `.toml` text that does not parse keeps the whole-text scrape, which can only
+    count more ids, never hide one; the carrier's own loader refuses the file.
 
     Contract:
-      Inputs:  text: the needs registry's raw text, under EITHER carrier
+      Inputs:  text: the needs registry's raw text, under EITHER carrier;
+               carrier: its file suffix, or None when only the text is known
       Outputs: set[str]
+
+    Implements: SR-189, LLR-215
     """
+    tables = _toml_tables(text)
+    is_toml = carrier == ".toml" if carrier else bool(tables)
+    if is_toml and tables is not None:
+        text = "\n".join(
+            "{} {}".format(rid, " ".join(str(v) for v in cells.values()))
+            for rid, cells in (tables.get("need") or {}).items()
+        )
     return {u for u in re.findall(r"\bSN-\d+\b", text) if not is_example(u)}
+
+
+def _toml_tables(text):
+    """`text` parsed as TOML, or None when it does not parse."""
+    try:
+        return tomllib.loads(text)
+    except tomllib.TOMLDecodeError:
+        return None
 
 
 def sn_cited_ids(srs):
@@ -498,6 +545,7 @@ def sn_cited_ids(srs):
 # here first — which is the same discipline `spine_carrier.SPINE_COLUMN` (the
 # key -> column-name map, which stays with the carrier that reads columns)
 # already carries, for the same reason.
+# Implements: SR-189, LLR-215
 SPINE_TIER_KEYS = {
     # THE NEED TIER, post-unification. `status` is the ONE maturity field (the
     # `kind`/`attestation`/`amended` trio it replaced is deleted, not renamed).
@@ -505,9 +553,16 @@ SPINE_TIER_KEYS = {
     # `always` hat reaches a need without one — but it is DECLARED, which is
     # the whole point: the template shipped without it precisely because no
     # schema named the tier.
+    # `stakeholder_refs` (SR-189) names the declared stakeholders whose outcome
+    # the need is, resolved against the same file's `[stakeholder.STK-##]`
+    # list; `source` (SR-190) points at the document the need was drawn from,
+    # as `path#anchor` targets. Both are optional POINTERS: the relation lives
+    # on the need, and neither is part of the need's approved text.
     "SN-ID": (
         "status",
         "tags",
+        "stakeholder_refs",
+        "source",
         "need",
         "why",
         "priority",
@@ -567,6 +622,7 @@ SPINE_TIER_KEYS = {
 # against each other for every entry of REGISTRY_KEYS, so adding a column to
 # `open-items` or `agents` is a reviewed edit HERE first, exactly as it is for a
 # spine tier.
+# Implements: SR-189, LLR-215
 OFFSPINE_KEYS = {
     "OI-ID": (
         "title",
@@ -654,6 +710,11 @@ OFFSPINE_KEYS = {
     # crossing without it is an advisory (`frame_rules.frame_system_findings`).
     "B-ID": ("entity", "direction", "carries", "system", "status", "absorbs", "notes"),
     "REL-ID": ("from", "to", "kind", "flow", "status", "absorbs", "notes"),
+    # THE STAKEHOLDER LIST (SR-189), a second tier on the NEEDS file: who owns
+    # an outcome, and which declared frame entity they are (`party`, optional).
+    # Keyed by its own id column, as the frame's three tiers share
+    # `external.toml`, so its rows never mix with the needs' own.
+    "STK-ID": ("name", "description", "party", "status"),
 }
 REGISTRY_KEYS = dict(SPINE_TIER_KEYS, **OFFSPINE_KEYS)
 

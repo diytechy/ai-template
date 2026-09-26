@@ -547,8 +547,8 @@ _ACTORLESS_RE = re.compile(r"\bshall be\s+\w+(?:ed|en)\b(?!\s+by\b)", re.IGNOREC
 
 # Every spine cell whose text a reader treats as the SPECIFICATION — the columns
 # a downstream adopter reads to learn what the system does and why. `Module`,
-# `CodeSymbol`, `TestRefs`, `Evidence` and the id/status columns are pointers by
-# design and are deliberately out of scope.
+# `CodeSymbol`, `TestRefs`, `Evidence`, a need's `source` and the id/status
+# columns are pointers by design and are deliberately out of scope.
 PROVENANCE_COLS = (
     ("SR", "SR-ID", ("Title", "Requirement", "Rationale", "AcceptanceCriteria")),
     ("LLR", "LLR-ID", ("Title", "Detail", "Rationale")),
@@ -629,6 +629,10 @@ def provenance_findings(srs, llrs, tcs):
 # The SN tier's cells, and the widened scope of the SR/LLR/TC ones. The need tier
 # joins by owner ruling: the rule was written naming three tiers and the need tier
 # then accumulated the worked examples of exactly the defect it forbids.
+# The need's three PROSE cells only: its `source` cell (SR-190) is a pointer to
+# the document the need was drawn from, a repository path by design, and
+# `stakeholder_refs` points at rows, so neither is scanned.
+# Implements: SR-190, LLR-217
 PROVENANCE_ADVISORY_COLS = (
     ("SN", "id", ("need", "why", "acceptance")),
     ("SR", "SR-ID", ("Title", "Requirement", "Rationale", "AcceptanceCriteria")),

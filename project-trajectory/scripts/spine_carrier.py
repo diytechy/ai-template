@@ -242,6 +242,12 @@ SPINE_TABLE = {
 # it joins the map three times and `load(external.toml, "B-ID")` returns exactly
 # the crossings. Nothing in the loader changed to allow that: keying by id
 # column rather than by path is what already made it work.
+#
+# THE NEEDS FILE HOLDS TWO TIERS THE SAME WAY (SR-189): its needs, and the
+# stakeholder list whose rows those needs cite. `load(stakeholder-needs.toml,
+# "STK-ID")` returns exactly the stakeholders, and the need readers below read
+# `NEED_TABLE` alone, so a stakeholder's status never joins the needs' draft set.
+# Implements: SR-189, LLR-215
 OFFSPINE_TABLE = {
     "OI-ID": "open_item",
     "Id": "agent",
@@ -250,6 +256,7 @@ OFFSPINE_TABLE = {
     "EXT-ID": "entity",
     "B-ID": "boundary",
     "REL-ID": "relationship",
+    "STK-ID": "stakeholder",
 }
 REGISTRY_TABLE = dict(SPINE_TABLE, **OFFSPINE_TABLE)
 
@@ -305,6 +312,10 @@ SPINE_COLUMN = {
     "why": "Why",
     "acceptance": "Acceptance",
     "tags": "Tags",
+    # The need's two POINTERS (SR-189, SR-190): the stakeholders whose outcome
+    # it is, and the `path#anchor` document it was drawn from.
+    "stakeholder_refs": "Stakeholder-Refs",
+    "source": "Source",
     "phase": "Phase",
     "aspect": "Aspect",
     "superseded_by": "SupersededBy",
@@ -425,6 +436,9 @@ OFFSPINE_COLUMN = {
     "kind": "Kind",
     "flow": "Flow",
     "absorbs": "Absorbs",
+    # stakeholders (STK-##, SR-189): the declared frame entity a stakeholder is.
+    # `name`, `description` and `status` are shared columns, declared above.
+    "party": "Party",
     # components (CMP-###, process-options.md "Component layer"; WI-443).
     "name": "Name",
     "category": "Category",
