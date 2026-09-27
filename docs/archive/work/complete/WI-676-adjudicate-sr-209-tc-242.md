@@ -2,7 +2,7 @@
 id = "WI-676"
 title = "adjudicate: SR-209, TC-242 - approved cells amended to the loop-lane ownership rule SR-209's blessed acceptance states; judge whether scope moved"
 workstream = "process"
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 sr_refs = ["SR-209"]
 needs = ["WI-673"]
 buildtier = "medium"
@@ -11,6 +11,18 @@ brief = "amendment"
 adjudicates = ["SR-209", "TC-242"]
 priority = 2
 +++
+
+## Deliverable
+
+The verdict `VERDICT: MEANING rows=2`, blessable, landed at e8ca47f7
+(`docs/reviews/wi-676-adjudicate-sr-209-tc-242/001-ADJUDICATE-7f98adc.md`;
+Codex Sol cross-review SOUND). Its re-anchor was refused on 2026-09-27
+because WI-650 had since amended SR-217 and TC-250 in the live files. It is
+taken here, in ONE act with WI-675's rows, on trunk 97815a8c:
+`intake.py snapshot --reattests SR-209,TC-242,SR-217,LLR-257,TC-250`
+(act ledger seq 3). Before relying on the verdict, the batch adjudicator
+confirmed with `tomllib` that SR-209 and TC-242 are byte-identical, cell for
+cell, at 97815a8c and at 7f98adc9, the commit the verdict judged.
 
 ## Context
 

@@ -1,0 +1,15 @@
+<!-- Codex Sol (gpt-5.6-sol, medium) cross-review of the spine-acts batch A adjudication, build/wi-675 a16414bd..9c116ee1, read-only; prompt gist in ARBITRATION.md. Links re-rooted from the removed worktree. -->
+
+9c116ee1 SOUND
+
+- blocker: none.
+- major: none.
+- minor: none.
+
+Checks:
+
+- Bless all three MEANING rows. SR-217 remains within SN-042’s test-before-implementation outcome ([stakeholder-needs.toml:358](../../../docs/requirements/stakeholder-needs.toml)); association dating, tip membership, unapproved reporting, and warnings match the implementation ([check_test_first.py:321](../../../project-trajectory/scripts/check_test_first.py), [check_test_first.py:469](../../../project-trajectory/scripts/check_test_first.py), [check_test_first.py:563](../../../project-trajectory/scripts/check_test_first.py)) and have direct cases ([test_check_test_first.py:342](../../../tests/test_check_test_first.py), [test_check_test_first.py:389](../../../tests/test_check_test_first.py), [test_check_test_first.py:519](../../../tests/test_check_test_first.py)). No amended clause is false or untested; the decomposition is minimal.
+- WI-604’s two RETURNs are correct. SR-157 specifies reported rule violations, not consolidation workflow ([system-requirements.toml:705](../../../docs/requirements/system-requirements.toml)); LLR-210 introduces minting, memory and restructuring anyway ([low-level-requirements.toml:2223](../../../docs/requirements/low-level-requirements.toml)). `queue_digest` hashes every queued row, not the ready frontier ([consolidate.py:166](../../../project-trajectory/scripts/consolidate.py)). TC-208 says Smoke while citing five tests from `test_consolidate_close.py` ([test-cases.toml:2117](../../../docs/test/test-cases.toml)), which is explicitly slow ([conftest.py:351](../../../tests/conftest.py)). Neither row should have been approved.
+- The act records exactly the five intended re-attestations, with increasing `seq`, valid date, empty approvals, and sorted IDs ([acts.toml:18](../../../docs/archive/last_approved/acts.toml)). SR-209 and TC-242 are byte-identical to the earlier verdict’s judged rows.
+- The whole-file copies also carried LLR-257’s `code_symbol`, TC-235/TC-251 `verifies`, and Drafted LLR-259/TC-252. The former are traced cells expressly outside the repository’s approved-text drift class ([baseline_snapshot.py:1507](../../../project-trajectory/scripts/baseline_snapshot.py)); the latter remain Drafted ([low-level-requirements snapshot:2709](../../../docs/archive/last_approved/docs/requirements/low-level-requirements.toml), [test-cases snapshot:2605](../../../docs/archive/last_approved/docs/test/test-cases.toml)). No unjudged attesting text was copied.
+- Nothing material rests on WI-650’s own account. The external premises are the owner’s OI-87 ruling and the independent arbitration finding; the verdict re-derives truth and coverage from the cells, code, and tests ([WI-675 verdict:51](../../../docs/reviews/wi-675-adjudicate-sr-217-chain/001-ADJUDICATE-97815a8.md)).

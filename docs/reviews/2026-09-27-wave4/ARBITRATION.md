@@ -24,3 +24,21 @@ arbiter makes are marked as such.
    spine-acts batch. The owner may overturn this; it is a convention reading,
    not a rung decision, which is why the coordinator rules it rather than
    minting an open item.
+
+2. **WI-638's carried-over blocker: declare, don't amend, where the rows
+   already say so.** Wave-3 ruling 22 left two routes for the five
+   observation cases a re-judge cannot finish (TC-036, TC-055, TC-209,
+   TC-210, TC-211): amend SR-215, LLR-254 and TC-247 so an undeclared case
+   is not due, or declare `inputs` and `max_age` on the five. The governing
+   text is OI-90's ruling (a): the ten declaration advisories on exactly
+   these five cases "are real work, not noise". **Ruling: declare.** The
+   builder declares `inputs` and `max_age` on the five cases, and SR-215,
+   LLR-254 and TC-247 stay as approved; wave-3 ruling 19's "not due"
+   remedy stays withdrawn. If a declared cell is an attesting cell of an
+   approved row, it is amended in place, status left `Approved`, and joins
+   the spine-acts batch. For the always-on declaration failure that exceeds
+   LLR-233 and TC-228: an input path that escapes the committed snapshot is
+   a real defect, so the failure stays and LLR-233 and TC-228 are amended
+   in place to name it, judged in the batch. The escape test resolves
+   symlinks against the snapshot and does not reject a non-escaping
+   `docs/../src`; the checkpoint revision is extracted once.

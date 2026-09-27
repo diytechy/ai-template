@@ -67,3 +67,33 @@ left them), smoke 1560 passed / 3 skipped. **Seconds FAILED: 66.8 s and
 loaded: the same tier at the parent commit 8aae3af3, in a fresh worktree
 at the same minute, took 92.45 s, and it took 30.2 s at the OI-88 commit an
 hour earlier. The change moves spec files and edits prose; it adds no test.
+
+### Spine-acts batch A: WI-675, WI-676 and WI-604 in one sitting, one act
+
+One independent Fable adjudicator judged both queued adjudications and relied
+on WI-676's landed verdict, then took ONE snapshot act for all of it:
+`intake.py snapshot --reattests SR-209,TC-242,SR-217,LLR-257,TC-250` (act
+ledger seq 3).
+
+- **WI-675: `VERDICT: MEANING rows=3`.** SR-217, LLR-257 and TC-250 were
+  blessed and re-anchored. The adjudicator ran `tests/test_check_test_first.py`:
+  32 passed.
+- **WI-676:** re-anchored on its landed verdict, after confirming SR-209 and
+  TC-242 are byte-identical to what that verdict judged.
+- **WI-604: `OUTCOME: RETURN rows=2`.** LLR-210 decomposes an obligation no SR
+  states (consolidation is a loop action; SR-157 obliges reporting), and
+  TC-208's Smoke tier is false of its slow evidence. The adjudicator ran
+  `tests/test_consolidate.py` and `tests/test_consolidate_close.py`: 86 passed.
+  The follow-up was not filed as a new row. It is folded into WI-582, the open
+  spine-authoring group, and its builder carries it.
+
+Codex Sol cross-reviewed the verdicts and the act and found them SOUND, with
+no findings ([sol-wi675.md](../reviews/2026-09-27-wave4/sol-wi675.md)).
+Afterwards `trace.py --approve modified` shows no approved spine row drifted.
+**Open count: 18** (17 queued, 1 deferred).
+
+Commit bar at batch A: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs --stale` 0 broken, smoke 1560 passed / 3 skipped. Seconds FAILED
+at 411.0 s, recorded and not re-stamped. Four agent lanes were running their
+own pytest and a Codex review on the box at the time.

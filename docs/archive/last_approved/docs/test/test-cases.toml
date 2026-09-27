@@ -2408,7 +2408,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-235]
-verifies = ["SR-203", "LLR-240"]
+verifies = ["SR-203", "LLR-240", "IF-226"]
 level = "Integration"
 method = "The approval brief rendered for a scope holding an assumption, a fidelity assumption with its surrogate, and a lone surrogate. Each assumption's section lists its citing requirements with their text first, then the needs derived through them, each landing crossing with its entity, its evidencing cases with their current level, and its falsifier; the fidelity assumption appears beside its surrogate and the surrogate's emulated entities; the lone surrogate appears with the assumptions naming it. A batch holding only assumptions is rendered and its freshness is checked. A brief for a batch with no assumption or surrogate is byte-identical to the stored golden brief."
 tier = "Full"
@@ -2487,9 +2487,9 @@ phase = 6
 [test.TC-242]
 verifies = ["SR-209", "LLR-247", "LLR-248", "IF-194", "IF-197"]
 level = "Integration"
-method = "The trailer helpers unit-tested: format and parse round-trip, the last trailer wins, and a missing, malformed or other-session trailer is refused naming the subject. A child process started by the dispatcher and by the loop's main entry sees the marker; the launcher scripts never set it. Driven on real git repositories: with the marker set, the commit-msg hook refuses a commit with no trailer and passes one with a valid trailer; without the marker a commit passes. The merge ladder refuses a lane whose range holds a plumbing commit without the trailer. The claim, refresh, merge, bookkeeping, handback-close and telemetry writers each produce messages carrying the trailer, and a refused telemetry commit is reported."
+method = "The trailer helpers unit-tested: format and parse round-trip, a session the grammar refuses cannot be formatted, the trailer joins the message's existing trailer block as git parses it, the last trailer wins, and a missing, malformed or other-session trailer is refused naming the subject, while with no session given any well-formed trailer passes. A child process started by the dispatcher and by the loop's main entry sees the marker, the session is told the trailer it owes, and that run's own commits name the same session; the launcher scripts never set it. Driven on real git repositories: with the marker set, the commit-msg hook refuses a commit with no trailer, naming its subject, and passes one with a valid trailer; without the marker a commit passes. The merge ladder refuses a loop lane whose range holds a plumbing commit without the trailer, merging nothing, and admits one whose every commit is marked; it judges a loop lane when the slot runs without the marker too; it judges no commit of a person's own lane, with or without the marker; and in a lane a person claimed and the loop later built, it exempts the commits before the first marked loop-writer commit and refuses a person's unmarked commit after it. The claim, refresh, merge, bookkeeping, handback-close, quarantine and telemetry writers each produce messages carrying the trailer, the refresh's attestation still verifies, the refresh, handback-close, quarantine, mechanical-close and telemetry messages each read as a loop writer's commit, and a refused telemetry commit is reported."
 tier = "Full"
-expected = "Satisfies SR-209's acceptance: every loop-started process carries the marker; a loop commit without a valid trailer is refused naming its subject; a commit from a process the loop did not start passes even while the loop runs; the same rule wherever the floor runs."
+expected = "Satisfies SR-209's acceptance: every loop-started process carries the marker; a loop commit without a valid trailer is refused naming its subject; a commit from a process the loop did not start passes where it is made, even while the loop runs; at the merge a lane is the loop's when its claim or a loop-writer commit in its range carries the trailer, every commit of a loop lane from its claim or its first marked loop-writer commit on must carry the trailer, a person's included, whoever runs the slot, and a person's own lane is not judged; the same rule wherever the floor runs."
 automated = "Yes"
 evidence = "tests/test_loop_provenance.py; tests/test_pre_commit_hook.py"
 status = "Approved"
@@ -2575,16 +2575,16 @@ phase = 6
 [test.TC-250]
 verifies = ["SR-217", "LLR-257", "IF-198", "IF-199"]
 level = "Integration"
-method = "Driven on real git repositories, in a module registered as slow. A requirement whose test cases were all approved before the first commit adding an Implements line for it produces nothing. Implementation landing is found both through a line naming the requirement and through a line naming one of its design rows, and the earlier of the two is the landing. A requirement with two test cases approved after that landing is reported naming the requirement, the implementation commit and both approval commits. A commit that approves one test case while withdrawing another still records the approval. A requirement with no implementation produces nothing. A declared start after a requirement's approval excludes it; no declared start judges the whole history. A test case added already Approved counts at its birth. A shallow clone, a start commit that does not exist, and a start not on first-parent history are each reported unreadable, never passing. Order is read only from commits, never from a cell. The step lists as warn-only in the harness plan."
+method = "Driven on real git repositories, in a module registered as slow. A requirement whose test cases were all approved before the first commit adding an Implements line for it produces nothing. Implementation landing is found both through a line naming the requirement and through a line naming one of its design rows, and the earlier of the two is the landing. A requirement with two test cases approved after that landing is reported naming the requirement, the implementation commit and both approval commits. A commit that approves one test case while withdrawing another still records the approval. A test case approved for another requirement and re-pointed at this one after its implementation landed is reported, dated at the re-pointing commit, and so is one reached through a design row re-pointed at this requirement after the landing. A test case that does not read approved is reported by name for a requirement whose implementation has landed, and not for one whose implementation has not; the report line names each late or unapproved test case with the warning that its result may not reflect the intended behaviour, and --strict refuses it. A requirement with no implementation produces nothing. A declared start after a requirement's approval excludes it; no declared start judges the whole history. A test case added already Approved counts at its birth. A shallow clone, a start commit that does not exist, and a start not on first-parent history are each reported unreadable, never passing, and so are a design registry still under an older carrier and a start before the design registry moved to TOML; a test case that reached the requirement through a design row before that move is dated at or before the move, and one reached through a design row re-pointed after it is dated exactly. Order is read only from commits, never from a cell. The step lists as warn-only in the harness plan."
 tier = "Full"
-expected = "Satisfies SR-217's acceptance: implementation landing and test-case approval read from history; each test case approved after the implementation reported naming both commits; a declared start scopes it; unreadable history never passes; order never read from a cell."
+expected = "Satisfies SR-217's acceptance: implementation landing and each test case's approval for the requirement read from history, a re-pointed test case dated at the re-pointing; each test case approved after the implementation reported naming both commits; each test case not approved named; each named test case warned as one whose result may not reflect the intended behaviour; a declared start scopes it; unreadable history never passes; order never read from a cell."
 automated = "Yes"
 evidence = "tests/test_check_test_first.py"
 status = "Approved"
 phase = 6
 
 [test.TC-251]
-verifies = ["SR-218", "LLR-258"]
+verifies = ["SR-218", "LLR-258", "IF-227"]
 level = "Integration"
 method = "The dashboard generated on a scaffold with needs, requirements, assumptions and records. Each need's detail lists every assumption its requirements cite, once, with its standing, its evidence level and the requirements citing it; a need whose requirements are all coincident says so; a need with an unclassified requirement shows the gap; a falsified assumption and one with no current evidence each carry a text label, asserted on the markup with styling removed. With no assumptions registry the generated page is byte-identical to the stored golden page."
 tier = "Full"
@@ -2592,4 +2592,15 @@ expected = "Satisfies SR-218's acceptance: per need, each relied-on assumption o
 automated = "Yes"
 evidence = "tests/test_traj_views.py"
 status = "Approved"
+phase = 6
+
+[test.TC-252]
+verifies = ["SR-139", "LLR-259", "IF-224"]
+level = "Integration"
+method = "Driven through the command on temporary repositories, the brief written to the live approval-brief path, in a module registered as slow. Under a level holding the requirement tier and releasing the design and test-case tiers: a chain whose owing rows are all Drafted design and test-case rows renders inside one details block, closed by default, whose summary carries the label 'Waiting for automated adjudication', with its requirement text and every owing row's cells in full; a Drafted requirement's chain, and a chain pairing a Drafted requirement with a Drafted design row, render outside the block in the owner's section; the page's title claims no human act and its signing instruction covers only the sections outside the block. With an approved snapshot and the rows then amended, status left Approved: a chain whose design row changed and whose test case was removed renders the before/after and the removal inside the block, and a chain whose requirement text changed renders its before/after outside it. With no level declared, no block renders and every chain is in the owner's section. With every tier released, every chain is in the block and the owner's section states that no held chain owes an act. The freshness check passes on each written brief."
+tier = "Full"
+expected = "Satisfies LLR-259: every owing chain rendered; a chain whose every owing row is on a released tier set apart in full in a collapsed block labelled 'Waiting for automated adjudication'; one held row keeps the chain in the owner's section; at a level that releases no spine tier, no collapsed block renders and every owing chain stays in the owner's section."
+automated = "Yes"
+evidence = "tests/test_trace_briefs.py"
+status = "Drafted"
 phase = 6

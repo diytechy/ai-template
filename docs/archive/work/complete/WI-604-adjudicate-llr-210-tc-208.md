@@ -2,12 +2,41 @@
 id = "WI-604"
 title = "adjudicate: LLR-210, TC-208 - spine row(s) authored Drafted on merged trunk 3b004c4..f395907 await a FIRST APPROVAL; read the whole chain, then approve (flip + snapshot) or return with findings"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "first-approval"
 adjudicates = ["LLR-210", "TC-208"]
 +++
+
+## Deliverable
+
+Ruled by an independent adjudicator session (Fable) from the kit's
+first-approval brief (the whole SR-157 chain rendered in full), at 97815a8c,
+in the coordinator's spine-acts batch A:
+
+    OUTCOME: RETURN rows=2
+
+- LLR-210 RETURNED: largely true of `consolidate.py` (86 tests pass), but it
+  decomposes an obligation no requirement states. SR-157 obliges REPORTING
+  declared rule violations; minting a judgement row, remembering a queue state,
+  parsing a verdict and archiving absorbed rows are loop actions no SR asks
+  for, and LLR-210 is the lone CMP-008 row among twenty CMP-006 siblings.
+  Wording: "the ready queue" is wrong, since `queue_digest` hashes every queued
+  row.
+- TC-208 RETURNED: the method matches its eighteen tests clause by clause, but
+  it reads `tier = "Smoke"` while five pointers are in
+  `tests/test_consolidate_close.py`, a `SLOW_MODULES` member that builds real
+  repositories (D31; wave-3 ruling 4(ii)).
+
+Every cell is byte-exact; nothing was flipped and nothing was anchored for
+these rows. Verdict:
+`docs/reviews/wi-604-adjudicate-llr-210-tc-208/001-ADJUDICATE-97815a8.md`.
+The follow-up is not a new row: it is carried by WI-582, the open
+spine-authoring group, whose Context and Done-when now state it (the
+consolidation obligation stated at SR level, LLR-210 re-pointed and reworded,
+TC-208's tier made true), and whose close drafts the first approval for the
+next spine-acts batch.
 
 ## Context
 

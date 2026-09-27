@@ -2,7 +2,7 @@
 id = "WI-675"
 title = "adjudicate: LLR-257, SR-217, TC-250 - approved cells amended by WI-650; judge whether scope moved"
 workstream = "process"
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 sr_refs = ["SR-217"]
 needs = ["WI-650"]
 buildtier = "medium"
@@ -11,6 +11,32 @@ brief = "amendment"
 adjudicates = ["LLR-257", "SR-217", "TC-250"]
 priority = 2
 +++
+
+## Deliverable
+
+Ruled by an independent adjudicator session (Fable) from the kit's amendment
+brief (`adjudicate_brief.compose`, all three rows in full), against the record
+at 97815a8c, in the coordinator's spine-acts batch A:
+
+    VERDICT: MEANING rows=3
+
+SR-217 (`requirement`, `rationale`, `acceptance_criteria`), LLR-257
+(`detail`) and TC-250 (`method`, `expected`) each change what a builder or a
+test must do, and all three were judged blessable: true of
+`check_test_first.py`, exercised by `tests/test_check_test_first.py` (the
+adjudicator ran it: 32 passed), and within SN-042. The placement of the
+owner's OI-87 addition as an SR-217 clause, not a derived row, was judged
+sound. The tiers were released under `human_approval_through =
+"DevStg-Boundary"`; nothing was held for the owner. Verdict:
+`docs/reviews/wi-675-adjudicate-sr-217-chain/001-ADJUDICATE-97815a8.md`.
+
+Re-anchored in this close's commit, in ONE act with WI-676's rows:
+`intake.py snapshot --reattests SR-209,TC-242,SR-217,LLR-257,TC-250`
+(act ledger seq 3). Afterwards `trace.py --approve modified` reports no
+approved spine row drifted. Recorded, not acted on: CMP-006 `Notes` still
+owes its own judgement (its third recording); `interfaces.toml` differs from
+its copy only in Drafted rows. Codex Sol cross-reviewed the verdicts and the
+act: `docs/reviews/2026-09-27-wave4/sol-wi675.md`.
 
 ## Context
 
