@@ -2326,6 +2326,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
     brief_key = ""  # the adjudicator brief this session was composed from
     route_id = None  # the selected registry id (managed mode)
     route_family = None  # the selected pair row's Family (identity, not route)
+    route_tier = ""  # the selected row's Tier; "" off the managed path
     # The launch environment: None = inherit the ambient env (today's exact
     # call); a pair row's Env is merged over os.environ below. This is how a
     # router (ANTHROPIC_BASE_URL), a second account (CLAUDE_CONFIG_DIR /
@@ -2377,7 +2378,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
             return route_stop
         m = registry[route_id]
         model = m.model or route_id
-        route_family = m.family
+        route_family, route_tier = m.family, m.tier
         tmpl = m.cmd_template or template
         row_env = agent_route.parse_env(m.env)
         if row_env:
@@ -2478,7 +2479,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         "brief": brief_key,
         "route_id": route_id,
         "route_family": route_family,
-        "route_tier": registry[route_id].tier if route_id else "",
+        "route_tier": route_tier,
         "session_env": session_env,
         # C5: this session is a review drawn with heterogeneity relaxed — a
         # typed field for the telemetry header, never a filename re-parse.

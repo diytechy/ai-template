@@ -11,7 +11,7 @@ worsening in one place, naming the measure, the part and the size of the change.
 DECLARED IN THE STACK PROFILE. The measures are a list in `docs/stack.ini`:
 
     [readability]
-    measures = complexity
+    measures = complexity flag-axis
     gating =
 
 `measures` names what runs, in order; `gating` names the declared measures
@@ -26,7 +26,10 @@ nothing would be exactly that false silence.
 THE EXIT IS NONZERO ONLY FOR A WORSENING IN A GATING MEASURE (LLR-256), and for
 nothing else. A misspelt name and an unreadable change are both reported and
 both exit 0: neither is a worsening, and a report that refused on its own
-inputs would be a gate the project never declared.
+inputs would be a gate the project never declared. A measure can also be
+REPORT-ONLY by its own contract (`REPORT_ONLY`): the flag-axis count names
+candidates for an enum state, and many a two-flag function is the right shape,
+so a profile naming it in `gating` is told it gates nothing.
 
 ONE COMPARISON PER MEASURE, OWNED BY THE MEASURE. `MEASURES` maps a name to an
 adapter that runs that measure's own comparison over the changed parts; this
@@ -41,7 +44,10 @@ A PART IS WHAT THE MEASURE SCORES. For complexity that is a function of the
 project's own code — a `.py` file under the profile's `[paths]` source or test
 root — and a function is touched when a changed line of the new side falls
 inside it (decorators included). An untouched function in a touched file is not
-measured: its debt is not this change's worsening.
+measured: its debt is not this change's worsening. For the flag axis
+(`flag_axis.py`) the part is the touched MODULE, because its stamped reading is
+per module: two counts, flag functions and positional boolean-literal call
+sites, against `docs/flag-axis-baseline`.
 
 Contracts: IF-187 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
@@ -52,7 +58,8 @@ Contract IF-187: the per-change readability verdict the harness reads back from
     worsening refuses. Each worsening is one stdout line naming the measure, the
     part and the delta — WARN for a reporting-only measure, FAIL for a gating
     one — and one summary line follows. A name no adapter measures, and a
-    gating name `measures` does not declare, each print one WARN line naming
+    gating name `measures` does not declare, and a gating name for a measure
+    that is report-only by its own contract, each print one WARN line naming
     it; a change that cannot be read prints one SKIP line per declared measure
     saying why it was not evaluated. Exit 1 only when a gating measure
     worsened; exit 0 for everything else, those lines included. argparse's
@@ -69,6 +76,7 @@ from pathlib import Path
 
 import check
 import check_complexity
+import flag_axis
 from kitlib.config import utf8_console
 from kitlib.git import git_bytes, git_out
 
@@ -142,15 +150,24 @@ def _span(node):
     return range(first, node.end_lineno + 1)
 
 
+def _new_side(root, change, rel):
+    """`(bytes, tree)` of `rel` on the change's new side, or None when it
+    cannot be read or parsed, which each measure reports as not measured."""
+    data = git_bytes(root, ["cat-file", "blob", "{}:{}".format(change.rev, rel)])
+    try:
+        return data, ast.parse(data.decode("utf-8"))
+    except (AttributeError, SyntaxError, UnicodeDecodeError, ValueError):
+        return None
+
+
 def _touched_functions(root, change, rel, lines, into):
     """The census names of the functions in `rel` that a changed line touches,
     writing the new-side text under `into` for the census to score. None when
     the new side cannot be parsed, which the caller reports as not measured."""
-    data = git_bytes(root, ["cat-file", "blob", "{}:{}".format(change.rev, rel)])
-    try:
-        tree = ast.parse(data.decode("utf-8"))
-    except (AttributeError, SyntaxError, UnicodeDecodeError, ValueError):
+    side = _new_side(root, change, rel)
+    if side is None:
         return None
+    data, tree = side
     target = into / rel
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(data)
@@ -216,8 +233,39 @@ def _complexity(root, change):
     ]
 
 
-# Implements: SR-216, LLR-256
-MEASURES = {"complexity": _complexity}
+def _flag_axis(root, change):
+    """The flag-axis reading of each touched module of the declared source and
+    test roots against its stamped row in `docs/flag-axis-baseline`: the
+    reading, the baseline reader and `compare` are all `flag_axis`'s own.
+
+    Implements: SR-216, LLR-261
+    """
+    code = _declared_code(root)
+    stamped = flag_axis.read_baseline(Path(root) / flag_axis.BASELINE)
+    out = []
+    for rel, lines in sorted(change.parts.items()):
+        if not (rel.endswith(".py") and rel.startswith(code) and lines):
+            continue
+        side = _new_side(root, change, rel)
+        if side is None:
+            print(
+                "readability: SKIP - flag-axis cannot read or parse {} ({})".format(
+                    rel, change.label
+                )
+            )
+            continue
+        delta = flag_axis.compare(flag_axis.reading(side[1]), stamped.get(rel))
+        if delta:
+            out.append((rel, delta))
+    return out
+
+
+# Implements: SR-216, LLR-256, LLR-261
+MEASURES = {"complexity": _complexity, "flag-axis": _flag_axis}
+# The measures that never refuse a change, whatever `gating` says: a count of
+# candidates is a prompt to look, not a defect.
+# Implements: SR-216, LLR-261
+REPORT_ONLY = frozenset({"flag-axis"})
 
 
 def declared_measures(profile):
@@ -246,8 +294,18 @@ def declared_measures(profile):
         for n in gating
         if n not in declared
     ]
+    problems += [
+        "readability: WARN - gating names {!r}, a measure that reports and never "
+        "refuses; it gates nothing".format(n)
+        for n in gating
+        if n in REPORT_ONLY and n in declared
+    ]
     measures = [n for n in declared if n in MEASURES]
-    return measures, [n for n in gating if n in measures], problems
+    return (
+        measures,
+        [n for n in gating if n in measures and n not in REPORT_ONLY],
+        problems,
+    )
 
 
 def worsened_findings(findings, gating, label):

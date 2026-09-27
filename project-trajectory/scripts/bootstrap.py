@@ -67,7 +67,7 @@ What it creates in the destination:
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.toml                  <- registries/test-cases.template.toml
     scripts/trace.py, trace_text.py, spine_rules.py, derive_stage.py, record_test_evidence.py, record_observation.py, check.py, check_flows.py, check_docs.py, check_perf.py,
-    scripts/check_stubs.py, check_coverage.py, check_readability.py, check_complexity.py, check_test_first.py, check_assumption_gate.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
+    scripts/check_stubs.py, check_coverage.py, check_readability.py, check_complexity.py, flag_axis.py, check_test_first.py, check_assumption_gate.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py, gen_components.py
     scripts/traj_display.py, traj_parse.py, traj_status.py
     scripts/rendering/{traj_graph.py,traj_render.py,traj_views.py,traj_panels.py,traj_context.py}
@@ -2084,9 +2084,11 @@ MAPPING = [
     # [step:readability] runs it on every scaffold. Its complexity measure calls
     # check_complexity's census and comparison through an unguarded import, so
     # the census ships beside it — a scaffold with the report and not the
-    # census could not run the one measure the profile declares.
+    # census could not run the one measure the profile declares. The flag-axis
+    # measure is imported unguarded too, so it ships whether or not declared.
     ("scripts/check_readability.py", "scripts/check_readability.py", "SR-216"),
     ("scripts/check_complexity.py", "scripts/check_complexity.py", "SR-183"),
+    ("scripts/flag_axis.py", "scripts/flag_axis.py", "SR-216"),
     # The test-first order (WI-640): check.py's built-in `test-first` step runs
     # it at every rung, so a scaffold without it would fail that step.
     ("scripts/check_test_first.py", "scripts/check_test_first.py", "SR-217"),

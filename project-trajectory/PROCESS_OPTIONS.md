@@ -32,6 +32,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Tier-conditional guardrails | an unattended run maps different model tiers to different phases | `docs/process.toml` `[policies] guardrails` |
 | Enforcement audit | your process outgrew one reader's head and you want to know which rules actually bind | `docs/enforcement-audit.md` |
 | Signed measurements | you are about to write a measured number into a doc, log or registry row | a commit-the-evidence-first rule + a historical-observation marker |
+| Complexity ratchet | a repo past roughly 5,000 lines of code whose agents author most of the diff | a stamped per-function complexity baseline, armed as a gate |
 | §7 boundary notes | onboarding contributors, wiring a workstation, or a contested tooling boundary | prose (setup-script + boundary calls) |
 | Skills layer | an AI agent works the repo and you want it to load reusable skills | `skills/` + a per-agent fan-out |
 | Trajectory / work-items layer | you want to track **how** work executes — cross-track order, %-complete | `docs/work/` specs + `PROJECT_STATE.html` + `gen_trajectory.py` |
@@ -1587,6 +1588,48 @@ commands read out of documents are an execution surface needing an allow-list,
 most figures are legitimately historical (valid only at the recorded revision),
 and some recorded commands are expensive or non-deterministic. Never imply it
 is covered.
+
+## Complexity ratchet
+
+**Applies when** a repo is past roughly 5,000 lines of code and agents author
+most of the diff. Below that, one reader holds the code in their head and the
+ratchet's upkeep costs more than it catches.
+
+An agent adds a branch where a person would have stopped to restructure: each
+change is locally reasonable and the function it lands in grows past anyone's
+reading. A size cap on the module does not see it, because the growth is inside
+one function and the module is still small. What sees it is a per-function
+measure against a stamped baseline, read at the moment the change is made.
+
+The kit ships the measure **report-only**, and arming it is this layer:
+
+1. **Read it per change first.** The scaffolded `[step:readability]` runs
+   `scripts/check_readability.py`, whose `complexity` measure reports each
+   touched function over the threshold against `docs/complexity-baseline`
+   (`[readability]` in `docs/stack.ini`). It never refuses until you list the
+   measure in `gating`.
+2. **Stamp your own baseline**, over your own `[paths]` roots and never the
+   kit's numbers: `python scripts/check_complexity.py --root . --include
+   "src/**/*.py" --include "tests/**/*.py" --restamp`. Each row is a **debt
+   statement, not an approval**; review the diff, not the run.
+3. **Arm it once its false-positive rate on your code is known**, either by
+   naming `complexity` in `gating` (the per-change view refuses) or with a
+   whole-tree step of your own running `--mode enforce`, which fails in both
+   directions: growth ("simplify, or take a reviewed bump whose reason is
+   recorded at the row") and improvement ("re-stamp downward in the same
+   commit, so the ratchet only tightens").
+4. **Place the step where it runs.** A step declared from a rung the repo has
+   not reached, or left out of the per-commit bar, does not run, and the
+   baseline drifts silently until a gate run finds fifty findings at once.
+
+The escapes the finding names are the design moves the kit's
+`deep-module-design` skill states: decompose outward into a sibling, express a
+ladder as a data table, define the error out of existence. There is **no inline
+suppression pragma**, deliberately: an opt-out copied into new code
+self-replicates, and the one central baseline is the only hatch. What this does
+**not** buy is a claim that complexity predicts defects on your code; no
+controlled study shows a threshold reduces them, so the measure is a prompt to
+restructure, reported, until your own history says it earns a gate.
 
 ## §7 boundary notes
 

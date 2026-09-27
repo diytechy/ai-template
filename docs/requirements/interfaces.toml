@@ -1828,9 +1828,9 @@ component = "CMP-007"
 [interface.IF-188]
 rationale = """The readability report measures complexity through the census's own scoring, naming, baseline reader and comparison, so a function the report calls worse is one the complexity step calls worse; a second copy of any of them would be a second answer waiting to disagree."""
 owner = "scripts/check_complexity"
-requestors = ["scripts/check_readability"]
+requestors = ["scripts/check_readability", "scripts/flag_axis"]
 channel = "call"
-data = "census, functions, read_baseline, compare, BASELINE, DEFAULT_THRESHOLD"
+data = "census, functions, source_paths, read_baseline, compare, BASELINE, DEFAULT_THRESHOLD"
 version = "v1"
 status = "Drafted"
 component = "CMP-007"
@@ -2097,3 +2097,24 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """Rows and derived readings in, finding strings out, with no I/O. The relation between a boundary interface and the requirements it reaches is derived through its owner's design rows and never recorded on the interface."""
+
+[interface.IF-239]
+rationale = """The readability report measures the flag axis through the count's own reading, comparison and baseline reader, so a module the report calls worse is one the count's own report calls worse; a second copy of any of them would be a second answer waiting to disagree."""
+owner = "scripts/flag_axis"
+requestors = ["scripts/check_readability"]
+channel = "call"
+data = "reading, compare, read_baseline, BASELINE"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+
+[interface.IF-240]
+rationale = """The whole-tree reading, per module with totals, and its re-stamp are a maintainer's act that the per-change report cannot give. Exiting 0 in every case keeps a count of candidates from ever becoming a gate."""
+owner = "scripts/flag_axis"
+requestors = ["external:downstream adopter"]
+channel = "cli"
+data = "--root · --include GLOB · --baseline · --restamp; always exit 0"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+notes = """No tie-back: the argv comes IN from the adopter's own session, and the frame declares no IN crossing for an invocation. It reads the source tree and the baseline file, and writes only the baseline, under --restamp."""

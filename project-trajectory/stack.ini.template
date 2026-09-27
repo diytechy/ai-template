@@ -115,6 +115,13 @@ mode = symbols
 #               row reports as new debt. PYTHON ONLY — a non-Python stack empties
 #               `measures`. Stamp a baseline over the same roots:
 #               python scripts/check_complexity.py --root . --include "src/**/*.py" --include "tests/**/*.py" --restamp
+#   flag-axis   per touched MODULE, its functions taking two or more boolean
+#               parameters and its call sites passing a boolean literal
+#               positionally — candidates for one enum state (scripts/flag_axis.py),
+#               against docs/flag-axis-baseline. REPORT-ONLY by its own
+#               contract: naming it in `gating` gates nothing. Opt in by adding
+#               it to `measures` once a baseline is stamped over the same roots:
+#               python scripts/flag_axis.py --root . --include "src/**/*.py" --include "tests/**/*.py" --restamp
 [readability]
 measures = complexity
 gating =

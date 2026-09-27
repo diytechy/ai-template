@@ -1,0 +1,47 @@
+# docs/flag-axis-baseline — the flag-axis reading of each counted module when stamped (flag_axis.py).
+# DOWNWARD-ONLY BY CONVENTION: re-stamp after a module sheds a flag or a literal, never to quiet a warning.
+# path	flag_functions	literal_call_sites
+project-trajectory/scripts/agent_common.py	0	1
+project-trajectory/scripts/agent_loop.py	0	5
+project-trajectory/scripts/agent_route.py	1	6
+project-trajectory/scripts/baseline_snapshot.py	0	1
+project-trajectory/scripts/bootstrap.py	1	0
+project-trajectory/scripts/check_privacy.py	1	0
+project-trajectory/scripts/check_test_first.py	0	3
+project-trajectory/scripts/dispatch.py	0	2
+project-trajectory/scripts/gen_arch_map.py	0	5
+project-trajectory/scripts/integrate.py	0	1
+project-trajectory/scripts/record_observation.py	0	1
+project-trajectory/scripts/spine_rules.py	1	0
+project-trajectory/scripts/trace.py	0	5
+tests/conftest.py	0	1
+tests/test_agent_loop_policy.py	0	9
+tests/test_agent_loop_review.py	0	1
+tests/test_agent_loop_routing.py	0	11
+tests/test_agent_loop_worker.py	0	6
+tests/test_agent_route.py	0	5
+tests/test_approval_level.py	0	10
+tests/test_baseline_snapshot.py	0	5
+tests/test_bootstrap.py	0	5
+tests/test_check_lane.py	0	1
+tests/test_check_test_first.py	0	19
+tests/test_cpu_cap.py	0	1
+tests/test_dispatch_admission.py	0	12
+tests/test_dual_plan_round.py	0	1
+tests/test_gen_okf.py	0	1
+tests/test_generated_freshness_wiring.py	1	0
+tests/test_intake.py	0	2
+tests/test_integrate_admission.py	1	0
+tests/test_loop_order.py	0	2
+tests/test_loop_provenance.py	1	0
+tests/test_plan_round.py	0	5
+tests/test_pre_commit_hook.py	0	6
+tests/test_pre_push_hook.py	0	1
+tests/test_profile.py	0	1
+tests/test_routing_and_prompts.py	0	3
+tests/test_rule_sync.py	0	2
+tests/test_session_stdin.py	0	1
+tests/test_test_evidence.py	0	2
+tests/test_trace_briefs.py	0	2
+tests/test_traj_graph.py	0	3
+tests/test_verdict_record.py	0	2

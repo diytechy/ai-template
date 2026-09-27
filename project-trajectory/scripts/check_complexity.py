@@ -42,7 +42,8 @@ Contract IF-188: the complexity measure's own parts, which the per-change
     one `(qualified name, node)` per census row; `read_baseline(path)` reads
     the stamped debt; `compare(over, old)` returns `(grew, improved)`.
     `BASELINE` and `DEFAULT_THRESHOLD` are the carrier path and the threshold a
-    baseline is stamped at. The caller holds no copy of any of them, so a
+    baseline is stamped at. `source_paths(root, includes)` is the file walk
+    under both the census and the flag-axis count. The caller holds no copy of any of them, so a
     function the report calls worse is one this census calls worse.
 
 Implements: SR-183, LLR-206
@@ -372,7 +373,11 @@ def _public(tree):
     return out
 
 
-def _paths(root, includes):
+def source_paths(root, includes):
+    """`(relative POSIX path, path)` for each file the include globs match
+    under `root`, once each, caches skipped. Public because the flag-axis count
+    walks the same surface, and a second walk would be a second answer to
+    which files a measure reads."""
     seen = set()
     for pattern in includes:
         for path in sorted(root.glob(pattern)):
@@ -387,7 +392,7 @@ def census(root, includes):
     and every module as `(path, public_symbols, lines)`. Paths are POSIX and
     relative to `root`, so a baseline is byte-identical on Windows and POSIX."""
     rows, modules = [], []
-    for rel, path in _paths(root, includes):
+    for rel, path in source_paths(root, includes):
         text = path.read_text(encoding="utf-8")
         tree = ast.parse(text)
         lines, docs = text.splitlines(), _doc_lines(tree)

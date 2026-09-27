@@ -6062,6 +6062,51 @@ the gate on would fail. A `[step:<name>]` of your own named
 `assumption-gate`, `crossing-allocation`, `interface-allocation` or
 `assumption-evidence` now collides with a built-in step and must be renamed.
 
+### The readability report gains a report-only flag-axis measure [since f7885a49]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A new kit script, `scripts/flag_axis.py`, counts per
+module the functions taking two or more boolean parameters and the call
+sites passing a boolean literal positionally: the candidates for packing
+booleans into one enum state. `scripts/check_readability.py` imports it
+unguarded as its `flag-axis` measure, which reports a rise above a module's
+stamped row in `docs/flag-axis-baseline` as a WARN and never refuses a
+change, even when `[readability] gating` names it (one WARN line says it
+gates nothing). `scripts/check_complexity.py`'s file walk is now public as
+`source_paths`. The template's `[readability]` still declares
+`measures = complexity`; the new measure is opt-in.
+
+**What to do.** Re-sync `scripts/flag_axis.py` (new; the report will not
+import without it), `scripts/check_readability.py` and
+`scripts/check_complexity.py`. To adopt the measure, stamp your own baseline
+over your own roots, never the kit's numbers:
+`python scripts/flag_axis.py --root . --include "src/**/*.py" --include "tests/**/*.py" --restamp`,
+then add `flag-axis` to `[readability] measures`. Skipping it changes
+nothing.
+
+### The complexity ratchet's opt-in layer, the structural-move rule and a deep-module-design skill [since f7885a49]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `PROCESS_OPTIONS.md` gains the "Complexity ratchet" layer
+and its Applies-when index row: how to arm the complexity measure the kit
+already ships report-only (the `complexity` measure of `[readability]`, run
+by `[step:readability]`, and `scripts/check_complexity.py`), by stamping
+your own baseline and then gating the measure or adding a whole-tree
+`--mode enforce` step of your own. `PROCESS.md` §3 gains "A structural move
+is its own commit", between the 0→A→B rule and Thin orchestrators. A new
+`scope: kit`, `domains: [any]` skill, `skills/deep-module-design/`, states
+the design moves a complexity finding names; `skills/INDEX.csv` has its row.
+
+**What to do.** Take `docs/process.md` and `docs/process-options.md`
+wholesale as usual. Copy `skills/deep-module-design/` and regenerate your
+`skills/INDEX.csv`. `bootstrap.py --sync` refreshes only the skills a
+per-agent directory already carries, so if your repo hand-curates
+`.claude/skills/` (or another agent's), add the skill there yourself or
+skip it with a stated reason. Arming the ratchet is your call; nothing
+changes until you do.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

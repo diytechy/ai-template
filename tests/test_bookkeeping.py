@@ -740,8 +740,8 @@ WHOLE_TREE = {("add", "-A"), ("reset", "--hard"), ("clean", None)}
 CLAIM_PATH = {"claim", "_claim_locked", "_claim_refusal", "_drop_abandoned"}
 
 
-def _whole_tree_git_calls(path, only=None):
-    tree = ast.parse(path.read_text(encoding="utf-8"))
+def _scan_calls(tree, only):
+    """Every call in the module, or only in the functions `only` names."""
     scopes = (
         [tree]
         if only is None
@@ -751,21 +751,26 @@ def _whole_tree_git_calls(path, only=None):
             if isinstance(n, ast.FunctionDef) and n.name in only
         ]
     )
+    return [c for s in scopes for c in ast.walk(s) if isinstance(c, ast.Call)]
+
+
+def _string_args(call):
+    """The positional string literals a call passes: a git argv's words."""
+    return {
+        a.value
+        for a in call.args
+        if isinstance(a, ast.Constant) and isinstance(a.value, str)
+    }
+
+
+def _whole_tree_git_calls(path, only=None):
+    tree = ast.parse(path.read_text(encoding="utf-8"))
     hits = set()
-    for scope in scopes:
-        for call in ast.walk(scope):
-            if not isinstance(call, ast.Call):
-                continue
-            words = [
-                a.value
-                for a in call.args
-                if isinstance(a, ast.Constant) and isinstance(a.value, str)
-            ]
-            for sub, flag in WHOLE_TREE:
-                if sub in words and (flag is None or flag in words):
-                    hits.add(
-                        "{}:{} git {} {}".format(path.name, call.lineno, sub, flag)
-                    )
+    for call in _scan_calls(tree, only):
+        words = _string_args(call)
+        for sub, flag in WHOLE_TREE:
+            if sub in words and (flag is None or flag in words):
+                hits.add("{}:{} git {} {}".format(path.name, call.lineno, sub, flag))
     return sorted(hits)
 
 

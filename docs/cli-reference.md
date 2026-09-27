@@ -313,6 +313,17 @@ Contracts (interfaces): IF-050, IF-165
 | `--phase-rule` | check the authoring-time stage-decrease rule against HEAD (warn-first) |
 | `--strict` | with --phase-rule: exit 1 on a finding instead of warning |
 
+### `scripts/flag_axis`
+_flag_axis.py — the flag-axis count: boolean switches that could be one state._
+Contracts (interfaces): IF-239, IF-240
+
+| Option | Help |
+|---|---|
+| `--root` | repo root (default: cwd) |
+| `--include` |  |
+| `--baseline` |  |
+| `--restamp` | rewrite the baseline |
+
 ### `scripts/gen_arch_map`
 _The module/function AST walk behind the DERIVED architecture (WI-455)._
 Contracts (interfaces): IF-010, IF-028, IF-117, IF-131, IF-132, IF-150, IF-199

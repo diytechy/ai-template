@@ -235,3 +235,33 @@ stands. Then smoke 1622 passed / 3 skipped, **seconds 36.4 s within 60 s**.
 Touched slow modules (test_rejudge, test_assumption_gate,
 test_assumption_rules, test_observation_writer), run by the coordinator:
 266 passed / 1 skipped.
+
+### WI-657 parts 1 to 3 land; the row stays open for the research (ruling 13)
+
+The complexity ratchet is back to green: `check_complexity.py --mode
+enforce` gives "OK - 204 row(s) over 15, unchanged from baseline." The three
+named growths were reduced, not re-stamped (`trace.load_registries` 42 -> 6
+through one `_working_set` helper). Improvements are re-stamped down, moved
+rows re-pointed, and 18 rows of trunk debt stamped with reasons. Two of those
+18 were stamped by the coordinator at this merge, WI-638's
+`release_gate_findings` and `due_cases`, cognitive 16 each. Part 2 is the
+flag-axis measure, report-only in the readability report. Part 3 is the
+"Complexity ratchet" opt-in layer in PROCESS_OPTIONS.md (+2,696 bytes), the
+structural-move bullet in PROCESS.md §3 (+323 bytes), and the
+`deep-module-design` skill, byte-identical in three copies. Why the bar
+missed the drift: `[step:complexity]` starts at DevStg-Impl while the derived
+stage is DevStg-Tests, and no hook runs the census. Codex Sol: first round
+NOT YET SOUND (the flag-axis command could exit nonzero), then SOUND.
+**Open count unchanged at 13**: WI-657 stays queued for WI-624's research.
+
+Commit bar at WI-657 (parts 1 to 3): `check_trajectory --strict` clean,
+`trace --strict-integrity` 0, approve-modified current, `gen_open_items`
+current, `check_docs` 0 broken, `check_complexity --mode enforce` OK. The
+live-frame pin fired again, for WI-657's flag-axis CLI (IF-240). IF-240 was
+a Drafted row with no `notes` cell, so it lacked the "No tie-back" reason its
+untied peers state. The coordinator added that note, mirroring IF-233's,
+and added IF-240 to the pin. Then smoke 1636 passed / 3 skipped, **seconds
+44.4 s within 60 s**. Ratchets, flag-axis, resync and dogfood: 69 passed /
+1 skipped. The live-frame pin broke twice at this session's merges, so the
+next session should ask whether it should read "No tie-back" rows rather than
+list them.

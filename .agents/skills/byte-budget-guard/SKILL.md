@@ -31,10 +31,10 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,992 | 2026-09-27 | +12: WI-649 — the ladder line points at process.md §4 for who signs |
 | `CLAUDE.md` | **8,500** | 7,977 | 2026-09-27 | +2: WI-652 re-measures the smoke tier on the 4-core box |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,542 | 2026-09-27 | WI-649 AGENTS and PROCESS, WI-577 PROCESS_OPTIONS row restamps |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,491 | 2026-09-27 | WI-657 PROCESS and PROCESS_OPTIONS row restamps |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill
-about 9%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
+about 10%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
 section under Gemini's truncation) and is not to be raised. Adding a sentence
 means cutting one, in the same edit. Each `Baseline` is pinned to its file's
 real size by `test_capped_doc_baselines_match_the_real_sizes`.
@@ -45,8 +45,8 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 89,953 | 2026-09-27 | **+753** WI-649: §4 states once who takes a held rung's approval, and which half is mechanical |
-| `project-trajectory/PROCESS_OPTIONS.md` | 189,817 | 2026-09-27 | **+268** WI-577: the approval brief sets released-rung chains apart, collapsed |
+| `project-trajectory/PROCESS.md` | 90,276 | 2026-09-27 | **+323** WI-657: §3 gains "a structural move is its own commit" |
+| `project-trajectory/PROCESS_OPTIONS.md` | 192,513 | 2026-09-27 | **+2,696** WI-657: the Complexity ratchet opt-in layer and its index row |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

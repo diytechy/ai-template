@@ -5070,6 +5070,14 @@ class Findings:
     area_counts: dict = field(default_factory=dict)
 
 
+def _working_set(rows, id_col):
+    """One tier's working set: the rows that carry an id, less the `-000`
+    template examples, so a fresh scaffold has nothing to orphan. Stated once
+    because every tier filters the same way; the raw list keeps both kinds of
+    row for the placeholder and integrity checks."""
+    return [r for r in rows if r.get(id_col) and not is_example(r[id_col])]
+
+
 def load_registries(docs):
     """Load the spine + off-spine registries under docs (loading only — no analysis)."""
     # The three spine tiers read through the CARRIER — as do the IF and CMP
@@ -5140,24 +5148,22 @@ def load_registries(docs):
     # The working sets exclude template example rows (ids ending "-000") so a
     # fresh scaffold has nothing to orphan; the raw lists above keep them for the
     # placeholder and integrity checks below.
-    srs = [r for r in raw_srs if r.get("SR-ID") and not is_example(r["SR-ID"])]
-    llrs = [r for r in raw_llrs if r.get("LLR-ID") and not is_example(r["LLR-ID"])]
-    tcs = [r for r in raw_tcs if r.get("TC-ID") and not is_example(r["TC-ID"])]
-    pbs = [r for r in raw_pbs if r.get("PB-ID") and not is_example(r["PB-ID"])]
+    srs = _working_set(raw_srs, "SR-ID")
+    llrs = _working_set(raw_llrs, "LLR-ID")
+    tcs = _working_set(raw_tcs, "TC-ID")
+    pbs = _working_set(raw_pbs, "PB-ID")
 
     mods = [
         r for r in raw_repos + raw_mods if _repo_id(r) and not is_example(_repo_id(r))
     ]
-    parts = [r for r in raw_parts if r.get("PART-ID") and not is_example(r["PART-ID"])]
-    assets = [
-        r for r in raw_assets if r.get("ASSET-ID") and not is_example(r["ASSET-ID"])
-    ]
-    cmps = [r for r in raw_cmps if r.get("CMP-ID") and not is_example(r["CMP-ID"])]
-    ifs = [r for r in raw_ifs if r.get("IF-ID") and not is_example(r["IF-ID"])]
-    exts = [r for r in raw_exts if r.get("EXT-ID") and not is_example(r["EXT-ID"])]
-    bifs = [r for r in raw_bifs if r.get("B-ID") and not is_example(r["B-ID"])]
-    rels = [r for r in raw_rels if r.get("REL-ID") and not is_example(r["REL-ID"])]
-    stks = [r for r in raw_stks if r.get("STK-ID") and not is_example(r["STK-ID"])]
+    parts = _working_set(raw_parts, "PART-ID")
+    assets = _working_set(raw_assets, "ASSET-ID")
+    cmps = _working_set(raw_cmps, "CMP-ID")
+    ifs = _working_set(raw_ifs, "IF-ID")
+    exts = _working_set(raw_exts, "EXT-ID")
+    bifs = _working_set(raw_bifs, "B-ID")
+    rels = _working_set(raw_rels, "REL-ID")
+    stks = _working_set(raw_stks, "STK-ID")
 
     sn_ids = set()
     sn_draft = set()

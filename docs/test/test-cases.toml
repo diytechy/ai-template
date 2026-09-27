@@ -2656,5 +2656,14 @@ tier = "Smoke"
 expected = "Satisfies LLR-263 and IF-233: the module map through design rows and resolution by path, suffix or stem; --tests-for listing from the registries and stack.ini of the directory --docs names, with exits 0, 1 and 2; and the live map reaching suites not named for their module"
 automated = "Yes"
 evidence = """tests/test_evidence_join.py::test_the_module_map_follows_design_rows_not_file_names; tests/test_evidence_join.py::test_a_module_resolves_by_path_suffix_or_stem; tests/test_evidence_join.py::test_the_command_prints_one_test_file_per_line; tests/test_evidence_join.py::test_the_command_reads_the_declared_test_root; tests/test_evidence_join.py::test_the_command_reads_the_docs_directory_it_is_pointed_at; tests/test_evidence_join.py::test_the_command_refuses_an_unknown_or_ambiguous_module; tests/test_evidence_join.py::test_the_live_map_reaches_tests_not_named_for_their_module"""
+
+[test.TC-256]
+verifies = ["SR-216", "LLR-261", "IF-239", "IF-240"]
+level = "Unit"
+method = "In memory, with no git, subprocess or scaffold. A function with two boolean parameters, by literal default or by a bool annotation on keyword-only parameters, is counted with its flags; a function with one is not; a method is named Class.method as the complexity census names it. A call passing a boolean literal positionally is counted with its line and callee; one passing it by keyword is not. Run directly over a tree of three modules, the report prints one line for each counted module and none for the uncounted one, then one total line, and exits 0; with a module above its stamped row it prints a WARN line naming the module and still exits 0; after a re-stamp over two counted modules the baseline holds both rows and the report warns on nothing; an included file that is not valid Python, or not UTF-8, prints a SKIP line naming it, with and without the re-stamp, and the run still exits 0. The comparison names only the counts that rose. Driven as the readability report's flag-axis measure over a change whose new sides are served in memory, a touched module above its stamped row is named, and neither one at its row nor one outside the declared roots is; declared gating, the measure gates nothing, one WARN line says it reports and never refuses, and a worsening exits 0."
+tier = "Smoke"
+expected = "Satisfies LLR-261: per module, functions with two or more boolean parameters and positional boolean-literal call sites counted with totals, one-flag functions and keyword literals not; a rise above the stamped per-module row reported as a worsening naming the module; never a refusal, even when declared gating."
+automated = "Yes"
+evidence = "tests/test_flag_axis.py"
 status = "Drafted"
 phase = 6

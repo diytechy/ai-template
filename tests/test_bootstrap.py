@@ -137,6 +137,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/check_figures.py",
         "scripts/check_readability.py",
         "scripts/check_complexity.py",
+        "scripts/flag_axis.py",
         "scripts/check_test_first.py",
         "scripts/check_assumption_gate.py",
         "scripts/check_need_form.py",

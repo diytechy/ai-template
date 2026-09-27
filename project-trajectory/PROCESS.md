@@ -190,6 +190,11 @@ Stable, zero-padded, never reused.
   behavior, never re-derived at each caller — this is the antidote skill's
   "validate once at the boundary" applied at repo scale (vendored at
   `skills/antidote/`, a per-fix companion to this repo-scale doctrine).
+- **A structural move is its own commit.** A behaviour-preserving move
+  (a rename, an extraction, a file split) lands in a commit that changes no
+  behaviour, before the change it enables. Each diff is then reviewable as one
+  kind of change: the move by its unchanged tests, the behaviour by a diff that
+  shows only it.
 - **Thin orchestrators**: an entry point / top-level routine should *compose, not
   compute* — a short, ordered sequence of well-named calls so that reading it is
   the high-level flow. Push logic down into the named steps. The flow is
