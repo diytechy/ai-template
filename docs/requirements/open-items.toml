@@ -3304,10 +3304,12 @@ recommendation = """(c) for the branches now, (a) for contract_split once OI-44 
 
 [open_item.OI-82]
 title = "Does the owner's approval brief narrow to the rungs the dial still holds?"
-status = "pending"
+status = "ruled"
 raised = "2026-09-02"
-one_line = "WI-572 moved the first-approval act to the adjudicator and filtered the minted population by the human-approval dial at both adjudication ends (intake's mint and adjudicate_brief's composition, through agent_common.human_approves_spine). The plan's §2a table row 'Surfaces to the owner' says rows on a RELEASED rung no longer surface to the owner - but trace.py --approve modified still renders every Drafted chain, held or released, and calls human_approves_spine nowhere. Should the owner's approval brief narrow to the rungs the dial still HOLDS (so a sitting shows only what the owner actually owes a signature on), or keep rendering every Drafted chain (so the owner retains sight of what adjudicators are approving on their behalf)? WI-572 deliberately did not decide this: it changes what the owner sees at a sitting, which is the owner's call and not a side effect of moving who acts."
-decision = """Whether `trace.py --approve modified` (and the `docs/ratify/CURRENT.md` it renders) narrows the owner's approval brief to the spine tiers the human-approval dial still HOLDS, or keeps rendering every Drafted chain including the rungs adjudicators now approve on the owner's behalf.
+one_line = "RULED 2026-09-26 (a), refined by the owner: every unapproved chain still appears in the approval brief; a chain on a rung the dial releases is labelled 'Waiting for automated adjudication' and collapsed by default. WI-577 applies it."
+decision = """RULED 2026-09-26 by the owner: option (a), refined. The owner's words: "All unapproved items should appear in the brief, but anything above the stage the human / human-delegated approval stage is noted as 'Waiting for automated adjudication' and is hidden / collapsed by default, or is collapsed (by default still) and tied to another expansion checkbox." So the refinement over (a) as written: the released-rung chains render in full, not as ids only, under that label and collapsed by default. The held-rung chains render as today. WI-577 applies it, reading the dial through `agent_common.human_approves_spine`. Record: docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md. Original question follows.
+
+Whether `trace.py --approve modified` (and the `docs/ratify/CURRENT.md` it renders) narrows the owner's approval brief to the spine tiers the human-approval dial still HOLDS, or keeps rendering every Drafted chain including the rungs adjudicators now approve on the owner's behalf.
 
 - WI-572 moved the first-approval act to the adjudicator and filtered the MINTED population by the dial at both adjudication ends, through `agent_common.human_approves_spine`.
 - The plan's §2a table row already asserts that rows on a RELEASED rung no longer surface to the owner. `trace.py` calls `human_approves_spine` nowhere, so that row is unsatisfied prose either way this is ruled.
@@ -3325,6 +3327,8 @@ recommendation = """(a) NARROW, with the delegated set listed but set apart.
 - the guard: read the dial through the EXISTING `agent_common.human_approves_spine`. A third copy of the rung table is precisely what WI-572's round-1 MAJOR was about.
 - the sequencing: WI-577 is drafted and parked on this row; ruling it releases that row onto the frontier, and the PROCESS_OPTIONS.md §2a text lands with it."""
 wi_refs = ["WI-577"]
+ruled_date = "2026-09-26"
+ruling_ref = "docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md"
 
 [open_item.OI-83]
 title = "A long-lived coordinator runs the modules it imported at launch"
@@ -3419,10 +3423,12 @@ ruling_ref = "docs/log.d/2026-09-06-oi85-owner-ruling.md"
 
 [open_item.OI-86]
 title = "Re-attest the stand-in's signatures on SN-041 to SN-044"
-status = "pending"
+status = "ruled"
 raised = "2026-09-26"
-one_line = "The phase-6 act (cbb6649f) approved SN-041..SN-044 on the owner's held rung by a Fable STAND-IN, not the owner; the need tier has no drift detector, so nothing else surfaces this. Three acts, D6/D20 first: keep or revert SN-042's narrowed acceptance, sign the two new needs SN-043/SN-044, and accept SN-041's first sentence being left to a later assumption row."
-decision = """Whether the owner re-attests, as approved, the four needs a stand-in signed at the phase-6 approval act (WI-642, cbb6649f), on the rung `human_approval_through = "DevStg-Needs"` holds for the owner.
+one_line = "RULED 2026-09-26 (a): the stand-in's signatures on SN-041..SN-044 hold as approved - it acted under the owner's delegation, which the held rung permits; the rung exists to stop a mechanically triggered session approving without the owner's intent. WI-649 states that where the dial is defined."
+decision = """RULED 2026-09-26 by the owner: option (a). SN-041 to SN-044 stand as approved, SN-042's prospective narrowing (D6/D20) and the D5 deferral included. The owner's clarification of what the held rung means, which decides it: "If the human has delegated approval to its main session LLM thread, then that delegation holds. The stage is intended to prevent mechanically triggered LLM sessions from approving without the human owner's intention, but delegation from a human is perfectly fine, even if it inherently incurs risk." The Fable stand-in acted under that delegation at the phase-6 act, so its signatures are the owner's act and are re-attested by this ruling. The owner also noted that an amended row whose meaning does not change is re-attested without them: the amendment adjudication judges whether meaning moved, and `intake.py snapshot --reattests` re-anchors it (for needs, that route needs the drift detector OI-91 funds). The owner asked whether this needs clearer documentation: it does. The dial's comment in `docs/process.toml` and its template say only "the human approves"; nothing states that an attended session acting on the owner's explicit delegation carries the owner's authority while a mechanically triggered one never does (WI-636's loop-trailer refusal enforces only the second half). WI-649 states it once, where PROCESS.md defines the dial, and points the other homes at it. Record: docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md. Original question follows.
+
+Whether the owner re-attests, as approved, the four needs a stand-in signed at the phase-6 approval act (WI-642, cbb6649f), on the rung `human_approval_through = "DevStg-Needs"` holds for the owner.
 
 - **D6/D20, first.** SN-042's acceptance, as the owner accepted it in the C1 package: "…the project record shows that order for every requirement; …". As approved: "…for every requirement approved after the project adopts this rule; …". The narrowing was the stand-in's act (D20), made because the repository's existing requirements were largely written after their code. SR-217 and the test-first check (WI-640) are built on the narrowed text, with this repository's start declared at f537fc53.
 - **D2.** SN-043 (premises beyond the system's own behavior are recorded and checked) and SN-044 (each need names its stakeholders and its source) are new text no owner has signed; no existing need demands the assumption tier or the stakeholder list.
@@ -3442,13 +3448,17 @@ recommendation = """(a): re-attest all three as approved.
 - the guard: rule OI-87 (SR-217's association timing) in the same sitting, since it is the other half of what "test-first" means for a requirement.
 - the sequencing: after this, the C1 sitting commit (WI-643) writes every need's stakeholder and source cells, which SN-044's own acceptance needs."""
 wi_refs = ["WI-642", "WI-640", "WI-643"]
+ruled_date = "2026-09-26"
+ruling_ref = "docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md"
 
 [open_item.OI-87]
 title = "When does a test case become a requirement's, for the test-first check?"
-status = "pending"
+status = "ruled"
 raised = "2026-09-26"
-one_line = "SR-217 dates a test case's approval per test case, so a test case approved earlier and attached to a requirement AFTER its implementation landed inherits its earlier date and passes. Amend SR-217 (with LLR-257, TC-250) so a requirement's test case counts from the first commit where it reads approved AND names the requirement or one of its design rows? Rule with OI-86's SN-042 act."
-decision = """Whether SR-217's test-first order counts a test case from its own first approval, or from the first commit at which it is both approved and associated with the requirement.
+one_line = "RULED 2026-09-26 (a) plus the owner's addition: a requirement's test case counts from the first commit where it reads approved AND names the requirement or its design rows; a test that is defined and whose implementation is done still runs, but a result from a test case not yet approved is reported with a warning that it may not reflect intended behaviour. WI-650."
+decision = """RULED 2026-09-26 by the owner: option (a), with an addition. The owner's words: "if the tests are defined and the implementation is 'done', run the test. But if that test was not approved, the test should warn it has not yet been approved and there is a chance that its result may not reflect intended behavior." So: (1) SR-217, LLR-257 and TC-250 are amended so a requirement's test case is approved at the earliest commit where it reads approved AND names the requirement or one of its design rows; (2) nothing blocks a defined test from running once its implementation is done; (3) where a requirement's result rests on a test case that is not approved (or was approved only after the implementation), the report carries a warning naming the case and saying its result may not reflect the intended behaviour. The drafting session places (3) on the spine by the spine-authoring skill (an SR-217 acceptance clause or a derived row), and the amendments go through adjudication. WI-650 carries all three. Record: docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md. Original question follows.
+
+Whether SR-217's test-first order counts a test case from its own first approval, or from the first commit at which it is both approved and associated with the requirement.
 
 - SR-217's acceptance: "a test case's approval is the earliest commit in which it reads approved". It says nothing about when a test case becomes the requirement's.
 - The built check (WI-640) reads membership (a test case's `Verifies` naming the requirement or one of its design rows) at the tip, and approval dates from history. An already-approved test case re-pointed at a requirement after the code landed therefore inherits its earlier approval date: a false pass. The module docstring discloses the reading.
@@ -3465,27 +3475,37 @@ recommendation = """(a), ruled together with OI-86's SN-042 act.
 - the guard: order is still read only from history, never from a cell, as SR-217 requires.
 - the sequencing: after the ruling, draft the SR-217/LLR-257/TC-250 amendment and its adjudication in one item, then the one-condition build."""
 wi_refs = ["WI-640"]
+ruled_date = "2026-09-26"
+ruling_ref = "docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md"
 
 [open_item.OI-88]
 title = "Confirm the assumption extension's gate sits at DevStg-Arch (spine map D8)"
 status = "pending"
 raised = "2026-09-26"
-one_line = "SR-212's interface-form gate runs at DevStg-Arch, because interfaces exist only from the Arch rung; the assumption-tier plan (AT §11) says its Boundary half 'also runs per reached boundary IF'. Confirm the deviation (the check waits for interfaces), or ask for a Boundary-rung arm?"
-decision = """Whether the assumption extension's gate (SR-212: each interface-form requirement reached by a boundary interface that is coincident or bridged by an assumption the requirement cites) sits at DevStg-Arch as approved, or also runs at DevStg-Boundary as the plan's §11 describes. Recorded as spine map D8, owner-reserved."""
+one_line = "OWNER DIRECTION 2026-09-26, not yet ruled: the owner leans to approving a level-0 interface that meets a boundary together with the assumption that needs it (an assumption cannot exist without its interface), or to baking the interface into the assumption, and asks for more discussion. The driver's reading: the frame's crossings ARE those level-0 interfaces and are approved at DevStg-Boundary, so SR-212 can gain a Boundary arm over crossings while its interface-row arm stays at Arch. Rule (a), (b), (c) or (d)."
+decision = """OWNER DIRECTION 2026-09-26 (not a ruling; the owner asked for more discussion). The owner's words: "The system specifications need to have testable interfaces, which means assumptions already need to be made, which means the interface into the system must be defined. There might be a better way to achieve this, but I tend to think 'level-0' interfaces that meet a boundary specifically need to get approved inherently with the assumption (because you can't have that assumption without the interface). Again, there are alternatives here, like baking the interface into the assumption."
+
+The driver's analysis for that discussion. The ladder already has a level-0 interface that exists before the Arch rung: the frame's boundary CROSSINGS (`B-##` in `external.toml`), approved with the frame at DevStg-Boundary. Requirements written at DevStg-Reqs already cite them (`boundary_refs`), and an assumption already lands on them (`effect_at` names crossings and must name declared ones). The `interfaces.toml` rows (IF-###) are the partition's seams, approved at DevStg-Arch, and a boundary IF realises a crossing. So the owner's premise holds of crossings today: an assumption cannot be recorded without the crossing it lands on, and both exist at the Boundary rung. What does NOT exist before Arch is the IF row that SR-212's check reads. That gives two new options beside (a) and (b): (c) SPLIT BY LEVEL - SR-212 gains a Boundary arm that judges each boundary-referencing requirement against the CROSSINGS (coincident or bridged by a cited assumption landing on that crossing), and keeps its Arch arm over IF rows; nothing changes about when IF rows are approved. (d) BAKE THE INTERFACE INTO THE ASSUMPTION - an assumption row carries the crossing's contract itself, so no separate level-0 interface is approved; this duplicates what the crossing row already holds and gives the contract two homes. Recommendation revised to (c): it is the owner's intuition expressed in rows that already exist, it adds a check arm rather than moving an approval rung, and it leaves (d)'s second home unbuilt. Until ruled, WI-634 builds SR-212 at Arch as approved; (c) would add an arm, not undo that build. Original question follows.
+
+Whether the assumption extension's gate (SR-212: each interface-form requirement reached by a boundary interface that is coincident or bridged by an assumption the requirement cites) sits at DevStg-Arch as approved, or also runs at DevStg-Boundary as the plan's §11 describes. Recorded as spine map D8, owner-reserved."""
 blast_radius = """- migration: none; the gate is enabled by a `[checks]` setting and is not yet built (WI-634).
 - deferring: WI-634 builds it at Arch as approved; ruling later means amending SR-212 and its design row after the build.
 - reversal: a threshold on one check step."""
 options = """- (a) CONFIRM Arch. FOR: interfaces are approved from the Arch rung, so a Boundary-rung arm would judge rows that do not exist yet. AGAINST: departs from the plan's wording.
-- (b) ADD a Boundary-rung arm that judges whatever boundary interfaces exist. FOR: the plan's text. AGAINST: judges an incomplete interface set and fails early for absence, not for defect."""
-recommendation = "(a) confirm Arch: the check can only judge interfaces that exist, and they exist from the Arch rung."
+- (b) ADD a Boundary-rung arm that judges whatever boundary interfaces exist. FOR: the plan's text. AGAINST: judges an incomplete interface set and fails early for absence, not for defect.
+- (c) SPLIT BY LEVEL: a Boundary arm over the frame's crossings, the Arch arm over IF rows unchanged. FOR: the level-0 interface the owner describes already exists as the crossing and is approved at DevStg-Boundary with the frame; adds an arm, moves no approval rung. AGAINST: two arms of one requirement to state and test; an amendment of SR-212 and its design row.
+- (d) BAKE the crossing's contract into the assumption row. FOR: the assumption is self-contained. AGAINST: the contract then has two homes, the crossing and the assumption."""
+recommendation = "REVISED 2026-09-26 after the owner's direction: (c) split by level. The frame's crossings are the level-0 interfaces and are approved with the frame, so a Boundary arm over them realises the owner's intent without moving when IF rows are approved; the original (a) remains the Arch half of it."
 wi_refs = ["WI-634"]
 
 [open_item.OI-89]
 title = "Does the two-frame orientation deserve an owner need of its own (spine map D14)?"
-status = "pending"
+status = "ruled"
 raised = "2026-09-26"
-one_line = "SR-187 (a crossing names its system of interest: operation or delivery) is derived from SN-043, not from a need that asks for two systems; SN-037 speaks of one system. Keep it as a derived requirement argued in its rationale, or state the two-frame orientation as an owner need (a design constraint)?"
-decision = """Whether the split between the operation system and the delivery system, which SR-187 introduces so an assumption has an operation crossing to land on (SN-043's "where its outcome lands"), should be stated as its own owner need rather than stay a derived requirement. Recorded as spine map D14, owner-reserved. Built by WI-627; this repository's crossings are written by the C1 sitting commit (WI-643)."""
+one_line = "RULED 2026-09-26 (a): SR-187 stays a derived requirement under SN-043, carried by its hat_refs lens and rationale; the owner asked how the kit accommodates such a derived row, answered in the ruling record."
+decision = """RULED 2026-09-26 by the owner: "Basically a, but need to understand how it's accommodated." SR-187 stays derived. How the kit accommodates a requirement its needs do not literally ask for (the spine-authoring skill, rule (c), DO-178C's derived-requirement class): the row traces to the need it serves (SR-187's `sn_refs` names SN-037 and SN-043), names the lens that derived it in `hat_refs` (FIRST-RUN-ADOPTER, a roster hat, so a retired lens is a finding), and argues the derivation in its `rationale`. A derived row traced to a parent whose text does not demand it WITHOUT that record is the defect; with it, the row is reviewable and the need owner can see it. The operation/delivery split is how the delivery frame (the kit and its process) mirrors the operation frame (the adopter's product, whose populated needs speak only of the product): the closed `system` cell on each crossing marks which frame a crossing belongs to, so a delivery-frame requirement can exist beside a product's needs without claiming to derive from them. What the kit does not yet do is render the derived set upward to the need owner (skill rule (c)(iii)); WI-633's per-need view is the queued home for that. Record: docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md. Original question follows.
+
+Whether the split between the operation system and the delivery system, which SR-187 introduces so an assumption has an operation crossing to land on (SN-043's "where its outcome lands"), should be stated as its own owner need rather than stay a derived requirement. Recorded as spine map D14, owner-reserved. Built by WI-627; this repository's crossings are written by the C1 sitting commit (WI-643)."""
 blast_radius = """- migration: none; SR-187 is built and its cells are optional.
 - deferring: SR-187 stays a derived row whose only lens is its rationale; a later reader may take it for accretion.
 - adding a need: one new SN at the owner's intake, and SR-187 re-traced to it."""
@@ -3493,13 +3513,17 @@ options = """- (a) KEEP derived, argued in SR-187's rationale. FOR: no new need;
 - (b) STATE it as an owner need (the system is described in two frames, the one it operates in and the one that delivers it). FOR: the constraint gets a home a stakeholder reads. AGAINST: a new need to write and approve."""
 recommendation = "(a) keep it derived for now: it exists to serve SN-043, and a second need would restate SN-043's purpose; revisit if a second requirement ever needs the two frames for a different reason."
 wi_refs = ["WI-627", "WI-643"]
+ruled_date = "2026-09-26"
+ruling_ref = "docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md"
 
 [open_item.OI-90]
 title = "Which test cases count as observation tests (spine map D22)?"
-status = "pending"
+status = "ruled"
 raised = "2026-09-26"
-one_line = "SR-198 marks an observation test case by its Automated cell alone (No), which admits manual and demonstration cases to lifetimes, declared inputs and checkpoint re-judging: a wider class than the inspection, critique and attestation the S6 ruling had in mind. Confirm the Automated-cell marker, or narrow the class?"
-decision = """Whether an observation test case is any case recorded as not automated (as approved in SR-198 and LLR-233 and built by WI-631), or only the inspection, critique and attestation cases S6 names. Recorded as spine map D22, owner-reserved: the rows disagree on method today, so the Automated cell was the one reliable marker. On this repository the build reports ten advisories: missing inputs and lifetime on TC-036, TC-055, TC-209, TC-210 and TC-211."""
+one_line = "RULED 2026-09-26 (a): confirm the Automated-cell marker; every test case recorded as not automated is an observation test."
+decision = """RULED 2026-09-26 by the owner: option (a), the recommendation ("I'm okay with the recommendation"). SR-198 and LLR-233 stand; the ten advisories on TC-036, TC-055, TC-209, TC-210 and TC-211 are real work, not noise. Record: docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md. Original question follows.
+
+Whether an observation test case is any case recorded as not automated (as approved in SR-198 and LLR-233 and built by WI-631), or only the inspection, critique and attestation cases S6 names. Recorded as spine map D22, owner-reserved: the rows disagree on method today, so the Automated cell was the one reliable marker. On this repository the build reports ten advisories: missing inputs and lifetime on TC-036, TC-055, TC-209, TC-210 and TC-211."""
 blast_radius = """- migration: adopters with Automated = No cases get two advisories per case on upgrade (disclosed in the resync pack).
 - narrowing: an amendment of SR-198 and LLR-233 and a marker the rows do not reliably carry today (the method cell).
 - deferring: none beyond the advisories; nothing fails."""
@@ -3507,26 +3531,34 @@ options = """- (a) CONFIRM the Automated-cell marker. FOR: one reliable marker; 
 - (b) NARROW to inspection, critique and attestation by method. FOR: S6's intent. AGAINST: rests on a method cell the rows disagree about; needs a method-vocabulary cleanup first."""
 recommendation = "(a) confirm: a manual or demonstration result also goes stale and also rests on inputs, so the wider class is the honest one."
 wi_refs = ["WI-631", "WI-638"]
+ruled_date = "2026-09-26"
+ruling_ref = "docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md"
 
 [open_item.OI-91]
 title = "SR-178 promises need-text drift reporting that is not built: fund the detector or amend SR-178 (spine map D29)"
-status = "pending"
+status = "ruled"
 raised = "2026-09-26"
-one_line = "Approved SR-178 says a recorded artifact whose text moved from its acceptance copy is reported, 'stakeholder needs included'; the need tier has no drift detector (OI-85 deferred it). Fund the detector (add the need tier to the snapshot comparison and the re-attestation brief) or amend SR-178 to exclude needs?"
-decision = """Whether to build need-text drift reporting, which approved SR-178 promises, or amend SR-178. OI-85's ruling left the detector deferred; the phase-6 sitting recorded the gap as spine map D29, owner-reserved. This row and OI-86 exist because the gap is real: a need's re-attestation debt surfaces nowhere mechanical."""
+one_line = "RULED 2026-09-26 (a): fund the need-tier drift detector; WI-651 builds it after the assumption tier's build."
+decision = """RULED 2026-09-26 by the owner: option (a), "Yep, fund it." SR-178 stays as approved and becomes true when the need tier joins the snapshot comparison and the re-attestation brief renders a need section. WI-651 carries it, sequenced after the assumption tier's build. Record: docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md. Original question follows.
+
+Whether to build need-text drift reporting, which approved SR-178 promises, or amend SR-178. OI-85's ruling left the detector deferred; the phase-6 sitting recorded the gap as spine map D29, owner-reserved. This row and OI-86 exist because the gap is real: a need's re-attestation debt surfaces nowhere mechanical."""
 blast_radius = """- funding: add the need tier to `baseline_snapshot.SNAPSHOT_TIERS` (row-level refusal then covers it too, spine map D18) and render a need section in the re-attestation brief; a sized pass.
 - amending: SR-178 drops "stakeholder needs included" and needs stay owner-tracked by open items.
 - deferring: SR-178 stays approved and false."""
 options = """- (a) FUND the detector. FOR: SR-178 becomes true; the next amended need is surfaced mechanically. AGAINST: a sized build.
 - (b) AMEND SR-178 to exclude needs. FOR: no build. AGAINST: need drift stays a human's job, which is how SN-007 and SN-026 went unnoticed."""
 recommendation = "(a) fund it, as its own item after the assumption tier's build: OI-85 and OI-86 are both this gap, found by hand."
+ruled_date = "2026-09-26"
+ruling_ref = "docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md"
 
 [open_item.OI-92]
 title = "The smoke tier's 60-second budget on this 4-core box (spine map D10)"
-status = "pending"
+status = "ruled"
 raised = "2026-09-26"
-one_line = "The per-commit smoke tier is budgeted at 60 s (measured 27 s on a 24-core box) and runs 188 s quiet and up to 957 s loaded on this 4-core, 8-thread box, so every commit records the seconds FAIL rather than re-stamping it. Keep recording, re-tier to fit this box, or make the budget name the machine it is measured on?"
-decision = """How the commit bar's seconds half applies on this machine. CLAUDE.md holds the budget at 60 s and says one box is one data point and the budget is not moved to fit it; every commit since the phase-6 act records the enforce-mode FAIL instead (spine map D10). This session: 188.1 s with nothing else running, 285 s with two builders, 957 s with eight."""
+one_line = "RULED 2026-09-26 (b): re-tier the smoke tier until it fits 60 s on this 4-core box, keeping it representative; the budget stays 60 s. WI-652."
+decision = """RULED 2026-09-26 by the owner: option (b), re-tier. The owner's words: "Always a risk vs reward, but as long as the 'smoke-test' is representative, it should be okay. Is saving 4 minutes each commit worth it? It may not be, but I'm willing to try it." So the 60 s budget stands and is not moved to fit the box; the tier's membership changes. The condition is representativeness: the re-tier must keep an in-process test of every kit script family in the tier and argue each module it drops. WI-652 carries it, measured quiet three times on this box, and records the owner's trial framing so the choice can be revisited. Record: docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md. Original question follows.
+
+How the commit bar's seconds half applies on this machine. CLAUDE.md holds the budget at 60 s and says one box is one data point and the budget is not moved to fit it; every commit since the phase-6 act records the enforce-mode FAIL instead (spine map D10). This session: 188.1 s with nothing else running, 285 s with two builders, 957 s with eight."""
 blast_radius = """- deferring: the bar's seconds half is permanently red on this box, so a genuine regression in the tier's runtime is indistinguishable from the standing failure.
 - re-tiering: moving modules out of the tier shrinks what every commit exercises.
 - per-machine budget: a stack-profile change (and its resync note) plus the check reading which box it is on."""
@@ -3534,13 +3566,17 @@ options = """- (a) KEEP recording the FAIL each commit. FOR: no change to the ba
 - (b) RE-TIER until this box fits 60 s. FOR: the bar is green here. AGAINST: most of the tier would leave the per-commit bar.
 - (c) DECLARE the budget per measuring machine (for example, keyed by logical CPU count), with this box's quiet figure measured three times. FOR: the seconds half means something on each box and still catches regressions. AGAINST: more declaration, and a budget per box to keep honest."""
 recommendation = "(c): state the budget against the machine it was measured on, measure this box quiet three times, and keep the 60 s figure for the reference box; the doctrine's concern is moving a budget to fit a box silently, not naming the box."
+ruled_date = "2026-09-26"
+ruling_ref = "docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md"
 
 [open_item.OI-93]
 title = "An out-of-vocabulary stakeholder status is reported twice under --strict"
-status = "pending"
+status = "ruled"
 raised = "2026-09-26"
-one_line = "Approved TC-215 puts an out-of-vocabulary stakeholder status in the always-on integrity class and approved LLR-216 puts it in the frame class, so the build (WI-628) reports it twice. Amend one: keep the integrity report (a schema fact, like every other status vocabulary) and drop LLR-216's status clause?"
-decision = """Which class reports a stakeholder row whose status is outside the vocabulary. The two approved rows name different classes and the build honours both. Other tiers report status vocabulary once, on the always-on integrity floor; the assumption tier's build deliberately kept its statuses out of the enum sweep to avoid the same double report."""
+one_line = "RULED 2026-09-26 (a): keep the integrity report, amend LLR-216 to drop its status clause; delegated to an amendment adjudication. WI-653."
+decision = """RULED 2026-09-26 by the owner: option (a), "Agreed with recommendation." The out-of-vocabulary stakeholder status is reported once, on the always-on integrity floor; LLR-216's status clause is amended away and the frame-class report dropped in the same change, through the next amendment adjudication. WI-653 carries it. Record: docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md. Original question follows.
+
+Which class reports a stakeholder row whose status is outside the vocabulary. The two approved rows name different classes and the build honours both. Other tiers report status vocabulary once, on the always-on integrity floor; the assumption tier's build deliberately kept its statuses out of the enum sweep to avoid the same double report."""
 blast_radius = """- migration: none; one finding line fewer.
 - amending: one approved LLR (or TC) cell, adjudicated at a released rung; an adjudicator can act on it once ruled."""
 options = """- (a) KEEP integrity, amend LLR-216 to drop its status clause. FOR: status vocabulary is schema, checked on every tier the same way, whether or not a frame exists. AGAINST: the frame class no longer lists it.
@@ -3548,16 +3584,23 @@ options = """- (a) KEEP integrity, amend LLR-216 to drop its status clause. FOR:
 - (c) KEEP both. AGAINST: two findings for one defect."""
 recommendation = "(a): one report, on the always-on floor where every other status vocabulary is judged; it can be delegated to the next amendment adjudication."
 wi_refs = ["WI-628"]
+ruled_date = "2026-09-26"
+ruling_ref = "docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md"
 
 [open_item.OI-94]
 title = "Should the interface-bridging report wait until the assumption tier is adopted?"
-status = "pending"
+status = "ruled"
 raised = "2026-09-26"
-one_line = "Approved SR-211 reports every boundary interface that names no bridging assumption and records no coincidence, with no 'until adopted' clause, so this repository gains 43 advisories and an adopter that never uses the tier gets one per boundary interface forever; the requirement side (SR-193/SR-194) stays silent until a real assumption row exists. Keep it ungated, or amend SR-211 to the same vacuity?"
-decision = """Whether SR-211's bridging report is vacuous until the assumption tier holds a real row, as the requirement-side reports are (LLR-224: "a repo that never adopts the tier is never asked"). The build (WI-637) follows SR-211 as written; the codex review judged the ungated reading intended, not a row defect."""
+one_line = "RULED 2026-09-26 (b): amend SR-211 so the bridging report is vacuous until the assumptions registry holds a real row, on the owner's condition that queued work returns to close the gap - WI-655 (C2, writing the assumptions) is that work. WI-654 amends and builds."
+decision = """RULED 2026-09-26 by the owner: option (b), on a condition: "I'm okay with the assumption, I believe there are work-items in queue to return to this and close the gap, as long as that is the case, continue with option b." Checked at the ruling: C2 (write the assumption and surrogate rows, and each boundary interface's `bridged_by` or `coincident`) was a plan step but was NOT a queued item; it is filed as WI-655 in the same commit, so the condition holds. WI-654 amends SR-211, its design row and its test case to the tier's one adoption rule and builds the one condition. Record: docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md. Original question follows.
+
+Whether SR-211's bridging report is vacuous until the assumption tier holds a real row, as the requirement-side reports are (LLR-224: "a repo that never adopts the tier is never asked"). The build (WI-637) follows SR-211 as written; the codex review judged the ungated reading intended, not a row defect."""
 blast_radius = """- keeping: 43 warn-only advisories here until the C1/C2 work writes `bridged_by` or `coincident` on each boundary interface; adopters who never adopt the tier see them permanently.
 - amending: one SR, its design row and its test case, adjudicated; a one-condition change in the build."""
 options = """- (a) KEEP ungated. FOR: the advisories are the worklist C2 needs; nothing fails. AGAINST: permanent noise for a repo that never adopts the tier, and inconsistent with SR-193/SR-194.
 - (b) AMEND SR-211 to be vacuous until the assumptions registry holds a real row. FOR: one adoption rule across the tier. AGAINST: this repository loses the worklist until its first assumption row lands."""
 recommendation = "(b): one adoption rule for the whole tier; this repository's worklist returns the moment C2 writes its first assumption."
 wi_refs = ["WI-637"]
+ruled_date = "2026-09-26"
+ruling_ref = "docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md"
+

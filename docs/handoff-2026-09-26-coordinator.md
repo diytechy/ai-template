@@ -162,6 +162,11 @@ amendment brief. It files the verdict, and one `intake.py snapshot
 
 ## For the owner
 
+**Ruled 2026-09-26** except OI-88, which the owner kept open for discussion.
+The rulings and the items they filed (WI-649 to WI-655) are in
+[log.d/2026-09-26-owner-rulings-oi82-oi94.md](log.d/2026-09-26-owner-rulings-oi82-oi94.md).
+The list below is the question set as it stood before the rulings.
+
 Every decision the owner owes is now an open item in
 `docs/requirements/open-items.toml`, rendered with its options and
 recommendation in [open-items.html](open-items.html) and projected into the

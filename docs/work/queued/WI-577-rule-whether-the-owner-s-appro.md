@@ -11,6 +11,8 @@ safety_class = "ordinary"
 
 ## Context
 
+**OI-82 RULED 2026-09-26: option (a), refined by the owner.** Every unapproved chain still appears in the brief; a chain on a rung the dial releases renders in full (not ids only) under the label "Waiting for automated adjudication", collapsed by default (a `<details>` block in `docs/ratify/CURRENT.md`, or an expansion toggle). Held-rung chains render as today. Record: `docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md`.
+
 Drafted by WI-574 (its ## Dispositions section) and minted at its merge - drafts-not-mints, ruling R1/R3.
 
 Gated on the owner's ruling by construction: the `open_item` cell above makes
