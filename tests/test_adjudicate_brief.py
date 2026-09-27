@@ -1493,8 +1493,8 @@ def test_an_unusable_verdict_is_refused_and_says_which_way(tmp_path, line, expec
 
 def test_the_review_scorer_cannot_serve_this_grammar():
     """Why the table exists rather than reusing `score_reviews.parse_verdict`:
-    that parser knows only the REVIEW vocabulary, so three of the four
-    adjudicator lines (which say `OUTCOME:`) and the fourth (which says
+    that parser knows only the REVIEW vocabulary, so four of the five
+    adjudicator lines (which say `OUTCOME:`) and the fifth (which says
     `VERDICT: MEANING`) would all read as unparseable — and an unparseable
     verdict is treated as no verdict."""
     scorer = load_script("score_reviews")

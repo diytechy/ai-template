@@ -2,13 +2,44 @@
 id = "WI-664"
 title = "Amend LLR-167, LLR-140, LLR-154 and TC-144 to the code as built, correct the routing prose that lags, and file the wave's joint amendment adjudication"
 workstream = "requirements"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 sr_refs = ["SR-146", "SR-156", "SR-026"]
 needs = ["WI-645", "WI-646", "WI-647", "WI-653", "WI-654"]
 buildtier = "medium"
 safety_class = "spine"
 priority = 4
 +++
+
+## Deliverable
+
+Draft K is carried out, with no behaviour change. Amended in place, left
+Approved, to the code at the landing:
+
+- LLR-167 `detail`: a declared brief that cannot be composed is a HOLD
+  (`EXIT_NEEDS_HUMAN`), never a fallback; the `census.*` names; which mint
+  arms declare a brief.
+- LLR-140 `detail`: the claim's current refusal ladder, and its commit
+  scoped under `bookkeeping.commit`'s contract (IF-186).
+- LLR-154 `detail`: the mint commits through the helper, within its scope.
+- TC-144 `method`: its scratchpad clause moved to TC-137, LLR-143's case.
+- LLR-143 `detail` and TC-137 `method`: checked clause by clause against
+  `dispatch.py` and the tests. Stranded residue drains, NEEDS-HUMAN hands
+  back, the pause stops claiming, the refresh bar has replaced the old
+  candidate bar, and the lanes behaviour is described.
+
+The stale prose is corrected in `adjudicate_brief.py`, `agent_loop.py` and
+two test docstrings, `compose`'s unreachable branch is removed, and LLR-167's
+four symbols carry `Implements:`.
+
+**The joint adjudication is filed as WI-669.** Its scope is every approved
+row whose attesting cell differs from `docs/archive/last_approved/`: the
+second wave's, this item's, WI-653's, WI-654's and WI-652's six tier
+amendments, 25 rows in all. The integrator checked that set against a
+cell-by-cell comparison and found an exact match. WI-643 (the C1 sitting)
+and WI-650 now need WI-669.
+
+**Review:** Sol took three rounds, the first two on stale TC-137 clauses
+(arbitration ruling 7). The last round was SOUND.
 
 ## Context
 

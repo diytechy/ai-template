@@ -148,9 +148,10 @@ EVIDENCE_CLIP = 80
 # checker that still expects the old one is the drift this table prevents.
 #
 # `score_reviews.parse_verdict` deliberately does not serve this: it knows only
-# `VERDICT: APPROVE|CHANGES-REQUESTED`, which is the review vocabulary. Three
-# of these four say `OUTCOME:` and none says `APPROVE`, so reusing it would
-# have parsed every adjudication verdict as unreadable.
+# `VERDICT: APPROVE|CHANGES-REQUESTED`, which is the review vocabulary. Four
+# of these five say `OUTCOME:`, and the fifth says `VERDICT:` with a word
+# outside that pair, so reusing it would have parsed every adjudication verdict
+# as unreadable.
 VERDICT_GRAMMAR = {
     "amendment": ("VERDICT", ("MEANING", "CLARITY"), ("rows",)),
     "first-approval": ("OUTCOME", ("APPROVE", "RETURN"), ("rows",)),
@@ -269,7 +270,10 @@ def disposition_values(root, row):
 
     Refuses on the clean-close spot-check arm, which mints no report: the whole
     brief is built around the lane's report, and a disposition brief without
-    one would ask the judge to rule on an absence."""
+    one would ask the judge to rule on an absence.
+
+    Implements: SR-146, LLR-167
+    """
     root = Path(root)
     specref = (row.get("SpecRef") or "").strip()
     if not specref:
@@ -357,7 +361,10 @@ def red_tc_values(root, row):
     "the registry never said". Same for a target whose normative text is
     absent. This is the empty-census refusal applied one level down — the rule
     is not "refuse when there is nothing", it is "refuse when any part of the
-    evidence is missing"."""
+    evidence is missing".
+
+    Implements: SR-146, LLR-167
+    """
     try:
         import census
     except Exception as exc:  # a stripped-down copy without the sibling
@@ -947,7 +954,10 @@ def consolidate_values(root, row):
     `{digests}` renders BOTH the recorded pair and the pair as it is now. The
     slot's declared purpose is "so a verdict that has gone stale is detectable
     rather than assumed fresh", and a recorded pair alone is not detectable —
-    it is a number with nothing to compare against."""
+    it is a number with nothing to compare against.
+
+    Implements: SR-146, LLR-167
+    """
     root = Path(root)
     scope = adjudicates(row)
     if not scope:
@@ -1080,9 +1090,10 @@ def _prior_lines(cons, rows):
     )
 
 
-# The briefs whose EVERY slot has a real producer today. A key absent here is
-# documented in this module's header with the derivation it is missing; adding
-# one is adding its assembler, never relaxing the fill.
+# Each shipped brief's assembler, the producer of EVERY slot its template
+# declares. The key set equals `BRIEF_PROMPTS`' (the suite pins both
+# directions), so shipping a new brief means adding its assembler here, never
+# relaxing the fill.
 _ASSEMBLERS = {
     "amendment": amendment_values,
     "first-approval": first_approval_values,
@@ -1102,7 +1113,10 @@ def compose(root, row, verdict_path, prompt_templates=None):
     key wins over the shipped template, exactly as it does for the reviewer and
     critique briefs; a `PromptError` from either one (an unreadable file, an
     override declaring slots this evidence cannot fill) is a refusal, never a
-    partially-filled send."""
+    partially-filled send.
+
+    Implements: SR-146, LLR-167
+    """
     brief = declared_brief(row)
     if not brief:
         return None, "the row declares no `brief`"
@@ -1111,13 +1125,7 @@ def compose(root, row, verdict_path, prompt_templates=None):
         return None, "unknown brief {!r} (expected one of {})".format(
             brief, ", ".join(sorted(BRIEF_PROMPTS))
         )
-    assembler = _ASSEMBLERS.get(brief)
-    if assembler is None:
-        return None, (
-            "the {} brief has no evidence assembler — its slots have no "
-            "producer yet (see adjudicate_brief.py's header)".format(brief)
-        )
-    values, reason = assembler(root, row)
+    values, reason = _ASSEMBLERS[brief](root, row)
     if values is None:
         return None, "the {} brief cannot be filled: {}".format(brief, reason)
     values["verdict"] = str(verdict_path)

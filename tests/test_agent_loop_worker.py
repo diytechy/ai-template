@@ -1,5 +1,5 @@
 """Explicit worker assignment mode — scripts/agent_loop.py --wi/--train
-(WI-181, SR-060/LLR-061/TC-061; docs/specs/parallel-wi-dispatch.md §6).
+(WI-181, SR-026/LLR-061/TC-061; docs/specs/parallel-wi-dispatch.md §6).
 
 Exercised the kit way: the real loop as a subprocess against a fake agent in
 throwaway git repos, plus the pure helpers direct. The load-bearing guarantees
@@ -14,14 +14,14 @@ corrupt a parallel dispatch run:
     reads/writes run-state, never regenerates the iteration index, and its
     committed evidence (trailers) is what makes it DONE — judged from git;
   - two concurrent workers in linked worktrees write non-colliding, train-
-    prefixed session logs (collision-safe evidence, SR-060);
+    prefixed session logs (collision-safe evidence, LLR-061);
   - a Blocked-WI trailer exits 3 (the durable disposition is the integrator's,
     Slice F) — never a silent DONE;
-  - preflight fails closed: half a pair, wrong branch, --track combination,
-    an unknown or already-done WI;
-  - legacy --track still runs its old behavior but warns deprecated (one
-    compatibility window; TC-061), and managed review evidence in worker mode
-    lands at reviews/<train>/NNN-<PHASE>-<sha7>.md naming the reviewed HEAD.
+  - preflight fails closed: half a pair, wrong branch, an unknown or
+    already-done WI;
+  - the retired --track flag is refused as an unknown flag (TC-061), and
+    managed review evidence in worker mode lands at
+    reviews/<train>/NNN-<PHASE>-<sha7>.md naming the reviewed HEAD.
 """
 
 import argparse
@@ -350,7 +350,7 @@ def test_worker_builds_assignment_and_exits_done(tmp_path):
     trailers = _git(repo, "log", "--format=%(trailers:key=WI,valueonly)", "HEAD")
     assert "WI-201" in trailers.split()
     # Collision-safe train-prefixed session log; NO lane files, NO generated
-    # index, NO run-state, NO tracks lane (SR-060 AC).
+    # index, NO run-state, NO tracks lane (LLR-061).
     assert list((repo / "docs" / "iteration").glob("t1-001-*.log"))
     assert not (repo / "docs" / "iteration_index.md").exists()
     assert not (repo / "docs" / "run-state").exists()
@@ -504,7 +504,7 @@ def test_two_concurrent_workers_write_non_colliding_evidence(tmp_path):
 def test_worker_review_evidence_names_exact_reviewed_commit(tmp_path):
     # Managed mode + review-policy 1 inside a worker: the verdict file lands at
     # reviews/<train>/NNN-REVIEW-A-<sha7>.md where <sha7> is the reviewed code
-    # HEAD (SR-060 — a verdict belongs to the exact commit, never a branch
+    # HEAD (LLR-061 — a verdict belongs to the exact commit, never a branch
     # tip), and the scoreboard is train-scoped too.
     repo, base, ctl, fake = _setup(tmp_path)
     template = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(

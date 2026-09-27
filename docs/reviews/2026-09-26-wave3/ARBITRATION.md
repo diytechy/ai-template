@@ -94,3 +94,9 @@ are marked as such.
    anything is written" (the helper creates its scratch worktree first) and
    transcribed IF-186's steps. It is cut to the claim-specific scope and
    cites IF-186 for the rest.
+
+   WI-664's second round found one more stale TC-137 clause, the old
+   candidate bar that the refresh bar has replaced. The coordinator asked for
+   a clause-by-clause pass over TC-137 and LLR-143 against `dispatch.py`, and
+   it corrected six more clauses. The third round (`sol-wi664-fix2.md`) was
+   SOUND. WI-660's fix round (`sol-wi660-fix.md`) was SOUND.

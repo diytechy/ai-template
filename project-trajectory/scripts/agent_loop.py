@@ -768,18 +768,18 @@ def session_body(root, worker, current_wi, session, sha, reviews_dir, templates)
     the whole defect: the judge was briefed as a builder, and all four
     authored adjudicator briefs were consumed by nothing.
 
-    EVERYTHING ELSE — and any adjudication row whose evidence could not be
-    assembled IN FULL — builds from the worker assignment: never a
+    EVERYTHING ELSE builds from the worker assignment: never a
     resume-from-status default (retired, WI-210) and never a repo prompt-map
     template (the assignment is the whole scope).
 
     A DECLARED BRIEF THAT CANNOT BE COMPOSED IS A HOLD, NOT A FALLBACK, and
     that is the third value: `(None, None, reason)`. Sending the ordinary
     assignment instead would put the judge back in the builder's chair on a
-    ROUTINELY MINTED path — `intake` mints `brief = "amendment"` rows today and
-    no assembler can serve them — which is the exact defect this seam exists to
-    close. A row that declares a brief the kit cannot produce is a gap in the
-    kit, and a gap fails CLOSED.
+    ROUTINELY MINTED path — every brief `intake` declares is one whose evidence
+    can go missing between the mint and the claim (a census come clean, a
+    scope no longer drifted) — which is the exact defect this seam exists to
+    close. A row whose declared brief cannot be filled is a gap, and a gap
+    fails CLOSED.
 
     A row that declares NO brief keeps the ordinary assignment: that is not a
     claim the kit failed to honour, it is an adjudication class the kit has
