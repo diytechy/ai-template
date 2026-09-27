@@ -55,17 +55,24 @@ the live registry first** — an approval, in a reviewed commit.
 
 ## How it is written
 
-Never by hand, and never by the unattended loop. Two callers only:
+Never by hand. One writer only: `scripts/intake.py snapshot`, run in the
+reviewed commit of an approval act and committed together with it. It copies
+only the registries the act authorises, and it refuses while any approved row
+in them has drifted from its copy here without the act flipping or naming it:
 
-- `scripts/intake.py snapshot` — the human path. At an approval sitting: edit
-  the `Status` cells, run it, and commit both together.
-- the mechanical flip inside `intake.py adjudicate`, which copies in the same act
-  as the status write.
+- **A first approval** — move the row's `Status` to `Approved`, run
+  `intake.py snapshot`, and commit both together. (`--approves <REGISTRY=REF>`
+  names a registry the act blesses by an approval ref instead.)
+- **A re-attestation** — an amended row still reads `Approved`, so no flip
+  carries it. Read its changed cells, then run
+  `intake.py snapshot --reattests <ROW-ID>[,<ROW-ID>...]`, naming exactly the
+  rows you read. A drifted row that is not yours to bless stays out of the
+  list, and the copy stays refused until that row is ruled on.
 
 The FIRST snapshot needs `intake.py snapshot --seed`, which is the only way this
 directory is created. Run it once, in the reviewed commit that first blesses the
 spine, **after** every pending row has been ruled — seeding it earlier records a
 blessing of text nobody read.
 
-This is one generation. It is replaced wholesale at each approval and never
-migrated in place; git holds the history.
+This is one generation. Each file here is replaced whole when an approval
+copies it, and never migrated in place; git holds the history.

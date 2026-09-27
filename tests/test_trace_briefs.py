@@ -136,6 +136,10 @@ def test_reattest_brief_shows_before_after_and_added_rows(tmp_path):
     assert "after: the AMENDED text" in out
     assert "LLR LLR-002 — ADDED since the snapshot" in out
     assert "docs/archive/last_approved" in out
+    # The header's instruction for the DRIFTED row it is about: an amended row
+    # still reads `Approved`, so no flip carries it, and a bare `intake.py
+    # snapshot` refuses it. The re-copy has to name it.
+    assert "intake.py snapshot --reattests <ROW-ID>" in out
     # The Status cell itself is excluded from the diff, both directions.
     assert "before: Approved" not in out
     # The unchanged chain rows (LLR-001, TC-001) emit no section.
@@ -936,6 +940,22 @@ def test_offspine_census_names_the_interfaces_registry_after_an_IF_cell_changes(
     out = proc.stdout
     assert "docs/requirements/interfaces.toml" in out
     assert "1 changed, 0 added, 0 removed" in out
+    # The census states what copies an off-spine registry. The implementation
+    # copies on a row moving INTO approval or arriving approved (a de-approval
+    # copies nothing), on `--approves` naming it, or on `--reattests` naming
+    # one of its rows. Each trigger is driven in tests/test_baseline_snapshot.py:
+    # test_a_spine_flip_LEAVES_the_offspine_snapshot_bytes_UNTOUCHED (into
+    # approval), test_a_registry_WRITTEN_for_another_reason_still_gates_its_
+    # amendments (arrives approved), test_a_DEAPPROVAL_cannot_authorise_an_
+    # unrelated_approved_amendment (a de-approval authorises nothing),
+    # test_an_explicit_APPROVES_ref_authorises_it_and_is_RECORDED (`--approves`)
+    # and test_an_AMEND_PLUS_FLIP_authorises_ITS_OWN_row_and_no_other
+    # (`--reattests` copies the live bytes).
+    assert "a row in it moves into approval or arrives approved" in out
+    assert "`--reattests` names one of its rows" in out
+    # The earlier sentences were false: two triggers only, then any move.
+    assert "moves or `--approves` names it" not in out
+    assert "when its own `Status` moves" not in out
     # A no-change off-spine tier — components.toml here, untouched by the
     # fixture — renders NOTHING: no standing noise for a reader to learn to
     # ignore.

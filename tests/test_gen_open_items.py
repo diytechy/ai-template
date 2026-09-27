@@ -490,6 +490,15 @@ def test_the_view_names_its_authority(tmp_path):
     assert "reattest_model" in page and "authoritative" in page
 
 
+def test_the_footer_names_reattests_for_blessing_an_amendment(tmp_path):
+    """Blessing an amendment re-copies a row that still reads `Approved`, so no
+    flip carries it, and a bare `intake.py snapshot` refuses it. The footer's
+    instruction has to name the row, or it hands the owner a refusal."""
+    repo(tmp_path, oi_rows=PENDING_OI)
+    assert gen(tmp_path).returncode == 0
+    assert "intake.py snapshot --reattests &lt;ROW-ID&gt;" in html_of(tmp_path)
+
+
 # --- 122-REVIEW-A regressions: one per finding, each proven against the defect --
 
 
@@ -841,6 +850,12 @@ def test_offspine_census_names_the_interfaces_registry_in_the_html_view(tmp_path
     html = html_of(root)
     assert "docs/requirements/interfaces.toml" in html
     assert "1 changed, 0 added, 0 removed" in html
+    # The same copy triggers as the markdown census (see
+    # tests/test_trace_briefs.py for where each is driven behaviourally).
+    assert "a row in it moves into approval or arrives approved" in html
+    assert "<code>--reattests</code> names one of its rows" in html
+    assert "moves or <code>--approves</code> names it" not in html
+    assert "when its own Status moves" not in html
     # No-change off-spine tiers render nothing.
     assert "docs/requirements/components.toml" not in html
     assert "docs/requirements/external.toml" not in html

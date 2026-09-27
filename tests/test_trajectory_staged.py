@@ -260,7 +260,9 @@ def test_staged_spine_amend_without_flip_warns(tmp_path):
     # so it now names the two real outcomes — re-attest in this commit, or the
     # change rides as snapshot drift until the next sitting.
     assert "SNAPSHOT DRIFT" in proc.stderr
-    assert "intake.py snapshot" in proc.stderr
+    # The re-copy names the row: a bare `intake.py snapshot` refuses a drifted
+    # approved row that the act neither flips nor names with `--reattests`.
+    assert "intake.py snapshot --reattests SR-001" in proc.stderr
     # ...and it no longer names a value the closed enum cannot hold.
     assert "Modified re-attest marker" not in proc.stderr
 
@@ -323,6 +325,7 @@ def test_staged_child_amend_needs_its_own_flip_not_the_parents(tmp_path):
     assert proc2.returncode == 0, proc2.stdout + proc2.stderr
     assert "LLR-001" in proc2.stderr
     assert "re-attest it in this commit" in proc2.stderr
+    assert "intake.py snapshot --reattests LLR-001" in proc2.stderr
 
 
 def test_staged_spine_warn_survives_a_bom(tmp_path):

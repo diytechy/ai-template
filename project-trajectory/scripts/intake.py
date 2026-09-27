@@ -2542,6 +2542,36 @@ def _rewrite_toml_statuses(live, rel, ids):
     live.write_text(eol.join(lines), encoding="utf-8", newline="")
 
 
+def _flip_remedy(rid, rel, status):
+    """What a row `_apply_flips` refuses owes instead, by the status it reads.
+
+    The refusal meets three kinds of row, and one remedy for all of them sent
+    two of the three the wrong way. A `Drafted` row owes a FIRST approval: a
+    reviewed `Status` move plus the copy, which that move itself authorises;
+    naming it in `--reattests` would record a re-attestation of text nobody
+    ever approved. A `Founded` row claims approval and owes, if its text was
+    amended, a fresh read plus a copy that names it, because a bare
+    `intake.py snapshot` refuses a drifted approved row it neither flips nor
+    names. Anything else is outside the closed vocabulary, and no copy is the
+    remedy for that. The `--approves` token is the registry's stem, which
+    `baseline_snapshot.resolve_registry` accepts under either carrier."""
+    if status == "Drafted":
+        return (
+            "{} owes a FIRST approval: move its `Status` to `Approved` in a "
+            "reviewed commit and run `intake.py snapshot` in the same commit, "
+            'adding `--approves "{}=<REF>"` when the act rides a ref.'.format(
+                rid, Path(rel).stem
+            )
+        )
+    if status == "Founded":
+        return (
+            "If {0}'s approved text was amended, what it owes is a fresh human "
+            "read plus `intake.py snapshot --reattests {0}` in the same "
+            "commit.".format(rid)
+        )
+    return "Its status is outside the closed vocabulary: correct the cell first."
+
+
 def _apply_flips(root, tables, located):
     """SKIP an already-blessed row, REFUSE everything else, WRITE NOTHING; the
     sorted flipped ids, which is now always empty — and permanently so. OI-45
@@ -2606,11 +2636,9 @@ def _apply_flips(root, tables, located):
             "`Approved` and the only state it moved FROM (`Modified`) retired at "
             "D-9 migration step 7. Under the snapshot ladder an amendment does "
             "not flip its row at all, so there is no cell for a mechanical "
-            "adjudication to move: an amended row still reads `Approved`, and "
-            "what it owes is a fresh human read plus `intake.py snapshot` in the "
-            "same commit. Refusing rather than skipping, so the row is named "
-            "instead of being passed over.".format(
-                rid, tables[rel][0], _STATUS_KEY, status
+            "adjudication to move. {} Refusing rather than skipping, so the row "
+            "is named instead of being passed over.".format(
+                rid, tables[rel][0], _STATUS_KEY, status, _flip_remedy(rid, rel, status)
             )
         )
     # THE WRITE LOOPS AND THE COPY WENT WITH THE ARM (2026-08-20, the batch

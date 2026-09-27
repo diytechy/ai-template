@@ -25,6 +25,8 @@ Every trigger below is driven red-then-green against the real git plumbing and
 the real spec folder — no seam is stubbed.
 """
 
+import pathlib
+import re
 import subprocess
 import tomllib
 
@@ -1839,8 +1841,44 @@ def test_below_the_human_dial_a_NON_FLIPPABLE_row_is_NAMED_not_skipped(tmp_path)
         # The row is NAMED, and so is the status that made it non-flippable.
         assert "LLR-001" in msg and "Drafted" in msg, msg
         assert "Modified" in msg and "step 7" in msg, msg
+        # A `Drafted` row owes a FIRST approval, so the remedy is a reviewed
+        # Status move plus the copy — never `--reattests`, which is the remedy
+        # for approved text that drifted. The `--approves` token it prints must
+        # be one the snapshot CLI's own resolver accepts for this registry.
+        assert "move its `Status` to `Approved`" in msg, msg
+        assert "--reattests" not in msg, msg
+        assert _approves_resolves_to(msg, "low-level-requirements"), msg
         # ...and the refusal wrote nothing: it raises before the write loops.
         assert (sr_csv.read_bytes(), llr_csv.read_bytes()) == before
+
+
+def _approves_resolves_to(text, stem):
+    """True when `text` prescribes `--approves "<REGISTRY>=<REF>"` and the real
+    `baseline_snapshot.parse_approves` resolves that REGISTRY to `stem`'s rel."""
+    m = re.search(r'--approves "([^"]*)"', text)
+    if not m:
+        return False
+    snap = load_script("baseline_snapshot")
+    return [pathlib.PurePosixPath(r).stem for r in snap.parse_approves(m.group(1))] == [
+        stem
+    ]
+
+
+def test_a_FOUNDED_row_is_refused_with_the_reattest_remedy_naming_it(tmp_path):
+    """The other status the refusal meets. A `Founded` row claims approval, so
+    what an amendment of it owes is a fresh read plus a re-copy that NAMES it
+    (`--reattests <id>`): a bare `intake.py snapshot` refuses a drifted
+    approved row it neither flips nor names. It is not a first approval, so the
+    Status-move remedy a `Drafted` row gets would be wrong here."""
+    root = _policy_repo(tmp_path, kit_stage.BELOW)
+    sr_csv = root / "docs" / "requirements" / "system-requirements.csv"
+    sr_csv.write_bytes(sr_csv.read_bytes().replace(b",Test,Approved", b",Test,Founded"))
+    with pytest.raises(SystemExit) as excinfo:
+        intake.flip_verified(root, ["SR-002"])
+    msg = str(excinfo.value)
+    assert 'reads `status = "Founded"`' in msg, msg
+    assert "intake.py snapshot --reattests SR-002" in msg, msg
+    assert "move its `Status` to `Approved`" not in msg, msg
 
 
 def test_a_row_already_at_the_written_value_is_the_ONE_silent_skip(tmp_path):

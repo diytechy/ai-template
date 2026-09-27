@@ -170,3 +170,11 @@ are marked as such.
     collapsed block renders and every owing chain stays in the owner's
     section.
     WI-577's third round (`sol-wi577-fix2.md`) was SOUND.
+
+14. **WI-661's third round — INTEGRATOR on the one minor.** Sol found the
+    census test's comment claiming each copy trigger is driven, with no
+    citation for `--approves` or `--reattests`. Both are driven already, in
+    `test_an_explicit_APPROVES_ref_authorises_it_and_is_RECORDED` and in
+    `test_an_AMEND_PLUS_FLIP_authorises_ITS_OWN_row_and_no_other`, which
+    asserts the copied bytes. The integrator added the citations at landing
+    rather than duplicating those tests.

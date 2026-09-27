@@ -194,10 +194,10 @@ def spine_pending(root):
                 "- **{} DRIFTED from the approved snapshot**{}: {} — its "
                 "approved text differs from its copy in `{}` while its own "
                 "Status still claims approval, so nobody has read the change. "
-                "Re-attest it, then run `intake.py snapshot` in the same "
-                "commit; before/after brief: `python "
+                "Re-attest it, then run `intake.py snapshot --reattests {}` in "
+                "the same commit; before/after brief: `python "
                 "project-trajectory/scripts/trace.py --approve modified`.".format(
-                    sid, phase_note, title, baseline_snapshot.SNAPSHOT_DIR
+                    sid, phase_note, title, baseline_snapshot.SNAPSHOT_DIR, sid
                 )
             )
     return lines

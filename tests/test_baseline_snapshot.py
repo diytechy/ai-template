@@ -24,6 +24,7 @@ two-row fixture would exercise none of them honestly.
 """
 
 import inspect
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -40,6 +41,7 @@ from conftest import (
 
 SNAP = load_script("baseline_snapshot")
 CT = load_script("check_trajectory")
+AR = load_script("acceptance_record")
 
 SR_REL = "docs/requirements/system-requirements.toml"
 
@@ -166,6 +168,25 @@ def test_a_SCAFFOLDED_but_unsigned_snapshot_is_VACUOUS_TOO(tmp_path):
     # The pin is only worth having if bootstrap really does scaffold it so.
     boot = (SCRIPTS / "bootstrap.py").read_text(encoding="utf-8")
     assert "docs/archive/last_approved/README.md" in boot
+
+
+def test_the_shipped_README_describes_the_writer_that_exists():
+    """The README scaffolded into every adopter's snapshot directory says how
+    the record is written. The mechanical flip inside `intake.py adjudicate`
+    that it once named as a second writer retired, and an amended row that
+    still reads `Approved` is re-copied only when `--reattests` names it — so
+    a README naming neither sends the adopter to a writer that is gone and a
+    command that refuses."""
+    tpl = SCRIPTS.parent / "registries" / "last-approved-README.template.md"
+    text = tpl.read_text(encoding="utf-8")
+    assert "mechanical flip" not in text
+    assert "intake.py snapshot --reattests <ROW-ID>" in text
+    # ONE writer, and both of its acts: the first approval rides a Status move.
+    assert "One writer only: `scripts/intake.py snapshot`" in text
+    assert "**A first approval** — move the row's `Status` to `Approved`" in text
+    # A session on a rung the gate authority released DOES re-attest, so the
+    # old blanket prohibition on the loop was false and must not come back.
+    assert "unattended loop" not in text
 
 
 # --- the bootstrap guard ------------------------------------------------------
@@ -1534,12 +1555,43 @@ def test_a_LANDED_forgery_reds_EVERY_LATER_RUN_though_nothing_is_staged(tmp_path
     )
     run_git("add", "-A")
     # The staged rule DOES see it in the commit that does it...
-    assert any("byte-identical" in f for f in CT.staged_snapshot_findings(root))
+    staged = CT.staged_snapshot_findings(root)
+    assert any("byte-identical" in f for f in staged)
+    # ...and prescribes a repair that works: a bare `intake.py snapshot`
+    # copies nothing here or refuses the drift, so it names the arguments.
+    assert any(_prescribes_a_working_repair(f, SR_REL) for f in staged), staged
     run_git("commit", "-m", "forge")
     # ...and this is the blind spot: with the index clean, it has nothing to say.
     assert CT.staged_snapshot_findings(root) == []
     found = CT.committed_snapshot_findings(root)
     assert any("LANDED" in f and SR_REL in f for f in found), found
+    assert any(_prescribes_a_working_repair(f, SR_REL) for f in found), found
+
+
+def _prescribes_a_working_repair(finding, live_rel):
+    """A mirror finding's repair is either restoring the blessed copy or an
+    explicit fresh act naming its authority for the registry concerned — and
+    that authority is a `--approves` token the snapshot CLI's own resolver
+    accepts for THIS registry, so the prescribed command does not refuse."""
+    m = re.search(r'--approves "([^"]*)"', finding)
+    return (
+        "restore the copy that was blessed" in finding
+        and "--reattests <ROW-ID>" in finding
+        and m is not None
+        and list(SNAP.parse_approves(m.group(1))) == [SNAP.resolve_registry(live_rel)]
+    )
+
+
+def test_the_mirror_repair_names_a_registry_the_resolver_accepts_per_carrier():
+    """`resolve_registry` accepts a registry's canonical rel, filename or stem,
+    and a CSV carrier's live path is none of those. The repair clause is
+    written for whichever carrier diverged, so its `--approves` token must
+    resolve for both — parsed here through the real resolver, in process."""
+    for live_rel in (SR_REL, SR_REL[: -len(".toml")] + ".csv"):
+        repair = AR._mirror_repair(live_rel)
+        m = re.search(r'--approves "([^"]*)"', repair)
+        assert m, repair
+        assert list(SNAP.parse_approves(m.group(1))) == [SR_REL], repair
 
 
 def test_a_PENDING_AMENDMENT_leaves_the_committed_mirror_GREEN(tmp_path):

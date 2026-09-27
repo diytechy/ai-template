@@ -806,9 +806,10 @@ def _offspine_census_block(rows):
     )
     return (
         '<p class="sub offspine-note">The off-spine registries above carry no '
-        "per-row rendering here; since WI-571 <code>intake.py snapshot</code> "
-        "copies one only when its own Status moves or <code>--approves</code> "
-        "names it; a re-SEED still blesses all. What it would absorb:</p>"
+        "per-row rendering here; <code>intake.py snapshot</code> copies one only "
+        "when a row in it moves into approval or arrives approved, "
+        "<code>--approves</code> names it or <code>--reattests</code> names one "
+        "of its rows; a re-SEED still blesses all. What it would absorb:</p>"
         '<ul class="pointers">{}</ul>\n'.format(items)
     )
 
@@ -916,10 +917,11 @@ def render(root):
         "<footer>Source: <code>{registry}</code> + the spine "
         "registries. Rule a decision by appending to <code>docs/log.md</code>'s "
         "Decisions log and setting the row's <code>Status</code>; bless an amendment "
-        "by re-reading the drifted cells and running "
-        "<code>intake.py snapshot</code> in a reviewed commit — the copy IS the "
-        "blessing now that no <code>Status</code> cell records one, so without it "
-        "the record of what was blessed does not move. The gate re-derives on its own.</footer>\n"
+        "by re-reading the drifted cells and running <code>intake.py snapshot "
+        "--reattests &lt;ROW-ID&gt;</code>, naming each row read, in a reviewed "
+        "commit — the copy IS the blessing now that no <code>Status</code> cell "
+        "records one, so without it the record of what was blessed does not move. "
+        "The gate re-derives on its own.</footer>\n"
         "</div>\n<script>{js}</script>\n</body></html>\n"
     ).format(
         css=CSS,

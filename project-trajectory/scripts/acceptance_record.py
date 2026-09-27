@@ -114,6 +114,8 @@ Contract IF-196: the held status, read from a delta. `staged_status_moves(root,
     side that does not parse is one move naming the registry.
 """
 
+from pathlib import PurePosixPath
+
 try:
     import spine_carrier
     from kitlib import authority as _kitauthority
@@ -1002,11 +1004,10 @@ def staged_spine_findings(root):
         "{}: approved cell(s) {} amended while Status stays put — a "
         "post-attestation amendment owes a fresh human read (process.md §7). "
         "Since D-9 step 7 there is no marker to set: either re-attest it in "
-        "this commit and run `intake.py snapshot` in the same commit, or the "
-        "change rides as SNAPSHOT DRIFT until the next sitting — visible on the "
-        "re-attest brief and open-items.html, but not blessed".format(
-            a["id"], ", ".join(sorted(a["approved"]))
-        )
+        "this commit and run `intake.py snapshot --reattests {}` in the same "
+        "commit, or the change rides as SNAPSHOT DRIFT until the next sitting — "
+        "visible on the re-attest brief and open-items.html, but not "
+        "blessed".format(a["id"], ", ".join(sorted(a["approved"])), a["id"])
         for a in staged_spine_amendments(root)
         if a["approved"]
     ]
@@ -1126,6 +1127,28 @@ def _snapshot_survives(root, new_rev):
     return bool(out and out.strip())
 
 
+def _mirror_repair(live_rel):
+    """The repair a snapshot-mirror finding prescribes, for the registry whose
+    copy diverged.
+
+    A bare `intake.py snapshot` is no repair here: it copies only a registry
+    the act authorises, so with no `Status` move it copies nothing, and it
+    refuses any approved row whose text differs from the recorded copy unless
+    `--reattests` names it. So the finding names the two repairs that work:
+    put the blessed copy back, or take a fresh act whose arguments carry the
+    authority for this registry and name the rows it re-attests. The
+    `--approves` token is the registry's STEM: `baseline_snapshot.
+    resolve_registry` takes a canonical rel, filename or stem, and a CSV
+    carrier's live path is none of those, so the path itself would refuse."""
+    return (
+        "Repair: restore the copy that was blessed, or take a fresh reviewed "
+        'approval act that re-copies it — `intake.py snapshot --approves "{}=<REF>" '
+        "--reattests <ROW-ID>[,<ROW-ID>...]`, naming each approved row whose "
+        "text differs from the copy; a bare `intake.py snapshot` copies nothing "
+        "here or refuses the drift".format(PurePosixPath(live_rel).stem)
+    )
+
+
 def staged_snapshot_findings(root, base="HEAD", head=None):
     """THE MIRROR INVARIANT (snapshot design §F3), as warn strings.
 
@@ -1215,7 +1238,7 @@ def staged_snapshot_findings(root, base="HEAD", head=None):
                 "the record of what a human blessed, so it may only ever be "
                 "written by copying the live file (`intake.py snapshot`). A hand "
                 "edit, a partial copy and a copy-then-amend-live all land "
-                "here".format(name, live_rel)
+                "here. {}".format(name, live_rel, _mirror_repair(live_rel))
             )
     return out
 
@@ -1322,9 +1345,9 @@ def committed_snapshot_findings(root):
                 "{} is NOT byte-identical to {} at {}, the commit that last "
                 "wrote it — the snapshot is the record of what a human blessed, "
                 "so it may only ever be written by copying the live file "
-                "(`intake.py snapshot`). This divergence has LANDED: re-copy it "
-                "in a reviewed commit, or restore the copy that was "
-                "blessed".format(name, live_rel, rev[:8])
+                "(`intake.py snapshot`). This divergence has LANDED. {}".format(
+                    name, live_rel, rev[:8], _mirror_repair(live_rel)
+                )
             )
     return out
 

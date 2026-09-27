@@ -5796,6 +5796,48 @@ freshness check reports it stale until you regenerate it with
 `trace.py --approve modified --out docs/ratify/CURRENT.md`. Nothing in your
 registries changes.
 
+### The kit's re-copy instructions name `--reattests` for a drifted row [since bdb0cc65]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** Since the snapshot refresh refuses row by row, a bare
+`intake.py snapshot` refuses a drifted approved row that the act neither flips
+nor names with `--reattests <ROW-ID>`. The messages that tell you to re-copy
+such a row now name `--reattests`, with the row id wherever the message knows
+it: the pending-owner-actions drift line and the staged amend-without-flip
+warn print the row; the re-attestation brief's header and the open-items
+footer print `<ROW-ID>`. `intake.py adjudicate`'s refusal now gives the remedy
+for the status the refused row reads: a `Drafted` row owes a first approval (a
+reviewed `Status` move to `Approved` plus `intake.py snapshot` in the same
+commit, with `--approves "<registry>=<REF>"` when the act rides a ref), a
+`Founded` row whose text was amended owes `intake.py snapshot --reattests
+<its id>`, and an out-of-vocabulary status owes a corrected cell. The two
+snapshot-mirror findings (a snapshot file not byte-identical to its live
+registry, staged or landed) no longer send you to a bare `intake.py snapshot`,
+which copies nothing there or refuses the drift: each now prescribes restoring
+the copy that was blessed, or a fresh reviewed act `intake.py snapshot
+--approves "<registry>=<REF>" --reattests <ROW-ID>[,...]` for the registry
+concerned. Every prescribed `--approves` names the registry by its stem (for
+example `system-requirements`), which the snapshot CLI resolves under either
+carrier; a CSV carrier's live path would be refused. The off-spine census note
+in the re-attestation brief and the open-items view now states the three
+things that copy an off-spine registry: a row in it moving into approval or
+arriving approved (a de-approval copies nothing), `--approves` naming it, or
+`--reattests` naming one of its rows. The shipped
+`registries/last-approved-README.template.md` no longer describes a mechanical
+flip inside `intake.py adjudicate` as a second writer of the record (that path
+retired); its "How it is written" section now gives `intake.py snapshot` as the
+one writer, with a first approval and a re-attestation as its two acts. No
+behaviour changed.
+
+**What to do.** Re-sync `scripts/pending.py`, `scripts/acceptance_record.py`,
+`scripts/trace.py`, `scripts/gen_open_items.py` and `scripts/intake.py`, then
+regenerate the re-attestation brief and the open-items view if you commit them.
+Your `docs/archive/last_approved/README.md` is your own file, since approval
+acts append lines to it: replace its "How it is written" section with the
+template's by hand if you want the corrected text, and keep your recorded
+lines.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

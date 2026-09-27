@@ -103,7 +103,8 @@ def _block(repo):
 # reads SNAPSHOT DRIFT, which is a property of the live registry against its
 # `docs/archive/last_approved/` copy rather than of a cell. These fixtures
 # carry no snapshot, so the DRAFTED arm is what they drive; the drift arm has
-# its own coverage in tests/test_baseline_snapshot.py, where a snapshot exists.
+# its own coverage in tests/test_baseline_snapshot.py, where a snapshot exists,
+# and one test below seeds a snapshot to pin the drift line's instruction.
 
 BOM = bytes([0xEF, 0xBB, 0xBF])
 SR_HEADER = (
@@ -154,6 +155,24 @@ def test_draft_sr_projects_approval_owed(tmp_path):
     body = _block(tmp_path)
     assert "SR-007" in body and "approval owed" in body
     assert "--approve SR-007" in body
+
+
+def test_a_DRIFTED_sr_line_names_the_row_to_reattest(tmp_path):
+    """The drift arm's instruction has to be one that WORKS. An amended row
+    still reads `Approved`, so no `Status` flip carries it into the copy, and a
+    bare `intake.py snapshot` refuses a drifted row the act neither flips nor
+    names. The line knows the row, so it hands over the whole command."""
+    _init(tmp_path)
+    _write_srs(
+        tmp_path, 'SR-004,Gate derivation,SN-001,"old",x,a,,C,Test,Approved,2,\n'
+    )
+    load_script("baseline_snapshot").copy_live(tmp_path, seed=True)
+    _write_srs(
+        tmp_path, 'SR-004,Gate derivation,SN-001,"new",x,a,,C,Test,Approved,2,\n'
+    )
+    body = _block(tmp_path)
+    assert "SR-004 DRIFTED from the approved snapshot" in body
+    assert "`intake.py snapshot --reattests SR-004`" in body
 
 
 def test_bommed_registry_still_projects(tmp_path):
