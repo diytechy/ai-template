@@ -218,3 +218,11 @@ are marked as such.
     addition (the not-approved warning) as an SR-217 clause, not a derived
     row, arguing that SN-042's acceptance already covers a never-approved
     test case. Sol raised no objection, and the coordinator agrees.
+
+18. **WI-673 — SOL.** SR-209's rationale kept a sentence from before the
+    floor existed: trailers "today appear on some of its commits and nothing
+    checks them". It is false now, and an amended row is judged whole, so the
+    sentence is made counterfactual. The fix is one sentence in a row that
+    WI-676's independent adjudicator judges next. The coordinator takes that
+    judgement as the confirmation round rather than running a separate Sol
+    round.

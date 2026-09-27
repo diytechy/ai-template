@@ -1,0 +1,3 @@
+84c08b1f NOT YET SOUND
+
+- **major** — `docs/requirements/system-requirements.toml:1375`: SR-209’s amended rationale says trailers “today appear on some of its commits and nothing checks them.” That is false of the current code: writers append trailers (`project-trajectory/scripts/kitlib/provenance.py:281`), the commit-msg hook checks them (`project-trajectory/hooks/commit-msg:165`), and the merge floor re-checks loop lanes (`project-trajectory/scripts/integrate.py:1252`). Fix: make this counterfactual, e.g. “Without a total floor, trailers could appear on only some commits and a missing one would prove nothing,” then keep SR-209 in WI-676’s adjudication scope.

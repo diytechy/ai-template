@@ -2,12 +2,36 @@
 id = "WI-673"
 title = "Amend SR-209's requirement and TC-242 to the loop-lane ownership rule its acceptance now states"
 workstream = "requirements"
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 sr_refs = ["SR-209"]
 buildtier = "medium"
 safety_class = "spine"
 priority = 4
 +++
+
+## Deliverable
+
+SR-209's requirement and rationale, and TC-242's method and expected, are
+amended in place (left Approved) to the loop-lane ownership rule that
+SR-209's acceptance already states. Wave-2 arbitration ruling 4 decided that
+rule and WI-669 blessed it. The requirement's `shall` now covers a commit
+made from a loop-started process, or merged in a lane the loop owns from the
+point it took the lane over. The rationale explains why the merge floor
+judges a lane's commits rather than processes, and why the commits before
+the takeover are exempt. A stale present-tense sentence is made
+counterfactual. TC-242's method states every case its evidence drives:
+
+- the lane-ownership cases;
+- the exemption window;
+- the slot run without the marker;
+- a person's own lane, which is not judged;
+- the trailer-block placement;
+- the writers.
+
+No behaviour change. The amendment adjudication is **WI-676**.
+Sol's first round found the stale rationale sentence (arbitration ruling
+18). The one-sentence fix is judged by WI-676's independent adjudicator
+rather than a separate Sol confirmation.
 
 ## Context
 
