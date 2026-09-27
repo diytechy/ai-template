@@ -25,25 +25,19 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-09-26-coordinator.md](handoff-2026-09-26-coordinator.md), then
-  [handoff-2026-09-26.md](handoff-2026-09-26.md)'s
-  read order. The redesign's remaining threads keep their context in
-  [handoff-2026-09-06.md](handoff-2026-09-06.md). Recheck Git and the generated
-  frontier before choosing work; earlier handoffs and sitting checklists are
-  historical context.
-- **Assumption tier — the second build wave has landed:** next is the
-  joint amendment adjudication the coordinator's handoff owes. The phase-6
-  chains are approved down to test cases
-  ([spine map](plans/2026-09-25-assumption-tier-spine-map.md)), the needs by
-  the owner's stand-in, and the build proceeds test-first, one builder
-  worktree per item in the generated frontier's order, each handed the
-  [builder brief](plans/2026-09-26-assumption-tier-builder-brief.md). The C1
-  sitting commit and the reversal sweep follow it. The full unfiltered suite is
-  owed before any phase close. The owner ruled the pending open items on
-  2026-09-26 except the Boundary-arm question, kept open for discussion
-  ([rulings](log.d/2026-09-26-owner-rulings-oi82-oi94.md)); their follow-ups
-  are in the queue. The depth-0 mockup in
-  `docs/plans/mockups/` still renders the old `kit` value.
+  [handoff-2026-09-27-coordinator.md](handoff-2026-09-27-coordinator.md).
+  Its first job is the owner's: consolidate the queue before building, so it
+  shrinks. Then its read order applies, and the redesign's remaining threads
+  keep their context in [handoff-2026-09-06.md](handoff-2026-09-06.md).
+  Recheck Git and the generated frontier before choosing work; earlier
+  handoffs are historical context.
+- **Assumption tier — the third build wave has landed:** the C1 sitting
+  commit is on trunk (the redrawn frame, the stakeholders, the dial at
+  DevStg-Boundary), and so is the joint amendment adjudication. The
+  re-judging build and one re-anchor carry over (the handoff's "Carried
+  over"). The remaining build, C2's content and the reversal sweep follow in
+  the handoff's consolidated groups. The full unfiltered suite is owed
+  before any phase close. The owner holds OI-88 open for discussion.
 - **Sister plan — one plan still owed:** every question in the
   [notes on spine, sessions and tests](plans/2026-09-23-owner-notes-spine-sessions-and-tests.md)
   §5 is ruled except S11, whose direction (one trunk commit per work item)

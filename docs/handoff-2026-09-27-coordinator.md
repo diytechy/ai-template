@@ -8,7 +8,7 @@ still hold). This session's record:
 
 - the build log fragment [log.d/2026-09-26-wave3-build.md](log.d/2026-09-26-wave3-build.md);
 - the arbitration file [reviews/2026-09-26-wave3/ARBITRATION.md](reviews/2026-09-26-wave3/ARBITRATION.md),
-  rulings 1–19, with Sol's review files beside it;
+  rulings 1–22, with Sol's review files beside it;
 - the owner's rulings [log.d/2026-09-26-owner-rulings-oi82-oi94.md](log.d/2026-09-26-owner-rulings-oi82-oi94.md);
 - the C1 sitting's Decisions entry [log.d/2026-09-27-c1-sitting.md](log.d/2026-09-27-c1-sitting.md).
 
@@ -19,10 +19,10 @@ drafted, but at this rate the queue will only grow. The next session should
 also emulate consolidation and collection of work items to execute larger
 chunks and to help the queue reduce in size instead of increase."*
 
-This session closed 22 items and filed 26: the owner's rulings, the wave-2
-drafts, review findings and successors. The queue held about 50 open items
-at the end. So the next session's first job is not the frontier's next item.
-It is to cut the queue:
+This session closed 18 items and filed 30: the owner's rulings, the wave-2
+drafts, review findings and successors. The queue went from 38 open to 49.
+So the next session's first job is not the frontier's next item. It is to
+cut the queue:
 
 1. **Consolidate before building.** Group the queue (proposal below). Where
    several items touch one surface or one seam, merge them into one item. Use
@@ -54,42 +54,57 @@ It is to cut the queue:
 
 | group | items | why together |
 |---|---|---|
-| **Spine acts batch** | WI-675 (SR-217 chain), WI-676 (SR-209/TC-242, in flight at handoff), WI-677 (LLR-259/TC-252 fix + re-filed first approval), WI-604 (LLR-210/TC-208 first approval), WI-582 (residual sweep: a TC to author), WI-644 (the reversal sweep's row amendments) | one adjudicator, one act per batch; WI-644 and WI-582 draft rows that should join the same verdict |
-| **Test-tier and pins** | WI-672 (tier ↔ SLOW_MODULES check + 13 older mismatches), WI-678 (live-frame pin, in flight), WI-663 (noqa), WI-598 (regen step table whole) | all are the suite's own honesty; WI-672's check would have caught WI-678's miss |
+| **Spine acts batch** | WI-675 (SR-217 chain), WI-676 (SR-209/TC-242's owed re-anchor, see below), WI-677 (LLR-259/TC-252 fix + re-filed first approval), WI-604 (LLR-210/TC-208 first approval), WI-582 (residual sweep: a TC to author), WI-644 (the reversal sweep's row amendments) | one adjudicator, one act per batch; WI-644 and WI-582 draft rows that should join the same verdict |
+| **Test-tier and pins** | WI-672 (tier ↔ SLOW_MODULES check + 13 older mismatches), WI-663 (noqa), WI-598 (regen step table whole) | all are the suite's own honesty; WI-672's check would have caught the stale live-frame pin WI-678 fixed |
 | **Snapshot and carrier** | WI-651 (need + stakeholder tiers in SNAPSHOT_TIERS, OI-91), WI-666 (each registry's own anchor copy on owner surfaces), WI-671 (needs_from_text carrier), WI-659 (scratchpad relink) | same modules: baseline_snapshot, spine_carrier, intake |
 | **Checker advisories that lie** | WI-656 (IF-owner reachability), WI-670 (unbound module count), WI-626 (shared-spec anchors), WI-658 (generated list) | each is a false or missing advisory in trace or check_trajectory |
 | **Doctrine prose (one byte-budget sitting)** | WI-609, WI-613, WI-614, then WI-615; WI-556, WI-668, WI-536, WI-610 | they share PROCESS.md's byte budget and the role prompts. The earlier handoff already ordered WI-609, WI-613 and WI-614 before WI-615 |
 | **Session service** | WI-620 (keep/act/record), WI-551, WI-605, WI-606, WI-541 | one service; WI-551 is already its keep operation |
 | **Review integrity** | WI-608, WI-621, WI-622 | the verdict file and Done-when guards |
-| **Assumption tier, remaining** | WI-634 (gate steps; OI-88 still open on its Boundary arm), WI-655 (C2 content), WI-667 (census routing) | the plan's remaining build and content |
+| **Assumption tier, remaining** | WI-638 (carried over, below), WI-634 (gate steps; OI-88 still open on its Boundary arm), WI-655 (C2 content), WI-667 (census routing) | the plan's remaining build and content |
 | **Absolutes** | WI-616 (check), WI-617 (sweep) | the check first, then the sweep that uses it |
 | **Quality and research** | WI-545, WI-539, WI-623, WI-624, WI-557, WI-570, WI-581, WI-618, WI-619 | lower priority. Triage these for cancel or defer before building any |
 
 ## State at handoff
 
-Trunk is `refactor_again`. Everything below is on trunk, one commit per item
-with its bar, in landing order:
+Trunk is `refactor_again` at 6ee918f5. Twenty-two commits landed this
+session, one per item, each with its bar:
 
-- the owner's rulings, the draft filings, WI-653, WI-654, WI-665, WI-602;
-- WI-652: the smoke re-tier, whose seconds bar is green at about 26–40 s
-  quiet;
-- WI-662, WI-660, WI-664, WI-669: the joint adjudication, 25 rows
-  re-anchored;
+- the owner's rulings and the draft filings;
+- WI-653, WI-654, WI-665, WI-602;
+- WI-652, the smoke re-tier, whose seconds bar is now green at 26–54 s
+  (under load);
+- WI-662, WI-660, WI-664;
+- WI-669, the joint adjudication, 25 rows re-anchored;
 - WI-649, WI-577, WI-661;
-- WI-643: the C1 sitting, with the dial at DevStg-Boundary;
-- WI-674 (RETURN, successor WI-677), WI-673, WI-650.
+- WI-643, the C1 sitting, with the dial at DevStg-Boundary;
+- WI-674 (RETURN, successor WI-677), WI-673, WI-650, WI-678;
+- WI-676's verdict;
+- WI-633.
 
-**In flight at handoff.** Worktrees are under this session's scratchpad,
-`C:/Users/Peter/AppData/Local/Temp/claude/c--Projects-ai-template/4c20dc92-f734-4020-9001-6c267d481450/scratchpad/wt-NNN`,
-and branches are `build/wi-NNN`. The section below is updated at the end of
-the session with what landed.
+**Carried over, not landed. Start the spine-acts batch with these two:**
 
-- WI-676: the SR-209/TC-242 amendment adjudication (Fable adjudicator).
-- WI-638: re-judging observation tests. Its review fix is in progress
-  (arbitration ruling 19).
-- WI-633: the assumption brief, stage reading and per-need view. Built at
-  b18bbb92; Sol review in progress.
-- WI-678: the live-frame pin.
+- **WI-676's re-anchor.** The verdict (MEANING, blessable, Sol SOUND) is on
+  trunk. Its act, taken at 7f98adc9, was refused at integration because WI-650
+  had since amended SR-217 and TC-250 in the live files, so the copy was no
+  longer byte-identical to live. Take ONE act on current trunk that
+  re-attests SR-209 and TC-242 together with WI-675's rows once WI-675 is
+  adjudicated: `intake.py snapshot --reattests SR-209,TC-242,<WI-675's>`.
+  Both specs record this.
+- **WI-638, checkpoint re-judging.** The branch `build/wi-638` holds
+  32aa17bc and f40373e3 on base b37dbbb1, and its worktree is kept.
+  Arbitration rulings 19 and 22 hold what remains:
+  - the approved SR-215, LLR-254 and TC-247 require filing cases that cannot
+    be re-judged, so either amend them or declare `inputs` and `max_age` on
+    TC-036, TC-055, TC-209, TC-210 and TC-211;
+  - a committed symlink escapes `input_escape`;
+  - the checkpoint revision can be extracted twice;
+  - the new always-on declaration failure exceeds approved LLR-233 and
+    TC-228, so it needs an amendment or must go.
+
+  Rebase it onto trunk before its next round.
+
+Worktrees were removed except `wt-638`. Every branch `build/wi-NNN` is kept.
 
 ## Your role and the loop (unchanged)
 
