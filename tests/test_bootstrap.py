@@ -108,16 +108,17 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/test/test-cases.toml",
         # The shared helper package (WI-448) — every module, because a
         # PARTIAL copy is the failure mode: the scripts import
-        # `kitlib.config` / `kitlib.evidence` / `kitlib.git` / `kitlib.ladder` /
+        # `kitlib.config` / `kitlib.done_when` / `kitlib.evidence` / `kitlib.git` / `kitlib.ladder` /
         # `kitlib.observation` / `kitlib.registry` / `kitlib.secret_classes` /
         # `kitlib.spine` / `kitlib.stage` / `kitlib.station` by name, so a
         # missing module ImportErrors on the scaffold's first check rather than
         # degrading. `test_the_common_package_ships_complete` asserts the set
-        # EXACTLY against the kit; these thirteen rows are the spot-check that keeps the
+        # EXACTLY against the kit; these fourteen rows are the spot-check that keeps the
         # expectation readable beside the other scripts.
         "scripts/kitlib/__init__.py",
         "scripts/kitlib/authority.py",
         "scripts/kitlib/config.py",
+        "scripts/kitlib/done_when.py",
         "scripts/kitlib/evidence.py",
         "scripts/kitlib/git.py",
         "scripts/kitlib/ladder.py",

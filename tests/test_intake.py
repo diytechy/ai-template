@@ -2640,3 +2640,75 @@ def test_a_merge_changing_an_observation_input_mints_one_rejudge_item(tmp_path):
     assert refusal is None, refusal
     assert minted == []
     assert len(_rejudge_rows(root)) == 1
+
+
+# --- S13: a lane's Done-when is fixed at claim ----------------------------------
+#
+# At merge each Done-when item's text AT CLAIM - the spec as trunk holds it under
+# `active/<branch>/`, which is what the claim wrote - is compared with its text
+# as the lane closed it, ticks and trailing evidence stripped. A change is the
+# builder moving its own goalposts, and the precedent for flagging it is the one
+# amended approved spine text already follows: the merge mints an adjudication.
+
+DONE_WHEN_AT_CLAIM = (
+    "\n## Done-when\n\n"
+    "- The widget renders at 60 fps on the reference box.\n"
+    "- A test pins the empty-frame refusal.\n"
+)
+
+
+def done_when_merge(tmp_path, closed_body, wid="WI-007", branch="wi-007"):
+    """`(root, before, after)`: trunk holds the claimed spec under
+    `active/<branch>/`, and the merge moves it to `complete/` as `closed_body`.
+    WI-007, not WI-008: the clean-close spot check samples every 4th id by
+    default, and this fixture must mint only what the Done-when rule mints."""
+    root = git_repo(tmp_path)
+    write_spec(
+        root, "active/" + branch, wid, specref="seed.txt", body=DONE_WHEN_AT_CLAIM
+    )
+    _commit(root, "claim: {} -> active/{} (bookkeeping)".format(wid, branch), T_CODE)
+    before = _rev(root)
+    for stale in (root / "docs" / "work" / "active" / branch).glob("*.md"):
+        stale.unlink()
+    write_spec(root, "complete", wid, body=closed_body)
+    _commit(root, "integrate: merge " + branch, when=T_LATER)
+    return root, before, _rev(root)
+
+
+def test_a_lane_that_rewords_its_own_done_when_mints_an_adjudication(tmp_path):
+    reworded = DONE_WHEN_AT_CLAIM.replace("- The", "- [x] The").replace(
+        "60 fps", "30 fps"
+    )
+    root, before, after = done_when_merge(tmp_path, reworded)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-007": "merged"}, "wi-007"
+    )
+    assert refusal is None, refusal
+    assert len(minted) == 1, minted
+    row = queued_rows(root)[minted[0][0]]
+    assert row["SafetyClass"] == "adjudication"
+    assert "WI-007" in row["Title"] and "Done-when" in row["Title"]
+    assert row["SpecRef"] == "docs/work/complete/WI-007-thing.md"
+    body = (root / minted[0][1]).read_text(encoding="utf-8")
+    assert "60 fps" in body and "30 fps" in body, "both texts, quoted"
+    assert "empty-frame" not in body, "the unchanged item is not flagged"
+    # Idempotent like every derived row: the title is the event's identity.
+    again, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-007": "merged"}, "wi-007"
+    )
+    assert refusal is None and again == []
+
+
+def test_a_lane_that_only_ticks_its_done_when_with_evidence_mints_nothing(tmp_path):
+    ticked = (
+        DONE_WHEN_AT_CLAIM.replace("- The", "- [x] The")
+        .replace("box.", "box. — measured 61 fps (docs/log.d/widget.md)")
+        .replace("- A test", "- [x] A test")
+        .replace("refusal.", "refusal. -> tests/test_widget.py::test_empty")
+    )
+    root, before, after = done_when_merge(tmp_path, ticked)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-007": "merged"}, "wi-007"
+    )
+    assert refusal is None, refusal
+    assert minted == []

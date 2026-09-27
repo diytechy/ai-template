@@ -2118,3 +2118,14 @@ version = "v1"
 status = "Drafted"
 component = "CMP-007"
 notes = """No tie-back: the argv comes IN from the adopter's own session, and the frame declares no IN crossing for an invocation. It reads the source tree and the baseline file, and writes only the baseline, under --restamp."""
+
+[interface.IF-242]
+rationale = """A reviewer maps each Done-when item to its covering test, so the list is the checklist a lane is judged against, and the lane being judged can rewrite it. Three readers ask about that list - the claim (does the row have one?), the reviewer's brief and the merge-time mint (did the lane change it?) - and a tick with evidence is the normal way an item is closed. Deciding what an item is and what counts as a change once, below all three, keeps them from disagreeing about whether a lane moved its own goalposts."""
+owner = "scripts/kitlib/done_when"
+requestors = ["scripts/integrate", "scripts/intake", "scripts/agent_loop"]
+channel = "call"
+data = "items(text) -> [item]; has_done_when(text) -> bool; changes(claimed_text, later_text) -> [(changed|added, item)]; describe(changes) -> [line]; claimed_text(root, rev, branch, wi_id) -> str or None"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """source - consumes no declared seam: pure text functions plus one read of the claim-time copy through kitlib.git. The section itself comes from kitlib.registry.done_when_section, so the tolerant heading rule keeps one home. Ticks, strikethrough and appended evidence in the form closed specs use (an evidence separator and an evidence token) read as the item unchanged; any other appended text is a change, closing punctuation or not, because that is how an item gets narrowed."""

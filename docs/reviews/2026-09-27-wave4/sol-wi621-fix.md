@@ -1,0 +1,7 @@
+<!-- Codex Sol (gpt-5.6-sol, medium) review of WI-621, read-only; prompt gist in ARBITRATION.md. Links re-rooted from the removed worktree. -->
+
+57bdae19 NOT YET SOUND
+
+- **major** — TC-257 requires the failed-stash case while “Driving the loop with a fake agent,” but its cited regression directly calls `judging_session_integrity` with a `SimpleNamespace`; it cannot detect the coordinator ignoring the returned stop or subsequently redrawing. [docs/test/test-cases.toml:2672](../../../docs/test/test-cases.toml), [tests/test_agent_loop_review.py:1470](../../../tests/test_agent_loop_review.py), [project-trajectory/scripts/agent_loop.py:3177](../../../project-trajectory/scripts/agent_loop.py). Add an end-to-end fake-agent regression that forces stash failure and asserts `EXIT_NEEDS_HUMAN` plus no second review invocation.
+
+- **minor** — TC-257’s `expected` cell still says every dirty judging session reruns clean, contradicting its new failed-stash method and implementation, which stop without redraw. [docs/test/test-cases.toml:2674](../../../docs/test/test-cases.toml), [project-trajectory/scripts/agent_loop.py:3266](../../../project-trajectory/scripts/agent_loop.py). Amend the Drafted expected text to distinguish successful stashing/redraw from failed stashing/NEEDS-HUMAN.

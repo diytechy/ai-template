@@ -78,6 +78,13 @@ its own approval. A file in `docs/reviews/` is a ROUND only when the coordinator
 own committed session log for that (train, ordinal) declares a REVIEW phase.
 The session log is written and committed by the loop, so the join is evidence a
 session cannot forge for itself without also forging the coordinator's telemetry.
+The same log records the session's exact commit range (`# commits:`), and that
+closes the two ways a round could still be changed by someone other than its
+reviewer: a round is READ at the end of that range, as its session committed it,
+so a later session rewriting the file changes nothing the gate counts; and a
+REVIEW session's range may change exactly its own verdict file
+(`scope_offenders`), which the merge slot re-derives from the committed logs
+(`review_scope_refusal`) as the loop checked it right after the session.
 
 WHAT THIS MODULE DELIBERATELY DOES NOT DO: it never decides what an absent answer
 MEANS (`kitlib.git`'s rule, inherited). `None` is "git had nothing to say"; the
@@ -98,9 +105,15 @@ Contract IF-175: the verdict record, as functions two independent readers call
     `format_trailer` / `parse_trailer` the `Review-Verdict:` machine half;
     `round_file` / `session_log` the two name grammars `docs/reviews/` and
     `docs/iteration/`
-    carry; `branch_paths` / `logged_rounds` / `round_entries` the round evidence
-    a branch holds, restricted to rounds a logged reviewer session produced and
-    to the tree under judgement; `declared_phases` / `phases_owed` the phase span
+    carry; `branch_paths` / `log_history` / `review_logs` / `logged_rounds` /
+    `round_entries`
+    the round evidence a branch holds, restricted to rounds a logged reviewer
+    session produced and COMMITTED, read as it committed them, and to the tree
+    under judgement; `parse_range` / `session_range` / `range_paths` a session's
+    recorded range and what it changed, and `scope_offenders` /
+    `session_scope_offenders` / `review_scope_refusal` what a REVIEW session
+    may change - its own verdict file and nothing else, one rule for the live
+    loop and the merge slot; `declared_phases` / `phases_owed` the phase span
     a review policy declares and which of those phases a tree has never had
     DRAWN — the resume's question, weaker than the gate's demand for a parseable
     APPROVE on exactly the mangled-verdict class and no other, so the two
@@ -118,6 +131,7 @@ Contract IF-175: the verdict record, as functions two independent readers call
 """
 
 import hashlib
+import os
 import re
 
 from .git import git_bytes, git_out
@@ -148,7 +162,14 @@ __all__ = [
     "governing_identity",
     "round_file",
     "session_log",
+    "parse_range",
+    "session_range",
+    "range_paths",
+    "scope_offenders",
+    "session_scope_offenders",
     "branch_paths",
+    "log_history",
+    "review_logs",
     "logged_rounds",
     "round_entries",
     "branch_entries",
@@ -158,6 +179,7 @@ __all__ = [
     "round_count",
     "format_branch_trailer",
     "branch_trailers",
+    "review_scope_refusal",
 ]
 
 # The process writing about itself. A commit touching only these cannot
@@ -205,6 +227,13 @@ ROUND_FILE_RE = re.compile(
 SESSION_LOG_RE = re.compile(r"^(?:(?P<train>.+)-)?(?P<ordinal>\d+)-\d{8}-\d{6}\.log$")
 
 _PHASE_HEADER_RE = re.compile(r"^# phase:[ \t]*(.*)$", re.M)
+
+# The session's exact commit range, `before..after`, as the coordinator took it
+# right after the session and wrote it into the log it commits. Empty when the
+# session committed nothing; the loop's `(root)` / `?` placeholders for an
+# unborn or unreadable head parse as no range at all.
+_COMMITS_HEADER_RE = re.compile(r"^# commits:[ \t]*(.*)$", re.M)
+_RANGE_RE = re.compile(r"^([0-9a-f]{7,64})\.\.([0-9a-f]{7,64})$")
 
 _REVIEWS = "docs/reviews"
 _ITERATION = "docs/iteration"
@@ -745,6 +774,222 @@ def session_log(path):
     return matched.group("train") or "", int(matched.group("ordinal"))
 
 
+# --- the session's recorded range, and what a REVIEW session may change -------
+
+
+def parse_range(text):
+    """`(before, after)` for a `before..after` commit range, or None.
+
+    None for an empty range (the session committed nothing) and for the loop's
+    placeholders when a head could not be read: neither names commits a reader
+    could diff or show, and a range that names nothing contributed nothing.
+
+    Implements: SR-154, LLR-262
+    """
+    matched = _RANGE_RE.match((text or "").strip())
+    return (matched.group(1), matched.group(2)) if matched else None
+
+
+def session_range(blob):
+    """The `(before, after)` range a session log's `# commits:` header records,
+    or None when it records none.
+
+    THE ONE RECORD NO COMMIT CARRIES FOR ITSELF. Every commit has the same
+    author, subjects are free-form and a reviewer carries no trailer, so nothing
+    on a commit reliably names the role that made it. The coordinator does know:
+    it takes the session's exact range right after the session ends and before
+    it commits anything of its own, and writes it here beside the phase.
+
+    Implements: SR-154, LLR-262
+    """
+    header = _COMMITS_HEADER_RE.search((blob or "")[:4000])
+    return parse_range(header.group(1)) if header else None
+
+
+def range_paths(root, span):
+    """Every path the commits `before..after` changed, sorted, or None when git
+    cannot answer. `--no-renames`, so a moved file names BOTH ends: a session
+    that renamed something changed two paths, and the check must see both.
+
+    Implements: SR-154, LLR-262
+    """
+    out = git_out(root, ["diff", "--name-only", "--no-renames", span[0], span[1]])
+    if out is None:
+        return None
+    return sorted({ln.strip() for ln in out.splitlines() if ln.strip()})
+
+
+def scope_offenders(changed, train, ordinal, phase):
+    """The paths in `changed` that are NOT the REVIEW session's own verdict
+    file, sorted - [] when the session changed nothing else.
+
+    ITS OWN VERDICT FILE is the round file named for the session's
+    `(train, ordinal)` AND the phase its log declares, under any reviewed sha
+    and tag. Record paths are not exempt, and that is the point of stating it
+    as one path rather than as "anything under docs/reviews/": a second round
+    file is a verdict this session had no business writing, a scoreboard is the
+    coordinator's, and a log fragment is a builder's. The live loop and the
+    merge slot both ask THIS function, so the check right after the session and
+    its re-derivation at merge cannot drift into two rules.
+
+    Implements: SR-154, LLR-262
+    """
+    own = (train, ordinal, phase)
+    return sorted(
+        path
+        for path in changed
+        if (round_file(path) or (None, None, None, None))[:3] != own
+    )
+
+
+def session_scope_offenders(root, commits, verdict_path):
+    """The live loop's half of S9: the paths a REVIEW session's just-taken
+    range `commits` (`before..after`, "" when it committed nothing) changed
+    beside `verdict_path`, the verdict file it was handed - [] when none.
+
+    The session's (train, ordinal, phase) are read off that path, the name the
+    loop composed for it, and the rule is `scope_offenders`, the one the merge
+    slot re-derives from the logs. A range that cannot be read is named rather
+    than passed: unread commits are not clean ones.
+
+    Implements: SR-154, LLR-262
+    """
+    if not commits:
+        return []
+    rel = os.path.relpath(str(verdict_path), str(root)).replace(os.sep, "/")
+    span = parse_range(commits)
+    changed = range_paths(root, span) if span else None
+    parsed = round_file(rel)
+    if changed is None or parsed is None:
+        return ["(the range {} could not be read)".format(commits)]
+    return scope_offenders(changed, *parsed[:3])
+
+
+def log_history(root, branch, base):
+    """`(added, rewritten)` over the session logs `base..branch`'s own commits
+    touched, or None when git cannot answer: `added` maps each log to the
+    commit that ADDED it (the oldest, should it be added twice), `rewritten`
+    lists `(sha, "M"|"D", path)` for every commit that modified or deleted one.
+
+    A SESSION LOG IS APPEND-ONLY EVIDENCE. The coordinator writes each one once,
+    in its own telemetry commit, and nothing in the loop edits it again; so a
+    later commit touching one is rewriting the record the checks key on - the
+    phase, and the range a round is read at and a review's scope is judged by.
+    Merge commits list no paths here, so a refresh bringing trunk's own logs
+    in rewrites nothing.
+
+    Implements: SR-154, SR-156, LLR-262
+    """
+    out = git_out(
+        root,
+        [
+            "log",
+            "--no-renames",
+            "--name-status",
+            "--format=%x00%H",
+            "{}..{}".format(base, branch),
+            "--",
+            _ITERATION,
+        ],
+    )
+    if out is None:
+        return None
+    added, rewritten = {}, []
+    for sha, status, path in _log_changes(out):
+        if status == "A":
+            added.setdefault(path, sha)
+        elif status in ("M", "D"):
+            rewritten.append((sha, status, path))
+    return added, rewritten
+
+
+def _log_changes(out):
+    """`(sha, status, path)` for each session-log change in a `--name-status`
+    listing whose records open with `\\x00<sha>`, OLDEST commit first."""
+    changes = []
+    for record in reversed(out.split("\x00")):
+        lines = [ln for ln in record.splitlines() if ln.strip()]
+        for line in lines[1:]:
+            status, _tab, path = line.partition("\t")
+            if session_log(path) is not None:
+                changes.append((lines[0].strip(), status, path))
+    return changes
+
+
+def review_logs(root, branch, base, paths):
+    """Every coordinator session log among `paths` that declares a REVIEW
+    phase, as `(log_path, (train, ordinal), phase, span)`, read AS THE COMMIT
+    THAT ADDED IT recorded it (`log_history`), never at the branch tip.
+
+    `span` is the log's recorded range, or None when it records none. A log
+    that cannot be read, or that no commit in `base..branch` added, is left
+    out, which every reader of this list turns toward more review: no round
+    comes from it, and the scope check at merge has nothing to clear it with
+    either (and refuses the rewrite itself, by name).
+
+    Implements: SR-154, SR-156, LLR-207, LLR-262
+    """
+    history = log_history(root, branch, base)
+    added = history[0] if history else {}
+    found = []
+    for path in paths:
+        key = session_log(path)
+        if key is None or path not in added:
+            continue
+        blob = git_out(root, ["show", "{}:{}".format(added[path], path)])
+        if blob is None:
+            continue
+        header = _PHASE_HEADER_RE.search(blob[:4000])
+        phase = header.group(1).strip() if header else ""
+        if phase in REVIEW_PHASES:
+            found.append((path, key, phase, session_range(blob)))
+    return found
+
+
+def review_scope_refusal(root, branch, base):
+    """S9 AT THE MERGE SLOT: the first REVIEW session in `base..branch` whose
+    recorded range changed anything but its own verdict file, as a refusal
+    naming the session log and the paths - or None.
+
+    RE-DERIVED FROM THE COMMITTED LOGS, not trusted from the loop's live check
+    right after the session, which is what makes it evidence: a crashed or
+    resumed run, or a lane some other process drove, reaches the slot all the
+    same. On a build lane nothing else stands between a reviewer's own edit
+    and trunk, so this is that lane's final pass. Unreadable evidence refuses.
+
+    Implements: SR-154, SR-156, LLR-262
+    """
+    paths = branch_paths(root, branch, base)
+    history = log_history(root, branch, base)
+    if paths is None or history is None:
+        return "cannot read the session logs {} committed".format(branch)
+    for sha, status, log in history[1]:
+        return (
+            "commit {} {} the session log {} after it was committed - a "
+            "session log is append-only evidence, so the lane's review record "
+            "cannot be trusted".format(
+                sha[:10], "modified" if status == "M" else "deleted", log
+            )
+        )
+    for log, (train, ordinal), phase, span in review_logs(root, branch, base, paths):
+        if span is None:
+            continue
+        changed = range_paths(root, span)
+        if changed is None:
+            return "cannot read the range {}..{} that {} records".format(
+                span[0][:10], span[1][:10], log
+            )
+        extra = scope_offenders(changed, train, ordinal, phase)
+        if extra:
+            return (
+                "the {} session logged at {} committed outside its verdict "
+                "file in {}..{}: {}".format(
+                    phase, log, span[0][:10], span[1][:10], ", ".join(extra)
+                )
+            )
+    return None
+
+
 def branch_paths(root, branch, base):
     """Every path `base..branch`'s OWN commits touched under the two record
     directories, or None when git cannot answer.
@@ -770,9 +1015,10 @@ def branch_paths(root, branch, base):
     return sorted({ln.strip() for ln in out.splitlines() if ln.strip()})
 
 
-def logged_rounds(root, branch, paths):
+def logged_rounds(root, branch, base, paths):
     """The rounds among `paths` that a LOGGED REVIEWER SESSION produced, as
-    `(ordinal, phase, reviewed_sha, path)` — the plan's finding K, closed.
+    `(ordinal, phase, reviewed_sha, path, read_at)` — the plan's finding K,
+    closed.
 
     A round file with no coordinator session log for its (train, ordinal), or
     one whose log declares a non-review phase, is NOT a round: it is a file
@@ -793,28 +1039,40 @@ def logged_rounds(root, branch, paths):
 
     A (train, ordinal) whose logs declare MORE THAN ONE review phase is
     ambiguous and yields no round: the fail-closed answer, and the reason this
-    reads a set rather than letting the last path scanned win."""
+    reads a set rather than letting the last path scanned win.
+
+    A ROUND IS WHAT ITS SESSION COMMITTED, so each carries the rev it is READ
+    at: the end of the range the session's own log records, and only when that
+    range changed the round file. The files live under `docs/reviews/`, a record
+    path, so a later session rewriting one moves neither the governing identity
+    nor the implementer-touch tripwire; read at the branch tip, a later session
+    could turn a reviewer's refusal into an approval the gate counted (driven:
+    WI-608, review pack C4). Read at the session's own commit, a later edit has
+    nothing to change. The same rule makes a file its session wrote and never
+    committed no round at all, which is the loop's rule too - it routes only on
+    a verdict as committed. A key whose logs disagree on the range is the
+    ambiguity above, answered the same way.
+
+    Implements: SR-154, SR-156, LLR-207, LLR-262
+    """
     declared = {}
-    for path in paths:
-        key = session_log(path)
-        if key is None:
-            continue
-        blob = git_out(root, ["show", "{}:{}".format(branch, path)])
-        if blob is None:
-            continue
-        header = _PHASE_HEADER_RE.search(blob[:4000])
-        if header and header.group(1).strip() in REVIEW_PHASES:
-            declared.setdefault(key, set()).add(header.group(1).strip())
-    reviewer = {key: ph.pop() for key, ph in declared.items() if len(ph) == 1}
+    for _log, key, phase, span in review_logs(root, branch, base, paths):
+        declared.setdefault(key, set()).add((phase, span))
+    reviewer = {key: rec.pop() for key, rec in declared.items() if len(rec) == 1}
+    touched = {}
     rounds = set()
     for path in paths:
         parsed = round_file(path)
         if parsed is None:
             continue
         train, ordinal, _name_phase, sha = parsed
-        phase = reviewer.get((train, ordinal))
-        if phase is not None:
-            rounds.add((ordinal, phase, sha, path))
+        phase, span = reviewer.get((train, ordinal), (None, None))
+        if span is None:
+            continue
+        if span not in touched:
+            touched[span] = range_paths(root, span) or []
+        if path in touched[span]:
+            rounds.add((ordinal, phase, sha, path, span[1]))
     return sorted(rounds)
 
 
@@ -846,12 +1104,13 @@ def round_entries(root, branch, rounds, want, parse):
     this leaf keeps no edge back into the scoring layer."""
     entries = []
     resolved = {}
-    for ordinal, phase, sha, path in rounds:
+    for ordinal, phase, sha, path, read_at in rounds:
         if sha not in resolved:
             resolved[sha] = governing_identity(root, branch, sha)
         if resolved[sha] != want:
             continue
-        text = git_out(root, ["show", "{}:{}".format(branch, path)])
+        # AT THE SESSION'S OWN COMMIT (`logged_rounds`), never at the tip.
+        text = git_out(root, ["show", "{}:{}".format(read_at, path)])
         if text is None:
             continue
         parsed = parse(text)
@@ -870,7 +1129,8 @@ def branch_entries(root, branch, base, want, parse):
     paths = branch_paths(root, branch, base)
     if paths is None:
         return None
-    return round_entries(root, branch, logged_rounds(root, branch, paths), want, parse)
+    rounds = logged_rounds(root, branch, base, paths)
+    return round_entries(root, branch, rounds, want, parse)
 
 
 def tree_already_judged(root, branch, base, parse):

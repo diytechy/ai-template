@@ -6107,6 +6107,45 @@ per-agent directory already carries, so if your repo hand-curates
 skip it with a stated reason. Arming the ratchet is your call; nothing
 changes until you do.
 
+### A review session may change only its verdict, rounds are read as committed, and a lane's Done-when is fixed at claim [since f61e22ff]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The checks key on the coordinator's session log (`# phase:`,
+`# commits: before..after`). Right after a REVIEW session, a range that
+changed anything but that session's own verdict file stops the loop needing a
+human, naming the paths; the merge slot refuses the same range from the
+committed logs with a new rung before the verdict gate. After a REVIEW or
+CRITIQUE session, uncommitted changes that were not there before it fail the
+draw (cooled, the same phase re-drawn) and are moved into one named
+`git stash` entry, so the re-drawn review starts clean (a stash that fails
+stops the loop needing a human instead); both arms route only
+on a verdict as committed, never on the file on disk. The gate reads each
+round at the end of its session's recorded range and only when that range
+changed the round file, so a later commit rewriting a round changes nothing,
+and a verdict its session never committed is no round. A session log is
+append-only evidence: every reader takes it as the commit that added it
+recorded it, and the merge slot refuses, by name, a lane commit that modified
+or deleted one. A claim of a row with
+no `## Done-when` item warns by name and still claims. A reviewer's brief
+gains a `DONE-WHEN CHANGED SINCE CLAIM` block when the lane's own diff changed
+a Done-when item (a tick, or evidence appended in the closed-spec form - a
+dash, arrow or bracket followed by a completion word such as `LANDED` or
+`DONE`, a path or test id, a backticked name or a commit sha - is not a
+change; other appended prose is), and the merge mints one
+brief-less adjudication row per such row. New module `scripts/kitlib/done_when.py`.
+
+**What to do.** Re-sync `scripts/kitlib/verdict.py`,
+`scripts/kitlib/done_when.py` (new: the package must be copied whole),
+`scripts/agent_loop.py`, `scripts/integrate.py`, `scripts/intake.py` and
+`scripts/bootstrap.py`. If your own loop writes session logs, they must carry
+the `# commits:` range, and must never edit a log once committed: a round
+whose log records none no longer counts at the gate, and a lane commit
+touching an existing log refuses the merge. A reviewer that commits anything beside its verdict file now blocks the
+lane's merge; a hook that auto-stages files into a reviewer's commit would do
+that. Expect claim warnings for rows without a Done-when, including rows the
+intake mint files; nothing refuses yet.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -247,31 +247,21 @@ def add_round(
     round_phase="REVIEW-A",
     when=T_LATER,
     extra_phases=(),
+    extra_files=(),
 ):
-    """Commit one round on `wi-401`: the coordinator's session log AND the
-    reviewer's verdict file, named for the code HEAD it read.
+    """Commit one round on `wi-401` in the loop's own two steps: the reviewer's
+    verdict file, named for the code HEAD it read, in the session's commit; then
+    the coordinator's session log, recording that session's exact commit range
+    in its `# commits:` header, in a telemetry commit of its own.
 
     `extra_phases` writes FURTHER round files into the same commit behind the
     same single session log — the shape a session that names its own second
-    phase produces, which is what the log-owns-the-phase join must refuse."""
+    phase produces, which is what the log-owns-the-phase join must refuse.
+    `extra_files` commits further paths in the SESSION's own commit - a review
+    session writing outside its verdict, which the merge ladder must refuse."""
     _git(root, "checkout", "-q", "wi-401")
-    sha = (_rev(root, "wi-401") or "")[:7]
-    log = (
-        root
-        / "docs"
-        / "iteration"
-        / "wi-401-{:03d}-20260101-000000.log".format(ordinal)
-    )
-    log.parent.mkdir(parents=True, exist_ok=True)
-    log.write_text(
-        LOG.format(
-            ordinal=ordinal,
-            train="wi-401",
-            phase=session_phase or round_phase,
-        ),
-        encoding="utf-8",
-        newline="\n",
-    )
+    before = _rev(root, "wi-401")
+    sha = (before or "")[:7]
     rnd = (
         root
         / "docs"
@@ -285,7 +275,28 @@ def add_round(
         (rnd.parent / "{:03d}-{}-{}.md".format(ordinal, phase, sha)).write_text(
             text, encoding="utf-8", newline="\n"
         )
+    for rel in extra_files:
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text("a reviewer's edit\n", encoding="utf-8", newline="\n")
     _commit(root, "review: round {}".format(ordinal), when=when)
+    log = (
+        root
+        / "docs"
+        / "iteration"
+        / "wi-401-{:03d}-20260101-000000.log".format(ordinal)
+    )
+    log.parent.mkdir(parents=True, exist_ok=True)
+    log.write_text(
+        LOG.format(
+            ordinal=ordinal,
+            train="wi-401",
+            phase=session_phase or round_phase,
+        )
+        + "# commits: {}..{}\n".format(before, _rev(root, "wi-401")),
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "telemetry: session wi-401-{:03d}".format(ordinal), when=when + 1)
     _git(root, "checkout", "-q", "main")
     return sha
 
@@ -508,6 +519,139 @@ def test_the_governing_round_can_refuse(tmp_path):
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
     assert "not an APPROVE" in refusal
+
+
+def test_a_later_session_rewriting_a_round_cannot_change_what_the_gate_counts(
+    tmp_path,
+):
+    # WI-608 (review pack C4), REPRODUCED FIRST. The round files sit under
+    # `docs/reviews/`, a record path, so a commit that only rewrites one moves
+    # neither the governing identity nor the implementer-touch tripwire (which
+    # excludes the train's own review folder) - and the gate used to read each
+    # round at the BRANCH TIP. A later session turning the reviewer's
+    # CHANGES-REQUESTED into an APPROVE therefore turned the gate green, with no
+    # trailer on the lane to contradict it. A round is now read as its review
+    # session COMMITTED it: at the end of the range that session's log records.
+    root = rounds_repo(tmp_path)
+    sha = add_round(root, 3, text=CHANGES)
+    want = kv.governing_identity(root, "wi-401")
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
+    assert refusal is not None and "not an APPROVE" in refusal
+
+    _git(root, "checkout", "-q", "wi-401")
+    rnd = root / "docs" / "reviews" / "wi-401" / "003-REVIEW-A-{}.md".format(sha)
+    rnd.write_text(APPROVE, encoding="utf-8", newline="\n")
+    _commit(root, "WI-401: a later session rewrites the round", when=T_LATER + 100)
+    _git(root, "checkout", "-q", "main")
+    assert integ.ac.git(root, "show", "wi-401:" + rnd.relative_to(root).as_posix())[
+        1
+    ].startswith("# Review A"), "the fixture must really commit the rewrite"
+    assert kv.governing_identity(root, "wi-401") == want, "a record-only rewrite"
+
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
+    assert refusal is not None, "the rewritten round cleared the gate (WI-608)"
+    assert "not an APPROVE" in refusal
+
+
+def test_a_verdict_its_session_did_not_commit_is_not_a_round(tmp_path):
+    # The other half of "as its session committed it": a reviewer that wrote its
+    # file and committed NOTHING records an empty range, and a later session
+    # committing the file for it does not make it that reviewer's round.
+    root = rounds_repo(tmp_path)
+    _git(root, "checkout", "-q", "wi-401")
+    sha = _rev(root, "wi-401")[:7]
+    log = root / "docs" / "iteration" / "wi-401-003-20260101-000000.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    log.write_text(
+        LOG.format(ordinal=3, train="wi-401", phase="REVIEW-A") + "# commits: \n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    rnd = root / "docs" / "reviews" / "wi-401" / "003-REVIEW-A-{}.md".format(sha)
+    rnd.parent.mkdir(parents=True, exist_ok=True)
+    rnd.write_text(APPROVE, encoding="utf-8", newline="\n")
+    _commit(root, "WI-401: the next session sweeps the verdict in", when=T_LATER)
+    _git(root, "checkout", "-q", "main")
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
+    assert refusal is not None and "no logged review round" in refusal
+
+
+def test_a_later_session_rewriting_a_session_log_cannot_launder_its_round(tmp_path):
+    # THE LOG IS EVIDENCE TOO, and it is append-only. A reviewer commits a
+    # CHANGES-REQUESTED verdict AND an edit to the work in one range, and its
+    # session log records that range. A later session then commits a
+    # verdict-only rewrite (to APPROVE) and rewrites the earlier log's
+    # `# commits:` header to name that clean commit instead. Read at the tip,
+    # the log vouches for the later commit: the scope rung sees a clean range
+    # and the gate reads the rewritten APPROVE. Read as the commit that ADDED it
+    # recorded it, the log still names the reviewer's own range - and the rung
+    # refuses the later commit that modified the log, by name.
+    root = rounds_repo(tmp_path)
+    sha = add_round(root, 3, text=CHANGES, extra_files=["src/helper.py"])
+    _git(root, "checkout", "-q", "wi-401")
+    rnd = root / "docs" / "reviews" / "wi-401" / "003-REVIEW-A-{}.md".format(sha)
+    before = _rev(root, "wi-401")
+    rnd.write_text(APPROVE, encoding="utf-8", newline="\n")
+    _commit(root, "WI-401: a verdict-only rewrite", when=T_LATER + 100)
+    clean = _rev(root, "wi-401")
+    log = root / "docs" / "iteration" / "wi-401-003-20260101-000000.log"
+    text = log.read_text(encoding="utf-8")
+    forged = "\n".join(
+        "# commits: {}..{}".format(before, clean) if ln.startswith("# commits:") else ln
+        for ln in text.split("\n")
+    )
+    assert forged != text, "the fixture must really rewrite the recorded range"
+    log.write_text(forged, encoding="utf-8", newline="\n")
+    _commit(root, "WI-401: tidy the session log", when=T_LATER + 200)
+    forger = _rev(root, "wi-401")
+    _git(root, "checkout", "-q", "main")
+
+    refusal = integ._review_scope_refusal(root, "wi-401")
+    assert refusal is not None, "the rewritten log laundered the review range"
+    assert "docs/iteration/wi-401-003-20260101-000000.log" in refusal
+    assert forger[:10] in refusal, "the commit that modified the log is named"
+    # ...and the gate does not clear on the rewritten APPROVE either: the round
+    # is read at the range the log recorded when it was ADDED.
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is not None
+
+
+def test_the_merge_ladder_refuses_a_review_range_beyond_its_verdict(tmp_path):
+    # S9 at the merge slot, RE-DERIVED from the committed session logs rather
+    # than trusted from the loop's live check: a REVIEW session's recorded range
+    # may change exactly its own verdict file. Asserted beside the clean round,
+    # which passes the same rung, so the rung is a rule and not a blanket stop.
+    (tmp_path / "clean").mkdir()
+    (tmp_path / "bad").mkdir()
+    clean = rounds_repo(tmp_path / "clean")
+    add_round(clean, 3)
+    assert integ._review_scope_refusal(clean, "wi-401") is None
+
+    root = rounds_repo(tmp_path / "bad")
+    add_round(root, 3, extra_files=["src/helper.py", "docs/log.d/WI-401-note.md"])
+    refusal = integ._review_scope_refusal(root, "wi-401")
+    assert refusal is not None
+    assert "wi-401-003-" in refusal, "the session log is named"
+    assert "src/helper.py" in refusal and "docs/log.d/WI-401-note.md" in refusal
+    assert "nothing was merged" in refusal
+    # ...and it is the merge LADDER's rung: `_merge_refusal` reaches it on a
+    # branch whose claimed spec closed cleanly, before the verdict gate.
+    _git(root, "checkout", "-q", "main")
+    write_spec(root, "active/wi-401", "WI-401")
+    _commit(root, "claim: WI-401 -> active/wi-401 (bookkeeping)", when=T_LATER + 50)
+    _git(root, "checkout", "-q", "wi-401")
+    _git(root, "merge", "-q", "--no-edit", "main")
+    _git(root, "mv", "docs/work/active/wi-401/WI-401-widget.md", "docs/work/")
+    (root / "docs" / "work" / "complete").mkdir(parents=True, exist_ok=True)
+    _git(
+        root,
+        "mv",
+        "docs/work/WI-401-widget.md",
+        "docs/work/complete/WI-401-widget.md",
+    )
+    _commit(root, "WI-401: close\n\nWI: WI-401", when=T_LATER + 60)
+    _git(root, "checkout", "-q", "main")
+    _outcomes, ladder = integ._merge_refusal(root, "wi-401", ["WI-401"])
+    assert ladder == refusal
 
 
 def test_a_trailer_contradicting_the_rounds_refuses(tmp_path):

@@ -172,3 +172,28 @@ arbiter makes are marked as such.
     counted modules, and its warning test asserts the report-only statement.
     The builder then rebases onto trunk and redoes the complexity re-stamp,
     because three landed lanes moved the measured functions.
+
+16. **WI-621 (58535a4c) — SOL on all five.** Sol's blocker extends
+    WI-608's own finding one level. The builder closed the rewrite of a
+    round's verdict file by reading each round at its session's recorded
+    range, but that range comes from the session log, which a later session
+    can also rewrite. The builder had named this as the trust boundary. The
+    governing text is WI-621's Done-when ("the merge ladder re-derives the
+    same check from the committed session logs"): a check re-derived from a
+    record the lane can rewrite is no check. Ruling: bounded, the same shape
+    as WI-608's fix. A session log is append-only evidence, read as the
+    commit that added it recorded it, and a later change to one is refused by
+    name at the merge. Also: Done-when narrowing hidden after punctuation, a
+    failed stash that still redraws, TC-257's in-memory clauses split into a
+    Smoke case (TC-259), and LLR-262's missing back-link.
+
+17. **WI-621, second round (57bdae19) — SOL on both.** The session-log
+    blocker and the other four first-round findings are confirmed fixed.
+    TC-257 claims the failed-stash stop is shown driving the loop with a fake
+    agent, but its test calls the integrity function directly, so a
+    coordinator that ignored the stop would pass it. An end-to-end regression
+    is owed, and TC-257's `expected` is corrected to tell the stash that
+    succeeds (redrawn) from the one that fails (NEEDS-HUMAN). The builder
+    states one limit of the Done-when evidence form, that `— DONE except on
+    Windows` still reads as evidence. That stands as stated: the rule makes a
+    change visible, and the reviewer and adjudicator judge it.

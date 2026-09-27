@@ -168,6 +168,7 @@ import score_reviews
 import spec_move
 from kitlib import authority as _kitauthority
 from kitlib import provenance as _kitprovenance
+from kitlib import done_when as kdone
 from kitlib import verdict as kverdict
 from kitlib.station import (
     BAR_GREEN,
@@ -704,6 +705,35 @@ def _claim_refusal(root, wi_ids, branch):
     return None
 
 
+def _done_when_warning(root, wi_ids):
+    """S13's first rule at the claim: every claimable row has a Done-when,
+    written before claim by whoever filed it. WARN-FIRST, by name, on stderr.
+
+    Not yet a refusal, and deliberately: the intake mint files its derived rows
+    (adjudications, gap closures, drafted successors) with a `## Context` and no
+    `## Done-when`, so refusing today would park every minted row off the
+    station. The rule becomes a refusal once the rows that lack one - the
+    mint's included - are backfilled.
+
+    Implements: SR-156, LLR-262
+    """
+    for wi_id in wi_ids:
+        spec = _queued_spec(root, wi_id)
+        try:
+            text = spec.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            text = ""
+        if not kdone.has_done_when(text):
+            print(
+                "integrate: WARNING - {} ({}) declares no Done-when; its reviewer "
+                "has no checklist and its merge nothing to hold it to. Write one "
+                "before claim (S13; warn-first).".format(
+                    wi_id, spec.relative_to(root).as_posix()
+                ),
+                file=sys.stderr,
+            )
+
+
 def claim(root, wi_ids, branch, dispatch_lock_held=False):
     """§2.3 steps 1+2 in the order that makes a half-claim BENIGN (§A3).
 
@@ -767,6 +797,7 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
     refusal = _claim_refusal(root, wi_ids, branch)
     if refusal:
         return fail(refusal)
+    _done_when_warning(root, wi_ids)
     release = None
     if not dispatch_lock_held:
         release, refusal = _dispatch_lock(root)
@@ -2713,6 +2744,26 @@ def _merge_ready(root, branch):
     return True, attested[1]
 
 
+def _review_scope_refusal(root, branch):
+    """S9 AT THE SLOT: a REVIEW session whose recorded range changed anything
+    but its own verdict file refuses the merge, by name - or None.
+
+    Re-derived from the branch's committed session logs through the verdict
+    record's one rule (`kverdict.review_scope_refusal`), the same one the loop
+    asks right after each review session. On a build lane with no Drafted rows
+    no adjudicator verifies the lane, so this is its final pass.
+
+    Implements: SR-154, SR-156, LLR-262
+    """
+    code, base = ac.git(root, "merge-base", _head(root), branch)
+    if code != 0 or not base.strip():
+        return "cannot read the merge base of trunk and {}, so its review sessions' ranges are unknowable; nothing was merged".format(
+            branch
+        )
+    refusal = kverdict.review_scope_refusal(root, branch, base.strip())
+    return "{}: {}; nothing was merged".format(branch, refusal) if refusal else None
+
+
 def _partial_report_refusal(root, branch, outcomes):
     """SR-144: a `partial` close must carry a readable report that states the
     KEEP/DISCARD split. A refusal string, or None.
@@ -2787,6 +2838,9 @@ def _merge_refusal(root, branch, wi_ids):
     if refusal:
         return outcomes, refusal
     refusal = _loop_trailer_refusal(root, branch)  # SR-209
+    if refusal:
+        return outcomes, refusal
+    refusal = _review_scope_refusal(root, branch)  # S9
     if refusal:
         return outcomes, refusal
     refusal = _declared_bar_or_refusal(root)

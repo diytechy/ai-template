@@ -1,0 +1,13 @@
+<!-- Codex Sol (gpt-5.6-sol, medium) review of WI-621, read-only; prompt gist in ARBITRATION.md. Links re-rooted from the removed worktree. -->
+
+58535a4c NOT YET SOUND
+
+- **blocker** — Session logs remain mutable evidence. `review_logs` reads each log from the branch tip, and `logged_rounds` trusts that final range ([verdict.py:882](../../../project-trajectory/scripts/kitlib/verdict.py), [verdict.py:993](../../../project-trajectory/scripts/kitlib/verdict.py)). A later session can commit a verdict-only rewrite, then rewrite the earlier log to name that clean range; scope passes and the rewritten verdict counts. Read each log at its original coordinator commit or refuse any later modification, and add an end-to-end regression for this bypass.
+
+- **major** — Done-when narrowing after punctuation is silently accepted. `_extends` treats every suffix after a claim ending in punctuation as evidence ([done_when.py:106](../../../project-trajectory/scripts/kitlib/done_when.py)); `Tests pass.` → `Tests pass. Only on Linux.` returns no change. The “qualification” test avoids this path by removing the period ([test_done_when.py:100](../../../tests/test_done_when.py)). Distinguish explicit completion evidence from arbitrary appended prose, add the punctuation regression, and correct Drafted LLR-262’s overbroad punctuation rule ([low-level-requirements.toml:2749](../../../docs/requirements/low-level-requirements.toml)).
+
+- **major** — A failed stash still re-runs on the dirty tree. After `stash_leftovers` reports failure, the code cools and returns the ordinary redraw result ([agent_loop.py:3263](../../../project-trajectory/scripts/agent_loop.py), [agent_loop.py:3278](../../../project-trajectory/scripts/agent_loop.py)); the next draw records the residue as pre-existing. Stop with NEEDS-HUMAN when stashing fails and test that no redraw occurs.
+
+- **minor** — TC-257 is Full, but its two new pure evidence modules are not in `SLOW_MODULES` ([test-cases.toml:2673](../../../docs/test/test-cases.toml), [conftest.py:85](../../../tests/conftest.py)). Split the in-memory clauses into a Smoke TC and retain the repository/subprocess clauses in Full TC-257.
+
+- **minor** — LLR-262 names `_done_when_drafts`, but its docstring lacks the required `Implements:` backlink ([low-level-requirements.toml:2748](../../../docs/requirements/low-level-requirements.toml), [intake.py:1139](../../../project-trajectory/scripts/intake.py)). Add `Implements: SR-156, LLR-262`.

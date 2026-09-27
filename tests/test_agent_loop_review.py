@@ -1294,3 +1294,241 @@ def test_a_refusal_with_no_findings_still_requests_changes(managed_repo):
     _repo, _ctl, proc = _one_round(managed_repo, EMPTY_REFUSAL_BODY)
     assert "MINOR-only findings routed as" not in proc.stdout
     assert "review round: merged=CHANGES-REQUESTED" in proc.stdout
+
+
+# --- S9 "verify, don't isolate": what a review session leaves behind ----------
+#
+# A reviewer works and commits in the lane (OI-76 unchanged), so what keeps it
+# from changing the work it judges is a CHECK, keyed on the coordinator's own
+# record of the session (its phase and exact commit range), run right after the
+# session. `review_mode` is consumed by the FIRST reviewer session only, so the
+# re-drawn review behaves - which is what "the review re-runs clean" needs.
+FAKE_REVIEWER_MISBEHAVES = FAKE.replace(
+    '    vpath.write_text(text, encoding="utf-8")\n'
+    '    commit(vpath, "review verdict")\n',
+    '    mode_file = ctl / "review_mode"\n'
+    '    mode = mode_file.read_text(encoding="utf-8").strip() if mode_file.exists() else ""\n'
+    "    if mode:\n"
+    "        mode_file.unlink()\n"
+    '        body = ctl / "misbehave_body.txt"\n'
+    '        text = body.read_text(encoding="utf-8") if body.exists() else text\n'
+    '    vpath.write_text(text, encoding="utf-8")\n'
+    '    if mode == "extra":\n'
+    '        pathlib.Path("helper.txt").write_text("a reviewer fix", encoding="utf-8")\n'
+    '        subprocess.run(["git", "add", "helper.txt"], check=True)\n'
+    '    if mode != "nocommit":\n'
+    '        commit(vpath, "review verdict")\n'
+    '    if mode in ("stray", "stray-locked"):\n'
+    '        pathlib.Path("stray.txt").write_text("left behind", encoding="utf-8")\n'
+    '    if mode == "stray-locked":\n'
+    '        pathlib.Path(".git", "index.lock").write_text("", encoding="utf-8")\n',
+)
+assert FAKE_REVIEWER_MISBEHAVES != FAKE, "the reviewer block moved; re-anchor"
+
+
+def _misbehaving_round(managed_repo, mode, body=None):
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "done_after").write_text("2", encoding="utf-8")
+    (repo.parent / "fake.py").write_text(FAKE_REVIEWER_MISBEHAVES, encoding="utf-8")
+    if mode:
+        (ctl / "review_mode").write_text(mode, encoding="utf-8")
+    if body:
+        (ctl / "misbehave_body.txt").write_text(body, encoding="utf-8")
+    return repo, ctl, _loop(repo, cmd)
+
+
+def _builds(ctl):
+    p = ctl / "builds.txt"
+    return len(p.read_text(encoding="utf-8").splitlines()) if p.exists() else 0
+
+
+def test_a_clean_review_session_is_accepted(managed_repo):
+    repo, ctl, proc = _misbehaving_round(managed_repo, "")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "outside its verdict" not in proc.stdout + proc.stderr
+    assert "left the tree dirty" not in proc.stdout
+    assert "review round: merged=APPROVE" in proc.stdout
+    assert _models(ctl).count("revb") == 1, "one draw served the round"
+
+
+def test_a_review_session_committing_beside_its_verdict_is_refused_by_name(
+    managed_repo,
+):
+    repo, ctl, proc = _misbehaving_round(managed_repo, "extra")
+    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
+    out = proc.stdout + proc.stderr
+    assert "outside its verdict" in out
+    assert "helper.txt" in out, "the refusal names the path"
+    # Refused right after the session: its verdict is never taken into a round.
+    assert "review round: merged=" not in proc.stdout
+
+
+def test_a_dirty_tree_after_a_review_fails_the_draw_and_it_reruns_clean(
+    managed_repo,
+):
+    repo, ctl, proc = _misbehaving_round(managed_repo, "stray")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "left the tree dirty" in proc.stdout and "stray.txt" in proc.stdout
+    # The failed draw is the existing one: cooled, and the SAME phase re-drawn
+    # on a different reviewer, whose clean session completes the round.
+    reviews = _routes(proc.stdout, "REVIEW-A")
+    assert len(reviews) >= 2 and "PROVC-REV-1" in reviews[-1]
+    assert "review round: merged=APPROVE" in proc.stdout
+    # The leftovers left the tree, recoverably, named for the session.
+    assert not (repo / "stray.txt").exists()
+    stashes = _git(repo, "stash", "list")
+    assert "REVIEW-A session t1-" in stashes and "leftovers" in stashes
+
+
+def test_a_review_whose_leftovers_cannot_be_stashed_stops_and_is_not_redrawn(
+    managed_repo,
+):
+    # END TO END, through the coordinator's own ladder: the reviewer commits its
+    # verdict, leaves a stray file, and holds the index lock, so the stash that
+    # would clear the tree fails. A redraw on that tree would record the residue
+    # as already there, so the run must stop needing a human - and the review
+    # route must have been launched exactly once.
+    repo, ctl, proc = _misbehaving_round(managed_repo, "stray-locked")
+    lock = repo / ".git" / "index.lock"
+    if lock.exists():
+        lock.unlink()
+    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
+    assert "could not be stashed" in proc.stdout and "stray.txt" in proc.stdout
+    assert len(_routes(proc.stdout, "REVIEW-A")) == 1, "the review was re-drawn"
+    reviewers = [m for m in _models(ctl) if m in ("revb", "revc")]
+    assert reviewers == ["revb"], reviewers
+    assert "review round: merged=" not in proc.stdout
+
+
+def test_an_uncommitted_review_verdict_is_never_routed_on(managed_repo):
+    # The reviewer writes a CHANGES-REQUESTED verdict and commits nothing. The
+    # merge gate reads committed round files only, so a loop routing on the file
+    # on DISK would re-work the lane on a verdict the gate can never see.
+    repo, ctl, proc = _misbehaving_round(
+        managed_repo, "nocommit", body=CHANGES_REQUESTED_BODY
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "left the tree dirty" in proc.stdout
+    assert "CHANGES-REQUESTED -> assignment-scoped rework" not in proc.stdout
+    assert "REWORK FINDING" not in (ctl / "prompts.txt").read_text(encoding="utf-8")
+    assert _builds(ctl) == 2, "no rework build was drawn on the unseen verdict"
+    assert "review round: merged=APPROVE" in proc.stdout, "the re-drawn review"
+    committed = _git(repo, "log", "--format=", "--name-only", "--", "docs/reviews")
+    assert committed.count("-REVIEW-A-") == 1, "only the re-drawn verdict landed"
+
+
+# --- S13: the reviewer is told when the lane moved its own Done-when ----------
+
+SPEC_AT_CLAIM = (
+    '+++\nid = "WI-201"\ntitle = "Scoped work"\n+++\n\n'
+    "## Done-when\n\n"
+    "- The widget renders at 60 fps on the reference box.\n"
+    "- A test pins the empty-frame refusal.\n"
+)
+
+
+def _claimed_lane(tmp_path, closed_text):
+    """`(repo, worker)`: the claim commit holds the spec under active/t1/, and the
+    lane's own later commit closes it as `closed_text`."""
+    repo = tmp_path / "lane"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    pin_autocrlf(repo)
+    _git(repo, "config", "user.email", "loop@example.com")
+    _git(repo, "config", "user.name", "Loop Test")
+    active = repo / "docs" / "work" / "active" / "t1" / "WI-201-scoped.md"
+    active.parent.mkdir(parents=True)
+    active.write_text(SPEC_AT_CLAIM, encoding="utf-8", newline="\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "claim: WI-201 -> active/t1 (bookkeeping)")
+    base = _git(repo, "rev-parse", "HEAD")
+    active.unlink()
+    done = repo / "docs" / "work" / "complete" / "WI-201-scoped.md"
+    done.parent.mkdir(parents=True)
+    done.write_text(closed_text, encoding="utf-8", newline="\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "WI-201: close\n\nWI: WI-201")
+    worker = {"train": "t1", "base": base, "assigned": ["WI-201"], "rows": {}}
+    return repo, worker
+
+
+def _brief(repo, worker):
+    return agent_loop.reviewer_prompt(
+        {}, "REVIEW-A", repo / "docs" / "reviews" / "t1" / "v.md", repo, worker
+    )
+
+
+def test_the_reviewer_is_told_the_lane_reworded_its_done_when(tmp_path):
+    repo, worker = _claimed_lane(tmp_path, SPEC_AT_CLAIM.replace("60 fps", "30 fps"))
+    brief = _brief(repo, worker)
+    assert "DONE-WHEN CHANGED SINCE CLAIM" in brief
+    assert "WI-201" in brief.split("DONE-WHEN CHANGED SINCE CLAIM", 1)[1]
+    assert "60 fps" in brief and "30 fps" in brief
+    assert "empty-frame" not in brief.split("DONE-WHEN CHANGED SINCE CLAIM", 1)[1]
+
+
+def test_a_lane_that_only_ticked_its_done_when_tells_the_reviewer_nothing(tmp_path):
+    ticked = SPEC_AT_CLAIM.replace("- The", "- [x] The").replace(
+        "refusal.", "refusal. (tests/test_widget.py::test_empty)"
+    )
+    repo, worker = _claimed_lane(tmp_path, ticked)
+    assert "DONE-WHEN CHANGED SINCE CLAIM" not in _brief(repo, worker)
+
+
+class _RoutingSpy:
+    """The two RoutingState transitions a failed draw takes, recorded."""
+
+    def __init__(self):
+        self.cooled, self.draw_failures = [], 0
+
+    def cool(self, route_id, now, seconds=None):
+        self.cooled.append(route_id)
+
+    def note_review_draw_failure(self):
+        self.draw_failures += 1
+
+
+def test_a_failed_stash_stops_for_a_human_and_redraws_nothing(
+    tmp_path, monkeypatch, capsys
+):
+    # The failed draw is only sound if the re-drawn review starts clean. When
+    # the leftovers cannot be moved aside, a redraw would run on the dirty tree
+    # and record the residue as pre-existing - so the run stops, by name, and
+    # the route is neither cooled nor charged a failed draw.
+    import types
+
+    repo = tmp_path / "lane"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    pin_autocrlf(repo)
+    _git(repo, "config", "user.email", "loop@example.com")
+    _git(repo, "config", "user.name", "Loop Test")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "seed")
+    (repo / "stray.txt").write_text("left behind\n", encoding="utf-8")
+    monkeypatch.setattr(agent_loop, "stash_leftovers", lambda *a: "index.lock held")
+    spy = _RoutingSpy()
+    status = tmp_path / "status.md"
+    status.write_text("# Status\n", encoding="utf-8")
+    ctx = types.SimpleNamespace(
+        root=repo,
+        run=types.SimpleNamespace(routing=spy),
+        status_path=status,
+        worker={"train": "t1"},
+    )
+    plan = {
+        "phase": "REVIEW-A",
+        "is_review": True,
+        "is_critique": False,
+        "route_id": "PROVB-REV-1",
+        "verdict_path": repo / "docs" / "reviews" / "t1" / "004-REVIEW-A-abc1234.md",
+        "pre_dirty": [],
+    }
+    failed, stop = agent_loop.judging_session_integrity(ctx, plan, "", "004", 0.0)
+    assert (failed, stop) == (True, agent_loop.EXIT_NEEDS_HUMAN)
+    assert spy.cooled == [] and spy.draw_failures == 0, "no redraw was armed"
+    banner = capsys.readouterr().out
+    assert "NEEDS-HUMAN" in banner
+    assert "stray.txt" in banner and "index.lock held" in banner

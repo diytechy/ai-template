@@ -265,3 +265,34 @@ and added IF-240 to the pin. Then smoke 1636 passed / 3 skipped, **seconds
 1 skipped. The live-frame pin broke twice at this session's merges, so the
 next session should ask whether it should read "No tie-back" rows rather than
 list them.
+
+### WI-621 lands: review and Done-when integrity (with WI-608 and WI-622)
+
+This lane was launched before the owner's wind-down instruction and was
+finished after it; nothing new started. One builder, three Sol rounds
+(rulings 16 and 17). WI-608 was reproduced and closed by reading each round
+as its session committed it. Session logs are append-only evidence, so a
+rewritten log cannot launder a rewritten verdict. A review session may change
+only its verdict file. The loop routes only on committed verdicts. A lane's
+Done-when is fixed at claim: a change is flagged and minted for adjudication,
+and a claim with none warns. **Open count: 13** (12 queued, 1 deferred).
+
+Next spine-acts batch, from this lane: first approvals LLR-262, TC-257,
+TC-259.
+
+Commit bar at WI-621: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs` 0 broken, `check_complexity --mode enforce` OK (204 rows),
+smoke 1647 passed / 3 skipped, **seconds 27.7 s within 60 s on a quiet box**
+(no agent running). Touched modules and ratchets (test_verdict_record,
+test_done_when, test_review_scope, test_agent_loop_review,
+test_frame_context, both ratchets), run by the coordinator: 141 passed.
+test_intake, test_integrate and test_agent_loop_critique: builder's runs at
+57bdae19 and c49146a3.
+
+**Open count at the end of the session: 13** (12 queued, 1 deferred),
+from 50 at the start.
+fig: `git ls-tree --name-only HEAD docs/work/queued/ docs/work/deferred/ | grep WI- | grep -v WI-000 | wc -l` at the commit after this entry.
+
+Deferred open items: none — OI-88 was the one pending row and is ruled; no
+new open item was minted this session.

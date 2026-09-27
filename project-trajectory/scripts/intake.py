@@ -82,8 +82,9 @@ Contract IF-090: the trunk-side intake mint, by importer.
     post-merge arm: it mints one landed merge's forced rows — the amendment
     adjudications, the FIRST-APPROVAL adjudications over the `Drafted` rows the
     lane handed over on rungs the dial releases (owner ruling 2026-09-01: a lane
-    authors, an adjudicator approves), the close dispositions and the drafts a
-    close names — as ONE bookkeeping commit inside the slot the caller holds,
+    authors, an adjudicator approves), the close dispositions, the drafts a
+    close names and one adjudication per row whose lane changed its own
+    Done-when since claim — as ONE bookkeeping commit inside the slot the caller holds,
     returning them with a refusal slot. `mint_gap_rows(root, lines)` is the
     dispatcher's empty-frontier arm over a census, and
     `context_block(root, wi_row)` renders the registry joins a worker prompt
@@ -127,10 +128,12 @@ except ImportError:  # pragma: no cover - in-process fallback
 # of two git trees, so it needs the FORMAT reader, not the filesystem-bound common
 # one — the parse rule has exactly one home either way.
 try:
+    from kitlib import done_when as kdone
     from kitlib import stage as kitstage
     from kitlib import spine as _spine
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from kitlib import done_when as kdone
     from kitlib import stage as kitstage
     from kitlib import spine as _spine
 
@@ -1130,6 +1133,62 @@ def _close_drafts(root, outcomes):
                     "context": _close_context(relpath, rel_report),
                 }
             )
+    return drafts
+
+
+def _done_when_drafts(root, before, outcomes, branch):
+    """Trigger (e), S13: one adjudication per claimed row whose lane changed its
+    OWN Done-when between claim and merge, ticks and trailing evidence aside.
+
+    A reviewer maps each Done-when item to its covering test, so an item the
+    builder rewords is the checklist its own reviewer reads - moved by the party
+    it judges. The precedent is trigger (a): amended approved spine text mints
+    an adjudication at the merge that landed it. AT CLAIM is the spec as trunk
+    held it under `active/<branch>/` just before this merge (what the claim
+    wrote); AT MERGE is the closed spec on the merged trunk. Brief-less, like
+    the spot-check: no report exists and no template is shipped for it, and a
+    row must not declare a brief the kit cannot assemble. An adjudication row's
+    own lane is skipped (R3: no recursion).
+
+    Implements: SR-156, LLR-262
+    """
+    drafts = []
+    for wi_id in sorted(outcomes or {}):
+        found = _closed_spec(root, wi_id, dirs=("complete", "partial", "cancelled"))
+        claimed = kdone.claimed_text(root, before, branch, wi_id) if branch else None
+        if found is None or claimed is None or _is_adjudication(found[1]):
+            continue
+        relpath = found[0]
+        try:
+            closed = (Path(root) / relpath).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        changed = kdone.changes(claimed, closed)
+        if not changed:
+            continue
+        drafts.append(
+            {
+                "title": (
+                    "adjudicate the Done-when {} changed in its own lane {} - "
+                    "does the close still answer the row as claimed? ({})".format(
+                        wi_id, branch, _DISPOSITION_OUTCOMES
+                    )
+                ),
+                "kind": "adjudication",
+                "workstream": "process",
+                "buildtier": "medium",
+                "specref": relpath,
+                "context": (
+                    "`{spec}` closed with a Done-when that differs from the one "
+                    "it was claimed with (ticks and trailing evidence already "
+                    "set aside). A reviewer maps coverage against that list, so "
+                    "a change made by the lane it judges is the goalposts "
+                    "moving:\n\n{lines}\n\nJudge whether each change only "
+                    "clarifies or moves the scope. A moved scope is a successor "
+                    "row, never a reversal - the merge stands."
+                ).format(spec=relpath, lines="\n".join(kdone.describe(changed))),
+            }
+        )
     return drafts
 
 
@@ -2283,6 +2342,7 @@ def intake_after_merge(root, before, after, outcomes=None, branch=""):
     drafts = _amendment_drafts(root, before, after)
     drafts += _first_approval_drafts(root, before, after)
     drafts += _close_drafts(root, outcomes)
+    drafts += _done_when_drafts(root, before, outcomes, branch)
     disposition, refusal = _disposition_drafts(root, outcomes)
     if refusal:
         return [], refusal

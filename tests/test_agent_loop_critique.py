@@ -451,3 +451,47 @@ def test_critique_unparseable_verdict_not_treated_as_approved(critique_repo, tmp
 # (test_critique_requirement_is_orthogonal_to_the_reviewer_dial retired with
 # the dispatcher's _required_phases at concurrency-restructure Phase 5 — the
 # integrator's verdict gate reads the review-policy dial itself, test_integrate.)
+
+
+# The critic writes its verdict and commits NOTHING - the S9 dirty-tree arm,
+# applied to the critique arm rather than restated for it.
+FAKE_CRITIC_NOCOMMIT = FAKE_PER_MODEL.replace(
+    '    commit(vpath, "critique verdict")\n',
+    '    if not (ctl / ("nocommit-" + args.model)).exists():\n'
+    '        commit(vpath, "critique verdict")\n',
+)
+assert FAKE_CRITIC_NOCOMMIT != FAKE_PER_MODEL, "the critic block moved; re-anchor"
+
+
+def test_an_uncommitted_critique_verdict_is_never_routed_on(critique_repo, tmp_path):
+    # critb writes CHANGES-REQUESTED and leaves it uncommitted. The merge gate
+    # reads committed files only, so routing on the file on disk would drive a
+    # rework build on a verdict nothing downstream can see. The draw fails, the
+    # tree is cleaned, and the second critic's committed APPROVE closes it.
+    repo, ctl, cmd = critique_repo
+    (tmp_path / "fake.py").write_text(FAKE_CRITIC_NOCOMMIT, encoding="utf-8")
+    (ctl / "verdict-critb.txt").write_text(CHANGES, encoding="utf-8")
+    (ctl / "verdict-critc.txt").write_text(APPROVE, encoding="utf-8")
+    (ctl / "nocommit-critb").write_text("", encoding="utf-8")
+    rows = [
+        ["Id", "Provider", "Model", "Version", "Tier", "CmdTemplate", "Notes"],
+        ["PROVA-BUILD-1", "PROVA", "builda", "1", "medium", cmd, ""],
+        ["PROVB-CRIT-1", "PROVB", "critb", "1", "strong", cmd, ""],
+        ["PROVC-CRIT-2", "PROVC", "critc", "1", "strong", cmd, ""],
+    ]
+    with open(
+        str(repo / "docs" / "agents.csv"), "w", encoding="utf-8", newline=""
+    ) as fh:
+        csv.writer(fh).writerows(rows)
+    (repo / "docs" / "agents-enabled").write_text(
+        "PROVA-BUILD-1\nPROVB-CRIT-1\nPROVC-CRIT-2\n", encoding="utf-8"
+    )
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "left the tree dirty" in proc.stdout
+    assert "critique [PROVB-CRIT-1]: verdict=CHANGES-REQUESTED" not in proc.stdout
+    assert "critique [PROVC-CRIT-2]: verdict=APPROVE" in proc.stdout
+    builds = (ctl / "builds.txt").read_text(encoding="utf-8").splitlines()
+    assert len(builds) == 1, "no rework build was drawn on the unseen verdict"
+    assert "critb" in _models(ctl) and "critc" in _models(ctl)

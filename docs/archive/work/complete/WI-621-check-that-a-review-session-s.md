@@ -2,13 +2,52 @@
 id = "WI-621"
 title = "Review and Done-when integrity: a review session adds only its verdict file, no later session rewrites a round, and a lane's Done-when is fixed at claim"
 workstream = "unattended"
-specref = "docs/plans/2026-09-23-owner-notes-spine-sessions-and-tests.md#33-fewer-tools-per-role-and-skills-handled-mechanically-note-1"
+specref = ""
 buildtier = "medium"
 priority = 4
 safety_class = "ordinary"
 needs = []
 supersedes = "WI-608;WI-622"
 +++
+
+## Deliverable
+
+The record a merge judges stays as its authors committed it (squash of
+build/wi-621: 58535a4c, 57bdae19 and c49146a3, rebased onto 9ecb934f from
+a7124fed). Codex Sol reviewed three rounds: NOT YET SOUND twice
+(`sol-wi621.md`, `sol-wi621-fix.md`), then SOUND (`sol-wi621-fix2.md`).
+Wave-4 rulings 16 and 17.
+
+- **WI-608 (absorbed), reproduced then closed.** A later session rewriting
+  an earlier round's verdict file cleared the gate; a test drove it red. No
+  new refusal was added. `kitlib/verdict.logged_rounds` reads each round at
+  the end of its session's recorded range, only when that range changed the
+  file. Session logs are append-only evidence: each is read as the commit that
+  added it recorded it, and the merge rung refuses by name any lane commit
+  that modifies or deletes one. An end-to-end regression shows a rewritten log
+  cannot launder a rewritten verdict.
+- **WI-621.** A REVIEW session whose recorded range adds anything but its
+  verdict file stops the run with NEEDS-HUMAN, naming the paths, and the merge
+  ladder re-derives the same check (`_review_scope_refusal`). New dirt after a
+  REVIEW or CRITIQUE session fails the draw, with the leftovers stashed. A
+  stash that fails stops for a human with nothing redrawn, driven end to end
+  through the fake-agent loop. `read_verdict` reads the committed blob in
+  both the review and critique arms, so the loop never routes on an
+  uncommitted verdict (review pack C3, reproduced).
+- **WI-622 (absorbed).** `kitlib/done_when.py` (IF-242). A claim WARNS on a
+  missing Done-when. It does not refuse, because every minted row today is
+  filed without one: 28 of the 74 completed rows since WI-550. The refusal
+  waits on the mint writing one, or on the owner ruling minted adjudications
+  exempt. At merge, a Done-when item changed since claim (a tick and the
+  convention's evidence form stripped; appended prose is not evidence) is
+  flagged in the reviewer brief and mints a brief-less adjudication row.
+
+Drafted rows owing a first approval in the next spine-acts batch: LLR-262,
+TC-257 (Full) and TC-259 (Smoke). IF-242 is Drafted and off-spine. No
+approved row was touched. Size ratchet: agent_loop, integrate, intake and
+bootstrap re-measured on the merged tree, with reasons; `check_complexity`
+is unchanged. Recorded limit: `— DONE except on Windows` still reads as
+evidence.
 
 ## Context
 

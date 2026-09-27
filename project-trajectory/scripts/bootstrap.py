@@ -2012,6 +2012,10 @@ MAPPING = [
     # the must-be-whole rule applies: a scaffold missing it ImportErrors on the
     # first merge attempt, not on some rare path.
     ("scripts/kitlib/verdict.py", "scripts/kitlib/verdict.py"),
+    # WI-621 added `done_when`: a spec's Done-when as comparable items (S13).
+    # `integrate.py` (the claim warning), `intake.py` (the merge-time flag) and
+    # `agent_loop.py` (the reviewer's brief) import it, all three in this list.
+    ("scripts/kitlib/done_when.py", "scripts/kitlib/done_when.py"),
     # WI-448 slice 3 added `spine`: the spine ROW vocabulary — the Status
     # predicates, the LLR-exemption set, the phase parse, the SN id scrapes and
     # the registry CSV loader — which `trace.py` and `spine_rules.py` each

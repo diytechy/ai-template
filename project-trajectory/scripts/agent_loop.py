@@ -191,6 +191,10 @@ except ImportError:  # pragma: no cover - in-process fallback
 # the merge slot's — one definition, two readers, which is the whole point.
 from kitlib import verdict as kverdict
 
+# A lane's Done-when as comparable items (S13): the reviewer's brief is told
+# when the lane's own diff moved the checklist it maps coverage against.
+from kitlib import done_when as kdone
+
 # The loop's provenance vocabulary (SR-209): the marker `main` sets once per
 # run, and the trailer line every session it starts is told to write.
 from kitlib import provenance as kprovenance
@@ -712,7 +716,36 @@ def reviewer_prompt(prompt_templates, phase, verdict_path, root=None, worker=Non
         text = text.replace("{process_doc}", process_doc_path(root))
         text = text.replace("{trunk}", trunk_name(root, worker))
         text = text.replace("{scripts}", scripts_dir(root))
+        text += done_when_flag_block(root, worker)
     return text
+
+
+def done_when_flag_block(root, worker):
+    """The brief's DONE-WHEN CHANGED SINCE CLAIM block, or "" when the lane
+    left every assigned row's Done-when as claimed (ticks and evidence aside).
+
+    S13's reviewer half: a round maps each Done-when item to its covering test,
+    so a builder that rewords an item has moved the checklist its own reviewer
+    reads. The claim-time text is the spec under `active/<train>/` at the lane's
+    base; the current one is this tree's (`lane_spec_text`).
+
+    Implements: SR-154, SR-156, LLR-262
+    """
+    lines = []
+    for wi in (worker or {}).get("assigned") or []:
+        claimed = kdone.claimed_text(root, worker["base"], worker["train"], wi)
+        current = lane_spec_text(root, wi)
+        found = kdone.changes(claimed, current) if claimed and current else []
+        if found:
+            lines += ["  " + wi + ":"] + ["    " + ln for ln in kdone.describe(found)]
+    if not lines:
+        return ""
+    return (
+        "\n\nDONE-WHEN CHANGED SINCE CLAIM — this lane's own diff changed the "
+        "checklist you map coverage against. Judge the work against the "
+        "claim-time items, and raise each change as a finding unless it only "
+        "clarifies:\n" + "\n".join(lines)
+    )
 
 
 def reviewed_rows_block(worker):
@@ -1097,20 +1130,31 @@ def fresh_verdict_path(reviews_dir, name):
     return path
 
 
-def read_verdict(verdict_path, route_family):
-    """The parsed verdict at `verdict_path`, or None when the session wrote no
-    file (errored, stalled, or simply did not write one).
+def read_verdict(root, verdict_path, route_family):
+    """The parsed verdict at `verdict_path` AS COMMITTED at HEAD, or None when
+    the session committed no such file (errored, stalled, wrote none, or wrote
+    one and left it uncommitted).
+
+    COMMITTED, NOT ON DISK (review pack C3): the merge gate reads committed round
+    files only, so a loop routing on the file in the working tree could approve,
+    re-work or re-critique on a verdict the gate never sees. The dirty-tree arm
+    (`judging_session_integrity`) is what fails that draw; reading the blob is
+    the same rule stated where the verdict is read, for both arms.
 
     Both managed arms read it identically; what they DO about an unparseable
     `VERDICT:` line differs and deliberately stays in the arms — the review arm
     cools and re-routes the phase, the critique arm cools and re-critiques. Only
-    the plumbing moves (WI-345)."""
-    if not verdict_path or not Path(verdict_path).exists():
+    the plumbing moves (WI-345).
+
+    Implements: SR-154, LLR-262
+    """
+    if not verdict_path:
         return None
-    return score_reviews.parse_verdict(
-        Path(verdict_path).read_text(encoding="utf-8", errors="replace"),
-        model=route_family,
-    )
+    rel = os.path.relpath(str(verdict_path), str(root)).replace(os.sep, "/")
+    code, text = git(root, "show", "HEAD:" + rel)
+    if code != 0:
+        return None
+    return score_reviews.parse_verdict(text, model=route_family)
 
 
 # --- the serial loop's managed-routing / escalation / critique / stall state ---
@@ -2484,6 +2528,9 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         # C5: this session is a review drawn with heterogeneity relaxed — a
         # typed field for the telemetry header, never a filename re-parse.
         "relaxed": relaxed,
+        # S9: the tree's uncommitted state as the session found it, so what a
+        # judging session leaves behind can be told from what was already there.
+        "pre_dirty": substantive_working_tree_dirty(root),
     }
 
 
@@ -2578,7 +2625,7 @@ def reroute_rate_limited(st, route_id, reset_hint, now):
     return "reroute"
 
 
-def absorb_review_verdict(st, plan, outcome, now):
+def absorb_review_verdict(root, st, plan, outcome, now):
     """Take one reviewer session's verdict into the round, or fail CLOSED.
     Both failure arms — no verdict file at all, and a file with no parseable
     `VERDICT:` machine line (a routine LLM garble) — cool the model and
@@ -2586,7 +2633,7 @@ def absorb_review_verdict(st, plan, outcome, now):
     (repo-review 2026-07-21 H-1)."""
     phase = plan["phase"]
     route_id = plan["route_id"]
-    v = read_verdict(plan["verdict_path"], plan["route_family"])
+    v = read_verdict(root, plan["verdict_path"], plan["route_family"])
     if v is None:
         why = "wrote no verdict ({})".format(outcome)
     elif v.verdict is None:
@@ -2799,7 +2846,7 @@ def review_bookkeeping(ctx, plan, outcome, session, now):
     """A reviewer session's consequences: absorb its verdict, then complete the
     round if this was the last one owed."""
     st = ctx.run.routing
-    absorb_review_verdict(st, plan, outcome, now)
+    absorb_review_verdict(ctx.root, st, plan, outcome, now)
     if not st.round_ready():
         return None
     return complete_review_round(ctx, session)
@@ -2835,7 +2882,7 @@ def critique_bookkeeping(ctx, plan, outcome, now):
     st = ctx.run.routing
     route_id = plan["route_id"]
     verdict_path = plan["verdict_path"]
-    v = read_verdict(verdict_path, plan["route_family"])
+    v = read_verdict(ctx.root, verdict_path, plan["route_family"])
     if v is None:
         # No verdict written (errored/stalled): cool + re-critique next pass
         # (the stall guard backstops a critic that never writes one).
@@ -2937,23 +2984,35 @@ def dispositions_drafted(root, wi):
     skipped over an unreadable mint costs the second opinion entirely."""
     import intake  # a sibling reader; deferred so a non-adjudicating run pays nothing
 
+    text = lane_spec_text(root, wi)
+    if text is None:
+        return ["spine"]
+    drafts, refusal = intake.parse_dispositions(text, wi)
+    if refusal:
+        return ["spine"]
+    # `kind`: `parse_dispositions` normalizes the declared `safety_class` cell
+    # into it (see `integrate._verdict_owed`).
+    return [d.get("kind") for d in drafts]
+
+
+def lane_spec_text(root, wi):
+    """`wi`'s spec as THIS LANE'S OWN TREE holds it, or None when unreadable.
+
+    Searched across `agent_common.SPEC_HOMES` because a session that ran its
+    close ritual has already moved the spec out of `active/`; WHICH copy wins
+    when the tree carries both is `agent_common.authoritative_spec`'s to say,
+    shared with the merge slot so the two cannot read different copies."""
     found = {}
     for home in agent_common.SPEC_HOMES:
         for hit in (Path(root) / home).rglob(wi + "-*.md"):
             found[hit.relative_to(Path(root)).as_posix()] = hit
     chosen = agent_common.authoritative_spec(found)
     if chosen is None:
-        return ["spine"]
+        return None
     try:
-        text = found[chosen].read_text(encoding="utf-8")
+        return found[chosen].read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
-        return ["spine"]
-    drafts, refusal = intake.parse_dispositions(text, found[chosen].name)
-    if refusal:
-        return ["spine"]
-    # `kind`: `parse_dispositions` normalizes the declared `safety_class` cell
-    # into it (see `integrate._verdict_owed`).
-    return [d.get("kind") for d in drafts]
+        return None
 
 
 def schedule_adjudication_round(ctx, plan, commits, after, wi_label):
@@ -3114,11 +3173,117 @@ def session_bookkeeping(
         return None
     if outcome == "WAITING":
         return reroute_rate_limited(st, plan["route_id"], reset_hint, now)
+    if plan["is_review"] or plan["is_critique"]:
+        failed, stop = judging_session_integrity(ctx, plan, commits, session, now)
+        if failed:
+            return stop
     if plan["is_review"]:
         return review_bookkeeping(ctx, plan, outcome, session, now)
     if plan["is_critique"]:
         return critique_bookkeeping(ctx, plan, outcome, now)
     return build_bookkeeping(ctx, plan, outcome, code, commits, after, wi_label, now)
+
+
+def stash_leftovers(root, label, dirt):
+    """Move a judging session's leftovers out of the tree, recoverably: one
+    named `git stash` entry holding exactly `dirt`'s paths. The failure line,
+    or "" when the stash landed.
+
+    Not a clean and not a reset - the leftovers are a session's that was told
+    not to write, but a stash keeps them, named, for whoever wants to read
+    them, and touches no path that was already uncommitted before it ran.
+
+    Implements: SR-154, LLR-262
+    """
+    paths = sorted({agent_common._porcelain_path(ln) for ln in dirt})
+    code, out = git(
+        root, "stash", "push", "--include-untracked", "-m", label, "--", *paths
+    )
+    return "" if code == 0 else agent_common._failure_tail(out) or "stash failed"
+
+
+def judging_session_integrity(ctx, plan, commits, session, now):
+    """S9, "verify, don't isolate", right after a REVIEW or CRITIQUE session:
+    `(failed, stop)`, with `failed` False when the session left the lane as it
+    should.
+
+    A reviewer works and commits in the lane (OI-76 unchanged), so what keeps
+    it from changing the work it judges is this check on the coordinator's own
+    record of the session - its phase and exact range - never on authors,
+    subjects or trailers, none of which reliably names a role. Two arms:
+
+      * a REVIEW session whose range changed anything but its own verdict file
+        is REFUSED, by name: its commits are in the lane now, and the merge
+        slot will refuse the same range from the committed log, so the run
+        stops for a human rather than build on it (`stop` = NEEDS-HUMAN);
+      * a session that left the tree DIRTY fails its draw through the existing
+        failed-draw path - cooled, the same phase re-drawn - with the leftovers
+        stashed so the re-drawn session starts clean; when the stash fails the
+        run stops needing a human instead, since a redraw on that tree would
+        record the residue as pre-existing. Checked now because only
+        now can they be attributed: left in place, the next build session would
+        commit them under its own name. An uncommitted verdict is such dirt,
+        so it is never read, in either arm (`read_verdict` reads the blob).
+
+    Implements: SR-154, LLR-262
+    """
+    root = ctx.root
+    st = ctx.run.routing
+    phase = plan["phase"]
+    offenders = (
+        kverdict.session_scope_offenders(root, commits, plan["verdict_path"])
+        if plan["is_review"]
+        else []
+    )
+    if offenders:
+        stop_banner(
+            ctx.status_path,
+            "NEEDS-HUMAN — {} session {} committed outside its verdict".format(
+                phase, session
+            ),
+            "range {} changed {} beside its own verdict file; the merge slot "
+            "refuses the same range from the session log".format(
+                commits, ", ".join(offenders)
+            ),
+        )
+        return True, EXIT_NEEDS_HUMAN
+    # The coordinator's own session log is not the session's dirt: it is
+    # written and committed before this runs, and a vetoed telemetry commit
+    # (best-effort by contract) must not fail every later draw.
+    before = set(plan.get("pre_dirty") or [])
+    dirt = [
+        ln
+        for ln in substantive_working_tree_dirty(root)
+        if ln not in before
+        and not agent_common._porcelain_path(ln).startswith("docs/iteration/")
+    ]
+    if not dirt:
+        return False, None
+    label = "agent_loop: {} session {}-{} leftovers (failed draw)".format(
+        phase, ctx.worker["train"], session
+    )
+    left = ", ".join(ln.strip() for ln in dirt)
+    failure = stash_leftovers(root, label, dirt)
+    if failure:
+        # A redraw is only sound on a clean tree: on this one it would run
+        # over the leftovers and record them as already there.
+        stop_banner(
+            ctx.status_path,
+            "NEEDS-HUMAN — {} session {} left the tree dirty".format(phase, session),
+            "leftovers {} could not be stashed ({}); no review is re-drawn on "
+            "them".format(left, failure),
+        )
+        return True, EXIT_NEEDS_HUMAN
+    st.cool(plan["route_id"], now)
+    if plan["is_review"]:
+        st.note_review_draw_failure()
+    print(
+        "route: {} [{}] left the tree dirty ({}); leftovers stashed as {!r}; "
+        "its verdict is not read, cooled, re-routing".format(
+            plan["route_id"], phase, left, label
+        )
+    )
+    return True, None
 
 
 def wait_out_blackout(lane):

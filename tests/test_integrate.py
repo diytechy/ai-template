@@ -200,6 +200,28 @@ def test_a_spine_batch_claims_as_one_commit(tmp_path):
     assert integ._claimed_wi_ids(root, "wi-501-alpha") == ["WI-501", "WI-502"]
 
 
+def test_a_claim_of_a_row_with_no_done_when_warns_by_name(tmp_path, capsys):
+    # S13 (review pack B3): every claimable work item has a Done-when, written
+    # before claim by whoever files it. WARN-FIRST: the intake mint still files
+    # its rows without one, so a refusal today would park every minted row off
+    # the station; the warning names the row so the gap is visible meanwhile.
+    root = claim_repo(tmp_path)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    err = capsys.readouterr().err
+    assert "WARNING" in err and "WI-401" in err and "no Done-when" in err
+
+
+def test_a_claim_of_a_row_with_a_done_when_is_silent_about_it(tmp_path, capsys):
+    git_repo(tmp_path)
+    spec = write_spec(tmp_path, "queued", "WI-401", specref="seed.txt")
+    with spec.open("a", encoding="utf-8", newline="\n") as fh:
+        fh.write("\n## Done-when\n\n- The widget ships.\n")
+    declare_generated(tmp_path)
+    _commit(tmp_path, "file WI-401", when=T_CODE)
+    assert integ.claim(tmp_path, "WI-401", "wi-401") == 0
+    assert "Done-when" not in capsys.readouterr().err
+
+
 def test_claim_refuses_a_spec_without_a_specref(tmp_path, capsys):
     # WI-370: an open WI without a SpecRef reds R-E under --strict on every
     # composed tree that sees it, and the debt is unpayable once the closing
