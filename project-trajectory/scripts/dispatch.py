@@ -90,6 +90,7 @@ import integrate
 import lane
 import schedule
 import score_reviews
+from kitlib import provenance as _kitprovenance
 from kitlib import verdict as kverdict
 
 SCRIPTS = Path(__file__).resolve().parent
@@ -1388,7 +1389,13 @@ def run(root, args, worker=None, tier="all"):
     agent_common keeps one held-descriptor slot, so the coordinator lock's
     descriptor is simply left to the OS's exit-time release — exactly the
     guard's intended span.
+
+    The LOOP MARKER is set first, in this process's own environment, once per
+    run (SR-209): every worker, refresh and session this run starts inherits
+    it, so each commit they make is known as the loop's and carries the
+    `Loop-Session` trailer, while a person's shell never holds it.
     """
+    _kitprovenance.mark_loop_process()
     lanes_total = _lane_count(args, root)
     # SN-029: one ordinal comparison, made once per run, threaded down exactly
     # as the enum was. `spine_stage_of` reads the tier currently in process

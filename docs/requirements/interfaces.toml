@@ -1342,7 +1342,7 @@ component = "CMP-008"
 owner = "scripts/spine_carrier"
 requestors = ["scripts/trace", "scripts/acceptance_record", "scripts/check_trajectory", "scripts/gen_arch_map", "scripts/plan_coverage", "scripts/spine_rules", "scripts/traj_status", "scripts/check_test_first"]
 channel = "call"
-data = "spine_carrier.load / resolve / stem / carriers / rows_from_text; rows under today's column names, None on a TOML decode error"
+data = "spine_carrier.load / resolve / stem / carriers / rows_from_text / status_cells; rows under today's column names, None on a TOML decode error"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
@@ -1857,6 +1857,49 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """source - assumption_rules consumes nothing but the row vocabulary it reads from kitlib.spine: rows in, findings out, with no I/O, no git and no filesystem."""
+
+[interface.IF-194]
+rationale = "A loop commit can be told apart from a person's only if every one says it is the loop's, and every floor that checks it and every reader that relies on it must agree on the words: the trailer key, the session grammar, which trailer counts, the name of the marker a loop-started process carries, and which commits mark a lane as the loop's. One vocabulary module below every writer, floor and reader keeps a writer from emitting a trailer a floor calls malformed, keeps the merge slot and the writers agreeing on what a loop writer's commit looks like, and keeps the history check reading the mark the writers wrote."
+owner = "scripts/kitlib/provenance"
+requestors = ["scripts/agent_common", "scripts/agent_loop", "scripts/bookkeeping", "scripts/check", "scripts/check_trajectory", "scripts/dispatch", "scripts/handback", "scripts/integrate"]
+channel = "call"
+data = "LOOP_TRAILER, LOOP_SESSION_ENV; format/parse_loop_trailer, loop_trailer_refusal, loop_writer_commit, loop_lane_window; mark_loop_process, with_loop_trailer"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """source - provenance consumes no other module's surface; its one input beyond its arguments is the process environment. The marker crosses processes as an environment variable rather than as an argument: the loop sets it in its own process once per run and every child inherits it, which is what makes a commit made from a loop-started process known as the loop's without any launcher passing it on; the commit-msg hook reads it by name only to fail closed when the floor cannot run."""
+
+[interface.IF-195]
+rationale = "Every reader that asks whether a dial holds a rung - the loop's writers, the pre-commit step, the merge slot and the history check - asks it here, so the rung tables, the comparison and the reading of the dial itself cannot differ between them. The live readers read the dial committed in a tree they name, with each legacy spelling translated the one way the coordinator translates it and nothing printed; the history reader reads each past commit's dial with no translation, which only ever reports more. None of them reaches a coordinator primitive to ask a question about a string, a table and a tree."
+owner = "scripts/kitlib/authority"
+requestors = ["scripts/acceptance_record", "scripts/agent_common", "scripts/check", "scripts/check_trajectory", "scripts/integrate"]
+channel = "call"
+data = "APPROVAL_RUNGS, SPINE_APPROVAL_RUNGS; rung_for -> rung|None; read_dial -> (rung, legacy); dial_at -> rung; dial_from_config -> rung; holds_under -> bool"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = "source - authority consumes the ladder vocabulary and one git read: the dial of a named commit or of the index, read through the kit's git-or-None primitive, so no git, no repository and an unknown commit all read as the most-held rung. It prints nothing; the migration note a legacy dial deserves is the coordinator's to present, for the one working tree a person can migrate."
+
+[interface.IF-196]
+rationale = """Which status cells a delta moves, and whether a dial holds them, is one judgement read from four places: the loop's writers before they commit, the pre-commit step over a session's staged tree, the merge slot over a lane's range, and the history check over each past commit. Drawing it beside the two-tree spine walk it reuses keeps one comparison basis for all four, and keeps the universe of watched registries declared apart from the rung map, so a registry the map does not name reads as held rather than as absent."""
+owner = "scripts/acceptance_record"
+requestors = ["scripts/agent_common", "scripts/check", "scripts/check_trajectory", "scripts/integrate"]
+channel = "call"
+data = "staged_, merge_, pending_, committed_status_moves -> [{registry, id, before, after}]; held_status_lines, held_status_refusal(dial, moves)"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "A delta git cannot read is an empty list, the degrade every reader of this module shares; a registry side that does not parse is one move naming the registry, never an empty delta, so an unreadable change is refused where the rung is held. The needs file is shared by a spine tier and an off-spine one: the off-spine walk reads its stakeholder tier alone and the spine walk its needs, so each row is reported once."
+
+[interface.IF-197]
+rationale = """The commit-msg hook is a shell script and the trailer rule is Python, and the rule must be the same wherever the commit floor runs. The hook therefore hands the message file to the harness and reads the exit code, so the grammar lives once and the hook carries only the knowledge of whether the loop marker is set, which it needs to fail closed when the harness cannot run."""
+owner = "scripts/check"
+consumers = ["hooks/commit-msg"]
+channel = "exit-code"
+data = "--loop-trailer MSGFILE: 0 unmarked, or a valid trailer naming the marked session · 1 marked and the trailer missing, malformed or naming another session"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
 
 [interface.IF-198]
 rationale = """The order runs as a built-in harness step, so the harness reads it back the way it reads every step: by exit code, with the report on stdout for the reviewer. Warn-only means the exit stays 0 for a finding and for a history the order cannot be read from, because the order is evidence a reviewer weighs; a project that rules it a gate says so with `--strict`, and the shipped step does not."""

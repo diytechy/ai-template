@@ -344,9 +344,17 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # edge back for the census's new home). The WINDOW itself is unmoved —
     # re-stamp it deliberately, with the reason in the log, only when the number
     # legitimately leaves it.
-    assert 14 <= deferred <= 26, (
+    # RE-STAMPED 26 -> 27 (2026-09-26, WI-636): measured 26 at the top of the
+    # window before it, and `check -> acceptance_record` joins deferred. The
+    # held-status step is the one arm of check.py that reads two git trees, and
+    # deferring the import is what keeps check.py runnable on `kitlib` alone
+    # (tests/test_generated_freshness_wiring.py assembles it that way) and keeps
+    # every unmarked commit free of the reader. The writers' side of the same
+    # judgement (`agent_common -> acceptance_record`) was made a module-level
+    # import instead, so the window moves by one rather than two.
+    assert 14 <= deferred <= 27, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..26 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..27 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "

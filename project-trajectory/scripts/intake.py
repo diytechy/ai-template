@@ -2081,7 +2081,15 @@ def _write_draft(root, draft, registry, subject_verb):
 def _mint(root, drafts, subject_verb):
     """Write every draft as a queued spec, then ONE bookkeeping commit.
     `([(wi_id, relpath)], refusal)`; all-or-nothing — a refusal restores what
-    the mint wrote and reports zero minted."""
+    the mint wrote and reports zero minted.
+
+    The mint's bookkeeping commit is a loop writer: under the loop marker the
+    shared helper judges its tree against the held-status rule before it
+    commits and marks the commit with the loop's provenance trailer
+    (`bookkeeping._commit_object`), exactly as it does for the claim.
+
+    Implements: SR-208, SR-209, LLR-246, LLR-248
+    """
     root = Path(root)
     registry = ac.read_spec_rows(root / WORK)
     titles = {r["Title"] for r in registry if r.get("Title")}

@@ -77,7 +77,10 @@ Contract IF-137: the terminal-outcome WRITES for the two lane closes that are
     is reverted to the lane's merge base, and it returns a refusal string or
     None. Neither function DECIDES which outcome a lane reached — that judgement
     is the caller's — so decision and write stay in separate modules and every
-    lane still ends in a merge.
+    lane still ends in a merge. Under the loop marker every commit either makes
+    carries the `Loop-Session` trailer, and a staged tree that would change a
+    status the approval level holds for a human is refused before it is
+    written.
 """
 
 from __future__ import annotations
@@ -89,6 +92,7 @@ import agent_common as ac
 import consolidate
 import integrate
 import spec_move
+from kitlib import provenance as _kitprovenance
 from kitlib import station
 
 # The frontmatter `specref = ...` line, cleared at a terminal close (R-E: an
@@ -369,7 +373,26 @@ def _existing_report_refusal(wt, branch, specs):
     return None
 
 
-def _commit_residue_as_is(wt, branch, ids, reason):
+def _loop_commit(root, wt, message):
+    """The ONE commit every close in this module makes: `(code, output)`, the
+    `ac.git` shape each caller already reads.
+
+    `--no-verify`, because a close is "as-is" by construction (see
+    `close_partial`) — which is also why the loop's floors cannot wait for a
+    hook here. Under the loop marker the staged tree is judged against the
+    held-status rule first, with the TRUNK's dial (SR-208): a refusal comes
+    back as code 1 with the refusal as the output, and nothing is committed.
+    The message carries the loop's provenance trailer (SR-209). A person
+    closing a lane by hand passes neither."""
+    refusal = ac.loop_held_status_refusal(wt, root)
+    if refusal:
+        return 1, refusal
+    return ac.git(
+        wt, "commit", "--no-verify", "-m", _kitprovenance.with_loop_trailer(message)
+    )
+
+
+def _commit_residue_as_is(root, wt, branch, ids, reason):
     """Commit whatever the lane left uncommitted, AS IS — a refusal, or None on
     a clean tree or a good commit.
 
@@ -377,20 +400,26 @@ def _commit_residue_as_is(wt, branch, ids, reason):
     refresh regenerates and BARS this tree before anything merges, so a hook
     refusal here would only trade a merge that is checked for a branch that
     hangs.
+
+    THE RESIDUE IS WHERE A SESSION'S OWN CHANGE MEETS THE LOOP'S CODE, so this
+    is the handback writer most likely to be handed a status change the dial
+    holds: it is refused before it is written, and the residue is unstaged
+    again, left exactly as the session left it.
+
+    Implements: SR-208, LLR-246
     """
     if not ac.working_tree_dirty(wt):
         return None
     ac.git(wt, "add", "-A")
-    code, out = ac.git(
+    code, out = _loop_commit(
+        root,
         wt,
-        "commit",
-        "--no-verify",
-        "-m",
         "{}: the work so far, committed as-is (partial close)\n\n{}".format(
             ", ".join(ids), reason
         ),
     )
     if code != 0:
+        ac.git(wt, "reset", "-q")  # unstage what this call staged
         return "the as-is work commit failed on {}:\n{}".format(
             branch, ac._failure_tail(out)
         )
@@ -431,7 +460,7 @@ def close_partial(root, branch, reason, fields=None):
         # is the same answer for a batch that got there one row at a time.
         return [], None
     ids = [wi_id for wi_id, _name in specs]
-    refusal = _commit_residue_as_is(wt, branch, ids, reason)
+    refusal = _commit_residue_as_is(root, wt, branch, ids, reason)
     if refusal:
         return None, refusal
     span = _span(root, branch)
@@ -478,11 +507,9 @@ def close_partial(root, branch, reason, fields=None):
             return None, _restore(
                 wt, written, "cannot close {}: {}".format(name, refusal)
             )
-    code, out = ac.git(
+    code, out = _loop_commit(
+        root,
         wt,
-        "commit",
-        "--no-verify",
-        "-m",
         "partial: {} -> partial/ ({})\n\nThe SR-144 outcome: this lane could not finish, so each claimed spec\nmoves to the TERMINAL partial/ and an immutable per-close report lands in\ndocs/handbacks/. The report is the event's identity - the disposition row\nintake mints cites it, so 'is a judgement still owed for THIS close?' is a\npositive-provenance question rather than one of the five reconstructions\nthat leaked. The branch merges like any other; nothing hangs, and nothing\nre-claims a terminal row.".format(
             ", ".join(ids), reason
         ),
@@ -855,11 +882,9 @@ def close_adjudication(root, branch):
     # attestor re-composes this subject from the diff, and it can only sort on
     # what the diff carries - see `station.mechanical_close_order`.
     closed = station.mechanical_close_order(moved_rows)
-    code, out = ac.git(
+    code, out = _loop_commit(
+        root,
         wt,
-        "commit",
-        "--no-verify",
-        "-m",
         station.mechanical_close_subject(closed)
         + "\n\n"
         "The OI-70/OI-73 adjudication close: the verdict is recorded, so the "
@@ -939,11 +964,9 @@ def quarantine(root, branch, why):
         return "cannot stage the quarantine artefact {}:\n{}".format(
             rel, ac._failure_tail(out)
         )
-    code, out = ac.git(
+    code, out = _loop_commit(
+        root,
         wt,
-        "commit",
-        "--no-verify",
-        "-m",
         "handback: revert {} to a bar-inert artefact\n\nThe §A3 red-close ruling: this lane's code is red and the lane cannot\nfix it, so the code goes back to {} and the failing diff lands as {} -\nin trunk, findable, pickable by a future WI, and unable to red anything.\nThe reverted commits stay reachable in trunk history once this merges.\n\nThe bar said: {}".format(
             branch, base[:10], rel, why
         ),

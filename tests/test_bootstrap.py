@@ -113,14 +113,16 @@ def test_scaffold_contains_expected_files(scaffold):
         # `kitlib.spine` / `kitlib.stage` / `kitlib.station` by name, so a
         # missing module ImportErrors on the scaffold's first check rather than
         # degrading. `test_the_common_package_ships_complete` asserts the set
-        # EXACTLY against the kit; these eleven rows are the spot-check that keeps the
+        # EXACTLY against the kit; these thirteen rows are the spot-check that keeps the
         # expectation readable beside the other scripts.
         "scripts/kitlib/__init__.py",
+        "scripts/kitlib/authority.py",
         "scripts/kitlib/config.py",
         "scripts/kitlib/evidence.py",
         "scripts/kitlib/git.py",
         "scripts/kitlib/ladder.py",
         "scripts/kitlib/observation.py",
+        "scripts/kitlib/provenance.py",
         "scripts/kitlib/registry.py",
         "scripts/kitlib/secret_classes.py",
         "scripts/kitlib/spine.py",

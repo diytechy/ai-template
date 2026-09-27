@@ -88,6 +88,19 @@ privacy_declared_true() {
 
 if mixed_config_refusal "commit-msg"; then exit 1; fi
 
+# THE LOOP PROVENANCE FLOOR (SR-209). A commit made from a process the
+# unattended loop started carries the loop marker in its environment, and must
+# end with a valid `Loop-Session:` trailer naming that session; a person's
+# commit carries no marker and is never judged. The rule itself lives once, in
+# Python (`check.py --loop-trailer`, over `kitlib.provenance`); what this shell
+# knows is only whether the marker is set, so that a marked commit whose floor
+# cannot run FAILS CLOSED below instead of passing unjudged — the same stance
+# the privacy layer takes. Hooks are opt-in per checkout, so the merge slot
+# re-checks every commit of a lane's range whether or not this ran.
+loop_marked() {
+  [ -n "${KIT_LOOP_SESSION:-}" ]
+}
+
 # Find a Python 3 interpreter (same probe as pre-commit: run it, don't just find
 # it — Windows' Store alias resolves on PATH but exits nonzero). No Python =
 # skip, consistent with pre-commit's process-check posture.
@@ -101,6 +114,11 @@ if [ -z "$PY" ]; then
   if privacy_declared_true; then
     echo "commit-msg: docs/privacy-check is true but Python 3 is unavailable —" >&2
     echo "  the message scan cannot run, so refusing to skip it. FAILING CLOSED." >&2
+    exit 1
+  fi
+  if loop_marked; then
+    echo "commit-msg: a loop commit, but Python 3 is unavailable — its" >&2
+    echo "  provenance trailer cannot be checked. FAILING CLOSED." >&2
     exit 1
   fi
   echo "commit-msg: Python 3 not found on PATH; skipping message scan." >&2
@@ -133,9 +151,18 @@ if [ -z "$SCRIPTS_DIR" ] || [ ! -d "$SCRIPTS_DIR" ]; then
     echo "  run — refusing to skip it. FAILING CLOSED." >&2
     exit 1
   fi
+  if loop_marked; then
+    echo "commit-msg: a loop commit, but the kit scripts dir cannot be found" >&2
+    echo "  (KIT_SCRIPTS_DIR or scripts/), so its provenance trailer cannot be" >&2
+    echo "  checked. FAILING CLOSED." >&2
+    exit 1
+  fi
   echo "commit-msg: cannot find the kit scripts dir (KIT_SCRIPTS_DIR or scripts/) under $REPO_ROOT; skipping message scan." >&2
   exit 0
 fi
+
+# The loop provenance floor: a no-op (exit 0) for a person's commit.
+"$PY" "$SCRIPTS_DIR/check.py" --loop-trailer "$1"
 
 # Scan the message file git handed us ($1). Nonzero exit aborts the commit.
 "$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT" --message "$1"

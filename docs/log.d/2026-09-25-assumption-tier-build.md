@@ -613,3 +613,50 @@ coordinator integrates in the handoff's order.
   open-items view up to date. Seconds **FAIL** at 164.3 s against 60 s,
   idle (OI-92), recorded, not re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=ae3d625e -->
+
+### WI-636 lands — held-status refusal and the loop's provenance
+
+- **Follow-up 10523f27** (Sol's chain C: two blockers, three majors):
+  ruling 4's lane ownership in `kitlib/provenance.py` (`loop_writer_commit`,
+  `loop_lane_window`), both slot rungs armed whoever runs the slot; SN and
+  STK at DevStg-Needs through the needs file's stakeholder table; one silent
+  legacy-aware dial reader over a committed tree or the index
+  (`kitlib/authority.dial_at`/`read_dial`) for the hook, the writers and the
+  slot; merges judged against both parents. Red: 12 failed, 76 passed (one
+  vacuous pass named). Amended, left Approved: SR-209 acceptance, LLR-246 and
+  LLR-248 detail (also correcting the removed `intake._bookkeeping_commit`).
+- **Sol on 10523f27** (`sol-wi636-fix.md`) and **ruling 9:** the builder's
+  three deviations stand (the history check keeps approved LLR-249's
+  legacy-as-most-held reading); owed and done in **600fcaa3:** the live
+  approval predicates route through `rung_for`; the RESYNC advice that a
+  person may merge a loop lane removed; the quarantine and mechanical-close
+  subjects driven by real-writer tests. Red: 2 failed, 95 passed.
+- **Integrated** by squash (base b14d1808). Conflicts: the kitlib row of
+  `project-trajectory/README.md` (WI-632's OBSERVATION RECORD clause and
+  WI-636's PROVENANCE and AUTHORITY sentence kept; the base's "cell. and"
+  typo, which WI-632 had fixed, not reintroduced), the bootstrap MAPPING and
+  `test_bootstrap.py` spot-check (thirteen kitlib rows), `SLOW_MODULES`,
+  IF-194..IF-197 placed between IF-190 and IF-198, three size entries summed
+  over the shared base (`check.py` 1180 -> 1233, `bootstrap.py` 1674 ->
+  1676, `agent_common.py` 1474 -> 1455), watermark, RESYNC entry re-anchored
+  `[since c907d31b]`.
+- **Integrator's fixes, both where WI-636 meets the landed wave:**
+  `test_integrate_admission`'s assumption-flip lane is now refused by the
+  approval-act rung, which runs first, since WI-629 made the assumptions
+  registry part of the approval act; the case asserts that rung, and the
+  born-row case keeps the held rung's assumption coverage.
+  `check_trajectory.py`'s history check reads a `git log` subject with
+  `splitlines()[0]`; declared in `test_stage_event_detectors`'s allow-list,
+  which names exactly that class (the first line of git command output).
+- **Amended, status left Approved, for the joint adjudication:** SR-209
+  `acceptance_criteria`, LLR-246 and LLR-248 `detail`.
+- **Commit bar:** first smoke **1 failed, 1949 passed, 3 skipped** (the
+  splitlines allow-list), the slow modules **1 failed, 409 passed, 1 skipped**
+  (the assumption-flip lane); after the fixes smoke **1950 passed, 3
+  skipped** in 160.9 s and `test_integrate_admission` **61 passed**;
+  `test_pre_commit_hook` **20 passed** under `-p no:xdist` (draft L);
+  `check_docs --stale` OK; `check_trajectory --strict` clean; `trace.py
+  --strict-integrity` 0 integrity; `CURRENT.md` current; the open-items view
+  up to date. Seconds **FAIL** at 161.6 s against 60 s, idle (OI-92),
+  recorded, not re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=c907d31b -->

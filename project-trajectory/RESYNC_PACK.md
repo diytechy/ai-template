@@ -5604,6 +5604,74 @@ requirements under the rule, in a reviewed commit, so that everything approved
 from there on is judged and nothing before it is. A project whose CI clones
 shallowly sees an unreadable line from this step until it fetches full history.
 
+### Loop commits carry a `Loop-Session` trailer, and the loop may not move a held off-spine status [since c907d31b]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The unattended loop marks its own process once per run with
+the `KIT_LOOP_SESSION` environment variable (set by `dispatch.run` and by
+`agent_loop.py` outside interactive mode, never by a launcher), so every worker,
+refresh and session it starts inherits it. Every commit the loop's own code
+makes (the claim, the refresh, the merge, the mint's bookkeeping commit, the
+handback closes and the telemetry commit) ends with a `Loop-Session: <session>`
+trailer, and each session's prompt now tells it to end every commit it makes
+with the same line, inside the trailer block beside `WI:` (SR-209). A lane is
+the loop's when its claim commit, or any commit one of the loop's own writers
+made in it (a refresh, a handback close, a telemetry commit), carries that
+trailer. The merge slot then refuses the lane, whoever runs the slot, if any of
+its commits lacks a present, well-formed trailer, naming the commit's subject -
+a person's commit inside a loop lane included; only the commits before the
+first marked loop-writer commit of a lane a person claimed are exempt. The
+shipped `commit-msg` hook refuses the same commit as it is made, only under the
+marker, through `check.py --loop-trailer`. Second, where
+`human_approval_through` holds a registry's rung for a human, the loop may not
+change that registry's status cells, a row added or removed with a status
+included (SR-208): the stakeholder list in `stakeholder-needs.toml` sits at
+`DevStg-Needs` with the needs, the frame (`external.toml`) and the new
+assumptions registry at `DevStg-Boundary`, the interface and component
+registries at `DevStg-Arch`, and a registry the map does not name is held. The
+merge slot refuses such a change in a loop lane over its whole range, whoever
+runs the slot; the loop's own writers refuse the same tree before they commit
+under the marker; and the pre-commit hook gains a `held-status` step for a
+session's own commit, which during a merge judges only a status neither side
+carried. Every one of these reads the dial COMMITTED in the tree it judges
+(trunk's, or HEAD's at the hook), never an uncommitted edit to
+`docs/process.toml`, with the retired spellings (the 0-4 ordinal, the old key
+name, the `gate-policy` enum) translated silently, as the coordinator reads
+them. A lane a person claimed and built is judged by neither rung. Third,
+`check_trajectory.py` reports, advisory only, each commit in history carrying
+the trailer that changed a status its own tree's dial held (SR-210). The rung
+tables now live in the new `scripts/kitlib/authority.py`, with the dial
+comparison and the dial readers (`dial_at` reads a named tree's dial), and
+`agent_common.py` re-exports them; the trailer grammar lives in
+the new `scripts/kitlib/provenance.py`. `agent_common.commit_telemetry` now
+returns a refused commit's reason instead of None.
+
+**What to do.** Re-sync `scripts/kitlib/provenance.py` and
+`scripts/kitlib/authority.py` (new) together with `scripts/agent_common.py`,
+`scripts/acceptance_record.py`, `scripts/spine_carrier.py`,
+`scripts/bookkeeping.py`, `scripts/integrate.py`, `scripts/intake.py`,
+`scripts/handback.py`, `scripts/dispatch.py`, `scripts/agent_loop.py`,
+`scripts/check.py`, `scripts/check_trajectory.py` and `scripts/bootstrap.py`; a
+copy missing either new module ImportErrors on its first claim or check. If your
+checkout enables the hooks, copy `hooks/pre-commit` and `hooks/commit-msg` to
+`.githooks/`. Lanes claimed before the upgrade carry no claim trailer, so
+neither rung judges them unless the loop's writers commit into them after the
+upgrade: then the held-status rung judges the whole lane and the trailer rung
+the commits from that point on. A dial change now governs the loop only once
+committed. A session command or prompt
+template of your own must let a session write the trailer line the composed
+prompt hands it; a session that drops it stops its lane at the loop's merge,
+loudly. Both merge-slot rungs judge a loop lane whoever runs the slot, so
+merging one yourself does not exempt it: a commit of your own on a loop lane
+must carry a well-formed `Loop-Session` trailer, or move to a lane of your own.
+If your dial holds
+`DevStg-Needs`, `DevStg-Boundary` or `DevStg-Arch`, a stakeholder, frame,
+assumption, interface or component status now changes only in your own
+reviewed commit, not in a loop lane.
+Nothing needs migrating in your registries, and a repository whose history
+holds no loop commit hears nothing from the history check.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -2,13 +2,36 @@
 id = "WI-636"
 title = "Build held off-spine status refusal, the loop provenance trailer and its history check (SR-208..SR-210)"
 workstream = "unattended"
-specref = "docs/plans/2026-09-25-assumption-tier-spine-map.md#3-plan-coverage"
+specref = ""
 sr_refs = ["SR-208", "SR-209", "SR-210"]
 needs = ["WI-642"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+- The loop's provenance: every loop writer appends a well-formed
+  `Loop-Session` trailer (`kitlib/provenance.py`), the commit-msg hook and
+  the merge slot refuse a loop commit without one.
+- Lane ownership at the slot (arbitration ruling 4): a lane is the loop's
+  when its claim or any loop-writer commit in its range carries the trailer;
+  both rungs judge every commit of a loop lane whoever runs the slot, a
+  person's commit there carrying the trailer or moving to their own lane;
+  commits before the lane's first marked loop-writer commit are exempt from
+  the trailer rung only. Validity is present and well-formed.
+- A loop-made held status change is refused: the rung maps in
+  `kitlib/authority.py`, the assumptions registry at DevStg-Boundary and the
+  needs file (needs and stakeholders) at DevStg-Needs, routed through
+  `rung_for` by every approval predicate; one silent, legacy-aware dial
+  reader over a committed tree or the index (`dial_at`/`read_dial`) for the
+  hook, the writers and the slot; a merge judged against both parents. The
+  history check keeps approved LLR-249's legacy-as-most-held reading
+  (ruling 9).
+- Amended, status left Approved, for the joint adjudication: SR-209
+  `acceptance_criteria`, LLR-246 and LLR-248 `detail`. Traced pointers moved:
+  LLR-246 and LLR-248 `module` and `code_symbol`.
 
 ## Context
 

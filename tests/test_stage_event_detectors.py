@@ -315,13 +315,14 @@ def test_no_kit_script_takes_splitlines_0_of_a_GENERATED_file():
     """WI-497's sweep instruction, mechanized so it stays swept.
 
     The defect class is "read line 0 of a file whose line 0 is a generated
-    header". Two `splitlines()[0]` sites survive in the kit and neither is in
-    that class: both read the FIRST LINE OF GIT COMMAND OUTPUT, where line 0 is
-    the value by the command's own contract. They are named here so a third site
+    header". Three `splitlines()[0]` sites survive in the kit and none is in
+    that class: each reads the FIRST LINE OF GIT COMMAND OUTPUT, where line 0 is
+    the value by the command's own contract. They are named here so a fourth site
     has to be judged rather than inherited."""
     allowed = {
         "integrate.py": "int(git rev-list --count output)",
         "trunk_step.py": "int(git command output)",
+        "check_trajectory.py": "the subject line of a git log message",
     }
     hits = {
         path.name

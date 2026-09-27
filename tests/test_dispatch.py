@@ -59,6 +59,9 @@ from conftest import (
 pytestmark = env_gate_skipif("git")
 
 drv = load_script("dispatch")
+# Imported after `load_script` has put scripts/ on sys.path.
+from kitlib import provenance  # noqa: E402
+
 # The attestation constant has ONE home; a literal here would be a second one
 # that could drift silently past every test in this file.
 integ = drv.integrate
@@ -81,13 +84,18 @@ def _git(root, *args, env=None):
 
 
 def _commit(root, message, when=None):
+    """Commit everything. Under the loop marker `dispatch.run` sets, this is a
+    worker SESSION's commit, so it ends with the `Loop-Session` trailer the
+    session prompt tells it to write (SR-209) - the merge slot refuses a loop
+    lane holding a commit without one. Outside a run it is the fixture's own
+    setup, a person's commit, and is left exactly as given."""
     env = dict(os.environ)
     if when is not None:
         stamp = "@{} +0000".format(when)
         env["GIT_AUTHOR_DATE"] = stamp
         env["GIT_COMMITTER_DATE"] = stamp
     _git(root, "add", "-A", env=env)
-    _git(root, "commit", "-qm", message, env=env)
+    _git(root, "commit", "-qm", provenance.with_loop_trailer(message), env=env)
 
 
 def git_repo(root, branch="main"):

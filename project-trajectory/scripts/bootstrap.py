@@ -110,7 +110,7 @@ What it creates in the destination:
     scripts/agent_session.py, agent_common.py, plan_runner.py, adjudicate_brief.py
                                                (the WI-218 split: session launch / shared primitives / dual-plan runner)
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
-    .githooks/commit-msg                       <- hooks/commit-msg  (commit-message privacy scan)
+    .githooks/commit-msg                       <- hooks/commit-msg  (message privacy scan + loop provenance floor)
     .githooks/pre-push                         <- hooks/pre-push  (privacy-review backstop)
     docs/stack.ini                             <- stack.ini.template  (declared product toolchain)
     pytest.ini                                 (test-tier markers; skipped when
@@ -2025,6 +2025,13 @@ MAPPING = [
     # `record_observation.py` read and write through it, so the must-be-whole
     # rule applies on the first check a scaffold runs.
     ("scripts/kitlib/observation.py", "scripts/kitlib/observation.py"),
+    # WI-636 added `provenance` and `authority`: the loop's `Loop-Session`
+    # trailer and marker, and the approval-rung tables with the one dial
+    # comparison. `agent_common.py`, `integrate.py`, `check.py` and
+    # `check_trajectory.py` are all in this list and import them, so the
+    # must-be-whole rule applies on the first check or claim a scaffold runs.
+    ("scripts/kitlib/provenance.py", "scripts/kitlib/provenance.py"),
+    ("scripts/kitlib/authority.py", "scripts/kitlib/authority.py"),
     ("scripts/trace.py", "scripts/trace.py"),
     # WI-329: trace.py imports its spine-row TEXT layer from this sibling, so a
     # scaffold missing it gets an ImportError on the first check. Copied

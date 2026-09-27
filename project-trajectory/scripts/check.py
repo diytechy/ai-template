@@ -111,7 +111,7 @@ exists — CI, the pre-commit hook, and setup.* delegate there instead of each
 restating a command. Absent that file, the built-in Python-reference defaults
 below apply (identical values), so a profile-less repo is unchanged.
 
-Contracts: IF-013, IF-040, IF-144 — the interface seams this module
+Contracts: IF-013, IF-040, IF-144, IF-197 — the interface seams this module
 declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-013: SR-006's obligation delivered as a CLI here. Runs a gate's declared
@@ -134,6 +134,13 @@ Contract IF-144: the reporting protocol every delivered checker honours, compose
     absent optional input exits zero and names the absence. Per-class severity
     stays each requirement's own declaration — this fixes the protocol, never
     the disposition.
+Contract IF-197: the loop provenance floor a commit-msg hook consumes as an
+    exit code. `--loop-trailer MSGFILE` exits 0 when the loop marker is not
+    set, a person's commit, or when the message's last `Loop-Session`
+    trailer is well-formed and names the marked session; it exits 1 naming
+    the commit's subject when the marker is set and the trailer is missing,
+    malformed or names another session. The rule is `kitlib.provenance`'s,
+    so it is the one the merge slot re-checks a lane's range by.
 """
 
 import argparse
@@ -157,13 +164,17 @@ from kitlib.config import utf8_console as _utf8_console
 # plain import resolves; the guard covers an in-process import (a test) whose
 # sys.path does not yet carry scripts/.
 try:
+    from kitlib import authority as _kitauthority
     from kitlib import git as _kitgit
     from kitlib import ladder as _kitladder
+    from kitlib import provenance as _kitprovenance
     from kitlib import stage as _kitstage
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from kitlib import authority as _kitauthority
     from kitlib import git as _kitgit
     from kitlib import ladder as _kitladder
+    from kitlib import provenance as _kitprovenance
     from kitlib import stage as _kitstage
 
 # Resolve sibling scripts relative to *this file*, not the cwd. A repo whose
@@ -271,6 +282,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "prompt-catalog",
         "staged-divergence",
         "approval-immutable",
+        "held-status",
     }
 )
 
@@ -1251,6 +1263,20 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_NEEDS,
             "process",
         ),
+        # The held status (SR-208), the staged-tree sibling of the two above and
+        # at every bar for their reason. It is the floor for a commit an AI
+        # SESSION makes through the hook, since a session's own staging never
+        # passes through the loop's code; armed only under the loop marker, so
+        # a person's commit passes. A merge in progress (the station refresh's
+        # bar runs mid-merge) is judged by what NEITHER side carried. The merge
+        # slot re-judges the lane's whole range whether or not a hook ran.
+        (
+            "held-status",
+            (),
+            [sys.executable, str(_SCRIPTS / "check.py"), "--held-status"],
+            _kitladder.STAGE_NEEDS,
+            "process",
+        ),
     ]
 
 
@@ -1892,6 +1918,66 @@ def approval_immutability(root=".", strict=True):
     return 1 if strict else 0
 
 
+def _held_status_refusal(root="."):
+    """The `held-status` step's judgement: the refusal for a marked commit whose
+    STAGED tree changes a status the approval level holds for a human, or None.
+
+    The loop writers' judgement (`acceptance_record`), over the index against
+    HEAD, with the dial COMMITTED at HEAD (`kitlib.authority.dial_at`, the one
+    silent, legacy-aware reader the writers and the merge slot also use): the
+    commit being made cannot release itself by staging a lower dial, and a hook
+    that runs on every commit prints no migration note.
+
+    DURING A MERGE the staged result is judged against its first parent, less
+    every status the merged side already carries (`pending_status_moves`): those
+    arrived in commits judged where they were made, while a value NEITHER side
+    carried - a conflict resolution or a mid-merge edit - is this commit's own.
+    The reader is imported only on a marked commit, so `check.py` itself still
+    needs nothing beyond `kitlib` to run.
+
+    Implements: SR-208, LLR-246
+    """
+    if _kitprovenance.loop_session() is None:
+        return None
+    import acceptance_record  # a leaf reader of two git trees, sibling of this one
+
+    moves = acceptance_record.pending_status_moves(root)
+    if not moves:
+        return None
+    dial = _kitauthority.dial_at(root, "HEAD")
+    return acceptance_record.held_status_refusal(dial, moves)
+
+
+def _held_status_mode(args):
+    """The `--held-status` entry point, `_approval_immutable_mode`'s shape:
+    EXIT 1 printing the refusal, or 0."""
+    if not args.held_status:
+        return
+    refusal = _held_status_refusal(".")
+    msg = refusal or "no loop commit moves a held status"
+    print("  {:5} held-status  {}".format("FAIL" if refusal else "ok", msg))
+    sys.exit(1 if refusal else 0)
+
+
+def _loop_trailer_mode(args):
+    """The `--loop-trailer MSGFILE` entry point, the commit-msg hook's loop
+    floor (SR-209): EXIT 1 naming the commit's subject when the loop marker is
+    set and the message's trailer is missing, malformed or names another
+    session; exit 0 otherwise, a person's commit included, whose message is
+    never read. Runs before the repo-root anchor: a message file needs no plan.
+    An unreadable message under the marker raises, which fails the commit."""
+    if args.loop_trailer is None:
+        return
+    session = _kitprovenance.loop_session()
+    text = session and Path(args.loop_trailer).read_text(
+        encoding="utf-8", errors="replace"
+    )
+    refusal = session and _kitprovenance.loop_trailer_refusal(text, session)
+    if refusal:
+        print("check: REFUSED - {}".format(refusal), file=sys.stderr)
+    sys.exit(1 if refusal else 0)
+
+
 def _approval_immutable_mode(args):
     """The `--approval-immutable` entry point, the same shape as
     `_divergence_mode`: EXIT with the detector's code when the flag selects
@@ -2375,6 +2461,18 @@ def main():
         "'approval-immutable' step, not a separate contract",
     )
     ap.add_argument(
+        "--held-status",
+        action="store_true",
+        help="run ONLY the 'held-status' step's body and exit (SR-208): under "
+        "the loop marker, refuse a staged change to a held status",
+    )
+    ap.add_argument(
+        "--loop-trailer",
+        metavar="MSGFILE",
+        help="the commit-msg hook's loop floor (SR-209): under the loop marker, "
+        "exit 1 unless the message carries this run's Loop-Session trailer",
+    )
+    ap.add_argument(
         "--jobs",
         type=int,
         default=None,
@@ -2385,6 +2483,7 @@ def main():
         "with each step's output streamed live exactly as before",
     )
     args = ap.parse_args()
+    _loop_trailer_mode(args)  # exits when --loop-trailer selects it
     global _FORCE_TRUNK_LANE
     _FORCE_TRUNK_LANE = args.trunk_lane
     # check.py resolves docs/stage and docs/stack.ini relative to the CWD
@@ -2401,6 +2500,7 @@ def main():
         )
     _divergence_mode(args)  # exits when --staged-divergence selects it
     _approval_immutable_mode(args)  # exits when --approval-immutable selects it
+    _held_status_mode(args)  # exits when --held-status selects it
     # Translate a retired `--stage G2` (warning once) before anything consumes  check_vocab: allow
     # it, so `resolve_stage` and `_step_stage` both see only canonical rungs.
     args.stage = (

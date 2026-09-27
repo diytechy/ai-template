@@ -8,7 +8,8 @@ acceptance; everything left in `check_trajectory.py` asks what the registries sa
 TODAY.** Nothing in this module reads the working tree, and the free-name census
 proves it rather than the docstring claiming it — the whole module's only
 non-builtin dependencies are `spine_carrier` (which carrier a spine registry
-uses) and one `git -C <root> … or None` primitive.
+uses) and one `git -C <root> … or None` primitive — and, for the held status
+at the end of the module, `kitlib.authority`'s rung tables.
 
 WHAT IT OWNS. `SR-178` (text that has moved away from its acceptance record is
 reported) and `SR-179` (the record can only ever be written by copying live
@@ -58,7 +59,7 @@ travel with the code they annotate.
 
 Stdlib only.
 
-Contracts: IF-091, IF-129 — the interface seams this module declares
+Contracts: IF-091, IF-129, IF-196 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-091: the staged spine-amendment set, offered as a call.
@@ -92,10 +93,30 @@ Contract IF-129: the ONE cell-comparison basis.
     amendment guard and a snapshot comparison cannot disagree about which cells
     are content or which half of the remainder arms an act. The dependency runs
     one way only: nothing in this module imports the readers that call it.
+Contract IF-196: the held status, read from a delta. `staged_status_moves(root,
+    base, head, paths)` returns every change to a status cell of an off-spine
+    registry in `HELD_STATUS_REGISTRIES` between two trees, or between `base`
+    and the index when `head` is None - a changed cell, and a row added or
+    removed with a status - as `{"registry", "id", "before", "after"}`,
+    an absent side reading ""; `head` may be a tree, and `paths` narrows the
+    registries to those among them. The needs file is read for its stakeholder
+    tier alone (`STATUS_TABLES`). `merge_status_moves(root, parents)` is the
+    index's moves against the first of `parents` that differ from EVERY one of
+    them - a staged merge result's own - and `pending_status_moves(root)` the
+    moves of the commit in progress, merge or not. `committed_status_moves(root,
+    rev)` is the same as `staged_status_moves` for one commit against its first
+    parent, or the empty tree for a root commit, across the spine registries
+    too, the needs tier included, each row once. `held_status_lines(dial,
+    moves)` returns one line naming the registry, the row and the rung of every
+    move whose rung the dial holds, a registry the rung map does not name read
+    as held; `held_status_refusal(dial, moves)` joins them into the refusal,
+    or returns None. A delta git cannot read is `[]`; a registry
+    side that does not parse is one move naming the registry.
 """
 
 try:
     import spine_carrier
+    from kitlib import authority as _kitauthority
     from kitlib import git as _kitgit
     from kitlib import spine as _kitspine
 except ImportError:  # pragma: no cover - in-process fallback
@@ -104,6 +125,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
+    from kitlib import authority as _kitauthority
     from kitlib import git as _kitgit
     from kitlib import spine as _kitspine
 
@@ -1305,3 +1327,220 @@ def committed_snapshot_findings(root):
                 "blessed".format(name, live_rel, rev[:8])
             )
     return out
+
+
+# --- THE HELD STATUS: which status cells a delta moves (SR-208, SR-210) ------
+# The approval level names the rungs a human still approves, and the approval
+# act above is already refused for the SPINE. The off-spine registries carry
+# status cells of their own that no automated path was stopped from changing,
+# so a declared hold on their rung was a claim rather than a control. The two
+# readers below make it a control: the same two-tree comparison as the spine
+# walk, read over the status cell of every row of every off-spine registry, and
+# the judgement of the result against a dial. The loop's writers and the merge
+# slot refuse on it (`agent_common.loop_held_status_refusal`,
+# `integrate._held_status_refusal`); the history check reports on it
+# (`check_trajectory.loop_held_status_findings`).
+#
+# THE UNIVERSE IS DECLARED, separately from the rung map, and that separation
+# is load-bearing: a registry here that the map does not name is HELD (an
+# unmapped status is one nobody has released), which a universe derived FROM
+# the map could never express. The frame carries three tiers in one file and
+# the assumptions registry two, so the reader walks every table of the file
+# rather than one tier by id column. The off-spine registries are TOML only
+# (each was converted, or born, under that carrier), and the example `-000`
+# rows are never statuses anyone approved.
+#
+# THE NEEDS FILE IS SHARED: it carries the stakeholder list (off-spine, so
+# here) beside the needs (a spine tier, walked by the spine half of
+# `committed_status_moves` through `APPROVAL_ACT_CSVS`). `STATUS_TABLES` narrows
+# its read to the stakeholder table, so each tier is read by exactly one walk
+# and no need is reported twice; both tiers are judged at the needs rung
+# (`kitlib.authority.rung_for`).
+NEEDS_REGISTRY = "docs/requirements/stakeholder-needs.toml"
+HELD_STATUS_REGISTRIES = (
+    "docs/requirements/external.toml",
+    "docs/requirements/interfaces.toml",
+    "docs/requirements/components.toml",
+    "docs/requirements/assumptions.toml",
+    NEEDS_REGISTRY,
+)
+STATUS_TABLES = {NEEDS_REGISTRY: (spine_carrier.OFFSPINE_TABLE["STK-ID"],)}
+
+
+def _status_cells(text, tables=None):
+    """`{row id: status}` of a registry text (of its `tables` only, when named),
+    the `-000` example rows dropped (never statuses anyone approved), or None
+    when it does not parse: `{}` is a registry with no status rows, None one
+    that cannot be read, and the two are opposite claims."""
+    cells = spine_carrier.status_cells(text, tables)
+    if cells is None:
+        return None
+    return {rid: status for rid, status in cells.items() if not rid.endswith("-000")}
+
+
+def _status_delta(path, before_text, after_text):
+    """The status moves one registry makes between two sides: a changed cell,
+    and a row added or removed WITH a status. A side that does not parse is
+    ONE move naming the registry, never an empty delta: a delta nobody can read
+    is not a delta that moved nothing."""
+    tables = STATUS_TABLES.get(path)
+    before = {} if before_text is None else _status_cells(before_text, tables)
+    after = {} if after_text is None else _status_cells(after_text, tables)
+    if before is None or after is None:
+        return [{"registry": path, "id": "(unparseable)", "before": "", "after": ""}]
+    return [
+        {
+            "registry": path,
+            "id": rid,
+            "before": before.get(rid, ""),
+            "after": after.get(rid, ""),
+        }
+        for rid in sorted(set(before) | set(after))
+        if before.get(rid) != after.get(rid)
+    ]
+
+
+def _offspine_status_moves(root, base, head, watched):
+    """Every status move in `watched` between the two sides `_spine_revs` names
+    (`head=None` is the index)."""
+    revs = _spine_revs(root, base, head, touches=watched)
+    if revs is None:
+        return []
+    changed, old, new = revs
+    moves = []
+    for path in watched:
+        if path in changed:
+            moves += _status_delta(
+                path, _git(root, ["show", old + path]), _git(root, ["show", new + path])
+            )
+    return moves
+
+
+def staged_status_moves(root, base="HEAD", head=None, paths=None):
+    """Every change to a status cell of an off-spine registry between two trees,
+    or between `base` and the index when `head` is None — rows added or removed
+    with a status included, as `{"registry", "id", "before", "after"}` (an
+    absent side is ""). `head` may be a commit or a TREE: a plumbing writer asks
+    about the tree it is about to commit, before any commit names it. `paths`,
+    when given, narrows the registries to those among them (a path-scoped
+    commit takes nothing else). `[]` when git cannot answer.
+
+    Implements: SR-208, LLR-246
+    """
+    watched = list(HELD_STATUS_REGISTRIES)
+    if paths is not None:
+        named = {str(p).replace("\\", "/").strip() for p in paths}
+        watched = [p for p in watched if p in named]
+    return _offspine_status_moves(root, base, head, watched) if watched else []
+
+
+def merge_status_moves(root, parents):
+    """The status moves a STAGED MERGE RESULT makes of its own: each move of the
+    index against the first of `parents` whose new value also differs from
+    every other parent's. A status the merged side already carried was judged
+    in the commit that made it and arrives with it; a value NEITHER side
+    carried - a conflict resolution, a hand edit mid-merge - was written by
+    this commit, and is judged here. `[]` when git cannot answer.
+
+    Implements: SR-208, LLR-246
+    """
+    own = None
+    for parent in parents:
+        moves = staged_status_moves(root, parent)
+        keys = {(m["registry"], m["id"]) for m in moves}
+        own = (
+            moves
+            if own is None
+            else [m for m in own if (m["registry"], m["id"]) in keys]
+        )
+    return own or []
+
+
+def pending_status_moves(root):
+    """The status moves the commit being made in `root` makes of its OWN: the
+    index against HEAD, or, while a merge is in progress, `merge_status_moves`
+    against HEAD and MERGE_HEAD. Read through git alone. An octopus merge's
+    further heads are not read, so a status only they carried reads as the
+    merge's own: the held direction.
+
+    Implements: SR-208, LLR-246
+    """
+    merging = _git(root, ["rev-parse", "-q", "--verify", "MERGE_HEAD"])
+    if merging and merging.strip():
+        return merge_status_moves(root, ["HEAD", merging.strip()])
+    return staged_status_moves(root)
+
+
+def held_status_lines(dial, moves):
+    """One line per move whose registry's rung `dial` holds for a human, naming
+    the registry, the row, the move and the rung — THE judgement both the
+    refusal below and the history check read, so the two cannot disagree about
+    which move is held.
+
+    A registry the rung map does not name is HELD whatever the dial says:
+    nobody has ruled which rung governs it, and the only safe answer to that is
+    the human's (the `agent_common.human_approves` fail-safe, applied to a
+    delta instead of an intent)."""
+    lines = []
+    for move in moves:
+        rung = _kitauthority.rung_for(move["registry"])
+        if rung is None or _kitauthority.holds_under(dial, rung):
+            lines.append(
+                "{} {} {} -> {} (rung {})".format(
+                    spine_carrier.stem(move["registry"]).rsplit("/", 1)[-1],
+                    move["id"],
+                    move["before"] or "(absent)",
+                    move["after"] or "(removed)",
+                    rung or "unmapped, so held",
+                )
+            )
+    return lines
+
+
+def held_status_refusal(dial, moves):
+    """The refusal naming every move `held_status_lines` holds, or None.
+
+    Implements: SR-208, LLR-246
+    """
+    held = held_status_lines(dial, moves)
+    if not held:
+        return None
+    return (
+        "the loop may not change a status the approval level holds for a human "
+        "(human_approval_through = {}): {} - a held status moves only in a "
+        "person's own reviewed commit".format(dial, "; ".join(held))
+    )
+
+
+def _empty_tree(root):
+    """The empty tree's id in this repository's hash, or None off git — what a
+    ROOT commit is compared with."""
+    out = _git(root, ["hash-object", "-t", "tree", "--stdin"], stdin="")
+    return out.strip() if out and out.strip() else None
+
+
+def committed_status_moves(root, rev):
+    """Every status move `rev` made against its FIRST parent — or against the
+    empty tree when it has none — across the spine registries and the off-spine
+    ones, in `staged_status_moves`' shape. A merge commit's first-parent delta
+    is the merged work's, which is why the history check skips merges and
+    visits the merged commits instead.
+
+    Implements: SR-210, LLR-249
+    """
+    parent = _git(root, ["rev-parse", "--verify", "--quiet", rev + "^1"])
+    base = parent.strip() if parent and parent.strip() else _empty_tree(root)
+    if base is None:
+        return []
+    moves = _offspine_status_moves(root, base, rev, list(HELD_STATUS_REGISTRIES))
+    for registry, _id_col, before, after, _csv in _spine_row_sides(
+        root, base, rev, APPROVAL_ACT_CSVS
+    ):
+        for rid in sorted(set(before) | set(after)):
+            was = ((before.get(rid) or {}).get("Status") or "").strip()
+            now = ((after.get(rid) or {}).get("Status") or "").strip()
+            if was != now:
+                moves.append(
+                    {"registry": registry, "id": rid, "before": was, "after": now}
+                )
+    return moves

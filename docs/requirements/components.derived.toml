@@ -19,7 +19,7 @@
 [derived]
 components = 4
 design_rows = 239
-seam_rows = 183
+seam_rows = 187
 requirements_placed = 106
 requirements_unplaced = 6
 seams_unplaced = 0
@@ -249,6 +249,8 @@ seam_internal_refs = [
   "IF-165",
   "IF-180",
   "IF-190",
+  "IF-195",
+  "IF-196",
   "IF-200",
   "IF-201",
   "IF-208",
@@ -320,6 +322,7 @@ seam_boundary_refs = [
   "IF-177",
   "IF-178",
   "IF-186",
+  "IF-194",
   "IF-199",
 ]
 
@@ -442,6 +445,7 @@ seam_internal_refs = [
   "IF-148",
   "IF-187",
   "IF-188",
+  "IF-196",
   "IF-198",
 ]
 seam_boundary_refs = [
@@ -494,6 +498,9 @@ seam_boundary_refs = [
   "IF-170",
   "IF-189",
   "IF-190",
+  "IF-194",
+  "IF-195",
+  "IF-197",
   "IF-199",
   "IF-200",
   "IF-201",
@@ -635,6 +642,7 @@ modules = [
   "project-trajectory/scripts/hats.py",
   "project-trajectory/scripts/intake.py",
   "project-trajectory/scripts/integrate.py",
+  "project-trajectory/scripts/kitlib/authority.py",
   "project-trajectory/scripts/kitlib/provenance.py",
   "project-trajectory/scripts/kitlib/station.py",
   "project-trajectory/scripts/kitlib/verdict.py",
@@ -676,6 +684,10 @@ seam_internal_refs = [
   "IF-173",
   "IF-175",
   "IF-186",
+  "IF-194",
+  "IF-195",
+  "IF-196",
+  "IF-197",
 ]
 seam_boundary_refs = [
   "IF-001",

@@ -298,6 +298,9 @@ SLOW_MODULES = frozenset(
         # WI-640 (TC-250): the test-first order exists only in commits, so every
         # case builds a real git history (a shallow clone, a merge) to read it.
         "test_check_test_first",  # git init + a commit per step, per case
+        # WI-636 (TC-242, TC-243): the loop provenance trailer, its floor and
+        # the history check, driven through real claims, lanes and loop runs.
+        "test_loop_provenance",  # real git repos + dispatcher/agent_loop runs
     }
 )
 
@@ -930,6 +933,26 @@ def _no_live_blackout_in_session_scaffolds(request):
         "conftest.set_process_key or call conftest.disable_blackout(root). "
         + "; ".join("{} -> {!r}".format(p, v) for p, v in live)
     )
+
+
+# WI-636: the loop marker. The loop sets it in its OWN process environment
+# (`kitlib.provenance.mark_loop_process`), so an in-process test of the
+# dispatcher leaves it set for every later test in the same worker, and a loop
+# session running this suite as its commit bar hands it to every test at once.
+# Either way a person's commit would read as the loop's and every claim, merge
+# and telemetry commit under test would gain a trailer nobody asked for.
+LOOP_SESSION_ENV = "KIT_LOOP_SESSION"
+
+
+@pytest.fixture(autouse=True)
+def _no_loop_marker_leaks():
+    """No test sees the loop marker unless it sets one, and none leaves one
+    behind: popped before the test and again after it, whoever set it."""
+    inherited = os.environ.pop(LOOP_SESSION_ENV, None)
+    yield
+    os.environ.pop(LOOP_SESSION_ENV, None)
+    if inherited is not None:
+        os.environ[LOOP_SESSION_ENV] = inherited
 
 
 def wi_registry_header(columns=10):

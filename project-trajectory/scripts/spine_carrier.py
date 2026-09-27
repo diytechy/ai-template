@@ -67,7 +67,10 @@ Contract IF-102: the carrier's whole read surface, as trace.py imports it — an
     RAISES when a stem exists under both, rather than resolving by precedence;
     load(path, id_col) returns rows in file order, the shape csv.DictReader
     returns, [] when the registry is absent and SystemExit when it exists and
-    will not parse. The `-000` example filter is NOT applied here.
+    will not parse. status_cells(text, tables=None) returns {row id: status}
+    for every row of every table of a TOML text (or of the named tables only)
+    that carries a `status` cell, or None when it does not parse. The `-000`
+    example filter is NOT applied here.
 
 Contract IF-104: check_doc_refs reads the spine through resolve() and load()
     for its Evidence-class pointer scan. resolve() is asked first, so an absent
@@ -1152,3 +1155,32 @@ def draft_need_ids(needs):
     """The needs still at draft. A FIELD now, not a heading a prose mention can
     fall under."""
     return {n["id"] for n in needs if is_draft_need(n)}
+
+
+def status_cells(text, tables=None):
+    """`{row id: status}` for every row of EVERY table of a TOML registry text
+    that carries a `status` cell, or None when the text does not parse.
+    `tables`, when given, narrows the read to the tables it names: the needs
+    file carries a spine tier and an off-spine one, and a reader that walks the
+    spine tier elsewhere must read only the other one here, or it reads every
+    need twice.
+
+    Keyed by row id across tables rather than read one tier by its id column,
+    because a question about a whole FILE's status cells - which ones a delta
+    moved - must see every tier the file carries, including one this module's
+    `OFFSPINE_TABLE` has not been told about yet: the frame holds three tiers in
+    one file, and a new registry can arrive before its tier is mapped here.
+    Ids are unique across a file's tiers (each tier has its own prefix). The
+    `-000` example rows are kept, as `rows_from_text` keeps them - the caller
+    owns that filter. None and `{}` stay opposite claims, as everywhere here."""
+    try:
+        parsed = tomllib.loads(text.lstrip("﻿"))
+    except tomllib.TOMLDecodeError:
+        return None
+    return {
+        str(rid): str(cells["status"]).strip()
+        for name, rows in parsed.items()
+        if isinstance(rows, dict) and (tables is None or name in tables)
+        for rid, cells in rows.items()
+        if isinstance(cells, dict) and "status" in cells
+    }

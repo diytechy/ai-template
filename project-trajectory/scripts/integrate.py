@@ -164,6 +164,8 @@ import agent_common as ac
 import bookkeeping
 import score_reviews
 import spec_move
+from kitlib import authority as _kitauthority
+from kitlib import provenance as _kitprovenance
 from kitlib import verdict as kverdict
 from kitlib.station import (
     BAR_GREEN,
@@ -786,7 +788,15 @@ def _claim_locked(root, wi_ids, branch):
     rewrite (`spec_move.planned_writes`), with the declared regeneration joined
     by the helper. So a dirty path the claim must write refuses by name, and an
     uncommitted edit anywhere else is neither swept into the claim commit nor
-    discarded by its refusal."""
+    discarded by its refusal.
+
+    Under the loop marker the same helper judges the claim's tree against the
+    held-status rule before it commits, and marks the commit with the loop's
+    provenance trailer (`bookkeeping._commit_object`): a claim the loop makes
+    is a commit the loop makes.
+
+    Implements: SR-208, SR-209, LLR-246, LLR-248
+    """
     moves = []
     for wi_id in wi_ids:
         spec = _queued_spec(root, wi_id)
@@ -1134,6 +1144,125 @@ def _approval_act_refusal(root, branch):
         return judge(root, base.strip(), branch, [], False)
     actor = _adjudication_lane(root, branch, metas=metas)
     return judge(root, base.strip(), branch, metas, actor)
+
+
+def _loop_claimed(root, branch):
+    """Did the LOOP claim `branch`? True when the claim commit on trunk's
+    first-parent line - the newest whose subject is the claim grammar for this
+    branch - carries a well-formed `Loop-Session` trailer, which the claim
+    writes under the loop marker and never otherwise (SR-209)."""
+    suffix = " -> active/{} (bookkeeping)".format(branch)
+    grep = ("--first-parent", "--fixed-strings", "--grep=" + suffix)
+    code, out = ac.git(root, "log", *grep, "--format=%B%x1e", _head(root))
+    for message in (out if code == 0 else "").split("\x1e"):
+        subject = (message.strip().splitlines() or [""])[0]
+        if subject.startswith("claim: ") and subject.endswith(suffix):
+            return _kitprovenance.parse_loop_trailer(message) is not None
+    return False
+
+
+# The mark that makes a lane the loop's: a commit one of its own writers made.
+_marked_loop_writer = _kitprovenance.loop_writer_commit
+
+
+def _loop_window(root, branch):
+    """`(window, refusal)`: whose lane `branch` is, read off its commits.
+
+    `window` is None for a PERSON's lane - claimed without the trailer, and no
+    commit in its range made by one of the loop's own writers - which neither
+    slot rung judges. Otherwise it is the `(sha, message)` pairs, oldest first,
+    the trailer rung judges (`provenance.loop_lane_window`): the whole range
+    for a lane the loop claimed, else the range from its first marked
+    loop-writer commit on. The held-status rung judges any loop lane WHOLE. A
+    range git cannot read is a refusal: unread commits are not a person's."""
+    code, out = ac.git(
+        root,
+        "log",
+        "--reverse",
+        "--topo-order",
+        "--format=%H%x00%B%x1e",
+        _head(root) + ".." + branch,
+    )
+    if code != 0:
+        return (
+            None,
+            "cannot read {}'s commits to check their provenance; nothing was merged:\n{}".format(
+                branch, ac._failure_tail(out)
+            ),
+        )
+    commits = []
+    for record in out.split("\x1e"):
+        sha, _nul, message = record.strip().partition("\x00")
+        if sha:
+            commits.append((sha, message))
+    claimed = _loop_claimed(root, branch)
+    return _kitprovenance.loop_lane_window(commits, claimed, branch), None
+
+
+def _held_status_refusal(root, branch):
+    """THE HELD STATUS AT THE SLOT (SR-208): a refusal string, or None.
+
+    Where the dial holds a registry's rung for a human, a LOOP lane may not
+    land a change to that registry's status cells - a changed cell, or a row
+    added or removed with one. The loop's own writers refuse the same change
+    before they commit, but an AI session commits for itself, and neither its
+    commits nor a `--no-verify` or plumbing commit pass through that code or a
+    hook; so the slot judges the lane's WHOLE range, after the approval-act
+    rung, and a refused change never lands on trunk.
+
+    Armed for every loop lane (`_loop_window`: its claim, or any commit one of
+    the loop's own writers made in it, carries the trailer) whoever runs the
+    slot, and over the whole range with no migration window: a change a person
+    made before the loop took the lane over lands through the loop's merge all
+    the same. A person's own lane is not governed. The dial is the one
+    COMMITTED on trunk (`kitlib.authority.dial_at`), never the lane's own tree,
+    which could have released itself, and never the trunk checkout's working
+    file.
+
+    Implements: SR-208, LLR-246
+    """
+    import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
+
+    window, refusal = _loop_window(root, branch)
+    if refusal or window is None:
+        return refusal
+    head = _head(root)
+    code, base = ac.git(root, "merge-base", head, branch)
+    if code != 0 or not base.strip():
+        # Fail closed: an unread delta is not an empty one.
+        return "cannot read the merge base of trunk {} and {}, so the status cells its range moves are unknowable; nothing was merged:\n{}".format(
+            head[:10], branch, ac._failure_tail(base)
+        )
+    moves = acceptance_record.staged_status_moves(root, base.strip(), branch)
+    dial = _kitauthority.dial_at(root, head)
+    refusal = acceptance_record.held_status_refusal(dial, moves)
+    return "{} - {}; nothing was merged".format(branch, refusal) if refusal else None
+
+
+def _loop_trailer_refusal(root, branch):
+    """THE PROVENANCE FLOOR AT THE SLOT (SR-209): a refusal string, or None.
+
+    Every commit of a LOOP lane must carry a well-formed `Loop-Session`
+    trailer, whoever runs the slot: the slot sees commits, not processes, and
+    it is the one place the floor always runs, because the commit-msg hook is
+    opt-in per checkout and plumbing and `--no-verify` commits never reach it.
+    A person's commit inside a loop lane is refused too; it belongs in the
+    person's own lane. The commits before the lane's first marked loop-writer
+    commit, in a lane a person claimed and the loop later built, are exempt
+    (`_loop_window`). Any well-formed session is accepted: a lane can span
+    runs, and no record of a run's sessions exists to check against. A
+    person's own lane is never judged.
+
+    Implements: SR-209, LLR-248
+    """
+    window, refusal = _loop_window(root, branch)
+    for sha, message in window or ():
+        refusal = _kitprovenance.loop_trailer_refusal(message)
+        if refusal:
+            return "{} holds {} - {}; nothing was merged".format(
+                branch, sha[:10], refusal
+            )
+    return refusal
 
 
 def _last_commit_time(root, ref, *pathspec):
@@ -2495,13 +2624,17 @@ def refresh(root, branch, tier):
         "commit",
         "--allow-empty",
         "-m",
-        "{}{}\n\nThe §A2 station refresh: trunk merged in, the §5.1 fragment compile and\n§5.2 regeneration folded on, and the declared bar run on THIS tree. The\ntrailer NAMES what it attests - the tree the bar saw and the work commit it\nsits on - so the merge slot verifies both against git instead of trusting a\nmessage. A --no-ff merge of a branch that contains trunk reproduces this\ntree byte for byte, which is why no second bar is owed at the slot.\n\n{} tree={} work={} {}".format(
-            kverdict.refresh_subject(branch),
-            trunk[:10],
-            BAR_GREEN,
-            tree.strip(),
-            work_tip,
-            summary,
+        # Under the loop marker the refresh is a loop commit and carries the
+        # provenance trailer, in the same trailer block as `Bar-Green:`.
+        _kitprovenance.with_loop_trailer(
+            "{}{}\n\nThe §A2 station refresh: trunk merged in, the §5.1 fragment compile and\n§5.2 regeneration folded on, and the declared bar run on THIS tree. The\ntrailer NAMES what it attests - the tree the bar saw and the work commit it\nsits on - so the merge slot verifies both against git instead of trusting a\nmessage. A --no-ff merge of a branch that contains trunk reproduces this\ntree byte for byte, which is why no second bar is owed at the slot.\n\n{} tree={} work={} {}".format(
+                kverdict.refresh_subject(branch),
+                trunk[:10],
+                BAR_GREEN,
+                tree.strip(),
+                work_tip,
+                summary,
+            )
         ),
     )
     if code != 0:
@@ -2631,6 +2764,12 @@ def _merge_refusal(root, branch, wi_ids):
     refusal = _approval_act_refusal(root, branch)  # owner ruling 2026-09-01
     if refusal:
         return outcomes, refusal
+    refusal = _held_status_refusal(root, branch)  # SR-208
+    if refusal:
+        return outcomes, refusal
+    refusal = _loop_trailer_refusal(root, branch)  # SR-209
+    if refusal:
+        return outcomes, refusal
     refusal = _declared_bar_or_refusal(root)
     if refusal:
         return outcomes, refusal
@@ -2693,11 +2832,13 @@ def integrate_one(root, branch, tier, held=None):
         "merge",
         "--no-ff",
         "-m",
-        "integrate: merge {} ({})\n\nThe §A2 merge: trunk was already an ancestor of this branch, so the\nmerge is trivially clean and its tree IS the branch tip's - the tree the\nbranch's own refresh bar passed ({}).\n\nOutcomes (§A3): {}".format(
-            branch,
-            ", ".join(wi_ids),
-            why,
-            ", ".join("{}={}".format(w, outcomes[w]) for w in wi_ids),
+        _kitprovenance.with_loop_trailer(
+            "integrate: merge {} ({})\n\nThe §A2 merge: trunk was already an ancestor of this branch, so the\nmerge is trivially clean and its tree IS the branch tip's - the tree the\nbranch's own refresh bar passed ({}).\n\nOutcomes (§A3): {}".format(
+                branch,
+                ", ".join(wi_ids),
+                why,
+                ", ".join("{}={}".format(w, outcomes[w]) for w in wi_ids),
+            )
         ),
         branch,
     )

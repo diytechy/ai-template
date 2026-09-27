@@ -1308,7 +1308,12 @@ def test_APPROVAL_RUNGS_is_the_off_spine_sibling_of_THE_DIAL(tmp_path):
     A typo'd rung would send `human_approves` through `human_holds`' unrecognized
     arm, which answers True — safe, but silently: the registry would read as held
     for a reason nobody intended. Pin the values against the ladder itself."""
-    assert set(ac.APPROVAL_RUNGS) == {"external", "interfaces", "components"}
+    assert set(ac.APPROVAL_RUNGS) == {
+        "external",
+        "interfaces",
+        "components",
+        "assumptions",
+    }
     for registry, rung in ac.APPROVAL_RUNGS.items():
         assert rung in ac.LADDER_RUNGS, (registry, rung)
     # The ruled mapping, verbatim: each registry gets the rung `spine_rules`
@@ -1317,6 +1322,9 @@ def test_APPROVAL_RUNGS_is_the_off_spine_sibling_of_THE_DIAL(tmp_path):
     assert ac.APPROVAL_RUNGS["external"] == dg.STAGE_BOUNDARY
     assert ac.APPROVAL_RUNGS["interfaces"] == dg.STAGE_ARCH
     assert ac.APPROVAL_RUNGS["components"] == dg.STAGE_ARCH
+    # WI-636 (LLR-246): the assumptions registry joins at the frame's rung, the
+    # boundary its assumptions land on.
+    assert ac.APPROVAL_RUNGS["assumptions"] == dg.STAGE_BOUNDARY
     # NO NEW KEY: the ruling's whole point. `human_approves` must answer from the
     # existing dial, so a repo that never declares anything new still gets it.
     # The OVERTURNED proposal's key must exist NOWHERE that a reader could take
@@ -1439,12 +1447,35 @@ def test_human_approves_spine_is_DERIVED_and_fails_safe(tmp_path):
     for registry in ac.SPINE_APPROVAL_RUNGS:
         assert ac.human_approves_spine(below, registry) is False, registry
 
-    # Arm 3 — UNMAPPED is HELD, at the MOST permissive dial there is. The
-    # suffixed key is in here deliberately: it is the near-miss a caller that
-    # forgot `spine_carrier.stem` would produce, and it must fail toward the
-    # human rather than toward a lookup that happens to work.
-    for unknown in ("docs/requirements/system-requirements.toml", "", None, "SR"):
+    # Arm 3 — UNMAPPED is HELD, at the MOST permissive dial there is.
+    for unknown in ("", None, "SR"):
         assert ac.human_approves_spine(below, unknown) is True, unknown
+    # A carrier path is not a near-miss any more: the predicate reads the one
+    # map through `kitlib.authority.rung_for`, which strips either suffix, so
+    # a caller that forgot `spine_carrier.stem` gets the row's real rung.
+    assert ac.human_approves_spine(mixed, srs + ".toml") is True
+    assert ac.human_approves_spine(mixed, llrs + ".csv") is False
+
+
+def test_the_needs_file_is_approved_at_the_needs_rung_by_both_predicates(tmp_path):
+    """WI-636 (LLR-246): the needs file, needs and stakeholders alike, is
+    approved at `DevStg-Needs`. The live predicates read the rung through
+    `kitlib.authority.rung_for`, the map the held-status judgement reads, so
+    the needs tier is not unmapped (held at every dial) on one path while it is
+    released below the dial on the other. Held at and above `DevStg-Needs`;
+    released at `DevStg-Below`."""
+    needs = "docs/requirements/stakeholder-needs"
+    held = _docs(tmp_path / "held", dial=dg.STAGE_NEEDS)
+    below = _docs(tmp_path / "below", dial=BELOW)
+    for registry in (needs, needs + ".toml", needs + ".csv"):
+        # SN, the spine tier.
+        assert ac.human_approves_spine(held, registry) is True, registry
+        assert ac.human_approves_spine(below, registry) is False, registry
+        # STK, the stakeholder list, which shares the file and so the rung.
+        assert ac.human_approves(held, registry) is True, registry
+        assert ac.human_approves(below, registry) is False, registry
+    assert ac.human_approves(held, "stakeholder-needs") is True
+    assert ac.human_approves(below, "stakeholder-needs") is False
 
 
 def test_no_shipped_loop_module_WRITES_an_approval_cell():

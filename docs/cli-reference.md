@@ -96,7 +96,7 @@ Contracts (interfaces): IF-014
 
 ### `scripts/check`
 _The check harness — one command that runs every quality gate locally and in CI._
-Contracts (interfaces): IF-013, IF-040, IF-144
+Contracts (interfaces): IF-013, IF-040, IF-144, IF-197
 
 | Option | Help |
 |---|---|
@@ -112,6 +112,8 @@ Contracts (interfaces): IF-013, IF-040, IF-144
 | `--staged-divergence` | run ONLY the staged-vs-worktree divergence detector and exit (OI-31): report every declared [generated] artifact modified in the worktree but absent from the index. Warn-only — exit 0 — unless --strict. This is the self-invoked body of the 'staged-divergence' step, not a separate contract |
 | `--strict` | with --staged-divergence: exit 1 on a divergent artifact instead of warning. The ruled promotion path (OI-31: error 'once it has run clean for a program'); the step itself does NOT pass it today |
 | `--approval-immutable` | run ONLY the re-attestation-brief immutability enforcer and exit (WI-503): refuse a STAGED change (other than a plain add) to an existing docs/ratify/<date>-*.md. Fail-closed by default — no --strict, no warn mode. This is the self-invoked body of the 'approval-immutable' step, not a separate contract |
+| `--held-status` | run ONLY the 'held-status' step's body and exit (SR-208): under the loop marker, refuse a staged change to a held status |
+| `--loop-trailer` | the commit-msg hook's loop floor (SR-209): under the loop marker, exit 1 unless the message carries this run's Loop-Session trailer |
 | `--jobs` | run the plan's steps concurrently on N workers (0 = one per step); every step is read-only or writes a distinct artifact, except the two trace.py steps, which share a lane. Default 1: sequential, with each step's output streamed live exactly as before |
 
 ### `scripts/check_complexity`

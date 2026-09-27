@@ -193,6 +193,7 @@ import configparser
 import difflib
 import re
 import sys
+import tomllib
 from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
@@ -208,17 +209,21 @@ from kitlib.config import utf8_console as _utf8_console
 # covers an in-process import (a test) whose sys.path does not yet carry
 # scripts/ — the same sanctioned-sibling idiom the engines use for each other.
 try:
+    from kitlib import authority as _kitauthority
     from kitlib import config as _kitconfig
     from kitlib import git as _kitgit
     from kitlib import ladder as _kitladder
+    from kitlib import provenance as _kitprovenance
     from kitlib import registry as _kitregistry
     from kitlib import spine as _kitspine
     from kitlib import stage as _kitstage
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from kitlib import authority as _kitauthority
     from kitlib import config as _kitconfig
     from kitlib import git as _kitgit
     from kitlib import ladder as _kitladder
+    from kitlib import provenance as _kitprovenance
     from kitlib import registry as _kitregistry
     from kitlib import spine as _kitspine
     from kitlib import stage as _kitstage
@@ -4672,6 +4677,67 @@ def critique_staleness_findings(root):
     ]
 
 
+# --- A loop commit that changed a human-held status (SR-210) -----------------
+# A changed status on a held rung is supposed to mean a human judged. The one
+# observation that would show otherwise is such a change arriving in a commit
+# the LOOP made, and the provenance floor makes every loop commit say so (its
+# `Loop-Session` trailer). So the committed history can falsify the premise
+# rather than the harness trusting it: each loop commit that moved a status
+# its own tree's dial held is one advisory line. Advisory, never the exit code:
+# the change has already landed, and what it asks for is a human's look.
+POLICY_REL = "docs/process.toml"
+
+
+def _commit_dial(root, rev):
+    """The dial `rev`'s OWN policy file declares, read pure: a missing file, a
+    missing dial or a legacy value is the most-held rung, and nothing prints -
+    one line per visited commit would bury the report it rides."""
+    text = _git(root, ["show", "{}:{}".format(rev, POLICY_REL)])
+    try:
+        policy = tomllib.loads(text) if text else {}
+    except tomllib.TOMLDecodeError:
+        policy = {}
+    return _kitauthority.dial_from_config(policy)
+
+
+def loop_held_status_findings(root):
+    """One advisory per status move a loop commit made on a rung its own dial
+    holds, naming the commit, the row and the rung.
+
+    Visits every non-merge commit HEAD reaches - trunk's history, where the
+    harness runs, and every lane commit merged into it - once each. A merge is
+    skipped because its changes are those of the commits it merges, each
+    visited on its own; a root commit is compared with the empty tree
+    (`acceptance_record.committed_status_moves`). Only a commit carrying a
+    well-formed `Loop-Session` trailer is judged, and it is judged against the
+    dial in ITS OWN tree, so raising the dial later re-judges nothing. `[]`
+    off git.
+
+    Implements: SR-210, LLR-249
+    """
+    log = _git(
+        root,
+        ["log", "--no-merges", "-i", "--grep=Loop-Session:", "--format=%H%x00%B%x1e"],
+    )
+    out = []
+    for record in (log or "").split("\x1e"):
+        sha, _nul, message = record.strip().partition("\x00")
+        session = sha and _kitprovenance.parse_loop_trailer(message)
+        if not session:
+            continue
+        dial = _commit_dial(root, sha)
+        subject = message.strip().splitlines()[0] if message.strip() else ""
+        moves = acceptance_record.committed_status_moves(root, sha)
+        for line in acceptance_record.held_status_lines(dial, moves):
+            out.append(
+                "loop commit {} ({!r}, Loop-Session {}) moved {}, a rung its own "
+                "approval level ({}) holds for a human".format(
+                    sha[:10], subject, session, line, dial
+                )
+            )
+    return out
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -4754,11 +4820,14 @@ def main():
     # is never itself a defect, so it must never join the exit code either — the
     # PROMOTABLE half of seam-TC coverage is `if_tc_coverage_findings`, below,
     # deliberately kept out of this loop.
+    # ...and the loop-commit held-status report (SR-210) rides it too: the
+    # change has already landed, so it asks for a human's look, never a red.
     for w in (
         interface_findings(root)
         + cross_component_advisories(root)
         + if_tc_allow_hygiene_findings(root)
         + codesymbol_crosscheck_findings(root)
+        + loop_held_status_findings(root)
     ):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 

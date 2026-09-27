@@ -89,9 +89,12 @@ Contract IF-186: the shared trunk bookkeeping commit, by importer.
     `(sha, None)` once trunk has advanced to a commit holding exactly the paths
     the step changed inside its scope plus the regeneration, or `(None,
     refusal)` with the reason named: a dirty in-scope path (nothing written), a
-    refusal from `write` or `before_advance`, a failed regeneration, or a git
-    failure; an exception from the step propagates with the restore's report
-    as a note. A path outside the scope is never touched or committed. A path
+    refusal from `write` or `before_advance`, a failed regeneration, a git
+    failure, or - under the loop marker - a tree that would change a status
+    the approval level holds for a human, judged before `commit-tree`; an
+    exception from the step propagates with the restore's report as a note.
+    Under the loop marker the commit's message carries the `Loop-Session`
+    trailer. A path outside the scope is never touched or committed. A path
     inside it is guarded at the pre-check only: an edit landing on one during
     the helper's run can be swept into the commit, overwritten by the
     regeneration, or restored over on a refusal - except that once the step
@@ -111,6 +114,7 @@ from pathlib import Path
 
 import agent_common as ac
 import trunk_step
+from kitlib import provenance as _kitprovenance
 
 # Where `trunk_step.py` is found. A module attribute rather than a literal in
 # the call, so a test can stand a failing regeneration in for the real one.
@@ -277,8 +281,19 @@ def _write_and_regenerate(root, write, label):
 def _commit_object(root, head, written, message):
     """The commit object for HEAD plus exactly `written`, built in a TEMPORARY
     index. `update-index --add --remove` takes an addition, an edit and a
-    deletion alike, through the repo's own clean filters."""
-    text = message() if callable(message) else message
+    deletion alike, through the repo's own clean filters.
+
+    Under the loop marker this is where the loop's two trunk writers meet the
+    held-status rule and the provenance trailer (SR-208, SR-209): the tree is
+    named, then judged, BEFORE `commit-tree` writes anything - plumbing never
+    reaches a commit hook, so the rule has to run here - and the message gains
+    the `Loop-Session` trailer. A person running the claim by hand passes
+    neither, because a person's commit is not the loop's. The dial is the one
+    committed in `head`, the tree this commit is built on.
+
+    Implements: SR-208, SR-209, LLR-246, LLR-248
+    """
+    text = _kitprovenance.with_loop_trailer(message() if callable(message) else message)
     with tempfile.TemporaryDirectory(prefix="bookkeeping-") as tmp:
         env = {"GIT_INDEX_FILE": str(Path(tmp) / "index")}
         _checked(root, "read-tree", head, why="HEAD could not seed an index", env=env)
@@ -290,6 +305,11 @@ def _commit_object(root, head, written, message):
             env=env,
         )
         tree = _checked(root, "write-tree", why="the tree could not be named", env=env)
+    # The dial is the one committed at `head`, the tree this commit is built
+    # on, never the working file: an uncommitted owner edit is not this tree.
+    _raise_on(
+        ac.loop_held_status_refusal(root, root, head, tree.strip(), trunk_rev=head)
+    )
     return _checked(
         root,
         "commit-tree",

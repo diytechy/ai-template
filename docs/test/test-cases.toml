@@ -2474,7 +2474,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-241]
-verifies = ["SR-208", "LLR-246"]
+verifies = ["SR-208", "LLR-246", "IF-196"]
 level = "Integration"
 method = "Driven on real git repositories with the dial holding DevStg-Boundary. A lane whose range changes a frame or assumption status, or adds or removes a row carrying one, is refused at the merge slot naming the registry, the row and the rung. The same change on a released rung merges. A registry missing from the rung map is held. With the loop marker set, the held-status pre-commit step refuses the same change in the index; without the marker, a person's commit passes. The claim writer, the mint bookkeeping writer, the handback residue writer and the telemetry writer each refuse, before writing, a tree that carries such a change."
 tier = "Full"
@@ -2485,7 +2485,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-242]
-verifies = ["SR-209", "LLR-247", "LLR-248"]
+verifies = ["SR-209", "LLR-247", "LLR-248", "IF-194", "IF-197"]
 level = "Integration"
 method = "The trailer helpers unit-tested: format and parse round-trip, the last trailer wins, and a missing, malformed or other-session trailer is refused naming the subject. A child process started by the dispatcher and by the loop's main entry sees the marker; the launcher scripts never set it. Driven on real git repositories: with the marker set, the commit-msg hook refuses a commit with no trailer and passes one with a valid trailer; without the marker a commit passes. The merge ladder refuses a lane whose range holds a plumbing commit without the trailer. The claim, refresh, merge, bookkeeping, handback-close and telemetry writers each produce messages carrying the trailer, and a refused telemetry commit is reported."
 tier = "Full"
@@ -2496,7 +2496,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-243]
-verifies = ["SR-210", "LLR-249"]
+verifies = ["SR-210", "LLR-249", "IF-195", "IF-196"]
 level = "Integration"
 method = "Driven on a real git repository, in a module registered as slow, with a history of three trunk commits — a loop-trailer commit changing a status on a rung its own tree's dial holds, one changing a status on a released rung, and one changing a held status without the trailer — plus a merged lane whose inner trailer-carrying commit changes a held status. The first trunk commit and the lane commit are reported, each once, naming the commit, the row and the rung; the merge commit itself is not reported. A root commit is compared with the empty tree. Raising the dial in a later commit does not change the verdict on earlier commits. A commit whose policy file has no dial is judged as most-held and prints no legacy warning. The pure dial comparison is unit-tested on each rung."
 tier = "Full"

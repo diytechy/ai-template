@@ -191,6 +191,10 @@ except ImportError:  # pragma: no cover - in-process fallback
 # the merge slot's — one definition, two readers, which is the whole point.
 from kitlib import verdict as kverdict
 
+# The loop's provenance vocabulary (SR-209): the marker `main` sets once per
+# run, and the trailer line every session it starts is told to write.
+from kitlib import provenance as kprovenance
+
 # The WI-218 split: the session-launch layer (slice B), the shared coordinator
 # primitives + the dual-plan runner (slice C), and (until Phase 5) the parallel dispatcher/
 # integrator (slice D) live in their own modules. These bindings keep
@@ -858,7 +862,7 @@ def compose_session_prompt(
     selected-but-absent core warns once, then runs without it (guardrails
     accelerate quick tiers, they never gate a run). warned_no_core is a shared
     mutable list used as the warn-once flag across calls."""
-    base = resume_reconcile + body
+    base = resume_reconcile + body + loop_provenance_note()
     if not guardrails_apply(guardrails_policy, model):
         return base, False
     core = guardrails_core(root)
@@ -874,6 +878,30 @@ def compose_session_prompt(
             file=sys.stderr,
         )
     return base, False
+
+
+def loop_provenance_note():
+    """The standing instruction a session under the loop marker owes every
+    commit, or "" for a session nobody marked (an interactive one).
+
+    A session is a process the loop started, so every commit it makes is the
+    loop's and must carry the `Loop-Session` trailer (SR-209): the commit-msg
+    hook refuses one without it where hooks are enabled, and the merge slot
+    re-checks every commit of the lane whether or not they are. Nothing in git
+    can add a trailer to `git commit -m` by itself, so the session is told the
+    exact line - value included - and where it goes: inside the final trailer
+    block, beside `WI:`, since git reads trailers from the last paragraph only
+    and a blank line between them would hide the `WI:` trailer."""
+    session = kprovenance.loop_session()
+    if session is None:
+        return ""
+    return (
+        "\n\nLOOP PROVENANCE: this session runs under the unattended loop. End "
+        "EVERY commit message with the trailer line `{}`, in the same final "
+        "trailer block as any `WI:` trailer (no blank line between them). A "
+        "commit without it is refused where the loop's commit floor runs, and "
+        "the lane will not merge.".format(kprovenance.format_loop_trailer(session))
+    )
 
 
 # A rubric path token as it appears in a TC's Parameters/Method cell.
@@ -4496,6 +4524,11 @@ def run_loop(ctx):
 def main():
     _utf8_console()
     args = parse_args()
+    if not args.interactive:
+        # The loop marker, once per run, in this process's own environment
+        # (SR-209): every session and subprocess this run starts inherits it,
+        # and a worker launched by the dispatcher keeps the run's session.
+        kprovenance.mark_loop_process()
     root, code = _resolve_root(args)
     if code is not None:
         return code

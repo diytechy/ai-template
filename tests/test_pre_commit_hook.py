@@ -554,6 +554,59 @@ def test_commit_msg_hook_scans_message(scaffold):
     assert ok.returncode == 0, ok.stdout + ok.stderr
 
 
+def test_commit_msg_hook_holds_a_loop_commit_to_its_provenance_trailer(scaffold):
+    # SR-209 (TC-242): a commit made from a process the unattended loop started
+    # carries the loop marker in its environment, and the commit floor refuses
+    # it unless its message ends with a valid `Loop-Session:` trailer naming
+    # that session. A person's commit carries no marker and needs no trailer,
+    # even while a loop runs in another checkout. Driven through REAL commits:
+    # a hooks directory holding only the shipped commit-msg hook, so the
+    # pre-commit floor (another test's subject) is not also run per commit.
+    skip_without_env_gates("posix-shell", "git")
+    session = "20260926T101500Z-a1b2c3"
+
+    def git(*args, env=None):
+        return subprocess.run(
+            ["git", *args],
+            cwd=str(scaffold),
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+
+    assert git("init").returncode == 0
+    pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
+    git("config", "user.name", "Test User")
+    git("config", "user.email", "someone@example.com")
+    hooks = scaffold / "msg-hooks"
+    hooks.mkdir()
+    shutil.copy2(scaffold / ".githooks" / "commit-msg", hooks / "commit-msg")
+    git("config", "core.hooksPath", "msg-hooks")
+    marked = dict(os.environ, KIT_LOOP_SESSION=session)
+    person = {k: v for k, v in os.environ.items() if k != "KIT_LOOP_SESSION"}
+
+    def commit(name, message, env):
+        (scaffold / name).write_text(name + "\n", encoding="utf-8")
+        assert git("add", name).returncode == 0
+        return git("commit", "-q", "-m", message, env=env)
+
+    head = git("rev-parse", "HEAD").stdout
+    refused = commit("a.txt", "loop: an unmarked write\n\nWI: WI-401", marked)
+    assert refused.returncode != 0, "a marked commit with no trailer must refuse"
+    assert "loop: an unmarked write" in refused.stdout + refused.stderr
+    assert git("rev-parse", "HEAD").stdout == head
+
+    passed = commit(
+        "a.txt",
+        "loop: a marked write\n\nWI: WI-401\nLoop-Session: {}".format(session),
+        marked,
+    )
+    assert passed.returncode == 0, passed.stdout + passed.stderr
+
+    ok = commit("b.txt", "a person's commit, with no trailer at all", person)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+
+
 def test_optional_agent_hook_configs_are_valid_json():
     # The optional extras ship as real JSON the user can drop into .claude/.gemini.
     for name in ("claude.settings.json", "gemini.settings.json"):

@@ -72,16 +72,20 @@ from pathlib import Path
 # covers an in-process import (a test) whose sys.path does not yet carry
 # scripts/ — the same sanctioned-sibling idiom the engines use for each other.
 try:
+    from kitlib import authority as _kitauthority
     from kitlib import config as _kitconfig
     from kitlib import ladder as _kitladder
+    from kitlib import provenance as _kitprovenance
     from kitlib import registry as _kitregistry
     from kitlib import secret_classes as _kitsecrets
     from kitlib import spine as _kitspine
     from kitlib import stage as _kitstage
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from kitlib import authority as _kitauthority
     from kitlib import config as _kitconfig
     from kitlib import ladder as _kitladder
+    from kitlib import provenance as _kitprovenance
     from kitlib import registry as _kitregistry
     from kitlib import secret_classes as _kitsecrets
     from kitlib import spine as _kitspine
@@ -100,6 +104,11 @@ try:
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from agent_session import build_argv, split_cmd
+
+# The held-status judgement the loop's writers owe before they commit
+# (`loop_held_status_refusal`): a leaf reader of two git trees, importing
+# nothing of the coordinator's, so the edge runs one way.
+import acceptance_record  # noqa: E402  (after the sibling path guard above)
 
 
 def scripts_fingerprint(scripts_dir=None):
@@ -611,17 +620,17 @@ def declared_policy(docs, legacy_name, default):
 #                  LLM verdict
 LEGACY_APPROVAL = {
     "attended": {
-        "human_approval_through": _kitladder.STAGE_RELEASE,
+        "human_approval_through": _kitauthority.LEGACY_GATE_DIALS["attended"],
         "keep_nondependent": False,
         "final_review": "always",
     },
     "single-approve": {
-        "human_approval_through": _kitstage.BELOW,
+        "human_approval_through": _kitauthority.LEGACY_GATE_DIALS["single-approve"],
         "keep_nondependent": True,
         "final_review": "always",
     },
     "autonomous": {
-        "human_approval_through": _kitstage.BELOW,
+        "human_approval_through": _kitauthority.LEGACY_GATE_DIALS["autonomous"],
         "keep_nondependent": True,
         "final_review": "off",
     },
@@ -677,14 +686,12 @@ PROCESS_KEY_VOCAB[("attestation", "human_approval_through")] = APPROVAL_DIAL_RUN
 # `process.toml`, and refusing it would stop their loop dead on a kit upgrade
 # for a spelling. `bootstrap.py --migrate-config` rewrites it in place, and the
 # warning names that command. There is no clamping arm: an int outside 0-4 was
-# malformed before the re-key and is malformed after it.
-LEGACY_DIAL_ORDINALS = {
-    0: _kitstage.BELOW,
-    1: _kitladder.STAGE_BOUNDARY,
-    2: _kitladder.STAGE_ARCH,
-    3: _kitladder.STAGE_LLREQS,
-    4: _kitladder.STAGE_RELEASE,
-}
+# malformed before the re-key and is malformed after it. The table's one home
+# is `kitlib.authority`, whose `read_dial` is the resolution every live reader
+# of the dial runs (the loop's writers, the pre-commit step and the merge slot
+# read committed trees through it, silently); re-exported here for the migrator
+# and the validator.
+LEGACY_DIAL_ORDINALS = _kitauthority.LEGACY_DIAL_ORDINALS
 
 PROCESS_KEY_LEGACY_VALUES[("attestation", "human_approval_through")] = frozenset(
     LEGACY_DIAL_ORDINALS
@@ -701,7 +708,7 @@ APPROVAL_FALLBACK = _kitladder.STAGE_RELEASE
 # mirroring the read-translate-warn shape WI-493 used for the retired 0-4
 # ordinal. `bootstrap.py --migrate-config` (`_migrate_dial_key_name`) is the
 # one-time fix that ends the warning.
-LEGACY_ATTESTATION_KEY = "human_ratification_through"
+LEGACY_ATTESTATION_KEY = _kitauthority.LEGACY_DIAL_KEY
 
 
 def legacy_approval(word, key):
@@ -733,65 +740,52 @@ def approval_through(docs):
     (`config_conflicts` refuses it loudly upstream; this is the behaviour for
     callers that did not run that gate.)
 
+    THE RESOLUTION IS `kitlib.authority.read_dial`, the one the loop's writers,
+    the pre-commit step and the merge slot run over a committed tree
+    (`authority.dial_at`), so a dial means one thing to every reader. This
+    function adds the two things only the LIVE working tree needs: the file
+    read, and the migration note, which is presentation and printed here alone.
+
     Implements: SR-137, SR-139, LLR-155
     """
-    table = process_config(docs).get("attestation")
-    if isinstance(table, dict):
-        value = table.get("human_approval_through")
-        used_legacy_key = False
-        if value is None and "human_approval_through" not in table:
-            # WI-499: the key itself was retired, not just a value it once
-            # held. A repo that never ran `--migrate-config` still carries
-            # the old spelling — read it, warn once per call, and translate
-            # exactly as if it had arrived under the live key.
-            value = table.get(LEGACY_ATTESTATION_KEY)
-            used_legacy_key = value is not None
-        if isinstance(value, str) and value.strip() in APPROVAL_DIAL_RUNGS:
-            if used_legacy_key:
-                print(
-                    "agent_common: [attestation] {} is RETIRED - reading it "
-                    "as `human_approval_through` (WI-499). Run `python "
-                    "project-trajectory/scripts/bootstrap.py --migrate-config "
-                    "--dest .` from your kept kit checkout to rewrite the "
-                    "key.".format(LEGACY_ATTESTATION_KEY),
-                    file=sys.stderr,
-                )
-            return value.strip()
-        if isinstance(value, int) and not isinstance(value, bool):
-            rung = LEGACY_DIAL_ORDINALS.get(value)
-            if rung is not None:
-                print(
-                    # ASCII ONLY, deliberately. This prints from a LIBRARY
-                    # path, so no caller is guaranteed to have run
-                    # `utf8_console()` first; an em-dash here reaches a cp1252
-                    # console as a replacement character in a message whose
-                    # whole job is to be read and acted on.
-                    "agent_common: [attestation] {} = {} is the RETIRED 0-4 "
-                    "ordinal{} - reading it as `{}` (WI-493{}). Run `python "
-                    "project-trajectory/scripts/bootstrap.py --migrate-config "
-                    "--dest .` from your kept kit checkout to rewrite "
-                    "it.".format(
-                        LEGACY_ATTESTATION_KEY
-                        if used_legacy_key
-                        else "human_approval_through",
-                        value,
-                        " under a RETIRED key name too (WI-499)"
-                        if used_legacy_key
-                        else "",
-                        rung,
-                        "+WI-499" if used_legacy_key else "",
-                    ),
-                    file=sys.stderr,
-                )
-                return rung
-            return APPROVAL_FALLBACK
-        if value is not None:
-            return APPROVAL_FALLBACK
-    legacy = legacy_approval(
-        declared_policy(docs, "gate-policy", "attended"),
-        "human_approval_through",
+    rung, legacy = _kitauthority.read_dial(
+        process_config(docs),
+        lambda: read_declared(Path(docs) / "gate-policy", None),
     )
-    return APPROVAL_FALLBACK if legacy is None else legacy
+    if legacy is not None:
+        print(_retired_dial_note(legacy, rung), file=sys.stderr)
+    return rung
+
+
+def _retired_dial_note(legacy, rung):
+    """The migration note for a retired dial spelling `read_dial` translated:
+    the retired key name, the retired 0-4 ordinal, or both.
+
+    ASCII ONLY, deliberately. This prints from a LIBRARY path, so no caller is
+    guaranteed to have run `utf8_console()` first; an em-dash here reaches a
+    cp1252 console as a replacement character in a message whose whole job is
+    to be read and acted on."""
+    fix = (
+        "Run `python project-trajectory/scripts/bootstrap.py --migrate-config "
+        "--dest .` from your kept kit checkout to rewrite {}."
+    )
+    retired_key = legacy["key"] == LEGACY_ATTESTATION_KEY
+    if legacy["ordinal"] is None:
+        return (
+            "agent_common: [attestation] {} is RETIRED - reading it as "
+            "`human_approval_through` (WI-499). ".format(LEGACY_ATTESTATION_KEY)
+            + fix.format("the key")
+        )
+    return (
+        "agent_common: [attestation] {} = {} is the RETIRED 0-4 ordinal{} - reading it as `{}` (WI-493{}). ".format(
+            legacy["key"],
+            legacy["ordinal"],
+            " under a RETIRED key name too (WI-499)" if retired_key else "",
+            rung,
+            "+WI-499" if retired_key else "",
+        )
+        + fix.format("it")
+    )
 
 
 # --- OI-21 -> WI-493: THE DIAL AND THE LADDER ARE ONE VOCABULARY --------------
@@ -861,11 +855,14 @@ LADDER_RUNGS = _kitladder.LADDER_RUNGS
 # registries are optional, so "I do not know which rung governs this" must
 # resolve toward more human involvement, exactly as `human_holds` resolves an
 # unreadable dial and an unrecognized rung.
-APPROVAL_RUNGS = {
-    "external": "DevStg-Boundary",
-    "interfaces": "DevStg-Arch",
-    "components": "DevStg-Arch",
-}
+#
+# THE TABLE LIVES IN `kitlib.authority` NOW (LLR-249) and this is the same
+# object, re-exported: the history check reads the rung of a PAST commit's
+# status change without importing the coordinator, and one table is what keeps
+# the loop's refusal and that report from disagreeing. The assumptions registry
+# joined it at the frame's rung (LLR-246).
+# Implements: SR-208, LLR-246
+APPROVAL_RUNGS = _kitauthority.APPROVAL_RUNGS
 
 
 # THE SPINE SIBLING OF THE TABLE ABOVE (owner ruling 2026-09-01, WI-572).
@@ -877,7 +874,7 @@ APPROVAL_RUNGS = {
 # both hold a registry path and neither holds a tier — and because a stem
 # survives a carrier change, which a `.toml` suffix would not.
 #
-# IT LIVES HERE BECAUSE IT HAS TWO CONSUMERS AND THEY MUST NOT DISAGREE. The
+# IT HAS ONE HOME BECAUSE IT HAS TWO CONSUMERS AND THEY MUST NOT DISAGREE. The
 # mint (`intake._released_drafted_rows`) uses it to decide which Drafted rows a
 # merge hands to an adjudicator; the brief
 # (`adjudicate_brief.first_approval_values`) uses it to decide which of the rows
@@ -888,11 +885,9 @@ APPROVAL_RUNGS = {
 # argument with no dial filter at all: at any dial holding a spine rung the
 # brief rendered the owner's held rows as this session's to approve. One table
 # with one predicate is what makes that unrepresentable rather than detected.
-SPINE_APPROVAL_RUNGS = {
-    "docs/requirements/system-requirements": _kitladder.STAGE_REQS,
-    "docs/requirements/low-level-requirements": _kitladder.STAGE_LLREQS,
-    "docs/test/test-cases": _kitladder.STAGE_TESTS,
-}
+#
+# Re-exported from `kitlib.authority` with its off-spine sibling (LLR-249).
+SPINE_APPROVAL_RUNGS = _kitauthority.SPINE_APPROVAL_RUNGS
 
 
 def human_holds(docs, stage):
@@ -926,16 +921,13 @@ def human_holds(docs, stage):
     must see it; here, the question is who approves, and the only safe answer to
     "I do not recognize this rung" is "the human does".
 
+    THE COMPARISON ITSELF IS `kitlib.authority.holds_under` (LLR-249), the
+    one the history check also makes against a past commit's dial; this
+    function supplies the LIVE dial.
+
     Implements: SR-137, SR-139, LLR-155
     """
-    dial = approval_through(docs)
-    if dial == _kitstage.BELOW:
-        return False
-    if dial == _kitladder.STAGE_RELEASE:
-        return True
-    if stage not in LADDER_RUNGS:
-        return True
-    return _kitladder.stage_ord(stage) <= _kitladder.stage_ord(dial)
+    return _kitauthority.holds_under(approval_through(docs), stage)
 
 
 def human_approves(docs, registry):
@@ -945,13 +937,14 @@ def human_approves(docs, registry):
     commit. The mirror of `human_holds`, and deliberately the same shape: one
     predicate, one home, consulting one table.
 
-    `registry` is the registry's STEM as the repo names it — `"interfaces"`,
-    `"external"`, `"components"` — not a path, because the caller that knows it
-    is a work item's action rather than a file reader.
+    `registry` is the registry's stem as the repo names it — `"interfaces"`,
+    `"external"`, `"components"` — or its path, read through
+    `kitlib.authority.rung_for`, the one map the held-status judgement reads,
+    which also answers the needs file's stakeholder list at `DevStg-Needs`.
 
     THREE ARMS, and only the third is new thinking:
       * MAPPED and its rung is human-held under `human_approval_through`
-        -> True (held). At this repo's `DevStg-Needs` dial that is none.
+        -> True (held). At a `DevStg-Needs` dial that is the needs file alone.
       * MAPPED and its rung is not held -> False (a loop session may write it,
         because the project has declared that rung machine-approvable).
       * UNMAPPED -> True (held), FAIL-SAFE. A status-carrying registry nobody has
@@ -968,7 +961,7 @@ def human_approves(docs, registry):
     which is where the first machine writer would land. That is the honest
     statement of scope: the predicate is enforced where a writer exists, and it
     exists so the next writer cannot be added without meeting it."""
-    rung = APPROVAL_RUNGS.get((registry or "").strip().lower())
+    rung = _kitauthority.rung_for(registry)
     if rung is None:
         return True
     return human_holds(docs, rung)
@@ -984,10 +977,10 @@ def human_approves_spine(docs, registry):
     with a rung is one nobody has ruled on, and the only safe answer to that is
     "the human does".
 
-    `registry` is the registry's STEM as `SPINE_APPROVAL_RUNGS` keys it —
-    `spine_carrier.stem("docs/test/test-cases.toml")`. Callers pass the stem
-    rather than the path so the carrier suffix is normalised in the one module
-    that owns "what a registry path is", not re-derived here.
+    `registry` is the registry's path or stem, read through
+    `kitlib.authority.rung_for` — the one map the held-status judgement reads
+    too, so the needs file (SN and its stakeholder list) is approved at
+    `DevStg-Needs` here as there, not unmapped and held at every dial.
 
     THE READER-SIDE CONTRACT, the half `human_approves` states for writers.
     Anything that tells a session which rows it may approve MUST filter through
@@ -996,10 +989,42 @@ def human_approves_spine(docs, registry):
     and a claim (`intake._released_drafted_rows` mints; `adjudicate_brief.
     first_approval_values` re-resolves live at composition time), and a filter
     applied at only one of them is a filter the brief does not have."""
-    rung = SPINE_APPROVAL_RUNGS.get(str(registry or "").strip())
+    rung = _kitauthority.rung_for(registry)
     if rung is None:
         return True
     return human_holds(docs, rung)
+
+
+def loop_held_status_refusal(
+    repo, trunk, base="HEAD", head=None, paths=None, trunk_rev="HEAD"
+):
+    """The held-status refusal a LOOP writer owes before it commits, or None.
+
+    None at once for a process the loop did not start (no loop marker): a
+    person's own commit is not governed (SR-208). Otherwise every status move
+    between `base` and `head` in `repo`'s off-spine registries is judged
+    against the dial COMMITTED at `trunk_rev` in the `trunk` checkout
+    (`kitlib.authority.dial_at`, the one silent, legacy-aware reader): the
+    TRUNK's, even when `repo` is a lane worktree, because a lane that lowered
+    its own dial would otherwise release itself; and a committed tree's, never
+    the trunk checkout's working file, because an uncommitted owner edit there
+    is not the tree the writer commits onto. `head=None` is the index (a `git
+    commit` writer); a commit or tree sha is the tree a plumbing writer is
+    about to commit; `paths` narrows the registries to the ones a path-scoped
+    commit takes.
+
+    ONE COMPOSITION for every loop writer — the bookkeeping commit, the
+    handback commits and the telemetry commit — so the reading of the marker
+    and the choice of dial cannot drift between them. The judgement itself is
+    `acceptance_record`'s, which the merge slot and the pre-commit step read
+    too."""
+    if _kitprovenance.loop_session() is None:
+        return None
+    moves = acceptance_record.staged_status_moves(repo, base, head, paths=paths)
+    if not moves:
+        return None
+    dial = _kitauthority.dial_at(trunk, trunk_rev)
+    return acceptance_record.held_status_refusal(dial, moves)
 
 
 def final_review(docs):
@@ -2825,7 +2850,17 @@ def commit_telemetry(root, session, label, paths, trailer=None):
     the READER and not only of the tree, and
     `test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel` drives
     this function's own empty carrier through it. Without a trailer the old rule
-    stands unchanged: no empty commits for bookkeeping."""
+    stands unchanged: no empty commits for bookkeeping.
+
+    UNDER THE LOOP MARKER the commit carries the loop's provenance trailer
+    (SR-209), and a tree that would change a status the dial holds for a human
+    is refused before it is written (SR-208) — telemetry names its paths, so
+    that tree is HEAD plus exactly those paths. A refused commit, that way or
+    by a hook's veto, is RETURNED as well as printed, so a caller can tell the
+    telemetry did not land; None means committed, or nothing to commit.
+
+    Implements: SR-208, SR-209, LLR-246, LLR-248
+    """
     rels = []
     for p in paths:
         try:
@@ -2833,18 +2868,22 @@ def commit_telemetry(root, session, label, paths, trailer=None):
         except ValueError:
             continue  # a path on another drive (Windows) — skip, never crash
     if not rels and not trailer:
-        return
+        return None
     code, out = git(root, "status", "--porcelain", "--", *rels) if rels else (0, "")
     dirty = code == 0 and bool(out.strip())
     if not dirty and not trailer:
-        return  # unchanged bookkeeping — no empty commit
+        return None  # unchanged bookkeeping — no empty commit
     code, staged = git(root, "diff", "--cached", "--name-only", "--", *rels)
     pre_staged = set(staged.splitlines()) if code == 0 else set()
     if dirty:
         git(root, "add", "--", *rels)
+    held = loop_held_status_refusal(root, root, paths=rels)
+    if held:
+        return _telemetry_veto(root, session, rels, pre_staged, held)
     code, out = git(root, *_telemetry_argv(session, label, trailer, dirty, rels))
     if code != 0:
-        _telemetry_veto(root, session, rels, pre_staged, out)
+        return _telemetry_veto(root, session, rels, pre_staged, out)
+    return None
 
 
 def _telemetry_argv(session, label, trailer, dirty, rels):
@@ -2869,6 +2908,7 @@ def _telemetry_argv(session, label, trailer, dirty, rels):
     msg = "telemetry: session {} {}".format(session, label)
     if trailer:
         msg += "\n\n" + trailer
+    msg = _kitprovenance.with_loop_trailer(msg)  # the loop's own mark, when marked
     argv = ["commit", "-q", "-m", msg, "--only"] + ([] if dirty else ["--allow-empty"])
     return argv + (["--", *rels] if rels else [])
 
@@ -2885,6 +2925,7 @@ def _telemetry_veto(root, session, rels, pre_staged, out):
     why = _failure_tail(out) or "hook veto or nothing staged"
     msg = "agent_loop: telemetry commit skipped (session {}): {}"
     print(msg.format(session, why), file=sys.stderr)
+    return why
 
 
 def next_session_number(iter_dir, train=None):
