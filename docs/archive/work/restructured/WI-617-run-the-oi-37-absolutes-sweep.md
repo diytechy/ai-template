@@ -9,6 +9,10 @@ priority = 2
 safety_class = "spine"
 +++
 
+## Deliverable
+
+Restructured into WI-616.
+
 ## Context
 
 OI-37's ruling (2026-08-18): "An absolute in a need is a promise every child

@@ -9,6 +9,10 @@ priority = 2
 safety_class = "spine"
 +++
 
+## Deliverable
+
+Restructured into WI-656.
+
 ## Context
 
 Filed at the owner's request, 2026-09-24.

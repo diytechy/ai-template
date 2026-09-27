@@ -10,6 +10,10 @@ safety_class = "ordinary"
 priority = 2
 +++
 
+## Deliverable
+
+Restructured into WI-615.
+
 ## Context
 
 `OI-72`'s ruling closes with a doctrine act the owner sized honestly: the

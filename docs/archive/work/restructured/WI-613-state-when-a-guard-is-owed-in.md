@@ -8,6 +8,10 @@ priority = 3
 safety_class = "ordinary"
 +++
 
+## Deliverable
+
+Restructured into WI-615.
+
 ## Context
 
 Ruled by the owner 2026-09-23 (sister plan S15, §4.2).

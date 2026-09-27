@@ -8,6 +8,10 @@ priority = 3
 safety_class = "ordinary"
 +++
 
+## Deliverable
+
+Restructured into WI-657.
+
 ## Context
 
 Ruled by the owner 2026-09-24 (sister plan S14, §4.1): pursued, re-scoped

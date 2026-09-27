@@ -9,6 +9,10 @@ priority = 4
 needs = ["WI-660"]
 +++
 
+## Deliverable
+
+Restructured into WI-651.
+
 ## Context
 
 WI-660 made `spine_carrier.draft_ids_from_text` take the needs carrier from

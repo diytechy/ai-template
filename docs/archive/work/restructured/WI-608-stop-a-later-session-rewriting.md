@@ -8,6 +8,10 @@ priority = 4
 safety_class = "ordinary"
 +++
 
+## Deliverable
+
+Restructured into WI-621.
+
 ## Context
 
 Found by the 2026-09-24 code-facts research, by reading, not driven;

@@ -1,14 +1,20 @@
 +++
 id = "WI-616"
-title = "Extend the absolutes check to needs, SRs and LLRs, warn-first, reusing the recorded-waiver grammar (S1)"
+title = "Absolutes: extend the check to needs, SRs and LLRs, then run the OI-37 sweep with it and route the rewrites for approval (S1)"
 workstream = "scripts"
 specref = "docs/plans/2026-09-23-owner-notes-spine-sessions-and-tests.md#11-absolutes-note-0"
-buildtier = "medium"
+buildtier = "strong"
 priority = 3
 safety_class = "ordinary"
+needs = []
+supersedes = "WI-617"
 +++
 
 ## Context
+
+**Consolidated 2026-09-27** (the coordinator's queue consolidation, the owner's direction in `docs/handoff-2026-09-27-coordinator.md`): this row absorbs WI-617 (Run the OI-37 absolutes sweep over the needs, then the SRs, and route the rewrites for approval (S1)). The sweep's input is the check's output; the 2026-09-26 handoff already sequenced them check-then-sweep. One lane, check first. The absorbed specs are archived under `docs/archive/work/restructured/` with their scope text untouched: read each one's Context there before building its part. Their Done-when blocks are quoted below under their old ids and remain this row's spec; decompose, don't paraphrase.
+
+The sweep's rewrites are Drafted amendments: needs go to the owner's brief, SRs to the spine-acts batch. Open-world absolutes that are really assumptions are listed for C2 (WI-655), not written into it.
 
 Ruled by the owner 2026-09-23 (sister plan S1, §1.1).
 
@@ -34,3 +40,13 @@ sweep is its own item.
   one (warned) and a waived one.
 - The spine-authoring skill carries the closed-domain question, kit master and
   this repo's copy in sync.
+- Every absorbed row's Done-when quoted below holds; their per-row commit-bar lines are this row's one bar.
+
+### From WI-617 (Done-when, verbatim)
+
+- Every absolute the check reports in a need is classified with a one-line
+  reason, and then every one in an SR.
+- Rewrites land as amendments for the approval route (needs to the owner's
+  brief, SRs to the adjudicator); none is approved in the lane.
+- Open-world absolutes that are really assumptions are listed for the
+  assumption tier's C2, not written into it.

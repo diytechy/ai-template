@@ -10,6 +10,10 @@ safety_class = "ordinary"
 priority = 2
 +++
 
+## Deliverable
+
+Restructured into WI-657.
+
 ## Context
 
 Phase 3 of the complexity-sensor plan (specref), minus what has shipped.

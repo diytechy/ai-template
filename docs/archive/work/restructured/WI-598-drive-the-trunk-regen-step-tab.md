@@ -7,6 +7,10 @@ buildtier = "medium"
 safety_class = "ordinary"
 +++
 
+## Deliverable
+
+Restructured into WI-672.
+
 ## Context
 
 Drafted by WI-592 (its ## Dispositions section) and minted at its merge - drafts-not-mints, ruling R1/R3.

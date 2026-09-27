@@ -10,6 +10,10 @@ bar = "DevStg-Tests"
 needs = ["WI-674"]
 +++
 
+## Deliverable
+
+Restructured into WI-582.
+
 ## Context
 
 Minted by hand at WI-674's integration from its `## Dispositions` draft (the first-approval adjudication of LLR-259 and TC-252 returned both rows).

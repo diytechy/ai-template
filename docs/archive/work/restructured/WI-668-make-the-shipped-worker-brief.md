@@ -8,6 +8,10 @@ safety_class = "ordinary"
 priority = 3
 +++
 
+## Deliverable
+
+Restructured into WI-615.
+
 ## Context
 
 Minted by hand at WI-602's integration from its `## Dispositions` draft (the

@@ -8,6 +8,10 @@ safety_class = "ordinary"
 priority = 6
 +++
 
+## Deliverable
+
+Restructured into WI-672.
+
 ## Context
 
 `ruff check tests/test_stage_ladder.py` warns: "Invalid `# noqa` directive

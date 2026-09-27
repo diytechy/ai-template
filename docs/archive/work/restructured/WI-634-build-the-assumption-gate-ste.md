@@ -10,6 +10,10 @@ safety_class = "ordinary"
 priority = 5
 +++
 
+## Deliverable
+
+Restructured into WI-638.
+
 ## Context
 
 Three built-in check steps behind one `[checks] assumption_gate` setting (absent reads off), advisory when off. Enabling the gate in this repository is the C5 act, taken after C4's approvals, not part of this item. Design rows: LLR-242, LLR-243, LLR-244. Test cases: TC-237, TC-238, TC-239. Derivation and decisions: `docs/plans/2026-09-25-assumption-tier-spine-map.md`.

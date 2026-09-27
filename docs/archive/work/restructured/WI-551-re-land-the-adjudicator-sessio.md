@@ -10,6 +10,10 @@ safety_class = "ordinary"
 supersedes = "WI-540"
 +++
 
+## Deliverable
+
+Restructured into WI-620.
+
 ## Context
 
 Drafted by WI-550 (its ## Dispositions section) and minted at its merge - drafts-not-mints, ruling R1/R3.

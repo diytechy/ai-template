@@ -7,7 +7,7 @@ buildtier = "strong"
 priority = 1
 safety_class = "ordinary"
 supersedes = "WI-521"
-needs = ["WI-579", "WI-580", "WI-581", "WI-551", "WI-583"]
+needs = ["WI-579", "WI-580", "WI-581", "WI-620", "WI-583"]
 +++
 
 ## Context

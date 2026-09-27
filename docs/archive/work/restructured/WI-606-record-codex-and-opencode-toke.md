@@ -8,6 +8,10 @@ priority = 3
 safety_class = "ordinary"
 +++
 
+## Deliverable
+
+Restructured into WI-620.
+
 ## Context
 
 Found by the 2026-09-23 telemetry research; filed by the owner from the

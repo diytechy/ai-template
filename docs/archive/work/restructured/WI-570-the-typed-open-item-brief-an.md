@@ -8,6 +8,10 @@ priority = 5
 safety_class = "ordinary"
 +++
 
+## Deliverable
+
+Restructured into WI-581.
+
 ## Context
 
 Filed 2026-09-01 (evening supervised session) at the owner's direction and

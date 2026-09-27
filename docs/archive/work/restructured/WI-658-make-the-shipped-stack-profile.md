@@ -8,6 +8,10 @@ safety_class = "ordinary"
 priority = 4
 +++
 
+## Deliverable
+
+Restructured into WI-656.
+
 ## Context
 
 The shipped `stack.ini.template` `[generated]` section declares three

@@ -8,6 +8,10 @@ safety_class = "ordinary"
 priority = 4
 +++
 
+## Deliverable
+
+Restructured into WI-581.
+
 ## Context
 
 The claim relinks references to the spec it moves from `queued/` to

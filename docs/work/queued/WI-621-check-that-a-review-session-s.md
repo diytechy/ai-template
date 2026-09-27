@@ -1,14 +1,20 @@
 +++
 id = "WI-621"
-title = "Check that a review session's commits add only its verdict file, after the session and again at merge (S9)"
+title = "Review and Done-when integrity: a review session adds only its verdict file, no later session rewrites a round, and a lane's Done-when is fixed at claim"
 workstream = "unattended"
 specref = "docs/plans/2026-09-23-owner-notes-spine-sessions-and-tests.md#33-fewer-tools-per-role-and-skills-handled-mechanically-note-1"
 buildtier = "medium"
-priority = 3
+priority = 4
 safety_class = "ordinary"
+needs = []
+supersedes = "WI-608;WI-622"
 +++
 
 ## Context
+
+**Consolidated 2026-09-27** (the coordinator's queue consolidation, the owner's direction in `docs/handoff-2026-09-27-coordinator.md`): this row absorbs WI-608 (Stop a later session rewriting an earlier review round's verdict file: reproduce first, then fix (review pack C4)), WI-622 (Require a Done-when before claim, and flag a lane that changes its own Done-when at merge (S13)). Each keeps the record a merge judges from being changed by the lane it judges: a reviewer's extra commits (WI-621), a later session rewriting an earlier round's verdict (WI-608), a builder rewriting its own Done-when (WI-622). All three sit in the claim and merge ladder. The absorbed specs are archived under `docs/archive/work/restructured/` with their scope text untouched: read each one's Context there before building its part. Their Done-when blocks are quoted below under their old ids and remain this row's spec; decompose, don't paraphrase.
+
+WI-608 reproduces first; its fix should fall out of this row's per-session range record (a round read as its session committed it) rather than add a refusal.
 
 Ruled by the owner: S9 (2026-09-23, "verify, don't isolate") and its
 mechanism (2026-09-24, review pack B2), sister plan §3.3 and §5.
@@ -51,3 +57,24 @@ second check.
   log records a bad range, and a review and a critique session that each
   write but do not commit their verdict, showing the loop does not route on
   it.
+- Every absorbed row's Done-when quoted below holds; their per-row commit-bar lines are this row's one bar.
+
+### From WI-608 (Done-when, verbatim)
+
+- A test reproduces the rewrite, or shows it cannot happen, in which case this
+  row closes with that evidence.
+- If reproduced: a round's verdict is read as its review session committed
+  it, so a later edit cannot change what the gate counts; prefer that to a
+  new refusal (the antidote question).
+- If a refusal is still needed, it names the round file and the commit that
+  touched it.
+
+### From WI-622 (Done-when, verbatim)
+
+- A work item without a `## Done-when` is not claimable: warn-first until the
+  open items lacking one are backfilled, then the claim refuses by name.
+- At merge, each Done-when item's text at claim is compared with its text at
+  merge, ticks and trailing evidence stripped, and any change is flagged to the
+  reviewer and the adjudicator.
+- Tests: a tick with evidence does not flag; a reworded item does; a work item
+  with no Done-when warns (and later refuses).

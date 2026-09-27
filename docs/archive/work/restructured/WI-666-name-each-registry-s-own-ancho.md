@@ -10,6 +10,10 @@ safety_class = "ordinary"
 priority = 4
 +++
 
+## Deliverable
+
+Restructured into WI-651.
+
 ## Context
 
 WI-646 made the amendment brief name, for each registry it shows, the commit

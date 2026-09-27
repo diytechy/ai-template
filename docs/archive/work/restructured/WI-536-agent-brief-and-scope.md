@@ -10,6 +10,10 @@ safety_class = "ordinary"
 priority = 2
 +++
 
+## Deliverable
+
+Restructured into WI-615.
+
 ## Context
 
 The knowledge-pack review's third plan folder, agent-brief-and-scope (specref

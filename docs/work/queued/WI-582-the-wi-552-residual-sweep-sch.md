@@ -1,15 +1,20 @@
 +++
 id = "WI-582"
-title = "The WI-552 residual sweep: the schedule-trace seam's test case, the validate docstring, the stage-currency exemption"
+title = "Spine authoring sweep: LLR-259/TC-252 fixes, the reversed sitting-2 rows, and the WI-552 residuals (IF-176's test case, the validate docstring, the stage-currency exemption)"
 workstream = "process"
 specref = "docs/archive/work/complete/WI-563-spot-check-the-clean-close-of.md"
 buildtier = "medium"
 priority = 4
 safety_class = "spine"
-supersedes = "WI-564;WI-565;WI-576"
+supersedes = "WI-564;WI-565;WI-576;WI-677;WI-644"
+needs = ["WI-674", "WI-643"]
 +++
 
 ## Context
+
+**Consolidated 2026-09-27** (the coordinator's queue consolidation, the owner's direction in `docs/handoff-2026-09-27-coordinator.md`): this row absorbs WI-677 (Make LLR-259 and TC-252 state only what their tests drive, then re-file their first approval), WI-644 (Sweep the rows that restate a reversed sitting-2 ruling (LLR-051/056/057/124/139, SR-151/152/175, IF-041)). All three author or amend spine text that the next batch adjudication judges, and none needs a design decision: WI-677 returns two Drafted rows with clause-level fixes, WI-644 amends nine rows to the redrawn C1 frame, and this row's residuals author IF-176's covering test case. One builder, one bar, and ONE batch of rows for one adjudicator instead of three adjudications. The absorbed specs are archived under `docs/archive/work/restructured/` with their scope text untouched: read each one's Context there before building its part. Their Done-when blocks are quoted below under their old ids and remain this row's spec; decompose, don't paraphrase.
+
+**Amendment authority (coordinator grant).** For WI-644's rows (LLR-051, LLR-056, LLR-057, LLR-124, LLR-139, SR-151, SR-152, SR-175, and IF-041's note), this lane amends APPROVED rows in place, status left `Approved`, and files no adjudication itself. LLR-259, TC-252 and any row authored here stay `Drafted`. At close, draft in `## Dispositions` one amendment adjudication over every approved row amended here and one first-approval adjudication over every Drafted row authored or returned here; the coordinator merges them with other lanes' rows into the next spine-acts batch.
 
 Minted by the owner-directed backlog restructure of 2026-09-02 (plan of record `docs/plans/2026-09-02-backlog-restructure-and-consolidation.md` §2.2; executed out of band as a hand trunk commit series, not by a lane). The absorbed rows are archived under `docs/archive/work/restructured/` with their scope text untouched; their Done-when blocks are QUOTED below under their old ids and remain the spec this row must satisfy — decompose, don't paraphrase.
 
@@ -64,6 +69,8 @@ minted at this row's merge performs the act.
 - The Deliverable records the process finding WI-564's scope names below, and
   `check_trajectory.py --strict` and the full suite pass with no spine row's
   `Status` flipped.
+- Every approved row amended here is left `Approved` and unanchored, every row authored or returned here is left `Drafted`, and the close drafts the two batch adjudications named in Context.
+- Every absorbed row's Done-when quoted below holds; their per-row commit-bar lines are this row's one bar.
 
 ### From WI-564 (scope, verbatim)
 
@@ -129,3 +136,14 @@ trunk with a stale `docs/stage`; the second half is the point — an exemption t
 also disarms trunk would trade a false red for a missed one. EXPLICITLY NOT IN
 SCOPE: any change to `derive_stage.py`'s own derivation, or to which artifacts
 the work-branch skip covers.
+
+### From WI-677 (Done-when, verbatim)
+
+- TC-252's method states only what its tests drive (the freshness check runs on every written brief, or the sentence is narrowed), and a test asserts the summary names the released chains' ids.
+- LLR-259's detail states the stated-empty owner's section the code renders when every owing chain is released.
+- A first-approval adjudication of LLR-259 and TC-252 is filed, and the commit bar passes.
+
+### From WI-644 (Done-when, verbatim)
+
+- Each of the nine rows is amended as a Drafted change stating the redrawn frame (the read crossing, the model-runner crossing, hosted CI as a party), through the ordinary adjudication route.
+- IF-041's tie-back to the model-runner crossing is left to the interface-allocation work, not done here.

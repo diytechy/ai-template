@@ -8,6 +8,10 @@ safety_class = "ordinary"
 priority = 3
 +++
 
+## Deliverable
+
+Restructured into WI-656.
+
 ## Context
 
 Drafted by WI-662's builder (its answer to that item's question) and filed at
