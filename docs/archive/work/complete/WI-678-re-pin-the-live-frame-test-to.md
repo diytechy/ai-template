@@ -2,11 +2,31 @@
 id = "WI-678"
 title = "Re-pin the live-frame test to the C1 frame, and settle IF-215 and IF-220's untied external endpoints"
 workstream = "tests"
-specref = "tests/test_traj_parse.py"
+specref = ""
 buildtier = "quick"
 safety_class = "ordinary"
 priority = 5
 +++
+
+## Deliverable
+
+`tests/test_traj_parse.py::test_frame_context_reads_this_repo_s_own_locked_frame`,
+the slow-tier pin of this repository's depth-0 frame, now pins the C1 frame.
+It had been red since the sitting.
+
+- **The frame:** 5 entities, the 7 crossings B-01, B-02, B-04, B-05, B-09,
+  B-10 and B-11, and 1 relationship.
+- **Crossings:** B-02 and the three new crossings are pinned unrealized
+  today; B-05's IF-080/IF-081 bundle still holds.
+- **Untied rows:** the list is IF-032, 036, 041, 151, 154, 155, 157, 168,
+  171 and 215, each stating its "No tie-back" reason.
+- **IF-220:** its `external:downstream adopter` consumer was wrong, since
+  only `baseline_snapshot` reads the act ledger. It is removed and the notes
+  say why.
+- **Review:** Sol asked for the new crossings to be pinned empty rather than
+  left unpinned (arbitration ruling 21), and the integrator applied it.
+- **Noted:** IF-041's notes still describe REL-003, which the sitting
+  promoted to B-10. Its re-tie is deferred by package §7.
 
 ## Context
 

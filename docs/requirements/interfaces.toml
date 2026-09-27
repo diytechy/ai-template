@@ -2002,13 +2002,13 @@ notes = """Read-only and off-clock: an act is found by the entry it added to the
 [interface.IF-220]
 rationale = """Re-accepting a risk is re-attesting its row, and a re-attestation moves no cell of the recorded copies, so which rows an approval act named must be written somewhere a reader may parse; the snapshot's stamp is prose that nothing parses. One typed entry per act, numbered, keeps two acts naming the same rows on the same day distinct, so the latest act always moves an accepted risk's anchor. The module that writes the record appends the entry in the same act and is the one that reads it back."""
 owner = "scripts/baseline_snapshot"
-consumers = ["scripts/acceptance_record", "external:downstream adopter"]
+consumers = ["scripts/acceptance_record"]
 channel = "file"
 data = "the act ledger acts.toml beside the snapshot copies: [[act]] seq (a positive integer, unique and increasing in file order), date (an ISO day), approved = [row ids], reattested = [row ids]"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
-notes = """Appended by every snapshot act that copied a registry, the first signing included, and by none that copied nothing. A malformed ledger is refused whole, never read in part: the snapshot act refuses before it moves any byte of the record, trace.py reports it on the always-on integrity floor, and risk_acceptance_act returns no anchor with the reason. risk_acceptance_act reads the entries a commit added by comparing entry numbers with its parent's. The acceptance record's mirror rules skip the file by name, as they skip the prose stamp, since it copies no live registry; the adopter commits it with the act's copies."""
+notes = """Appended by every snapshot act that copied a registry, the first signing included, and by none that copied nothing. A malformed ledger is refused whole, never read in part: the snapshot act refuses before it moves any byte of the record, trace.py reports it on the always-on integrity floor, and risk_acceptance_act returns no anchor with the reason. risk_acceptance_act reads the entries a commit added by comparing entry numbers with its parent's. The acceptance record's mirror rules skip the file by name, as they skip the prose stamp, since it copies no live registry. No party outside the kit reads the format: the owner writes it and reads it back, and the file reaches history as one more governed write of the act, committed with its copies."""
 
 [interface.IF-224]
 rationale = """The owner's approval brief sets apart the owing chains the human-approval dial releases, and which rows the dial releases is a question the loop already answers for the rows it mints and the adjudication brief it composes. Reading that one predicate keeps the owner's surface, the mint and the adjudicator agreeing about who signs a row; a rung table in the brief would be a third answer to one question, free to disagree with the other two."""

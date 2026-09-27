@@ -1,0 +1,5 @@
+76d52577 NOT YET SOUND
+
+- `tests/test_traj_parse.py:279`: B-09/B-10/B-11 are left entirely unpinned. §7 defers specific re-ties—IF-041 to B-10 and the dashboard IF—not every new crossing (`docs/plans/2026-09-25-c1-sitting-package.md:473`). Deferral makes current emptiness worth asserting, and does not support claiming B-11 is awaiting a re-tie. Counts and crossing IDs are otherwise pinned correctly.
+- No issue with IF-220: `baseline_snapshot` owns/parses the ledger (`project-trajectory/scripts/baseline_snapshot.py:164`); `acceptance_record` only excludes it by filename (`project-trajectory/scripts/acceptance_record.py:1202`). Removing the external consumer matches the Contract and actual readers.
+- No issue with IF-215: its adopter-driven CLI endpoint and “No tie-back” rationale match the established invocation model (`docs/requirements/interfaces.toml:1969`).

@@ -243,3 +243,24 @@ are marked as such.
     - *CLI.* The command stays release-only, per LLR-255.
     - *Minors.* The staging test gains a sentinel refusal and a pre-staged
       edit, and IF-102 names the function actually consumed.
+
+20. **WI-633 — split.**
+    - SOL on tier activation: LLR-241 says a tier is active once a row
+      "reads Approved", so counting `Founded` would be an amendment, not a
+      build choice.
+    - SOL on SR-203's "shows its cells": every assumption and surrogate
+      cell renders, status and obstacle-hat pointers included.
+    - INTEGRATOR, conditionally, on the evidence line's exclusion from the
+      brief's freshness gate. The line reads the clock, and gating on it
+      would redden the approval check on commits that change no row, which
+      is the case `_DERIVED_STAMP_PREFIXES` exists for. The exclusion stands
+      unless LLR-240 or TC-235 requires the gate, and the builder checks the
+      approved text before keeping it.
+
+21. **WI-678 — SOL, applied by the integrator.** The builder left the new
+    crossings B-09, B-10 and B-11 unpinned, citing §7's deferral. §7 defers
+    only IF-041's re-tie and the dashboard's own IF row, so today's emptiness
+    is worth asserting. A later re-tie then moves the pin deliberately
+    instead of passing in silence. It was a two-line edit, so the integrator
+    made it at landing. IF-220's consumer removal and IF-215's endpoint were
+    judged right.
