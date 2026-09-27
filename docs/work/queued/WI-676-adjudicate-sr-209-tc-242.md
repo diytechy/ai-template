@@ -14,6 +14,18 @@ priority = 2
 
 ## Context
 
+**State at the 2026-09-27 handoff: verdict landed, re-anchor owed.** The
+independent adjudicator's verdict, `VERDICT: MEANING rows=2`, is committed
+(`docs/reviews/wi-676-adjudicate-sr-209-tc-242/001-ADJUDICATE-7f98adc.md`),
+and Sol's cross-review of it was SOUND. Its re-anchor act (51970385 on
+`build/wi-676`) was taken at 7f98adc9, before WI-650 amended SR-217 and TC-250
+in the live files. On trunk that copy is no longer byte-identical to the live
+registries, and the approval-record rule refuses it. So the re-anchor is owed
+as ONE act together with WI-675's rows (SR-217, LLR-257, TC-250), taken on
+current trunk once WI-675 is adjudicated:
+`intake.py snapshot --reattests SR-209,TC-242,<WI-675's blessed rows>`.
+Close this item in that commit.
+
 SR-209's `acceptance_criteria` states the merge slot's lane-ownership rule:
 the slot sees commits, not processes, so a lane is the loop's when its claim,
 or any commit one of the loop's own writers made in its range, carries the
