@@ -2,13 +2,53 @@
 id = "WI-672"
 title = "The suite's own honesty: tie a test case's tier to smoke membership, drive the trunk regen table whole, print a module's spine-linked tests, and clear ruff's noqa warning"
 workstream = "quality"
-specref = "tests/conftest.py"
+specref = ""
 buildtier = "medium"
 safety_class = "spine"
 priority = 6
 needs = []
 supersedes = "WI-663;WI-598;WI-619"
 +++
+
+## Deliverable
+
+The suite's own honesty (squash of build/wi-672: b60e1f86, 7191fd08,
+ecbe72eb, 235d5870, 9049750d). Codex Sol reviewed four rounds (`sol-wi672.md`,
+`sol-wi672-fix.md`, `sol-wi672-fix2.md`); the last finding, a
+ruling-provenance sentence in SR-221's rationale, was deleted in 9049750d and
+checked by the coordinator. Wave-4 arbitration rulings 5, 9 and 14.
+
+- **WI-672: the tier rule.** `kitlib.spine.tier_findings(tcs, tier_of)` is
+  pure and shipped. An approved Smoke case none of whose evidence runs in
+  the smoke tier is an error, and an approved Full case none of whose
+  evidence is slow is an advisory. This repository gates it in the commit
+  bar through `tests/test_evidence_join.py`, which binds `tier_of` to
+  `conftest.smoke_tier_for`; the kit cannot read a stack's tiering
+  stack-neutrally. Live: 10 errors before and 0 after; 20 advisories after.
+  Settled cases: TC-067, TC-068, TC-077, TC-086, TC-100, TC-189 and TC-198
+  have their `tier` amended to Full in place (all their evidence is
+  subprocess, scaffold or git). TC-153 is split, with four in-memory tests
+  moved verbatim to `tests/test_baseline_drift.py`, so it stays Smoke.
+  TC-196 and TC-075 have their evidence re-pointed to new fast modules.
+  TC-068's dangling evidence is re-pointed, and its `expected` amended
+  (ruling 9).
+- **WI-619 (absorbed).** `trace.py --tests-for MODULE` (IF-233) lists the
+  test files the spine links to a module through design rows and test-case
+  evidence, honouring `--docs`. It rests on a new labelled derived SR-221
+  (SN-012; PERFORMANCE and TEST-ENGINEER lenses), LLR-263 and TC-258. The
+  shipped worker brief tells a builder to run those tests while iterating
+  and the commit bar before every commit.
+- **WI-598 (absorbed).** `tests/test_trunk_step_plan.py`'s two arms read
+  `REGEN_STEPS` whole, and a third case proves a new row is covered with no
+  test edit. `trunk_step.py` is unchanged.
+- **WI-663 (absorbed).** The `tests/test_stage_ladder.py` comment is reworded,
+  and `ruff check` is clean.
+
+Owed to the next spine-acts batch. Amendments: the `tier` cells of TC-067,
+TC-068, TC-077, TC-086, TC-100, TC-189 and TC-198, and TC-068's `expected`.
+First approvals: SR-221, LLR-260, LLR-263, TC-255, TC-258. Recorded: the
+live Full advisories (20) are left standing; TC-067, TC-068, TC-077, TC-100
+and TC-189 could return to Smoke if their tests drove `main()` in-process.
 
 ## Context
 

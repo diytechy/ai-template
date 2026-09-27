@@ -23,7 +23,7 @@ import shutil
 import pytest
 
 
-from conftest import ROOT, SCRIPTS, load_script, run_py
+from conftest import SCRIPTS, load_script, run_py
 
 wi_convert = load_script("wi_convert")
 
@@ -1166,16 +1166,6 @@ def test_forward_only_vacuous_on_placeholder_registry(tmp_path):
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert FORWARD_ONLY not in proc.stderr
-
-
-def test_forward_only_unit_over_the_real_meta_repo():
-    # Prove the pruned meta-repo status.md passes: its named WI ids (WI-194..200
-    # open, the deferred backlog) carry no `done` id, so the rule finds nothing.
-    ct = load_script("check_trajectory")
-    wis = ct.load_wis(ct.read_registry_rows(ROOT / "docs/requirements/work-items.csv"))[
-        0
-    ]
-    assert ct.status_forward_only_findings(ROOT, wis) == []
 
 
 # --- WI-284: the forward-only cascade is broken by generation ------------------

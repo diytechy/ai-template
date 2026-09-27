@@ -1,0 +1,9 @@
+<!-- Codex Sol (gpt-5.6-sol, medium) review of WI-672, read-only; prompt gist in ARBITRATION.md. Links re-rooted from the removed worktree. -->
+
+ecbe72eb NOT YET SOUND
+
+- **blocker** — `docs/requirements/system-requirements.toml:700-707` limits SR-157 to reporting registry-rule violations and their severity, but LLR-260 additionally assigns it the unrelated module-to-test listing and `--tests-for` CLI (`docs/requirements/low-level-requirements.toml:2713-2719`). Calling it “the same join read from the design side” does not derive that behavior from SR-157, so the original IF-233 traceability blocker remains. Split LLR-260: retain the tier rule under SR-157, and place the listing/IF-233 under an honestly derived SR/LLR chain; split or repoint TC-255 and the `Implements:` backlinks accordingly.
+
+- **major** — LLR-260 requires a parametrized node suffix to remain whole (`docs/requirements/low-level-requirements.toml:2718`), but `evidence_items` splits on every whitespace character (`project-trajectory/scripts/kitlib/spine.py:541-560`). For example, `test_x[param one]` becomes `test_x[param` plus a spurious path `one]`. The test uses only the whitespace-free `[live]` form (`tests/test_evidence_join.py:50-64`), so it cannot catch the defect. Parse separators outside bracketed node suffixes and add a spaced parametrization case asserting the exact pair.
+
+- **major** — The documented `--docs` option says its path is used as-is (`project-trajectory/scripts/trace.py:6523-6530`), but `--tests-for` passes only `args.root` through `_writer_mode` (`project-trajectory/scripts/trace.py:6379-6395`) and reconstructs `<root>/docs` (`project-trajectory/scripts/trace.py:6253-6275`). Consequently, a valid explicit docs tree is ignored and the command returns “no module.” Pass the resolved docs path into `_cmd_tests_for`, read both registries and `stack.ini` from it, and add a TC-255 test combining `--docs` with an unrelated `--root`.

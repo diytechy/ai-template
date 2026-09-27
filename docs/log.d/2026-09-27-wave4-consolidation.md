@@ -161,3 +161,30 @@ standing (a retroactive judgement from the kit's consolidate brief is one
 option), and then runs the machinery end to end on the live queue. Nothing
 open could hold it, because WI-582, which carried SR-220, has closed.
 **Open count: 16** (15 queued, 1 deferred): WI-582 closed and WI-679 filed.
+
+### WI-672 lands: the suite's own honesty (with WI-663, WI-598 and WI-619)
+
+One builder, four rounds (wave-4 rulings 5, 9 and 14). Approved test cases
+are now checked for a `tier` that is true of where their evidence runs:
+10 errors before, 0 after. Seven cases were amended to Full, TC-153 was
+split to stay Smoke, and TC-068's stale `expected` was amended.
+`trace.py --tests-for` lists a module's spine-linked tests under a new
+labelled derived SR-221. The trunk regen table is driven whole. Merge: five
+conflicts, each two independent additions (the SR-220 and SR-221 rows, the
+TC-253/254 and TC-255/258 rows, the IF-176 and IF-233 contracts, two RESYNC
+entries), all resolved by keeping both. **Open count: 15.**
+
+Next spine-acts batch, from this lane: amendments to the `tier` cells of
+TC-067, TC-068, TC-077, TC-086, TC-100, TC-189 and TC-198, and to TC-068's
+`expected`; first approvals SR-221, LLR-260, LLR-263, TC-255, TC-258.
+
+Commit bar at WI-672: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs --stale` 0 broken (one re-rooted review link fixed), smoke 1602
+passed / 3 skipped / 20 warnings (the warnings are the tier rule's 20 Full
+advisories). **Seconds FAILED: 90.7 s and 113.7 s**, taken while three
+builder lanes and a Codex review ran on the box. Recorded, not re-stamped.
+The tier grew by 27 tests in this lane, so the next session re-measures it
+on a quiet box before anything else lands. Touched slow modules
+(test_trace, test_trace_interfaces, test_bootstrap): the builder's run at
+235d5870, 159 passed / 1 skipped.

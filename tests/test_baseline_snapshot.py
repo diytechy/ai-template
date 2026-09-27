@@ -30,6 +30,10 @@ import subprocess
 from pathlib import Path
 
 import pytest
+
+# The tree helpers are shared with the in-process drift corners split out to
+# `test_baseline_drift.py`.
+from baseline_snapshot_fixtures import _first_row_at, _rewrite, _seeded, _tree
 from conftest import (
     ROOT,
     SCRIPTS,
@@ -46,52 +50,12 @@ AR = load_script("acceptance_record")
 SR_REL = "docs/requirements/system-requirements.toml"
 
 
-def _tree(tmp_path):
-    """A tmp repo carrying this repo's seven real registries at their real
-    paths. Everything the module reads resolves off `root`, so nothing else of
-    the repo needs to come along."""
-    root = tmp_path / "repo"
-    for rel in SNAP.SNAPSHOTTED:
-        src = ROOT / rel
-        if not src.is_file():
-            continue
-        dest = root / rel
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(src, dest)
-    return root
-
-
-def _seeded(tmp_path):
-    """`_tree` plus its first snapshot — the post-signing steady state every
-    reader test starts from."""
-    root = _tree(tmp_path)
-    SNAP.copy_live(root, seed=True)
-    return root
-
-
 def _seeded_with_a_drafted_sr(tmp_path):
     """A standing snapshot with one SR still below approval."""
     root = _tree(tmp_path)
     _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')
     SNAP.copy_live(root, seed=True)
     return root
-
-
-def _rewrite(root, rel, old, new):
-    """One substring edit to a live registry, asserted to have actually
-    changed something — a fixture that silently matched nothing would make
-    every assertion below vacuously true.
-
-    ON BYTES, NOT TEXT (2026-08-20). `Path.write_text` translates `\\n` to
-    `os.linesep`, so on Windows this "one substring edit" rewrote every line
-    ending in the file and git saw the WHOLE registry change — which is the same
-    fixture-CRLF class WI-465 swept, and it silently defeats any assertion about
-    WHAT a commit touched (it fooled the status-cell pickaxe into reporting a
-    traced-only commit as an approval). Bytes in, bytes out, endings untouched."""
-    path = root / rel
-    data = path.read_bytes()
-    assert old.encode("utf-8") in data, "fixture substring not found: " + old
-    path.write_bytes(data.replace(old.encode("utf-8"), new.encode("utf-8"), 1))
 
 
 def _append_new_approved_sr(root, sid):
@@ -108,17 +72,6 @@ def _append_new_approved_sr(root, sid):
     ).format(sid)
     with path.open("ab") as fh:
         fh.write(row.encode("utf-8"))
-
-
-def _first_row_at(root, status, exclude=()):
-    """`(id, row)` of the first SR carrying `status`, from the LIVE tree."""
-    spine_carrier = load_script("spine_carrier")
-    for row in spine_carrier.load(root / SR_REL, "SR-ID", keep_examples=False):
-        if (row.get("Status") or "").strip().lower() == status and row[
-            "SR-ID"
-        ] not in exclude:
-            return row["SR-ID"], row
-    raise AssertionError("no SR at status " + status + " in the fixture")
 
 
 def test_approves_format_and_parse_share_one_multi_registry_syntax():
@@ -1048,65 +1001,6 @@ def test_a_stale_other_carrier_file_is_DELETED_in_the_same_act(tmp_path):
 
 
 # --- drift --------------------------------------------------------------------
-
-
-def test_a_approved_cell_moving_under_an_approved_row_is_DRIFT(tmp_path):
-    root = _seeded(tmp_path)
-    sid, _row = _first_row_at(root, "approved")
-    snapshot = SNAP.load_all(root)
-    before = SNAP.rows_for(snapshot, SR_REL, "SR-ID")
-    live = {
-        r["SR-ID"]: r for r in load_script("spine_carrier").load(root / SR_REL, "SR-ID")
-    }
-    # Green first: a freshly copied tree has drifted nowhere. Without this the
-    # assertion below could pass on a comparison that always says "changed".
-    assert not SNAP.is_drifted(SR_REL, "SR-ID", live[sid], before)
-    _rewrite(root, SR_REL, live[sid]["Title"], live[sid]["Title"] + " (amended)")
-    live2 = {
-        r["SR-ID"]: r for r in load_script("spine_carrier").load(root / SR_REL, "SR-ID")
-    }
-    assert SNAP.is_drifted(SR_REL, "SR-ID", live2[sid], before)
-    assert set(SNAP.drifted_cells(SR_REL, "SR-ID", live2[sid], before)) == {"Title"}
-
-
-def test_a_TRACED_cell_moving_is_NOT_drift(tmp_path):
-    # The WI-388 ruling, unchanged by the new baseline: re-pointing what a
-    # requirement answers to routes to ADJUDICATION and never arms a re-attest
-    # window. If this ever flips, the re-tier campaign arms a window on every
-    # row it touches, which is the noise that gets a window ignored.
-    root = _seeded(tmp_path)
-    snapshot = SNAP.load_all(root)
-    before = SNAP.rows_for(snapshot, SR_REL, "SR-ID")
-    sid, row = _first_row_at(root, "approved")
-    moved = dict(row, Phase="99")  # `Phase` is declared TRACED for the SR tier
-    assert CT.spine_cell_class(SR_REL, "Phase") == "traced"
-    assert not SNAP.is_drifted(SR_REL, "SR-ID", moved, before)
-
-
-def test_a_row_below_approval_can_never_be_drifted(tmp_path):
-    # It has made no claim to fall from. A Drafted row differing from its snapshot
-    # copy is work in progress, not a broken attestation. The live registries
-    # carry no Drafted row since the 2026-08-20 signing, so the fixture makes
-    # its own (first SR flipped pre-seed) rather than borrowing one.
-    root = _tree(tmp_path)
-    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')
-    SNAP.copy_live(root, seed=True)
-    snapshot = SNAP.load_all(root)
-    before = SNAP.rows_for(snapshot, SR_REL, "SR-ID")
-    sid, row = _first_row_at(root, "drafted")
-    amended = dict(row, Title=(row.get("Title") or "") + " (amended)")
-    assert amended["Title"] != before[sid].get("Title")
-    assert not SNAP.is_drifted(SR_REL, "SR-ID", amended, before)
-
-
-def test_status_itself_is_never_the_amendment(tmp_path):
-    # `Status` is the MARKER, not the content: folding it into the comparison
-    # would make every flip look like an amendment and every real amendment
-    # invisible behind its own flip.
-    root = _seeded(tmp_path)
-    before = SNAP.rows_for(SNAP.load_all(root), SR_REL, "SR-ID")
-    sid, row = _first_row_at(root, "approved")
-    assert not SNAP.is_drifted(SR_REL, "SR-ID", dict(row, Status="Approved"), before)
 
 
 # --- the OFF-SPINE tiers, which carry no `Status` at all -----------------------

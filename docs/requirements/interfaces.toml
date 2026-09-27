@@ -2042,3 +2042,14 @@ version = "v1"
 status = "Drafted"
 component = "CMP-009"
 notes = """The facade hands each need's entry to traj_views.need_assumption_block, which renders it into the need's detail panel. An empty map is the view's omit condition, so a project without the tier renders byte-identically. The evidence level reads the clock, so an observation's expiry moves the page."""
+
+[interface.IF-233]
+rationale = """A builder changing a module needs the tests that pin it while iterating, and the spine already records that link: the module's design rows, the test cases verifying them and those cases' evidence. Printing it from the registries, one file per line, gives the inner loop a list a test runner takes whole, with no second map to keep in step and no file-name guess that misses the suites named for the script they drive."""
+owner = "scripts/trace"
+requestors = ["external:downstream adopter"]
+channel = "cli"
+data = "--tests-for MODULE: linked test files, one per line · exit 0 listed, 1 no module matches, 2 several match"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """No tie-back: the argv comes IN from the adopter's own session, and the frame declares no IN crossing for an invocation - asking which tests to run is the session's own act. The arm reads the design and test-case registries, runs no check and writes nothing."""

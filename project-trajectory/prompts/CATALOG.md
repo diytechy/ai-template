@@ -25,7 +25,7 @@ is a refusal rather than a silently empty instruction.
 | `ADJUDICATE-RED-TC` | [adjudicate-red-tc.template.md](adjudicate-red-tc.template.md) | `sha256:6c33cffc9727` | `{spine}`, `{tcs}`, `{verdict}`, `{wi}` |
 | `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:66976e43c582` | `{brief}`, `{verdict}` |
 | `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:e6809ad74365` | `{process_doc}`, `{scripts}`, `{trunk}`, `{verdict}`, `{wis}` |
-| `WORKER` | [worker.template.md](worker.template.md) | `sha256:43a7722b02c2` | `{assignment_block}`, `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{scripts}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
+| `WORKER` | [worker.template.md](worker.template.md) | `sha256:e091d2622829` | `{assignment_block}`, `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{scripts}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
 
 An operator override replaces a template per phase (`--prompt-map`); an
 overridden session's `# prompt-template:` names the override path, so the

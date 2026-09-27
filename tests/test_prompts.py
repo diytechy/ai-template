@@ -130,6 +130,17 @@ def test_the_worker_brief_carries_the_standing_state_ritual():
     assert "not a one-shot write at the end" in worker
 
 
+def test_the_worker_brief_points_at_the_spine_linked_tests_and_the_bar():
+    # The inner loop and the bar are two different runs: while iterating, the
+    # tests the spine links to the module being changed (derived by `trace.py
+    # --tests-for`, never a hand-kept map or a file-name guess); before every
+    # commit, the commit bar, whatever the inner loop said.
+    worker = pr.load(pr.WORKER)
+    assert "While iterating, run the tests the spine links to the module" in worker
+    assert "{scripts}/trace.py --tests-for <module>" in worker
+    assert "run the commit bar before every commit" in worker
+
+
 def test_the_worker_brief_never_leaks_into_a_judge_brief():
     # The negative assertion the review/critique suites make from the other
     # side: no shared preamble may put the worker's framing in a judge's brief.

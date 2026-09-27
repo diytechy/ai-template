@@ -80,7 +80,7 @@ endpoint that resolves to no LLR Module. The report always carries the
 attested-vs-mechanized approval split (process.md §4 "Attest") and, when the SR
 registry tags Aspect, a per-aspect count.
 
-Contracts: IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146, IF-166, IF-176
+Contracts: IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146, IF-166, IF-176, IF-233
 — the interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
@@ -140,7 +140,8 @@ Contract IF-145: the gate verdict the harness reads back from this CLI. Every
     from the file. Without a strict flag a checking run exits 0 having still
     printed every finding, so a harness reading the code alone must pass one.
     The writer arms (`--bump-ids`, `--correct-mark`, `--mint-approval-brief`)
-    run no checks and exit on their own refusal instead.
+    and the `--tests-for` listing run no checks and exit on their own refusal
+    instead.
 Contract IF-146: `docs/test/report.md`, rewritten whole on every checking run
     under `--docs`. It carries the metric counts, the SR -> LLR -> TC matrix,
     the orphan, integrity, status and advisory sections, the flag-gated
@@ -165,9 +166,21 @@ Contract IF-176: `open_item_states(root) -> {OI-###: status} | None` — the
     `{}`: None means there is nothing to resolve an open-item edge against,
     while an empty map means every named id is unresolved. The caller reads the
     answer and writes nothing back.
+
+Contract IF-233: `--tests-for MODULE` prints, one per line and sorted, the test
+    files the spine links to a module: the design rows whose `Module` cell
+    names it, the test cases whose `Verifies` names one of those rows, and the
+    paths under the declared test root (`stack.ini` `[paths] tests` in the docs
+    directory, default `tests`) in those cases' `Evidence`. The registries and
+    `stack.ini` are read from the directory `--docs` names, else
+    `<root>/docs`. MODULE is a declared module
+    path, a trailing part of one, or a stem. It runs no checks and exits 0 with
+    the listing, possibly empty; 1 when no design row names a module MODULE
+    matches; 2, naming the candidates, when it matches more than one.
 """
 
 import argparse
+import configparser
 import csv
 import io
 import datetime
@@ -6254,6 +6267,35 @@ def exit_code(findings, args):
     return 0
 
 
+def _cmd_tests_for(docs, wanted):
+    """`--tests-for MODULE` (IF-233): the test files the spine links to a
+    module, for a builder's inner loop.
+
+    Matching file names (`test_<module>`) finds a fraction of a module's tests:
+    its cases are named for the behaviour they drive, and a driven suite for the
+    script it runs. The spine already records the link, so this reads it
+    through `kitlib.spine.module_tests` and keeps no second map. Everything is
+    read from `docs`, the directory `--docs` resolves to, the declared test
+    root included (`stack.ini` `[paths] tests`, default `tests`).
+
+    Implements: SR-221, LLR-263
+    """
+    llr_path = docs / "requirements" / "low-level-requirements.toml"
+    llrs = spine_carrier.load(llr_path, "LLR-ID", keep_examples=False)
+    matched = _spine.resolve_modules(llrs, wanted)
+    if len(matched) != 1:
+        why = "; ".join(matched) or "no module a design row declares"
+        print("trace: --tests-for {!r} names {}".format(wanted, why), file=sys.stderr)
+        return 2 if matched else 1
+    tcs = spine_carrier.load(docs / "test" / "test-cases.toml", "TC-ID")
+    cp = configparser.ConfigParser(interpolation=None)
+    cp.read(docs / "stack.ini", encoding="utf-8-sig")  # an absent file reads empty
+    test_root = cp.get("paths", "tests", fallback="").strip() or "tests"
+    for path in _spine.module_tests(llrs, tcs, matched[0], test_root):
+        print(path)
+    return 0
+
+
 def _cmd_bump_ids(root):
     """`--bump-ids`: raise every mark to the live maximum and report what moved."""
     marks, raised = bump_watermark(root)
@@ -6353,11 +6395,13 @@ def _cmd_mint_approval_brief(root, slug, date):
     return 0
 
 
-def _writer_mode(args):
-    """`None` when neither writer flag is set, else the exit code of the one
-    that is. Split out of `main()` so the two mutually-exclusive early-return
-    branches cost that function ONE call, not two `if`s — the same reason
-    `resolve_plan` left `check.py`'s `main` in the WI-473 entry below."""
+def _writer_mode(args, docs):
+    """`None` when no act-and-exit flag is set, else the exit code of the one
+    that is: the writer arms, and the `--tests-for` listing, which writes
+    nothing but likewise runs no checks. Split out of `main()` so the
+    mutually-exclusive early-return branches cost that function ONE call, not
+    one `if` each — the same reason `resolve_plan` left `check.py`'s `main` in
+    the WI-473 entry below."""
     if args.bump_ids:
         return _cmd_bump_ids(args.root)
     if args.correct_mark:
@@ -6366,6 +6410,8 @@ def _writer_mode(args):
         return _cmd_mint_approval_brief(
             args.root, args.mint_approval_brief, args.mint_date
         )
+    if args.tests_for:
+        return _cmd_tests_for(docs, args.tests_for)
     return None
 
 
@@ -6479,6 +6525,13 @@ def main():
         help="with --approve, write the view to FILE (parent dirs created) instead "
         "of stdout, so a brief can link a stable path",
     )
+    ap.add_argument(
+        "--tests-for",
+        metavar="MODULE",
+        default=None,
+        help="print the test files the spine links to MODULE (a module path, a "
+        "trailing part of one, or a stem) and exit; runs no checks",
+    )
     # --root/--docs path flags: here and in check_perf.py an explicit --docs is
     # a PATH used as-is (--root ignored); check_docs.py instead treats --docs as
     # a name joined under --root (absolute paths still win via pathlib join).
@@ -6501,7 +6554,7 @@ def main():
     # Folded into one call rather than two `if`s at this level, which is
     # main()'s own complexity ceiling (`resolve_plan`/`floor_notice`'s WI-473
     # precedent: lift a branch OUT rather than let a dispatcher grow past it).
-    writer_code = _writer_mode(args)
+    writer_code = _writer_mode(args, docs)
     if writer_code is not None:
         # `main()` is called bare at the bottom of this module (like the
         # --approve --check path above), so a plain `return` sets no process

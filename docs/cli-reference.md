@@ -577,7 +577,7 @@ _spec_move.py — the link-aware spec-move ritual: move a registry/spec file and
 
 ### `scripts/trace`
 _Traceability join + orphan report for the SN->SR->LLR->TC registries._
-Contracts (interfaces): IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146, IF-166, IF-176
+Contracts (interfaces): IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146, IF-166, IF-176, IF-233
 
 | Option | Help |
 |---|---|
@@ -595,6 +595,7 @@ Contracts (interfaces): IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, 
 | `--approve` | emit ONLY the batch-scoped approval hierarchy (SN->SR->LLR->TC with prose) for SCOPE — a phase tag (e.g. v3) or an SR-id list (e.g. 'SR-052,SR-053'); a DevStg-Reqs/DevStg-Tests brief links this instead of hand-copying rows (WI-146). The reserved scope 'modified' (WI-316) emits the RE-ATTESTATION brief instead: per-cell before/after for every row owing a human act, against its copy in docs/archive/last_approved/. The reserved scope 'assumptions', or a DA-/SUR-id list, emits the assumption section: each assumption or surrogate owing an approval, or each one named, with the requirements citing it first. A scope matching nothing is REFUSED, never rendered empty. Prints to stdout unless --out is given; runs no checks |
 | `--check` | with --approve modified: FRESHNESS mode. Re-render the brief and compare it against the committed file (--out, else docs/ratify/CURRENT.md), exiting nonzero when they differ. A plain regenerate-and-compare — the baseline is a directory of files, so there is nothing a re-render could move (WI-325's blocker dissolved with the git-derived baseline). Silent no-op when there is no brief, or when no row owes an act (the window is closed and the brief is a record, not a live surface) |
 | `--out` | with --approve, write the view to FILE (parent dirs created) instead of stdout, so a brief can link a stable path |
+| `--tests-for` | print the test files the spine links to MODULE (a module path, a trailing part of one, or a stem) and exit; runs no checks |
 | `--root` | repo root (default: .) |
 | `--docs` | docs directory path, used as-is (default: <root>/docs) |
 

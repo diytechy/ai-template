@@ -127,3 +127,48 @@ arbiter makes are marked as such.
     with LF endings on every platform. A CRLF spec is outside the format, so
     the test cases state the invariant for the registry's LF format and the
     code is left alone.
+
+11. **WI-638, second fix round (c04f142a) — SOL, and the coordinator's
+    ruling 7 link arm is REVISED.** Ruling 7 had the checkpoint resolve an
+    internal committed link to its target's bytes. Sol shows why that is
+    wrong. On a Windows box without symlink privilege, the observation writer
+    hashes the link's text while the checkpoint hashes the target, so a fresh
+    result is due at once. A directory link to `.` makes the checkpoint copy
+    the snapshot into itself. The error was the coordinator's. **Revised
+    ruling: a committed link is not content.** One shared predicate excludes
+    links from both digests identically, and a declared input that is itself
+    a link reads as absent at both. Nothing is read through and nothing is
+    materialized. That is the smallest rule that is consistent, bounded and
+    platform-neutral.
+
+12. **WI-581, first round (017ef299) — SOL on both majors, BUILDER on the
+    minor.** The `[open_item]` cells must be non-empty strings, and the
+    quarantine's exact-file exemption (`docs/id-watermark`) is separated from
+    its directory-prefix exemptions. The builder writes the minted cells
+    through `wi_convert.toml_value`, the kit's one writer that reads back
+    exactly, instead of the plan's triple-quoted carrier. That stands: a
+    second, unescaped writer would be the larger defect. Copying `decision`
+    from `one_line` stands for now.
+
+13. **WI-657 lands partial by design.** Parts 1 to 3 (the ratchet, the
+    flag-axis measure, the shipping) are built. Part 4, WI-624's research
+    write-up, was not reached before the session limit. Parts 1 to 3 land
+    with their review. WI-657 stays open, re-scoped in its Context to the
+    research, rather than closing as partial, because nothing in it stopped
+    for a defect.
+
+14. **WI-672, third round (235d5870) — COORDINATOR on the blocker, SOL on
+    the minor.** Sol reads TC-068's `expected` amendment as outside
+    WI-672's authority. The coordinator granted it (ruling 9), and Sol's
+    base commit could not show that grant. The amendment stands for the
+    spine-acts batch. SR-221's rationale loses its closing ruling-provenance
+    sentence, which the spine-authoring skill's rationale-cell rule forbids.
+    The split under a labelled derived SR-221 (SN-012; PERFORMANCE and
+    TEST-ENGINEER lenses) is otherwise sound.
+
+15. **WI-657 (bc6a245f..9b530f88) — SOL on both.** The flag-axis command
+    must exit 0 in every case, as LLR-261 says, so an unreadable or
+    unparseable file becomes a SKIP line. TC-256's re-stamp clause gets two
+    counted modules, and its warning test asserts the report-only statement.
+    The builder then rebases onto trunk and redoes the complexity re-stamp,
+    because three landed lanes moved the measured functions.

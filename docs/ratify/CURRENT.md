@@ -10,7 +10,7 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into approval or arrives approved, `--approves` names it or `--reattests` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 17 changed, 28 added, 1 removed since the snapshot; ruling(s): WI-582, WI-604, WI-644, WI-677.
+- `docs/requirements/interfaces.toml` — 17 changed, 29 added, 1 removed since the snapshot; ruling(s): WI-582, WI-604, WI-644, WI-677.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): none cited.
 
 
@@ -21,7 +21,7 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 17 chain(s): SR-017, SR-139, SR-148, SR-151, SR-152, SR-157, SR-163, SR-168, SR-170, SR-175, SR-176, SR-180, SR-183, SR-184, SR-185, SR-186, SR-220</summary>
+<summary>Waiting for automated adjudication — 21 chain(s): SR-017, SR-139, SR-148, SR-151, SR-152, SR-157, SR-159, SR-161, SR-163, SR-164, SR-168, SR-170, SR-175, SR-176, SR-180, SR-183, SR-184, SR-185, SR-186, SR-220, SR-221</summary>
 
 ## SR-017 — Always-on secrets floor
 
@@ -134,11 +134,92 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
   - before: Three signals over OPEN rows only — Jaccard over title token sets at a deliberately high bar, shared `SR-Refs`, and a shared anchor-stripped `SpecRef` — each reported once per pair per signal with both ids, in sorted order. Printed on the warn-only line beside backlog staleness; never appended to `errors`. A shared stopword alone is never a signal, and the findings stay out of the exit code even under --strict.
   - after: Three signals over OPEN rows only — Jaccard over title token sets at a deliberately high bar, shared `SR-Refs`, and a shared `SpecRef`, where two SpecRefs share a spec when their files match and either their anchors are equal or one of them has none (two different sections of one document are two specs; a whole-document reference covers every section) — each reported once per pair per signal with both ids, in sorted order. Printed on the warn-only line beside backlog staleness; never appended to `errors`. A shared stopword alone is never a signal, and the findings stay out of the exit code even under --strict.
 
+### LLR LLR-260 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-260
+- **SR-Refs**: SR-157
+- **Title**: An approved test case's tier agrees with where its evidence runs
+- **Module**: project-trajectory/scripts/kitlib/spine.py
+- **CodeSymbol**: evidence_items/tier_findings
+- **Detail**: evidence_items(cell) reads a test case's Evidence cell as (path, node) pairs: items separated by `;` or whitespace outside a node's bracketed parametrization, a `path::node` id kept whole with its parametrized suffix, spaces inside the brackets included, a parenthetical note dropped and a `#anchor` read as its document. tier_findings(tcs, tier_of) judges only Approved test cases, taking the tier a path runs in from tier_of(path), which answers "smoke", "slow" or None for a path that is no test the harness runs: a case whose Tier is Smoke and none of whose evidence runs in the smoke tier is an error naming the case and its evidence paths, and a case whose Tier is Full and none of whose evidence is slow is an advisory in the same shape, never an error; a Release case and a case below approval are silent. This repository binds tier_of to its test-module tiering in a test of the per-commit tier, so an error fails the commit bar.
+- **Rationale**: SR-157 asks the harness to report every declared spine rule violation naming the at-fault row and cell, gating the declared failure set while advisory classes never change the exit code. A test case's Tier cell is such a rule: an approved Smoke case whose evidence runs only at close claims a per-commit run that does not happen, and nothing checked it, so evidence moved to a slow module left the cell false and a stale pin in that module unseen until a close run. The error names the case and its evidence and gates; the Full-side disagreement understates rather than falsifies, so it stays advisory. Which tier a test runs in is the harness's answer, which the kit cannot read in a stack-neutral way, so the rule is pure over a tier function the project binds. The Evidence cell's reading sits in this row because the rule is its first reader; the module listing reads the same cell through it.
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-075
+- **Evidence**
+  - before: tests/test_trajectory.py::test_clean_status_has_no_forward_only_finding; tests/test_trajectory.py::test_done_id_in_status_warns_plain_errors_strict; tests/test_trajectory.py::test_open_ids_in_status_are_not_a_finding; tests/test_trajectory.py::test_generated_marker_stands_the_rule_down; tests/test_trajectory.py::test_forward_only_opt_out_silences; tests/test_trajectory.py::test_forward_only_vacuous_on_placeholder_registry; tests/test_trajectory.py::test_forward_only_unit_over_the_real_meta_repo
+  - after: tests/test_trajectory.py::test_clean_status_has_no_forward_only_finding; tests/test_trajectory.py::test_done_id_in_status_warns_plain_errors_strict; tests/test_trajectory.py::test_open_ids_in_status_are_not_a_finding; tests/test_trajectory.py::test_generated_marker_stands_the_rule_down; tests/test_trajectory.py::test_forward_only_opt_out_silences; tests/test_trajectory.py::test_forward_only_vacuous_on_placeholder_registry; tests/test_trajectory_forward_only.py::test_forward_only_unit_over_the_real_meta_repo
+
+### TC TC-077
+- **Tier**
+  - before: Smoke
+  - after: Full
+
+### TC TC-086
+- **Tier**
+  - before: Smoke
+  - after: Full
+
+### TC TC-100
+- **Tier**
+  - before: Smoke
+  - after: Full
+
+### TC TC-255 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-255
+- **Verifies**: SR-157;LLR-260
+- **Level**: Unit
+- **Method**: In-process, over literal rows and the live registry read as data. THE CELL: an Evidence cell spelled with `;`, `; ` and a bare space, a parametrized node, a parenthetical note and a `#anchor` reads as the path and node pairs, and an empty or absent cell as none; a node whose parametrization carries a space or a `;` inside its brackets reads as one exact pair. THE TIER RULE, over a literal tier table: a Smoke case with slow-only evidence is one error naming it and its evidence; a Smoke case with one fast item is silent; a Smoke case whose only evidence is a document is an error; a Full case whose evidence is all fast, and one whose evidence is only a workflow file, are each one advisory and no error; a Full case with slow evidence and a Release case are silent; a Drafted Smoke case with slow-only evidence is not judged. THE LIVE CHECK: bound to this repository's module tiering, no approved Smoke case in the live registry lacks evidence in the smoke tier.
+- **Tier**: Smoke
+- **Expected**: Satisfies LLR-260: the cell read as its path and node pairs, a bracketed parametrization kept whole; a Smoke case with no smoke evidence an error and a Full case with no slow evidence an advisory, approved rows only; and the live registry clean of Smoke errors
+- **Automated**: Yes
+- **Evidence**: tests/test_evidence_join.py::test_evidence_items_read_every_spelling_the_registry_uses; tests/test_evidence_join.py::test_a_spaced_parametrization_stays_one_node; tests/test_evidence_join.py::test_a_smoke_case_with_slow_only_evidence_is_reported; tests/test_evidence_join.py::test_a_smoke_case_with_fast_evidence_is_not_reported; tests/test_evidence_join.py::test_a_smoke_case_whose_evidence_is_no_test_is_reported; tests/test_evidence_join.py::test_a_full_case_none_of_whose_evidence_is_slow_is_an_advisory; tests/test_evidence_join.py::test_a_full_case_with_slow_evidence_or_a_release_case_is_silent; tests/test_evidence_join.py::test_a_case_below_approval_is_not_judged; tests/test_evidence_join.py::test_every_approved_smoke_case_has_evidence_in_the_smoke_tier
+- **Status**: Drafted
+- **Phase**: 6
+
 ### LLR LLR-210 — REMOVED since the snapshot
 _In this SR's chain in the snapshot, out of it in the working tree — the row was deleted, re-parented, or superseded (a superseded row keeps existing; it leaves the chain)._
 
 ### TC TC-208 — REMOVED since the snapshot
 _In this SR's chain in the snapshot, out of it in the working tree — the row was deleted, re-parented, or superseded (a superseded row keeps existing; it leaves the chain)._
+
+## SR-159 — Declared-architecture connectivity gaps are reported
+
+> **Requirement.** The delivered harness shall report declared-architecture connectivity gaps — an unresolvable interface row, an undeclared endpoint or direction, a cross-component import no declared interface covers, an invalid spec interface citation, and a top view past its declared bound — warn-first with --strict gating, vacuous where the optional inventories are absent.
+
+> **Rationale.** Realizes SN-023 (the parts' connections are as much of the truth as the requirement tree, checked mechanically warn-first — the need's own words), SN-002 (interface rows stay resolvable) and SN-012 (opt-out and vacuity keep the layer free for non-users). One row: the delivered contract is one connectivity verdict; the checkers below it are its decomposition.
+
+
+### TC TC-067
+- **Tier**
+  - before: Smoke
+  - after: Full
+
+### TC TC-068
+_approved — re-attestation owed_
+- **Expected**
+  - before: Unknown or unjustified seams warn/fail strict; resolvable, justified, intra-module, and unarmed cases pass.
+  - after: Unknown seams warn/fail strict; resolvable, intra-module, and unarmed cases pass, and a draft seam cited with no rationale is silent.
+- **Tier**
+  - before: Smoke
+  - after: Full
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_trajectory_arch.py::test_spec_interfaces_unarmed_is_vacuous; tests/test_trajectory_arch.py::test_spec_interfaces_resolvable_passes; tests/test_trajectory_arch.py::test_spec_interfaces_unresolvable_warns_then_errors_under_strict; tests/test_trajectory_arch.py::test_spec_interfaces_proposed_needs_rationale; tests/test_trajectory_arch.py::test_spec_interfaces_intra_module_escape_passes
+  - after: tests/test_trajectory_arch.py::test_spec_interfaces_unarmed_is_vacuous; tests/test_trajectory_arch.py::test_spec_interfaces_resolvable_passes; tests/test_trajectory_arch.py::test_spec_interfaces_unresolvable_warns_then_errors_under_strict; tests/test_trajectory_arch.py::test_the_anti_duplication_rationale_arm_is_RETIRED_not_re_keyed; tests/test_trajectory_arch.py::test_spec_interfaces_intra_module_escape_passes
+
+## SR-161 — Decompositions carry a perspective record
+
+> **Requirement.** The delivered planning content shall leave, with every decomposition it produces, a machine-readable record of the declared review perspectives — each perspective's applicability decision and the requirements or explicit no-finding it produced — such that an applicable declared perspective missing from the record is a reportable finding.
+
+> **Rationale.** Realizes SN-036 — a decomposition produced from one perspective can look complete while omitting security, operations or first-use failures, and the omission is invisible unless the record names what was considered. SN-036 had no citing SR. The declared-perspective inventory is the ruled hats roster; the record proves coverage and provenance while adequacy stays with the independent review, exactly as the need partitions it.
+
+
+### TC TC-198
+- **Tier**
+  - before: Smoke
+  - after: Full
 
 ## SR-163 — Every shipped file maps to a stakeholder outcome
 
@@ -186,6 +267,18 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Status**: Drafted
 - **Phase**: 5
 
+## SR-164 — Stakeholder-need scope is a declared, checked value
+
+> **Requirement.** Every non-example stakeholder-need row shall carry a scope value from the declared closed vocabulary (template / this repository / both), with a missing or out-of-vocabulary value reported by the harness naming the row.
+
+> **Rationale.** Realizes SN-039 — a need whose audience is ambiguous gets enforced against the wrong repositories, and the scope must be a value a check can read, not inferred from prose. SN-039 had no citing SR. The field enters the SN carrier schema in the scheduled schema batch, per the need's own acceptance, rather than as a one-off column.
+
+
+### TC TC-189
+- **Tier**
+  - before: Smoke
+  - after: Full
+
 ## SR-168 — The state view shows current progress and next work
 
 > **Requirement.** The delivered generator set shall produce one state view from which a reviewer reads the adopted repository's completeness, its requirement decomposition, its planned and in-flight work, and any declared hold on that work, without consulting a second surface.
@@ -212,6 +305,11 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Detail**
   - before: Renders zero-or-one 'Paused since <since> - <reason>' bullet in the committed-tree-pure pending region from docs/work/pause - declared since verbatim, no clock, the since clause omitted when empty, fail-closed text on malformation pinned equal to the reader's placeholder. The bullet clears when the pause file is deleted; the pending surface is part of the adopted toolkit's generated project-state view (REL-002 output), not a system output.
   - after: Renders zero-or-one 'Paused since <since> - <reason>' bullet in the committed-tree-pure pending region from docs/work/pause - declared since verbatim, no clock, the since clause omitted when empty, fail-closed text on malformation pinned equal to the reader's placeholder. The bullet clears when the pause file is deleted; the pending surface is part of the generated project-state view, an output of the kit in operation read by the human operator across B-09.
+
+### TC TC-196
+- **Evidence**
+  - before: tests/test_traj_parse.py::test_frame_context_is_none_without_a_declared_frame; tests/test_traj_parse.py::test_frame_context_drops_the_blank_form_s_example_rows; tests/test_traj_parse.py::test_frame_context_joins_the_tie_backs_and_keeps_id_order; tests/test_traj_parse.py::test_frame_context_reads_this_repo_s_own_locked_frame; tests/test_traj_views.py::test_context_view_renders_the_declared_frame; tests/test_traj_views.py::test_context_view_states_an_untied_external_endpoint_with_its_reason; tests/test_traj_views.py::test_context_view_renders_above_the_derived_structure; tests/test_traj_views.py::test_context_view_omitted_and_byte_identical_without_a_frame; tests/test_traj_views.py::test_a_template_only_frame_renders_the_vacuous_view; tests/test_traj_views.py::test_context_view_alone_earns_the_how_tab
+  - after: tests/test_frame_context.py::test_frame_context_is_none_without_a_declared_frame; tests/test_frame_context.py::test_frame_context_drops_the_blank_form_s_example_rows; tests/test_frame_context.py::test_frame_context_joins_the_tie_backs_and_keeps_id_order; tests/test_frame_context.py::test_frame_context_reads_this_repo_s_own_locked_frame; tests/test_traj_views.py::test_context_view_renders_the_declared_frame; tests/test_traj_views.py::test_context_view_states_an_untied_external_endpoint_with_its_reason; tests/test_traj_views.py::test_context_view_renders_above_the_derived_structure; tests/test_traj_views.py::test_context_view_omitted_and_byte_identical_without_a_frame; tests/test_traj_views.py::test_a_template_only_frame_renders_the_vacuous_view; tests/test_traj_views.py::test_context_view_alone_earns_the_how_tab
 
 ## SR-170 — Shared authority surfaces are the serial actor's alone
 
@@ -522,5 +620,51 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **Evidence**: tests/test_consolidate_close.py::test_the_census_mints_one_row_and_refuses_a_second_while_it_is_pending; tests/test_consolidate_close.py::test_a_consolidate_verdict_absorbs_its_cluster_end_to_end; tests/test_consolidate_close.py::test_the_close_refuses_by_name_when_an_absorbed_row_was_claimed; tests/test_consolidate_close.py::test_queue_with_edge_writes_the_hard_needs_edge; tests/test_consolidate_close.py::test_return_to_draft_moves_the_row_back_with_the_finding_quoted
 - **Status**: Drafted
 - **Phase**: 5
+
+## SR-221 — A builder changing a module can list the tests the spine links to it
+
+> **Requirement.** The delivered harness shall list, for a module a design row names, the test files the requirement spine links to it through the design rows naming it, the test cases verifying those rows and those cases' evidence, derived from the registries with no hand-kept map.
+
+> **Rationale.** A DERIVED requirement: SN-012 asks that small changes stay cheap and does not name a test listing, so this obligation arrives through two lenses rather than through the need's text. The performance lens prices operator time: a builder iterating on one module either reruns the whole suite, minutes each time, or guesses which tests matter. The test-engineer lens names what the guess costs: tests picked by file name are a fraction of those exercising a module, because cases are named for the behaviour they drive and driven suites for the script they run, so a green from them has not examined what the module's design rows claim. The spine already records which tests carry each design row's evidence, so the listing reads it. It is an inner loop only: the commit bar still runs before every commit, and making a module-scoped subset the bar was considered and rejected, since a change that breaks another module through a shared import would then commit green.
+
+_No approved baseline — absent from the docs/archive/last_approved snapshot — awaiting its first approval; current state only._
+
+### SR SR-221 (current)
+- **SR-ID**: SR-221
+- **Title**: A builder changing a module can list the tests the spine links to it
+- **SN-Refs**: SN-012
+- **Boundary-Refs**: B-05
+- **Hat-Refs**: PERFORMANCE;TEST-ENGINEER
+- **Requirement**: The delivered harness shall list, for a module a design row names, the test files the requirement spine links to it through the design rows naming it, the test cases verifying those rows and those cases' evidence, derived from the registries with no hand-kept map.
+- **Rationale**: A DERIVED requirement: SN-012 asks that small changes stay cheap and does not name a test listing, so this obligation arrives through two lenses rather than through the need's text. The performance lens prices operator time: a builder iterating on one module either reruns the whole suite, minutes each time, or guesses which tests matter. The test-engineer lens names what the guess costs: tests picked by file name are a fraction of those exercising a module, because cases are named for the behaviour they drive and driven suites for the script they run, so a green from them has not examined what the module's design rows claim. The spine already records which tests carry each design row's evidence, so the listing reads it. It is an inner loop only: the commit bar still runs before every commit, and making a module-scoped subset the bar was considered and rejected, since a change that breaks another module through a shared import would then commit green.
+- **AcceptanceCriteria**: For a module a design row names, the listing names every test file under the declared test root that the evidence of a test case verifying one of its design rows cites, files not named for the module included, and no other file; a name matching no declared module and one matching several are each refused with a distinct outcome, the latter naming the candidates; the listing reads the registries of the repository it is pointed at; the commit bar is unchanged by it.
+- **Priority**: S
+- **Verification**: Test
+- **Status**: Drafted
+- **Phase**: 6
+
+### LLR LLR-263 (current)
+- **LLR-ID**: LLR-263
+- **SR-Refs**: SR-221
+- **Title**: The module listing: a module's design rows, the cases verifying them, their evidence files
+- **Module**: project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/trace.py
+- **CodeSymbol**: resolve_modules/module_tests/_cmd_tests_for
+- **Detail**: module_tests(llrs, tcs, module, test_root) returns, sorted and distinct, the evidence paths under test_root of every test case, of any status, whose Verifies names a design row whose Module cell names module, each Evidence cell read through evidence_items. resolve_modules(llrs, wanted) returns the declared Module paths that wanted names as the path, a trailing part of it or its stem, compared through norm_module. trace.py --tests-for MODULE prints module_tests for the one module MODULE resolves to, one path per line; the design and test-case registries and stack.ini are read from the directory --docs names, else <root>/docs, and the test root from stack.ini [paths] tests (default tests). It runs no check and exits 0, or 1 when MODULE names no declared module, or 2 naming the candidates when it names several.
+- **Rationale**: SR-221 asks for the tests the spine links to a module, derived from the registries. The link already exists as three cells the rows carry, a design row's Module and a test case's Verifies and Evidence, so the listing is a join over them and keeps no second map. A drafted case is included because the builder iterating is often the one writing it. Resolving by stem as well as by path keeps the command usable from a file name, and an ambiguous name is refused with its candidates rather than answered for one of them. It is an act-and-exit arm of the spine checker's command line, which already loads both registries, so it adds no command and no import edge; the pure half sits beside the Evidence cell's reading in the row vocabulary.
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-258 (current)
+- **TC-ID**: TC-258
+- **Verifies**: SR-221;LLR-263;IF-233
+- **Level**: Unit
+- **Method**: In-process, over a synthetic spine and the live registries read as data. THE MAP: a module's tests come through its design row and every case verifying it, a Drafted case included, while a case verifying only the SR, another module's case and a document among the evidence stay out, and a different test root yields none; a module resolves by its path, a trailing part with or without the extension, and its stem, a name matching two modules returns both and an unknown or empty name none. THE COMMAND, driven through trace.py's own entry point: --tests-for prints one path per line and exits 0; it reads the declared test root; pointed by --docs at a docs directory elsewhere while --root names an unrelated empty directory, it lists from that directory's registries and reads its stack.ini; it exits 1 naming the miss for an unknown module and 2 naming both candidates for an ambiguous one. THE LIVE MAP reaches coherence.py's suite, which no test file is named for, and frame_rules.py's driven suite beside its unit module.
+- **Tier**: Smoke
+- **Expected**: Satisfies LLR-263 and IF-233: the module map through design rows and resolution by path, suffix or stem; --tests-for listing from the registries and stack.ini of the directory --docs names, with exits 0, 1 and 2; and the live map reaching suites not named for their module
+- **Automated**: Yes
+- **Evidence**: tests/test_evidence_join.py::test_the_module_map_follows_design_rows_not_file_names; tests/test_evidence_join.py::test_a_module_resolves_by_path_suffix_or_stem; tests/test_evidence_join.py::test_the_command_prints_one_test_file_per_line; tests/test_evidence_join.py::test_the_command_reads_the_declared_test_root; tests/test_evidence_join.py::test_the_command_reads_the_docs_directory_it_is_pointed_at; tests/test_evidence_join.py::test_the_command_refuses_an_unknown_or_ambiguous_module; tests/test_evidence_join.py::test_the_live_map_reaches_tests_not_named_for_their_module
+- **Status**: Drafted
+- **Phase**: 6
 
 </details>

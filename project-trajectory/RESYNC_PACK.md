@@ -5942,6 +5942,33 @@ registries changes; expect fewer advisories, and read the new unbound-module
 count as a list of design rows whose `module` cell names a file that holds
 none of their code.
 
+### `trace.py --tests-for`, the evidence join, and the worker brief's inner loop [since 39c95c77]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `trace.py --tests-for MODULE` prints, one per line, the test
+files your spine links to a module: the design rows whose `Module` cell names
+it, the test cases whose `Verifies` names one of them, and the paths under
+`[paths] tests` in those cases' `Evidence`, reading the registries and
+`stack.ini` from the directory `--docs` names (else `docs/`). It runs no checks
+and writes nothing; it exits 1 when no design row names the module and 2 when
+the name matches several. The join lives in `scripts/kitlib/spine.py`
+(`evidence_items`, `resolve_modules`, `module_tests`) beside a pure rule,
+`tier_findings(tcs, tier_of)`, that reports an approved `Smoke` test case none
+of whose evidence runs in your smoke tier, and, as an advisory, a `Full` case
+none of whose evidence is slow. The kit cannot know how your harness tiers
+tests, so nothing ships that calls the rule: you bind `tier_of` to your
+harness, in a test your per-commit tier runs, if you want the check. The worker
+brief (`prompts/worker.template.md`) now tells a builder to run the listed tests
+while iterating and the commit bar before every commit, and
+`prompts/CATALOG.md` carries its new digest.
+
+**What to do.** Re-sync `scripts/trace.py`, `scripts/kitlib/spine.py`,
+`prompts/worker.template.md` and `prompts/CATALOG.md`. If you keep a
+customised worker brief, add the inner-loop sentence yourself and regenerate
+the catalogue with `gen_prompt_catalog.py`. Nothing in your registries
+changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

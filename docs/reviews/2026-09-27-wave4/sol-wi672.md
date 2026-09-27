@@ -1,0 +1,9 @@
+<!-- Codex Sol (gpt-5.6-sol, medium) review of WI-672, read-only; prompt gist in ARBITRATION.md. Links re-rooted from the removed worktree. -->
+
+b60e1f86 NOT YET SOUND
+
+- **blocker** — IF-233 is deliberately shipped without a design row or citing TC. `project-trajectory/scripts/trace.py:6253` implements the CLI, while `docs/if-tc-coverage-allow:223` acknowledges the omission. This contradicts the seam convention at `docs/plans/2026-09-26-assumption-tier-builder-brief.md:54-64`; tests at `tests/test_evidence_join.py:228-251` do not establish spine ownership. Draft design/test rows covering the CLI and evidence join, cite IF-233 from the TC, add `Implements:` backlinks, and remove the allowlist entry.
+
+- **major** — The Full-tier advisory is narrower than WI-672 specifies. The contract requires an advisory when no evidence is slow (`docs/work/queued/WI-672-tie-a-test-case-s-tier-to-the.md:33-34`), but `project-trajectory/scripts/kitlib/spine.py:637` additionally requires smoke evidence. `tests/test_evidence_join.py:105-112` incorrectly pins a Full case with only non-test evidence as silent. Advise for every approved Full case lacking slow evidence and reverse that test expectation.
+
+- **major** — TC-153 was re-tiered wholesale despite four fast, in-memory clauses. Its filesystem/pure-function cases are at `tests/test_baseline_snapshot.py:1053-1110`; only the premise at `tests/test_baseline_snapshot.py:1820-1845` requires git. Nevertheless, `docs/test/test-cases.toml:1510-1517` points the entire Full case at the slow module. Move the four pure cases and required helpers to a fast module, update the evidence pointer, and retain TC-153 as Smoke rather than amending it to Full.

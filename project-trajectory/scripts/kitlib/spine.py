@@ -84,6 +84,10 @@ __all__ = [
     "phase_num",
     "sn_all_ids",
     "sn_cited_ids",
+    "evidence_items",
+    "resolve_modules",
+    "module_tests",
+    "tier_findings",
     "SPINE_TIER_KEYS",
     "OFFSPINE_KEYS",
     "REGISTRY_KEYS",
@@ -511,8 +515,149 @@ def sn_cited_ids(srs):
     # coverage rung for the primitive it consumes, and `check_trajectory`'s
     # symbol check says so. No sibling module in this package carries a tag:
     # `LLR-197` claims the whole module, which is the right grain for a
-    # vocabulary whose eleven names are one decision.
+    # vocabulary whose eleven names are one decision. The evidence join below
+    # is the one exception: two separate decisions with design rows of their
+    # own, the tier rule (`LLR-260`) and the module listing (`LLR-263`), so
+    # each of its functions carries its row's tag.
     return {x for r in srs for x in refs(r.get("SN-Refs"))}
+
+
+# ---------------------------------------------------------------------------
+# THE EVIDENCE JOIN — what a test case's `Evidence` cell names, and what joins
+# through it.
+#
+# The cell is the spine's one pointer into the test tree, and two readers need
+# the same reading of it: `trace.py --tests-for`, which prints the tests the
+# spine links to a module (the module's design rows, the cases verifying them,
+# their evidence) for a builder's inner loop, and a project's binding of
+# `tier_findings` to its own harness. The cell's grammar is a statement of the
+# kind this module makes, beside `refs` and `norm_module`; the two joins over it
+# read rows only, so the package stays import-clean of `scripts/`.
+
+# One Evidence item, or a parenthetical note ("(to be extended at
+# implementation)"), which is never a path. `;` and whitespace separate items
+# only outside a node's bracketed parametrization, so `test_x[param one]` stays
+# one node.
+_EVIDENCE_TOKEN = re.compile(r"\([^)]*\)|(?:[^\s;\[(]|\[[^\]]*\])+")
+
+
+def evidence_items(cell):
+    """An `Evidence` cell as `[(path, node)]`, in cell order.
+
+    The live cells separate items by `;` or whitespace, name a whole file or one
+    node (`path::test`, a parametrized id included, spaces inside its brackets
+    kept), and may cite a document section (`doc.md#anchor`, read as the
+    document). `node` is `""` for a whole file.
+
+    Implements: SR-157, LLR-260
+
+    Contract:
+      Inputs:  cell: str | None — one TC row's `Evidence` cell
+      Outputs: list[tuple[str, str]] — `(path, node)`, paths `/`-separated
+    """
+    items = []
+    for token in _EVIDENCE_TOKEN.findall(cell or ""):
+        if token.startswith("("):
+            continue
+        path, _sep, node = token.partition("::")
+        path = path.split("#", 1)[0].replace("\\", "/")
+        if path:
+            items.append((path, node))
+    return items
+
+
+def resolve_modules(llrs, wanted):
+    """The sorted distinct `Module` paths the design rows declare that `wanted`
+    names: the path or a trailing part of it, with or without its extension,
+    compared through `norm_module` so a stem names it too.
+
+    Implements: SR-221, LLR-263
+
+    Contract:
+      Inputs:  llrs: iterable of LLR row mappings; wanted: str
+      Outputs: list[str] — every declared module `wanted` matches, sorted
+    """
+    key = norm_module(wanted).strip("/")
+    declared = {m for r in llrs for m in refs(r.get("Module"))}
+    return sorted(
+        m
+        for m in declared
+        if key and (norm_module(m) == key or norm_module(m).endswith("/" + key))
+    )
+
+
+def module_tests(llrs, tcs, module, test_root="tests"):
+    """The sorted test files the spine links to the declared module path
+    `module`: the design rows whose `Module` names it, the test cases whose
+    `Verifies` names one of them, and the paths under `test_root` in those
+    cases' `Evidence`. Every status is read, a drafted case included: a builder
+    iterating runs the case being written.
+
+    Implements: SR-221, LLR-263
+
+    Contract:
+      Inputs:  llrs, tcs: iterables of LLR and TC row mappings; module: a path
+               exactly as a `Module` cell spells it; test_root: the declared
+               test root
+      Outputs: list[str] — test file paths, sorted and distinct
+    """
+    design = {r.get("LLR-ID") for r in llrs if module in refs(r.get("Module"))}
+    prefix = test_root.strip().replace("\\", "/").strip("/") + "/"
+    return sorted(
+        {
+            path
+            for r in tcs
+            if design.intersection(refs(r.get("Verifies")))
+            for path, _node in evidence_items(r.get("Evidence"))
+            if path.startswith(prefix)
+        }
+    )
+
+
+def tier_findings(tcs, tier_of):
+    """`(errors, advisories)` for the approved test cases whose `Tier` cell
+    disagrees with the tier their evidence runs in.
+
+    WHICH TIER A TEST RUNS IN IS THE HARNESS'S ANSWER, so the rule takes it as
+    `tier_of(path)` -> `"smoke"`, `"slow"`, or None for a path that is no test
+    the harness runs, and gates wherever a project binds it: a harness that
+    tiers whole modules binds that table, one that marks single tests binds its
+    marks, and a binding run inside the per-commit tier gates every commit. A
+    `Smoke` case none of whose evidence runs in the smoke tier is an
+    error: its cell claims a per-commit run that does not happen. A `Full` case
+    none of whose evidence is slow is an advisory: either it runs per commit
+    after all, or it names no test the harness runs (a document, a workflow),
+    and the full tier runs everything, so the cell understates where its
+    evidence runs and is never false. A row below approval is not judged; its
+    tier is a proposal.
+
+    Implements: SR-157, LLR-260
+
+    Contract:
+      Inputs:  tcs: iterable of TC row mappings; tier_of: callable(path) ->
+               "smoke" | "slow" | None
+      Outputs: (list[str], list[str]) — error and advisory lines, each naming
+               the case and its evidence paths
+    """
+    errors, advisories = [], []
+    for r in tcs:
+        if not is_approved(r):
+            continue
+        tier = (r.get("Tier") or "").strip()
+        paths = sorted({p for p, _node in evidence_items(r.get("Evidence"))})
+        tiers = {tier_of(p) for p in paths}
+        if tier == "Smoke" and "smoke" not in tiers:
+            errors.append(
+                "{}: tier Smoke, but none of its evidence runs in the smoke tier "
+                "({})".format(r.get("TC-ID"), ", ".join(paths) or "no evidence")
+            )
+        elif tier == "Full" and "slow" not in tiers:
+            advisories.append(
+                "{}: tier Full, but none of its evidence is slow ({})".format(
+                    r.get("TC-ID"), ", ".join(paths) or "no evidence"
+                )
+            )
+    return errors, advisories
 
 
 # ---------------------------------------------------------------------------

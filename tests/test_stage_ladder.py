@@ -38,7 +38,7 @@ vocab = load_script("check_vocab")
 # A comparison operator with a `DevStg-`/`DevStg-` literal or a known
 # ladder-valued expression on either side. Deliberately a GREP and not an AST
 # walk: the rule is about what a reader can see in the source, the false-positive
-# cost is one `# noqa`-style exemption, and an AST rule would silently stop
+# cost is one noqa-style exemption comment, and an AST rule would silently stop
 # covering the shell scripts and templates a later change might add.
 _LEXICAL = re.compile(
     r"""

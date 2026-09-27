@@ -2709,3 +2709,25 @@ rationale = """The owner signs only what the approval level holds, yet keeps sig
 status = "Drafted"
 component = "CMP-006"
 phase = 6
+
+[design.LLR-260]
+sr_refs = ["SR-157"]
+title = "An approved test case's tier agrees with where its evidence runs"
+module = "project-trajectory/scripts/kitlib/spine.py"
+code_symbol = "evidence_items/tier_findings"
+detail = """evidence_items(cell) reads a test case's Evidence cell as (path, node) pairs: items separated by `;` or whitespace outside a node's bracketed parametrization, a `path::node` id kept whole with its parametrized suffix, spaces inside the brackets included, a parenthetical note dropped and a `#anchor` read as its document. tier_findings(tcs, tier_of) judges only Approved test cases, taking the tier a path runs in from tier_of(path), which answers "smoke", "slow" or None for a path that is no test the harness runs: a case whose Tier is Smoke and none of whose evidence runs in the smoke tier is an error naming the case and its evidence paths, and a case whose Tier is Full and none of whose evidence is slow is an advisory in the same shape, never an error; a Release case and a case below approval are silent. This repository binds tier_of to its test-module tiering in a test of the per-commit tier, so an error fails the commit bar."""
+rationale = """SR-157 asks the harness to report every declared spine rule violation naming the at-fault row and cell, gating the declared failure set while advisory classes never change the exit code. A test case's Tier cell is such a rule: an approved Smoke case whose evidence runs only at close claims a per-commit run that does not happen, and nothing checked it, so evidence moved to a slow module left the cell false and a stale pin in that module unseen until a close run. The error names the case and its evidence and gates; the Full-side disagreement understates rather than falsifies, so it stays advisory. Which tier a test runs in is the harness's answer, which the kit cannot read in a stack-neutral way, so the rule is pure over a tier function the project binds. The Evidence cell's reading sits in this row because the rule is its first reader; the module listing reads the same cell through it."""
+status = "Drafted"
+component = "CMP-006"
+phase = 6
+
+[design.LLR-263]
+sr_refs = ["SR-221"]
+title = "The module listing: a module's design rows, the cases verifying them, their evidence files"
+module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/trace.py"
+code_symbol = "resolve_modules/module_tests/_cmd_tests_for"
+detail = """module_tests(llrs, tcs, module, test_root) returns, sorted and distinct, the evidence paths under test_root of every test case, of any status, whose Verifies names a design row whose Module cell names module, each Evidence cell read through evidence_items. resolve_modules(llrs, wanted) returns the declared Module paths that wanted names as the path, a trailing part of it or its stem, compared through norm_module. trace.py --tests-for MODULE prints module_tests for the one module MODULE resolves to, one path per line; the design and test-case registries and stack.ini are read from the directory --docs names, else <root>/docs, and the test root from stack.ini [paths] tests (default tests). It runs no check and exits 0, or 1 when MODULE names no declared module, or 2 naming the candidates when it names several."""
+rationale = """SR-221 asks for the tests the spine links to a module, derived from the registries. The link already exists as three cells the rows carry, a design row's Module and a test case's Verifies and Evidence, so the listing is a join over them and keeps no second map. A drafted case is included because the builder iterating is often the one writing it. Resolving by stem as well as by path keeps the command usable from a file name, and an ambiguous name is refused with its candidates rather than answered for one of them. It is an act-and-exit arm of the spine checker's command line, which already loads both registries, so it adds no command and no import edge; the pure half sits beside the Evidence cell's reading in the row vocabulary."""
+status = "Drafted"
+component = "CMP-006"
+phase = 6

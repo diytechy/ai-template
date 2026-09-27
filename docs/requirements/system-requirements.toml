@@ -1522,3 +1522,16 @@ priority = "S"
 verification = "Test"
 status = "Drafted"
 phase = 5
+
+[requirement.SR-221]
+title = "A builder changing a module can list the tests the spine links to it"
+sn_refs = ["SN-012"]
+boundary_refs = ["B-05"]
+hat_refs = ["PERFORMANCE", "TEST-ENGINEER"]
+requirement = "The delivered harness shall list, for a module a design row names, the test files the requirement spine links to it through the design rows naming it, the test cases verifying those rows and those cases' evidence, derived from the registries with no hand-kept map."
+rationale = """A DERIVED requirement: SN-012 asks that small changes stay cheap and does not name a test listing, so this obligation arrives through two lenses rather than through the need's text. The performance lens prices operator time: a builder iterating on one module either reruns the whole suite, minutes each time, or guesses which tests matter. The test-engineer lens names what the guess costs: tests picked by file name are a fraction of those exercising a module, because cases are named for the behaviour they drive and driven suites for the script they run, so a green from them has not examined what the module's design rows claim. The spine already records which tests carry each design row's evidence, so the listing reads it. It is an inner loop only: the commit bar still runs before every commit, and making a module-scoped subset the bar was considered and rejected, since a change that breaks another module through a shared import would then commit green."""
+acceptance_criteria = "For a module a design row names, the listing names every test file under the declared test root that the evidence of a test case verifying one of its design rows cites, files not named for the module included, and no other file; a name matching no declared module and one matching several are each refused with a distinct outcome, the latter naming the candidates; the listing reads the registries of the repository it is pointed at; the commit bar is unchanged by it."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6

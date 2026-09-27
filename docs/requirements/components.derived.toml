@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 240
-seam_rows = 190
-requirements_placed = 107
+design_rows = 242
+seam_rows = 191
+requirements_placed = 108
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -74,6 +74,7 @@ sr_refs = [
   "SR-213",
   "SR-214",
   "SR-219",
+  "SR-221",
 ]
 sr_shared_refs = [
   "SR-017",
@@ -173,6 +174,8 @@ llr_refs = [
   "LLR-251",
   "LLR-252",
   "LLR-259",
+  "LLR-260",
+  "LLR-263",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -326,6 +329,7 @@ seam_boundary_refs = [
   "IF-194",
   "IF-199",
   "IF-224",
+  "IF-233",
 ]
 
 [component_view.CMP-007]
