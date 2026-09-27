@@ -1,0 +1,3 @@
+acbf0d77 NOT YET SOUND
+
+- [major] `project-trajectory/scripts/bookkeeping.py:226` — `_full_scope` still uses the checkout-loaded `trunk_step.regen_writes()`. An uncommitted `REGEN_STEPS` edit can omit a committed generator output from `written`, shaping the commit despite IF-186. Derive regeneration scope from the scratch tree’s committed kit too, and extend `tests/test_bookkeeping.py:640` to alter the loaded write table and prove the committed output remains scoped.

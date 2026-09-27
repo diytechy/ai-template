@@ -690,3 +690,31 @@ coordinator integrates in the handoff's order.
   open-items view up to date. Seconds **FAIL** at 490.9 s against 60 s
   (OI-92), recorded, not re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=ac96741e -->
+
+### The second wave landed: its record, and what the integration taught
+
+- **Record:** rulings 7 to 10 appended to the wave's `ARBITRATION.md`, and
+  the four follow-up reviews kept beside it (`sol-wi640-fix.md`,
+  `sol-wi632-fix.md`, `sol-wi636-fix.md`, `sol-wi647-fix.md`). The
+  coordinator's handoff and the status surface now point at the joint
+  amendment adjudication (SR-209, LLR-167, LLR-246, LLR-248, LLR-257, TC-061,
+  TC-145, TC-161, TC-222), which is owed before any snapshot refresh.
+- **What the builders' targeted runs could not see, and the coordinator's
+  merged bar did:** a template key with a second, hand-listed consumer
+  (`gen_cases.py`'s CSV header, WI-631); a composer budget that three
+  parallel items each fit alone (`analyze`, WI-630/631/637); a rung-order
+  interaction between items built apart (WI-629's approval act against
+  WI-636's held-status lane); an allow-listed pattern class (WI-636's git
+  subject read). Each was fixed at integration and recorded with its item.
+  A builder should run the smoke tier's detectors for any module it touches,
+  or the coordinator's bar stays the only place these surface.
+- **The seconds budget:** idle, with no builder running, the smoke tier took
+  160 to 535 s on this 4-core box against 60 s. OI-92 is not a load artefact
+  here.
+- **Commit bar:** a docs-only change (reviews, the handoff, `docs/status.md`,
+  this fragment): `check_docs --stale` OK; `check_trajectory --strict` clean;
+  `gen_open_items --check` up to date; the status lint (run by
+  `check_docs`) passes, `docs/status.md` at 141 of its 160 lines.
+
+Deferred open items: OI-82, OI-86, OI-87, OI-88, OI-89, OI-90, OI-91, OI-92,
+OI-93, OI-94 (unchanged; the fragment's declaration names them).

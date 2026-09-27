@@ -1,0 +1,5 @@
+f6538270 NOT YET SOUND
+
+- [blocker] `project-trajectory/scripts/baseline_snapshot.py:1280` — the exempt ledger has no integrity validation. Valid TOML with duplicate `seq` values makes `_acts_at` lose the later act (`:1523`), recreating the identical re-attestation defect; non-list `approved`/`reattested` values can crash parsing. Validate strict field types, row-ID syntax, unique monotonic sequences, and append-only history in staged/committed snapshot checks; fail closed.
+- [major] `project-trajectory/scripts/baseline_snapshot.py:1211` — malformed-ledger refusal occurs only after registry copies and the prose stamp have been modified (`:1246`). Validate the existing ledger before any snapshot mutation.
+- [minor] `tests/test_observation_writer.py:312` — the coverage assertion derives only carrier tiers; CSV, SN, and WI coverage remains hand-listed, so adding another registry CSV would not fail the census test. Derive the expected set from carrier tables, special loaders, and registry CSV headers, then assert equality.

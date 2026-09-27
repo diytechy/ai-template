@@ -81,3 +81,69 @@ applied every ruling except where noted.
 WI-636's two slot rungs were armed inconsistently (held-status for anyone,
 trailer only under the loop marker), which located the defect in the trailer
 gate rather than the ownership model.
+
+## Coordinator's rulings (resumed session, 2026-09-26)
+
+Ruled by the coordinator, per the handoff: the governing row text, then the
+ruling.
+
+7. **WI-640's follow-up (dc3f8c6b): pre-TOML approvals — BUILDER; the two
+   minors — SOL** (`sol-wi640-fix.md`). Approved LLR-257 reports "history
+   from before the TOML registries, as unreadable, never as a pass". The
+   follow-up narrows that: an approval the TOML history cannot date exactly
+   is bounded at or before the cutover commit, settles the order when the
+   bound falls at or before the landing, and is otherwise reported unread.
+   Sol's case (a TC approved under the CSV carrier, implemented later, the
+   cutover last) now reports unread, which the approved row already
+   required; it is a disclosed gap, never a false pass. Reading older-carrier
+   approvals is a capability no approved row asks for: a possible follow-up,
+   not owed. TC-250 is not amended: every clause of its method stays true,
+   and the widening is carried by the LLR-257 amendment already in the joint
+   adjudication. Owed, in a second follow-up: assert that an unread
+   requirement makes `--strict` exit 1, and qualify the README, template and
+   RESYNC wording that says every inexact approval is reported unread.
+
+8. **WI-632's follow-up (f6538270): the typed act ledger — SOL, narrowed**
+   (`sol-wi632-fix.md`). LLR-239 has the latest act move the anchor. The
+   ledger replaced the prose stamp so that anchor rests on a typed carrier,
+   and a typed carrier that admits duplicate `seq` values or wrong-typed cells
+   silently brings back the defect it was built to remove. Owed, in a second
+   follow-up: `parse_acts` fails closed on missing or wrong-typed fields, bad
+   row-id syntax and a `seq` that is not unique and strictly increasing; the
+   existing ledger is validated before any snapshot mutation; the digest
+   coverage test derives its expected set from the implementation's sources.
+   Not owed: cross-commit append-only detection, which is hardening of the
+   same class as trailer validity (ruling 4). The ledger itself departs from
+   the snapshot header's argument against a ledger (design §F8) because the
+   review required a typed carrier; it is declared in the module, and the
+   owner may rule on it.
+
+9. **WI-636's follow-up (10523f27): the builder's three deviations —
+   BUILDER; Sol's three findings — SOL** (`sol-wi636-fix.md`). (a) The
+   history check still reads a legacy dial as most-held: approved LLR-249's
+   detail prescribes exactly that ("an absent or legacy value reading as the
+   most-held rung with no printed warning"), and an approved row outranks the
+   review's cross-chain wish for one reader everywhere; the hook, writers and
+   slot share `authority.dial_at`/`read_dial`, and the history path errs held
+   and is advisory. Unifying it would need an LLR-249 amendment, not owed.
+   (b) A merge move counts only when its staged value differs from both
+   parents, so a loop refresh that brings in a person's approved status from
+   trunk is not refused; the drafted LLR-246 amendment states it. (c)
+   Loop-writer commits are recognised by subject pattern plus a well-formed
+   trailer; a forged subject only makes a lane more governed. Owed, in a
+   second follow-up: the live SN path through `rung_for` (the owed
+   DevStg-Needs classification), the RESYNC advice that a person may merge
+   a loop lane themselves removed, and the quarantine and mechanical-close
+   subjects driven by real-writer tests.
+
+10. **WI-647's follow-up (acbf0d77) — SOL** (`sol-wi647-fix.md`). IF-186
+    says no uncommitted edit shapes the bookkeeping commit, and the
+    follow-up already runs the scratch tree's committed trunk step for that
+    reason; the regeneration's write scope (`_full_scope` over
+    `trunk_step.regen_writes()`) still came from the loaded kit, so an
+    uncommitted edit to the write table could drop a committed output from
+    the commit. Owed: the write scope from the same committed kit whenever
+    it runs. Sol did not contest the builder's choices (the HEAD-planned
+    scope extended to the mint; a drift refusal after the branch cut leaves
+    the branch for the next claim to re-cut; an uncommitted added link
+    widens nothing; the TC-145 amendment's home), so they stand.

@@ -7,6 +7,18 @@ worktrees and are cross-reviewed by codex Sol. It replaces the
 its read order, its owner items and its build procedure, and this one
 overrides it where they differ.
 
+## Update: the wave has landed (resumed coordinator session, 2026-09-26)
+
+All ten items are on trunk, in the order above: WI-646 26c086dd, WI-629
+b0e693ac, WI-630 06ba0b1b, WI-631 8d25242f, WI-637 1be5ca08, WI-632
+ae3d625e, WI-640 c907d31b, WI-636 ac96741e, WI-647 9da560b6. Four
+follow-ups drew a second Sol round and a second fix, ruled in
+[ARBITRATION.md](reviews/2026-09-26-assumption-tier-wave2/ARBITRATION.md)
+rulings 7 to 10. The per-item record, the integrator's fixes where items
+met on trunk, and each bar are in the build log fragment. **Next: the joint
+amendment adjudication below**, then "After the wave". The worktrees and
+`build/wi-*` branches can be removed once nobody needs them.
+
 ## Read first, in this order
 
 1. [`CLAUDE.md`](../CLAUDE.md), the `session-protocol` and `spine-authoring`
@@ -113,7 +125,7 @@ This wave drafts amendments to approved rows, with status left Approved:
 | LLR-257 | `detail` | WI-640 follow-up |
 | SR-209 | acceptance | WI-636 follow-up |
 | LLR-246, LLR-248 | `detail` | WI-636 follow-up |
-| a TC covering the bookkeeping isolation tests | per WI-647's follow-up | WI-647 follow-up |
+| TC-145 | `method` (the bookkeeping isolation tests; `evidence` also moved) | WI-647 follow-up |
 
 Draft K also drafts LLR-167's two false clauses, LLR-140, LLR-154 and
 TC-144's misplaced clause (it absorbed the former draft H), and files the
@@ -144,9 +156,9 @@ amendment brief. It files the verdict, and one `intake.py snapshot
 - **Then build** WI-633, WI-634 and WI-638, the C1 sitting commit (WI-643),
   and the reversal sweep (WI-644), in the generated frontier's order.
 - **Interface ids:**
-  - Used so far: 190, 194–201, 208 and 214–217.
-  - Held for follow-ups: 220 and 221 (WI-632).
-  - Leave the other gaps. Next free: **IF-222**.
+  - Used by the wave: 190, 194–201, 208, 214–217 and 220.
+  - Pre-assigned this session and not used: 221–227; the watermark stands at
+    220, so a mint takes **IF-221** next.
 
 ## For the owner
 

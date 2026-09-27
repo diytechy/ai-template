@@ -31,8 +31,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   [handoff-2026-09-06.md](handoff-2026-09-06.md). Recheck Git and the generated
   frontier before choosing work; earlier handoffs and sitting checklists are
   historical context.
-- **Assumption tier — the build is under way:** the phase-6 chains are
-  approved down to test cases
+- **Assumption tier — the second build wave has landed:** next is the
+  joint amendment adjudication the coordinator's handoff owes. The phase-6
+  chains are approved down to test cases
   ([spine map](plans/2026-09-25-assumption-tier-spine-map.md)), the needs by
   the owner's stand-in, and the build proceeds test-first, one builder
   worktree per item in the generated frontier's order, each handed the
