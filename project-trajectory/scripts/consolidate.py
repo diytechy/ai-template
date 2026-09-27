@@ -177,7 +177,10 @@ def queue_digest(rows):
     (needs) and how it must be scheduled (safety_class). A row whose Deliverable
     or BuildTier was edited is the SAME queue question, and hashing those would
     re-arm the census on an edit that changes no answer. Sorted, so the digest
-    is a property of the set and not of directory order."""
+    is a property of the set and not of directory order.
+
+    Implements: SR-220, LLR-210
+    """
     keyed = sorted(
         (
             _cell(r, "WI-ID"),
@@ -196,7 +199,10 @@ def spine_digest(root):
     Whichever carrier is live (`spine_carrier.resolve`), and a registry that is
     ABSENT hashes as the empty string rather than being skipped — a repo that
     gains its first LLR registry has moved the spine, and the verdict recorded
-    against the old pair should read as stale."""
+    against the old pair should read as stale.
+
+    Implements: SR-220, LLR-210
+    """
     parts = []
     for rel in SPINE_REGISTRIES:
         live = spine_carrier.resolve(Path(root) / rel, spine_carrier.CARRIERS)
@@ -450,7 +456,10 @@ def clusters(root, rows):
     (see this module's header): two disjoint overlapping pairs are still one
     question, and only one judgement may be live at a time anyway. `findings` is
     every finding among the selected ids — including the ones a successor is in,
-    which are evidence the judge should see once the cluster exists."""
+    which are evidence the judge should see once the cluster exists.
+
+    Implements: SR-220, LLR-210
+    """
     findings = pair_findings(root, rows)
     seeds = _seed_pairs(rows, findings)
     ids = sorted({f[0] for f in seeds} | {f[1] for f in seeds})
@@ -528,7 +537,10 @@ def census_draft(root, rows=None):
 
     A REASON AND NOT AN EXCEPTION for every "nothing to do" arm, because the
     caller is a tick of the dispatcher and every one of these is an ordinary
-    state: an idle station with no overlap is the healthy case."""
+    state: an idle station with no overlap is the healthy case.
+
+    Implements: SR-220, LLR-210
+    """
     root = Path(root)
     rows = read_rows(root) if rows is None else rows
     refusal = _pending_refusal(rows)
@@ -636,7 +648,10 @@ def parse_verdict(text, where):
     adjudication row reads: the caller uses that to tell "not my case" from "my
     case, malformed". Everything else is a refusal and never a default — reading
     a malformed block as `queue` would silently discard a judgement that closes
-    rows."""
+    rows.
+
+    Implements: SR-220, LLR-210
+    """
     _head, sep, tail = text.partition("\n" + VERDICT_SECTION)
     if not sep:
         return None, None
@@ -937,7 +952,10 @@ def close_refusal(root, record, absorbed, rows, where, *, scope, drafts, recorde
        before the close must be evaluated before the close.
 
     `scope` is the closing row's `Adjudicates` set, `drafts` its parsed
-    `## Dispositions` blocks, `recorded` its `Digests` cell."""
+    `## Dispositions` blocks, `recorded` its `Digests` cell.
+
+    Implements: SR-220, LLR-210
+    """
     # ORDER IS THE MESSAGE. The specific causes run first: a row this verdict
     # names that a lane has claimed is reported BY NAME, before the drift rung
     # notices that the queue digest moved — which it also did, because that
@@ -1187,7 +1205,10 @@ def archive_absorbed(root, minted):
     chain), so archiving these rows at the close would make the mint refuse its
     own successor. It runs AFTER the edge re-point for the third half of the
     same argument: `_open_specs` skips a terminal row, so a dependent's edge has
-    to move while the absorbed row is still open."""
+    to move while the absorbed row is still open.
+
+    Implements: SR-220, LLR-210
+    """
     plan, refusal = _archive_plan(root, minted)
     if refusal:
         return [], refusal

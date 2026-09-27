@@ -20,7 +20,7 @@
 components = 4
 design_rows = 240
 seam_rows = 190
-requirements_placed = 106
+requirements_placed = 107
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -82,7 +82,6 @@ sr_shared_refs = [
   "SR-139",
   "SR-152",
   "SR-155",
-  "SR-157",
   "SR-163",
   "SR-176",
 ]
@@ -525,7 +524,6 @@ sr_refs = [
   "SR-154",
   "SR-155",
   "SR-156",
-  "SR-157",
   "SR-170",
   "SR-171",
   "SR-172",
@@ -537,12 +535,12 @@ sr_refs = [
   "SR-208",
   "SR-209",
   "SR-215",
+  "SR-220",
 ]
 sr_shared_refs = [
   "SR-139",
   "SR-146",
   "SR-155",
-  "SR-157",
   "SR-170",
   "SR-176",
 ]
@@ -615,7 +613,6 @@ llr_refs = [
 hat_refs = [
   "CONSISTENCY",
   "DATA-PROTECTION",
-  "FIRST-RUN-ADOPTER",
   "INTEGRITY-RECOVERABILITY",
   "LEGAL",
   "MAINTAINER",

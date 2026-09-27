@@ -1043,8 +1043,11 @@ def test_a_released_rungs_chain_renders_in_full_collapsed_under_its_label(tmp_pa
     assert proc.returncode == 0, proc.stdout + proc.stderr
     text = (tmp_path / "docs" / "ratify" / "CURRENT.md").read_text(encoding="utf-8")
     before, inside = _collapsed_block(text)
-    # The label, where a reader sees it with the block still collapsed.
-    assert "<summary>" in inside and _WAITING in inside.split("</summary>")[0]
+    # The label, where a reader sees it with the block still collapsed, and
+    # the released chain's id, so the closed block says what it holds.
+    summary = inside.split("</summary>")[0]
+    assert "<summary>" in inside and _WAITING in summary
+    assert "SR-002" in summary
     # The released chain is inside, rendered in FULL: its anchor text and every
     # owing row's cells, not a list of ids.
     assert "## SR-002 — Released parent" in inside
@@ -1089,6 +1092,8 @@ def test_the_shipped_default_dial_holds_every_chain_and_collapses_none(tmp_path)
         "## SR-003 — Mixed parent",
     ):
         assert heading in text
+    # The freshness gate reads the unsplit rendering back too.
+    assert _check(tmp_path).returncode == 0
 
 
 def test_a_dial_releasing_every_rung_leaves_the_owner_a_stated_empty_ask(tmp_path):
@@ -1101,9 +1106,13 @@ def test_a_dial_releasing_every_rung_leaves_the_owner_a_stated_empty_ask(tmp_pat
     text = (tmp_path / "docs" / "ratify" / "CURRENT.md").read_text(encoding="utf-8")
     before, inside = _collapsed_block(text)
     assert "No chain on a rung the human-approval dial holds" in before
+    summary = inside.split("</summary>")[0]
     for sid in ("SR-001", "SR-002", "SR-003"):
         assert "## {} —".format(sid) in inside
+        assert sid in summary
         assert sid not in before
+    # The freshness gate reads the block over an empty owner's section back.
+    assert _check(tmp_path).returncode == 0
 
 
 def _amended_split_tree(root):

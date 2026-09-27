@@ -121,6 +121,22 @@ def test_an_absent_registry_hashes_as_empty_rather_than_being_skipped(tmp_path):
     assert consolidate.spine_digest(repo) != absent
 
 
+def test_the_spine_digest_hashes_whichever_carrier_is_live(tmp_path):
+    """The digest resolves each registry through the spine carrier rather than
+    assuming its TOML path: a repo whose spine lives in CSV moves the digest
+    when a CSV row changes, and one holding both carriers is refused."""
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    csv_path = req / "system-requirements.csv"
+    csv_path.write_text("SR-ID,Title\nSR-001,one\n", encoding="utf-8", newline="\n")
+    before = consolidate.spine_digest(tmp_path)
+    csv_path.write_text("SR-ID,Title\nSR-001,two\n", encoding="utf-8", newline="\n")
+    assert consolidate.spine_digest(tmp_path) != before
+    (req / "system-requirements.toml").write_text("", encoding="utf-8", newline="\n")
+    with pytest.raises(SystemExit):
+        consolidate.spine_digest(tmp_path)
+
+
 @pytest.mark.parametrize(
     "cell", ["", "   ", "no-separator", "|only-spine", "only-queue|", "|"]
 )
@@ -224,6 +240,21 @@ def test_two_disjoint_overlapping_pairs_make_one_candidate_set(tmp_path):
     ids, findings = consolidate.clusters(repo, rows)
     assert ids == ["WI-001", "WI-002", "WI-003", "WI-004"]
     assert findings and "WI-005" not in "".join(f[2] for f in findings)
+
+
+def test_a_pair_only_the_queue_conflict_detector_sees_seeds_a_cluster(tmp_path):
+    """The census reads the validator's detector, not a copy of it: two rows
+    with near-identical titles, different specs, no open-item edge and no
+    shared module pair through `queue_conflict_pairs` alone, since neither of
+    the census's own signals sees them."""
+    rows = [
+        _row("WI-001", Title="harden widget parser", SpecRef="docs/plans/a.md"),
+        _row("WI-002", Title="harden widget parser", SpecRef="docs/plans/b.md"),
+    ]
+    repo = _repo(tmp_path, rows)
+    ids, findings = consolidate.clusters(repo, rows)
+    assert ids == ["WI-001", "WI-002"]
+    assert [f[2] for f in findings if "near-identical titles" in f[2]]
 
 
 def test_a_queue_with_no_overlap_selects_nothing(tmp_path):
@@ -749,14 +780,28 @@ def test_the_absorbed_set_has_exactly_one_carrier():
 # --- the pure text transforms --------------------------------------------------
 
 
+def without_deliverable(text, successor):
+    """`text` with exactly the Deliverable section a restructuring inserts cut
+    out: its heading, its one line and the blank line after it. Comparing the
+    rest to the original is what makes "the only edit" a checked claim."""
+    section = "\n## Deliverable\n\nRestructured into {}.\n".format(successor)
+    assert text.count(section) == 1, text
+    return text.replace(section, "", 1)
+
+
 def test_an_absorbed_rows_scope_text_is_byte_identical_and_specref_kept():
     """The same rule `partial` follows, for the reason R-F's carve-out states:
     the successor's lineage is worth nothing if the thread it continues has
     already been cut. The ONLY edit is the one-line Deliverable, and it sits
     BEFORE `## Context` — after it, `parse_spec_deliverable` clips the body and
     the cell reads EMPTY (R-A hard error)."""
-    original = _spec("\n## Context\n\nThe original scope, untouched.\n")
+    original = _spec(
+        "\n## Context\n\nThe original scope, untouched.\n"
+        "\n## Done-when\n\n1. Deliver it.\n"
+    )
     moved = consolidate.restructured_text(original, "WI-500")
+    # Every byte but the inserted section is the original's.
+    assert without_deliverable(moved, "WI-500") == original
     assert moved.index("## Deliverable") < moved.index("## Context")
     assert moved.count("Restructured into WI-500.") == 1
     assert 'specref = "docs/plans/a.md"' in moved

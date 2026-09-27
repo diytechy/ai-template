@@ -706,6 +706,9 @@ def test_oi_predecessor_resolves_against_the_open_items_registry():
     assert ct.validate(wis, frozenset(), frozenset({"OI-70"})) == []
     errs = ct.validate(wis, frozenset(), frozenset())
     assert any("OI-70" in e and "not a minted open item" in e for e in errs)
+    # `known_ois=None`, a repo with no registry, reads as the empty set: the
+    # same ERROR, never a pass left to the scheduler.
+    assert ct.validate(wis, frozenset()) == errs
 
 
 def test_oi_predecessor_is_never_a_dependency_cycle_node():

@@ -2,13 +2,72 @@
 id = "WI-582"
 title = "Spine authoring sweep: LLR-259/TC-252 fixes, the reversed sitting-2 rows, and the WI-552 residuals (IF-176's test case, the validate docstring, the stage-currency exemption)"
 workstream = "process"
-specref = "docs/archive/work/complete/WI-563-spot-check-the-clean-close-of.md"
+specref = ""
 buildtier = "medium"
 priority = 4
 safety_class = "spine"
 supersedes = "WI-564;WI-565;WI-576;WI-677;WI-644"
 needs = ["WI-674", "WI-643"]
 +++
+
+## Deliverable
+
+The spine authoring sweep (squash of build/wi-582: 01b378ad, 1803458b,
+ffb2c143, 6866935a). Codex Sol ran four rounds: NOT YET SOUND three times
+(`sol-wi582.md`, `sol-wi582-fix.md`, `sol-wi582-fix2.md`), then SOUND
+(`sol-wi582-fix3.md`). Wave-4 arbitration rulings 4, 8 and 10 record the
+disputes.
+
+- **The WI-552 residuals.** A new Drafted TC-253 covers IF-176 through
+  `schedule.load_oi_status`, over a real open-items registry and an absent
+  one, and IF-176 leaves `docs/if-tc-coverage-allow`. `trace.py` gains its
+  `Contract IF-176:` body. The `check_trajectory.validate` docstring now
+  states the `known_ois=None` coercion.
+  `test_this_repo_s_committed_stage_is_current` stands down on a claimed
+  work branch through `check._work_branch` and stays red on trunk with a
+  stale `docs/stage`, as shown in one scaffold across three states.
+- **WI-677 (absorbed).** LLR-259's `detail` states the owner's-section line
+  rendered when every owing chain is released. TC-252's summary-id clause
+  now has assertions, and the freshness check runs on all four written
+  briefs. Both rows stay Drafted.
+- **WI-644 (absorbed).** Nine rows no longer restate the reversed C1
+  sitting-2 rulings. Approved LLR-051, LLR-056, LLR-057, LLR-124 and LLR-139
+  (`detail`) and SR-151, SR-152 and SR-175 (`rationale`) are amended in place
+  to the redrawn frame (B-09, B-10, B-11; EXT-005, EXT-007). IF-041's note is
+  also amended; it is Drafted. The tie-back to the model-runner crossing is
+  left to interface allocation, and the three SRs' `boundary_refs` are left
+  for C2 (WI-655).
+- **WI-604's RETURN (folded).** A new Drafted SR-220 states the consolidation
+  obligation as a labelled derived requirement under SN-025. Its hat_refs
+  are UNATTENDED-OPS and PERFORMANCE, and its rationale feeds the gap back to
+  SN-025's acceptance. Approved SR-157's rationale citation of SN-025 is
+  corrected in place. LLR-210 re-points to SR-220 and names "the queued
+  rows", and all seven of its symbols carry `Implements: SR-220, LLR-210`.
+  TC-208 is split into a true Smoke case over fifteen in-memory tests, which
+  cites IF-177 and IF-178 with a test only each seam passes, and a new Full
+  TC-254 over the five end-to-end tests. Both scope-unchanged clauses compare
+  whole LF specs byte for byte. IF-177 and IF-178 leave the allowlist, and
+  their owners gain `Contract` bodies.
+
+**The process finding WI-564 named.** The WI-563 spot-check first passed the
+WI-552 close as clean because it declared a false no-toolchain Bar and skipped
+the mandated `check_trajectory.py --strict` run. The WI-552 close had
+introduced a cross-component import, `scripts/schedule` (CMP-008) ->
+`scripts/trace` (CMP-006), with no declared IF row. `--strict` exits 1 on it,
+while trunk just before the WI-552 merge (`b6e155d3^1`) is ERROR-free. A spot
+check that declares a Bar it did not run cannot attest a clean close. The seam
+was later declared as IF-176, and its covering test case is TC-253.
+
+**Owed to the next spine-acts batch** (not filed as rows here; the
+coordinator's handoff carries them into one batch):
+
+- amendments to judge: LLR-051, LLR-056, LLR-057, LLR-124, LLR-139, SR-151,
+  SR-152, SR-175, SR-157;
+- first approvals: SR-220, LLR-210, TC-208, TC-254, LLR-259, TC-252, TC-253.
+
+IF-041, IF-177 and IF-178 are off-spine and follow their own approval route.
+Their notes carry citation-frame advisories (a WI id and dates), which should
+be cleaned before any approval.
 
 ## Context
 

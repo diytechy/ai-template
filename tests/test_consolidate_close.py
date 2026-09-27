@@ -267,6 +267,11 @@ def test_a_consolidate_verdict_absorbs_its_cluster_end_to_end(tmp_path):
     says: three rows in `restructured/` naming the successor, one successor
     superseding all three, and the census silent afterwards."""
     root = cluster_repo(tmp_path)
+    queued = root / "docs" / "work" / "queued"
+    originals = {
+        wid: sorted(queued.glob(wid + "-*.md"))[0].read_bytes()
+        for wid in ("WI-401", "WI-402", "WI-403")
+    }
     minted, refusal = intake.mint_consolidation(root, busy=False)
     assert refusal is None, refusal
     judge_id = minted[0][0]
@@ -296,7 +301,12 @@ def test_a_consolidate_verdict_absorbs_its_cluster_end_to_end(tmp_path):
         assert hit, wid
         text = hit[0].read_text(encoding="utf-8")
         assert "Restructured into {}.".format(successor) in text
-        assert "The {} context.".format(wid) in text  # scope text untouched
+        # Scope text untouched: the archived spec, less exactly the inserted
+        # Deliverable section, is the queued spec byte for byte.
+        section = "\n## Deliverable\n\nRestructured into {}.\n".format(successor)
+        archived = hit[0].read_bytes()
+        assert archived.count(section.encode("utf-8")) == 1, text
+        assert archived.replace(section.encode("utf-8"), b"", 1) == originals[wid]
         assert 'specref = "docs/plans/one.md"' in text  # kept, like `partial`
         assert rows[wid]["Deliverable"] == "Restructured into {}.".format(successor)
     # 2. The successor names all three, in ONE list-valued cell.

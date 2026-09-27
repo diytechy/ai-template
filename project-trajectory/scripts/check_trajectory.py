@@ -152,7 +152,7 @@ exit-code change, at any stage); vacuous on a single-phase repo with no anchors
 Usage:  python scripts/check_trajectory.py [--root .] [--strict] [--staged]
 Exit codes: 0 clean / vacuous / opted-out, 1 a hard error, 2 usage/environment.
 
-Contracts: IF-009, IF-056, IF-082, IF-083, IF-084 — the interface seams
+Contracts: IF-009, IF-056, IF-082, IF-083, IF-084, IF-177 — the interface seams
 this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
@@ -185,6 +185,14 @@ Contract IF-083: the same loader surface as taken by `traj_views`, the
 Contract IF-084: the same loader surface as taken by `traj_status`, the `--status`
     snapshot layer: `load_ifs`, `IF_CSV` and `spine_carrier`. The seam rows the
     generated status block reports are the rows validation reads.
+Contract IF-177: `queue_conflict_pairs(wis) -> [(first_id, second_id, finding)]`,
+    the queue-conflict detector's overlaps as edges rather than warn lines, read
+    by the consolidation census as its cluster seeds. `wis` is the loader's row
+    shape (`id`, `title`, `status`, `srs`, `specref`), and only rows in an open
+    status pair. Three signals, a near-identical title, a shared `SR-Refs` id and
+    a shared anchor-stripped `SpecRef`, each give one finding per pair, the ids
+    in sorted order, and the list is sorted. Pure and warn-only: no I/O, and the
+    validator's own rendering of the same pairs never reaches the exit code.
 """
 
 import argparse
@@ -831,10 +839,10 @@ def validate(wis, known_srs, known_ois=None):
     A hard OPEN-ITEM edge (OI-73) resolves against `known_ois` — the open-items
     registry read through the spine carrier — not the WI id set: an `OI-###` in
     `Predecessors` that names no minted open item is a dangling edge, the same
-    ERROR class as an unknown WI predecessor. `known_ois` is `None` only for the
-    non-adopter with no registry, where any OI edge cannot be resolved and is
-    left to the scheduler's fail-closed `waiting`; the caller passes the real
-    set (see `main`).
+    ERROR class as an unknown WI predecessor. `known_ois=None` (the non-adopter
+    with no registry) reads as the empty set, so EVERY OI edge is that ERROR:
+    an edge naming a registry the repo does not carry is dangling. The caller
+    passes the real set (see `main`).
 
     Implements: SR-157, LLR-034
     """
@@ -897,9 +905,9 @@ def load_known_ois(root):
     Reads the same registry the readiness gate resolves an OI edge against, so
     the validator's ERROR and the scheduler's `waiting` cannot disagree about
     whether an `OI-###` edge is even real. `None` when the repo carries no
-    open-items registry at all (the D-5 absent-vs-empty distinction), which
-    `validate` treats as the non-adopter posture rather than failing every OI
-    edge."""
+    open-items registry at all (the D-5 absent-vs-empty distinction); `validate`
+    reads it as the empty set, so every OI edge in such a repo is a dangling-edge
+    ERROR."""
     path = Path(root) / OPEN_ITEMS_REL
     if spine_carrier.resolve(path) is None:
         return None

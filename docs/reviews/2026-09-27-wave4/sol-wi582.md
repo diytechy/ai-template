@@ -1,0 +1,5 @@
+<!-- Codex Sol (gpt-5.6-sol, medium) review of WI-582, read-only; prompt gist in ARBITRATION.md. Links re-rooted from the removed worktree. -->
+
+01b378ad NOT YET SOUND
+
+- **major** — IF-176 lacks its required owner-side contract declaration. The interface names `scripts/trace` as owner at [interfaces.toml:1756](../../../docs/requirements/interfaces.toml), and TC-253 cites it at [test-cases.toml:2608](../../../docs/test/test-cases.toml), but `trace.py`’s `Contracts:` list omits IF-176 and has no `Contract IF-176:` body at [trace.py:83](../../../project-trajectory/scripts/trace.py). `check_trajectory.py --strict` reports this exact warning. Add IF-176 to that list and document `open_item_states(root)` there, including lowercased statuses, `-000` exclusion, and the absent-registry `None` result.

@@ -14,17 +14,23 @@ answered `None`. This module is the record that each of those now has a defined,
 driven answer.
 """
 
+import shutil
+import subprocess
+
+import pytest
 from conftest import (
     ROOT,
     SCRIPTS,
     load_script,
     make_minimal_project,
     run_py,
+    skip_without_env_gates,
 )
 
 from kitlib import ladder, stage as kitstage
 
 DS = load_script("derive_stage")
+CHECK = load_script("check")
 
 SRS_H = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,"
@@ -525,15 +531,69 @@ def test_next_phase_on_an_unphased_spine(scaffold):
 
 
 # --- the dogfood --------------------------------------------------------------
+def _assert_committed_stage_current(root):
+    """`root`'s committed `docs/stage` records the live inputs, or SKIP on a
+    claimed work branch.
+
+    The skip is the commit-bar twin's: check.py stands the `derived-stage` step
+    down on a claimed work branch because generated freshness is the trunk
+    lane's (concurrency-restructure §5.2). It asks `check._work_branch`, the
+    same detector, so there is one notion of "work branch", fail-closed: off
+    git, detached, or unclaimed, the claim is asserted in full."""
+    branch = CHECK._work_branch(root)
+    if branch:
+        pytest.skip(
+            "work branch '{}': the committed stage's freshness is the trunk "
+            "lane's, as for check.py's derived-stage step".format(branch)
+        )
+    recorded = kitstage.parse((root / kitstage.STAGE_FILE).read_text(encoding="utf-8"))
+    assert recorded is not None
+    assert recorded["stage"] in ladder.LADDER_RUNGS
+    assert recorded["fingerprint"] == kitstage.fingerprint(root, memo=None)
+    assert DS.read(root)["source"] == "recorded"
+
+
 def test_this_repo_s_committed_stage_is_current():
     """The meta-repo's own committed `docs/stage` records the live inputs. This is
     the same claim the commit-bar `--check` step makes; asserting it here too is
     what makes a stale commit visible to a plain `pytest` run as well."""
-    recorded = kitstage.parse((ROOT / kitstage.STAGE_FILE).read_text(encoding="utf-8"))
-    assert recorded is not None
-    assert recorded["stage"] in ladder.LADDER_RUNGS
-    assert recorded["fingerprint"] == kitstage.fingerprint(ROOT, memo=None)
-    assert DS.read(ROOT)["source"] == "recorded"
+    _assert_committed_stage_current(ROOT)
+
+
+def test_the_stage_currency_claim_stands_down_on_a_claimed_branch_only(scaffold):
+    """The claim above is exempt where its commit-bar twin is, and nowhere else.
+    Amending a settled row moves the stage's input digest, so a claimed work
+    branch doing the routine amendment meets a stale `docs/stage` it may not
+    regenerate; the trunk, with the same stale file, must still go red."""
+    skip_without_env_gates("git")
+    make_minimal_project(scaffold)
+    _no_frame(scaffold)
+    srs, llrs, tcs = _settled_phase("001", "SR-001", "1")
+    _write(scaffold, srs=srs, llrs=llrs, tcs=tcs)
+    write = run_py([SCRIPTS / "derive_stage.py", "--root", scaffold], cwd=scaffold)
+    assert write.returncode == 0, write.stdout + write.stderr
+
+    def on_branch(branch):
+        git = shutil.which("git")
+        for args in (["init", "-q"], ["symbolic-ref", "HEAD", "refs/heads/" + branch]):
+            subprocess.run([git, "-C", str(scaffold), *args], check=True)
+        CHECK._WORK_BRANCH_CACHE.clear()
+
+    on_branch("main")
+    _assert_committed_stage_current(scaffold)  # fresh on the trunk: the baseline
+
+    # A settled row amended, its status left Approved: the recorded copy is stale.
+    _write(scaffold, srs=srs.replace('"r"', '"r, amended"'), llrs=llrs, tcs=tcs)
+    with pytest.raises(AssertionError):
+        _assert_committed_stage_current(scaffold)
+
+    # The same tree on a claimed work branch: the claim stands down.
+    on_branch("wi-999-lane")
+    claim = scaffold / "docs" / "work" / "active" / "wi-999-lane"
+    claim.mkdir(parents=True)
+    (claim / "WI-999-demo.md").write_text('+++\nid = "WI-999"\n+++\n', encoding="utf-8")
+    with pytest.raises(pytest.skip.Exception):
+        _assert_committed_stage_current(scaffold)
 
 
 # --- TC-226: an assumption-only case joins its requirements' phases (SR-197) ---

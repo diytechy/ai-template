@@ -263,7 +263,7 @@ Contracts (interfaces): IF-198
 
 ### `scripts/check_trajectory`
 _Validate the work-item registry — stdlib only._
-Contracts (interfaces): IF-009, IF-056, IF-082, IF-083, IF-084
+Contracts (interfaces): IF-009, IF-056, IF-082, IF-083, IF-084, IF-177
 
 | Option | Help |
 |---|---|
@@ -577,7 +577,7 @@ _spec_move.py — the link-aware spec-move ritual: move a registry/spec file and
 
 ### `scripts/trace`
 _Traceability join + orphan report for the SN->SR->LLR->TC registries._
-Contracts (interfaces): IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146, IF-166
+Contracts (interfaces): IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146, IF-166, IF-176
 
 | Option | Help |
 |---|---|

@@ -728,7 +728,7 @@ channel = "cli"
 data = "headless invocation; the prompt on stdin"
 version = "v1"
 status = "Drafted"
-notes = """No tie-back, and the frame already states the reason: the model-runner surface is an external-to-external relationship touching the SESSION and not the system, so invoking a configured agent CLI crosses no boundary of this system. Contrast the subagent-gate row, which faces the same CLI and DOES tie back - what crosses there is a guardrail verdict this system emits, and that is a system output whoever consumes it. Consuming an external tool and emitting a verdict to one are not the same act."""
+notes = """No tie-back yet, though one is owed: invoking a configured agent CLI is the loop invoking a model runner, which crosses the operation frame at B-10, and tying this row to that crossing is interface-allocation work. Contrast the subagent-gate row, which faces the same CLI across a different crossing - what crosses there is a guardrail verdict this system emits, and that is a system output whoever consumes it. Consuming an external tool and emitting a verdict to one are not the same act."""
 
 [interface.IF-042]
 owner = "scripts/trace"

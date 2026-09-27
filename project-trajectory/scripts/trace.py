@@ -80,8 +80,8 @@ endpoint that resolves to no LLR Module. The report always carries the
 attested-vs-mechanized approval split (process.md §4 "Attest") and, when the SR
 registry tags Aspect, a per-aspect count.
 
-Contracts: IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146, IF-166 — the
-interface seams this module declares (process.md §8; rows of record in
+Contracts: IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146, IF-166, IF-176
+— the interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
 Contract IF-001: SR-157's obligation delivered as a CLI here. Joins the
@@ -157,6 +157,14 @@ Contract IF-166: `docs/test/report.html`, written only under `--html` and
     tree: every node labelled with its status, its orphan flag and its title,
     orphan and draft nodes coloured. It renders the join `docs/test/report.md`
     states and promises no parser a grammar.
+Contract IF-176: `open_item_states(root) -> {OI-###: status} | None` — the
+    one reading of `docs/requirements/open-items.toml` the scheduler's
+    readiness gate shares with the spine checks. Each minted row maps to its
+    `status` stripped and lowercased; a `-000` example row, and a row whose id
+    does not start `OI-`, is left out. An absent registry answers None, never
+    `{}`: None means there is nothing to resolve an open-item edge against,
+    while an empty map means every named id is unresolved. The caller reads the
+    answer and writes nothing back.
 """
 
 import argparse

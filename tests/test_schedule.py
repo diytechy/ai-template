@@ -210,6 +210,48 @@ def test_mixed_wi_and_oi_edges_both_gate():
     ]
 
 
+# --- TC-253: the readiness gate's read of the open-items registry (IF-176) ----
+# The tests above hand the gate an injected states map. These drive the seam
+# that builds the map, `load_oi_status` over trace's reader, on a registry
+# file, so a disagreement between the two modules about that file is caught.
+
+_OI_REGISTRY = """[open_item.OI-000]
+title = "Example row"
+status = "pending"
+
+[open_item.OI-70]
+title = "Still owed"
+status = "Pending"
+
+[open_item.OI-71]
+title = "Ruled"
+status = "ruled"
+"""
+
+
+def test_load_oi_status_resolves_a_real_open_items_registry(tmp_path):
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (req / "open-items.toml").write_text(_OI_REGISTRY, encoding="utf-8")
+    # Every minted row, status lowercased, the `-000` example dropped.
+    oi = sched.load_oi_status(tmp_path)
+    assert oi == {"OI-70": "pending", "OI-71": "ruled"}
+    # The map it returns is the one the gate reads: the pending edge waits and
+    # the ruled edge is satisfied.
+    wis = sched.load_wis([row("WI-001", preds="OI-70"), row("WI-002", preds="OI-71")])
+    assert [r["id"] for r in sched.frontier(wis, oi_status=oi)] == ["WI-002"]
+
+
+def test_load_oi_status_answers_empty_where_the_repo_has_no_registry(tmp_path):
+    # The owner draws absent apart from empty; the requestor collapses absent
+    # to an empty map at its own boundary, so every OI edge fails closed.
+    assert load_script("trace").open_item_states(tmp_path) is None
+    oi = sched.load_oi_status(tmp_path)
+    assert oi == {}
+    wis = sched.load_wis([row("WI-001", preds="OI-70")])
+    assert [r["id"] for r in sched.frontier(wis, oi_status=oi)] == []
+
+
 # --- WI-384: `draft` is never-ready, exactly like `deferred` ------------------
 
 

@@ -117,3 +117,27 @@ touched slow modules (test_check_doc_refs, test_integrate,
 test_integrate_admission) were run by the builder at db45a2bf, 251 passed /
 1 skipped. Trunk moved only by batch A's documents since that base, and the
 coordinator did not re-run them.
+
+### WI-582 lands: the spine authoring sweep (with WI-677, WI-644 and WI-604's RETURN)
+
+One builder, four rounds. Codex Sol found issues in three of them (IF-176's
+missing contract body; LLR-210's back-links, IF-177/IF-178 uncited and the
+scope-unchanged tests too weak; IF-177/IF-178's citations vacuous, plus CRLF,
+which was ruled out by IF-159's LF format) and judged the fourth round SOUND
+(wave-4 rulings 4, 8 and 10). The sweep covers IF-176 with TC-253, restates
+nine rows to the redrawn C1 frame, fixes LLR-259 and TC-252, and carries
+WI-604's RETURN. The RETURN follow-up adds a new labelled derived SR-220
+under SN-025 for the consolidation obligation, re-points LLR-210 to it, and
+splits TC-208 into a Smoke case and a Full TC-254. The Deliverable records
+the process finding WI-564 named. **Open count: 16.**
+
+The next spine-acts batch owes these, gathered with the other lanes' rows
+in the handoff: amendments LLR-051, LLR-056, LLR-057, LLR-124, LLR-139,
+SR-151, SR-152, SR-175 and SR-157; first approvals SR-220, LLR-210, TC-208,
+TC-254, LLR-259, TC-252 and TC-253.
+
+Commit bar at WI-582: all green, including seconds, at 34.0 s within 60 s.
+Smoke 1575 passed / 3 skipped. Touched slow modules
+(test_derive_stage, test_schedule, test_consolidate), run by the coordinator:
+155 passed. test_consolidate_close was run by the builder at ffb2c143,
+unchanged since.
