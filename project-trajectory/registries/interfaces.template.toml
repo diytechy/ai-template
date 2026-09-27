@@ -114,7 +114,8 @@
 #
 # A boundary row with neither is one `trace.py` advisory naming it; a
 # `bridged_by` entry naming an assumption the registry does not declare is a
-# `trace.py --strict` finding. `bridged_by` is a pointer (moving it re-opens no
+# `trace.py --strict` finding. Neither is checked until your assumptions registry
+# holds its first real (non-`-000`) row: until then nothing here is asked. `bridged_by` is a pointer (moving it re-opens no
 # approval); `coincident` is a statement the row makes, so declaring or changing
 # it re-opens the row's. No requirement id goes here: the requirement a seam
 # answers is reached through its owner, as above.

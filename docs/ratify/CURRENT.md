@@ -498,6 +498,11 @@ _traced — routes to adjudication_
 > **Rationale.** A requirement reached by no interface looks the same as one meant to rest only on an assumption unless the row says which it is, so a missing interface hides behind a legitimate exception. A closed cell whose absence is reported, rather than a default, keeps the omission visible. A property of every delivered capability at once is met at no single seam, which is why it is the third form rather than a kind of interface.
 
 
+### LLR LLR-224
+- **Detail**
+  - before: kitlib/spine.py declares FORM_VALUES = ("interface", "assumption", "cross-cutting") and the requirement tier gains `form`, mapped to Form and shipped on SR-000. assumption_rules.sr_form_findings(srs) makes a value outside FORM_VALUES a failure composed into the always-on integrity class, naming the row, and a requirement with no form an advisory naming it. Vacuous when the assumptions registry is absent, so a repo that never adopts the tier is never asked for a form.
+  - after: kitlib/spine.py declares FORM_VALUES = ("interface", "assumption", "cross-cutting") and the requirement tier gains `form`, mapped to Form and shipped on SR-000. assumption_rules.sr_form_findings(srs) makes a value outside FORM_VALUES a failure composed into the always-on integrity class, naming the row, and a requirement with no form an advisory naming it. Vacuous when the assumptions registry holds no real assumption row, so a repo that never adopts the tier is never asked for a form.
+
 ### TC TC-222
 _approved — re-attestation owed_
 - **Tier**
@@ -619,6 +624,16 @@ _traced — routes to adjudication_
 > **Rationale.** A requirement is testable only if the interface it is met at is defined or its reading is clearly assumed. The allocation is recorded on the interface, which is approved at the architecture rung where interfaces are, so an assumption approved earlier at the boundary rung is never edited to point at a seam approved later. The requirement a seam answers stays derived through the interface's owner, because stating it on the interface would give that relation a second home.
 
 
+### SR SR-211
+- **AcceptanceCriteria**
+  - before: A boundary interface naming one or more assumptions, each declared, is bridged; one recording a waiver is coincident; one with neither is reported without failing the check, naming it; a named assumption that is not declared fails the check naming the interface; an internal interface is out of scope; no requirement reference is recorded on the interface; changing the named assumptions re-opens no attestation, while declaring or changing the waiver re-opens the interface's.
+  - after: A boundary interface naming one or more assumptions, each declared, is bridged; one recording a waiver is coincident; one with neither is reported without failing the check, naming it; a named assumption that is not declared fails the check naming the interface; an internal interface is out of scope; no requirement reference is recorded on the interface; changing the named assumptions re-opens no attestation, while declaring or changing the waiver re-opens the interface's; a project whose assumptions registry holds no real assumption row is vacuous.
+
+### LLR LLR-250
+- **Detail**
+  - before: The interface tier gains bridged_by (a list of assumption ids, mapped to BridgedBy and listed in REF_COLS) and the shared coincident cell; IF-000 ships both. assumption_rules.interface_bridge_findings(ifs, das) reads only boundary interfaces, those with a from- or to-external tie-back: a BridgedBy entry naming an undeclared assumption is a failure composed into the interface class; one with neither cell is an advisory naming it. No requirement reference is added to the interface row: the requirement a seam answers stays derived through its owner.
+  - after: The interface tier gains bridged_by (a list of assumption ids, mapped to BridgedBy and listed in REF_COLS) and the shared coincident cell; IF-000 ships both. assumption_rules.interface_bridge_findings(ifs, das) reads only boundary interfaces, those with a from- or to-external tie-back: a BridgedBy entry naming an undeclared assumption is a failure composed into the interface class; one with neither cell is an advisory naming it. Vacuous until the assumptions registry holds a real assumption row, the adoption predicate the requirement-side reports use. No requirement reference is added to the interface row: the requirement a seam answers stays derived through its owner.
+
 ### TC TC-222
 _approved — re-attestation owed_
 - **Tier**
@@ -630,6 +645,14 @@ _traced — routes to adjudication_
   - after: tests/test_cell_classes.py
 
 ### TC TC-244
+_approved — re-attestation owed_
+- **Expected**
+  - before: Satisfies SR-211's acceptance: bridged, coincident and neither classified as stated; an undeclared assumption fails naming the interface; internal interfaces out of scope; no requirement reference on the interface.
+  - after: Satisfies SR-211's acceptance: bridged, coincident and neither classified as stated; an undeclared assumption fails naming the interface; internal interfaces out of scope; no requirement reference on the interface; nothing judged until the assumptions registry holds a real row.
+- **Method**
+  - before: interface_bridge_findings driven through the traceability check. A boundary interface naming declared assumptions is bridged; one with a waiver is coincident; one with neither is one advisory naming it; one naming an undeclared assumption fails the strict run naming the interface. An internal interface, one with no from- or to-external tie-back, is not judged. A requirement-reference cell on an interface row is still refused by the existing retired-cell rule.
+  - after: interface_bridge_findings driven through the traceability check. A boundary interface naming declared assumptions is bridged; one with a waiver is coincident; one with neither is one advisory naming it; one naming an undeclared assumption fails the strict run naming the interface. Beside an assumptions registry holding no real row, or no registry, nothing is judged: neither the one with neither cell nor one naming an undeclared assumption yields a finding. An internal interface, one with no from- or to-external tie-back, is not judged. A requirement-reference cell on an interface row is still refused by the existing retired-cell rule.
+_traced — routes to adjudication_
 - **Verifies**
   - before: SR-211;LLR-250
   - after: SR-211;LLR-250;IF-208

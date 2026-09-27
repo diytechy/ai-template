@@ -56,12 +56,14 @@ silent (SR-191's applies-when). And the requirement-side reports ask nothing of
 a project that has not adopted the tier: until the registry holds a real
 assumption row, no requirement is asked for a citation or a form. Every
 adopter is scaffolded the blank form, so the file existing is not adoption.
-The two rules at the end of this module stand apart (IF-208) and wait for
-neither: each boundary interface is asked whether assumptions bridge it or its
-reading is the outcome (SR-211), and each assumption's obstacle perspectives
-are resolved against the hats roster (SR-214), because neither requirement
-states such a condition, and a pointer into nothing is wrong wherever it is
-written.
+The two rules at the end of this module stand apart (IF-208) and wait for no
+declared crossing: each boundary interface is asked whether assumptions bridge
+it or its reading is the outcome (SR-211), and each assumption's obstacle
+perspectives are resolved against the hats roster (SR-214). The bridging rule
+takes the requirement side's adoption rule whole, so a project that never
+adopts the tier is not handed one line per boundary seam: before the first real
+assumption row, every assumption a seam names is necessarily undeclared, so a
+failure that survived would be that worklist under another name.
 
 Rows are the carrier's column-keyed dicts (`DA-ID`, `EffectAt`, `SUR-ID`,
 `Emulates`, `SR-ID`, `DA-Refs`, `EXT-ID`, `B-ID`, `Entity`), exactly as
@@ -125,11 +127,11 @@ Contract IF-208: the tier's two pointer rules that land in OTHER classes, which
     (a from- or to-external tie-back): the failures, a `BridgedBy` entry naming
     an undeclared assumption, join the interface class and `--strict`'s exit
     code; the advisories, a boundary interface with neither `BridgedBy` nor
-    `Coincident`, ride the warn pipe. `obstacle_hat_findings(das, hat_names)`
-    returns failures, each an `ObstacleHats` entry the roster names in
-    `hat_names` do not hold, joining the dangling-hat class; an empty
-    `hat_names` means no roster, so every named perspective fails. Neither
-    waits for a declared crossing or a real assumption row.
+    `Coincident`, ride the warn pipe. Both are empty until `das` holds a real
+    assumption row. `obstacle_hat_findings(das, hat_names)` returns failures,
+    each an `ObstacleHats` entry the roster names in `hat_names` do not hold,
+    joining the dangling-hat class; an empty `hat_names` means no roster, so
+    every named perspective fails. Neither waits for a declared crossing.
 Contract IF-216: the observation results and what they evidence, the rules
     `trace.py` composes and the writer's one policy read. Rows and already-read
     inputs in, findings and readings out, with no I/O, no git and no clock but
@@ -1007,12 +1009,19 @@ def interface_bridge_findings(ifs, das):
     interface class, which fails `--strict`. ADVISORIES: a boundary interface
     with neither cell, one line naming it, on the warn pipe.
 
+    VACUOUS until the registry holds a real assumption row, the requirement
+    side's adoption rule (`_adopted`): until then no seam can be bridged, so
+    every boundary seam would be a line in a worklist the project never took
+    on, and every assumption a seam names is necessarily undeclared.
+
     No requirement reference is read or asked for: the requirement a seam
     answers stays derived through its owner, and stating it on the row would
     give that relation a second home.
 
     Implements: SR-211, LLR-250
     """
+    if not _adopted(das):
+        return [], []
     declared = dict(_real(das, "DA-ID"))
     failures, advisories = [], []
     for iid, row in _real(ifs, "IF-ID"):

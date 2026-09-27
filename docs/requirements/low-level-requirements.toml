@@ -2362,7 +2362,7 @@ sr_refs = ["SR-194"]
 title = "The requirement's form cell and its findings"
 module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/scripts/assumption_rules.py;project-trajectory/registries/system-requirements.template.toml"
 code_symbol = "FORM_VALUES/sr_form_findings"
-detail = "kitlib/spine.py declares FORM_VALUES = (\"interface\", \"assumption\", \"cross-cutting\") and the requirement tier gains `form`, mapped to Form and shipped on SR-000. assumption_rules.sr_form_findings(srs) makes a value outside FORM_VALUES a failure composed into the always-on integrity class, naming the row, and a requirement with no form an advisory naming it. Vacuous when the assumptions registry is absent, so a repo that never adopts the tier is never asked for a form."
+detail = "kitlib/spine.py declares FORM_VALUES = (\"interface\", \"assumption\", \"cross-cutting\") and the requirement tier gains `form`, mapped to Form and shipped on SR-000. assumption_rules.sr_form_findings(srs) makes a value outside FORM_VALUES a failure composed into the always-on integrity class, naming the row, and a requirement with no form an advisory naming it. Vacuous when the assumptions registry holds no real assumption row, so a repo that never adopts the tier is never asked for a form."
 status = "Approved"
 component = "CMP-006"
 phase = 6
@@ -2624,7 +2624,7 @@ sr_refs = ["SR-211"]
 title = "An interface's bridging assumptions and coincident waiver"
 module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/scripts/assumption_rules.py;project-trajectory/registries/interfaces.template.toml"
 code_symbol = "interface_bridge_findings"
-detail = "The interface tier gains bridged_by (a list of assumption ids, mapped to BridgedBy and listed in REF_COLS) and the shared coincident cell; IF-000 ships both. assumption_rules.interface_bridge_findings(ifs, das) reads only boundary interfaces, those with a from- or to-external tie-back: a BridgedBy entry naming an undeclared assumption is a failure composed into the interface class; one with neither cell is an advisory naming it. No requirement reference is added to the interface row: the requirement a seam answers stays derived through its owner."
+detail = "The interface tier gains bridged_by (a list of assumption ids, mapped to BridgedBy and listed in REF_COLS) and the shared coincident cell; IF-000 ships both. assumption_rules.interface_bridge_findings(ifs, das) reads only boundary interfaces, those with a from- or to-external tie-back: a BridgedBy entry naming an undeclared assumption is a failure composed into the interface class; one with neither cell is an advisory naming it. Vacuous until the assumptions registry holds a real assumption row, the adoption predicate the requirement-side reports use. No requirement reference is added to the interface row: the requirement a seam answers stays derived through its owner."
 status = "Approved"
 component = "CMP-006"
 phase = 6

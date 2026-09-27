@@ -167,10 +167,10 @@
 #                    because its reading IS the outcome, `coincident` saying
 #                    why. A boundary row with neither is one `trace.py`
 #                    advisory; a `bridged_by` entry no assumption row declares
-#                    is a `trace.py --strict` finding. No live row carries
-#                    either yet: the assumption rows they would name are later
-#                    reviewed content, so each boundary row here is one
-#                    advisory until then.
+#                    is a `trace.py --strict` finding. The whole rule waits for
+#                    the first real row in `assumptions.toml`: none exists here
+#                    yet, and no live row carries either cell yet, so both
+#                    return with the first one.
 #
 #   notes            OPTIONAL free prose about the row. A reason cell: argument,
 #                    never citation. Honesty valve — the word `source` (produces

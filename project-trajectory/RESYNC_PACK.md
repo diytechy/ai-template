@@ -5731,6 +5731,25 @@ description.
 changes. If a script or test of yours counts `FINDING (frame)` lines naming a
 stakeholder's status, count the one `FINDING (integrity)` line instead.
 
+### The interface-bridging rule waits until your assumptions registry holds a real row [since fc1daed3]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The whole interface-bridging rule (SR-211) now waits until
+your assumptions registry holds a real assumption row, one whose id does not
+end `-000`: the same adoption rule the requirement-side reports already follow
+(SR-193, SR-194). Until then no boundary interface (a row with a tie-back) is
+judged: one naming neither `bridged_by` nor `coincident` is not reported, and a
+`bridged_by` entry naming an undeclared assumption does not fail `--strict`.
+Before, both applied whether or not you had adopted the assumption tier.
+
+**What to do.** Re-sync `scripts/assumption_rules.py`. Nothing in your
+registries changes. If you have not written an assumption row, the advisories
+the previous entry told you to expect disappear. They return with your first
+real assumption row, one per boundary row still naming neither, together with
+the `--strict` failure for any `bridged_by` entry naming an assumption you have
+not declared.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

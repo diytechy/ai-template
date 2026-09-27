@@ -2509,9 +2509,9 @@ phase = 6
 [test.TC-244]
 verifies = ["SR-211", "LLR-250", "IF-208"]
 level = "Integration"
-method = "interface_bridge_findings driven through the traceability check. A boundary interface naming declared assumptions is bridged; one with a waiver is coincident; one with neither is one advisory naming it; one naming an undeclared assumption fails the strict run naming the interface. An internal interface, one with no from- or to-external tie-back, is not judged. A requirement-reference cell on an interface row is still refused by the existing retired-cell rule."
+method = "interface_bridge_findings driven through the traceability check. A boundary interface naming declared assumptions is bridged; one with a waiver is coincident; one with neither is one advisory naming it; one naming an undeclared assumption fails the strict run naming the interface. Beside an assumptions registry holding no real row, or no registry, nothing is judged: neither the one with neither cell nor one naming an undeclared assumption yields a finding. An internal interface, one with no from- or to-external tie-back, is not judged. A requirement-reference cell on an interface row is still refused by the existing retired-cell rule."
 tier = "Full"
-expected = "Satisfies SR-211's acceptance: bridged, coincident and neither classified as stated; an undeclared assumption fails naming the interface; internal interfaces out of scope; no requirement reference on the interface."
+expected = "Satisfies SR-211's acceptance: bridged, coincident and neither classified as stated; an undeclared assumption fails naming the interface; internal interfaces out of scope; no requirement reference on the interface; nothing judged until the assumptions registry holds a real row."
 automated = "Yes"
 evidence = "tests/test_trace_interfaces.py"
 status = "Approved"

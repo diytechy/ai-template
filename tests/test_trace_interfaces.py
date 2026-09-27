@@ -17,7 +17,7 @@ completeness rule.
 
 import pytest
 
-from conftest import SCRIPTS, make_minimal_project, record_ids, run_py
+from conftest import KIT, SCRIPTS, make_minimal_project, record_ids, run_py
 
 
 # --- WI-056: the IF-### interface-seam tier (process.md §8) ---------------------
@@ -988,7 +988,8 @@ def test_tc_citing_only_seam_ids_is_an_orphan(scaffold):
 # reference, and gates. Internal seams are out of scope. Driven through the
 # checker on ONE scaffold per worker (module-scoped: every case rewrites the
 # whole interface registry before it runs), because each case is one registry
-# state and the bootstrap is the cost.
+# state and the bootstrap is the cost. The whole rule waits for the tier: until
+# the assumptions registry holds a real row, no boundary seam is judged.
 
 BRIDGE_FRAME = """
 [entity.EXT-001]
@@ -1055,11 +1056,23 @@ def bridge_project(tmp_path_factory):
     return root
 
 
-def _bridge_run(root, *blocks):
-    """`--strict` over exactly `blocks` as the interface registry."""
-    (root / "docs" / "requirements" / "interfaces.toml").write_text(
-        "\n".join(blocks), encoding="utf-8"
-    )
+# The blank form every adopter is scaffolded: its only rows are the `-000`
+# examples, so the file exists and the tier is still not adopted.
+BLANK_ASSUMPTIONS = (KIT / "registries" / "assumptions.template.toml").read_text(
+    encoding="utf-8"
+)
+
+
+def _bridge_run(root, *blocks, assumptions=BRIDGE_ASSUMPTION):
+    """`--strict` over exactly `blocks` as the interface registry, beside
+    `assumptions` as the assumptions registry (None: no registry at all).
+    Written every run, because the module's cases share one scaffold."""
+    req = root / "docs" / "requirements"
+    (req / "interfaces.toml").write_text("\n".join(blocks), encoding="utf-8")
+    if assumptions is None:
+        (req / "assumptions.toml").unlink(missing_ok=True)
+    else:
+        (req / "assumptions.toml").write_text(assumptions, encoding="utf-8")
     record_ids(root)
     return run_py(["scripts/trace.py", "--strict"], cwd=root)
 
@@ -1088,6 +1101,29 @@ def test_a_boundary_interface_with_neither_is_one_advisory_naming_it(bridge_proj
     assert len(lines) == 1, lines
     assert lines[0].startswith("WARNING (advisory)"), lines
     assert "IF-003" in lines[0], lines
+
+
+@pytest.mark.parametrize(
+    "assumptions", [BLANK_ASSUMPTIONS, None], ids=["blank-form", "no-registry"]
+)
+def test_no_boundary_interface_is_judged_until_the_tier_is_adopted(
+    bridge_project, assumptions
+):
+    # Beside the blank form or no registry at all, the whole rule is vacuous:
+    # the seam that is one advisory beside a real assumption row, and the one
+    # whose undeclared bridging assumption fails there (the cases on either
+    # side), both pass silently. Before adoption every named assumption is
+    # necessarily undeclared, so a surviving failure would be the worklist
+    # again under another name. The requirement side's adoption rule: a repo
+    # that never adopts the tier is never asked.
+    dangling = _bridge_if(
+        "IF-005", interface_to_external='"B-01"', bridged_by='["DA-404"]'
+    )
+    proc = _bridge_run(
+        bridge_project, COINCIDENT, NEITHER, dangling, assumptions=assumptions
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert _bridge_lines(proc.stdout) == [], proc.stdout
 
 
 def test_an_undeclared_bridging_assumption_fails_the_strict_run_naming_the_interface(
