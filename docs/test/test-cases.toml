@@ -393,6 +393,8 @@ automated = "No"
 evidence = "project-trajectory/ADOPTING.md"
 status = "Approved"
 phase = 1
+inputs = ["project-trajectory/ADOPTING.md", "project-trajectory/skills/downstream-resync/SKILL.md", "SR-036"]
+max_age = 90
 
 [test.TC-037]
 verifies = ["SR-157", "LLR-034"]
@@ -570,6 +572,8 @@ automated = "No"
 evidence = "docs/reviews/074-CRITIQUE.md"
 status = "Approved"
 phase = 3
+inputs = ["docs/rubrics/dashboard-usability.md", "SR-054", "LLR-055", "project-trajectory/scripts/gen_trajectory.py", "project-trajectory/scripts/rendering"]
+max_age = 90
 
 [test.TC-056]
 verifies = ["SR-168", "LLR-056", "IF-093", "IF-094"]
@@ -2131,6 +2135,8 @@ automated = "No"
 evidence = "docs/test/inspection-procedures.md#critique-acceptance-provenance-inspection-result"
 status = "Drafted"
 phase = 5
+inputs = ["docs/test/inspection-procedures.md", "SR-184"]
+max_age = 90
 
 [test.TC-210]
 verifies = ["SR-185"]
@@ -2142,6 +2148,8 @@ automated = "No"
 evidence = "docs/test/inspection-procedures.md#requirement-and-interface-counterpart-review-inspection-result"
 status = "Drafted"
 phase = 5
+inputs = ["docs/test/inspection-procedures.md", "SR-185"]
+max_age = 90
 
 [test.TC-211]
 verifies = ["SR-186"]
@@ -2153,6 +2161,8 @@ automated = "No"
 evidence = "docs/test/inspection-procedures.md#decomposition-proportionality-inspection-result"
 status = "Drafted"
 phase = 5
+inputs = ["docs/test/inspection-procedures.md", "SR-186"]
+max_age = 90
 
 [test.TC-212]
 verifies = ["SR-187", "LLR-211", "LLR-212"]
@@ -2333,9 +2343,9 @@ phase = 6
 [test.TC-228]
 verifies = ["SR-198", "LLR-232", "LLR-233", "IF-200"]
 level = "Unit"
-method = "is_observation_tc, observation_tc_findings and sampling_model_declared called on in-memory test cases. A case whose Automated reads No is an observation case and one reading Yes is not. An observation case missing inputs, missing max_age, or, when it cites assumptions, missing a sampling policy is one advisory per omission naming it. A max_age of 6 fails and 7 passes; a max_age of 7.5 or a word fails; a sampling value outside sampled and monitored fails. For the sampling model: a sample size of 0, of 2.5 or a word fails; an empty or whitespace acceptance rule fails; a size without a rule, and a rule without a size, fail; a sampled case with neither is valid but not model-declared; a sampled case with a size of 5 and a non-empty rule is model-declared. An automated case carrying any of the declaration cells is an advisory. The template's example case ships every key."
+method = "is_observation_tc, observation_tc_findings and sampling_model_declared called on in-memory test cases. A case whose Automated reads No is an observation case and one reading Yes is not. An observation case missing inputs, missing max_age, or, when it cites assumptions, missing a sampling policy is one advisory per omission naming it. A max_age of 6 fails and 7 passes; a max_age of 7.5 or a word fails; an input naming an absolute or drive-qualified path, or one still climbing out of the repository with `..` once normalized, in either separator style, fails naming the row and the input, and `docs/../src/a.txt` passes; a sampling value outside sampled and monitored fails. For the sampling model: a sample size of 0, of 2.5 or a word fails; an empty or whitespace acceptance rule fails; a size without a rule, and a rule without a size, fail; a sampled case with neither is valid but not model-declared; a sampled case with a size of 5 and a non-empty rule is model-declared. An automated case carrying any of the declaration cells is an advisory. The template's example case ships every key."
 tier = "Smoke"
-expected = "Satisfies SR-198's acceptance: observation cases defined by the one marker; omissions reported without failing; a lifetime under seven days, an out-of-pair policy or a malformed sampling model fails naming the row; automated cases declare none."
+expected = "Satisfies SR-198's acceptance: observation cases defined by the one marker; omissions reported without failing; a lifetime under seven days, an input path outside the repository, an out-of-pair policy or a malformed sampling model fails naming the row; automated cases declare none."
 automated = "Yes"
 evidence = "tests/test_assumption_rules.py"
 status = "Approved"
@@ -2430,7 +2440,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-237]
-verifies = ["SR-205", "LLR-242"]
+verifies = ["SR-205", "LLR-242", "IF-230"]
 level = "Integration"
 method = "The assumption-gate step driven on a scaffold. With no frame file the step reports nothing even with the setting on. With the setting absent or off, every condition below prints as an advisory and the step passes. With it on: a coincident requirement passes; one citing only approved, active, reaching assumptions passes; an unclassified requirement fails, including every non-coincident requirement when a frame exists and no assumptions registry does; citing a Drafted assumption, a falsified one, one the reach check reports, and a fidelity assumption whose surrogate is Drafted, each fail naming the requirement, the assumption and the condition. The step's plan listing shows it at the DevStg-Boundary threshold and in the built-in step set. The derived stage is identical with the setting on and off."
 tier = "Full"
@@ -2452,11 +2462,11 @@ status = "Approved"
 phase = 6
 
 [test.TC-239]
-verifies = ["SR-212", "LLR-244"]
+verifies = ["SR-212", "LLR-244", "IF-231"]
 level = "Integration"
-method = "The interface-allocation step driven on a scaffold with the setting on, in a module registered as slow. An interface-form requirement reached, through its design rows' module, by a boundary interface recorded coincident passes; one reached by an interface bridged by an assumption the requirement cites passes. One reached only by an interface bridged by other assumptions fails naming the requirement and that interface. One reached by no boundary interface fails naming the requirement and stating that none reaches it. One reached by two interfaces, one valid and one bridged only by uncited assumptions, fails naming the invalid interface. Assumption-form and cross-cutting requirements are not judged. With the setting off the same cases are advisories. The step lists at the DevStg-Arch threshold, and the stage fold still takes no interface parameter."
+method = "The interface-allocation step driven on a scaffold with the setting on, in a module registered as slow. An interface-form requirement reached, through its design rows' module, by a boundary interface recorded coincident passes; one reached by an interface bridged by an assumption the requirement cites passes. One reached only by an interface bridged by other assumptions fails naming the requirement and that interface. One reached by no boundary interface fails naming the requirement and stating that none reaches it. One reached by two interfaces, one valid and one bridged only by uncited assumptions, fails naming the invalid interface. Assumption-form and cross-cutting requirements are not judged. The crossing-allocation step, driven the same way, judges each interface-form requirement against the crossings its Boundary-Refs names: one recorded coincident passes; one citing an assumption landing on its crossing passes; one citing only an assumption landing elsewhere fails naming the requirement and the crossing; one naming two crossings and bridged on one fails naming only the other; one citing none fails; an assumption-form requirement, and a crossing the frame does not declare, are not judged. With the setting off the same cases are advisories for both steps. The interface-allocation step lists at the DevStg-Arch threshold and the crossing-allocation step at the DevStg-Boundary threshold, and the stage fold still takes no interface parameter."
 tier = "Full"
-expected = "Satisfies SR-212's acceptance: a requirement passes only when at least one boundary interface reaches it and each reaching interface is coincident or bridged by an assumption it cites; an unreached one fails naming it, an invalid reaching interface fails naming both; other forms out of scope; advisory with the gate off."
+expected = "Satisfies SR-212's acceptance: at the boundary rung, an interface-form requirement not recorded coincident passes only when every declared crossing it names is the landing of an assumption it cites, and each other crossing fails naming both; at the architecture rung, a requirement passes only when at least one boundary interface reaches it and each reaching interface is coincident or bridged by an assumption it cites; an unreached one fails naming it, an invalid reaching interface fails naming both; other forms out of scope; advisory with the gate off."
 automated = "Yes"
 evidence = "tests/test_assumption_gate.py"
 status = "Approved"
@@ -2540,9 +2550,9 @@ status = "Approved"
 phase = 6
 
 [test.TC-247]
-verifies = ["SR-215", "LLR-254"]
+verifies = ["SR-215", "LLR-254", "IF-228"]
 level = "Integration"
-method = "checkpoint_drafts driven on a real git repository. An observation case whose declared input changed since its latest record gets one draft naming it and the input; one whose record expired gets one; one with no record gets one; an unchanged, unexpired one gets none; a case declaring no inputs is judged by expiry and absence alone. An open re-judge item for a case, found by its typed cells, suppresses a second draft; a closed item in the archive with an identical title does not. Inputs are read at the given revision: an uncommitted edit to an input changes nothing. No agent command is spawned."
+method = "checkpoint_drafts driven on a real git repository. An observation case whose declared input changed since its latest record gets one draft naming it and the input; one whose record expired gets one; one with no record gets one; an unchanged, unexpired one gets none; a case declaring no inputs is judged by expiry and absence alone. An open re-judge item for a case, found by its typed cells, suppresses a second draft; a closed item in the archive with an identical title does not. Inputs are read at the given revision: an uncommitted edit to an input changes nothing. A committed link is excluded: a result recorded through the writer on a declared link, or on a directory holding one, is not due at the checkpoint where the platform cannot create a link, a change to the link's target does not make it due, and a directory link to itself is harmless. No agent command is spawned."
 tier = "Full"
 expected = "Satisfies SR-215's acceptance: a changed, expired or unjudged observation case gets exactly one open re-judge item naming it and what changed; an unchanged one gets none; an open item suppresses another; no model runs; a case with no inputs judged by expiry."
 automated = "Yes"
@@ -2551,7 +2561,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-248]
-verifies = ["SR-215", "LLR-255"]
+verifies = ["SR-215", "LLR-255", "IF-229"]
 level = "Integration"
 method = "Driven through intake on a real git repository. A merged work item whose merge changes an observation case's declared input mints one re-judge item; a second merge while that item is open mints none. The release subcommand mints for a case whose record expired, and the generated release checklist carries a required item naming that command and the number of due cases. Minting runs through the mint path's checks, and a checkout holding an unrelated uncommitted edit keeps it."
 tier = "Full"

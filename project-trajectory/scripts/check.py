@@ -250,7 +250,7 @@ COVERAGE_JSON = Path("coverage.json")
 # The built-in plan's own step names. A project-declared `[step:<name>]` in
 # docs/stack.ini may not shadow one — that would silently append a second step
 # under a kit name, not replace the kit step. Keep in sync with steps() below.
-# Implements: SR-217, LLR-257
+# Implements: SR-217, LLR-257, SR-205, LLR-242
 BUILTIN_STEP_NAMES = frozenset(
     {
         "format",
@@ -283,6 +283,10 @@ BUILTIN_STEP_NAMES = frozenset(
         "staged-divergence",
         "approval-immutable",
         "held-status",
+        "assumption-gate",
+        "crossing-allocation",
+        "interface-allocation",
+        "assumption-evidence",
     }
 )
 
@@ -732,6 +736,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         if rollup_gen.exists()
         else [sys.executable, "-c", "pass"]  # generator absent: vacuous
     )
+    gate = [sys.executable, str(_SCRIPTS / "check_assumption_gate.py"), "--root", "."]
     return [
         # --- product checks: language-specific, declared in docs/stack.ini -----
         ("format", _requires(fmt_cmd), fmt_cmd, _kitladder.STAGE_IMPL, "product"),
@@ -1276,6 +1281,22 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             [sys.executable, str(_SCRIPTS / "check.py"), "--held-status"],
             _kitladder.STAGE_NEEDS,
             "process",
+        ),
+        # The assumption gate (SR-205, SR-206, SR-212): one step per question,
+        # each at the rung it can first be answered at, from maturity at the
+        # frame to evidence at release. Steps, never stage conjuncts, so the
+        # derived stage and its single release producer read none of it.
+        # Advisory unless `[checks] assumption_gate = true`
+        # (check_assumption_gate.py). `assumption-evidence` is listed after
+        # the harness, whose results it reads.
+        *(
+            (name, (), [*gate, "--step", name], rung, "process")
+            for name, rung in (
+                ("assumption-gate", _kitladder.STAGE_BOUNDARY),
+                ("crossing-allocation", _kitladder.STAGE_BOUNDARY),
+                ("interface-allocation", _kitladder.STAGE_ARCH),
+                ("assumption-evidence", _kitladder.STAGE_RELEASE),
+            )
         ),
     ]
 

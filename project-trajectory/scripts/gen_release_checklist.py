@@ -15,6 +15,9 @@ It pulls, from `docs/`:
     - Provided cross-project interfaces (IF, if present) -> contract still honored?
     - Performance budgets (PB, if present) -> still within allocation? (§9; the
       warn-tier runtime budgets never fail the gate, so a human confirms them here)
+    - A REQUIRED re-judge item (SR-215): the command that files one re-judge
+      work item per observation test case due at the release commit, with
+      how many are due now
 
 Each line is `- [ ] <ID> — <what to confirm> (refs)`. The output is a *generated
 record*: regenerate it per release and keep the ticked copy as the sign-off
@@ -40,7 +43,10 @@ Contract IF-018: the human release checklist, written as a Markdown document
     their acceptance intent, system requirements whose Verification is
     Demonstration, Manual or Inspection, release-tier and manual test cases,
     the declared interface seams, and the performance budgets whose runtime
-    tier never fails a gate. `--phase` narrows to the listed phases while the
+    tier never fails a gate. Its release-hygiene section always carries one
+    required item naming `intake.py rejudge --checkpoint release` and the
+    number of observation test cases due at HEAD, or why that number could not
+    be read. `--phase` narrows to the listed phases while the
     foundation phase is never deferred; `--version` files the output under
     `docs/releases/checklist-<X>.md`, `--out` overrides the path, and the
     default is `docs/release-checklist.md`. Every optional registry is
@@ -73,7 +79,44 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
 
+# The checkpoint re-judge decision (SR-215). A pure read of git: this view may
+# not import the intake mint, so it counts through the decision the mint files.
+try:
+    import rejudge
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import rejudge
+
 HUMAN_METHODS = {"Demonstration", "Manual", "Inspection"}
+
+# The release checkpoint's command, as a person preparing a release runs it.
+REJUDGE_COMMAND = "python scripts/intake.py rejudge --checkpoint release"
+
+
+def _rejudge_checklist_line(root):
+    """The release checklist's REQUIRED re-judge item: the command that files
+    one re-judge work item per observation test case due at HEAD, and how many
+    are due now, counted by the decision the command files through.
+
+    Release preparation is a person's act, so the checkpoint is an item on the
+    person's list rather than something this generator does unasked. A count
+    git cannot give is stated as unavailable with its reason, never as zero,
+    because zero would read as nothing to re-judge.
+
+    Implements: SR-215, LLR-255
+    """
+    try:
+        count = "{} observation test case(s) due now".format(
+            len(rejudge.due_cases(root, "HEAD"))
+        )
+    except rejudge.RejudgeError as exc:
+        count = "the due count could not be read ({})".format(exc)
+    return (
+        "- [ ] **Required** — re-judge observation tests: run `{}` and close "
+        "each re-judge item it files before sign-off ({}).".format(
+            REJUDGE_COMMAND, count
+        )
+    )
 
 
 def load_csv(path):
@@ -318,6 +361,7 @@ def main():
         "",
         "- [ ] `python scripts/check.py --stage DevStg-Impl --tier release` is green "
         "(paste the output in the audit log).",
+        _rejudge_checklist_line(docs.resolve().parent),
         "- [ ] CHANGELOG / release notes updated.",
         "- [ ] Version bumped; any changed `Approved` interface versions "
         "communicated to counterparts.",

@@ -1055,6 +1055,11 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         # start, so a fresh scaffold is judged over its whole history, which
         # is its whole history under the rule.
         "test_first_since": "",
+        # NINTH, added by SR-205 (the assumption gate): off by default, because
+        # it asks every requirement for a written argument, a cost a project
+        # opts into. Shipped on, it would fail every fresh scaffold's
+        # requirements at the boundary rung.
+        "assumption_gate": False,
     }
     # And this repo's own instance declares the same six KEYS — the structure
     # that must not drift (CLAUDE.md: "VALUES may diverge … STRUCTURE must not").

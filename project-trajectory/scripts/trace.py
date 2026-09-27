@@ -192,6 +192,7 @@ from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
+from kitlib.config import assumption_gate_enabled
 from kitlib.config import utf8_console as _utf8_console
 
 # THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
@@ -6617,9 +6618,12 @@ def main():
     # records, digests and acts are read here, once, for the same reason; a
     # malformed or out-of-policy record joins the integrity floor, the rest the
     # warn pipe.
+    # With the assumption gate on, a falsified assumption fails through the
+    # gate's boundary step instead of riding the worklist too (SR-201).
     inputs = record_observation.evidence_inputs(docs.parent, reg.tcs, reg.das, reg.bifs)
+    gate = assumption_gate_enabled(docs)
     observed, observed_advisories = observation_evidence_findings(
-        reg.srs, reg.das, reg.tcs, reg.sn_needs, reg.bifs, **inputs
+        reg.srs, reg.das, reg.tcs, reg.sn_needs, reg.bifs, gate=gate, **inputs
     )
     findings.integrity += observed
     findings.interface_advisories += observed_advisories

@@ -117,7 +117,9 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
     # one more of that kind, the observation writer's argv; WI-678 took the
     # act ledger's `external:` consumer off, since only the kit reads that
     # file, rather than leaving it here without a reason. The spine-linked
-    # test listing's argv joined them, driven by the adopter's session too.
+    # test listing's argv joined them, driven by the adopter's session too,
+    # and so did the release re-judge checkpoint's argv (IF-229), run by the
+    # person preparing a release.
     assert [u["id"] for u in frame["untied"]] == [
         "IF-032",
         "IF-036",
@@ -129,6 +131,7 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
         "IF-168",
         "IF-171",
         "IF-215",
+        "IF-229",
         "IF-233",
     ]
     assert all(u["reason"].startswith("No tie-back") for u in frame["untied"])

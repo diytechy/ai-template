@@ -290,6 +290,10 @@ SLOW_MODULES = frozenset(
         # WI-639 (TC-249): the per-change readability report needs a real git
         # history (a staged change, a claimed branch in a linked worktree).
         "test_check_readability",  # git init/commit/worktree per case
+        # WI-638 (TC-247, TC-248): the checkpoint re-judge decision reads inputs
+        # at a revision, and its release half drives the intake mint's commit.
+        "test_rejudge",  # git init/commit per case + the bookkeeping commit
+        "test_assumption_gate",  # check.py subprocess per case + a git approval act
         # WI-543 rework (REVIEW-A): the SR-163 mapping-purpose checker's CLI
         # drives. Each case spawns gen_arch_map.py --mapping-purpose as a
         # subprocess (real interpreter startup) to prove the delivered command is

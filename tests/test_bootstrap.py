@@ -138,6 +138,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/check_readability.py",
         "scripts/check_complexity.py",
         "scripts/check_test_first.py",
+        "scripts/check_assumption_gate.py",
         "scripts/check_need_form.py",
         "scripts/check_privacy.py",
         "scripts/check_vendored.py",
@@ -195,6 +196,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/bookkeeping.py",
         "scripts/census.py",
         "scripts/consolidate.py",
+        "scripts/rejudge.py",
         "scripts/pending.py",
         "scripts/coherence.py",
         "scripts/frame_rules.py",
@@ -898,6 +900,9 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
         # SR-217's declared start for the test-first order: empty declares
         # none, so a fresh scaffold's whole history is judged.
         "test_first_since": "",
+        # The assumption gate ships off: on, it would fail every fresh
+        # scaffold's requirements for the argument none has written yet.
+        "assumption_gate": False,
     }
     for legacy in (
         "gate-policy",

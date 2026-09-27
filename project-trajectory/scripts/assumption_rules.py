@@ -75,8 +75,8 @@ Stdlib only. A plain sibling of `scripts/`, not a `kitlib` module, for the
 reason `coherence.py` records: these are the checker's rules, and the
 scaffolder has no business importing them.
 
-Contracts: IF-190, IF-200, IF-201, IF-208, IF-216, IF-226 — the seams this
-module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-190, IF-200, IF-201, IF-208, IF-216, IF-226, IF-231 — the seams
+this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-190: the assumption tier's rule surface `trace.py` imports. Rows in,
     findings out, and nothing else: no I/O, no git, no filesystem, no argv.
@@ -113,7 +113,13 @@ Contract IF-200: the observation test declaration's rules `trace.py` imports.
     same seam: `is_observation_tc(tc)`, true when the `Automated` cell reads
     No, and `sampling_model_declared(tc)`, true only for a sampled case whose
     sample size and acceptance rule are both valid. A `-000` row is never
-    judged.
+    judged. `input_escape(name)` says why a declared input names a path
+    outside the repository (absolute, drive-qualified or still climbing with
+    `..` once normalized, in either separator style), or None; such an input
+    is a failure here, the observation writer refuses its case and digests it
+    without reading it, and the checkpoint re-judge reads it the same way.
+    `input_path(name)` is the repository-relative path an inside input names,
+    normalized, or None for an escaping one.
 Contract IF-201: the one derivation of an assumption's citing requirements,
     `da_citing_srs(srs) -> {assumption id: [requirement ids]}` in row order,
     read by the stage derivation and the red-TC census. Pure over requirement
@@ -162,9 +168,24 @@ Contract IF-226: the chain the approval brief renders for one assumption or
     `surrogate`, that surrogate's chain; a surrogate's carries `emulates` as
     `(id, name)` and `named_by` as `(id, assumption)`. Both carry `row`, the
     row itself.
+Contract IF-231: the assumption gate's rules, read by the gate's check step
+    (`check_assumption_gate.py`). Rows and already-derived readings in,
+    finding strings out, with no I/O; whether a finding fails or advises is
+    the step's. `boundary_gate_findings(srs, das, surs, reach, have_frame)`
+    (SR-205), with `reach` from `reach_gaps(das, srs, needs, stks, exts, bifs,
+    surs) -> {assumption id: [reasons]}`, the reach check's own derivation;
+    `crossing_gate_findings(srs, das, bifs)` and
+    `interface_form_gate_findings(srs, ifs, llrs)` (SR-212's Boundary and Arch
+    arms), over `if_reached_srs(ifs, llrs) -> {interface id: [requirement
+    ids]}` and `module_srs(llrs) -> {module: [requirement ids]}`; and
+    `release_gate_findings(das, srs, levels, risks, tcs)` (SR-206), with
+    `levels` mapping each assumption id to its `evidence_level`, `risks` to its
+    `accepted_risk_state` pair, and `tcs` the cases holding a current passing
+    result. A `-000` row is never judged.
 """
 
 import datetime
+import posixpath
 import re
 
 try:
@@ -176,7 +197,7 @@ try:
         is_example,
         refs,
     )
-    from kitlib.spine import is_approved, is_founded
+    from kitlib.spine import is_approved, is_founded, norm_module
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
     from pathlib import Path
@@ -190,7 +211,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         is_example,
         refs,
     )
-    from kitlib.spine import is_approved, is_founded
+    from kitlib.spine import is_approved, is_founded, norm_module
 
 # The observation record's reader and the whole-suite tiers the evidence level
 # reads (SR-199, SR-200): the shipped package again, importable once the block
@@ -233,6 +254,8 @@ OBSERVATION_CELLS = ("Inputs", "MaxAge", "Sampling", "SampleSize", "AcceptanceRu
 # A whole number of days or samples, written in digits: `7.5`, `seven` and `-3`
 # are not. The carrier hands an integer cell over as its text.
 _WHOLE = re.compile(r"[0-9]+")
+# A drive-qualified path (`C:`, `c:\`), which is absolute on Windows.
+_DRIVE = re.compile(r"\A[A-Za-z]:")
 
 
 def _cell(row, column):
@@ -737,7 +760,19 @@ def _idle_landings(did, landing, entity_of, reach, fidelity):
 
 
 def assumption_reach_advisories(das, srs, needs, stks, exts, bifs, surs):
-    """SR-195's reach check, need by need, as advisories.
+    """SR-195's reach check, need by need, as advisories: every line
+    `reach_gaps` holds, in assumption order.
+
+    Implements: SR-195, LLR-227
+    """
+    gaps = reach_gaps(das, srs, needs, stks, exts, bifs, surs)
+    return [line for lines in gaps.values() for line in lines]
+
+
+def reach_gaps(das, srs, needs, stks, exts, bifs, surs):
+    """SR-195's reach check, need by need, as `{assumption id: [lines]}` for
+    each assumption the check reports; the advisories and the boundary gate's
+    "does not reach" condition read this one derivation.
 
     For each assumption at least one requirement cites, its SERVED NEEDS are
     derived through `da_citing_srs` and the citing requirements' `SN-Refs`, and
@@ -761,12 +796,12 @@ def assumption_reach_advisories(das, srs, needs, stks, exts, bifs, surs):
     Implements: SR-195, LLR-227
     """
     if not bifs:
-        return []
+        return {}
     entity_of = {r["B-ID"]: _cell(r, "Entity") for r in bifs}
     parties = reaching_parties(needs, stks, exts)
     served_by = _served_needs(srs, parties)
     surrogates = dict(_real(surs, "SUR-ID"))
-    out = []
+    out = {}
     for did, row in _real(das, "DA-ID"):
         served = served_by.get(did)
         judged, emulated = _emulated(row, surrogates)
@@ -775,8 +810,10 @@ def assumption_reach_advisories(das, srs, needs, stks, exts, bifs, surs):
         landing = [bid for bid in refs(row.get("EffectAt")) if bid in entity_of]
         fidelity = emulated is not None
         reach = {nid: emulated if fidelity else parties[nid] for nid in served}
-        out += _unreached_needs(did, landing, entity_of, reach, fidelity)
-        out += _idle_landings(did, landing, entity_of, reach, fidelity)
+        lines = _unreached_needs(did, landing, entity_of, reach, fidelity)
+        lines += _idle_landings(did, landing, entity_of, reach, fidelity)
+        if lines:
+            out[did] = lines
     return out
 
 
@@ -928,7 +965,65 @@ def _declaration_failures(tid, row):
                 tid, sampling, " | ".join(SAMPLING_VALUES)
             )
         )
-    return out + _model_failures(tid, row)
+    return out + _escape_failures(tid, row) + _model_failures(tid, row)
+
+
+def input_path(name):
+    """The declared input `name` as the repository-relative path it names, in
+    forward slashes with `.` and inner `..` resolved lexically
+    (`docs/../src/a.txt` is `src/a.txt`), or None when that path is absolute,
+    drive-qualified or climbs out of the repository.
+
+    The one spelling every reader of a declared input resolves it by, so the
+    writer's checkout and a checkpoint's commit read the same file for the
+    same name. Symbolic links are not resolved here, since this reads no file:
+    each reader resolves them against the tree it digests.
+    """
+    text = str(name).strip().replace("\\", "/")
+    if text.startswith("/") or _DRIVE.match(text):
+        return None
+    normal = posixpath.normpath(text) if text else ""
+    if normal == ".." or normal.startswith("../"):
+        return None
+    return "" if normal == "." else normal
+
+
+def input_escape(name):
+    """Why the declared input `name` names a path outside the repository, or
+    None when it names a path inside it (or a registry row id).
+
+    A result is trusted only for what it judged, and what it judged has to be
+    what the repository holds: the writer digests the checkout and a
+    checkpoint digests a commit, and a path reaching outside either would
+    make the digest read a file no commit carries, which moves without any
+    merge and cannot be checked out at the revision judged. So an absolute
+    path, a drive-qualified one and one that still climbs out with `..` once
+    normalized (`input_path`) are refused here, in either separator style,
+    and this one rule is what the declaration check, the writer and the
+    checkpoint all apply. A `..` that stays inside is no escape.
+
+    Implements: SR-198, LLR-233
+    """
+    text = str(name).strip().replace("\\", "/")
+    if text.startswith("/") or _DRIVE.match(text):
+        return "an absolute path"
+    if input_path(name) is None:
+        return "a path climbing out of the repository with `..`"
+    return None
+
+
+def _escape_failures(tid, row):
+    """One failure per declared input naming a path outside the repository."""
+    out = []
+    for name in refs(row.get("Inputs")):
+        why = input_escape(name)
+        if why:
+            out.append(
+                "TC {} Inputs names `{}`, {} — a declared input is read inside "
+                "the repository only, so a result's digest is of committed "
+                "bytes".format(tid, name, why)
+            )
+    return out
 
 
 def _omissions(tid, row):
@@ -956,7 +1051,8 @@ def observation_tc_findings(tcs):
     declaration says nothing about it.
 
     FAILURES, bound for the always-on integrity floor: a `MaxAge` that is not a
-    whole number of days of at least `MAX_AGE_FLOOR_DAYS`, a `Sampling` outside
+    whole number of days of at least `MAX_AGE_FLOOR_DAYS`, an `Inputs` entry
+    naming a path outside the repository (`input_escape`), a `Sampling` outside
     `SAMPLING_VALUES`, a `SampleSize` that is not a whole number of at least
     one, an `AcceptanceRule` of whitespace alone, and one of those two model
     cells without the other, on an observation case. An empty cell is an
@@ -1663,3 +1759,255 @@ def assumption_chain(da_id, reg):
         "falsifier": _cell(row, "Falsifier"),
         "surrogate": _surrogate_chain(named[0], reg) if len(named) == 1 else None,
     }
+
+
+# --- the assumption gate: the argument behind each requirement, gated ---------
+# Everything above REPORTS. With the project's `[checks] assumption_gate` on,
+# the same questions FAIL a check step instead, each at the rung where it can
+# first be answered honestly (spine map D16: gates are check steps, never
+# conjuncts of the derived stage, which stays the harness evidence's alone):
+#
+#   DevStg-Boundary  maturity: each requirement not recorded coincident cites
+#                    approved, active assumptions that reach its stakeholders
+#                    (SR-205), and each interface-form requirement's crossings
+#                    are coincident or bridged by a cited assumption landing on
+#                    them (SR-212's Boundary arm), since the crossings are the
+#                    level-0 interfaces approved with the frame;
+#   DevStg-Arch      the same form judged against the boundary interfaces that
+#                    realize the crossings, once they exist (SR-212's Arch arm);
+#   DevStg-Release   evidence: each relied-on assumption has a current passing
+#                    result of a kind that supports a positive claim, or an
+#                    accepted risk that has not reopened (SR-206).
+#
+# With the gate off the step prints the same findings as advisories and
+# passes. The rules below return the findings alone; which of the two they
+# become is the step's (`check_assumption_gate.py`).
+
+
+def _unmet(did, da, surrogates, reach):
+    """The conditions assumption `did` fails for a requirement relying on it
+    at the boundary gate, one reason each, in the order SR-205 names them."""
+    if da is None:
+        return ["is not a declared assumption"]
+    out = []
+    if not is_approved(da):
+        out.append("is not approved (Status {})".format(_cell(da, "Status") or "unset"))
+    if _cell(da, "Standing") != "active":
+        out.append(
+            "is not active (Standing {})".format(_cell(da, "Standing") or "unset")
+        )
+    if reach.get(did):
+        out.append(
+            "does not reach the stakeholders of its needs: " + "; ".join(reach[did])
+        )
+    return out + [
+        "is a fidelity assumption whose surrogate {} is not approved".format(sur)
+        for sur in refs(da.get("RealizedBy"))
+        if not is_approved(surrogates.get(sur) or {})
+    ]
+
+
+def boundary_gate_findings(srs, das, surs, reach, have_frame):
+    """SR-205's boundary gate, as findings naming the requirement, the
+    assumption and the unmet condition.
+
+    A requirement recorded coincident (`Coincident`) passes. Any other
+    requirement fails when it cites no assumption, and once for each unmet
+    condition of each assumption it cites: not `Approved`, `Standing` not
+    active, reported by the reach check (`reach`, `reach_gaps`' map), or a
+    fidelity assumption whose `RealizedBy` surrogate is not `Approved`. With
+    no assumptions registry every requirement not recorded coincident
+    therefore fails: enabling the gate asks for the argument.
+
+    Nothing when `have_frame` is false: with no declared crossing an
+    assumption has nowhere to land, and the tier does not apply.
+
+    Implements: SR-205, LLR-242
+    """
+    if not have_frame:
+        return []
+    declared = dict(_real(das, "DA-ID"))
+    surrogates = dict(_real(surs, "SUR-ID"))
+    out = []
+    for sid, row in _real(srs, "SR-ID"):
+        if _cell(row, "Coincident"):
+            continue
+        cited = refs(row.get("DA-Refs"))
+        if not cited:
+            out.append(
+                "SR {} cites no assumption in DA-Refs and records no Coincident "
+                "waiver: the gate asks every requirement for the argument that "
+                "carries it to its needs".format(sid)
+            )
+        for did in cited:
+            out += [
+                "SR {} relies on assumption {}, which {}".format(sid, did, why)
+                for why in _unmet(did, declared.get(did), surrogates, reach)
+            ]
+    return out
+
+
+def release_gate_findings(das, srs, levels, risks, tcs):
+    """SR-206's release gate, as findings naming the assumption and what is
+    missing, over each assumption at least one requirement cites.
+
+    It passes with a monitored evidence level (`levels`, `evidence_level` per
+    assumption id: a current passing monitored observation or automated
+    result); with a sampled level only while one of the current sampled cases
+    citing it declares a sampling model (`sampling_model_declared`), since a
+    sparse sample can falsify but not prove; or with an accepted risk that
+    reads covered (`risks`, `accepted_risk_state` per assumption id, read as
+    though nothing evidenced it: the gate consults the risk only once the
+    evidence has not counted, and a sampled result with no sampling model
+    must not read the risk moot). `tcs` are the test cases holding a current
+    passing result (`result_current`), the only ones a sampled level can rest
+    on.
+
+    Implements: SR-206, LLR-243
+    """
+    cited = da_citing_srs(srs)
+    current = dict(_real(tcs, "TC-ID"))
+    out = []
+    for did, _da in _real(das, "DA-ID"):
+        if did not in cited:
+            continue
+        level = levels.get(did, LEVEL_ASSUMED)
+        if level == LEVEL_MONITORED:
+            continue
+        cases = _citing_cases(did, tcs)
+        if level == LEVEL_SAMPLED and any(
+            sampling_model_declared(current[tid]) for tid in cases
+        ):
+            continue
+        reading, reasons = risks.get(did) or (None, [])
+        if reading == RISK_COVERED:
+            continue
+        missing = (
+            "its only current passing results are sampled and none of their "
+            "test cases declares a sampling model (sample_size and "
+            "acceptance_rule)"
+            if level == LEVEL_SAMPLED
+            else "it has no current passing monitored or automated result "
+            "(evidence level {})".format(level)
+        )
+        risk = "its accepted risk has reopened: " + "; ".join(reasons or ["?"])
+        out.append(
+            "assumption {}, relied on by {}: {}, and {}".format(
+                did,
+                ", ".join(cited[did]),
+                missing,
+                risk if reading else "it records no accepted risk",
+            )
+        )
+    return out
+
+
+def module_srs(llrs):
+    """`{module: [requirement ids]}`: each design row's `Module` entries,
+    normalized by `norm_module`, mapped to the requirements its `SR-Refs`
+    names, in row order and once each.
+
+    Implements: SR-212, LLR-244
+    """
+    out = {}
+    for _lid, row in _real(llrs, "LLR-ID"):
+        for module in refs(row.get("Module")):
+            listed = out.setdefault(norm_module(module), [])
+            listed += [s for s in refs(row.get("SR-Refs")) if s not in listed]
+    return out
+
+
+def if_reached_srs(ifs, llrs):
+    """`{interface id: [requirement ids]}` for each BOUNDARY interface (a
+    from- or to-external tie-back): the requirements its owner's module
+    realizes, through the design rows naming that module. Derived here and
+    never recorded on the interface, so the relation has one home.
+
+    Implements: SR-212, LLR-244
+    """
+    by_module = module_srs(llrs)
+    return {
+        iid: by_module.get(norm_module(_cell(row, "Owner")), [])
+        for iid, row in _real(ifs, "IF-ID")
+        if _crossings(row)
+    }
+
+
+def _interface_form(srs):
+    """`(id, row)` for each requirement whose `Form` is interface."""
+    return [(s, r) for s, r in _real(srs, "SR-ID") if _cell(r, "Form") == "interface"]
+
+
+def interface_form_gate_findings(srs, ifs, llrs):
+    """SR-212's Arch arm, as findings: each interface-form requirement judged
+    against EVERY boundary interface reaching it (`if_reached_srs`).
+
+    One reached by none fails, naming it and stating that no boundary
+    interface reaches it; nothing is invented to reach it. Each reaching
+    interface that records no `Coincident` and whose `BridgedBy` shares no
+    assumption with the requirement's `DA-Refs` fails, naming the requirement
+    and that interface, so one valid interface never excuses another. The
+    other two forms are not judged.
+
+    Implements: SR-212, LLR-244
+    """
+    rows = dict(_real(ifs, "IF-ID"))
+    reaching = {}
+    for iid, sids in if_reached_srs(ifs, llrs).items():
+        for sid in sids:
+            reaching.setdefault(sid, []).append(iid)
+    out = []
+    for sid, row in _interface_form(srs):
+        if sid not in reaching:
+            out.append(
+                "SR {} is of interface form, but no boundary interface reaches it "
+                "through the modules its design rows name".format(sid)
+            )
+            continue
+        cited = set(refs(row.get("DA-Refs")))
+        for iid in reaching[sid]:
+            bridging = refs(rows[iid].get("BridgedBy"))
+            if _cell(rows[iid], "Coincident") or cited & set(bridging):
+                continue
+            out.append(
+                "SR {} is reached by boundary interface {}, which records no "
+                "Coincident waiver and is bridged by no assumption the "
+                "requirement cites (BridgedBy: {})".format(
+                    sid, iid, ", ".join(bridging) or "none"
+                )
+            )
+    return out
+
+
+def crossing_gate_findings(srs, das, bifs):
+    """SR-212's Boundary arm, as findings: each interface-form requirement
+    judged against every declared crossing its `Boundary-Refs` names.
+
+    The frame's crossings are the level-0 interfaces, approved with the frame
+    before any interface row exists, and an assumption already lands on them
+    (`EffectAt`). So a requirement recorded coincident passes, its own
+    specification being the outcome at the crossing; otherwise each crossing
+    it names must be the landing of an assumption it cites, and each one that
+    is not fails, naming the requirement and the crossing. The other two
+    forms are not judged, and neither is a crossing the frame does not
+    declare, which the frame's own reference rule fails. Nothing with no
+    declared crossing.
+
+    Implements: SR-212, LLR-244
+    """
+    declared = {_cell(r, "B-ID") for r in bifs}
+    lands = {did: set(refs(r.get("EffectAt"))) for did, r in _real(das, "DA-ID")}
+    out = []
+    for sid, row in _interface_form(srs):
+        if _cell(row, "Coincident"):
+            continue
+        cited = refs(row.get("DA-Refs"))
+        for bid in refs(row.get("Boundary-Refs")):
+            if bid not in declared or any(bid in lands.get(d, ()) for d in cited):
+                continue
+            out.append(
+                "SR {} names crossing {} in Boundary-Refs, but records no "
+                "Coincident waiver and cites no assumption landing on it "
+                "(EffectAt)".format(sid, bid)
+            )
+    return out

@@ -194,6 +194,7 @@ JUDGING = (
     pr.ADJUDICATE_DISPOSITION,
     pr.ADJUDICATE_CONSOLIDATE,
     pr.ADJUDICATE_RED_TC,
+    pr.ADJUDICATE_REJUDGE,
 )
 
 # A machine line: one closed enum, on its own line, with a typed counter. The

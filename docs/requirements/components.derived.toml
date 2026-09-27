@@ -19,7 +19,7 @@
 [derived]
 components = 4
 design_rows = 242
-seam_rows = 191
+seam_rows = 195
 requirements_placed = 108
 requirements_unplaced = 6
 seams_unplaced = 0
@@ -329,6 +329,9 @@ seam_boundary_refs = [
   "IF-194",
   "IF-199",
   "IF-224",
+  "IF-228",
+  "IF-229",
+  "IF-231",
   "IF-233",
 ]
 
@@ -414,6 +417,7 @@ modules = [
   "project-trajectory/scripts/acceptance_record.py",
   "project-trajectory/scripts/assumption_rules.py",
   "project-trajectory/scripts/check.py",
+  "project-trajectory/scripts/check_assumption_gate.py",
   "project-trajectory/scripts/check_complexity.py",
   "project-trajectory/scripts/check_coverage.py",
   "project-trajectory/scripts/check_doc_refs.py",
@@ -452,6 +456,8 @@ seam_internal_refs = [
   "IF-188",
   "IF-196",
   "IF-198",
+  "IF-230",
+  "IF-231",
 ]
 seam_boundary_refs = [
   "IF-001",
@@ -477,6 +483,7 @@ seam_boundary_refs = [
   "IF-070",
   "IF-072",
   "IF-077",
+  "IF-089",
   "IF-091",
   "IF-102",
   "IF-104",
@@ -508,6 +515,7 @@ seam_boundary_refs = [
   "IF-201",
   "IF-208",
   "IF-214",
+  "IF-215",
   "IF-216",
   "IF-220",
   "IF-226",
@@ -689,6 +697,7 @@ seam_internal_refs = [
   "IF-195",
   "IF-196",
   "IF-197",
+  "IF-228",
 ]
 seam_boundary_refs = [
   "IF-001",
@@ -770,9 +779,13 @@ seam_boundary_refs = [
   "IF-187",
   "IF-189",
   "IF-198",
+  "IF-200",
   "IF-201",
+  "IF-215",
   "IF-220",
   "IF-224",
+  "IF-229",
+  "IF-230",
 ]
 
 [component_view.CMP-009]
@@ -979,6 +992,7 @@ seam_boundary_refs = [
   "IF-199",
   "IF-215",
   "IF-216",
+  "IF-228",
 ]
 
 [unplaced]

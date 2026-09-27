@@ -2,7 +2,7 @@
 id = "WI-638"
 title = "Assumption build, remaining: checkpoint re-judging of observation tests (SR-215), then the gate's boundary, release and architecture steps with SR-212's Boundary arm (SR-205, SR-206, SR-212)"
 workstream = "unattended"
-specref = "docs/plans/2026-09-25-assumption-tier-spine-map.md#3-plan-coverage"
+specref = ""
 sr_refs = ["SR-215"]
 needs = ["WI-632", "WI-612", "WI-630"]
 buildtier = "strong"
@@ -10,6 +10,50 @@ safety_class = "ordinary"
 priority = 5
 supersedes = "WI-634"
 +++
+
+## Deliverable
+
+The assumption plan's remaining build (squash of build/wi-638: 285800f9,
+42a627fd, af6e9278, c04f142a, efd1cda9). Codex Sol reviewed it over two
+sessions: wave-3 `sol-wi638.md` and `sol-wi638-fix.md` (rulings 19, 22),
+then wave-4 `sol-wi638.md`, `sol-wi638-fix.md` and `sol-wi638-fix2.md`, the
+last SOUND. Wave-4 rulings 2, 7 and 11 record the disputes; ruling 11
+revised the coordinator's own ruling 7.
+
+- **SR-215 (WI-638).** `rejudge.py` decides from a digest of each
+  observation case's declared inputs. At each work-item merge the intake mint
+  files one `rejudge` adjudication row per due case with no open one.
+  `intake.py rejudge --checkpoint release` and a required release-checklist
+  item cover release. The checkpoint revision is extracted once, and an input
+  path escaping the repository fails the declaration rule. A committed link
+  is not content: one predicate excludes links from the writer's digest and
+  the checkpoint's alike, so a result recorded on Windows without symlink
+  privilege is not due at once, and a directory link to itself is harmless.
+  TC-036, TC-055, TC-209, TC-210 and TC-211 declare `inputs` and
+  `max_age = 90` (ruling 2), so the first merge after this files five
+  re-judge rows.
+- **SR-205, SR-206, SR-212 (WI-634, absorbed).**
+  `scripts/check_assumption_gate.py` (IF-230) runs four built-in steps
+  behind `[checks] assumption_gate`, shipped `false`, where absent or
+  unreadable reads off: `assumption-gate` and `crossing-allocation` from
+  DevStg-Boundary, `interface-allocation` from DevStg-Arch, and
+  `assumption-evidence` at DevStg-Release. With the gate off every finding is
+  an advisory. SR-212 carries OI-88 (c): a Boundary arm over the frame's
+  crossings beside the Arch arm over IF rows, both over interface-form
+  requirements (ruling 7). Both arms were driven red then green. The Release
+  arm judges a project with no frame too (SR-206 has no exemption).
+
+Approved rows amended in place, unanchored, for the next spine-acts batch:
+SR-198 (`requirement`, `acceptance_criteria`), SR-212 (`title`,
+`requirement`, `rationale`, `acceptance_criteria`), LLR-233 (`detail`),
+LLR-244 (`title`, `detail`), LLR-254 (`detail`), TC-228 (`method`,
+`expected`), TC-239 (`method`, `expected`), TC-247 (`method`), and TC-036
+and TC-055 (`inputs`, `max_age`). TC-209, TC-210 and TC-211 are Drafted.
+Traced cells moved: LLR-242, LLR-243 and LLR-244 `module` and `code_symbol`;
+LLR-254 `code_symbol`; TC-237 and TC-239 `verifies`. New Drafted IF-228 to
+IF-231. Recorded: on Windows with `core.symlinks=false`, an uncommitted link
+held as a text file is invisible to the link rule; it cannot reach a
+checkpoint.
 
 ## Context
 

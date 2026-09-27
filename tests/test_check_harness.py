@@ -229,6 +229,27 @@ def test_step_plan_wiring():
             )
 
 
+def test_the_assumption_gate_steps_are_built_in_at_their_rungs():
+    """TC-237's plan half, with SR-206 and SR-212's steps beside it: each of
+    the assumption gate's four steps is in the built-in step set and becomes
+    relevant at the rung its question can first be answered at, and none is a
+    product step."""
+    check = load_script("check")
+    from kitlib import ladder as kitladder
+
+    plan = {s[0]: s for s in check.steps(80, "all", "all")}
+    for name, rung in (
+        ("assumption-gate", kitladder.STAGE_BOUNDARY),
+        ("crossing-allocation", kitladder.STAGE_BOUNDARY),
+        ("interface-allocation", kitladder.STAGE_ARCH),
+        ("assumption-evidence", kitladder.STAGE_RELEASE),
+    ):
+        assert name in check.BUILTIN_STEP_NAMES, name
+        assert plan[name][3] == rung, (name, plan[name][3])
+        assert plan[name][4] == "process", name
+        assert plan[name][2][-2:] == ["--step", name], plan[name][2]
+
+
 def test_missing_command_is_designed_failure():
     # A rewired step ("swap the format/lint/test commands for your toolchain")
     # names an executable the module guard can't see (npx, cargo, ...). Its

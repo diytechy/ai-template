@@ -5992,6 +5992,76 @@ linking the claimed spec no longer refuses the claim.
 unmerged adjudication spec drafts a scalar `open_item`, rewrite it as the table
 before its merge, or its mint refuses. Rows already minted are untouched.
 
+### Observation tests are re-judged at each merge and at release [since 6957fb38]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A test case recorded as not automated (an observation test
+case) is now checked at two checkpoints. At each work-item merge, the intake
+mint hashes every observation case's declared `inputs` at the merged commit
+and files one queued `rejudge` adjudication row for each case whose inputs no
+longer match its latest result's judged digest, whose latest result has
+expired, or which has no result; a case declaring no inputs is judged by
+expiry and absence alone. No second row is filed while a case's row is open.
+The new `scripts/intake.py rejudge --checkpoint release [--rev <commit>]` runs
+the same check for release preparation, and the release checklist now carries
+a required item naming that command and how many cases are due. The check runs
+no model: a filed row is briefed by the new
+`prompts/adjudicate-rejudge.template.md`, whose session records the result
+with `scripts/record_observation.py` or says the judgment is a person's. New
+kit script: `scripts/rejudge.py`. A declared `inputs` entry naming a path
+outside the repository (absolute, drive-qualified, or still climbing out with
+`..` once normalized, in either separator style; `docs/../src/a.txt` is inside
+and reads `src/a.txt`) now fails the traceability check naming the case, the
+observation writer refuses to record that case, and the inputs digest never
+reads such a path, so a result's digest is only ever of committed bytes. A
+committed symbolic link is not content: the digest excludes it in the
+checkout and at a checkpoint alike, a declared link reading as absent and a
+link inside a declared directory contributing nothing, so its target is never
+read and a change to the target moves no result.
+
+**What to do.** Copy `scripts/rejudge.py` and
+`prompts/adjudicate-rejudge.template.md`, and re-sync `scripts/intake.py`,
+`scripts/adjudicate_brief.py`, `scripts/prompts.py`,
+`scripts/gen_release_checklist.py`, `scripts/assumption_rules.py`,
+`scripts/record_observation.py` and `prompts/CATALOG.md`. Rewrite any
+observation case's `inputs` entry that points outside the repository as a
+repository-relative path. From the next
+merge, every observation test case with no recorded result gets a re-judge row,
+so expect one row per such case on the first merge after the upgrade; record a
+result for each (`record_observation.py --tc <id> --outcome pass|fail --by
+<who>`) or let the rows run. A case with no `max_age` cannot be recorded: give
+it one before its row is picked up.
+
+### The assumption gate: four check steps, off until you turn it on [since 6957fb38]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A new `[checks] assumption_gate` key in `docs/process.toml`
+(shipped `false`; absent or unreadable reads off) and four new built-in
+`check.py` steps run by the new `scripts/check_assumption_gate.py`:
+`assumption-gate` and `crossing-allocation` from DevStg-Boundary,
+`interface-allocation` from DevStg-Arch and `assumption-evidence` at
+DevStg-Release. They ask each requirement for the argument that carries it to
+its needs: approved, active assumptions reaching its stakeholders or a
+`coincident` waiver; for an interface-form requirement, each crossing it names
+coincident or bridged by a cited assumption landing on it, and each boundary
+interface reaching it coincident or bridged by a cited assumption; and at
+release, current evidence or an unreopened accepted risk for every assumption
+relied on. With the setting off every finding prints as an advisory and the
+step passes; with it on, each finding fails the step. The derived stage reads
+none of it. With the gate on, `trace.py` also leaves a falsified assumption out
+of the falsification worklist, since the gate's boundary step fails it.
+
+**What to do.** Copy `scripts/check_assumption_gate.py`, and re-sync
+`scripts/check.py`, `scripts/assumption_rules.py`, `scripts/kitlib/config.py`
+and `scripts/trace.py`. Add `assumption_gate = false` under `[checks]` in your
+`docs/process.toml` (the template's comment on it is the documentation): the
+four steps now run in your plan and print advisories, which is what turning
+the gate on would fail. A `[step:<name>]` of your own named
+`assumption-gate`, `crossing-allocation`, `interface-allocation` or
+`assumption-evidence` now collides with a built-in step and must be renamed.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

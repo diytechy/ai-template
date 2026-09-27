@@ -331,3 +331,17 @@ backlink_coverage_min = 0
 # before the landing (a requirement's own, at or before the start); otherwise
 # it is reported as an order that cannot be read.
 test_first_since = ""
+# THE ASSUMPTION GATE (SR-205, SR-206, SR-212), off by default. Its four
+# built-in check steps (`check_assumption_gate.py`) ask of every requirement the
+# argument that carries it to its needs: at DevStg-Boundary, approved, active
+# assumptions reaching its stakeholders, or a `coincident` waiver
+# (`assumption-gate`), and for an interface-form requirement, each crossing it
+# names coincident or bridged by a cited assumption landing on it
+# (`crossing-allocation`); at DevStg-Arch, a boundary interface reaching it, each
+# reaching one coincident or bridged (`interface-allocation`); at DevStg-Release,
+# current evidence or an accepted risk for every assumption relied on
+# (`assumption-evidence`). `false` (or the key absent, or this file unreadable)
+# prints the same findings as advisories and fails nothing, so you can see what
+# `true` would fail before turning it on. It is a cost worth opting into once
+# your requirements cite assumptions; the derived stage never reads it.
+assumption_gate = false

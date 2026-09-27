@@ -10,7 +10,7 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into approval or arrives approved, `--approves` names it or `--reattests` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 17 changed, 29 added, 1 removed since the snapshot; ruling(s): WI-582, WI-598, WI-604, WI-619, WI-644, WI-663, WI-672, WI-677.
+- `docs/requirements/interfaces.toml` — 18 changed, 33 added, 1 removed since the snapshot; ruling(s): WI-582, WI-598, WI-604, WI-619, WI-644, WI-663, WI-672, WI-677.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): none cited.
 
 
@@ -21,7 +21,7 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 21 chain(s): SR-017, SR-139, SR-148, SR-151, SR-152, SR-157, SR-159, SR-161, SR-163, SR-164, SR-168, SR-170, SR-175, SR-176, SR-180, SR-183, SR-184, SR-185, SR-186, SR-220, SR-221</summary>
+<summary>Waiting for automated adjudication — 26 chain(s): SR-017, SR-036, SR-054, SR-139, SR-148, SR-151, SR-152, SR-157, SR-159, SR-161, SR-163, SR-164, SR-168, SR-170, SR-175, SR-176, SR-180, SR-183, SR-184, SR-185, SR-186, SR-198, SR-212, SR-215, SR-220, SR-221</summary>
 
 ## SR-017 — Always-on secrets floor
 
@@ -56,6 +56,36 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Evidence**: tests/test_kitlib_secret_classes.py
 - **Status**: Drafted
 - **Phase**: 5
+
+## SR-036 — Deliberate re-sync integration
+
+> **Requirement.** A re-sync of an existing adoption shall integrate relevant kit updates without clobbering the adopter's filled-in files, per the documented re-sync procedure — take kit-owned scripts/hooks wholesale, regenerate generated docs, and preserve filled-in registries/config.
+
+> **Rationale.** Realizes SN-001 and SN-007 — picking up kit updates is a deliberate diff-and-merge, not a mechanical operation: bootstrap.py supplies the docs/kit-version stamp and --force (SR-011), while the operator makes the overwrite-vs-preserve call, aided by the downstream-resync skill.
+
+
+### TC TC-036
+- **Inputs**
+  - before: (empty)
+  - after: project-trajectory/ADOPTING.md;project-trajectory/skills/downstream-resync/SKILL.md;SR-036
+- **MaxAge**
+  - before: (empty)
+  - after: 90
+
+## SR-054 — Dashboard usability (rubric-adjudicated)
+
+> **Requirement.** The state view the delivered generators produce shall support its core reading tasks with low friction: a first-time reviewer finds the project state, the next work, and how the parts connect, each within one tab switch; views default to a legible density (start-collapsed per the greater-than-3 rule) and reveal detail without losing context; labels stay readable at default zoom with no clipped or overlapping text.
+
+> **Rationale.** Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded one-time judgement rather than on a standing re-judgement — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today.
+
+
+### TC TC-055
+- **Inputs**
+  - before: (empty)
+  - after: docs/rubrics/dashboard-usability.md;SR-054;LLR-055;project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/rendering
+- **MaxAge**
+  - before: (empty)
+  - after: 90
 
 ## SR-139 — Approval as an ordinal over a derived spine stage
 
@@ -478,18 +508,13 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Status**: Drafted
 - **Phase**: 5
 
-### TC TC-209 — Drafted, never approved
-_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
-- **TC-ID**: TC-209
-- **Verifies**: SR-184
-- **Level**: Inspection
-- **Method**: Follow the Critique acceptance provenance inspection in docs/test/inspection-procedures.md#critique-acceptance-provenance-inspection; inspect a complete record, an abnormal record missing reviewer/rubric/intent/anchor, and a fully populated record whose rubric is copied from the verifying TC without independent SN/SR derivation.
-- **Tier**: Release
-- **Expected**: Complete independently derived provenance is accepted; each missing field or TC-copied rubric without independent SN/SR derivation is an Inspection finding; artifact quality remains Critique's judgment.
-- **Automated**: No
-- **Evidence**: docs/test/inspection-procedures.md#critique-acceptance-provenance-inspection-result
-- **Status**: Drafted
-- **Phase**: 5
+### TC TC-209, Drafted — never approved
+- **Inputs**
+  - before: (empty)
+  - after: docs/test/inspection-procedures.md;SR-184
+- **MaxAge**
+  - before: (empty)
+  - after: 90
 
 ## SR-185 — Coordinated requirement/interface change review
 
@@ -513,18 +538,13 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Status**: Drafted
 - **Phase**: 5
 
-### TC TC-210 — Drafted, never approved
-_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
-- **TC-ID**: TC-210
-- **Verifies**: SR-185
-- **Level**: Inspection
-- **Method**: Follow the requirement and interface counterpart review inspection in docs/test/inspection-procedures.md#requirement-and-interface-counterpart-review-inspection; inspect a semantic change record and an abnormal reference-existence-only record.
-- **Tier**: Release
-- **Expected**: The counterpart decision is explicit; reference-existence evidence alone is found insufficient.
-- **Automated**: No
-- **Evidence**: docs/test/inspection-procedures.md#requirement-and-interface-counterpart-review-inspection-result
-- **Status**: Drafted
-- **Phase**: 5
+### TC TC-210, Drafted — never approved
+- **Inputs**
+  - before: (empty)
+  - after: docs/test/inspection-procedures.md;SR-185
+- **MaxAge**
+  - before: (empty)
+  - after: 90
 
 ## SR-186 — Proportionate requirement decomposition
 
@@ -549,18 +569,123 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Phase**: 5
 - **Aspect**: process
 
-### TC TC-211 — Drafted, never approved
-_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
-- **TC-ID**: TC-211
-- **Verifies**: SR-186
-- **Level**: Inspection
-- **Method**: Follow the decomposition proportionality inspection in docs/test/inspection-procedures.md#decomposition-proportionality-inspection; inspect the complete chain and an extra paraphrasing child.
-- **Tier**: Release
-- **Expected**: A child within a required tier with no independent decision or verification purpose is an Inspection finding; otherwise the review records that independent value and why further splitting stops.
-- **Automated**: No
-- **Evidence**: docs/test/inspection-procedures.md#decomposition-proportionality-inspection-result
-- **Status**: Drafted
-- **Phase**: 5
+### TC TC-211, Drafted — never approved
+- **Inputs**
+  - before: (empty)
+  - after: docs/test/inspection-procedures.md;SR-186
+- **MaxAge**
+  - before: (empty)
+  - after: 90
+
+## SR-198 — An observation test declares what it reads, how long its result holds, and how it samples
+
+> **Requirement.** The delivered harness shall report an observation test case that omits the inputs its judgment reads, its result lifetime or, where it evidences an assumption, its sampling policy, and refuse one declaring a lifetime shorter than seven days, an input path outside the repository, or a sampling policy outside the closed pair of sampled and monitored.
+
+> **Rationale.** An observation — a person reading a render, a critique of a rendered view, a measurement taken across an adopter's first week — cannot be rerun for every tree, so its result is trusted only while the state it judged is unchanged, and for a declared time. Declaring the inputs it reads is what lets a changed input make the result stale without a model call; the lifetime floor keeps a judgment from being demanded more often than it can honestly be taken. The author proposes the lifetime and the row's approval accepts it, because how fast a premise can change is a judgment about the world. A sampled result supports a positive claim only under a stated sampling model, so the model is declared where a project wants that claim. Omissions are reported rather than refused so observation tests written before these cells existed keep passing on upgrade; the declarations are approved content because they state how the row's claim is kept current.
+
+
+### SR SR-198
+- **AcceptanceCriteria**
+  - before: A test case is an observation test case when it is recorded as not automated — a judgment the harness cannot rerun — whether it verifies a requirement or evidences an assumption; each declares the inputs its judgment reads and a result lifetime in days, one evidencing an assumption also declares a sampling policy of sampled or monitored, and a sampled one may declare a sampling model made of a whole-number sample size of at least one and a non-empty acceptance rule, whose adequacy for the claim is judged when the test case is approved; an omitted input list, lifetime or policy is reported without failing the check, naming the row; a lifetime under seven days, a policy outside the pair, or a sampling model missing either part or carrying a sample size below one fails the check naming the row; an automated test case declares none of these; declaring or changing any of them re-opens the test case's attestation.
+  - after: A test case is an observation test case when it is recorded as not automated — a judgment the harness cannot rerun — whether it verifies a requirement or evidences an assumption; each declares the inputs its judgment reads and a result lifetime in days, one evidencing an assumption also declares a sampling policy of sampled or monitored, and a sampled one may declare a sampling model made of a whole-number sample size of at least one and a non-empty acceptance rule, whose adequacy for the claim is judged when the test case is approved; an omitted input list, lifetime or policy is reported without failing the check, naming the row; a lifetime under seven days, an input path that is absolute or still climbs out of the repository once normalized, a policy outside the pair, or a sampling model missing either part or carrying a sample size below one fails the check naming the row; an automated test case declares none of these; declaring or changing any of them re-opens the test case's attestation.
+- **Requirement**
+  - before: The delivered harness shall report an observation test case that omits the inputs its judgment reads, its result lifetime or, where it evidences an assumption, its sampling policy, and refuse one declaring a lifetime shorter than seven days or a sampling policy outside the closed pair of sampled and monitored.
+  - after: The delivered harness shall report an observation test case that omits the inputs its judgment reads, its result lifetime or, where it evidences an assumption, its sampling policy, and refuse one declaring a lifetime shorter than seven days, an input path outside the repository, or a sampling policy outside the closed pair of sampled and monitored.
+
+### LLR LLR-233
+- **Detail**
+  - before: is_observation_tc(tc) reads the Automated cell alone: a case whose Automated reads No is an observation test case, the one marker covering every judgment the harness cannot rerun, since the Level and Verification cells disagree across rows. observation_tc_findings(tcs) returns (failures, advisories): an observation case with no inputs, no max_age, or, when it carries Assumption-Refs, no sampling policy is an advisory naming the row; a max_age below MAX_AGE_FLOOR_DAYS or not a whole number, a sampling value outside SAMPLING_VALUES, a sample_size that is not a whole number of at least one, an acceptance_rule that is empty or whitespace, and one of the two model cells without the other, are failures composed into the always-on integrity class naming the row; an automated case carrying any of these cells is an advisory. sampling_model_declared(tc) is true only for a sampled case carrying both model cells valid; whether the rule justifies the claim is judged when the case is approved.
+  - after: is_observation_tc(tc) reads the Automated cell alone: a case whose Automated reads No is an observation test case, the one marker covering every judgment the harness cannot rerun, since the Level and Verification cells disagree across rows. observation_tc_findings(tcs) returns (failures, advisories): an observation case with no inputs, no max_age, or, when it carries Assumption-Refs, no sampling policy is an advisory naming the row; a max_age below MAX_AGE_FLOOR_DAYS or not a whole number, an inputs entry naming a path outside the repository (input_escape: absolute, drive-qualified, or still climbing out with `..` once normalized, so `docs/../src` is inside), a sampling value outside SAMPLING_VALUES, a sample_size that is not a whole number of at least one, an acceptance_rule that is empty or whitespace, and one of the two model cells without the other, are failures composed into the always-on integrity class naming the row; an automated case carrying any of these cells is an advisory. sampling_model_declared(tc) is true only for a sampled case carrying both model cells valid; whether the rule justifies the claim is judged when the case is approved.
+
+### TC TC-228
+- **Expected**
+  - before: Satisfies SR-198's acceptance: observation cases defined by the one marker; omissions reported without failing; a lifetime under seven days, an out-of-pair policy or a malformed sampling model fails naming the row; automated cases declare none.
+  - after: Satisfies SR-198's acceptance: observation cases defined by the one marker; omissions reported without failing; a lifetime under seven days, an input path outside the repository, an out-of-pair policy or a malformed sampling model fails naming the row; automated cases declare none.
+- **Method**
+  - before: is_observation_tc, observation_tc_findings and sampling_model_declared called on in-memory test cases. A case whose Automated reads No is an observation case and one reading Yes is not. An observation case missing inputs, missing max_age, or, when it cites assumptions, missing a sampling policy is one advisory per omission naming it. A max_age of 6 fails and 7 passes; a max_age of 7.5 or a word fails; a sampling value outside sampled and monitored fails. For the sampling model: a sample size of 0, of 2.5 or a word fails; an empty or whitespace acceptance rule fails; a size without a rule, and a rule without a size, fail; a sampled case with neither is valid but not model-declared; a sampled case with a size of 5 and a non-empty rule is model-declared. An automated case carrying any of the declaration cells is an advisory. The template's example case ships every key.
+  - after: is_observation_tc, observation_tc_findings and sampling_model_declared called on in-memory test cases. A case whose Automated reads No is an observation case and one reading Yes is not. An observation case missing inputs, missing max_age, or, when it cites assumptions, missing a sampling policy is one advisory per omission naming it. A max_age of 6 fails and 7 passes; a max_age of 7.5 or a word fails; an input naming an absolute or drive-qualified path, or one still climbing out of the repository with `..` once normalized, in either separator style, fails naming the row and the input, and `docs/../src/a.txt` passes; a sampling value outside sampled and monitored fails. For the sampling model: a sample size of 0, of 2.5 or a word fails; an empty or whitespace acceptance rule fails; a size without a rule, and a rule without a size, fail; a sampled case with neither is valid but not model-declared; a sampled case with a size of 5 and a non-empty rule is model-declared. An automated case carrying any of the declaration cells is an advisory. The template's example case ships every key.
+
+## SR-212 — With the assumption gate on, interface-form requirements are bridged at their crossings and reached and bridged at the architecture rung
+
+> **Requirement.** Where the assumption gate is enabled, the delivered harness shall fail, for each system requirement of interface form, the boundary gate when the requirement is not recorded as coincident and names a crossing on which no assumption it cites lands, and the architecture gate when no boundary interface reaches it or a reaching boundary interface neither records it as coincident nor bridges it by an assumption the requirement also cites.
+
+> **Rationale.** A requirement meant to be met at an interface is not testable until that interface exists and its reading is either the outcome or carried by an assumption the requirement itself relies on. The frame's crossings are the first such interfaces: they are approved with the frame at the boundary rung, before any interface row exists, and an assumption already names the crossing it lands on, so the requirement is judged against them there. Judging it again at the architecture rung, against the boundary interfaces that realize the crossings, keeps interfaces after the requirements they answer. Minting interface rows to match a count would produce seams with no contract behind them, so the check reports the gap rather than inventing the seam.
+
+
+### SR SR-212
+- **AcceptanceCriteria**
+  - before: A requirement of interface form reached, through the modules its design rows name, by at least one boundary interface, every such interface coincident or bridged by an assumption the requirement cites, passes; one reached by none fails the architecture gate naming the requirement and stating that no boundary interface reaches it; each reaching interface bridged only by assumptions the requirement does not cite fails it naming the requirement and that interface, however many other reaching interfaces pass; requirements of the other two forms are out of scope; with the gate disabled the same conditions are advisory.
+  - after: At the boundary rung, a requirement of interface form recorded as coincident passes, and any other fails the boundary gate once for each declared crossing its boundary references name on which no assumption it cites lands, naming the requirement and that crossing; a crossing the frame does not declare is not judged here. At the architecture rung, a requirement of interface form reached, through the modules its design rows name, by at least one boundary interface, every such interface coincident or bridged by an assumption the requirement cites, passes; one reached by none fails the architecture gate naming the requirement and stating that no boundary interface reaches it; each reaching interface bridged only by assumptions the requirement does not cite fails it naming the requirement and that interface, however many other reaching interfaces pass; requirements of the other two forms are out of scope; with the gate disabled the same conditions are advisory.
+- **Rationale**
+  - before: A requirement meant to be met at an interface is not testable until that interface exists and its reading is either the outcome or carried by an assumption the requirement itself relies on. Judging it at the architecture rung keeps interfaces after the requirements they answer. Minting interface rows to match a count would produce seams with no contract behind them, so the check reports the gap rather than inventing the seam.
+  - after: A requirement meant to be met at an interface is not testable until that interface exists and its reading is either the outcome or carried by an assumption the requirement itself relies on. The frame's crossings are the first such interfaces: they are approved with the frame at the boundary rung, before any interface row exists, and an assumption already names the crossing it lands on, so the requirement is judged against them there. Judging it again at the architecture rung, against the boundary interfaces that realize the crossings, keeps interfaces after the requirements they answer. Minting interface rows to match a count would produce seams with no contract behind them, so the check reports the gap rather than inventing the seam.
+- **Requirement**
+  - before: Where the assumption gate is enabled, the delivered harness shall fail the architecture gate for each system requirement of interface form that no boundary interface reaches, or that a reaching boundary interface neither records as coincident nor bridges by an assumption the requirement also cites.
+  - after: Where the assumption gate is enabled, the delivered harness shall fail, for each system requirement of interface form, the boundary gate when the requirement is not recorded as coincident and names a crossing on which no assumption it cites lands, and the architecture gate when no boundary interface reaches it or a reaching boundary interface neither records it as coincident nor bridges it by an assumption the requirement also cites.
+- **Title**
+  - before: With the assumption gate on, interface-form requirements are reached and bridged at the architecture rung
+  - after: With the assumption gate on, interface-form requirements are bridged at their crossings and reached and bridged at the architecture rung
+
+### LLR LLR-244
+_approved — re-attestation owed_
+- **Detail**
+  - before: module_srs(llrs) maps each normalized design Module to the requirements its rows name in SR-Refs, with norm_module as the one normalizer. if_reached_srs(ifs, llrs) maps each boundary interface, one carrying a from- or to-external tie-back, through its owner to those requirements. interface_form_gate_findings judges each requirement whose form is interface against every boundary interface reaching it: one reached by none fails naming the requirement and stating that no boundary interface reaches it; each reaching interface with no Coincident whose BridgedBy shares no assumption with the requirement's DA-Refs fails naming the requirement and that interface, so one valid interface never excuses another invalid one. check.py gains a built-in step `interface-allocation` at the DevStg-Arch threshold, gated by the same setting. The relation is derived here and never recorded on an interface, and the stage fold gains no interface parameter.
+  - after: module_srs(llrs) maps each normalized design Module to the requirements its rows name in SR-Refs, with norm_module as the one normalizer. if_reached_srs(ifs, llrs) maps each boundary interface, one carrying a from- or to-external tie-back, through its owner to those requirements. interface_form_gate_findings judges each requirement whose form is interface against every boundary interface reaching it: one reached by none fails naming the requirement and stating that no boundary interface reaches it; each reaching interface with no Coincident whose BridgedBy shares no assumption with the requirement's DA-Refs fails naming the requirement and that interface, so one valid interface never excuses another invalid one. check.py gains a built-in step `interface-allocation` at the DevStg-Arch threshold, gated by the same setting. crossing_gate_findings(srs, das, bifs) is the Boundary arm over the frame's crossings: each interface-form requirement with no Coincident fails once for each declared crossing its Boundary-Refs names on which no assumption in its DA-Refs lands (EffectAt), naming the requirement and that crossing; a crossing the frame does not declare is left to the frame's own reference rule. check.py gains a built-in step `crossing-allocation` at the DevStg-Boundary threshold, gated by the same setting. The relation is derived here and never recorded on an interface, and the stage fold gains no interface parameter.
+- **Title**
+  - before: The architecture half: interface-form requirements reached and bridged
+  - after: The boundary and architecture arms: interface-form requirements bridged at their crossings, reached and bridged by interfaces
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: module_srs/if_reached_srs/interface_form_gate_findings
+  - after: module_srs/if_reached_srs/interface_form_gate_findings/crossing_gate_findings/step_findings
+- **Module**
+  - before: project-trajectory/scripts/assumption_rules.py;project-trajectory/scripts/check.py
+  - after: project-trajectory/scripts/assumption_rules.py;project-trajectory/scripts/check.py;project-trajectory/scripts/check_assumption_gate.py
+
+### TC TC-239
+_approved — re-attestation owed_
+- **Expected**
+  - before: Satisfies SR-212's acceptance: a requirement passes only when at least one boundary interface reaches it and each reaching interface is coincident or bridged by an assumption it cites; an unreached one fails naming it, an invalid reaching interface fails naming both; other forms out of scope; advisory with the gate off.
+  - after: Satisfies SR-212's acceptance: at the boundary rung, an interface-form requirement not recorded coincident passes only when every declared crossing it names is the landing of an assumption it cites, and each other crossing fails naming both; at the architecture rung, a requirement passes only when at least one boundary interface reaches it and each reaching interface is coincident or bridged by an assumption it cites; an unreached one fails naming it, an invalid reaching interface fails naming both; other forms out of scope; advisory with the gate off.
+- **Method**
+  - before: The interface-allocation step driven on a scaffold with the setting on, in a module registered as slow. An interface-form requirement reached, through its design rows' module, by a boundary interface recorded coincident passes; one reached by an interface bridged by an assumption the requirement cites passes. One reached only by an interface bridged by other assumptions fails naming the requirement and that interface. One reached by no boundary interface fails naming the requirement and stating that none reaches it. One reached by two interfaces, one valid and one bridged only by uncited assumptions, fails naming the invalid interface. Assumption-form and cross-cutting requirements are not judged. With the setting off the same cases are advisories. The step lists at the DevStg-Arch threshold, and the stage fold still takes no interface parameter.
+  - after: The interface-allocation step driven on a scaffold with the setting on, in a module registered as slow. An interface-form requirement reached, through its design rows' module, by a boundary interface recorded coincident passes; one reached by an interface bridged by an assumption the requirement cites passes. One reached only by an interface bridged by other assumptions fails naming the requirement and that interface. One reached by no boundary interface fails naming the requirement and stating that none reaches it. One reached by two interfaces, one valid and one bridged only by uncited assumptions, fails naming the invalid interface. Assumption-form and cross-cutting requirements are not judged. The crossing-allocation step, driven the same way, judges each interface-form requirement against the crossings its Boundary-Refs names: one recorded coincident passes; one citing an assumption landing on its crossing passes; one citing only an assumption landing elsewhere fails naming the requirement and the crossing; one naming two crossings and bridged on one fails naming only the other; one citing none fails; an assumption-form requirement, and a crossing the frame does not declare, are not judged. With the setting off the same cases are advisories for both steps. The interface-allocation step lists at the DevStg-Arch threshold and the crossing-allocation step at the DevStg-Boundary threshold, and the stage fold still takes no interface parameter.
+_traced — routes to adjudication_
+- **Verifies**
+  - before: SR-212;LLR-244
+  - after: SR-212;LLR-244;IF-231
+
+## SR-215 — At a checkpoint, a changed or expired observation test is queued once for re-judging
+
+> **Requirement.** When a work item merges or a release is prepared, the delivered harness shall file one re-judge work item for each observation test case whose declared inputs changed since its last result or whose last result expired, never filing a second while one is open.
+
+> **Rationale.** A judgment made by inspection, critique or observation holds only for the state it looked at, and nothing re-fires it once that state moves. Hashing each test case's declared inputs at a merge or a release costs no model call, so the expensive part — the re-judgment — runs only when something it looked at changed or its result aged out, and one open item per test case keeps a busy week from filing the same judgment many times.
+
+
+### LLR LLR-254
+_approved — re-attestation owed_
+- **Detail**
+  - before: A pure sibling of consolidate.py that intake imports. observation_test_cases(root, rev) reads the observation cases at a revision. checkpoint_drafts(root, rev, checkpoint) digests each case's declared inputs as read from git at that revision, not from the working tree, and drafts one re-judge work item for each case whose digest differs from its latest record's judged digest, whose latest record has expired, or which has no record. A case declaring no inputs is judged by expiry and absence alone. _open_rejudge(rows, tc) finds an open re-judge item for the case by its typed cells, never by title, because a title match would also find the closed items in the archive. A draft names the case and what changed, and its title carries the case id and the digest prefix. No model runs.
+  - after: A pure sibling of consolidate.py that intake imports. observation_test_cases(root, rev) reads the observation cases at a revision. checkpoint_drafts(root, rev, checkpoint) digests each case's declared inputs as read from git at that revision, not from the working tree, and drafts one re-judge work item for each case whose digest differs from its latest record's judged digest, whose latest record has expired, or which has no record. A case declaring no inputs is judged by expiry and absence alone. A committed link is not content: it is never written into the extracted tree and is excluded from the digest by the observation writer's own link predicate, so a declared link reads as absent, a link inside a declared directory contributes nothing, and a change to a link's target makes no case due. _open_rejudge(rows, tc) finds an open re-judge item for the case by its typed cells, never by title, because a title match would also find the closed items in the archive. A draft names the case and what changed, and its title carries the case id and the digest prefix. No model runs.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: observation_test_cases/checkpoint_drafts/_open_rejudge
+  - after: observation_test_cases/checkpoint_drafts/_open_rejudge/due_cases/BRIEF/CHECKPOINTS
+
+### TC TC-247
+_approved — re-attestation owed_
+- **Method**
+  - before: checkpoint_drafts driven on a real git repository. An observation case whose declared input changed since its latest record gets one draft naming it and the input; one whose record expired gets one; one with no record gets one; an unchanged, unexpired one gets none; a case declaring no inputs is judged by expiry and absence alone. An open re-judge item for a case, found by its typed cells, suppresses a second draft; a closed item in the archive with an identical title does not. Inputs are read at the given revision: an uncommitted edit to an input changes nothing. No agent command is spawned.
+  - after: checkpoint_drafts driven on a real git repository. An observation case whose declared input changed since its latest record gets one draft naming it and the input; one whose record expired gets one; one with no record gets one; an unchanged, unexpired one gets none; a case declaring no inputs is judged by expiry and absence alone. An open re-judge item for a case, found by its typed cells, suppresses a second draft; a closed item in the archive with an identical title does not. Inputs are read at the given revision: an uncommitted edit to an input changes nothing. A committed link is excluded: a result recorded through the writer on a declared link, or on a directory holding one, is not due at the checkpoint where the platform cannot create a link, a change to the link's target does not make it due, and a directory link to itself is harmless. No agent command is spawned.
+_traced — routes to adjudication_
+- **Verifies**
+  - before: SR-215;LLR-254
+  - after: SR-215;LLR-254;IF-228
+
+### TC TC-248
+- **Verifies**
+  - before: SR-215;LLR-255
+  - after: SR-215;LLR-255;IF-229
 
 ## SR-220 — Overlapping queued work is consolidated through one judgement per queue state
 

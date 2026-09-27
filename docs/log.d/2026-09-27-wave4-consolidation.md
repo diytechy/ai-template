@@ -205,3 +205,33 @@ enforcer was not re-run separately). Touched slow modules plus both ratchets
 test_complexity_ratchet), run by the coordinator: 57 passed. test_intake,
 test_bookkeeping and test_integrate_unload were run by the builder at
 017ef299 and b8cf0514.
+
+### WI-638 lands: the assumption plan's remaining build (with WI-634 and OI-88 (c))
+
+The lane carried over from the third session: rebased, finished under wave-4
+ruling 2, then three Sol rounds here. The last round revised the
+coordinator's own ruling 7 (ruling 11: a committed link is not content,
+where ruling 7 had read through to the target). Checkpoint re-judging of
+observation tests runs at each merge and at release. The assumption gate's
+four steps ship behind `[checks] assumption_gate = false`, and SR-212 now
+has its Boundary arm over crossings. The merge resolved four conflicts, all
+two independent additions: the IF rows, the RESYNC entries (re-anchored to
+6957fb38), and trace.py's and intake.py's size-ratchet counts, re-measured
+at 3740 and 1510. **Open count: 13.**
+
+Next spine-acts batch, from this lane: amendments SR-198, SR-212, LLR-233,
+LLR-244, LLR-254, TC-228, TC-239, TC-247, TC-036, TC-055. The first merge
+after this files five re-judge rows (TC-036, TC-055, TC-209, TC-210, TC-211).
+
+Commit bar at WI-638: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs` 0 broken. Smoke first ran 2 red, both from lanes composing on
+trunk. One was the live-frame pin in `tests/test_frame_context.py`, which
+gains IF-229, the release checkpoint's argv, a "No tie-back" row like its
+peers. The other was the membership ceiling: 1625 against 1620, from real
+in-process growth across WI-672, WI-638 and WI-581, so it is re-stamped
+1620 -> 1690 in `docs/stack.ini` with its reason. The 60 s seconds budget
+stands. Then smoke 1622 passed / 3 skipped, **seconds 36.4 s within 60 s**.
+Touched slow modules (test_rejudge, test_assumption_gate,
+test_assumption_rules, test_observation_writer), run by the coordinator:
+266 passed / 1 skipped.

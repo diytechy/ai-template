@@ -1211,9 +1211,9 @@ notes = """sink — the banner renders what the read model derives; a scheduling
 
 [interface.IF-089]
 owner = "scripts/trace"
-requestors = ["scripts/census"]
+requestors = ["scripts/census", "scripts/check_assumption_gate"]
 channel = "call"
-data = "load_registries then analyze: orphans, status_findings and the findings bag"
+data = "load_registries then analyze: orphans, status_findings and the findings bag; load_registries alone for check_assumption_gate"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -1340,9 +1340,9 @@ component = "CMP-008"
 
 [interface.IF-102]
 owner = "scripts/spine_carrier"
-requestors = ["scripts/trace", "scripts/acceptance_record", "scripts/check_trajectory", "scripts/gen_arch_map", "scripts/plan_coverage", "scripts/spine_rules", "scripts/traj_status", "scripts/check_test_first"]
+requestors = ["scripts/trace", "scripts/acceptance_record", "scripts/check_trajectory", "scripts/gen_arch_map", "scripts/plan_coverage", "scripts/spine_rules", "scripts/traj_status", "scripts/check_test_first", "scripts/rejudge"]
 channel = "call"
-data = "spine_carrier.load / resolve / stem / carriers / rows_from_text / status_cells; rows under today's column names, None on a TOML decode error"
+data = "spine_carrier.load / resolve / stem / carriers / rows_from_text / rows_seq_from_text / status_cells; rows under today's column names, None on a TOML decode error"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
@@ -1925,9 +1925,9 @@ notes = """cross-component crossing declared per the architecture rule: check_te
 [interface.IF-200]
 rationale = """An observation test case's declaration is judged by the same pure join layer as the assumption tier, beside it rather than inside the tier's entry point, because the declaration applies to every case the harness cannot rerun whether or not the frame declares a crossing; drawing the seam here keeps the checker growing by composition lines alone while the rules stay testable on in-memory rows."""
 owner = "scripts/assumption_rules"
-requestors = ["scripts/trace"]
+requestors = ["scripts/trace", "scripts/rejudge", "scripts/record_observation"]
 channel = "call"
-data = "observation_tc_findings -> (failures, advisories); data: is_observation_tc, sampling_model_declared"
+data = "observation_tc_findings -> (failures, advisories); data: is_observation_tc, sampling_model_declared, input_escape, input_path"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
@@ -1969,9 +1969,9 @@ notes = """source - the module consumes only the shipped package's TOML string e
 [interface.IF-215]
 rationale = """A result the harness cannot produce needs one sanctioned writer, which judges a record before it exists: the same format and policy rules the checker applies to a record it finds, so a refused record is never written and a written one never fails the check. The module's second face is the checker's read of what judging the records needs - the records, the digests of the inputs as they stand, the suite's evidence record and each accepted risk's act - so the writer and the reader digest one way and the checker grows by composition lines alone."""
 owner = "scripts/record_observation"
-requestors = ["external:downstream adopter", "scripts/trace", "scripts/traj_parse"]
+requestors = ["external:downstream adopter", "scripts/check_assumption_gate", "scripts/rejudge", "scripts/trace", "scripts/traj_parse"]
 channel = "cli"
-data = "--tc --outcome pass|fail --by [--expires] [--root]: one record or a REFUSED line and exit 1; evidence_inputs, inputs_digest for trace"
+data = "--tc --outcome pass|fail --by [--expires] [--root]: one record or a REFUSED line and exit 1; evidence_inputs, inputs_digest for trace; inputs_digest(root, inputs, outside) and REGISTRY_DIRS for rejudge; evidence_inputs for check_assumption_gate"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
@@ -2053,3 +2053,47 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """No tie-back: the argv comes IN from the adopter's own session, and the frame declares no IN crossing for an invocation - asking which tests to run is the session's own act. The arm reads the design and test-case registries, runs no check and writes nothing."""
+
+[interface.IF-228]
+rationale = """Which observation test cases a checkpoint finds due is one decision with three readers: the mint that files a re-judge item at a merge and at release, the release checklist that counts them, and the re-judge brief that re-derives a filed case before a session judges it. One pure module answering it, reading only git at the checkpoint's commit and hashing inputs with the observation writer's own digest, keeps the three from disagreeing about what is due and keeps the mint's own module free of the hashing."""
+owner = "scripts/rejudge"
+requestors = ["scripts/intake", "scripts/gen_release_checklist", "scripts/adjudicate_brief"]
+channel = "call"
+data = "observation_test_cases(root, rev) · due_cases(root, rev, now) -> tc, row, why, digest, record, changed · checkpoint_drafts(root, rev, checkpoint, now, rows) -> intake drafts · explain(due) · BRIEF, CHECKPOINTS, RejudgeError"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """Reads git and hashes files; runs no model and writes nothing. The inputs, the registry and the records are read at the commit, never from the working tree, so an uncommitted edit neither makes a case due nor hides one. An open re-judge item is found by its typed Brief and Adjudicates cells, since the registry reader unions the archive and a title would find closed items there. The release checklist is a view and may not import the mint, so it reads this decision directly."""
+
+[interface.IF-229]
+rationale = """Release preparation is a person's act, so its checkpoint is a command that person runs rather than a hook; naming it on the release checklist as a required item is what makes the checkpoint happen at every release. Filing through the mint's one bookkeeping commit keeps the person's uncommitted work in the checkout out of the commit and in place."""
+owner = "scripts/intake"
+requestors = ["external:downstream adopter"]
+channel = "cli"
+data = "rejudge --checkpoint release [--rev <commit>] [--root]: one queued rejudge adjudication row per due observation test case without an open one, exit 0 naming the count; a refusal mints nothing and exits 1"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """No tie-back: the argv comes in from the person preparing the release, and the frame declares no inbound crossing for an invocation. The merge checkpoint runs the same decision only inside the merge slot, through the importer seam of the mint, once per merged work item; this command accepts the release checkpoint alone."""
+
+[interface.IF-230]
+rationale = """The assumption gate is four questions asked at four rungs, and the harness reads every step the same way: by exit code, with the findings on stdout for the reviewer. One command taking the step's name keeps the registry reads and the choice between failing and advising in one place, so the four steps cannot disagree about what the setting means, and the checker's own module stays free of the gate's reads."""
+owner = "scripts/check_assumption_gate"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "--step assumption-gate|crossing-allocation|interface-allocation|assumption-evidence [--root]: FAIL: or ADVISORY: lines, a summary line; 1 when the gate is on and a finding stands, else 0"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+notes = """The gate's setting is read from `[checks] assumption_gate`, absent or unreadable reading off, so a project that never opts in sees advisories and never a failure. It writes nothing."""
+
+[interface.IF-231]
+rationale = """Whether a requirement's argument holds is a join across rows the tier already judges, and the reach check, the evidence level and the accepted risk each have one derivation here. Keeping the gate's four rules beside them, pure, means the gate fails exactly what the reports report, and the step that runs them grows by its reads alone."""
+owner = "scripts/assumption_rules"
+requestors = ["scripts/check_assumption_gate"]
+channel = "call"
+data = "boundary_gate_findings(srs, das, surs, reach, have_frame) · reach_gaps(...) -> {DA id: [reasons]} · crossing_gate_findings(srs, das, bifs) · interface_form_gate_findings(srs, ifs, llrs) · if_reached_srs(ifs, llrs) · module_srs(llrs) · release_gate_findings(das, srs, levels, risks, tcs) -> [finding]"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """Rows and derived readings in, finding strings out, with no I/O. The relation between a boundary interface and the requirements it reaches is derived through its owner's design rows and never recorded on the interface."""

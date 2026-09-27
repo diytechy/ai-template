@@ -49,6 +49,13 @@ Four triggers, plus the drafts-not-mints arm:
       block per draft); intake parses the section and mints them at ITS merge.
       An in-lane mint would trip WI-397's R1 rung at the row's own merge slot,
       which is the invariant working, not an inconvenience.
+  (e) **the checkpoint re-judge** (SR-215) — at each merge, and at release
+      preparation through `intake.py rejudge --checkpoint release`, one
+      `rejudge` adjudication row per observation test case whose declared
+      inputs changed since its latest result, whose result expired, or which
+      has none, and none while that case's row is open. The decision is
+      `rejudge.checkpoint_drafts`, which hashes files at the commit and runs
+      no model.
 
 **Tier signals are measurable, never judged**: rows touched and a moved
 `docs/stage` (trigger a), the handback reason class (trigger b), and the census
@@ -67,8 +74,8 @@ what the mint wrote and mints NOTHING, and every derived title is deterministic
 intake.py sweep --before <sha> --after <sha>` — is idempotent by exact-title
 dedup.
 
-Contracts: IF-090 — the interface seam this module declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
+Contracts: IF-090, IF-229 — the interface seams this module declares (process.md
+§8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-090: the trunk-side intake mint, by importer.
     `intake_after_merge(root, before, after, outcomes, branch)` is integrate's
@@ -85,6 +92,18 @@ Contract IF-090: the trunk-side intake mint, by importer.
     ALL-OR-NOTHING: any refusal mints nothing and restores trunk while the
     merge stands, and deterministic titles make the CLI recovery re-run
     idempotent by exact-title dedup.
+
+Contract IF-229: the release checkpoint, as a command.
+    `intake.py [--root <dir>] rejudge --checkpoint release [--rev <commit>]`
+    files, as one bookkeeping commit, one queued `rejudge` adjudication row
+    per observation test case due at the commit (HEAD by default) that has no
+    open re-judge row, and exits 0 naming how many it minted; a refusal (an
+    unresolvable commit, a dirty path inside the mint's scope, any mint
+    refusal) mints nothing, prints `intake: <reason>` to stderr and exits 1.
+    An uncommitted edit outside the mint's scope is neither committed nor
+    discarded. The release checklist names this command as a required item.
+    `release` is the only checkpoint it accepts: the merge checkpoint runs only
+    inside the merge slot, once per merged work item.
 """
 
 from __future__ import annotations
@@ -121,6 +140,7 @@ import baseline_snapshot
 import bookkeeping
 import census
 import consolidate
+import rejudge
 import schedule
 import trace
 import wi_convert
@@ -2250,11 +2270,16 @@ def _mint_message(minted, subject_verb):
 
 
 def intake_after_merge(root, before, after, outcomes=None, branch=""):
-    """THE MERGE-SLOT ARM: triggers (a), (a2), (b) and (d) for one landed merge.
-    `([(wi_id, relpath)], refusal)`. Serial by construction — the caller is
-    `integrate.integrate_one`, inside the held slot. All-or-nothing: any
-    refusal mints nothing (the merge itself STANDS; recovery is a trunk-side
-    fix plus `python intake.py sweep --before {before} --after {after}`)."""
+    """THE MERGE-SLOT ARM: triggers (a), (a2), (b), (d) and (e) for one landed
+    merge. `([(wi_id, relpath)], refusal)`. Serial by construction — the caller
+    is `integrate.integrate_one`, inside the held slot, so SR-215's merge
+    checkpoint runs exactly once per merged work item, judged at `after`.
+    All-or-nothing: any refusal mints nothing (the merge itself STANDS;
+    recovery is a trunk-side fix plus `python intake.py sweep --before {before}
+    --after {after}`).
+
+    Implements: SR-215, LLR-255
+    """
     drafts = _amendment_drafts(root, before, after)
     drafts += _first_approval_drafts(root, before, after)
     drafts += _close_drafts(root, outcomes)
@@ -2262,8 +2287,39 @@ def intake_after_merge(root, before, after, outcomes=None, branch=""):
     if refusal:
         return [], refusal
     drafts += disposition
+    # SR-215's merge checkpoint: once per merged work item, inside the slot.
+    rejudges, refusal = _rejudge_drafts(root, after, "merge")
+    if refusal:
+        return [], refusal
+    drafts += rejudges
     label = "intake at merge of {}".format(branch or str(after)[:7])
     return _mint(root, drafts, label)
+
+
+def _rejudge_drafts(root, rev, checkpoint):
+    """`(drafts, refusal)`: the checkpoint's re-judge drafts, or the reason git
+    could not answer, which refuses the whole mint like any other arm's."""
+    try:
+        return rejudge.checkpoint_drafts(root, rev, checkpoint), None
+    except rejudge.RejudgeError as exc:
+        return [], "the {} re-judge check: {}".format(checkpoint, exc)
+
+
+def mint_rejudge(root, rev, checkpoint):
+    """THE CHECKPOINT ARM (SR-215): one re-judge adjudication row per
+    observation test case due at the commit `rev` names, and none for a case
+    whose re-judge row is still open. `([(wi_id, relpath)], refusal)`.
+
+    The DECISION is `rejudge.checkpoint_drafts`, which reads git and hashes
+    files and runs no model; the EFFECT is `_mint`, the one allocator of a WI
+    id, through the bookkeeping commit that stages only what the mint wrote.
+
+    Implements: SR-215, LLR-255
+    """
+    drafts, refusal = _rejudge_drafts(root, rev, checkpoint)
+    if refusal:
+        return [], refusal
+    return _mint(root, drafts, "re-judge at {} {}".format(checkpoint, str(rev)[:7]))
 
 
 def mint_gap_rows(root, lines):
@@ -2770,6 +2826,24 @@ def _cmd_census(args):
     )
 
 
+def _cmd_rejudge(args):
+    """Release preparation's entry to SR-215: file one re-judge row per
+    observation test case due at `--rev` (HEAD by default). Release is a
+    person's act, so the release checklist names this command as a required
+    item rather than anything running it unasked.
+
+    Implements: SR-215, LLR-255
+    """
+    root = Path(args.root).resolve()
+    minted, refusal = mint_rejudge(root, args.rev, args.checkpoint)
+    return _cli_result(
+        refusal,
+        "re-judge at {}: minted {} row(s).".format(args.checkpoint, len(minted))
+        if minted
+        else "re-judge at {}: nothing due without an open row.".format(args.checkpoint),
+    )
+
+
 def _cmd_snapshot(args):
     """THE HUMAN PATH to the `last_approved` snapshot: copy every snapshotted
     registry into `docs/archive/last_approved/`.
@@ -2861,6 +2935,19 @@ def main(argv=None):
         "census", help="derive the gap census and mint gap-closure rows"
     )
     census_cmd.set_defaults(func=_cmd_census)
+    rejudge_cmd = sub.add_parser(
+        "rejudge",
+        help="release preparation's checkpoint (SR-215): one re-judge row per "
+        "observation test case whose inputs changed since its latest result, "
+        "whose result expired, or which has none (merges check in the slot)",
+    )
+    # RELEASE ONLY: a by-hand merge checkpoint would judge a commit no merge
+    # landed, once per invocation rather than once per merged work item.
+    rejudge_cmd.add_argument("--checkpoint", required=True, choices=("release",))
+    rejudge_cmd.add_argument(
+        "--rev", default="HEAD", help="the commit judged (default: HEAD)"
+    )
+    rejudge_cmd.set_defaults(func=_cmd_rejudge)
     adj = sub.add_parser(
         "adjudicate",
         help="recommend re-verify for spine rows judged no-scope-moved — "

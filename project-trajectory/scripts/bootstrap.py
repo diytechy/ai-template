@@ -67,7 +67,7 @@ What it creates in the destination:
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.toml                  <- registries/test-cases.template.toml
     scripts/trace.py, trace_text.py, spine_rules.py, derive_stage.py, record_test_evidence.py, record_observation.py, check.py, check_flows.py, check_docs.py, check_perf.py,
-    scripts/check_stubs.py, check_coverage.py, check_readability.py, check_complexity.py, check_test_first.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
+    scripts/check_stubs.py, check_coverage.py, check_readability.py, check_complexity.py, check_test_first.py, check_assumption_gate.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py, gen_components.py
     scripts/traj_display.py, traj_parse.py, traj_status.py
     scripts/rendering/{traj_graph.py,traj_render.py,traj_views.py,traj_panels.py,traj_context.py}
@@ -91,6 +91,9 @@ What it creates in the destination:
                                                 three triggers + drafts-not-mints,
                                                 the context block, the gate-policy
                                                 flip arms; WI-388)
+    scripts/rejudge.py                         (the checkpoint re-judge decision the
+                                                mint files at a merge and at release;
+                                                SR-215)
     scripts/agent_route.py, scripts/score_reviews.py   (S8 coordinator routing + review scorer)
     docs/agents.toml                           <- agents.template.toml (model registry; inert until docs/agents-enabled)
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
@@ -1785,6 +1788,11 @@ MAPPING = [
         "SR-146",
     ),
     (
+        "prompts/adjudicate-rejudge.template.md",
+        "prompts/adjudicate-rejudge.template.md",
+        "SR-215",
+    ),
+    (
         "prompts/dual-plan-planner.template.md",
         "prompts/dual-plan-planner.template.md",
         "SR-146",
@@ -2082,6 +2090,11 @@ MAPPING = [
     # The test-first order (WI-640): check.py's built-in `test-first` step runs
     # it at every rung, so a scaffold without it would fail that step.
     ("scripts/check_test_first.py", "scripts/check_test_first.py", "SR-217"),
+    # The assumption gate's four steps (SR-205, SR-206, SR-212): check.py's
+    # built-in `assumption-gate`, `crossing-allocation`, `interface-allocation`
+    # and `assumption-evidence` steps run it, so a scaffold without it would
+    # fail each of them.
+    ("scripts/check_assumption_gate.py", "scripts/check_assumption_gate.py", "SR-205"),
     ("scripts/check_privacy.py", "scripts/check_privacy.py"),
     ("scripts/check_vendored.py", "scripts/check_vendored.py"),
     # The retired-vocabulary enforcer (OI-21). Shipped, not kit-only: an adopter
@@ -2267,6 +2280,11 @@ MAPPING = [
     # ids". `intake.py` imports it unguarded for its lineage refusal and its
     # mint arm, so a scaffold without it cannot run the mint at all.
     ("scripts/consolidate.py", "scripts/consolidate.py"),
+    # The CHECKPOINT RE-JUDGE decision (SR-215): which observation test cases a
+    # merge or release preparation finds due. `intake.py`, `adjudicate_brief.py`
+    # and `gen_release_checklist.py` import it unguarded, so a scaffold without
+    # it can neither mint at a merge nor print its release checklist.
+    ("scripts/rejudge.py", "scripts/rejudge.py", "SR-215"),
     # The pending-owner-action read model (WI-483 slice 3): the other half of
     # the same question the census asks — what the OWNER owes, rather than what
     # the registries lack. It used to live in traj_status.py, which made the

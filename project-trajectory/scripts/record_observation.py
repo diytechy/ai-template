@@ -15,7 +15,8 @@ digest of the inputs the case declares it reads, as they stand now.
 WHAT IT REFUSES, WRITING NOTHING: a case the registry does not declare, a case
 that is automated (its results are the harness's own evidence record), an
 outcome outside pass | fail, a missing provenance, a case declaring no usable
-lifetime (`max_age`), and an expiry that is not canonical UTC, precedes the
+lifetime (`max_age`), a case declaring an input outside the repository, and
+an expiry that is not canonical UTC, precedes the
 observation, or lies further than the case's lifetime after it. With no
 `--expires` the record expires one lifetime after the observation. The format
 is judged by the record module's own reader and the policy by
@@ -52,16 +53,21 @@ Contract IF-215: the observation writer, as a command and as a call.
     `docs/test/observations/` through `kitlib.observation.write_atomic` and
     exits 0, or prints a line starting `record_observation: REFUSED` to stderr,
     writes nothing and exits nonzero. It reads the test-case registry through
-    the carrier and never writes it. `inputs_digest(root, inputs)` is the digest
-    a record's `judged` is compared with to decide whether it is current:
+    the carrier and never writes it. `inputs_digest(root, inputs, links=None)`
+    is the digest a record's `judged` is compared with to decide whether it is
+    current (`links`: the paths git records as links, read from the index when
+    not given):
     `""` for no inputs, else `sha256:<hex>` over each input in declared order
     as its name, NUL, the SHA-256 of its LF-normalized bytes (a directory as
-    the fold of its files, a missing path as `(absent)`), and newline, with a
+    the fold of its files, a missing path or a link as `(absent)`, a link inside
+    a directory contributing nothing (`is_link`, the one link predicate), a
+    path outside the repository as `(outside the repository)`, never read),
+    and newline, with a
     registry row id (`<PREFIX>-<digits>` of any tier a registry holds: the
     carrier's tiers, the needs, the work items and the registry CSVs) digested
     as that row's cells as its reader reads them, `(absent)` when the tier
     holds no such row. And
-    `evidence_inputs(root, tcs, das, bifs)` is the checker's read of
+    `evidence_inputs(root, tcs, das, bifs, framed=None)` is the checker's read of
     everything judging the records needs, returned as the keyword arguments of
     `assumption_rules.observation_evidence_findings`: `records`, `raw_files`,
     `suite_proof`, `digests` and `views`.
@@ -74,6 +80,7 @@ import datetime
 import hashlib
 import json
 import re
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -114,11 +121,64 @@ def _file_digest(path):
     return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
-def _directory_digest(folder):
-    """The fold of every file under a directory input, by relative name."""
+# What a declared input naming a path outside the repository digests as. It
+# is never read, so no file the repository does not hold can move a result.
+OUTSIDE = "(outside the repository)"
+# What a declared input digests as when it names nothing readable: no such
+# path, or a committed link.
+ABSENT = "(absent)"
+
+
+def link_paths(root):
+    """The repo-relative paths git records as links (mode 120000) in the
+    index at `root`, or an empty set where git cannot say. The half of the
+    link predicate a checkout needs: a platform that cannot create a link
+    checks one out as a plain file of its target, which only git still knows
+    is a link."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(root), "ls-files", "-s", "-z"],
+            capture_output=True,
+            stdin=subprocess.DEVNULL,
+        )
+    except OSError:
+        return frozenset()
+    if proc.returncode != 0:
+        return frozenset()
+    return frozenset(
+        e.partition(b"\t")[2].decode("utf-8", "replace")
+        for e in proc.stdout.split(b"\0")
+        if e.startswith(b"120000 ")
+    )
+
+
+def is_link(root, path, links):
+    """THE LINK PREDICATE, one statement for the writer and the checkpoint: a
+    path is a link when it, or a directory on the way to it, is a link on
+    disk or among `links` (repo-relative paths git records as links). A
+    committed link is not content: its target is never read, so it
+    contributes nothing to a digest and a change to its target moves no
+    result. Following links instead would read different bytes wherever the
+    platform checks a link out differently, and could loop or leave the
+    repository."""
+    base = Path(root)
+    rel = path.relative_to(base).as_posix()
+    parts = [] if rel == "." else rel.split("/")
+    for depth in range(1, len(parts) + 1):
+        prefix = "/".join(parts[:depth])
+        if prefix in links or (base / prefix).is_symlink():
+            return True
+    return False
+
+
+def _directory_digest(root, folder, links):
+    """The fold of every file under a directory input, by relative name; a
+    link, and anything reached through one, contributes nothing."""
     fold = hashlib.sha256()
     for item in sorted(folder.rglob("*")):
-        if not item.is_file() or any(p in _SKIP_DIRS for p in item.parts):
+        if any(p in _SKIP_DIRS for p in item.parts) or is_link(root, item, links):
+            continue
+        if not item.is_file():
             continue
         fold.update(item.relative_to(folder).as_posix().encode("utf-8"))
         fold.update(b"\0")
@@ -191,35 +251,48 @@ def _row_digest(rows, rid):
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def _input_digest(root, name):
+def _input_digest(root, name, links):
     """One declared input's digest: a registry row, a file, a directory, or
-    `(absent)` for a path that does not exist."""
+    `ABSENT` for a path that does not exist or is a link (`is_link`). A path
+    is read at its normalized spelling (`assumption_rules.input_path`), so
+    `docs/../src/a.txt` reads `src/a.txt` wherever it is digested. A path
+    outside the repository by its name (`assumption_rules.input_escape`) is
+    never read: it digests as `OUTSIDE`."""
+    if assumption_rules.input_escape(name):
+        return OUTSIDE
     match = _ROW_ID.match(name)
     rows = _rows(root, match.group(1)) if match else None
     if rows is not None:
         return _row_digest(rows, name)
-    path = Path(root) / name
+    path = Path(root) / assumption_rules.input_path(name)
+    if is_link(root, path, links):
+        return ABSENT
     if path.is_file():
         return _file_digest(path)
     if path.is_dir():
-        return _directory_digest(path)
-    return "(absent)"
+        return _directory_digest(root, path, links)
+    return ABSENT
 
 
-def inputs_digest(root, inputs):
+def inputs_digest(root, inputs, links=None):
     """The digest of a case's declared inputs as they stand now: `""` for a
     case declaring none, else `sha256:<hex>` folding each input in declared
-    order as its name, a NUL, its digest and a newline.
+    order as its name, a NUL, its digest and a newline. `links` are the
+    repo-relative paths git records as links; read from the index at `root`
+    (`link_paths`) when not given, and handed in by a caller digesting a tree
+    git does not index, such as a checkpoint's extracted snapshot.
 
     Implements: SR-199, LLR-235
     """
     if not inputs:
         return ""
+    if links is None:
+        links = link_paths(root)
     fold = hashlib.sha256()
     for name in inputs:
         fold.update(name.encode("utf-8"))
         fold.update(b"\0")
-        fold.update(_input_digest(root, name).encode("utf-8"))
+        fold.update(_input_digest(root, name, links).encode("utf-8"))
         fold.update(b"\n")
     return "sha256:" + fold.hexdigest()
 
@@ -234,7 +307,7 @@ def _suite_proof(root):
     return dict(record, bound=record.get("binding") == kitstage.evidence_binding(root))
 
 
-def evidence_inputs(root, tcs, das, bifs):
+def evidence_inputs(root, tcs, das, bifs, framed=None):
     """What judging the observation records reads from disk and git
     (SR-199..SR-202), read once, as the keyword arguments of
     `assumption_rules.observation_evidence_findings`.
@@ -245,10 +318,13 @@ def evidence_inputs(root, tcs, das, bifs):
     digest, each accepted risk's approval act
     (`baseline_snapshot.risk_acceptance_view`) and, only when an automated case
     evidences an assumption, the suite's evidence record, since whether it is
-    bound to this tree is a hash over the whole source surface.
+    bound to this tree is a hash over the whole source surface. `framed`
+    overrides whether a crossing is declared: the release gate judges
+    evidence whatever the frame declares (SR-206), so it reads as framed.
     """
     raw = kitobservation.read_files(root)
-    tier = bool(bifs and das)
+    tier = bool((bool(bifs) if framed is None else framed) and das)
+    links = link_paths(root) if tier else frozenset()
     cited = [t for t in tcs if tier and refs(t.get("Assumption-Refs"))]
     observed = [t for t in cited if assumption_rules.is_observation_tc(t)]
     return {
@@ -256,7 +332,8 @@ def evidence_inputs(root, tcs, das, bifs):
         "raw_files": raw,
         "suite_proof": _suite_proof(root) if len(observed) < len(cited) else None,
         "digests": {
-            t["TC-ID"]: inputs_digest(root, refs(t.get("Inputs"))) for t in observed
+            t["TC-ID"]: inputs_digest(root, refs(t.get("Inputs")), links)
+            for t in observed
         },
         "views": {
             d["DA-ID"]: baseline_snapshot.risk_acceptance_view(root, d["DA-ID"])
@@ -279,7 +356,23 @@ def record_refusal(record, tc):
         why = assumption_rules.record_policy_problem(
             record["tc"], tc, record["observed_at"], record["expires"]
         )
+    if why is None:
+        why = _escaping_input(tc)
     return why
+
+
+def _escaping_input(tc):
+    """Why the case declares an input outside the repository, or None: the
+    declaration check's own rule, so the writer never records a result the
+    checker fails the case for."""
+    for name in refs((tc or {}).get("Inputs")):
+        escape = assumption_rules.input_escape(name)
+        if escape:
+            return (
+                "{} declares input `{}`, {}; a declared input is read inside "
+                "the repository only".format((tc or {}).get("TC-ID"), name, escape)
+            )
+    return None
 
 
 def _case(root, tid):

@@ -116,6 +116,15 @@ Contracts (interfaces): IF-013, IF-040, IF-144, IF-197
 | `--loop-trailer` | the commit-msg hook's loop floor (SR-209): under the loop marker, exit 1 unless the message carries this run's Loop-Session trailer |
 | `--jobs` | run the plan's steps concurrently on N workers (0 = one per step); every step is read-only or writes a distinct artifact, except the two trace.py steps, which share a lane. Default 1: sequential, with each step's output streamed live exactly as before |
 
+### `scripts/check_assumption_gate`
+_check_assumption_gate.py — the assumption gate's four check steps._
+Contracts (interfaces): IF-230
+
+| Option | Help |
+|---|---|
+| `--step` | the step to run |
+| `--root` | repo root (default: .) |
+
 ### `scripts/check_complexity`
 _check_complexity.py — the stdlib cognitive-complexity + SLOC census._
 Contracts (interfaces): IF-188
@@ -430,7 +439,7 @@ _hats.py — the HATS ROSTER reader: which declared expert perspectives apply to
 
 ### `scripts/intake`
 _intake.py — the unified trunk-side intake mint (WI-388; docs/concurrency-v2.md §A5.2)._
-Contracts (interfaces): IF-090
+Contracts (interfaces): IF-090, IF-229
 
 | Option | Help |
 |---|---|
@@ -439,6 +448,8 @@ Contracts (interfaces): IF-090
 | `--after` | post-merge trunk sha (trigger a) |
 | `--branch` | mint subject (default: the range) |
 | `--with-terminal` | terminal scan too |
+| `--checkpoint` |  |
+| `--rev` | the commit judged (default: HEAD) |
 | `--rows` | spine row id(s), ;-joined (SR-/LLR-/TC-) |
 | `--seed` | CREATE the snapshot directory. For the FIRST snapshot only, in the owner's signing commit, after every pending row has been ruled — seeding earlier blesses text nobody read. Unreachable from every loop module and hook (pinned by tests/test_baseline_snapshot.py) |
 | `--approves` | NAME THE APPROVAL ACT this refresh rides, PER REGISTRY: `;`-joined `<registry>=<ref>` pairs. A ref copies the ONE registry it names and lands in the snapshot's prose stamp; it clears none of that registry's drifted rows (name those with --reattests) |

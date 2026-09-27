@@ -834,6 +834,52 @@ def test_the_lifetime_is_a_whole_number_of_days_at_least_seven(rules, max_age, f
         assert "MaxAge" in failures[0]
 
 
+@pytest.mark.parametrize(
+    "name",
+    [
+        "/etc/passwd",
+        "//server/share/x.txt",
+        "C:/Windows/win.ini",
+        r"c:\Windows\win.ini",
+        r"\\server\share\x.txt",
+        "../outside.txt",
+        "docs/../../outside.txt",
+        r"..\outside.txt",
+        r"docs\..\..\outside.txt",
+    ],
+)
+def test_an_input_outside_the_repository_fails_naming_the_row_and_input(rules, name):
+    """A declared input is read inside the repository only, in either path
+    style: the digest a result carries, and the one a checkpoint compares it
+    with, are of committed bytes, never of a file the commit does not hold."""
+    assert rules.input_escape(name)
+    failures, advisories = rules.observation_tc_findings(
+        [_obs(Inputs="src/a.txt;" + name)]
+    )
+    assert advisories == []
+    assert len(failures) == 1, failures
+    assert "TC-001" in failures[0] and name in failures[0]
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "src/a.txt",
+        r"docs\m.md",
+        "SR-001",
+        "a..b/c.txt",
+        "./src/a.txt",
+        "docs/../src/a.txt",
+        r"docs\..\src\a.txt",
+    ],
+)
+def test_an_input_inside_the_repository_passes(rules, name):
+    """A `..` that stays inside once the path is normalized is not an escape:
+    `docs/../src/a.txt` names `src/a.txt`."""
+    assert rules.input_escape(name) is None
+    assert rules.observation_tc_findings([_obs(Inputs=name)]) == ([], [])
+
+
 @pytest.mark.parametrize("policy", ["sampled", "monitored"])
 def test_both_sampling_policies_pass(rules, policy):
     assert rules.observation_tc_findings([_sampled(Sampling=policy)]) == ([], [])

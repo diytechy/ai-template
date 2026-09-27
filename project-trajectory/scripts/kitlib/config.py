@@ -6,7 +6,8 @@ one-word `docs/<dial>` files, and `process_check` for a `[checks]` toggle in
 whose value is text, such as a declared start commit). They are the two halves
 of the SN-028 dual-read window — the same question asked of the legacy file
 and of the TOML that supersedes it — so a caller resolving a dial reaches for
-exactly one module.
+exactly one module. `assumption_gate_enabled` reads one more `[checks]` toggle,
+the one that ships off and so fails off rather than on.
 
 THE BEHAVIOUR THAT HAD FIVE HOMES (census 2026-08-12, `repo-lock.md` §8.2;
 confirmed independently by the 2026-08-19 review, H-09). A declared-policy file
@@ -38,6 +39,7 @@ import tomllib
 from pathlib import Path
 
 __all__ = [
+    "assumption_gate_enabled",
     "first_declared_line",
     "process_check",
     "process_check_text",
@@ -116,6 +118,34 @@ def process_check(root, key):
     if value is None:
         return None
     return value if isinstance(value, bool) else True
+
+
+def assumption_gate_enabled(docs):
+    """Whether `[checks] assumption_gate` in `<docs>/process.toml` turns the
+    assumption gate on: true only when the key reads `true`.
+
+    THE THIRD FAIL-DIRECTION, and deliberately not `process_check`'s. That
+    reader answers ON for a file it cannot parse, because the checks it
+    toggles are on by default and a silent opt-out is the failure it guards
+    against. This gate is OFF by default: it asks every requirement for a
+    written argument, a cost a project opts into. So an absent file, an
+    unparseable one, an absent key and any value but `true` all read off, and
+    the gate's steps print their findings as advisories instead of failing.
+
+    Implements: SR-205, LLR-242
+
+    Contract:
+      Inputs:  docs: path-like to the project's `docs/` directory
+      Outputs: bool — True only for a readable `assumption_gate = true`
+    """
+    try:
+        data = tomllib.loads(
+            (Path(docs) / "process.toml").read_text(encoding="utf-8-sig")
+        )
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+        return False
+    table = data.get("checks")
+    return isinstance(table, dict) and table.get("assumption_gate") is True
 
 
 def process_check_text(root, key):

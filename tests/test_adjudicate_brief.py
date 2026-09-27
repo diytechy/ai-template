@@ -430,12 +430,14 @@ def test_no_mint_can_declare_a_brief_the_kit_does_not_ship():
     purpose, because the kit ships no brief for them and a false declaration
     would page a human for routine work.
 
-    BOTH MINT SOURCES ARE SCANNED, not just `intake`: the consolidation census
+    EVERY MINT SOURCE IS SCANNED, not just `intake`: the consolidation census
     lives in its own module (its decision half is testable with no repository)
     and declares `consolidate` there, so a guard reading `intake.py` alone would
-    have gone vacuous for the newest brief on the day it landed."""
+    have gone vacuous for the newest brief on the day it landed. The checkpoint
+    re-judge decision is the third source for the same reason: it declares
+    `rejudge` in its own module and intake only files what it drafts."""
     declared = set()
-    for module in (intake, load_script("consolidate")):
+    for module in (intake, load_script("consolidate"), load_script("rejudge")):
         source = (module.__file__ or "").strip()
         assert source
         with open(source, encoding="utf-8") as handle:

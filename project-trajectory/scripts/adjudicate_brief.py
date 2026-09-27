@@ -53,7 +53,7 @@ asks for a `Status` cell to be judged). Deriving it from the TITLE instead is
 the `NEEDS-HUMAN` fold this repo wrote in blood (WI-417): prose that carries
 control flow must be a typed field. So it is a typed field.
 
-ALL FIVE BRIEFS ARE NOW ROUTED (`ROUTED`), which they were not for most of this
+ALL SIX BRIEFS ARE NOW ROUTED (`ROUTED`), which they were not for most of this
 module's life. The two that were unrouted are worth keeping on record, because
 each says something about what "routed" costs:
 
@@ -109,6 +109,7 @@ import agent_common as ac
 import baseline_snapshot
 import consolidate as cons
 import prompts
+import rejudge
 import spine_carrier
 
 # The declared `Brief` cell -> the prompt key its session is composed from.
@@ -118,6 +119,7 @@ BRIEF_PROMPTS = {
     "disposition": prompts.ADJUDICATE_DISPOSITION,
     "consolidate": prompts.ADJUDICATE_CONSOLIDATE,
     "red-tc": prompts.ADJUDICATE_RED_TC,
+    rejudge.BRIEF: prompts.ADJUDICATE_REJUDGE,
 }
 
 # The per-close reports' home (`intake.REPORTS` / `handback.REPORTS`, restated
@@ -148,8 +150,8 @@ EVIDENCE_CLIP = 80
 # checker that still expects the old one is the drift this table prevents.
 #
 # `score_reviews.parse_verdict` deliberately does not serve this: it knows only
-# `VERDICT: APPROVE|CHANGES-REQUESTED`, which is the review vocabulary. Four
-# of these five say `OUTCOME:`, and the fifth says `VERDICT:` with a word
+# `VERDICT: APPROVE|CHANGES-REQUESTED`, which is the review vocabulary. Five
+# of these six say `OUTCOME:`, and the sixth says `VERDICT:` with a word
 # outside that pair, so reusing it would have parsed every adjudication verdict
 # as unreadable.
 VERDICT_GRAMMAR = {
@@ -179,6 +181,10 @@ VERDICT_GRAMMAR = {
         ("needs", "absorbs"),
     ),
     "red-tc": ("OUTCOME", ("DRAFTED", "NEEDS-JUDGEMENT"), ("cases", "drafts")),
+    # The CHECKPOINT RE-JUDGE (SR-215): the session judged the observation case
+    # and committed its record, naming the outcome, or the judgment is a
+    # person's act and it recorded nothing (`result=-`).
+    rejudge.BRIEF: ("OUTCOME", ("RECORDED", "NEEDS-JUDGEMENT"), ("result",)),
 }
 
 
@@ -1090,6 +1096,61 @@ def _prior_lines(cons, rows):
     )
 
 
+# --- the checkpoint re-judge brief (SR-215) -----------------------------------
+
+# The case cells `{case}` lists. Method and Expected are REQUIRED: they are the
+# whole instruction, and a dash there would read as "nothing to check".
+REJUDGE_CELLS = ("Verifies", "Method", "Expected")
+
+
+def rejudge_values(root, row):
+    """`({case, reason, tc}, None)` for a re-judge row, or `(None, reason)`.
+
+    THE DECISION IS RE-RUN LIVE (`red_tc_values`' rule). The row's typed
+    `Adjudicates` cell names its one case, and `rejudge.due_cases` at HEAD, the
+    decision that filed it, says why it is due now; a case re-judged since the
+    mint refuses here rather than briefing a session to judge it twice. A case
+    declaring no lifetime refuses too, because the observation writer refuses
+    to record a result for it, so the session could not finish.
+
+    Implements: SR-215, LLR-255
+    """
+    scope = sorted(adjudicates(row))
+    if len(scope) != 1:
+        return None, (
+            "a re-judge row names exactly one case in `Adjudicates`; this one "
+            "names {}".format(";".join(scope) or "none")
+        )
+    tc = scope[0]
+    try:
+        due = [d for d in rejudge.due_cases(root, "HEAD") if d["tc"] == tc]
+    except rejudge.RejudgeError as exc:
+        return None, "the re-judge decision could not be read: {}".format(exc)
+    if not due:
+        return None, "{} is no longer due for re-judging at HEAD".format(tc)
+    case = due[0]["row"]
+    cells = {name: (case.get(name) or "").strip() for name in REJUDGE_CELLS}
+    missing = [name for name, value in cells.items() if not value]
+    if not (case.get("MaxAge") or "").strip():
+        missing.append("MaxAge")
+    if missing:
+        return None, "{} has no `{}` cell".format(tc, "`, `".join(missing))
+    inputs = (case.get("Inputs") or "").strip()
+    text = (
+        "- {tc} — verifies {Verifies}\n"
+        "  - Method: {Method}\n"
+        "  - Expected: {Expected}\n"
+        "  - Declared inputs: {inputs}\n"
+        "  - Result lifetime: {age} days"
+    ).format(
+        tc=tc,
+        inputs=inputs or "none declared, so only its expiry makes it due",
+        age=case["MaxAge"].strip(),
+        **cells,
+    )
+    return {"case": text, "reason": rejudge.explain(due[0]), "tc": tc}, None
+
+
 # Each shipped brief's assembler, the producer of EVERY slot its template
 # declares. The key set equals `BRIEF_PROMPTS`' (the suite pins both
 # directions), so shipping a new brief means adding its assembler here, never
@@ -1100,6 +1161,7 @@ _ASSEMBLERS = {
     "consolidate": consolidate_values,
     "disposition": disposition_values,
     "red-tc": red_tc_values,
+    rejudge.BRIEF: rejudge_values,
 }
 ROUTED = tuple(sorted(_ASSEMBLERS))
 

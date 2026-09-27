@@ -2548,3 +2548,95 @@ def test_a_bare_sweep_still_walks_the_terminal_folders(tmp_path, capsys):
     assert _sweep(root) == 0
     assert "sweep minted 1 row(s)." in capsys.readouterr().out
     assert any("work/partial/WI-005" in ref for ref in _minted_specrefs(root))
+
+
+# --- SR-215 at the merge checkpoint (TC-248's merge half) ---------------------
+#
+# An observation test case (Automated = No) whose declared input a merged work
+# item changes is due for re-judging, and the merge-slot arm files one re-judge
+# adjudication row for it; while that row is open, a later merge that moves the
+# input again files none. The release half is in tests/test_rejudge.py.
+
+OBSERVATION_TCS = (
+    "TC-ID,Verifies,Level,Method,Tier,Expected,Automated,Evidence,Status,"
+    "Inputs,MaxAge\n"
+    "TC-001,SR-001,Inspection,a reader reads the page,Release,the page reads,"
+    "No,docs/m.md,Approved,src/page.txt,30\n"
+)
+
+
+def observed_repo(tmp_path):
+    """A repo holding one observation case and a CURRENT result for it — judged
+    against the committed input, expiring in twenty days."""
+    import datetime
+
+    obs = load_script("record_observation")
+    import kitlib.observation as kit_obs
+
+    root = git_repo(tmp_path)
+    (root / "src").mkdir()
+    (root / "src" / "page.txt").write_text(
+        "as judged\n", encoding="utf-8", newline="\n"
+    )
+    tcs = root / "docs" / "test" / "test-cases.csv"
+    tcs.parent.mkdir(parents=True, exist_ok=True)
+    tcs.write_text(OBSERVATION_TCS, encoding="utf-8", newline="\n")
+    now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
+    stamp = now - datetime.timedelta(days=1)
+    rec = {
+        "tc": "TC-001",
+        "outcome": "pass",
+        "observed_at": stamp.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "provenance": "a reader",
+        "expires": (now + datetime.timedelta(days=20)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "judged": obs.inputs_digest(root, ["src/page.txt"]),
+    }
+    path = (
+        root
+        / kit_obs.OBSERVATIONS_DIR
+        / kit_obs.record_name("TC-001", rec["observed_at"])
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(kit_obs.render(rec), encoding="utf-8", newline="\n")
+    write_spec(root, "queued", "WI-003", specref="seed.txt")
+    _commit(root, "judged", when=T_CODE)
+    return root
+
+
+def _rejudge_rows(root):
+    return [r for r in queued_rows(root).values() if r.get("Brief") == "rejudge"]
+
+
+def test_a_merge_changing_an_observation_input_mints_one_rejudge_item(tmp_path):
+    root = observed_repo(tmp_path)
+    # A merge that touches none of the case's inputs files nothing.
+    before = _rev(root)
+    (root / "seed.txt").write_text("unrelated\n", encoding="utf-8", newline="\n")
+    _commit(root, "an unrelated merge", when=T_CODE + 50)
+    minted, refusal = intake.intake_after_merge(root, before, _rev(root), {}, "wi-003")
+    assert refusal is None, refusal
+    assert minted == [] and _rejudge_rows(root) == []
+    # A merge that changes the declared input files exactly one re-judge row.
+    before = _rev(root)
+    (root / "src" / "page.txt").write_text("changed\n", encoding="utf-8", newline="\n")
+    _commit(root, "the merged branch's delta", when=T_CODE + 100)
+    minted, refusal = intake.intake_after_merge(root, before, _rev(root), {}, "wi-003")
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    (row,) = _rejudge_rows(root)
+    assert row["WI-ID"] == minted[0][0]
+    assert row["SafetyClass"] == "adjudication"
+    assert row["Adjudicates"] == "TC-001"
+    assert "TC-001" in row["Title"]
+    text = (root / minted[0][1]).read_text(encoding="utf-8")
+    assert "src/page.txt" in text
+    # A second merge moving the input again while that row is open files none.
+    before = _rev(root)
+    (root / "src" / "page.txt").write_text(
+        "changed again\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "a second merge", when=T_CODE + 200)
+    minted, refusal = intake.intake_after_merge(root, before, _rev(root), {}, "wi-004")
+    assert refusal is None, refusal
+    assert minted == []
+    assert len(_rejudge_rows(root)) == 1
