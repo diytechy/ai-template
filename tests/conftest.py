@@ -21,6 +21,31 @@ ROOT = Path(__file__).resolve().parent.parent
 KIT = ROOT / "project-trajectory"
 SCRIPTS = KIT / "scripts"
 
+
+def _put_scripts_on_path():
+    """Put scripts/ first on sys.path, where a script run as a subprocess finds
+    its siblings (sys.path[0]) — so the kit's `trace.py` shadows the stdlib's
+    exactly as it does for the scripts that import it by that name. An entry
+    further down, however spelled, would lose that race, so it is moved rather
+    than kept; the list is rewritten in place because other code holds it."""
+    target = os.path.normcase(os.path.abspath(SCRIPTS))
+    rest = [
+        p
+        for p in sys.path
+        if not (isinstance(p, str) and p)
+        or os.path.normcase(os.path.abspath(p)) != target
+    ]
+    sys.path[:] = [str(SCRIPTS), *rest]
+
+
+# A test module's top-level `from kitlib import ...` runs at collection, before
+# any test. Were scripts/ put on the path only by the first `load_script` call,
+# that import would resolve only when an earlier-collected module had loaded a
+# script — so under xdist a worker handed that module alone failed to collect
+# it. Conftest is imported before every test module, so doing it here makes the
+# import order-independent.
+_put_scripts_on_path()
+
 # Hermeticity: a coordinator-launched session (agent-resume.* -> agent_loop.py ->
 # the agent CLI running this suite as the commit bar) inherits the launcher's
 # AGENT_* routing contract (AGENT_CMD, AGENT_MODEL_MAP, AGENT_TIER_MAP, ...).
@@ -301,6 +326,8 @@ SLOW_MODULES = frozenset(
         # WI-636 (TC-242, TC-243): the loop provenance trailer, its floor and
         # the history check, driven through real claims, lanes and loop runs.
         "test_loop_provenance",  # real git repos + dispatcher/agent_loop runs
+        # WI-665: collection of one module alone can only be seen from outside.
+        "test_conftest_isolation",  # a pytest subprocess over one test module
     }
 )
 
@@ -327,9 +354,9 @@ def load_script(name):
     too. Run as a subprocess the sibling resolves via sys.path[0], but
     importlib.exec_module does not add scripts/ itself, so the next author writing
     an in-process test of a sibling-importing script would otherwise hit a bare
-    ImportError (THREAD_52_REVIEW.md F5)."""
-    if str(SCRIPTS) not in sys.path:
-        sys.path.insert(0, str(SCRIPTS))
+    ImportError (THREAD_52_REVIEW.md F5). Re-checked here because a test may
+    have taken scripts/ off the path since conftest put it there."""
+    _put_scripts_on_path()
     spec = importlib.util.spec_from_file_location(name, SCRIPTS / (name + ".py"))
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)

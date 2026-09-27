@@ -43,3 +43,23 @@ are marked as such.
    follow-up: its `detail` says "absent" where the shared predicate reads "no
    real row". It is amended in place so WI-664's joint adjudication judges it
    with the rest.
+
+4. **WI-652's first round — split three ways.**
+   - (i) *Quiet measurement, figures and log — INTEGRATOR.* Sol held the item
+     incomplete because the three quiet runs, the CLAUDE.md and skill figures
+     and the log rationale were missing. The coordinator had reserved those
+     for landing, because a quiet measurement cannot be taken while builders
+     share the box. So they are the landing's duty, not a builder defect, and
+     the item does not close until they are done.
+   - (ii) *Approved Smoke evidence moved slow-only — SOL, in part.* The
+     governing text is D31 (spine map §6): each Smoke test case sits in a fast
+     in-memory module. The builder brief defines fast as no scaffold, no
+     subprocess and no git. An approved row's `tier` cell must stay true, so
+     each affected case either keeps fast evidence for its in-memory clauses
+     (moving the traced `evidence` pointer), or has its `tier` amended to Full
+     in place for WI-664's joint adjudication where a clause inherently drives
+     git or a subprocess. The thirteen older mismatches predate this item and
+     are filed separately.
+   - (iii) *Representativeness — SOL.* This is the owner's stated condition
+     on OI-92 (b). The seven scripts left with no per-commit exercise keep
+     cheap direct pins for their pure seams.
