@@ -29,9 +29,9 @@ before you edit and again before you commit.
 
 | File | Hard cap | Baseline | Stamped | Latest change |
 |---|---|---|---|---|
-| `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
+| `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,992 | 2026-09-27 | +12: WI-649 — the ladder line points at process.md §4 for who signs |
 | `CLAUDE.md` | **8,500** | 7,977 | 2026-09-27 | +2: WI-652 re-measures the smoke tier on the 4-core box |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,528 | 2026-09-26 | WI-640 PROCESS row restamp |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,530 | 2026-09-27 | WI-649 AGENTS and PROCESS row restamp |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill
 about 9%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
@@ -45,7 +45,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 89,200 | 2026-09-26 | **+191** WI-640: the test-first rule names the warn-only `test-first` history step and its start |
+| `project-trajectory/PROCESS.md` | 89,953 | 2026-09-27 | **+753** WI-649: §4 states once who takes a held rung's approval, and which half is mechanical |
 | `project-trajectory/PROCESS_OPTIONS.md` | 189,549 | 2026-09-26 | **+14** WI-612: the claim's refusal list names a dirty path it must write, not a dirty tree |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped

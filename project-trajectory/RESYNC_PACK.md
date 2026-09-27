@@ -5750,6 +5750,32 @@ real assumption row, one per boundary row still naming neither, together with
 the `--strict` failure for any `bridged_by` entry naming an assumption you have
 not declared.
 
+### `process.md` §4 states who takes a held rung's approval [since d4e93937]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `process.md` §4 now says, once, what the approval dial's
+"the human" means on a held rung: the approval is the owner's act, taken by the
+owner or by an attended session acting on the owner's explicit delegation,
+recorded with its scope in the approving commit or its log entry; a
+mechanically triggered session (the unattended loop, a launcher-spawned worker)
+never approves on a held rung. It also says which half is mechanical (the
+loop's trailer and the held-status refusals) and which is review-enforced (the
+delegation record, which nothing authenticates). The dial's comment in
+`process.toml.template`, the ladder line in `AGENTS.template.md` and the
+gate-advance skill now point at that paragraph instead of leaving "the human"
+undefined. No behaviour changed: the refusals and the dial's values are as
+they were.
+
+**What to do.** Re-sync `docs/process.md` and the gate-advance skill, which are
+the kit's. Your own `docs/process.toml` and `AGENTS.md` are preserved on
+re-sync, so the pointers do not reach them by themselves: optionally copy the
+four-line `WHO "THE HUMAN" ABOVE MAY BE` comment from the template's
+`[attestation]` section into yours, and the ladder line's "and process.md §4"
+into your `AGENTS.md`. If you have been approving held rungs through a
+delegated session, record the delegation and its scope in the approving commit
+or its log entry from now on.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

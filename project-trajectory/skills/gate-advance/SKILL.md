@@ -17,7 +17,9 @@ Authority: `docs/process.md` §4 (the stage ladder), §5 (verdict protocol), §7
 `[attestation] human_approval_through` dial in `docs/process.toml` declares
 (default `DevStg-Release` = a human through every rung; the levels + the
 deviation register: process-options.md "Gate authority levels") — on a
-non-default repo, read "human" in this skill as that declared acceptor.
+non-default repo, read "human" in this skill as that declared acceptor. On a
+held rung the approval is the owner's act; which sessions may take it is
+process.md §4 "A held rung's approval is the owner's act" — read it there.
 
 ## One axis: a stage is a STATE, approval is an EVENT
 

@@ -1,0 +1,3 @@
+2046aa66 NOT YET SOUND
+
+- **major** `tests/test_held_rung_doctrine.py:27` — The uniqueness check matches only two exact phrases, so a synonymous restatement passes. `AGENTS.template.md` is also absent from `POINTER_HOMES`, so deleting its new §4 pointer passes. Fix: include every intended pointer home, especially `AGENTS.template.md`, and broaden/mutation-test the duplicate-home detector so a paraphrased doctrine fails.

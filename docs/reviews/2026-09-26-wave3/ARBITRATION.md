@@ -100,3 +100,22 @@ are marked as such.
    a clause-by-clause pass over TC-137 and LLR-143 against `dispatch.py`, and
    it corrected six more clauses. The third round (`sol-wi664-fix2.md`) was
    SOUND. WI-660's fix round (`sol-wi660-fix.md`) was SOUND.
+
+8. **WI-649's first round — SOL, both findings.** The new PROCESS.md §4
+   paragraph named the loop-trailer refusal as the enforcer of the whole
+   rule. The trailer only marks loop commits. The held-status refusal is a
+   separate, marker-dependent step, and nothing authenticates an attended
+   session's recorded delegation. The ruling OI-86 records accepted that risk
+   ("even if it inherently incurs risk"), so the doctrine must say which half
+   is mechanical and which is review-enforced, not imply one mechanism for
+   both. The existing once-per-file test matches only legacy phrases, so a
+   small pin now holds the new statement to one home, with the others only
+   pointing at it.
+
+   WI-649's fix round raised one major, split two ways. SOL: AGENTS.template.md
+   carries a §4 pointer and was missing from the pin's pointer homes, so
+   deleting that pointer went unseen. INTEGRATOR: Sol also asked the pin to
+   catch a paraphrased restatement. Phrase-pinning is the kit's standing
+   method (`test_gate_policy` does the same), and a detector that no
+   paraphrase could slip past cannot be built honestly. A reworded
+   restatement is for review to catch.

@@ -91,6 +91,10 @@
 #   DevStg-Impl       ... and the implementation
 #   DevStg-Release    everything (the most conservative setting)
 #
+# WHO "THE HUMAN" ABOVE MAY BE on a held rung (the owner, and which sessions
+# may take the owner's act) is stated once, with its enforcer, in process.md
+# §4 "A held rung's approval is the owner's act". Read it there.
+#
 # IT WAS A 0-4 ORDINAL UNTIL WI-493 (OI-21 shape (ii)). A repo that still
 # carries the number is READ, TRANSLATED AND WARNED — not refused — and,
 # from your kept kit checkout,

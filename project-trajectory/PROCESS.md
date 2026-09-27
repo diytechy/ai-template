@@ -623,6 +623,18 @@ above `DevStg-Needs` and `DevStg-Arch` immediately above `DevStg-Reqs`, so each
 is held whenever the rung below it is — the direction that errs toward *more*
 human involvement — and now by the ORDER rather than by a hand-written pairing.
 
+**A held rung's approval is the owner's act**, taken by the owner or by an
+attended session on the owner's explicit delegation, the delegation and its
+scope recorded in the approving commit or its log entry. A mechanically
+triggered session (the unattended loop, a launcher-spawned worker) never
+approves on a held rung; that is what the hold is for. MECHANICAL: a
+loop-started commit must carry its `Loop-Session` trailer
+(`scripts/kitlib/provenance.py`), `check.py`'s `held-status` step and the merge
+slot refuse a held status such a commit moves, and `check_trajectory.py`
+reports one that lands. REVIEW-ENFORCED: the delegation record; nothing
+authenticates it or stops an unmarked session that lacks one, the risk the
+owner accepts by delegating.
+
 **What a signature certifies is NOT derivable from the rung.** Leaving
 `DevStg-Reqs` also requires non-goals captured and a UX sign-off; leaving
 `DevStg-Tests` requires the key runtime flows diagrammed. No derivation can see
