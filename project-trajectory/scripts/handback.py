@@ -172,10 +172,30 @@ def _git_stdout(cwd, *args):
     return proc.returncode, proc.stdout or ""
 
 
-# The surfaces a revert must never touch: the spec move, the report and the log
-# fragments ARE the record being kept, so reverting them would revert the close
-# itself.
-BOOKKEEPING = (integrate.WORK + "/", "docs/log.d/", REPORTS + "/")
+# The surfaces a revert must never touch, in two classes.
+#   RECORD: the spec move, the report, the log fragments and the lane's review
+# rounds ARE the record being kept. Reverting the first three would revert the
+# close itself; reverting the rounds deleted a lane's review evidence with its
+# product diff, so the disposition adjudicator judged a close whose review it
+# could not read. Evidence of what happened survives the reverting of what was
+# done.
+#   MONOTONE BY CONTRACT: `docs/id-watermark` only ever rises. An id the lane
+# allocated is burned whether or not its row survives the revert, and a mark
+# taken back with the product diff is LOWERED in the quarantine commit itself,
+# which registry-integrity refuses - the artefact built to be inert then stops
+# the run. The path's one home is `trace.WATERMARK`; it is mirrored here, as
+# `integrate.BOOKKEEPING_PREFIXES` mirrors it, rather than importing the tracer
+# into a lane close for one string (a test pins the two equal).
+#   Two SHAPES, kept apart: directories match by prefix, the watermark by exact
+# path. One `startswith` over both spared `docs/id-watermark.bak`, a product
+# file that merely shares the name's prefix.
+BOOKKEEPING = (integrate.WORK + "/", "docs/log.d/", REPORTS + "/", "docs/reviews/")
+BOOKKEEPING_FILES = frozenset({"docs/id-watermark"})
+
+
+def _is_bookkeeping(path):
+    """True when repo-relative `path` is a surface the quarantine never reverts."""
+    return path.startswith(BOOKKEEPING) or path in BOOKKEEPING_FILES
 
 
 def diff_records(fields):
@@ -908,8 +928,10 @@ def quarantine(root, branch, why):
     """Turn a RED non-merged lane into a BAR-INERT artefact. A refusal, or None.
 
     Bookkeeping paths are exempt by construction — the spec moves, the close
-    report and the log fragments ARE the record being kept, and reverting them
-    would revert the close itself. Nothing is lost by the revert either: the
+    report, the log fragments and the review rounds ARE the record being kept,
+    and the id watermark only ever rises (see `BOOKKEEPING`), so the lane's
+    marks stand and the reverted tree still passes registry-integrity. Nothing
+    is lost by the revert either: the
     reverted commits stay reachable in trunk history once the branch merges,
     and the `.patch` is the convenience copy a future WI can apply without
     archaeology.
@@ -936,7 +958,7 @@ def quarantine(root, branch, why):
     changed = [
         (status, paths)
         for status, paths in records
-        if not any(p.startswith(BOOKKEEPING) for p in paths)
+        if not any(_is_bookkeeping(p) for p in paths)
     ]
     if not changed:
         return (

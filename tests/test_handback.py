@@ -24,7 +24,8 @@ repos, a real claim, a real lane worktree, real commits. What each group pins:
     (WI-291);
   * the QUARANTINE is bar-inert AND lossless: the product paths go back to the
     base byte for byte, the `.patch` re-applies, and the bookkeeping the
-    handback just wrote survives untouched.
+    handback just wrote survives untouched, as do the lane's review rounds and
+    its id watermark, which only ever rises.
 
 Mutation notes are inline where a green could be vacuous — a revert that
 reverted nothing, or a "blocked" assertion that would pass on an unblocked row.
@@ -902,6 +903,101 @@ def test_quarantine_leaves_the_handback_bookkeeping_alone(tmp_path):
     # nothing is owed a judgement for.
     assert (wt / "docs" / "handbacks" / "WI-401-wi-401.md").is_file()
     assert integ.branch_outcomes(root, "wi-401")[0] == {"WI-401": "partial"}
+
+
+def _marks(**raised):
+    """A complete watermark (every space present) at the given marks."""
+    tr = load_script("trace")
+    marks = {space: 0 for space in tr.WATERMARK_SPACES}
+    marks.update(raised)
+    return tr.render_watermark(marks)
+
+
+def test_quarantine_leaves_the_monotone_watermark_as_the_lane_left_it(tmp_path):
+    # A minted id is BURNED whether or not its row survives: the lane raised
+    # the IF mark when it allocated, the red revert takes the row away, and the
+    # mark must stay where the lane left it. Reverting it with the product diff
+    # lowered a mark in the quarantine commit itself, so the reverted tree
+    # could never pass registry-integrity and the run stopped on the very
+    # artefact built to be inert (IF 174 -> 173, measured).
+    tr = load_script("trace")
+    root = claimed_repo(tmp_path, extra=[(tr.WATERMARK, _marks(WI=401, IF=5))])
+    wt = lane(root)
+    raised = _marks(WI=401, IF=6)
+    (wt / tr.WATERMARK).write_text(raised, encoding="utf-8", newline="\n")
+    (wt / "added.py").write_text("BROKEN = (\n", encoding="utf-8", newline="\n")
+    _commit(wt, "WI-401: allocate IF-6 and break a file")
+    assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
+
+    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+
+    assert not (wt / "added.py").exists()  # the product still reverts
+    assert (wt / tr.WATERMARK).read_text(encoding="utf-8") == raised
+    assert _git(root, "show", "wi-401:" + tr.WATERMARK) == raised
+    # The integrity rule itself, read the way trace.py reads it: the committed
+    # history (the quarantine commit AND its parent) against the tree.
+    assert (
+        tr.watermark_findings(
+            wt, tr.committed_watermark(wt), tr.committed_corrections(wt)
+        )
+        == []
+    )
+    patch = (wt / "docs" / "work" / "handback" / "wi-401.patch").read_text(
+        encoding="utf-8"
+    )
+    assert "added.py" in patch and tr.WATERMARK not in patch
+
+
+def test_a_product_file_sharing_the_watermarks_prefix_still_reverts(tmp_path):
+    # The watermark is exempt by EXACT path. A prefix match spared
+    # `docs/id-watermark.bak` too, a product file the red lane added, leaving
+    # it live on trunk after a quarantine that claimed to revert the product.
+    tr = load_script("trace")
+    root = claimed_repo(tmp_path, extra=[(tr.WATERMARK, _marks(WI=401, IF=5))])
+    wt = lane(root)
+    raised = _marks(WI=401, IF=6)
+    (wt / tr.WATERMARK).write_text(raised, encoding="utf-8", newline="\n")
+    backup = wt / (tr.WATERMARK + ".bak")
+    backup.write_text("IF = 5\n", encoding="utf-8", newline="\n")
+    _commit(wt, "WI-401: allocate IF-6 and leave a backup")
+    assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
+
+    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+
+    assert not backup.exists()
+    tree = _git(root, "ls-tree", "-r", "--name-only", "wi-401").split()
+    assert tr.WATERMARK + ".bak" not in tree and tr.WATERMARK in tree
+    assert (wt / tr.WATERMARK).read_text(encoding="utf-8") == raised
+
+
+def test_the_monotone_exemption_names_the_watermarks_one_home():
+    # The mark's path is mirrored here, not imported (trace.py is not this
+    # module's dependency); the pin keeps the mirror from drifting.
+    tr = load_script("trace")
+    assert tr.WATERMARK in hb.BOOKKEEPING_FILES
+
+
+def test_quarantine_keeps_the_lanes_review_record(tmp_path):
+    # Evidence of what happened survives the reverting of what was done: the
+    # red revert deleted a lane's round files with its product diff, and the
+    # disposition adjudicator then judged a close whose review it could not
+    # read (WI-540, the one merged row on trunk with zero round files).
+    root, wt = quarantined_repo(tmp_path)
+    round_file = wt / "docs" / "reviews" / "wi-401" / "001-REVIEW-A-abc1234.md"
+    round_file.parent.mkdir(parents=True, exist_ok=True)
+    round_file.write_text(
+        "- [MAJOR] added.py:1 -> unparseable\n", encoding="utf-8", newline="\n"
+    )
+    _commit(wt, "review: WI-401 round 1")
+
+    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+
+    assert not (wt / "added.py").exists()
+    assert round_file.read_text(encoding="utf-8") == (
+        "- [MAJOR] added.py:1 -> unparseable\n"
+    )
+    tree = _git(root, "ls-tree", "-r", "--name-only", "wi-401").split()
+    assert "docs/reviews/wi-401/001-REVIEW-A-abc1234.md" in tree
 
 
 def test_quarantine_refuses_when_the_red_is_not_the_lanes_own_code(tmp_path):

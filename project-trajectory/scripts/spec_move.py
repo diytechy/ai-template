@@ -237,13 +237,22 @@ def _relink_inbound_links(root, moves):
 def _markdown_files(root):
     """`(path, repo-relative posix path)` for every markdown file the inbound
     redirect visits - ONE traversal, shared by the ritual and its plan
-    (`planned_writes`), so the two cannot disagree about which files exist."""
+    (`planned_writes`), so the two cannot disagree about which files exist.
+
+    The owner-only paths (`agent_common.OWNER_ONLY_PATHS`) are not visited:
+    they are the human owner's free-form notes, and no kit step rewrites them.
+    A stale link there is the owner's to fix. Relinking it put the scratchpad
+    in a claim's write set, so an owner mid-edit had the claim refused by name
+    over their own notes. Excluded HERE, in the one traversal, the plan and the
+    write agree without a second rule."""
     root = Path(root)
     for path in sorted(root.rglob("*.md")):
-        parts = path.relative_to(root).parts
-        if ".git" in parts or "node_modules" in parts:
+        rel = path.relative_to(root)
+        if ".git" in rel.parts or "node_modules" in rel.parts:
             continue
-        yield path, path.relative_to(root).as_posix()
+        if rel.as_posix() in ac.OWNER_ONLY_PATHS:
+            continue
+        yield path, rel.as_posix()
 
 
 def planned_writes(root, moves):

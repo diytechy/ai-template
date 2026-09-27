@@ -136,6 +136,25 @@ def test_relink_preserves_crlf_and_skips_unrelated_files(tmp_path):
     assert "docs/other.md" not in touched
 
 
+def test_the_owners_scratchpad_is_never_planned_or_rewritten(tmp_path):
+    """The owner-only notes are outside every kit write: a scratchpad linking
+    the moved spec keeps its link as typed (stale is the owner's to fix), is
+    absent from the plan a bookkeeping commit refuses a dirty path against, and
+    is absent from what the ritual reports it touched."""
+    repo = tmp_path
+    _spec_with_links(repo)
+    pad = repo / sm.ac.OWNER_ONLY_PATHS[0]
+    pad.write_bytes(b"next: [WI-001](docs/specs/WI-001.md)\r\n")
+    before = pad.read_bytes()
+
+    planned = sm.planned_writes(repo, [("docs/specs/WI-001.md", ARCHIVED)])
+    assert pad.name not in planned
+    touched = _archive(repo)
+
+    assert pad.read_bytes() == before
+    assert pad.name not in touched
+
+
 # --- the outbound half (WI-353): rebase the moved file's own links --------------
 
 

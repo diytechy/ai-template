@@ -33,7 +33,9 @@ regeneration:
     owner edit landing on an in-scope path in that window is left and named;
   * no bookkeeping path in the primary checkout keeps a whole-tree git write;
   * the owner-only scratchpad no longer stops the merge slot (the dispatcher's
-    own tick-top check is pinned beside its siblings in tests/test_dispatch.py).
+    own tick-top check is pinned beside its siblings in tests/test_dispatch.py),
+    and the claim never rewrites it, so a dirty one linking the claimed spec
+    no longer refuses the claim.
 
 The helper is reached THROUGH its two callers (`integ.bookkeeping`, never a
 second `load_script` copy), because the claim of the design is that both
@@ -790,3 +792,34 @@ def test_the_merge_slot_reads_past_a_dirty_owner_scratchpad(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "dirty" not in proc.stderr
     assert pad.read_text(encoding="utf-8") == "owner notes, mid-edit\n"
+
+
+def test_the_claim_never_rewrites_a_dirty_owner_scratchpad_naming_its_spec(
+    tmp_path, capsys
+):
+    # The claim's link-aware move relinks every markdown file linking the moved
+    # spec, and it reached the owner's scratchpad: a committed pad linking the
+    # queued spec landed in the claim's write set, so an owner mid-edit had the
+    # claim refused by name over their own notes. The pad is owner-only - no
+    # kit step rewrites it - so the claim succeeds and leaves it byte-identical,
+    # dirty edit and stale link alike, and the claim commit does not touch it.
+    root = trunk(tmp_path)
+    pad = root / integ.ac.OWNER_ONLY_PATHS[0]
+    pad.write_text(
+        "- [WI-401](docs/work/queued/WI-401-widget.md) next\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "the owner's scratchpad", when=T_VERDICT + 1)
+    mid_edit = (
+        b"- [WI-401](docs/work/queued/WI-401-widget.md) next, then WI-402\r\n"
+        b"- half a thought"
+    )
+    pad.write_bytes(mid_edit)
+    head = _rev(root, "HEAD")
+
+    assert integ.claim(root, "WI-401", "wi-401") == 0, capsys.readouterr().err
+    assert pad.read_bytes() == mid_edit
+    assert (root / "docs/work/active/wi-401/WI-401-widget.md").is_file()
+    touched = _git(root, "diff-tree", "--name-only", "-r", head, "HEAD").split()
+    assert pad.name not in touched, touched

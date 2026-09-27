@@ -5969,6 +5969,29 @@ customised worker brief, add the inner-loop sentence yourself and regenerate
 the catalogue with `gen_prompt_catalog.py`. Nothing in your registries
 changes.
 
+### A disposition's open item is a typed brief, and three lane-close paths spare what is not theirs [since b58b7ccd]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A `## Dispositions` draft now carries a human-owed open item
+as an `[open_item]` table closing its block, with `one_line`, `blast_radius`,
+`options` and `recommendation`, each required and non-empty. The intake mint
+refuses, by name, the retired scalar `open_item = "<question>"`, a table
+missing or emptying any of the four cells, and a cell outside them, and writes
+the four cells verbatim into the minted open item (its `decision` derived from
+`one_line`). `prompts/adjudicate-disposition.template.md` documents the table.
+Three lane-close fixes change nothing you author: the quarantine's revert now
+keeps `docs/id-watermark` and `docs/reviews/` as the lane left them; the
+unload sheds `out/integrate.lock` beside `out/agent-loop.lock`; and a claim's
+link-aware move never rewrites `OWNER_SCRATCHPAD.md`, so a dirty scratchpad
+linking the claimed spec no longer refuses the claim.
+
+**What to do.** Re-sync `scripts/intake.py`, `scripts/handback.py`,
+`scripts/integrate.py`, `scripts/spec_move.py`,
+`prompts/adjudicate-disposition.template.md` and `prompts/CATALOG.md`. If an
+unmerged adjudication spec drafts a scalar `open_item`, rewrite it as the table
+before its merge, or its mint refuses. Rows already minted are untouched.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

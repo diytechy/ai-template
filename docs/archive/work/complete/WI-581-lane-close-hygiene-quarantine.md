@@ -3,12 +3,41 @@ id = "WI-581"
 title = "Lane-close and intake hygiene: quarantine spares monotone and record paths, integrate.lock declared, the claim never rewrites the owner's scratchpad, and a minted open item carries its full brief"
 workstream = "process"
 needs = ["~WI-579"]
-specref = "docs/plans/2026-08-31-verdict-record-and-queue-blockers.md#2-the-other-things-that-stopped-the-queue"
+specref = ""
 buildtier = "medium"
 priority = 6
 safety_class = "ordinary"
 supersedes = "WI-561;WI-562;WI-560;WI-659;WI-570"
 +++
+
+## Deliverable
+
+Claim, close and mint hygiene (squash of build/wi-581: 017ef299, b8cf0514).
+Codex Sol: first round NOT YET SOUND (`sol-wi581.md`), follow-up SOUND
+(`sol-wi581-fix.md`); wave-4 ruling 12.
+
+- **WI-581 (WI-561, WI-562).** `handback.quarantine`'s revert spares
+  `docs/reviews/`, a record path, and `docs/id-watermark`, which only ever
+  rises. The watermark is spared by exact path (`BOOKKEEPING_FILES`), so a
+  product file such as `docs/id-watermark.bak` still reverts. The reverted
+  tree passes registry-integrity. `out/integrate.lock` is declared residue.
+- **WI-659 (absorbed).** The claim's relink (`spec_move._markdown_files`)
+  skips `OWNER_ONLY_PATHS`. A claim with a dirty owner scratchpad naming the
+  id succeeds, the scratchpad stays byte-identical, and the claim's contract
+  (IF-080) says the owner's notes are never rewritten.
+- **WI-570 (absorbed).** A disposition's open item is a typed `[open_item]`
+  table: `one_line`, `blast_radius`, `options` and `recommendation`, each a
+  non-empty string. The bare scalar form, a missing or empty cell and a
+  non-string cell are each refused by name, at the draft and at the mint.
+  `_mint_open_item` writes the cells verbatim through `wi_convert.toml_value`,
+  with `decision` copied from `one_line` (ruling 12). The disposition prompt
+  documents the table. The two rows minted thin before the fix were OI-77 (at
+  the WI-563 merge) and OI-78 (at the WI-568 merge), both hand-filled on
+  2026-09-01.
+
+Size ratchet: intake.py 1436 -> 1475 and integrate.py 1454 -> 1456,
+re-stamped with reasons. No spine row was touched. Builder test runs
+(-n 2): 333 passed / 3 skipped; follow-up 119 passed.
 
 ## Context
 

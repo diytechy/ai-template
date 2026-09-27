@@ -1373,7 +1373,27 @@ def write_open_items(root):
     return path
 
 
-_HUMAN_OWED = """
+# The owner's whole card, as the adjudicator authors it: the four cells a
+# hand-filed pending row carries, multi-line and quote-bearing so "verbatim" is
+# tested on the shapes a real brief has, not on one tidy sentence.
+_BRIEF = {
+    "one_line": 'Does the retention window include partial closes? Recommend (a): "yes".',
+    "blast_radius": "- choosing (a): none.\n- deferring: the successor waits.",
+    "options": (
+        "- (a) INCLUDE. FOR: one rule. AGAINST: a longer window.\n"
+        "- (b) EXCLUDE. FOR: shorter. AGAINST: a second rule."
+    ),
+    "recommendation": "(a).\n\n- the deciding reason: one rule, not two.",
+}
+
+# The typed table closes the block: after a `[table]` header every key belongs
+# to the table, so it is the block's LAST part.
+_OPEN_ITEM_TABLE = "\n[open_item]\n" + "".join(
+    "{} = {}\n".format(key, wi_convert.toml_string(text))
+    for key, text in _BRIEF.items()
+)
+
+_HUMAN_OWED_HEAD = """
 ## Deliverable
 
 Adjudicated: the remaining question is the owner's to answer.
@@ -1385,9 +1405,9 @@ title = "Continue once the owner rules the boundary"
 workstream = "scripts"
 buildtier = "medium"
 supersedes = "WI-005"
-open_item = "Does the retention window include partial closes?"
-```
 """
+
+_HUMAN_OWED = _HUMAN_OWED_HEAD + _OPEN_ITEM_TABLE + "```\n"
 
 
 def test_the_close_mints_a_pending_oi_that_gates_the_successor(tmp_path):
@@ -1425,6 +1445,195 @@ def test_the_close_mints_a_pending_oi_that_gates_the_successor(tmp_path):
     tr = load_script("trace")
     states = tr.open_item_states(root)
     assert states.get(preds) == "pending"
+    # The edge still GATES: the scheduler reads the successor as waiting on
+    # the owner's ruling, not ready.
+    sched = load_script("schedule")
+    records = {
+        r["id"]: r
+        for r in sched.evaluate(sched._load(root), oi_status=sched.load_oi_status(root))
+    }
+    assert records[successor]["disposition"] == "waiting"
+    assert "waiting:open-item-pending:" + preds in records[successor]["reasons"]
+
+
+def test_the_minted_open_item_carries_the_adjudicators_brief_verbatim(tmp_path):
+    # The thin card made unrepresentable: the minted row is field-identical in
+    # shape to a hand-filed pending row (one_line, decision, blast_radius,
+    # options, recommendation) and every authored cell lands byte-for-byte, so
+    # gen_open_items renders it with no special case. Before the typed table
+    # the mint wrote title/status/raised/one_line/wi_refs only, and OI-77 and
+    # OI-78 reached the owner as a bare question.
+    root = git_repo(tmp_path)
+    write_sr(root)
+    registry = write_open_items(root)
+    write_spec(
+        root, "partial", "WI-005", slug="returned", body="\n## Deliverable\n\nstopped\n"
+    )
+    write_spec(
+        root,
+        "complete",
+        "WI-008",
+        slug="adjudicate",
+        safety_class="adjudication",
+        body=_HUMAN_OWED,
+    )
+    _commit(root, "setup", when=T_CODE)
+    before = after = _rev(root)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-008": "merged"}, "wi-008"
+    )
+    assert refusal is None, refusal
+    successor = minted[0][0]
+    rows = tomllib.loads(registry.read_text(encoding="utf-8"))["open_item"]
+    assert len(rows) == 1
+    ((oi_id, row),) = rows.items()
+    for cell, text in _BRIEF.items():
+        assert row[cell] == text, cell
+    # `decision` ("what is being decided") is derived from the one-line, so the
+    # row carries every brief cell a hand-filed pending row does.
+    assert row["decision"] == _BRIEF["one_line"]
+    assert row["status"] == "pending" and row["wi_refs"] == [successor]
+    # Rendered through the owner surface's own card builder, over the row as
+    # its registry reader hands it over: no special case, every cell shown.
+    gen = load_script("gen_open_items")
+    items = [r for r in gen.load_open_items(root) if r.get("OI-ID") == oi_id]
+    card = gen._brief_cards(items)
+    for label in ("One line", "What is being decided", "Blast radius"):
+        assert label in card, label
+    for label in ("Options", "Recommendation", "Work items"):
+        assert label in card, label
+
+
+_WHERE = "docs/work/complete/WI-008-adjudicate.md"
+
+
+def test_the_bare_scalar_open_item_is_refused_by_name():
+    # The retired form: a question where the registry wants a brief. Refused,
+    # not tolerated - a thin card must be unrepresentable at the mint rather
+    # than caught by a reviewer.
+    scalar = (
+        _HUMAN_OWED_HEAD
+        + 'open_item = "Does the retention window include partial closes?"\n```\n'
+    )
+    drafts, refusal = intake.parse_dispositions(scalar, _WHERE)
+    assert drafts == []
+    assert refusal is not None and "[open_item] table" in refusal
+    assert "bare" in refusal
+    for cell in _BRIEF:
+        assert cell in refusal, cell
+    # The mint's own rung refuses the same shape on a DERIVED draft, which no
+    # hand-authored block validation ever sees.
+    derived = intake._mint_shape_refusal(
+        {"title": "s", "open_item": "a bare question?"}, "intake at merge of wi-008"
+    )
+    assert derived is not None and "[open_item] table" in derived
+
+
+@pytest.mark.parametrize("cell", sorted(_BRIEF))
+@pytest.mark.parametrize("thin", ["missing", "empty"])
+def test_an_open_item_table_missing_a_cell_is_refused_by_name(cell, thin):
+    brief = dict(_BRIEF)
+    if thin == "missing":
+        del brief[cell]
+    else:
+        brief[cell] = "   "
+    table = "\n[open_item]\n" + "".join(
+        "{} = {}\n".format(k, wi_convert.toml_string(v)) for k, v in brief.items()
+    )
+    drafts, refusal = intake.parse_dispositions(
+        _HUMAN_OWED_HEAD + table + "```\n", _WHERE
+    )
+    assert drafts == []
+    assert refusal is not None and "[open_item]" in refusal
+    assert cell in refusal, refusal
+    derived = intake._mint_shape_refusal(
+        {"title": "s", "open_item": brief}, "intake at merge of wi-008"
+    )
+    assert derived is not None and cell in derived
+
+
+# Every non-string TOML value type, as authored. Each is truthy, so a
+# "non-empty" check alone would pass it and the mint would serialize whatever
+# `str` makes of it onto the owner's card.
+_NON_STRING_TOML = {
+    "integer": "7",
+    "float": "1.5",
+    "boolean": "true",
+    "array": '["(a)", "(b)"]',
+    "table": '{ a = "x" }',
+    "date": "2026-09-27",
+}
+
+
+@pytest.mark.parametrize("kind", sorted(_NON_STRING_TOML))
+def test_an_open_item_cell_that_is_not_a_string_is_refused_by_name(kind):
+    table = "\n[open_item]\n" + "".join(
+        "{} = {}\n".format(
+            key,
+            _NON_STRING_TOML[kind]
+            if key == "options"
+            else wi_convert.toml_string(text),
+        )
+        for key, text in _BRIEF.items()
+    )
+    drafts, refusal = intake.parse_dispositions(
+        _HUMAN_OWED_HEAD + table + "```\n", _WHERE
+    )
+    assert drafts == []
+    assert refusal is not None and "not strings" in refusal
+    assert "options" in refusal and "blast_radius" not in refusal, refusal
+
+
+def test_a_non_string_cell_mints_nothing_and_renders_nothing(tmp_path):
+    # Through the whole path: the merge's mint refuses by cell name, the
+    # registry is byte-identical, and the owner's surface has no card to draw.
+    root = git_repo(tmp_path)
+    write_sr(root)
+    registry = write_open_items(root)
+    before_bytes = registry.read_bytes()
+    body = _HUMAN_OWED.replace(
+        "options = " + wi_convert.toml_string(_BRIEF["options"]), "options = 7"
+    )
+    assert "options = 7" in body
+    write_spec(
+        root, "partial", "WI-005", slug="returned", body="\n## Deliverable\n\nstopped\n"
+    )
+    write_spec(
+        root,
+        "complete",
+        "WI-008",
+        slug="adjudicate",
+        safety_class="adjudication",
+        body=body,
+    )
+    _commit(root, "setup", when=T_CODE)
+    before = after = _rev(root)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-008": "merged"}, "wi-008"
+    )
+    assert minted == []
+    assert refusal is not None and "options (int)" in refusal, refusal
+    assert registry.read_bytes() == before_bytes
+    gen = load_script("gen_open_items")
+    assert gen.load_open_items(root) == []
+    assert "No pending decision" in gen._brief_cards(gen.load_open_items(root))
+
+
+def test_an_open_item_table_with_an_unknown_cell_is_refused():
+    # A typo'd cell is a silently dropped cell on a row minted with nobody
+    # watching - refused, exactly as an unknown top-level draft key is.
+    table = _OPEN_ITEM_TABLE + 'blast_radus = "typo"\n'
+    drafts, refusal = intake.parse_dispositions(
+        _HUMAN_OWED_HEAD + table + "```\n", _WHERE
+    )
+    assert drafts == [] and refusal is not None and "blast_radus" in refusal
+
+
+def test_the_typed_open_item_table_is_accepted_whole():
+    drafts, refusal = intake.parse_dispositions(_HUMAN_OWED, _WHERE)
+    assert refusal is None, refusal
+    assert len(drafts) == 1 and drafts[0]["open_item"] == _BRIEF
+    assert drafts[0]["supersedes"] == "WI-005"
 
 
 def test_the_oi_mint_refuses_on_a_non_toml_registry(tmp_path):

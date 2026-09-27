@@ -116,7 +116,9 @@ Contract IF-080: this module's CLI is the local integration seam, and each
     bookkeeping commit and the branch is cut from that commit — refusing
     before it writes anything on a declared pause, a dirty path it must write,
     an existing branch, an unsafe branch name, a non-ordinary spec or an
-    off-frontier row.
+    off-frontier row. The owner's notes (the owner-only paths) are never
+    rewritten: the move's relink passes them by, so they are never a path the
+    claim must write and never a reason it refuses.
     `refresh` runs the station refresh on a claimed branch. `integrate` is the
     serial fail-closed merge queue: a `--no-ff` merge onto a candidate
     worktree, the trunk step folded in, then the DECLARED bar on the composed
@@ -788,6 +790,9 @@ def _claim_locked(root, wi_ids, branch):
     worktree), with the declared regeneration joined by the helper. So a dirty
     path the claim must write refuses by name, and an uncommitted edit anywhere
     else is neither swept into the claim commit nor discarded by its refusal.
+    The owner's notes are never in that set: the relink does not visit the
+    owner-only paths (`spec_move._markdown_files`), so the claim neither
+    rewrites them nor refuses over their edits.
 
     Under the loop marker the same helper judges the claim's tree against the
     held-status rule before it commits, and marks the commit with the loop's
@@ -2011,9 +2016,13 @@ _RESIDUE_FILES = frozenset({"docs/test/report.md", "docs/test/report.html"})
 # surprise is evidence that refuses the unload by name.
 # out/agent-loop.lock is the loop's OWN per-checkout coordinator lock, dead once
 # its process exited (measured 2026-08-31: it held WI-547's lane after the shed).
+# out/integrate.lock is this module's own coordinator lock (`_slot`), the same
+# class: taken wherever `integrate` ran, dead once it exited, never evidence.
 _RESIDUE_STREAM_RE = re.compile(r"^out/run-logs/[^/]+-\d{3}-\d{8}-\d{6}\.log$")
 _RESIDUE_STREAM_DIRS = ("out/run-logs/",)
-_RESIDUE_OUT_FILES = frozenset({"out/review-owed", "out/agent-loop.lock"})
+_RESIDUE_OUT_FILES = frozenset(
+    {"out/review-owed", "out/agent-loop.lock", "out/integrate.lock"}
+)
 
 # BUILD RESIDUE: the ignored paths a toolchain rebuilds from a manifest, which
 # never count as dirt at all (2026-09-04). Measured that day: three merged

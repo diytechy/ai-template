@@ -188,3 +188,20 @@ The tier grew by 27 tests in this lane, so the next session re-measures it
 on a quiet box before anything else lands. Touched slow modules
 (test_trace, test_trace_interfaces, test_bootstrap): the builder's run at
 235d5870, 159 passed / 1 skipped.
+
+### WI-581 lands: claim, close and mint hygiene (with WI-659 and WI-570)
+
+One builder, two rounds (wave-4 ruling 12). The quarantine spares the review
+record and the watermark, the latter by exact path. The integrate lock is
+declared residue. The claim never rewrites the owner's scratchpad. A minted
+open item carries its full typed brief, refused by name when thin; OI-77 and
+OI-78 were the two minted thin before this. **Open count: 14.**
+
+Commit bar at WI-581: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs` 0 broken, smoke 1603 passed / 3 skipped in 58.55 s (the budget
+enforcer was not re-run separately). Touched slow modules plus both ratchets
+(test_handback, test_spec_move, test_module_size_ratchet,
+test_complexity_ratchet), run by the coordinator: 57 passed. test_intake,
+test_bookkeeping and test_integrate_unload were run by the builder at
+017ef299 and b8cf0514.
