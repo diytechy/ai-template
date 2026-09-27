@@ -141,3 +141,23 @@ Smoke 1575 passed / 3 skipped. Touched slow modules
 (test_derive_stage, test_schedule, test_consolidate), run by the coordinator:
 155 passed. test_consolidate_close was run by the builder at ffb2c143,
 unchanged since.
+
+### WI-679 filed: consolidation runs through the kit's own machinery
+
+The owner, on reading this session's consolidation: "the consolidation of
+work items may itself need to be a work item. The adjudicator is supposed to
+look at that (mechanically, for other projects that adopt this process), and
+perhaps all of that will work, I'm just not sure / a bit nervous." The worry
+is well founded, and there is a sharper finding under it. The hand
+consolidation bypassed the census, the adjudication and the close, for two
+reasons that are adopter-facing gaps. `_pending_refusal` blocks a census
+while ANY adjudication is queued, and the census's signals do not see groups
+that share a surface. The bypass also switched guard 3 on: every hand host
+carries `supersedes` naming a `restructured` row, which
+`consolidate.consolidation_successors` reads as a consolidation's own
+successor. So the census now treats the eleven hosts as judged, although no
+adjudicator judged them. WI-679 decides both gaps, decides the hosts'
+standing (a retroactive judgement from the kit's consolidate brief is one
+option), and then runs the machinery end to end on the live queue. Nothing
+open could hold it, because WI-582, which carried SR-220, has closed.
+**Open count: 16** (15 queued, 1 deferred): WI-582 closed and WI-679 filed.
