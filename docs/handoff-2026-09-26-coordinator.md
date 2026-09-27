@@ -138,9 +138,8 @@ amendment brief. It files the verdict, and one `intake.py snapshot
 
 ## After the wave
 
-- **File the drafts** in [plans/2026-09-26-wave2-drafts/](plans/2026-09-26-wave2-drafts/K-llr167-amend.md)
-  (A, B, C, E, F, G, I, J, K, L, N, O; ids from `trace.py --bump-ids`).
-  O is the census-routing follow-up (ruling 2); A lands with or after I.
+- **Filed 2026-09-26** as WI-656 to WI-667 (A, B, C, E, F, G, I, J, K, L, N, O in that order; K is WI-664, and now also needs WI-653 and WI-654). The drafts in [plans/2026-09-26-wave2-drafts/](plans/2026-09-26-wave2-drafts/K-llr167-amend.md) are the pre-filing record.
+  O (WI-667) is the census-routing follow-up (ruling 2); A (WI-656) needs I (WI-662).
 - **Backlog cleanup: applied** at the owner's go-ahead, from a read-only
   audit.
   - Cancelled WI-596 and WI-597 (WI-635 made them obsolete).
