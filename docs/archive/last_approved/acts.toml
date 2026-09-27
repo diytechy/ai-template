@@ -1,0 +1,10 @@
+# APPROVAL ACTS, appended by `intake.py snapshot` (baseline_snapshot.copy_live).
+# One entry per act that copied a registry: the rows it carried into approval
+# and the rows it re-attested. Do not edit; accepted risks are anchored to
+# these entries, and git holds the commit each act landed in.
+
+[[act]]
+seq = 1
+date = "2026-09-27"
+approved = []
+reattested = ["LLR-140", "LLR-143", "LLR-154", "LLR-167", "LLR-216", "LLR-224", "LLR-246", "LLR-248", "LLR-250", "LLR-257", "SR-209", "SR-211", "TC-061", "TC-135", "TC-137", "TC-144", "TC-145", "TC-161", "TC-164", "TC-170", "TC-178", "TC-192", "TC-206", "TC-222", "TC-244"]

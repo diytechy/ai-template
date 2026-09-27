@@ -2,7 +2,7 @@
 id = "WI-669"
 title = "adjudicate: LLR-140, LLR-143, LLR-154, LLR-167, LLR-216, LLR-224, LLR-246, LLR-248, LLR-250, LLR-257, SR-209, SR-211, TC-061, TC-135, TC-137, TC-144, TC-145, TC-161, TC-164, TC-170, TC-178, TC-192, TC-206, TC-222, TC-244 - approved cells amended by the second build wave; judge whether scope moved"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 sr_refs = ["SR-026", "SR-144", "SR-146", "SR-148", "SR-156", "SR-174", "SR-189", "SR-190", "SR-193", "SR-194", "SR-197", "SR-198", "SR-208", "SR-209", "SR-211", "SR-214", "SR-217"]
 needs = ["WI-664", "WI-652"]
 buildtier = "medium"
@@ -11,6 +11,42 @@ brief = "amendment"
 adjudicates = ["LLR-140", "LLR-143", "LLR-154", "LLR-167", "LLR-216", "LLR-224", "LLR-246", "LLR-248", "LLR-250", "LLR-257", "SR-209", "SR-211", "TC-061", "TC-135", "TC-137", "TC-144", "TC-145", "TC-161", "TC-164", "TC-170", "TC-178", "TC-192", "TC-206", "TC-222", "TC-244"]
 priority = 2
 +++
+
+## Deliverable
+
+Ruled by an independent adjudicator session from the kit's amendment brief
+(`adjudicate_brief.compose` rendered all 25 rows in full), against the record
+at d4e93937:
+
+    VERDICT: MEANING rows=25
+
+All 25 amended rows change what a builder or a test must do (SR-209, SR-211
+`acceptance_criteria`; LLR-140, LLR-143, LLR-154, LLR-167, LLR-216, LLR-224,
+LLR-246, LLR-248, LLR-250, LLR-257 `detail`; TC-061, TC-137, TC-144, TC-145
+`method`; TC-161 `method` and `tier`; TC-244 `method` and `expected`; TC-135,
+TC-164, TC-170, TC-178, TC-192, TC-206, TC-222 `tier`), and all 25 were judged
+blessable: true of the code at d4e93937, exercised by the tests their cases
+name (the adjudicator ran them: fourteen targeted runs, 689 tests, all green),
+and within their parents. The verdict is
+`docs/reviews/wi-669-adjudicate-the-wave-amendments/001-ADJUDICATE-d4e9393.md`
+(8ce1cfd4).
+
+Re-anchored in this close's own commit with `intake.py snapshot --reattests
+LLR-140,LLR-143,LLR-154,LLR-167,LLR-216,LLR-224,LLR-246,LLR-248,LLR-250,LLR-257,SR-209,SR-211,TC-061,TC-135,TC-137,TC-144,TC-145,TC-161,TC-164,TC-170,TC-178,TC-192,TC-206,TC-222,TC-244`.
+It copied the system-requirement, design-row and test-case records only,
+stamped the 25 ids, and wrote the first entry of the snapshot's typed act
+ledger (`docs/archive/last_approved/acts.toml`, WI-632). The copy also carried
+the traced cells that moved on those files: LLR-167, LLR-246, LLR-248
+`module`/`code_symbol`; LLR-235, LLR-256 `module`; TC-135, TC-145, TC-170,
+TC-178, TC-206, TC-222 `evidence`; and `verifies` on thirteen test cases
+(TC-217, TC-226 to TC-230, TC-232, TC-234, TC-241 to TC-244, TC-246, TC-250),
+six more than the Context below counts.
+
+Not acted on, recorded in the verdict: `components.toml` CMP-006 `Notes` has
+drifted from its approved copy and is another act's to judge; `interfaces.toml`
+differs from its copy only in `Drafted` rows; LLR-224 attributes to
+`sr_form_findings` a vacuity the composer applies; no test drives a real
+cancelled close through the mint and asserts its empty `brief` cell.
 
 ## Context
 

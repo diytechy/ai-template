@@ -630,7 +630,7 @@ phase = 4
 [test.TC-061]
 verifies = ["SR-026", "LLR-061"]
 level = "Integration"
-method = """Run two concurrent workers from explicit --wi/--train/worktree assignments; assert no lane-local status/next/run-state file, non-colliding logs/review evidence naming the exact reviewed commit, no root-truth mutation, and --track refused as an unknown flag (retired)."""
+method = """Drive the real worker loop as a subprocess against a fake agent CLI in throwaway git repos, from explicit --wi/--train assignments and from --wi alone, whose session tag defaults to the branch name. Assert the composed prompt carries the WI row, its SpecRef, its predecessor context, the branch diff of an earlier assigned row and the trailer protocol, forbids resuming from docs/status.md, and carries the context block only when the registries join, the one-turn close bar, and close commands resolved at the repository's own scripts path. On a lane claimed with two rows, assert each session's prompt lists every assigned row with its id, title, SpecRef and walk state, the second session reading the first row as `built` off its committed trailer, while a one-row lane renders no such block; and assert that a row whose `WI:` trailer is committed while its spec is still in active/<branch>/ reads `started, not closed`, never `built`, and stays the walk's next row until its spec leaves, and that moving the specs alone flips both the lane's completion read and the integrator's finished-branch read. Assert the result channel is committed trailer evidence: a `WI:` trailer ends the run DONE, a relaunch whose branch already carries it spends no session, a `Blocked-WI:` + `BlockRef:` trailer exits blocked with no block record written to the row's spec, a commit with no trailer runs to the budget ceiling, and done-detection defers on an open review, a pending rework or an uncommitted path other than the owner scratchpad. Assert a worker writes no run-state, iteration-index or tracks file; run two concurrent workers in linked worktrees and assert tag-prefixed session logs that do not collide and no session log or run-state in the primary checkout; under managed routing, assert the review verdict lands under reviews/<tag>/ named for the exact reviewed commit. Then drive the refusals: a --train tag carrying traversal or junk and a --wi list with a malformed or repeated id are rejected; --train without --wi, a detached HEAD, an unknown, done or cancelled WI, and an unresolvable or unreadable base each fail closed at preflight, while a row this branch itself closed is not read as a stale assignment and a row made terminal elsewhere still is; and --track is refused as an unknown flag."""
 tier = "Full"
 expected = "Satisfies SR-026 AcceptanceCriteria via the LLR-061 detail contract"
 automated = "Yes"
@@ -1313,10 +1313,10 @@ phase = 4
 verifies = ["SR-173", "LLR-142"]
 level = "Unit"
 method = """Run the trunk-step regen suite: --regen skips absent artifact families with a notice and stops loudly at the first failing generator, regenerating in dependency order."""
-tier = "Smoke"
+tier = "Full"
 expected = "Satisfies SR-173 AcceptanceCriteria via the LLR-142 detail contract"
 automated = "Yes"
-evidence = """tests/test_trunk_step.py::test_regen_skips_absent_artifact_families; tests/test_trunk_step.py::test_regen_fails_loudly_on_a_broken_generator"""
+evidence = """tests/test_trunk_step_plan.py::test_regen_skips_absent_artifact_families; tests/test_trunk_step.py::test_regen_fails_loudly_on_a_broken_generator"""
 status = "Approved"
 phase = 4
 
@@ -1334,7 +1334,7 @@ phase = 4
 [test.TC-137]
 verifies = ["SR-026", "LLR-143"]
 level = "Unit"
-method = """Run the drive suite: an unwired agent command refuses before any claim while an empty queue still drains to exit 0; a refusing claim rung, a stranded claim, a dirty trunk and a red composed-tree bar each stop the run by name; the tracked pause appearing mid-run stops the next cycle at exit 8; NEEDS-HUMAN propagates at exit 7 with the claim parked; a DONE-reporting worker that finishes nothing trips the stall guard; and two end-to-end runs against the real bar prove the green path (claim->build->merge->drained banner) and the red path (candidate parked, claim intact). The plain agent_loop.py launch enters the drive mode as a subprocess."""
+method = """Run the drive suite: an unwired agent command refuses before any claim while an empty queue still drains to exit 0; a refusing claim rung, a dirty trunk and a red refresh bar each stop the run by name, while a claim directory with no branch ref does not stop it and a trunk whose only change is confined to the owner's scratchpad (agent_common.OWNER_ONLY_PATHS) is not dirty and the parked lane resumes; the tracked pause appearing mid-run stops the next claim while the lane in flight merges, exiting 8; a NEEDS-HUMAN worker hands its lane back as a partial close that merges, and the run drives on to exit 0; a DONE-reporting worker that finishes nothing trips the stall guard; and two end-to-end runs against the real bar prove the green path (claim->build->merge->drained banner) and the red path (the refresh bar red on the branch, nothing merged, the claimed branch left in place with no refresh attestation). The plain agent_loop.py launch enters the drive mode as a subprocess."""
 tier = "Full"
 expected = "Satisfies SR-026 AcceptanceCriteria"
 automated = "Yes"
@@ -1411,7 +1411,7 @@ phase = 4
 [test.TC-144]
 verifies = ["SR-156", "LLR-150"]
 level = "Integration"
-method = """Run the dispatch loop suite on real git repos with the real bar: a spine batch claims as one commit and its worker receives both ids together, ordinary work admitted only after the window closes; a NEEDS-HUMAN worker hands back, the lane's refresh runs as its own subprocess and the branch merges; a red refresh quarantines a merges-nothing branch once and stops the run for a done-asserting one; an attended gate row drains and exits 0 with the approvals banner; the empty-frontier ladder hands the gap census to the intake mint (rows minted in one bookkeeping commit, driven by the same run, deduped on the next idle pass) and counts rung-2 cards off the shared pending read; pause/dirty-trunk/stall/crash-resume keep their serial-loop contracts at lanes=1, the dirty-trunk stop reading past a change confined to the owner's scratchpad (agent_common.OWNER_ONLY_PATHS)."""
+method = """Run the dispatch loop suite on real git repos with the real bar: a spine batch claims as one commit and its worker receives both ids together, ordinary work admitted only after the window closes; a NEEDS-HUMAN worker hands back, the lane's refresh runs as its own subprocess and the branch merges; a red refresh quarantines a merges-nothing branch once and stops the run for a done-asserting one; an attended gate row drains and exits 0 with the approvals banner; the empty-frontier ladder hands the gap census to the intake mint (rows minted in one bookkeeping commit, driven by the same run, deduped on the next idle pass) and counts rung-2 cards off the shared pending read; pause/dirty-trunk/stall/crash-resume keep their serial-loop contracts at lanes=1."""
 tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-150 detail contract"
 automated = "Yes"
@@ -1422,11 +1422,11 @@ phase = 4
 [test.TC-145]
 verifies = ["SR-156", "LLR-151", "IF-186"]
 level = "Unit"
-method = """Run the integrator claim suite: a spine claim succeeds on an idle station (the deleted safety-class arm, red-then-green); a hand claim while another holder has the dispatch lock refuses naming the lock and leaves the queue untouched, while dispatch_lock_held=True proceeds; a spine batch claims as ONE bookkeeping commit whose subject joins the ids and whose specs all land in active/<branch>/; the claim commits through the shared bookkeeping helper (IF-186) and refuses by name a dirty path it must write - the spec it moves among them - where it once refused any dirty tree; every other pre-existing single-WI claim contract (abandoned-claim re-cut, relink oracle, minted-id rung, bookkeeping-commit audit) holds unchanged."""
+method = """Run the integrator claim suite: a spine claim succeeds on an idle station (the deleted safety-class arm, red-then-green); a hand claim while another holder has the dispatch lock refuses naming the lock and leaves the queue untouched, while dispatch_lock_held=True proceeds; a spine batch claims as ONE bookkeeping commit whose subject joins the ids and whose specs all land in active/<branch>/; the claim commits through the shared bookkeeping helper (IF-186) and refuses by name a dirty path it must write - the spec it moves among them - where it once refused any dirty tree; every other pre-existing single-WI claim contract (abandoned-claim re-cut, relink oracle, minted-id rung, bookkeeping-commit audit) holds unchanged; and the helper isolates the checkout (IF-186): the step and its regeneration execute in a scratch worktree cut from HEAD, planned over HEAD so an uncommitted edit hiding a committed link refuses by name while one adding a link widens nothing, with the kit's committed trunk step run rather than an uncommitted edit to it; an owner edit to an in-scope path made while the regeneration is blocked, or while the caller's before-advance step runs, is concurrent drift refused by name, survives byte for byte and is absent from the commit; an uncommitted generator input outside the scope does not shape the committed artifacts; the scratch worktree is removed on success, refusal and crash, one that will not remove named on stderr; and installation writes the commit's paths and advances trunk by compare-and-swap, a refusal inside it restoring what it wrote while leaving and naming an edit made there."""
 tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-151 detail contract"
 automated = "Yes"
-evidence = "tests/test_integrate.py"
+evidence = "tests/test_integrate.py;tests/test_bookkeeping.py"
 status = "Approved"
 phase = 4
 
@@ -1598,8 +1598,8 @@ phase = 5
 [test.TC-161]
 verifies = ["LLR-167", "IF-124", "IF-075"]
 level = "Integration"
-method = """Drive the real loop against a fake agent CLI over throwaway git repos, one per routed brief, and capture what the session was actually handed. Assert the composed brief carries each slot's real derivation (the lane's report verbatim, the closed spec, the commit facts; the live census joined to the TC row and to the obligation it covers), that no `{slot}` survives in the output, and that the typed verdict line the brief demands is written to the path the brief named and committed with the result trailer. Then drive the refusals: a clean close (no per-close report), a report with no typed `commit_range`, and a census that has come clean each fall back to the worker assignment with the reason printed. Pin the discriminator: two rows with an identical SpecRef and different declared `Brief` cells compose differently. Pin the two unrouted briefs as unrouted, naming themselves in the refusal. The amendment arm covers two seams: IF-124, the `last_approved` baseline read - the brief carries the snapshot as its anchor, only approved cells reach the judge, and with no snapshot the brief holds and says FIRST APPROVAL rather than fabricating an anchor; and IF-127, the lazily imported re-attestation model."""
-tier = "Smoke"
+method = """Drive the real loop against a fake agent CLI over throwaway git repos for the disposition, red-TC and amendment briefs, and capture what the session was actually handed: the brief its row declares rather than the worker assignment. Assert the session writes the typed verdict line the brief demands to the path the brief named and commits it under the row's result trailer, ending the run done; that a session committing the trailer with no verdict, or with a label outside the brief's closed enum, does not complete; that a row whose declared brief cannot be filled is held for a human, with no session run, the reason printed and nothing committed under the row; and that a row declaring no brief builds from the worker assignment. Compose each routed brief in process and assert each slot carries its real derivation: for the disposition brief, the lane's report verbatim, the closed spec and the commit facts; for the red-TC brief, the live census joined to each TC row's Method, Expected and Evidence and to the obligation its targets name; for the consolidation brief, the whole cluster, the other open rows, the cited SR and LLR text (a stated literal when the cluster cites none), the overlap findings, the recorded and current digest pairs and what earlier consolidations absorbed; for the first-approval brief, the whole chain of each SR holding a scoped row, the scoped `Drafted` rows marked as the question, a held or out-of-scope row labelled as not this session's and contributing no registry, an unrelated chain left out, the derived `--approves` argument rendered as one shell command with the rows each token covers named once, and closing instructions that forbid stopping before the approval commit when any row is approved. Assert no `{slot}` survives in the composed disposition, red-TC, amendment and first-approval text. Then drive the refusals, each returning its reason and never a partial brief: a clean close with no per-close report, a report with no typed `commit_range`, a census that has come clean, a TC row missing a listed cell, a target with no normative text; a first-approval, amendment or consolidation row declaring no `Adjudicates` scope, a first approval whose scoped rows are all settled, gone from the spine or held for the owner, and an amendment none of whose scoped rows still differs from its approved copy; a consolidation with no `Digests` cell, a cluster row no longer queued, and a cluster whose overlap has dissolved. Pin the discriminator: two rows with an identical SpecRef and different declared `Brief` cells compose differently. Pin the routing both ways: the routed set equals the shipped set and each routed brief names a shipped template, every brief a mint declares is shipped and every routed brief is declared by a mint, a row declaring `conflict`, which the kit no longer ships, refuses as an unknown brief, and an absent or unknown brief refuses. Pin each brief's typed verdict grammar: a well-formed line is accepted, and an absent file, a missing machine line, an out-of-enum label or a missing counter is refused with its reason. Pin the amendment arm's scope: the amendment mint writes the rows it routes as the row's `Adjudicates` scope, and a one-row mint's brief renders that row alone while another row's unadjudicated drift stays out of it, and a row hanging under two SRs is rendered once. The amendment arm covers two seams: IF-124, the `last_approved` baseline read - the brief carries the snapshot as its anchor, naming for each registry shown the commit that last wrote that registry's copy rather than the newest write anywhere in the snapshot, only approved cells reach the judge, and with no snapshot the brief holds and says FIRST APPROVAL rather than fabricating an anchor; and IF-075, the re-attestation model its before/after listing is read from. What a MEANING verdict owes next is derived from the declared approval dial."""
+tier = "Full"
 expected = "Satisfies SR-146 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_adjudicate_brief.py"
@@ -1632,7 +1632,7 @@ phase = 5
 verifies = ["SR-150", "LLR-170"]
 level = "Unit"
 method = """Construct a needs registry whose need cell plants one token of each declared class (an internal path, an underscore identifier, a registry id and a section mark); run check_need_form.py at both severities; plant a user-facing interface name with and without its reviewed exception-list entry, and with a malformed entry missing the reason separator; plant the same dirty tokens in why/acceptance cells only; plant an English either/or pair, a sibling SN-### citation and a -000 example row; plant a one-level dot-free token both with and without a resolving target in the scanned tree; plant a URL whose tail is path-shaped, in scheme:// and scheme-less www. forms, one sharing its cell with a genuine internal path, one abutting a second path through a comma/semicolon, and a single-label www.-prefixed local path; end a cell with a path token and with an English either/or pair at the full stop; empty the registry file, then strip the need fields from real rows, then leave only a -000 example row; run over a tree with no needs registry at all; and run over the real meta-repo tree."""
-tier = "Smoke"
+tier = "Full"
 expected = """The dirty cell reports the row id AND each offending phrase, one finding per token (the path's inner filename is not a second finding), exit 0 by default and 1 under --strict; the exception-list entry silences exactly its token while the malformed entry silences nothing; exempt cells, either/or pairs, SN cross-references and example rows report nothing; a one-level dot-free token reports as a path only when it resolves on disk, and a URL's path-shaped tail never reports in either form while its cell-mate genuine path, a delimiter-abutting neighbour token and a single-label www.-prefixed local path all still do; a sentence-final path is named without its trailing full stop — so its reviewed exception matches — and a sentence-final either/or pair stays exempt; a registry that is present but yields zero scannable need cells reports as vacuous (strict exit 1) while an absent registry is a clean skip and a -000-only registry stays clean; and the live registry is clean at zero findings, so the assertions cannot pass against fixtures while the tier dirties."""
 automated = "Yes"
 evidence = "tests/test_check_need_form.py"
@@ -1698,10 +1698,10 @@ phase = 4
 verifies = ["SR-173", "LLR-142"]
 level = "Unit"
 method = """Run the trunk-step regen order/commit cases: the executed step sequence follows the declared dependency table - okf before derived-stage (the dashboard/status steps' input, not their output), derived-stage before its two consumers (trajectory, status), open-items last - asserted on the printed per-step lines of a real run rather than on the table constant (the retired arch-map step is no longer part of the sequence); a regen run creates NO git commit, a green step's output staying uncommitted in the working tree for the caller's one serial commit; and the failure path is executed, not inferred - a run whose later step fails after green steps have dirtied the tree exits nonzero with HEAD unmoved and the green output still uncommitted, so a later step's failure can never leave a partially regenerated set in history."""
-tier = "Smoke"
+tier = "Full"
 expected = "Satisfies SR-173 AcceptanceCriteria via the LLR-142 detail contract"
 automated = "Yes"
-evidence = """tests/test_trunk_step.py::test_regen_runs_in_declared_dependency_order; tests/test_trunk_step.py::test_regen_never_commits_the_caller_owns_the_commit; tests/test_trunk_step.py::test_regen_failure_after_green_steps_commits_nothing"""
+evidence = """tests/test_trunk_step_plan.py::test_regen_runs_in_declared_dependency_order; tests/test_trunk_step.py::test_regen_never_commits_the_caller_owns_the_commit; tests/test_trunk_step.py::test_regen_failure_after_green_steps_commits_nothing"""
 status = "Approved"
 phase = 4
 
@@ -1797,10 +1797,10 @@ phase = 5
 verifies = ["SR-161", "LLR-183"]
 level = "Unit"
 method = """Four halves, one per claim the row makes. RESOLUTION: build a spine whose SR and LLR rows carry a Hat-Refs naming a hat the roster declares and one naming a hat it does not, and assert the second is reported and joins the --strict failure set under its own class while the first is silent. VACUITY: delete the roster and assert the same tree reports nothing at all, then leave a roster that will not parse and assert the same - absence is opt-out for the layer, and a rule that reddened every row on a malformed roster would punish the wrong file. COVERAGE NEVER GATES: assert a tree whose rows carry no Hat-Refs at all exits zero under --strict and reports exactly one coverage advisory. THE DERIVED SET: assert effective_hats returns the union of a row's own refs with its SR parents', that a parent's change moves the child's answer with no child cell edited, and that a dangling SR-Refs contributes nothing rather than raising. Plus the anti-drift pin the second reader needs: assert trace's roster path equals hats.ROSTER_REL, since a test may import both modules where the shipped code may not."""
-tier = "Smoke"
+tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-183 (parent SR-161)"
 automated = "Yes"
-evidence = """tests/test_trace_hats.py::test_an_undeclared_hat_name_is_a_finding; tests/test_trace_hats.py::test_an_undeclared_hat_reds_a_real_run_under_strict; tests/test_trace_hats.py::test_the_rule_is_vacuous_without_a_roster; tests/test_trace_hats.py::test_an_unparseable_roster_is_vacuous_not_loud; tests/test_trace_hats.py::test_coverage_is_one_advisory_and_never_a_finding; tests/test_trace_hats.py::test_effective_hats_unions_the_parents; tests/test_trace_hats.py::test_a_parent_re_ruling_moves_the_child_with_no_child_cell_edited; tests/test_trace_hats.py::test_a_dangling_parent_contributes_nothing_rather_than_raising; tests/test_trace_hats.py::test_the_roster_path_matches_the_hats_module"""
+evidence = """tests/test_trace_hats.py::test_an_undeclared_hat_name_is_a_finding; tests/test_trace_hats_driven.py::test_an_undeclared_hat_reds_a_real_run_under_strict; tests/test_trace_hats.py::test_the_rule_is_vacuous_without_a_roster; tests/test_trace_hats.py::test_an_unparseable_roster_is_vacuous_not_loud; tests/test_trace_hats.py::test_coverage_is_one_advisory_and_never_a_finding; tests/test_trace_hats.py::test_effective_hats_unions_the_parents; tests/test_trace_hats.py::test_a_parent_re_ruling_moves_the_child_with_no_child_cell_edited; tests/test_trace_hats.py::test_a_dangling_parent_contributes_nothing_rather_than_raising; tests/test_trace_hats.py::test_the_roster_path_matches_the_hats_module"""
 status = "Approved"
 phase = 5
 
@@ -1950,7 +1950,7 @@ phase = 5
 verifies = ["SR-146", "LLR-164"]
 level = "Unit"
 method = """gen_prompt_catalog.render is exercised directly rather than read. test_the_catalogue_lists_every_shipped_prompt_with_its_digest asserts that the rendered text contains every prompts.KIT_PROMPTS key and every prompts.catalog_rows() digest. test_the_catalogue_on_disk_is_FRESH runs catalog.main(["--check"]) against the committed file and asserts exit 0 - the freshness gate LLR-164 names. test_a_template_edit_moves_its_digest_and_so_the_catalogue asserts that a real text edit moves the digest while a bare line-ending difference does not. tests/test_generated_freshness_wiring.py::test_prompt_catalog_step_reds_when_a_template_changes drives the wired [step:] enforcer end to end over a bootstrapped scaffold: edit a template, assert the commit-floor step reds, run gen_prompt_catalog.py, then assert it goes green."""
-tier = "Smoke"
+tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-164 (parent SR-146)"
 automated = "Yes"
 evidence = """tests/test_routing_and_prompts.py::test_the_catalogue_lists_every_shipped_prompt_with_its_digest; tests/test_routing_and_prompts.py::test_the_catalogue_on_disk_is_FRESH; tests/test_routing_and_prompts.py::test_a_template_edit_moves_its_digest_and_so_the_catalogue; tests/test_generated_freshness_wiring.py::test_prompt_catalog_step_reds_when_a_template_changes"""
@@ -2092,10 +2092,10 @@ phase = 5
 verifies = ["SR-170", "LLR-208"]
 level = "Unit"
 method = """The rollup as DERIVED state, driven on a scaffold carrying one review scope. Regeneration writes docs/reviews/rollup/<train>.md with a row per round file. --check is proven to have ALL its answers rather than one: an absent file reports stale, a freshly written one reports fresh, and a new round arriving in the scope reports stale again. THE EXTRA ARM IS DRIVEN AND NOT MERELY ENUMERATED, because it was the arm that was broken while it was uncovered: a rollup for a retired review scope reports stale, and then the regenerator the failure message names is run and asserted to REMOVE it and to leave --check fresh - a report whose own remedy cannot clear it is an unbreakable red, so the assertion is on the clearing and not on the reporting. THE FLAT PRE-TRAIN LAYOUT IS DRIVEN, and it is the arm the directory enumeration silently skipped: a round file sitting directly under docs/reviews/ reports stale, regenerates into the reserved flat stem carrying its row, and reports fresh - where before it produced no target at all and so a green --check over an empty rollup directory. The one name collision the reserved stem leaves - a train directory called by that same name - is asserted REFUSED on both the check and the write arm rather than resolved by a last write, and removing both scopes is asserted to PRUNE the flat rollup, so the refusal is proven clearable by the same remedy the module's other arms name. The rendered header is asserted to carry the sentence that keeps the artifact honest about its own standing - that the merge gate does not read this file - since the whole hazard of a checked-in summary is a reader taking it for the authority. The declaration side is held by the generated-artifact wiring guard, which fails any [generated] row with no freshness enforcer, and by the work-branch stand-down set, asserted whole rather than sampled. THE TRUNK WIRING IS DRIVEN, NOT READ BACK OFF THE TABLE THAT DECLARES IT, because none of the arms above can see it: on a scaffold whose only armed artifact family is docs/reviews/, the trunk step's own regen is RUN - the generator is never called directly on this arm, which is exactly what every other arm here does - and the rollup is asserted to appear under it carrying the round file's row, beside the executed per-step line naming the step. Deleting the `verdict-rollup` regen row leaves the trunk module valid with no occurrence of that step left in it, every arm above still green and the whole of the trunk step's own suite still green; this arm reds and names the step that stopped running. THE EXCLUSIVE WRITER IS ENFORCED AND NOT ONLY DECLARED, driven in the shape that broke it: in a LINKED worktree checked out on a claimed branch the direct write is asserted to exit 2 and to leave NO rollup file behind - the arm where the generator returned 0, wrote the directory, and the work-branch freshness stand-down then hid the write - while the two exemptions are driven beside it rather than assumed, `--check` answering stale on the same worktree unrefused, and `--trunk-step` writing the rollup there because the station's refresh runs the trunk step inside exactly that lane worktree. The single-checkout fixtures every other arm here uses are their own trunk and keep writing, which is why the refusal had to be driven through a real linked worktree to be driven at all."""
-tier = "Smoke"
+tier = "Full"
 expected = "Satisfies SR-170: the per-review-scope rollup is written by a regenerator the serial merge step runs and never by a work branch, its freshness is gated with two answers, and the artifact states that it is not the gate's input"
 automated = "Yes"
-evidence = """tests/test_verdict_record.py::test_the_rollup_is_generated_and_its_check_has_two_answers; tests/test_verdict_record.py::test_a_work_branch_cannot_write_the_rollup_but_the_trunk_step_can; tests/test_trunk_step.py::test_regen_really_writes_the_verdict_rollup; tests/test_generated_freshness_wiring.py::test_every_declared_generated_artifact_has_an_enforcer; tests/test_generated_freshness_wiring.py::test_every_wired_enforcer_is_a_real_step_and_runs_in_the_commit_floor; tests/test_check_lane.py::test_every_declared_freshness_step_is_skipped"""
+evidence = """tests/test_verdict_record.py::test_the_rollup_is_generated_and_its_check_has_two_answers; tests/test_verdict_record.py::test_a_work_branch_cannot_write_the_rollup_but_the_trunk_step_can; tests/test_trunk_step.py::test_regen_really_writes_the_verdict_rollup; tests/test_generated_freshness_census.py::test_every_declared_generated_artifact_has_an_enforcer; tests/test_generated_freshness_census.py::test_every_wired_enforcer_is_a_real_step_and_runs_in_the_commit_floor; tests/test_check_lane.py::test_every_declared_freshness_step_is_skipped"""
 status = "Approved"
 phase = 5
 
@@ -2210,7 +2210,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-217]
-verifies = ["SR-191", "LLR-218", "LLR-219"]
+verifies = ["SR-191", "LLR-218", "LLR-219", "IF-190"]
 level = "Integration"
 method = "Driven on a scaffold with a declared frame and an assumptions registry. A row missing each required cell in turn, a status outside the closed vocabulary, a standing outside active and falsified, and a landing crossing that is not declared, each fail the strict run naming the row and the cell. A complete row passes. A DA or SUR id above its watermark mark is refused. The template's example rows are inert. A fresh scaffold receives the registry as a blank form through the scaffold mapping and passes the strict check. A project with no frame file produces no finding from an assumptions registry."
 tier = "Full"
@@ -2268,10 +2268,10 @@ phase = 6
 verifies = ["SR-189", "SR-190", "SR-193", "SR-194", "SR-197", "SR-198", "SR-211", "SR-214", "LLR-225"]
 level = "Integration"
 method = "Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation."
-tier = "Smoke"
+tier = "Full"
 expected = "Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell re-opens its row's."
 automated = "Yes"
-evidence = "tests/test_acceptance_record.py"
+evidence = "tests/test_cell_classes.py"
 status = "Approved"
 phase = 6
 
@@ -2309,7 +2309,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-226]
-verifies = ["SR-197", "LLR-230"]
+verifies = ["SR-197", "LLR-230", "IF-201"]
 level = "Integration"
 method = "_phase_groups called with a requirement in phase 5 and one in phase 6, both citing one assumption, and a test case naming only that assumption: the case appears in both phase groups. A case whose assumption no requirement cites appears in none. Driven on a git repository, a change to a case's Assumption-Refs between HEAD and the working tree is attributed to the case's phases by the stage-change attribution."
 tier = "Full"
@@ -2320,7 +2320,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-227]
-verifies = ["SR-197", "LLR-231"]
+verifies = ["SR-197", "LLR-231", "IF-201"]
 level = "Unit"
 method = "assumption_evidence_rows, the forest builder, the red-TC census and the report metrics called in memory on a spine holding a requirement-only case, an assumption-only case and a case citing both. The assumption-only case is listed under the assumption-evidence group, not the verifying-nothing bucket; the census and the report count assumption evidence apart from requirement evidence, with the both-citing case counted once in each; the verified-requirement join, the matrix and the triangle rule give the same answers as with the assumption references removed."
 tier = "Smoke"
@@ -2331,7 +2331,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-228]
-verifies = ["SR-198", "LLR-232", "LLR-233"]
+verifies = ["SR-198", "LLR-232", "LLR-233", "IF-200"]
 level = "Unit"
 method = "is_observation_tc, observation_tc_findings and sampling_model_declared called on in-memory test cases. A case whose Automated reads No is an observation case and one reading Yes is not. An observation case missing inputs, missing max_age, or, when it cites assumptions, missing a sampling policy is one advisory per omission naming it. A max_age of 6 fails and 7 passes; a max_age of 7.5 or a word fails; a sampling value outside sampled and monitored fails. For the sampling model: a sample size of 0, of 2.5 or a word fails; an empty or whitespace acceptance rule fails; a size without a rule, and a rule without a size, fail; a sampled case with neither is valid but not model-declared; a sampled case with a size of 5 and a non-empty rule is model-declared. An automated case carrying any of the declaration cells is an advisory. The template's example case ships every key."
 tier = "Smoke"
@@ -2342,7 +2342,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-229]
-verifies = ["SR-199", "LLR-234"]
+verifies = ["SR-199", "LLR-234", "IF-214"]
 level = "Unit"
 method = "The record module exercised in a temporary directory. A record with every field round-trips; a record missing any one field, or cut off mid-file, parses to nothing; an outcome outside pass and fail, an observed_at or expires not in the canonical UTC form, an expiry earlier than the observation, and an empty or whitespace provenance each parse to nothing; a leading-dot file is never read; latest returns the newest by observation time; an empty judged digest is valid. write_atomic is driven with the replace step failing twice with a permission error and then succeeding, and with it failing every time, which raises after the bounded retries and leaves no partial record readable."
 tier = "Smoke"
@@ -2353,7 +2353,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-230]
-verifies = ["SR-199", "LLR-235"]
+verifies = ["SR-199", "LLR-235", "IF-215"]
 level = "Integration"
 method = "The writer run as a command on a scaffold, in a module registered as slow. It refuses an undeclared case, an automated case, an outcome outside the pair, a missing provenance, and an expiry later than the observation time plus the case's max_age, writing nothing each time. With no expiry given it writes the observation time plus max_age. The test-case registry's bytes are unchanged after every run. The inputs digest is equal for a declared input stored with LF and with CRLF line endings, and changes when its content changes; a registry row id among the inputs is digested from that row's cells. Recording a sample leaves the stage fingerprint and the release evidence binding unchanged. A fresh scaffold receives the writer and the record module."
 tier = "Full"
@@ -2375,7 +2375,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-232]
-verifies = ["SR-200", "LLR-237"]
+verifies = ["SR-200", "LLR-237", "IF-216"]
 level = "Unit"
 method = "evidence_level and tier_covers driven table-first over in-memory assumptions, cases, records and a suite proof. No citing case gives assumed. A citing case with no result gives specified. For an automated case: a passing record for this tree at the full tier gives monitored for a Smoke or Full case and specified for a Release case; at the release or all tier it gives monitored for every case; a failing record gives specified; a passing record bound to another tree gives specified. A current passing sampled observation gives sampled and a monitored one monitored. An expired record, and one whose judged digest differs from the current inputs digest, give specified and never touch the standing cell. A case declaring no inputs is judged by expiry alone. An approved, active assumption reading assumed or specified is one advisory; a Drafted one is not reported."
 tier = "Smoke"
@@ -2397,7 +2397,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-234]
-verifies = ["SR-202", "LLR-239"]
+verifies = ["SR-202", "LLR-239", "IF-217", "IF-220"]
 level = "Integration"
 method = "Driven on a real git repository, in a module registered as slow. An assumption with an accepted risk is approved in an act; with no evidence it reads covered. Amending a need it serves, then re-approving that need in a later commit, still reads it unproven and names the need. Amending the assumption's own text reads it unproven. A failing record added in a commit after the acceptance act reads it unproven, whatever its observation timestamp says. After each of these, two restorations are checked separately: an act that re-attests the assumption with its text unchanged re-binds the risk and it reads covered; and, without any new act, a current passing observation for one of its evidencing cases makes it evidenced rather than covered. Advancing the test clock by a year changes nothing. A shallow clone missing the acceptance act reads unproven with the reason stated."
 tier = "Full"
@@ -2474,7 +2474,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-241]
-verifies = ["SR-208", "LLR-246"]
+verifies = ["SR-208", "LLR-246", "IF-196"]
 level = "Integration"
 method = "Driven on real git repositories with the dial holding DevStg-Boundary. A lane whose range changes a frame or assumption status, or adds or removes a row carrying one, is refused at the merge slot naming the registry, the row and the rung. The same change on a released rung merges. A registry missing from the rung map is held. With the loop marker set, the held-status pre-commit step refuses the same change in the index; without the marker, a person's commit passes. The claim writer, the mint bookkeeping writer, the handback residue writer and the telemetry writer each refuse, before writing, a tree that carries such a change."
 tier = "Full"
@@ -2485,7 +2485,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-242]
-verifies = ["SR-209", "LLR-247", "LLR-248"]
+verifies = ["SR-209", "LLR-247", "LLR-248", "IF-194", "IF-197"]
 level = "Integration"
 method = "The trailer helpers unit-tested: format and parse round-trip, the last trailer wins, and a missing, malformed or other-session trailer is refused naming the subject. A child process started by the dispatcher and by the loop's main entry sees the marker; the launcher scripts never set it. Driven on real git repositories: with the marker set, the commit-msg hook refuses a commit with no trailer and passes one with a valid trailer; without the marker a commit passes. The merge ladder refuses a lane whose range holds a plumbing commit without the trailer. The claim, refresh, merge, bookkeeping, handback-close and telemetry writers each produce messages carrying the trailer, and a refused telemetry commit is reported."
 tier = "Full"
@@ -2496,7 +2496,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-243]
-verifies = ["SR-210", "LLR-249"]
+verifies = ["SR-210", "LLR-249", "IF-195", "IF-196"]
 level = "Integration"
 method = "Driven on a real git repository, in a module registered as slow, with a history of three trunk commits — a loop-trailer commit changing a status on a rung its own tree's dial holds, one changing a status on a released rung, and one changing a held status without the trailer — plus a merged lane whose inner trailer-carrying commit changes a held status. The first trunk commit and the lane commit are reported, each once, naming the commit, the row and the rung; the merge commit itself is not reported. A root commit is compared with the empty tree. Raising the dial in a later commit does not change the verdict on earlier commits. A commit whose policy file has no dial is judged as most-held and prints no legacy warning. The pure dial comparison is unit-tested on each rung."
 tier = "Full"
@@ -2507,11 +2507,11 @@ status = "Approved"
 phase = 6
 
 [test.TC-244]
-verifies = ["SR-211", "LLR-250"]
+verifies = ["SR-211", "LLR-250", "IF-208"]
 level = "Integration"
-method = "interface_bridge_findings driven through the traceability check. A boundary interface naming declared assumptions is bridged; one with a waiver is coincident; one with neither is one advisory naming it; one naming an undeclared assumption fails the strict run naming the interface. An internal interface, one with no from- or to-external tie-back, is not judged. A requirement-reference cell on an interface row is still refused by the existing retired-cell rule."
+method = "interface_bridge_findings driven through the traceability check. A boundary interface naming declared assumptions is bridged; one with a waiver is coincident; one with neither is one advisory naming it; one naming an undeclared assumption fails the strict run naming the interface. Beside an assumptions registry holding no real row, or no registry, nothing is judged: neither the one with neither cell nor one naming an undeclared assumption yields a finding. An internal interface, one with no from- or to-external tie-back, is not judged. A requirement-reference cell on an interface row is still refused by the existing retired-cell rule."
 tier = "Full"
-expected = "Satisfies SR-211's acceptance: bridged, coincident and neither classified as stated; an undeclared assumption fails naming the interface; internal interfaces out of scope; no requirement reference on the interface."
+expected = "Satisfies SR-211's acceptance: bridged, coincident and neither classified as stated; an undeclared assumption fails naming the interface; internal interfaces out of scope; no requirement reference on the interface; nothing judged until the assumptions registry holds a real row."
 automated = "Yes"
 evidence = "tests/test_trace_interfaces.py"
 status = "Approved"
@@ -2529,7 +2529,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-246]
-verifies = ["SR-214", "LLR-252"]
+verifies = ["SR-214", "LLR-252", "IF-208"]
 level = "Unit"
 method = "obstacle_hat_findings called with a roster: an assumption naming declared hats passes; one naming an unknown hat fails naming the assumption and the name; an empty cell produces nothing. Called with no roster: an assumption naming any hat fails naming it, and an empty cell still produces nothing."
 tier = "Smoke"
@@ -2573,7 +2573,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-250]
-verifies = ["SR-217", "LLR-257"]
+verifies = ["SR-217", "LLR-257", "IF-198", "IF-199"]
 level = "Integration"
 method = "Driven on real git repositories, in a module registered as slow. A requirement whose test cases were all approved before the first commit adding an Implements line for it produces nothing. Implementation landing is found both through a line naming the requirement and through a line naming one of its design rows, and the earlier of the two is the landing. A requirement with two test cases approved after that landing is reported naming the requirement, the implementation commit and both approval commits. A commit that approves one test case while withdrawing another still records the approval. A requirement with no implementation produces nothing. A declared start after a requirement's approval excludes it; no declared start judges the whole history. A test case added already Approved counts at its birth. A shallow clone, a start commit that does not exist, and a start not on first-parent history are each reported unreadable, never passing. Order is read only from commits, never from a cell. The step lists as warn-only in the harness plan."
 tier = "Full"

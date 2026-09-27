@@ -119,3 +119,38 @@ are marked as such.
    method (`test_gate_policy` does the same), and a detector that no
    paraphrase could slip past cannot be built honestly. A reworded
    restatement is for review to catch.
+
+9. **WI-661 — SOL, all three.** A message that knows the row must print it.
+   A literal `--reattests <ROW-ID>` pasted from `intake.py`'s refusal is
+   itself refused by `parse_reattests`. The two off-spine census notes, which
+   say a copy happens only on a Status move or `--approves`, became false the
+   day `--reattests` also copied. The acceptance-record mirror findings still
+   send a user to a bare `snapshot` that refuses. The tests now assert that
+   each false sentence is gone as well as that the new one is present.
+
+10. **WI-577 — SOL, all four.**
+    - The `.agents` skill copy was stale. The branch also needs a rebase onto
+      WI-649's ledger.
+    - The brief's heading still promised that every row owes a human act.
+    - Released-rung re-attestation, which the approval-act plan's §2a
+      requires, was never exercised by a test.
+    - IF-224 was allowlisted instead of cited. The builder's reason, that no
+      spine row states this rendering, is the gap itself. The standing rule
+      is never to sanction a check to green a step. So an approved test case
+      covering the brief cites it, or a Drafted design row and test case state
+      the ruled rendering and go to a first-approval adjudication.
+
+11. **WI-669's adjudication, cross-reviewed — SOL on the defect, INTEGRATOR on
+    the remedy.** An independent Fable adjudicator ruled all 25 amended rows
+    MEANING and blessable, having run 689 targeted tests, and re-anchored
+    them. Sol found that SR-209's chain is inconsistent. Its blessed
+    acceptance states wave-2 ruling 4's lane-ownership rule: a person's commit
+    in a loop lane is judged. Its `requirement` sentence still scopes the rule
+    to "a commit the unattended loop creates", and TC-242 still expects a
+    non-loop commit to pass. Narrowing SR-209 back would contradict ruling 4
+    and the built code. The blessed acceptance is true of the code, so the
+    re-anchor stands. The defect is in the rows around it, and the kit's
+    ordinary amendment route fixes that: WI-673 amends SR-209's requirement
+    and rationale and TC-242, and files their own adjudication. Holding the
+    other 24 rows back would also hold the C1 sitting, for a defect none of
+    them carries.
