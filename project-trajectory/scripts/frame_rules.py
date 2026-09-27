@@ -55,13 +55,13 @@ Contract IF-180: the frame and need-tier rule surface `trace.py` imports. Rows
 """
 
 try:
-    from kitlib.spine import STATUS_VALUES, SYSTEM_VALUES, is_example, refs
+    from kitlib.spine import SYSTEM_VALUES, is_example, refs
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
     from pathlib import Path
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from kitlib.spine import STATUS_VALUES, SYSTEM_VALUES, is_example, refs
+    from kitlib.spine import SYSTEM_VALUES, is_example, refs
 
 # THE STAKEHOLDER ROW'S REQUIRED CELLS (SR-189), in the carrier's column names.
 # `Party` is deliberately absent: a stakeholder need not be an entity the frame
@@ -166,20 +166,16 @@ def _real_needs(sn_needs):
 
 
 def _stakeholder_row_findings(row, entities):
-    """One stakeholder's own failures: a missing required cell, a status outside
-    the spine's vocabulary, a party naming no declared entity."""
+    """One stakeholder's own failures: a missing required cell, a party naming
+    no declared entity. A status outside the spine's vocabulary is not one: it
+    is schema, and the always-on integrity floor reports it once, as it does
+    every tier's status, so a second copy here would count one bad cell twice."""
     sid, out = row["STK-ID"], []
     missing = [c.lower() for c in STK_REQUIRED if not (row.get(c) or "").strip()]
     if missing:
         out.append(
             "stakeholder {} has no {} — a stakeholder states who it is, which "
             "outcomes it owns and its maturity".format(sid, " or ".join(missing))
-        )
-    status = (row.get("Status") or "").strip()
-    if status and status not in STATUS_VALUES:
-        out.append(
-            "stakeholder {} Status={!r} is outside the spine's closed vocabulary "
-            "({})".format(sid, status, " | ".join(sorted(STATUS_VALUES)))
         )
     party = (row.get("Party") or "").strip()
     if party and party not in entities:
@@ -195,10 +191,10 @@ def stakeholder_findings(sn_needs, stks, exts):
 
     FAILURES, which the caller joins to the frame class so they fail wherever
     the frame check runs rather than only under `--strict-schema`: a stakeholder
-    missing a `STK_REQUIRED` cell or carrying a status outside the spine's
-    closed vocabulary, a stakeholder whose `Party` names no declared entity,
-    and a need whose `stakeholder_refs` names an undeclared stakeholder. A
-    stakeholder with no party is valid.
+    missing a `STK_REQUIRED` cell, a stakeholder whose `Party` names no declared
+    entity, and a need whose `stakeholder_refs` names an undeclared stakeholder.
+    A stakeholder with no party is valid. A status outside the closed vocabulary
+    is the integrity floor's, not this rule's (`_stakeholder_row_findings`).
 
     ADVISORIES: a need naming no stakeholder, one line per need. It rides the
     warn pipe, because a need with no named owner is unconfirmable rather than

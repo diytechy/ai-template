@@ -155,18 +155,18 @@ def test_a_stakeholder_with_no_party_is_valid(scaffold):
     assert proc.returncode == 0, proc.stdout
 
 
-def test_a_status_outside_the_vocabulary_fails_the_integrity_floor(scaffold):
+def test_a_status_outside_the_vocabulary_is_one_integrity_finding(scaffold):
+    """Status vocabulary is schema, judged the same way on every tier, so the
+    always-on integrity floor owns it. The full strict run reports it ONCE, in
+    that class, and never again in the frame class beside it: two findings for
+    one bad cell would count one defect twice."""
     _project(scaffold, STAKEHOLDERS.replace('"Approved"', '"Bananas"', 1) + NEED)
-    proc = _run(scaffold, "--strict-integrity")
-    assert _lines(proc.stdout, "FINDING (integrity)", "STK-01", "Bananas"), proc.stdout
-    assert proc.returncode == 1
-    # ...and under the full strict run it ALSO fails the frame class, where the
-    # stakeholder rules put it: each of the two approved rows asking for it
-    # holds, and removing either finding reds this test.
-    proc = _run(scaffold, "--strict", bump=False)
-    assert _lines(proc.stdout, "FINDING (integrity)", "STK-01", "Bananas"), proc.stdout
-    assert _lines(proc.stdout, "FINDING (frame)", "STK-01", "Bananas"), proc.stdout
-    assert proc.returncode == 1
+    for flag in ("--strict-integrity", "--strict"):
+        proc = _run(scaffold, flag, bump=flag == "--strict-integrity")
+        found = _lines(proc.stdout, "FINDING", "STK-01", "Bananas")
+        assert len(found) == 1, proc.stdout
+        assert found[0].startswith("FINDING (integrity)"), proc.stdout
+        assert proc.returncode == 1
 
 
 def test_a_stakeholder_id_above_the_watermark_is_refused_as_unallocated(scaffold):

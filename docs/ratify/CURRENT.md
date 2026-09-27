@@ -442,6 +442,11 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 > **Rationale.** A need with no named owner has nobody who can confirm it is still wanted, and a stakeholder's party is what lets the need's outcome be placed on the frame. The link lives on the need, pointing at the stakeholder, so the relation has one home; a short list beside the needs keeps the stakeholders where the rows citing them already are, rather than in a registry of their own. A stakeholder is not a review perspective: a stakeholder owns an outcome, while a perspective owns a question put to each decomposition, so no perspective becomes a stakeholder row.
 
 
+### LLR LLR-216
+- **Detail**
+  - before: stakeholder_findings(sn_needs, stks, exts) returns (failures, advisories). A stakeholder missing any STK_REQUIRED cell (name, description, status) or carrying a status outside the spine's closed vocabulary, a need's stakeholder_refs entry, split on ';', naming an undeclared STK id, and a stakeholder party naming an undeclared EXT id are failures, composed into the frame class so they fail wherever the frame check runs, not only under --strict-schema. A need naming no stakeholder is an advisory. Stakeholder rows are loaded by their own id column, so their status never mixes with the needs' draft state. Vacuous when the needs file declares no stakeholder table.
+  - after: stakeholder_findings(sn_needs, stks, exts) returns (failures, advisories). A stakeholder missing any STK_REQUIRED cell (name, description, status), a need's stakeholder_refs entry, split on ';', naming an undeclared STK id, and a stakeholder party naming an undeclared EXT id are failures, composed into the frame class so they fail wherever the frame check runs, not only under --strict-schema. A stakeholder status outside the spine's closed vocabulary is not among them: status vocabulary is schema, reported once by the always-on integrity floor as on every tier. A need naming no stakeholder is an advisory. Stakeholder rows are loaded by their own id column, so their status never mixes with the needs' draft state. Vacuous when the needs file declares no stakeholder table.
+
 ### TC TC-222
 _approved — re-attestation owed_
 - **Tier**

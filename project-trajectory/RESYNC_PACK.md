@@ -5714,6 +5714,23 @@ is planned over HEAD. A claim or mint killed outright can leave a detached
 worktree list` shows it and `git worktree remove --force <path>` clears it.
 Nothing in your registries changes.
 
+### A stakeholder status outside the vocabulary is reported once, on the integrity floor [since 8918e56b]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A stakeholder row whose `status` is outside the spine's
+`Drafted | Approved | Founded` was reported twice under `trace.py --strict`:
+once by the always-on integrity floor, as every tier's status is, and again in
+the frame class by `scripts/frame_rules.py`'s stakeholder rules. The frame-class
+copy is gone. The integrity finding is unchanged, so the row still fails both
+`--strict-integrity` and `--strict`, now with one finding instead of two. A
+missing status is still a frame-class failure, beside a missing name or
+description.
+
+**What to do.** Re-sync `scripts/frame_rules.py`. Nothing in your registries
+changes. If a script or test of yours counts `FINDING (frame)` lines naming a
+stakeholder's status, count the one `FINDING (integrity)` line instead.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
