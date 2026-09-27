@@ -37,7 +37,7 @@ from __future__ import annotations
 
 import types
 
-from conftest import ROOT, load_script, make_minimal_project, run_py
+from conftest import ROOT, load_script
 
 trace = load_script("trace")
 hats = load_script("hats")
@@ -266,30 +266,8 @@ def test_the_live_roster_resolves_every_hat_the_live_spine_cites():
 
 
 # --- the end-to-end wiring: the finding reaches the exit code ------------------
-
-
-def test_an_undeclared_hat_reds_a_real_run_under_strict(scaffold):
-    make_minimal_project(scaffold)
-    write_roster(scaffold)
-    csv = scaffold / "docs" / "requirements" / "system-requirements.csv"
-    text = csv.read_text(encoding="utf-8").splitlines()
-    # Append the column to the header and a bad value to the first data row.
-    text[0] += ",Hat-Refs"
-    text[1] += ",SECRUITY"
-    csv.write_text("\n".join(text) + "\n", encoding="utf-8")
-
-    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
-    assert proc.returncode == 1, proc.stdout + proc.stderr
-    assert "FINDING (hat)" in proc.stdout, proc.stdout
-    assert "SECRUITY" in proc.stdout
-
-    # And it is non-vacuous in the other direction: the SAME tree with the name
-    # spelled correctly exits zero.
-    text[1] = text[1].replace("SECRUITY", "SECURITY")
-    csv.write_text("\n".join(text) + "\n", encoding="utf-8")
-    ok = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
-    assert ok.returncode == 0, ok.stdout + ok.stderr
-    assert "FINDING (hat)" not in ok.stdout
+# Driven through a bootstrapped scaffold and `trace.py --strict`, so it lives in
+# test_trace_hats_driven.py, outside the per-commit smoke tier.
 
 
 # --- a perspective's `speaks_for`, resolved against the stakeholder list -------

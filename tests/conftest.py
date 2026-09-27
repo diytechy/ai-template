@@ -328,6 +328,51 @@ SLOW_MODULES = frozenset(
         "test_loop_provenance",  # real git repos + dispatcher/agent_loop runs
         # WI-665: collection of one module alone can only be seen from outside.
         "test_conftest_isolation",  # a pytest subprocess over one test module
+        # WI-652 (OI-92 ruling (b): re-tier, the 60 s budget stands). On the
+        # 4-core / 8-thread box the tier had grown to 188 s quiet at -n auto, so
+        # every commit recorded a seconds FAIL and a real regression was
+        # invisible. Profiled with `python -m pytest -q -n 2 -m smoke
+        # --durations=0` under load (the seconds are inflated and are used only
+        # to rank; each figure below is that run's setup+call+teardown sum for
+        # the module). The entries below were 85% of the tier's 5465 s; every
+        # one is the heavy class this set is drawn on (real git repos, the
+        # `scaffold` fixture, or a kit script run as a subprocess per case, or
+        # a whole-live-registry sweep), chosen so that every kit script family
+        # the tier exercised keeps a test in it (the family-to-module table
+        # is WI-652's close record). Where a moved module's script had a pure
+        # seam, that seam keeps a direct in-process pin in the tier (a verbatim
+        # split or one small new test beside the module: test_trunk_step_plan,
+        # test_gen_open_items_render, test_generated_freshness_census,
+        # test_handback_records, test_check_figures_rules,
+        # test_check_need_form_rules, test_verdict_rollup_render,
+        # test_gen_trajectory_splice). Nothing is deleted or weakened: all of
+        # them run at slice/phase close and in CI.
+        "test_verdict_record",  # 1369 s: 56 cases, each on a real git repo (the merge gate's evidence walk)
+        "test_consolidate_close",  # 1016 s: the census close end-to-end on real repos and lanes
+        "test_gen_open_items",  # 332 s: gen_open_items.py subprocesses over git-committed scaffolds
+        "test_push_policy",  # 210 s: a full bootstrap per case
+        "test_check_doc_refs",  # 165 s: check_doc_refs.py run as a subprocess per case
+        "test_check_lane",  # 162 s: real git repos + check.py driven through its CLI
+        "test_trunk_step",  # 131 s: trunk_step --regen on git scaffolds
+        "test_check_figures",  # 109 s: check_figures.py run as a subprocess per case
+        "test_wi_convert",  # 107 s: converts and round-trips the whole live registry, repeatedly
+        "test_check_need_form",  # 101 s: check_need_form.py run as a subprocess per case
+        "test_process_config",  # 92 s: the hooks' `sh` reader run as a subprocess per shape
+        "test_generated_freshness_wiring",  # 86 s: check.py over a copied harness per case
+        "test_resync_pack",  # 75 s: scaffold + git history reads
+        "test_wi_folder_loaders",  # 70 s: git-committed spec trees per case
+        "test_csv_header",  # 49 s: a full bootstrap per case
+        "test_skills_sync",  # 48 s: gen_skills_index.py and friends as subprocesses
+        # Six modules were mostly in-process with one heavy case
+        # that carried most of their cost. Those cases moved to a sibling module
+        # (the test_check_complexity_cli precedent) so the in-process remainder
+        # stays in the tier; the sibling is filed here.
+        "test_id_watermark_driven",  # 191 s: two full bootstraps (bootstrap --force keeps the marks)
+        "test_rule_sync_driven",  # 84 s: scaffold + trace.py --require-verified subprocess
+        "test_check_coverage_driven",  # 53 s: scaffold + check.py driven twice
+        "test_dogfood_widening",  # 52 s: four consumers over every live work item, twice
+        "test_trace_hats_driven",  # 62 s: scaffold + trace.py --strict subprocess, twice
+        "test_prompts_driven",  # 54 s: a full bootstrap, then the loader over it
     }
 )
 

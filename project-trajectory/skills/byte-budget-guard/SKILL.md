@@ -30,7 +30,7 @@ before you edit and again before you commit.
 | File | Hard cap | Baseline | Stamped | Latest change |
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
-| `CLAUDE.md` | **8,500** | 7,975 | 2026-09-04 | +89: WI-580 aligns mid-phase close with the phase cadence |
+| `CLAUDE.md` | **8,500** | 7,977 | 2026-09-27 | +2: WI-652 re-measures the smoke tier on the 4-core box |
 | `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,528 | 2026-09-26 | WI-640 PROCESS row restamp |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill

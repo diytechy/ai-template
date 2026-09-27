@@ -93,10 +93,10 @@ means results AND seconds, not results alone (OI-52 ruling (a), 2026-08-23):
 is what makes the seconds a real bar rather than a claim a worker could read
 "passed" over — it FAILS the commit when the tier's wall time breaches the
 budget, instead of only being caught later in CI. The budget, re-tiered to fit
-by WI-281 and re-tiered again + re-measured 2026-08-23 (WI-496, after the tier
-crept back to 0.9-1.1x its ceiling): **≤ 60 s** wall, declared in
-`docs/stack.ini` `[smoke-budget]` (27.27 / 28.16 / 27.86 s over three warm
-runs on a 24-core box at the WI-496 re-tier) so it stays a real smoke test —
+by WI-281, WI-496 (2026-08-23) and WI-652 (2026-09-27, OI-92 (b), after the
+tier grew to 188 s on this repo's 4-core / 8-thread box): **≤ 60 s** wall,
+declared in `docs/stack.ini` `[smoke-budget]` (26.4 / 26.4 / 25.7 s over three
+quiet runs on that box at the WI-652 re-tier) so it stays a real smoke test —
 "is it basically alive?", not a re-run of most of the suite. Tiering is
 opt-out: smoke drops the **subprocess/scaffold-heavy** modules
 (`tests/conftest.py` `SLOW_MODULES` — the hook/gate/scaffold/heavy-script runs

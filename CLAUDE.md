@@ -60,11 +60,11 @@ that easier to achieve in a real project — or get out of the way.
   2026-08-23): `python -m pytest -q -n auto -m smoke && python
   scripts/check_smoke_budget.py --mode enforce`, budgeted at **60 s** wall in
   [`docs/stack.ini`](docs/stack.ini) — a breach FAILS the bar where it is
-  introduced. **Re-tiered and re-measured 2026-08-23 (WI-496): 27.27 / 28.16 /
-  27.86 s over three warm runs**, after moving five subprocess/scaffold-heavy
-  modules out of the tier (`tests/conftest.py` `SLOW_MODULES`) — the prior
-  reading (54.9/64.0/55.7 s, one past the ceiling) is why enforcement waited
-  for the re-tier. One box is one data point and the budget is not moved to
+  introduced. **Re-tiered and re-measured 2026-09-27 (WI-652, OI-92 (b)):
+  26.4 / 26.4 / 25.7 s over three quiet runs on the 4-core / 8-thread box**,
+  where the tier had grown to 188 s; its heavy cases moved to
+  `tests/conftest.py` `SLOW_MODULES`, every script family keeping an
+  in-process pin (a trial the owner may revisit). One box is one data point and the budget is not moved to
   fit it. A mid-phase WI/slice ends at that commit bar. Run the **full**
   unfiltered suite (`python -m pytest -q -n auto`, ~10 min on a quiet box,
   3–4× that while other sessions load it) once at phase close; the lane refresh

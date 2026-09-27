@@ -110,6 +110,11 @@ _traced — routes to adjudication_
   - before: Smoke
   - after: Full
 
+### TC TC-192
+- **Tier**
+  - before: Smoke
+  - after: Full
+
 ## SR-148 — Autonomous loop work selection: what it derives from, and in what order
 
 > **Requirement.** The delivered loop content shall select the work an unattended run does next from the repository's tracked registries and git history alone, in this order: ready adjudication rows first, as a stable partition applied at admission rather than by renumbering the ruled rank table; then unresolved handback records; then the earliest incomplete spine tier in SN-to-SR-to-LLR-to-TC order; then implementation work after test-case layout is complete — with the eligible set and its order deterministic, an item whose declared safety, policy or plan-mode inputs are missing, undeclared or contradictory failing closed for that item alone, human holds applied only from the declared approval level, nothing admitted past a human-held stop, no prose surface and no predefined track in the derivation, no hand-curated next-work or run-phase pointer surface shipped for any live instruction or executable surface to read, write, validate, generate or link, and the status surface a session reads generated and freshness-gated rather than hand-copied.
@@ -131,6 +136,18 @@ _traced — routes to adjudication_
 - **Method**
   - before: Drive the real loop against a fake agent CLI over throwaway git repos, one per routed brief, and capture what the session was actually handed. Assert the composed brief carries each slot's real derivation (the lane's report verbatim, the closed spec, the commit facts; the live census joined to the TC row and to the obligation it covers), that no `{slot}` survives in the output, and that the typed verdict line the brief demands is written to the path the brief named and committed with the result trailer. Then drive the refusals: a clean close (no per-close report), a report with no typed `commit_range`, and a census that has come clean each fall back to the worker assignment with the reason printed. Pin the discriminator: two rows with an identical SpecRef and different declared `Brief` cells compose differently. Pin the two unrouted briefs as unrouted, naming themselves in the refusal. The amendment arm covers two seams: IF-124, the `last_approved` baseline read - the brief carries the snapshot as its anchor, only approved cells reach the judge, and with no snapshot the brief holds and says FIRST APPROVAL rather than fabricating an anchor; and IF-127, the lazily imported re-attestation model.
   - after: Drive the real loop against a fake agent CLI over throwaway git repos for the disposition, red-TC and amendment briefs, and capture what the session was actually handed: the brief its row declares rather than the worker assignment. Assert the session writes the typed verdict line the brief demands to the path the brief named and commits it under the row's result trailer, ending the run done; that a session committing the trailer with no verdict, or with a label outside the brief's closed enum, does not complete; that a row whose declared brief cannot be filled is held for a human, with no session run, the reason printed and nothing committed under the row; and that a row declaring no brief builds from the worker assignment. Compose each routed brief in process and assert each slot carries its real derivation: for the disposition brief, the lane's report verbatim, the closed spec and the commit facts; for the red-TC brief, the live census joined to each TC row's Method, Expected and Evidence and to the obligation its targets name; for the consolidation brief, the whole cluster, the other open rows, the cited SR and LLR text (a stated literal when the cluster cites none), the overlap findings, the recorded and current digest pairs and what earlier consolidations absorbed; for the first-approval brief, the whole chain of each SR holding a scoped row, the scoped `Drafted` rows marked as the question, a held or out-of-scope row labelled as not this session's and contributing no registry, an unrelated chain left out, the derived `--approves` argument rendered as one shell command with the rows each token covers named once, and closing instructions that forbid stopping before the approval commit when any row is approved. Assert no `{slot}` survives in the composed disposition, red-TC, amendment and first-approval text. Then drive the refusals, each returning its reason and never a partial brief: a clean close with no per-close report, a report with no typed `commit_range`, a census that has come clean, a TC row missing a listed cell, a target with no normative text; a first-approval, amendment or consolidation row declaring no `Adjudicates` scope, a first approval whose scoped rows are all settled, gone from the spine or held for the owner, and an amendment none of whose scoped rows still differs from its approved copy; a consolidation with no `Digests` cell, a cluster row no longer queued, and a cluster whose overlap has dissolved. Pin the discriminator: two rows with an identical SpecRef and different declared `Brief` cells compose differently. Pin the routing both ways: the routed set equals the shipped set and each routed brief names a shipped template, every brief a mint declares is shipped and every routed brief is declared by a mint, a row declaring `conflict`, which the kit no longer ships, refuses as an unknown brief, and an absent or unknown brief refuses. Pin each brief's typed verdict grammar: a well-formed line is accepted, and an absent file, a missing machine line, an out-of-enum label or a missing counter is refused with its reason. Pin the amendment arm's scope: the amendment mint writes the rows it routes as the row's `Adjudicates` scope, and a one-row mint's brief renders that row alone while another row's unadjudicated drift stays out of it, and a row hanging under two SRs is rendered once. The amendment arm covers two seams: IF-124, the `last_approved` baseline read - the brief carries the snapshot as its anchor, naming for each registry shown the commit that last wrote that registry's copy rather than the newest write anywhere in the snapshot, only approved cells reach the judge, and with no snapshot the brief holds and says FIRST APPROVAL rather than fabricating an anchor; and IF-075, the re-attestation model its before/after listing is read from. What a MEANING verdict owes next is derived from the declared approval dial.
+- **Tier**
+  - before: Smoke
+  - after: Full
+
+## SR-150 — Stakeholder-need cells stay in stakeholder language
+
+> **Requirement.** The harness shall report each stakeholder-need `need` cell that contains an internal path, an implementation-only identifier or a process citation, naming the row and the offending phrase — at a severity that warns by default and fails only under --strict, exempting a name declared on a reviewed exception list that ships empty (a name that is itself a user-facing interface belongs in a need), and reporting nothing for acceptance or engineering-requirement cells, which SN-033 exempts by its own text.
+
+> **Rationale.** Realizes SN-033 — its approved acceptance commissions exactly this check, and until this row it did not exist. The need tier was measured clean when this landed (0 of 27 cells), and the row sits deliberately AHEAD of the SR re-tier's churn: locking the clean state in costs one warn-first step now; trusting a large re-statement pass not to dirty it costs an audit later. Warn-first is the ruled posture, not a softness — a form heuristic over approved stakeholder prose must not gate without an owner ruling, and that ruling has not been made.
+
+
+### TC TC-164
 - **Tier**
   - before: Smoke
   - after: Full
@@ -186,6 +203,23 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Status**: Drafted
 - **Phase**: 5
 
+## SR-161 — Decompositions carry a perspective record
+
+> **Requirement.** The delivered planning content shall leave, with every decomposition it produces, a machine-readable record of the declared review perspectives — each perspective's applicability decision and the requirements or explicit no-finding it produced — such that an applicable declared perspective missing from the record is a reportable finding.
+
+> **Rationale.** Realizes SN-036 — a decomposition produced from one perspective can look complete while omitting security, operations or first-use failures, and the omission is invisible unless the record names what was considered. SN-036 had no citing SR. The declared-perspective inventory is the ruled hats roster; the record proves coverage and provenance while adequacy stays with the independent review, exactly as the need partitions it.
+
+
+### TC TC-178
+_approved — re-attestation owed_
+- **Tier**
+  - before: Smoke
+  - after: Full
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_trace_hats.py::test_an_undeclared_hat_name_is_a_finding; tests/test_trace_hats.py::test_an_undeclared_hat_reds_a_real_run_under_strict; tests/test_trace_hats.py::test_the_rule_is_vacuous_without_a_roster; tests/test_trace_hats.py::test_an_unparseable_roster_is_vacuous_not_loud; tests/test_trace_hats.py::test_coverage_is_one_advisory_and_never_a_finding; tests/test_trace_hats.py::test_effective_hats_unions_the_parents; tests/test_trace_hats.py::test_a_parent_re_ruling_moves_the_child_with_no_child_cell_edited; tests/test_trace_hats.py::test_a_dangling_parent_contributes_nothing_rather_than_raising; tests/test_trace_hats.py::test_the_roster_path_matches_the_hats_module
+  - after: tests/test_trace_hats.py::test_an_undeclared_hat_name_is_a_finding; tests/test_trace_hats_driven.py::test_an_undeclared_hat_reds_a_real_run_under_strict; tests/test_trace_hats.py::test_the_rule_is_vacuous_without_a_roster; tests/test_trace_hats.py::test_an_unparseable_roster_is_vacuous_not_loud; tests/test_trace_hats.py::test_coverage_is_one_advisory_and_never_a_finding; tests/test_trace_hats.py::test_effective_hats_unions_the_parents; tests/test_trace_hats.py::test_a_parent_re_ruling_moves_the_child_with_no_child_cell_edited; tests/test_trace_hats.py::test_a_dangling_parent_contributes_nothing_rather_than_raising; tests/test_trace_hats.py::test_the_roster_path_matches_the_hats_module
+
 ## SR-163 — Every shipped file maps to a stakeholder outcome
 
 > **Requirement.** Every file the delivered package ships shall map, through the declared shipped-file inventory and its recorded exclusions, to at least one system requirement whose references resolve to a stakeholder need — generated outputs mapping through their generator — with missing files, stale inventory entries, unresolved references and unmapped files reported under the declared warning-to-gating policy.
@@ -231,6 +265,51 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Evidence**: tests/test_mapping_purpose.py::test_checker_catches_unmapped_file; tests/test_mapping_purpose.py::test_checker_catches_unresolved_reference; tests/test_mapping_purpose.py::test_checker_catches_missing_file; tests/test_mapping_purpose.py::test_checker_catches_stale_entry; tests/test_mapping_purpose.py::test_stale_arm_exempts_the_lifecycle_marker; tests/test_mapping_purpose.py::test_policy_is_warn_first_for_the_reference_classes; tests/test_mapping_purpose.py::test_generated_output_inherits_its_generator_mapping; tests/test_mapping_purpose.py::test_real_mapping_has_no_gate_class_findings; tests/test_mapping_purpose.py::test_every_filled_reference_resolves; tests/test_mapping_purpose.py::test_delivery_census_classifies_every_physical_package_source; tests/test_mapping_purpose_cli.py::test_cli_mapping_purpose_gates_when_real_shipped_row_is_removed
 - **Status**: Drafted
 - **Phase**: 5
+
+## SR-170 — Shared authority surfaces are the serial actor's alone
+
+> **Requirement.** The delivered loop content shall write the shared records it derives - the compiled activity log and the generated project-state artifacts - only from the serial merge step and only against the merged tree, never from a parallel work branch.
+
+> **Rationale.** ONE DECISION PER ROW: a shared serial actor is a shared MECHANISM, not one decision. This row holds the EXCLUSIVE-WRITER contract alone; ordering-and-all-or-nothing is SR-173's and identity allocation SR-174's, each with its own children. Realizes SN-027's serialization guarantee at the surfaces where a parallel writer would actually corrupt something, with SN-010 (the status surface a human reads regenerates at the seam, never on a lane), SN-008 (a first failure stops loudly rather than half-regenerating) and SN-025 (the surface a session reads is generated, never hand-copied). The serial LANDING (SR-156) and the rule that shared authority surfaces regenerate only there are two contracts that fail independently, since a perfectly serialized landing that still lets a lane commit a regenerated artifact satisfies the landing row and not this one. The three surfaces sit in ONE row rather than three because they share one decision, not three: the serial trunk actor is their sole writer. That decision is already ruled for the identity mint — a work branch never mints a work-item id — and this row is its requirement-tier home, which it did not have. `phase` inherits the parent's 4, matching every child.
+
+
+### TC TC-206
+_approved — re-attestation owed_
+- **Tier**
+  - before: Smoke
+  - after: Full
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_verdict_record.py::test_the_rollup_is_generated_and_its_check_has_two_answers; tests/test_verdict_record.py::test_a_work_branch_cannot_write_the_rollup_but_the_trunk_step_can; tests/test_trunk_step.py::test_regen_really_writes_the_verdict_rollup; tests/test_generated_freshness_wiring.py::test_every_declared_generated_artifact_has_an_enforcer; tests/test_generated_freshness_wiring.py::test_every_wired_enforcer_is_a_real_step_and_runs_in_the_commit_floor; tests/test_check_lane.py::test_every_declared_freshness_step_is_skipped
+  - after: tests/test_verdict_record.py::test_the_rollup_is_generated_and_its_check_has_two_answers; tests/test_verdict_record.py::test_a_work_branch_cannot_write_the_rollup_but_the_trunk_step_can; tests/test_trunk_step.py::test_regen_really_writes_the_verdict_rollup; tests/test_generated_freshness_census.py::test_every_declared_generated_artifact_has_an_enforcer; tests/test_generated_freshness_census.py::test_every_wired_enforcer_is_a_real_step_and_runs_in_the_commit_floor; tests/test_check_lane.py::test_every_declared_freshness_step_is_skipped
+
+## SR-173 — Shared regeneration is ordered and commits no partial result
+
+> **Requirement.** The delivered loop content shall regenerate the shared derived artifacts in declared dependency order, stopping at the first failure and committing no partially regenerated set.
+
+> **Rationale.** THE TRANSACTIONALITY HALF of three obligations that fail independently: ordering and all-or-nothing are one decision about a regeneration run, and they are not the same decision as who is allowed to write (SR-170) or how identity is allocated (SR-174). A regeneration that runs in the right order and still commits half a set satisfies neither, which is what makes them separable. Realizes SN-008 - a first failure that stops loudly beats a half-regenerated set that reads as complete - and SN-010.
+THE GUARANTEE IS "COMMITS NO PARTIAL SET" RATHER THAN "LEAVES NONE BEHIND", and the narrower wording is the one the delivered behaviour supports: the regeneration step touches git NOT AT ALL, so on a first failure it exits nonzero having run no later step, with HEAD unmoved and nothing committed - and it DELIBERATELY LEAVES the already-green steps' output dirty in the working tree, because the design assigns the commit to the caller (LLR-142's "never commits; the caller owns the commit"). The residue is not tolerated, it is REQUIRED: TC-170's own evidence test asserts `git status --porcelain` is NON-EMPTY after the failure, so an implementation that cleaned up after itself would fail the test that holds this row. The transactional rollback a reader might otherwise expect exists, but it belongs to the WRAPPING callers (the integrator and intake each reset the branch to its last work commit on failure) and is their obligation, not this row's - which is why stating it here would credit thi… [58 more chars — read the registry row]
+
+
+### TC TC-135
+_approved — re-attestation owed_
+- **Tier**
+  - before: Smoke
+  - after: Full
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_trunk_step.py::test_regen_skips_absent_artifact_families; tests/test_trunk_step.py::test_regen_fails_loudly_on_a_broken_generator
+  - after: tests/test_trunk_step_plan.py::test_regen_skips_absent_artifact_families; tests/test_trunk_step.py::test_regen_fails_loudly_on_a_broken_generator
+
+### TC TC-170
+_approved — re-attestation owed_
+- **Tier**
+  - before: Smoke
+  - after: Full
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_trunk_step.py::test_regen_runs_in_declared_dependency_order; tests/test_trunk_step.py::test_regen_never_commits_the_caller_owns_the_commit; tests/test_trunk_step.py::test_regen_failure_after_green_steps_commits_nothing
+  - after: tests/test_trunk_step_plan.py::test_regen_runs_in_declared_dependency_order; tests/test_trunk_step.py::test_regen_never_commits_the_caller_owns_the_commit; tests/test_trunk_step.py::test_regen_failure_after_green_steps_commits_nothing
 
 ## SR-176 — A privacy finding persists by class and location, never by value
 

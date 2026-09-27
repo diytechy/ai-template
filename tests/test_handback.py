@@ -825,40 +825,6 @@ def test_quarantine_reverts_the_product_and_keeps_the_failing_diff(tmp_path):
     assert not (wt / ".gitignore").exists()
 
 
-def test_the_name_status_stream_is_read_as_records_not_pairs():
-    # THE PARSE ITSELF, on the exact field list REVIEW-A round 1 drove. Read two
-    # at a time this pairs as ('R100','Aold.py'), ('Anew.py','D'), … — paths in
-    # the status slot, the bookkeeping filter blind, and `z_broken.py` (the
-    # failing file) past the loop bound. A rename is THREE fields, and
-    # `diff.renames` has defaulted true since Git 2.9, so this is ordinary
-    # output rather than an exotic case.
-    fields = [
-        "R100",
-        "Aold.py",
-        "Anew.py",
-        "D",
-        "docs/work/active/wi-401/WI-401-widget.md",
-        "A",
-        "docs/work/queued/WI-401-widget.md",
-        "M",
-        "z_broken.py",
-    ]
-    assert hb.diff_records(fields) == [
-        ("R100", ["Aold.py", "Anew.py"]),
-        ("D", ["docs/work/active/wi-401/WI-401-widget.md"]),
-        ("A", ["docs/work/queued/WI-401-widget.md"]),
-        ("M", ["z_broken.py"]),
-    ]
-    # A copy is the other three-field form.
-    assert hb.diff_records(["C75", "src/a.py", "src/b.py"]) == [
-        ("C75", ["src/a.py", "src/b.py"])
-    ]
-    # A stream that ends mid-record is a TRUNCATED READ, not an empty diff:
-    # None, so the caller refuses rather than quarantining a partial list.
-    assert hb.diff_records(["R100", "Aold.py"]) is None
-    assert hb.diff_records(["M"]) is None
-
-
 def test_quarantine_reverts_a_rename_and_keeps_the_failing_file(tmp_path):
     # The end-to-end half of the same defect, in the DAMAGING alignment: the
     # rename sorts first (capital A before `docs/`) and the broken file sorts

@@ -6,6 +6,9 @@ LIVE tree, so an id freed by deleting its row is invisible and can be minted
 again, silently re-pointing every commit message and archived document that
 cites it. These tests pin the guard AND its fail-open edges, because a mark that
 degrades to "no constraint" is worse than no mark at all: it looks like cover.
+
+The one case that bootstraps a real repository (`bootstrap --force` keeps the
+marks) lives in test_id_watermark_driven.py, outside the per-commit smoke tier.
 """
 
 from conftest import load_script
@@ -799,27 +802,3 @@ def test_bump_watermark_preserves_a_recorded_correction(tmp_path):
     assert marks["B"] == 8  # untouched — no live B rows to raise it further
     assert "B" not in raised  # the bump itself did not move it; the correction did
     assert TRACE.read_corrections(root)["B"] == [(7, 8, "OI-47")]
-
-
-def test_force_never_overwrites_a_live_repos_marks(tmp_path):
-    # `bootstrap --force` re-lays every scaffold file. For every OTHER target
-    # that costs at most re-doing an edit — they are templates to fill, or are
-    # regenerable from the tree. The watermark is the only one whose content is
-    # HISTORY (which ids were allocated and then deleted), so forcing the
-    # fresh-scaffold marks over a live repo frees every id above them and
-    # nothing can rebuild what was lost.
-    from conftest import KIT, run_py
-
-    dest = tmp_path / "repo"
-    dest.mkdir()
-    run_py([KIT / "scripts" / "bootstrap.py", "--dest", str(dest)], cwd=tmp_path)
-    mark = dest / TRACE.WATERMARK
-    mark.write_text(
-        mark.read_text(encoding="utf-8").replace("SR = 0", "SR = 146"),
-        encoding="utf-8",
-    )
-    run_py(
-        [KIT / "scripts" / "bootstrap.py", "--dest", str(dest), "--force"],
-        cwd=tmp_path,
-    )
-    assert "SR = 146" in mark.read_text(encoding="utf-8")

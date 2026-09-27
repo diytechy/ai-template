@@ -63,3 +63,34 @@ are marked as such.
    - (iii) *Representativeness — SOL.* This is the owner's stated condition
      on OI-92 (b). The seven scripts left with no per-commit exercise keep
      cheap direct pins for their pure seams.
+
+   WI-652's fix round (`sol-wi652-fix.md`): SOUND. Six test cases have their
+   `tier` amended from Smoke to Full in place (TC-135, TC-170, TC-164, TC-178,
+   TC-192, TC-206), left Approved for the joint adjudication. TC-157 and
+   TC-245 keep fast evidence and stay Smoke.
+
+5. **WI-662 — no dispute.** Sol: SOUND.
+
+6. **WI-660's parse-failure fallback — SOL.** The builder kept one fallback:
+   an unparseable `.toml` needs text is read by the markdown heading scan. Its
+   argument was that this only over-reports drafts, and that `load_needs`
+   refuses the file on the same run. The Done-when says "no text-based carrier
+   guess remains on that path", and the fallback is exactly such a guess.
+   Sol also showed the safety argument fails on one path: `spine_rules.load_spine`
+   never calls `load_needs`. There, malformed TOML carrying an SN id without a
+   markdown draft heading yields an id and no draft, which can raise the
+   derived stage. Ruling: dispatch strictly by carrier and fail closed on a
+   parse failure, with a refusal pinned through the stage path. Sol's minor
+   finding (`needs_from_text` keeps the same sniff) is its own item.
+
+7. **WI-664's first round — SOL, both findings.** TC-137, which received
+   TC-144's scratchpad clause, still says a stranded claim stops the run and
+   that NEEDS-HUMAN exits 7 with the claim parked. LLR-143 says the same.
+   `tests/test_dispatch.py` pins the reverse. The contradiction predates this
+   item, but TC-137 is now one of WI-669's amended rows, and an adjudicator
+   bound to bless only text true of the code would return it. The cheaper
+   route is to amend LLR-143 and TC-137 to the tested behaviour now and add
+   LLR-143 to WI-669. LLR-140's rewritten claim clause claimed "before
+   anything is written" (the helper creates its scratch worktree first) and
+   transcribed IF-186's steps. It is cut to the claim-specific scope and
+   cites IF-186 for the rest.

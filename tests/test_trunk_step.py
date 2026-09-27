@@ -9,6 +9,10 @@ absent artifact family, loud nonzero on a failing generator).
 Every test builds its scaffolding under `tmp_path` — including a REAL git repo,
 because merge order is *derived* from history rather than asserted, so a fake
 would test the wrong thing. The real `docs/` is never written.
+
+The two regen cases that need neither (the skip notice and the declared order,
+read off a run where every family skips) live in test_trunk_step_plan.py, in
+the per-commit smoke tier.
 """
 
 import subprocess
@@ -240,21 +244,6 @@ def test_dry_run_plans_both_operations_without_writing(tmp_path, capsys):
     assert len(ts.fragment_paths(root)) == 1
 
 
-def test_regen_skips_absent_artifact_families(tmp_path, capsys):
-    # A repo that carries none of the generated surfaces pays nothing — and the
-    # skip is PRINTED, so "nothing regenerated" is never mistaken for "all fresh".
-    assert ts.regen(tmp_path) == 0
-    out = capsys.readouterr().out
-    for name in (
-        "okf",
-        "derived-stage",
-        "trajectory",
-        "status",
-        "open-items",
-    ):
-        assert "skipping {}".format(name) in out
-
-
 def test_regen_fails_loudly_on_a_broken_generator(tmp_path, capsys):
     # The §5.5 fail-loud contract on the regen half: a red generator stops the
     # step at that step (a later one may read its output), exits nonzero, and
@@ -271,32 +260,6 @@ def test_regen_fails_loudly_on_a_broken_generator(tmp_path, capsys):
     err = capsys.readouterr().err
     assert "regen FAILED at okf" in err
     assert "trunk lane is RED" in err
-
-
-def test_regen_runs_in_declared_dependency_order(tmp_path, capsys):
-    # SR-173: a producer runs before every consumer that reads it — okf first
-    # (the dashboard's Knowledge tab reads the BUNDLE), derived-stage before
-    # trajectory and status (both read docs/stage), open-items last (nothing
-    # reads it back). Asserted on the EXECUTED surface (the printed per-step
-    # lines of a real run), not on the REGEN_STEPS table, so a reorder of the
-    # table shows up here even though every family skips.
-    #
-    # `arch-map` LED this list until WI-455 retired it: the module map derives
-    # live from the source AST, so there is no committed block to regenerate
-    # and no producer edge into okf left to assert.
-    assert ts.regen(tmp_path) == 0
-    out = capsys.readouterr().out
-    pos = [
-        out.index("skipping {}".format(name))
-        for name in (
-            "okf",
-            "derived-stage",
-            "trajectory",
-            "status",
-            "open-items",
-        )
-    ]
-    assert pos == sorted(pos), "regen must execute in declared dependency order"
 
 
 def test_regen_really_writes_the_verdict_rollup(tmp_path, capsys):

@@ -8,12 +8,14 @@ or absent from the report; a missing report SKIPs (an unmeasured run, e.g. the
 smoke tier), and no floors is a clean no-op.
 
 These tests exercise the pure functions in-process and drive the CLI end-to-end
-over crafted report/floors files, plus prove the step wires into the harness.
+over crafted report/floors files. The proof that the step wires into the
+harness bootstraps a scaffold, so it lives in test_check_coverage_driven.py,
+outside the per-commit smoke tier.
 """
 
 import json
 
-from conftest import SCRIPTS, load_script, make_minimal_project, run_py
+from conftest import SCRIPTS, load_script, run_py
 
 check = load_script("check_coverage")
 
@@ -228,28 +230,3 @@ def test_cli_skips_when_tier_does_not_measure_coverage(tmp_path):
     graded = _run_tier(tmp_path, report, floors, tier="full", skip="smoke")
     assert graded.returncode == 1, graded.stdout + graded.stderr
     assert "breached" in graded.stdout
-
-
-# --- harness wiring -----------------------------------------------------------
-def test_module_coverage_step_wires_into_the_harness(scaffold):
-    # The opt-in step slots into check.py's plan as a DevStg-Impl product step with no
-    # kit-script edit (the extra_steps contract), and passes as a no-op until a
-    # docs/coverage-floors census is authored.
-    make_minimal_project(scaffold)
-    stack = scaffold / "docs" / "stack.ini"
-    stack.write_text(
-        stack.read_text(encoding="utf-8")
-        + "\n[step:module-coverage]\n"
-        + "command = {py} scripts/check_coverage.py\n"
-        + "gates = DevStg-Impl\nlayer = product\n",
-        encoding="utf-8",
-    )
-    listed = run_py(
-        ["scripts/check.py", "--gate", "DevStg-Impl", "--list"], cwd=scaffold
-    )
-    assert listed.returncode == 0, listed.stdout + listed.stderr
-    assert "module-coverage" in listed.stdout
-
-    ran = run_py(["scripts/check.py", "--run-step", "module-coverage"], cwd=scaffold)
-    assert ran.returncode == 0, ran.stdout + ran.stderr
-    assert "no per-module coverage floors declared" in ran.stdout
