@@ -5672,6 +5672,48 @@ reviewed commit, not in a loop lane.
 Nothing needs migrating in your registries, and a repository whose history
 holds no loop commit hears nothing from the history check.
 
+### Trunk bookkeeping commits are built in a scratch worktree and installed under a drift check [since ac96741e]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The claim and the intake mint no longer write in your
+checkout while they run. Their shared helper, `scripts/bookkeeping.py`, now
+cuts a detached worktree from HEAD in the system's temporary directory, plans
+the step's write set there (the claim's relink plan reads HEAD's markdown, not
+your checkout's), refuses by name a dirty path in that set, runs the step's
+writes and `trunk_step.py --regen` there, builds the commit and removes the
+worktree. The regeneration runs the kit's scripts as HEAD commits them, so an
+uncommitted edit to a generator script no longer shapes what a claim or mint
+commits (a kit your repository does not carry still runs as loaded). After the
+caller's own pre-advance step (the claim's branch cut) and immediately before
+installing, it checks that HEAD has not moved and that every path in the write
+set still equals HEAD in your checkout; any difference refuses BY NAME and
+nothing is installed. Only then are the commit's paths written into your
+checkout and trunk advanced, as before. So an edit you make to an in-scope
+path while a claim or mint runs (the prose of `docs/status.md`, say) is no
+longer committed with it or overwritten: the step refuses naming it. A claim
+refused that way leaves the branch it cut, which the refusal names and the
+next claim of the same work item re-cuts. An uncommitted note of yours that
+adds a link to a claimed spec is no longer refused and is left alone; one that
+hides a committed link is refused by name. And an uncommitted edit to a file a
+generator reads (another spec's title, a registry row) no longer shapes the
+dashboard or status block a claim or mint commits. The window that remains is
+the install's own few git calls. The helper's `write` callback now receives
+the scratch worktree's root and must write under it; a write outside the
+declared scope is discarded with the scratch. Its `scope` may now be a
+callable handed that root, returning `(paths, refusal)`.
+
+**What to do.** Re-sync `scripts/bookkeeping.py`, `scripts/integrate.py` and
+`scripts/intake.py` together: the callback's signature changed, so a
+mismatched copy fails with a `TypeError` on its first claim or mint. If you
+wrote a caller of `bookkeeping.commit` yourself, give its `write` one
+argument, the root to write under, and write there rather than in your
+checkout; if its scope depends on what files say, pass it as a callable so it
+is planned over HEAD. A claim or mint killed outright can leave a detached
+`bookkeeping-*` worktree registered from your temporary directory; `git
+worktree list` shows it and `git worktree remove --force <path>` clears it.
+Nothing in your registries changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

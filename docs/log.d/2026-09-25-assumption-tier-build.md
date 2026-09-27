@@ -660,3 +660,33 @@ coordinator integrates in the handoff's order.
   up to date. Seconds **FAIL** at 161.6 s against 60 s, idle (OI-92),
   recorded, not re-stamped.
   <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=c907d31b -->
+
+### WI-647 lands — the trunk bookkeeping commit built in a scratch worktree
+
+- **Rebased** onto WI-636's first follow-up (329155cd -> cec49213; one
+  conflict in `bookkeeping._commit_object`, WI-636's committed-dial read
+  kept). **Follow-up acbf0d77** (Sol's chain C, four majors): the scope
+  planned over HEAD in the scratch tree for the claim and the mint, one plan
+  for pre-check and commit; the drift check after `before_advance`; the
+  scratch tree's committed trunk step run; the isolation tests traced from
+  TC-145 (amended `method`, left Approved; `evidence` gains
+  `tests/test_bookkeeping.py`). Red: 5 failed.
+- **Sol on acbf0d77** (`sol-wi647-fix.md`) and **ruling 10:** the
+  regeneration's write scope still came from the loaded kit. **Second
+  follow-up f6bb96e2:** read from the committed kit it runs. Red: 1 failed.
+- **Integrated** by cherry-picking cec49213 and applying acbf0d77 +
+  f6bb96e2 onto WI-636's landed form. One conflict: `intake.py` size
+  (WI-646's +1 and WI-647's -3 -> 1422). RESYNC entry re-anchored
+  `[since ac96741e]`.
+- **Amended, status left Approved, for the joint adjudication:** TC-145
+  `method`.
+- **Commit bar:** smoke **1950 passed, 3 skipped** in 489.4 s; the touched
+  modules (`test_bookkeeping`, `test_integrate`, `test_integrate_admission`,
+  `test_integrate_station`, `test_integrate_unload`, `test_intake`,
+  `test_loop_provenance`, `test_consolidate_close`, `test_dispatch`,
+  `test_resync_pack`, `test_dogfood_sync`, `test_rule_sync`) **421 passed, 3
+  skipped**; `check_docs --stale` OK; `check_trajectory --strict` clean;
+  `trace.py --strict-integrity` 0 integrity; `CURRENT.md` current; the
+  open-items view up to date. Seconds **FAIL** at 490.9 s against 60 s
+  (OI-92), recorded, not re-stamped.
+  <!-- fig: cmd="python scripts/check_smoke_budget.py --mode enforce" rev=ac96741e -->

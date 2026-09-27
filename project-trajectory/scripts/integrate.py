@@ -721,13 +721,12 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
     said two and was wrong (REVIEW-A round 1, driven).
 
     1. Before `commit-tree`. The spec is already `git mv`d and the regen output
-       already written, so a crash here leaves a DIRTY TRUNK with the spec
-       moved and no branch. That window is unchanged by the inversion (the old
-       order had it too) and it is not this function's to close: the next
-       bookkeeping commit refuses by name wherever its own write set overlaps
-       the residue (the regenerated artifacts always do), and dispatch.py's
-       cycle-top check turns any residue into EXIT_PREFLIGHT. Hand repair, but
-       LOUD and already fronted.
+       already written - in the helper's scratch worktree, not this checkout
+       (WI-647) - so a crash here leaves the checkout and trunk as they were.
+       A process killed outright can leave that detached worktree registered,
+       which holds no branch and which `git worktree remove --force` clears.
+       It once left a DIRTY TRUNK with the spec moved and no branch, when the
+       step wrote in the checkout itself.
     2. Between `git branch` and the trunk advance - THE WINDOW THE INVERSION
        MOVES, and the entire reason the driver's `_stranded_claims` existed. TRUNK
        FIRST left a claim no lane could reach: the spec sat in
@@ -785,10 +784,10 @@ def _claim_locked(root, wi_ids, branch):
 
     The claim's write set is planned before anything moves: each spec's
     `queued/ -> active/<branch>/` pair and every file the link-aware move will
-    rewrite (`spec_move.planned_writes`), with the declared regeneration joined
-    by the helper. So a dirty path the claim must write refuses by name, and an
-    uncommitted edit anywhere else is neither swept into the claim commit nor
-    discarded by its refusal.
+    rewrite (`spec_move.planned_writes`, read over HEAD in the helper's scratch
+    worktree), with the declared regeneration joined by the helper. So a dirty
+    path the claim must write refuses by name, and an uncommitted edit anywhere
+    else is neither swept into the claim commit nor discarded by its refusal.
 
     Under the loop marker the same helper judges the claim's tree against the
     held-status rule before it commits, and marks the commit with the loop's
@@ -803,7 +802,9 @@ def _claim_locked(root, wi_ids, branch):
         dest = "{}/{}/{}".format(ACTIVE, branch, spec.name)
         moves.append((spec.relative_to(root).as_posix(), dest))
 
-    def write():
+    def write(scratch):
+        # The abandoned branch is a ref, shared by every worktree; the move is
+        # made in the helper's scratch worktree, never in this checkout.
         refusal = _drop_abandoned(root, branch)
         if refusal:
             return refusal
@@ -817,21 +818,26 @@ def _claim_locked(root, wi_ids, branch):
         # one bookkeeping lane) - otherwise the claim is blocked by its own
         # freshness floor, which the acceptance run proved live.
         for src, dest in moves:
-            _touched, refusal = spec_move.move_spec(root, src, dest)
+            _touched, refusal = spec_move.move_spec(scratch, src, dest)
             if refusal:
                 return "the claim move failed: {}".format(refusal)
         return None
 
+    cuts = []
+
     def cut(commit):
-        # The branch BEFORE trunk moves (§A3). Should the trunk advance still
-        # fail after this, the branch holds a claim trunk never took, which is
-        # the abandoned-claim shape the next claim re-cuts.
+        # The branch BEFORE trunk moves (§A3). Should the drift check or the
+        # trunk advance still refuse after this, the branch holds a claim trunk
+        # never took, which is the abandoned-claim shape the next claim re-cuts.
         code, out = ac.git(root, "branch", branch, commit)
+        cuts.append(code == 0)
         return None if code == 0 else "branch cut failed:\n" + ac._failure_tail(out)
 
     _sha, refusal = bookkeeping.commit(
         root,
-        spec_move.planned_writes(root, moves),
+        # Planned in the scratch, which is HEAD: an uncommitted edit hiding or
+        # adding a link to a moved spec neither narrows nor widens the claim.
+        lambda tree: (spec_move.planned_writes(tree, moves), None),
         write,
         "{}\n\nThe §2.3 claim with its regeneration folded in, written BEFORE the\nbranch and before trunk moves onto it (§A3): a crash between the two\nwrites leaves at worst an orphan branch this claim re-cuts, never a\nclaim no lane can reach.".format(
             _claim_subject(wi_ids, branch)
@@ -839,6 +845,10 @@ def _claim_locked(root, wi_ids, branch):
         label="the claim",
         before_advance=cut,
     )
+    if refusal and cuts == [True]:
+        refusal += "; the branch {} it cut holds a claim trunk never took, which the next claim re-cuts".format(
+            branch
+        )
     if refusal:
         return fail(refusal)
     print(

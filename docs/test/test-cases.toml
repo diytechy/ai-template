@@ -1422,11 +1422,11 @@ phase = 4
 [test.TC-145]
 verifies = ["SR-156", "LLR-151", "IF-186"]
 level = "Unit"
-method = """Run the integrator claim suite: a spine claim succeeds on an idle station (the deleted safety-class arm, red-then-green); a hand claim while another holder has the dispatch lock refuses naming the lock and leaves the queue untouched, while dispatch_lock_held=True proceeds; a spine batch claims as ONE bookkeeping commit whose subject joins the ids and whose specs all land in active/<branch>/; the claim commits through the shared bookkeeping helper (IF-186) and refuses by name a dirty path it must write - the spec it moves among them - where it once refused any dirty tree; every other pre-existing single-WI claim contract (abandoned-claim re-cut, relink oracle, minted-id rung, bookkeeping-commit audit) holds unchanged."""
+method = """Run the integrator claim suite: a spine claim succeeds on an idle station (the deleted safety-class arm, red-then-green); a hand claim while another holder has the dispatch lock refuses naming the lock and leaves the queue untouched, while dispatch_lock_held=True proceeds; a spine batch claims as ONE bookkeeping commit whose subject joins the ids and whose specs all land in active/<branch>/; the claim commits through the shared bookkeeping helper (IF-186) and refuses by name a dirty path it must write - the spec it moves among them - where it once refused any dirty tree; every other pre-existing single-WI claim contract (abandoned-claim re-cut, relink oracle, minted-id rung, bookkeeping-commit audit) holds unchanged; and the helper isolates the checkout (IF-186): the step and its regeneration execute in a scratch worktree cut from HEAD, planned over HEAD so an uncommitted edit hiding a committed link refuses by name while one adding a link widens nothing, with the kit's committed trunk step run rather than an uncommitted edit to it; an owner edit to an in-scope path made while the regeneration is blocked, or while the caller's before-advance step runs, is concurrent drift refused by name, survives byte for byte and is absent from the commit; an uncommitted generator input outside the scope does not shape the committed artifacts; the scratch worktree is removed on success, refusal and crash, one that will not remove named on stderr; and installation writes the commit's paths and advances trunk by compare-and-swap, a refusal inside it restoring what it wrote while leaving and naming an edit made there."""
 tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-151 detail contract"
 automated = "Yes"
-evidence = "tests/test_integrate.py"
+evidence = "tests/test_integrate.py;tests/test_bookkeeping.py"
 status = "Approved"
 phase = 4
 

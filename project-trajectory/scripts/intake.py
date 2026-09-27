@@ -2101,14 +2101,12 @@ def _mint(root, drafts, subject_verb):
     ) or _supersede_source_refusal(root, drafts, subject_verb)
     if refusal:
         return [], refusal
-    scope, refusal = _mint_scope(root, drafts)
-    if refusal:
-        return [], refusal
     minted = []
     _sha, refusal = bookkeeping.commit(
         root,
-        scope,
-        lambda: _write_mint(root, drafts, registry, subject_verb, minted),
+        # Planned in the scratch, which is HEAD, like the writes themselves.
+        lambda tree: _mint_scope(tree, drafts),
+        lambda scratch: _write_mint(scratch, drafts, registry, subject_verb, minted),
         lambda: _mint_message(minted, subject_verb),
         label="the intake mint",
     )
@@ -2121,7 +2119,8 @@ def _mint(root, drafts, subject_verb):
 
 def _write_mint(root, drafts, registry, subject_verb, minted):
     """The mint's own writes, appending each `(wi_id, relpath)` to `minted`: a
-    refusal or None. The caller's bookkeeping commit owns the restore."""
+    refusal or None. `root` is the bookkeeping commit's scratch worktree, so
+    nothing here reaches the checkout unless the commit is installed."""
     lineage = []
     # ...and the CONSOLIDATION subset of it. Every successor's lineage is
     # re-pointed; only a consolidation's is ARCHIVED, because only a
@@ -2162,8 +2161,8 @@ def _write_mint(root, drafts, registry, subject_verb, minted):
     # allocates an id without recording it leaves the mark behind the tree, and
     # trace.py's integrity pass reads that as "an id was allocated past the
     # mark" — correctly, because it was. Safe against a later refusal: the mark
-    # is inside the mint's planned scope, so the restore reverts it with the
-    # spec it was minted for.
+    # is raised in the scratch worktree beside the spec it was minted for, and
+    # neither reaches the checkout unless the commit is installed.
     trace.bump_watermark(root)
     return None
 

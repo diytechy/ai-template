@@ -2,12 +2,35 @@
 id = "WI-647"
 title = "Build the trunk bookkeeping commit in an isolated worktree from HEAD and install it under a drift check"
 workstream = "unattended"
-specref = "docs/concurrency-restructure.md#23-the-claim-protocol-serial-on-the-trunk"
+specref = ""
 needs = ["WI-636"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 +++
+
+## Deliverable
+
+- `bookkeeping.commit` builds every trunk bookkeeping commit (the claim, the
+  mint) in a scratch worktree cut from HEAD and installs it by
+  compare-and-swap under a drift check (IF-186): an owner edit to an
+  in-scope path made while the commit is built is refused by name and
+  survives byte for byte; an uncommitted generator input outside the scope
+  does not shape the committed artifacts.
+- The scope is planned over HEAD in the scratch tree and the same plan
+  drives the pre-check and the commit, for the claim and the mint alike; an
+  uncommitted edit hiding a committed link refuses by name, one adding a
+  link widens nothing.
+- The drift check runs after the caller's `before_advance`; a refusal after
+  the claim's branch cut leaves the branch for the next claim to re-cut.
+- The regeneration runs the scratch tree's committed trunk step and reads
+  its write scope from the same committed kit; the harness interpreter
+  still comes from the checkout, as IF-186 says.
+- The claim's held-status check reads the dial committed at the scratch's
+  head through WI-636's `authority.dial_at`.
+- Amended, status left Approved, for the joint adjudication: TC-145
+  `method`. Traced pointer moved: TC-145 `evidence` gains
+  `tests/test_bookkeeping.py`.
 
 ## Context
 
