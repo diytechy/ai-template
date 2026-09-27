@@ -952,3 +952,210 @@ def test_offspine_census_renders_nothing_when_no_offspine_tier_changed(tmp_path)
     assert "docs/requirements/external.toml" not in out
     assert "docs/requirements/components.toml" not in out
     assert "Off-spine census" not in out
+
+
+# --- OI-82, ruled (a) as the owner refined it: every unapproved chain stays on
+# --- the owner's brief, and a chain the human-approval dial releases to an
+# --- adjudicator renders in full under its own label, collapsed by default.
+
+_WAITING = "Waiting for automated adjudication"
+
+
+def _dial_split_tree(root, dial=None):
+    """Three owing chains and no snapshot (so every row renders whole, which is
+    the point: a released chain is shown in FULL, not as ids). With `dial` at
+    `DevStg-Reqs` the SR rung is held and the LLR and TC rungs are released:
+
+      * SR-001 is itself `Drafted`: its one owing row sits on the held rung.
+      * SR-002 is `Approved`; only its LLR and TC are `Drafted`: every owing
+        row sits on a released rung, so the whole chain is the adjudicator's.
+      * SR-003 is `Drafted` with a `Drafted` LLR: a chain with ANY held row is
+        still the owner's to sign, released rows beside it notwithstanding.
+
+    `dial=None` writes no `docs/process.toml`, which is the shipped default
+    (`DevStg-Release`, every rung held)."""
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (root / "docs" / "test").mkdir(parents=True)
+    (req / "system-requirements.csv").write_text(
+        _REATTEST_SR_H + 'SR-001,Held parent,SN-001,"a held requirement","why","ac",,C,'
+        "Test,Drafted,1\n"
+        + 'SR-002,Released parent,SN-001,"a settled requirement","why","ac",,C,'
+        "Test,Approved,1\n"
+        + 'SR-003,Mixed parent,SN-001,"a mixed requirement","why","ac",,C,'
+        "Test,Drafted,1\n",
+        encoding="utf-8",
+    )
+    (req / "low-level-requirements.csv").write_text(
+        _REATTEST_LLR_H
+        + 'LLR-002,SR-002,Released child,src/demo.py,add,"the released detail",'
+        "(see TC-002),Drafted\n"
+        + 'LLR-003,SR-003,Mixed child,src/demo.py,mul,"the mixed detail",'
+        "(see TC-003),Drafted\n",
+        encoding="utf-8",
+    )
+    (root / "docs" / "test" / "test-cases.csv").write_text(
+        _REATTEST_TC_H
+        + 'TC-002,SR-002;LLR-002,Unit,"drive the released case","Smoke","a=1",'
+        '"sum",Yes,tests/test_demo.py::t,Drafted\n',
+        encoding="utf-8",
+    )
+    if dial is not None:
+        (root / "docs" / "process.toml").write_text(
+            '[attestation]\nhuman_approval_through = "{}"\n'.format(dial),
+            encoding="utf-8",
+        )
+
+
+def _collapsed_block(text):
+    """`(before, inside)`: the brief before its `<details>` block and the block's
+    body. Fails when the block is missing, open by default, or not closed."""
+    assert text.count("<details>") == 1, text
+    assert "<details open" not in text
+    before, rest = text.split("<details>", 1)
+    assert "</details>" in rest, text
+    return before, rest.split("</details>", 1)[0]
+
+
+def test_a_released_rungs_chain_renders_in_full_collapsed_under_its_label(tmp_path):
+    _dial_split_tree(tmp_path, dial="DevStg-Reqs")
+    proc = _brief(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    text = (tmp_path / "docs" / "ratify" / "CURRENT.md").read_text(encoding="utf-8")
+    before, inside = _collapsed_block(text)
+    # The label, where a reader sees it with the block still collapsed.
+    assert "<summary>" in inside and _WAITING in inside.split("</summary>")[0]
+    # The released chain is inside, rendered in FULL: its anchor text and every
+    # owing row's cells, not a list of ids.
+    assert "## SR-002 — Released parent" in inside
+    assert "> **Requirement.** a settled requirement" in inside
+    assert "### LLR LLR-002 (current)" in inside
+    assert "**Detail**: the released detail" in inside
+    assert "### TC TC-002 (current)" in inside
+    assert "**Method**: drive the released case" in inside
+    assert "SR-002" not in before
+    # The held chains render as today, in the body, never in the block.
+    assert "## SR-001 — Held parent" in before
+    assert "> **Requirement.** a held requirement" in before
+    assert "## SR-003 — Mixed parent" in before
+    assert "**Detail**: the mixed detail" in before
+    assert "SR-001" not in inside and "SR-003" not in inside
+    # The page's own framing does not tell the owner to sign what the block
+    # holds: the title claims no human act, and the signing instruction is
+    # scoped to the sections outside the block.
+    head = before.split("\n## ", 1)[0]
+    assert "owing a human act" not in head
+    assert "Rule on each section:" not in head
+    assert "Rule on each section outside the collapsed" in head
+    assert "not this sitting's" in head
+    # The freshness gate reads the same rendering back.
+    assert _check(tmp_path).returncode == 0
+
+
+def test_the_shipped_default_dial_holds_every_chain_and_collapses_none(tmp_path):
+    """No dial declared reads as `DevStg-Release`, which releases no spine
+    tier: no collapsed block renders and every owing chain stays in the
+    owner's section. (The title and signing instruction are the same at every
+    level; only the block depends on the dial.)"""
+    _dial_split_tree(tmp_path)
+    proc = _brief(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    text = (tmp_path / "docs" / "ratify" / "CURRENT.md").read_text(encoding="utf-8")
+    assert "<details" not in text
+    assert "## " + _WAITING not in text
+    for heading in (
+        "## SR-001 — Held parent",
+        "## SR-002 — Released parent",
+        "## SR-003 — Mixed parent",
+    ):
+        assert heading in text
+
+
+def test_a_dial_releasing_every_rung_leaves_the_owner_a_stated_empty_ask(tmp_path):
+    """Every owing chain released: the owner's section says there is nothing on
+    a held rung, rather than reading as an empty brief, and every chain is in
+    the block."""
+    _dial_split_tree(tmp_path, dial="DevStg-Below")
+    proc = _brief(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    text = (tmp_path / "docs" / "ratify" / "CURRENT.md").read_text(encoding="utf-8")
+    before, inside = _collapsed_block(text)
+    assert "No chain on a rung the human-approval dial holds" in before
+    for sid in ("SR-001", "SR-002", "SR-003"):
+        assert "## {} —".format(sid) in inside
+        assert sid not in before
+
+
+def _amended_split_tree(root):
+    """Two APPROVED chains snapshotted, then amended with every `Status` left
+    `Approved` (the D-9 regime: an amendment flips nothing), under a dial that
+    holds the SR rung and releases the LLR and TC rungs:
+
+      * SR-001's own Requirement moved: a drifted row on the held rung, so the
+        chain is the owner's re-attestation, as before the ruling.
+      * SR-002's chain moved only below the SR: LLR-002's Detail changed and
+        TC-002 left the registry. Every owing row is on a released rung, so the
+        re-attestation is an adjudicator's, and its diff renders collapsed."""
+
+    def write(sr1_req, llr2_detail, with_tc2):
+        (req / "system-requirements.csv").write_text(
+            _REATTEST_SR_H
+            + 'SR-001,Held amended parent,SN-001,"{}","why","ac",,C,Test,'
+            "Approved,1\n".format(sr1_req)
+            + 'SR-002,Released amended parent,SN-001,"a settled requirement",'
+            '"why","ac",,C,Test,Approved,1\n',
+            encoding="utf-8",
+        )
+        (req / "low-level-requirements.csv").write_text(
+            _REATTEST_LLR_H + 'LLR-001,SR-001,Held child,src/demo.py,add,"held detail",'
+            "(see TC-001),Approved\n"
+            + 'LLR-002,SR-002,Released child,src/demo.py,mul,"{}",'
+            "(see TC-002),Approved\n".format(llr2_detail),
+            encoding="utf-8",
+        )
+        (root / "docs" / "test" / "test-cases.csv").write_text(
+            _REATTEST_TC_H
+            + 'TC-001,SR-001;LLR-001,Unit,"drive the held case","Smoke","a=1",'
+            '"sum",Yes,tests/test_demo.py::t,Approved\n'
+            + (
+                'TC-002,SR-002;LLR-002,Unit,"drive the released case","Smoke",'
+                '"a=1","product",Yes,tests/test_demo.py::u,Approved\n'
+                if with_tc2
+                else ""
+            ),
+            encoding="utf-8",
+        )
+
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (root / "docs" / "test").mkdir(parents=True)
+    write("the ORIGINAL held text", "the ORIGINAL released detail", True)
+    load_script("baseline_snapshot").copy_live(root, seed=True)
+    write("the AMENDED held text", "the AMENDED released detail", False)
+    (root / "docs" / "process.toml").write_text(
+        '[attestation]\nhuman_approval_through = "DevStg-Reqs"\n', encoding="utf-8"
+    )
+
+
+def test_a_released_rungs_re_attestation_renders_its_diff_in_the_collapsed_block(
+    tmp_path,
+):
+    _amended_split_tree(tmp_path)
+    proc = _brief(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    text = (tmp_path / "docs" / "ratify" / "CURRENT.md").read_text(encoding="utf-8")
+    before, inside = _collapsed_block(text)
+    # The released chain's re-attestation, whole, inside the block: the
+    # changed cell's before/after and the row that left the chain.
+    assert "## SR-002 — Released amended parent" in inside
+    assert "### LLR LLR-002" in inside
+    assert "before: the ORIGINAL released detail" in inside
+    assert "after: the AMENDED released detail" in inside
+    assert "### TC TC-002 — REMOVED since the snapshot" in inside
+    assert "SR-002" not in before
+    # The held chain's re-attestation stays on the owner's section.
+    assert "## SR-001 — Held amended parent" in before
+    assert "before: the ORIGINAL held text" in before
+    assert "after: the AMENDED held text" in before
+    assert "SR-001" not in inside
+    assert _check(tmp_path).returncode == 0

@@ -22,7 +22,7 @@ unchanged). The session engine (agent_loop) and the serial integrator
 agent_loop re-exports the names it historically exposed, so its public
 surface is unchanged. Stdlib only, Python 3.11+, Windows/POSIX.
 
-Contracts: IF-065, IF-189 — the interface seams this module declares (process.md
+Contracts: IF-065, IF-189, IF-224 — the interface seams this module declares (process.md
 §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-065: the shared coordinator primitives the session engine and the
@@ -47,6 +47,12 @@ Contract IF-189: `default_base(root)`, the integration base a claimed branch's
     checkout is the lane branch itself, HEAD for a manual lane with no claim
     record, and None when a claimed history cannot be read — which the caller
     treats as an unreadable change rather than an empty one.
+Contract IF-224: `human_approves_spine(docs, registry)`, read by the owner's
+    approval brief to set apart the owing chains the human-approval dial
+    releases to an adjudicator: True (held) for a spine registry whose rung the
+    dial holds and for one no rung map names, False for a released one. The
+    brief asks it once per spine tier per rendering and keeps no rung table of
+    its own.
 """
 
 import datetime

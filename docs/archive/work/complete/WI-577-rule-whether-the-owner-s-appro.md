@@ -3,11 +3,45 @@ id = "WI-577"
 title = "Rule whether the owner's approval brief narrows to the held rungs, then apply the ruling to trace --approve"
 workstream = "process"
 needs = ["OI-82"]
-specref = "docs/archive/work/complete/WI-574-spot-check-the-clean-close-of.md"
+specref = ""
 buildtier = "medium"
 priority = 4
 safety_class = "ordinary"
 +++
+
+## Deliverable
+
+OI-82 is ruled (a), refined by the owner, and applied. `trace.py --approve
+modified`, and the `docs/ratify/CURRENT.md` it renders, still render every
+owing chain. A chain whose every owing row sits on a tier the dial releases
+(Drafted, or drifted against its approved copy) renders in full inside one
+`<details>` block. The block is collapsed by default and labelled "Waiting
+for automated adjudication". A chain with any held-rung row stays in the
+owner's section as before.
+
+The page's title claims no human act, and its signing instruction covers
+only the sections outside the block. The dial is read only through
+`agent_common.human_approves_spine`, once per spine tier. No new rung table
+exists, and `SPINE_APPROVAL_RUNGS` is unchanged. PROCESS_OPTIONS.md states
+the ruled owner surface (+268 bytes).
+
+- **Spine:** no spine row stated this rendering, so WI-577 authored LLR-259
+  (under SR-139) and TC-252 Drafted. TC-252 cites the new seam IF-224
+  (`agent_common` read from `trace`), so nothing is allowlisted. Their first
+  approval is **WI-674**.
+- **Evidence:** four tests in `tests/test_trace_briefs.py`, run red before
+  the code:
+  - a held and a released rung, Drafted chains;
+  - a released-rung re-attestation, whose diff renders inside the block
+    while a held amended chain stays in the owner's section;
+  - the default dial rendering no block;
+  - the neutral framing.
+- **Review:** Sol took three rounds (arbitration rulings 10 and 13) and the
+  last was SOUND.
+- **Not in scope, noted:** `open-items.html` (gen_open_items) still renders
+  the unsplit population. The plan-of-record row in
+  `docs/plans/2026-09-01-approval-act-adjudicator-only.md` §2a is left as
+  history.
 
 ## Context
 

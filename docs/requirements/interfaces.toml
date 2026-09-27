@@ -2009,3 +2009,14 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """Appended by every snapshot act that copied a registry, the first signing included, and by none that copied nothing. A malformed ledger is refused whole, never read in part: the snapshot act refuses before it moves any byte of the record, trace.py reports it on the always-on integrity floor, and risk_acceptance_act returns no anchor with the reason. risk_acceptance_act reads the entries a commit added by comparing entry numbers with its parent's. The acceptance record's mirror rules skip the file by name, as they skip the prose stamp, since it copies no live registry; the adopter commits it with the act's copies."""
+
+[interface.IF-224]
+rationale = """The owner's approval brief sets apart the owing chains the human-approval dial releases, and which rows the dial releases is a question the loop already answers for the rows it mints and the adjudication brief it composes. Reading that one predicate keeps the owner's surface, the mint and the adjudicator agreeing about who signs a row; a rung table in the brief would be a third answer to one question, free to disagree with the other two."""
+owner = "scripts/agent_common"
+requestors = ["scripts/trace"]
+channel = "call"
+data = "human_approves_spine(docs, registry) -> True when the dial holds the registry's rung or no rung map names it; False when the dial releases it"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """Cross-component crossing: trace is CMP-006 and agent_common is CMP-008. The import is deferred into the brief's rendering, so every other trace run loads nothing from the coordinator's primitives. The shipped dial holds every rung, so a repo that has released none sees the brief it saw before."""

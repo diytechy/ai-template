@@ -5776,6 +5776,26 @@ into your `AGENTS.md`. If you have been approving held rungs through a
 delegated session, record the delegation and its scope in the approving commit
 or its log entry from now on.
 
+### The approval brief sets apart the chains your dial releases [since 99d645ba]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `trace.py --approve modified`, and the
+`docs/ratify/CURRENT.md` it writes, still render every chain owing an act, but
+a chain whose every owing row sits on a rung your `[attestation]
+human_approval_through` dial releases now renders after the others, in full,
+inside a `<details>` block labelled "Waiting for automated adjudication" and
+collapsed by default. An adjudication session approves those rows, not you. A
+chain with any row on a held rung renders where it always did. The shipped
+dial, `DevStg-Release`, holds every rung, so at that dial the brief is
+unchanged.
+
+**What to do.** Re-sync `scripts/trace.py` and `scripts/agent_common.py`. If
+your dial releases a spine rung and you keep a `docs/ratify/CURRENT.md`, its
+freshness check reports it stale until you regenerate it with
+`trace.py --approve modified --out docs/ratify/CURRENT.md`. Nothing in your
+registries changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -2698,3 +2698,14 @@ detail = "traj_parse.need_assumptions(root) derives, for each need, the assumpti
 status = "Approved"
 component = "CMP-009"
 phase = 6
+
+[design.LLR-259]
+sr_refs = ["SR-139"]
+title = "The owner's approval brief sets apart the chains the approval level releases"
+module = "project-trajectory/scripts/trace.py"
+code_symbol = "released_tiers/dial_releases_chain/reattest_lines"
+detail = """released_tiers(root) asks agent_common.human_approves_spine once per spine tier (SR, LLR, TC), each tier's registry taken from SPINE_FILES, and returns the tiers the declared approval level releases; no rung table is held in trace.py. dial_releases_chain(entry, released) is true when a chain of reattest_model has at least one row owing an act (a Drafted row, or a row changed, added or removed against the approved snapshot) and every such row is on a released tier; one owing row on a held tier, or no owing row at all, keeps the chain held. reattest_lines renders every owing chain: the held ones in the owner's section as before, then, when any chain is released, a heading and one details block, closed by default and labelled "Waiting for automated adjudication" with the chains' ids in its summary, holding each released chain rendered in full by the same per-chain renderer. The page's title claims no human act, and its signing instruction covers only the sections outside the block. At a level that releases no spine tier, no collapsed block renders and every owing chain stays in the owner's section."""
+rationale = """The owner signs only what the approval level holds, yet keeps sight of what an adjudicator approves on the owner's behalf. One surface with the delegated chains set apart and collapsed shows both, without the delegated rows competing for attention with the signature actually owed. A chain is read whole, so one held row keeps it with the owner. Reading the level through the one predicate the adjudication mint and the adjudicator's brief also read keeps the three surfaces agreeing about who signs a row."""
+status = "Drafted"
+component = "CMP-006"
+phase = 6

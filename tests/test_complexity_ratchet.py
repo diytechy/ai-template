@@ -364,18 +364,13 @@ BASELINE = {
     # surface come to disagree about one spine. Recorded DOWN in the same
     # commit rather than left as headroom, per this file's rule.
     ("trace.py", "reattest_model"): 13,
-    # NEW ENTRY, 2026-08-24, WI-513: `reattest_lines` crossed back over the
-    # threshold when its per-row loop gained the `state == "drafted"` arm
-    # (a Drafted row with no cell diff against the snapshot still owes, and
-    # needs its own section) alongside the existing `added`/`changed`/
-    # `removed` arms — the same shape `_chain_row` in gen_open_items.py grew
-    # for the same reason, and the branches are the row states a reader acts
-    # on, not incidental nesting.
-    # RE-STAMPED UP 11 -> 12, 2026-08-24, WI-518 (the off-spine census): one
-    # more branch — `if census:` — to splice the off-spine census lines in
-    # only when a tier actually changed, so a clean re-seed costs the reader
-    # nothing extra to read past. Reason: docs/log.d/2026-08-24-wi518-offspine-census.md.
-    ("trace.py", "reattest_lines"): 12,
+    # `reattest_lines` DELETED, 2026-09-27, WI-577: its per-chain loop (the
+    # row-state arms WI-513 added, and the census splice WI-518 added beside
+    # them) moved into `_entry_lines`, because the OI-82 ruling renders a
+    # chain in two places — the owner's section and the collapsed block of
+    # chains the dial releases — and one renderer is what keeps a chain reading
+    # the same in both. Both functions sit under the threshold, so the entry
+    # goes rather than being re-stamped, per this file's rule.
     ("trace.py", "render_report"): 17,
     # 2026-08-15, the interface rework step 7 (Q3, owner-ruled): the carriage
     # graph's three rules in one pass — resolve, acyclic, depth-bounded. The

@@ -154,3 +154,19 @@ are marked as such.
     and rationale and TC-242, and files their own adjudication. Holding the
     other 24 rows back would also hold the C1 sitting, for a defect none of
     them carries.
+
+12. **WI-661's fix round — SOL, all four, correcting the coordinator.**
+    Ruling 9 told the builder to print the known row id in `intake.py`'s
+    refusal. The refused row can be Drafted, and a Drafted row is approved by
+    a Status change, not re-attested, so the message now picks its remedy by
+    the row's status. The prescribed `--approves` argument must be the
+    canonical registry token the resolver accepts, because a CSV carrier's
+    path is refused. The census names a move INTO approval, or a row arriving
+    approved, as the trigger; a de-approval never copies.
+
+13. **WI-577's fix round — SOL.** The follow-up drafted LLR-259 and TC-252,
+    and both said the brief at a default dial is "unchanged". The title and
+    instruction now change at every level. The true invariant is that no
+    collapsed block renders and every owing chain stays in the owner's
+    section.
+    WI-577's third round (`sol-wi577-fix2.md`) was SOUND.

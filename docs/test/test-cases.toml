@@ -2593,3 +2593,14 @@ automated = "Yes"
 evidence = "tests/test_traj_views.py"
 status = "Approved"
 phase = 6
+
+[test.TC-252]
+verifies = ["SR-139", "LLR-259", "IF-224"]
+level = "Integration"
+method = "Driven through the command on temporary repositories, the brief written to the live approval-brief path, in a module registered as slow. Under a level holding the requirement tier and releasing the design and test-case tiers: a chain whose owing rows are all Drafted design and test-case rows renders inside one details block, closed by default, whose summary carries the label 'Waiting for automated adjudication', with its requirement text and every owing row's cells in full; a Drafted requirement's chain, and a chain pairing a Drafted requirement with a Drafted design row, render outside the block in the owner's section; the page's title claims no human act and its signing instruction covers only the sections outside the block. With an approved snapshot and the rows then amended, status left Approved: a chain whose design row changed and whose test case was removed renders the before/after and the removal inside the block, and a chain whose requirement text changed renders its before/after outside it. With no level declared, no block renders and every chain is in the owner's section. With every tier released, every chain is in the block and the owner's section states that no held chain owes an act. The freshness check passes on each written brief."
+tier = "Full"
+expected = "Satisfies LLR-259: every owing chain rendered; a chain whose every owing row is on a released tier set apart in full in a collapsed block labelled 'Waiting for automated adjudication'; one held row keeps the chain in the owner's section; at a level that releases no spine tier, no collapsed block renders and every owing chain stays in the owner's section."
+automated = "Yes"
+evidence = "tests/test_trace_briefs.py"
+status = "Drafted"
+phase = 6

@@ -502,7 +502,11 @@ driving it:
 
 **What this is not.** It is not a change to the dial or to which rungs are
 human-held — a held rung still surfaces to the owner exactly as before, and the
-adjudicator acts only where the dial has released. It is not a return of
+adjudicator acts only where the dial has released. The owner's approval brief
+(`trace.py --approve modified`) still shows every owing chain: one whose every
+owing row sits on a released rung renders in full under "Waiting for automated
+adjudication", collapsed by default — in sight, apart from what the owner
+signs. It is not a return of
 mechanical approval: no hook, step or helper writes a `Status` cell. The act is
 a *session's* reviewed commit, and what changed is which session may take it.
 

@@ -4174,6 +4174,156 @@ def offspine_census_lines(root, snapshot=_UNSET):
     ]
 
 
+# THE LABEL OF THE COLLAPSED BLOCK, in the owner's own words (OI-82 ruling).
+WAITING_FOR_ADJUDICATION = "Waiting for automated adjudication"
+
+# The row states that owe an act on their own: changed or added text, a row
+# leaving the chain, and a `Drafted` row with no diff. A `current` row (the
+# no-baseline arm) owes only when it is itself `Drafted`, the per-row flag.
+_OWING_STATES = frozenset(("changed", "added", "removed", "drafted"))
+
+
+def released_tiers(root):
+    """The spine tiers (`SR`, `LLR`, `TC`) whose rows the dial `root` declares
+    RELEASES to an adjudicator — the rows the owner no longer signs.
+
+    The dial is read ONLY through `agent_common.human_approves_spine`, the
+    predicate the mint (`intake._released_drafted_rows`) and the adjudicator's
+    brief (`adjudicate_brief.first_approval_values`) filter through: a copy of
+    the rung table here would be a third answer to one question. Each tier's
+    registry is `SPINE_FILES`, the tier-to-file join this module already owns.
+    Asked once per rendering, not once per row, so a legacy dial's migration
+    note prints once per tier rather than once per chain row.
+
+    Implements: SR-139, LLR-259
+    """
+    import agent_common as ac  # IF-224; deferred: only a rendered brief asks
+
+    docs = Path(root) / "docs"
+    return frozenset(
+        kind
+        for kind, ix in _KIND_IX.items()
+        if not ac.human_approves_spine(docs, SPINE_FILES[ix][0])
+    )
+
+
+def dial_releases_chain(entry, released):
+    """Is this owing chain an ADJUDICATOR's to approve rather than the owner's?
+
+    True only when the chain has at least one row owing an act and EVERY such
+    row's tier is in `released` (`released_tiers`). One held row keeps the
+    whole chain on the owner's section: the owner's signature is still owed on
+    it, and a row is read with its chain. A chain with no owing row is held
+    too: nothing released it, and the conservative answer to "who approves" is
+    the human.
+
+    Implements: SR-139, LLR-259
+    """
+    owing = [
+        row
+        for row in entry["rows"]
+        if row.get("drafted") or row["state"] in _OWING_STATES
+    ]
+    return bool(owing) and all(row["kind"] in released for row in owing)
+
+
+def _waiting_lines(entries, srs_by_id):
+    """The collapsed block of chains the dial releases: a heading, one line
+    saying why they are set apart, then every chain in full inside a
+    `<details>` block that is closed until the reader opens it. The ids go in
+    the summary so the collapsed block still says what it holds."""
+    ids = ", ".join(entry["id"] for entry in entries)
+    lines = [
+        "",
+        "## {}".format(WAITING_FOR_ADJUDICATION),
+        "",
+        "_Every owing row of these chains sits on a rung"
+        " `[attestation] human_approval_through` releases, so an adjudication"
+        " session approves them and this sitting does not. Shown in full for"
+        " sight; collapsed by default._",
+        "",
+        "<details>",
+        "<summary>{} — {} chain(s): {}</summary>".format(
+            WAITING_FOR_ADJUDICATION, len(entries), ids
+        ),
+    ]
+    for entry in entries:
+        lines += _entry_lines(entry, srs_by_id)
+    return lines + ["", "</details>"]
+
+
+def _entry_lines(entry, srs_by_id):
+    """The markdown section for ONE owing chain of `reattest_model`: the
+    anchor SR's own text, then each chain row as its state renders it.
+
+    One function for both places a chain renders — the owner's section and the
+    collapsed block of chains the dial releases to an adjudicator — so a chain
+    reads the same wherever the dial puts it (the OI-82 ruling: released
+    chains render in full, not as ids)."""
+    sid, title = entry["id"], entry["title"]
+    out = ["", "## {} — {}".format(sid, title or "(untitled)"), ""]
+    # UNCONDITIONAL, unlike every other block below: the anchor SR's own
+    # Requirement/Rationale render here regardless of whether the SR row
+    # appears in `entry["rows"]` — see `_anchor_lines`'s docstring for the
+    # gap this closes.
+    out += _anchor_lines(srs_by_id.get(sid))
+    if entry["no_baseline_reason"]:
+        out.append(
+            "_No approved baseline — {}; current state only._".format(
+                entry["no_baseline_reason"]
+            )
+        )
+        for row in entry["rows"]:
+            out += ["", "### {} {} (current)".format(row["kind"], row["id"])]
+            out += _full_row_bullets(row)
+        return out
+    for row in entry["rows"]:
+        # WIDENED: a `Drafted` row that carries no cell diff against the
+        # snapshot (it sat there byte-identical, never approved) still
+        # renders — its own section, tagged with WHY, rather than being
+        # dropped for lack of a diff.
+        suffix = ", Drafted — never approved" if row.get("drafted") else ""
+        if row["state"] == "added":
+            out += [
+                "",
+                "### {} {} — ADDED since the snapshot{}".format(
+                    row["kind"], row["id"], suffix
+                ),
+            ]
+            out += _full_row_bullets(row)
+        elif row["state"] == "drafted":
+            out += [
+                "",
+                "### {} {} — Drafted, never approved".format(row["kind"], row["id"]),
+                "_No cell differs from the approved snapshot; this row owes"
+                " because its own `Status` has never been `Approved`._",
+            ]
+            out += _full_row_bullets(row)
+        elif row["state"] == "changed":
+            out += [
+                "",
+                "### {} {}{}".format(row["kind"], row["id"], suffix),
+            ]
+            out += _cell_diff_lines(
+                row["cells"], row["approved"], drafted=row.get("drafted", False)
+            )
+        elif row["state"] == "removed":
+            out += [
+                "",
+                "### {} {} — REMOVED since the snapshot".format(row["kind"], row["id"]),
+                "_In this SR's chain in the snapshot, out of it in the working"
+                " tree — the row was deleted, re-parented, or superseded"
+                " (a superseded row keeps existing; it leaves the chain)._",
+            ]
+    if not entry["rows"]:
+        out.append(
+            "_No cell differs from the approved snapshot. The row is here"
+            " because its own `Status` asks for a human, not because its"
+            " text moved._"
+        )
+    return out
+
+
 def reattest_lines(root, srs, llrs, tcs):
     """Markdown for the re-attestation brief (`--approve modified`, WI-316): one
     section per SR owing a human act (grouped by SR for reading) with per-cell
@@ -4194,13 +4344,16 @@ def reattest_lines(root, srs, llrs, tcs):
 
     Deterministic given the working tree and the snapshot; a generator mode like
     `approval_lines` — runs no checks. The markdown RENDERER over `reattest_model`
-    (WI-322): the model owns the comparison, this owns the prose."""
+    (WI-322): the model owns the comparison, this owns the prose.
+
+    Implements: SR-139, LLR-259
+    """
     model = reattest_model(root, srs, llrs, tcs)
     srs_by_id = {r.get("SR-ID"): r for r in srs if r.get("SR-ID")}
     stamp_rev, stamp_date = baseline_snapshot.stamp(root)
     appr_rev, appr_date = baseline_snapshot.approval_stamp(root)
     lines = [
-        "# Re-attestation brief — spine rows owing a human act",
+        "# Re-attestation brief — spine rows owing an approval",
         "",
         "_GENERATED by `trace.py --approve modified` (WI-316) — do not"
         " hand-edit; cite the spine registries, not this rendering. One"
@@ -4212,10 +4365,14 @@ def reattest_lines(root, srs, llrs, tcs):
         " working tree), approved cells first — or, for a `Drafted` row with no"
         " cell diff, its full current content, since it owes only because it"
         " was never approved. `Status` itself is never listed —"
-        " the marker is not the amendment. Rule on each section: bless → set"
+        " the marker is not the amendment. Rule on each section outside the"
+        " collapsed `{}` block (every section, when none renders): bless → set"
         " `Status` to `Approved` (process.md §7) — and from the first signing"
         " onward, run `intake.py snapshot` in the SAME commit, or the record of"
-        " what was blessed does not move._",
+        " what was blessed does not move. A chain inside that block is an"
+        " adjudication session's to approve, not this sitting's._".format(
+            WAITING_FOR_ADJUDICATION
+        ),
         "",
         # TWO DERIVED LINES, AND THEY ANSWER DIFFERENT QUESTIONS (2026-08-20, the
         # batch review's MAJOR-4). This said "the reviewed commit that last moved
@@ -4262,72 +4419,24 @@ def reattest_lines(root, srs, llrs, tcs):
             " approval._".format(baseline_snapshot.SNAPSHOT_DIR)
         )
         return lines
+    # THE DIAL SPLITS THE POPULATION, IT DOES NOT NARROW IT (OI-82, ruled (a)
+    # as the owner refined it): every owing chain is still rendered, and a
+    # chain whose every owing row sits on a rung the dial releases goes to a
+    # collapsed block below the owner's section, in full.
+    tiers = released_tiers(root)
+    held, released = [], []
     for entry in model:
-        sid, title = entry["id"], entry["title"]
-        lines += ["", "## {} — {}".format(sid, title or "(untitled)"), ""]
-        # UNCONDITIONAL, unlike every other block below: the anchor SR's own
-        # Requirement/Rationale render here regardless of whether the SR row
-        # appears in `entry["rows"]` — see `_anchor_lines`'s docstring for the
-        # gap this closes.
-        lines += _anchor_lines(srs_by_id.get(sid))
-        if entry["no_baseline_reason"]:
-            lines.append(
-                "_No approved baseline — {}; current state only._".format(
-                    entry["no_baseline_reason"]
-                )
-            )
-            for row in entry["rows"]:
-                lines += ["", "### {} {} (current)".format(row["kind"], row["id"])]
-                lines += _full_row_bullets(row)
-            continue
-        for row in entry["rows"]:
-            # WIDENED: a `Drafted` row that carries no cell diff against the
-            # snapshot (it sat there byte-identical, never approved) still
-            # renders — its own section, tagged with WHY, rather than being
-            # dropped for lack of a diff.
-            suffix = ", Drafted — never approved" if row.get("drafted") else ""
-            if row["state"] == "added":
-                lines += [
-                    "",
-                    "### {} {} — ADDED since the snapshot{}".format(
-                        row["kind"], row["id"], suffix
-                    ),
-                ]
-                lines += _full_row_bullets(row)
-            elif row["state"] == "drafted":
-                lines += [
-                    "",
-                    "### {} {} — Drafted, never approved".format(
-                        row["kind"], row["id"]
-                    ),
-                    "_No cell differs from the approved snapshot; this row owes"
-                    " because its own `Status` has never been `Approved`._",
-                ]
-                lines += _full_row_bullets(row)
-            elif row["state"] == "changed":
-                lines += [
-                    "",
-                    "### {} {}{}".format(row["kind"], row["id"], suffix),
-                ]
-                lines += _cell_diff_lines(
-                    row["cells"], row["approved"], drafted=row.get("drafted", False)
-                )
-            elif row["state"] == "removed":
-                lines += [
-                    "",
-                    "### {} {} — REMOVED since the snapshot".format(
-                        row["kind"], row["id"]
-                    ),
-                    "_In this SR's chain in the snapshot, out of it in the working"
-                    " tree — the row was deleted, re-parented, or superseded"
-                    " (a superseded row keeps existing; it leaves the chain)._",
-                ]
-        if not entry["rows"]:
-            lines.append(
-                "_No cell differs from the approved snapshot. The row is here"
-                " because its own `Status` asks for a human, not because its"
-                " text moved._"
-            )
+        (released if dial_releases_chain(entry, tiers) else held).append(entry)
+    for entry in held:
+        lines += _entry_lines(entry, srs_by_id)
+    if released and not held:
+        lines += [
+            "",
+            "_No chain on a rung the human-approval dial holds owes an act;"
+            " every chain in this brief waits for automated adjudication._",
+        ]
+    if released:
+        lines += _waiting_lines(released, srs_by_id)
     return lines
 
 

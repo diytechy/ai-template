@@ -352,9 +352,16 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # every unmarked commit free of the reader. The writers' side of the same
     # judgement (`agent_common -> acceptance_record`) was made a module-level
     # import instead, so the window moves by one rather than two.
-    assert 14 <= deferred <= 27, (
+    # RE-STAMPED 27 -> 28 (2026-09-27, WI-577): measured 27 at the top of the
+    # window before it, and `trace -> agent_common` (IF-224) joins deferred.
+    # The approval brief reads the human-approval dial through the one existing
+    # predicate, `agent_common.human_approves_spine`, rather than a second
+    # copy of the rung table; only a rendered re-attestation brief asks, so
+    # every other trace run stays free of agent_common's import. Reason in
+    # docs/log.d/2026-09-26-wave3-build.md.
+    assert 14 <= deferred <= 28, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..27 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..28 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "
