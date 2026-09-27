@@ -362,10 +362,44 @@ def test_two_open_rows_answering_one_SR_are_named():
 
 def test_two_open_rows_sharing_one_spec_of_record_are_named():
     # The sharpest of the three: a spec IS a row's definition, so two open rows
-    # sharing one is either a duplicate or a split nobody wrote down. The
-    # anchor is stripped — `spec.md#a` and `spec.md#b` are one document.
+    # sharing one is either a duplicate or a split nobody wrote down. Two
+    # anchor-less references to one file are one spec.
+    rows = [
+        _open("WI-001", "Alpha", specref="docs/specs/thing.md"),
+        _open("WI-002", "Beta", specref="docs/specs/thing.md"),
+    ]
+    assert ct.queue_conflict_findings(rows) == [
+        "WI-001 and WI-002 are both open and share one spec of record "
+        "(docs/specs/thing.md)"
+    ]
+
+
+def test_different_anchors_in_one_file_are_different_specs():
+    # Items filed from one plan's sections cite its sections, and a documented
+    # split is not a duplicate: two different sections are two specs. A real
+    # duplicate filed against two sections is still caught by its title.
     rows = [
         _open("WI-001", "Alpha", specref="docs/specs/thing.md#part-a"),
+        _open("WI-002", "Beta", specref="docs/specs/thing.md#part-b"),
+    ]
+    assert ct.queue_conflict_findings(rows) == []
+
+
+def test_the_same_anchor_in_one_file_is_one_spec():
+    rows = [
+        _open("WI-001", "Alpha", specref="docs/specs/thing.md#part-a"),
+        _open("WI-002", "Beta", specref="docs/specs/thing.md#part-a"),
+    ]
+    assert ct.queue_conflict_findings(rows) == [
+        "WI-001 and WI-002 are both open and share one spec of record "
+        "(docs/specs/thing.md#part-a)"
+    ]
+
+
+def test_an_anchorless_reference_pairs_with_an_anchored_one_in_its_file():
+    # A whole-document reference covers every section of it.
+    rows = [
+        _open("WI-001", "Alpha", specref="docs/specs/thing.md"),
         _open("WI-002", "Beta", specref="docs/specs/thing.md#part-b"),
     ]
     assert ct.queue_conflict_findings(rows) == [

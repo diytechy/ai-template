@@ -42,3 +42,88 @@ arbiter makes are marked as such.
    in place to name it, judged in the batch. The escape test resolves
    symlinks against the snapshot and does not reject a non-escaping
    `docs/../src`; the checkpoint revision is extracted once.
+
+3. **WI-675 / WI-676 / WI-604 (spine-acts batch A) — no dispute.** Sol:
+   9c116ee1 SOUND, no findings (`sol-wi675.md`). WI-604's RETURN is folded
+   into WI-582, the open spine-authoring group, not filed as a new row.
+
+4. **WI-582, first round — SOL.** IF-176 gained a covering test case but no
+   owner-side `Contract IF-176:` body in `trace.py`; the builder adds it in
+   the follow-up commit that also carries WI-604's disposition.
+
+5. **WI-672, first round — SOL on all three.**
+   - *The blocker.* The builder shipped `trace.py --tests-for` (IF-233)
+     with no design row, because it held no LLR or TC ids. Its reason is
+     honest, but a shipped CLI arm no row claims is exactly the untraced
+     code the kit exists to prevent (the builder brief's seam convention).
+     The coordinator grants LLR-260 and TC-255, authored Drafted, for the
+     next spine-acts batch.
+   - *The Full advisory.* It follows the spec's wording: every approved
+     Full case with no slow evidence is advised.
+   - *TC-153.* It is split, not re-tiered. Its four in-memory clauses move
+     to a fast module and the case stays Smoke; a wholesale amendment to
+     Full is the remedy only where no honest split exists.
+
+6. **WI-656, first round — SOL on all three; the builder's WI-658 choice
+   stands.** The builder shipped a template `[generated]` list held equal to
+   the regeneration's writes, not readers derived from it, because approved
+   LLR-140 defines audit's allowed set as "the stack.ini [generated] set".
+   That is the honest option under an approved row. Sol's findings: the
+   resync pack omits `kitlib/registry.py`, which `check_trajectory.py` now
+   calls; the reader test drives neither real reader; the unbound count is
+   a substring match. All three are fixed in one follow-up commit.
+
+7. **WI-638 (af6e9278) — BUILDER on the blocker, SOL on the three majors.**
+   - *The Boundary arm's population.* Sol reads OI-88's "each
+     boundary-referencing requirement" as widening SR-212 to every form. The
+     governing text is approved SR-212's own acceptance: "requirements of the
+     other two forms are out of scope". The owner's question (OI-88, spine map
+     D8) was at which rung SR-212's gate runs, and its ruling added a rung.
+     It did not widen SR-212's population. The phrase Sol quotes is the
+     driver's gloss in the ruling's one-line summary, written by this
+     coordinator, and it is imprecise. An assumption-form requirement is
+     itself the premise, so demanding that it be bridged by an assumption
+     would be circular. **Ruling: interface-form only, at both arms.** The
+     one-line summary is corrected to say so.
+   - *The Release arm's no-frame vacuity.* SOL. SR-206 has no frame
+     exemption. The tier's adoption rule (OI-94) keys on a real assumption
+     being declared, and a relied-on assumption is one. The early return
+     goes.
+   - *Internal committed symlinks.* SOL, proportionately. Wave-4 ruling 2
+     said the escape test resolves symlinks against the snapshot, so a
+     committed link whose target is inside the repository is resolved within
+     the revision, and its target's bytes are what gets digested.
+   - *SR-198.* SOL. The coordinator grants amendment authority over SR-198
+     so it names the repository-escaping input path; it joins the batch with
+     LLR-233 and TC-228.
+
+8. **WI-582, second round (1803458b) — SOL on all three.** The IF-176 fix
+   is confirmed. The WI-604 disposition's rows go to a first approval next,
+   so they must be complete: LLR-210's seven symbols get their
+   `Implements:` back-links, TC-208 (or TC-254) cites IF-177 and IF-178,
+   whose allowlist entries named this successor, and the scope-unchanged
+   assertions compare whole specs rather than one sentinel. SR-220 is judged
+   honest as a labelled derived requirement under SN-025 (hat_refs lenses
+   and the rationale's argument, the SR-175 / OI-89 precedent); the owner
+   may prefer to widen SN-025's acceptance, which the rationale feeds back.
+
+9. **WI-672, second round (7191fd08, ecbe72eb) — SOL on all three.** The
+   first round's findings are fixed. The new design row, though, parents
+   two behaviours under SR-157, which obliges REPORTING rule violations.
+   The tier rule is such a report; the module-to-test listing is not. It is
+   split: the listing gets its own design row and test case under an SR
+   that honestly obliges a query of the joined spine, or a labelled derived
+   SR if none does (the S5 ruling is its origin). Also fixed: the evidence
+   parser splitting a spaced parametrized id, and `--tests-for` ignoring
+   `--docs`. TC-068's `expected` is amended to drop the retired
+   "unjustified seam" arm, under a coordinator grant.
+
+10. **WI-582, third round (ffb2c143) — SOL on the vacuous seam citations,
+    COORDINATOR on CRLF.** The back-links and the byte-for-byte tests are
+    fixed. TC-208 cites IF-177 and IF-178, but its evidence would stay green
+    with either seam removed, so each gets a test only that seam can pass.
+    Sol also finds that the byte-for-byte invariant fails for a CRLF spec.
+    The governing text is IF-159, the spec registry's write contract: UTF-8
+    with LF endings on every platform. A CRLF spec is outside the format, so
+    the test cases state the invariant for the registry's LF format and the
+    code is left alone.

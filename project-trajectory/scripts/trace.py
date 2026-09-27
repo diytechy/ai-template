@@ -1830,7 +1830,12 @@ def _retired_cell_findings(ifs, root):
 def _implementing_modules(root):
     """The normalized module keys whose header declares an `Implements:` line —
     the second way an owner reaches the spine — or an empty set when there is
-    no source surface to read (no root, `files` mode, a copied script)."""
+    no source surface to read (no root, `files` mode, a copied script).
+
+    The report keys each file relative to the source root's PARENT (its paths
+    open with the root's own last segment), so a key is rebuilt from that
+    parent: joined to the whole declared root it names `scripts/scripts/<mod>`
+    under the kit's own profile, and matches no owner."""
     if gen_arch_map is None or root is None:
         return set()
     try:
@@ -1839,12 +1844,12 @@ def _implementing_modules(root):
         return set()
     if mode == "files":
         return set()
-    src = src.strip().replace("\\", "/").rstrip("/")
-    src_dir = root / src
+    src_dir = root / src.strip().replace("\\", "/").rstrip("/")
     if not src_dir.exists():
         return set()
     sites, _known = gen_arch_map.implements_report([src_dir])
-    return {_norm_module(src + "/" + rel) for rel in sites}
+    base = src_dir.parent
+    return {_norm_module((base / rel).relative_to(root).as_posix()) for rel in sites}
 
 
 def placeholder_findings(label, raw_rows):

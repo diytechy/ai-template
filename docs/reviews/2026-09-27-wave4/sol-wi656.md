@@ -1,0 +1,9 @@
+<!-- Codex Sol (gpt-5.6-sol, medium) review of WI-656, read-only; prompt gist in ARBITRATION.md. Links re-rooted from the removed worktree. -->
+
+eb68ad50 NOT YET SOUND
+
+- **major** — The adopter instructions omit the new module that implements `shared_spec`. [RESYNC_PACK.md:5937](../../../project-trajectory/RESYNC_PACK.md) tells adopters to copy `check_trajectory.py`, which calls `_kitregistry.shared_spec` at [check_trajectory.py:3180](../../../project-trajectory/scripts/check_trajectory.py), but omits the implementation added at [registry.py:461](../../../project-trajectory/scripts/kitlib/registry.py). Following the pack produces an `AttributeError`. Fix: include `scripts/kitlib/registry.py` in that re-sync set.
+
+- **major** — The lane-close “reader” test is vacuous with respect to both readers: [test_generated_set.py:71](../../../tests/test_generated_set.py) claims to cover abandoned-claim and audit, but line 78 calls only `_generated_paths`. Replacing either actual use at [integrate.py:478](../../../project-trajectory/scripts/integrate.py) or [integrate.py:3026](../../../project-trajectory/scripts/integrate.py) with a stale list leaves the test green. Fix: behaviorally drive a claim-shaped commit and an audit window containing a newly declared generated path, asserting both readers accept it; keep these Full with TC-132’s integrator evidence.
+
+- **minor** — The unbound-module total is a substring count, so unrelated untraced text can inflate it. `UNBOUND` is ordinary prose at [check_doc_refs.py:721](../../../project-trajectory/scripts/check_doc_refs.py), and [check_doc_refs.py:938](../../../project-trajectory/scripts/check_doc_refs.py) searches every rendered untraced message for it. For example, a single-module row whose raw `CodeSymbol` prose contains “unbound module” is counted despite being excluded from the per-module rule. Fix: carry the unbound entries/count structurally from `unbound_modules`, and add this collision case.

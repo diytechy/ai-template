@@ -54,6 +54,7 @@ __all__ = [
     "parse_spec_row",
     "read_spec_rows",
     "spec_id_number",
+    "shared_spec",
 ]
 
 WI_COLUMNS = (
@@ -455,3 +456,22 @@ def read_spec_rows(work_dir, on_error=None):
 def spec_id_number(wid):
     match = re.search(r"\d+", wid or "")
     return int(match.group()) if match else 0
+
+
+def shared_spec(ref_a, ref_b):
+    """The spec two work items' SpecRefs share, or '' when they name different specs.
+
+    They share one when their files match and either their anchors are equal
+    or one of them has none: a whole-document reference covers every section,
+    while two different sections of one document are two specs. Items filed
+    from one plan's sections cite its sections, and pairing those on the file
+    alone made every documented split read as a possible duplicate, which is a
+    warning nobody reads. The shared text is the file, or the file and its
+    anchor when both name the same section."""
+    file_a, _, anchor_a = (ref_a or "").strip().partition("#")
+    file_b, _, anchor_b = (ref_b or "").strip().partition("#")
+    if not file_a or file_a != file_b:
+        return ""
+    if anchor_a and anchor_b:
+        return ref_a.strip() if anchor_a == anchor_b else ""
+    return file_a

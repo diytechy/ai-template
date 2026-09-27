@@ -97,3 +97,23 @@ Commit bar at batch A: `check_trajectory --strict` clean, `trace
 `check_docs --stale` 0 broken, smoke 1560 passed / 3 skipped. Seconds FAILED
 at 411.0 s, recorded and not re-stamped. Four agent lanes were running their
 own pytest and a Codex review on the box at the time.
+
+### WI-656 lands: checker findings that lie (with WI-670, WI-626 and WI-658)
+
+One builder, two rounds. Codex Sol found three issues in the first round:
+the resync pack omitted `kitlib/registry.py`, the reader test drove no real
+reader, and the unbound total was a substring count. It judged the follow-up
+SOUND (wave-4 rulings 1 and 6). The reachability advisories fell from 9 to
+2, the strict WARN lines from 66 to 61 and the shared-spec pairs from 7 to 2,
+and the new unbound-module count reports 44 across 28 rows (not burned down).
+LLR-160, LLR-180 and TC-175 are amended in place for the next spine-acts
+batch. **Open count: 17.**
+
+Commit bar at WI-656: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs --stale` 0 broken, smoke 1571 passed / 3 skipped. Seconds: 61.7 s
+under agent load, then **49.9 s within the 60 s budget** on a quiet box. The
+touched slow modules (test_check_doc_refs, test_integrate,
+test_integrate_admission) were run by the builder at db45a2bf, 251 passed /
+1 skipped. Trunk moved only by batch A's documents since that base, and the
+coordinator did not re-run them.

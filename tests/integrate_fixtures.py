@@ -252,6 +252,28 @@ def declare_generated(root):
     ini.write_text(text, encoding="utf-8", newline="\n")
 
 
+def declare_shipped_generated(root):
+    """Replace `docs/stack.ini` with the SHIPPED template, whose `[generated]`
+    section is held equal to what `trunk_step.py --regen` writes. Uncommitted:
+    both readers take the section from the working tree."""
+    ini = root / "docs" / "stack.ini"
+    ini.parent.mkdir(parents=True, exist_ok=True)
+    ini.write_bytes((SCRIPTS.parent / "stack.ini.template").read_bytes())
+
+
+def write_every_regen_output(root):
+    """Write one file at every path the regeneration may write (a file under a
+    `/`-terminated prefix), and return the repo-relative paths written."""
+    written = []
+    for path in load_script("trunk_step").regen_writes():
+        rel = path + "regen.md" if path.endswith("/") else path
+        target = root / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("regenerated\n", encoding="utf-8", newline="\n")
+        written.append(rel)
+    return written
+
+
 # --- 3. the verdict gate (RULING-7) ------------------------------------------
 
 

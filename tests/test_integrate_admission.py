@@ -55,8 +55,10 @@ from integrate_fixtures import (
     _git,
     _rev,
     claim_repo,
+    declare_shipped_generated,
     git_repo,
     integ,
+    write_every_regen_output,
     write_spec,
 )
 
@@ -1053,6 +1055,33 @@ def test_audit_allows_product_changes_that_arrive_by_a_no_ff_merge(tmp_path, cap
     assert (root / "src" / "widget.py").is_file()  # the product change did land
     assert integ.audit(root, base) == 0
     assert "audit clean" in capsys.readouterr().out
+
+
+def test_audit_passes_a_trunk_commit_of_every_regen_output_under_the_shipped_list(
+    tmp_path, capsys
+):
+    # The trunk bookkeeping commit folds the regeneration in, so a window whose
+    # commit writes every regeneration path is bookkeeping under the shipped
+    # `[generated]` list. The same window under a stale list naming only the
+    # dashboard is flagged, by the paths the list omitted: the audit reads the
+    # declared list, and the shipped list is the whole of what regen writes.
+    root = git_repo(tmp_path)
+    base = _rev(root, "HEAD")
+    written = write_every_regen_output(root)
+    _commit(root, "trunk: regenerate", when=T_CODE)
+
+    declare_shipped_generated(root)
+    assert integ.audit(root, base) == 0
+    assert "audit clean" in capsys.readouterr().out
+
+    (root / "docs" / "stack.ini").write_text(
+        "[generated]\nPROJECT_STATE.html = trajectory\n", encoding="utf-8"
+    )
+    assert integ.audit(root, base) == 1
+    err = capsys.readouterr().err
+    assert "docs/cli-reference.md" in err
+    assert "PROJECT_STATE.html" not in err
+    assert len(written) > 3
 
 
 # --- 6. the HELD STATUS (SR-208, TC-241) ---------------------------------------

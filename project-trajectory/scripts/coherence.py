@@ -233,9 +233,14 @@ def spine_orphan_findings(
 
 
 def llr_module_ids(llrs):
-    """The set of non-blank `Module` cells across the LLR tier — the third kind
-    of target an off-spine back-link may name, beside an SR id and an LLR id."""
-    module_ids = {(lr.get("Module") or "").strip() for lr in llrs}
+    """The set of modules the LLR tier's `Module` cells name — the third kind
+    of target an off-spine back-link may name, beside an SR id and an LLR id.
+
+    A cell listing several modules is `;`-joined (both carriers hand it so), and
+    each module is its own key: taken whole, the joined string matches no owner
+    and no back-link, so every module named only inside such a cell read as
+    reached by no design row."""
+    module_ids = {m.strip() for lr in llrs for m in (lr.get("Module") or "").split(";")}
     module_ids.discard("")
     return module_ids
 

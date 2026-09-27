@@ -5894,6 +5894,54 @@ when you keep no assumptions registry, and regenerate
 `docs/ratify/CURRENT.md` and `PROJECT_STATE.html` if you commit them. Nothing
 in your registries changes.
 
+### The shipped `[generated]` list equals what the regeneration writes [since bc6a245f]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `stack.ini.template`'s `[generated]` section declared three
+artifacts while `trunk_step.py --regen` writes ten, and the integrator's
+lane-close readers (the abandoned-claim check and `integrate.py audit`) treat
+only the declared rows as generated. A claim commit, which folds the
+regeneration in, therefore touched undeclared paths (`docs/stage`,
+`docs/open-items.html` and the rest) that the audit then flagged. The template
+now declares exactly the regeneration's writes: `docs/stage`,
+`docs/open-items.html`, `docs/requirements/components.derived.toml`,
+`docs/cli-reference.md` and `docs/interface-reference.md` (each with its marker
+pair), `docs/reviews/rollup/` and `docs/ratify/CURRENT.md` join the three it
+had, and the kit's tests hold the list equal to `trunk_step.REGEN_STEPS`.
+
+**What to do.** Add the seven rows above to your own `docs/stack.ini`
+`[generated]` section, keeping any rows of your own (a path whose file you do
+not carry costs nothing). If you already declare `docs/ratify/` as a prefix,
+it covers `docs/ratify/CURRENT.md`. Your hand-kept list is your ownership
+declaration beyond the regeneration; the regeneration's share of it is now
+the template's.
+
+### Three checker readings stop reporting traced things as untraced [since bc6a245f]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `trace.py` reads a design row's `;`-joined `module` cell as
+one module per entry, and reads a module's `Implements:` header under the
+declared source root without doubling its last segment, so an interface owner
+reached either way no longer gets the "traces to no requirement" advisory (the
+endpoint-coverage advisory, which reads the same modules, counts fewer
+vacuous rows too). `check_doc_refs.py` adds an untraced-class count: each
+module a design row lists in which none of the row's code symbols binds
+(`main`, and any name every CLI module defines, does not count as binding),
+listed by `--show-untraced` and totalled on the summary line, never the exit
+code. `check_trajectory.py`'s shared-spec warning pairs two open items only
+when their spec files match and their anchors are equal or one has none, so
+items filed from different sections of one plan no longer pair.
+
+**What to do.** Re-sync `scripts/trace.py`, `scripts/coherence.py`,
+`scripts/check_doc_refs.py`, `scripts/check_trajectory.py` and
+`scripts/kitlib/registry.py`, together: `check_trajectory.py` now calls
+`kitlib.registry.shared_spec`, so the older `registry.py` fails it. Nothing in your
+registries changes; expect fewer advisories, and read the new unbound-module
+count as a list of design rows whose `module` cell names a file that holds
+none of their code.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

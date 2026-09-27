@@ -651,3 +651,110 @@ def test_llr_symbol_anchor_skips_placeholder_rows(tmp_path):
         encoding="utf-8",
     )
     assert refs(tmp_path, "--strict").returncode == 0
+
+
+# --- the per-module UNBOUND count (the `module` cell lists the modules holding
+# the row's code) -------------------------------------------------------------
+# The anchor verdict reads a row's `Module` list as a UNION, so a module the
+# row lists but holds none of its code passed silently: a reader sent there
+# finds nothing. Each such module is now counted, untraced-class — listed by
+# --show-untraced, never a WARN, never the exit code — and a generic token
+# (`main`, or a name every CLI module defines) does not bind for the count,
+# because a name every entry point carries says nothing about where a row's
+# code lives.
+
+
+def _two_module_row(root, symbol, other_src):
+    """A spine whose one LLR lists `scripts/real.py;scripts/other.py`."""
+    spine_repo(
+        root,
+        "scripts/real.py",
+        module="scripts/real.py;scripts/other.py",
+        symbol=symbol,
+    )
+    (root / "scripts" / "other.py").write_text(other_src, encoding="utf-8")
+    return root
+
+
+def _add_llr(root, line):
+    llr = root / "docs" / "requirements" / "low-level-requirements.csv"
+    llr.write_text(llr.read_text(encoding="utf-8") + line, encoding="utf-8")
+
+
+def test_a_listed_module_none_of_the_row_symbols_binds_in_is_counted_untraced(
+    tmp_path,
+):
+    _two_module_row(tmp_path, "load", "def unrelated():\n    pass\n")
+    proc = refs(tmp_path, "--strict", "--show-untraced")
+    assert proc.returncode == 0, "never the exit code: " + proc.stdout + proc.stderr
+    listed = [ln for ln in proc.stderr.splitlines() if "unbound module" in ln]
+    assert len(listed) == 1, proc.stderr
+    assert listed[0].startswith("check_doc_refs: UNTRACED - "), "untraced-class"
+    assert "LLR-001" in listed[0] and "scripts/other.py" in listed[0]
+    assert "WARN" not in proc.stderr, "never dangling"
+    assert "1 unbound module(s)" in proc.stdout, "the count is reported"
+    # Without the flag the entry is not listed, and the count still is.
+    quiet = refs(tmp_path)
+    assert "unbound module" not in quiet.stderr
+    assert "1 unbound module(s)" in quiet.stdout
+    # The module that holds the row's code is never counted.
+    assert "scripts/real.py` —" not in proc.stderr
+
+
+def test_a_generic_main_does_not_bind_a_listed_module_for_the_count(tmp_path):
+    # LLR-235's shape: the row names `main` beside its real symbol, and a second
+    # listed module happens to define `main` too. The union anchor is unchanged
+    # (the row is founded on `load`), but `main` no longer vouches for the
+    # second module, so it is counted where it used to pass silently.
+    _two_module_row(tmp_path, "load/main", "def main():\n    pass\n")
+    real = tmp_path / "scripts" / "real.py"
+    real.write_text(real.read_text(encoding="utf-8") + "\n\ndef main():\n    pass\n")
+    # A row listing ONE module is the anchor verdict's alone: its only module
+    # holds `main`, which is where the row's code is, so it is not counted.
+    _add_llr(
+        tmp_path,
+        "LLR-002,SR-001,T,scripts/other.py,main,detail,,(see TC-001),Approved,,1\n",
+    )
+    proc = refs(tmp_path, "--strict", "--show-untraced")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    listed = [ln for ln in proc.stderr.splitlines() if "unbound module" in ln]
+    assert len(listed) == 1, proc.stderr
+    assert "LLR-001" in listed[0] and "scripts/other.py" in listed[0]
+    assert "LLR-001 CodeSymbol" not in proc.stderr.replace(listed[0], ""), (
+        "the anchor verdict is unchanged: the row stays founded"
+    )
+
+
+def test_a_name_every_cli_module_defines_does_not_bind_for_the_count(tmp_path):
+    # Beyond `main`: a helper every entry point defines (here `parse_args`) is
+    # as uninformative. `other.py` binds only the shared CLI names, so it is
+    # counted; the registry names three CLI modules, and the shared set is
+    # computed over them.
+    cli = "def main():\n    pass\n\n\ndef parse_args():\n    pass\n"
+    _two_module_row(tmp_path, "load/parse_args", cli)
+    real = tmp_path / "scripts" / "real.py"
+    real.write_text(real.read_text(encoding="utf-8") + "\n\n" + cli)
+    (tmp_path / "scripts" / "third.py").write_text(
+        cli + "\n\ndef own():\n    pass\n", encoding="utf-8"
+    )
+    _add_llr(
+        tmp_path,
+        "LLR-002,SR-001,T,scripts/third.py,own,detail,,(see TC-001),Approved,,1\n",
+    )
+    proc = refs(tmp_path, "--strict", "--show-untraced")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    listed = [ln for ln in proc.stderr.splitlines() if "unbound module" in ln]
+    assert len(listed) == 1, proc.stderr
+    assert "LLR-001" in listed[0] and "scripts/other.py" in listed[0]
+
+
+def test_the_unbound_total_counts_entries_not_the_phrase_in_other_prose(tmp_path):
+    # The total is carried from the unbound entries themselves. A row whose own
+    # CodeSymbol prose happens to contain the phrase renders an ordinary
+    # untraced miss that quotes it, and that entry is not an unbound module.
+    spine_repo(tmp_path, "scripts/real.py", symbol="load/missing_name/unbound module")
+    proc = refs(tmp_path, "--strict", "--show-untraced")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "`missing_name` is not a module-level name" in proc.stderr
+    assert "unbound module" in proc.stderr, "the collision is really rendered"
+    assert "unbound module(s)" not in proc.stdout, proc.stdout

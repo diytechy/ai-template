@@ -587,7 +587,7 @@ def _row_bindings(root, mods, cache):
 
 
 def symbol_findings(root):
-    """`(dangling, untraced, advisory)` for the LLR `CodeSymbol` ANCHOR rule
+    """`(dangling, untraced, advisory, unbound)` for the LLR `CodeSymbol` ANCHOR rule
     (WI-429, approved as built by owner ruling OI-20 2026-08-13).
 
     THE RULE: a live LLR row must carry at least ONE identifier-shaped
@@ -639,7 +639,9 @@ def symbol_findings(root):
     The `;` list in `Module` is read as a UNION, never as a positional pairing
     with the symbol list. One live row (LLR-080) does pair them positionally,
     nothing states that convention, and a union can only ever be the safer
-    reading: it accepts both authorings and invents no failure.
+    reading: it accepts both authorings and invents no failure. The union
+    decides the anchor verdict only; a listed module holding none of the row's
+    code is counted apart, untraced-class (`unbound_modules`).
 
     Skips are deliberate and each costs a stated thing: a placeholder row
     (`*-000`) so a scaffold stays copy-ready; a non-`.py` module (a hook, a
@@ -661,8 +663,8 @@ def symbol_findings(root):
     rel = LLR_REL
     bad, untraced, advisory = [], [], []
     if spine_carrier.resolve(root / rel) is None:
-        return bad, untraced, advisory
-    cache = {}
+        return bad, untraced, advisory, []
+    cache, anchored = {}, []
     for row in spine_carrier.load(root / rel, "LLR-ID"):
         rid = (row.get("LLR-ID") or "").strip()
         if not rid or rid.endswith("-000"):
@@ -709,7 +711,61 @@ def symbol_findings(root):
                     entry, miss, " or ".join(mods), hit[0]
                 )
             )
-    return bad, untraced, advisory
+        anchored.append((rid, idents, mods))
+    return bad, untraced, advisory, unbound_modules(root, anchored, cache)
+
+
+# The phrase every per-module unbound entry carries, naming its class for the
+# reader. The summary counts the entries `unbound_modules` returns, never this
+# phrase: a row's own prose may contain it.
+UNBOUND = "unbound module"
+
+
+def _generic_names(cache):
+    """The names that say nothing about where a row's code lives: `main`, and
+    any name EVERY CLI module the registry names defines (a module that binds
+    `main` is an entry point). The shared set needs two entry points to mean
+    anything: over one, it would be that module's every name."""
+    clis = [names for names in cache.values() if names and "main" in names]
+    shared = set.intersection(*clis) if len(clis) >= 2 else set()
+    return shared | {"main"}
+
+
+def unbound_modules(root, anchored, cache):
+    """The per-module UNBOUND count: one untraced entry for each `.py` module an
+    anchored row lists in which none of its identifier tokens binds.
+
+    A design row's `module` cell lists the modules holding its `code_symbol`
+    entries (the coordinator's ruling on the cell, open to the owner's
+    overturn), so a listed module holding none of them sends a reader to the
+    wrong file, and the union anchor above lets it pass. The count is
+    untraced-class, never dangling and never the exit code: most such rows
+    follow an unruled older convention (a module holding one composition line),
+    and burning them down is separate work from making them visible.
+
+    Only an anchored row listing two or more checkable modules is judged: with
+    one module the anchor verdict already answers, and a dangling row is
+    already reported whole. A generic token (`_generic_names`) does not bind
+    here, which is what surfaces a row that named `main` beside its real
+    symbol while a second listed module happened to define `main` too. The
+    anchor verdict keeps reading every token."""
+    generic = _generic_names(cache)
+    out = []
+    for rid, idents, mods in anchored:
+        checked = [m for m in mods if cache.get(m) is not None]
+        if len(checked) < 2:
+            continue
+        for mod in checked:
+            if not any(t in cache[mod] and t not in generic for t in idents):
+                out.append(
+                    "{}: {} Module: `{}` — {}: none of the row's CodeSymbol "
+                    "tokens binds there (a generic name such as `main` does not "
+                    "count); the cell lists the modules holding the row's "
+                    "code, so this is counted, not gated".format(
+                        LLR_REL, rid, mod, UNBOUND
+                    )
+                )
+    return out
 
 
 # Above this many skipped-with-reason rows, the per-row advisory stops being a
@@ -861,9 +917,9 @@ def main():
     reg_bad, reg_untraced = registry_findings(root, kit_root, records, absences)
     findings += reg_bad
     untraced += reg_untraced
-    sym_bad, sym_untraced, sym_advisory = symbol_findings(root)
+    sym_bad, sym_untraced, sym_advisory, sym_unbound = symbol_findings(root)
     findings += sym_bad
-    untraced += sym_untraced
+    untraced += sym_untraced + sym_unbound
     for f in findings:
         print("check_doc_refs: WARN - " + f, file=sys.stderr)
     # A THIRD ink, because this module's other two both mean something else:
@@ -879,8 +935,10 @@ def main():
     # classification you can't see the size of is a suppression list.
     tail = ""
     if untraced:
-        tail = " · {} untraced (explained: declared absent, kit-relative, or a record surface){}".format(
-            len(untraced), "" if args.show_untraced else " — --show-untraced to list"
+        tail = " · {} untraced (explained: declared absent, kit-relative, or a record surface{}){}".format(
+            len(untraced),
+            "; {} {}(s)".format(len(sym_unbound), UNBOUND) if sym_unbound else "",
+            "" if args.show_untraced else " — --show-untraced to list",
         )
     if findings:
         print(

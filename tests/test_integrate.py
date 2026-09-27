@@ -48,8 +48,10 @@ from integrate_fixtures import (
     _rev,
     claim_repo,
     declare_generated,
+    declare_shipped_generated,
     git_repo,
     integ,
+    write_every_regen_output,
     write_spec,
 )
 
@@ -413,6 +415,37 @@ def test_an_md_edit_that_is_not_the_relink_still_convicts(tmp_path):
     _commit(root, integ._claim_subject("WI-401", "wi-401"), when=T_VERDICT)
     _git(root, "checkout", "-q", "main")
 
+    assert not integ._abandoned_claim(root, "WI-401", "wi-401")
+
+
+def test_a_crashed_claim_carrying_every_regen_output_is_excused_by_the_shipped_list(
+    tmp_path,
+):
+    """The shipped `[generated]` list is what the abandoned-claim check reads,
+    and it must cover everything the claim's folded-in regeneration can write.
+    A claim-shaped commit carrying one file at EVERY regeneration path is
+    excused under the shipped template, and convicted under a stale list that
+    declares only the dashboard: the check reads the declared list, and the
+    shipped list is the whole of what the regeneration writes."""
+    root = claim_repo(tmp_path)
+    _git(root, "checkout", "-q", "-b", "wi-401")
+    (root / "docs" / "work" / "active" / "wi-401").mkdir(parents=True)
+    _git(
+        root,
+        "mv",
+        "docs/work/queued/WI-401-widget.md",
+        "docs/work/active/wi-401/WI-401-widget.md",
+    )
+    write_every_regen_output(root)
+    _commit(root, integ._claim_subject("WI-401", "wi-401"), when=T_VERDICT)
+    _git(root, "checkout", "-q", "main")
+
+    declare_shipped_generated(root)
+    assert integ._abandoned_claim(root, "WI-401", "wi-401")
+    # The stale list the shipped template used to carry convicts the same commit.
+    (root / "docs" / "stack.ini").write_text(
+        "[generated]\nPROJECT_STATE.html = trajectory\n", encoding="utf-8"
+    )
     assert not integ._abandoned_claim(root, "WI-401", "wi-401")
 
 

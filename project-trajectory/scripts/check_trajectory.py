@@ -3132,10 +3132,13 @@ def queue_conflict_pairs(wis):
                             compared against the queue produces.
       shared SR-Refs        two open rows answering the same requirement. Often
                             correct; worth seeing.
-      shared SpecRef        two open rows pointing at ONE spec document. This is
-                            the sharpest of the three: a spec is a row's
+      shared SpecRef        two open rows pointing at ONE spec. This is the
+                            sharpest of the three: a spec is a row's
                             definition, so two open rows sharing one is either a
                             duplicate or a split that never got written down.
+                            Sections are specs (`kitlib.registry.shared_spec`):
+                            two different anchors in one file are two, and a
+                            reference with no anchor covers the whole file.
 
     Deterministic order (sorted by the id pair), and each pair is reported once
     per signal, never once per direction.
@@ -3174,8 +3177,8 @@ def queue_conflict_pairs(wis):
                         first, second, ";".join(shared_srs)
                     )
                 )
-            spec = (a.get("specref") or "").split("#", 1)[0]
-            if spec and spec == (b.get("specref") or "").split("#", 1)[0]:
+            spec = _kitregistry.shared_spec(a.get("specref"), b.get("specref"))
+            if spec:
                 texts.append(
                     "{} and {} are both open and share one spec of record ({})".format(
                         first, second, spec

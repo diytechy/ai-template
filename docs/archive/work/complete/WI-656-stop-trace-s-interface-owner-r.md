@@ -2,13 +2,50 @@
 id = "WI-656"
 title = "Checker findings that lie: interface-owner reachability, unbound design-row modules, section-anchored shared specs, and the generated-artifact list"
 workstream = "scripts"
-specref = "project-trajectory/scripts/coherence.py"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 needs = ["WI-662"]
 priority = 4
 supersedes = "WI-670;WI-626;WI-658"
 +++
+
+## Deliverable
+
+Four checker readings stop reporting traced things as untraced or pairing
+distinct specs (squash of build/wi-656: eb68ad50, db45a2bf; Codex Sol
+`sol-wi656.md` NOT YET SOUND, then `sol-wi656-fix.md` SOUND):
+
+- **WI-656:** `coherence.llr_module_ids` splits `;`-joined Module cells, and
+  `trace._implementing_modules` no longer doubles the source prefix. The
+  "traces to no requirement" reachability advisories fell from 9 to 2
+  (IF-025, IF-026, whose owner is the `scripts` directory). IF-186 is gone,
+  and IF-187 was already absent. Evidence: `tests/test_interface_owner_reach.py`.
+- **WI-670 (absorbed):** under wave-4 arbitration ruling 1, LLR-180's
+  `detail` and TC-175's `method` and `evidence` are amended in place and left
+  Approved. `check_doc_refs` counts unbound modules structurally. The count is
+  untraced-class and never the exit code, and `main` and names shared by
+  every CLI module do not bind for it. It reports 44 unbound modules across
+  28 rows on this repository, not burned down; against the pre-WI-662
+  registry it reports the LLR-235 and LLR-256 `main` coincidence.
+- **WI-626 (absorbed):** `kitlib.registry.shared_spec` pairs two SpecRefs
+  only when their files match and their anchors are equal or one is absent.
+  LLR-160's `detail` is amended in place and left Approved. The strict WARN
+  lines fell from 66 to 61, and shared-spec pairs from 7 to 2.
+- **WI-658 (absorbed):** the shipped `stack.ini.template` `[generated]` list
+  is held equal to `trunk_step.regen_writes()` in both directions by
+  `tests/test_generated_set.py`. The readers still read `[generated]`,
+  because approved LLR-140 defines audit's allowed set that way (wave-4
+  ruling 6). `tests/test_integrate.py` and
+  `tests/test_integrate_admission.py` drive `_abandoned_claim` and `audit`
+  against a stale list and the shipped one. Two RESYNC_PACK entries.
+
+Approved rows amended in place, unanchored, for the next spine-acts batch:
+LLR-160 (`detail`), LLR-180 (`detail`), TC-175 (`method`, `evidence`).
+Builder test runs (-n 2): 490 passed / 1 skipped; follow-up 251 passed /
+1 skipped. Outside scope, recorded: `check.py._generated_census` is a
+third `[generated]` reader; `docs/stack.ini`'s `[generated]` comment still
+says five families.
 
 ## Context
 

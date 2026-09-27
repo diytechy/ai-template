@@ -84,9 +84,9 @@ THE SEQUENCE, in `commit`:
 
 WHY THE REGENERATION'S SHARE IS `trunk_step`'S TABLE, NOT `[generated]`. The
 stack.ini section declares OWNERSHIP, and an adopter's copy can lag what the
-regeneration writes (the shipped template names three rows while the step writes
-`docs/stage` and `docs/open-items.html` too), so staging only declared rows would
-leave a scaffold's claim DIRTY behind itself. The table that runs the generators
+regeneration writes (the shipped template is held equal to the table, but a
+profile copied before a step was added still omits its path), so staging only
+declared rows would leave a scaffold's claim DIRTY behind itself. The table that runs the generators
 is the one place that knows what they write. Every generator's path is taken,
 applicable here or not: one that does not apply writes nothing, so its path
 costs only a refusal while it is dirty.
