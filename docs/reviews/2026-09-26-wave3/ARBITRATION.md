@@ -208,3 +208,13 @@ are marked as such.
       exactly what the owner accepted.
     The act is re-taken once more, so the ledger holds one act for the
     sitting.
+
+17. **WI-650 — SOL, both.** Association-aware dating reads design rows'
+    SR-Refs from history. So the unreadable-history guard must cover the
+    design registry, or an LLR registry still on an older carrier silently
+    drops the test cases it would reach. That is a pass by omission, which
+    SR-217's "unreadable history never passes" forbids. The kit README's row
+    describing the check is updated to match. The builder placed the owner's
+    addition (the not-approved warning) as an SR-217 clause, not a derived
+    row, arguing that SN-042's acceptance already covers a never-approved
+    test case. Sol raised no objection, and the coordinator agrees.

@@ -1,0 +1,5 @@
+d0e4a0dd NOT YET SOUND
+
+- **major** — `history_unreadable` omits the newly required design registry from both older-carrier checks (`project-trajectory/scripts/check_test_first.py:174`, `:224`), although associations now depend on `DESIGN_ROWS` (`:350`). If LLRs remain under an older carrier, `_members` sees no TOML design rows and can silently omit indirect test cases instead of reporting unreadable history. Fix: include `DESIGN_ROWS` in both carrier checks and add tests for an LLR carrier still old, an LLR migration, and its exact/inexact association date.
+
+- **minor** — The shipped kit description still says test cases are dated from their own first approval and mentions neither association-aware dating nor unapproved-case warnings (`project-trajectory/README.md:63`). Fix: update that table row to match SR-217 and the RESYNC_PACK entry.
