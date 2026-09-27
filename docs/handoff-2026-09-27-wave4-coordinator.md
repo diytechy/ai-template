@@ -1,4 +1,4 @@
-# Handoff 2026-09-27 (wave 4, coordinator) — the queue consolidated, six groups landed, batch B owed
+# Handoff 2026-09-27 (wave 4, coordinator) — the queue consolidated, seven groups landed, batch B owed
 
 For the next session's **coordinator**: an Opus session that coordinates
 builders, arbitrates, and lands work on trunk. It replaces
@@ -9,16 +9,16 @@ this session's corrections folded in. This session's record:
 - the log fragment [log.d/2026-09-27-wave4-consolidation.md](log.d/2026-09-27-wave4-consolidation.md):
   every landing, its bar, and the open count at each step;
 - the arbitration file [reviews/2026-09-27-wave4/ARBITRATION.md](reviews/2026-09-27-wave4/ARBITRATION.md),
-  rulings 1 to 15, with Codex Sol's review files beside it;
+  rulings 1 to 17, with Codex Sol's review files beside it;
 - the owner's ruling [log.d/2026-09-27-owner-ruling-oi88.md](log.d/2026-09-27-owner-ruling-oi88.md)
   (OI-88 (c)).
 
 ## What happened
 
-**The queue went from 50 open to 14.** The consolidation (97815a8c) absorbed
+**The queue went from 50 open to 13.** The consolidation (97815a8c) absorbed
 29 rows into eleven host rows, one per shared surface. The table is in the
 log fragment. Then the spine-acts batch A closed three adjudications in one
-act, and six groups landed, each through Codex Sol review rounds and
+act, and seven groups landed, each through Codex Sol review rounds and
 arbitration:
 
 | commit | item | what it carried |
@@ -33,18 +33,20 @@ arbitration:
 | 6957fb38 | WI-581 (+659, 570) | quarantine, claim relink, typed open-item brief |
 | f7885a49 | WI-638 (+634) | re-judging of observation tests; the assumption gate's four steps |
 | 9ecb934f | WI-657 parts 1–3 (+623, 539) | the complexity ratchet green; flag-axis; the sensor layer and skill |
+| f61e22ff | handoff | this document's first version |
+| 5da9dbf1 | WI-621 (+608, 622) | review and Done-when integrity; session logs append-only |
 
-WI-621 (with WI-608 and WI-622) was built and reviewed this session. See
-"In flight at handoff" for where it stands.
+Nothing is in flight: every lane launched this session has landed, and no
+worktree remains. Every `build/wi-NNN` branch is kept.
 
 ## Your first jobs, in order
 
-1. **Re-measure the smoke tier quietly** before anything lands:
-   `python scripts/check_smoke_budget.py --mode enforce`, three times, with
-   no agent running. This session's readings ranged from 34 to 44 s quiet
-   and up to 411 s under four lanes. The membership ceiling was re-stamped
-   1620 -> 1690 for in-process growth, with its reason in `docs/stack.ini`.
-   The 60 s budget stands.
+1. **Confirm the smoke tier quietly** before anything lands:
+   `python scripts/check_smoke_budget.py --mode enforce`, with no agent
+   running. The last quiet reading was 27.7 s over 1647 tests at 5da9dbf1.
+   Readings reached 411 s under four lanes. The membership ceiling was
+   re-stamped 1620 -> 1690 for in-process growth, with its reason in
+   `docs/stack.ini`. The 60 s budget stands.
 2. **Spine-acts batch B: one independent Fable adjudicator, one snapshot
    act.** Two verdict grammars mean two adjudication rows (an `amendment`
    brief and a `first-approval` brief). Hand-file both from the lists below,
@@ -67,7 +69,7 @@ WI-621 (with WI-608 and WI-622) was built and reviewed this session. See
      - WI-672: SR-221, LLR-260, LLR-263, TC-255, TC-258;
      - WI-657: LLR-261, TC-256;
      - WI-638: TC-209, TC-210, TC-211;
-     - WI-621, if it has landed: LLR-262, TC-257.
+     - WI-621: LLR-262, TC-257, TC-259.
 
      `trace.py --approve modified` lists every Drafted row owing a first
      approval, including older ones (LLR-205/TC-201 and others). Take the
@@ -100,19 +102,16 @@ WI-621 (with WI-608 and WI-622) was built and reviewed this session. See
      WI-618, WI-667 (gated on re-arming the red-TC rung), and WI-625
      (deferred, last).
 
-## In flight at handoff
+## Landed last: WI-621
 
-- **WI-621** (review and Done-when integrity; branch `build/wi-621`,
-  worktree `wt-621` in this session's scratchpad). Built at a7124fed on
-  bc6a245f. It reproduced WI-608 (a later session rewriting a round cleared
-  the gate) and closed it without a new refusal: a round is read at its own
-  session's commit. At handoff the builder was rebasing onto 9ecb934f; the
-  Codex Sol review and the integration come after that. The coordinator
-  accepted its deviations. The claim WARNS on a missing Done-when rather than
-  refusing, because every minted row (adjudications, gap closures) is filed
-  with none: 28 of the 74 completed rows since WI-550. Refusing waits on the
-  mint writing a Done-when, or on an owner ruling that minted adjudications
-  are exempt.
+WI-621 (with WI-608 and WI-622) reproduced WI-608 (a later session rewriting
+a round cleared the gate) and closed it by reading each round at its own
+session's commit. Session logs are now append-only evidence. The
+coordinator accepted one deviation: the claim WARNS on a missing Done-when
+rather than refusing, because every minted row (adjudications, gap closures)
+is filed with none, 28 of the 74 completed rows since WI-550. Refusing waits
+on the mint writing a Done-when, or on an owner ruling that minted
+adjudications are exempt.
 
 ## For the owner
 

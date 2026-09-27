@@ -26,7 +26,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 
 - **RESUME HERE:** start with the coordinator's
   [handoff-2026-09-27-wave4-coordinator.md](handoff-2026-09-27-wave4-coordinator.md).
-  The queue is consolidated (50 open to 14) and six groups have landed. Its
+  The queue is consolidated (50 open to 13) and seven groups have landed. Its
   first jobs: re-measure the smoke tier quietly, then ONE spine-acts batch
   (one adjudicator, one act) over every row the landed groups amended or
   drafted, which the handoff lists. Then the consolidation machinery item and
