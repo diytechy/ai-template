@@ -1216,3 +1216,236 @@ def test_fit_lines_breaks_on_words_then_ellipsizes():
     assert all(len(line) <= 8 for line in got)
     # A single word longer than the budget is cut, never allowed to run past.
     assert gt._fit_lines("supercalifragilistic", 8, 2) == ["supercal", "ifragil…"]
+
+
+# --- TC-251: the per-need assumption view (SR-218, LLR-258) -----------------
+# For each stakeholder need the spine view's detail panel lists the
+# assumptions its requirements rely on, each once, with its validity, its
+# evidence level and the requirements citing it; a need answered only by
+# coincident requirements says so, an unclassified requirement shows as the
+# gap, and a falsified or unevidenced premise is marked in words as well as in
+# color.
+
+_GOLDEN_PAGE = ROOT / "tests" / "golden" / "dashboard-no-assumptions.html"
+
+_VIEW_NEEDS = """[need.SN-001]
+status = "Approved"
+need = "Runs are trustworthy."
+why = "A wrong verdict is acted on."
+priority = "M"
+acceptance = "Every verdict is right."
+
+[need.SN-002]
+status = "Approved"
+need = "The page loads."
+why = "No page, no reading."
+priority = "M"
+acceptance = "It loads."
+
+[need.SN-003]
+status = "Approved"
+need = "Reports reach the owner."
+why = "An unread report changes nothing."
+priority = "S"
+acceptance = "The owner reads it."
+"""
+
+
+def _view_sr(sid, need, da_refs=(), coincident=""):
+    cells = [
+        "[requirement.{}]".format(sid),
+        'title = "{} title"'.format(sid),
+        'sn_refs = ["{}"]'.format(need),
+        'requirement = "The system shall do {}."'.format(sid),
+        'rationale = "why"',
+        'acceptance_criteria = "ac"',
+        'priority = "M"',
+        'verification = "Test"',
+        'status = "Approved"',
+    ]
+    if da_refs:
+        cells.append("da_refs = [{}]".format(", ".join('"%s"' % d for d in da_refs)))
+    if coincident:
+        cells.append('coincident = "{}"'.format(coincident))
+    return "\n".join(cells) + "\n\n"
+
+
+_VIEW_SRS = (
+    _view_sr("SR-001", "SN-001", ("DA-001", "DA-002"))
+    + _view_sr("SR-002", "SN-001", ("DA-001",))
+    + _view_sr("SR-003", "SN-002", coincident="The page is its own outcome.")
+    + _view_sr("SR-004", "SN-002", coincident="Loading is the outcome.")
+    + _view_sr("SR-005", "SN-003")
+    + _view_sr("SR-006", "SN-003", ("DA-003",))
+)
+
+_VIEW_TCS = """[test.TC-010]
+verifies = ["SR-001"]
+level = "System"
+method = "watch a week of runs"
+tier = "Full"
+expected = "every verdict right"
+automated = "No"
+status = "Approved"
+assumption_refs = ["DA-001"]
+max_age = 30
+sampling = "monitored"
+"""
+
+_VIEW_FRAME = """[entity.EXT-001]
+name = "Owner"
+class = "operational"
+description = "The owner."
+status = "Approved"
+
+[boundary.B-01]
+entity = "EXT-001"
+direction = "out"
+carries = "the verdict"
+status = "Approved"
+"""
+
+
+def _view_da(did, standing, text):
+    return (
+        '[assumption.{}]\neffect_at = ["B-01"]\nassumption = "{}"\n'
+        'holds_when = "always"\nobstacle = "never"\nstatus = "Approved"\n'
+        'standing = "{}"\n\n'.format(did, text, standing)
+    )
+
+
+_VIEW_DAS = (
+    _view_da("DA-001", "active", "The verdict reaches the owner intact.")
+    + _view_da("DA-002", "falsified", "The owner reads every verdict.")
+    + _view_da("DA-003", "active", "Reports are opened within a day.")
+)
+
+_VIEW_RECORD = {
+    "tc": "TC-010",
+    "outcome": "pass",
+    "observed_at": "2026-09-01T00:00:00Z",
+    "provenance": "the owner",
+    "expires": "2099-01-01T00:00:00Z",
+    "judged": "",
+}
+
+
+def _view_repo(root):
+    """`make_repo`'s work items and README over a TOML spine with three needs:
+    SN-001 relies on DA-001 (through two requirements, evidenced by a current
+    passing observation) and DA-002 (falsified); SN-002 is answered only by
+    coincident requirements; SN-003 has an unclassified requirement beside one
+    relying on DA-003, which nothing evidences."""
+    make_repo(root)
+    req = root / "docs" / "requirements"
+    for stale in (
+        req / "stakeholder-needs.md",
+        req / "system-requirements.csv",
+        req / "low-level-requirements.csv",
+        root / "docs" / "test" / "test-cases.csv",
+    ):
+        stale.unlink()
+    from kitlib import observation as obs_mod
+
+    files = {
+        req / "stakeholder-needs.toml": _VIEW_NEEDS,
+        req / "system-requirements.toml": _VIEW_SRS,
+        req / "low-level-requirements.toml": "",
+        req / "external.toml": _VIEW_FRAME,
+        req / "assumptions.toml": _VIEW_DAS,
+        root / "docs" / "test" / "test-cases.toml": _VIEW_TCS,
+        root
+        / obs_mod.OBSERVATIONS_DIR
+        / obs_mod.record_name("TC-010", _VIEW_RECORD["observed_at"]): obs_mod.render(
+            _VIEW_RECORD
+        ),
+    }
+    for path, text in files.items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8", newline="\n")
+    return root
+
+
+def _need_details(page):
+    """The spine view's detail records, read back out of the page's script."""
+    import json
+
+    start = page.index("const archDetails = ") + len("const archDetails = ")
+    details, _end = json.JSONDecoder().raw_decode(page, start)
+    return details
+
+
+def _unstyled_text(markup):
+    """The words a reader gets with every style removed: no `<style>` block,
+    no `style` or `class` attribute, then no tags at all."""
+    markup = re.sub(r"<style\b.*?</style>", "", markup, flags=re.S)
+    markup = re.sub(r'\s(?:style|class)="[^"]*"', "", markup)
+    return html.unescape(re.sub(r"<[^>]+>", " ", markup))
+
+
+def test_need_assumptions_derives_each_need_s_premises_once(tmp_path):
+    view = load_script("traj_parse").need_assumptions(_view_repo(tmp_path))
+    first = view["SN-001"]
+    assert [a["id"] for a in first["assumptions"]] == ["DA-001", "DA-002"]
+    da1, da2 = first["assumptions"]
+    assert da1["citing"] == ["SR-001", "SR-002"]
+    assert (da1["standing"], da1["level"]) == ("active", "monitored")
+    assert (da2["standing"], da2["level"]) == ("falsified", "assumed")
+    assert view["SN-002"]["coincident"] and not view["SN-002"]["assumptions"]
+    third = view["SN-003"]
+    assert third["unclassified"] == ["SR-005"]
+    assert [a["id"] for a in third["assumptions"]] == ["DA-003"]
+
+
+def test_each_need_s_detail_lists_its_assumptions_with_their_evidence(tmp_path):
+    root = _view_repo(tmp_path)
+    proc = gen(root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    details = _need_details(html_of(root))
+    first = _unstyled_text(details["SN-001"]["assumptions"])
+    # Every assumption the need's requirements cite, once, with its standing,
+    # its evidence level and the requirements citing it.
+    assert first.count("DA-001") == 1 and first.count("DA-002") == 1
+    for needle in ("active", "monitored", "SR-001", "SR-002", "falsified"):
+        assert needle in first, needle
+    # A falsified premise is labelled in words, not only by color.
+    assert "FALSIFIED" in first
+    second = _unstyled_text(details["SN-002"]["assumptions"])
+    assert "coincident" in second
+    third = _unstyled_text(details["SN-003"]["assumptions"])
+    assert "SR-005" in third and "unclassified" in third
+    # One relied on with no current evidence is labelled in words too.
+    assert "DA-003" in third and "NO CURRENT EVIDENCE" in third
+    # A need whose premises are all evidenced carries no such label.
+    assert "NO CURRENT EVIDENCE" not in first.split("DA-002")[0]
+
+
+def test_with_no_assumptions_registry_the_page_is_byte_identical_to_the_golden(
+    tmp_path,
+):
+    """The stored golden was generated by the code before the view existed.
+    With no assumptions registry, and with the template's example rows only,
+    the page is byte for byte that golden.
+
+    Regenerate the golden (only when a change to the page's output is intended
+    and reviewed) with:
+    UPDATE_PAGE_GOLDEN=1 python -m pytest tests/test_traj_views.py"""
+    import os
+
+    template = (
+        ROOT / "project-trajectory" / "registries" / "assumptions.template.toml"
+    ).read_text(encoding="utf-8")
+    for label, assumptions in (("none", None), ("template", template)):
+        root = tmp_path / label
+        root.mkdir()
+        make_repo(root)
+        if assumptions is not None:
+            (root / "docs" / "requirements" / "assumptions.toml").write_text(
+                assumptions, encoding="utf-8", newline="\n"
+            )
+        proc = gen(root)
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+        page = (root / "PROJECT_STATE.html").read_bytes()
+        if os.environ.get("UPDATE_PAGE_GOLDEN") and label == "none":
+            _GOLDEN_PAGE.write_bytes(page)
+        assert page == _GOLDEN_PAGE.read_bytes(), label

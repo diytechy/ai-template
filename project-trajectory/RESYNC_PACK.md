@@ -5863,6 +5863,37 @@ case, and one whose test case was re-pointed at it after its code landed. Each
 is a finding to weigh, not a failure: approving a drafted test case clears
 its line, and a late one stays reported, because the order is history.
 
+### The assumption tier reaches the approval brief, the stage and the dashboard [since e8ca47f7]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** Three readers of `docs/requirements/assumptions.toml` and the
+stakeholder list. The approval brief (`trace.py --approve modified` and the
+`docs/ratify/CURRENT.md` it writes) gains a section for each assumption or
+surrogate owing an approval (`Drafted`, or approved and drifted from its
+snapshot copy), leading with the requirements citing it and the needs they
+reach, then its landing crossings, cells, evidence level and falsifier; an
+assumption owing approval keeps the freshness check's window open.
+`--approve assumptions`, or a list of `DA-`/`SUR-` ids, renders that section
+alone. The derived stage reads the assumption, surrogate and stakeholder
+tiers from each tier's first approved row: once a tier has one, a `Drafted`
+row of it holds `DevStg-Boundary` (assumptions, surrogates) or
+`DevStg-Needs` (stakeholders) in the live reading; the settled reading and
+the headline stage never move for them. The assumptions registry is now a
+declared stage input, so its fingerprint covers the file. The dashboard's
+spine view lists, in each need's detail panel, the assumptions its
+requirements rely on with their validity and evidence level. With no real
+assumption row and no approved stakeholder, every output is unchanged.
+
+**What to do.** Re-sync `scripts/trace.py`, `scripts/assumption_rules.py`,
+`scripts/spine_rules.py`, `scripts/derive_stage.py`, `scripts/kitlib/stage.py`,
+`scripts/traj_parse.py`, `scripts/rendering/traj_views.py` and
+`scripts/gen_trajectory.py`. Then regenerate `docs/stage` with
+`derive_stage.py`, since the new declared input moves its fingerprint even
+when you keep no assumptions registry, and regenerate
+`docs/ratify/CURRENT.md` and `PROJECT_STATE.html` if you commit them. Nothing
+in your registries changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

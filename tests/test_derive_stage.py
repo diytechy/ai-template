@@ -667,3 +667,269 @@ def test_a_moved_assumption_reference_is_attributed_to_the_case_s_phases(tmp_pat
 
     assert phases(before) == ["5"]
     assert phases(live) == ["6"]
+
+
+# --- TC-236: the assumption, surrogate and stakeholder tiers join the stage at
+# their first approval, each tier read on its own (SR-204, LLR-241) ----------
+# A tier holding only Drafted rows reads, to its rung, as a frame declared and
+# not approved; reading it before its first approval would lower the derived
+# stage of every tree in between. So a tier is read only once one of its rows
+# is Approved, and then a Drafted row of it holds its rung in the live reading.
+
+
+def _settled_spine(**tiers):
+    """An in-memory spine every spine row of which is settled, no frame, and the
+    three tiers under test as given: the live and settled readings are both
+    DevStg-Impl until a tier holds a rung."""
+    spine = dict(
+        srs=[
+            _row(
+                "SR-ID",
+                "SR-001",
+                Status="Approved",
+                Verification="Test",
+                **{"SN-Refs": "SN-001"},
+            )
+        ],
+        llrs=[_row("LLR-ID", "LLR-001", Status="Approved", **{"SR-Refs": "SR-001"})],
+        tcs=[_row("TC-ID", "TC-001", Status="Approved", Verifies="SR-001;LLR-001")],
+        sn_ids={"SN-001"},
+        sn_draft=set(),
+        bifs=[],
+        cmps=[],
+        have_bifs=False,
+        have_cmps=False,
+        das=[],
+        surs=[],
+        stks=[],
+    )
+    spine.update(tiers)
+    return spine
+
+
+def _readings(spine):
+    """`(live, settled)` over the in-memory spine."""
+    live, _ = DS._stage_map(spine, settled=False)
+    settled, _ = DS._stage_map(spine, settled=True)
+    return live, settled
+
+
+def _da(did, status):
+    return _row("DA-ID", did, Status=status)
+
+
+def _sur(sid, status):
+    return _row("SUR-ID", sid, Status=status)
+
+
+def _stk(sid, status):
+    return _row("STK-ID", sid, Status=status)
+
+
+IMPL = (ladder.STAGE_IMPL, ladder.STAGE_IMPL)
+
+
+def test_a_tier_holding_only_drafted_rows_moves_neither_reading():
+    assert _readings(_settled_spine()) == IMPL
+    for tiers in (
+        {"das": [_da("DA-001", "Drafted"), _da("DA-002", "Drafted")]},
+        {"surs": [_sur("SUR-001", "Drafted")]},
+        {"stks": [_stk("STK-01", "Drafted"), _stk("STK-02", "Drafted")]},
+    ):
+        assert _readings(_settled_spine(**tiers)) == IMPL, tiers
+
+
+def test_after_the_first_approval_a_draft_holds_its_rung_in_the_live_reading_only():
+    held = {
+        "das": ([_da("DA-001", "Approved"), _da("DA-002", "Drafted")], "BOUNDARY"),
+        "surs": ([_sur("SUR-001", "Approved"), _sur("SUR-002", "Drafted")], "BOUNDARY"),
+        "stks": ([_stk("STK-01", "Approved"), _stk("STK-02", "Drafted")], "NEEDS"),
+    }
+    for key, (rows, rung) in held.items():
+        live, settled = _readings(_settled_spine(**{key: rows}))
+        assert live == getattr(ladder, "STAGE_" + rung), key
+        assert settled == ladder.STAGE_IMPL, key
+    # With every row of each tier approved, nothing holds.
+    assert (
+        _readings(
+            _settled_spine(
+                das=[_da("DA-001", "Approved")],
+                surs=[_sur("SUR-001", "Approved")],
+                stks=[_stk("STK-01", "Approved")],
+            )
+        )
+        == IMPL
+    )
+
+
+def test_the_two_tiers_sharing_the_assumptions_file_stay_apart():
+    """An approved assumption does not activate the surrogate tier, and an
+    approved surrogate does not activate the assumption tier."""
+    assert (
+        _readings(
+            _settled_spine(
+                das=[_da("DA-001", "Approved")], surs=[_sur("SUR-001", "Drafted")]
+            )
+        )
+        == IMPL
+    )
+    assert (
+        _readings(
+            _settled_spine(
+                das=[_da("DA-001", "Drafted")], surs=[_sur("SUR-001", "Approved")]
+            )
+        )
+        == IMPL
+    )
+
+
+def test_no_setting_turns_a_tier_on():
+    """`tier_active` reads the rows and nothing else: the one input is whether
+    any row of the tier reads Approved (LLR-241; Founded does not count)."""
+    rules = DS.spine_rules
+    assert not rules.tier_active([])
+    assert not rules.tier_active([_da("DA-001", "Drafted")])
+    assert rules.tier_active([_da("DA-001", "Drafted"), _da("DA-002", "Approved")])
+    assert rules.tier_active([_da("DA-001", "approved")])
+    # "Reads Approved" is the switch (LLR-241): a tier whose only non-draft row
+    # reads Founded holds no Approved row, so it is not read.
+    assert not rules.tier_active([_sur("SUR-001", "Founded")])
+
+
+def _needs_file(root, need_status, stakeholder_status):
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "test").mkdir(parents=True, exist_ok=True)
+    (req / "stakeholder-needs.toml").write_text(
+        '[need.SN-001]\nstatus = "{}"\nneed = "A need."\nwhy = "Why."\n'
+        'priority = "M"\nacceptance = "Seen."\nstakeholder_refs = ["STK-01"]\n\n'
+        '[stakeholder.STK-01]\nname = "Operator"\ndescription = "Runs it."\n'
+        'status = "{}"\n\n'
+        '[stakeholder.STK-02]\nname = "Reviewer"\ndescription = "Reads it."\n'
+        'status = "Approved"\n'.format(need_status, stakeholder_status),
+        encoding="utf-8",
+        newline="\n",
+    )
+    (req / "system-requirements.toml").write_text(
+        '[requirement.SR-001]\ntitle = "T"\nsn_refs = ["SN-001"]\n'
+        'requirement = "r"\nrationale = "why"\nacceptance_criteria = "ac"\n'
+        'priority = "M"\nverification = "Test"\nstatus = "Approved"\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    (req / "low-level-requirements.toml").write_text(
+        '[design.LLR-001]\nsr_refs = ["SR-001"]\ntitle = "t"\nmodule = "m.py"\n'
+        'code_symbol = "f"\ndetail = "d"\nstatus = "Approved"\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    (root / "docs" / "test" / "test-cases.toml").write_text(
+        '[test.TC-001]\nverifies = ["SR-001", "LLR-001"]\nlevel = "Unit"\n'
+        'method = "m"\ntier = "Smoke"\nexpected = "e"\nautomated = "Yes"\n'
+        'evidence = "tests/t.py::t"\nstatus = "Approved"\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
+def test_a_stakeholder_s_status_never_answers_for_a_need(tmp_path):
+    """The two tiers share the needs file and are loaded by their own id
+    columns: a Drafted stakeholder beside an approved need is not a drafted
+    need, and an approved stakeholder does not settle a Drafted need."""
+    drafted_stk = tmp_path / "drafted-stakeholder"
+    _needs_file(drafted_stk, "Approved", "Drafted")
+    spine = DS.spine_rules.load_spine(drafted_stk / "docs")
+    assert spine["sn_draft"] == set()
+    assert [r["STK-ID"] for r in spine["stks"]] == ["STK-01", "STK-02"]
+    record = DS.derive(drafted_stk)
+    # The stakeholder tier is active (STK-02) and STK-01 is Drafted: the live
+    # reading holds at Needs through the STAKEHOLDER rung, the settled one not.
+    assert record["live-stage"] == ladder.STAGE_NEEDS
+    assert record["settled-stage"] == ladder.STAGE_IMPL
+
+    drafted_need = tmp_path / "drafted-need"
+    _needs_file(drafted_need, "Drafted", "Approved")
+    spine = DS.spine_rules.load_spine(drafted_need / "docs")
+    assert spine["sn_draft"] == {"SN-001"}
+    assert DS.derive(drafted_need)["live-stage"] == ladder.STAGE_NEEDS
+
+
+def test_derive_counts_the_three_tiers_drafts(tmp_path):
+    _needs_file(tmp_path, "Approved", "Drafted")
+    (tmp_path / "docs" / "requirements" / "assumptions.toml").write_text(
+        '[assumption.DA-001]\neffect_at = ["B-01"]\nassumption = "a"\n'
+        'holds_when = "h"\nobstacle = "o"\nstatus = "Drafted"\nstanding = "active"\n\n'
+        '[surrogate.SUR-001]\nname = "s"\nemulates = ["EXT-001"]\n'
+        'description = "d"\nstatus = "Drafted"\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    spine = DS.spine_rules.load_spine(tmp_path / "docs")
+    assert [r["DA-ID"] for r in spine["das"]] == ["DA-001"]
+    assert [r["SUR-ID"] for r in spine["surs"]] == ["SUR-001"]
+    # One Drafted stakeholder, one assumption, one surrogate.
+    assert DS.derive(tmp_path)["drafted"] == 3
+
+
+def test_the_scaffold_s_template_rows_hold_nothing(scaffold):
+    """A freshly scaffolded tree carries the assumptions template's `-000`
+    example rows and the needs template's example stakeholder; neither is a
+    real row, so the three tiers read empty and hold nothing."""
+    spine = DS.spine_rules.load_spine(scaffold / "docs")
+    assert spine["das"] == [] and spine["surs"] == [] and spine["stks"] == []
+
+
+def test_the_derivation_reads_the_assumptions_registry_as_a_declared_input(
+    tmp_path,
+):
+    """The derivation reads no policy file, and every file it reads is a
+    declared input of the fingerprint, the assumptions registry among them."""
+    import io
+    from pathlib import Path
+    from unittest import mock
+
+    _needs_file(tmp_path, "Approved", "Approved")
+    req = tmp_path / "docs" / "requirements"
+    (req / "assumptions.toml").write_text(
+        '[surrogate.SUR-001]\nname = "s"\nemulates = ["EXT-001"]\n'
+        'description = "d"\nstatus = "Approved"\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    (tmp_path / "docs" / "process.toml").write_text(
+        '[attestation]\nhuman_approval_through = "DevStg-Reqs"\n', encoding="utf-8"
+    )
+    opened = []
+    real_open = io.open
+
+    def _audit(file, *args, **kwargs):
+        try:
+            opened.append(Path(file).resolve())
+        except TypeError:
+            pass
+        return real_open(file, *args, **kwargs)
+
+    with mock.patch("io.open", _audit), mock.patch("builtins.open", _audit):
+        DS.spine_rules.load_spine(tmp_path / "docs")
+    declared = {
+        p.resolve() for _d, p in kitstage.input_paths(tmp_path) if p is not None
+    }
+    assert (req / "assumptions.toml").resolve() in declared
+    assert (req / "assumptions.toml").resolve() in opened
+    assert (tmp_path / "docs" / "process.toml").resolve() not in opened
+    docs = (tmp_path / "docs").resolve()
+    assert {p for p in opened if p.is_relative_to(docs)} <= declared
+
+
+def test_the_new_maturity_tables_equal_the_check_s_enum_vocabulary():
+    """Compared case-normalized, as the approval-level test pins the existing
+    tables: the tables are keyed lowercase because `_maturity` lowercases."""
+    rules = DS.spine_rules
+    trace = load_script("trace")
+    vocabulary = {v.lower() for v in trace.ENUM_FIELDS["STK"]["Status"]}
+    assert set(rules.STK_MATURITY) == vocabulary
+    # The assumption tier's status vocabulary is the spine's closed one, which
+    # `assumption_rules` judges its two tiers against.
+    spine_vocabulary = {v.lower() for v in DS.assumption_rules.STATUS_VALUES}
+    assert set(rules.DA_MATURITY) == spine_vocabulary
+    assert set(rules.SUR_MATURITY) == spine_vocabulary

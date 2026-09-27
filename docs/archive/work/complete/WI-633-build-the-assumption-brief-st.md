@@ -2,13 +2,35 @@
 id = "WI-633"
 title = "Build the assumption approval brief, the stage's tier reading and the per-need view (SR-203, SR-204, SR-218)"
 workstream = "scripts"
-specref = "docs/plans/2026-09-25-assumption-tier-spine-map.md#3-plan-coverage"
+specref = ""
 sr_refs = ["SR-203", "SR-204", "SR-218"]
 needs = ["WI-628", "WI-632"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 4
 +++
+
+## Deliverable
+
+The assumption tier reaches the owner's approval brief, the derived stage
+and the dashboard (SR-203, SR-204, SR-218; LLR-240, LLR-241, LLR-258;
+TC-235, TC-236, TC-251).
+
+- **The brief:** `trace.py --approve modified` renders an assumption
+  section, and accepts an `assumptions` scope, for every assumption or
+  surrogate row owing approval (Drafted, or drifted from its copy). Each
+  section shows every cell, its evidencing cases, and the evidence level,
+  which is computed at render time and not freshness-compared.
+- **The stage:** it reads the assumption, surrogate and stakeholder tiers
+  from each tier's first approved row (`tier_active`: Approved only).
+- **The dashboard:** the per-need view lists each need's assumptions.
+- **No change without the tier:** goldens captured from the pre-change code
+  pin that a repository with no assumptions sees the same brief and page.
+- **New seams:** IF-226 and IF-227, cited by TC-235 and TC-251.
+- **Evidence:** the tests were red first (15 across three modules), then
+  green.
+- **Review:** Sol took two rounds (arbitration ruling 20) and the fix round
+  was SOUND.
 
 ## Context
 

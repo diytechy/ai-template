@@ -75,8 +75,8 @@ Stdlib only. A plain sibling of `scripts/`, not a `kitlib` module, for the
 reason `coherence.py` records: these are the checker's rules, and the
 scaffolder has no business importing them.
 
-Contracts: IF-190, IF-200, IF-201, IF-208, IF-216 — the seams this module declares
-(process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-190, IF-200, IF-201, IF-208, IF-216, IF-226 — the seams this
+module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-190: the assumption tier's rule surface `trace.py` imports. Rows in,
     findings out, and nothing else: no I/O, no git, no filesystem, no argv.
@@ -150,6 +150,18 @@ Contract IF-216: the observation results and what they evidence, the rules
     `RISK_UNPROVEN`, `RISK_EVIDENCED`, with its reasons). `suite_proof` is the
     harness's evidence record as `{"outcome", "tier", "bound"}` or None, and a
     view is `baseline_snapshot.risk_acceptance_view`'s dict.
+Contract IF-226: the chain the approval brief renders for one assumption or
+    surrogate, read by `trace.py`'s brief. `assumption_chain(da_id, reg)`
+    returns a dict, or None for an id the registry does not declare, and reads
+    no file: `reg` maps `srs`, `needs`, `das`, `surs`, `exts`, `bifs`, `tcs`
+    and the evidence inputs `records`, `suite_proof`, `digests` and `now` to
+    what the caller already read, a missing key reading as empty. An
+    assumption's chain carries `citing` as `(id, title, requirement)`, `needs`
+    as `(id, need)`, `landing` as `(crossing, entity, name)`, `cases`, `level`
+    (one of `EVIDENCE_LEVELS`), `falsifier` and, for a fidelity assumption,
+    `surrogate`, that surrogate's chain; a surrogate's carries `emulates` as
+    `(id, name)` and `named_by` as `(id, assumption)`. Both carry `row`, the
+    row itself.
 """
 
 import datetime
@@ -1543,3 +1555,111 @@ def observation_evidence_findings(
         )
     )
     return integrity, advisories
+
+
+# --- the approval brief's chain: what an approver judges an assumption by -----
+# An assumption is approved for what it lets the requirements claim, so the
+# approver's question is whether those requirements may rely on it (SR-203).
+# The brief therefore needs, for one row, everything that question reads: the
+# requirements citing it with their text, the needs derived through them,
+# where its outcome lands and whose crossing that is, what evidences it and at
+# what level now, and what would show it false. A fidelity assumption is
+# meaningless without its surrogate, and a surrogate without the assumptions
+# stating its fidelity, so each carries the other.
+
+
+def _named(rows, id_col, name_col):
+    """`{id: name}` over the real rows."""
+    return {rid: _cell(row, name_col) for rid, row in _real(rows, id_col)}
+
+
+def _surrogate_chain(sid, reg):
+    """The chain of one surrogate: its cells, the parties it emulates with
+    their names, and the assumptions naming it in `RealizedBy` with their
+    text."""
+    surrogates = dict(_real(reg.get("surs") or (), "SUR-ID"))
+    if sid not in surrogates:
+        return None
+    row = surrogates[sid]
+    entities = _named(reg.get("exts") or (), "EXT-ID", "Name")
+    return {
+        "id": sid,
+        "kind": "surrogate",
+        "row": row,
+        "emulates": [(e, entities.get(e, "")) for e in refs(row.get("Emulates"))],
+        "named_by": [
+            (did, _cell(da, "Assumption"))
+            for did, da in _real(reg.get("das") or (), "DA-ID")
+            if sid in refs(da.get("RealizedBy"))
+        ],
+    }
+
+
+def assumption_chain(da_id, reg):
+    """What the approval brief shows for one assumption or surrogate, or None
+    when the registry does not declare `da_id`.
+
+    For an ASSUMPTION: its row, the requirements citing it (`da_citing_srs`) as
+    `(id, title, requirement text)`, the needs derived through them as
+    `(id, need text)` in first-seen order, each landing crossing as
+    `(crossing, entity, entity name)`, the cases naming it in
+    `Assumption-Refs` with its current `evidence_level`, its falsifier, and,
+    for a fidelity assumption, its surrogate's chain. For a SURROGATE: its row,
+    the parties it emulates as `(id, name)` and the assumptions naming it as
+    `(id, assumption text)`.
+
+    `reg` is a mapping of rows already read: `srs`, `needs` (the carrier's need
+    rows), `das`, `surs`, `exts`, `bifs` and `tcs`, and the evidence inputs
+    `evidence_level` reads, `records`, `suite_proof`, `digests` and `now`. A
+    missing key reads as empty. Nothing is read from disk here.
+
+    Implements: SR-203, LLR-240
+    """
+    if str(da_id).startswith("SUR-"):
+        return _surrogate_chain(da_id, reg)
+    das = dict(_real(reg.get("das") or (), "DA-ID"))
+    if da_id not in das:
+        return None
+    row = das[da_id]
+    srs = reg.get("srs") or ()
+    requirements = dict(_real(srs, "SR-ID"))
+    citing = da_citing_srs(srs).get(da_id, [])
+    need_text = {
+        nid: _cell(n, "need") for nid, n in _real(reg.get("needs") or (), "id")
+    }
+    served = _unique(
+        n for sid in citing for n in refs(requirements[sid].get("SN-Refs"))
+    )
+    crossings = {_cell(b, "B-ID"): _cell(b, "Entity") for b in reg.get("bifs") or ()}
+    entities = _named(reg.get("exts") or (), "EXT-ID", "Name")
+    tcs = reg.get("tcs") or ()
+    named = refs(row.get("RealizedBy"))
+    return {
+        "id": da_id,
+        "kind": "assumption",
+        "row": row,
+        "citing": [
+            (
+                sid,
+                _cell(requirements[sid], "Title"),
+                _cell(requirements[sid], "Requirement"),
+            )
+            for sid in citing
+        ],
+        "needs": [(nid, need_text.get(nid, "")) for nid in served],
+        "landing": [
+            (bid, crossings.get(bid, ""), entities.get(crossings.get(bid, ""), ""))
+            for bid in refs(row.get("EffectAt"))
+        ],
+        "cases": _citing_cases(da_id, tcs),
+        "level": evidence_level(
+            row,
+            tcs,
+            reg.get("records") or (),
+            reg.get("suite_proof"),
+            reg.get("digests") or {},
+            reg.get("now"),
+        ),
+        "falsifier": _cell(row, "Falsifier"),
+        "surrogate": _surrogate_chain(named[0], reg) if len(named) == 1 else None,
+    }

@@ -1179,3 +1179,354 @@ def test_a_released_rungs_re_attestation_renders_its_diff_in_the_collapsed_block
     assert "after: the AMENDED held text" in before
     assert "SR-001" not in inside
     assert _check(tmp_path).returncode == 0
+
+
+# --- TC-235: the assumption section of the approval brief (SR-203, LLR-240) ---
+# An assumption is approved for what it lets the requirements claim, so its
+# section leads with the requirements citing it and the needs they reach, then
+# where its outcome lands, its evidence and what would show it false. The tree
+# below carries no snapshot and no git, so the brief is deterministic.
+
+_GOLDEN_BRIEF = ROOT / "tests" / "golden" / "approval-brief-no-assumptions.txt"
+
+_ASSUMPTION_NEEDS = """[need.SN-001]
+status = "Approved"
+need = "An operator sees the verdict of every run."
+why = "A hidden verdict is acted on blind."
+priority = "M"
+acceptance = "The verdict is on screen."
+
+[need.SN-002]
+status = "Approved"
+need = "A vendor's answers are trusted only as far as they were checked."
+why = "An unchecked stand-in hides a broken integration."
+priority = "S"
+acceptance = "Every stand-in's fidelity is stated."
+"""
+
+_ASSUMPTION_SRS = """[requirement.SR-001]
+title = "Show the verdict"
+sn_refs = ["SN-001"]
+requirement = "The system shall print each run's verdict."
+rationale = "why"
+acceptance_criteria = "the verdict is printed"
+priority = "M"
+verification = "Test"
+status = "Approved"
+da_refs = ["DA-001"]
+
+[requirement.SR-002]
+title = "Call the vendor"
+sn_refs = ["SN-002"]
+requirement = "The system shall call the vendor's lookup."
+rationale = "why"
+acceptance_criteria = "the lookup is called"
+priority = "M"
+verification = "Test"
+status = "Approved"
+da_refs = ["DA-002"]
+"""
+
+_ASSUMPTION_TCS = """[test.TC-001]
+verifies = ["SR-001"]
+level = "Unit"
+method = "run once and read the console"
+tier = "Full"
+expected = "the verdict is printed"
+automated = "Yes"
+evidence = "tests/test_demo.py::t"
+status = "Approved"
+assumption_refs = ["DA-001"]
+"""
+
+_ASSUMPTION_FRAME = """[entity.EXT-001]
+name = "Operator"
+class = "operational"
+description = "The person running the system."
+status = "Approved"
+
+[entity.EXT-002]
+name = "Vendor lookup"
+class = "enabling"
+description = "The vendor's lookup service."
+status = "Approved"
+
+[boundary.B-01]
+entity = "EXT-001"
+direction = "out"
+carries = "the run's verdict"
+status = "Approved"
+
+[boundary.B-02]
+entity = "EXT-002"
+direction = "inout"
+carries = "the lookup"
+status = "Approved"
+"""
+
+_ASSUMPTIONS = """[assumption.DA-001]
+effect_at = ["B-01"]
+assumption = "The operator reads the console after each run."
+holds_when = "An operator is at the console."
+obstacle = "The run is unattended."
+falsifier = "A run whose verdict nobody acknowledged."
+accepted_risk = "An unattended run goes unread for a day."
+obstacle_hats = ["OPERATOR-HAT"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-002]
+effect_at = ["B-02"]
+assumption = "The recorded vendor stub answers as the vendor does."
+holds_when = "The vendor's schema is unchanged."
+obstacle = "The vendor changes its schema."
+falsifier = "A live answer the stub would not give."
+realized_by = "SUR-001"
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-003]
+effect_at = ["B-01"]
+assumption = "The console stand-in prints as the operator's terminal does."
+holds_when = "The terminal is a plain text console."
+obstacle = "A terminal that reflows lines."
+realized_by = "SUR-002"
+status = "Approved"
+standing = "active"
+
+[surrogate.SUR-001]
+name = "Vendor stub"
+emulates = ["EXT-002"]
+description = "A recorded replay of the vendor's lookup."
+status = "Drafted"
+
+[surrogate.SUR-002]
+name = "Console capture"
+emulates = ["EXT-001"]
+description = "A captured stdout standing in for the operator's terminal."
+status = "Drafted"
+"""
+
+
+def _assumption_tree(root, assumptions=_ASSUMPTIONS):
+    """A spine every row of which is approved, a frame of two crossings, and an
+    assumptions registry: DA-001 plain and Drafted, DA-002 a Drafted fidelity
+    assumption on SUR-001 (Drafted), and SUR-002 a lone Drafted surrogate that
+    the Approved DA-003 names. No snapshot and no git, so the spine window is
+    closed and the brief is deterministic."""
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "test").mkdir(parents=True, exist_ok=True)
+    files = {
+        req / "stakeholder-needs.toml": _ASSUMPTION_NEEDS,
+        req / "system-requirements.toml": _ASSUMPTION_SRS,
+        req / "low-level-requirements.toml": "",
+        req / "external.toml": _ASSUMPTION_FRAME,
+        req / "assumptions.toml": assumptions,
+        root / "docs" / "test" / "test-cases.toml": _ASSUMPTION_TCS,
+    }
+    for path, text in files.items():
+        path.write_text(text, encoding="utf-8", newline="\n")
+
+
+def _section(text, heading):
+    """The body of the `###` section whose heading starts `heading`, up to the
+    next heading of the same or a higher level."""
+    assert heading in text, text
+    body = text.split(heading, 1)[1]
+    return re.split(r"\n#{2,3} ", body, maxsplit=1)[0]
+
+
+def _in_order(body, *needles):
+    """Each needle is present, and each after the one before it."""
+    at = -1
+    for needle in needles:
+        found = body.find(needle, at + 1)
+        assert found > at, "{!r} missing or out of order in:\n{}".format(needle, body)
+        at = found
+
+
+def _current(root):
+    return (root / "docs" / "ratify" / "CURRENT.md").read_text(encoding="utf-8")
+
+
+def test_an_assumption_leads_with_its_citing_requirements_and_needs(tmp_path):
+    _assumption_tree(tmp_path)
+    proc = _brief(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    body = _section(_current(tmp_path), "### DA-001")
+    # Citing requirements with their text first, then the needs derived
+    # through them, the landing crossing with its party, the evidencing case
+    # with the current evidence level, and the falsifier.
+    _in_order(
+        body,
+        "SR-001",
+        "The system shall print each run's verdict.",
+        "SN-001",
+        "An operator sees the verdict of every run.",
+        "B-01",
+        "EXT-001",
+        "Operator",
+        "TC-001",
+        "specified",
+        "A run whose verdict nobody acknowledged.",
+    )
+    # Its own cells are shown.
+    for cell in (
+        "The operator reads the console after each run.",
+        "An operator is at the console.",
+        "The run is unattended.",
+        "active",
+    ):
+        assert cell in body, cell
+
+
+def test_every_cell_of_an_owing_row_appears_in_its_section(tmp_path):
+    """SR-203's "shows its cells": every non-empty cell of each owing assumption
+    and surrogate, status and pointer cells included, is on the page, whether
+    as its own bullet or in the structural line that carries it."""
+    _assumption_tree(tmp_path)
+    assert _brief(tmp_path).returncode == 0
+    text = _current(tmp_path)
+    path = tmp_path / "docs" / "requirements" / "assumptions.toml"
+    carrier = load_script("spine_carrier")
+    for id_col in ("DA-ID", "SUR-ID"):
+        for row in carrier.load(path, id_col, keep_examples=False):
+            if row["Status"] != "Drafted":
+                continue
+            body = _section(text, "### " + row[id_col])
+            for column, value in row.items():
+                if column == id_col:
+                    continue  # the section's own heading
+                for part in value.split(";"):
+                    assert part.strip() in body, (row[id_col], column, part)
+            assert "**Status**: Drafted" in body, row[id_col]
+    assert "OPERATOR-HAT" in _section(text, "### DA-001")
+
+
+def test_the_evidence_line_says_it_is_computed_at_render_time(tmp_path):
+    """The evidence level reads the current results and the clock, so its line
+    says so, and the freshness comparison leaves it out, as it does the
+    git-derived stamps: an expiring sample must not stale a brief whose rows did
+    not move."""
+    _assumption_tree(tmp_path)
+    assert _brief(tmp_path).returncode == 0
+    line = next(ln for ln in _current(tmp_path).splitlines() if "Evidence level" in ln)
+    assert "computed at render time" in line
+    trace = load_script("trace")
+    assert line.startswith(trace._DERIVED_STAMP_PREFIXES)
+
+
+def test_a_fidelity_assumption_is_shown_beside_its_surrogate(tmp_path):
+    _assumption_tree(tmp_path)
+    assert _brief(tmp_path).returncode == 0
+    body = _section(_current(tmp_path), "### DA-002")
+    _in_order(body, "SR-002", "SN-002", "B-02")
+    for needle in ("SUR-001", "Vendor stub", "EXT-002", "Vendor lookup"):
+        assert needle in body, needle
+
+
+def test_a_lone_surrogate_is_shown_with_the_assumptions_naming_it(tmp_path):
+    _assumption_tree(tmp_path)
+    assert _brief(tmp_path).returncode == 0
+    text = _current(tmp_path)
+    body = _section(text, "### SUR-002")
+    for needle in (
+        "Console capture",
+        "EXT-001",
+        "DA-003",
+        "The console stand-in prints as the operator's terminal does.",
+    ):
+        assert needle in body, needle
+    # DA-003 itself is approved and owes nothing, so it has no section.
+    assert "### DA-003" not in text
+
+
+def test_a_batch_holding_only_assumptions_is_rendered_and_freshness_checked(
+    tmp_path,
+):
+    """No spine row owes an act, so the spine window alone is closed; the
+    assumptions owing approval keep it open, and an edit to one makes the
+    committed brief stale."""
+    _assumption_tree(tmp_path)
+    assert _brief(tmp_path).returncode == 0
+    proc = _check(tmp_path)
+    assert proc.returncode == 0 and "is current" in proc.stderr, proc.stderr
+    changed = _ASSUMPTIONS.replace(
+        "The operator reads the console after each run.",
+        "The operator reads the console at the end of the day.",
+    )
+    _assumption_tree(tmp_path, changed)
+    proc = _check(tmp_path)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "STALE" in proc.stderr
+
+
+def _approve(tmp_path, scope):
+    return run_py(
+        [SCRIPTS / "trace.py", "--root", tmp_path, "--approve", scope],
+        cwd=tmp_path,
+    )
+
+
+def test_the_assumptions_scope_renders_every_assumption_owing_approval(tmp_path):
+    _assumption_tree(tmp_path)
+    proc = _approve(tmp_path, "assumptions")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    for heading in ("### DA-001", "### DA-002", "### SUR-001", "### SUR-002"):
+        assert heading in proc.stdout, heading
+    assert "### DA-003" not in proc.stdout
+
+
+def test_an_assumption_id_scope_renders_the_named_rows(tmp_path):
+    _assumption_tree(tmp_path)
+    proc = _approve(tmp_path, "DA-003,SUR-001")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "### DA-003" in proc.stdout and "### SUR-001" in proc.stdout
+    assert "### DA-001" not in proc.stdout
+    # An id the registry does not declare is refused, never rendered empty.
+    assert _approve(tmp_path, "DA-099").returncode != 0
+
+
+def test_the_assumptions_scope_with_nothing_owing_is_refused(tmp_path):
+    _assumption_tree(tmp_path, _ASSUMPTIONS.replace('"Drafted"', '"Approved"'))
+    proc = _approve(tmp_path, "assumptions")
+    assert proc.returncode != 0
+    assert "refusing" in (proc.stdout + proc.stderr)
+
+
+def _golden_brief_tree(root, assumptions):
+    _dial_split_tree(root)
+    if assumptions is not None:
+        (root / "docs" / "requirements" / "assumptions.toml").write_text(
+            assumptions, encoding="utf-8", newline="\n"
+        )
+
+
+def test_a_brief_with_no_assumption_owing_is_byte_identical_to_the_golden(tmp_path):
+    """The stored golden was rendered by the code before the assumption section
+    existed. Three trees must render it byte for byte: no assumptions registry,
+    the template's example rows only, and assumptions that owe nothing.
+
+    Regenerate the golden (only when a change to the brief's output is intended
+    and reviewed) with:
+    UPDATE_BRIEF_GOLDEN=1 python -m pytest tests/test_trace_briefs.py"""
+    import os
+
+    template = (
+        ROOT / "project-trajectory" / "registries" / "assumptions.template.toml"
+    ).read_text(encoding="utf-8")
+    approved = _ASSUMPTIONS.replace('"Drafted"', '"Approved"')
+    for label, assumptions in (
+        ("none", None),
+        ("template", template),
+        ("approved", approved),
+    ):
+        root = tmp_path / label
+        root.mkdir()
+        _golden_brief_tree(root, assumptions)
+        assert _brief(root).returncode == 0
+        text = (root / "docs" / "ratify" / "CURRENT.md").read_bytes()
+        if os.environ.get("UPDATE_BRIEF_GOLDEN") and label == "none":
+            _GOLDEN_BRIEF.write_bytes(text)
+        assert text == _GOLDEN_BRIEF.read_bytes(), label

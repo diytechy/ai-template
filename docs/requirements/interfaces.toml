@@ -1850,7 +1850,7 @@ notes = """cross-component crossing declared per the architecture rule: check_re
 [interface.IF-190]
 rationale = """The assumption tier's rules are a pure join layer beside the frame rules, so the checker composes them and stays their only caller; drawing the seam here keeps the checker growing by composition lines alone while every rule stays testable on in-memory rows. One tier entry point owns the tier's classified findings, keeping the choice of which class each one joins beside the rules that produce it; the two reach reports ride the same seam as advisories, which the checker composes into its warn pipe itself."""
 owner = "scripts/assumption_rules"
-requestors = ["scripts/trace"]
+requestors = ["scripts/trace", "scripts/traj_parse"]
 channel = "call"
 data = "assumption_tier_findings -> (frame, integrity, advisories), its six rules and the two reach reports; data: da_citing_srs, classify_srs, reaching_parties"
 version = "v1"
@@ -1969,7 +1969,7 @@ notes = """source - the module consumes only the shipped package's TOML string e
 [interface.IF-215]
 rationale = """A result the harness cannot produce needs one sanctioned writer, which judges a record before it exists: the same format and policy rules the checker applies to a record it finds, so a refused record is never written and a written one never fails the check. The module's second face is the checker's read of what judging the records needs - the records, the digests of the inputs as they stand, the suite's evidence record and each accepted risk's act - so the writer and the reader digest one way and the checker grows by composition lines alone."""
 owner = "scripts/record_observation"
-requestors = ["external:downstream adopter", "scripts/trace"]
+requestors = ["external:downstream adopter", "scripts/trace", "scripts/traj_parse"]
 channel = "cli"
 data = "--tc --outcome pass|fail --by [--expires] [--root]: one record or a REFUSED line and exit 1; evidence_inputs, inputs_digest for trace"
 version = "v1"
@@ -1980,7 +1980,7 @@ notes = """No tie-back: the argv comes IN from the adopter's own session, and th
 [interface.IF-216]
 rationale = """The observation records are judged, and turned into an assumption's evidence level, a falsification worklist and an accepted risk's reading, by the same pure join layer as the rest of the assumption tier; the checker reads every file and every commit these rules need and hands them in, so the rules stay testable on in-memory rows and the checker grows by composition lines alone."""
 owner = "scripts/assumption_rules"
-requestors = ["scripts/trace", "scripts/record_observation"]
+requestors = ["scripts/trace", "scripts/record_observation", "scripts/traj_parse"]
 channel = "call"
 data = "observation_evidence_findings -> (integrity, advisories); record_policy_problem, evidence_level, falsification_worklist, accepted_risk_state"
 version = "v1"
@@ -2020,3 +2020,25 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """Cross-component crossing: trace is CMP-006 and agent_common is CMP-008. The import is deferred into the brief's rendering, so every other trace run loads nothing from the coordinator's primitives. The shipped dial holds every rung, so a repo that has released none sees the brief it saw before."""
+
+[interface.IF-226]
+rationale = """An assumption is approved for what it lets the requirements claim, so the brief an approver reads must show, for each one, the requirements citing it, the needs they reach, where its outcome lands, its evidence and its falsifier. Gathering that chain in the pure join layer that judges the tier keeps the approver reading the same rows, joined the same way, as the checker judges, and keeps the brief's module growing by rendering lines alone."""
+owner = "scripts/assumption_rules"
+requestors = ["scripts/trace"]
+channel = "call"
+data = "assumption_chain(da_id, reg) -> {id, kind, row, citing, needs, landing, cases, level, falsifier, surrogate} or {id, kind, row, emulates, named_by}, or None"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """Rows and already-read evidence inputs in, one dict out, with no I/O: the brief reads the registries and the observation records once and hands them in. The same evidence level the checker reports is the one the brief shows."""
+
+[interface.IF-227]
+rationale = """A reviewer starting from an outcome needs to see what it relies on and whether that has been checked, and neither the per-assumption reports nor the approval brief starts from a need. Deriving the view from the registries and the current results in the dashboard's source layer, through the same classification and evidence rules the checker applies, keeps it from going stale the way a hand-written summary does and keeps the page and the checker agreeing."""
+owner = "scripts/traj_parse"
+requestors = ["scripts/gen_trajectory"]
+channel = "call"
+data = "need_assumptions(root) -> {need id: {assumptions: [{id, text, standing, level, citing}], coincident, unclassified}}, or {} (no real assumption)"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """The facade hands each need's entry to traj_views.need_assumption_block, which renders it into the need's detail panel. An empty map is the view's omit condition, so a project without the tier renders byte-identically. The evidence level reads the clock, so an observation's expiry moves the page."""

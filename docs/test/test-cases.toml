@@ -2408,7 +2408,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-235]
-verifies = ["SR-203", "LLR-240"]
+verifies = ["SR-203", "LLR-240", "IF-226"]
 level = "Integration"
 method = "The approval brief rendered for a scope holding an assumption, a fidelity assumption with its surrogate, and a lone surrogate. Each assumption's section lists its citing requirements with their text first, then the needs derived through them, each landing crossing with its entity, its evidencing cases with their current level, and its falsifier; the fidelity assumption appears beside its surrogate and the surrogate's emulated entities; the lone surrogate appears with the assumptions naming it. A batch holding only assumptions is rendered and its freshness is checked. A brief for a batch with no assumption or surrogate is byte-identical to the stored golden brief."
 tier = "Full"
@@ -2584,7 +2584,7 @@ status = "Approved"
 phase = 6
 
 [test.TC-251]
-verifies = ["SR-218", "LLR-258"]
+verifies = ["SR-218", "LLR-258", "IF-227"]
 level = "Integration"
 method = "The dashboard generated on a scaffold with needs, requirements, assumptions and records. Each need's detail lists every assumption its requirements cite, once, with its standing, its evidence level and the requirements citing it; a need whose requirements are all coincident says so; a need with an unclassified requirement shows the gap; a falsified assumption and one with no current evidence each carry a text label, asserted on the markup with styling removed. With no assumptions registry the generated page is byte-identical to the stored golden page."
 tier = "Full"

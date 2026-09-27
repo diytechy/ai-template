@@ -142,6 +142,10 @@ DECLARED_INPUTS = (
     ("docs/requirements/external", (".toml", ".csv")),
     ("docs/requirements/components", (".toml", ".csv")),
     ("docs/test/test-cases", (".toml", ".csv")),
+    # THE ASSUMPTIONS REGISTRY (SR-204): the derivation reads its assumption
+    # and surrogate tiers from their first approval. TOML is its one carrier.
+    # The stakeholder tier needs no line: it lives in the needs file above.
+    ("docs/requirements/assumptions", (".toml",)),
     # `process.toml` is DELIBERATELY NOT an input (owner ruling 2026-08-21,
     # amending the plan's §2 list): the derivation does not read it, and the
     # original "over-inclusion costs milliseconds" argument priced the wrong

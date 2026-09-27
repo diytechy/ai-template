@@ -5,8 +5,8 @@ The spine/OKF/arch-map/gate readers, the one subprocess capture seam
 WI-280 split of gen_trajectory.py; the facade re-exports, so consumers are
 unchanged.
 
-Contracts: IF-052 — the seam this module declares (process.md §8; row of
-record in docs/requirements/interfaces.toml).
+Contracts: IF-052, IF-227 — the seams this module declares (process.md §8;
+rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-052: the dashboard's Process tab reads the recorded derived stage
     through `_stage_value(root)`, which the gen_trajectory facade re-exports
@@ -19,6 +19,17 @@ Contract IF-052: the dashboard's Process tab reads the recorded derived stage
     fresh derivation: this module is a source for a generated artifact whose
     freshness is gated elsewhere, so the page and the file it cites always
     describe one commit.
+Contract IF-227: the per-need assumption view's data, which the gen_trajectory
+    facade reads and hands to `traj_views.need_assumption_block`.
+    `need_assumptions(root)` returns `{need id: {"assumptions", "coincident",
+    "unclassified"}}` for every need, each assumption a dict of `id`, `text`,
+    `standing`, `level` (one of `assumption_rules.EVIDENCE_LEVELS`) and
+    `citing` (the need's requirement ids citing it), listed once in
+    first-cited order; `coincident` is a bool and `unclassified` a list of
+    requirement ids. It returns `{}` when the assumptions registry is absent or
+    holds only the template's `-000` rows, which is the view's omit condition,
+    so a project without the tier renders byte-identically. The evidence level
+    is read over the current results, with the clock, on every render.
 """
 
 import json
@@ -38,6 +49,15 @@ except ImportError:  # pragma: no cover - in-process fallback
 # repair, and it runs before this module is ever imported.
 import check_trajectory as ct
 from kitlib import stage as _kitstage
+
+# Siblings: the assumption tier's pure rules and the one reader of what judging
+# an observation needs (IF-190, IF-215, IF-216). The per-need assumption view
+# (SR-218) takes an assumption's classification and evidence level from the
+# rules the checker applies, so the page and the checker cannot disagree about
+# what a requirement relies on or how well it is evidenced. Plain imports for
+# the same reason as `ct` above.
+import assumption_rules
+import record_observation
 
 # Sibling: the arch-map AST walk — sw_modules' source since WI-455 retired the
 # committed docs/architecture.md MODULE MAP block it used to parse back
@@ -133,6 +153,74 @@ def _spine(root, skip_example=False):
         rows("docs/requirements/low-level-requirements.toml", "LLR-ID", "LLR-"),
         rows("docs/test/test-cases.toml", "TC-ID", "TC-"),
     )
+
+
+def _needs_srs(srs):
+    """`{need id: [requirement rows]}`: the requirements naming each need in
+    `SN-Refs`, in row order."""
+    out = {}
+    for row in srs:
+        for nid in ct._split_refs(row.get("SN-Refs", "")):
+            out.setdefault(nid, []).append(row)
+    return out
+
+
+def need_assumptions(root):
+    """The per-need assumption view's data (SR-218): `{need id: {"assumptions",
+    "coincident", "unclassified"}}` for every need, or `{}` when the registry
+    holds no real assumption, which is how a project that has not adopted the
+    tier gets no section at all.
+
+    `assumptions` lists, once each and in first-cited order, every declared
+    assumption the need's requirements cite, as `{id, text, standing, level,
+    citing}`: its validity (`Standing`), its evidence level from
+    `assumption_rules.evidence_level` over the current results, and the need's
+    requirements citing it. `coincident` is true when the need has
+    requirements and every one is coincident; `unclassified` names each that
+    neither cites an assumption nor records why it needs none
+    (`assumption_rules.classify_srs`). Derived from the registries and the
+    results on every render, never kept.
+
+    Implements: SR-218, LLR-258"""
+    req = root / "docs" / "requirements"
+    das = spine_carrier.load(req / "assumptions.toml", "DA-ID", keep_examples=False)
+    if not das:
+        return {}
+    srs, _llrs, tcs = _spine(root, skip_example=True)
+    bifs = spine_carrier.load(req / "external.toml", "B-ID", keep_examples=False)
+    inputs = record_observation.evidence_inputs(root, tcs, das, bifs)
+    evidence = (inputs["records"], inputs["suite_proof"], inputs["digests"])
+    declared = {r["DA-ID"]: r for r in das}
+    classes = assumption_rules.classify_srs(srs, das)
+    by_need = _needs_srs(srs)
+    out = {}
+    for need in _sn_rows(root):
+        rows = by_need.get(need["id"], [])
+        cited = {}
+        for row in rows:
+            for did in ct._split_refs(row.get("DA-Refs", "")):
+                if did in declared:
+                    cited.setdefault(did, []).append(row["SR-ID"])
+        out[need["id"]] = {
+            "assumptions": [
+                {
+                    "id": did,
+                    "text": (declared[did].get("Assumption") or "").strip(),
+                    "standing": (declared[did].get("Standing") or "").strip(),
+                    "level": assumption_rules.evidence_level(
+                        declared[did], tcs, *evidence
+                    ),
+                    "citing": citing,
+                }
+                for did, citing in cited.items()
+            ],
+            "coincident": bool(rows)
+            and all(classes.get(r["SR-ID"]) == "coincident" for r in rows),
+            "unclassified": [
+                r["SR-ID"] for r in rows if classes.get(r["SR-ID"]) == "unclassified"
+            ],
+        }
+    return out
 
 
 def spine_stats(root):

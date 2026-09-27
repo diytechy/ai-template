@@ -67,7 +67,9 @@ an SR-id list) to stdout or --out and runs no checks (WI-146); the reserved scop
 `modified` (WI-316) emits the re-attestation brief instead — per-cell
 before/after for every row owing a human act, against its copy in the
 `docs/archive/last_approved/` snapshot (`baseline_snapshot.py`); regenerate it
-to `docs/ratify/CURRENT.md`, the one file this path ever rewrites. `--mint-
+to `docs/ratify/CURRENT.md`, the one file this path ever rewrites; the
+reserved scope `assumptions`, or a DA-/SUR-id list, emits the assumption
+section alone, the one both briefs carry (SR-203). `--mint-
 approval-brief SLUG` (WI-503) copies CURRENT.md to a dated, IMMUTABLE
 `docs/ratify/<date>-SLUG.md` — the only sanctioned writer of a dated brief;
 `check.py --approval-immutable` refuses any other commit that touches one. Warn-only
@@ -228,6 +230,7 @@ try:
 
     from assumption_rules import interface_bridge_findings, obstacle_hat_findings
     from assumption_rules import observation_evidence_findings
+    from assumption_rules import assumption_chain
     import record_observation
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
@@ -277,6 +280,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 
     from assumption_rules import interface_bridge_findings, obstacle_hat_findings
     from assumption_rules import observation_evidence_findings
+    from assumption_rules import assumption_chain
     import record_observation
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
@@ -3439,10 +3443,10 @@ def _scope_srs(scope, srs):
     if not matched:
         raise SystemExit(
             "trace: --approve {!r} matches no SR — refusing to emit an empty "
-            "brief. A scope is an SR-id list, a phase tag, or one of the "
-            "reserved scopes ({}); an empty brief reads as 'nothing to approve' "
-            "to the human about to sign it.".format(
-                scope, ", ".join(sorted(_RESERVED_APPROVAL_SCOPES))
+            "brief. A scope is an SR-id list, a DA/SUR-id list, a phase tag, or "
+            "one of the reserved scopes ({}); an empty brief reads as 'nothing "
+            "to approve' to the human about to sign it.".format(
+                scope, ", ".join(sorted(_RESERVED_APPROVAL_SCOPES | {ASSUMPTION_SCOPE}))
             )
         )
     return matched
@@ -3972,7 +3976,13 @@ def current_approval_brief(root):
 # Excluded from the freshness comparison, and named ONCE here so the renderer and
 # the gate can never disagree about which lines are derived (the renderer's own
 # note points back at this constant).
-_DERIVED_STAMP_PREFIXES = ("_Baseline: ", "_Approval provenance: ")
+# The assumption section's evidence line is derived from current results rather
+# than from the registry, so it is excluded on the same terms (SR-203).
+_DERIVED_STAMP_PREFIXES = (
+    "_Baseline: ",
+    "_Approval provenance: ",
+    "_Evidence level now: ",
+)
 
 
 def _without_derived_stamps(text):
@@ -4021,7 +4031,9 @@ def approval_check(root, srs, llrs, tcs, out_path):
     if not out_path.exists():
         return 0, "no brief at {} — nothing to gate".format(out_path)
     model = reattest_model(root, srs, llrs, tcs)
-    if not model:
+    # An assumption owing an approval keeps the window open (SR-203), so a
+    # batch holding only assumptions is freshness-checked like any other.
+    if not model and not assumptions_owing(root, *_assumption_rows(root)):
         return 0, "no row owes an approval or a re-attest — the window is closed"
     try:
         with out_path.open("r", encoding="utf-8", newline="") as fh:
@@ -4324,6 +4336,201 @@ def _entry_lines(entry, srs_by_id):
     return out
 
 
+# --- the assumption section of the approval brief (SR-203) --------------------
+# An assumption is approved for what it lets the requirements claim, so its
+# section leads with the requirements citing it and the needs they reach. It
+# owes an approval the way a spine row does: it is `Drafted`, or it claims
+# approval and its approved cells moved from the snapshot copy. The chain is
+# `assumption_rules.assumption_chain`'s (IF-226), so the approver reads the rows
+# the checker judges; what is here is the owing test and the markdown.
+
+ASSUMPTIONS_REL = "docs/requirements/assumptions.toml"
+# The reserved `--approve` scope that renders the assumption section alone.
+ASSUMPTION_SCOPE = "assumptions"
+_ASSUMPTION_ID = re.compile(r"(?:DA|SUR)-\d+", re.IGNORECASE)
+# The evidence level is derived from current results and the clock, which move on
+# commits that move no row (a sample expiring, the suite's record binding a new
+# tree), so its line is left out of the freshness comparison, like the
+# git-derived stamps, and says it was computed when the brief was rendered.
+_EVIDENCE_NOW = "_Evidence level now: "
+# The cells each tier's section shows in a line of their own rather than in its
+# cell list (SR-203 "shows its cells": every other non-empty cell is listed).
+_DA_SHOWN = frozenset({"DA-ID", "EffectAt", "Falsifier"})
+_SUR_SHOWN = frozenset({"SUR-ID", "Name", "Emulates", "Description"})
+
+
+def _cell_bullets(row, shown):
+    """`**Cell**: value` for every non-empty cell of `row` not in `shown`, in
+    the row's own order, status and pointer cells included."""
+    return [
+        "**{}**: {}".format(c, _cell(row, c))
+        for c in row
+        if c not in shown and _cell(row, c)
+    ]
+
+
+def _assumption_rows(root):
+    """`(das, surs)`: the assumptions registry's two tiers, examples dropped."""
+    path = Path(root) / ASSUMPTIONS_REL
+    return (
+        spine_carrier.load(path, "DA-ID", keep_examples=False),
+        spine_carrier.load(path, "SUR-ID", keep_examples=False),
+    )
+
+
+def assumptions_owing(root, das, surs, snapshot=_UNSET):
+    """`[(id, why, drifted cells)]` for each assumption and surrogate owing an
+    approval, assumptions first: a `Drafted` row, and one claiming approval
+    whose approved cells differ from its snapshot copy (`drifted_cells`)."""
+    if snapshot is _UNSET:
+        snapshot = baseline_snapshot.load_all(root)
+    out = []
+    for id_col, rows in (("DA-ID", das), ("SUR-ID", surs)):
+        base = baseline_snapshot.rows_for(snapshot, ASSUMPTIONS_REL, id_col)
+        for row in rows:
+            moved = baseline_snapshot.drifted_cells(ASSUMPTIONS_REL, id_col, row, base)
+            if is_drafted(row) or moved:
+                why = "Drafted, never approved" if is_drafted(row) else "DRIFTED"
+                cells = [(name, b, a) for name, (b, a) in sorted(moved.items())]
+                out.append((_cell(row, id_col), why, cells))
+    return out
+
+
+def _listed(label, items):
+    """A bold label, then one bullet per item, or `(none)`, each block set off
+    by a blank line so no renderer folds the next one into the list."""
+    bullets = ["- " + i for i in items] or ["- (none)"]
+    return ["**{}**".format(label), ""] + bullets + [""]
+
+
+def _assumption_lines(chain):
+    """An assumption's body: citing requirements and the needs they reach
+    first, then its landing crossings, its cells, its evidence and falsifier,
+    and a fidelity assumption's surrogate beside it."""
+    row, sur = chain["row"], chain["surrogate"]
+    out = _listed("Relied on by.", ["{} — {}: {}".format(*c) for c in chain["citing"]])
+    out += _listed("Serving.", ["{} — {}".format(*n) for n in chain["needs"]])
+    out += _listed(
+        "Lands on.",
+        ["{} — {} ({})".format(b, e or "no entity", n) for b, e, n in chain["landing"]],
+    )
+    # `RealizedBy` is shown by the surrogate line when it resolves to one
+    # declared surrogate, and listed as a cell otherwise.
+    shown = _DA_SHOWN | ({"RealizedBy"} if sur else set())
+    out += _listed("Cells.", _cell_bullets(row, shown))
+    out += [
+        "**Evidenced by.** {}".format(", ".join(chain["cases"]) or "no test case"),
+        "",
+        "{}{} (computed at render time from the current results and the"
+        " clock; not compared by the freshness check)._".format(
+            _EVIDENCE_NOW, chain["level"]
+        ),
+        "",
+        "**Falsifier.** {}".format(chain["falsifier"] or "(none declared)"),
+    ]
+    if sur:
+        parties = ", ".join("{} ({})".format(*e) for e in sur["emulates"])
+        out += [
+            "",
+            "**Surrogate.** {} — {}, emulating {}".format(
+                sur["id"], _cell(sur["row"], "Name"), parties or "no party"
+            ),
+        ]
+    return out
+
+
+def _surrogate_lines(chain):
+    """A surrogate's body: what it is, whom it answers for, and the assumptions
+    stating its fidelity."""
+    row = chain["row"]
+    return (
+        ["**Name.** {}".format(_cell(row, "Name")), ""]
+        + _listed("Emulates.", ["{} ({})".format(*e) for e in chain["emulates"]])
+        + ["**Description.** {}".format(_cell(row, "Description")), ""]
+        + _listed("Cells.", _cell_bullets(row, _SUR_SHOWN))
+        + _listed("Named by.", ["{} — {}".format(*d) for d in chain["named_by"]])
+    )
+
+
+def assumption_brief_lines(root, srs, tcs, ids=None):
+    """The approval brief's section for assumptions and surrogates (SR-203):
+    one `###` block per row owing an approval (`assumptions_owing`), or per row
+    `ids` names, each built from `assumption_rules.assumption_chain`. `[]` when
+    none is owed, so a brief for a batch without one is unchanged. A named id
+    the registry does not declare REFUSES the run, as an unmatched scope does.
+
+    Implements: SR-203, LLR-240"""
+    das, surs = _assumption_rows(root)
+    if not das and not surs:
+        owing = []
+    elif ids is None:
+        owing = assumptions_owing(root, das, surs)
+    else:
+        owing = [(rid, "", []) for rid in ids]
+    if not owing:
+        return []
+    reg = {"srs": srs, "tcs": tcs, "das": das, "surs": surs}
+    reg["exts"], reg["bifs"] = (
+        spine_carrier.load(Path(root) / "docs/requirements/external.toml", c, False)
+        for c in ("EXT-ID", "B-ID")
+    )
+    reg["needs"] = spine_carrier.needs_for_root(Path(root))
+    reg.update(record_observation.evidence_inputs(root, tcs, das, reg["bifs"]))
+    lines = [
+        "## Assumptions and surrogates {}".format(
+            "owing an approval" if ids is None else "named in the scope"
+        ),
+        "",
+    ]
+    for rid, why, cells in owing:
+        chain = assumption_chain(rid, reg)
+        if chain is None:
+            raise SystemExit(
+                "trace: --approve names {}, which the assumptions registry does "
+                "not declare — refusing to emit a brief without it".format(rid)
+            )
+        lines += ["### {}{}".format(rid, " — " + why if why else ""), ""]
+        if cells:
+            lines += _cell_diff_lines(cells, frozenset(c[0] for c in cells)) + [""]
+        body = _surrogate_lines if chain["kind"] == "surrogate" else _assumption_lines
+        lines += body(chain) + [""]
+    return lines
+
+
+def _approval_body(scope, reserved, root, reg):
+    """The `--approve` view's lines: the re-attestation brief for a reserved
+    scope; the assumption section for the `assumptions` scope or a list of
+    `DA-`/`SUR-` ids, after the hierarchy of any other ids in the list; and
+    the hierarchy view otherwise. An assumption scope with nothing to render is
+    REFUSED, as an unmatched SR scope is."""
+    if reserved:
+        return reattest_lines(root, reg.srs, reg.llrs, reg.tcs)
+    named = [t.upper() for t in refs(scope) if _ASSUMPTION_ID.fullmatch(t)]
+    rest = [t for t in refs(scope) if not _ASSUMPTION_ID.fullmatch(t)]
+    if scope.strip().lower() != ASSUMPTION_SCOPE and not named:
+        return approval_lines(
+            scope, reg.sn_ids, reg.srs, reg.llrs, reg.tcs, reg.sn_meta
+        )
+    head = [
+        "# Approval hierarchy — scope: {}".format(scope),
+        "",
+        "_GENERATED by `trace.py --approve {}` from the registries — do not"
+        " hand-edit._".format(scope),
+        "",
+    ]
+    if rest and scope.strip().lower() != ASSUMPTION_SCOPE:
+        head = approval_lines(
+            ",".join(rest), reg.sn_ids, reg.srs, reg.llrs, reg.tcs, reg.sn_meta
+        ) + [""]
+    section = assumption_brief_lines(root, reg.srs, reg.tcs, ids=named or None)
+    if not section:
+        raise SystemExit(
+            "trace: --approve {!r}: no assumption or surrogate owes an approval — "
+            "refusing to emit an empty brief".format(scope)
+        )
+    return head + section
+
+
 def reattest_lines(root, srs, llrs, tcs):
     """Markdown for the re-attestation brief (`--approve modified`, WI-316): one
     section per SR owing a human act (grouped by SR for reading) with per-cell
@@ -4413,6 +4620,10 @@ def reattest_lines(root, srs, llrs, tcs):
     census = offspine_census_lines(root)
     if census:
         lines += census + [""]
+    # SR-203: the assumptions and surrogates owing an approval, rendered in both
+    # arms for the census's reason: a batch holding only assumptions still has
+    # something to sign while the spine window is closed.
+    lines += assumption_brief_lines(root, srs, tcs)
     if not model:
         lines.append(
             "_No spine row differs from its `{}` copy, and no row awaits a first"
@@ -6229,7 +6440,10 @@ def main():
         "(e.g. 'SR-052,SR-053'); a DevStg-Reqs/DevStg-Tests brief links this instead of hand-copying "
         "rows (WI-146). The reserved scope 'modified' (WI-316) emits the "
         "RE-ATTESTATION brief instead: per-cell before/after for every row owing "
-        "a human act, against its copy in docs/archive/last_approved/. A scope "
+        "a human act, against its copy in docs/archive/last_approved/. The "
+        "reserved scope 'assumptions', or a DA-/SUR-id list, emits the "
+        "assumption section: each assumption or surrogate owing an approval, "
+        "or each one named, with the requirements citing it first. A scope "
         "matching nothing is REFUSED, never rendered empty. Prints to stdout "
         "unless --out is given; runs no checks",
     )
@@ -6316,12 +6530,7 @@ def main():
             if code:
                 sys.exit(code)
             return 0
-        if reserved:
-            body = reattest_lines(Path(args.root), reg.srs, reg.llrs, reg.tcs)
-        else:
-            body = approval_lines(
-                args.approve, reg.sn_ids, reg.srs, reg.llrs, reg.tcs, reg.sn_meta
-            )
+        body = _approval_body(args.approve, reserved, Path(args.root), reg)
         text = "\n".join(body) + "\n"
         if args.out:
             out_path = Path(args.out)

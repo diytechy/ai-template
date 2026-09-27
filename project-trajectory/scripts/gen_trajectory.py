@@ -153,6 +153,7 @@ else:
         _spine,
         cmp_rows,
         frame_context,
+        need_assumptions,
         project_name,
         project_vision,
         read_sns,
@@ -221,6 +222,7 @@ else:
         arch_icicle,
         dag_svg,
         flows_block,
+        need_assumption_hooks,
         sw_containment,
         sw_graph,
         when_view,
@@ -636,7 +638,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         + '<h3>'+esc(id)+(d.title?' — '+esc(d.title):'')+'</h3>'
         + (d.status&&d.tier?'<p class="status">'+esc(d.status)+'</p>':'')
         + '<p class="body">'+esc(d.body)+'</p>'
-        + (d.meta?'<p class="meta">'+esc(d.meta)+'</p>':'');
+        + (d.meta?'<p class="meta">'+esc(d.meta)+'</p>':'')$need_da_js;
     }
     /* A3 (WI-313 rework): these maps are SUBSTITUTED from TIER_FILL/STATUS_FILL,
        never hand-copied — the adversarial review found the previous literals
@@ -863,6 +865,11 @@ def build_html(root, wis):
     stats = snapshot.spine
     workstreams = len({w["workstream"] for w in wis})
     arch, arch_details, arch_desc = arch_icicle(root)
+    # SR-218: each need's relied-on assumptions join its detail record; the
+    # style and script the block needs come back empty when no block exists.
+    need_da_style, need_da_js = need_assumption_hooks(
+        arch_details, need_assumptions(root)
+    )
     dag, wi_details = dag_svg(wis)
     # WI-087: the When view tiers into phase -> workstream -> work-item block
     # layers once a tier holds more than 3 members; at <= 3 phases and <= 3
@@ -987,7 +994,8 @@ def build_html(root, wis):
         wi_cancelled_clause=wi_cancelled_clause,
         wi_active_line=wi_active_line,
         next_work=_next_work_html(root),
-        arch_svg=arch,
+        arch_svg=arch + need_da_style,
+        need_da_js=need_da_js,
         arch_details=j(arch_details),
         arch_desc=j(arch_desc),
         dag_svg=dag_view,

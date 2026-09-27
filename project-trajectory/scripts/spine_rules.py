@@ -35,8 +35,11 @@ nothing runs it — there is no `main()`.
 THE RUNG FALL-THROUGH, in one sentence each. `spine_stage` returns the LOWEST
 rung anything still holds open, so the answer is "what is in work":
 
-  0 `DevStg-Needs`      a Drafted need, or an approved need no SR answers.
-  1 `DevStg-Boundary`   a declared external frame with an unsettled crossing.
+  0 `DevStg-Needs`      a Drafted need, an approved need no SR answers, or a
+                        Drafted stakeholder once one stakeholder is approved.
+  1 `DevStg-Boundary`   a declared external frame with an unsettled crossing,
+                        or a Drafted assumption or surrogate once one row of
+                        that tier is approved (`tier_active`).
   2 `DevStg-Reqs`       a Drafted SR.
   3 `DevStg-Arch`       a declared partition with an unsettled component.
   4 `DevStg-LLReqs`     an SR with no LLR (unless its Verification is
@@ -149,6 +152,8 @@ sn_draft_ids = spine_carrier.draft_ids_from_text
 # are SHARED VOCABULARY this module's readers spell `spine_rules.is_approved`,
 # not private helpers of a rung. Under the pins that was an argument that had to
 # be made; now it is just what a re-export is for.
+# `is_approved` has a caller here again since `tier_active` (SR-204): the first
+# APPROVED row is what switches a first-approval tier on.
 
 
 # `is_planned` WAS DELETED AT D-9 STEP 5 (not re-keyed) with the word it read:
@@ -343,6 +348,33 @@ CMP_MATURITY = {
 # active` is the declared shorthand — so it clears.
 CMP_STANDING_CLEARS = frozenset({"active", "deprecated"})
 
+# THE THREE TIERS READ FROM THEIR FIRST APPROVAL (SR-204): the domain
+# assumptions and the surrogates in `assumptions.toml`, read at the boundary
+# rung, and the stakeholders in the needs file, read at the needs rung. Each is
+# its own table rather than a share of `SPINE_MATURITY`, for `CMP_MATURITY`'s
+# reason: three registries whose vocabularies coincide today, not one with
+# three names. They speak the spine's closed `Status` words, which the checker
+# enforces on each (`ENUM_FIELDS["STK"]`, and `assumption_rules` for the two
+# tiers of the assumptions registry).
+# Implements: SR-204, LLR-241
+DA_MATURITY = {
+    "drafted": DRAFTED,
+    "approved": APPROVED,
+    "founded": FOUNDED,
+}
+# Implements: SR-204, LLR-241
+SUR_MATURITY = {
+    "drafted": DRAFTED,
+    "approved": APPROVED,
+    "founded": FOUNDED,
+}
+# Implements: SR-204, LLR-241
+STK_MATURITY = {
+    "drafted": DRAFTED,
+    "approved": APPROVED,
+    "founded": FOUNDED,
+}
+
 
 def _standing_holds_rung(value):
     """Does this CMP `standing` cell hold the architecture rung open?
@@ -528,6 +560,59 @@ def arch_incomplete(cmps, have_registry):
     )
 
 
+def tier_active(rows):
+    """Is this tier READ by the stage yet? True once any of its rows reads
+    Approved, matched case-insensitively. A row reading Founded, or anything
+    else, does not switch the tier on: the requirement names the first
+    APPROVED row as the switch, and widening it to another status would be an
+    amendment of that requirement, not a reading of it.
+
+    THE SWITCH IS THE ROWS, AND NO SETTING EXISTS (SR-204). A tier holding only
+    Drafted rows reads, to its rung, as a frame declared and not approved, so
+    reading it before its first approval would lower the derived stage of every
+    committed tree between the registry's arrival and its first signing.
+    Reading it from its first approved row puts the switch in the commit that
+    approves the first batch, and there is nothing beside the rows that could
+    disagree with them: `docs/process.toml` is kept out of the stage's inputs,
+    and no registry carries a file-level key.
+
+    Implements: SR-204, LLR-241"""
+    return any(is_approved(r) for r in rows)
+
+
+def _tier_holds(rows, table):
+    """An ACTIVE tier with a row at DRAFTED maturity: the tier is read, and a
+    row of it is still in work at its rung."""
+    return tier_active(rows) and any(
+        _caps(_maturity(r.get("Status"), table)) for r in rows
+    )
+
+
+def assumption_incomplete(das, surs):
+    """The boundary rung's reading of the assumptions registry: an active
+    assumption tier or an active surrogate tier holding a Drafted row.
+
+    EACH TIER IS READ ON ITS OWN, though the two share one file. An approved
+    assumption beside a Drafted surrogate leaves the surrogate tier inactive,
+    and the reverse: the first approval in a shared file must not answer for
+    every other tier in it, or two readers of one file would disagree about
+    what a status covers. The rows arrive already split by id column
+    (`load_spine`), so this never sees one tier's rows as the other's.
+
+    Implements: SR-204, LLR-241"""
+    return _tier_holds(das, DA_MATURITY) or _tier_holds(surs, SUR_MATURITY)
+
+
+def stakeholders_incomplete(stks):
+    """The needs rung's reading of the stakeholder list: an active stakeholder
+    tier holding a Drafted row. The stakeholders share the needs file and are
+    loaded by their own id column, so a stakeholder's status never joins the
+    needs' draft set, and a need's status never activates this tier.
+
+    Implements: SR-204, LLR-241"""
+    return _tier_holds(stks, STK_MATURITY)
+
+
 def spine_stage(
     srs,
     llrs,
@@ -540,6 +625,9 @@ def spine_stage(
     have_cmps=False,
     cited_srs=None,
     evidence_passed=False,
+    das=(),
+    surs=(),
+    stks=(),
 ):
     """The rung currently IN WORK — the STATE axis (a repo is *in* a stage), and
     the one a human-approval level is compared against. Returns a
@@ -629,14 +717,21 @@ def spine_stage(
     for the bar's own arithmetic and would read as "everything is finished" here,
     which is precisely backwards. And an APPROVED-BUT-UNCITED SN is DevStg-Needs,
     applying WI-401's coverage rung on the same subset `_raw_level` uses: a need
-    with no requirement answering it is unfinished work at the needs rung."""
+    with no requirement answering it is unfinished work at the needs rung.
+
+    `das`, `surs` and `stks` ARE THE THREE TIERS READ FROM THEIR FIRST APPROVAL
+    (SR-204), repo-global like the frame rows: an active stakeholder tier with
+    a Drafted row holds DevStg-Needs, and an active assumption or surrogate
+    tier with a Drafted row holds DevStg-Boundary. A tier with no approved row
+    holds nothing (`tier_active`). All three default empty, which is every
+    caller's reading before the tiers existed."""
     bifs = bifs or []
     cmps = cmps or []
     if any(u in sn_draft for u in sn_ids) or not sn_ids:
         return STAGE_NEEDS
-    if not srs:
+    if not srs or stakeholders_incomplete(stks):
         return STAGE_NEEDS
-    if boundary_incomplete(bifs, have_bifs):
+    if boundary_incomplete(bifs, have_bifs) or assumption_incomplete(das, surs):
         return STAGE_BOUNDARY
     if any(is_drafted(r) for r in srs):
         return STAGE_REQS
@@ -756,6 +851,18 @@ def load_spine(docs):
     # the runnable bar is computed from exactly the rows it always was.
     bifs, have_bifs = _frame_rows(docs, "external.toml", "B-ID")
     cmps, have_cmps = _frame_rows(docs, "components.toml", "CMP-ID")
+    # THE THREE TIERS READ FROM THEIR FIRST APPROVAL (SR-204), each loaded by
+    # its OWN id column: the two tiers of the assumptions registry apart, and
+    # the stakeholders apart from the needs whose draft set is read above, so no
+    # tier's status ever answers for another sharing its file. No applies-when
+    # flag travels with them: an absent registry and one holding no approved
+    # row mean the same thing here, a tier the stage does not read yet.
+    assumptions = docs / "requirements" / "assumptions.toml"
+    das = spine_carrier.load(assumptions, "DA-ID", keep_examples=False)
+    surs = spine_carrier.load(assumptions, "SUR-ID", keep_examples=False)
+    stks = spine_carrier.load(
+        docs / "requirements" / "stakeholder-needs.toml", "STK-ID", keep_examples=False
+    )
     return {
         "srs": srs,
         "llrs": llrs,
@@ -766,4 +873,7 @@ def load_spine(docs):
         "cmps": cmps,
         "have_bifs": have_bifs,
         "have_cmps": have_cmps,
+        "das": das,
+        "surs": surs,
+        "stks": stks,
     }

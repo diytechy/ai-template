@@ -264,3 +264,23 @@ are marked as such.
     instead of passing in silence. It was a two-line edit, so the integrator
     made it at landing. IF-220's consumer removal and IF-215's endpoint were
     judged right.
+    WI-633's fix round (`sol-wi633-fix.md`) was SOUND. Its one minor, a test
+    docstring still saying "Approved or above", was reworded by the
+    integrator at landing.
+
+22. **WI-638's fix round — SOL, and the coordinator's remedy withdrawn.**
+    The builder stopped on the blocker, and Sol agreed. SR-215's acceptance,
+    LLR-254's detail and TC-247's method require filing every case with no
+    result, and judging a case with no inputs by expiry and absence. So the
+    coordinator's "not due without a lifetime" remedy (ruling 19) needs an
+    amendment of those three approved rows, or the five cases (TC-036,
+    TC-055, TC-209, TC-210, TC-211) need declared `inputs` and `max_age`.
+    Sol also found three defects in the fix:
+    - a committed symlink escapes the lexical `input_escape`;
+    - the checkpoint revision can be extracted twice;
+    - the new always-on declaration failure exceeds approved LLR-233 and
+      TC-228, whose failure list names no invalid input path, so the failure
+      needs an amendment too. It also rejects a non-escaping `docs/../src`.
+    WI-638 does not land this session, at the owner's direction to finish
+    only what was in flight. Its branch `build/wi-638` (f40373e3) carries
+    the work, and its amendments join the next session's spine-acts batch.

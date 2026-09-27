@@ -308,6 +308,101 @@ def arch_icicle(root):
     )
 
 
+# --- the per-need assumption view (SR-218) -----------------------------------
+# A reviewer starting from an outcome asks what it relies on and whether that
+# has been checked; the per-assumption reports and the approval brief answer
+# other questions. So each need's detail panel in the spine view lists the
+# assumptions its requirements cite, from `traj_parse.need_assumptions`. The
+# style and the one line of script the block needs are emitted only when a
+# block exists, so a project without the tier renders byte-identically.
+
+# The labels a falsified premise, and one relied on with no current evidence,
+# carry in words, so the signal survives for a reader who does not see color.
+FALSIFIED_LABEL = "FALSIFIED"
+UNEVIDENCED_LABEL = "NO CURRENT EVIDENCE"
+# The evidence levels that are no current evidence: nothing could evidence it,
+# or nothing evidencing it has a current passing result.
+_UNEVIDENCED = frozenset({"assumed", "specified"})
+
+NEED_DA_STYLE = (
+    "<style>.detail .need-da{margin-top:.6rem;border-top:1px solid var(--border);"
+    "padding-top:.55rem;font-size:var(--small);}"
+    ".detail .need-da h4{font-size:var(--small);margin:0 0 .3rem;}"
+    ".detail .need-da ul{margin:.2rem 0;padding-left:1.1rem;}"
+    ".detail .need-da .da-facts{color:var(--muted);}"
+    ".detail .need-da .da-flag{color:#b91c1c;}"
+    "@media (prefers-color-scheme: dark){.detail .need-da .da-flag{color:#f87171;}}"
+    "</style>"
+)
+# Appended to the detail renderer's markup: the block is built and escaped here,
+# so the script inserts it as it stands.
+NEED_DA_JS = "\n        + (d.assumptions||'')"
+
+
+def _da_item(a):
+    """One relied-on assumption: its id, any label, its text, then its
+    validity, evidence level and citing requirements."""
+    flags = [FALSIFIED_LABEL] if a["standing"] == "falsified" else []
+    flags += [UNEVIDENCED_LABEL] if a["level"] in _UNEVIDENCED else []
+    return (
+        "<li><strong>{}</strong> {}{} "
+        '<span class="da-facts">validity: {} · evidence: {} · cited by {}</span>'
+        "</li>".format(
+            esc(a["id"]),
+            "".join('<strong class="da-flag">{}</strong> '.format(f) for f in flags),
+            esc(a["text"]),
+            esc(a["standing"] or "unset"),
+            esc(a["level"]),
+            esc(", ".join(a["citing"])),
+        )
+    )
+
+
+def need_assumption_block(entry):
+    """The markup one need's detail panel shows (SR-218): every assumption its
+    requirements cite, once, with its validity, evidence level and citing
+    requirements; that the need is answered by coincident requirements alone;
+    or the unclassified requirements that leave a gap. `""` for no entry, or
+    one with nothing to say.
+
+    Implements: SR-218, LLR-258"""
+    if not entry:
+        return ""
+    parts = []
+    if entry["assumptions"]:
+        parts.append("<ul>{}</ul>".format("".join(map(_da_item, entry["assumptions"]))))
+    if entry["coincident"]:
+        parts.append(
+            "<p>Every requirement of this need is coincident: its own "
+            "specification delivers the need, and it relies on no assumption.</p>"
+        )
+    if entry["unclassified"]:
+        parts.append(
+            '<p><strong class="da-flag">GAP</strong> {} unclassified: neither '
+            "cites an assumption nor records why it needs none.</p>".format(
+                esc(", ".join(entry["unclassified"]))
+            )
+        )
+    if not parts:
+        return ""
+    return '<div class="need-da"><h4>Assumptions relied on</h4>{}</div>'.format(
+        "".join(parts)
+    )
+
+
+def need_assumption_hooks(details, by_need):
+    """Attach each need's block to its spine-view detail record, and return the
+    `(style, script)` the page needs for it: both empty when no block was
+    attached, which keeps a project without the tier byte-identical."""
+    attached = False
+    for nid, entry in by_need.items():
+        block = need_assumption_block(entry)
+        if block and nid in details:
+            details[nid]["assumptions"] = block
+            attached = True
+    return (NEED_DA_STYLE, NEED_DA_JS) if attached else ("", "")
+
+
 # --- the layered work-item DAG, computed in Python (Thread 52 ruling A) ---------
 
 DAG_COL_W = 172  # node width

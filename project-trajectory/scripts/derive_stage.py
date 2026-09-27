@@ -186,6 +186,17 @@ def _settled_off_spine(rows, table):
     ]
 
 
+# THE THREE TIERS THE STAGE READS FROM THEIR FIRST APPROVAL (SR-204), each
+# with the maturity table its settled reading filters by: the settled branch
+# drops their Drafted rows as it does every tier's, so a settled reading is
+# never held by them, and the live reading holds a rung once a tier is active.
+_FIRST_APPROVAL_TIERS = {
+    "das": spine_rules.DA_MATURITY,
+    "surs": spine_rules.SUR_MATURITY,
+    "stks": spine_rules.STK_MATURITY,
+}
+
+
 def _stage_map(spine, settled, evidence_passed=False):
     """`(global-stage, {phase: stage})` over the live rows or the settled subset.
 
@@ -197,6 +208,9 @@ def _stage_map(spine, settled, evidence_passed=False):
     srs, llrs, tcs = spine["srs"], spine["llrs"], spine["tcs"]
     sn_ids, sn_draft = spine["sn_ids"], spine["sn_draft"]
     bifs, cmps = spine["bifs"], spine["cmps"]
+    # The three tiers read from their first approval (SR-204). A spine built
+    # before they existed carries none of them, and reads as an empty tier.
+    tiers = {key: spine.get(key, []) for key in _FIRST_APPROVAL_TIERS}
     live_labels = set(_phase_groups(srs, llrs, tcs))
 
     if settled:
@@ -207,6 +221,10 @@ def _stage_map(spine, settled, evidence_passed=False):
         sn_draft = set()
         bifs = _settled_off_spine(bifs, spine_rules.BIF_MATURITY)
         cmps = _settled_off_spine(cmps, spine_rules.CMP_MATURITY)
+        tiers = {
+            key: _settled_off_spine(rows, _FIRST_APPROVAL_TIERS[key])
+            for key, rows in tiers.items()
+        }
 
     frame = dict(
         sn_ids=sn_ids,
@@ -215,6 +233,7 @@ def _stage_map(spine, settled, evidence_passed=False):
         cmps=cmps,
         have_bifs=spine["have_bifs"],
         have_cmps=spine["have_cmps"],
+        **tiers,
         # THE TEST-EVIDENCE VERDICT TRAVELS WITH THE FRAME (WI-500), for the same
         # reason the need/boundary/component rows do: it is a REPO-WIDE fact, and
         # a per-phase call must see the same one the global call did. A phase
@@ -254,7 +273,12 @@ def derive(root):
     settled_stage = min(earned, key=kitstage.order) if earned else kitstage.BELOW
 
     rows = spine["srs"] + spine["llrs"] + spine["tcs"]
-    drafted = sum(1 for r in rows if spine_rules.is_drafted(r)) + len(spine["sn_draft"])
+    # The three first-approval tiers' drafts are counted too, whether or not
+    # their tier is read yet: the count is of rows in work, not a rung.
+    tier_rows = [r for key in _FIRST_APPROVAL_TIERS for r in spine.get(key, [])]
+    drafted = sum(1 for r in rows + tier_rows if spine_rules.is_drafted(r)) + len(
+        spine["sn_draft"]
+    )
     phases = [spine_rules.phase_num(r) for r in rows if not spine_rules.is_drafted(r)]
     phases = [p for p in phases if p is not None]
 

@@ -1,0 +1,9 @@
+f40373e3 NOT YET SOUND
+
+- **blocker** — The builder is right. SR-215 requires every case with no result to be queued; LLR-254 and TC-247 explicitly say a no-input case is judged by “expiry and absence.” The coordinator’s proposed exemption therefore needs approved-row amendments. Without them, a missing-MaxAge case cannot record a result yet remains perpetually due. `docs/requirements/system-requirements.toml:1455`, `docs/requirements/low-level-requirements.toml:2657`, `docs/test/test-cases.toml:2545`, `project-trajectory/scripts/assumption_rules.py:1211`
+
+- **major** — Lexical `input_escape` does not prevent escape through a committed symlink: `Path.is_file()` and `read_bytes()` follow the link and can still hash bytes outside the repository. `project-trajectory/scripts/record_observation.py:208`
+
+- **major** — Extraction is not strictly once per revision. If a mismatching record was added at the checkpoint revision, that same SHA is extracted as both `here` and `then`; the count test requires two distinct revisions and misses this case. `project-trajectory/scripts/rejudge.py:379`, `tests/test_rejudge.py:578`
+
+- **major** — Adding `input_escape` to the always-on declaration failures is an unapproved behavior, not merely implementation latitude: approved LLR-233 and TC-228 enumerate the failure set and do not include invalid input paths. The safe digest/refusal mechanism may implement the repository-path constraint, but the new integrity failure requires an approved amendment. It also rejects nonescaping paths such as `docs/../src/a.txt`. `docs/requirements/low-level-requirements.toml:2455`, `project-trajectory/scripts/assumption_rules.py:925`
