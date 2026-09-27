@@ -226,3 +226,20 @@ are marked as such.
     WI-676's independent adjudicator judges next. The coordinator takes that
     judgement as the confirmation round rather than running a separate Sol
     round.
+    WI-650's fix round (`sol-wi650-fix.md`) was SOUND.
+
+19. **WI-638 — SOL on all six, with the coordinator's remedy for the
+    blocker.**
+    - *The blocker.* A case with no lifetime or no declared inputs cannot be
+      re-judged, because the brief refuses it. Filing it would mint an
+      unfinishable adjudication at every merge. So such a case is not due:
+      it mints nothing and stays the declaration advisory's business, which
+      is real work under OI-90 (a). If an approved row demands the filing,
+      that part stops for an amendment. The dedup identity stays the open
+      typed row (Brief = rejudge, Adjudicates = the case).
+    - *Paths.* An input path escaping the committed snapshot is refused in
+      the shared declaration rule.
+    - *Cost.* One snapshot per revision, reused across cases.
+    - *CLI.* The command stays release-only, per LLR-255.
+    - *Minors.* The staging test gains a sentinel refusal and a pre-staged
+      edit, and IF-102 names the function actually consumed.

@@ -5838,6 +5838,31 @@ acts append lines to it: replace its "How it is written" section with the
 template's by hand if you want the corrected text, and keep your recorded
 lines.
 
+### The test-first check dates a test case from when it became the requirement's, and names unapproved ones [since b37dbbb1]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `scripts/check_test_first.py` no longer dates a test case
+from its own first approval. A test case counts as approved for a requirement
+from the earliest commit at which it reads approved AND its `Verifies` names
+the requirement or one of its design rows (a design row's `SR-Refs` read as
+they stood at that commit), so an approved test case re-pointed at a
+requirement after its code landed, directly or through a re-pointed design row,
+is reported as late, dated at the re-pointing (SR-217). A requirement whose
+implementation has landed is now also reported when one of its test cases does
+not read approved, naming it, and the report line warns that the named test
+cases' results may not reflect the intended behaviour. The step stays
+warn-only; the exit codes are unchanged. It now also reads the design
+registry's history, so it takes longer on a long history, and a design registry
+still under an older carrier, or a declared start before it moved to TOML, is
+reported unreadable, as the requirement and test-case registries already were.
+
+**What to do.** Re-sync `scripts/check_test_first.py`. Expect the step to name
+requirements it passed before: a landed requirement with a `Drafted` test
+case, and one whose test case was re-pointed at it after its code landed. Each
+is a finding to weigh, not a failure: approving a drafted test case clears
+its line, and a late one stays reported, because the order is history.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -2,13 +2,41 @@
 id = "WI-650"
 title = "Count a requirement's test case from its first approved-and-associated commit, and warn when a result rests on an unapproved test case (SR-217 amendment)"
 workstream = "scripts"
-specref = "docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md"
+specref = ""
 sr_refs = ["SR-217"]
 needs = ["WI-664", "WI-669"]
 buildtier = "strong"
 safety_class = "spine"
 priority = 4
 +++
+
+## Deliverable
+
+OI-87 is carried out: option (a) plus the owner's addition. SR-217's
+test-first check (`check_test_first.py`) now dates a test case for a
+requirement from the earliest commit at which it reads approved AND names
+the requirement, directly or through a design row whose SR-Refs name it at
+that commit (`first_association_commits`). A test case re-pointed at code
+already written therefore no longer inherits its earlier approval date. A
+requirement whose implementation has landed names each test case that is
+not approved, and every late or unapproved case carries the owner's
+warning: "a result from those test cases may not reflect the intended
+behaviour". The check stays warn-only, so nothing blocks a run. The design
+registry is held to both unreadable-history rules, so an LLR registry on an
+older carrier is reported, never passed in silence.
+
+- **Amendments (in place, left Approved):** SR-217's requirement, rationale
+  and acceptance; LLR-257's detail; TC-250's method and expected. The
+  owner's warning is an SR-217 clause, not a derived row, because SN-042's
+  acceptance already covers a never-approved test case. The amendment
+  adjudication is **WI-675**.
+- **Evidence:** seven new tests in `tests/test_check_test_first.py`, each
+  red first. The module now runs 32 passed.
+- **Review:** Sol's first round asked for the design registry in the
+  unreadable-history guard and the README row (arbitration ruling 17). The
+  fix round was SOUND.
+- **Cost:** the check takes about 16 s on this repository, up from 8.6 s,
+  because it also walks the design registry's history.
 
 ## Context
 

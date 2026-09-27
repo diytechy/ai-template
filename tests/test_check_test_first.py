@@ -78,7 +78,11 @@ class History:
         return self
 
     def _registries(self):
+        # A registry with no rows is not written, so a case can keep one tier
+        # under an older carrier while the others are TOML.
         for rel, table in TABLES.items():
+            if not self.rows[rel]:
+                continue
             lines = []
             for rid, cells in self.rows[rel].items():
                 lines.append("[{}.{}]".format(table, rid))
@@ -332,6 +336,84 @@ def test_a_test_case_added_already_approved_counts_at_its_birth(tmp_path, ctf):
     assert as_tuples(_judge(ctf, h.root)) == [("SR-001", landing, [("TC-001", born)])]
 
 
+# --- clause: a test case is the requirement's from its approved-and-naming commit
+
+
+def test_an_approved_test_case_re_pointed_after_the_landing_is_dated_at_the_re_point(
+    tmp_path, ctf
+):
+    # TC-001 was approved long before SR-001's code, but for SR-002. Named at
+    # SR-001 only after the code landed, it is SR-001's test case from that
+    # commit: its own earlier approval date does not travel with it.
+    h = History(tmp_path / "repo")
+    h.sr("SR-001", "Approved").sr("SR-002", "Approved")
+    h.tc("TC-001", ["SR-002"], "Approved")
+    early = h.commit("TC-001 approved for SR-002")
+    landing = h.write("src/app.py", implements("SR-001")).commit("SR-001 code")
+    repoint = h.tc("TC-001", ["SR-001"], "Approved").commit("TC-001 re-pointed")
+    assert ctf.first_association_commits(h.root) == {
+        ("TC-001", "SR-002"): ctf.Approval(early, True),
+        ("TC-001", "SR-001"): ctf.Approval(repoint, True),
+    }
+    assert as_tuples(_judge(ctf, h.root)) == [
+        ("SR-001", landing, [("TC-001", repoint)])
+    ]
+
+
+def test_a_test_case_reaching_the_requirement_through_a_re_pointed_design_row(
+    tmp_path, ctf
+):
+    # TC-001 names LLR-001 throughout and is approved first. LLR-001 belonged to
+    # SR-002 and is re-pointed at SR-001 after SR-001's code landed, so TC-001
+    # names one of SR-001's design rows only from the re-pointing commit.
+    h = History(tmp_path / "repo")
+    h.sr("SR-001", "Approved").sr("SR-002", "Approved").llr("LLR-001", "SR-002")
+    h.tc("TC-001", ["LLR-001"], "Approved").commit("TC-001 approved via LLR-001")
+    landing = h.write("src/app.py", implements("SR-001")).commit("SR-001 code")
+    repoint = h.llr("LLR-001", "SR-001").commit("LLR-001 re-pointed at SR-001")
+    assert ctf.first_association_commits(h.root)[("TC-001", "SR-001")] == (
+        ctf.Approval(repoint, True)
+    )
+    assert as_tuples(_judge(ctf, h.root)) == [
+        ("SR-001", landing, [("TC-001", repoint)])
+    ]
+
+
+# --- clause: a result resting on a test case not approved is warned ----------
+
+
+def as_unapproved(findings):
+    return [(f.requirement, list(f.unapproved)) for f in findings if f.unapproved]
+
+
+def test_a_drafted_test_case_of_a_landed_requirement_is_warned(tmp_path, ctf, capsys):
+    h = History(tmp_path / "repo")
+    h.sr("SR-001", "Approved").sr("SR-002", "Approved")
+    h.tc("TC-001", ["SR-001"], "Approved").tc("TC-002", ["SR-001"], "Drafted")
+    h.tc("TC-003", ["SR-002"], "Drafted").commit("two approved, two drafted")
+    landing = h.write("src/app.py", implements("SR-001")).commit("SR-001 code")
+    findings = _judge(ctf, h.root)
+    # SR-002 has no code, so its drafted test case is not judged yet.
+    assert as_tuples(findings) == [("SR-001", landing, [])]
+    assert as_unapproved(findings) == [("SR-001", ["TC-002"])]
+    assert ctf.main(["--root", str(h.root), "--src", "src"]) == 0
+    out = capsys.readouterr().out
+    line = [ln for ln in out.splitlines() if "SR-001" in ln]
+    assert len(line) == 1, out
+    for token in ("WARN", "TC-002", "not approved", "may not reflect"):
+        assert token in line[0], (token, line[0])
+    assert "TC-001" not in line[0] and "SR-002" not in out, out
+    assert ctf.main(["--root", str(h.root), "--src", "src", "--strict"]) == 1
+
+
+def test_a_late_approval_carries_the_same_warning(tmp_path, capsys, ctf):
+    h = _one_finding_history(tmp_path / "repo")
+    assert ctf.main(["--root", str(h.root), "--src", "src"]) == 0
+    out = capsys.readouterr().out
+    line = [ln for ln in out.splitlines() if "SR-001" in ln]
+    assert len(line) == 1 and "may not reflect" in line[0], out
+
+
 # --- clause: unreadable history is reported, never a pass --------------------
 
 
@@ -429,6 +511,60 @@ def test_registries_still_under_an_older_carrier_are_reported_unreadable(tmp_pat
     h.write(TC_CSV, "TC-ID,Verifies,Status\nTC-001,SR-001,Drafted\n")
     h.commit("the csv carrier, never moved", registries=False)
     assert "older carrier" in _assert_unreadable(ctf, h.root)
+
+
+LLR_CSV = "docs/requirements/low-level-requirements.csv"
+
+
+def test_a_design_registry_still_under_an_older_carrier_is_reported_unreadable(
+    tmp_path, ctf
+):
+    # A test case reaches a requirement through a design row, so a design
+    # registry the TOML reader cannot see would silently drop that test case.
+    h = History(tmp_path / "repo")
+    h.write(LLR_CSV, "LLR-ID,SR-Refs,Status\nLLR-001,SR-001,Approved\n")
+    h.sr("SR-001", "Approved").tc("TC-001", ["LLR-001"], "Drafted").commit("mixed")
+    h.write("src/app.py", implements("SR-001")).commit("implementation")
+    assert "older carrier" in _assert_unreadable(ctf, h.root)
+
+
+def _design_csv_then_toml(root):
+    """TC-001 and TC-002 approved through design rows while the design
+    registry is CSV; SR-001's code lands; the design registry moves to TOML;
+    then LLR-002 is re-pointed from SR-002 to SR-001."""
+    h = History(root)
+    h.write(
+        LLR_CSV,
+        "LLR-ID,SR-Refs,Status\nLLR-001,SR-001,Approved\nLLR-002,SR-002,Approved\n",
+    )
+    h.sr("SR-001", "Approved").sr("SR-002", "Approved")
+    h.tc("TC-001", ["LLR-001"], "Approved").tc("TC-002", ["LLR-002"], "Approved")
+    csv = h.commit("design rows under the csv carrier")
+    landing = h.write("src/app.py", implements("SR-001")).commit("SR-001 code")
+    (h.root / LLR_CSV).unlink()
+    cutover = h.llr("LLR-001", "SR-001").llr("LLR-002", "SR-002").commit("to toml")
+    repoint = h.llr("LLR-002", "SR-001").commit("LLR-002 re-pointed at SR-001")
+    return h, csv, landing, cutover, repoint
+
+
+def test_a_start_before_the_design_registry_moved_to_toml_is_unreadable(tmp_path, ctf):
+    h, csv, _landing, cutover, _repoint = _design_csv_then_toml(tmp_path / "repo")
+    assert "TOML" in _assert_unreadable(ctf, h.root, csv)
+    assert ctf.history_unreadable(h.root, cutover) is None
+
+
+def test_an_association_across_the_design_registrys_move_to_toml(tmp_path, ctf):
+    # TC-001 already reached SR-001 through LLR-001 under the CSV carrier, so
+    # the move dates that pair only at or before itself; LLR-002's re-point
+    # after the move is the act, dated exactly.
+    h, _csv, landing, cutover, repoint = _design_csv_then_toml(tmp_path / "repo")
+    pairs = ctf.first_association_commits(h.root)
+    assert pairs[("TC-001", "SR-001")] == ctf.Approval(cutover, False)
+    assert pairs[("TC-002", "SR-002")] == ctf.Approval(cutover, False)
+    assert pairs[("TC-002", "SR-001")] == ctf.Approval(repoint, True)
+    findings = _judge(ctf, h.root)
+    assert as_tuples(findings) == [("SR-001", landing, [("TC-002", repoint)])]
+    assert as_unread(findings) == [("SR-001", [("TC-001", cutover)])]
 
 
 def test_a_verdict_resting_on_a_date_before_the_toml_registries_is_unread(
