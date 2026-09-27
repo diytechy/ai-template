@@ -1041,8 +1041,9 @@ def folded(need):
     return {k: need.get(k, "") for k in ("id",) + SN_CORE}
 
 
-def draft_ids_from_text(text):
-    """Draft need ids for a needs registry given only its TEXT, per carrier.
+def draft_ids_from_text(text, carrier):
+    """Draft need ids for a needs registry's TEXT, under the carrier it was read
+    from.
 
     THE TWO CARRIERS ARE DELIBERATELY NOT UNIFIED HERE, and that is the whole
     care in this function. Under TOML draft-ness is a FIELD (`status`, read by
@@ -1057,10 +1058,35 @@ def draft_ids_from_text(text):
     every repo that has not migrated yet: needs that were draft would stop
     being draft, and the derived gate would rise. The ruling retires the sharp
     edge WITH the carrier, not ahead of it, so a file gets the semantics it was
-    written under."""
-    parsed = needs_from_toml(text)
-    if parsed is not None and (parsed or NEED_TABLE + "." in text):
+    written under.
+
+    THE CARRIER COMES FROM THE FILE, NOT FROM THE TEXT. `carrier` is the
+    resolved registry's suffix (`.toml` or `.md`), which every caller holds
+    because it read the file; `load_needs` and `sn_all_ids` take it the same
+    way. Sniffing cannot decide it: an empty or comment-only TOML file parses
+    to nothing, exactly like a markdown file of headings, and read as markdown
+    a `## Draft` comment followed by a commented need id drafted a need the
+    file never declared.
+
+    A `.toml` TEXT THAT DOES NOT PARSE RAISES, and so does a carrier the need
+    tier does not have. There is no safe guess: a heading-scan fallback over
+    malformed TOML with no markdown draft heading answers "no drafts", every
+    need then reads as approved, and the derived stage rises on a file nobody
+    could read. ValueError, not SystemExit, because the policy is the
+    caller's: the two readers of the gate turn it into a refusal naming the
+    file, the way `load_needs` refuses."""
+    if carrier == ".toml":
+        parsed = needs_from_toml(text)
+        if parsed is None:
+            raise ValueError(
+                "the .toml needs carrier does not parse as TOML; refusing to "
+                "report its drafts from a guess"
+            )
         return draft_need_ids(parsed)
+    if carrier != ".md":
+        raise ValueError(
+            "no needs carrier {!r}: the need tier is .toml or .md".format(carrier)
+        )
     draft, in_draft = set(), False
     for line in text.splitlines():
         heading = _SN_HEADING.match(line)
@@ -1072,6 +1098,23 @@ def draft_ids_from_text(text):
                 u for u in re.findall(r"\bSN-\d+\b", line) if not u.endswith("-000")
             )
     return draft
+
+
+def draft_ids_or_refuse(path, text):
+    """`draft_ids_from_text` for a needs file a gate reader RESOLVED, refusing
+    the run when the file cannot be read.
+
+    The refusal is a SystemExit naming the file, the way `load_needs` refuses:
+    answering "no drafts" for an unreadable file would read every need as
+    approved and let the derived stage rise. It has one home because its two
+    callers are the two readers of the gate, `trace.load_registries` and
+    `spine_rules.load_spine`, and a refusal policy stated twice is one that
+    drifts. The stage derivation reads the needs file nowhere else, so this is
+    where its refusal has to happen."""
+    try:
+        return draft_ids_from_text(text, path.suffix)
+    except ValueError as exc:
+        raise SystemExit("{}: {}".format(path, exc)) from exc
 
 
 _SN_EMPHASIS = re.compile(r"\*\*|`")

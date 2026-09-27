@@ -134,6 +134,8 @@ the exhaustive rung sweep over the closed Status enum is
 import re as _re
 import tomllib as _toml
 
+import pytest
+
 from conftest import (
     ROOT,
     load_script,
@@ -490,6 +492,28 @@ def test_per_phase_resolves_tc_citing_only_its_llr(scaffold):
 
 
 # --- WI-188: the derived current phase ----------------------------------------
+def test_a_needs_file_that_does_not_parse_refuses_rather_than_derives(tmp_path):
+    """Malformed TOML needs REFUSE the stage derivation; they never raise it.
+
+    The file names a Drafted need in text the TOML parser rejects and carries
+    no markdown draft heading. Read by a heading-scan fallback its drafts came
+    back empty while the id scrape still found SN-007, so the need read as
+    approved and the derived stage could rise on a file nobody could read.
+    `load_spine` is the stage derivation's only read of the needs file, so the
+    refusal reaches the user from here, as a SystemExit naming the file; the
+    trace loader refuses the same file the same way.
+    """
+    needs = tmp_path / "docs" / "requirements" / "stakeholder-needs.toml"
+    needs.parent.mkdir(parents=True)
+    needs.write_text(
+        '[need.SN-007]\nstatus = "Drafted"\nneed = "unterminated\n', encoding="utf-8"
+    )
+    with pytest.raises(SystemExit, match="stakeholder-needs.toml"):
+        RULES.load_spine(tmp_path / "docs")
+    with pytest.raises(SystemExit, match="stakeholder-needs.toml"):
+        load_script("trace").load_registries(tmp_path / "docs")
+
+
 def test_phase_num_digit_parses():
     # The one phase-parse the kit shares: bare integers and vN both digit-parse.
     assert RULES.phase_num({"Phase": "v2"}) == 2

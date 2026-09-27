@@ -351,7 +351,7 @@ sn_cited_ids = _spine.sn_cited_ids
 # scaffolder. So the wrapper is deleted rather than relocated and the sibling
 # function is bound directly, under the same local name. Its claim — that
 # draft-ness is a FIELD under TOML and was SECTION-AS-STATE under legacy
-# markdown, and that sniffing the carrier is load-bearing because a heading scan
+# markdown, and that choosing the carrier is load-bearing because a heading scan
 # over TOML reports zero drafts and floats the derived stage upward — is the
 # carrier's own and lives on `spine_carrier.draft_ids_from_text`.
 sn_draft_ids = spine_carrier.draft_ids_from_text
@@ -4833,7 +4833,9 @@ def load_registries(docs):
         sn_ids = sn_all_ids(sn_text, sn_md.suffix)
         # Section-as-state maturity (derived-gate §4a): SNs under a "draft" heading
         # are unapproved (DevStg-Below) and exempt from the "SN with no SR" child rule below.
-        sn_draft = sn_draft_ids(sn_text)
+        # An unreadable needs file REFUSES the run, naming the file: answering
+        # "no drafts" for it would read every need as approved.
+        sn_draft = spine_carrier.draft_ids_or_refuse(sn_md, sn_text)
         sn_meta = _sn_prose(sn_text)
         sn_integrity = sn_integrity_findings(sn_text)
         # The need tier's rows in the SAME `<TIER>-ID`/`Status` shape the CSV-era

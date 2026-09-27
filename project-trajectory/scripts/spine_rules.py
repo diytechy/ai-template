@@ -745,7 +745,9 @@ def load_spine(docs):
     if sn_md is not None:
         text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
         sn_ids = sn_all_ids(text, sn_md.suffix)
-        sn_draft = sn_draft_ids(text)
+        # An unreadable needs file REFUSES the run, naming the file: answering
+        # "no drafts" for it would read every need as approved.
+        sn_draft = spine_carrier.draft_ids_or_refuse(sn_md, text)
 
     # THE TWO OFF-SPINE REGISTRIES THE LADDER'S INSERTED RUNGS READ (OI-21). Both
     # are resolved through the carrier and both are APPLIES-WHEN — a project that

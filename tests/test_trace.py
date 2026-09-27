@@ -884,13 +884,13 @@ def test_sn_draft_ids_reader():
     from conftest import load_script
 
     trace = load_script("trace")
-    assert trace.sn_draft_ids(DRAFT_SN_MD) == {"SN-002"}
+    assert trace.sn_draft_ids(DRAFT_SN_MD, ".md") == {"SN-002"}
     # A -000 placeholder in a draft section is excluded (like every other scan).
-    assert trace.sn_draft_ids("## Draft needs\nSN-000 SN-005\n") == {"SN-005"}
+    assert trace.sn_draft_ids("## Draft needs\nSN-000 SN-005\n", ".md") == {"SN-005"}
     # No draft heading -> nothing is draft (the approved default).
-    assert trace.sn_draft_ids("# Needs\n\n## Core\nSN-001\n") == set()
+    assert trace.sn_draft_ids("# Needs\n\n## Core\nSN-001\n", ".md") == set()
     # The "draft" match is on the heading text, case-insensitive, not the body.
-    assert trace.sn_draft_ids("## DRAFT items\nSN-009\n") == {"SN-009"}
+    assert trace.sn_draft_ids("## DRAFT items\nSN-009\n", ".md") == {"SN-009"}
 
 
 def test_predicate_markers_are_word_bounded():

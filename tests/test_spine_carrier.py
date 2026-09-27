@@ -351,7 +351,50 @@ def test_legacy_markdown_draftness_survives_the_field_it_moved_to():
     }
     assert sc.draft_need_ids(needs) == {"SN-050"}
     # ...and the whole-text entry point agrees, over both carriers.
-    assert sc.draft_ids_from_text(text) == {"SN-050"}
+    assert sc.draft_ids_from_text(text, ".md") == {"SN-050"}
     assert sc.draft_ids_from_text(
-        '[need.SN-050]\nstatus = "Drafted"\nneed = "n"\n'
+        '[need.SN-050]\nstatus = "Drafted"\nneed = "n"\n', ".toml"
     ) == {"SN-050"}
+
+
+def test_draft_ids_take_the_carrier_from_the_file_not_the_text():
+    """The draft scan is chosen by the file's suffix, never by sniffing its text.
+
+    A TOML needs file that is empty or holds only comments parses to nothing,
+    exactly like a markdown file of headings; sniffed, it read as markdown, and
+    `## Draft needs` followed by a commented need id drafted a need the file
+    never declared. The needs loader and the id universe already take the
+    carrier from the file; this is the third reader of the same file and must
+    agree with them.
+    """
+    comment_only = "## Draft needs\n# SN-005 is planned, not yet written\n"
+    assert sc.draft_ids_from_text(comment_only, ".toml") == set()
+    assert sc.draft_ids_from_text("", ".toml") == set()
+    # The same text under the markdown carrier keeps section-as-state.
+    assert sc.draft_ids_from_text(comment_only, ".md") == {"SN-005"}
+    # The other direction: a markdown file whose text happens to parse as TOML
+    # with a need table is still read by its headings, not by the missing field.
+    md_parses = "## Draft needs\n[need.SN-009]\n"
+    assert tomllib.loads(md_parses) == {"need": {"SN-009": {}}}
+    assert sc.draft_ids_from_text(md_parses, ".md") == {"SN-009"}
+
+
+def test_draft_ids_refuse_a_toml_text_that_does_not_parse_and_an_unknown_carrier():
+    """A needs file that cannot be read has no answer to give, so it gets none.
+
+    Falling back to the heading scan would choose the carrier from the text
+    again, and it is not safe in either direction: malformed TOML with a need
+    id and no markdown draft heading scans to "no drafts", every need then reads
+    as approved, and the derived stage RISES on a file nobody could read. The
+    stage derivation does not re-read the needs through the refusing loader
+    afterwards, so the refusal has to be here.
+    """
+    broken = '[need.SN-007]\nstatus = "Drafted"\nneed = "unterminated\n'
+    with pytest.raises(ValueError, match=r"\.toml.*does not parse"):
+        sc.draft_ids_from_text(broken, ".toml")
+    # A carrier the needs tier does not have is a caller's mistake, named rather
+    # than quietly read as one of the two it does have.
+    with pytest.raises(ValueError, match=r"'\.csv'"):
+        sc.draft_ids_from_text("SN-001\n", ".csv")
+    with pytest.raises(ValueError, match="None"):
+        sc.draft_ids_from_text("## Draft needs\nSN-001\n", None)

@@ -446,7 +446,7 @@ def test_the_sn_scrapes_answer_by_value():
         ("SN-050 no heading at all\n", set()),
         ("", set()),
     ]:
-        assert CARRIER.draft_ids_from_text(text) == want, text
+        assert CARRIER.draft_ids_from_text(text, ".md") == want, text
 
 
 def test_the_legacy_approval_translation_agrees():
@@ -779,7 +779,7 @@ def test_the_need_reader_agrees_with_both_heading_scrapers():
     text = md.read_text(encoding="utf-8")
     needs = SPINE.load_needs(md)
     assert SPINE.need_ids(needs) == KITSPINE.sn_all_ids(text)
-    assert SPINE.draft_need_ids(needs) == SPINE.draft_ids_from_text(text)
+    assert SPINE.draft_need_ids(needs) == SPINE.draft_ids_from_text(text, ".md")
     assert needs, "the fixture read no needs — the agreement would be vacuous"
 
 
@@ -855,7 +855,7 @@ def test_draft_ness_reads_by_the_rule_the_file_was_written_under():
     # `test_the_spine_row_vocabulary_is_one_home`; what stays here is the
     # carrier's own two-rule claim, which is what this test was ever about.
     legacy = "## Draft needs\nSN-000 SN-005\n"
-    assert SPINE.draft_ids_from_text(legacy) == {"SN-005"}
+    assert SPINE.draft_ids_from_text(legacy, ".md") == {"SN-005"}
 
     # The same claim under the new carrier is a field, and a MENTION does not
     # set it: SN-006 is named in SN-005's prose and stays approved.
@@ -863,7 +863,7 @@ def test_draft_ness_reads_by_the_rule_the_file_was_written_under():
         '[need.SN-005]\nstatus = "Drafted"\nneed = "n"\n\n'
         '[need.SN-006]\nstatus = "Approved"\nneed = "supersedes SN-005"\n'
     )
-    assert SPINE.draft_ids_from_text(modern) == {"SN-005"}
+    assert SPINE.draft_ids_from_text(modern, ".toml") == {"SN-005"}
 
     # And the id UNIVERSE keeps working unchanged across both, because the
     # prefixed token survives into the table key — the measured reason D-5 kept
