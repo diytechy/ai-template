@@ -178,3 +178,33 @@ are marked as such.
     `test_an_AMEND_PLUS_FLIP_authorises_ITS_OWN_row_and_no_other`, which
     asserts the copied bytes. The integrator added the citations at landing
     rather than duplicating those tests.
+
+15. **WI-643, the C1 sitting commit, first round — split.** It was made by
+    the owner's Fable stand-in under the recorded delegation.
+    - (i) *STK-01..04 absent from `acts.toml`'s approved rows — SOL on the
+      gap, INTEGRATOR on the remedy.* The ledger row-records only the tiers
+      in `baseline_snapshot.SNAPSHOT_TIERS`, which lacks the stakeholder
+      tier, as it lacks the need tier (OI-91 funded WI-651 for the latter).
+      Adding a tier is a build, not a sitting act. WI-651 is extended to the
+      stakeholder tier. The sitting's STK approvals are recorded in the
+      stamp's ref and in the Decisions entry.
+    - (ii) *The REL growth floor lowered 1 -> 0 — SOL.* That weakened a
+      ratchet so the ruled frame would pass. The locked tier is exempted, and
+      the exact-one pin in `tests/test_external_frame.py` stands guard.
+    - (iii) *An added "two systems of interest" header paragraph — SOL.* A
+      sitting writes only the signed text or a disclosed reconciliation.
+    - (iv) *Log fragment and derived views — INTEGRATOR.* They were reserved
+      to the integrator by instruction.
+    - (v) *Stale `test_intake` docstrings — SOL.*
+
+16. **WI-643's second round — split.** Sol held that two header additions
+    exceed §1.3's signed text.
+    - SOL on the `mediates` entry's added sentence ("Its one reader… grants
+      no authority"). It is true, but it is not signed.
+    - INTEGRATOR on the FLIP AUTHORITY rewrite. Package §4 says both
+      comments that paraphrase the old dial "are rewritten in the same commit
+      to point at the dial instead of restating it", and deleting §1.3's
+      sentence bare would leave a broken sentence. A pointer to the dial is
+      exactly what the owner accepted.
+    The act is re-taken once more, so the ledger holds one act for the
+    sitting.

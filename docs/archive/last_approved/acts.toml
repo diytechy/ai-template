@@ -8,3 +8,9 @@ seq = 1
 date = "2026-09-27"
 approved = []
 reattested = ["LLR-140", "LLR-143", "LLR-154", "LLR-167", "LLR-216", "LLR-224", "LLR-246", "LLR-248", "LLR-250", "LLR-257", "SR-209", "SR-211", "TC-061", "TC-135", "TC-137", "TC-144", "TC-145", "TC-161", "TC-164", "TC-170", "TC-178", "TC-192", "TC-206", "TC-222", "TC-244"]
+
+[[act]]
+seq = 2
+date = "2026-09-27"
+approved = ["B-09", "B-10", "B-11", "EXT-006", "EXT-007"]
+reattested = ["B-01", "B-02", "B-04", "B-05", "EXT-001", "EXT-003", "EXT-005", "REL-001", "REL-002", "REL-003"]

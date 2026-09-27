@@ -85,33 +85,45 @@ def test_the_three_tiers_load_off_one_path_without_a_new_loader():
 
 
 def test_the_live_frame_is_the_LOCKED_one():
-    """4 entities, 4 crossings, 3 relationships — sitting-2 §1R.7, ruled
-    2026-08-13o, amended at 13u when B-03 was removed, and again at
-    2026-08-16q when the hosted-CI frame was cut. A count is a weak assertion
-    about most registries and a strong one here, because this frame was closed
-    by a ruling: a row appearing or vanishing without a sitting is the defect,
-    not a growth curve. THIS TEST IS EXPECTED TO BE EDITED BY A SITTING and by
-    nothing else — it red-flagged the 2026-08-16q cut before that ruling had
-    been written down anywhere, which is the behaviour to keep."""
+    """5 entities, 7 crossings, 1 relationship — the C1 sitting of the
+    assumption-tier plan (docs/plans/2026-09-25-c1-sitting-package.md §1,
+    ruled 2026-09-25), which redrew the frame sitting-2 §1R.7 locked at
+    2026-08-13o (4/4/3 after the 13u removal of B-03 and the 2026-08-16q
+    hosted-CI cut): the human operator and hosted CI drawn as parties, the
+    read set returned as a crossing, the model runner promoted from a
+    relationship to a crossing, and the Adopter folded into the human
+    operator. A count is a weak assertion about most registries and a strong
+    one here, because this frame is closed by a ruling: a row appearing or
+    vanishing without a sitting is the defect, not a growth curve. THIS TEST
+    IS EXPECTED TO BE EDITED BY A SITTING and by nothing else — it red-flagged
+    the 2026-08-16q cut before that ruling had been written down anywhere,
+    which is the behaviour to keep."""
     tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))
-    assert len(tables["entity"]) == 4
-    assert len(tables["boundary"]) == 4
-    assert len(tables["relationship"]) == 3
-    # B-03 is ABSENT on purpose (removed 13u) and the gap is load-bearing: it
-    # keeps id and frame name aligned 1:1 rather than renumbering a locked table.
-    assert "B-03" not in tables["boundary"]
-    # B-06/B-07 and EXT-004 (Hosted CI) CUT 2026-08-16q on the design-control
-    # ruling: a hosted runner is an ADOPTER's boundary, this system holds no
-    # authority over whether an external runner honours the workflow it is
-    # handed, and what it delivers is a METHOD for one to invoke — so the
-    # obligation lands on B-05 as package content (SR-151, SR-152), exactly as
-    # REL-003 already handles the model provider. Same load-bearing gap rule as
-    # B-03: the ids are SPENT, never re-minted at a different thing. Asserted
-    # rather than left to the count, because a count alone would be satisfied by
-    # any four crossings.
-    for gone in ("B-06", "B-07"):
+    assert len(tables["entity"]) == 5
+    assert len(tables["boundary"]) == 7
+    assert len(tables["relationship"]) == 1
+    # THE SPENT IDS, asserted rather than left to the counts, because a count
+    # alone would be satisfied by any five entities. Each gap is load-bearing:
+    # it keeps id and frame name aligned 1:1 rather than renumbering a locked
+    # table, and `docs/id-watermark` keeps a mint from landing on one. EXT-003
+    # (the Adopter) was dropped at C1 — an adopting team is the human operator
+    # of the kit in its own repository (EXT-006); EXT-004 (the cut hosted-CI
+    # entity) stays spent although hosted CI is drawn again, as EXT-007.
+    for gone in ("EXT-003", "EXT-004"):
+        assert gone not in tables["entity"], gone
+    # B-03 (removed 13u; its content came back as B-09), B-06/B-07 (the
+    # 2026-08-16q cut; absorbed by B-11 — being outside design control is what
+    # makes hosted CI an external party, not a reason to leave it undrawn) and
+    # B-08 (13o: the vendored-doc check is not a crossing until a repository
+    # vendors something).
+    for gone in ("B-03", "B-06", "B-07", "B-08"):
         assert gone not in tables["boundary"], gone
-    assert "EXT-004" not in tables["entity"]
+    # REL-001 merged into REL-002 when EXT-003 went; REL-003 promoted to B-10
+    # (the loop's invocation of a model runner crosses the operation frame);
+    # REL-004 folded at 13o. REL-002 alone survives, as Transition.
+    for gone in ("REL-001", "REL-003", "REL-004"):
+        assert gone not in tables["relationship"], gone
+    assert set(tables["relationship"]) == {"REL-002"}
 
 
 def test_every_frame_row_carries_the_approval_element():

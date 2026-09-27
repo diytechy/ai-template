@@ -889,8 +889,9 @@ def test_the_old_first_run_adopter_predicate_was_defective_and_the_new_one_fires
     they fire on ZERO real rows — silence BY DEFECT. Its `templates` tag
     clause fired on exactly ONE historical row in the whole registry (WI-131,
     2026-07-13, a workstream label no later row uses) — the census refinement
-    over Decision 11's 'silent': effectively voiceless, its entity (EXT-003
-    Adopter) unheard in review. The NEW predicate, read from the live roster,
+    over Decision 11's 'silent': effectively voiceless, the adopting team
+    (STK-02 since the C1 sitting; the frame's spent EXT-003 before it) unheard
+    in review. The NEW predicate, read from the live roster,
     fires on the deliverable's real tags (`scripts`, `process`, `templates` —
     the kit's product IS its shipped scripts, templates and process docs)."""
     contexts = _real_work_item_contexts()

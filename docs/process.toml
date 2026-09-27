@@ -107,17 +107,21 @@
 # Named `human_approval_through`, never "attest level": `Attest` is already
 # a Verification method in the SR vocabulary and the collision would be
 # permanent.
-# THIS REPO RUNS `DevStg-Needs`-HELD ONLY (owner's own edit, 2026-08-21,
-# docs/log.d/2026-08-21-owner-session-dial-and-folds.md): only the Needs rung
-# is human-held; SR/LLR/TC approval and amendment proceed under ordinary
-# review. This SUPERSEDES the 2026-08-14 every-tier-human-held directive that
-# used to be recorded here (itself superseding the spent 2026-07-15
-# loop-held charge-through directive) — read the dial value below, don't
-# paraphrase it. The retired `gate_policy = "autonomous"` that used to sit
-# above is DELETED rather than left inert: shipping it beside the ordinal is
-# the shadowing defect the template names, and the kit must not carry in its
-# own config the shape it refuses downstream.
-human_approval_through = "DevStg-Needs"
+# THIS REPO'S OWN VALUE IS THE LINE BELOW — read it, don't paraphrase it, here
+# or anywhere else. Every rung at or below it is human-held; approval and
+# amendment above it proceed under ordinary review. Its history, for the
+# record and not as a second statement of the value: the owner set it to hold
+# the Needs rung alone on 2026-08-21
+# (docs/log.d/2026-08-21-owner-session-dial-and-folds.md), superseding the
+# 2026-08-14 every-tier-human-held directive (itself superseding the spent
+# 2026-07-15 loop-held charge-through directive); the C1 sitting of the
+# assumption-tier plan then raised it one rung to hold the system frame too
+# (docs/plans/2026-09-25-c1-sitting-package.md §4, on the owner's 2026-09-25
+# ruling). The retired `gate_policy = "autonomous"` that used to sit above is
+# DELETED rather than left inert: shipping it beside the ordinal is the
+# shadowing defect the template names, and the kit must not carry in its own
+# config the shape it refuses downstream.
+human_approval_through = "DevStg-Boundary"
 # OFF-SPINE APPROVAL AUTHORITY IS DERIVED FROM THIS SAME DIAL — NO SECOND KEY
 # (owner ruling OI-30 D3, 2026-08-15). The registries that carry an `approval`
 # cell (interfaces, external, components) are governed by the DEV-STAGE RUNG

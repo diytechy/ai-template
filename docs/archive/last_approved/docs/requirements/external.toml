@@ -22,19 +22,23 @@
 # have is a boundary crossing.
 #
 # ROW IDS — READ THIS BEFORE CITING ONE. Crossings are `B-##`, and that is the
-# name every ruled citation writes: an SR's shall names `B-01`…`B-05`, and a
+# name every ruled citation writes: an SR's shall names a `B-##`, and a
 # tie-back writes `interface_to_external = "B-05"`. `BIF-###` is NOT used here
 # and must not be — those ids name a DIFFERENT, superseded set of crossings, so
-# reusing the prefix would recycle live ids onto new meanings. `B-03` is absent
-# on purpose; the gap keeps id and frame name aligned 1:1 rather than
-# renumbering a locked table.
+# reusing the prefix would recycle live ids onto new meanings. The gaps in the
+# numbering are on purpose: a spent id keeps id and frame name aligned 1:1
+# rather than renumbering a locked table.
 #
-# SPENT IDS — retired to a pointer (OI-47 ruled (e), 2026-08-20, executed by
-# WI-492): `docs/id-watermark` itself now carries the protection this block
-# used to state in prose — `B` and `REL` were corrected to 8 and 4 by the
-# ruling's own recorded-correction verb (`trace.py --correct-mark`), so the
-# next mint from either mark is past `B-08`/`REL-004`, not onto them. See
-# OI-47 for the mechanism and the mis-seed this fixes.
+# SPENT IDS — never re-minted at a different thing: `EXT-003` (the Adopter,
+# dropped: an adopting team is the human operator of the kit in its own
+# repository) and `EXT-004` (the cut hosted-CI entity, re-drawn as `EXT-007`);
+# `B-03` (the read set, returned as `B-09`), `B-06` and `B-07` (the cut
+# hosted-CI crossings, absorbed by `B-11`) and `B-08` (the vendored-doc check,
+# not a crossing until a repository vendors something); `REL-001` (merged into
+# `REL-002`), `REL-003` (promoted to `B-10`) and `REL-004`. `docs/id-watermark`
+# carries the protection (OI-47 ruled (e), 2026-08-20, executed by WI-492): a
+# mint counts from the mark, never from the live maximum, so none of these
+# numbers can be handed out again.
 #
 # THE FIELDS — what each one is, and how it is used.
 #
@@ -45,11 +49,16 @@
 #                  `interoperating` (a service it exchanges with) or
 #                  `deliverable` (a package it produces and hands off).
 #     description  What the party is, in one line.
+#     mediates     OPTIONAL — the `EXT-###` whose writes this party carries
+#                  into the system and to whom it shows the system's verdicts.
 #
 #   BOUNDARY ROWS
 #     entity       The `EXT-###` on the far side. Must resolve to a row above.
 #     direction    CLOSED vocabulary, read from the SYSTEM's point of view:
 #                  `in` | `out` | `inout`.
+#     system       CLOSED vocabulary, `operation` (the system in use) |
+#                  `delivery` (the system that builds and delivers it) — the
+#                  system-of-interest this crossing belongs to.
 #     carries      What crosses, in one testable line. A crossing may be a
 #                  BUNDLE of implementation-specific interfaces, which is
 #                  legitimate provided the decomposition is broken down or
@@ -74,13 +83,13 @@
 #                  DevStg-Boundary — is not human-held under the `[attestation]
 #                  human_approval_through` dial, the predicate being
 #                  `agent_common.human_approves(docs, "external")`. READ THE
-#                  DIAL, DO NOT ASSUME IT: this repo runs `DevStg-Needs`-held
-#                  only, so DevStg-Boundary is NOT held and the predicate
-#                  answers FALSE. What keeps these values the owner's today is
-#                  that the kit ships no automated writer for an off-spine
-#                  `status` — they are hand-edited, in a reviewed Status-change
-#                  commit. The predicate exists so the first such writer cannot
-#                  be added without consulting it.
+#                  DIAL, DO NOT ASSUME IT: whether DevStg-Boundary is held is
+#                  that value's to say, never this comment's. What keeps these
+#                  values the owner's, whatever the dial says, is that the kit
+#                  ships no automated writer for an off-spine `status` — they
+#                  are hand-edited, in a reviewed Status-change commit. The
+#                  predicate exists so the first such writer cannot be added
+#                  without consulting it.
 #
 #     absorbs      OPTIONAL — the earlier ids this row folded in, so a re-drawn
 #                  frame loses nothing and an old citation still lands.
@@ -96,10 +105,11 @@
 [entity.EXT-001]
 name = "Development session"
 class = "operational"
-description = """Human or LLM in a terminal - attended or the agent-resume loop, indistinguishable by rule - plus the user's local development environment and the working copy in its hands (shell, git client, OS, Python, editors, test runner, LLM runners). The session HOLDS the checkout; the system owns the governed state those edits become once admitted through the hook floor."""
+mediates = "EXT-006"
+description = """The computer and the working copy in its hands: shell, editors, OS, git client, Python and the test runner. Writes reach the system through it, whether a person types them or an agent CLI makes them, and the system's verdicts come back through it. The session HOLDS the checkout; the system owns the governed state those edits become once admitted through the hook floor."""
 status = "Approved"
 absorbs = "v1 EXT-001; dissolved into it: v1 EXT-005 (git), EXT-007 (OS/filesystem/Python), EXT-008 (test+coverage toolchain)"
-notes = """The human is inside this entity, not beside it (13k). Reversing that is an open follow-on from decision 2 and must be stated deliberately, never drifted into."""
+notes = """It mediates for the human operator (EXT-006): an outcome landing on its crossings can be one that operator experiences. Who holds authority is policy, declared by the approval dial, not a property of this party."""
 
 [entity.EXT-002]
 name = "Template"
@@ -109,79 +119,98 @@ status = "Approved"
 absorbs = "v1 EXT-002"
 notes = """`deliverable` was an ADDITION to the class vocabulary (operational/enabling/interoperating did not fit an output package) and is CONFIRMED (§1R.7 item 2). Nothing gates on `class` today; it is read by the generated context view and the advisory schema tier."""
 
-[entity.EXT-003]
-name = "Adopter"
-class = "operational"
-description = """The downstream team and their repository. Receives the Template (REL-001); never receives this repository."""
-status = "Approved"
-absorbs = "v1 EXT-003"
-
 [entity.EXT-005]
 name = "Model provider API(s) / CLI(s)"
 class = "interoperating"
-description = """The model services and command-line runners behind any LLM in the session - the primary builder AND the adversarial reviewers alike. They touch the SESSION, never the system (REL-003)."""
+description = """The model services and command-line runners behind every model in use, the primary builder and the adversarial reviewers alike. The kit's own loop invokes them across B-10; a person may also drive one directly, and its writes then arrive through the development session."""
 status = "Approved"
 absorbs = "v1 EXT-004 merged with the external-reviewer CLI at 13o"
 notes = """A model CLI is just a model CLI, whether primary or secondary."""
+
+[entity.EXT-006]
+name = "Human operator"
+class = "operational"
+description = """The person who operates the kit: writes to the system through the development session, holds approval authority, and reads the spine and the views generated from it."""
+status = "Approved"
+
+[entity.EXT-007]
+name = "Hosted CI"
+class = "interoperating"
+description = """A remote runner that invokes the declared bar on a push, pull request or schedule, across the OS x Python matrix the job declares, and reports the job verdict and step log."""
+status = "Approved"
+notes = """Outside this system's design control: it may or may not honour the workflow it is handed. That is what makes it an external party; the obligation the system can carry stays on the shipped workflow (B-05 content)."""
 
 # --- boundary crossings: what enters and leaves the system ---------------------
 
 [boundary.B-01]
 entity = "EXT-001"
 direction = "in"
+system = "operation"
 carries = """Governed writes: artifact, registry and config edits admitted ONLY through the git hook floor (privacy, format, gate checks) - the one write path from the session into the system's governed state."""
 status = "Approved"
 absorbs = "v1 BIF-004/N-01, BIF-006/M-13, BIF-007-in/M-10, BIF-025/X-09, and the write half of BIF-026/M-16"
 
 [boundary.B-02]
-entity = "EXT-001"
+entity = "EXT-006"
 direction = "in"
+system = "operation"
 carries = """Authority: rulings, attestations and Status flips - the distinguished input the process advances on."""
 status = "Approved"
 absorbs = "v1 BIF-005/M-11"
+notes = """No port of its own: authority arrives as content on B-01's write path. The system can observe that a Status cell changed, not that a person judged."""
 
 [boundary.B-04]
 entity = "EXT-001"
 direction = "out"
+system = "operation"
 carries = """Guardrail verdicts during a session: hook-floor accept/reject and subagent_gate PreToolUse allow/deny."""
 status = "Approved"
 absorbs = "v1 BIF-012/X-07, and the verdict halves of BIF-006 and BIF-026"
-notes = """The honest limit belongs in this crossing's SR: a local hook floor is bypassable (git commit --no-verify), so "no unchecked write enters governed state" rests on this verdict at the moment of the act PLUS a re-run of the same bar away from that bypass (§1R.6). THE RE-RUN IS NOT A CROSSING OF THIS SYSTEM, and that is a ruling rather than an omission: a hosted runner is an ADOPTER's boundary, this system holds no design authority over whether an external runner honours the workflow it is handed, and what the system delivers is a METHOD for one to invoke - so the obligation lands on B-05 as package content, carried by SR-151 and SR-152. The EXT-004/B-06/B-07 rows that used to state it were CUT on that reading, the same argument REL-003 already applies to the model provider. Their ids are spent: never re-mint B-06, B-07 or EXT-004."""
+notes = """The honest limit belongs in this crossing's SR: a local hook floor is bypassable (git commit --no-verify), so "no unchecked write enters governed state" rests on this verdict at the moment of the act PLUS a re-run of the same bar away from that bypass. Where hosted CI is configured, that re-run crosses B-11. The system holds no design control over whether the runner honours the workflow it is handed, so the obligation it carries stays on the shipped workflow (B-05 content, SR-151 and SR-152)."""
 
 [boundary.B-05]
 entity = "EXT-002"
 direction = "out"
+system = "delivery"
 carries = """THE TEMPLATE - the packaged deliverable. The delivered scripts' contracts (check.py, bootstrap.py + MAPPING, agent_loop.py, check_vendored.py, gen_cases.py, gen_release_checklist.py, the hooks, the launchers) are IF definitions tied to this crossing: content of the package, not separate system crossings."""
 status = "Approved"
 absorbs = "v1 BIF-014/M-07, BIF-015/M-06, BIF-016..021/X-01..X-06; BIF-001/M-01 and BIF-002/M-02 as CONTENT (their invocation is the session's, 13n); the skills fan-out and docs/knowledge packs (§1R.7 item 5)"
-notes = "The largest bundle in the frame, and legitimate as one under §3R: a single shall against it is permitted BECAUSE the decomposition is stated in the component details. The delivered capabilities it breaks down into are: harness verdict, scaffold + MAPPING, unattended loop, generators, hook floor, and package-wide property -- the sixth being a ruled class for a property of every delivered capability at once, which is why SR-031, SR-034, SR-035 and SR-114 each stay one row in it rather than one per capability."
+notes = "The largest bundle in the frame, and legitimate as one under §3R: a single shall against it is permitted BECAUSE the decomposition is stated in the component details. The delivered capabilities it breaks down into are: harness verdict, scaffold + MAPPING, unattended loop, generators, hook floor, and cross-cutting property -- the sixth being a ruled class for a property of every delivered capability at once, which is why SR-031, SR-034, SR-035 and SR-114 each stay one row in it rather than one per capability."
+
+[boundary.B-09]
+entity = "EXT-006"
+direction = "out"
+system = "operation"
+carries = """Read: the spine and the views generated from it - the project-state dashboard, the open-items page, the status surface, the derived stage and the console reports."""
+status = "Approved"
+absorbs = "v1 BIF-007-out/M-10, BIF-008/M-03, BIF-009/M-19, BIF-010/M-09, BIF-011/M-08 - the former B-03 set, held by REL-002 while the views were not system outputs"
+
+[boundary.B-10]
+entity = "EXT-005"
+direction = "inout"
+system = "operation"
+carries = """The loop invoking a model runner: the prompt and brief out; the output, exit code and commits back; and the runner's limits - rate limit, expired authorization, model retirement."""
+status = "Approved"
+absorbs = "REL-003 (v1 BIF-023/M-15 and BIF-024/M-14)"
+notes = """The backoff obligation stays a requirement on the loop content that makes the call."""
+
+[boundary.B-11]
+entity = "EXT-007"
+direction = "inout"
+system = "operation"
+carries = """A hosted run of the declared bar: the trigger and the declared OS x Python matrix in; the job verdict and step log out."""
+status = "Approved"
+absorbs = "EXT-004's cut crossings B-06 (trigger in) and B-07 (verdict out)"
 
 # --- relationships: external-to-external, the system not a party ---------------
 # No interface vocabulary appears in these rows. That absence is what keeps
 # decision 6 satisfied: a relationship is not a crossing and must never grow a
 # realizing IF.
 
-[relationship.REL-001]
-from = "EXT-002"
-to = "EXT-003"
-kind = "hands-off"
-flow = """Full template content provided and adopted into the adopter's repo - their scaffold, their loop, their hooks."""
-status = "Approved"
-
 [relationship.REL-002]
 from = "EXT-002"
 to = "EXT-001"
-kind = "self-adoption"
-flow = """This repository's own session adopts the same delivered content and activates autonomous builds from it (agent-resume). The session then RUNS that adopted toolkit to produce PROJECT_STATE.html, open-items.html, docs/status.md, docs/stage and the console reports, and surfaces them to the human reading from that session."""
+kind = "hands-off"
+flow = """Transition: the Template installed into an operating environment, this repository's own or an adopter's - the only lifecycle hand-off between the delivery frame and the operation frame."""
 status = "Approved"
-absorbs = "v1 BIF-007-out/M-10, BIF-008/M-03, BIF-009/M-19, BIF-010/M-09, BIF-011/M-08 - the former B-03 set, moved here at 13u"
-notes = """Those outputs are NOT system outputs (13u). The system delivered the generators as B-05 content; the workflow that runs them is adopted, exactly as an adopter's would be. Activating the loop from adopted content is an input into this repository's DEVELOPMENT SESSION, not into the system (13n)."""
-
-[relationship.REL-003]
-from = "EXT-001"
-to = "EXT-005"
-kind = "runner-surface"
-flow = """The LLM runner surface, primary and adversarial alike: rate limit, auth expiry and model retirement; hostile-review briefs out and findings in."""
-status = "Approved"
-absorbs = "v1 BIF-023/M-15 and BIF-024/M-14, merged 2026-08-13o"
-notes = """The backoff obligation reads as a requirement on delivered loop content (B-05), exercised session-side."""
+absorbs = "REL-001 (the Template adopted into the Adopter's repository), merged when EXT-003 was dropped"

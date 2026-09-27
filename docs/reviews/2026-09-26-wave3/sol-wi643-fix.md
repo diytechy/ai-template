@@ -1,0 +1,3 @@
+50de5f04 NOT YET SOUND
+
+- **major** — `docs/requirements/external.toml:54` and `:88`: the header still exceeds §1.3’s signed text. The `mediates` entry adds “Its one reader…” and FLIP AUTHORITY adds new “whether…/whatever…” prose; §1.3 authorized only the two stated field descriptions and deletion of the stale dial claim. Remove the unsigned additions, then retake seq-2 so the archive remains byte-identical.

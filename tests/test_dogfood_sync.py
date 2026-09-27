@@ -334,15 +334,16 @@ KIT = ROOT / "project-trajectory"
 
 # Registries whose LIVE rows arrive in a later reviewed commit: the tier and its
 # template ship first, and this repository's own rows are written and approved
-# by the C1 sitting commit (WI-643). Until then the live leg is empty and only
-# the template leg (template keys == the schema) can bite. The allowance EXPIRES
-# on its own: both tests below fail once the live table exists, so the commit
-# that writes the rows must drop the entry here, which arms the live leg and its
-# floor.
+# later. Until then the live leg is empty and only the template leg (template
+# keys == the schema) can bite. The allowance EXPIRES on its own: both tests
+# below fail once the live table exists, so the commit that writes the rows
+# must drop the entry here, which arms the live leg and its floor. The
+# stakeholder list left this set at the C1 sitting commit (WI-643), which wrote
+# STK-01..STK-04.
 # The assumptions registry ships EMPTY here the same way: its assumption and
 # surrogate rows are later reviewed content, and the commit that writes them
 # drops its two entries.
-LIVE_ROWS_PENDING = frozenset({"STK-ID", "DA-ID", "SUR-ID"})
+LIVE_ROWS_PENDING = frozenset({"DA-ID", "SUR-ID"})
 
 
 def _toml_keys(path, table):
@@ -462,14 +463,17 @@ def test_the_live_registries_carry_more_than_the_template_example(tmp_path):
         "IF-ID": 10,
         "CMP-ID": 2,
         # The frame is small BY RULING and cannot grow to a spine tier's size:
-        # sitting 2 locked it at 5 entities, 6 crossings, 3 relationships. The
-        # floor is still "more than the example", which is the property.
+        # the C1 sitting redrew it at 5 entities, 7 crossings and ONE
+        # relationship. The floor is still "more than the example", which is
+        # the property. The relationship tier is EXEMPT from the growth check
+        # below (never lowered): the ruled frame locks it at exactly one
+        # relationship, REL-002, and tests/test_external_frame.py's exact pin
+        # is the guard for that tier.
         "EXT-ID": 1,
         "B-ID": 1,
         "REL-ID": 1,
         # The stakeholder list is short by nature (who owns outcomes, not each
-        # person); "more than the example" is still the property. Held back by
-        # LIVE_ROWS_PENDING until this repository's rows are written.
+        # person); "more than the example" is still the property.
         "STK-ID": 1,
         # An assumption is one claim about the world, and a surrogate one
         # stand-in; "more than the example" is the property here too. Held back
@@ -486,6 +490,11 @@ def test_the_live_registries_carry_more_than_the_template_example(tmp_path):
                 live_rel,
                 table,
             )
+            continue
+        if id_col == "REL-ID":
+            # Locked at exactly one by the ruled frame; the exact pin in
+            # tests/test_external_frame.py guards it (see the floors table).
+            assert rows, live_rel
             continue
         assert len(rows) > floors[id_col], "%s[%s]" % (live_rel, table)
 
@@ -799,7 +808,7 @@ def _drop_key(src, key):
         # be named against THAT tier and not absorbed by a sibling.
         ("EXT-ID", "[entity.EXT-001]"),
         ("B-ID", "[boundary.B-01]"),
-        ("REL-ID", "[relationship.REL-001]"),
+        ("REL-ID", "[relationship.REL-002]"),
     ],
 )
 def test_bite_the_key_rule_fails_on_a_planted_batch2_defect(tmp_path, id_col, plant_at):

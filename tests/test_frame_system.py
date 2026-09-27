@@ -128,9 +128,9 @@ def test_the_three_leg_key_comparison_passes_with_the_key_on_every_leg(scaffold)
     schema = set(CARRIER.REGISTRY_KEYS["B-ID"])
     assert "system" in live and "system" in tmpl and "system" in schema
     assert registry_key_drift(tmpl, live, schema, CARRIER.REGISTRY_COLUMN) is None
-    # ...and this repository's own frame, which gains the cell only at the C1
-    # sitting commit (LLR-211: the live frame changes by ruling), still passes
-    # the same comparison without it. WI-643, which writes those cells, turns
-    # this into `assert "system" in own`.
+    # ...and this repository's own frame, which gained the cell at the C1
+    # sitting commit (LLR-211: the live frame changes by ruling) after passing
+    # the same comparison without it while the build sat with its arms off.
     own = _toml_keys(ROOT / "docs" / "requirements" / "external.toml", "boundary")
+    assert "system" in own
     assert registry_key_drift(tmpl, own, schema, CARRIER.REGISTRY_COLUMN) is None

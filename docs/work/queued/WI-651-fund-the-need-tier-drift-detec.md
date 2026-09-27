@@ -16,6 +16,8 @@ OI-91 ruled 2026-09-26: fund the detector. Approved SR-178 reports a recorded ar
 
 IN SCOPE: add the need tier to the snapshot comparison (row-level refusal then covers it too, spine map D18), render a need section in the re-attestation brief with the word-level diff the other tiers get, and route a drifted approved need through the same `intake.py snapshot --reattests` re-anchor. The owner's note from OI-86 applies: a need whose meaning did not change is re-anchored through the amendment adjudication, not re-signed by the owner. Sequenced after the assumption tier's build (OI-91's recommendation).
 
+Extended 2026-09-27 (arbitration ruling 15(i) of `docs/reviews/2026-09-26-wave3/ARBITRATION.md`): the stakeholder tier (`STK-ID` in the needs file) is absent from `SNAPSHOT_TIERS` too, so the C1 sitting's approval of STK-01..STK-04 is recorded only in the snapshot stamp's ref text and not in `docs/archive/last_approved/acts.toml`'s row list (IF-220). Add the stakeholder tier with the need tier, with a regression showing an approved STK row recorded by the act ledger.
+
 ## Done-when
 
 - A drifted approved need is reported by the snapshot comparison and appears in `trace.py --approve modified`'s brief with its diff; a test drives both on a scaffold.

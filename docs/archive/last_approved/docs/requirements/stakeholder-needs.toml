@@ -71,6 +71,17 @@
 #               needs no tag to reach anything, and `tags` carries no
 #               arithmetic and appears in no schema rule.
 #
+#   stakeholder_refs
+#               The declared stakeholders (`[stakeholder.STK-##]`, below the
+#               needs) whose outcome the need is. A POINTER, not the need's own
+#               text: traced, so re-pointing it re-attests nothing. A need
+#               naming none is reported; one naming an undeclared id fails.
+#
+#   source      OPTIONAL — where the need was drawn from: repository-relative
+#               `path#anchor` targets, each resolving to a file and one of its
+#               headings or ids. A pointer like the one above, and exempt from
+#               the provenance rule that scans `need` and `why`.
+#
 # ## Non-goals
 #
 # Explicit scope boundaries — what the kit deliberately does **not** do,
@@ -90,6 +101,7 @@
 
 [need.SN-001]
 status = "Approved"
+stakeholder_refs = ["STK-02"]
 tags = ["templates", "scripts"]
 need = """An adopting team can add this process to a new or existing repository and get a working gated, requirement-traced process, without hand-building the tooling."""
 why = "It is the kit's reason to exist — a *reusable starting point*."
@@ -98,6 +110,7 @@ acceptance = """A single scaffolding action against a destination repository pro
 
 [need.SN-002]
 status = "Approved"
+stakeholder_refs = ["STK-03"]
 need = """A reviewer can trust the chain from need to requirement to design to test because it is **mechanically verified**, not manually asserted: every requirement links to a need and a test before a gate."""
 why = "*Requirement-traced … trust what ships*; a hand-maintained trace rots."
 priority = "M"
@@ -105,6 +118,7 @@ acceptance = """The strict traceability check reports **zero orphans** across th
 
 [need.SN-003]
 status = "Approved"
+stakeholder_refs = ["STK-02"]
 tags = ["templates", "scripts"]
 need ="""A team in any language can use this process: it is **stack-agnostic**, and a non-Python project adopts it by re-pointing the harness at that stack's tools, with Python only as the reference."""
 why = "*Stack-agnostic with Python-first reference scripts.*"
@@ -113,6 +127,7 @@ acceptance = """The toolchain is declared once, in a single declared configurati
 
 [need.SN-004]
 status = "Approved"
+stakeholder_refs = ["STK-02"]
 need = """A team advances only through **explicit approval gates** (DevStg-Reqs→DevStg-Tests→DevStg-Impl→…), and a gate passes only when its mechanical bar is met."""
 why = "*Explicit approval gates so you can trust what ships.*"
 priority = "M"
@@ -120,6 +135,7 @@ acceptance = """A harness run for a named gate enforces that gate's required ste
 
 [need.SN-005]
 status = "Approved"
+stakeholder_refs = ["STK-01"]
 tags = ["shell"]
 need ="""AI agents and humans work from the **same playbook**, and the process is enforced **agent-neutrally** — by git hooks + CI — not by trusting whichever agent showed up."""
 why = """*AI agents and humans working from the same playbook*; enforcement can't depend on which agent showed up."""
@@ -128,6 +144,7 @@ acceptance = """The enforcement floor is git + CI running the *same* harness a h
 
 [need.SN-006]
 status = "Approved"
+stakeholder_refs = ["STK-01"]
 tags = ["unattended", "loop", "scripts", "personal-data"]
 need = """An agent can run **unattended** and resume from repository text alone. Such a run never waits for interactive input, and reports its failures clearly. It also stays **safe**: declared limits bound the workers it may set running and the actions it takes that cannot be undone, and only an override a human provides — never one the model can set — may relax those limits. That safety is **supervision rather than an absolute**: the layer's first obligation is to move forward as far as it can, and it surfaces to a human when it cannot proceed — so a fault in the machinery that carries a limit degrades to a recorded condition, not to a stopped run."""
 why = """Agents develop here, and a walk-away run is only worth having if it can be both left alone and trusted while unwatched. The safety half is stated in the need itself rather than only here, because a `why` cell is context that nothing derives from: a safety obligation recorded only here leaves the gate enforcing it parentless, and drops out of any re-derivation of the need."""
@@ -136,6 +153,7 @@ acceptance = """The unattended loop resumes from the repository's tracked status
 
 [need.SN-007]
 status = "Approved"
+stakeholder_refs = ["STK-04"]
 need = """The people maintaining this kit hold it to its own standard: it stays traceable and tested through every change."""
 why = """The kit is a foundation many repos inherit; a regression here propagates downstream."""
 priority = "M"
@@ -143,6 +161,7 @@ acceptance = """The declared bar is green before a change lands. The Full-suite 
 
 [need.SN-008]
 status = "Approved"
+stakeholder_refs = ["STK-03"]
 need = """A reader can believe a **pass verdict**: gates are **honest**, and a pass verdict never hides a skipped check, a stub, or an unmet criterion."""
 why = """*Trust what ships*; a false pass is worse than a failure. The verdict is named as a verdict — the word PASS — never by hue: a colour word as the only name for the system's most important signal does not exist for a substantial class of readers, and the kit's console output carries zero ANSI colour in any case."""
 priority = "M"
@@ -150,6 +169,7 @@ acceptance = """The harness **fails** (not skips) on a missing required tool —
 
 [need.SN-009]
 status = "Approved"
+stakeholder_refs = ["STK-02"]
 tags = ["personal-data", "scripts"]
 need ="""A team is protected from publishing a **secret or private identity**: it is caught before it publishes, in **every** repo, without extra setup."""
 why = "Trust + safety; a leaked key or PII is near-irreversible once pushed."
@@ -158,6 +178,7 @@ acceptance = """The always-on secrets floor scans every commit's staged diff, me
 
 [need.SN-010]
 status = "Approved"
+stakeholder_refs = ["STK-03"]
 need = """A reader can navigate the documentation and trust it: **navigable and honest** — links resolve, the vision is declared once, and generated views cannot silently rot."""
 why = "*Readable and correct over the long run.*"
 priority = "S"
@@ -165,6 +186,7 @@ acceptance = """The documentation check fails on a broken intra-repo link or a m
 
 [need.SN-011]
 status = "Approved"
+stakeholder_refs = ["STK-02"]
 tags = ["scripts", "legal"]
 need ="""An adopting team can run every check on a **clean Python 3.11+ with minimal, argued dependencies** — stdlib by default, a non-stdlib dependency admitted only through a reviewed ledger row — on Windows and POSIX (and macOS)."""
 why = """Portability — the kit must not impose an *unargued* dependency stack on a downstream repo to run its checks. But a blanket "no dependencies" rule is itself a design constraint: it can force a worse hand-rolled alternative than a well-chosen tool, so the bar is **argument, not abstinence**."""
@@ -173,6 +195,7 @@ acceptance = """Every non-stdlib import in the kit's scripts is declared as a ro
 
 [need.SN-012]
 status = "Approved"
+stakeholder_refs = ["STK-02"]
 tags = ["process"]
 need ="""A team can keep small changes small: the process is **right-sized**, not ceremony for its own sake — small changes stay cheap, and heavy layers are opt-in."""
 why = "An over-heavy process is abandoned; adoption depends on proportionality."
@@ -181,6 +204,7 @@ acceptance = """Opt-in layers (perf, guardrails, unattended, parallel tracks, OK
 
 [need.SN-023]
 status = "Approved"
+stakeholder_refs = ["STK-03"]
 # Both tags are INERT AS ROUTING and kept as SUBJECT metadata. `ui`: the UX
 # pair is `always` here and gated on `render`/`ui` in the SHIPPED template (the
 # VALUES-DIVERGE NOTE in hats.toml), so the row reads correctly under both.
@@ -195,6 +219,7 @@ acceptance = """The single root dashboard renders both the roadmap/decomposition
 
 [need.SN-024]
 status = "Approved"
+stakeholder_refs = ["STK-03"]
 need = """A reviewer can trust subjective/perceptual acceptance — a realistic-looking render, an artifact comparison with no crisp measurable interface — because it is adjudicated by an **independent critical eye against a written rubric**, never by the session that authored the artifact."""
 why = """*Trust what ships*; an implementer session cannot judge its own output, and a lax test case lets awkward work ship because nothing gave it the critical eye — another agent wearing a different hat must say *where and why* it isn't good enough and drive rework."""
 priority = "S"
@@ -202,6 +227,7 @@ acceptance = """A `Verification=Critique` requirement is judged by a fresh criti
 
 [need.SN-025]
 status = "Approved"
+stakeholder_refs = ["STK-01"]
 tags = ["unattended", "loop"]
 need ="""**With no human curating what comes next**, a configured LLM agent implements toward the vision — fully autonomously where enabled — deriving its own next work from the repository's tracked state. (The launcher that starts it is SN-034's obligation; this need is the self-direction.)"""
 why = """Walk-away autonomy is the whole promise of the unattended layer: if a human must hand-maintain a next-step pointer, the loop is attended in practice and the pointer rots against the registry it paraphrases. Extends SN-006 (a *resumable* unattended run) into a *self-directing* one."""
@@ -210,6 +236,7 @@ acceptance = """A plain launch derives what to do next from the tracked WI DAG p
 
 [need.SN-026]
 status = "Approved"
+stakeholder_refs = ["STK-01"]
 tags = ["unattended", "loop", "legal", "personal-data"]
 need ="""The repo owner can configure **several LLM families** — selected per job and per capability level — so that work benefiting from an independent second opinion is automatically routed to a *different* family wherever that is configured."""
 why = """One family is a single point of both failure and bias: an outage, a retired model or an expired auth stalls the whole loop, and a reviewer drawn from the implementer's own family shares its blind spots — so a same-family review reads like corroboration while adding little. Declaring the families and levels in a registry, rather than hard-coding one vendor, is also what keeps the kit vendor-neutral as models turn over."""
@@ -218,6 +245,7 @@ acceptance = """A declared agent roster carries (family × model × tier) pair-r
 
 [need.SN-027]
 status = "Approved"
+stakeholder_refs = ["STK-02"]
 # `perf` is INERT AS ROUTING since the 2026-08-16 ruling made hat.PERFORMANCE
 # `always` in both rosters; kept as SUBJECT metadata (the same reading as
 # SN-023's `a11y`). `unattended` and `scripts` still route.
@@ -229,6 +257,7 @@ acceptance = """A launch with independent ready WIs runs up to the configured wo
 
 [need.SN-028]
 status = "Approved"
+stakeholder_refs = ["STK-01"]
 tags = ["shell"]
 need ="""The repo owner can find and change every policy dial in **one home** — a **single hand-edited, machine-read file** — and a repo that declares the same dial twice is REFUSED rather than resolved by precedence."""
 why = """The dials had accreted into ~10 one-word files under `docs/`, an idiom that was never ruled: it was held in place by the git hooks' pure-sh parse (a Python-less box must still fail closed on a declared privacy gate) and by a 3.8 floor with no `tomllib`. Both reasons are spent. Scattering costs an owner one file per question and a reader five ad-hoc parsers; worse, two sources for one dial is exactly the state where two readers disagree about the same policy, and a precedence rule makes that disagreement invisible instead of loud."""
@@ -237,6 +266,7 @@ acceptance = """A single declared process-dial file holds every process dial und
 
 [need.SN-029]
 status = "Approved"
+stakeholder_refs = ["STK-01"]
 tags = ["unattended", "loop"]
 need ="""**An autonomous run gets as far as it honestly can.** Once triggered, the coordinator stops for a human judgement only when the declared approval level reserves that tier for a human, when a round cannot converge on its own, or when requirement/test documentation is introduced or amended such that the gate drops below what automation is permitted to attest. On every tier released to automation, an approval still happens as a review from a declared perspective against the row's actual evidence, and leaves a record naming who or what approved it — releasing a tier means the review is delegated, never skipped."""
 why = """The unattended layer only pays for itself if a walk-away run actually walks away — so what stops it must be exactly the set of judgements the owner reserved, and nothing else. A three-value gate-authority enum (`attended` / `single-approve` / `autonomous`) cannot express "TCs are human-held but LLRs are not", the distinction an owner actually wants to dial, and leaves each consuming table free to re-interpret the same word with its own fail-safe direction. Answering "has this been approved?" by walking git for the newest commit where a row reads `Verified` is sound only while every amendment flips its row in the same commit — precisely the sanctioned path an amendment detector ignores — so the blessed way to amend an attested requirement is invisible to every consumer, and a stakeholder need has no anchor at all (an SN has no Status cell)."""
@@ -245,6 +275,7 @@ acceptance = """A cumulative level names the highest tier a human still approves
 
 [need.SN-033]
 status = "Approved"
+stakeholder_refs = ["STK-01"]
 priority = "S"
 need = """**Scope: template (adopters + this repo).** A stakeholder can read each stakeholder need and recognize the outcome they asked for without knowing how the repository is built."""
 why = """A need written in internal engineering vocabulary can remain technically current while becoming unreadable to the person whose intent it is supposed to preserve. The resulting failure is an approved requirement spine that no stakeholder can independently validate."""
@@ -252,6 +283,7 @@ acceptance = """The rule applies specifically to each SN `need` cell, not to eng
 
 [need.SN-034]
 status = "Approved"
+stakeholder_refs = ["STK-04"]
 tags = ["launcher", "templates"]
 priority = "S"
 need = """**Scope: template (adopters + this repo).** A person setting up to work on the repository can start each of the two universal contributor actions — preparing their development environment, and resuming the automated development loop — with a single action from the repository's front door, on Windows, macOS and Linux alike (one click where the platform allows it; one obvious command where it does not)."""
@@ -260,6 +292,7 @@ acceptance = """Both entry points exist at the repository root for each supporte
 
 [need.SN-035]
 status = "Approved"
+stakeholder_refs = ["STK-04"]
 tags = ["launcher"]
 priority = "C"
 need = """**Scope: this repo (adopters advised).** A person working on this repository can open one launcher that lists the repository's available actions and runs the one they choose, on each platform this repository supports; adopters are told the pattern exists."""
@@ -268,6 +301,7 @@ acceptance = """A root menu launcher exists for this repository's supported plat
 
 [need.SN-036]
 status = "Approved"
+stakeholder_refs = ["STK-01"]
 priority = "S"
 need = """**Scope: template (adopters + this repo).** When a stakeholder's need is turned into detailed requirements, it is examined from every relevant expert and downstream-user perspective so important failure cases are not lost."""
 why = """A decomposition produced from one perspective can omit security, operations, accessibility or first-use failures while still appearing complete. The omission remains invisible unless the review records which relevant perspectives were considered and what each contributed."""
@@ -275,6 +309,7 @@ acceptance = """Each decomposition has a machine-readable record of the declared
 
 [need.SN-037]
 status = "Approved"
+stakeholder_refs = ["STK-03"]
 priority = "M"
 need = """**Scope: template (adopters + this repo).** A stakeholder can see where each promised system behavior enters or leaves the system, and the architecture changes with those promises instead of being invented afterward."""
 why = """A requirement whose inputs and outputs cannot be located at a declared system boundary cannot be verified or assigned to a responsible component. Updating requirements and architecture separately also leaves periods in which each tells a different story."""
@@ -282,6 +317,7 @@ acceptance = """Every system-requirement input and output references a declared 
 
 [need.SN-038]
 status = "Approved"
+stakeholder_refs = ["STK-02"]
 tags = ["templates"]
 priority = "M"
 need = """**Scope: template (adopters + this repo).** An adopter can determine why every file supplied by the kit exists and which stakeholder outcome it supports."""
@@ -290,6 +326,7 @@ acceptance = """A declared shipped-file inventory defines the coverage universe 
 
 [need.SN-039]
 status = "Approved"
+stakeholder_refs = ["STK-02"]
 tags = ["templates"]
 priority = "S"
 need = """**Scope: template (adopters + this repo).** An adopter can tell whether each stakeholder need applies to the reusable template, this repository alone, or both, without inferring scope from surrounding prose."""
@@ -298,6 +335,7 @@ acceptance = """Every non-example stakeholder-need row carries a required scope 
 
 [need.SN-040]
 status = "Approved"
+stakeholder_refs = ["STK-03"]
 priority = "S"
 need = """**Scope: template (adopters + this repo).** A stakeholder can obtain a repeatable explanation for why the system was divided into its chosen components, based on the system's declared inputs, outputs and internal signal trade-offs rather than an unrecorded model judgment."""
 why = """A component breakdown invented free-form by a model (or a person) leaves no record of the alternatives weighed, so the next reviser cannot tell load-bearing boundaries from accidents. Deriving the partition from the system's own declared inputs and outputs, against a declared objective, leaves evidence the choice can be re-examined against."""
@@ -305,6 +343,8 @@ acceptance = """A decomposition run records the candidate partitions considered,
 
 [need.SN-041]
 status = "Approved"
+stakeholder_refs = ["STK-01"]
+source = ["README.md#objective-o1"]
 priority = "M"
 need = """**Scope: template (adopters + this repo).** A person reading a project's code or analytics long after it was written can understand what each part does and why it exists, and can change one part without having to understand or rework unrelated parts."""
 why = """The vision promises code and analytics that stay readable and correct over the long run. Code that only its author can follow gets rewritten instead of changed, each rewrite drops behavior nobody wrote down, and each later change costs more than the one before."""
@@ -312,6 +352,8 @@ acceptance = """A reader new to a sampled part of the code can say what it does 
 
 [need.SN-042]
 status = "Approved"
+stakeholder_refs = ["STK-01"]
+source = ["README.md#objective-o3"]
 priority = "M"
 need = """**Scope: template (adopters + this repo).** The owner can rely on every required behavior being checked by tests written from its requirement before the behavior was built, rather than by tests written afterwards to fit what was built."""
 why = """Tests written after the code tend to describe what the code does instead of what was required, so a passing run stops being evidence that the requirement is met, and the approval gates stop meaning what the vision promises."""
@@ -319,6 +361,7 @@ acceptance = """Each requirement's test cases are defined and approved before it
 
 [need.SN-043]
 status = "Approved"
+stakeholder_refs = ["STK-03"]
 tags = ["templates"]
 priority = "M"
 need = """**Scope: template (adopters + this repo).** A reviewer can see, for each stakeholder outcome, what its delivery relies on beyond the system's own checked behavior, and whether each of those premises has itself been checked."""
@@ -327,8 +370,41 @@ acceptance = """Each premise that a requirement relies on beyond the system's ow
 
 [need.SN-044]
 status = "Approved"
+stakeholder_refs = ["STK-01", "STK-03"]
 tags = ["templates"]
 priority = "S"
 need = """**Scope: template (adopters + this repo).** A stakeholder can find the needs that are theirs, and a reader can check a need against the document it was drawn from."""
 why = """A need with no named owner has nobody who can confirm it is still wanted, and a need drawn from a longer statement of constraints drifts from it unseen; either way, what the requirements serve stops being what anyone asked for."""
 acceptance = """Each need names the declared stakeholder or stakeholders whose outcome it is, and each declared stakeholder states which outside party it is where that is known. A need drawn from another document points at the place it was drawn from, and that pointer resolves. A need naming no stakeholder, or one that is not declared, is reported."""
+
+# --- STAKEHOLDERS --------------------------------------------------------------
+#
+# Who owns the outcomes above: one table per stakeholder, `[stakeholder.STK-##]`,
+# with the same `status` field as every tier. Every stakeholder's `party` is the
+# human operator (EXT-006): an adopting team is the human operator of the kit in
+# its own repository. A stakeholder owns an OUTCOME; a review perspective in
+# `hats.toml` owns a QUESTION, and no perspective becomes a stakeholder row.
+
+[stakeholder.STK-01]
+name = "Owner"
+description = """Holds approval authority over the repository, sets its policy and design constraints, and runs it unattended where that is enabled."""
+party = "EXT-006"
+status = "Approved"
+
+[stakeholder.STK-02]
+name = "Adopting team"
+description = """A team that adds the kit to its own repository and works under it there."""
+party = "EXT-006"
+status = "Approved"
+
+[stakeholder.STK-03]
+name = "Reviewer"
+description = """A person deciding whether to trust what the process reports and what ships, by reading the spine, the verdicts and the generated views."""
+party = "EXT-006"
+status = "Approved"
+
+[stakeholder.STK-04]
+name = "Contributor"
+description = """A person developing this repository: setting it up, changing it and keeping it to its own standard."""
+party = "EXT-006"
+status = "Approved"

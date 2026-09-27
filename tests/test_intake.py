@@ -290,8 +290,8 @@ def test_the_amendment_mint_is_idempotent_across_a_rerun(tmp_path):
 
 def _released(root):
     """Release every spine rung to the loop — the dial state this trigger needs.
-    `DevStg-Needs` is what this repo itself runs: the owner holds Needs and
-    nothing above it."""
+    The fixture declares `DevStg-Needs`: the owner holds Needs and nothing
+    above it. (This repository's own value is docs/process.toml's to state.)"""
     set_process_key(
         root, "attestation", "human_approval_through", kit_ladder.STAGE_NEEDS
     )
@@ -349,7 +349,8 @@ def test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing(tmp_pat
 
     Until this round the refusal walked `SPINE_CSVS` — SR/LLR/TC — only, so the
     one tier the human-approval dial holds for the owner (`DevStg-Needs`, the
-    rung THIS repo runs held) was the one a lane could bless on its way past.
+    rung the fixture declares held) was the one a lane could bless on its way
+    past.
     That is the worst case of the act the owner's 2026-09-01 ruling moved to the
     adjudicator, not an exempt one, so `APPROVAL_ACT_CSVS` now adds the need
     registry. The three OFF-SPINE registries stay out — their approval cells are
@@ -367,8 +368,9 @@ def test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing(tmp_pat
 
     The second half is the dial's: even released of the refusal, no adjudication
     is minted over the flip. Two independent reasons, both intended — the rung
-    is HELD here (`human_approval_through = DevStg-Needs`, so the loop may not
-    approve needs at all), and the first-approval mint's universe was left at
+    is HELD in the fixture (`human_approval_through = DevStg-Needs`, so the
+    loop may not approve needs at all), and the first-approval mint's universe
+    was left at
     `SPINE_CSVS` on purpose, because widening the MINT is a separate decision
     from widening the REFUSAL and this round made only the second."""
     acceptance_record = load_script("acceptance_record")
