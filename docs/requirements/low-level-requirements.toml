@@ -2472,7 +2472,7 @@ phase = 6
 [design.LLR-235]
 sr_refs = ["SR-199"]
 title = "The observation writer"
-module = "project-trajectory/scripts/record_observation.py;project-trajectory/scripts/bootstrap.py"
+module = "project-trajectory/scripts/record_observation.py"
 code_symbol = "build_observation/record_refusal/inputs_digest/main"
 detail = "record_observation.py --tc TC-### --outcome pass|fail --by <provenance> [--expires <UTC>] resolves the test case from the registry, refuses an undeclared test case or one that is not an observation test case, an outcome outside OUTCOMES, a missing provenance, and an expiry later than observed_at plus the case's max_age; with no --expires it writes observed_at plus max_age. inputs_digest(root, inputs) folds each declared input in declared order as name, NUL, SHA-256 of its LF-normalized bytes, the fold kitlib/stage uses; a registry row id is digested as that row's cells as the carrier reads them. The writer calls write_atomic and never opens the test-case registry for writing. bootstrap.MAPPING ships the script and the kitlib module; the directory is not a declared stage input, so recording a sample never makes the stage's fingerprint or the release evidence stale."
 status = "Approved"
@@ -2672,7 +2672,7 @@ phase = 6
 [design.LLR-256]
 sr_refs = ["SR-216"]
 title = "The per-change readability report"
-module = "project-trajectory/scripts/check_readability.py;project-trajectory/scripts/bootstrap.py"
+module = "project-trajectory/scripts/check_readability.py"
 code_symbol = "MEASURES/changed_parts/worsened_findings/main"
 detail = "check_readability.py reads the declared measures from a [readability] section of the stack profile, a list of measure names. MEASURES maps each name to an adapter that runs that measure's own comparison over the changed parts only; the complexity adapter reuses check_complexity's census, baseline reader and comparison rather than copying them. A measure cannot join until it can name the part it worsened. changed_parts reads the change as the index against HEAD, or merge-base to tip on a claimed branch. worsened_findings prints one line per worsening naming the measure, the part and the delta; a profile declaring no measure prints one line saying nothing is measured. The exit is nonzero only for a worsening in a measure the profile declares gating. A [step:readability] runs it, bootstrap.MAPPING ships it, and the stack-profile contract names the section."
 status = "Approved"

@@ -2,11 +2,24 @@
 id = "WI-662"
 title = "Drop bootstrap.py from design rows whose code_symbol names nothing in it"
 workstream = "requirements"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "quick"
 safety_class = "ordinary"
 priority = 5
 +++
+
+## Deliverable
+
+`project-trajectory/scripts/bootstrap.py` is dropped from the `module` cell of
+the two design rows whose `code_symbol` names nothing in it: LLR-235
+(record_observation) and LLR-256 (check_readability). These are traced cells,
+so no re-attestation follows. LLR-203 and LLR-218 (`MAPPING`) and LLR-009,
+LLR-010, LLR-011, LLR-121 and LLR-156 keep it, since each has a symbol that
+binds there. The check the spec asked about, a warning on a listed module no
+symbol binds in, is worth building only as a counted advisory, and only after
+a ruling on what `module` means. The binding rule reads the cell as a union
+(LLR-180's approved detail), 37 rows would fire on arrival, and a name-only
+oracle is fooled by `main`. It is filed as **WI-670**. Sol: SOUND.
 
 ## Context
 

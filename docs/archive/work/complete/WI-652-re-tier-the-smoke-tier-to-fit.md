@@ -35,7 +35,7 @@ suite, and 13 new direct pins were added.
   check that would catch the class, are WI-672.
 - **Declared figures:** the membership ceiling `max-tests` drops 2030 → 1620,
   about 4% over 1558. CLAUDE.md and the session-protocol skill carry the new
-  figures (CLAUDE.md +2 bytes, now 7,977 of 8,500). The `fig:` markers for
+  figures (CLAUDE.md +2 bytes, now 7,977 of 8,500). The provenance markers for
   the count and the seconds are stamped against this item's landing commit in
   the next integration commit, the stack profile's established pattern.
 - **Review:** Sol's first round (the measurement, which the integrator had
