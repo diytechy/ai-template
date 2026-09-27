@@ -160,7 +160,7 @@ adjudicator judged them. WI-679 decides both gaps, decides the hosts'
 standing (a retroactive judgement from the kit's consolidate brief is one
 option), and then runs the machinery end to end on the live queue. Nothing
 open could hold it, because WI-582, which carried SR-220, has closed.
-**Open count: 16** (15 queued, 1 deferred): WI-582 closed and WI-679 filed.
+**Open count: 17** (16 queued, 1 deferred): WI-582 closed (16), then WI-679 filed.
 
 ### WI-672 lands: the suite's own honesty (with WI-663, WI-598 and WI-619)
 
@@ -172,7 +172,7 @@ split to stay Smoke, and TC-068's stale `expected` was amended.
 labelled derived SR-221. The trunk regen table is driven whole. Merge: five
 conflicts, each two independent additions (the SR-220 and SR-221 rows, the
 TC-253/254 and TC-255/258 rows, the IF-176 and IF-233 contracts, two RESYNC
-entries), all resolved by keeping both. **Open count: 15.**
+entries), all resolved by keeping both. **Open count: 16.**
 
 Next spine-acts batch, from this lane: amendments to the `tier` cells of
 TC-067, TC-068, TC-077, TC-086, TC-100, TC-189 and TC-198, and to TC-068's
@@ -195,7 +195,7 @@ One builder, two rounds (wave-4 ruling 12). The quarantine spares the review
 record and the watermark, the latter by exact path. The integrate lock is
 declared residue. The claim never rewrites the owner's scratchpad. A minted
 open item carries its full typed brief, refused by name when thin; OI-77 and
-OI-78 were the two minted thin before this. **Open count: 14.**
+OI-78 were the two minted thin before this. **Open count: 15.**
 
 Commit bar at WI-581: `check_trajectory --strict` clean, `trace
 --strict-integrity` 0, approve-modified current, `gen_open_items` current,
@@ -217,7 +217,7 @@ four steps ship behind `[checks] assumption_gate = false`, and SR-212 now
 has its Boundary arm over crossings. The merge resolved four conflicts, all
 two independent additions: the IF rows, the RESYNC entries (re-anchored to
 6957fb38), and trace.py's and intake.py's size-ratchet counts, re-measured
-at 3740 and 1510. **Open count: 13.**
+at 3740 and 1510. **Open count: 14.**
 
 Next spine-acts batch, from this lane: amendments SR-198, SR-212, LLR-233,
 LLR-244, LLR-254, TC-228, TC-239, TC-247, TC-036, TC-055. The first merge
@@ -252,7 +252,7 @@ structural-move bullet in PROCESS.md §3 (+323 bytes), and the
 missed the drift: `[step:complexity]` starts at DevStg-Impl while the derived
 stage is DevStg-Tests, and no hook runs the census. Codex Sol: first round
 NOT YET SOUND (the flag-axis command could exit nonzero), then SOUND.
-**Open count unchanged at 13**: WI-657 stays queued for WI-624's research.
+**Open count unchanged at 14**: WI-657 stays queued for WI-624's research.
 
 Commit bar at WI-657 (parts 1 to 3): `check_trajectory --strict` clean,
 `trace --strict-integrity` 0, approve-modified current, `gen_open_items`

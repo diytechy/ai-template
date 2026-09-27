@@ -25,30 +25,30 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-09-27-coordinator.md](handoff-2026-09-27-coordinator.md).
-  Its first job, consolidating the queue, is done (50 open to 21; the
-  groups and their hosts are in the fourth session's log fragment,
-  `docs/log.d/2026-09-27-wave4-consolidation.md`). Build one lane per group,
-  file new work into an open group's Context before minting a row, and batch
-  the spine acts. Then its read order applies, and the redesign's remaining threads
-  keep their context in [handoff-2026-09-06.md](handoff-2026-09-06.md).
-  Recheck Git and the generated frontier before choosing work; earlier
-  handoffs are historical context.
-- **Assumption tier — the third build wave has landed:** the C1 sitting
-  commit is on trunk (the redrawn frame, the stakeholders, the dial at
-  DevStg-Boundary), and so is the joint amendment adjudication. The
-  re-judging build and one re-anchor carry over (the handoff's "Carried
-  over"). The remaining build, C2's content and the reversal sweep follow in
-  the handoff's consolidated groups. The full unfiltered suite is owed
-  before any phase close. OI-88 is ruled (c) (2026-09-27): SR-212 gains a
-  Boundary arm over crossings, carried by the assumption group.
+  [handoff-2026-09-27-wave4-coordinator.md](handoff-2026-09-27-wave4-coordinator.md).
+  The queue is consolidated (50 open to 14) and six groups have landed. Its
+  first jobs: re-measure the smoke tier quietly, then ONE spine-acts batch
+  (one adjudicator, one act) over every row the landed groups amended or
+  drafted, which the handoff lists. Then the consolidation machinery item and
+  the remaining groups, one builder each. File new work into an open group's
+  Context before minting a row. The redesign's remaining threads keep their
+  context in [handoff-2026-09-06.md](handoff-2026-09-06.md). Recheck Git and
+  the generated frontier before choosing work; earlier handoffs are
+  historical context.
+- **Assumption tier — the build has landed:** the C1 sitting (the redrawn
+  frame, the stakeholders, the dial at DevStg-Boundary), checkpoint
+  re-judging of observation tests, and the assumption gate's four steps
+  (behind `[checks] assumption_gate = false`), with SR-212's Boundary arm per
+  OI-88 (c). Their amended rows await the spine-acts batch. C2's content is
+  next in its group, C3 (evidence) and C4 (activation) after it. The full
+  unfiltered suite is owed before any phase close.
 - **Sister plan — one plan still owed:** every question in the
   [notes on spine, sessions and tests](plans/2026-09-23-owner-notes-spine-sessions-and-tests.md)
   §5 is ruled except S11, whose direction (one trunk commit per work item)
   needs its own plan before any ruling; design S9's reviewer-commit check with
   it. S7's session service proceeds and writes S8's adopted OTel schema; S6 is
-  designed with the assumption tier before its C3; S14's flag-axis count
-  proceeds, its duplicate-detection research first.
+  designed with the assumption tier before its C3; S14's flag-axis count has
+  landed, and its duplicate-detection research is still owed.
 - **Next implementation:** resolve the existing SR-161 per-decomposition
   perspective-record gap and complete TC-211's normal sample. Follow the
   existing artifact adjudication route for the Drafted amendments; passing an
