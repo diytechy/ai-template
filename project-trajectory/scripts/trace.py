@@ -254,6 +254,7 @@ try:
     from assumption_rules import observation_evidence_findings
     from assumption_rules import assumption_chain
     import record_observation
+    import retire
     from absolute_terms import absolute_advisories, absolute_report_lines
     from absolute_terms import absolute_summary
     from trace_text import (
@@ -306,6 +307,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     from assumption_rules import observation_evidence_findings
     from assumption_rules import assumption_chain
     import record_observation
+    import retire
     from absolute_terms import absolute_advisories, absolute_report_lines
     from absolute_terms import absolute_summary
     from trace_text import (
@@ -5133,6 +5135,9 @@ class Findings:
     # class since migration step 7 — it is also appended to `findings.integrity`
     # there, and kept as its own list so the console can name the rule.
     snapshot_findings: list = field(default_factory=list)
+    # Filled after analyze() returns: the retirement records are files read
+    # against git. Warn-first, so never in an exit code.
+    retired_advisories: list = field(default_factory=list)
     provenance: list = field(default_factory=list)
     form: list = field(default_factory=list)
     paraphrase: list = field(default_factory=list)
@@ -6252,6 +6257,7 @@ def render_console(reg, findings, args, out, html_out):
         + verif_coherence_advis
         + absolute_summary(findings.absolute_advis)
         + watermark_advis
+        + findings.retired_advisories
     ):
         print(f"WARNING (advisory): {a}")
     # ARMED AT MIGRATION STEP 7: the UNANCHORED rule left the advisory loop above
@@ -6812,6 +6818,9 @@ def main():
     # nobody had to make, and never again. Same pipe, because it is still one
     # property: every approval rode a copy, and every copy is a copy. The
     # record's own producer also reports a malformed act ledger (WI-632).
+    # The retirement records (SR-226): a spent id with none, one moved after it
+    # landed. Beside the watermark because both read the spent ids.
+    findings.retired_advisories = retire.retirement_findings(wm_root)
     findings.snapshot_findings = (
         baseline_snapshot.record_findings(wm_root)
         + check_trajectory.staged_snapshot_findings(wm_root)

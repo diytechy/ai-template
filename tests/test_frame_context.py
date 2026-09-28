@@ -122,7 +122,9 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
     # person preparing a release, and the flag-axis census's argv (IF-240),
     # run by the adopter's session. So did the consolidation census's argv
     # (IF-243) and the merge-slot intake's recovery sweep (IF-244), each run by
-    # the person operating the process by hand.
+    # the person operating the process by hand. The retirement records (IF-257)
+    # joined them, as did the command that writes them (IF-258): the adopter's
+    # session runs it and looks a record up.
     assert [u["id"] for u in frame["untied"]] == [
         "IF-032",
         "IF-036",
@@ -139,5 +141,7 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
         "IF-240",
         "IF-243",
         "IF-244",
+        "IF-257",
+        "IF-258",
     ]
     assert all(u["reason"].startswith("No tie-back") for u in frame["untied"])

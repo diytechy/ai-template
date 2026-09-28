@@ -32,6 +32,13 @@ docs/work/*
 # directory, `kitlib.registry` still reads it as one registry.
 docs/archive/work/*
 
+# The retirement records (PROCESS.md section 5): one file per retired spine row,
+# under the fragment drop-box but outside its fold, which reads only the
+# top level. Kept, never compiled or deleted, and for LOOKUP by id rather than
+# navigation, so no page links the set. (The drop-box glob below matches these
+# too; this line states why they stay.)
+docs/log.d/retired/*
+
 # The log's fragment drop-box: a work branch's `docs/log.md` entry, parked under
 # its own unique name until `scripts/trunk_step.py` compiles it into the log on
 # the trunk. Transient by construction and never a navigation node — the entry

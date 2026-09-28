@@ -1381,7 +1381,7 @@ component = "CMP-008"
 
 [interface.IF-102]
 owner = "scripts/spine_carrier"
-requestors = ["scripts/trace", "scripts/acceptance_record", "scripts/check_trajectory", "scripts/gen_arch_map", "scripts/plan_coverage", "scripts/spine_rules", "scripts/traj_status", "scripts/check_test_first", "scripts/rejudge"]
+requestors = ["scripts/trace", "scripts/acceptance_record", "scripts/check_trajectory", "scripts/gen_arch_map", "scripts/plan_coverage", "scripts/spine_rules", "scripts/traj_status", "scripts/check_test_first", "scripts/rejudge", "scripts/retire"]
 channel = "call"
 data = "spine_carrier.load / resolve / stem / carriers / rows_from_text / rows_seq_from_text / status_cells; rows under today's column names, None on a TOML decode error"
 version = "v1"
@@ -2250,3 +2250,25 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """source - the module imports nothing and reads no file, git or environment, so every answer is a function of its arguments; the git read of a record and the policy-file read of the dial stay with the merge slot and the dial reader."""
+
+[interface.IF-257]
+rationale = """A retired row's record is written by the retirement and read by three parties: the traceability check that reports a missing or moved record, the dashboard that lists the records with their deleting commits, and a session that meets a spent id and looks it up. Declaring the files' path and shape as one contract keeps the writer and every reader on one shape, and one file per id keeps the lookup a path rather than a search and the write conflict-free across parallel branches."""
+owner = "scripts/retire"
+consumers = ["scripts/trace", "scripts/gen_trajectory", "external:downstream adopter"]
+channel = "file"
+data = "docs/log.d/retired/<ID>.md: +++ exactly id, date, successor, reason +++, no body, never rewritten; docs/log.d/retired/before-the-record.toml: <tier> = id ranges"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """No tie-back: the reader outside the kit is the adopter's own session looking up a spent id it met, and the frame declares no crossing for a read of the repository's own files. The files are written only through the command, whose arm is its own seam. The fold of session records into the activity log reads only the directory above and never reaches these files."""
+
+[interface.IF-258]
+rationale = """Retiring a row is a person's or a session's act, and the command is the one sanctioned way to perform it, so its arguments and its exit protocol are a contract of their own: a caller must be able to tell a retirement done from one refused with nothing written, whatever the files' format later becomes."""
+owner = "scripts/retire"
+requestors = ["external:downstream adopter"]
+channel = "cli"
+data = "<ID> --reason [--successor] [--date] | --seed [--exclude ID,..] [--replace]; [--root] · 0 done · 1 REFUSED, nothing written · 2 usage"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """No tie-back: the argv comes in from the adopter's own session, and the frame declares no inbound crossing for an invocation."""

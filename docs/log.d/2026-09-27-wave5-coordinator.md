@@ -735,3 +735,39 @@ Commit bar at batch D: `check_trajectory --strict` clean, `trace
 --strict-integrity` 0, approve-modified current, `gen_open_items` current,
 `check_docs --stale` 0 broken, smoke 1799 passed / 3 skipped, seconds 42.9 s
 within 60 s. Trunk before this squash: 126cf5f2.
+
+Batch D's sweep minted WI-710, which was redundant in the same way as WI-706
+(the four completed crossings and their act shared one squash), so it is
+closed with that stated, and WI-711 (TC-296's one-clause follow-up).
+**Open count: 11** (10 queued, 1 deferred).
+
+### WI-618 lands: retired spine rows recorded as structured fragments
+
+One builder, three Codex Sol rounds (wave-5 rulings 48 and 50):
+[sol-wi618.md](../reviews/2026-09-27-wave5/sol-wi618.md),
+[sol-wi618-fix.md](../reviews/2026-09-27-wave5/sol-wi618-fix.md),
+[sol-wi618-fix2.md](../reviews/2026-09-27-wave5/sol-wi618-fix2.md).
+`retire.py` deletes a spine row and writes its record under
+`docs/log.d/retired/` in the same commit, and D-4 names that home. Two
+warn-first checks watch the records, and the dashboard gains a Retired tab.
+Sol's rounds made the census reservation-aware, gave shallow clones an
+honest "unverifiable" advisory, closed a freshness exemption, tightened the
+record format, and split the file seam (IF-257) from the command seam
+(IF-258). At the merge the coordinator regenerated the census on trunk:
+`retire.py --seed --replace --exclude SR-222,LLR-266..270,TC-262..268,IF-245..249`.
+That excludes WI-620's reserved ids, which stay in the warn-only report
+until that lane lands, and keeps the genuinely spent-unused ids (TC-277,
+TC-280 to TC-288, TC-295, TC-298). **Open count: 10** (9 queued, 1 deferred).
+
+Commit bar at WI-618: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs --stale` 0 broken, smoke 1799 passed / 3 skipped, seconds 29.5 s
+within 60 s. The touched slow modules plus both ratchets (test_retire,
+test_retire_dashboard, test_trace, test_dogfood_sync, test_rule_sync,
+test_resync_pack, test_gen_trajectory, test_traj_views, test_traj_render,
+test_frame_context, test_check_docs, test_bootstrap, test_trunk_step,
+test_skills_sync, test_module_size_ratchet, test_complexity_ratchet), run by
+the coordinator: 448 passed / 2 skipped. `check_complexity --mode enforce`:
+OK, 204 rows. The merge conflicted only in the watermark (trunk's,
+re-bumped). The auto-merged registries were checked, and every row keeps
+its status and phase. Trunk before this squash: ec05c5ce.

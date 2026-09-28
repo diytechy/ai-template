@@ -857,6 +857,10 @@ There is a **third** tier behind those two — `docs/archive/`, where a document
 that records a historical decision and is no longer read by a script goes to
 stop competing with the live surfaces; its README states the boundary rule and
 the counter-rule (a generated or script-read surface is machinery, not history).
+A retired spine row is deleted and leaves one record, `docs/log.d/retired/<ID>.md`
+(id, date, successor, reason), written by `retire.py` with the deletion. Records
+are for **lookup, not browsing**: read the record of a spent id you meet; never
+survey the set.
 
 **Open items — the owner decision surface, always shipped.** A decision deferred
 to the owner is a **row** in `docs/requirements/open-items.toml`, rendered by

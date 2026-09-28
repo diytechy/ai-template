@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 261
-seam_rows = 205
-requirements_placed = 111
+design_rows = 263
+seam_rows = 207
+requirements_placed = 112
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -76,6 +76,7 @@ sr_refs = [
   "SR-214",
   "SR-219",
   "SR-221",
+  "SR-226",
 ]
 sr_shared_refs = [
   "SR-017",
@@ -87,6 +88,7 @@ sr_shared_refs = [
   "SR-155",
   "SR-163",
   "SR-176",
+  "SR-226",
 ]
 llr_refs = [
   "LLR-001",
@@ -185,6 +187,7 @@ llr_refs = [
   "LLR-276",
   "LLR-277",
   "LLR-278",
+  "LLR-286",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -237,6 +240,7 @@ modules = [
   "project-trajectory/scripts/migrate_carrier.py",
   "project-trajectory/scripts/plan_coverage.py",
   "project-trajectory/scripts/record_observation.py",
+  "project-trajectory/scripts/retire.py",
   "project-trajectory/scripts/spine_carrier.py",
   "project-trajectory/scripts/spine_rules.py",
   "project-trajectory/scripts/trace.py",
@@ -278,6 +282,7 @@ seam_internal_refs = [
   "IF-220",
   "IF-226",
   "IF-252",
+  "IF-257",
 ]
 seam_boundary_refs = [
   "IF-001",
@@ -350,6 +355,7 @@ seam_boundary_refs = [
   "IF-242",
   "IF-243",
   "IF-244",
+  "IF-258",
 ]
 
 [component_view.CMP-007]
@@ -856,6 +862,7 @@ sr_refs = [
   "SR-170",
   "SR-218",
   "SR-224",
+  "SR-226",
 ]
 sr_shared_refs = [
   "SR-049",
@@ -863,6 +870,7 @@ sr_shared_refs = [
   "SR-146",
   "SR-163",
   "SR-170",
+  "SR-226",
 ]
 llr_refs = [
   "LLR-009",
@@ -928,6 +936,7 @@ llr_refs = [
   "LLR-279",
   "LLR-281",
   "LLR-285",
+  "LLR-287",
 ]
 hat_refs = [
   "ACCESSIBILITY",
@@ -1039,6 +1048,7 @@ seam_boundary_refs = [
   "IF-216",
   "IF-228",
   "IF-254",
+  "IF-257",
 ]
 
 [unplaced]

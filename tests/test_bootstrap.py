@@ -136,6 +136,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/derive_stage.py",
         "scripts/record_test_evidence.py",
         "scripts/record_observation.py",
+        "scripts/retire.py",
         "scripts/check_doc_refs.py",
         "scripts/check_figures.py",
         "scripts/check_readability.py",

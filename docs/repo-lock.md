@@ -365,6 +365,20 @@ SR-tier carrier key, and its `approved` classification in `check_trajectory`
 all retired in the same commit; the log's forwarding entry is the map. The
 CMP-registry `PartOf`/`SupersededBy` rule stays (separate, still live).
 
+**AMENDED 2026-09-28 (WI-618; owner ruling S4, 2026-09-23, home revised
+2026-09-24 by review pack A2):** deletion stays, and history gains a THIRD,
+structured home beside git and the log. A retired spine row leaves one record,
+`docs/log.d/retired/<ID>.md` — id, date, successor if any, reason — written by
+`retire.py` in the same commit as the deletion. The subdirectory is load-bearing:
+`trunk_step.py` folds and deletes every top-level `docs/log.d/*.md`, and its glob
+does not recurse. No self-referential hash: the dashboard resolves the deleting
+commit from git at render time and shows *unknown* in a shallow or squashed
+clone. Append-only by check, warn-first: a record changed after it lands, and a
+spent id with no record, are reported by `trace.py`; ids spent before the record
+began are declared once in `docs/log.d/retired/before-the-record.toml`. The
+owner's condition travels with the amendment: records are for **lookup, not
+browsing** (PROCESS.md §5).
+
 ### D-5 — ONE TOML CARRIER for all four tiers
 
 **Ruled 2026-08-10, EXECUTED 2026-08-11** (`bb69a622` · `f7be75af`, plus

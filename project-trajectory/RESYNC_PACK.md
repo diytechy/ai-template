@@ -6402,6 +6402,43 @@ from the template if you want the example beside your records. Before setting
 was never told to write its record, and its merge would be refused until
 someone writes it.
 
+### Retired spine rows leave a record in `docs/log.d/retired/` [since 32687d47]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A superseded spine row is still deleted, and now leaves one
+record: `docs/log.d/retired/<ID>.md`, a `+++` TOML front matter holding `id`,
+`date`, `successor` (empty when none) and `reason`. The new
+`scripts/retire.py <ID> --reason "<why>" [--successor <ID>] [--date
+YYYY-MM-DD]` deletes the row from its registry and writes the record, both as
+working-tree changes for one commit; it refuses, writing nothing, a row that is
+not live, a successor that is not live, a blank reason and an id that already
+has a record. `retire.py --seed [--exclude ID[,ID...]]` writes
+`docs/log.d/retired/before-the-record.toml` once, declaring the ids spent
+before the record began and never an excluded one; `--replace` regenerates
+a census that has not yet landed. `trace.py` prints two new
+advisories, never in an exit code: a spent SN/SR/LLR/TC id with neither a record
+nor a place in that census, and a file under `docs/log.d/retired/` whose text
+has changed since it landed or that was removed (in a shallow clone that
+cannot see a file's landing, its append-only status is reported as
+unverifiable). The dashboard gains a Retired
+tab once a record exists, showing each record's deleting commit read from git
+(*unknown* in a shallow or squashed clone); `gen_trajectory.py --check` holds the
+page to that commit wherever the checkout can resolve it, and ignores it only
+where it cannot. `trunk_step.py --compile-log` is
+unchanged: its fold reads only the top level of `docs/log.d/`, so the records
+stay. The shipped `orphans-allow.template` gains a `docs/log.d/retired/*` line
+stating why. PROCESS.md §5 states the records are for lookup, not browsing.
+
+**What to do.** Re-sync the kit files, `scripts/retire.py` included. Run
+`python scripts/retire.py --seed` once, in the commit that takes the re-sync
+(`--exclude` naming any id a branch still in flight has reserved, since that
+id is not retired): without the census every id your repository has already
+spent is reported as missing a record. Add the `docs/log.d/retired/*` line and its reason to your
+`docs/orphans-allow` (the existing `docs/log.d/*` glob already matches the
+records; the line states why they are kept). From then on, retire a row with
+`retire.py` rather than by hand.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -134,6 +134,7 @@ if _STATUS_ONLY:
     import traj_status  # noqa: F401
 else:
     from traj_display import load_display_snapshot
+    import retire
     from rendering import traj_context, traj_graph, traj_panels, traj_render, traj_views  # noqa: F401
     import traj_status  # noqa: F401
     import traj_parse  # noqa: F401
@@ -223,6 +224,7 @@ else:
         dag_svg,
         flows_block,
         need_assumption_hooks,
+        retired_panel,
         sw_containment,
         sw_graph,
         when_view,
@@ -286,6 +288,37 @@ OUT_HTML = "PROJECT_STATE.html"
 # it would force a follow-up regen commit after every source commit. Content
 # freshness stays byte-exact; the stamp is informational.
 ASOF_RE = re.compile(r'<p class="asof">.*?</p>', re.S)
+# The retired view's deleting commits are read from git too. Where this
+# checkout can name a record's landing, the page must carry exactly that
+# commit; where it cannot (a shallow CI clone, a squashed history), the page
+# may carry whatever the fuller history that rendered it read, so only those
+# records' commits are emptied before the compare.
+RETCOMMIT_RE = re.compile(r'(<code class="retcommit" data-id="([^"]*)">)[^<]*(</code>)')
+
+
+def fresh_view(text, unresolved=()):
+    """What the --check compare reads: the page without its as-of stamp, and
+    without the deleting commit of each record in `unresolved`, the ids whose
+    landing this checkout cannot resolve.
+
+    Implements: SR-226, LLR-287
+    """
+    unresolved = set(unresolved)
+
+    def blank(match):
+        if match.group(2) in unresolved:
+            return match.group(1) + match.group(3)
+        return match.group(0)
+
+    return RETCOMMIT_RE.sub(blank, ASOF_RE.sub("", text))
+
+
+def _unresolved(root):
+    """The ids of the records whose deleting commit this checkout reads as
+    unknown."""
+    return {r["id"] for r in retire.records(root) if r["commit"] == retire.UNKNOWN}
+
+
 # Implements: SR-053, LLR-111, SR-052, LLR-112, SR-054, LLR-117, SR-054, LLR-285
 HTML_TEMPLATE = string.Template("""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
@@ -850,6 +883,17 @@ def _splice_context_into_panel(panel, context_html):
     return head + _SW_HEADING + context_html + "\n" + tail
 
 
+def _retired_view(root):
+    """`([tab], [panel])` for the Retired view, or `([], [])` until a row has
+    been retired, so `build_html` extends its tab lists without a branch.
+
+    Implements: SR-226, LLR-287
+    """
+    before = sum(len(ids) for ids in retire.read_census(root)[0].values())
+    view = retired_panel(retire.records(root), before)
+    return ([view[0]], [view[1]]) if view else ([], [])
+
+
 def build_html(root, wis):
     snapshot = load_display_snapshot(root)
     total = len(wis)
@@ -981,6 +1025,10 @@ def build_html(root, wis):
         tab, panel = proc
         extra_tabs.append(tab)
         extra_panels.append(panel)
+    # SR-226: the retirement records, the one view that shows them as a set.
+    tabs, panels = _retired_view(root)
+    extra_tabs += tabs
+    extra_panels += panels
 
     # </ -> <\/ so a stray "</script>" inside requirement text can't close the tag.
     def j(o):
@@ -1097,7 +1145,10 @@ def main():
         current = out.read_text(encoding="utf-8") if out.exists() else None
         # The as-of stamp is excluded from the freshness compare (see ASOF_RE):
         # content gates byte-exact, the stamp is informational.
-        if current is None or ASOF_RE.sub("", current) != ASOF_RE.sub("", generated):
+        unresolved = _unresolved(root)
+        if current is None or fresh_view(current, unresolved) != fresh_view(
+            generated, unresolved
+        ):
             print(
                 "project-state dashboard STALE in {}: run `python "
                 "scripts/gen_trajectory.py`".format(OUT_HTML),

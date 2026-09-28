@@ -379,6 +379,8 @@ SLOW_MODULES = frozenset(
         "test_prompts_driven",  # 54 s: a full bootstrap, then the loader over it
         "test_snapshot_readers",  # a bootstrap per case, trace.py subprocesses and real git repos
         "test_decision_record_merge",  # claims and closes a lane in a real git repo per case
+        "test_retire",  # the retirement command, the log fold and trace.py over real git repos
+        "test_retire_dashboard",  # the generator over git repos, a shallow clone included
     }
 )
 

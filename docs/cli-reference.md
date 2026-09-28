@@ -551,6 +551,21 @@ _Record the test evidence — the harness driver that makes `DevStg-Release`_
 | `--check` | report whether the committed record still holds; exit 1 if not |
 | `--dry-run` | print the record a green run would write; run nothing, write nothing |
 
+### `scripts/retire`
+_Retire a spine row and leave its record — the one writer of `docs/log.d/retired/`._
+Contracts (interfaces): IF-257, IF-258
+
+| Option | Help |
+|---|---|
+| `id` | the spine row to retire |
+| `--reason` | why the row is retired |
+| `--successor` | the live row replacing it |
+| `--date` | YYYY-MM-DD (default: today) |
+| `--seed` | declare the ids spent before the record began, once |
+| `--exclude` | with --seed: ids reserved by lanes still building, never declared spent (ID[,ID...], an id may end ..N for a run, e.g. LLR-266..270) |
+| `--replace` | with --seed: regenerate a census that has not yet landed |
+| `--root` | repo root (default: .) |
+
 ### `scripts/run_menu`
 _The run capability menu — one launcher that presents every major capability._
 Contracts (interfaces): IF-048, IF-157, IF-158

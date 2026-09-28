@@ -58,6 +58,13 @@ docs/reviews/*
 # them, which is reachability by accident rather than by class).
 docs/ratify/*
 
+# The retirement records (PROCESS.md section 5): one file per retired spine row,
+# under the fragment drop-box but outside its fold, which reads only the
+# top level. Kept, never compiled or deleted, and for LOOKUP by id rather than
+# navigation, so no page links the set. (The drop-box glob below matches these
+# too; this line states why they stay.)
+docs/log.d/retired/*
+
 # log fragments awaiting the serial trunk step — a work branch's docs/log.md
 # entry, parked under its own unique name until trunk_step.py compiles it into
 # the log (concurrency-restructure.md §5.1). Transient by construction and never

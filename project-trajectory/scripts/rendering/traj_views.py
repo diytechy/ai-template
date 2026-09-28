@@ -1317,3 +1317,55 @@ def _cmp_panel(rows):
         "</tr></thead><tbody>{}</tbody></table></div>\n</section>".format("".join(body))
     )
     return tab, panel
+
+
+def retired_panel(rows, before):
+    """The Retired tab: one table row per retirement record, or None when there
+    is none, so a repository that has retired nothing renders as it did.
+
+    `rows` are `retire.records` (id, date, successor, reason, commit); `before`
+    counts the ids declared as retired before the record began, which have no
+    row. The deleting commit sits in `<code class="retcommit" data-id="<ID>">`
+    because it is read from git at render time: the freshness compare
+    (`gen_trajectory.fresh_view`) empties that element for exactly the records
+    whose commit the checking checkout cannot resolve, and holds the rest.
+
+    Implements: SR-226, LLR-287
+    """
+    if not rows:
+        return None
+    body = "".join(
+        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
+        '<td><code class="retcommit" data-id="{}">{}</code></td></tr>'.format(
+            esc(r["id"]),
+            esc(r["date"]),
+            esc(r["successor"]) or "—",
+            esc(r["reason"]),
+            esc(r["id"]),
+            esc(r["commit"]),
+        )
+        for r in rows
+    )
+    earlier = (
+        " {} ids retired before the record began have no record; git and the "
+        "log hold what is left of theirs.".format(before)
+        if before
+        else ""
+    )
+    panel = (
+        tab_panel_open("retired")
+        + "\n<h2>Retired spine rows</h2>\n"
+        '<p class="cap">One record per deleted row, from '
+        "<code>docs/log.d/retired/</code>. The records are for lookup: a reader "
+        "who meets a spent id opens that id's record. The deleting commit is read "
+        "from git when this page is rendered, and reads <em>unknown</em> where "
+        "history is shallow, squashed or not yet committed.{}</p>\n".format(earlier)
+        + SCROLL_CUE
+        + '<div class="tablescroll" '
+        + _hscroll("Retired spine rows table, horizontally scrollable")
+        + '><table class="swmap"><thead><tr>'
+        "<th>Id</th><th>Retired</th><th>Successor</th><th>Reason</th>"
+        "<th>Deleting commit</th></tr></thead><tbody>{}</tbody></table></div>\n"
+        "</section>".format(body)
+    )
+    return tab_button("retired", "Retired"), panel

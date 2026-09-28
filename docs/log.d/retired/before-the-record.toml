@@ -1,0 +1,9 @@
+# Ids spent before the retirement record began (scripts/retire.py --seed):
+# rows deleted then, and ids allocated but never landed. They have no
+# record and never will; history holds whatever is left of why they went.
+# Written once, never edited: a later retirement writes its own record
+# under this directory instead. Look up one id here; do not survey the set.
+SN = "13-22, 30-32"
+SR = "1-5, 8, 12-14, 16, 21, 23, 25, 29-30, 37-39, 41-42, 44-45, 47-48, 50-51, 55-69, 71-110, 115-128, 130-136, 141-143, 145, 153"
+LLR = "36, 53-54, 62-66, 90-94, 125-129, 253"
+TC = "39, 53-54, 62-66, 92-96, 99, 111-112, 133, 277, 280-288, 295, 298"
