@@ -12,13 +12,13 @@ _Baseline: `docs/requirements/interfaces.toml` copied 2026-08-30 (580df781)._
 _Baseline: `docs/requirements/external.toml` copied 2026-09-27 (efa9e3cd)._
 _Baseline: `docs/requirements/components.toml` copied 2026-08-30 (580df781)._
 
-_Approval provenance: the last commit to move a `Status` cell in a snapshotted registry is 500be4c9 (2026-09-28) — the record's maturity cells have not moved since._
+_Approval provenance: the last commit to move a `Status` cell in a snapshotted registry is 655c60ab (2026-09-28) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into approval or arrives approved, `--approves` names it or `--reattests` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 62 changed, 43 added, 1 removed since the snapshot; ruling(s): OI-37, OI-85, OI-88, OI-95, WI-539, WI-553, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-619, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679.
+- `docs/requirements/interfaces.toml` — 62 changed, 43 added, 1 removed since the snapshot; ruling(s): OI-37, OI-74, OI-75, OI-85, OI-88, OI-95, WI-539, WI-553, WI-557, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-619, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-587.
 
 ## Assumptions and surrogates owing an approval
