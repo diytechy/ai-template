@@ -936,7 +936,8 @@ def test_interactive_boots_exactly_one_session(loop_repo):
     assert meta["role"] == "INTERACTIVE"
     assert meta["exit-code"] == "0"
     assert meta["usage-status"] == "unavailable"
-    assert meta["input-tokens"] == meta["output-tokens"] == ""
+    assert meta["gen_ai.usage.input_tokens"] == ""
+    assert meta["gen_ai.usage.output_tokens"] == ""
     assert logs[0].read_text(encoding="utf-8").endswith("# ---\n\n")
     al = load_script("agent_loop")
     assert al.phase_draw_ordinal([repo / "docs" / "iteration"], "REVIEW-A") == 0
@@ -1702,3 +1703,23 @@ def test_session_log_redacts_credential_shapes(tmp_path):
     assert "AKIA" + "BCDEFGHIJKLMNOPQ" not in text  # split so the floor stays clean
     assert "normal line stays intact" in text
     assert "# redacted: 3 credential-shaped token(s)" in text
+
+
+def test_session_log_redacts_credential_shapes_in_header_values(tmp_path):
+    # The header is committed history too, and a verbatim raw-usage line can
+    # carry the result text: header values pass the same redaction seam, and
+    # the finding is still named by class and count, never by value.
+    ac = load_script("agent_common")
+    key = "sk-ant-api03-{}".format("C" * 30)
+    meta = {
+        "session": "008",
+        "stamp": "test",
+        "raw-usage": '[{"type":"result","result":"echo ' + key + '"}]',
+    }
+    path = ac.write_session_log(tmp_path, meta, "clean transcript\n")
+    text = path.read_text(encoding="utf-8")
+    header = text.split("# ---")[0]
+    assert key not in text and "sk-ant-api03" not in header
+    assert "[REDACTED]" in header
+    assert "# redacted: 1 credential-shaped token(s)" in header
+    assert "clean transcript" in text

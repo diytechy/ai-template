@@ -1723,11 +1723,11 @@ phase = 5
 [test.TC-172]
 verifies = ["SR-176", "LLR-177"]
 level = "Integration"
-method = """Plant credential-shaped values (an API key, a Bearer token, an AWS key id) in a transcript and write the session log: each planted value appears 0 times in the written tracked file, [REDACTED] stands in its place, ordinary lines survive intact, and the header names the finding by class and count ("# redacted: 3 credential-shaped token(s)"), never by value. The PII/identity classes are SR-176's stated gap and are deliberately NOT tested until the redaction set carries them."""
+method = """Plant credential-shaped values (an API key, a Bearer token, an AWS key id) in a transcript and write the session log: each planted value appears 0 times in the written tracked file, [REDACTED] stands in its place, ordinary lines survive intact, and the header names the finding by class and count ("# redacted: 3 credential-shaped token(s)"), never by value. Then plant a credential in a header value (a raw-usage line carrying result text) and assert it too appears 0 times, [REDACTED] stands in the header, the count line names it, and the transcript survives; and through the session service, a credential inside a runner's result line never reaches the committed header. The PII/identity classes are SR-176's stated gap and are deliberately NOT tested until the redaction set carries them."""
 tier = "Full"
 expected = "Satisfies SR-176's planted-value observable for the mechanized classes via the LLR-177 detail contract"
 automated = "Yes"
-evidence = "tests/test_agent_loop.py::test_session_log_redacts_credential_shapes"
+evidence = "tests/test_agent_loop.py::test_session_log_redacts_credential_shapes; tests/test_agent_loop.py::test_session_log_redacts_credential_shapes_in_header_values; tests/test_session_service.py::test_a_credential_in_a_raw_usage_line_is_redacted_in_the_log_header"
 status = "Approved"
 phase = 4
 
@@ -2940,5 +2940,82 @@ parameters = "tests/traj_fixtures.py make_repo (re-exported from tests/traj_core
 expected = "Satisfies SR-226 AcceptanceCriteria: the deleting commit is read from history when a record is shown and reads unknown where history cannot answer, and the freshness compare holds the page to that commit wherever the checkout can resolve it"
 automated = "Yes"
 evidence = "tests/test_retire_dashboard.py::test_a_landed_record_reads_its_landing_commit; tests/test_retire_dashboard.py::test_an_uncommitted_record_reads_unknown; tests/test_retire_dashboard.py::test_a_record_in_a_root_commit_reads_unknown; tests/test_retire_dashboard.py::test_a_shallow_clone_reads_unknown; tests/test_retire_dashboard.py::test_records_come_in_tier_then_number_order; tests/test_retire_dashboard.py::test_no_record_renders_no_tab; tests/test_retire_dashboard.py::test_the_panel_renders_one_escaped_row_per_record; tests/test_retire_dashboard.py::test_the_caption_counts_the_ids_retired_before_the_record; tests/test_retire_dashboard.py::test_the_dashboard_carries_the_tab_only_when_a_record_exists; tests/test_retire_dashboard.py::test_a_fabricated_deleting_commit_is_stale_where_history_answers; tests/test_retire_dashboard.py::test_a_checkout_that_cannot_resolve_the_commit_accepts_the_page; tests/test_retire_dashboard.py::test_any_other_change_to_a_record_is_stale"
+status = "Drafted"
+phase = 6
+
+[test.TC-262]
+verifies = ["SR-222", "LLR-266", "IF-245"]
+level = "Unit"
+method = "Over recorded fixtures of each runner's output driven through the service's act step with an injected runner. The codex and opencode fixtures are NOT LIVE: they are built from the runners' documented event shapes and say so on their first line, and recording them live, with the opencode pathway re-checked on the installed version, is owed to a person. Assert the adapter is chosen by the launched executable's name and a stand-in gets the plain adapter; the codex argv carries --json beside the last-message file and a template already carrying --json is not given a second; a successful codex call returns the last-message text and keeps its usage event verbatim, the stored text containing the fixture's line exactly; the opencode argv carries --format json, a successful call returns the last step's text and keeps both step_finish events verbatim, and output with no JSON event passes through as text with no usage kept. Then, for each of the three runners, write its usage-bearing line in a shape a re-serialisation would change (odd spacing, keys out of order, a field the adapter never reads, surrounding whitespace) and assert the raw usage, and the usage record's raw-usage column beside its parsed counts, hold that line byte for byte."
+tier = "Smoke"
+expected = "Satisfies LLR-266 (parent SR-222) for capture: the usage of a successful codex and opencode call survives verbatim in the record while the final text is read as before."
+automated = "Yes"
+evidence = "tests/test_session_adapters.py"
+status = "Drafted"
+phase = 6
+
+[test.TC-263]
+verifies = ["SR-222", "LLR-267"]
+level = "Unit"
+method = "Over a LIVE recorded claude stream-json session of two model calls whose cumulative usage and final request differ, assert the occupancy is the final request's input plus cache read plus cache write, not the result's cumulative counters, the window is the modelUsage entry of the model that request named although a background model's entry sits beside it, the percent is under 100, and the occupancy reader's docstring names its source field; the same values reach the session record through the invocation boundary. Over NOT LIVE fixtures built from documented shapes (owed a live recording by a person), assert opencode's occupancy is the last step's input plus cache read and write with no window guessed, codex's exec stream yields its thread id and no occupancy because its usage is cumulative, and codex's rollout under the launch's CODEX_HOME yields the last request's inclusive input and its window; an unknown runner reports none."
+tier = "Smoke"
+expected = "Satisfies LLR-267 (parent SR-222): occupancy is the latest request's prompt over the window, never cumulative usage, and blank where no window is reported."
+automated = "Yes"
+evidence = "tests/test_session_adapters.py"
+status = "Drafted"
+phase = 6
+
+[test.TC-264]
+verifies = ["SR-222", "LLR-268"]
+level = "Unit"
+method = "Over the recorded fixture of each runner (claude LIVE; codex and opencode NOT LIVE, built from documented event shapes, their live recording owed to a person), assert each adapter's usage record carries the pinned revision and the OpenTelemetry names with input counted inclusive of cached input and fresh input derived by one formula: claude's input is its fresh, cache-read and cache-write counts summed, its reasoning is read from output_tokens_details.thinking_tokens and its response model is the model its last request named although a background model's usage sits beside it, or, with no assistant event, the one matching modelUsage entry; codex's input already counts cached input and its unreported cache write and reasoning stay empty; opencode's steps are summed with reasoning inside output; and every runner's record, a stand-in's included, carries exactly the same columns."
+tier = "Smoke"
+expected = "Satisfies LLR-268 (parent SR-222): one usage record per runner in the pinned vocabulary, inclusive input, derived fresh input, raw usage verbatim, unreported counts empty, and the two claude defects fixed."
+automated = "Yes"
+evidence = "tests/test_session_service.py"
+status = "Drafted"
+phase = 6
+
+[test.TC-265]
+verifies = ["SR-222", "LLR-269", "IF-246"]
+level = "Unit"
+method = "Drive the service's act and call steps with an injected launch: a codex call returns its last-message text and its whole stream and is accounted with its route identity, requested model and usage; a failed spawn, a timeout, a repeated call and a raising launch are each accounted (unavailable usage, the timeout kind with partial usage, a new invocation id per call, the error named then re-raised). Assert call writes one session log carrying the usage record, the occupancy under 100% and the raw stream as its transcript, and commits it; an interrupted hands-on sitting is recorded INTERRUPTED with its timing filled; provider text cannot inject a header line; and the worker's record takes the caller's row, writes the raw stream file and commits under the worker's session label. Assert a credential shape inside a raw usage line is redacted in the committed log header. Then two structural guards over every kit script's syntax tree: no process launch outside the service and its launch layer runs an argv that names a provider runner or was built from a command template, and no module but the service calls the session-log writer, and none but the shared primitives carries the log's header or writes into the iteration directory; each guard is shown to fail on planted mutations (a subprocess run, a Popen, an os.system, a check_output of a provider runner, a launch of a template-built argv, a literal provider argv held in a variable, as a list and as a tuple extended before its launch; a writer call, a header literal, two iteration-directory writes, and an iteration-directory path written as one literal in either separator), and the retired wrappers, the in-line reader and the raw-stream writer are referred to nowhere."
+tier = "Smoke"
+expected = "Satisfies LLR-269 (parent SR-222): every model call is launched and recorded through the one service, and no role keeps its own launch or logging path."
+automated = "Yes"
+evidence = "tests/test_session_service.py"
+status = "Drafted"
+phase = 6
+
+[test.TC-266]
+verifies = ["SR-227", "LLR-270", "IF-248", "IF-065"]
+level = "Unit"
+method = "Read the shipped policy file and its template: both declare [adjudicator] with context_reset_pct = 0 and the same keys, and the configuration they yield is the off default. At dial 0, assert no retained session is planned for an adjudication and the runner's version is not read, its launch argv and environment equal a fresh session's (no session-id or resume flag, the ambient environment), no store is written, the loop's retention plan is None in a bare repository and in this one, and the dispatcher builds no keep-warm; a missing table or a non-numeric dial reads as off; with the dial on, only an adjudication of a retained class is kept."
+tier = "Smoke"
+expected = "Satisfies LLR-270 (parent SR-227) at the shipped dial: the retention layer is inert and every adjudication is a fresh session exactly as without it."
+automated = "Yes"
+evidence = "tests/test_session_keep.py"
+status = "Drafted"
+phase = 6
+
+[test.TC-267]
+verifies = ["SR-227", "LLR-270", "IF-247", "IF-248"]
+level = "Unit"
+method = "With the dial on, over the recorded fixtures (claude LIVE; codex and opencode NOT LIVE, built from documented event shapes and owed a live recording by a person), assert for each runner that the first adjudication mints (claude's pre-minted id, codex's thread id, opencode's session id recorded) with its occupancy and generation and releases its lease, and the next resumes by that id in the runner's own form, codex's without a working-directory or ephemeral flag. Drive a retained codex route and assert it launches under the dedicated CODEX_HOME created under the store, reading its occupancy from the rollout there, and that an unretained codex call reads occupancy under an inherited CODEX_HOME. Then one test per reset clause: under the dial the session stays active; cresting it drains without retiring; a draining session is still resumed while a queued adjudication succeeds an item it judged, while a lane is out on such an item, and for an item that continues its chain, and is retired at the first launch where none of these holds, the next launch minting generation 2; the chain is the transitive lineage, so a queued re-adjudication naming only the worker an adjudication sent back keeps the chain open, supersession links count, a cycle ends, and launching that re-adjudication continues the chain; a reported error, a non-zero exit and a timeout each retire at once; a launch that raises retires the session and releases its lease, and does so under a store lock another holder keeps throughout: the record is untouched while the lock is held, keep-warm skips it, and the next launch retires it and mints, leaving no tombstone; a changed agent guide, a changed loaded skill and a changed runner version each drain; the runner's version is read for a retained launch; the same-artifact guard retires before rejudging; the codex dial is clamped to 85; the loop folds the brief's template or its override into the governing inputs. For the store: no temporary or lock file is left after a write, a second holder of the store lock is refused, and an adjudication meeting a keep-warm lease runs unretained; and when a holder's lease expires while it is still running, the next adjudication retires that session and mints rather than resuming it."
+tier = "Smoke"
+expected = "Satisfies LLR-270 (parent SR-227) with the dial on: each runner's resume and occupancy are read from its own output under its dedicated home, every ruled reset rule holds, and the store is written whole by one holder at a time."
+automated = "Yes"
+evidence = "tests/test_session_keep.py"
+status = "Drafted"
+phase = 6
+
+[test.TC-268]
+verifies = ["SR-227", "LLR-270", "IF-044", "IF-065"]
+level = "Unit"
+method = "Assert a keep-warm ping is due only with the dial and its minutes on, for an active ANTHROPIC session idle past the minutes while work is pending, and that an adjudication's lease makes a due ping skip naming the holder. Drive the dispatcher's keep-warm over a retained session with an injected launch that blocks: the tick returns at once with the ping on its own thread holding the lease, a second tick starts nothing and says so, nothing is committed while the ping runs, and once it finishes the next tick writes its session log and commits it on the tick's own thread; the ping resumed the session, is bounded to one turn, is logged as an ordinary call (role KEEP-WARM, source keep-warm, outcome and occupancy filled) and updated the record and released the lease. A finished ping over a dirty trunk is held and said until the trunk is clean; a ping skipped for a held lease is said once; a ping in flight at the run's end is recorded over a clean trunk and, over a dirty one, is not recorded and its reason is printed and returned; the dirty read is the shared primitives' own check over a real repository; and the dispatcher's warmer is built from the routing registry with each row's declared environment."
+tier = "Smoke"
+expected = "Satisfies LLR-270 (parent SR-227) for keep-warm: one bounded turn off the scheduler's thread, never racing another call on the session, recorded like any other call through the serialised telemetry path."
+automated = "Yes"
+evidence = "tests/test_session_keep.py"
 status = "Drafted"
 phase = 6

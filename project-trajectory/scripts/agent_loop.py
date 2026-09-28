@@ -159,7 +159,6 @@ import datetime
 import os
 import re
 import shutil
-import subprocess
 import sys
 import time
 from dataclasses import dataclass, field
@@ -186,6 +185,7 @@ try:
     import plan_runner
     import prompts
     import score_reviews
+    import session_service
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import adjudicate_brief
@@ -195,6 +195,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     import plan_runner
     import prompts
     import score_reviews
+    import session_service
 
 # The verdict record's one home (OI-76): the non-record tree identity, the
 # `Review-Verdict:` trailer grammar and the round-file/session-log join. Read
@@ -229,9 +230,6 @@ echo_session_line = agent_session.echo_session_line
 _stdout_is_tty = agent_session._stdout_is_tty
 _enable_windows_vt = agent_session._enable_windows_vt
 LiveStatus = agent_session.LiveStatus
-_codex_lastmsg_setup = agent_session._codex_lastmsg_setup
-_codex_lastmsg_read = agent_session._codex_lastmsg_read
-run_session = agent_session.run_session
 
 EXIT_DONE = agent_common.EXIT_DONE
 EXIT_PREFLIGHT = agent_common.EXIT_PREFLIGHT
@@ -280,7 +278,6 @@ acquire_lock = agent_common.acquire_lock
 release_lock = agent_common.release_lock
 parse_map = agent_common.parse_map
 preflight = agent_common.preflight
-write_session_log = agent_common.write_session_log
 regenerate_index = agent_common.regenerate_index
 next_session_number = agent_common.next_session_number
 phase_draw_ordinal = agent_common.phase_draw_ordinal
@@ -2157,45 +2154,20 @@ def run_interactive(
             phase or "—", model or "—"
         )
     )
-    argv, stdin_input = build_argv(
-        itemplate,
-        model,
-        compose_session_prompt(
-            model,
-            "",
-            "",
-            guardrails_policy,
-            root,
-            warned_no_core,
-        )[0],
-    )
-    metrics = {
-        "source-event": "interactive",
-        "role": "INTERACTIVE",
-        "requested-model": model,
-    }
-    code, _output, _timed_out = agent_common.invoke_and_persist(
-        root,
-        argv,
-        None,
-        metrics=metrics,
-        runner=_run_attached_session,
-        stdin_input=stdin_input,
-    )
-    return code
-
-
-def _run_attached_session(argv, root, _timeout, *, stdin_input=None):
-    """The ``invoke_session`` runner for a hands-on, attached-stdio sitting."""
-    if stdin_input is None:
-        # {prompt} rode argv: stdin stays the caller's terminal (hands-on).
-        proc = subprocess.run(argv, cwd=str(root))
-    else:
-        # A no-{prompt} template pipes its prompt in, then the CLI proceeds
-        # (stdout/stderr stay attached to the terminal). text=True is
-        # load-bearing: a str input on a binary pipe is a TypeError.
-        proc = subprocess.run(argv, cwd=str(root), input=stdin_input, text=True)
-    return proc.returncode, "", False
+    prompt = compose_session_prompt(
+        model, "", "", guardrails_policy, root, warned_no_core
+    )[0]
+    return session_service.call(
+        session_service.Call(
+            root=root,
+            role="INTERACTIVE",
+            template=itemplate,
+            model=model,
+            prompt=prompt,
+            source_event="interactive",
+            attached=True,
+        )
+    ).code
 
 
 def _subagent_gate_log_count(root):
@@ -3441,21 +3413,45 @@ def resolve_idle_timeout(args):
     return idle if idle and idle > 0 else None
 
 
-def launch_session(ctx, argv, stdin_input, plan, metrics):
-    """Run one agent session and time it on the COORDINATOR's own clock, so a
-    duration exists even when the session dies before emitting JSON (spawn
-    failure, timeout, crash). Returns (code, output, timed_out, wall_secs)."""
-    args = ctx.args
-    metrics.update(
-        {
-            "attempt-id": "{}@{}".format(ctx.worker["train"], ctx.worker["base"]),
-            "role": plan["phase"],
-            "provider": plan["route_family"] or "",
-            "requested-model": plan["model"],
-            "tier": plan["route_tier"],
-            "roster-row": plan["route_id"] or "",
-        }
+def adjudication_keep(ctx, plan, wi):
+    """The retained adjudicator session this launch resumes or mints, or
+    None — which, at the shipped `[adjudicator] context_reset_pct = 0`, is
+    every launch. The governing inputs include the template this brief is
+    composed from: the operator's override text when one is loaded, else the
+    shipped file. The work-item registry is handed over for the clear-point
+    rule, and the lease outlives the session's own wall deadline.
+
+    Implements: SR-227, LLR-270
+    """
+    key = adjudicate_brief.BRIEF_PROMPTS.get(plan.get("brief") or "")
+    override = (ctx.prompt_templates or {}).get(key) if key else None
+    return session_service.plan_keep(
+        ctx.root,
+        session_service.session_keep.keep_config(ctx.root),
+        template=plan["tmpl"],
+        env=plan["session_env"],
+        role=plan["phase"],
+        brief=plan.get("brief") or "",
+        family=plan["route_family"] or "",
+        route_id=plan["route_id"] or "",
+        wi=wi or "",
+        rows=agent_common.load_wi_registry(ctx.root),
+        template_paths=[prompts.template_path(key)] if key and not override else [],
+        template_texts=[override] if override else [],
+        lease_seconds=(ctx.args.session_timeout or 7200) + 300,
     )
+
+
+def launch_session(ctx, plan, wi=None):
+    """Run one worker session through the session service and return its
+    `Outcome`: the service launches it, reads its result, and times it on its
+    own clock, so a duration exists even when the session dies before
+    emitting JSON (spawn failure, timeout, crash). The loop hands over only
+    the route's data and the console renderer.
+
+    Implements: SR-222, LLR-269
+    """
+    args = ctx.args
     live = LiveStatus(ctx.worker["train"]) if ctx.use_live else None
     if args.no_session_echo:
         on_line = None
@@ -3463,72 +3459,27 @@ def launch_session(ctx, argv, stdin_input, plan, metrics):
         on_line = live.event
     else:
         on_line = echo_session_line
-    code, output, timed_out = agent_session.invoke_session(
-        argv,
-        ctx.root,
-        args.session_timeout,
-        metrics=metrics,
-        runner=run_session,
-        env=plan["session_env"],
-        on_line=on_line,
-        stdin_input=stdin_input,
-        idle_timeout=resolve_idle_timeout(args),
+    outcome = session_service.act(
+        session_service.Call(
+            root=ctx.root,
+            role=plan["phase"],
+            template=plan["tmpl"],
+            model=plan["model"],
+            prompt=plan["prompt"],
+            provider=plan["route_family"] or "",
+            tier=plan["route_tier"],
+            route_id=plan["route_id"] or "",
+            attempt_id="{}@{}".format(ctx.worker["train"], ctx.worker["base"]),
+            env=plan["session_env"],
+            timeout=args.session_timeout,
+            idle_timeout=resolve_idle_timeout(args),
+            on_line=on_line,
+            keep=adjudication_keep(ctx, plan, wi),
+        )
     )
     if live is not None:
         live.finish()
-    return code, output, timed_out, metrics["wall-secs"]
-
-
-def write_raw_stream(raw_dir, name, output):
-    """The raw session stream: debug convenience, never load-bearing — so
-    every filesystem failure here is swallowed."""
-    try:
-        raw_dir.mkdir(parents=True, exist_ok=True)
-        (raw_dir / name).write_bytes(output.encode("utf-8", "replace"))
-    except OSError:
-        pass
-
-
-def family_context_telemetry(family, data):
-    """Session id + context occupancy/window/percent, read straight off the
-    process's OWN JSON result (WI-535, telemetry first — no mint, no resume,
-    no adapter; that's the retention layer, WI-540). Returns
-    `(session_id, occupancy, window, pct)`, every field `""` where the
-    family's plain one-shot call doesn't carry it today.
-
-    ANTHROPIC's stream-json result already carries `session_id`. Occupancy is
-    its four usage counters summed (plan §3.3: input + cache_read +
-    cache_creation + output). Window is the unique `modelUsage` entry whose
-    same four counters match; absent/ambiguous matches stay blank rather than
-    guessed (plan §2). This distinguishes the session's own turn from a
-    colliding subagent aside. Duplicate full matches remain ambiguous even if
-    their windows agree. OPENAI/OPENCODE's one-shot templates emit none of
-    this yet; WI-540's per-family adapter is what adds it."""
-    if family != "ANTHROPIC":
-        return "", "", "", ""
-    session_id = data.get("session_id") or ""
-    usage = data.get("usage")
-    usage = usage if isinstance(usage, dict) else {}
-    usage_fields = (
-        ("input_tokens", "inputTokens"),
-        ("output_tokens", "outputTokens"),
-        ("cache_read_input_tokens", "cacheReadInputTokens"),
-        ("cache_creation_input_tokens", "cacheCreationInputTokens"),
-    )
-    if not any(usage.get(key) is not None for key, _ in usage_fields):
-        return session_id, "", "", ""
-    usage_totals = tuple(usage.get(key) or 0 for key, _ in usage_fields)
-    occupancy = sum(usage_totals)
-    matches = [
-        entry
-        for entry in (data.get("modelUsage") or {}).values()
-        if tuple(entry.get(key) or 0 for _, key in usage_fields) == usage_totals
-    ]
-    window = ""
-    if len(matches) == 1:
-        window = matches[0].get("contextWindow", "") or ""
-    pct = round(occupancy * 100 / window) if isinstance(window, int) and window else ""
-    return session_id, occupancy, window, pct
+    return outcome
 
 
 def session_meta(
@@ -3554,9 +3505,6 @@ def session_meta(
     phase = plan["phase"]
     usage = data.get("usage")
     usage = usage if isinstance(usage, dict) else {}
-    session_id, ctx_used, ctx_window, ctx_pct = family_context_telemetry(
-        plan.get("route_family") or "", data
-    )
     tokens = ""
     if usage.get("input_tokens") is not None or usage.get("output_tokens") is not None:
         tokens = "{}+{}".format(
@@ -3605,17 +3553,6 @@ def session_meta(
         "prompt-template": prompt_source(ctx.prompt_templates, phase),
         "prompt-sha": agent_common.prompt_fingerprint(prompt),
         "exit-code": code,
-        # WI-535: the adjudicator-retention plan's telemetry-first step
-        # (docs/plans/2026-08-29-adjudicator-session-retention-plan.md §3.3) —
-        # what the process already reports about its own context, per family,
-        # with the retention dial off. Blank wherever today's one-shot call
-        # doesn't carry it (family_context_telemetry). Invocation accounting
-        # subsequently fills session-id for any provider reporting one;
-        # the retained context columns keep their existing family semantics.
-        "session-id": session_id,
-        "context-used": ctx_used,
-        "context-window": ctx_window,
-        "context-pct": ctx_pct,
     }
 
 
@@ -3673,29 +3610,27 @@ def probe_route(row, root, wall=30):
     draw — the doubled --dir incident, 2026-08-30) with the fixed prompt and a
     30 s wall. `ok` means the session exited 0 inside the wall and the result
     carries the word OK."""
-    try:
-        argv, stdin_input = build_argv(row.cmd_template, row.model or "", PROBE_PROMPT)
-    except ValueError as exc:
-        return False, str(exc)
     row_env = agent_route.parse_env(row.env)
     env = {**os.environ, **row_env} if row_env else None
-    metrics = {
-        "source-event": "recovery-probe",
-        "role": "PROBE",
-        "provider": row.family,
-        "requested-model": row.model or "",
-        "tier": row.tier,
-        "roster-row": row.id,
-    }
-    code, output, timed_out = agent_common.invoke_and_persist(
-        root,
-        argv,
-        wall,
-        metrics=metrics,
-        runner=run_session,
-        env=env,
-        stdin_input=stdin_input,
-    )
+    try:
+        probe = session_service.call(
+            session_service.Call(
+                root=root,
+                role="PROBE",
+                template=row.cmd_template,
+                model=row.model or "",
+                prompt=PROBE_PROMPT,
+                provider=row.family,
+                tier=row.tier,
+                route_id=row.id,
+                source_event="recovery-probe",
+                env=env,
+                timeout=wall,
+            )
+        )
+    except ValueError as exc:
+        return False, str(exc)
+    code, output, timed_out = probe.code, probe.text, probe.timed_out
     data = parse_json_result(output or "")
     result = str(data.get("result", "")) if data else (output or "")
     ok = code == 0 and not timed_out and re.search(r"\bOK\b", result) is not None
@@ -4217,12 +4152,9 @@ def run_iteration(ctx, i):
             current_wi,
         )
     )
-    argv, stdin_input = build_argv(plan["tmpl"], plan["model"], plan["prompt"])
-    invocation = {}
-    code, output, timed_out, wall_secs = launch_session(
-        ctx, argv, stdin_input, plan, invocation
-    )
-    write_raw_stream(ctx.raw_dir, "{}{}-{}.log".format(ctx.tag, session, stamp), output)
+    launched = launch_session(ctx, plan, current_wi)
+    code, output, timed_out = launched.code, launched.text, launched.timed_out
+    wall_secs = launched.metrics["wall-secs"]
     data = parse_json_result(output)
     reset_hint = limit_reset_hint(output, data, code)
     after, commits = session_commit_range(root, before)
@@ -4241,20 +4173,20 @@ def run_iteration(ctx, i):
         ctx, plan, data, session, stamp, current_wi, outcome, commits, code, wall_secs
     )
     stamp_session_meta(meta, plan, timed_out)
-    meta.update(invocation)
-    log_path = write_session_log(ctx.iter_dir, meta, output)
-    # A worker never regenerates the iteration index: it is a GENERATED
-    # root artifact the integrator rebuilds on the composed tree (spec
-    # §5.1) — two workers regenerating it would collide at integration.
-    # Commit the coordinator's own bookkeeping now, in its own telemetry
-    # commit — never let it ride the next session's work commit or dangle
-    # (WI-137). The review scoreboard is committed at its own write, in
-    # complete_review_round.
-    commit_telemetry(
-        root,
-        ctx.tag + session,
-        "{} {}".format(plan["phase"] or "—", outcome),
-        [log_path],
+    # The service's one writer: the tracked log, the raw stream in the
+    # untracked run-logs, and its own telemetry commit — never riding the next
+    # session's work commit (WI-137). A worker never regenerates the iteration
+    # index: it is a GENERATED root artifact the integrator rebuilds on the
+    # composed tree (spec §5.1). The review scoreboard is committed at its own
+    # write, in complete_review_round.
+    session_service.record(
+        launched,
+        meta,
+        iter_dir=ctx.iter_dir,
+        raw_dir=ctx.raw_dir,
+        raw_name="{}{}-{}.log".format(ctx.tag, session, stamp),
+        session=ctx.tag + session,
+        label="{} {}".format(plan["phase"] or "—", outcome),
     )
     print(
         "session {}: outcome={} commits={} wall={}s{}".format(

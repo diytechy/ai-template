@@ -1,0 +1,6 @@
+<!-- Codex Sol confirmation of WI-620's third fix round, 80fcc94a; ruling 56. Links re-rooted from the removed worktree. -->
+
+80fcc94a NOT YET SOUND
+
+- **major — (1)(2):** A remaining expiry-boundary window exists. `keep_for` checks retirement using one `time.time()` and lease ownership using another ([session_keep.py](../../../project-trajectory/scripts/session_keep.py)); if the lease expires between them, `_lease_held` treats it as free and `_hold` resumes the stale session. `take_warm_lease` repeats the same split check and can ping it ([session_keep.py](../../../project-trajectory/scripts/session_keep.py)). Lock-contention timeout itself safely returns unretained ([session_keep.py](../../../project-trajectory/scripts/session_keep.py)).
+- **major — (3)(4):** The regression drives holder → expiry → `keep_for` and would fail without the fix, but its constant mocked clock cannot expose expiry between the two checks ([test_session_keep.py](../../../tests/test_session_keep.py)). LLR-270 and its `code_symbol` minimally state the intended rule ([low-level-requirements.toml](../../../docs/requirements/low-level-requirements.toml)); TC-267 states the interleaving ([test-cases.toml](../../../docs/test/test-cases.toml)), but the “never reused” claim is not yet true because of the new split-clock window.

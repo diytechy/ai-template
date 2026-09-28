@@ -1,0 +1,7 @@
+<!-- Codex Sol confirmation of WI-620's fourth fix round, 706cadc7: SOUND. Links re-rooted from the removed worktree. -->
+
+706cadc7 SOUND
+
+- blocker — none. `keep_for` shares one reading across retirement, ownership, and the replacement lease end ([session_keep.py:571](../../../project-trajectory/scripts/session_keep.py)); `take_warm_lease` does likewise ([session_keep.py:798](../../../project-trajectory/scripts/session_keep.py)). The only other locked ownership decision, `_landing`, reads once ([session_keep.py:661](../../../project-trajectory/scripts/session_keep.py)); callers add no lease-clock decision.
+- major — none. The advancing clock crosses `start + 0.5` ([test_session_keep.py:780](../../../tests/test_session_keep.py), [test_session_keep.py:799](../../../tests/test_session_keep.py), [test_session_keep.py:811](../../../tests/test_session_keep.py)). On the split form, `keep_for` would resume the stale ID, failing line 802, and keep-warm would return a ping, failing line 816.
+- minor — none. The commit introduces the private `_hold(..., lease)` tuple signature ([session_keep.py:596](../../../project-trajectory/scripts/session_keep.py)); its sole repository caller supplies it ([session_keep.py:575](../../../project-trajectory/scripts/session_keep.py)). No caller break or other new defect found.

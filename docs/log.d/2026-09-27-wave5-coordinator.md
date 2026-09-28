@@ -814,3 +814,84 @@ LLR-287 has no "such as"; TC-300 has no "minimal". The rows stay Drafted,
 and a scratch flip shows no form finding. The sweep mints their first
 approval. Trunk before this squash: 9b16cde1. **Open count: 10**
 (9 queued, 1 deferred).
+
+### WI-620 lands: one session service for every model call
+
+One builder, seven commits, five Codex Sol rounds (wave-5 rulings 53 to 56):
+[sol-wi620.md](../reviews/2026-09-27-wave5/sol-wi620.md),
+[sol-wi620-fix.md](../reviews/2026-09-27-wave5/sol-wi620-fix.md),
+[sol-wi620-fix2.md](../reviews/2026-09-27-wave5/sol-wi620-fix2.md),
+[sol-wi620-fix3.md](../reviews/2026-09-27-wave5/sol-wi620-fix3.md),
+[sol-wi620-fix4.md](../reviews/2026-09-27-wave5/sol-wi620-fix4.md), SOUND
+at 706cadc7. WI-620 absorbed WI-605, WI-606 and WI-551 at the consolidation.
+
+- **One path.** `session_service.py` (act, keep, record) is the one path
+  every model call takes. `session_adapters.py` holds one adapter per
+  provider. `session_keep.py` is the retention keep operation, inert at the
+  `[adjudicator]` table's `context_reset_pct = 0`, which is the shipped
+  value.
+- **Sol's later rounds** held retention to the ruled plan, bounded
+  keep-warm, and made a failed or overrun retained launch retire rather
+  than be reused (the lineage, the tombstone, the unreleased-lease rule, one
+  clock per decision).
+
+**WI-606 (lossless capture).** The codex route runs `exec --json` beside
+`--output-last-message`; the file still gives a successful call's final
+text. The opencode route runs `run --format json`. Each runner's
+usage-bearing line is kept verbatim in the session log's `raw-usage` header,
+and no parsed column gains a mapping from it. The claude fixture is a live
+recording; the codex and opencode fixtures
+(`tests/golden/sessions/codex-exec-json.jsonl`, `opencode-run-json.jsonl`)
+are built from the documented event shapes and say so. **The opencode
+pathway checks were not re-run on the installed 1.18.29**: the permission
+classifier refused the builder's live runs, and they were not worked around.
+So `docs/agents.toml` still records the version last tested, 1.17.18. Two
+things are owed to the owner: recording both fixtures live, and re-running
+the opencode checks over the changed route. WI-606's last Done-when stays
+open until then.
+
+**WI-605 (occupancy).** A session log's `context-used`, `context-window` and
+`context-pct` now hold the occupancy of the session's latest request (the
+final call's input plus cache read plus cache write), not the cumulative
+counters that had read up to 34,836%. No session log has yet been written
+under the corrected meaning, because the loop has made no claim since the
+pause (`docs/work/pause`, 2026-09-04). The last log written,
+`docs/iteration/wi521-decomposition-debt-owner-004-20260830-082452.log`,
+carries the old meaning, so the first log written after this merge is the
+first under the new one.
+
+**At the merge.**
+- *Conflicts:* the watermark (trunk's, re-bumped: SR 226 -> 227), the four
+  registries (merged table by table from the base, 126cf5f2), RESYNC_PACK
+  (both kept, and WI-620's three entries re-anchored to `[since 46970249]`),
+  and the bootstrap ratchet.
+- *The ratchet:* trunk's WI-618 row (1701) composed with WI-620's three
+  MAPPING rows, re-measured at 1704. agent_common fell 1487 -> 1466 and
+  agent_loop 2801 -> 2752.
+- *Smoke:* WI-620's lane re-stamped the ceiling 1875 -> 1955.
+- Trunk before this squash: 46970249.
+
+**A lane red, found at the merge's bar.** IF-247, the retained-session
+record file, named `scripts/session_keep` as both its owner and its
+consumer; it had since Sol's second round moved the record to that module.
+So `test_seam_resolution` failed, on the lane as well as on trunk, because
+no one had run the whole smoke tier there. The coordinator set its far side
+to the two processes that share the record through that module:
+`scripts/agent_loop`, whose adjudication writes it, and `scripts/dispatch`,
+whose keep-warm tick reads it. That is what the row's rationale already
+states. IF-247 is Drafted, and its first approval judges the cell.
+
+Commit bar at WI-620: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs --stale` 0 broken. Smoke: 1890 passed / 3 skipped, 1893
+collected under the 1955 ceiling, 38.6 s within 60 s. WI-620's slow modules
+plus both ratchets, run by the coordinator: 559 passed / 2 skipped. Those
+modules are test_session_keep, test_session_service, test_session_adapters,
+test_agent_loop, test_agent_loop_policy, test_dispatch,
+test_dual_plan_routing, test_session_stdin, test_routing_and_prompts,
+test_bootstrap, test_baseline_snapshot, test_seam_resolution,
+test_frame_context, test_resync_pack and test_dogfood_sync, with
+test_module_size_ratchet and test_complexity_ratchet. `check_complexity
+--mode enforce`: OK, 203 rows. WI-541 (verify the retention layer on this
+box) and WI-545 are unblocked. **Open count: 10** (9 queued, 1 deferred)
+before the sweep.

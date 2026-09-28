@@ -12,16 +12,20 @@ returns its output:
     prompt to the child's STDIN (WI-216), immune to caps and batch-shell parsing.
   - `run_session` — one fresh headless driver session (stdin closed or fed +
     closed — never an interactive wait, SN-016), with a reader thread so the
-    child can't block on a full pipe, a per-session timeout, and codex
-    result capture via `--output-last-message` (WI-217).
+    child can't block on a full pipe, and a per-session timeout. It returns
+    the whole captured stream; reading a CLI's result out of it (codex's
+    `--output-last-message` file, WI-217) is that CLI's adapter's job
+    (`session_adapters`), and every call reaches this layer through the
+    session service (`session_service`).
   - `parse_json_result` — best-effort result-event parse of a
     --output-format json / stream-json transcript.
   - `summarize_session_line`/`echo_session_line`/`LiveStatus` (+ the TTY/VT
     probes) — the console rendering of a streaming session (WI-125/WI-136).
 
-Stdlib only, Python 3.11+, Windows/POSIX. agent_loop.py (the coordinator) and
-plan_runner.py (the dual-plan round) drive sessions exclusively through this
-module; agent_loop re-exports these names so its public surface is unchanged.
+Stdlib only, Python 3.11+, Windows/POSIX. The session service
+(session_service.py) is the one caller that launches through this module;
+agent_loop re-exports the argv and rendering names so its public surface is
+unchanged.
 
 Contracts: IF-041, IF-064 — the interface seams this module declares (process.md §8; rows
 of record in docs/requirements/interfaces.toml).
@@ -36,9 +40,9 @@ Contract IF-064: the session-launch surface. `build_argv(template, model,
     timed_out)` for ONE fresh headless session: stdin is closed, or fed and then
     closed — never left open for an interactive read, so the child cannot wedge
     the run — output is pumped by a reader thread, the timeout is per session,
-    and a last-message file is read back as the result where the CLI writes one.
-    `parse_json_result` and the console renderers complete the surface, and the
-    caller re-exports these names, so its own public surface is unchanged.
+    and the output is the whole captured stream. `parse_json_result` and the
+    console renderers complete the surface, and the loop re-exports these
+    names, so its own public surface is unchanged.
 
 Contract IF-041: our reading of the configured agent CLI, stated here because
     the CLI's own header is not ours to write. The registry row's command
@@ -61,11 +65,8 @@ import shutil
 import signal
 import subprocess
 import sys
-import tempfile
 import threading
 import time
-import uuid
-from pathlib import Path
 
 
 def split_cmd(template):
@@ -203,64 +204,6 @@ def parse_json_result(output):
         if data.get("type") == "result":
             return data
     return dicts[0] if dicts else {}
-
-
-def _result_accounting(data):
-    """Return raw, reportable fields from one parsed provider result.
-
-    This reader deliberately does not infer billing scope or add counters from
-    ``modelUsage``. A provider's nested totals can be cumulative or inclusive,
-    and a guessed aggregate is worse than an explicit unknown at this boundary.
-    """
-    if not isinstance(data, dict):
-        data = {}
-    usage = data.get("usage")
-    usage = usage if isinstance(usage, dict) else {}
-
-    def raw(key):
-        value = usage.get(key, "")
-        return "" if value is None else value
-
-    cost = data.get("total_cost_usd", "")
-    out = {
-        "session-id": data.get("session_id") or data.get("session-id") or "",
-        "reported-model": data.get("model") or data.get("model_id") or "",
-        "input-tokens": raw("input_tokens"),
-        "output-tokens": raw("output_tokens"),
-        "cache-read": raw("cache_read_input_tokens"),
-        "cache-create": raw("cache_creation_input_tokens"),
-        "reasoning-tokens": raw("reasoning_tokens"),
-        "cost-usd": "" if cost is None else cost,
-        "usage-scope": "unknown",
-        "usage-source": "unknown",
-        "usage-status": "unavailable",
-    }
-    if not out["reported-model"]:
-        model_usage = data.get("modelUsage")
-        if isinstance(model_usage, dict) and len(model_usage) == 1:
-            out["reported-model"] = next(iter(model_usage))
-    if isinstance(usage.get("scope"), str):
-        out["usage-scope"] = usage["scope"]
-    token_keys = {
-        "input_tokens",
-        "output_tokens",
-        "cache_read_input_tokens",
-        "cache_creation_input_tokens",
-        "reasoning_tokens",
-    }
-    present = [key for key in usage if key in token_keys and usage.get(key) is not None]
-    if present or cost not in ("", None):
-        out["usage-source"] = "reported"
-    if present:
-        out["usage-status"] = (
-            "known"
-            if out["input-tokens"] != "" and out["output-tokens"] != ""
-            else "partial"
-        )
-        out["raw-usage"] = json.dumps(usage, sort_keys=True, separators=(",", ":"))
-    elif out["cost-usd"] != "":
-        out["usage-status"] = "partial"
-    return out
 
 
 def _kill_tree(proc):
@@ -411,40 +354,6 @@ class LiveStatus:
             self.active = False
 
 
-def _codex_lastmsg_setup(argv):
-    """If argv launches codex, append its `--output-last-message` temp file and
-    return (augmented_argv, path); otherwise (argv, None). codex echoes its banner
-    + the whole prompt into stdout, so that file — its own final-message contract —
-    is the deterministic session result (WI-217, gilbert 9add15b).
-
-    Detection is a basename-prefix heuristic (accepted trade-off): a lookalike
-    CLI named codex-* would receive the flag too, and a template that already
-    declares its own -o/--output-last-message gets a second one (codex
-    last-wins, so the kit's temp file is the one read back). Revisit as a
-    declared registry column only if that ever bites a real registry."""
-    if not (argv and os.path.basename(argv[0]).lower().startswith("codex")):
-        return argv, None
-    fd, path = tempfile.mkstemp(prefix="codex-lastmsg-", suffix=".txt")
-    os.close(fd)
-    return argv + ["--output-last-message", path], path
-
-
-def _codex_lastmsg_read(path):
-    """Read then delete the codex last-message file (`path` None for a non-codex
-    session -> None). Best-effort: a missing/unreadable file reads as empty."""
-    if path is None:
-        return None
-    try:
-        text = Path(path).read_text(encoding="utf-8", errors="replace").strip()
-    except OSError:
-        text = ""
-    try:
-        os.unlink(path)
-    except OSError:
-        pass
-    return text
-
-
 def _pump_stdout(proc, lines, last_line, on_line):
     """The reader thread's body: pump every stdout line into `lines`, stamp
     `last_line[0]` (the idle deadline's clock, C3), and hand the line to the
@@ -533,10 +442,6 @@ def run_session(
         if resolved and not resolved.lower().endswith(".ps1"):
             argv = [resolved] + argv[1:]
 
-    # codex echoes its banner + the WHOLE prompt into stdout, so its own
-    # --output-last-message file is the deterministic result (WI-217).
-    argv, codex_lastmsg = _codex_lastmsg_setup(argv)
-
     try:
         _validate_prompt_transport(argv, stdin_input, env=env)
         proc = subprocess.Popen(
@@ -557,7 +462,6 @@ def run_session(
             start_new_session=(os.name != "nt"),
         )
     except (OSError, ValueError) as exc:
-        _codex_lastmsg_read(codex_lastmsg)  # cleanup the (unused) last-message file
         return -1, "coordinator: session error: {}".format(exc), False
     # A reader thread pumps the pipe so the child can never block on a full
     # buffer while the main thread waits — the same shape subprocess.run uses
@@ -605,63 +509,10 @@ def run_session(
         _kill_tree(proc)
         proc.wait()
         pump.join(5)
-        _codex_lastmsg_read(
-            codex_lastmsg
-        )  # cleanup; a timed-out session has no usable result
         return (
             -1,
             "".join(lines) + "\ncoordinator: " + killed,
             killed_kind,
         )
     pump.join(5)
-    output = "".join(lines)
-    last = _codex_lastmsg_read(codex_lastmsg)
-    if last and proc.returncode == 0:
-        output = last  # codex: the deterministic last message, not the transcript
-    return proc.returncode, output, False
-
-
-def invoke_session(argv, root, timeout, *, metrics, runner=run_session, **kwargs):
-    """Invoke one session and fill caller-owned launch/result metadata.
-
-    ``run_session`` remains the public three-tuple API. ``runner`` is injectable
-    so coordinators and tests retain their existing mock seam. No transcript,
-    spool or billing store is created by this boundary.
-    """
-    metrics["invocation-id"] = uuid.uuid4().hex
-    metrics["started-at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    started = time.monotonic()
-    try:
-        result = runner(argv, root, timeout, **kwargs)
-    except BaseException as exc:
-        # BaseException, not Exception: a Ctrl-C in an attached sitting must
-        # leave a log with its wall-secs/ended-at filled, not blank columns.
-        metrics.update(_result_accounting({}))
-        metrics.update(
-            {
-                "ended-at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                "wall-secs": int(round(time.monotonic() - started)),
-                "exit-code": "",
-                "timeout": "",
-                "usage-source": "unknown",
-                "usage-status": "unavailable",
-                "usage-scope": "unknown",
-                "error": type(exc).__name__,
-            }
-        )
-        raise
-    code, output, timed_out = result
-    metrics.update(
-        {
-            "ended-at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "wall-secs": int(round(time.monotonic() - started)),
-            "exit-code": code,
-            "timeout": timed_out
-            if isinstance(timed_out, str)
-            else "wall"
-            if timed_out
-            else "",
-        }
-    )
-    metrics.update(_result_accounting(parse_json_result(output)))
-    return result
+    return proc.returncode, "".join(lines), False

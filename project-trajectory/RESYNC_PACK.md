@@ -6439,6 +6439,110 @@ spent is reported as missing a record. Add the `docs/log.d/retired/*` line and i
 records; the line states why they are kept). From then on, retire a row with
 `retire.py` rather than by hand.
 
+### One adapter per provider runner: codex and opencode usage captured, occupancy from the latest request [since 46970249]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A new kit script, `scripts/session_adapters.py`, holds one
+adapter per provider runner, chosen by the launched executable's name. The
+codex route now runs `exec --json` beside the `--output-last-message` file it
+already carried, and the opencode route runs `run --format json`; the adapter
+adds both flags at launch, so your `docs/agents.toml` command templates are
+unchanged. A successful codex call's final text still comes from the
+last-message file, and opencode's is read out of its event stream. Each call's
+usage events are kept verbatim in the session log's `# raw-usage:` header, so
+codex and opencode sessions record their usage for the first time;
+`run_session` now returns the whole captured stream and no longer reads any
+file back itself. The session log's `context-used`, `context-window` and
+`context-pct` columns now hold the occupancy of the session's latest request
+(claude: the last assistant event's prompt; opencode: the last step's prompt,
+no window reported; codex: its rollout's last request, read only under a
+declared `CODEX_HOME`), where they had held the cumulative usage over the
+window, which read far above 100%. Logs written before this keep the old
+meaning.
+
+**What to do.** Re-sync the kit files, including the new
+`scripts/session_adapters.py`. A registry row whose template already carries
+`--json` or `--format json` is not given a second one. If you wrap one of the
+three runners in a script whose name starts `claude`, `codex` or `opencode`,
+it now receives that runner's flags; rename the wrapper if it cannot take
+them. Read any `Ctx %` figure from before the re-sync as the old cumulative
+reading.
+
+### One session service for every model call, and the OpenTelemetry usage record in the session log [since 46970249]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A new kit script, `scripts/session_service.py`, is the one
+path every model call takes: the worker loop's sessions, the hands-on sitting,
+the route probe and the dual-plan hats all hand it a `Call` and it launches,
+accounts and records them. `agent_common.invoke_and_persist` and
+`agent_session.invoke_session` are gone, and `run_session` is called only by
+the service. The session log's header (`docs/iteration/*.log`) now carries the
+usage record, the same columns for every runner: `cli`, `semconv` (the pinned
+revision of the OpenTelemetry GenAI conventions,
+`open-telemetry/semantic-conventions-genai@e57c543b…`),
+`gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.response.model`,
+`gen_ai.conversation.id`, `gen_ai.usage.input_tokens` (inclusive of cached
+input), `gen_ai.usage.cache_read.input_tokens`,
+`gen_ai.usage.cache_write.input_tokens`, `gen_ai.usage.output_tokens`,
+`gen_ai.usage.reasoning.output_tokens`, `fresh-input-tokens` (input less both
+cache counts), `raw-usage` (verbatim), `usage-scope`, `usage-source` and
+`usage-status`. A count a runner does not report is empty, not 0. The columns
+`requested-model`, `reported-model`, `input-tokens`, `output-tokens` and
+`reasoning-tokens` are retired. Claude's reasoning count is now read from
+`output_tokens_details.thinking_tokens`, and its reported model no longer goes
+blank when a background model's usage sits beside it. A session log's
+transcript is now the whole captured stream (a successful codex session's
+included), bounded and redacted as before. `agent_common.read_log_meta` reads
+dotted header keys, and header values now pass the same credential redaction
+as the transcript (a verbatim `raw-usage` line can carry a runner's result
+text).
+
+**What to do.** Re-sync the kit files, including the new
+`scripts/session_service.py`. If your own tooling reads the session-log
+headers, move it from the five retired columns to the `gen_ai.*` ones, and
+note that `gen_ai.usage.input_tokens` counts cached input where the old
+claude `input-tokens` did not (`fresh-input-tokens` is the old meaning). If
+you called `invoke_and_persist` or `invoke_session` from your own scripts,
+hand `session_service.call` a `session_service.Call` instead. Logs written
+before the re-sync keep their old columns; nothing rewrites them.
+
+### Adjudicator session retention as the session service's keep operation, a new `[adjudicator]` table shipped OFF [since 46970249]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `process.toml.template` gains an `[adjudicator]` table
+(`context_reset_pct`, `retain_for`, `keepwarm_minutes`,
+`reset_on_same_artifact`), shipped at `context_reset_pct = 0`, where the whole
+layer is inert: no session id minted, no resume flag, no store written, and
+every adjudication a fresh session exactly as before. With the dial on, an
+adjudication of a retained class resumes a session an earlier one minted
+(claude `--resume`, codex `exec resume`, opencode `--session`) through the
+session service, under a dedicated CLI home (`CLAUDE_CONFIG_DIR` or
+`CODEX_HOME` under `out/adjudicator/home/`). The retained session's record is
+written to `out/adjudicator/` under the primary checkout, under a store lock,
+with a lease so no two calls use one session at once. It drains at the dial,
+or when the agent guides, the policy file, a loaded skill, the adjudication
+template or the runner's version changes; it retires at the first launch where
+no queued adjudication or active lane belongs to a chain it judged, and at
+once when a call errors, times out or fails to launch. The dispatcher pings a
+due retained ANTHROPIC session with a one-turn call (`--max-turns 1`) on its
+own thread while lanes are out (`keepwarm_minutes`, 0 = off), and commits its
+session log between polls over a clean trunk. The session log gains two columns,
+`session-gen` and `reset-reason`, empty on every call the layer did not
+retain.
+
+**What to do.** Re-sync the kit files, including the new `scripts/session_keep.py` (the keep operation's rules and store). Add the `[adjudicator]` table to your
+`docs/process.toml` with `context_reset_pct = 0` (an absent table already
+reads as off, so nothing changes until you add it). `out/` is already ignored,
+so the store needs no `.gitignore` edit unless you narrowed that ignore.
+Turning the dial on is a decision to take only after checking the layer on the
+machine it runs on, and it needs credentials provisioned into the dedicated
+homes first (for example `CODEX_HOME=out/adjudicator/home/openai codex login`,
+and `CLAUDE_CONFIG_DIR=out/adjudicator/home/anthropic claude` once
+interactively); a retained launch without them fails and retires its session.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

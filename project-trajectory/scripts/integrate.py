@@ -2045,7 +2045,7 @@ _RESIDUE_FILES = frozenset({"docs/test/report.md", "docs/test/report.html"})
 # caches: ignored by git AND declared here — never sole-copy evidence.
 #
 # Declared BY NAME, never by directory (WI-548 round 4): a stream is
-# `<train>-<NNN>-<YYYYMMDD>-<HHMMSS>.log`, the shape `agent_loop.write_raw_stream`
+# `<train>-<NNN>-<YYYYMMDD>-<HHMMSS>.log`, the shape the loop hands `session_service.record`
 # produces, and ONLY that shape is the loop's. Anything else under
 # out/run-logs/ — an operator's notes, a foreign log — is a surprise, and a
 # surprise is evidence that refuses the unload by name.

@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 263
-seam_rows = 207
-requirements_placed = 112
+design_rows = 268
+seam_rows = 211
+requirements_placed = 114
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -576,8 +576,10 @@ sr_refs = [
   "SR-209",
   "SR-215",
   "SR-220",
+  "SR-222",
   "SR-223",
   "SR-225",
+  "SR-227",
 ]
 sr_shared_refs = [
   "SR-139",
@@ -654,6 +656,11 @@ llr_refs = [
   "LLR-262",
   "LLR-264",
   "LLR-265",
+  "LLR-266",
+  "LLR-267",
+  "LLR-268",
+  "LLR-269",
+  "LLR-270",
   "LLR-280",
   "LLR-282",
   "LLR-283",
@@ -704,6 +711,9 @@ modules = [
   "project-trajectory/scripts/rejudge.py",
   "project-trajectory/scripts/schedule.py",
   "project-trajectory/scripts/score_reviews.py",
+  "project-trajectory/scripts/session_adapters.py",
+  "project-trajectory/scripts/session_keep.py",
+  "project-trajectory/scripts/session_service.py",
   "project-trajectory/scripts/spec_move.py",
   "project-trajectory/scripts/trunk_step.py",
 ]
@@ -738,6 +748,10 @@ seam_internal_refs = [
   "IF-197",
   "IF-228",
   "IF-242",
+  "IF-245",
+  "IF-246",
+  "IF-247",
+  "IF-248",
   "IF-255",
   "IF-256",
 ]

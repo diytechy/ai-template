@@ -1,0 +1,13 @@
+<!-- Codex Sol confirmation of WI-620's second fix round, aad52b75; ruling 55. Links re-rooted from the removed worktree. -->
+
+aad52b75 NOT YET SOUND
+
+- **major — (3):** The tombstone is durable, but a stale session can still be reused. Retention permits no wall timeout ([agent_loop.py](../../../project-trajectory/scripts/agent_loop.py), [agent_loop.py](../../../project-trajectory/scripts/agent_loop.py)) while assigning a finite 7,500-second lease ([agent_loop.py](../../../project-trajectory/scripts/agent_loop.py)). Once that lease expires, `keep_for` can read no tombstone and return the old session ([session_keep.py](../../../project-trajectory/scripts/session_keep.py)); the failing caller may then write its lockless tombstone ([session_keep.py](../../../project-trajectory/scripts/session_keep.py)), too late to prevent reuse. `load_honoured` checks only once ([session_keep.py](../../../project-trajectory/scripts/session_keep.py)). The contention test covers eventual retirement, not this interleaving ([test_session_keep.py](../../../tests/test_session_keep.py)).
+
+No other findings:
+
+- (1) Transitive lineage and cycle handling are implemented and tested ([session_keep.py](../../../project-trajectory/scripts/session_keep.py), [test_session_keep.py](../../../tests/test_session_keep.py), [test_session_keep.py](../../../tests/test_session_keep.py)).
+- (2) Shutdown records only after the shared clean-tree check; dirty shutdown skips and reports why ([session_service.py](../../../project-trajectory/scripts/session_service.py), [test_session_keep.py](../../../tests/test_session_keep.py)).
+- (4) Both bounded ordinary forms are recognized, their mutations are planted, and the whole-kit guard census passes ([test_session_service.py](../../../tests/test_session_service.py), [test_session_service.py](../../../tests/test_session_service.py), [test_session_service.py](../../../tests/test_session_service.py), [test_session_service.py](../../../tests/test_session_service.py)).
+- (5) LLR-177 and TC-172 minimally and accurately add header-value redaction and both evidence paths ([low-level-requirements.toml](../../../docs/requirements/low-level-requirements.toml), [test-cases.toml](../../../docs/test/test-cases.toml), [agent_common.py](../../../project-trajectory/scripts/agent_common.py)).
+- (6) IF-065 now names `session_keep` and `substantive_working_tree_dirty`; TC-268 drives the real-repository read ([interfaces.toml](../../../docs/requirements/interfaces.toml), [test-cases.toml](../../../docs/test/test-cases.toml)).

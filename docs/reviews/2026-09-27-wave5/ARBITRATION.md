@@ -598,3 +598,48 @@ such.
     - **(g)** IF-044 and IF-065 state the surface they carry, each cited by a
       case that drives it (IF-248 and IF-249 remain reserved if a seam needs
       its own row).
+
+54. **WI-620, fix round (80a86d14) — SOL on all six, one bounded.** Ruling 53
+    (c) and (d), SR-227 and the smoke re-stamp (in-process growth, 1880
+    collected) are confirmed.
+    - (a) The clear point reads the whole lineage: the transitive closure of
+      `Predecessors` and `Supersedes`, tested on an adjudication, worker and
+      re-adjudication chain.
+    - (b) The shutdown path commits keep-warm telemetry only through the same
+      clean-trunk path the tick uses, and otherwise skips and logs.
+    - (c) A raising retained launch is guaranteed to retire under lock
+      contention, through a durable tombstone that `keep_for` honours, and
+      this is tested.
+    - (e), **BOUNDED:** a static guard can always be evaded, so the bar is
+      ordinary forms, not a complete data-flow analysis. The guard recognizes
+      a literal provider argv held in a variable and an iteration path built
+      from parts, with both planted mutations; or launches and writes move
+      behind one import that a closed import guard enforces.
+    - Minors: the header redaction is traced. The coordinator grants
+      amendment authority over approved LLR-177 and TC-172, in place, to name
+      the session-log header. IF-065 lists `scripts/session_keep` and the
+      surface it carries.
+
+55. **WI-620, third round (aad52b75) — SOL on the stale-lease window; one
+    rule.** Points (1), (2), (4), (5) and (6) of ruling 54 are confirmed. A
+    retained launch has no wall timeout, but its lease is finite (7,500 s). A
+    launch outliving its lease can therefore see its session reused by the
+    next `keep_for` before its own tombstone lands. **Ruling:** an expired
+    lease that was never released means the holder is still running or has
+    crashed. Either way the session is not safe to resume, so `keep_for`
+    retires it and mints a fresh one, failing toward a fresh session and never
+    reusing. The regression is the interleaving itself: a lease expiring
+    under a live holder, then a `keep_for`.
+
+56. **WI-620, fourth round (80fcc94a) — SOL on a split clock; one rule.**
+    Ruling 55's rule is implemented and its regression drives the
+    interleaving. But `keep_for` and `take_warm_lease` each read `time.time()`
+    twice, once for `retire_stale_lease` and again for `_lease_held`. A lease
+    that expires between the two reads is seen as live by the first and free
+    by the second, so the stale session is resumed or pinged (the coordinator
+    verified this at `session_keep.py:569-570` and `:794/:798`). **Ruling:**
+    each locked decision reads the clock ONCE, and that one instant governs
+    both the retire and the busy check. The regression uses an advancing
+    clock that crosses the lease's end between successive reads, and it fails
+    on the split form. The lock-contention fallback is confirmed safe, and
+    the text of LLR-270 and TC-267 stands.

@@ -19,7 +19,6 @@ project-trajectory/scripts/agent_route.py	_rows_from_csv	17	34
 project-trajectory/scripts/agent_route.py	escalate	16	72
 project-trajectory/scripts/agent_route.py	load_registry	24	65
 project-trajectory/scripts/agent_route.py	main	16	62
-project-trajectory/scripts/agent_session.py	_result_accounting	22	48	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): this new row (22) came with the redesign-baseline repair sitting (22b21b06, 2026-09-06): one reader of a provider's raw result fields, each optional field its own guarded branch because a guessed aggregate is worse than an explicit unknown. The fields are a table waiting to be written; repair is owed on trunk.
 project-trajectory/scripts/agent_session.py	_wait_for_exit	16	24
 project-trajectory/scripts/agent_session.py	summarize_session_line	29	24
 project-trajectory/scripts/assumption_rules.py	falsification_worklist	19	38	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): this new row (19) came with WI-632 (ae3d625e): SR-201's worklist joins an assumption's two falsification signals (its Standing, a failed latest record) to the citing requirements, their needs and the evidencing cases, each once. Repair is owed on trunk: the join is three lookups a sibling could build.

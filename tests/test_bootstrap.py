@@ -209,6 +209,9 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/assumption_rules.py",
         "scripts/acceptance_record.py",
         "scripts/agent_session.py",
+        "scripts/session_adapters.py",
+        "scripts/session_service.py",
+        "scripts/session_keep.py",
         "scripts/agent_common.py",
         "scripts/plan_runner.py",
     ]:

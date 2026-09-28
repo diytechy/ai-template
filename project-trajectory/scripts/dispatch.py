@@ -90,6 +90,7 @@ import integrate
 import lane
 import schedule
 import score_reviews
+import session_service
 from kitlib import provenance as _kitprovenance
 from kitlib import verdict as kverdict
 
@@ -1366,6 +1367,16 @@ def _station_exit(root, tier, verb, payload, state):
 _POLL_SECONDS = 0.5
 
 
+def _keep_warm(warmer, table):
+    """One keep-warm tick, its skip and hold reasons logged. The tick never
+    waits on a ping, and a ping's log is committed here, on the thread that
+    runs the merges, so it never lands beside one."""
+    if warmer is None:
+        return
+    for line in warmer.tick(work_pending=bool(table)):
+        _say(line)
+
+
 def run(root, args, worker=None, tier="all"):
     """The dispatch loop (docs/concurrency-v2.md §A4). `worker` is the one
     injection seam (tests): a callable `(root, branch, wi_ids, args) -> exit
@@ -1394,6 +1405,14 @@ def run(root, args, worker=None, tier="all"):
     run (SR-209): every worker, refresh and session this run starts inherits
     it, so each commit they make is known as the loop's and carries the
     `Loop-Session` trailer, while a person's shell never holds it.
+
+    KEEP-WARM rides the tick without blocking it: the session service's
+    KeepWarmer pings a due retained adjudicator session on its own thread, as
+    an ordinary call, while lanes are out, and records it on this thread
+    between polls; it is None, and does nothing, at the shipped
+    `[adjudicator]` dial.
+
+    Implements: SR-227, LLR-270
     """
     _kitprovenance.mark_loop_process()
     lanes_total = _lane_count(args, root)
@@ -1409,6 +1428,11 @@ def run(root, args, worker=None, tier="all"):
     # cross-review finding, round 1).
     config_refusal = _session_config_refusal(root, args) if worker is None else None
     state = {"merged": 0, "stall": 0, "cycles": 0, "fatal": None}
+    # The session service's keep-warm, built once per run: None, and so no
+    # thread, store read or ping, at the shipped `[adjudicator]` dial.
+    warmer = session_service.keep_warmer(
+        root, session_service.session_keep.keep_config(root)
+    )
     table = []
     while True:
         # The pause is re-read at the top of every tick so one appearing
@@ -1458,6 +1482,7 @@ def run(root, args, worker=None, tier="all"):
             )
             if code is not None:
                 return code
+        _keep_warm(warmer, table)
         if not (event or admitted):
             # Nothing moved this tick: wait for a subprocess rather than spin.
             time.sleep(_POLL_SECONDS if table else 0.05)

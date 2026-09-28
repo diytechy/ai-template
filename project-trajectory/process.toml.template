@@ -360,3 +360,45 @@ test_first_since = ""
 # `true` would fail before turning it on. It is a cost worth opting into once
 # your requirements cite assumptions; the derived stage never reads it.
 assumption_gate = false
+
+[adjudicator]
+# ADJUDICATOR SESSION RETENTION (opt-in, ships OFF). An adjudication is one
+# bounded headless process, exactly as without it; with the dial on, that
+# process is launched in its runner's RESUME form against a session an earlier
+# adjudication minted, so the judge arrives already holding the spine and the
+# items it judged instead of reloading them for every small work item. It is a
+# retained transcript a bounded process replays, never a daemon, a long-lived
+# process or an open stdin: an unattended run still cannot wedge on a prompt.
+# Resuming, reading occupancy, draining and resetting, and the keep-warm ping
+# are all ordinary calls through the session service, recorded like any other.
+#
+# Percent of the model's context window at which the retained session is
+# drained and then reset. 0 = OFF: every adjudication is a fresh session and
+# the whole layer is inert (no session id minted, no resume flag, no store
+# written). Occupancy is the latest request's prompt over the window. A session
+# at or past the dial DRAINS: it keeps being resumed for the items it is still
+# judging, and is retired at the next adjudication of an item it has not
+# judged, so a review, rework and re-review round trip is never cut mid-way. A
+# change to the agent guides, this file or the adjudication templates drains it
+# too, and an errored, error-reporting or timed-out session is retired at once.
+# A draining session is also triggered by a changed loaded skill or a runner
+# version change, and a session whose call fails to launch retires at once.
+# The codex family clamps a dial above 85 to 85 (its own compaction is the
+# backstop); claude and opencode keep their provider compaction above the dial.
+# With the dial on, retained claude and codex sessions run under dedicated CLI
+# homes under out/adjudicator/home/ (CLAUDE_CONFIG_DIR, CODEX_HOME), so a person
+# provisions credentials there before turning it on.
+context_reset_pct = 0            # e.g. 55
+# Retain the session across these adjudication classes only (Brief cell values).
+retain_for = ["disposition", "amendment", "red-tc"]
+# ANTHROPIC only: minutes between keep-warm pings of an idle retained session
+# while lanes are active, so its hour-long prompt cache is not rewritten; 0 =
+# off. A ping is a real one-turn call (resumed, --max-turns 1, recorded in the
+# session log like any other) that runs off the dispatcher's thread, never while
+# another call holds the session, and fires through the blackout. Other families' caches live
+# minutes and are never pinged.
+keepwarm_minutes = 0             # e.g. 50
+# Reset before re-judging an item the retained session already judged. Default
+# false: continuity across a worker round trip on the SAME item is the layer's
+# purpose; true restores the strict posture at the cost of that continuity.
+reset_on_same_artifact = false

@@ -7,7 +7,7 @@ A queued WI whose registry row declares `PlanMode=dual` is run as a dual-plan
 round — two planner sessions, the coverage pre-pass, one cross-critique +
 revision, the position-swapped arbiter pair — never as a direct BUILD (the
 worker path refuses a dual row, fail-closed). Sessions launch through the
-split-out headless layer (agent_session.build_argv/run_session), so each
+session service (session_service.call), so each
 inherits the S8 per-session limits; routing (agent_route.planner_pair /
 planner_fallback, with the registry's tag-rank override) is used when the
 enable-list opts it in, else one template drives every hat as the recorded
@@ -50,21 +50,19 @@ from pathlib import Path
 # covers an in-process import (a test) whose sys.path doesn't yet carry
 # scripts/ — the same sanctioned-sibling-import idiom agent_loop uses.
 try:
-    import agent_common
-    import agent_session as agent_session
-    from agent_session import build_argv, parse_json_result, run_session
+    import session_service
+    from agent_session import parse_json_result
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    import agent_common
-    import agent_session as agent_session
-    from agent_session import build_argv, parse_json_result, run_session
+    import session_service
+    from agent_session import parse_json_result
 # --- the dual-plan decomposition round (WI-199; DP-001 selected plan P6) -------
 # The coordinator fan-in over the WI-194..WI-198 modules: a queued WI whose
 # registry row declares `PlanMode=dual` is run as a dual-plan round — two
 # planner sessions, the coverage pre-pass, one cross-critique + revision, the
 # position-swapped arbiter pair — never as a direct BUILD (the worker path
 # refuses a dual row, fail-closed). Sessions launch through the existing
-# headless invocation path (build_argv/run_session), so each inherits the S8
+# session service (session_service.call), so each inherits the S8
 # per-session limits; routing (agent_route.planner_pair/planner_fallback) is
 # used when the enable-list opts it in, else one template drives every hat as
 # the recorded routing-off degraded mode. Frontier AUTO-dispatch under --jobs
@@ -159,29 +157,37 @@ def _dp_routes(root, tier):
 def _dp_session(
     template, model, prompt, root, timeout, env_cell="", *, attribution=None
 ):
-    """One round session through the existing headless path. Returns
-    (ok, output). A pair row's Env cell is merged over the ambient env
-    (agent_route.parse_env), matching the loop's session launch."""
+    """One round session through the session service. Returns (ok, output).
+    A pair row's Env cell is merged over the ambient env
+    (agent_route.parse_env), matching the loop's session launch.
+
+    Implements: SR-222, LLR-269
+    """
     env = None
     if env_cell:
         import agent_route
 
         env = dict(os.environ)
         env.update(agent_route.parse_env(env_cell))
-    argv, stdin_input = build_argv(template, model, prompt)
-    metrics = dict(attribution or {})
-    metrics.setdefault("role", "PLAN")
-    metrics.setdefault("source-event", "dual-plan")
-    metrics["requested-model"] = model
-    code, output, timed_out = agent_common.invoke_and_persist(
-        root,
-        argv,
-        timeout,
-        metrics=metrics,
-        runner=run_session,
-        env=env,
-        stdin_input=stdin_input,
+    attribution = dict(attribution or {})
+    session = session_service.call(
+        session_service.Call(
+            root=root,
+            role=attribution.pop("role", "PLAN"),
+            template=template,
+            model=model,
+            prompt=prompt,
+            provider=attribution.pop("provider", ""),
+            tier=attribution.pop("tier", ""),
+            route_id=attribution.pop("roster-row", ""),
+            source_event=attribution.pop("source-event", "dual-plan"),
+            attempt_id=attribution.pop("attempt-id", ""),
+            attribution=attribution,
+            env=env,
+            timeout=timeout,
+        )
     )
+    code, output, timed_out = session.code, session.text, session.timed_out
     ok = code == 0 and not timed_out
     # A --output-format json/stream-json template (what the real agents.toml rows
     # use) captures the whole event transcript, but the round's consumers need the

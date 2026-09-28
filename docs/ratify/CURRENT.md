@@ -18,7 +18,7 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into approval or arrives approved, `--approves` names it or `--reattests` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 62 changed, 45 added, 1 removed since the snapshot; ruling(s): OI-37, OI-74, OI-75, OI-85, OI-88, OI-95, WI-539, WI-553, WI-557, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-618, WI-619, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679.
+- `docs/requirements/interfaces.toml` — 65 changed, 49 added, 1 removed since the snapshot; ruling(s): OI-37, OI-74, OI-75, OI-85, OI-88, OI-95, WI-539, WI-553, WI-557, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-618, WI-619, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-587.
 
 ## Assumptions and surrogates owing an approval
@@ -621,7 +621,151 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 2 chain(s): SR-224, SR-226</summary>
+<summary>Waiting for automated adjudication — 5 chain(s): SR-176, SR-222, SR-224, SR-226, SR-227</summary>
+
+## SR-176 — A privacy finding persists by class and location, never by value
+
+> **Requirement.** Any durable record the delivered kit produces of a secrets or privacy finding shall identify the finding by its class and location, never by the matched value.
+
+> **Rationale.** The finding record is the one artifact guaranteed to contain the personal data it reports, created by the control itself — SN-009 defeating itself, since a scanner that catches a value and then echoes it into a committed artifact has published what it protected. The intake proposal's measurement (docs/plans/2026-08-17-wi468-obligation-intake-options.md §2 option (b)) grounds the row: the scanner mints no record of its own (check_privacy prints location, label and the MATCHED VALUE to stdout and writes nothing), but an unattended run's transcript is committed bookkeeping, so the durable copy of every finding is the session log — and the transcript path redacts credential shapes only. DELIBERATE NARROWING of the charter's ask, recorded here as the deriving decision: C-DPR-2 asks for a retention limit and an access rule, and a kit cannot honestly promise either over an adopter's git history (committed content is effectively forever; access is the host's) — what it CAN promise is that the matched value never reaches durable storage, which moots both. MECHANIZED TODAY for the always-on class: the transcript writer redacts the credential shapes and its summary line names class and count, never the value — pinned by the chain below. NOT YET MECHANIZED, stated rather than implied: the PII/identity classes the privacy gate adds are not in the redaction set, so for an adopter with the gate on a PII finding echoed into a session transcript would persist — closing that, on the same seam,… [26 more chars — read the registry row]
+
+
+### LLR LLR-177
+- **Detail**
+  - before: write_session_log passes every transcript through redact_secrets before the tracked per-session log (docs/iteration/NNN-<stamp>.log) is written: each declared credential shape in _SECRET_RES (API keys, GitHub tokens and PATs, AWS key ids, Bearer tokens, Slack tokens) is substituted with [REDACTED], and the header reports the finding as class plus count ("# redacted: N credential-shaped token(s)") - the matched value has no path into the committed file. Deliberately imperfect by its own docstring: an unknown token shape passes through, and the raw unredacted stream stays in gitignored out/run-logs/ for debugging - the untracked half SR-176's acceptance names. THE GAP, stated as LLR-172 states its own: the set covers the always-on secrets classes only; the PII/identity classes check_privacy adds under the privacy gate are not in _SECRET_RES, so the planted-value observable holds today for credential shapes and not yet for the gate's added classes - extending the set on this same seam is the row's build debt.
+  - after: write_session_log passes every transcript, and every header value (a verbatim raw-usage line can carry a runner's result text), through redact_secrets before the tracked per-session log (docs/iteration/NNN-<stamp>.log) is written: each declared credential shape in _SECRET_RES (API keys, GitHub tokens and PATs, AWS key ids, Bearer tokens, Slack tokens) is substituted with [REDACTED], and the header reports the findings of both paths as class plus count ("# redacted: N credential-shaped token(s)") - the matched value has no path into the committed file. Deliberately imperfect by its own docstring: an unknown token shape passes through, and the raw unredacted stream stays in gitignored out/run-logs/ for debugging - the untracked half SR-176's acceptance names. THE GAP, stated as LLR-172 states its own: the set covers the always-on secrets classes only; the PII/identity classes check_privacy adds under the privacy gate are not in _SECRET_RES, so the planted-value observable holds today for credential shapes and not yet for the gate's added classes - extending the set on this same seam is the row's build debt.
+
+### TC TC-172
+_approved — re-attestation owed_
+- **Method**
+  - before: Plant credential-shaped values (an API key, a Bearer token, an AWS key id) in a transcript and write the session log: each planted value appears 0 times in the written tracked file, [REDACTED] stands in its place, ordinary lines survive intact, and the header names the finding by class and count ("# redacted: 3 credential-shaped token(s)"), never by value. The PII/identity classes are SR-176's stated gap and are deliberately NOT tested until the redaction set carries them.
+  - after: Plant credential-shaped values (an API key, a Bearer token, an AWS key id) in a transcript and write the session log: each planted value appears 0 times in the written tracked file, [REDACTED] stands in its place, ordinary lines survive intact, and the header names the finding by class and count ("# redacted: 3 credential-shaped token(s)"), never by value. Then plant a credential in a header value (a raw-usage line carrying result text) and assert it too appears 0 times, [REDACTED] stands in the header, the count line names it, and the transcript survives; and through the session service, a credential inside a runner's result line never reaches the committed header. The PII/identity classes are SR-176's stated gap and are deliberately NOT tested until the redaction set carries them.
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_agent_loop.py::test_session_log_redacts_credential_shapes
+  - after: tests/test_agent_loop.py::test_session_log_redacts_credential_shapes; tests/test_agent_loop.py::test_session_log_redacts_credential_shapes_in_header_values; tests/test_session_service.py::test_a_credential_in_a_raw_usage_line_is_redacted_in_the_log_header
+
+## SR-222 — Every model session is recorded in one usage record, whichever provider CLI serves it
+
+> **Requirement.** The delivered loop content shall record every model session it launches, whichever provider command-line runner serves it, in one usage record: token usage under a published usage vocabulary pinned to a named revision, input counted inclusive of cached input, fresh input derived by one formula, the runner's raw usage kept verbatim, the provider and the runner that produced the row named, and the context occupancy of the session's latest request kept apart from its billed tokens.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-026 asks that the owner can configure several model families and route work among them per job and capability level; it does not name a usage record, so this obligation arrives through two lenses rather than through the need's text. The performance lens listens for measurements that cannot be compared, or are unavailable, being read as a reliable total: routing among families is a cost and quality choice, and the choice is blind when one family's calls record their usage and another's do not, or when the runners disagree on what "input tokens" means (two count cached input apart from input, one counts it inside), so one column would hold two incompatible numbers. The consistency lens listens for readers disagreeing after a one-sided change: when each launching role keeps its own launch and logging path, a usage fix lands in one path and not the others. Adopting a published vocabulary rather than inventing a log format was the owner's choice, since the problem is not novel; every name in it is still at development stability and its repository moved in 2026 with no tagged release, so the record pins the exact revision it follows. The raw usage is kept verbatim so a mapping later found wrong is re-derived rather than lost. Occupancy is kept apart from billed tokens because they answer different questions: billed tokens are summed over every request the session made, while how full a context is depends on the latest request alone, and a … [284 more chars — read the registry row]
+
+_No approved baseline — absent from the docs/archive/last_approved snapshot — awaiting its first approval; current state only._
+
+### SR SR-222 (current)
+- **SR-ID**: SR-222
+- **Title**: Every model session is recorded in one usage record, whichever provider CLI serves it
+- **SN-Refs**: SN-026
+- **Boundary-Refs**: B-10
+- **Hat-Refs**: PERFORMANCE;CONSISTENCY
+- **Requirement**: The delivered loop content shall record every model session it launches, whichever provider command-line runner serves it, in one usage record: token usage under a published usage vocabulary pinned to a named revision, input counted inclusive of cached input, fresh input derived by one formula, the runner's raw usage kept verbatim, the provider and the runner that produced the row named, and the context occupancy of the session's latest request kept apart from its billed tokens.
+- **Rationale**: A DERIVED requirement, and labelled so. SN-026 asks that the owner can configure several model families and route work among them per job and capability level; it does not name a usage record, so this obligation arrives through two lenses rather than through the need's text. The performance lens listens for measurements that cannot be compared, or are unavailable, being read as a reliable total: routing among families is a cost and quality choice, and the choice is blind when one family's calls record their usage and another's do not, or when the runners disagree on what "input tokens" means (two count cached input apart from input, one counts it inside), so one column would hold two incompatible numbers. The consistency lens listens for readers disagreeing after a one-sided change: when each launching role keeps its own launch and logging path, a usage fix lands in one path and not the others. Adopting a published vocabulary rather than inventing a log format was the owner's choice, since the problem is not novel; every name in it is still at development stability and its repository moved in 2026 with no tagged release, so the record pins the exact revision it follows. The raw usage is kept verbatim so a mapping later found wrong is re-derived rather than lost. Occupancy is kept apart from billed tokens because they answer different questions: billed tokens are summed over every request the session made, while how full a context is depends on the latest request alone, and a … [284 more chars — read the registry row]
+- **AcceptanceCriteria**: For a recorded session of each routed runner, the record carries the vocabulary's usage names and the revision they are pinned to; its input count includes cached input; its fresh input equals input less cache read and cache write; its raw usage reproduces the runner's usage events exactly; a count the runner does not report is empty, not zero; the provider and runner columns are filled; a successful call's usage survives in the record even where the runner's result text is read from a separate file; and occupancy is the latest request's prompt over the model's window, blank where the runner reports no window, so no session reports occupancy above 100% because counts accumulated across its requests.
+- **Priority**: S
+- **Verification**: Test
+- **Status**: Drafted
+- **Phase**: 6
+
+### LLR LLR-266 (current)
+- **LLR-ID**: LLR-266
+- **SR-Refs**: SR-222
+- **Title**: One adapter per provider runner captures its structured output
+- **Module**: project-trajectory/scripts/session_adapters.py
+- **CodeSymbol**: adapter_for/CodexAdapter/OpencodeAdapter/json_events
+- **Detail**: adapter_for(argv) picks the adapter by the basename prefix of the executable argv launches (claude, codex, opencode, case-insensitive), else a plain adapter that changes nothing, so a stand-in agent is accounted as before. prepare(argv) adds the runner's structured-output flags once: codex gets --json beside the --output-last-message temp file it already carried, opencode gets --format json, claude's route already emits stream-json. run_session captures the whole stream and no longer reads any file back; the session service asks the adapter for the final text instead: codex's is the last-message file on a zero exit and the stream otherwise, opencode's is the text of the last step that spoke, or the stream as it came when no JSON event parsed. raw_usage(stream) returns the usage-bearing events (codex's events carrying a usage object, opencode's step_finish events) as a JSON array whose members are the runner's own lines, byte for byte, and the usage record stores it in the raw-usage column. An attached sitting keeps its argv as written.
+- **Rationale**: Before this, a successful codex call replaced its captured stream with the last-message text, so its usage never reached any record, and the opencode route asked for no structured output at all. Choosing the adapter by the program launched rather than by the routed family keeps the flags with the grammar that needs them. Keeping each usage line as written, rather than a re-serialised object, is what lets a mapping later found wrong be re-derived from the record.
+- **TestRefs**: (see TC-262)
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### LLR LLR-267 (current)
+- **LLR-ID**: LLR-267
+- **SR-Refs**: SR-222
+- **Title**: Context occupancy is read from the latest request's prompt
+- **Module**: project-trajectory/scripts/session_adapters.py
+- **CodeSymbol**: ClaudeAdapter.context/CodexAdapter.context/OpencodeAdapter.context
+- **Detail**: context(stream, env, session_id) returns (session_id, used, window, pct) for the session's final model request, each field empty where the runner does not report it. claude: used is the last assistant event's message.usage input_tokens + cache_read_input_tokens + cache_creation_input_tokens, falling back to the result's last usage.iterations entry; the window is the contextWindow of the modelUsage entry for the model that request named, so a background model's entry beside it is never taken. codex: the exec --json turn usage is cumulative over the thread and is never read as occupancy; used is the last rollout token_count event's info.last_token_usage.input_tokens and the window its info.model_context_window, read from the rollout file named for exactly this thread id under the launch environment's CODEX_HOME, and blank with no CODEX_HOME. opencode: used is the last step_finish event's part.tokens input + cache.read + cache.write; opencode reports no window, so window and percent stay blank. pct is the rounded percent when used and a positive window are both counts. The session service writes the four fields to the session-id, context-used, context-window and context-pct columns for every call.
+- **Rationale**: The result event's usage counters accumulate over every request the session made, so dividing their sum by the window read up to 34,836% in the iteration index. How full a context is depends on what the latest request sent. A missing window is left blank rather than guessed, because a guessed percentage is the input a reset rule would act on.
+- **TestRefs**: (see TC-263)
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### LLR LLR-268 (current)
+- **LLR-ID**: LLR-268
+- **SR-Refs**: SR-222
+- **Title**: Each adapter maps its runner's usage to the pinned OpenTelemetry names
+- **Module**: project-trajectory/scripts/session_adapters.py
+- **CodeSymbol**: OTEL_SEMCONV/USAGE_KEYS/USAGE_COUNT_KEYS/usage_record/_claude_usage/CodexAdapter.usage/OpencodeAdapter.usage
+- **Detail**: usage(stream) returns one dict with exactly the USAGE_KEYS columns for every runner: cli, semconv (OTEL_SEMCONV, open-telemetry/semantic-conventions-genai at commit e57c543b4889619eb2a05702471937db5119165d), gen_ai.provider.name, gen_ai.response.model, gen_ai.conversation.id, the five USAGE_COUNT_KEYS (gen_ai.usage.input_tokens, cache_read.input_tokens, cache_write.input_tokens, output_tokens, reasoning.output_tokens), fresh-input-tokens, cost-usd, usage-scope and raw-usage. usage_record is the one builder: input_tokens = fresh + cache read + cache write over the parts reported, fresh-input-tokens = input_tokens - cache read - cache write, and an unreported count is "" rather than 0. claude (and a stand-in's claude-shaped result): fresh is usage.input_tokens, cache read and write are cache_read_input_tokens and cache_creation_input_tokens, reasoning is usage.output_tokens_details.thinking_tokens, the response model is the last assistant event's message.model, else the result's model, else the one modelUsage entry whose input and output counts match, and raw-usage is the result's usage, modelUsage and total_cost_usd values. codex: the last event carrying usage (turn.completed), whose input_tokens already includes cached_input_tokens, so fresh is their difference; no cache write or response model is reported; the conversation is thread.started.thread_id; scope thread. opencode: every step_finish part summed, fresh from tokens.input, cache from tokens.cache.read and write, outpu… [102 more chars — read the registry row]
+- **Rationale**: The runners disagree on what input means: two count cached input apart from input and one counts it inside, so a column copied from each would hold incomparable numbers. Mapping each to the convention's inclusive form in its own adapter, through one builder, makes the columns mean the same thing for every runner, and the verbatim raw usage lets a mapping found wrong later be re-derived. The two claude fields were misread before: reasoning was read from a field no runner emits, and the reported model went blank whenever a background model's usage sat beside the session's own.
+- **TestRefs**: (see TC-264)
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### LLR LLR-269 (current)
+- **LLR-ID**: LLR-269
+- **SR-Refs**: SR-222
+- **Title**: One session service launches and records every model call
+- **Module**: project-trajectory/scripts/session_service.py;project-trajectory/scripts/agent_loop.py;project-trajectory/scripts/plan_runner.py
+- **CodeSymbol**: Call/act/record/call;launch_session;_dp_session
+- **Detail**: A role hands a Call its data (root, role, the route's template, model and prompt, provider, tier, route id, source event, attempt id, further attribution, env, deadlines, console renderer, attached) and nothing else. act builds the argv (agent_session.build_argv), lets the launched runner's adapter prepare it, launches it headless through run_session or attached through run_attached, reads the final text through the adapter, and fills the accounting: invocation id and timestamps, wall seconds, exit code and timeout kind, the adapter's usage record with usage-source and usage-status (known when input and output are both reported, partial when anything is, else unavailable), and the latest request's session id and context occupancy; a launch that raises is accounted with unavailable usage and re-raised. record writes one session log from the caller's row overlaid by that accounting, with the whole captured stream as its transcript, the raw stream to raw_dir/raw_name when given, and its own telemetry commit. call is act then record with the standard call_<invocation-id> row, recording an interrupted or failed launch too. The worker loop (launch_session, then record with the row it composed), the hands-on sitting, the route probe and the dual-plan hats (_dp_session) all launch through it; nothing else calls run_session, run_attached or the session-log writer.
+- **Rationale**: Two recording wrappers and an in-line logging path existed, so a fix to what a call records landed in one of them. With one path, a role differs only in data, and a new provider difference goes to its adapter rather than into each role. The caller's row is overlaid rather than trusted, so what the service measured is never shadowed by a field a role composed.
+- **TestRefs**: (see TC-265)
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### TC TC-262 (current)
+- **TC-ID**: TC-262
+- **Verifies**: SR-222;LLR-266;IF-245
+- **Level**: Unit
+- **Method**: Over recorded fixtures of each runner's output driven through the service's act step with an injected runner. The codex and opencode fixtures are NOT LIVE: they are built from the runners' documented event shapes and say so on their first line, and recording them live, with the opencode pathway re-checked on the installed version, is owed to a person. Assert the adapter is chosen by the launched executable's name and a stand-in gets the plain adapter; the codex argv carries --json beside the last-message file and a template already carrying --json is not given a second; a successful codex call returns the last-message text and keeps its usage event verbatim, the stored text containing the fixture's line exactly; the opencode argv carries --format json, a successful call returns the last step's text and keeps both step_finish events verbatim, and output with no JSON event passes through as text with no usage kept. Then, for each of the three runners, write its usage-bearing line in a shape a re-serialisation would change (odd spacing, keys out of order, a field the adapter never reads, surrounding whitespace) and assert the raw usage, and the usage record's raw-usage column beside its parsed counts, hold that line byte for byte.
+- **Tier**: Smoke
+- **Expected**: Satisfies LLR-266 (parent SR-222) for capture: the usage of a successful codex and opencode call survives verbatim in the record while the final text is read as before.
+- **Automated**: Yes
+- **Evidence**: tests/test_session_adapters.py
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-263 (current)
+- **TC-ID**: TC-263
+- **Verifies**: SR-222;LLR-267
+- **Level**: Unit
+- **Method**: Over a LIVE recorded claude stream-json session of two model calls whose cumulative usage and final request differ, assert the occupancy is the final request's input plus cache read plus cache write, not the result's cumulative counters, the window is the modelUsage entry of the model that request named although a background model's entry sits beside it, the percent is under 100, and the occupancy reader's docstring names its source field; the same values reach the session record through the invocation boundary. Over NOT LIVE fixtures built from documented shapes (owed a live recording by a person), assert opencode's occupancy is the last step's input plus cache read and write with no window guessed, codex's exec stream yields its thread id and no occupancy because its usage is cumulative, and codex's rollout under the launch's CODEX_HOME yields the last request's inclusive input and its window; an unknown runner reports none.
+- **Tier**: Smoke
+- **Expected**: Satisfies LLR-267 (parent SR-222): occupancy is the latest request's prompt over the window, never cumulative usage, and blank where no window is reported.
+- **Automated**: Yes
+- **Evidence**: tests/test_session_adapters.py
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-264 (current)
+- **TC-ID**: TC-264
+- **Verifies**: SR-222;LLR-268
+- **Level**: Unit
+- **Method**: Over the recorded fixture of each runner (claude LIVE; codex and opencode NOT LIVE, built from documented event shapes, their live recording owed to a person), assert each adapter's usage record carries the pinned revision and the OpenTelemetry names with input counted inclusive of cached input and fresh input derived by one formula: claude's input is its fresh, cache-read and cache-write counts summed, its reasoning is read from output_tokens_details.thinking_tokens and its response model is the model its last request named although a background model's usage sits beside it, or, with no assistant event, the one matching modelUsage entry; codex's input already counts cached input and its unreported cache write and reasoning stay empty; opencode's steps are summed with reasoning inside output; and every runner's record, a stand-in's included, carries exactly the same columns.
+- **Tier**: Smoke
+- **Expected**: Satisfies LLR-268 (parent SR-222): one usage record per runner in the pinned vocabulary, inclusive input, derived fresh input, raw usage verbatim, unreported counts empty, and the two claude defects fixed.
+- **Automated**: Yes
+- **Evidence**: tests/test_session_service.py
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-265 (current)
+- **TC-ID**: TC-265
+- **Verifies**: SR-222;LLR-269;IF-246
+- **Level**: Unit
+- **Method**: Drive the service's act and call steps with an injected launch: a codex call returns its last-message text and its whole stream and is accounted with its route identity, requested model and usage; a failed spawn, a timeout, a repeated call and a raising launch are each accounted (unavailable usage, the timeout kind with partial usage, a new invocation id per call, the error named then re-raised). Assert call writes one session log carrying the usage record, the occupancy under 100% and the raw stream as its transcript, and commits it; an interrupted hands-on sitting is recorded INTERRUPTED with its timing filled; provider text cannot inject a header line; and the worker's record takes the caller's row, writes the raw stream file and commits under the worker's session label. Assert a credential shape inside a raw usage line is redacted in the committed log header. Then two structural guards over every kit script's syntax tree: no process launch outside the service and its launch layer runs an argv that names a provider runner or was built from a command template, and no module but the service calls the session-log writer, and none but the shared primitives carries the log's header or writes into the iteration directory; each guard is shown to fail on planted mutations (a subprocess run, a Popen, an os.system, a check_output of a provider runner, a launch of a template-built argv, a literal provider argv held in a variable, as a list and as a tuple extended before its launch; a… [236 more chars — read the registry row]
+- **Tier**: Smoke
+- **Expected**: Satisfies LLR-269 (parent SR-222): every model call is launched and recorded through the one service, and no role keeps its own launch or logging path.
+- **Automated**: Yes
+- **Evidence**: tests/test_session_service.py
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
 
@@ -715,6 +859,77 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **Expected**: Satisfies SR-226 AcceptanceCriteria: the deleting commit is read from history when a record is shown and reads unknown where history cannot answer, and the freshness compare holds the page to that commit wherever the checkout can resolve it
 - **Automated**: Yes
 - **Evidence**: tests/test_retire_dashboard.py::test_a_landed_record_reads_its_landing_commit; tests/test_retire_dashboard.py::test_an_uncommitted_record_reads_unknown; tests/test_retire_dashboard.py::test_a_record_in_a_root_commit_reads_unknown; tests/test_retire_dashboard.py::test_a_shallow_clone_reads_unknown; tests/test_retire_dashboard.py::test_records_come_in_tier_then_number_order; tests/test_retire_dashboard.py::test_no_record_renders_no_tab; tests/test_retire_dashboard.py::test_the_panel_renders_one_escaped_row_per_record; tests/test_retire_dashboard.py::test_the_caption_counts_the_ids_retired_before_the_record; tests/test_retire_dashboard.py::test_the_dashboard_carries_the_tab_only_when_a_record_exists; tests/test_retire_dashboard.py::test_a_fabricated_deleting_commit_is_stale_where_history_answers; tests/test_retire_dashboard.py::test_a_checkout_that_cannot_resolve_the_commit_accepts_the_page; tests/test_retire_dashboard.py::test_any_other_change_to_a_record_is_stale
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-227 — Where the retention dial is on, an adjudication resumes a retained session and resets it only when that is safe
+
+> **Requirement.** Where the declared adjudicator retention dial is above zero, the delivered loop content shall launch each adjudication of a retained class in its model runner's resume form against a session an earlier adjudication on the same route started, recording each such call like any other, draining the session when its latest request's occupancy reaches the dial or the inputs it judges under change, retiring it only when no work it has a stake in is pending, retiring it at once when a call on it fails, and letting no two calls use one retained session at once.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-025 asks that a configured agent implement toward the vision with no human curating what comes next; it does not name retaining a session, so this obligation arrives through three lenses rather than through the need's text. The performance lens listens for an operating-cost risk left unassessed: an unattended run that re-spun a fresh adjudicator for every small work item reloaded the spine each time, and its usage was extreme, while resuming a session by id costs about what a standing process would under the provider's hour-long prompt cache. The unattended-operations lens listens for a silent degrade: a retained session that has filled, or judges under rules that have since changed, or that a failed call left in an unknown state, degrades every later judgement with nothing paging anyone, so the drain, the change rules and the immediate retirement are part of the obligation, not tuning. The integrity lens listens for a durable artifact updated in place without an all-or-nothing guarantee and for a claim nothing can reclaim: two calls resuming one transcript at once corrupt it, so one call at a time holds a session, under a hold that expires when its holder is gone. Retiring only when no work the session has a stake in is pending is what keeps a review, rework and re-review round trip in one session, which is the continuity the layer exists for; a session is retained as a transcript a bounded process replays, never as a long-lived pro… [373 more chars — read the registry row]
+
+_No approved baseline — absent from the docs/archive/last_approved snapshot — awaiting its first approval; current state only._
+
+### SR SR-227 (current)
+- **SR-ID**: SR-227
+- **Title**: Where the retention dial is on, an adjudication resumes a retained session and resets it only when that is safe
+- **SN-Refs**: SN-025
+- **Boundary-Refs**: B-10
+- **Hat-Refs**: PERFORMANCE;UNATTENDED-OPS;INTEGRITY-RECOVERABILITY
+- **Requirement**: Where the declared adjudicator retention dial is above zero, the delivered loop content shall launch each adjudication of a retained class in its model runner's resume form against a session an earlier adjudication on the same route started, recording each such call like any other, draining the session when its latest request's occupancy reaches the dial or the inputs it judges under change, retiring it only when no work it has a stake in is pending, retiring it at once when a call on it fails, and letting no two calls use one retained session at once.
+- **Rationale**: A DERIVED requirement, and labelled so. SN-025 asks that a configured agent implement toward the vision with no human curating what comes next; it does not name retaining a session, so this obligation arrives through three lenses rather than through the need's text. The performance lens listens for an operating-cost risk left unassessed: an unattended run that re-spun a fresh adjudicator for every small work item reloaded the spine each time, and its usage was extreme, while resuming a session by id costs about what a standing process would under the provider's hour-long prompt cache. The unattended-operations lens listens for a silent degrade: a retained session that has filled, or judges under rules that have since changed, or that a failed call left in an unknown state, degrades every later judgement with nothing paging anyone, so the drain, the change rules and the immediate retirement are part of the obligation, not tuning. The integrity lens listens for a durable artifact updated in place without an all-or-nothing guarantee and for a claim nothing can reclaim: two calls resuming one transcript at once corrupt it, so one call at a time holds a session, under a hold that expires when its holder is gone. Retiring only when no work the session has a stake in is pending is what keeps a review, rework and re-review round trip in one session, which is the continuity the layer exists for; a session is retained as a transcript a bounded process replays, never as a long-lived pro… [373 more chars — read the registry row]
+- **AcceptanceCriteria**: With the dial at zero, an adjudication launches exactly as a fresh session: no session id minted, no resume argument, no retention state written, no keep-warm call made. With the dial on, an adjudication of a retained class resumes the route's retained session by its id in the runner's own resume form, or starts one whose id is recorded; a session whose latest request's occupancy reaches the dial, whose governing inputs (agent guides, policy file, loaded skills, the adjudication template) changed, or whose runner version changed is marked draining and is still resumed while a queued adjudication, or a lane out on work, belongs to a chain it judged, and is retired at the first launch where none does; a call that exits non-zero, times out, reports an error or fails to launch retires the session at once; a keep-warm call is one bounded turn, recorded like any other call, never blocks the scheduler, and never runs while another call holds the session; and the retention state is only ever written whole, by one writer at a time.
+- **Priority**: S
+- **Verification**: Test
+- **Status**: Drafted
+- **Phase**: 6
+
+### LLR LLR-270 (current)
+- **LLR-ID**: LLR-270
+- **SR-Refs**: SR-227
+- **Title**: The keep operation retains adjudicator sessions through act and record, inert at dial 0
+- **Module**: project-trajectory/scripts/session_keep.py;project-trajectory/scripts/session_service.py;project-trajectory/scripts/session_adapters.py;project-trajectory/scripts/agent_loop.py;project-trajectory/scripts/dispatch.py
+- **CodeSymbol**: KeepConfig/keep_config/applies/FAMILY_RESET_CAP/GOVERNING_INPUT_FILES/GOVERNING_INPUT_GLOBS/HOME_VARIABLES/store_lock/store_load/write_tombstone/load_honoured/retire_stale_lease/dedicated_home_env/governing_hash/drain_reason/lineage/chain_pending/is_clear_point/keep_for/keep_argv/keep_bookkeep/keep_abandon/keepwarm_due/take_warm_lease;cli_version/plan_keep/KeepWarmer/keep_warmer;ClaudeAdapter.mint/ClaudeAdapter.resume/ClaudeAdapter.one_turn/CodexAdapter.resume/OpencodeAdapter.resume/reported_error;adjudication_keep;run
+- **Detail**: CONFIG. keep_config reads [adjudicator] (context_reset_pct 0..100, retain_for, keepwarm_minutes, reset_on_same_artifact); a missing table or an out-of-type value reads as that field's default. applies is true only for an ADJUDICATE call of a retain_for brief on a named route with context_reset_pct above 0; otherwise plan_keep returns None before reading the runner version or the store, so at dial 0 nothing is minted, no resume flag is added, no store is written, the launch equals a fresh session's, and keep_warmer builds no warmer. STORE. One JSON record per route (IF-247) in store_dir, out/adjudicator under the primary checkout (the git common directory's parent), so it outlives a lane worktree. Every read-modify-write holds store_lock, a file created exclusively and stale after two minutes; each record is written through its own mkstemp file and os.replace. A record carries a lease {holder, until}: keep_for takes it for the adjudication's wall deadline plus 300 s, waits up to lease_wait seconds while another call holds it, and past that runs the adjudication unretained, saying why; keep_bookkeep and keep_abandon release it. A lease that EXPIRED without being released means its holder is still running past it or crashed, so the session is never reused: keep_for (and take_warm_lease) retires it with reason lease expired unreleased and drops the stale lease (retire_stale_lease), and the launch mints fresh. BEFORE A LAUNCH (keep_for, under the lock): a retired or absent record … [3320 more chars — read the registry row]
+- **Rationale**: Retention is one more thing a call does, not a second launch path, so resume, occupancy, reset and keep-warm all go through act and record, and the rules and the store sit in their own module beside the service rather than in the roles. The layer ships off because turning it on is the owner's decision after it has been verified on the machine it runs on, and at the off dial the launch must be exactly today's. The lock and the lease exist because a lane's worker and the dispatcher both reach the one store and the one transcript: a torn record or two calls resuming one session at once corrupts the state every later judgement reads. The clear point reads the queue and the lanes rather than the item alone because a draining session that retires while a successor of its own verdict is still queued breaks the round trip the layer exists for. The keep-warm ping is off the dispatcher's thread so a slow ping cannot stall the merges, and its record is on it so its commit is serialised with them. The dedicated homes keep a retained transcript out of a person's own sessions; credentials are provisioned into them by a person.
+- **TestRefs**: (see TC-266, TC-267, TC-268)
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### TC TC-266 (current)
+- **TC-ID**: TC-266
+- **Verifies**: SR-227;LLR-270;IF-248;IF-065
+- **Level**: Unit
+- **Method**: Read the shipped policy file and its template: both declare [adjudicator] with context_reset_pct = 0 and the same keys, and the configuration they yield is the off default. At dial 0, assert no retained session is planned for an adjudication and the runner's version is not read, its launch argv and environment equal a fresh session's (no session-id or resume flag, the ambient environment), no store is written, the loop's retention plan is None in a bare repository and in this one, and the dispatcher builds no keep-warm; a missing table or a non-numeric dial reads as off; with the dial on, only an adjudication of a retained class is kept.
+- **Tier**: Smoke
+- **Expected**: Satisfies LLR-270 (parent SR-227) at the shipped dial: the retention layer is inert and every adjudication is a fresh session exactly as without it.
+- **Automated**: Yes
+- **Evidence**: tests/test_session_keep.py
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-267 (current)
+- **TC-ID**: TC-267
+- **Verifies**: SR-227;LLR-270;IF-247;IF-248
+- **Level**: Unit
+- **Method**: With the dial on, over the recorded fixtures (claude LIVE; codex and opencode NOT LIVE, built from documented event shapes and owed a live recording by a person), assert for each runner that the first adjudication mints (claude's pre-minted id, codex's thread id, opencode's session id recorded) with its occupancy and generation and releases its lease, and the next resumes by that id in the runner's own form, codex's without a working-directory or ephemeral flag. Drive a retained codex route and assert it launches under the dedicated CODEX_HOME created under the store, reading its occupancy from the rollout there, and that an unretained codex call reads occupancy under an inherited CODEX_HOME. Then one test per reset clause: under the dial the session stays active; cresting it drains without retiring; a draining session is still resumed while a queued adjudication succeeds an item it judged, while a lane is out on such an item, and for an item that continues its chain, and is retired at the first launch where none of these holds, the next launch minting generation 2; the chain is the transitive lineage, so a queued re-adjudication naming only the worker an adjudication sent back keeps the chain open, supersession links count, a cycle ends, and launching that re-adjudication continues the chain; a reported error, a non-zero exit and a timeout each retire at once; a launch that raises retires the session and releases its lease, and does so under a store lock another holder keeps… [757 more chars — read the registry row]
+- **Tier**: Smoke
+- **Expected**: Satisfies LLR-270 (parent SR-227) with the dial on: each runner's resume and occupancy are read from its own output under its dedicated home, every ruled reset rule holds, and the store is written whole by one holder at a time.
+- **Automated**: Yes
+- **Evidence**: tests/test_session_keep.py
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-268 (current)
+- **TC-ID**: TC-268
+- **Verifies**: SR-227;LLR-270;IF-044;IF-065
+- **Level**: Unit
+- **Method**: Assert a keep-warm ping is due only with the dial and its minutes on, for an active ANTHROPIC session idle past the minutes while work is pending, and that an adjudication's lease makes a due ping skip naming the holder. Drive the dispatcher's keep-warm over a retained session with an injected launch that blocks: the tick returns at once with the ping on its own thread holding the lease, a second tick starts nothing and says so, nothing is committed while the ping runs, and once it finishes the next tick writes its session log and commits it on the tick's own thread; the ping resumed the session, is bounded to one turn, is logged as an ordinary call (role KEEP-WARM, source keep-warm, outcome and occupancy filled) and updated the record and released the lease. A finished ping over a dirty trunk is held and said until the trunk is clean; a ping skipped for a held lease is said once; a ping in flight at the run's end is recorded over a clean trunk and, over a dirty one, is not recorded and its reason is printed and returned; the dirty read is the shared primitives' own check over a real repository; and the dispatcher's warmer is built from the routing registry with each row's declared environment.
+- **Tier**: Smoke
+- **Expected**: Satisfies LLR-270 (parent SR-227) for keep-warm: one bounded turn off the scheduler's thread, never racing another call on the session, recorded like any other call through the serialised telemetry path.
+- **Automated**: Yes
+- **Evidence**: tests/test_session_keep.py
 - **Status**: Drafted
 - **Phase**: 6
 

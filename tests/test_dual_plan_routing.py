@@ -28,7 +28,7 @@ pb = load_script("plan_briefs")
 
 
 def test_planner_logs_coexist_with_worker_numbering_and_index(tmp_path, monkeypatch):
-    common = pr.agent_common
+    common = pr.session_service.agent_common
     docs = tmp_path / "docs"
     logs = docs / "iteration"
     old = common.write_session_log(
@@ -41,9 +41,11 @@ def test_planner_logs_coexist_with_worker_numbering_and_index(tmp_path, monkeypa
     )
     # Even an all-numeric UUID must not become a legacy ordinal.
     monkeypatch.setattr(
-        pr.agent_session.uuid, "uuid4", lambda: SimpleNamespace(hex="1" * 32)
+        pr.session_service.uuid, "uuid4", lambda: SimpleNamespace(hex="1" * 32)
     )
-    monkeypatch.setattr(pr, "run_session", lambda *a, **k: (0, "plan result", False))
+    monkeypatch.setattr(
+        pr.session_service, "run_session", lambda *a, **k: (0, "plan result", False)
+    )
     assert pr._dp_session(
         "tool", "m", "prompt", tmp_path, 1, attribution={"role": "CRITIQUE"}
     )[0]
@@ -69,7 +71,9 @@ def test_failed_planning_invocations_keep_attribution_and_unknown_usage(
             "usage": {"input_tokens": 100},
         }
     )
-    monkeypatch.setattr(pr, "run_session", lambda *a, **k: (1, transcript, "idle"))
+    monkeypatch.setattr(
+        pr.session_service, "run_session", lambda *a, **k: (1, transcript, "idle")
+    )
     attribution = {
         "source-event": "owner-review",
         "role": "CRITIQUE",
@@ -86,20 +90,20 @@ def test_failed_planning_invocations_keep_attribution_and_unknown_usage(
         )
     logs = list((tmp_path / "docs" / "iteration").glob("*.log"))
     assert len(logs) == 2
-    rows = [pr.agent_common.read_log_meta(p) for p in logs]
+    rows = [pr.session_service.agent_common.read_log_meta(p) for p in logs]
     assert len({row["invocation-id"] for row in rows}) == 2
     for row in rows:
         assert row["source-event"] == "owner-review"
         assert row["wi"] == ""
         assert row["role"] == "CRITIQUE"
         assert row["roster-row"] == "route-A"
-        assert row["input-tokens"] == "100"
-        assert row["output-tokens"] == ""
-        assert row["usage-scope"] == "unknown"
+        assert row["gen_ai.usage.input_tokens"] == "100"
+        assert row["gen_ai.usage.output_tokens"] == ""
+        assert row["usage-status"] == "partial"
         assert row["session-id"] == "same-conversation"
         assert row["outcome"] == "TIMEOUT"
     # Rereading a retained result cannot create another invocation or log.
-    assert pr.agent_common.read_log_meta(logs[0]) == rows[0]
+    assert pr.session_service.agent_common.read_log_meta(logs[0]) == rows[0]
     assert len(list(logs[0].parent.glob("*.log"))) == 2
 
 
@@ -180,7 +184,9 @@ def test_dp_session_reduces_stream_json_to_result_text(tmp_path, monkeypatch):
         '{"type":"assistant","message":"thinking out loud"}\n'
         '{"type":"result","result":"P1 | the real plan text"}\n'
     )
-    monkeypatch.setattr(pr, "run_session", lambda *a, **k: (0, transcript, False))
+    monkeypatch.setattr(
+        pr.session_service, "run_session", lambda *a, **k: (0, transcript, False)
+    )
     ok, output = pr._dp_session("tmpl {prompt}", "m", "prompt", tmp_path, 10)
     assert ok is True
     assert output == "P1 | the real plan text"
@@ -188,7 +194,9 @@ def test_dp_session_reduces_stream_json_to_result_text(tmp_path, monkeypatch):
 
 def test_dp_session_passes_plain_text_through(tmp_path, monkeypatch):
     monkeypatch.setattr(
-        pr, "run_session", lambda *a, **k: (0, "P1 | plan\nP2 | plan\n", False)
+        pr.session_service,
+        "run_session",
+        lambda *a, **k: (0, "P1 | plan\nP2 | plan\n", False),
     )
     ok, output = pr._dp_session("tmpl {prompt}", "m", "prompt", tmp_path, 10)
     assert ok is True
@@ -197,7 +205,9 @@ def test_dp_session_passes_plain_text_through(tmp_path, monkeypatch):
 
 def test_dp_session_failed_session_is_not_reduced(tmp_path, monkeypatch):
     # A failed session keeps its raw output (ok False); no result reduction.
-    monkeypatch.setattr(pr, "run_session", lambda *a, **k: (1, "boom", False))
+    monkeypatch.setattr(
+        pr.session_service, "run_session", lambda *a, **k: (1, "boom", False)
+    )
     ok, output = pr._dp_session("tmpl {prompt}", "m", "prompt", tmp_path, 10)
     assert ok is False
     assert output == "boom"

@@ -114,6 +114,9 @@ What it creates in the destination:
                                                 subprocess, the §A2 refresh; WI-381)
     scripts/agent_session.py, agent_common.py, plan_runner.py, adjudicate_brief.py
                                                (the WI-218 split: session launch / shared primitives / dual-plan runner)
+    scripts/session_adapters.py                (one adapter per provider runner: flags, final text, usage)
+    scripts/session_service.py                 (the one path every model call takes: act, keep, record)
+    scripts/session_keep.py                    (the keep operation's rules and store: adjudicator retention)
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
     .githooks/commit-msg                       <- hooks/commit-msg  (message privacy scan + loop provenance floor)
     .githooks/pre-push                         <- hooks/pre-push  (privacy-review backstop)
@@ -2366,6 +2369,13 @@ MAPPING = [
     # siblings. (The parallel dispatcher retired at concurrency-restructure
     # Phase 5; integrate.py is the serial integration seam.)
     ("scripts/agent_session.py", "scripts/agent_session.py"),
+    # One adapter per provider runner (flags, final text, usage, occupancy);
+    # the session layer imports it as a sibling.
+    ("scripts/session_adapters.py", "scripts/session_adapters.py"),
+    # The session service: the one path every model call takes (act, keep,
+    # record); the loop and the dual-plan runner import it as a sibling.
+    ("scripts/session_service.py", "scripts/session_service.py"),
+    ("scripts/session_keep.py", "scripts/session_keep.py"),
     ("scripts/agent_common.py", "scripts/agent_common.py"),
     ("scripts/plan_runner.py", "scripts/plan_runner.py"),
     ("scripts/agent-resume.template.cmd", "agent-resume.cmd"),

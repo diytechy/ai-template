@@ -777,9 +777,9 @@ status = "Drafted"
 
 [interface.IF-044]
 owner = "scripts/agent_route"
-requestors = ["scripts/agent_loop"]
+requestors = ["scripts/agent_loop", "scripts/session_service"]
 channel = "call"
-data = "select() -> the chosen row plus its reason; tiers strong · medium · quick"
+data = "select() -> the chosen row plus its reason; load_registry(path) -> {id: row}, errors; parse_env(cell) -> {name: value}; tiers strong · medium · quick"
 version = "v1"
 status = "Drafted"
 
@@ -947,7 +947,7 @@ component = "CMP-009"
 [interface.IF-064]
 rationale = """The module is the session-launch layer split out of agent_loop, which is why the crossing states a re-export guarantee at all: the extraction owes its caller an unchanged public surface."""
 owner = "scripts/agent_session"
-requestors = ["scripts/agent_loop"]
+requestors = ["scripts/agent_loop", "scripts/session_service", "scripts/plan_runner"]
 channel = "call"
 data = "build_argv, run_session, parse_json_result and the console renderers"
 version = "v1"
@@ -955,9 +955,9 @@ status = "Drafted"
 
 [interface.IF-065]
 owner = "scripts/agent_common"
-requestors = ["scripts/agent_loop", "scripts/integrate"]
+requestors = ["scripts/agent_loop", "scripts/integrate", "scripts/session_service", "scripts/session_keep"]
 channel = "call"
-data = "END_STATES, git, head_sha, acquire_lock, release_lock, preflight, parse_map, write_session_log"
+data = "END_STATES, git, head_sha, acquire_lock, release_lock, preflight, parse_map, process_config, load_wi_registry, substantive_working_tree_dirty, write_session_log, commit_telemetry"
 version = "v1"
 status = "Drafted"
 
@@ -2272,3 +2272,47 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """No tie-back: the argv comes in from the adopter's own session, and the frame declares no inbound crossing for an invocation."""
+
+[interface.IF-245]
+rationale = """Each provider runner differs in the flags that make it emit structured output, where its final text is, which events carry its usage and how full its context is. Scattered through the launching roles those differences drift apart, so one module answers them per runner and the session layer imports it."""
+owner = "scripts/session_adapters"
+requestors = ["scripts/session_service"]
+channel = "call"
+data = "USAGE_KEYS, OTEL_SEMCONV; adapter_for(argv) -> adapter; adapter.prepare, final_text, raw_usage, usage, context"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """source - the module imports no kit sibling; the only files it touches are the codex last-message temp file it creates and removes, and a codex rollout file it reads by exact thread id under the launch's CODEX_HOME."""
+
+[interface.IF-246]
+rationale = """Every role that makes a model call needs the same launch, accounting and record, and a role that keeps its own copy of any of them drifts: a usage fix lands in one path and not the others. One service owns the call and its record, and a role hands it only the data it differs by."""
+owner = "scripts/session_service"
+requestors = ["scripts/agent_loop", "scripts/plan_runner", "scripts/dispatch"]
+channel = "call"
+data = "Call(...); act(call) -> Outcome; record(outcome, meta, ...) -> path; call(call) -> Outcome; plan_keep, cli_version, KeepWarmer, keep_warmer"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """source - the session log and its telemetry commit are written through the shared primitives' writer, and the raw stream to the untracked run-logs directory a caller names."""
+
+[interface.IF-247]
+rationale = """A retained adjudicator session must outlive the lane worktree whose loop minted it, and a keep-warm tick in the dispatcher must read the same record an adjudication writes, so the record is a file under the primary checkout that one owner writes whole and both read."""
+owner = "scripts/session_keep"
+consumers = ["scripts/agent_loop", "scripts/dispatch"]
+channel = "file"
+data = "out/adjudicator/<FAMILY>-<route hash>.json: family, route_id, session_id, generation, state, reset_reason, judged, cli_version, lease, occupancy, window, pct"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """No tie-back: the record is per-clone runtime state under the ignored out/ directory, read and written by the one module that owns it; it crosses no boundary and publishes nothing. Every read-modify-write holds the store lock, each record is written through its own temporary file and a replace, and a record that does not parse, or names another route, reads as no session, so the next launch mints."""
+
+[interface.IF-248]
+rationale = """The retention rules and the store are read by the service before and after every retained call and by the keep-warm schedule, and a copy of any rule in the service would let the launch side and the bookkeeping side disagree about when a session resets; one module owns them and the service imports it."""
+owner = "scripts/session_keep"
+requestors = ["scripts/session_service"]
+channel = "call"
+data = "KeepConfig, keep_config, applies, keep_for -> Keep | None, keep_argv, keep_bookkeep, keep_abandon, keepwarm_due, take_warm_lease -> (Keep, reason)"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """source - the module launches nothing and writes no log; its only effects are the retained-session records and the store lock under out/adjudicator, and the dedicated CLI home directories it creates there."""

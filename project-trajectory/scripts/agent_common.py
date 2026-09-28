@@ -2730,37 +2730,56 @@ def write_session_log(iter_dir, meta, transcript):
         # for every other session.
         "heterogeneity",
         "exit-code",
-        # WI-535 (docs/plans/2026-08-29-adjudicator-session-retention-plan.md
-        # §3.3, telemetry first, retention dial off): the CLI's own session
-        # id and context occupancy/window/percent, per family — "" wherever
-        # today's one-shot call doesn't report it (family_context_telemetry).
-        # Invocation accounting also records session-id from other providers;
-        # context columns retain their existing family-specific meaning.
+        # The CLI's own session id and the context occupancy of the call's
+        # LATEST request over the model's window (session_adapters' context
+        # readers) — "" wherever the CLI does not report it. Billed tokens are
+        # the usage record below, never this.
         "session-id",
         "context-used",
         "context-window",
         "context-pct",
+        # The keep operation's two columns, "" on every call it did not
+        # retain: which generation of a retained session answered, and why
+        # this call drained or retired it.
+        "session-gen",
+        "reset-reason",
         "invocation-id",
         "attempt-id",
         "source-event",
         "role",
         "provider",
-        "requested-model",
-        "reported-model",
         "tier",
         "roster-row",
         "started-at",
         "ended-at",
-        "input-tokens",
-        "output-tokens",
-        "reasoning-tokens",
+        # S8, the usage record (session_adapters.USAGE_KEYS): the OpenTelemetry
+        # GenAI usage names at the pinned revision `semconv` names, input
+        # counted inclusive of cached input, fresh input derived, the CLI that
+        # produced the row, and its raw usage verbatim. The same columns for
+        # every CLI; a count it does not report is empty, never 0.
+        "cli",
+        "semconv",
+        "gen_ai.provider.name",
+        "gen_ai.request.model",
+        "gen_ai.response.model",
+        "gen_ai.conversation.id",
+        "gen_ai.usage.input_tokens",
+        "gen_ai.usage.cache_read.input_tokens",
+        "gen_ai.usage.cache_write.input_tokens",
+        "gen_ai.usage.output_tokens",
+        "gen_ai.usage.reasoning.output_tokens",
+        "fresh-input-tokens",
         "raw-usage",
         "usage-scope",
         "usage-source",
         "usage-status",
     ):
-        # Header values occupy one physical line, including provider metadata.
+        # Header values occupy one physical line, including provider metadata,
+        # and pass the same credential redaction the transcript does: a raw
+        # usage line can carry the result text.
         value = str(meta.get(key, "")).replace("\r", "\\r").replace("\n", "\\n")
+        value, hits = redact_secrets(value)
+        redacted += hits
         header.append("# {}: {}".format(key, value).rstrip())
     if redacted:
         header.append("# redacted: {} credential-shaped token(s)".format(redacted))
@@ -2779,42 +2798,6 @@ def write_session_log(iter_dir, meta, transcript):
     return path
 
 
-def invoke_and_persist(root, argv, timeout, *, metrics, runner, **kwargs):
-    """Invoke a non-worker session, durably account it, and return its result."""
-    import agent_session
-
-    outcome = "ERROR"
-    transcript = ""
-    try:
-        result = agent_session.invoke_session(
-            argv, root, timeout, metrics=metrics, runner=runner, **kwargs
-        )
-        code, transcript, timed_out = result
-        outcome = "TIMEOUT" if timed_out else ("COMPLETED" if code == 0 else "ERROR")
-        return result
-    except KeyboardInterrupt:
-        outcome = "INTERRUPTED"  # a Ctrl-C in an attached sitting, re-raised
-        raise
-    finally:
-        metrics.update(
-            session="call_" + metrics["invocation-id"],
-            stamp=time.strftime("%Y%m%d-%H%M%S"),
-            date=time.strftime("%Y-%m-%d %H:%M"),
-            model=metrics.get("requested-model", ""),
-            phase=metrics.get("role", ""),
-            outcome=outcome,
-        )
-        log_path = write_session_log(
-            Path(root) / "docs" / "iteration", metrics, transcript
-        )
-        commit_telemetry(
-            root,
-            metrics["invocation-id"],
-            "{} {}".format(metrics["phase"], metrics["outcome"]),
-            [log_path],
-        )
-
-
 def read_log_meta(path):
     """Parse the `# key: value` metadata header of one session log."""
     meta = {}
@@ -2823,7 +2806,7 @@ def read_log_meta(path):
             for line in fh:
                 if not line.startswith("#") or line.startswith("# ---"):
                     break
-                m = re.match(r"#\s*([\w-]+):\s*(.*)", line)
+                m = re.match(r"#\s*([\w.-]+):\s*(.*)", line)
                 if m:
                     meta[m.group(1)] = m.group(2).strip()
     except OSError:

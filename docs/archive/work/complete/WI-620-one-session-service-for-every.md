@@ -3,12 +3,69 @@ id = "WI-620"
 title = "One session service for every model call (act, keep, record) writing the OTel usage schema, with its occupancy fix, lossless codex/opencode capture, and adjudicator retention as its keep operation"
 workstream = "unattended"
 needs = ["WI-579", "WI-580"]
-specref = "docs/plans/2026-09-23-owner-notes-spine-sessions-and-tests.md#31-a-common-session-service-note-1"
+specref = ""
 buildtier = "strong"
 priority = 3
 safety_class = "ordinary"
 supersedes = "WI-605;WI-606;WI-551"
 +++
+
+## Deliverable
+
+Built by one builder in seven commits with five Codex Sol rounds (wave-5
+arbitration rulings 53 to 56), SOUND at 706cadc7.
+
+- **One path for every model call.** `scripts/session_service.py` is the
+  service (act, keep, record); the worker loop, the hands-on sitting, the
+  route probe and the dual-plan hats all launch through it. Removed:
+  `agent_common.invoke_and_persist`, `agent_session.invoke_session` and
+  `_result_accounting`, the loop's in-line logging sequence and
+  `_run_attached_session`, and `family_context_telemetry`; none is named in
+  the kit scripts any more. The existing modules lost 411 lines and gained
+  218. Two syntax-tree guards, with planted mutations, fail a direct provider
+  launch or a second session-log writer outside the service (ordinary forms,
+  ruling 54 (e)).
+- **One adapter per provider** in `scripts/session_adapters.py`. The codex
+  route runs `exec --json` beside `--output-last-message`, whose file still
+  gives the final text; the opencode route runs `run --format json`. Each
+  runner's usage-bearing line is kept byte for byte in the session log's
+  `raw-usage` header. Claude's `reasoning-tokens` and `reported-model`
+  defects are fixed in its adapter.
+- **The record** writes the S8 schema: the `gen_ai.*` usage names pinned at
+  open-telemetry/semantic-conventions-genai@e57c543b, inclusive input, fresh
+  input derived, cli and provider columns, and unreported counts empty rather
+  than 0. A test per provider runs over `tests/golden/sessions/`.
+- **Occupancy** is the latest request's prompt, no longer the session's
+  cumulative counters, which had read up to 34,836%.
+- **The keep operation** (WI-551) is `scripts/session_keep.py`, and retention
+  follows the ruled plan. It is inert at `context_reset_pct = 0`, which is
+  what the new `[adjudicator]` table ships in both `docs/process.toml` and
+  the template. With the dial on, a session drains at the dial or on a
+  changed governing input or runner version. It retires at a clear point read
+  from the whole lineage, and at once on an error, a raised launch (through a
+  tombstone) or a lease that expired unreleased. Each locked lease decision
+  reads the clock once. A keep-warm ping is an ordinary recorded call, on its
+  own thread under the route's lease, and its log is committed only over a
+  clean trunk.
+- **Ratchets:** the C901 pin holds, and the complexity baseline lost
+  `_result_accounting`'s row. The module-size ratchet moved agent_common
+  1487 -> 1466 and agent_loop 2801 -> 2752. bootstrap moved 1701 -> 1704,
+  a reviewed bump for the three MAPPING rows that ship the new modules.
+
+**Not met here, and owed:**
+- *To a person:* the codex and opencode fixtures are built from the
+  documented event shapes, not recorded live, and the opencode pathway checks
+  were not re-run on the installed 1.18.29. The permission classifier refused
+  the live runs, so `docs/agents.toml` still records 1.17.18.
+- *To the first loop run after the pause lifts:* no session log has yet been
+  written under the corrected occupancy. The last one written is
+  `docs/iteration/wi521-decomposition-debt-owner-004-20260830-082452.log`,
+  under the old meaning.
+
+New Drafted rows: SR-222, SR-227 (a labelled derived requirement for
+retention on SN-025), LLR-266 to LLR-270, TC-262 to TC-268 and IF-245 to
+IF-248. Amended in place under granted authority: LLR-026's module cell,
+LLR-177's detail, and TC-172's method and evidence.
 
 ## Context
 

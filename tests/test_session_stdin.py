@@ -9,6 +9,7 @@ on stdin): the fixed prompt is written then stdin is closed, so the child reads
 it and sees EOF — never an interactive wait.
 """
 
+import json
 import os
 import sys
 import types
@@ -18,6 +19,9 @@ import pytest
 from conftest import load_script
 
 al = load_script("agent_loop")
+adapters = load_script("session_adapters")
+service = load_script("session_service")
+agent_session = al.agent_session
 
 # Cross-platform fake CLI: echo whatever arrived on stdin, bracketed, so a test
 # can prove the prompt was delivered there (and only there).
@@ -86,7 +90,7 @@ def test_run_session_refuses_env_resolved_batch_before_spawn(monkeypatch, tmp_pa
         "_windows_batch_executable",
         lambda executable, env=None, platform=None: r"C:\env-tools\agent.bat",
     )
-    code, output, timed_out = al.run_session(
+    code, output, timed_out = agent_session.run_session(
         ["agent", "-p", "repo text & whoami"],
         tmp_path,
         30,
@@ -106,7 +110,7 @@ def test_windows_batch_shim_is_allowed_when_prompt_uses_stdin(monkeypatch, tmp_p
     # The safety guard must not reject the supported transport. Use a missing
     # executable so the platform-independent test stops at the ordinary spawn
     # sentinel after proving it passed the batch-prompt guard.
-    code, output, timed_out = al.run_session(
+    code, output, timed_out = agent_session.run_session(
         ["definitely-missing-agent-cli"],
         tmp_path,
         30,
@@ -118,7 +122,7 @@ def test_windows_batch_shim_is_allowed_when_prompt_uses_stdin(monkeypatch, tmp_p
 
 
 def test_run_session_delivers_stdin_input(tmp_path):
-    code, output, timed_out = al.run_session(
+    code, output, timed_out = agent_session.run_session(
         ECHO_STDIN, tmp_path, 30, stdin_input="prompt-via-stdin"
     )
     assert code == 0 and not timed_out, output
@@ -128,7 +132,7 @@ def test_run_session_delivers_stdin_input(tmp_path):
 def test_run_session_without_stdin_input_gives_eof_not_hang(tmp_path):
     # No stdin_input -> DEVNULL -> the child's read() returns '' immediately. If
     # stdin were left open interactively, this would hang until the timeout.
-    code, output, timed_out = al.run_session(ECHO_STDIN, tmp_path, 30)
+    code, output, timed_out = agent_session.run_session(ECHO_STDIN, tmp_path, 30)
     assert code == 0 and not timed_out, output
     assert "STDIN[]" in output
 
@@ -137,7 +141,9 @@ def test_run_session_large_prompt_past_the_cmd_limit(tmp_path):
     # A prompt well past cmd.exe's 8191-char cap goes through stdin untruncated —
     # the whole point of the fix (gilbert's proven failing size).
     big = "x" * 20044
-    code, output, timed_out = al.run_session(ECHO_STDIN, tmp_path, 30, stdin_input=big)
+    code, output, timed_out = agent_session.run_session(
+        ECHO_STDIN, tmp_path, 30, stdin_input=big
+    )
     assert code == 0 and not timed_out, output[:200]
     assert "STDIN[" + big + "]" in output
 
@@ -148,36 +154,37 @@ def test_run_session_large_prompt_past_the_cmd_limit(tmp_path):
 
 
 def test_codex_lastmsg_setup_appends_and_creates_file():
-    argv, path = al._codex_lastmsg_setup(["codex", "exec", "--model", "x"])
+    argv, path = adapters._codex_lastmsg_setup(["codex", "exec", "--model", "x"])
     assert argv[-2:] == ["--output-last-message", path]
     assert path is not None and os.path.exists(path)
     os.unlink(path)
 
 
 def test_codex_lastmsg_setup_case_insensitive_full_path():
-    argv, path = al._codex_lastmsg_setup(["/opt/tools/CODEX.EXE", "exec"])
+    argv, path = adapters._codex_lastmsg_setup(["/opt/tools/CODEX.EXE", "exec"])
     assert path is not None and "--output-last-message" in argv
     os.unlink(path)
 
 
 def test_codex_lastmsg_setup_ignores_non_codex():
-    assert al._codex_lastmsg_setup(["claude", "-p"]) == (["claude", "-p"], None)
-    assert al._codex_lastmsg_setup([]) == ([], None)
+    assert adapters._codex_lastmsg_setup(["claude", "-p"]) == (["claude", "-p"], None)
+    assert adapters._codex_lastmsg_setup([]) == ([], None)
 
 
 def test_codex_lastmsg_read_reads_then_deletes(tmp_path):
     f = tmp_path / "last.txt"
     f.write_text("  the clean result  ", encoding="utf-8")
-    assert al._codex_lastmsg_read(str(f)) == "the clean result"
+    assert adapters._codex_lastmsg_read(str(f)) == "the clean result"
     assert not f.exists()
-    assert al._codex_lastmsg_read(None) is None
-    assert al._codex_lastmsg_read(str(tmp_path / "nope.txt")) == ""
+    assert adapters._codex_lastmsg_read(None) is None
+    assert adapters._codex_lastmsg_read(str(tmp_path / "nope.txt")) == ""
 
 
-def test_run_session_codex_reads_last_message_not_transcript(tmp_path):
+def test_codex_session_reads_last_message_not_transcript(tmp_path):
     # A fake codex that echoes GARBAGE to stdout (as real codex echoes the prompt)
-    # but writes the CLEAN result to its --output-last-message file. run_session
-    # must return the file content, not the transcript.
+    # but writes the CLEAN result to its --output-last-message file. The session
+    # boundary must return the file content, not the transcript: the codex
+    # adapter adds the flag, and run_session itself captures the whole stream.
     impl = tmp_path / "impl.py"
     impl.write_text(
         "import sys\n"
@@ -205,9 +212,16 @@ def test_run_session_codex_reads_last_message_not_transcript(tmp_path):
     # (no {prompt} placeholder) — the transport the H-4 guard (272a6e8) requires
     # for a Windows batch shim launcher; the impl above never reads stdin, so
     # this only proves the launch clears the guard and the capture still works.
-    code, output, timed_out = al.run_session(
-        [str(launcher)], tmp_path, 30, stdin_input="the prompt"
+    launched = service.act(
+        service.Call(
+            root=tmp_path,
+            role="BUILD",
+            template=json.dumps([str(launcher)]),
+            prompt="the prompt",
+            timeout=30,
+        )
     )
+    code, output, timed_out = launched.code, launched.text, launched.timed_out
     assert code == 0 and not timed_out, output
     assert output == "CLEAN-165-char-result-table"  # not the GARBAGE transcript
     assert "GARBAGE" not in output
@@ -255,8 +269,8 @@ def test_attached_interactive_runner_inherits_stdio(monkeypatch, tmp_path):
         calls.append((argv, kwargs))
         return types.SimpleNamespace(returncode=7)
 
-    monkeypatch.setattr(al.subprocess, "run", fake_run)
-    assert al._run_attached_session(["agent"], tmp_path, None) == (7, "", False)
+    monkeypatch.setattr(service.subprocess, "run", fake_run)
+    assert service.run_attached(["agent"], tmp_path, None) == (7, "", False)
     assert calls == [(["agent"], {"cwd": str(tmp_path)})]
 
 
@@ -323,7 +337,7 @@ def test_run_session_idle_deadline_kills_a_silent_child(tmp_path):
     import time as _time
 
     t0 = _time.time()
-    code, output, timed_out = al.run_session(
+    code, output, timed_out = agent_session.run_session(
         SLEEPY_AFTER_ONE_LINE, tmp_path, 55, idle_timeout=2
     )
     wall = _time.time() - t0
@@ -336,7 +350,7 @@ def test_run_session_idle_deadline_kills_a_silent_child(tmp_path):
 def test_run_session_wall_timeout_keeps_its_historical_shape(tmp_path):
     # The wall kill still reports timed_out is True (the historical value) so
     # every existing truthiness read holds; only the idle kill says "idle".
-    code, output, timed_out = al.run_session(
+    code, output, timed_out = agent_session.run_session(
         SLEEPY_AFTER_ONE_LINE, tmp_path, 2, idle_timeout=None
     )
     assert timed_out is True
@@ -359,7 +373,7 @@ def test_a_raising_renderer_never_stops_the_pump(tmp_path):
     def boom(line):
         raise UnicodeEncodeError("cp1252", line, 0, 1, "renderer failed")
 
-    code, output, timed_out = al.run_session(
+    code, output, timed_out = agent_session.run_session(
         chatty, tmp_path, 60, on_line=boom, idle_timeout=20
     )
     assert code == 0 and not timed_out, output[-300:]
