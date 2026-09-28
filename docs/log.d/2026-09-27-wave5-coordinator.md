@@ -652,3 +652,22 @@ instrument, and the log records each.
 
 Commit bar at WI-703: all green; smoke 1798 passed / 3 skipped, seconds 29.2 s. Trunk before this
 squash: 312b2033.
+
+### WI-692: the sampled spot check of WI-616's clean close — CONFIRMED
+
+An independent Fable adjudicator checked WI-616's close against its nine
+Done-when clauses. It ran the cited tests and re-derived the sweep's 48 + 166
+absolutes exactly from the shipped check at 0ded5c77. Result: CONFIRMED, no
+successor. Codex Sol cross-reviewed it SOUND and reproduced the re-derivation
+([sol-wi692.md](../reviews/2026-09-27-wave5/sol-wi692.md)). Recorded for the
+owner, not filed:
+- the check keeps reporting the absolutes the sweep judged closed (121
+  cells hold only closed or non-promise classes; Sol corrected the
+  adjudicator's 128, which counted seven C2 premises). Whether a judged row
+  should carry its classification is a design question;
+- the LLR tier was never in the sweep's scope;
+- `docs/registry-machinery-reference.md` does not yet mention the
+  absolute-term rule or its waiver marker.
+
+Commit bar at WI-692: documents only, all green; smoke 1798 passed / 3 skipped, seconds 32.8 s. Trunk before this
+squash: 32687d47. **Open count: 13** (12 queued, 1 deferred).
