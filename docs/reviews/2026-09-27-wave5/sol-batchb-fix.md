@@ -1,0 +1,9 @@
+<!-- Codex Sol confirmation of batch B's first fix round, 8a960cf1..d7558774; ruling 4 in ARBITRATION.md. Links re-rooted. -->
+
+d7558774 NOT YET SOUND
+
+- **[blocker]** TC-055’s per-row verdict still evaluates the superseded wording and says “NOT BLESSED,” while the appended sitting blesses the final wording and act 4 re-attests it ([verdict:21](../../../docs/reviews/wi-680-adjudicate-batch-b-amendments/001-ADJUDICATE-1ea526a.md), [verdict:144](../../../docs/reviews/wi-680-adjudicate-batch-b-amendments/001-ADJUDICATE-1ea526a.md), [acts.toml:28](../../../docs/archive/last_approved/acts.toml)). Fix the per-row line to quote and bless the final three-trigger text; retain the earlier ruling only as sitting history.
+
+- **[major]** WI-681’s disposition draft still claims 27 approvals/five returns and its TOML title covers only those five, contradicting the final 25/7 verdict. The appended note names TC-201 and TC-203 but explicitly leaves the draft unwidened ([WI-681:80](../../../docs/archive/work/complete/WI-681-adjudicate-batch-b-first-approvals.md), [WI-681:89](../../../docs/archive/work/complete/WI-681-adjudicate-batch-b-first-approvals.md), [WI-681:171](../../../docs/archive/work/complete/WI-681-adjudicate-batch-b-first-approvals.md), [verdict:199](../../../docs/reviews/wi-681-adjudicate-batch-b-first-approvals/001-ADJUDICATE-1ea526a.md)). Fix the draft to cover all seven and state 25/7, while preserving the ruling that WI-616 receives LLR-205’s widened cell-hygiene work.
+
+- **[minor]** The fix broke WI-680’s Markdown: the closing backtick and `## Dispositions` heading were deleted, leaving the disposition text inside `## Done-when` ([WI-680:71](../../../docs/archive/work/complete/WI-680-adjudicate-batch-b-amendments.md)). Close the inline code span and restore the heading.

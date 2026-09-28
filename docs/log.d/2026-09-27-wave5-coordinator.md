@@ -41,3 +41,57 @@ approval no brief showed. The coordinator filled `status = "Drafted"` and
 folded into WI-651 (the snapshot and its readers), not filed as a new row.
 
 **Open count: 15** (14 queued, 1 deferred): WI-680 and WI-681 filed.
+
+### Spine-acts batch B lands: WI-680 and WI-681 in one sitting, one act
+
+One independent Fable adjudicator judged both rows from the kit's own briefs
+(`adjudicate_brief.compose`, both filled in full), then took ONE snapshot act
+(act ledger seq 4): 25 `Status` flips and `intake.py snapshot --reattests
+<30 rows> --approves "<the three spine registries>=WI-681"`.
+
+- **WI-680: `VERDICT: MEANING rows=30`.** 20 MEANING, all blessed; 10
+  CLARITY. All 30 are re-anchored. The CLARITY rows are named in
+  `--reattests` too: the copy takes whole registries and refuses to absorb
+  text that differs from it unnamed.
+- **WI-681: `OUTCOME: RETURN rows=32`.** 25 approved: SR-183 to SR-186,
+  SR-221, LLR-210, LLR-259 to LLR-261, LLR-263, and 15 test cases. 7
+  returned byte-exact: LLR-205, LLR-206, TC-201, TC-203, TC-204, SR-220 and
+  LLR-262. The adjudicator caught SR-220's two `shall`s and LLR-262's open
+  "such as" list by driving the flipped tree under `trace.py --strict`
+  before the act, because those form findings fire only on an Approved row.
+- **Folded, not minted:** SR-220's fix goes to WI-679, which realises SR-220.
+  The other six rows go to WI-616, the open spine-text sweep, together with
+  the adjudicator's non-blocking findings on that surface.
+
+Codex Sol reviewed three rounds (wave-5 rulings 1 to 4). Round one was NOT
+YET SOUND. TC-055 had been re-attested over an `expected` that its declared
+`max_age = 90` made false, and TC-201 and TC-203 had been approved with
+changelog prose in their methods. The act was reverted in the lane.
+The coordinator amended TC-055's `expected` and SR-054's `rationale` in
+place (SR-054 joined the scope). The adjudicator then refused the
+coordinator's first wording, which omitted the checkpoint's no-record
+trigger, and its own wording replaced it. The act was re-taken. Round two was
+NOT YET SOUND on the verdict files' consistency, and round three was SOUND:
+[sol-batchb.md](../reviews/2026-09-27-wave5/sol-batchb.md),
+[sol-batchb-fix.md](../reviews/2026-09-27-wave5/sol-batchb-fix.md),
+[sol-batchb-fix2.md](../reviews/2026-09-27-wave5/sol-batchb-fix2.md).
+
+Found on the way: the coordinator's hand squash-merges do not run the kit's
+merge checkpoint, so the five observation cases `rejudge.due_cases` reports
+due (TC-036, TC-055, TC-209, TC-210, TC-211) have no re-judge rows. Folded
+into WI-679 (ruling 4).
+
+For the owner: the adjudicator recommends widening SN-025's acceptance to
+state SR-220's obligation, and keeping SR-221 derived under SN-012.
+
+**Open count: 13** (12 queued, 1 deferred): WI-680 and WI-681 closed.
+
+Commit bar at batch B: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0 (drafts 7), approve-modified current, `gen_open_items`
+current, `check_docs --stale` 0 broken, smoke 1647 passed / 3 skipped.
+**Seconds FAILED: 154.7 s and 155.6 s against the 60 s budget**, recorded and
+not re-stamped. No agent or test of this session was running, but the box
+was at 88% CPU from desktop applications. As a control, the same tier at the
+parent commit 1ea526ac, in a fresh worktree at the same minute, took 197.7 s;
+it took 42.1 s there two hours earlier. The change moves specs and registry
+cells and adds no test.

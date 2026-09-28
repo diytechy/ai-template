@@ -30,6 +30,28 @@ a declared set), with the tokenization documented; whether a named domain is
 really closed stays a review question in the spine-authoring skill. The OI-37
 sweep is its own item.
 
+Folded 2026-09-27 (spine-acts batch B's close, the fifth coordinator session): WI-681's
+first-approval adjudication RETURNED six rows on this row's surface (spine text, routed to a
+spine-acts batch), and its `## Dispositions` draft was folded here instead of minted. The fixes are
+stated in that draft ([`docs/archive/work/complete/WI-681-adjudicate-batch-b-first-approvals.md`](../../archive/work/complete/WI-681-adjudicate-batch-b-first-approvals.md),
+items 1, 2, 3 and 5), its verdict (`docs/reviews/wi-681-adjudicate-batch-b-first-approvals/001-ADJUDICATE-1ea526a.md`) and wave-5 arbitration rulings 2 and 3
+(`docs/reviews/2026-09-27-wave5/ARBITRATION.md`). LLR-205's rationale ends in a sentence stating its
+own status and the authority that will sign it, calls itself "a live, dated finding" and cites a dated
+plan, and its detail narrates the state before the table: rewrite both to the standing divergence and
+design reason, with no dates, plan provenance or status. LLR-206's rationale ends in the same status
+sentence, to be deleted. TC-201's method narrates what "now" catches against what "was" and a record
+"BEFORE this table existed", and TC-203's opens "Re-tiered into": rewrite both as standing test
+contracts. TC-204 reads `Smoke` while one of its eleven pointers is in a `SLOW_MODULES` module (split
+as WI-604 split TC-208, or re-tier to `Full`). LLR-262's detail leaves its completion-word list open
+with "such as", to be closed to `kitlib/done_when.py`'s set (a split by carrier may ride it). The rows
+are Drafted, so these are authoring edits, not amendments; their first approval joins the next batch.
+The adjudicator's non-blocking findings on the same surface ride along: no SR-198 or LLR-233 cell says
+a registry id is a legal declared input, though TC-036, TC-055 and TC-209 to TC-211 declare them;
+SR-163's checker (`gen_arch_map.mapping_purpose_findings`, `bootstrap.delivery_inventory`) has no
+design row; and trace.py's Critique-instrument advisory fires on SR-184, whose subject is Critique
+records while its method is Inspection (a lexical false positive, the same kind of lexical check this
+row extends).
+
 ## Done-when
 
 - The check scans the matrix's cells, warn-first, and never TCs.
@@ -40,6 +62,7 @@ sweep is its own item.
   one (warned) and a waived one.
 - The spine-authoring skill carries the closed-domain question, kit master and
   this repo's copy in sync.
+- LLR-205, LLR-206, TC-201, TC-203, TC-204 and LLR-262 carry the fixes above, stay Drafted, and are listed for the next spine-acts batch's first approval; the registry-id input rule is stated in the row that owns declared inputs (an amendment, for that batch); SR-163's checker has a Drafted design row; and the SR-184 advisory no longer fires on a row whose method is Inspection, with a test.
 - Every absorbed row's Done-when quoted below holds; their per-row commit-bar lines are this row's one bar.
 
 ### From WI-617 (Done-when, verbatim)

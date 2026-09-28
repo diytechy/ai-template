@@ -28,15 +28,15 @@
 # this file. Regenerate: python scripts/derive_stage.py
 # Freshness is guarded by `--check` (a pre-commit + gate step).
 #
-stage = DevStg-Tests
-stage-ord = 5
+stage = DevStg-LLReqs
+stage-ord = 4
 stage-of = 8
 floored = no
-settled-stage = DevStg-Tests
+settled-stage = DevStg-LLReqs
 live-stage = DevStg-Reqs
 phase = 6
-per-phase = 1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-Tests;6=DevStg-Impl
-per-phase-live = 1=DevStg-LLReqs;3=DevStg-Impl;4=DevStg-LLReqs;5=DevStg-Reqs;6=DevStg-Reqs
-drafted = 32
-fingerprint = sha256:2588d3f20f7eb1a755357bc3465168ea7af7156492b698bccdb08c29bb25259b
-# computed 2026-09-27 (as-of 4e141893)
+per-phase = 1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-LLReqs;6=DevStg-Impl
+per-phase-live = 1=DevStg-LLReqs;3=DevStg-Impl;4=DevStg-LLReqs;5=DevStg-Reqs;6=DevStg-Impl
+drafted = 7
+fingerprint = sha256:cd98c11e2483f6a890eab36c74bed37632012d48dafe7d51acb3874e8bf3cced
+# computed 2026-09-27 (as-of 1ea526ac)

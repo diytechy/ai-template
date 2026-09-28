@@ -359,7 +359,7 @@ sn_refs = ["SN-024", "SN-023"]
 boundary_refs = ["B-05"]
 hat_refs = ["UX-DESIGNER", "UX-ENGINEER"]
 requirement = "The state view the delivered generators produce shall support its core reading tasks with low friction: a first-time reviewer finds the project state, the next work, and how the parts connect, each within one tab switch; views default to a legible density (start-collapsed per the greater-than-3 rule) and reveal detail without losing context; labels stay readable at default zoom with no clipped or overlapping text."
-rationale = """Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded one-time judgement rather than on a standing re-judgement — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today."""
+rationale = """Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded judgement, re-judged when a declared input changes or the record expires rather than on every commit — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today."""
 acceptance_criteria = """A first-time reviewer reaches each core reading task — the project state, the next work, and how the parts connect — through a labelled entry point within one tab switch; every view whose element count exceeds the declared threshold starts collapsed, and revealing detail preserves the return path to the parent context; at default zoom, over the real registry volumes rather than a trimmed fixture, no label is clipped, overflows its own box, or crosses an unrelated element. Any entry point missing or unlabelled, any oversized view starting expanded, any lost return path, or any illegible label is a fail. The one clause no automated check holds — that a first-time reader in fact finds the entry points usable — rests on a recorded human judgement, a stated limit rather than an implied coverage."""
 priority = "C"
 verification = "Test"
@@ -1035,7 +1035,7 @@ rationale = """Realizes SN-007 (the kit holds itself to its own standard) and SN
 acceptance_criteria = """A fresh run over a declared source tree reports every function whose cognitive complexity is strictly OVER the declared threshold (the boundary is exclusive — a function scoring exactly the threshold is under it and is not reported, matching LLR-206 and the baseline's over-threshold rows), with its complexity and its source-line count, and a per-module public-symbol count that is reported and never graded. Compared against a stamped baseline (the current carrier: `docs/complexity-baseline`, one tab-separated row per over-threshold function with the reason for its entry) a function above its entry, and a function whose entry no longer exists, are each reported as a finding naming the delta; a function BELOW its entry is reported as an invitation to re-stamp downward; an unstamped repo reports the bare census. In reporting mode every one of those cases exits zero; in gating mode a divergence in either direction exits nonzero and the message names the three sanctioned remedies. A re-stamp mode rewrites the baseline from the current census and writes nothing else. No per-site suppression is honoured from the source tree."""
 priority = "S"
 verification = "Test"
-status = "Drafted"
+status = "Approved"
 phase = 5
 aspect = "process"
 
@@ -1049,7 +1049,7 @@ acceptance_criteria = "A Critique acceptance record identifies the fresh non-aut
 rationale = "Carries SN-024's omitted author-independence, rubric provenance and anchor obligation as one coherent Critique acceptance decision. It applies to attended and unattended Critique acceptance; SR-154 remains the home of the underlying brief, unattended scheduling, consent, family selection and family diversity, degradation and escalation, and SR-155 remains the contested-plan state machine. LLR-048 already assembles the rubric/intent/artifact brief and LLR-076 already refuses a missing dual-plan rubric; those mechanisms remain under SR-154 rather than being re-homed here. The acceptance record's process/provenance completeness is inspectable, while artifact adequacy remains the independent Critique judgment."
 priority = "S"
 verification = "Inspection"
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [requirement.SR-185]
@@ -1062,7 +1062,7 @@ acceptance_criteria = "For every reviewed change that alters one side of a requi
 rationale = "Carries the final clause of SN-037 as a separate semantic review obligation because SR-162 already owns the mechanical frame and interface resolution. A citation-only provenance check cannot establish that a changed signal or requirement still means the same thing at its counterpart; the record must expose the decision for an independent review."
 priority = "M"
 verification = "Inspection"
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [requirement.SR-186]
@@ -1075,7 +1075,7 @@ rationale = "Carries SN-012's unowned granularity clause as a process requiremen
 acceptance_criteria = "For a reviewed decomposition, each additional child within a required tier has an independent decision or verification purpose traceable to its parent; when further splitting would only paraphrase or duplicate, the existing scoped decomposition/review record states why the process stops at that independent-value boundary."
 priority = "S"
 verification = "Inspection"
-status = "Drafted"
+status = "Approved"
 phase = 5
 aspect = "process"
 
@@ -1533,5 +1533,5 @@ rationale = """A DERIVED requirement: SN-012 asks that small changes stay cheap 
 acceptance_criteria = "For a module a design row names, the listing names every test file under the declared test root that the evidence of a test case verifying one of its design rows cites, files not named for the module included, and no other file; a name matching no declared module and one matching several are each refused with a distinct outcome, the latter naming the candidates; the listing reads the registries of the repository it is pointed at; the commit bar is unchanged by it."
 priority = "S"
 verification = "Test"
-status = "Drafted"
+status = "Approved"
 phase = 6

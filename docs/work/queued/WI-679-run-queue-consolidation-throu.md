@@ -53,6 +53,25 @@ The obligation this row realises is SR-220 (Drafted, first approval owed in
 the next spine-acts batch): overlapping queued work is consolidated through
 one judgement per queue state.
 
+Folded 2026-09-27 (spine-acts batch B's close): WI-681 APPROVED LLR-210, TC-208 and TC-254 and
+RETURNED SR-220, whose requirement carries two `shall`s ("shall hand that set to a single judgement,
+... and shall enact the judgement's outcome ..."), a form finding `trace.py --strict` gates on an
+Approved row. The fix is item 4 of WI-681's Dispositions
+([`docs/archive/work/complete/WI-681-adjudicate-batch-b-first-approvals.md`](../../archive/work/complete/WI-681-adjudicate-batch-b-first-approvals.md)): drop the
+second `shall`, or split the enactment into its own row under SN-025. This row realises SR-220 and
+may restate it anyway, so the fix is taken here. The adjudicator recommends the owner widen SN-025's
+acceptance ("the loop keeps its own queue free of duplicated work") and keep the derived label until
+then; that is the owner's call and is recorded, not acted on. LLR-210, TC-208 and TC-254 are now
+Approved, so a change this row makes to their meaning (for example, to `_pending_refusal`) is an
+in-place amendment, status left Approved, for the next spine-acts batch.
+
+A second finding on the same surface (the hand path bypassing the kit's own machinery), from batch B's
+adjudicator and wave-5 arbitration ruling 4: the coordinator's hand squash-merges do not run the kit's
+merge checkpoint, so the five observation cases `rejudge.due_cases` reports due (TC-036, TC-055, TC-209,
+TC-210, TC-211, none with a result on record) have no re-judge rows, although WI-657, WI-621 and
+WI-581 merged after WI-638 declared their inputs. The consolidation bypass and this one are one gap:
+what the kit's merge does that a coordinator's hand merge skips.
+
 ## Done-when
 
 - The two blockers are decided and, where the decision is a change, built
@@ -80,4 +99,6 @@ one judgement per queue state.
 - The coordinator doctrine (the next handoff and, if it states one,
   PROCESS.md §3's consolidation rule) says consolidation runs through this
   machinery, and a hand consolidation is the stated fallback, not the path.
+- The coordinator's integration step runs the kit's merge checkpoint (or the handoff names the command that does), and the five due observation cases have their re-judge rows minted by it, not by hand.
+- SR-220 states one obligation with one `shall` (or its enactment is split into its own row), stays Drafted, and is listed for the next spine-acts batch's first approval.
 - The commit bar passes.
