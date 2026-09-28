@@ -732,7 +732,7 @@ da_refs = ["DA-007"]
 [requirement.SR-156]
 title = "Bounded lanes narrowing to one gated landing"
 sn_refs = ["SN-027", "SN-008", "SN-025"]
-boundary_refs = ["B-01", "B-10"]
+boundary_refs = ["B-01", "B-09", "B-10"]
 hat_refs = ["INTEGRITY-RECOVERABILITY", "UNATTENDED-OPS"]
 requirement = """The delivered loop content shall run ready work on bounded, mutually isolated lanes and narrow every lane back to the integration branch through one serial, fail-closed seam that runs the declared bar on the composed tree — parking a red candidate and stopping the queue loudly, draining claiming to a clean merged stop under a declared pause, and reconstructing claim and queue state from version-control history alone at any crash boundary, never a half-integrated authoritative state."""
 rationale = """Realizes SN-027 WHOLE — ready work fans out across bounded parallel lanes and that fan-out narrows to one serialized gated seam before anything lands, in the need's own words — with SN-008 (the seam is fail-closed) and SN-025 (recovery from version-control history alone). ONE DECISION PER ROW: "serial integration is one delivered contract" is sound for the SEAM, but lane execution, claim authority and the trunk-side mint of work-item identity are not the seam, and a row stating the seam alone leaves SN-027's FIRST half — bounded lanes, isolated working trees, a worker ceiling — stated nowhere. This row therefore states the whole lane LIFECYCLE (claim, run isolated, close, land), which is what closes that hole; the trunk-only authority contract sheds to SR-170. The two fail independently: a perfectly serialized landing that lets a lane commit a regenerated artifact satisfies this row and not that one. Terminal close is SR-144's and is not restated here — one SR per (need, property), and both rows sit under SN-027 — so what this row carries of it is only that a terminal branch still lands through the one serial seam."""
@@ -845,7 +845,7 @@ da_refs = ["DA-001"]
 [requirement.SR-164]
 title = "Stakeholder-need scope is a declared, checked value"
 sn_refs = ["SN-039"]
-boundary_refs = ["B-09"]
+boundary_refs = ["B-05", "B-09"]
 hat_refs = ["CONSISTENCY"]
 requirement = """Every non-example stakeholder-need row shall carry a scope value from the declared closed vocabulary (template / this repository / both), with a missing or out-of-vocabulary value reported by the harness naming the row."""
 rationale = """Realizes SN-039 — a need whose audience is ambiguous gets enforced against the wrong repositories, and the scope must be a value a check can read, not inferred from prose. SN-039 had no citing SR. The field enters the SN carrier schema in the scheduled schema batch, per the need's own acceptance, rather than as a one-off column."""
@@ -1018,7 +1018,7 @@ coincident = """The row promises the declared inclusion rule and the stated scop
 [requirement.SR-176]
 title = "A privacy finding persists by class and location, never by value"
 sn_refs = ["SN-009"]
-boundary_refs = ["B-09"]
+boundary_refs = ["B-01", "B-09"]
 hat_refs = ["DATA-PROTECTION"]
 requirement = """Any durable record the delivered kit produces of a secrets or privacy finding shall identify the finding by its class and location, never by the matched value."""
 rationale = """The finding record is the one artifact guaranteed to contain the personal data it reports, created by the control itself — SN-009 defeating itself, since a scanner that catches a value and then echoes it into a committed artifact has published what it protected. The intake proposal's measurement (docs/plans/2026-08-17-wi468-obligation-intake-options.md §2 option (b)) grounds the row: the scanner mints no record of its own (check_privacy prints location, label and the MATCHED VALUE to stdout and writes nothing), but an unattended run's transcript is committed bookkeeping, so the durable copy of every finding is the session log — and the transcript path redacts credential shapes only. DELIBERATE NARROWING of the charter's ask, recorded here as the deriving decision: C-DPR-2 asks for a retention limit and an access rule, and a kit cannot honestly promise either over an adopter's git history (committed content is effectively forever; access is the host's) — what it CAN promise is that the matched value never reaches durable storage, which moots both. MECHANIZED TODAY for the always-on class: the transcript writer redacts the credential shapes and its summary line names class and count, never the value — pinned by the chain below. NOT YET MECHANIZED, stated rather than implied: the PII/identity classes the privacy gate adds are not in the redaction set, so for an adopter with the gate on a PII finding echoed into a session transcript would persist — closing that, on the same seam, is this row's build debt."""
@@ -1618,14 +1618,14 @@ coincident = """The need asks for a stakeholder seeing which system each promise
 [requirement.SR-220]
 title = "Overlapping queued work is consolidated through one judgement per queue state"
 sn_refs = ["SN-025"]
-boundary_refs = ["B-01", "B-10"]
+boundary_refs = ["B-01", "B-09", "B-10"]
 hat_refs = ["UNATTENDED-OPS", "PERFORMANCE"]
 requirement = "While the queued work items include a set that overlaps, the delivered loop content shall hand that set to a single judgement, at most once for any one state of the queued work items and never while another judgement is in progress, queued over an item of the set, or queued to run before it, whose outcome takes effect only as a recorded restructuring in which each absorbed item is closed in a terminal state naming its one successor, its scope text unchanged."
 rationale = """A DERIVED requirement, and labelled so. SN-025 asks that no human curate what comes next; its acceptance states only that the next work derives from the tracked work-item graph, which a stranger reading it would derive as work selection alone. This row states what that promise needs once the loop also mints work: rows minted one finding at a time overlap, and without this row either a human merges them, which is the curation the need rules out, or the loop builds the same job more than once. Two lenses shape it. UNATTENDED-OPS: an overlap is a standing state, so a judgement fired on it re-asks the same question on every idle tick unless the judged state is remembered past the judging row's close, an unbounded retry that pages nobody. PERFORMANCE: each judgement is a strong-tier session, so asking once per queue state is the operating-cost bound rather than an optimisation. The restructuring is recorded rather than done by deletion so that an absorbed item's scope and its successor stay readable after the act. Fed back to the need: SN-025's acceptance could name the loop keeping its own queue free of duplicated work; until it does, this row is derived and says so. Choosing the next work stays SR-148's, and reporting an overlap as a warning stays SR-157's."""
 acceptance_criteria = "A queue holding an overlapping set yields exactly one judgement row, and the same state of the queued work items yields none again, including after that judgement has closed; no judgement is started while another is in progress, while another consolidation is pending, while a queued judgement names an item of the set, or while a queued judgement would run before it, each refusal naming that judgement, and a queued judgement that does neither holds nothing back; a judgement is never itself a member of a set; a set is never seeded by, and never re-absorbs, an item created by an earlier judgement that enacted a consolidation, while an item made by a judgement that consolidated nothing, or by a consolidation without a recorded judgement, is not treated as judged; an outcome that moves an item no longer queued is refused, naming the item; an absorbing outcome leaves each absorbed item in a terminal state naming its one successor with its scope text unchanged, and the successor records every item it supersedes."
 priority = "S"
 verification = "Test"
-status = "Drafted"
+status = "Approved"
 phase = 5
 da_refs = ["DA-015"]
 
@@ -1653,7 +1653,7 @@ rationale = """A DERIVED requirement, and labelled so. SN-026 asks that models b
 acceptance_criteria = "A guarded session on a model whose name contains a vendored payload's substring receives that payload and not the default core; when several vendored substrings match, the longest wins; a session on a model matching none receives the default core; a session the declared guardrails policy leaves unguarded receives nothing, whatever payloads are vendored; the kit ships no payload of its own, and so names no model to the selection: with only the default core present, every model receives the default core."
 priority = "C"
 verification = "Test"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [requirement.SR-224]
@@ -1679,5 +1679,5 @@ rationale = """A DERIVED requirement, and labelled so. SN-029 asks that a run re
 acceptance_criteria = "With the dial off or undeclared, a lane is judged by nothing here and no record is read; with the dial at record or escalate-first, a lane whose work closed complete, cancelled or partial without its record at its run's path is refused, the refusal naming that path, and one carrying its record passes this check; in a present record, an entry that is not a table, an entry lacking what was decided, the alternative passed over, the reversal cost, why it was not escalated or the review cell, or carrying one that is not text, or leaving one of the first four blank, a hoist that is absent or not a list of entry ids, and a hoist naming an entry the record lacks, are each reported naming the entry, none refuses, and keys beyond the required ones are not judged; an entry numbered -000 is never judged; a value of the dial outside its three, compared trimmed and case-folded, is refused where the policy file is checked, and at the close it is refused as configuration before the record is read; a session handed a lane to build or to adjudicate under a recording dial is told the path its record belongs at, and a review session is not."
 priority = "S"
 verification = "Test"
-status = "Drafted"
+status = "Approved"
 phase = 6

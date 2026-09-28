@@ -500,3 +500,70 @@ such.
     for a requirement that delivers its need jointly with others, and C2 asked
     that every SR be classified. That is a vocabulary question for the owner:
     **OI-97**.
+
+48. **WI-618 (04d5986d) — SOL on all five majors.**
+    - (a) `retire.py --seed` records every hole below the watermark as spent,
+      and that includes ids reserved for a lane still building (WI-620's
+      SR-222, LLR-266 to LLR-270, TC-262 to TC-268, IF-245 to IF-249). They
+      would read as retired forever. Seeding takes an explicit exclusion, and
+      the coordinator regenerates the census on trunk at the merge, where
+      the true set of spent ids is known.
+    - (b) In a shallow clone, the append-only check reports nothing when a
+      record's landing lies past the boundary. It says so, as a warn-only
+      "append-only status unverifiable", with a depth-one regression.
+    - (c) `gen_trajectory --check` erases every deleting-commit value. It
+      requires the resolved hash when history supplies one, and accepts
+      "unknown" only when the checkout cannot resolve it.
+    - (d) The record reader requires IF-257's exact key set, an empty body
+      and a real calendar date.
+    - (e) IF-257 joins two seams. The coordinator grants IF-258 for
+      `retire.py`'s command arm; IF-257 keeps the record and census files.
+
+49. **Batch D (86aa7b0f), two blockers: routed pointer cells absorbed
+    unruled — SOL.** `SN-Refs` and `Boundary-Refs` are routed traced cells:
+    a change to one routes to adjudication (`intake.ROUTED_TRACED_CELLS`),
+    because a re-pointed parent or crossing can move scope. Nobody ruled
+    WI-707's nine `sn_refs` re-points (the verdict calls them silent) or
+    C2's 72 `boundary_refs` moves (WI-695's brief rendered only the waivers).
+    Act seq 6 then copied the whole SR registry, and the copy never blocks on
+    pointer cells. **Ruling:** the batch-D adjudicator re-sits and rules
+    every one of the 81 routed pointer changes explicitly. The test is
+    whether the new parent's stated outcome, or the new crossing, is the one
+    the requirement's approved text serves, against `external.toml`'s
+    crossings and the needs' own words. If every ruling holds, the act
+    stands as taken, since the ruling changes no cell. If any fails, the act
+    is reverted in the lane, the failed pointer is withheld, and the act is
+    re-taken without the SR copy. Recorded for the owner, a kit gap: the
+    amendment brief renders attesting cells but not routed pointer cells, so
+    an adjudicator can bless a row without seeing its routed re-points.
+    Batch C's WI-695 and batch D's WI-708 both show it.
+
+50. **WI-618, fix round (d72a5c0a) — SOL on both.** Ruling 48 (a) to (e) is
+    confirmed. IF-257 says "nothing after the closing fence", but the reader
+    tests `body.strip()`, so blank lines and spaces pass. The body must be
+    empty apart from the file's final newline, tested with a whitespace-only
+    body. The advertised `..N` exclusion form gets its own test.
+
+51. **Batch D, second sitting (40e9ee16) — SOL on four omissions; the cells
+    are completed and the full act re-taken.** The population is confirmed,
+    all nine `sn_refs` rulings hold, and so do the sampled `boundary_refs`.
+    But the adjudicator itself noted four "omission candidates" and still
+    ruled them HOLD: SR-156 without B-09 ("stopping the queue loudly"),
+    SR-164 without B-05 (it constrains the shipped registry), SR-176 without
+    B-01 (a durable tracked artifact), and SR-220 without B-09 (named
+    refusals). Ruling 27 requires each multi-valued cell to list every
+    crossing its approved text names, so an incomplete list fails.
+    **Ruling:** rather than leave the SR tier unanchored again, the act is
+    reverted in the lane, and the coordinator adds the four crossings the
+    adjudicator identified. These are traced pointer additions, in place;
+    SR-220 is Drafted. The adjudicator rules the four added crossings, and
+    the same one act is re-taken, so the copy carries the completed cells.
+
+52. **Batch D, last round (4ecbeff9) — SOL on a count; applied by the
+    coordinator.** The four completed cells, the verdict's corrected FAILS and
+    HOLDs, the same 13 flips, the equal copies and SR-164's remaining
+    frame-spanning advisory (ruling 27) are all confirmed. The verdict and
+    the act's commit message claimed 78 re-attestations, but SR-164 and
+    SR-176 were already among the first act's 75, so the ledger rightly
+    records 76. The coordinator corrects the verdict's sentence at
+    integration, as ruling 23 did, and the landing commit states 76.

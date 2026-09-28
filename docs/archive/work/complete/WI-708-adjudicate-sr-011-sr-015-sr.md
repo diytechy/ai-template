@@ -3,12 +3,20 @@ id = "WI-708"
 title = "adjudicate: SR-011, SR-015, SR-024, SR-031, SR-033, SR-040, SR-111, SR-112, SR-129, SR-147, SR-149, SR-174, SR-177 - approved/routed cell(s) amended on merged trunk 83d866c..5934f4c (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-011", "SR-015", "SR-024", "SR-031", "SR-033", "SR-040", "SR-111", "SR-112"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["SR-011", "SR-015", "SR-024", "SR-031", "SR-033", "SR-040", "SR-111", "SR-112", "SR-129", "SR-147", "SR-149", "SR-174", "SR-177"]
 +++
+
+## Deliverable
+
+Ruled in spine-acts batch D by an independent Fable adjudicator from the kit's own brief, cross-reviewed by Codex Sol over three rounds (wave-5 rulings 49, 51, 52). The verdict (`docs/reviews/wi-708-adjudicate-sr-011-sr-015-sr/001-ADJUDICATE-126cf5f2.md`) ends:
+
+    VERDICT: MEANING rows=13
+
+The one act (ledger seq 6) copied the SR, LLR and TC registries: 13 rows approved (SR-220 on its batch-C approval, confirmed unchanged), 76 re-attested. Those include the 66 WI-695 waivers and SR-178 carried from batch C, and the 81 routed pointer changes ruled explicitly, four of them completed first.
 
 ## Context
 

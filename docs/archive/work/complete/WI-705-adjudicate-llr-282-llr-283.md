@@ -3,12 +3,20 @@ id = "WI-705"
 title = "adjudicate: LLR-282, LLR-283, LLR-284, SR-225, TC-292, TC-293, TC-294 - spine row(s) authored Drafted on merged trunk 4b7f6da..655c60a await a FIRST APPROVAL; read the whole chain, then approve (flip + snapshot) or return with findings"
 workstream = "process"
 sr_refs = ["SR-225"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "first-approval"
 adjudicates = ["LLR-282", "LLR-283", "LLR-284", "SR-225", "TC-292", "TC-293", "TC-294"]
 +++
+
+## Deliverable
+
+Ruled in spine-acts batch D by an independent Fable adjudicator from the kit's own brief, cross-reviewed by Codex Sol over three rounds (wave-5 rulings 49, 51, 52). The verdict (`docs/reviews/wi-705-adjudicate-llr-282-llr-283/001-ADJUDICATE-126cf5f2.md`) ends:
+
+    OUTCOME: APPROVE rows=7
+
+The one act (ledger seq 6) copied the SR, LLR and TC registries: 13 rows approved (SR-220 on its batch-C approval, confirmed unchanged), 76 re-attested. Those include the 66 WI-695 waivers and SR-178 carried from batch C, and the 81 routed pointer changes ruled explicitly, four of them completed first.
 
 ## Context
 

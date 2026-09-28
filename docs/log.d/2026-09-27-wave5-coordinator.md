@@ -698,3 +698,40 @@ test_snapshot_readers, test_assumption_rules, test_trace_briefs,
 test_frame_rules, test_dogfood_sync, test_module_size_ratchet,
 test_complexity_ratchet), run by the coordinator: 308 passed / 1 skipped.
 Trunk before this squash: 83d866c8.
+
+WI-707's sweep minted WI-708 (the amendment adjudication of the thirteen
+SRs) and WI-709 (the first approval of SR-223, TC-272, TC-290 and TC-297).
+
+### Spine-acts batch D lands: the SR tier anchored at last
+
+One independent Fable adjudicator judged four rows: WI-704, WI-705, WI-708
+and WI-709. It also relied on three batch-C rulings after confirming by git
+that their cells were unchanged: the 66 blessed WI-695 waivers, SR-178, and
+SR-220's approval. Codex Sol cross-reviewed over three rounds
+([sol-batchd.md](../reviews/2026-09-27-wave5/sol-batchd.md),
+[sol-batchd-fix.md](../reviews/2026-09-27-wave5/sol-batchd-fix.md),
+[sol-batchd-fix2.md](../reviews/2026-09-27-wave5/sol-batchd-fix2.md);
+wave-5 rulings 49, 51, 52).
+- **Routed pointers had been absorbed unruled.** `SN-Refs` and
+  `Boundary-Refs` route to adjudication, but WI-707's nine `sn_refs`
+  re-points and C2's 72 `boundary_refs` moves had never been ruled; the
+  amendment brief does not render routed pointer cells. The adjudicator
+  ruled all 81. Four lists were incomplete (SR-156, SR-164, SR-176,
+  SR-220), so the coordinator completed them and the act was re-taken.
+- **Act seq 6 copied all three spine registries.** It approved 13 rows
+  (SR-220, SR-223, SR-225, LLR-282 to LLR-285, TC-272, TC-290, TC-292 to
+  TC-294, TC-297) and re-attested 76. TC-296 returned on one self-referential
+  sentence, and the sweep mints its follow-up.
+- SR-164 now names both frames (B-05 delivery, B-09 operation), as its
+  approved text does. It joins SR-139, SR-146 and SR-148 as a named
+  frame-spanning advisory, not split (ruling 27).
+- For the owner, a kit gap: the amendment brief shows an adjudicator the
+  attesting cells but not the routed pointer cells, so a row can be blessed
+  without its re-points being seen. Batches C and D both hit it.
+
+**Open count: 10** (9 queued, 1 deferred): four adjudication rows closed.
+
+Commit bar at batch D: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs --stale` 0 broken, smoke 1799 passed / 3 skipped, seconds 42.9 s
+within 60 s. Trunk before this squash: 126cf5f2.

@@ -2801,7 +2801,7 @@ tier = "Smoke"
 expected = "Satisfies LLR-277 (parent SR-147) for the in-memory readers: no reader of a needs file chooses its carrier by guessing, and an unparseable TOML needs file refuses naming the file."
 automated = "Yes"
 evidence = "tests/test_spine_carrier.py::test_needs_from_text_takes_the_carrier_from_the_file_not_the_text; tests/test_spine_carrier.py::test_needs_or_refuse_names_the_file_it_cannot_read; tests/test_spine_carrier.py::test_every_needs_text_caller_takes_the_carrier_from_the_file"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-297]
@@ -2812,7 +2812,7 @@ tier = "Full"
 expected = "Satisfies LLR-277 (parent SR-147) for the readers over version-control history and the recorded copy: the history reader takes the carrier from the file at each commit and refuses an unparseable one naming the commit and the file, and a markdown needs file is compared like a TOML one."
 automated = "Yes"
 evidence = "tests/test_snapshot_readers.py::test_the_snapshot_history_reader_takes_the_needs_carrier_from_the_file; tests/test_snapshot_readers.py::test_a_markdown_needs_file_is_compared_like_a_toml_one"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-278]
@@ -2861,7 +2861,7 @@ tier = "Smoke"
 expected = "Satisfies SR-223 AcceptanceCriteria: the longest matching vendored substring selects the payload, a model matching none gets the default core, the policy alone decides whether anything is injected, and the kit ships no payload of its own, so with only the default core present every model receives the default core"
 automated = "Yes"
 evidence = "tests/test_guardrails_payload.py::test_the_longest_matching_substring_selects_the_payload; tests/test_guardrails_payload.py::test_a_guarded_session_carries_its_payload_and_the_policy_still_decides; tests/test_guardrails_payload.py::test_the_kit_ships_no_payload_so_every_model_gets_the_default_core"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-291]
@@ -2895,7 +2895,7 @@ tier = "Smoke"
 expected = "Satisfies SR-225 AcceptanceCriteria: the dial's three values read as declared, trimmed and case-folded, an undeclared dial reads off, and a value outside the three is refused where the policy file is checked and read as asking for a record"
 automated = "Yes"
 evidence = "tests/test_decision_record.py::test_each_declared_value_reads_as_itself; tests/test_decision_record.py::test_an_undeclared_dial_reads_off; tests/test_decision_record.py::test_an_unrecognized_value_is_refused_and_read_as_record; tests/test_decision_record.py::test_a_padded_or_mixed_case_value_is_accepted_as_the_reader_reads_it; tests/test_decision_record.py::test_the_reader_and_the_validator_share_one_normalization; tests/test_decision_record.py::test_a_wrong_typed_value_is_refused; tests/test_decision_record.py::test_the_template_ships_off_and_this_repo_records"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-293]
@@ -2906,7 +2906,7 @@ tier = "Smoke"
 expected = "Satisfies SR-225 AcceptanceCriteria: each shape, required-key and hoist defect is reported by entry, extra keys are not judged, the findings never raise, a -000 entry is never judged, every close owes a record under a recording dial, and a build or adjudication session is told its record's path while a review session is not"
 automated = "Yes"
 evidence = "tests/test_decision_record.py::test_a_sound_record_yields_no_finding; tests/test_decision_record.py::test_a_record_with_no_entries_is_sound; tests/test_decision_record.py::test_each_missing_required_key_is_reported_by_entry; tests/test_decision_record.py::test_each_required_key_holding_non_text_is_reported; tests/test_decision_record.py::test_each_required_key_left_blank; tests/test_decision_record.py::test_a_non_table_entry_is_reported; tests/test_decision_record.py::test_a_decision_key_that_is_not_a_table_is_reported; tests/test_decision_record.py::test_a_malformed_hoist_is_reported; tests/test_decision_record.py::test_extra_keys_on_an_entry_are_not_judged; tests/test_decision_record.py::test_the_findings_never_raise; tests/test_decision_record.py::test_a_hoist_naming_an_absent_entry_is_reported; tests/test_decision_record.py::test_a_missing_hoist_is_reported; tests/test_decision_record.py::test_an_entry_id_outside_the_numbering_is_reported; tests/test_decision_record.py::test_an_unparseable_record_is_one_finding; tests/test_decision_record.py::test_a_000_entry_is_inert; tests/test_decision_record.py::test_the_shipped_template_is_sound_and_carries_the_example; tests/test_decision_record.py::test_the_record_path_is_one_file_per_run; tests/test_decision_record.py::test_which_closes_owe_a_record; tests/test_decision_record.py::test_the_session_note_names_the_path_only_under_a_recording_dial; tests/test_decision_record.py::test_a_build_session_is_handed_the_note_by_the_dial; tests/test_decision_record.py::test_an_adjudication_session_is_handed_the_note_too; tests/test_decision_record.py::test_a_review_session_is_not_handed_the_note"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-294]
@@ -2917,5 +2917,5 @@ tier = "Full"
 expected = "Satisfies SR-225 AcceptanceCriteria: under a recording dial a complete, cancelled or partial close without its record is refused naming the path, a malformed record is reported without refusing, a misspelled dial is refused as configuration before any record is read, and under off nothing is read"
 automated = "Yes"
 evidence = "tests/test_decision_record_merge.py::test_a_recording_dial_refuses_a_close_without_its_record; tests/test_decision_record_merge.py::test_the_off_dial_reads_nothing; tests/test_decision_record_merge.py::test_a_lane_carrying_its_record_passes_the_rung; tests/test_decision_record_merge.py::test_a_malformed_entry_is_reported_and_does_not_refuse; tests/test_decision_record_merge.py::test_a_partial_close_without_its_record_is_refused_too; tests/test_decision_record_merge.py::test_a_partial_close_carrying_its_record_passes_the_rung; tests/test_decision_record_merge.py::test_a_dial_typo_is_refused_as_configuration_before_any_record; tests/test_decision_record_merge.py::test_a_padded_or_mixed_case_dial_reads_as_its_word"
-status = "Drafted"
+status = "Approved"
 phase = 6
