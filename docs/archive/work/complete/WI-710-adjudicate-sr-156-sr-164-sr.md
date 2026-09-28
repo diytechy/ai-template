@@ -3,12 +3,25 @@ id = "WI-710"
 title = "adjudicate: SR-156, SR-164, SR-176 - approved/routed cell(s) amended on merged trunk 126cf5f..e7fe487 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-156", "SR-164", "SR-176"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["SR-156", "SR-164", "SR-176"]
 +++
+
+## Deliverable
+
+Already judged and re-anchored; nothing owed. The four `boundary_refs`
+completions (SR-156 +B-09, SR-164 +B-05, SR-176 +B-01, SR-220 +B-09; the
+coordinator's traced pointer additions, wave-5 ruling 51) were ruled HOLD in
+the batch-D adjudicator's third sitting
+(`docs/reviews/wi-708-adjudicate-sr-011-sr-015-sr/001-ADJUDICATE-126cf5f2.md`),
+and act seq 6 re-attested them. SR-220 was approved by it. `trace.py
+--approve modified` shows no drift on them. As with WI-706, this row was
+minted only because the amendment and its act landed in one squash, and the
+sweep's amendment trigger does not check whether the merged range also
+re-attests the row.
 
 ## Context
 
