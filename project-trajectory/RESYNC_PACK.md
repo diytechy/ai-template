@@ -6222,6 +6222,52 @@ as a worklist, and for each absolute name its domain, bound it, carry it as an
 assumption row, or record a waiver. A golden test over `trace.py`'s report
 gains the new section.
 
+### Needs compared with their recorded copy, a row missing its status or phase is an integrity finding, each registry's own copy stamp, and a re-attestation held to its amendment's scope [since e520b6e6]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The approval record now compares the needs file's needs and
+stakeholders with their recorded copy: a need or stakeholder whose approved
+text moved, status left `Approved`, is shown in `trace.py --approve modified`'s
+new "Stakeholder needs and stakeholders owing an act" section with its moved
+cells before and after, as is a `Drafted` one or one with no `status`. An act
+approving a need or a stakeholder now names it in the act ledger's `approved`
+list. Both tiers join the snapshot refresh's row-level refusal: an act that
+copies the needs registry is refused while an approved need or stakeholder's
+text moved unread, until `intake.py snapshot --reattests SN-###` (or `STK-##`)
+names it; and an approved need or stakeholder absent from its recorded copy,
+or recorded below approval, is an unanchored integrity finding. A needs file
+still on the legacy markdown carrier is compared the same way.
+A spine row (SN, SR, LLR, TC) with no `status` cell, or an SR, LLR or TC row
+with no `phase` cell once any row is phased, is now an INTEGRITY finding, so
+`trace.py --strict-integrity` fails on it at every stage, and the approval
+brief lists such a row as owing its first approval. The brief's `_Baseline:`
+lines, the open-items view and the first-approval brief name each registry's
+copy with the commit that last wrote that copy, not the snapshot directory's
+newest write. At merge, an adjudication lane whose act re-attests (`intake.py
+snapshot --reattests`) a row outside the `Adjudicates` scope of the amendment
+row it claims is refused by name; a lane claiming no amendment row may
+re-attest nothing. `spine_carrier.needs_from_text(text, carrier)` now takes
+the carrier (`.toml` or `.md`) and raises on a TOML text that does not parse;
+`needs_or_refuse(path, text)` refuses naming the file, and the README
+Must/Should floor refuses an unparseable needs file instead of reading it as
+markdown.
+
+**What to do.** Re-sync `scripts/spine_carrier.py`,
+`scripts/baseline_snapshot.py`, `scripts/trace.py`, `scripts/kitlib/spine.py`,
+`scripts/acceptance_record.py`, `scripts/adjudicate_brief.py`,
+`scripts/gen_open_items.py` and `scripts/check_docs.py`. Run `trace.py
+--strict-integrity`: for each "has no Status cell" finding give the row
+`status = "Drafted"` (or its real maturity), and for each "has no Phase cell"
+finding give it the phase it is delivered in. Before your next approval act,
+run `trace.py --approve modified`: every need or stakeholder its need section
+lists as drifted must be re-attested (`--reattests`) once its meaning is ruled,
+or the act that copies the needs registry is refused. Regenerate the approval brief and
+the open-items view; both change shape. A direct caller of
+`spine_carrier.needs_from_text` passes the carrier of the file it read. An
+amendment session that re-anchors rows names only the rows its row's
+`Adjudicates` cell lists.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

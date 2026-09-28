@@ -857,7 +857,10 @@ def render(root):
     offspine_rows = tr.offspine_census_rows(root)
     items = load_open_items(root)
     pure = pending_block_text(root)
-    stamp_rev, stamp_date = baseline_snapshot.stamp(root)
+    # Each registry's OWN copy, named by the commit that last wrote it: a
+    # refresh copies only what its act authorises, so one directory-wide stamp
+    # named one copy's commit for every registry on the page.
+    stamps = baseline_snapshot.registry_stamps(root)
     counts = {
         "pending": sum(
             1 for r in items if (r.get("Status") or "").strip().lower() == "pending"
@@ -869,11 +872,17 @@ def render(root):
         # own Status still claims approval.
         "drifted": sum(1 for e in model if not e["no_baseline_reason"]),
         "baseline": (
-            "<code>{}</code> — copied {} ({}), the reviewed commit that last "
-            "moved an approval".format(
-                esc(baseline_snapshot.SNAPSHOT_DIR), esc(stamp_date), esc(stamp_rev)
+            "<code>{}</code>, each registry's copy named by the commit that "
+            "last wrote it:<ul>{}</ul>".format(
+                esc(baseline_snapshot.SNAPSHOT_DIR),
+                "".join(
+                    "<li><code>{}</code> — copied {} ({})</li>".format(
+                        esc(rel), esc(date), esc(rev)
+                    )
+                    for rel, rev, date in stamps
+                ),
             )
-            if stamp_rev
+            if stamps
             else "<code>{}</code> — no snapshot exists yet, so every row below "
             "awaits a FIRST approval and shows its current text in "
             "full".format(esc(baseline_snapshot.SNAPSHOT_DIR))
@@ -901,7 +910,7 @@ def render(root):
         "computed by <code>trace.reattest_model</code>, the same code behind "
         "<code>trace.py --approve</code>. If the two ever disagree, the brief is "
         "authoritative and this view is the bug.</p>\n"
-        '<p class="baseline">Baseline: {baseline}</p>\n'
+        '<div class="baseline">Baseline: {baseline}</div>\n'
         "{offspine}"
         "</header>\n"
         '<section class="band"><p class="eyebrow">1 · Pending decisions</p>{briefs}</section>\n'

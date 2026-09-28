@@ -701,14 +701,14 @@ _SHARED = _shared_file_pairs()
 
 def test_the_row_rule_is_driven_over_EVERY_compared_tier():
     """The parameter lists ARE `SNAPSHOT_TIERS`, and hold every tier TC-240
-    names: the spine's three, interfaces, components, the frame's three, and
-    the assumptions registry's two (assumptions and surrogates, which share one
-    file). The cases below take their parameters from the table itself, so
+    names: the spine's three, interfaces, components, the frame's three, the
+    assumptions registry's two (assumptions and surrogates, which share one
+    file), and the needs file's two (needs and stakeholders). The cases below take their parameters from the table itself, so
     nothing here can drift from the table that decides which rows are
     compared."""
     assert [tuple(p.values) for p in _TIERS] == list(SNAP.SNAPSHOT_TIERS)
     named = {"SR-ID", "LLR-ID", "TC-ID", "IF-ID", "CMP-ID", "EXT-ID", "B-ID", "REL-ID"}
-    named |= {"DA-ID", "SUR-ID"}
+    named |= {"DA-ID", "SUR-ID", "SN-ID", "STK-ID"}
     assert named <= {col for _rel, col in SNAP.SNAPSHOT_TIERS}
     assert _SHARED, "no registry holds two tiers, so the shared-file case is vacuous"
 
@@ -805,34 +805,43 @@ def test_SEVEN_drifted_rows_are_ALL_named_with_none_cut_off(tmp_path):
     assert "more row" not in proc.stderr, proc.stderr
 
 
-def test_a_drifted_NEED_is_not_covered(tmp_path):
-    """Needs are outside `SNAPSHOT_TIERS`, and SR-207 keeps them outside until
-    their own text is compared with a recorded copy: a drifted need never
-    refuses an act, and `--reattests` does not reach one."""
+def test_a_drifted_NEED_refuses_the_act_until_the_act_names_it(tmp_path):
+    """The needs file's two tiers are compared tiers (SR-207): an approved need
+    whose text moved refuses an act copying the needs registry, naming the need
+    and the cell, however the registry is named; `--reattests SN-###` clears it,
+    copies the registry and records the need in the act ledger."""
     root, _git = _git_tree(tmp_path)
     needs = SNAP.NEEDS_REL
-    assert all(rel != needs for rel, _col in SNAP.SNAPSHOT_TIERS)
+    assert (needs, "SN-ID") in SNAP.SNAPSHOT_TIERS
+    assert (needs, "STK-ID") in SNAP.SNAPSHOT_TIERS
     _rewrite(root, needs, 'why = "', 'why = "Amended, unread. ')
-    proc = _snapshot_cli(root, "--approves", Path(needs).name + "=the-sitting")
+    recorded = (SNAP.snapshot_root(root) / needs).read_bytes()
+    ref = ["--approves", Path(needs).name + "=the-sitting"]
+    proc = _snapshot_cli(root, *ref)
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "{} SN-001: Why".format(needs) in proc.stderr, proc.stderr
+    assert (SNAP.snapshot_root(root) / needs).read_bytes() == recorded
+    proc = _snapshot_cli(root, *ref, "--reattests", "SN-001")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert (SNAP.snapshot_root(root) / needs).read_bytes() == (
         root / needs
     ).read_bytes()
-    proc = _snapshot_cli(root, "--reattests", "SN-001")
-    assert proc.returncode != 0 and "row-compared" in proc.stderr, proc.stderr
+    assert "SN-001" in SNAP.read_acts(root)[-1]["reattested"]
 
 
 def test_parse_reattests_reads_comma_joined_row_ids_of_compared_tiers():
     assert SNAP.parse_reattests(None) == frozenset()
-    assert SNAP.parse_reattests(" SR-012, LLR-061 ,,B-02") == {
+    assert SNAP.parse_reattests(" SR-012, LLR-061 ,,B-02, SN-001,STK-01") == {
         "SR-012",
         "LLR-061",
         "B-02",
+        "SN-001",
+        "STK-01",
     }
-    # A need, a work item and the `;` of the `--approves` idiom each name no
-    # row of a compared tier; a refusal beats a re-attestation that matched
-    # nothing while reading as though it had.
-    for bad in ("SN-001", "WI-635", "SR-012;LLR-061", "sr-012"):
+    # A work item and the `;` of the `--approves` idiom each name no row of a
+    # compared tier; a refusal beats a re-attestation that matched nothing
+    # while reading as though it had.
+    for bad in ("WI-635", "SR-012;LLR-061", "sr-012"):
         with pytest.raises(SystemExit):
             SNAP.parse_reattests(bad)
 
@@ -1101,18 +1110,15 @@ def test_the_claimed_sets_are_DERIVED_from_derive_gates_one_ruled_table():
     assert not SNAP._claims_approval({"Status": "built"})
 
 
-def test_the_SN_tier_is_COPIED_but_claims_nothing_BY_DECISION():
-    """Design §B7, restated as a test so the omission cannot be mistaken for an
-    oversight.
-
-    The REASON changed on 2026-08-17 and the test is worth more for it: needs
-    used to carry no maturity key, so the claim predicate had nothing to read
-    and the omission proved itself. They now carry `status`, so the omission is
-    a live choice — and what holds it is `SNAPSHOT_TIERS`, pinned below. Wiring
-    SN drift to that cell is deliberately a separate pass; until then this is
-    the line that would go red if someone wired it by accident."""
+def test_the_needs_files_two_tiers_are_COMPARED_tiers():
+    """Needs carry `status` in the spine's words, and so do the stakeholders
+    beside them, so both tiers are compared with their recorded copy like
+    every other: the drift read, the refresh refusal, `--reattests`, the act
+    ledger and the unanchored rule all walk `SNAPSHOT_TIERS`, which lists them
+    (`NEED_TIERS`)."""
     assert SNAP.NEEDS_REL in SNAP.SNAPSHOTTED
-    assert not any(rel == SNAP.NEEDS_REL for rel, _col in SNAP.SNAPSHOT_TIERS)
+    assert set(SNAP.NEED_TIERS) <= set(SNAP.SNAPSHOT_TIERS)
+    assert SNAP._claims_approval({"Status": "Approved"})
 
 
 # --- unanchored, both directions ----------------------------------------------
@@ -1156,6 +1162,32 @@ def test_an_approval_whose_snapshot_copy_reads_BELOW_approval_is_unanchored(tmp_
     snap_sr.write_text(head + sep + rest, encoding="utf-8")
     found = SNAP.unanchored_findings(root)
     assert any(sid in f and "Drafted" in f for f in found), found
+
+
+def test_an_approved_NEED_or_STAKEHOLDER_without_its_anchor_is_unanchored(tmp_path):
+    """The unanchored rule covers the needs file's two tiers: an approved need
+    the record does not hold, and an approved stakeholder whose recorded copy
+    reads below approval, are each an approval that never rode a copy."""
+    root = _seeded(tmp_path)
+    needs = SNAP.NEEDS_REL
+    assert SNAP.unanchored_findings(root) == []
+    path = root / needs
+    with path.open("ab") as fh:
+        fh.write(b'\n[need.SN-9001]\nstatus = "Approved"\nneed = "Unrecorded."\n')
+    copy = SNAP.snapshot_root(root) / needs
+    text = copy.read_bytes()
+    at = text.index(b"[stakeholder.STK-01]")
+    head, tail = text[:at], text[at:]
+    tail = tail.replace(b'status = "Approved"', b'status = "Drafted"', 1)
+    copy.write_bytes(head + tail)
+    findings = SNAP.unanchored_findings(root)
+    assert any(
+        f.startswith("SN-9001 reads Status=Approved but is ABSENT") for f in findings
+    ), findings
+    assert any(
+        f.startswith("STK-01 reads Status=Approved but its") and "Status=Drafted" in f
+        for f in findings
+    ), findings
 
 
 def test_a_registry_missing_from_an_EXISTING_snapshot_is_reported(tmp_path):

@@ -127,9 +127,11 @@ Contract IF-111: traj_parse renders the dashboard's need tier from
     cannot disagree about which needs exist.
 
 Contract IF-112: check_docs holds the root README to the need tier through
-    needs_from_text(text) and is_draft_need(need): the Must/Should coverage
-    floor reads each need's own priority and status fields rather than a
-    table's header text, and resolve(path, NEED_CARRIERS) decides whether there
+    needs_or_refuse(path, text) and is_draft_need(need): the Must/Should
+    coverage floor reads each need's own priority and status fields rather than
+    a table's header text, under the carrier the file's suffix names, and a
+    `.toml` file that does not parse refuses the run naming the file rather
+    than reading as markdown. resolve(path, NEED_CARRIERS) decides whether there
     is a registry to hold the README to at all. The same module reads the
     open-items registry through resolve() and load() for its deferred-decision
     detector. Existence checking of cited ids stays check_docs' own whole-file
@@ -208,7 +210,7 @@ import re
 import io
 import os
 import tomllib
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 # The one sibling this module imports, and it is the SHIPPED package rather than
 # a peer: `kitlib` is import-clean of the rest of `scripts/` by assertion
@@ -990,21 +992,51 @@ def needs_from_toml(text):
     return out
 
 
-def needs_from_text(text):
-    """`[{id, kind, **fields}]` for a needs registry given only its TEXT, by
-    sniffing which carrier wrote it.
+def needs_from_text(text, carrier):
+    """`[{id, kind, **fields}]` for a needs registry's TEXT, under the carrier
+    it was read from (`.toml` or `.md`, the resolved file's suffix).
 
-    Exists because the two SN scrapers the gate depends on take TEXT, not a
-    path, and are pinned equal across `trace` and `spine_rules`. Under TOML the
-    id scrape happens to keep working — `[need.SN-001]` still contains the token
-    — but the DRAFT scan does not: it looks for a markdown heading containing
-    the word "draft", finds none, and reports zero drafts. Every draft need
-    would read as approved and the derived gate would RISE. That is the failure
-    this dispatch exists to make impossible; it is not a convenience."""
-    parsed = needs_from_toml(text)
-    if parsed is not None and (parsed or NEED_TABLE + "." in text):
+    Exists because some readers hold the registry's TEXT rather than its path:
+    the approval view's need prose, the README's Must/Should floor, and the
+    snapshot's reads of a needs file at a past commit. Each read that text from
+    a file it resolved, so each knows the carrier.
+
+    THE CARRIER COMES FROM THE FILE, NOT FROM THE TEXT, for the reason
+    `draft_ids_from_text` gives. Sniffing read a TOML text that declares no need
+    table as markdown, so a table row inside a TOML string became a need the
+    file never declared, and read a TOML text that does not parse as markdown
+    instead of refusing it. A `.toml` text that does not parse RAISES, and so
+    does a carrier the need tier does not have: ValueError, because the refusal
+    is the caller's (`needs_or_refuse` names the file).
+
+    Implements: SR-147, LLR-277"""
+    if carrier == ".toml":
+        parsed = needs_from_toml(text)
+        if parsed is None:
+            raise ValueError(
+                "the .toml needs carrier does not parse as TOML; refusing to "
+                "read its needs from a guess"
+            )
         return parsed
+    if carrier != ".md":
+        raise ValueError(
+            "no needs carrier {!r}: the need tier is .toml or .md".format(carrier)
+        )
     return needs_from_markdown(text)
+
+
+def needs_or_refuse(path, text):
+    """`needs_from_text` for a needs file its caller resolved, taking the
+    carrier from `path`'s suffix and refusing the run, naming the file, when it
+    cannot be read — the refusal `draft_ids_or_refuse` makes for the draft set.
+    `path` may name a file at a past commit (`<rev>:<path>`); only its suffix
+    and its spelling are read.
+
+    Implements: SR-147, LLR-277"""
+    try:
+        return needs_from_text(text, PurePosixPath(str(path).replace("\\", "/")).suffix)
+    except ValueError as exc:
+        raise SystemExit("{}: {}".format(path, exc)) from exc
 
 
 def load_needs(path):
@@ -1027,6 +1059,38 @@ def load_needs(path):
             "unreadable needs registry as an empty one".format(live)
         )
     return needs
+
+
+def load_need_tier(path, id_col, keep_examples=True):
+    """The needs file's `id_col` tier (`SN-ID` or `STK-ID`) as rows under
+    today's column names, whichever of the two need carriers is live — the
+    shape `load` returns for every other tier, so one comparison reads them.
+
+    `load` knows the row tiers' carriers alone (`.toml`/`.csv`), so a needs
+    file still on the legacy markdown carrier read through it yielded no rows
+    on either side of a comparison, and a drifted need read as no drift. Under
+    markdown the needs are `needs_from_markdown`'s rows keyed by their column
+    names (`status` read off the section as it always was), and the stakeholder
+    tier, which that carrier never had, is `[]`. `[]` when neither carrier
+    exists; a `.toml` that does not parse raises through `load`.
+
+    Implements: SR-147, LLR-277"""
+    live = resolve(path, NEED_CARRIERS)
+    if live is None:
+        return []
+    if live.suffix != ".md":
+        return load(live, id_col, keep_examples)
+    if id_col != "SN-ID":
+        return []
+    rows = []
+    for need in needs_from_markdown(
+        live.read_text(encoding="utf-8-sig", errors="replace")
+    ):
+        row = {"SN-ID": need["id"]}
+        row.update({REGISTRY_COLUMN.get(k, k): v for k, v in need.items() if k != "id"})
+        if keep_examples or not row["SN-ID"].endswith("-000"):
+            rows.append(row)
+    return rows
 
 
 def folded(need):

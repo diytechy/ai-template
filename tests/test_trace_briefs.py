@@ -652,7 +652,10 @@ def test_the_brief_states_what_the_stamp_IS_and_names_approval_provenance(tmp_pa
     _approval_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
     out = (tmp_path / "docs" / "ratify" / "CURRENT.md").read_text(encoding="utf-8")
-    assert "the commit that last wrote this record" in out, out
+    # Each registry's copy is named by the commit that last wrote THAT copy
+    # (a refresh copies only what its act authorises), not the record's
+    # newest write.
+    assert "each registry's copy, named by the commit that last wrote it" in out, out
     assert "reviewed commit that last moved an approval" not in out
     assert "_Approval provenance:" in out, out
     # This fixture is a CSV-carrier repo, where a status move has no line shape

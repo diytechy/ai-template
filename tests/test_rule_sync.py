@@ -549,7 +549,9 @@ def test_sn_field_mapping_agrees_across_all_three_readers(tmp_path):
         encoding="utf-8",
     )
     rows = PARSE._sn_rows(tmp_path)
-    prose = TR._sn_prose((reg / "stakeholder-needs.md").read_text(encoding="utf-8"))
+    prose = TR._sn_prose(
+        (reg / "stakeholder-needs.md").read_text(encoding="utf-8"), ".md"
+    )
     assert prose == {r["id"]: {k: v for k, v in r.items() if k != "id"} for r in rows}
 
     # The `-000` placeholder is skipped by all three — the drift that happened.

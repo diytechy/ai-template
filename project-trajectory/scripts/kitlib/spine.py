@@ -88,6 +88,7 @@ __all__ = [
     "resolve_modules",
     "module_tests",
     "tier_findings",
+    "missing_cell_findings",
     "SPINE_TIER_KEYS",
     "OFFSPINE_KEYS",
     "REGISTRY_KEYS",
@@ -658,6 +659,61 @@ def tier_findings(tcs, tier_of):
                 )
             )
     return errors, advisories
+
+
+# The spine tiers a `Phase` cell is owed on once the spine is phased. The need
+# tier declares no phase: a need is delivered through the requirements citing it.
+# Implements: SR-157, LLR-272
+PHASED_TIERS = ("SR", "LLR", "TC")
+
+
+def missing_cell_findings(tiers):
+    """One integrity line per spine row missing a cell every reader keys on:
+    its `Status`, on every tier, and its `Phase`, on the phased tiers once any
+    of their rows is phased.
+
+    AN ABSENT CELL WAS THE ONE SHAPE THE VOCABULARY CHECKS COULD NOT SEE. They
+    judge a value that is present, so a row authored with no `status` passed
+    every one of them while reading, to each surface that asks what it owes, as
+    neither `Drafted` nor approved: no first-approval arm and no drift arm
+    fires on it, and the approval brief omitted it. A row with no `phase` in a
+    phased spine falls outside every `--phase` scope the same silent way. Both
+    are wrong at any stage, so both are integrity-class. The phase half arms as
+    the numeric-phase rule does, on the first phased row, so an unphased
+    project is not asked for a cell it does not use.
+
+    Implements: SR-157, LLR-272
+
+    Contract:
+      Inputs:  tiers: {label: rows} over "SN", "SR", "LLR", "TC", each row a
+               registry row mapping keyed `<label>-ID`; `-000` rows and rows
+               with no id are skipped
+      Outputs: list[str] — one line per row and missing cell, naming both
+    """
+    rows = [
+        (label, str(r.get(label + "-ID") or "").strip(), r)
+        for label, tier in tiers.items()
+        for r in tier
+    ]
+    rows = [(label, rid, r) for label, rid, r in rows if rid and not is_example(rid)]
+    phased = any(
+        phase_num(r) is not None for label, _rid, r in rows if label in PHASED_TIERS
+    )
+    out = []
+    for label, rid, r in rows:
+        if not (r.get("Status") or "").strip():
+            out.append(
+                "{} {} has no Status cell — a row stating no maturity is neither "
+                "Drafted nor approved to every reader that asks what it owes; "
+                'give it status = "Drafted"'.format(label, rid)
+            )
+        if phased and label in PHASED_TIERS and not (r.get("Phase") or "").strip():
+            out.append(
+                "{} {} has no Phase cell — the spine is phased, and a row with no "
+                "phase falls outside every phase scope; give it the phase it is "
+                "delivered in".format(label, rid)
+            )
+    return out
 
 
 # ---------------------------------------------------------------------------

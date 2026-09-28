@@ -266,3 +266,55 @@ Commit bar at WI-657 part 4: `check_trajectory --strict` clean, `trace
 --strict-integrity` 0, approve-modified current, `gen_open_items` current,
 `check_docs --stale` 0 broken, smoke 1694 passed / 3 skipped, seconds 49.4 s
 within 60 s (two builder lanes on the box). The change is documents only.
+
+### WI-651 lands: the snapshot and its readers, the need tier funded (with WI-666 and WI-671)
+
+One builder, five commits, four Codex Sol rounds (wave-5 rulings 17, 19 to
+22, 24 and 25):
+[sol-wi651.md](../reviews/2026-09-27-wave5/sol-wi651.md),
+[sol-wi651-fix.md](../reviews/2026-09-27-wave5/sol-wi651-fix.md),
+[sol-wi651-fix2.md](../reviews/2026-09-27-wave5/sol-wi651-fix2.md).
+The builder stopped twice on approved rows written before OI-91's ruling:
+LLR-245 and TC-240 said the needs file "stays outside" the snapshot tiers,
+and SR-178 said needs carry "no status cell". The coordinator granted each
+amendment the ruling called for, rather than let a row that realises an
+owner's ruling stop short of it. Sol's rounds found a Markdown needs file
+never compared, two design rows each holding two decisions (split, with
+LLR-277, LLR-278 and TC-278), coverage gaps, and two stale cells. The
+coordinator ruled for the builder on one point: the pre-existing,
+deliberate whole-ledger arm for an act that copies nothing (ruling 25).
+
+The merge conflicted in five files. `docs/id-watermark` took trunk's copy and
+was re-bumped. The RESYNC entries kept both, and only WI-651's was
+re-anchored to `[since e520b6e6]`. `trace.py`'s size ratchet was
+re-measured on the merged tree, 3798 with both reasons. The two registries
+exposed a trap. Git's line merge aligned the identical `status`/`component`/
+`phase` tail of WI-616's LLR-274 with WI-651's LLR-272, so keeping both hunks
+would have stripped LLR-274's tail. They were merged table by table from the
+merge base instead (`toml_merge3.py` in the coordinator's scratchpad), and
+every row's tail was checked.
+
+For the owner: needs are now in the drift comparison, so WI-616's
+amendments to SN-003, SN-008, SN-009 and SN-025 are on your brief. Any act
+that copies the needs registry is refused until you re-attest them (`intake.py
+snapshot --reattests SN-003,SN-008,SN-009,SN-025` in your own reviewed commit);
+acts that copy only the SR, LLR and TC registries are not blocked.
+**Open count: 20** (19 queued, 1 deferred).
+
+One composition red at the merge was the handoff's known trap: the line-number
+pin in `tests/test_generated_newlines.py`. The one non-literal write site in
+`gen_open_items.py` moved from 1383 to 1392, because WI-651's view lists each
+registry's copy stamp above it; the site itself is unchanged. The pin moved
+with its reason.
+
+Commit bar at WI-651: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs --stale` 0 broken, smoke 1697 passed / 3 skipped, seconds 43.3 s
+within 60 s (three builder lanes on the box). The touched slow modules plus
+both ratchets (test_snapshot_readers, test_baseline_snapshot,
+test_accepted_risk, test_trace, test_trace_briefs, test_trajectory_arch,
+test_intake, test_integrate, test_acceptance_record,
+test_module_size_ratchet, test_complexity_ratchet, test_resync_pack,
+test_frame_context, test_rule_sync, test_dogfood_sync, test_derive_stage),
+run by the coordinator: 636 passed / 2 skipped. `check_complexity --mode
+enforce`: OK, 204 rows. Trunk before this squash: e520b6e6.

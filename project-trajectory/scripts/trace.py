@@ -3486,15 +3486,16 @@ def _scope_srs(scope, srs):
 _SN_EMPHASIS = re.compile(r"\*\*|`")
 
 
-def _sn_prose(sn_text):
+def _sn_prose(sn_text, carrier):
     """Parse each SN row's prose (Need / Why it matters / Acceptance intent) from
     stakeholder-needs.md so the approve view renders the *top* of the chain, not a
     bare SN id (WI-146 REVIEW-A). Reads `spine_carrier`, the ONE home the fold
     now has — it was the third copy of a rule three modules
     promised in a docstring to change together, and did not. Takes TEXT rather
-    than a path because the approve view already holds the registry's contents;
-    example `-000` rows are skipped."""
-    needs = spine_carrier.needs_from_text(sn_text)
+    than a path because the approve view already holds the registry's contents,
+    and the CARRIER its caller resolved the file under, so the text is never
+    read by a guess; example `-000` rows are skipped."""
+    needs = spine_carrier.needs_from_text(sn_text, carrier)
     return {
         row["id"]: {k: v for k, v in row.items() if k != "id"}
         for row in (
@@ -3757,6 +3758,30 @@ def sr_chain_drifts(sid, chain, snapshot):
 _KIND_IX = {"SR": 0, "LLR": 1, "TC": 2}
 
 
+def _owes_first(row):
+    """Does this row owe a FIRST approval: it is `Drafted`, or it carries no
+    `Status` cell at all, which claims no approval for a drift arm to judge and
+    is not `Drafted` either, so no arm read it and the brief omitted it.
+
+    Implements: SR-157, LLR-272"""
+    return is_drafted(row) or not (row.get("Status") or "").strip()
+
+
+def _spine_stamps(root, snapshot):
+    """`{tier: (short rev, date)}`: the commit that last wrote EACH spine
+    registry's own copy — a refresh copies only what its act authorises, so one
+    directory-wide stamp named one copy's commit for all three. Empty stamps
+    when the model compares against no record.
+
+    Implements: SR-178, LLR-273"""
+    return {
+        kind: baseline_snapshot.stamp(root, SPINE_FILES[ix][0])
+        if snapshot
+        else ("", "")
+        for kind, ix in _KIND_IX.items()
+    }
+
+
 def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
     """The STRUCTURED attestation model: one entry per SR owing a human act,
     with its chain rows and each row's changed cells.
@@ -3794,8 +3819,11 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
     pre-signing repo's): drift then answers False everywhere and the selector
     falls back to the `Drafted` arm alone.
 
-    Returns `[{id, title, kind, baseline, baseline_date, no_baseline_reason,
-    rows:[{kind, id, state, cells, approved, full, drafted}]}]` where `state` is
+    Returns `[{id, title, kind, baseline, baseline_date, baselines,
+    no_baseline_reason, rows:[{kind, id, state, cells, approved, full,
+    drafted}]}]` where `baselines` is `{tier: (short rev, date)}`, the commit
+    that last wrote EACH spine registry's copy (`baseline`/`baseline_date` are
+    the requirement registry's), `state` is
     `changed` | `added` | `removed` | `current` | `drafted` (the last: a
     `Drafted` row with no cell diff against the snapshot — it owes only because
     it was never approved, not because its text moved), `cells` is the
@@ -3805,9 +3833,10 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
     for the states that render whole rows, and `drafted` is whether THIS row
     (independent of `state`) is in the pre-approval `Drafted` state — the
     per-row "why" a renderer needs to say "Drafted, never approved" rather than
-    leave that reason implicit in `state` alone. `kind` answers for the whole
-    chain: `approve` if the SR or any chain row is `Drafted`, `reattest`
-    otherwise (drift only). Deterministic given the working tree and the
+    leave that reason implicit in `state` alone; a row with no `Status` cell
+    reads as owing its first approval the same way (`_owes_first`). `kind`
+    answers for the whole chain: `approve` if the SR or any chain row owes a
+    first approval, `reattest` otherwise (drift only). Deterministic given the working tree and the
     snapshot."""
     if snapshot is _UNSET:
         snapshot = baseline_snapshot.load_all(root)
@@ -3816,7 +3845,7 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
     chain_of = spine_chain
 
     def owes(sr):
-        if is_drafted(sr):
+        if _owes_first(sr):
             return True
         chain = chain_of(sr.get("SR-ID", ""), srs, llrs_by_sr, tcs_by_ref)
         # WIDENED: a `Drafted` LLR/TC owes a first approval in its own right,
@@ -3826,14 +3855,14 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
         # from, and one absent from the snapshot is unanchored, not drifted).
         # Without this arm the row is invisible to the brief a human approves
         # from (the OI-61-sitting finding).
-        if any(is_drafted(row) for _kind, _rid, row in chain):
+        if any(_owes_first(row) for _kind, _rid, row in chain):
             return True
         return sr_chain_drifts(sr.get("SR-ID", ""), chain, snapshot)
 
     pending_srs = sorted((r for r in srs if owes(r)), key=lambda r: r.get("SR-ID", ""))
     if not pending_srs:
         return []
-    stamp_rev, stamp_date = baseline_snapshot.stamp(root) if snapshot else ("", "")
+    stamps = _spine_stamps(root, snapshot)
 
     snap_rows = {
         kind: baseline_snapshot.rows_for(snapshot, *SPINE_FILES[ix])
@@ -3853,11 +3882,12 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
             # WIDENED: the pill answers for the whole chain, not the SR row
             # alone — see `_entry_kind`'s docstring for why.
             "kind": _entry_kind(
-                is_drafted(sr),
-                any(is_drafted(row) for _k, _i, row in current_chain),
+                _owes_first(sr),
+                any(_owes_first(row) for _k, _i, row in current_chain),
             ),
             "baseline": "",
-            "baseline_date": stamp_date,
+            "baseline_date": stamps["SR"][1],
+            "baselines": stamps,
             "no_baseline_reason": "",
             "rows": [],
         }
@@ -3884,19 +3914,19 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
                     "cells": [],
                     "approved": frozenset(),
                     "full": r,
-                    "drafted": is_drafted(r),
+                    "drafted": _owes_first(r),
                 }
                 for k, i, r in current_chain
             ]
             model.append(entry)
             continue
-        entry["baseline"] = stamp_rev
+        entry["baseline"] = stamps["SR"][0]
         base_chain = chain_of(sid, base_srs, base_llrs_by_sr, base_tcs_by_ref)
         base_by_id = {(k, i): r for k, i, r in base_chain}
         cur_by_id = {(k, i): r for k, i, r in current_chain}
         for kind, rid, row in current_chain:
             before = base_by_id.get((kind, rid))
-            drafted = is_drafted(row)
+            drafted = _owes_first(row)
             if before is None:
                 entry["rows"].append(
                     {
@@ -4064,7 +4094,11 @@ def approval_check(root, srs, llrs, tcs, out_path):
     model = reattest_model(root, srs, llrs, tcs)
     # An assumption owing an approval keeps the window open (SR-203), so a
     # batch holding only assumptions is freshness-checked like any other.
-    if not model and not assumptions_owing(root, *_assumption_rows(root)):
+    if (
+        not model
+        and not assumptions_owing(root, *_assumption_rows(root))
+        and not baseline_snapshot.needs_owing(root)
+    ):
         return 0, "no row owes an approval or a re-attest — the window is closed"
     try:
         with out_path.open("r", encoding="utf-8", newline="") as fh:
@@ -4173,7 +4207,6 @@ def offspine_census_rows(root, snapshot=_UNSET):
         snapshot = baseline_snapshot.load_all(root)
     if snapshot is None:
         return []
-    stamp_rev, _stamp_date = baseline_snapshot.stamp(root)
     rows = []
     for rel, id_cols in OFFSPINE_CENSUS_TIERS:
         changed, added, removed = _offspine_row_diff(root, rel, id_cols, snapshot)
@@ -4185,7 +4218,11 @@ def offspine_census_rows(root, snapshot=_UNSET):
                 "changed": changed,
                 "added": added,
                 "removed": removed,
-                "ruling": _offspine_ruling_pointer(root, rel, stamp_rev),
+                # Since THIS registry's copy was written, not the directory's
+                # newest write, which may be another registry's copy.
+                "ruling": _offspine_ruling_pointer(
+                    root, rel, baseline_snapshot.stamp(root, rel)[0]
+                ),
             }
         )
     return rows
@@ -4325,7 +4362,8 @@ def _entry_lines(entry, srs_by_id):
         # snapshot (it sat there byte-identical, never approved) still
         # renders — its own section, tagged with WHY, rather than being
         # dropped for lack of a diff.
-        suffix = ", Drafted — never approved" if row.get("drafted") else ""
+        first = "Drafted" if _cell(row["full"], "Status") else "no Status cell"
+        suffix = ", {} — never approved".format(first) if row.get("drafted") else ""
         if row["state"] == "added":
             out += [
                 "",
@@ -4337,7 +4375,7 @@ def _entry_lines(entry, srs_by_id):
         elif row["state"] == "drafted":
             out += [
                 "",
-                "### {} {} — Drafted, never approved".format(row["kind"], row["id"]),
+                "### {} {} — {}, never approved".format(row["kind"], row["id"], first),
                 "_No cell differs from the approved snapshot; this row owes"
                 " because its own `Status` has never been `Approved`._",
             ]
@@ -4411,20 +4449,22 @@ def _assumption_rows(root):
 
 def assumptions_owing(root, das, surs, snapshot=_UNSET):
     """`[(id, why, drifted cells)]` for each assumption and surrogate owing an
-    approval, assumptions first: a `Drafted` row, and one claiming approval
-    whose approved cells differ from its snapshot copy (`drifted_cells`)."""
+    approval, assumptions first: a `Drafted` row, one with no `Status` cell,
+    and one claiming approval whose approved cells differ from its snapshot
+    copy — `baseline_snapshot.owing_rows`, the one owing rule the need section
+    reads too."""
     if snapshot is _UNSET:
         snapshot = baseline_snapshot.load_all(root)
-    out = []
-    for id_col, rows in (("DA-ID", das), ("SUR-ID", surs)):
-        base = baseline_snapshot.rows_for(snapshot, ASSUMPTIONS_REL, id_col)
-        for row in rows:
-            moved = baseline_snapshot.drifted_cells(ASSUMPTIONS_REL, id_col, row, base)
-            if is_drafted(row) or moved:
-                why = "Drafted, never approved" if is_drafted(row) else "DRIFTED"
-                cells = [(name, b, a) for name, (b, a) in sorted(moved.items())]
-                out.append((_cell(row, id_col), why, cells))
-    return out
+    return [
+        (rid, why, cells)
+        for id_col, rows in (("DA-ID", das), ("SUR-ID", surs))
+        for rid, why, cells, _row in baseline_snapshot.owing_rows(
+            ASSUMPTIONS_REL,
+            id_col,
+            rows,
+            baseline_snapshot.rows_for(snapshot, ASSUMPTIONS_REL, id_col),
+        )
+    ]
 
 
 def _listed(label, items):
@@ -4562,6 +4602,63 @@ def _approval_body(scope, reserved, root, reg):
     return head + section
 
 
+def _baseline_lines(root):
+    """The brief's `_Baseline: ` lines: the record, then each registry's copy
+    with the commit that last wrote it (`registry_stamps`) — the provenance of
+    the text each section is measured against, since a refresh copies only
+    what its act authorises and the copies were written at different commits.
+    Derived from git, so every line carries the prefix the freshness check
+    drops (`_DERIVED_STAMP_PREFIXES`).
+
+    Implements: SR-178, LLR-273"""
+    stamps = baseline_snapshot.registry_stamps(root)
+    if not stamps:
+        return [
+            "_Baseline: `{}` — no snapshot exists yet, so every row below awaits"
+            " a FIRST approval and renders its current text in full._".format(
+                baseline_snapshot.SNAPSHOT_DIR
+            )
+        ]
+    return [
+        "_Baseline: `{}` — each registry's copy, named by the commit that last"
+        " wrote it:_".format(baseline_snapshot.SNAPSHOT_DIR),
+        "",
+    ] + [
+        "_Baseline: `{}` copied {} ({})._".format(rel, date, rev)
+        for rel, rev, date in stamps
+    ]
+
+
+def need_brief_lines(root):
+    """The brief's section for the needs file's two tiers: one block per need
+    or stakeholder owing an act (`baseline_snapshot.needs_owing`), a drifted
+    one with its moved cells before and after, the rest with their cells in
+    full. `[]` when none owes, so a brief with nothing here is unchanged.
+
+    Implements: SR-178, LLR-271"""
+    owing = baseline_snapshot.needs_owing(root)
+    if not owing:
+        return []
+    lines = [
+        "## Stakeholder needs and stakeholders owing an act",
+        "",
+        "_A drifted row's approved text moved from its `{}` copy: once its"
+        " meaning is ruled, re-anchor it with `intake.py snapshot --reattests"
+        " <ROW-ID>`; until then an act copying the needs registry is refused. A"
+        " row with no `Status` cell, or a `Drafted` one, owes its first"
+        " approval._".format(baseline_snapshot.SNAPSHOT_DIR),
+        "",
+    ]
+    for rid, why, cells, row in owing:
+        lines += ["### {} — {}".format(rid, why), ""]
+        if cells:
+            lines += _cell_diff_lines(cells, frozenset(c[0] for c in cells))
+        else:
+            lines += _full_row_bullets({"full": row})
+        lines.append("")
+    return lines
+
+
 def reattest_lines(root, srs, llrs, tcs):
     """Markdown for the re-attestation brief (`--approve modified`, WI-316): one
     section per SR owing a human act (grouped by SR for reading) with per-cell
@@ -4588,7 +4685,6 @@ def reattest_lines(root, srs, llrs, tcs):
     """
     model = reattest_model(root, srs, llrs, tcs)
     srs_by_id = {r.get("SR-ID"): r for r in srs if r.get("SR-ID")}
-    stamp_rev, stamp_date = baseline_snapshot.stamp(root)
     appr_rev, appr_date = baseline_snapshot.approval_stamp(root)
     lines = [
         "# Re-attestation brief — spine rows owing an approval",
@@ -4623,15 +4719,8 @@ def reattest_lines(root, srs, llrs, tcs):
         # registry. Both are EXCLUDED from `approval_check`'s comparison
         # (`_DERIVED_STAMP_PREFIXES`) — a brief that goes stale because its own
         # stamp moved is a guard that fires on every commit.
-        "_Baseline: `{}` — {}._".format(
-            baseline_snapshot.SNAPSHOT_DIR,
-            "copied {} ({}), the commit that last wrote this record".format(
-                stamp_date, stamp_rev
-            )
-            if stamp_rev
-            else "no snapshot exists yet, so every row below awaits a FIRST "
-            "approval and renders its current text in full",
-        ),
+    ]
+    lines += _baseline_lines(root) + [
         "",
         "_Approval provenance: {}._".format(
             "the last commit to move a `Status` cell in a snapshotted registry is"
@@ -4655,6 +4744,7 @@ def reattest_lines(root, srs, llrs, tcs):
     # arms for the census's reason: a batch holding only assumptions still has
     # something to sign while the spine window is closed.
     lines += assumption_brief_lines(root, srs, tcs)
+    lines += need_brief_lines(root)
     if not model:
         lines.append(
             "_No spine row differs from its `{}` copy, and no row awaits a first"
@@ -5194,7 +5284,7 @@ def load_registries(docs):
         # An unreadable needs file REFUSES the run, naming the file: answering
         # "no drafts" for it would read every need as approved.
         sn_draft = spine_carrier.draft_ids_or_refuse(sn_md, sn_text)
-        sn_meta = _sn_prose(sn_text)
+        sn_meta = _sn_prose(sn_text, sn_md.suffix)
         sn_integrity = sn_integrity_findings(sn_text)
         # The need tier's rows in the SAME `<TIER>-ID`/`Status` shape the CSV-era
         # tiers carry, so the ONE `ENUM_FIELDS` table can be read over SN too
@@ -5346,6 +5436,9 @@ def integrity_sweep(reg, raw):
     integrity += enum_integrity_findings("SN", reg.raw_sns)
     # ...and the stakeholder list, the needs file's other approvable tier.
     integrity += enum_integrity_findings("STK", reg.raw_stks)
+    # A spine row with NO Status cell (or, once phased, no Phase cell) is the
+    # shape the vocabulary check above cannot see: it judges present values.
+    integrity += _spine.missing_cell_findings(dict(raw, SN=reg.raw_sns))
     # The SN tier's duplicate protection (prose registry — see
     # sn_integrity_findings): integrity-class like a duplicated CSV id.
     integrity += reg.sn_integrity

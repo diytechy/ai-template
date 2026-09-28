@@ -574,9 +574,12 @@ def _registry_needs(path):
     # heading arm would have gone silently wrong rather than loudly — no
     # headings in a TOML file means no draft needs, which would ADD rows to a
     # floor that gates the README.
+    # The carrier comes from the FILE's suffix, never from sniffing its text: a
+    # TOML file declaring no need must not be re-read as markdown, and one that
+    # does not parse refuses the run naming the file.
     must_should = {
         n["id"]
-        for n in spine_carrier.needs_from_text(text)
+        for n in spine_carrier.needs_or_refuse(path, text)
         if not spine_carrier.is_draft_need(n)
         and not _is_sn_example(n["id"])
         and (n.get("priority") or "").strip().upper() in ("M", "S", "MUST", "SHOULD")

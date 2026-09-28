@@ -398,3 +398,69 @@ def test_draft_ids_refuse_a_toml_text_that_does_not_parse_and_an_unknown_carrier
         sc.draft_ids_from_text("SN-001\n", ".csv")
     with pytest.raises(ValueError, match="None"):
         sc.draft_ids_from_text("## Draft needs\nSN-001\n", None)
+
+
+# --- the needs readers take the carrier from the file too (TC-272) -------------
+# `needs_from_text` used to pick the carrier by sniffing: a TOML text that parsed
+# to no need table and never spelled `need.` was re-read as MARKDOWN, so a table
+# row sitting inside a TOML string (or any text that happened to look like one)
+# became a need the file never declared, and a TOML file that did not parse at
+# all was read as markdown instead of refused. Every caller holds the file it
+# read, so every caller now passes its carrier.
+
+_COMMENT_ONLY_TOML = "# Needs are written below once drafted, e.g. SN-005.\n"
+# A valid TOML needs file with no need table and no `need.` in it, whose one
+# stakeholder description carries a markdown table row: sniffed, it read as the
+# markdown carrier and yielded SN-005 as an approved Must need.
+_TABLE_IN_A_STRING = (
+    "[stakeholder.STK-01]\n"
+    'name = "Owner"\n'
+    'description = """\n'
+    "| SN-005 | a need nobody declared | nobody | M | later |\n"
+    '"""\n'
+)
+_UNPARSEABLE = '[need.SN-007]\nstatus = "Drafted"\nneed = "unterminated\n'
+
+
+def test_needs_from_text_takes_the_carrier_from_the_file_not_the_text():
+    """Under `.toml` a text yields only its need tables; under `.md` the tables
+    are read as they always were; an unparseable `.toml` and an unknown carrier
+    raise rather than being read by a guess.
+
+    The comment-only case passed before the fix too (it spells no table row, so
+    the markdown fallback found nothing); the table-in-a-string case is the one
+    the sniff misread."""
+    for text in (_COMMENT_ONLY_TOML, _TABLE_IN_A_STRING, ""):
+        assert sc.needs_from_text(text, ".toml") == [], text
+    assert [n["id"] for n in sc.needs_from_text(_TABLE_IN_A_STRING, ".md")] == [
+        "SN-005"
+    ]
+    with pytest.raises(ValueError, match=r"\.toml.*does not parse"):
+        sc.needs_from_text(_UNPARSEABLE, ".toml")
+    with pytest.raises(ValueError, match=r"'\.csv'"):
+        sc.needs_from_text("| SN-001 | x | y | M | z |\n", ".csv")
+
+
+def test_needs_or_refuse_names_the_file_it_cannot_read(tmp_path):
+    path = tmp_path / "stakeholder-needs.toml"
+    with pytest.raises(SystemExit, match="stakeholder-needs.toml.*does not parse"):
+        sc.needs_or_refuse(path, _UNPARSEABLE)
+    assert sc.needs_or_refuse(path, _TABLE_IN_A_STRING) == []
+
+
+def test_every_needs_text_caller_takes_the_carrier_from_the_file(tmp_path):
+    """The README floor (`check_docs`) and the approval view's need prose
+    (`trace._sn_prose`) read no need out of a TOML needs file that declares
+    none, and the README floor refuses an unparseable one by name. The
+    snapshot's history reader is driven over git in
+    `tests/test_snapshot_readers.py`."""
+    check_docs = load_script("check_docs")
+    trace = load_script("trace")
+    reg = tmp_path / "stakeholder-needs.toml"
+    reg.write_text(_TABLE_IN_A_STRING, encoding="utf-8")
+    _all_ids, must_should = check_docs._registry_needs(reg)
+    assert must_should == set()
+    assert trace._sn_prose(_TABLE_IN_A_STRING, ".toml") == {}
+    reg.write_text(_UNPARSEABLE, encoding="utf-8")
+    with pytest.raises(SystemExit, match="stakeholder-needs.toml"):
+        check_docs._registry_needs(reg)

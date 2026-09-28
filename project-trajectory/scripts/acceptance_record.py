@@ -84,6 +84,12 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     snapshot delta, the opposite pole from its readers' silent degrade, because
     a refusal is where the conservative direction belongs. All four share
     `_spine_row_sides`, so no reader can be the only one that sees a row.
+    `merge_approval_refusal(root, base, head, metas, adjudication)` is the
+    merge slot's one call: a lane's delta through `lane_approval_refusal`, an
+    adjudication's flips through its first-approval scope, and its
+    re-attestations — read from the act ledger entries the delta added — through
+    `reattest_scope_refusal`, which refuses by name every re-attested row
+    outside the `Adjudicates` scope of the amendment rows the lane claims.
 Contract IF-129: the ONE cell-comparison basis.
     `split_changed_cells(registry_path, id_col, before_row, live_row)` returns
     `{"approved": {cell: (before, after)}, "traced": {cell: (before, after)}}`
@@ -114,6 +120,7 @@ Contract IF-196: the held status, read from a delta. `staged_status_moves(root,
     side that does not parse is one move naming the registry.
 """
 
+import tomllib
 from pathlib import PurePosixPath
 
 try:
@@ -787,14 +794,105 @@ def adjudication_approval_refusal(scope, delta):
 
 
 def merge_approval_refusal(root, base, head, metas, adjudication):
-    """Apply one derived approval delta to its actor's authorization rule."""
+    """Apply one derived approval delta to its actor's authorization rule: an
+    adjudication's flips to its first-approval scope, and its re-attestations
+    to its amendment scope (`reattest_scope_refusal`)."""
     delta = approval_delta(root, base, head)
     if adjudication:
+        refusal = reattest_scope_refusal(root, base, head, metas, delta)
+        if refusal:
+            return refusal
         scope = first_approval_scope(metas)
         if scope is not None or delta[0]:
             return adjudication_approval_refusal(scope or frozenset(), delta)
         return delta[2]
     return lane_approval_refusal(root, base, head, delta)
+
+
+def amendment_scope(metas):
+    """The rows the claimed AMENDMENT adjudications ruled: the union of their
+    `Adjudicates` cells, empty when none is claimed. A first-approval row's
+    scope is its flips, not a re-attestation's.
+
+    Implements: SR-178, LLR-278"""
+    return frozenset(
+        str(rid).strip()
+        for _name, meta in metas
+        if meta.get("brief") == "amendment"
+        and isinstance(meta.get("adjudicates"), list)
+        for rid in meta["adjudicates"]
+        if str(rid).strip()
+    )
+
+
+def _ledger_acts(root, rev):
+    """The act ledger's `[[act]]` entries at `rev`, `[]` where it is absent, or
+    None when it does not parse (IF-220 is the ledger's shape)."""
+    text = _git(root, ["show", "{}:{}/{}".format(rev, SNAPSHOT_DIR, SNAPSHOT_ACTS)])
+    if text is None:
+        return []
+    try:
+        acts = tomllib.loads(text).get("act", [])
+    except tomllib.TOMLDecodeError:
+        return None
+    return acts if isinstance(acts, list) else None
+
+
+def reattested_between(root, base, head):
+    """`(ids, refusal)`: the row ids the act-ledger entries `head` added over
+    `base` re-attested, or a refusal naming the ledger when either side does
+    not parse. An entry is added when its `seq` is not in `base`'s ledger.
+
+    Implements: SR-178, LLR-278"""
+    before, after = _ledger_acts(root, base), _ledger_acts(root, head)
+    if before is None or after is None:
+        return frozenset(), (
+            "the act ledger {}/{} does not parse at {}, so which rows this "
+            "merge re-attests is unknowable; nothing was merged".format(
+                SNAPSHOT_DIR, SNAPSHOT_ACTS, base if before is None else head
+            )
+        )
+    seen = {act.get("seq") for act in before if isinstance(act, dict)}
+    return frozenset(
+        str(rid)
+        for act in after
+        if isinstance(act, dict) and act.get("seq") not in seen
+        for rid in act.get("reattested") or []
+    ), None
+
+
+def reattest_scope_refusal(root, base, head, metas, delta=None):
+    """Refuse an adjudication's act re-attesting a row outside the `Adjudicates`
+    scope of the amendment rows it claims — by name — or None.
+
+    A re-attestation moves no cell, so the flips the first-approval arm
+    judges cannot show it; the act ledger names the rows each act re-attested,
+    and the entries the merge adds are the acts this branch took. An amendment
+    row's scope is the rows its verdict ruled, so re-anchoring any other row
+    re-blesses text nobody judged. A lane claiming no amendment row has no
+    re-attestation scope at all. Only read when the delta wrote the ledger.
+
+    Implements: SR-178, LLR-278"""
+    snapshot_files = (delta or approval_delta(root, base, head))[1]
+    if not any(line.endswith("/" + SNAPSHOT_ACTS) for line in snapshot_files):
+        return None
+    ids, refusal = reattested_between(root, base, head)
+    if refusal:
+        return refusal
+    scope = amendment_scope(metas)
+    outside = sorted(ids - scope)
+    if not outside:
+        return None
+    return (
+        "the adjudication's act re-attests rows OUTSIDE the `Adjudicates` scope "
+        "of its amendment row(s) ({}); nothing was merged:\n{}\nRemedy: a "
+        "re-attestation re-anchors text as judged, so it names only rows the "
+        "amendment ruled. Re-take the snapshot with `--reattests` naming those "
+        "rows alone; a drifted row outside them is another act's to judge.".format(
+            ";".join(sorted(scope)) or "none claimed",
+            "\n".join("  {} re-attested OUTSIDE the scope".format(r) for r in outside),
+        )
+    )
 
 
 def lane_approval_refusal(root, base, head, delta=None):

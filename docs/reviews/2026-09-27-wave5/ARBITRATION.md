@@ -245,3 +245,26 @@ such.
     at 5c8706da: one minor). Each is a phrase and neither touches behaviour,
     so the coordinator corrects both in the landing commit instead of spending
     a builder round and a review on a sentence.
+
+24. **WI-651, the tail of ruling 17 — GRANT extended.** Ruling 17 granted
+    SR-178's requirement cell only. Its rationale and acceptance criteria
+    still say needs carry "no Status cell", and LLR-173's detail still says
+    "seven registries" and "advisory today". Both are false once the need
+    tiers are compared. **Ruling:** the grant extends to those cells, in
+    place, status left Approved. The two stale `docs/if-tc-coverage-allow`
+    entries (IF-112, IF-126, now cited) are pruned together with the seed pin
+    in `tests/test_trajectory_arch.py` that holds them, in one commit.
+
+25. **WI-651, confirmation round (b2ce12f2) — BUILDER on the empty-write
+    arm, SOL on the two cells.** Sol reads `refresh_refusal`'s whole-ledger
+    arm for an act that copies nothing as exceeding SR-207, now that it also
+    sees the need tiers. That arm pre-dates this lane (0ded5c77). Its
+    docstring calls it deliberately unscoped: a no-op exiting 0 over a
+    rewritten approved row "is the laundering scenario answered with
+    silence". It implements approved LLR-245. WI-651 widened the tiers it
+    walks, which OI-91's ruling asks for; it did not add the arm. Changing a
+    deliberate, approved design is not this lane's scope, so the arm stands.
+    If no-op refreshes should pass while a need drifts, that is the owner's
+    to ask for as its own item. **SOL** on LLR-158 (`APPROVAL_ACT_CSVS` also
+    holds the two assumption tiers) and TC-167 (IF-126 is now cited by
+    TC-271): both amended in place under the original grant.

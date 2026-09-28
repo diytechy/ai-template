@@ -83,9 +83,19 @@ def test_the_dependency_surface_is_the_argument_for_the_split():
     narrow is found, not carved. If a future edit widens it, the split's premise
     has changed and that should be argued, not absorbed.
     """
-    assert _imported_roots() == {"spine_carrier", "kitlib", "sys", "pathlib"}, sorted(
-        _imported_roots()
-    )
+    # `tomllib` joined with the merge's re-attestation scope check (LLR-273): the
+    # act ledger (IF-220, whose declared consumer this module is) is the one
+    # record of which rows an act re-attested, and reading it at two revisions
+    # is a TOML parse. Its owner's parser cannot be imported here — the owner
+    # imports the checker that imports this module — so the widening is one
+    # stdlib parser, not a sibling.
+    assert _imported_roots() == {
+        "spine_carrier",
+        "kitlib",
+        "sys",
+        "pathlib",
+        "tomllib",
+    }, sorted(_imported_roots())
     # `sys`/`pathlib` are the sanctioned-sibling fallback only — they must not
     # be reachable as module attributes for a rule to use.
     assert not hasattr(acceptance_record, "csv")

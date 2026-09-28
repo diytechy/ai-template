@@ -559,12 +559,28 @@ def _amendment_baseline(root, tiers):
     """`{baseline}`: the snapshot as the accepted anchor, with the commit that
     last wrote the copy of EACH registry the listing shows — the provenance of
     the text actually under judgement, in spine order."""
-    stamps = []
-    for tier, rel in _REGISTRY_OF.items():
-        if tier not in tiers:
-            continue
+    rels = [rel for tier, rel in _REGISTRY_OF.items() if tier in tiers]
+    return (
+        "{} — the approved text as a human last blessed it, each registry's copy "
+        "as last written:\n{}\nThis is the text BEFORE the change below; it is "
+        "not the change under judgement, and it could only have been written by "
+        "copying a live registry in an approval commit.".format(
+            baseline_snapshot.SNAPSHOT_DIR, _copy_stamp_lines(root, rels)
+        )
+    )
+
+
+def _copy_stamp_lines(root, rels):
+    """One `  - <registry>: copied <date> (commit <rev>)` line per registry in
+    `rels`, each naming the commit that last wrote THAT registry's copy — a
+    refresh copies only what its act authorises, so the directory's newest
+    write is one copy's provenance, not every copy's.
+
+    Implements: SR-146, LLR-273"""
+    lines = []
+    for rel in rels:
         rev, date = baseline_snapshot.stamp(root, rel)
-        stamps.append(
+        lines.append(
             "  - {}: {}".format(
                 rel,
                 "copied {} (commit {})".format(date, rev)
@@ -572,14 +588,7 @@ def _amendment_baseline(root, tiers):
                 else "not yet committed, so no copy stamp",
             )
         )
-    return (
-        "{} — the approved text as a human last blessed it, each registry's copy "
-        "as last written:\n{}\nThis is the text BEFORE the change below; it is "
-        "not the change under judgement, and it could only have been written by "
-        "copying a live registry in an approval commit.".format(
-            baseline_snapshot.SNAPSHOT_DIR, "\n".join(stamps)
-        )
-    )
+    return "\n".join(lines)
 
 
 # The spine tier a chain row's `kind` names -> the registry it lives in. The
@@ -851,17 +860,19 @@ def first_approval_values(root, row):
             )
         )
     wi_id = (row.get("WI-ID") or "").strip()
-    stamp_rev, stamp_date = baseline_snapshot.stamp(root)
+    # Each registry the act would copy, with the commit that last wrote ITS
+    # copy rather than the directory's newest write (another registry's copy).
     baseline = (
-        "{}{}. Approving these rows moves it for the registries you flip and "
-        "for no others (WI-571), so an off-spine census computed against it "
-        "survives your act.".format(
+        "{}, each registry this act copies as last written:\n{}\nApproving "
+        "these rows moves it for the registries you flip and for no others "
+        "(WI-571), so an off-spine census computed against it survives your "
+        "act.".format(
             baseline_snapshot.SNAPSHOT_DIR,
-            ", copied {} (commit {})".format(stamp_date, stamp_rev)
-            if stamp_rev
-            else " does not exist yet — your act is this repo's FIRST signing, "
-            "and `--seed` is what creates it",
+            _copy_stamp_lines(root, sorted(registries)),
         )
+        if baseline_snapshot.exists(root)
+        else "{} does not exist yet — your act is this repo's FIRST signing, "
+        "and `--seed` is what creates it.".format(baseline_snapshot.SNAPSHOT_DIR)
     )
     return {
         "chain": "\n".join(lines),

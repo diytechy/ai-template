@@ -170,7 +170,7 @@ project-trajectory/scripts/trace.py	integrity_findings	17	17
 project-trajectory/scripts/trace.py	interface_findings	30	58
 project-trajectory/scripts/trace.py	main	20	196	RE-STAMPED DOWN 23 -> 20 (WI-657): WI-633 (6ee918f5) routed two approval-scope branches to `_approval_body`; never recorded.
 project-trajectory/scripts/trace.py	mermaid_graph	31	45
-project-trajectory/scripts/trace.py	reattest_model	35	118
+project-trajectory/scripts/trace.py	reattest_model	34	119
 project-trajectory/scripts/trace.py	render_console	35	136
 project-trajectory/scripts/trace.py	render_report	66	368	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 65 -> 66 with WI-637 (1be5ca08): a hat finding is counted with no roster (`hat_names or hat_dangling`), so a strict failure never stands without its summary line.
 project-trajectory/scripts/trace.py	schema_findings	29	28	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 25 -> 29 with WI-631 (8d25242f): a test case's Verifies is required unless it evidences assumptions instead (LLR-229), a nested conditional arm. Repair is owed on trunk.

@@ -1,0 +1,9 @@
+<!-- Codex Sol confirmation of WI-651's follow-ups, ba72cad8..b2ce12f2; rulings 24-25. Links re-rooted from the removed worktree. -->
+
+b2ce12f2 NOT YET SOUND
+
+- **major** — The empty-write arm exceeds SR-207 and ruling 17. `refresh_refusal` deliberately judges the entire ledger when the act copies nothing ([baseline_snapshot.py](../../../project-trajectory/scripts/baseline_snapshot.py), [baseline_snapshot.py](../../../project-trajectory/scripts/baseline_snapshot.py)), but SR-207 governs drift in a registry the approval act refreshes ([system-requirements.toml](../../../docs/requirements/system-requirements.toml)). A no-op refresh cannot absorb or bless the drift; the test itself acknowledges that the drift survives ([test_baseline_snapshot.py](../../../tests/test_baseline_snapshot.py)). Adding needs to `SNAPSHOT_TIERS` now blocks such unrelated no-op calls on need drift, beyond OI-91’s detector and bullet 2’s “act copying the needs registry.” Fix: an empty write scope should return without refusal; remove/update the empty-scope test and prose. If a global drift-checking command is wanted, specify it separately.
+
+- **major** — Two approved cells remain false. LLR-158 says `APPROVAL_ACT_CSVS` is the three row registries plus stakeholder needs ([low-level-requirements.toml](../../../docs/requirements/low-level-requirements.toml)), but the code also includes both assumption tiers ([acceptance_record.py](../../../project-trajectory/scripts/acceptance_record.py)). TC-167 says IF-126 is uncited ([test-cases.toml](../../../docs/test/test-cases.toml)), while TC-271 now cites it ([test-cases.toml](../../../docs/test/test-cases.toml)). Fix: make LLR-158 name the assumption tiers and update TC-167’s expected text to record IF-126’s TC-271 coverage.
+
+Pytest could not start because the read-only environment provided no writable temporary directory; AST/TOML parsing and `git diff --check` passed.

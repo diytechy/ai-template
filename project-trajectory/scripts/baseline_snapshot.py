@@ -141,9 +141,11 @@ Contract IF-125: the drift read — `load_all`, `rows_for`, `is_drifted` and
     harder unanchored finding, owned elsewhere. With no snapshot `load_all`
     returns None and `rows_for` collapses it to `{}`, so a reader reports
     nothing approved rather than everything drifted.
-Contract IF-126: the stamp read — `stamp(root)` and `SNAPSHOT_DIR` — so a
-    generated surface can name WHICH baseline the reader is being shown and
-    where it lives. Advisory and read-only in both directions: the stamp is
+Contract IF-126: the stamp read — `registry_stamps(root)` and `SNAPSHOT_DIR`
+    — so a generated surface can name WHICH baseline the reader is being shown
+    and where it lives: each registry the record holds a committed copy of,
+    with the commit that last wrote THAT copy, since a refresh copies only what
+    its act authorises and the copies were written at different commits. Advisory and read-only in both directions: the stamp is
     derived from git and degrades to empty strings off a checkout, and this side
     never calls `copy_live`, because a generator that refreshed the baseline
     would erase the very lag it exists to report.
@@ -167,7 +169,8 @@ Contract IF-220: the act ledger, `ACTS` under `SNAPSHOT_DIR`. A TOML file of
     integer one above the highest already present, so identical acts stay
     distinct; `date`, the ISO day; `approved`, the sorted ids of the compared
     tiers' rows the act carried into approval (a live row claiming approval
-    whose prior recorded copy did not, or that the record did not hold); and
+    whose prior recorded copy did not, or that the record did not hold), the
+    needs file's need and stakeholder tiers among them (`NEED_TIERS`); and
     `reattested`, the sorted ids its `reattests` named. FAILS CLOSED:
     `acts_problems(text)` lists every fault (text that does not parse, a field
     missing or mistyped, an id not of the kit's syntax, `seq` values not
@@ -205,7 +208,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     import spine_carrier
 
 from kitlib.observation import OBSERVATIONS_DIR
-from kitlib.spine import toml_fields
+from kitlib.spine import is_drafted, toml_fields
 
 # The snapshot's root, repo-relative. One generation only, never migrated in
 # place — git holds the history, and a snapshot edited forward would be a second
@@ -297,11 +300,31 @@ FIRST_COPY_AT_APPROVAL = ("docs/requirements/assumptions.toml",)
 # loop below never has to special-case a path.
 NEEDS_REL = SNAPSHOTTED[0]
 
-# `(registry path, id column)` for every ROW-KEYED tier. Ten tiers over six
-# files: `external.toml` carries entities, boundary crossings and relationships
-# in one file because they are one statement, and each is its own tier with its
-# own id column (`spine_carrier.OFFSPINE_TABLE`); `assumptions.toml` carries the
-# assumptions and the surrogates the same way.
+# THE NEEDS FILE'S TWO TIERS: its needs and the stakeholder list whose rows
+# those needs cite. A need's text moving away from the copy that recorded its
+# acceptance is the drift SR-178 names "stakeholder needs included", and a
+# stakeholder is approved content in the same file. Both carry `status` in the
+# spine's words, so both are compared tiers like every other (`SNAPSHOT_TIERS`
+# below): drift is asked of them, the refresh refusal holds an act carrying a
+# drifted one, `--reattests SN-###` or `STK-##` re-anchors one, the act ledger
+# names them, and the unanchored rule reports an approval with no copy behind
+# it. Named on its own for the readers that ask about the needs file alone (the
+# approval brief's need section, `needs_owing`).
+#
+# Read through `_tier_rows`, the one carrier-aware need-tier loader, so a needs
+# file still on the legacy markdown carrier is compared like a TOML one.
+# Implements: SR-178, SR-207, LLR-271, LLR-245
+NEED_TIERS = (
+    ("docs/requirements/stakeholder-needs.toml", "SN-ID"),
+    ("docs/requirements/stakeholder-needs.toml", "STK-ID"),
+)
+
+# `(registry path, id column)` for every ROW-KEYED tier. Twelve tiers over
+# seven files: `external.toml` carries entities, boundary crossings and
+# relationships in one file because they are one statement, and each is its own
+# tier with its own id column (`spine_carrier.OFFSPINE_TABLE`);
+# `assumptions.toml` carries the assumptions and the surrogates the same way,
+# and the needs file its needs and stakeholders (`NEED_TIERS`).
 # Implements: SR-191, SR-192, LLR-220
 SNAPSHOT_TIERS = (
     ("docs/requirements/system-requirements.toml", "SR-ID"),
@@ -314,7 +337,8 @@ SNAPSHOT_TIERS = (
     ("docs/requirements/external.toml", "REL-ID"),
     ("docs/requirements/assumptions.toml", "DA-ID"),
     ("docs/requirements/assumptions.toml", "SUR-ID"),
-)
+) + NEED_TIERS
+
 
 # The Status value that CLAIMS approval-or-above. ONE MEMBER since D-9 step 5
 # (it held `verified` and `planned` before the fold). Lowercase, matching every
@@ -430,8 +454,9 @@ def parse_reattests(spec):
     """A `--reattests` CLI value into the frozenset of row ids it names.
 
     Comma-joined ids; `None` or empty is the empty set. Each id must name a row
-    of a tier compared with its recorded copy — a need, a work item or a
-    `;`-joined pair RAISES rather than passing a re-attestation that matched
+    of a tier compared with its recorded copy (a need or a stakeholder among
+    them) — a work item or a `;`-joined pair RAISES rather than passing a
+    re-attestation that matched
     nothing while reading as though it had (`resolve_registry`'s reason, one
     flag over).
 
@@ -561,6 +586,23 @@ def stamp(root, registry=None):
     return (parts[0], parts[1]) if len(parts) >= 2 else ("", "")
 
 
+def registry_stamps(root, rels=SNAPSHOTTED):
+    """`[(registry, short rev, date)]`: `stamp` asked once per registry the
+    record holds a copy of, in `rels` order — the provenance an owner's surface
+    names beside the rows it shows. A refresh copies only what its act
+    authorises, so the copies were written at different commits, and one
+    directory-wide stamp named one copy's commit for all of them. A registry
+    with no committed copy is left out rather than given another's commit.
+
+    Implements: SR-178, LLR-273"""
+    out = []
+    for rel in rels:
+        rev, date = stamp(root, rel)
+        if rev:
+            out.append((rel, rev, date))
+    return out
+
+
 def approval_stamp(root):
     """`(short rev, date)` of the last commit that MOVED A STATUS CELL in a
     snapshotted registry, or `("", "")` when git cannot say.
@@ -644,18 +686,11 @@ def _claims_approval(row):
     this reads through `spine_rules` rather than restating, so the re-spelling
     needed no edit here at all.
 
-    **SN IS ABSENT BY DECISION, NOT BY OMISSION** (design §B7). The reason
-    CHANGED on 2026-08-17 and the distinction now matters: needs used to carry no
-    maturity key at all, so there was literally no cell to read. They now carry
-    `status`, in the same words as the spine (the registry status unification).
-    The omission is therefore a LIVE CHOICE rather than a vacuum — SN drift is
-    still not status-gated, and wiring it is deliberately parked as its own pass
-    (that plan's §7: a `status` nobody checks is the same defect with a better
-    name, and sizing the wiring is separate work). What holds the omission in
-    place mechanically is `SNAPSHOT_TIERS`, which does not list SN, so no SN row
-    reaches this predicate at all. The tier is still COPIED —
-    `stakeholder-needs.toml` is in `SNAPSHOTTED`, so the record of what was
-    blessed is complete."""
+    **THE NEEDS FILE'S TIERS REACH IT LIKE EVERY OTHER.** Needs used to carry
+    no maturity key, so there was no cell to read; they carry `status` now, in
+    the spine's words, and so does the stakeholder list beside them, so
+    `SNAPSHOT_TIERS` lists both (`NEED_TIERS`) and every compared-tier reader
+    asks this predicate of them."""
     return (
         (row.get("Status") or "").strip().lower() in _APPROVAL_CLAIMED
         or (row.get("Status") or "").strip().lower() in _APPROVAL_CELL_CLAIMED
@@ -697,22 +732,20 @@ def load_all(root):
     history, a snapshot file is on disk and a person can fix it. The
     advisory-print-and-fall-back degrade that a GIT-HISTORY reader is right to
     use (`check_trajectory._spine_rows_at`, reading a revision nobody can now
-    edit) is wrong here."""
+    edit) is wrong here.
+
+    Implements: SR-178, LLR-271"""
     base = snapshot_root(root)
     if not base.is_dir():
         return None
     out = {}
     for rel, id_col in SNAPSHOT_TIERS:
-        rows = spine_carrier.load(base / rel, id_col, keep_examples=False)
+        rows = _tier_rows(base, rel, id_col)
         out[(spine_carrier.stem(rel), id_col)] = {
             str(r.get(id_col) or "").strip(): r
             for r in rows
             if str(r.get(id_col) or "").strip()
         }
-    needs = spine_carrier.load_needs(base / NEEDS_REL)
-    out[(spine_carrier.stem(NEEDS_REL), "SN-ID")] = {
-        n["id"]: n for n in needs if n.get("id") and not str(n["id"]).endswith("-000")
-    }
     return out
 
 
@@ -726,6 +759,30 @@ def rows_for(snapshot, rel, id_col):
     if snapshot is None:
         return {}
     return snapshot.get((spine_carrier.stem(rel), id_col), {})
+
+
+def _copy_file(base, rel):
+    """Registry `rel`'s live file under `base` — a repository root, or the
+    snapshot root for its copy — or None. The needs registry may sit under its
+    legacy markdown carrier, which is that registry all the same, not a hole.
+
+    Implements: SR-147, LLR-277"""
+    suffixes = (
+        spine_carrier.NEED_CARRIERS if rel == NEEDS_REL else spine_carrier.CARRIERS
+    )
+    return spine_carrier.resolve(Path(base) / rel, suffixes)
+
+
+def _tier_rows(base, rel, id_col):
+    """One compared tier's rows under `base` (a repository root or the snapshot
+    root), example rows dropped: the needs file's tiers through the one
+    carrier-aware need-tier loader, so a markdown needs file is compared on
+    both sides like a TOML one, and every other tier through `load`.
+
+    Implements: SR-147, LLR-277"""
+    if (rel, id_col) in NEED_TIERS:
+        return spine_carrier.load_need_tier(Path(base) / rel, id_col, False)
+    return spine_carrier.load(Path(base) / rel, id_col, keep_examples=False)
 
 
 # The one "cell" a REMOVED row is absorbed under (`refresh_ledger`). Worded as
@@ -792,7 +849,7 @@ def refresh_ledger(root, snapshot=None):
     for rel, id_col in SNAPSHOT_TIERS:
         entry = ledger.setdefault(rel, {"absorbed": {}, "flips": []})
         before_rows = rows_for(snapshot, rel, id_col)
-        live_rows = spine_carrier.load(Path(root) / rel, id_col, keep_examples=False)
+        live_rows = _tier_rows(root, rel, id_col)
         entry["absorbed"].update(_removed_rows(before_rows, live_rows, id_col))
         for row in live_rows:
             rid = str(row.get(id_col) or "").strip()
@@ -856,8 +913,9 @@ def refresh_refusal(root, approves=None, snapshot=None, *, seed=False, reattests
     flipping it, so the row-level rule costs no flip. And it holds for any
     number of tiers in one file: `external.toml`'s three tiers share one ledger
     entry, so one tier's approval can no longer carry another tier's drift, and
-    a tier added to `SNAPSHOT_TIERS` is covered with no edit here. Needs stay
-    outside: `SNAPSHOT_TIERS` does not list them, so no need is ever absorbed.
+    a tier added to `SNAPSHOT_TIERS` is covered with no edit here — the needs
+    file's needs and stakeholders included (`NEED_TIERS`), so an act copying the
+    needs registry is refused while an approved need's text moved unread.
     A recorded approved row deleted from live is absorbed as REMOVED
     (`refresh_ledger`) and cleared only by naming it in `--reattests`. Whether
     each re-attested id names a row at all is `_refuse_reattests`'s question,
@@ -1079,10 +1137,10 @@ def _authorised_registries(root, approves, snapshot, reattests=frozenset()):
     out = set(approves or ()) | {_reattested_registry(r) for r in reattests}
     out.discard(None)
     for rel, id_col in SNAPSHOT_TIERS:
-        if rel in out or spine_carrier.resolve(Path(root) / rel) is None:
+        if rel in out or _copy_file(Path(root), rel) is None:
             continue
         before_rows = rows_for(snapshot, rel, id_col)
-        for row in spine_carrier.load(Path(root) / rel, id_col, keep_examples=False):
+        for row in _tier_rows(root, rel, id_col):
             rid = str(row.get(id_col) or "").strip()
             if not rid:
                 continue
@@ -1118,7 +1176,7 @@ def _refuse_reattests(root, reattests, snapshot, first_signing):
         return
     known = set()
     for rel, id_col in SNAPSHOT_TIERS:
-        live = spine_carrier.load(Path(root) / rel, id_col, keep_examples=False)
+        live = _tier_rows(root, rel, id_col)
         known |= {str(row.get(id_col) or "").strip() for row in live}
         known |= set(rows_for(snapshot, rel, id_col))
     unknown = sorted(reattests - known)
@@ -1309,13 +1367,17 @@ def _prior_record(root):
 def _approved_by_act(root, copied_rels, prior):
     """The ids of the compared tiers' rows, in the registries this act copied,
     that it carried into approval: live rows claiming approval whose prior
-    recorded copy did not, or that the prior record did not hold."""
+    recorded copy did not, or that the prior record did not hold. The needs
+    file's two tiers are compared tiers here, so an act approving a need or a
+    stakeholder names it in a typed field and not only in the prose stamp.
+
+    Implements: SR-178, LLR-271"""
     out = set()
     for rel, id_col in SNAPSHOT_TIERS:
         if rel not in copied_rels:
             continue
         before = rows_for(prior, rel, id_col)
-        for row in spine_carrier.load(Path(root) / rel, id_col, keep_examples=False):
+        for row in _tier_rows(root, rel, id_col):
             rid = str(row.get(id_col) or "").strip()
             if (
                 rid
@@ -1534,6 +1596,54 @@ def drifted_cells(rel, id_col, live_row, snapshot_rows):
     )["approved"]
 
 
+def owing_rows(rel, id_col, rows, snapshot_rows):
+    """`[(id, why, cells, row)]` for each row of one tier owing an act: a
+    `Drafted` row, a row with no `Status` cell at all, and a row claiming
+    approval whose approved cells differ from its recorded copy
+    (`drifted_cells`, whose `(name, before, after)` triples `cells` carries).
+
+    THE ROW WITH NO STATUS OWES TOO. It claims no approval, so no drift arm can
+    fire on it, and it is not `Drafted`, so the first-approval arm missed it: a
+    row authored without the cell reached no surface a signer reads. Its
+    missing cell is also an integrity finding; this is the half that keeps the
+    brief from omitting it.
+
+    Pure: the caller loads the live rows and the recorded ones.
+
+    Implements: SR-178, SR-157, LLR-271, LLR-272"""
+    out = []
+    for row in rows:
+        rid = str(row.get(id_col) or "").strip()
+        if not rid:
+            continue
+        moved = drifted_cells(rel, id_col, row, snapshot_rows)
+        if is_drafted(row):
+            why = "Drafted, never approved"
+        elif not (row.get("Status") or "").strip():
+            why = "no Status cell, never approved"
+        elif moved:
+            why = "DRIFTED"
+        else:
+            continue
+        cells = [(name, b, a) for name, (b, a) in sorted(moved.items())]
+        out.append((rid, why, cells, row))
+    return out
+
+
+def needs_owing(root, snapshot=None):
+    """`owing_rows` over the needs file's two tiers (`NEED_TIERS`), needs
+    first: every need or stakeholder owing an act against the recorded copy.
+
+    Implements: SR-178, LLR-271"""
+    if snapshot is None:
+        snapshot = load_all(root)
+    out = []
+    for rel, id_col in NEED_TIERS:
+        live = _tier_rows(root, rel, id_col)
+        out += owing_rows(rel, id_col, live, rows_for(snapshot, rel, id_col))
+    return out
+
+
 def _missing_registry_findings(rel, live):
     """The finding for a registry the record lacks, as a list.
 
@@ -1606,8 +1716,8 @@ def unanchored_findings(root, snapshot=None):
         return []  # scaffolded-but-unsigned: the pre-signing state, honestly
     out = []
     for rel, id_col in SNAPSHOT_TIERS:
-        live = spine_carrier.load(Path(root) / rel, id_col, keep_examples=False)
-        if spine_carrier.resolve(base / rel) is None:
+        live = _tier_rows(root, rel, id_col)
+        if _copy_file(base, rel) is None:
             out += _missing_registry_findings(rel, live)
             continue
         before = rows_for(snapshot, rel, id_col)
@@ -1788,11 +1898,16 @@ def risk_acceptance_act(root, da_id):
 
 
 def _needs_at(root, sha):
-    """`{need id: need}` as the needs registry stood at `sha`, either carrier."""
+    """`{need id: need}` as the needs registry stood at `sha`, either carrier,
+    read under the carrier of the file that commit held and refusing, naming the
+    commit and the file, a `.toml` one that does not parse: an unreadable file
+    must not read as a need set a risk was accepted against.
+
+    Implements: SR-147, LLR-277"""
     for cand in spine_carrier.carriers(NEEDS_REL, spine_carrier.NEED_CARRIERS):
         text = _git(root, ["show", "{}:{}".format(sha, cand)])
         if text is not None:
-            needs = spine_carrier.needs_from_text(text)
+            needs = spine_carrier.needs_or_refuse("{}:{}".format(sha, cand), text)
             return {str(n.get("id") or ""): n for n in needs if n.get("id")}
     return {}
 

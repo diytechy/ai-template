@@ -2,7 +2,7 @@
 id = "WI-651"
 title = "Snapshot and carrier: the need and stakeholder tiers in the drift comparison, each registry's own anchor copy on the owner's surfaces, an amendment act held to its scope, and the needs carrier chosen from the file"
 workstream = "scripts"
-specref = "docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md"
+specref = ""
 sr_refs = ["SR-178"]
 needs = ["WI-633", "WI-638", "WI-646", "WI-660"]
 buildtier = "medium"
@@ -10,6 +10,47 @@ safety_class = "ordinary"
 priority = 4
 supersedes = "WI-666;WI-671"
 +++
+
+## Deliverable
+
+Built by one builder over five commits and four Codex Sol rounds (wave-5
+arbitration rulings 17, 19 to 22, 24 and 25), SOUND at f88e92e6.
+
+- **WI-671, the needs carrier.** Every caller of `needs_from_text` passes
+  the carrier. An unparseable `.toml` needs file refuses by name.
+  `spine_carrier.load_need_tier` is the one need-tier loader for both need
+  carriers, Markdown included.
+- **WI-666, each registry's own copy, and the re-attest scope.** The owner's
+  brief and the open-items view name, per registry, the commit that last
+  wrote its copy. At merge, `acceptance_record.reattest_scope_refusal` refuses
+  by name a re-attested row outside the claimed amendment rows'
+  `Adjudicates`. A batch-B-shaped mixed act (one row approved, another
+  re-attested, each claimed by its own row) merges.
+- **WI-651's own scope: the need tier is funded (OI-91 (a)).** The needs
+  file's needs and stakeholders are in `SNAPSHOT_TIERS`. A drifted approved
+  need or stakeholder is shown with its cells before and after in the
+  brief's owner section, never in the adjudicator block. An act copying the
+  needs registry is refused until `--reattests SN-###` (or `STK-##`) names it,
+  and the act ledger records need and stakeholder approvals.
+  `unanchored_findings` covers the need tiers.
+- **The fold: a missing cell is an integrity finding.**
+  `kitlib.spine.missing_cell_findings` reports a spine row with no `status`
+  (SN, SR, LLR, TC) or no `phase` once phased (SR, LLR, TC), naming the row
+  and cell, and the approval brief lists a status-less row. The tests
+  would have caught TC-256 and TC-258 as they stood before 1ea526ac.
+- **Amended in place, status left Approved:** SR-178 (requirement,
+  rationale, acceptance: needs no longer "carry no status cell"), LLR-245,
+  TC-240, LLR-173, TC-167 and LLR-158. **New Drafted rows:** LLR-271 to
+  LLR-273, LLR-277, LLR-278, TC-269 to TC-272 and TC-278. IF-112 and IF-126
+  are cited now and pruned from `docs/if-tc-coverage-allow`, with its seed
+  pin.
+
+The whole-ledger arm of `refresh_refusal`, where an act that copies nothing
+is still refused over drift, pre-dates this row and is deliberate under
+LLR-245. It now also sees the need tiers (ruling 25). For the owner: with
+this landed, WI-616's amendments to SN-003, SN-008, SN-009 and SN-025
+surface on your brief, and any act copying the needs registry is refused
+until you re-attest them.
 
 ## Context
 

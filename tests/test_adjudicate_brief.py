@@ -1113,6 +1113,35 @@ def test_the_first_approval_brief_carries_the_WHOLE_CHAIN(tmp_path):
     assert "one reviewed commit" in text
 
 
+def test_the_first_approval_anchor_names_the_copied_registrys_own_copy(tmp_path):
+    # The first-approval brief named the directory's newest write as the record
+    # the act moves, whichever registry that write copied. It names, for each
+    # registry the act copies, the commit that last wrote THAT copy.
+    repo = _first_approval_repo(tmp_path)
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "the seeding signature")
+    seeded = _rev_short(repo)
+    tcs = repo / "docs" / "test" / "test-cases.csv"
+    tcs.write_text(
+        tcs.read_text(encoding="utf-8").replace(",Approved,P1", ",Approved,P2"),
+        encoding="utf-8",
+    )
+    baseline_snapshot.copy_live(repo, approves={TC_TOML: "WI-9"})
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "a later act copies the TC registry")
+    assert baseline_snapshot.stamp(repo)[0] != seeded
+    values, why = ab.first_approval_values(repo, _fa_row())
+    assert why is None, why
+    anchors = dict(
+        re.findall(
+            r"^  - (\S+): copied \S+ \(commit (\w+)\)$", values["baseline"], re.M
+        )
+    )
+    assert anchors == {"docs/requirements/low-level-requirements.toml": seeded}, values[
+        "baseline"
+    ]
+
+
 def test_the_first_approval_brief_cannot_stop_before_its_approved_act(tmp_path):
     repo = _first_approval_repo(tmp_path)
     text, why = ab.compose(repo, _fa_row(), repo / "docs/reviews/v.md")

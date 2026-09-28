@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 249
+design_rows = 254
 seam_rows = 201
 requirements_placed = 108
 requirements_unplaced = 6
@@ -34,6 +34,7 @@ sr_refs = [
   "SR-129",
   "SR-139",
   "SR-140",
+  "SR-146",
   "SR-147",
   "SR-152",
   "SR-155",
@@ -81,6 +82,7 @@ sr_shared_refs = [
   "SR-049",
   "SR-070",
   "SR-139",
+  "SR-146",
   "SR-152",
   "SR-155",
   "SR-163",
@@ -176,8 +178,13 @@ llr_refs = [
   "LLR-259",
   "LLR-260",
   "LLR-263",
+  "LLR-271",
+  "LLR-272",
+  "LLR-273",
   "LLR-274",
   "LLR-276",
+  "LLR-277",
+  "LLR-278",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -203,6 +210,7 @@ modules = [
   "project-trajectory/registries/test-cases.template.toml",
   "project-trajectory/scripts/absolute_terms.py",
   "project-trajectory/scripts/acceptance_record.py",
+  "project-trajectory/scripts/adjudicate_brief.py",
   "project-trajectory/scripts/assumption_rules.py",
   "project-trajectory/scripts/baseline_snapshot.py",
   "project-trajectory/scripts/bootstrap.py",
@@ -238,6 +246,7 @@ modules = [
 seam_internal_refs = [
   "IF-028",
   "IF-050",
+  "IF-075",
   "IF-076",
   "IF-089",
   "IF-091",
@@ -246,8 +255,10 @@ seam_internal_refs = [
   "IF-102",
   "IF-104",
   "IF-110",
+  "IF-114",
   "IF-117",
   "IF-123",
+  "IF-124",
   "IF-128",
   "IF-129",
   "IF-131",
@@ -288,7 +299,6 @@ seam_boundary_refs = [
   "IF-057",
   "IF-060",
   "IF-072",
-  "IF-075",
   "IF-077",
   "IF-078",
   "IF-079",
@@ -305,12 +315,12 @@ seam_boundary_refs = [
   "IF-109",
   "IF-111",
   "IF-112",
-  "IF-114",
+  "IF-113",
+  "IF-115",
   "IF-118",
   "IF-119",
   "IF-120",
   "IF-122",
-  "IF-124",
   "IF-125",
   "IF-126",
   "IF-132",

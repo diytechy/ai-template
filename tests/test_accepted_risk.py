@@ -330,7 +330,11 @@ def test_a_need_amended_then_re_approved_on_its_own_still_reads_unproven(repo):
     # The need is re-approved in a later act of its own: the record's copy of
     # the needs now holds the new text, and the risk still reads unproven,
     # because the comparison is with the act that accepted the risk.
-    SNAP.copy_live(root, approves={NEEDS_REL: "SN-001 re-approved"})
+    # Needs are compared tiers, so the act re-approving the drifted need names
+    # it (`--reattests`); naming the registry alone is refused.
+    SNAP.copy_live(
+        root, approves={NEEDS_REL: "SN-001 re-approved"}, reattests={"SN-001"}
+    )
     _commit(root, "re-approve SN-001")
     assert SNAP.risk_acceptance_act(root, "DA-001")[0] == act
     state, reasons = _state(root)

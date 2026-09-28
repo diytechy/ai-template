@@ -18,8 +18,8 @@
 # GRAMMAR: one `IF-###` id per non-blank, non-comment line, optionally followed
 # by ` — <reason>`. A line whose first token does not parse as an IF-### id
 # declares nothing and is dropped (fail-soft in the loud direction — the
-# `docs/provenance-allow` rule). The 118 seeded entries below carry no per-line
-# reason because they share ONE reason, stated once here rather than 118 times:
+# `docs/provenance-allow` rule). The 116 seeded entries below carry no per-line
+# reason because they share ONE reason, stated once here rather than 116 times:
 # they are the SEEDED baseline, not a judgment call made row by row. A reason
 # stamped on a FUTURE addition should say what it says for every other ratchet
 # in this repo — why the seam is legitimately still untested and what would
@@ -29,10 +29,10 @@
 # review, W-4): the key below names how many of the entries are the seeded
 # baseline. Everything past it is an ADDITION — it must carry its own
 # ` — <reason>` or it suppresses nothing, and `if_tc_allow_hygiene_findings`
-# reports the growth either way. The exact 118-id set is also pinned in
+# reports the growth either way. The exact 116-id set is also pinned in
 # tests/test_trajectory_arch.py, so a silent swap inside the baseline is a
 # failing test rather than a diff nobody reads.
-# seed-count: 118
+# seed-count: 116
 #
 # THE SEEDING MEASUREMENT (basis for the count below): 120 of 130 live IF
 # seams cited by no TC, reproduced with:
@@ -155,7 +155,6 @@ IF-108
 IF-109
 IF-110
 IF-111
-IF-112
 IF-113
 IF-114
 IF-115
@@ -166,7 +165,6 @@ IF-120
 IF-121
 IF-122
 IF-125
-IF-126
 IF-130
 IF-131
 IF-132

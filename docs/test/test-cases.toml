@@ -1668,9 +1668,9 @@ phase = 5
 [test.TC-167]
 verifies = ["SR-140", "LLR-173", "IF-123", "IF-128", "IF-129"]
 level = "Integration"
-method = """Run the record half of the baseline-snapshot suite over real temp repos - the half TC-153 does not cover, which is drift. (a) VACUITY: with no snapshot directory every reader is vacuous by ABSENCE, load_all returns None rather than {}, and the mechanical flip is a no-op before the first signing. (b) THE BOOTSTRAP GUARD: copy_live REFUSES to create the directory without seed=True, and --seed is proven UNREACHABLE from every loop module, hook and check step, so the first snapshot can only ride the owner's signing commit. (c) THE COPY CONTRACT: the copy is byte-for-byte and preserves repo-relative paths, and a stale other-carrier file for the same stem is DELETED in the same act (or the next resolve raises "exists under BOTH carriers"). (d) UNANCHORED, BOTH DIRECTIONS: an approved row absent from the snapshot is reported, an approval whose snapshot copy reads BELOW approval is reported (the case that is only decidable because the copy keeps each row's own Status cell), a registry missing from an EXISTING snapshot is reported, and an unparseable snapshot RAISES rather than reading as empty. (e) The snapshot-directory constant has ONE value in both homes, and the `intake.py snapshot` CLI seeds then refreshes. The MIRROR INVARIANT half is TC-173's, so it is not covered twice."""
+method = """Run the record half of the baseline-snapshot suite over real temp repos - the half TC-153 does not cover, which is drift. (a) VACUITY: with no snapshot directory every reader is vacuous by ABSENCE, load_all returns None rather than {}, and the mechanical flip is a no-op before the first signing. (b) THE BOOTSTRAP GUARD: copy_live REFUSES to create the directory without seed=True, and --seed is proven UNREACHABLE from every loop module, hook and check step, so the first snapshot can only ride the owner's signing commit. (c) THE COPY CONTRACT: the copy is byte-for-byte and preserves repo-relative paths, and a stale other-carrier file for the same stem is DELETED in the same act (or the next resolve raises "exists under BOTH carriers"). (d) UNANCHORED, BOTH DIRECTIONS: an approved row absent from the snapshot is reported, an approval whose snapshot copy reads BELOW approval is reported (the case that is only decidable because the copy keeps each row's own Status cell), each as true of an approved need and an approved stakeholder as of a spine row, a registry missing from an EXISTING snapshot is reported, and an unparseable snapshot RAISES rather than reading as empty. (e) The snapshot-directory constant has ONE value in both homes, and the `intake.py snapshot` CLI seeds then refreshes. The MIRROR INVARIANT half is TC-173's, so it is not covered twice."""
 tier = "Full"
-expected = "Satisfies SR-140 AcceptanceCriteria via the LLR-173 detail contract, and covers the IF-123 provider seam with the two seams this module itself consumes (IF-128 the carrier, IF-129 the comparison basis). The three CONSUMPTION rows IF-124/125/126 are the consumers' own to cover; IF-124 rides TC-161, and IF-125/126 are uncited today"
+expected = "Satisfies SR-140 AcceptanceCriteria via the LLR-173 detail contract, and covers the IF-123 provider seam with the two seams this module itself consumes (IF-128 the carrier, IF-129 the comparison basis). The three CONSUMPTION rows IF-124/125/126 are the consumers' own to cover; IF-124 rides TC-161, IF-126 rides TC-271, and IF-125 is uncited today"
 automated = "Yes"
 evidence = "tests/test_baseline_snapshot.py"
 status = "Approved"
@@ -1862,6 +1862,7 @@ automated = "Yes"
 evidence = """tests/test_handback.py; tests/test_kitlib_station.py; tests/test_import_layers.py::test_no_new_import_cycle; tests/test_import_layers.py::test_the_graph_sees_imports_inside_function_bodies"""
 status = "Approved"
 phase = 5
+
 [test.TC-194]
 verifies = ["SR-168", "LLR-198"]
 level = "Integration"
@@ -2004,6 +2005,7 @@ automated = "Yes"
 evidence = """tests/test_trace_coherence.py::test_the_orphan_rules_emit_sr_then_llr_then_tc_then_sn; tests/test_trace_coherence.py::test_a_drafted_row_stands_the_child_rules_down_but_not_its_sn_link; tests/test_trace_coherence.py::test_off_spine_backlinks_resolve_against_ids_and_llr_module_paths; tests/test_trace_coherence.py::test_component_membership_is_checked_from_the_primitive_side; tests/test_trace_coherence.py::test_the_knowledge_ref_resolves_only_the_pack_prefix; tests/test_trace_coherence.py::test_the_phase_scope_always_covers_the_foundation_phase; tests/test_trace_coherence.py::test_the_status_criterion_defers_out_of_phase_and_stands_down_for_drafted; tests/test_trace_coherence.py::test_registries_is_frozen_and_total; tests/test_trace_coherence.py::test_the_loader_is_the_only_construction_site_of_registries; tests/test_trace_coherence.py::test_findings_list_defaults_are_per_instance; tests/test_trace_coherence.py::test_the_two_post_analyze_fields_are_declared_not_conjured; tests/test_trace_coherence.py::test_analysis_flags_takes_a_record_or_a_namespace; tests/test_trace_coherence.py::test_no_caller_forges_an_argparse_namespace_for_the_engine; tests/test_trace_coherence.py::test_the_coherence_rules_import_no_sibling_of_scripts; tests/test_trace_coherence.py::test_trace_re_exports_every_moved_name; tests/test_trace_coherence.py::test_analyze_is_a_composer_and_stays_one"""
 status = "Approved"
 phase = 5
+
 [test.TC-198]
 verifies = ["SR-161", "LLR-202"]
 level = "Unit"
@@ -2475,7 +2477,7 @@ phase = 6
 [test.TC-240]
 verifies = ["SR-207", "LLR-245"]
 level = "Integration"
-method = "Driven on real git repositories through the snapshot command, parameterized over every row-compared tier: requirements, design rows, test cases, interfaces, components, the frame's entities, crossings and relationships, assumptions and surrogates. For each, an act approving row A while row B of the same tier carries drifted approved text is refused naming B and the cell; naming the registry alone in the approves option does not clear B; adding B through the re-attests option clears it, and the act's record names B. In a file holding two tiers, drift in one tier refuses an act approving a row of the other. A registry with no drifted row outside the act refreshes as before. Seven drifted rows are all named, with none cut off. A drifted need is not covered."
+method = "Driven on real git repositories through the snapshot command, parameterized over every row-compared tier: requirements, design rows, test cases, interfaces, components, the frame's entities, crossings and relationships, assumptions and surrogates, needs and stakeholders. For each, an act approving row A while row B of the same tier carries drifted approved text is refused naming B and the cell; naming the registry alone in the approves option does not clear B; adding B through the re-attests option clears it, and the act's record names B. In a file holding two tiers, drift in one tier refuses an act approving a row of the other. A registry with no drifted row outside the act refreshes as before. Seven drifted rows are all named, with none cut off. A drifted approved need refuses an act naming the needs registry, naming the need and the cell, until the re-attests option names it, and the act ledger then records it."
 tier = "Full"
 expected = "Satisfies SR-207's acceptance: a drifted row outside the act refuses the refresh naming row and cell; adding it clears the refusal and is named in the record; no drift refreshes as before; every compared tier covered, including tiers sharing a file."
 automated = "Yes"
@@ -2755,5 +2757,60 @@ tier = "Smoke"
 expected = "Satisfies LLR-233 (parent SR-198): a registry row id is a legal declared input beside a repository path, never judged as an escaping path, and it stands for that row's cells, which the checkpoint reads from the registry and the digest follows row by row"
 automated = "Yes"
 evidence = "tests/test_assumption_rules.py::test_a_registry_row_id_is_a_legal_declared_input; tests/test_registry_id_inputs.py"
+status = "Drafted"
+phase = 6
+
+[test.TC-269]
+verifies = ["SR-178", "LLR-271"]
+level = "Integration"
+method = "Driven on scaffolds made by the kit's bootstrap. An approved need is recorded by a seed; with no text moved it owes nothing, and after its need cell is amended, status left Approved, the comparison reports it as drifted naming that cell, and the re-attestation brief from the command line shows its block with the cell before and after. An approved stakeholder whose description is amended is reported and briefed the same way. A Drafted stakeholder recorded by a seed, then approved in an act naming the needs registry, is named among the rows the act ledger's newest entry approved. Through the scaffold's own snapshot command, an act naming the needs registry is refused while an approved need's text moved, naming the need and the cell, and re-attesting the need re-anchors it: the copy equals the live file, the act ledger names it, and it owes nothing."
+tier = "Full"
+expected = "Satisfies LLR-271 (parent SR-178): a need or stakeholder whose approved text moved is reported and briefed with its diff, holds an act copying the needs registry until re-attested, and an act approving a stakeholder records it in the act ledger."
+automated = "Yes"
+evidence = "tests/test_snapshot_readers.py::test_a_drifted_approved_need_is_reported_and_briefed_with_its_diff; tests/test_snapshot_readers.py::test_a_drifted_approved_stakeholder_is_reported_and_briefed; tests/test_snapshot_readers.py::test_an_approved_stakeholder_is_recorded_by_the_act_that_approves_it; tests/test_snapshot_readers.py::test_a_drifted_need_refuses_the_snapshot_until_it_is_reattested"
+status = "Drafted"
+phase = 6
+
+[test.TC-270]
+verifies = ["SR-157", "LLR-272"]
+level = "Integration"
+method = "Driven through the command line on a scaffold made by the kit's bootstrap. With one requirement phased, a test case written with neither status nor phase and a need written with no status, and the ids recorded: the strict integrity run fails with exactly three integrity findings, naming the test case's Status and Phase cells and the need's Status cell, and none for the requirement carrying both. The re-attestation brief renders the requirement's chain with the test case in it, and the need's block labelled as having no Status cell. With the cells written, the strict integrity run passes. In memory, for each of the need, requirement, design and test-case tiers a row missing Status, and for each of the requirement, design and test-case tiers a row missing Phase in a phased spine, is exactly one finding naming that row and cell, and the missing Phase is none once no row is phased."
+tier = "Full"
+expected = "Satisfies LLR-272 (parent SR-157): a spine row missing its Status cell, or its Phase cell once the spine is phased, is an integrity finding naming the row and the cell, and the brief does not omit it."
+automated = "Yes"
+evidence = "tests/test_snapshot_readers.py::test_a_row_missing_its_status_or_phase_cell_is_an_integrity_finding; tests/test_snapshot_readers.py::test_each_tiers_missing_cell_is_named"
+status = "Drafted"
+phase = 6
+
+[test.TC-271]
+verifies = ["SR-178", "LLR-273", "IF-126"]
+level = "Integration"
+method = "Driven on real git repositories. A record seeded at one commit whose test-case copy alone is re-written at a later one, the directory-wide stamp naming the later commit: the re-attestation brief from the command line names the requirement and design registries' copies with the seeding commit and the test-case registry's with the later one, the open-items view lists the same pairs, and the model's entry carries each spine registry's own stamp; the first-approval brief's anchor names the design registry it copies with the seeding commit alone."
+tier = "Full"
+expected = "Satisfies LLR-273 (parent SR-178): each owner and judge surface names the commit that last wrote each registry's own copy."
+automated = "Yes"
+evidence = "tests/test_snapshot_readers.py::test_the_owners_brief_and_open_items_name_each_registrys_own_copy; tests/test_adjudicate_brief.py::test_the_first_approval_anchor_names_the_copied_registrys_own_copy"
+status = "Drafted"
+phase = 6
+
+[test.TC-272]
+verifies = ["SR-147", "LLR-277", "IF-112"]
+level = "Unit"
+method = "In memory, and over real git repositories and a scaffold for the history reader and the legacy carrier. Under the TOML carrier, a comment-only text, a text whose only table row sits inside a stakeholder's description string, and an empty text yield no need, while the markdown carrier reads the same string text's row; a TOML text that does not parse and a carrier the need tier does not have raise, and the refusing reader names the file. The README floor and the approval view's need prose read no need from a TOML file declaring none, and the README floor refuses an unparseable one naming the file. The record's history reader reads no need at a commit whose needs file declares none, and refuses one at a commit whose needs file does not parse, naming the commit and the file. A scaffold whose needs file is markdown records its approved need, reports it drifted naming the cell once amended, refuses an act copying it until the need is re-attested, and reports nothing unanchored."
+tier = "Smoke"
+expected = "Satisfies LLR-277 (parent SR-147): no reader of a needs file chooses its carrier by guessing, an unparseable TOML needs file refuses naming the file, and a markdown needs file is compared like a TOML one."
+automated = "Yes"
+evidence = "tests/test_spine_carrier.py::test_needs_from_text_takes_the_carrier_from_the_file_not_the_text; tests/test_spine_carrier.py::test_needs_or_refuse_names_the_file_it_cannot_read; tests/test_spine_carrier.py::test_every_needs_text_caller_takes_the_carrier_from_the_file; tests/test_snapshot_readers.py::test_the_snapshot_history_reader_takes_the_needs_carrier_from_the_file; tests/test_snapshot_readers.py::test_a_markdown_needs_file_is_compared_like_a_toml_one"
+status = "Drafted"
+phase = 6
+
+[test.TC-278]
+verifies = ["SR-178", "LLR-278", "IF-091"]
+level = "Integration"
+method = "Driven on real git repositories made from scaffolds. An adjudication lane claiming an amendment row scoped to one requirement, whose act re-attests two amended requirements, is refused at merge naming the one outside the scope; an act re-attesting only the scoped row merges, and the same act claimed by a first-approval row is refused naming the row, since that lane holds no re-attestation scope. One act that approves a Drafted requirement and re-attests an amended one, claimed by a first-approval row scoped to the first and an amendment row scoped to the second, merges; the same act whose amendment row is scoped to another requirement is refused naming the re-attested row."
+tier = "Full"
+expected = "Satisfies LLR-278 (parent SR-178): a re-attestation outside the amendment row's Adjudicates scope is refused at merge by name, and an act whose approvals and re-attestations each lie in the scope of the row claiming them merges."
+automated = "Yes"
+evidence = "tests/test_snapshot_readers.py::test_a_reattestation_outside_the_amendment_scope_is_refused_by_name; tests/test_snapshot_readers.py::test_a_reattestation_inside_the_amendment_scope_merges; tests/test_snapshot_readers.py::test_a_mixed_approval_and_reattestation_act_merges; tests/test_snapshot_readers.py::test_a_mixed_act_reattesting_outside_its_amendment_scope_is_refused"
 status = "Drafted"
 phase = 6

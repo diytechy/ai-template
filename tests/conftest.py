@@ -377,6 +377,7 @@ SLOW_MODULES = frozenset(
         "test_dogfood_widening",  # 52 s: four consumers over every live work item, twice
         "test_trace_hats_driven",  # 62 s: scaffold + trace.py --strict subprocess, twice
         "test_prompts_driven",  # 54 s: a full bootstrap, then the loader over it
+        "test_snapshot_readers",  # a bootstrap per case, trace.py subprocesses and real git repos
     }
 )
 

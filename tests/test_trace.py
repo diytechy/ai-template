@@ -104,20 +104,22 @@ def test_strict_integrity_ignores_orphans_but_fails_bad_ids(scaffold):
 # SR is exempt from --require-verified entirely (WI-089, a different axis), and
 # `Approved`/`Founded` both pass, which leaves no LIVE value that reaches the bar.
 # The cost is that this fixture also reds the enum floor, which
-# `test_phase_scopes_require_verified` states rather than works around.
+# `test_phase_scopes_require_verified` states rather than works around. Every
+# row carries its Phase: in a phased spine a row with no Phase cell is itself an
+# integrity finding, which is not the property these tests drive.
 PHASED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved,v1
 SR-002,Future thing,SN-001,"The system shall do a v2 thing.","Realizes SN-001 later.","v2 behavior",,S,Test,Modified,v2
 """
 
-PHASED_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
-LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Approved
-LLR-002,SR-002,Future part,src/future,todo,"Approved decomposition of the v2 SR.",(see TC),Approved
+PHASED_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Phase
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Approved,v1
+LLR-002,SR-002,Future part,src/future,todo,"Approved decomposition of the v2 SR.",(see TC),Approved,v2
 """
 
-PHASED_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
-TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Approved
-TC-002,SR-002;LLR-002,Unit,planned v2 test,Full,,"Satisfies SR-002 AcceptanceCriteria",Yes,Drafted
+PHASED_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status,Phase
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Approved,v1
+TC-002,SR-002;LLR-002,Unit,planned v2 test,Full,,"Satisfies SR-002 AcceptanceCriteria",Yes,Drafted,v2
 """
 
 
@@ -182,7 +184,7 @@ def test_phase_blind_orphan_rules_still_apply(scaffold):
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(
         PHASED_TCS.replace(
             "TC-002,SR-002;LLR-002,Unit,planned v2 test,Full,,"
-            '"Satisfies SR-002 AcceptanceCriteria",Yes,Drafted\n',
+            '"Satisfies SR-002 AcceptanceCriteria",Yes,Drafted,v2\n',
             "",
         ),
         encoding="utf-8",
