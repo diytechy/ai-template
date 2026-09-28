@@ -654,3 +654,31 @@ such.
     and names WI-551's clause beside WI-606's. The clause census is
     corrected to 19 (13 absorbed). Nothing is drafted: the close stands, and
     the owed work has a home.
+
+58. **Batch F (b32cd7a5) — the coordinator's note was inverted; the brief
+    governs.** The coordinator's adjudicator note said to re-attest LLR-177
+    and TC-172 only on CLARITY, and on MEANING to draft follow-ups. The
+    kit's amendment brief says the reverse: CLARITY owes nothing further,
+    and a MEANING verdict on a rung the dial has released is re-attested by
+    the adjudicator itself, in its own commit. That applies when the new
+    text is one it would bless; otherwise it drafts Dispositions. The
+    adjudicator ruled MEANING (header values now redacted, one combined
+    count), found the new text true, and re-attested both. That follows the
+    brief, which the note named as its instructions. **Ruling:** the act
+    stands. A coordinator note never restates a brief's aftermath: it
+    points at the brief.
+
+59. **Batch F (b32cd7a5) — SOL on all three.** Upheld:
+    - (a) LLR-270's rationale says the off-dial launch "must be exactly
+      today's", a time-relative receipt of the same class as TC-262's "read
+      as before", which the same sitting returned. LLR-270 is RETURNED with
+      that one cell, and its fix ("a fresh session's") joins WI-718's single
+      Dispositions lane.
+    - (b) WI-717 did not rule LLR-177's routed `SR-Refs` (SR-176), which
+      the batch's instructions required. A ruling line is added before the
+      re-attestation is re-taken.
+    - (c) The disposition's cell count is corrected.
+
+    As with ruling 51, the act is reverted in the lane, the verdicts are
+    corrected in one commit, and the ONE act is re-taken with seven flips
+    and the same re-attestation.

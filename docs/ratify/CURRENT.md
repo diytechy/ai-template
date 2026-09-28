@@ -621,29 +621,7 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 5 chain(s): SR-176, SR-222, SR-224, SR-226, SR-227</summary>
-
-## SR-176 — A privacy finding persists by class and location, never by value
-
-> **Requirement.** Any durable record the delivered kit produces of a secrets or privacy finding shall identify the finding by its class and location, never by the matched value.
-
-> **Rationale.** The finding record is the one artifact guaranteed to contain the personal data it reports, created by the control itself — SN-009 defeating itself, since a scanner that catches a value and then echoes it into a committed artifact has published what it protected. The intake proposal's measurement (docs/plans/2026-08-17-wi468-obligation-intake-options.md §2 option (b)) grounds the row: the scanner mints no record of its own (check_privacy prints location, label and the MATCHED VALUE to stdout and writes nothing), but an unattended run's transcript is committed bookkeeping, so the durable copy of every finding is the session log — and the transcript path redacts credential shapes only. DELIBERATE NARROWING of the charter's ask, recorded here as the deriving decision: C-DPR-2 asks for a retention limit and an access rule, and a kit cannot honestly promise either over an adopter's git history (committed content is effectively forever; access is the host's) — what it CAN promise is that the matched value never reaches durable storage, which moots both. MECHANIZED TODAY for the always-on class: the transcript writer redacts the credential shapes and its summary line names class and count, never the value — pinned by the chain below. NOT YET MECHANIZED, stated rather than implied: the PII/identity classes the privacy gate adds are not in the redaction set, so for an adopter with the gate on a PII finding echoed into a session transcript would persist — closing that, on the same seam,… [26 more chars — read the registry row]
-
-
-### LLR LLR-177
-- **Detail**
-  - before: write_session_log passes every transcript through redact_secrets before the tracked per-session log (docs/iteration/NNN-<stamp>.log) is written: each declared credential shape in _SECRET_RES (API keys, GitHub tokens and PATs, AWS key ids, Bearer tokens, Slack tokens) is substituted with [REDACTED], and the header reports the finding as class plus count ("# redacted: N credential-shaped token(s)") - the matched value has no path into the committed file. Deliberately imperfect by its own docstring: an unknown token shape passes through, and the raw unredacted stream stays in gitignored out/run-logs/ for debugging - the untracked half SR-176's acceptance names. THE GAP, stated as LLR-172 states its own: the set covers the always-on secrets classes only; the PII/identity classes check_privacy adds under the privacy gate are not in _SECRET_RES, so the planted-value observable holds today for credential shapes and not yet for the gate's added classes - extending the set on this same seam is the row's build debt.
-  - after: write_session_log passes every transcript, and every header value (a verbatim raw-usage line can carry a runner's result text), through redact_secrets before the tracked per-session log (docs/iteration/NNN-<stamp>.log) is written: each declared credential shape in _SECRET_RES (API keys, GitHub tokens and PATs, AWS key ids, Bearer tokens, Slack tokens) is substituted with [REDACTED], and the header reports the findings of both paths as class plus count ("# redacted: N credential-shaped token(s)") - the matched value has no path into the committed file. Deliberately imperfect by its own docstring: an unknown token shape passes through, and the raw unredacted stream stays in gitignored out/run-logs/ for debugging - the untracked half SR-176's acceptance names. THE GAP, stated as LLR-172 states its own: the set covers the always-on secrets classes only; the PII/identity classes check_privacy adds under the privacy gate are not in _SECRET_RES, so the planted-value observable holds today for credential shapes and not yet for the gate's added classes - extending the set on this same seam is the row's build debt.
-
-### TC TC-172
-_approved — re-attestation owed_
-- **Method**
-  - before: Plant credential-shaped values (an API key, a Bearer token, an AWS key id) in a transcript and write the session log: each planted value appears 0 times in the written tracked file, [REDACTED] stands in its place, ordinary lines survive intact, and the header names the finding by class and count ("# redacted: 3 credential-shaped token(s)"), never by value. The PII/identity classes are SR-176's stated gap and are deliberately NOT tested until the redaction set carries them.
-  - after: Plant credential-shaped values (an API key, a Bearer token, an AWS key id) in a transcript and write the session log: each planted value appears 0 times in the written tracked file, [REDACTED] stands in its place, ordinary lines survive intact, and the header names the finding by class and count ("# redacted: 3 credential-shaped token(s)"), never by value. Then plant a credential in a header value (a raw-usage line carrying result text) and assert it too appears 0 times, [REDACTED] stands in the header, the count line names it, and the transcript survives; and through the session service, a credential inside a runner's result line never reaches the committed header. The PII/identity classes are SR-176's stated gap and are deliberately NOT tested until the redaction set carries them.
-_traced — routes to adjudication_
-- **Evidence**
-  - before: tests/test_agent_loop.py::test_session_log_redacts_credential_shapes
-  - after: tests/test_agent_loop.py::test_session_log_redacts_credential_shapes; tests/test_agent_loop.py::test_session_log_redacts_credential_shapes_in_header_values; tests/test_session_service.py::test_a_credential_in_a_raw_usage_line_is_redacted_in_the_log_header
+<summary>Waiting for automated adjudication — 3 chain(s): SR-222, SR-224, SR-227</summary>
 
 ## SR-222 — Every model session is recorded in one usage record, whichever provider CLI serves it
 
@@ -651,9 +629,9 @@ _traced — routes to adjudication_
 
 > **Rationale.** A DERIVED requirement, and labelled so. SN-026 asks that the owner can configure several model families and route work among them per job and capability level; it does not name a usage record, so this obligation arrives through two lenses rather than through the need's text. The performance lens listens for measurements that cannot be compared, or are unavailable, being read as a reliable total: routing among families is a cost and quality choice, and the choice is blind when one family's calls record their usage and another's do not, or when the runners disagree on what "input tokens" means (two count cached input apart from input, one counts it inside), so one column would hold two incompatible numbers. The consistency lens listens for readers disagreeing after a one-sided change: when each launching role keeps its own launch and logging path, a usage fix lands in one path and not the others. Adopting a published vocabulary rather than inventing a log format was the owner's choice, since the problem is not novel; every name in it is still at development stability and its repository moved in 2026 with no tagged release, so the record pins the exact revision it follows. The raw usage is kept verbatim so a mapping later found wrong is re-derived rather than lost. Occupancy is kept apart from billed tokens because they answer different questions: billed tokens are summed over every request the session made, while how full a context is depends on the latest request alone, and a … [284 more chars — read the registry row]
 
-_No approved baseline — absent from the docs/archive/last_approved snapshot — awaiting its first approval; current state only._
 
-### SR SR-222 (current)
+### SR SR-222 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **SR-ID**: SR-222
 - **Title**: Every model session is recorded in one usage record, whichever provider CLI serves it
 - **SN-Refs**: SN-026
@@ -667,7 +645,8 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **Status**: Drafted
 - **Phase**: 6
 
-### LLR LLR-266 (current)
+### LLR LLR-266 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **LLR-ID**: LLR-266
 - **SR-Refs**: SR-222
 - **Title**: One adapter per provider runner captures its structured output
@@ -680,7 +659,8 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **Component**: CMP-008
 - **Phase**: 6
 
-### LLR LLR-267 (current)
+### LLR LLR-267 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **LLR-ID**: LLR-267
 - **SR-Refs**: SR-222
 - **Title**: Context occupancy is read from the latest request's prompt
@@ -693,7 +673,8 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **Component**: CMP-008
 - **Phase**: 6
 
-### LLR LLR-268 (current)
+### LLR LLR-268 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **LLR-ID**: LLR-268
 - **SR-Refs**: SR-222
 - **Title**: Each adapter maps its runner's usage to the pinned OpenTelemetry names
@@ -706,7 +687,8 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **Component**: CMP-008
 - **Phase**: 6
 
-### LLR LLR-269 (current)
+### LLR LLR-269 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **LLR-ID**: LLR-269
 - **SR-Refs**: SR-222
 - **Title**: One session service launches and records every model call
@@ -719,7 +701,8 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **Component**: CMP-008
 - **Phase**: 6
 
-### TC TC-262 (current)
+### TC TC-262 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **TC-ID**: TC-262
 - **Verifies**: SR-222;LLR-266;IF-245
 - **Level**: Unit
@@ -731,37 +714,14 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-263 (current)
-- **TC-ID**: TC-263
-- **Verifies**: SR-222;LLR-267
-- **Level**: Unit
-- **Method**: Over a LIVE recorded claude stream-json session of two model calls whose cumulative usage and final request differ, assert the occupancy is the final request's input plus cache read plus cache write, not the result's cumulative counters, the window is the modelUsage entry of the model that request named although a background model's entry sits beside it, the percent is under 100, and the occupancy reader's docstring names its source field; the same values reach the session record through the invocation boundary. Over NOT LIVE fixtures built from documented shapes (owed a live recording by a person), assert opencode's occupancy is the last step's input plus cache read and write with no window guessed, codex's exec stream yields its thread id and no occupancy because its usage is cumulative, and codex's rollout under the launch's CODEX_HOME yields the last request's inclusive input and its window; an unknown runner reports none.
-- **Tier**: Smoke
-- **Expected**: Satisfies LLR-267 (parent SR-222): occupancy is the latest request's prompt over the window, never cumulative usage, and blank where no window is reported.
-- **Automated**: Yes
-- **Evidence**: tests/test_session_adapters.py
-- **Status**: Drafted
-- **Phase**: 6
-
-### TC TC-264 (current)
+### TC TC-264 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **TC-ID**: TC-264
 - **Verifies**: SR-222;LLR-268
 - **Level**: Unit
 - **Method**: Over the recorded fixture of each runner (claude LIVE; codex and opencode NOT LIVE, built from documented event shapes, their live recording owed to a person), assert each adapter's usage record carries the pinned revision and the OpenTelemetry names with input counted inclusive of cached input and fresh input derived by one formula: claude's input is its fresh, cache-read and cache-write counts summed, its reasoning is read from output_tokens_details.thinking_tokens and its response model is the model its last request named although a background model's usage sits beside it, or, with no assistant event, the one matching modelUsage entry; codex's input already counts cached input and its unreported cache write and reasoning stay empty; opencode's steps are summed with reasoning inside output; and every runner's record, a stand-in's included, carries exactly the same columns.
 - **Tier**: Smoke
 - **Expected**: Satisfies LLR-268 (parent SR-222): one usage record per runner in the pinned vocabulary, inclusive input, derived fresh input, raw usage verbatim, unreported counts empty, and the two claude defects fixed.
-- **Automated**: Yes
-- **Evidence**: tests/test_session_service.py
-- **Status**: Drafted
-- **Phase**: 6
-
-### TC TC-265 (current)
-- **TC-ID**: TC-265
-- **Verifies**: SR-222;LLR-269;IF-246
-- **Level**: Unit
-- **Method**: Drive the service's act and call steps with an injected launch: a codex call returns its last-message text and its whole stream and is accounted with its route identity, requested model and usage; a failed spawn, a timeout, a repeated call and a raising launch are each accounted (unavailable usage, the timeout kind with partial usage, a new invocation id per call, the error named then re-raised). Assert call writes one session log carrying the usage record, the occupancy under 100% and the raw stream as its transcript, and commits it; an interrupted hands-on sitting is recorded INTERRUPTED with its timing filled; provider text cannot inject a header line; and the worker's record takes the caller's row, writes the raw stream file and commits under the worker's session label. Assert a credential shape inside a raw usage line is redacted in the committed log header. Then two structural guards over every kit script's syntax tree: no process launch outside the service and its launch layer runs an argv that names a provider runner or was built from a command template, and no module but the service calls the session-log writer, and none but the shared primitives carries the log's header or writes into the iteration directory; each guard is shown to fail on planted mutations (a subprocess run, a Popen, an os.system, a check_output of a provider runner, a launch of a template-built argv, a literal provider argv held in a variable, as a list and as a tuple extended before its launch; a… [236 more chars — read the registry row]
-- **Tier**: Smoke
-- **Expected**: Satisfies LLR-269 (parent SR-222): every model call is launched and recorded through the one service, and no role keeps its own launch or logging path.
 - **Automated**: Yes
 - **Evidence**: tests/test_session_service.py
 - **Status**: Drafted
@@ -789,88 +749,15 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Status**: Drafted
 - **Phase**: 6
 
-## SR-226 — A retired spine row leaves one record of its own, found by its id
-
-> **Requirement.** When a spine row is retired, the delivered harness shall leave one record found by the retired id, written in the same change that deletes the row, naming the id, the date, the successor if any and the reason, and kept in view by two reports that warn without failing, one naming any record changed after it landed and one naming any spent id retired since the record began that has no record.
-
-> **Rationale.** A DERIVED requirement, and labelled so. SN-010 asks that a reader can navigate the documentation and trust it, with references that resolve; it does not name what a reader finds when a reference names a row that no longer exists, so this obligation arrives through the maintainer lens rather than through the need's text. Retiring a row deletes it, so the registries state only what is, and ids are never reused, so a reference to a spent id stays unambiguous; but a reader who meets one in a commit message, a log entry or an archived document learns neither why it went nor what replaced it. The id watermark holds only high-water marks, a shallow or squashed history holds nothing, and a forwarding map written into the activity log is prose no tool can read, so the reason lives only in the session that retired the row: the failure that lens listens for. One small record per id, written with the deletion, answers that lookup and nothing else; it is for looking up the id in hand, not for browsing the set. A file per id rather than a registry keeps the lookup a path instead of a search, and keeps the write conflict-free across parallel branches, since no two branches retire one id. The record does not carry the commit that deleted the row, because a commit cannot contain its own hash; history supplies it wherever history exists, and a reader without it is told the commit is unknown rather than given a wrong one. Both reports warn rather than fail: a missing or edited record loses a re… [363 more chars — read the registry row]
-
-_No approved baseline — absent from the docs/archive/last_approved snapshot — awaiting its first approval; current state only._
-
-### SR SR-226 (current)
-- **SR-ID**: SR-226
-- **Title**: A retired spine row leaves one record of its own, found by its id
-- **SN-Refs**: SN-010
-- **Boundary-Refs**: B-01;B-09
-- **Hat-Refs**: MAINTAINER
-- **Requirement**: When a spine row is retired, the delivered harness shall leave one record found by the retired id, written in the same change that deletes the row, naming the id, the date, the successor if any and the reason, and kept in view by two reports that warn without failing, one naming any record changed after it landed and one naming any spent id retired since the record began that has no record.
-- **Rationale**: A DERIVED requirement, and labelled so. SN-010 asks that a reader can navigate the documentation and trust it, with references that resolve; it does not name what a reader finds when a reference names a row that no longer exists, so this obligation arrives through the maintainer lens rather than through the need's text. Retiring a row deletes it, so the registries state only what is, and ids are never reused, so a reference to a spent id stays unambiguous; but a reader who meets one in a commit message, a log entry or an archived document learns neither why it went nor what replaced it. The id watermark holds only high-water marks, a shallow or squashed history holds nothing, and a forwarding map written into the activity log is prose no tool can read, so the reason lives only in the session that retired the row: the failure that lens listens for. One small record per id, written with the deletion, answers that lookup and nothing else; it is for looking up the id in hand, not for browsing the set. A file per id rather than a registry keeps the lookup a path instead of a search, and keeps the write conflict-free across parallel branches, since no two branches retire one id. The record does not carry the commit that deleted the row, because a commit cannot contain its own hash; history supplies it wherever history exists, and a reader without it is told the commit is unknown rather than given a wrong one. Both reports warn rather than fail: a missing or edited record loses a re… [363 more chars — read the registry row]
-- **AcceptanceCriteria**: Retiring a live row removes that row, and only that row, from its registry and writes its record naming the id, the date, the successor when one is given and the reason, both as working-tree changes for one commit; a retirement naming a row that is not live, a successor that is not live or is the row itself, no reason, a malformed date, or an id that already has a record is refused with nothing written; the record survives the step that folds session records into the activity log; a record whose text differs from its text as it landed, or that was removed after it landed, is reported naming it; a spent id with neither a record nor a place among the ids declared as retired before the record began is reported naming it, while a live id, a recorded id, a declared id and an id above its space's mark are not; neither report fails a check; and the commit that deleted a row is read from history when the record is shown, reading unknown where history cannot answer.
-- **Priority**: S
-- **Verification**: Test
-- **Status**: Drafted
-- **Phase**: 6
-
-### LLR LLR-286 (current)
-- **LLR-ID**: LLR-286
-- **SR-Refs**: SR-226
-- **Title**: The retirement record's one home: the command that deletes a row and writes its record, the census, and the readers' questions
-- **Module**: project-trajectory/scripts/retire.py
-- **CodeSymbol**: RETIRED_DIR/CENSUS/fragment_text/parse_fragment/drop_row/retire/parse_exclusions/seed_census/missing_findings/shallow_boundary/edited_findings/retirement_findings/records/main
-- **Detail**: retire(root, row_id, reason, successor, date) judges the whole retirement before writing anything: the id is SN, SR, LLR or TC with a nonzero number and is a live row of its tier's TOML registry; the reason is not blank; the date is a real YYYY-MM-DD date, today when not given; the successor, when given, is another live spine id; and RETIRED_DIR/<id>.md does not exist. drop_row(text, table, id) cuts the row's table from its header line to the next table header, leaving the comment lines directly above that header and one blank line between rows, and refuses unless the result parses to the old document minus exactly that row. The record is then created exclusively and the registry rewritten, both as working-tree changes the caller commits together. fragment_text writes the id, date, successor (empty when none) and reason as a +++ TOML front matter; parse_fragment reads it back through kitlib.registry.parse_spec_frontmatter and refuses a record whose keys are not exactly those four text cells, that has anything after the closing fence but the file's final newline, whitespace included, whose id is not its file name, whose date is not a real date by datetime.date.fromisoformat, whose reason is blank or whose successor is not a spine id. seed_census writes CENSUS, before-the-record.toml under RETIRED_DIR, holding per tier the ids at or below the tier's watermark mark that are neither live nor recorded, as comma-separated numbers and ranges, never naming an id parse_exclusions read… [1612 more chars — read the registry row]
-- **Rationale**: One module owns the record's shape and every question asked of it, so the writer, the check and the dashboard cannot disagree about what a record is. The command performs the deletion as well as writing the record because the two must land in one commit, and a writer that only wrote the record would leave the deletion to a hand edit that can happen without it. Judging everything before the first write means a refused retirement leaves the tree as it found it. The table is cut as text rather than re-serialized so every other row keeps its bytes, and comparing the parsed result against the old document minus the row is what makes a cut that swallowed or damaged a neighbour impossible to write. The edit report compares blobs rather than walking every commit that touched a record, so an edit that was put back clears itself and the cost is two git calls whatever the history's length; hash-object applies the checkout's filters, so a line-ending conversion is not an edit. A commit with no parent deleted nothing, which is why it reads as unknown rather than as the deleting commit.
-- **TestRefs**: (see TC-299, TC-300)
-- **Status**: Approved
-- **Component**: CMP-006
-- **Phase**: 6
-
-### LLR LLR-287 (current)
-- **LLR-ID**: LLR-287
-- **SR-Refs**: SR-226
-- **Title**: The dashboard lists the retirement records with their deleting commit, and its freshness compare ignores that commit
-- **Module**: project-trajectory/scripts/rendering/traj_views.py;project-trajectory/scripts/gen_trajectory.py
-- **CodeSymbol**: retired_panel/_retired_view/fresh_view/_unresolved
-- **Detail**: retired_panel(rows, before) returns None when there is no record, so a repository that has retired nothing renders as before, and otherwise a Retired tab and its panel: a table of id, date, successor (a dash when none), reason and deleting commit, one row per record in the order retire.records gives, every cell escaped and the commit inside a code element of class retcommit carrying the record's id as data-id, under a caption saying the records are for lookup and the commit is read from git at render time, and, when before is positive, how many ids were retired before the record began. _retired_view(root) builds it from retire.records(root) and the number of ids retire.read_census declares, returned as one-element lists or empty ones, and build_html extends its tab and panel lists with them after the Process tab, so the view adds no branch to the page's composition. fresh_view(text, unresolved) is what the --check compare reads: the as-of stamp removed and the content emptied of the retcommit elements whose id is in unresolved, which _unresolved(root) gives as the records retire.records reads as unknown in the checking checkout; every other deleting commit must match exactly.
-- **Rationale**: The deleting commit is read at render time because the record cannot hold its own commit, and the compare ignores it only where the checking checkout cannot resolve it: an uncommitted record, and a record landed by a commit with no parent (a shallow clone's boundary, a squashed history's root), read unknown with no source having moved, and a freshness check that failed there would be switched off, while a checkout that can resolve it holds the page to the exact commit, so a fabricated one is stale. The tab is absent until there is something in it, so the view costs nothing to a repository that never retires a row. This is the one surface that shows the records as a set; everywhere else a record is read by its id.
-- **TestRefs**: (see TC-300)
-- **Status**: Drafted
-- **Component**: CMP-009
-- **Phase**: 6
-
-### TC TC-299 (current)
-- **TC-ID**: TC-299
-- **Verifies**: SR-226;LLR-286;IF-257;IF-258
-- **Level**: Integration
-- **Method**: A temporary git repository holding the four spine registries, a watermark with two spent requirement ids, a log and its fragment drop-box, driven through the command. (a) THE DELETION WRITES ITS RECORD: retiring a live requirement with a reason, a successor and a date removes that row alone, every other row parsing unchanged and the comment above the next row staying with it, and writes its record carrying the four cells; the two changes are the only working-tree changes and land in one commit; a retirement with no successor records none and one with no date records a calendar date. (b) REFUSALS: an id that is not live, a -000 id, an id outside the four tiers, a blank reason, a successor that is not live, a successor that is the row itself, a malformed date and an id that already has a record are each refused with exit 1 and a REFUSED line, the registry byte-identical and no record written. (c) THE FOLD: trunk_step.py --compile-log over a committed session fragment and a committed record folds and deletes the first and leaves the second byte-identical and out of the log. (d) THE CENSUS: --seed declares the spent ids with no record as ranges per tier and refuses a second seed; an --exclude'd id, and every id of an ID..N run and no other, is never declared and stays reported until its row lands; a malformed exclusion is refused with nothing written; --replace rewrites a census not yet landed, changing no other file, and is refused once it has landed. (e) MISSING: a spent id wit… [1118 more chars — read the registry row]
-- **Tier**: Full
-- **Expected**: Satisfies SR-226 AcceptanceCriteria: a retirement removes exactly its row and writes its record for one commit, every refusal writes nothing, the record survives the log fold, a spent id without a record and a record moved after landing are each reported, and neither report fails a check
-- **Automated**: Yes
-- **Evidence**: tests/test_retire.py::test_retiring_a_live_row_removes_it_and_writes_its_record; tests/test_retire.py::test_a_retirement_without_a_successor_records_none; tests/test_retire.py::test_each_refusal_writes_nothing; tests/test_retire.py::test_an_id_already_recorded_is_refused; tests/test_retire.py::test_the_log_fold_leaves_retirement_records_in_place; tests/test_retire.py::test_the_seed_declares_the_spent_ids_once; tests/test_retire.py::test_a_spent_id_without_a_record_is_reported; tests/test_retire.py::test_the_missing_rule_is_pure_over_its_four_sets; tests/test_retire.py::test_an_unreadable_record_is_reported; tests/test_retire.py::test_a_record_changed_after_it_landed_is_reported; tests/test_retire.py::test_an_uncommitted_record_is_not_an_edit; tests/test_retire.py::test_off_git_the_edit_report_is_silent; tests/test_retire.py::test_the_reports_never_change_the_exit_code; tests/test_retire.py::test_trace_prints_the_reports_as_advisories; tests/test_retire.py::test_the_seed_never_declares_an_excluded_id; tests/test_retire.py::test_a_malformed_exclusion_is_refused; tests/test_retire.py::test_the_census_is_replaced_only_before_it_lands; tests/test_retire.py::test_a_shallow_clone_says_the_record_is_unverifiable; tests/test_retire.py::test_a_record_outside_the_declared_format_is_unreadable; tests/test_retire.py::test_the_final_newline_alone_is_not_a_body; tests/test_retire.py::test_an_exclusion_run_excludes_every_id_in_it_and_nothing_else
-- **Status**: Approved
-- **Phase**: 6
-
-### TC TC-300 (current)
-- **TC-ID**: TC-300
-- **Verifies**: SR-226;LLR-286;LLR-287;IF-257
-- **Level**: Integration
-- **Method**: Records read from temporary git repositories, a shallow clone included, and the real generator run over the shared fixture project. (a) THE DELETING COMMIT: a landed record reads its landing commit's short hash with its four cells; an uncommitted record, a record added by a root commit and a record in a depth-one clone read unknown; records come in tier then number order. (b) THE PANEL: no record renders no tab, whatever the census counts; two records render two escaped table rows with their commits inside retcommit elements, a dash for a missing successor and a caption naming lookup; a positive census count is stated in the caption and a zero one is not. (c) THE DOCUMENT: the dashboard carries the Retired tab only once a record exists; in a full clone --check fails when the page carries a fabricated deleting commit or unknown where history resolves one; in a depth-one clone that cannot resolve it, a page rendered with the full history passes; a changed reason fails.
-- **Tier**: Full
-- **Parameters**: tests/traj_fixtures.py make_repo (re-exported from tests/traj_core_fixtures.py), with tests/test_retire_dashboard.py _rendered_history for the committed variants
-- **Expected**: Satisfies SR-226 AcceptanceCriteria: the deleting commit is read from history when a record is shown and reads unknown where history cannot answer, and the freshness compare holds the page to that commit wherever the checkout can resolve it
-- **Automated**: Yes
-- **Evidence**: tests/test_retire_dashboard.py::test_a_landed_record_reads_its_landing_commit; tests/test_retire_dashboard.py::test_an_uncommitted_record_reads_unknown; tests/test_retire_dashboard.py::test_a_record_in_a_root_commit_reads_unknown; tests/test_retire_dashboard.py::test_a_shallow_clone_reads_unknown; tests/test_retire_dashboard.py::test_records_come_in_tier_then_number_order; tests/test_retire_dashboard.py::test_no_record_renders_no_tab; tests/test_retire_dashboard.py::test_the_panel_renders_one_escaped_row_per_record; tests/test_retire_dashboard.py::test_the_caption_counts_the_ids_retired_before_the_record; tests/test_retire_dashboard.py::test_the_dashboard_carries_the_tab_only_when_a_record_exists; tests/test_retire_dashboard.py::test_a_fabricated_deleting_commit_is_stale_where_history_answers; tests/test_retire_dashboard.py::test_a_checkout_that_cannot_resolve_the_commit_accepts_the_page; tests/test_retire_dashboard.py::test_any_other_change_to_a_record_is_stale
-- **Status**: Drafted
-- **Phase**: 6
-
 ## SR-227 — Where the retention dial is on, an adjudication resumes a retained session and resets it only when that is safe
 
 > **Requirement.** Where the declared adjudicator retention dial is above zero, the delivered loop content shall launch each adjudication of a retained class in its model runner's resume form against a session an earlier adjudication on the same route started, recording each such call like any other, draining the session when its latest request's occupancy reaches the dial or the inputs it judges under change, retiring it only when no work it has a stake in is pending, retiring it at once when a call on it fails, and letting no two calls use one retained session at once.
 
 > **Rationale.** A DERIVED requirement, and labelled so. SN-025 asks that a configured agent implement toward the vision with no human curating what comes next; it does not name retaining a session, so this obligation arrives through three lenses rather than through the need's text. The performance lens listens for an operating-cost risk left unassessed: an unattended run that re-spun a fresh adjudicator for every small work item reloaded the spine each time, and its usage was extreme, while resuming a session by id costs about what a standing process would under the provider's hour-long prompt cache. The unattended-operations lens listens for a silent degrade: a retained session that has filled, or judges under rules that have since changed, or that a failed call left in an unknown state, degrades every later judgement with nothing paging anyone, so the drain, the change rules and the immediate retirement are part of the obligation, not tuning. The integrity lens listens for a durable artifact updated in place without an all-or-nothing guarantee and for a claim nothing can reclaim: two calls resuming one transcript at once corrupt it, so one call at a time holds a session, under a hold that expires when its holder is gone. Retiring only when no work the session has a stake in is pending is what keeps a review, rework and re-review round trip in one session, which is the continuity the layer exists for; a session is retained as a transcript a bounded process replays, never as a long-lived pro… [373 more chars — read the registry row]
 
-_No approved baseline — absent from the docs/archive/last_approved snapshot — awaiting its first approval; current state only._
 
-### SR SR-227 (current)
+### SR SR-227 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **SR-ID**: SR-227
 - **Title**: Where the retention dial is on, an adjudication resumes a retained session and resets it only when that is safe
 - **SN-Refs**: SN-025
@@ -884,7 +771,8 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **Status**: Drafted
 - **Phase**: 6
 
-### LLR LLR-270 (current)
+### LLR LLR-270 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **LLR-ID**: LLR-270
 - **SR-Refs**: SR-227
 - **Title**: The keep operation retains adjudicator sessions through act and record, inert at dial 0
@@ -897,31 +785,8 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **Component**: CMP-008
 - **Phase**: 6
 
-### TC TC-266 (current)
-- **TC-ID**: TC-266
-- **Verifies**: SR-227;LLR-270;IF-248;IF-065
-- **Level**: Unit
-- **Method**: Read the shipped policy file and its template: both declare [adjudicator] with context_reset_pct = 0 and the same keys, and the configuration they yield is the off default. At dial 0, assert no retained session is planned for an adjudication and the runner's version is not read, its launch argv and environment equal a fresh session's (no session-id or resume flag, the ambient environment), no store is written, the loop's retention plan is None in a bare repository and in this one, and the dispatcher builds no keep-warm; a missing table or a non-numeric dial reads as off; with the dial on, only an adjudication of a retained class is kept.
-- **Tier**: Smoke
-- **Expected**: Satisfies LLR-270 (parent SR-227) at the shipped dial: the retention layer is inert and every adjudication is a fresh session exactly as without it.
-- **Automated**: Yes
-- **Evidence**: tests/test_session_keep.py
-- **Status**: Drafted
-- **Phase**: 6
-
-### TC TC-267 (current)
-- **TC-ID**: TC-267
-- **Verifies**: SR-227;LLR-270;IF-247;IF-248
-- **Level**: Unit
-- **Method**: With the dial on, over the recorded fixtures (claude LIVE; codex and opencode NOT LIVE, built from documented event shapes and owed a live recording by a person), assert for each runner that the first adjudication mints (claude's pre-minted id, codex's thread id, opencode's session id recorded) with its occupancy and generation and releases its lease, and the next resumes by that id in the runner's own form, codex's without a working-directory or ephemeral flag. Drive a retained codex route and assert it launches under the dedicated CODEX_HOME created under the store, reading its occupancy from the rollout there, and that an unretained codex call reads occupancy under an inherited CODEX_HOME. Then one test per reset clause: under the dial the session stays active; cresting it drains without retiring; a draining session is still resumed while a queued adjudication succeeds an item it judged, while a lane is out on such an item, and for an item that continues its chain, and is retired at the first launch where none of these holds, the next launch minting generation 2; the chain is the transitive lineage, so a queued re-adjudication naming only the worker an adjudication sent back keeps the chain open, supersession links count, a cycle ends, and launching that re-adjudication continues the chain; a reported error, a non-zero exit and a timeout each retire at once; a launch that raises retires the session and releases its lease, and does so under a store lock another holder keeps… [757 more chars — read the registry row]
-- **Tier**: Smoke
-- **Expected**: Satisfies LLR-270 (parent SR-227) with the dial on: each runner's resume and occupancy are read from its own output under its dedicated home, every ruled reset rule holds, and the store is written whole by one holder at a time.
-- **Automated**: Yes
-- **Evidence**: tests/test_session_keep.py
-- **Status**: Drafted
-- **Phase**: 6
-
-### TC TC-268 (current)
+### TC TC-268 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **TC-ID**: TC-268
 - **Verifies**: SR-227;LLR-270;IF-044;IF-065
 - **Level**: Unit

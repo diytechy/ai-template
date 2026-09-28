@@ -930,3 +930,52 @@ The verdict's one observation, a stale sentence in `session_adapters.py`'s
 docstring (it named `agent_session` as its importer; `session_service` is),
 was corrected at the merge. Trunk before this squash: d7e1be0e.
 **Open count: 12** (11 queued, 1 deferred).
+
+### Spine-acts batch F lands: WI-716, WI-717 and WI-718
+
+One independent Fable adjudicator ruled three rows from the kit's briefs,
+routed pointer cells included, and took one act (seq 8).
+
+Codex Sol cross-reviewed the first act
+([sol-batchf.md](../reviews/2026-09-27-wave5/sol-batchf.md)) and found
+three things:
+- LLR-270 was approved with a time-relative receipt in its rationale ("the
+  launch must be exactly today's"), the class the same sitting returned
+  TC-262 for;
+- LLR-177's routed `SR-Refs` went unruled;
+- the draft miscounted its cells.
+
+Ruling 59 upheld all three. As with ruling 51, the act was reverted in the
+lane, the verdicts corrected, and the act re-taken. Sol confirmed it SOUND
+([sol-batchf-fix.md](../reviews/2026-09-27-wave5/sol-batchf-fix.md)). Sol's
+one remaining minor, the draft's "rule behind nine of them" (ten, with
+LLR-270), was corrected at the merge.
+
+**The coordinator's own error, ruling 58.** The coordinator's note to the
+adjudicator had the amendment aftermath backwards: re-attest on CLARITY,
+draft on MEANING. The kit's brief says CLARITY owes nothing, and a MEANING
+verdict on a released rung is re-attested by the adjudicator. The
+adjudicator followed the brief and the act stands. Lesson: a coordinator
+note points at the brief's aftermath, never restates it.
+
+- **WI-716:** `OUTCOME: APPROVE rows=3`. SR-226, LLR-287 and TC-300 are
+  approved, so WI-618's chain is anchored.
+- **WI-717:** `VERDICT: MEANING rows=2`. LLR-177's Detail and TC-172's
+  Method now cover header values, and both are re-attested. SR-176 holds
+  as LLR-177's parent.
+- **WI-718:** `OUTCOME: RETURN rows=14`.
+  - Approved: TC-263, TC-265, TC-266 and TC-267.
+  - Returned: SR-222, SR-227, LLR-266 to LLR-270, TC-262, TC-264 and
+    TC-268, on fourteen cells. Most are history or receipts in standing
+    cells. Two are substantive: LLR-268 misdescribes claude's raw-usage
+    line (the whole result line is kept, not three values), and TC-268's
+    method claims a message its evidence makes optional.
+  - The follow-up is one quick spine lane, minted at this merge. The same
+    misdescription sits in `session_adapters.py`'s IF-245 docstring, so
+    that lane corrects it too.
+- `trace` now advises that LLR-267 and LLR-269 read Drafted while every
+  test case citing them is Approved. That is expected from the mixed
+  verdict, and it clears when the follow-up lands.
+
+Trunk before this squash: e827e697.
+**Open count: 9** (8 queued, 1 deferred) before the sweep.

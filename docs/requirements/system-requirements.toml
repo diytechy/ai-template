@@ -1692,7 +1692,7 @@ rationale = """A DERIVED requirement, and labelled so. SN-010 asks that a reader
 acceptance_criteria = "Retiring a live row removes that row, and only that row, from its registry and writes its record naming the id, the date, the successor when one is given and the reason, both as working-tree changes for one commit; a retirement naming a row that is not live, a successor that is not live or is the row itself, no reason, a malformed date, or an id that already has a record is refused with nothing written; the record survives the step that folds session records into the activity log; a record whose text differs from its text as it landed, or that was removed after it landed, is reported naming it; a spent id with neither a record nor a place among the ids declared as retired before the record began is reported naming it, while a live id, a recorded id, a declared id and an id above its space's mark are not; neither report fails a check; and the commit that deleted a row is read from history when the record is shown, reading unknown where history cannot answer."
 priority = "S"
 verification = "Test"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [requirement.SR-222]

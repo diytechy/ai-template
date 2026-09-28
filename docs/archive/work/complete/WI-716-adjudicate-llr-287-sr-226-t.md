@@ -3,12 +3,20 @@ id = "WI-716"
 title = "adjudicate: LLR-287, SR-226, TC-300 - spine row(s) authored Drafted on merged trunk 9b16cde..3bb6186 await a FIRST APPROVAL; read the whole chain, then approve (flip + snapshot) or return with findings"
 workstream = "process"
 sr_refs = ["SR-226"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "first-approval"
 adjudicates = ["LLR-287", "SR-226", "TC-300"]
 +++
+
+## Deliverable
+
+Ruled in spine-acts batch F by an independent Fable adjudicator from the kit's own brief, routed pointer cells included. Codex Sol cross-reviewed it in two rounds (wave-5 rulings 58 and 59): NOT YET SOUND on the first act, and SOUND on the re-taken act, after the correction returned LLR-270 (a receipt phrase) and ruled LLR-177's `SR-Refs`. The verdict (`docs/reviews/wi-716-adjudicate-llr-287-sr-226-t/001-ADJUDICATE-d7e1be0e.md`) ends:
+
+    OUTCOME: APPROVE rows=3
+
+The one act (ledger seq 8) approved SR-226, LLR-287, TC-300, TC-263, TC-265, TC-266 and TC-267, and re-attested LLR-177 and TC-172 on a MEANING verdict. SR-222, SR-227, LLR-266 to LLR-270, TC-262, TC-264 and TC-268 returned on fourteen cells, mostly receipts and history in standing cells. The follow-up is WI-718's one Dispositions draft, minted at this merge.
 
 ## Context
 

@@ -2940,7 +2940,7 @@ parameters = "tests/traj_fixtures.py make_repo (re-exported from tests/traj_core
 expected = "Satisfies SR-226 AcceptanceCriteria: the deleting commit is read from history when a record is shown and reads unknown where history cannot answer, and the freshness compare holds the page to that commit wherever the checkout can resolve it"
 automated = "Yes"
 evidence = "tests/test_retire_dashboard.py::test_a_landed_record_reads_its_landing_commit; tests/test_retire_dashboard.py::test_an_uncommitted_record_reads_unknown; tests/test_retire_dashboard.py::test_a_record_in_a_root_commit_reads_unknown; tests/test_retire_dashboard.py::test_a_shallow_clone_reads_unknown; tests/test_retire_dashboard.py::test_records_come_in_tier_then_number_order; tests/test_retire_dashboard.py::test_no_record_renders_no_tab; tests/test_retire_dashboard.py::test_the_panel_renders_one_escaped_row_per_record; tests/test_retire_dashboard.py::test_the_caption_counts_the_ids_retired_before_the_record; tests/test_retire_dashboard.py::test_the_dashboard_carries_the_tab_only_when_a_record_exists; tests/test_retire_dashboard.py::test_a_fabricated_deleting_commit_is_stale_where_history_answers; tests/test_retire_dashboard.py::test_a_checkout_that_cannot_resolve_the_commit_accepts_the_page; tests/test_retire_dashboard.py::test_any_other_change_to_a_record_is_stale"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-262]
@@ -2962,7 +2962,7 @@ tier = "Smoke"
 expected = "Satisfies LLR-267 (parent SR-222): occupancy is the latest request's prompt over the window, never cumulative usage, and blank where no window is reported."
 automated = "Yes"
 evidence = "tests/test_session_adapters.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-264]
@@ -2984,7 +2984,7 @@ tier = "Smoke"
 expected = "Satisfies LLR-269 (parent SR-222): every model call is launched and recorded through the one service, and no role keeps its own launch or logging path."
 automated = "Yes"
 evidence = "tests/test_session_service.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-266]
@@ -2995,7 +2995,7 @@ tier = "Smoke"
 expected = "Satisfies LLR-270 (parent SR-227) at the shipped dial: the retention layer is inert and every adjudication is a fresh session exactly as without it."
 automated = "Yes"
 evidence = "tests/test_session_keep.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-267]
@@ -3006,7 +3006,7 @@ tier = "Smoke"
 expected = "Satisfies LLR-270 (parent SR-227) with the dial on: each runner's resume and occupancy are read from its own output under its dedicated home, every ruled reset rule holds, and the store is written whole by one holder at a time."
 automated = "Yes"
 evidence = "tests/test_session_keep.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-268]
