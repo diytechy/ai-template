@@ -468,3 +468,35 @@ such.
     merged the verdicts and the 31 flips, kept trunk's snapshot record, and
     re-ran the adjudicator's exact snapshot command against trunk. The new
     Drafted rows ride along as Drafted.
+
+46. **WI-707 (011524ff): six rationales still name a dropped need — GRANT
+    extended.** The builder re-pointed nine SRs' `sn_refs` under its grant
+    and stopped where six of those rows' `rationale` still opens "Realizes"
+    a need they no longer cite (SR-011, SR-031, SR-040, SR-111, SR-149,
+    SR-174). A rationale naming a parent the row does not cite is the same
+    defect the waivers had, one cell over. **Ruling:** amendment authority
+    extends to those six `rationale` cells, in place, status left Approved,
+    each limited to naming the cited need honestly in its own words; the
+    rest of each rationale stays. The derived rows' waivers (SR-223, SR-225),
+    which say plainly that no clause of the cited need is their outcome,
+    are the adjudicator's to judge in the next batch.
+
+47. **WI-707 (ee1d68ff) — SOL on the substance, bounded remedy; the
+    vocabulary gap goes to the owner.** Sol passes six re-parented or
+    re-worded waivers (SR-011, SR-031, SR-040, SR-112, SR-147, SR-149) and
+    fails seven (SR-015, SR-024, SR-033, SR-111, SR-129, SR-174, SR-177),
+    plus the derived rows' waivers (SR-223, SR-225). The governing text is
+    approved SR-193: a `coincident` waiver "states why its own specification
+    alone delivers its needs". Each of the seven contributes one part of a
+    need that several requirements deliver together (a prerequisite, a
+    measurement, one link of a verified chain), so none alone delivers it.
+    SR-193 also names the honest third state: a requirement with neither
+    classification "is reported as unclassified without failing the check".
+    **Ruling:** the seven and the two derived rows drop their `coincident`
+    waiver and stay unclassified. Inventing a DA for a premise that is really
+    another requirement, or relabelling a row as derived, would repeat the
+    waivers' defect in another cell. SR-111's and SR-174's rationale say
+    "contributes to" what they serve, not "realizes" it. The tier has no class
+    for a requirement that delivers its need jointly with others, and C2 asked
+    that every SR be classified. That is a vocabulary question for the owner:
+    **OI-97**.

@@ -671,3 +671,30 @@ owner, not filed:
 
 Commit bar at WI-692: documents only, all green; smoke 1798 passed / 3 skipped, seconds 32.8 s. Trunk before this
 squash: 32687d47. **Open count: 13** (12 queued, 1 deferred).
+
+### WI-707 lands: batch C's returns, and OI-97 for joint delivery
+
+One builder, three Codex Sol rounds (wave-5 rulings 46 and 47):
+[sol-wi707.md](../reviews/2026-09-27-wave5/sol-wi707.md),
+[sol-wi707-fix.md](../reviews/2026-09-27-wave5/sol-wi707-fix.md).
+Six of the thirteen waivers were re-worded or re-parented until they hold
+for every need they cite. Seven cannot hold: each row contributes one part
+of a need that several requirements deliver together, and approved SR-193
+defines `coincident` as "alone delivers its needs". Those seven, and the
+derived SR-223 and SR-225, drop the waiver and stay unclassified, SR-193's
+honest third state. Nothing was forced into an invented DA. The tier has no
+class for joint delivery, so C2's aim that every SR be classified cannot be
+met honestly yet: **OI-97** (pending, typed brief, recommendation (a), a
+declared joint-delivery class). SR-223's last clause is pinned by TC-290's
+new arm and narrowed to what it observes. TC-272 was split into TC-297.
+SR-224 still waits on the owner's SN-005 tags. **Open count: 12**
+(11 queued, 1 deferred).
+
+Commit bar at WI-707: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs --stale` 0 broken, smoke 1799 passed / 3 skipped, seconds 42.6 s
+within 60 s. Affected modules and both ratchets (test_guardrails_payload,
+test_snapshot_readers, test_assumption_rules, test_trace_briefs,
+test_frame_rules, test_dogfood_sync, test_module_size_ratchet,
+test_complexity_ratchet), run by the coordinator: 308 passed / 1 skipped.
+Trunk before this squash: 83d866c8.

@@ -621,7 +621,7 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 85 chain(s): SR-006, SR-007, SR-009, SR-011, SR-015, SR-022, SR-024, SR-027, SR-031, SR-033, SR-035, SR-040, SR-043, SR-049, SR-054, SR-070, SR-111, SR-112, SR-113, SR-129, SR-137, SR-144, SR-146, SR-147, SR-149, SR-150, SR-157, SR-158, SR-159, SR-161, SR-162, SR-164, SR-165, SR-166, SR-167, SR-168, SR-169, SR-173, SR-174, SR-175, SR-176, SR-177, SR-178, SR-180, SR-181, SR-182, SR-183, SR-185, SR-186, SR-187, SR-188, SR-189, SR-190, SR-191, SR-192, SR-193, SR-194, SR-195, SR-196, SR-197, SR-198, SR-199, SR-200, SR-201, SR-202, SR-203, SR-204, SR-205, SR-206, SR-207, SR-208, SR-210, SR-211, SR-212, SR-213, SR-214, SR-215, SR-217, SR-218, SR-219, SR-220, SR-221, SR-223, SR-224, SR-225</summary>
+<summary>Waiting for automated adjudication — 80 chain(s): SR-006, SR-007, SR-009, SR-011, SR-022, SR-027, SR-031, SR-035, SR-040, SR-043, SR-049, SR-054, SR-070, SR-111, SR-112, SR-113, SR-137, SR-144, SR-146, SR-147, SR-149, SR-150, SR-157, SR-158, SR-159, SR-161, SR-162, SR-164, SR-165, SR-166, SR-167, SR-168, SR-169, SR-173, SR-174, SR-175, SR-176, SR-178, SR-180, SR-181, SR-182, SR-183, SR-185, SR-186, SR-187, SR-188, SR-189, SR-190, SR-191, SR-192, SR-193, SR-194, SR-195, SR-196, SR-197, SR-198, SR-199, SR-200, SR-201, SR-202, SR-203, SR-204, SR-205, SR-206, SR-207, SR-208, SR-210, SR-211, SR-212, SR-213, SR-214, SR-215, SR-217, SR-218, SR-219, SR-220, SR-221, SR-223, SR-224, SR-225</summary>
 
 ## SR-006 — Gate/tier harness enforces required steps
 
@@ -673,30 +673,21 @@ _traced — routes to adjudication_
 
 > **Requirement.** The delivered scaffold generator shall skip an existing file on a re-run unless an explicit overwrite is requested.
 
-> **Rationale.** Realizes SN-001 (safe drop-in onto an existing repo) and SN-007 — an adopter picking up kit updates must not lose their own edits, and a scaffolder that overwrites cannot be run twice, so it stops being run at all. Overwrite-always with a backup copy was rejected: it leaves the repo carrying a second copy of every file it touched. The deliberate kit-vs-project merge is a separate, operator-driven process (SR-036).
+> **Rationale.** Realizes SN-001 (a re-sync onto an existing repo never clobbers the repo's own files) — an adopter picking up kit updates must not lose their own edits, and a scaffolder that overwrites cannot be run twice, so it stops being run at all. Overwrite-always with a backup copy was rejected: it leaves the repo carrying a second copy of every file it touched. The deliberate kit-vs-project merge is a separate, operator-driven process (SR-036).
 
 
 ### SR SR-011
-- **Coincident**
-  - before: (empty)
-  - after: The need asks for a re-run that costs the adopter none of its own edits; a re-run leaving each existing file byte-unchanged unless an overwrite is asked for is that outcome itself.
-
-## SR-015 — Performance-budget back-links
-
-> **Requirement.** The delivered performance-budgets registry (PB-###) shall keep every row's Refs resolvable to a real SR/LLR/Module.
-
-> **Rationale.** Realizes SN-002 — a budget row that cannot be traced to a requirement, design item or module cannot demonstrate what it constrains, so the off-spine budget rows stay traceable to the spine. Deliberate pair: this row states the delivered data invariant; the checker that polices it is the harness's, decomposing under SR-157 — an on-purpose split, not an echo. SN-002 is the only basis: hat.PERFORMANCE's failure class is a speed or size risk left unassessed, or a budget with no measurement behind it, which says nothing about whether a trace reference resolves.
-
-
-### SR SR-015
 _approved — re-attestation owed_
 - **Coincident**
   - before: (empty)
-  - after: The need asks for a budget row a reviewer can trace to what it constrains; each unresolvable reference reported is that traceability's verdict, read directly by the reviewer.
+  - after: The need asks that a re-sync onto an existing repository never clobber the repository's own files; a re-run that leaves every existing file byte-unchanged, replacing one only when an overwrite is explicitly requested, is that clause delivered by the generator itself, with no party between the re-run and the files it leaves alone.
+- **Rationale**
+  - before: Realizes SN-001 (safe drop-in onto an existing repo) and SN-007 — an adopter picking up kit updates must not lose their own edits, and a scaffolder that overwrites cannot be run twice, so it stops being run at all. Overwrite-always with a backup copy was rejected: it leaves the repo carrying a second copy of every file it touched. The deliberate kit-vs-project merge is a separate, operator-driven process (SR-036).
+  - after: Realizes SN-001 (a re-sync onto an existing repo never clobbers the repo's own files) — an adopter picking up kit updates must not lose their own edits, and a scaffolder that overwrites cannot be run twice, so it stops being run at all. Overwrite-always with a backup copy was rejected: it leaves the repo carrying a second copy of every file it touched. The deliberate kit-vs-project merge is a separate, operator-driven process (SR-036).
 _traced — routes to adjudication_
-- **Boundary-Refs**
-  - before: B-05
-  - after: B-09
+- **SN-Refs**
+  - before: SN-001;SN-007
+  - after: SN-001
 
 ## SR-022 — Vendored-doc drift
 
@@ -710,23 +701,6 @@ _approved — re-attestation owed_
 - **Coincident**
   - before: (empty)
   - after: The need asks for documentation a reader can trust; a drifted vendored copy reported as a finding is that outcome, with nothing between the comparison and the report.
-_traced — routes to adjudication_
-- **Boundary-Refs**
-  - before: B-05
-  - after: B-09
-
-## SR-024 — Permutation case generation
-
-> **Requirement.** The delivered permutation-case generator shall expand a Permutations spec into concrete dimensional cases.
-
-> **Rationale.** Realizes SN-002 — dimensional coverage is generated from the SR's declared inputs, not hand-listed. Systematic expansion reduces the risk that a dimensional combination is omitted, which is the charter's coverage half. Generation does NOT answer the charter's second half: showing that an enforcer fails when it should is demonstrated by negative or planted-failure tests, and a hand-listed negative case can demonstrate it. Those negative tests remain a separate obligation, not this row's.
-
-
-### SR SR-024
-_approved — re-attestation owed_
-- **Coincident**
-  - before: (empty)
-  - after: The need asks for dimensional coverage generated rather than hand-listed; the expanded case set is that output, whole.
 _traced — routes to adjudication_
 - **Boundary-Refs**
   - before: B-05
@@ -753,30 +727,21 @@ _traced — routes to adjudication_
 
 > **Requirement.** Every delivered enforcer of a declared policy dial shall read the same value for that dial as every other enforcer — one parse, one answer, across the hooks, the loop and the checkers alike.
 
-> **Rationale.** Realizes SN-004 (policies drive the gate) and SN-005 (one source, every enforcer reads it the same way). Partition with SR-137 (census): the one-home surface and its checked shape are SR-137's obligations at B-01/B-04 — read off that row's current crossings rather than restated here, so a revision there cannot leave a stale pair here — while this row is the package-wide coherence property those mechanics serve. ONE HOME: the two-grammars-agree observable lives HERE and nowhere else. SR-137 stated it too and the texts had already diverged, only this row's naming the trailing-comment decoy that once made the privacy gate fail OPEN; the duplicate clause is struck from SR-137 and nothing of its wording was unique. The shared-parse mechanism and the legacy migration-window read decompose to this row's LLRs.
+> **Rationale.** Realizes SN-028 (every policy dial in one home, a single hand-edited, machine-read file, whose two readings are pinned equal over a table of adversarial files). Partition with SR-137 (census): the one-home surface and its checked shape are SR-137's obligations at B-01/B-04 — read off that row's current crossings rather than restated here, so a revision there cannot leave a stale pair here — while this row is the package-wide coherence property those mechanics serve. ONE HOME: the two-grammars-agree observable lives HERE and nowhere else. SR-137 stated it too and the texts had already diverged, only this row's naming the trailing-comment decoy that once made the privacy gate fail OPEN; the duplicate clause is struck from SR-137 and nothing of its wording was unique. The shared-parse mechanism and the legacy migration-window read decompose to this row's LLRs.
 
 
 ### SR SR-031
-- **Coincident**
-  - before: (empty)
-  - after: The needs ask for one declared value per policy dial, read the same way by every enforcer; the enforcers agreeing is that outcome, a property of the delivered code with no outside party in it.
-
-## SR-033 — Release checklist generation
-
-> **Requirement.** The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate.
-
-> **Rationale.** Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did.
-
-
-### SR SR-033
 _approved — re-attestation owed_
 - **Coincident**
   - before: (empty)
-  - after: The need asks for a release gate whose warn-tier budgets reach a reader; the emitted checklist listing each budget is that outcome, and ticking it off is the release act's own.
+  - after: The need asks for every policy dial in one hand-edited, machine-read file whose shape is a checked contract because two grammars read it, the two readings pinned equal over a table of adversarial files. Every enforcer reading the same value for the same dial, and the two delivered reader grammars returning the same answer over that adversarial table, the trailing-comment decoy included, is that pinned equality, a property of the delivered code with no outside party in it.
+- **Rationale**
+  - before: Realizes SN-004 (policies drive the gate) and SN-005 (one source, every enforcer reads it the same way). Partition with SR-137 (census): the one-home surface and its checked shape are SR-137's obligations at B-01/B-04 — read off that row's current crossings rather than restated here, so a revision there cannot leave a stale pair here — while this row is the package-wide coherence property those mechanics serve. ONE HOME: the two-grammars-agree observable lives HERE and nowhere else. SR-137 stated it too and the texts had already diverged, only this row's naming the trailing-comment decoy that once made the privacy gate fail OPEN; the duplicate clause is struck from SR-137 and nothing of its wording was unique. The shared-parse mechanism and the legacy migration-window read decompose to this row's LLRs.
+  - after: Realizes SN-028 (every policy dial in one home, a single hand-edited, machine-read file, whose two readings are pinned equal over a table of adversarial files). Partition with SR-137 (census): the one-home surface and its checked shape are SR-137's obligations at B-01/B-04 — read off that row's current crossings rather than restated here, so a revision there cannot leave a stale pair here — while this row is the package-wide coherence property those mechanics serve. ONE HOME: the two-grammars-agree observable lives HERE and nowhere else. SR-137 stated it too and the texts had already diverged, only this row's naming the trailing-comment decoy that once made the privacy gate fail OPEN; the duplicate clause is struck from SR-137 and nothing of its wording was unique. The shared-parse mechanism and the legacy migration-window read decompose to this row's LLRs.
 _traced — routes to adjudication_
-- **Boundary-Refs**
-  - before: B-05
-  - after: B-09
+- **SN-Refs**
+  - before: SN-004;SN-005
+  - after: SN-028
 
 ## SR-035 — No language-specific token in the shipped scheme
 
@@ -794,18 +759,24 @@ _traced — routes to adjudication_
 
 > **Requirement.** The delivered coordinator shall route each in-process session phase (PLAN/BUILD/REVIEW-A/REVIEW-B/DESIGN-CHECK/CRITIQUE) through its declared per-phase command template, falling back to the single declared command — surfacing the declared reviewer dial at run start without enforcing it.
 
-> **Rationale.** Realizes SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run — two samples of one model share blind spots, so a review by the family that built the change agrees with it for the wrong reasons; cross-family routing is what makes the second opinion independent, and one model for every phase was rejected on that basis. Dispatch stays keyed off the in-process session phase because the alternative, a per-phase code branch, makes adding a phase a code change and so discourages adding one. THIS ROW CARRIED A RESUME-SURFACE SIZE TRIPWIRE AND NO LONGER DOES, and the two lenses that reached it are answered here rather than deleted with it. Both were premised on a session INHERITING a resume surface that grows across runs: a view must stay usable as its content volume grows (hat.UX-ENGINEER), and at 3am the reader of that surface is another automated step, which needs the growth legible from the artifact rather than from a human noticing (hat.UNATTENDED-OPS). Neither premise survives the one-engine coordinator — no session inherits a resume surface any more, and the status page is a generated integrator artifact whose size the generator owns, so there is no growing view to keep usable and no 3am artifact whose growth an automated reader must judge. The lenses are not overruled; their subject is gone. If a per-session resume surface is ever reintroduced, both apply again on the same reasoning, and the warn-not-fail severity they… [130 more chars — read the registry row]
+> **Rationale.** Realizes SN-026 (several model families selected per job, so that work benefiting from an independent second opinion is routed to a different family wherever that is configured) — two samples of one model share blind spots, so a review by the family that built the change agrees with it for the wrong reasons; cross-family routing is what makes the second opinion independent, and one model for every phase was rejected on that basis. Dispatch stays keyed off the in-process session phase because the alternative, a per-phase code branch, makes adding a phase a code change and so discourages adding one. THIS ROW CARRIED A RESUME-SURFACE SIZE TRIPWIRE AND NO LONGER DOES, and the two lenses that reached it are answered here rather than deleted with it. Both were premised on a session INHERITING a resume surface that grows across runs: a view must stay usable as its content volume grows (hat.UX-ENGINEER), and at 3am the reader of that surface is another automated step, which needs the growth legible from the artifact rather than from a human noticing (hat.UNATTENDED-OPS). Neither premise survives the one-engine coordinator — no session inherits a resume surface any more, and the status page is a generated integrator artifact whose size the generator owns, so there is no growing view to keep usable and no 3am artifact whose growth an automated reader must judge. The lenses are not overruled; their subject is gone. If a per-session resume surface is ever reintroduced, both apply again o… [187 more chars — read the registry row]
 
 
 ### SR SR-040
 _approved — re-attestation owed_
 - **Coincident**
   - before: (empty)
-  - after: The need asks for an unattended run whose per-phase sessions start as declared; routing each phase through its declared command template, and surfacing the reviewer dial at run start, is that outcome, and what the invoked runner then does is the routed session's own requirement.
+  - after: The need asks that the owner configure several model families selected per job, so that work benefiting from an independent second opinion is routed to a different family wherever that is configured. Each in-process phase routed through its own declared command template, falling back to the single declared command, is that per-job selection carried out, so a review phase declared on another family's command runs on that family; the reviewer dial surfaced at run start shows the declared choice before the run, and a broken map entry is refused before the first iteration rather than routed silently. What the invoked runner then does is the routed session's own requirement.
+- **Rationale**
+  - before: Realizes SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run — two samples of one model share blind spots, so a review by the family that built the change agrees with it for the wrong reasons; cross-family routing is what makes the second opinion independent, and one model for every phase was rejected on that basis. Dispatch stays keyed off the in-process session phase because the alternative, a per-phase code branch, makes adding a phase a code change and so discourages adding one. THIS ROW CARRIED A RESUME-SURFACE SIZE TRIPWIRE AND NO LONGER DOES, and the two lenses that reached it are answered here rather than deleted with it. Both were premised on a session INHERITING a resume surface that grows across runs: a view must stay usable as its content volume grows (hat.UX-ENGINEER), and at 3am the reader of that surface is another automated step, which needs the growth legible from the artifact rather than from a human noticing (hat.UNATTENDED-OPS). Neither premise survives the one-engine coordinator — no session inherits a resume surface any more, and the status page is a generated integrator artifact whose size the generator owns, so there is no growing view to keep usable and no 3am artifact whose growth an automated reader must judge. The lenses are not overruled; their subject is gone. If a per-session resume surface is ever reintroduced, both apply again on the same reasoning, and the warn-not-fail severity they argued for travels with them: a growing resume surface is a smell, and failing on a smell trains an operator to bypass the check.
+  - after: Realizes SN-026 (several model families selected per job, so that work benefiting from an independent second opinion is routed to a different family wherever that is configured) — two samples of one model share blind spots, so a review by the family that built the change agrees with it for the wrong reasons; cross-family routing is what makes the second opinion independent, and one model for every phase was rejected on that basis. Dispatch stays keyed off the in-process session phase because the alternative, a per-phase code branch, makes adding a phase a code change and so discourages adding one. THIS ROW CARRIED A RESUME-SURFACE SIZE TRIPWIRE AND NO LONGER DOES, and the two lenses that reached it are answered here rather than deleted with it. Both were premised on a session INHERITING a resume surface that grows across runs: a view must stay usable as its content volume grows (hat.UX-ENGINEER), and at 3am the reader of that surface is another automated step, which needs the growth legible from the artifact rather than from a human noticing (hat.UNATTENDED-OPS). Neither premise survives the one-engine coordinator — no session inherits a resume surface any more, and the status page is a generated integrator artifact whose size the generator owns, so there is no growing view to keep usable and no 3am artifact whose growth an automated reader must judge. The lenses are not overruled; their subject is gone. If a per-session resume surface is ever reintroduced, both apply again on the same reasoning, and the warn-not-fail severity they argued for travels with them: a growing resume surface is a smell, and failing on a smell trains an operator to bypass the check.
 _traced — routes to adjudication_
 - **Boundary-Refs**
   - before: B-05
   - after: B-09;B-10
+- **SN-Refs**
+  - before: SN-006
+  - after: SN-026
 
 ## SR-043 — Subagent spawn gate
 
@@ -901,13 +872,18 @@ _traced — routes to adjudication_
 
 > **Requirement.** The delivered scaffold generator shall record a kit-version stamp carrying the kit commit SHA and date, marked -dirty on an uncommitted kit tree.
 
-> **Rationale.** Realizes SN-007 — without a recorded origin an adopter cannot tell which kit version they are on, so a re-sync degrades from a diff into a guess and the ADOPTING.md re-sync procedure has no baseline to diff against. Deriving the version from file hashes was rejected: it reports that something differs without saying from what. The stamp is what lets a maintainer identify the upstream version a scaffold came from and compute a re-sync diff.
+> **Rationale.** Contributes to SN-001's re-sync clause (a re-sync onto an existing repo never clobbers the repo's own files) by supplying the kit base that re-sync diffs from — without a recorded origin an adopter cannot tell which kit version they are on, so a re-sync degrades from a diff into a guess and the ADOPTING.md re-sync procedure has no baseline to diff against. Deriving the version from file hashes was rejected: it reports that something differs without saying from what. The stamp is what lets a maintainer identify the upstream version a scaffold came from and compute a re-sync diff.
 
 
 ### SR SR-111
-- **Coincident**
-  - before: (empty)
-  - after: The needs ask for an adopter able to pick up kit updates from a known base; the stamp recording the kit commit a scaffold came from is that base, written by the generator itself.
+_approved — re-attestation owed_
+- **Rationale**
+  - before: Realizes SN-007 — without a recorded origin an adopter cannot tell which kit version they are on, so a re-sync degrades from a diff into a guess and the ADOPTING.md re-sync procedure has no baseline to diff against. Deriving the version from file hashes was rejected: it reports that something differs without saying from what. The stamp is what lets a maintainer identify the upstream version a scaffold came from and compute a re-sync diff.
+  - after: Contributes to SN-001's re-sync clause (a re-sync onto an existing repo never clobbers the repo's own files) by supplying the kit base that re-sync diffs from — without a recorded origin an adopter cannot tell which kit version they are on, so a re-sync degrades from a diff into a guess and the ADOPTING.md re-sync procedure has no baseline to diff against. Deriving the version from file hashes was rejected: it reports that something differs without saying from what. The stamp is what lets a maintainer identify the upstream version a scaffold came from and compute a re-sync diff.
+_traced — routes to adjudication_
+- **SN-Refs**
+  - before: SN-001;SN-007
+  - after: SN-001
 
 ## SR-112 — Checked per-agent skill fan-out
 
@@ -917,9 +893,14 @@ _traced — routes to adjudication_
 
 
 ### SR SR-112
+_approved — re-attestation owed_
 - **Coincident**
   - before: (empty)
-  - after: The need asks for a repository paying only for what it uses; one neutral skill source with a checked, generated per-agent fan-out is that outcome, since no hand-kept copy exists to drift.
+  - after: The need asks that AI agents and humans work from the same playbook. The skills are part of that playbook, and each agent harness loads them from its own copy; each copy generated from the one neutral skill source, with a copy diverging from it byte for byte detected and refreshed by one command, is that sameness for the skills: every agent loads the text the source holds, and no agent's copy can quietly become a different skill. The generator and its check deliver it with no party between; the need's agent-neutral enforcement clause is other rows'.
+_traced — routes to adjudication_
+- **SN-Refs**
+  - before: SN-012
+  - after: SN-005
 
 ## SR-113 — Dev-setup wires the process floor
 
@@ -932,23 +913,6 @@ _traced — routes to adjudication_
 - **Coincident**
   - before: (empty)
   - after: The need asks for a working gated process without hand-building the tooling; the developer setup wiring the commit floor is that outcome in the adopter's checkout.
-
-## SR-129 — Registry representation migration
-
-> **Requirement.** The delivered harness shall convert the work-item registry between its current and legacy representations without losing or altering any cell, refusing a conversion whose declared inputs it cannot vouch for and any conversion attempted while either representation is in use.
-
-> **Rationale.** WHAT THE ROW STATES IS THE CAPABILITY. The spec folder layout (status = directory, TOML frontmatter, Deliverable in the body), the retired flat CSV and the drained-stop mechanics are implementation and history, which the requirement tier does not carry: layout and claim detection belong to LLR-136, and the current-and-legacy carriers to that design row's cells as current-carrier evidence. The 140-cell lesson: an unproven representation change is where a registry silently loses cells. The converter is the migration path every adopter of the folder home takes, and the single spec writer the filing seam reuses (concurrency-restructure spec, Phase 2). A converter is the check on a representation change, and the charter's second half — can it be shown to fail when it should — is exactly what a cell-exact round-trip over the live registry provides; the 140-cell lesson in this row's own rationale is that failure class already observed once.
-
-
-### SR SR-129
-_approved — re-attestation owed_
-- **Coincident**
-  - before: (empty)
-  - after: The needs ask for a registry whose cells survive a change of representation; a conversion preserving every cell, and refusing where it cannot vouch for its inputs or either form is in use, is that outcome.
-_traced — routes to adjudication_
-- **Boundary-Refs**
-  - before: B-05
-  - after: B-01;B-09
 
 ## SR-137 — One policy home, with a checked shape
 
@@ -1004,20 +968,35 @@ _traced — routes to adjudication_
 
 
 ### SR SR-147
+_approved — re-attestation owed_
 - **Coincident**
   - before: (empty)
-  - after: The needs ask for a spine a machine can verify; one machine-parseable representation, reached by a migration proven over the live registries, is the precondition that verification reads, delivered by the package alone.
+  - after: The need asks that the chain from need to test be mechanically verified, not manually asserted, with the strict check reporting zero orphans and a malformed or duplicate id failing at any stage. Every tier held in one machine-parseable representation is what that check reads, and the representation carries part of the outcome itself: a duplicate id is a decode error of the parse, and a reference list is a typed array, so no prose word is read as a reference; the migration proven cell for cell before the switch means the chain verified is the one the registries held, with nothing silently dropped. The harness delivers both with no party between.
+_traced — routes to adjudication_
+- **SN-Refs**
+  - before: SN-002;SN-012
+  - after: SN-002
 
-### TC TC-272 — Drafted, never approved
-_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
-- **TC-ID**: TC-272
-- **Verifies**: SR-147;LLR-277;IF-112
-- **Level**: Unit
-- **Method**: In memory, and over real git repositories and a scaffold for the history reader and the legacy carrier. Under the TOML carrier, a comment-only text, a text whose only table row sits inside a stakeholder's description string, and an empty text yield no need, while the markdown carrier reads the same string text's row; a TOML text that does not parse and a carrier the need tier does not have raise, and the refusing reader names the file. The README floor and the approval view's need prose read no need from a TOML file declaring none, and the README floor refuses an unparseable one naming the file. The record's history reader reads no need at a commit whose needs file declares none, and refuses one at a commit whose needs file does not parse, naming the commit and the file. A scaffold whose needs file is markdown records its approved need, reports it drifted naming the cell once amended, refuses an act copying it until the need is re-attested, and reports nothing unanchored.
-- **Tier**: Smoke
-- **Expected**: Satisfies LLR-277 (parent SR-147): no reader of a needs file chooses its carrier by guessing, an unparseable TOML needs file refuses naming the file, and a markdown needs file is compared like a TOML one.
+### TC TC-272, Drafted — never approved
+- **Expected**
+  - before: Satisfies LLR-277 (parent SR-147): no reader of a needs file chooses its carrier by guessing, an unparseable TOML needs file refuses naming the file, and a markdown needs file is compared like a TOML one.
+  - after: Satisfies LLR-277 (parent SR-147) for the in-memory readers: no reader of a needs file chooses its carrier by guessing, and an unparseable TOML needs file refuses naming the file.
+- **Method**
+  - before: In memory, and over real git repositories and a scaffold for the history reader and the legacy carrier. Under the TOML carrier, a comment-only text, a text whose only table row sits inside a stakeholder's description string, and an empty text yield no need, while the markdown carrier reads the same string text's row; a TOML text that does not parse and a carrier the need tier does not have raise, and the refusing reader names the file. The README floor and the approval view's need prose read no need from a TOML file declaring none, and the README floor refuses an unparseable one naming the file. The record's history reader reads no need at a commit whose needs file declares none, and refuses one at a commit whose needs file does not parse, naming the commit and the file. A scaffold whose needs file is markdown records its approved need, reports it drifted naming the cell once amended, refuses an act copying it until the need is re-attested, and reports nothing unanchored.
+  - after: In memory. Under the TOML carrier, a comment-only text, a text whose only table row sits inside a stakeholder's description string, and an empty text yield no need, while the markdown carrier reads the same string text's row; a TOML text that does not parse and a carrier the need tier does not have raise, and the refusing reader names the file. The README floor and the approval view's need prose read no need from a TOML file declaring none, and the README floor refuses an unparseable one naming the file.
+- **Evidence**
+  - before: tests/test_spine_carrier.py::test_needs_from_text_takes_the_carrier_from_the_file_not_the_text; tests/test_spine_carrier.py::test_needs_or_refuse_names_the_file_it_cannot_read; tests/test_spine_carrier.py::test_every_needs_text_caller_takes_the_carrier_from_the_file; tests/test_snapshot_readers.py::test_the_snapshot_history_reader_takes_the_needs_carrier_from_the_file; tests/test_snapshot_readers.py::test_a_markdown_needs_file_is_compared_like_a_toml_one
+  - after: tests/test_spine_carrier.py::test_needs_from_text_takes_the_carrier_from_the_file_not_the_text; tests/test_spine_carrier.py::test_needs_or_refuse_names_the_file_it_cannot_read; tests/test_spine_carrier.py::test_every_needs_text_caller_takes_the_carrier_from_the_file
+
+### TC TC-297 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-297
+- **Verifies**: SR-147;LLR-277
+- **Level**: Integration
+- **Method**: Over real git repositories and a scaffold. The record's history reader reads no need at a commit whose needs file declares none, and refuses one at a commit whose needs file does not parse, naming the commit and the file. A scaffold whose needs file is markdown records its approved need, reports it drifted naming the cell once amended, refuses an act copying it until the need is re-attested, and reports nothing unanchored.
+- **Tier**: Full
+- **Expected**: Satisfies LLR-277 (parent SR-147) for the readers over version-control history and the recorded copy: the history reader takes the carrier from the file at each commit and refuses an unparseable one naming the commit and the file, and a markdown needs file is compared like a TOML one.
 - **Automated**: Yes
-- **Evidence**: tests/test_spine_carrier.py::test_needs_from_text_takes_the_carrier_from_the_file_not_the_text; tests/test_spine_carrier.py::test_needs_or_refuse_names_the_file_it_cannot_read; tests/test_spine_carrier.py::test_every_needs_text_caller_takes_the_carrier_from_the_file; tests/test_snapshot_readers.py::test_the_snapshot_history_reader_takes_the_needs_carrier_from_the_file; tests/test_snapshot_readers.py::test_a_markdown_needs_file_is_compared_like_a_toml_one
+- **Evidence**: tests/test_snapshot_readers.py::test_the_snapshot_history_reader_takes_the_needs_carrier_from_the_file; tests/test_snapshot_readers.py::test_a_markdown_needs_file_is_compared_like_a_toml_one
 - **Status**: Drafted
 - **Phase**: 6
 
@@ -1025,18 +1004,24 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 
 > **Requirement.** The harness shall report every occurrence of a retired process tag in a live authored surface — naming the file and line and the vocabulary that replaces it, at a severity that warns by default and fails under --strict — reporting none in a declared historical, generated or attestation-quoting surface, nor in a line or file marked as a declaration site.
 
-> **Rationale.** Realizes SN-004 (the ladder's vocabulary is the one the project is held to) and SN-010 (docs stay honest). This check is a CONDITION of the vocabulary conversion rather than a follow-up, on measured evidence: an earlier sweep removed a retired-tag construct from this repo's own open-items registry and it REGENERATED within days, caught only by an audit. A ~2,500-edit conversion held in place by attention is a conversion that comes undone. The carve-outs are as load-bearing as the rule: history is not rewritten and an attestation is never re-worded, because a swept sign-off makes a signed record claim something was signed that was not. C-MNT-3 gives every declared vocabulary value exactly one normative definition in one home; a retired tag surviving in a live authored surface is a second, contradictory definition of the same word, which is why the earlier sweep regenerated within days when only attention held it.
+> **Rationale.** Realizes SN-010 (a reader can navigate the documentation and trust it: navigable and honest). This check is a CONDITION of the vocabulary conversion rather than a follow-up, on measured evidence: an earlier sweep removed a retired-tag construct from this repo's own open-items registry and it REGENERATED within days, caught only by an audit. A ~2,500-edit conversion held in place by attention is a conversion that comes undone. The carve-outs are as load-bearing as the rule: history is not rewritten and an attestation is never re-worded, because a swept sign-off makes a signed record claim something was signed that was not. C-MNT-3 gives every declared vocabulary value exactly one normative definition in one home; a retired tag surviving in a live authored surface is a second, contradictory definition of the same word, which is why the earlier sweep regenerated within days when only attention held it.
 
 
 ### SR SR-149
 _approved — re-attestation owed_
 - **Coincident**
   - before: (empty)
-  - after: The needs ask for authored surfaces that stay honest to the current vocabulary; each retired tag reported with its file, line and replacement is that outcome.
+  - after: The need asks that a reader can trust the documentation: navigable and honest. A retired process tag surviving in a live authored surface names a step by a word the process no longer defines, a second and contradictory definition of it; each one reported with its file, line and the vocabulary that replaces it, warned by default and failing under --strict, while history, generated surfaces and attestation quotes are left as written, is that honesty held by the harness's own check rather than by attention.
+- **Rationale**
+  - before: Realizes SN-004 (the ladder's vocabulary is the one the project is held to) and SN-010 (docs stay honest). This check is a CONDITION of the vocabulary conversion rather than a follow-up, on measured evidence: an earlier sweep removed a retired-tag construct from this repo's own open-items registry and it REGENERATED within days, caught only by an audit. A ~2,500-edit conversion held in place by attention is a conversion that comes undone. The carve-outs are as load-bearing as the rule: history is not rewritten and an attestation is never re-worded, because a swept sign-off makes a signed record claim something was signed that was not. C-MNT-3 gives every declared vocabulary value exactly one normative definition in one home; a retired tag surviving in a live authored surface is a second, contradictory definition of the same word, which is why the earlier sweep regenerated within days when only attention held it.
+  - after: Realizes SN-010 (a reader can navigate the documentation and trust it: navigable and honest). This check is a CONDITION of the vocabulary conversion rather than a follow-up, on measured evidence: an earlier sweep removed a retired-tag construct from this repo's own open-items registry and it REGENERATED within days, caught only by an audit. A ~2,500-edit conversion held in place by attention is a conversion that comes undone. The carve-outs are as load-bearing as the rule: history is not rewritten and an attestation is never re-worded, because a swept sign-off makes a signed record claim something was signed that was not. C-MNT-3 gives every declared vocabulary value exactly one normative definition in one home; a retired tag surviving in a live authored surface is a second, contradictory definition of the same word, which is why the earlier sweep regenerated within days when only attention held it.
 _traced — routes to adjudication_
 - **Boundary-Refs**
   - before: B-05
   - after: B-09
+- **SN-Refs**
+  - before: SN-004;SN-010
+  - after: SN-010
 
 ## SR-150 — Stakeholder-need cells stay in stakeholder language
 
@@ -1249,18 +1234,21 @@ _traced — routes to adjudication_
 
 > **Requirement.** The delivered loop content shall allocate each work-item identity at most once, so that no two concurrent actors receive the same identity and an identity freed by a deletion is never re-issued.
 
-> **Rationale.** Identity allocation is its own decision, not a consequence of serialization: serializing the writer makes a COLLISION unlikely and does nothing about RE-USE, which is the half that silently re-points every commit message and archived document citing the freed id. The non-reuse clause has a `shall` of its own here rather than living in SR-170's acceptance, which is a cell that cannot mint a requirement. Realizes SN-008 and SN-025.
+> **Rationale.** Identity allocation is its own decision, not a consequence of serialization: serializing the writer makes a COLLISION unlikely and does nothing about RE-USE, which is the half that silently re-points every commit message and archived document citing the freed id. The non-reuse clause has a `shall` of its own here rather than living in SR-170's acceptance, which is a cell that cannot mint a requirement. Contributes to SN-025 (the ready frontier ordered deterministically, so two readers of the same registry dispatch the same work) by supplying a work-item identity that names one record for every reader, before and after a deletion.
 
 
 ### SR SR-174
 _approved — re-attestation owed_
-- **Coincident**
-  - before: (empty)
-  - after: The needs ask for ids a reader can trust to name one thing; an identity allocated at most once and not re-issued after a deletion is that outcome, held by the loop's own allocation.
+- **Rationale**
+  - before: Identity allocation is its own decision, not a consequence of serialization: serializing the writer makes a COLLISION unlikely and does nothing about RE-USE, which is the half that silently re-points every commit message and archived document citing the freed id. The non-reuse clause has a `shall` of its own here rather than living in SR-170's acceptance, which is a cell that cannot mint a requirement. Realizes SN-008 and SN-025.
+  - after: Identity allocation is its own decision, not a consequence of serialization: serializing the writer makes a COLLISION unlikely and does nothing about RE-USE, which is the half that silently re-points every commit message and archived document citing the freed id. The non-reuse clause has a `shall` of its own here rather than living in SR-170's acceptance, which is a cell that cannot mint a requirement. Contributes to SN-025 (the ready frontier ordered deterministically, so two readers of the same registry dispatch the same work) by supplying a work-item identity that names one record for every reader, before and after a deletion.
 _traced — routes to adjudication_
 - **Boundary-Refs**
   - before: B-05
   - after: B-01
+- **SN-Refs**
+  - before: SN-008;SN-025
+  - after: SN-025
 
 ## SR-175 — Declared inclusion rule for content dispatched to a model provider
 
@@ -1291,23 +1279,6 @@ _approved — re-attestation owed_
 - **Coincident**
   - before: (empty)
   - after: The need asks for a secret or identity not republished by the kit's own records; a finding recorded by its class and location, and not by the matched value, is that outcome in each record the kit writes.
-_traced — routes to adjudication_
-- **Boundary-Refs**
-  - before: B-05
-  - after: B-09
-
-## SR-177 — Fan-out utilisation reported from the run's own telemetry
-
-> **Requirement.** The delivered loop content shall report, per run, the utilisation of the fan-out it commissions — the lanes configured, the lanes actually occupied, and the work integrated per unit of wall time — derived from the run's own recorded telemetry, reported and never gated, with no declared improvement target.
-
-> **Rationale.** The charter refuses a declared budget with no measurement behind it, and SN-027 is that finding inverted — the system's most complex machinery justified by a throughput claim no instrument measures, flagged unfalsifiable as written by three independent derivations. The intake proposal (docs/plans/2026-08-17-wi468-obligation-intake-options.md §3 option (b)) is DELIBERATELY LESS than the charter asks — the narrowing is the decision: C-PRF-1 wants a declared improvement over the serial semantic on a declared workload, but the wall time of an LLM loop is dominated by provider latency and model choice, so a numeric target would pin machine, provider and model conditions the kit does not control (one machine is one data point) — this row makes the throughput claim OBSERVABLE rather than BUDGETED. The concrete argument the instrument earns its keep: the lanes dial is undeclared in this repository and defaults to 1, so the machinery SN-027 justifies by fan-out runs SERIAL here and nothing today would say so — this report's first run would have printed lanes=1. SN-027's own `why` states the same structural claim, so the need and the instrument stop overclaiming together. NOT DECOMPOSED, stated rather than implied: nothing aggregates the existing per-session telemetry (wall seconds, api seconds, turns — the session-log headers and the iteration index) by lane or by run, so there is no seam to pin and no test to cite; the row lands Drafted-undecomposed with the aggregation surface as it… [69 more chars — read the registry row]
-
-
-### SR SR-177
-_approved — re-attestation owed_
-- **Coincident**
-  - before: (empty)
-  - after: The need asks for a team seeing whether its parallel lanes pay off; the per-run utilisation reported from the run's own telemetry is that outcome, reported and not gated.
 _traced — routes to adjudication_
 - **Boundary-Refs**
   - before: B-05
@@ -1996,7 +1967,7 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **Hat-Refs**: UNATTENDED-OPS
 - **Requirement**: Where a repository vendors a guardrails payload for a model-name substring, the delivered loop content shall inject that payload, in place of the default guardrails core, into a guarded session whose model name contains that substring.
 - **Rationale**: A DERIVED requirement, and labelled so. SN-026 asks that models be selected per job and capability level; it does not name what a session on a given model is told, so this obligation arrives through the unattended-operations lens rather than through the need's text. A guardrails posture written for one model is ritual noise to a stronger one and too little for a weaker one, and in an unattended run nobody watches a session drift: one core for every guarded model is the silent degrade that lens listens for. Selecting by a substring of the model name reuses the matcher the guardrails policy already applies, so one grammar decides both whether a session is guarded and what it is given, and the repository's own file names carry the mapping. A per-model key in the policy dial was the alternative, and it lost because a model name in shared configuration is the name that rots when models turn over. Fed back to the need: SN-026's acceptance could name a per-model posture; until it does, this row is derived and says so.
-- **AcceptanceCriteria**: A guarded session on a model whose name contains a vendored payload's substring receives that payload and not the default core; when several vendored substrings match, the longest wins; a session on a model matching none receives the default core; a session the declared guardrails policy leaves unguarded receives nothing, whatever payloads are vendored; the kit ships no payload and names no model.
+- **AcceptanceCriteria**: A guarded session on a model whose name contains a vendored payload's substring receives that payload and not the default core; when several vendored substrings match, the longest wins; a session on a model matching none receives the default core; a session the declared guardrails policy leaves unguarded receives nothing, whatever payloads are vendored; the kit ships no payload of its own, and so names no model to the selection: with only the default core present, every model receives the default core.
 - **Priority**: C
 - **Verification**: Test
 - **Status**: Drafted
@@ -2019,11 +1990,11 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **TC-ID**: TC-290
 - **Verifies**: SR-223;LLR-280;IF-253
 - **Level**: Unit
-- **Method**: A planted vendored guardrails set under a temporary directory: a default core, a payload for a broad substring and a payload for a narrower substring containing it, the narrower one wrapped in a KIT CORE block with text outside it. (a) THE SELECTOR: guardrails_core returns the narrower payload's block, without the text outside it, for a model containing both substrings; the broader payload for a model containing only the broader one; the default core for a model containing neither and for a call naming no model. (b) THE SESSION: compose_session_prompt under an all policy prepends the narrower payload and not the default core for a matching model; under a policy excepting that model it guards nothing and injects no payload.
+- **Method**: A planted vendored guardrails set under a temporary directory: a default core, a payload for a broad substring and a payload for a narrower substring containing it, the narrower one wrapped in a KIT CORE block with text outside it. (a) THE SELECTOR: guardrails_core returns the narrower payload's block, without the text outside it, for a model containing both substrings; the broader payload for a model containing only the broader one; the default core for a model containing neither and for a call naming no model. (b) THE SESSION: compose_session_prompt under an all policy prepends the narrower payload and not the default core for a matching model; under a policy excepting that model it guards nothing and injects no payload. (c) THE SHIPPED SET: no physical kit source is a core.<substring>.md payload, no MAPPING, conditional or generated destination of the kit's delivery inventory is one, and this repository's own guardrails directory holds none; and with only a default core present, guardrails_core returns that core for every model the kit's shipped roster template names, bare and with its version, so the kit names no model to the selection in its files or its code.
 - **Tier**: Smoke
-- **Expected**: Satisfies SR-223 AcceptanceCriteria: the longest matching vendored substring selects the payload, a model matching none gets the default core, and the policy alone decides whether anything is injected
+- **Expected**: Satisfies SR-223 AcceptanceCriteria: the longest matching vendored substring selects the payload, a model matching none gets the default core, the policy alone decides whether anything is injected, and the kit ships no payload of its own, so with only the default core present every model receives the default core
 - **Automated**: Yes
-- **Evidence**: tests/test_guardrails_payload.py::test_the_longest_matching_substring_selects_the_payload; tests/test_guardrails_payload.py::test_a_guarded_session_carries_its_payload_and_the_policy_still_decides
+- **Evidence**: tests/test_guardrails_payload.py::test_the_longest_matching_substring_selects_the_payload; tests/test_guardrails_payload.py::test_a_guarded_session_carries_its_payload_and_the_policy_still_decides; tests/test_guardrails_payload.py::test_the_kit_ships_no_payload_so_every_model_gets_the_default_core
 - **Status**: Drafted
 - **Phase**: 6
 

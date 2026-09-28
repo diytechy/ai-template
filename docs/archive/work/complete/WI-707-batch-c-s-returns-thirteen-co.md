@@ -3,12 +3,43 @@ id = "WI-707"
 title = "Batch C's returns: thirteen Coincident waivers (re-word or re-parent), SR-223 with TC-290, SR-224's lens (SN-005 is the owner's), TC-272's tier"
 workstream = "process"
 sr_refs = ["SR-011", "SR-015", "SR-024", "SR-031", "SR-033", "SR-040", "SR-111", "SR-112", "SR-129", "SR-147", "SR-149", "SR-174", "SR-177", "SR-223", "SR-224"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "quick"
 priority = 3
 safety_class = "spine"
 bar = "DevStg-Reqs"
 +++
+
+## Deliverable
+
+Built by one builder in three commits with three Codex Sol rounds (wave-5
+arbitration rulings 46 and 47), SOUND at 4396d734. It carries spine-acts
+batch C's folded returns.
+
+- **The thirteen waivers**, judged by approved SR-193's test (the
+  specification alone delivers its needs):
+  - Six pass after re-wording or re-parenting: SR-011 (SN-001), SR-031
+    (SN-028), SR-040 (SN-026), SR-112 (SN-005), SR-147 (SN-002) and SR-149
+    (SN-010). `sn_refs` were re-pointed where the old parent's outcome could
+    not carry the row, and the "Realizes" sentences of SR-011, SR-031,
+    SR-040 and SR-149 name the cited need in its own words.
+  - Seven contribute one part of a need that several requirements deliver
+    together, so they cannot honestly waive: SR-015, SR-024, SR-033,
+    SR-111, SR-129, SR-174 and SR-177. They drop `coincident` and stay
+    unclassified, SR-193's third state, reported without failing. SR-111's
+    and SR-174's rationale now say what they contribute. The tier has no
+    class for joint delivery, so the question is the owner's: **OI-97**
+    (recommendation (a), a declared joint-delivery class).
+- **SR-223 and TC-290.** TC-290 gains arm (c): no guardrail payload ships,
+  and with only the default core present every roster model receives it.
+  The planted states went red. SR-223's last clause is narrowed to what that
+  arm observes, because the kit's roster template names models by design.
+  SR-223 and SR-225, labelled derived rows, stay unclassified for the same
+  reason as the seven.
+- **TC-272** is Smoke over its in-memory arm, and the new Full TC-297
+  carries the two slow-module pointers.
+- **Not done:** SR-224 is byte-exact. It waits on the owner's SN-005
+  applicability tags, which are a need.
 
 ## Context
 

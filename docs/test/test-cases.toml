@@ -2796,11 +2796,22 @@ phase = 6
 [test.TC-272]
 verifies = ["SR-147", "LLR-277", "IF-112"]
 level = "Unit"
-method = "In memory, and over real git repositories and a scaffold for the history reader and the legacy carrier. Under the TOML carrier, a comment-only text, a text whose only table row sits inside a stakeholder's description string, and an empty text yield no need, while the markdown carrier reads the same string text's row; a TOML text that does not parse and a carrier the need tier does not have raise, and the refusing reader names the file. The README floor and the approval view's need prose read no need from a TOML file declaring none, and the README floor refuses an unparseable one naming the file. The record's history reader reads no need at a commit whose needs file declares none, and refuses one at a commit whose needs file does not parse, naming the commit and the file. A scaffold whose needs file is markdown records its approved need, reports it drifted naming the cell once amended, refuses an act copying it until the need is re-attested, and reports nothing unanchored."
+method = "In memory. Under the TOML carrier, a comment-only text, a text whose only table row sits inside a stakeholder's description string, and an empty text yield no need, while the markdown carrier reads the same string text's row; a TOML text that does not parse and a carrier the need tier does not have raise, and the refusing reader names the file. The README floor and the approval view's need prose read no need from a TOML file declaring none, and the README floor refuses an unparseable one naming the file."
 tier = "Smoke"
-expected = "Satisfies LLR-277 (parent SR-147): no reader of a needs file chooses its carrier by guessing, an unparseable TOML needs file refuses naming the file, and a markdown needs file is compared like a TOML one."
+expected = "Satisfies LLR-277 (parent SR-147) for the in-memory readers: no reader of a needs file chooses its carrier by guessing, and an unparseable TOML needs file refuses naming the file."
 automated = "Yes"
-evidence = "tests/test_spine_carrier.py::test_needs_from_text_takes_the_carrier_from_the_file_not_the_text; tests/test_spine_carrier.py::test_needs_or_refuse_names_the_file_it_cannot_read; tests/test_spine_carrier.py::test_every_needs_text_caller_takes_the_carrier_from_the_file; tests/test_snapshot_readers.py::test_the_snapshot_history_reader_takes_the_needs_carrier_from_the_file; tests/test_snapshot_readers.py::test_a_markdown_needs_file_is_compared_like_a_toml_one"
+evidence = "tests/test_spine_carrier.py::test_needs_from_text_takes_the_carrier_from_the_file_not_the_text; tests/test_spine_carrier.py::test_needs_or_refuse_names_the_file_it_cannot_read; tests/test_spine_carrier.py::test_every_needs_text_caller_takes_the_carrier_from_the_file"
+status = "Drafted"
+phase = 6
+
+[test.TC-297]
+verifies = ["SR-147", "LLR-277"]
+level = "Integration"
+method = "Over real git repositories and a scaffold. The record's history reader reads no need at a commit whose needs file declares none, and refuses one at a commit whose needs file does not parse, naming the commit and the file. A scaffold whose needs file is markdown records its approved need, reports it drifted naming the cell once amended, refuses an act copying it until the need is re-attested, and reports nothing unanchored."
+tier = "Full"
+expected = "Satisfies LLR-277 (parent SR-147) for the readers over version-control history and the recorded copy: the history reader takes the carrier from the file at each commit and refuses an unparseable one naming the commit and the file, and a markdown needs file is compared like a TOML one."
+automated = "Yes"
+evidence = "tests/test_snapshot_readers.py::test_the_snapshot_history_reader_takes_the_needs_carrier_from_the_file; tests/test_snapshot_readers.py::test_a_markdown_needs_file_is_compared_like_a_toml_one"
 status = "Drafted"
 phase = 6
 
@@ -2845,11 +2856,11 @@ phase = 1
 [test.TC-290]
 verifies = ["SR-223", "LLR-280", "IF-253"]
 level = "Unit"
-method = """A planted vendored guardrails set under a temporary directory: a default core, a payload for a broad substring and a payload for a narrower substring containing it, the narrower one wrapped in a KIT CORE block with text outside it. (a) THE SELECTOR: guardrails_core returns the narrower payload's block, without the text outside it, for a model containing both substrings; the broader payload for a model containing only the broader one; the default core for a model containing neither and for a call naming no model. (b) THE SESSION: compose_session_prompt under an all policy prepends the narrower payload and not the default core for a matching model; under a policy excepting that model it guards nothing and injects no payload."""
+method = """A planted vendored guardrails set under a temporary directory: a default core, a payload for a broad substring and a payload for a narrower substring containing it, the narrower one wrapped in a KIT CORE block with text outside it. (a) THE SELECTOR: guardrails_core returns the narrower payload's block, without the text outside it, for a model containing both substrings; the broader payload for a model containing only the broader one; the default core for a model containing neither and for a call naming no model. (b) THE SESSION: compose_session_prompt under an all policy prepends the narrower payload and not the default core for a matching model; under a policy excepting that model it guards nothing and injects no payload. (c) THE SHIPPED SET: no physical kit source is a core.<substring>.md payload, no MAPPING, conditional or generated destination of the kit's delivery inventory is one, and this repository's own guardrails directory holds none; and with only a default core present, guardrails_core returns that core for every model the kit's shipped roster template names, bare and with its version, so the kit names no model to the selection in its files or its code."""
 tier = "Smoke"
-expected = "Satisfies SR-223 AcceptanceCriteria: the longest matching vendored substring selects the payload, a model matching none gets the default core, and the policy alone decides whether anything is injected"
+expected = "Satisfies SR-223 AcceptanceCriteria: the longest matching vendored substring selects the payload, a model matching none gets the default core, the policy alone decides whether anything is injected, and the kit ships no payload of its own, so with only the default core present every model receives the default core"
 automated = "Yes"
-evidence = "tests/test_guardrails_payload.py::test_the_longest_matching_substring_selects_the_payload; tests/test_guardrails_payload.py::test_a_guarded_session_carries_its_payload_and_the_policy_still_decides"
+evidence = "tests/test_guardrails_payload.py::test_the_longest_matching_substring_selects_the_payload; tests/test_guardrails_payload.py::test_a_guarded_session_carries_its_payload_and_the_policy_still_decides; tests/test_guardrails_payload.py::test_the_kit_ships_no_payload_so_every_model_gets_the_default_core"
 status = "Drafted"
 phase = 6
 
