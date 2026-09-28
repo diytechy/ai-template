@@ -3,12 +3,22 @@ id = "WI-685"
 title = "re-judge TC-055: no result recorded [sha256:2680da392f6a] at merge 77fb093"
 workstream = "process"
 sr_refs = ["SR-054"]
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "rejudge"
 adjudicates = ["TC-055"]
 +++
+
+## Deliverable
+
+Re-judged in the coordinator's hand lane (build/wi-684), `OUTCOME: RECORDED result=pass`. Verdict: `docs/reviews/wi-685-re-judge-tc-055-no-result-rec/`. Result record: `docs/test/observations/TC-055.2026-09-28T072908Z.toml` (90-day lifetime), written by the kit's observation writer. Codex Sol cross-reviewed the five re-judges (wave-5 ruling 31).
+
+The first session (Fable) was the rendering code's own model family, which
+TC-055's Method excludes. Its record was withdrawn before merge. The
+qualifying judge was Codex Sol, cross-family (`002-ADJUDICATE-fe96ec6.md`):
+APPROVE on T2, T4, T5 and T8. Its first T4 finding at 390 px came from
+downsampling a 24,076 px shot; on 58 native-resolution tiles, T4 passes.
 
 ## Context
 

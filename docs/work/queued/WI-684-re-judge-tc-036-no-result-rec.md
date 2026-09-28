@@ -28,3 +28,5 @@ Advisory registry joins (WI-388; never gating):
 
 ### Decomposition code map (LLR/TC on the same SRs)
 - TC-036 -> project-trajectory/ADOPTING.md
+Judged 2026-09-28 (`docs/reviews/wi-684-re-judge-tc-036-no-result-rec/001-ADJUDICATE-fe96ec6.md`, confirmed by Codex Sol): `OUTCOME: NEEDS-JUDGEMENT result=-`. No re-sync of an existing adoption exists to inspect: this repository is the kit, and no stamped adoption's re-sync is on record. The owed act is a person's re-sync of a stamped adoption, per ADOPTING.md §6 and RESYNC_PACK.md, with its per-file decisions, regenerated docs, the target kit's checker run and the re-stamp; an inspector then records TC-036's result. This row stays open so that the merge checkpoint does not re-mint it; it suppresses a second draft only while a row for the case is open (wave-5 ruling 31). Folded (the adjudicator's finding, upheld by Sol): TC-036's `inputs` omit `project-trajectory/RESYNC_PACK.md`, where the procedure lives, so a change to the pack would not stale a recorded result. Amend the cell (approved, so it goes to adjudication) before the result is recorded.
+

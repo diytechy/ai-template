@@ -3,12 +3,16 @@ id = "WI-686"
 title = "re-judge TC-209: no result recorded [sha256:3b7866818926] at merge 77fb093"
 workstream = "process"
 sr_refs = ["SR-184"]
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "rejudge"
 adjudicates = ["TC-209"]
 +++
+
+## Deliverable
+
+Re-judged in the coordinator's hand lane (build/wi-684), `OUTCOME: RECORDED result=pass`. Verdict: `docs/reviews/wi-686-re-judge-tc-209-no-result-rec/`. Result record: `docs/test/observations/TC-209.2026-09-28T070936Z.toml` (90-day lifetime), written by the kit's observation writer. Codex Sol cross-reviewed the five re-judges (wave-5 ruling 31).
 
 ## Context
 

@@ -355,3 +355,46 @@ test_frame_system, test_trace_interfaces, test_assumptions_registry,
 test_derive_stage, test_module_size_ratchet, test_complexity_ratchet), run by
 the coordinator: 507 passed / 1 skipped. `check_complexity --mode enforce`:
 OK, 204 rows. Trunk before this squash: 47198652.
+
+WI-655's post-merge sweep minted three rows: WI-695 (the amendment
+adjudication of the SR cells C2 wrote), WI-696 (the first approval of the DA,
+SUR and TC-279 rows) and WI-697 (TC-279's re-judge, owed because no result
+is recorded). **Open count: 24.**
+
+### The five overdue re-judges: WI-684 to WI-688
+
+An independent Fable adjudicator judged the five observation cases the hand
+merges had never checkpointed, one commit per row. Codex Sol cross-reviewed
+them ([sol-rejudge.md](../reviews/2026-09-27-wave5/sol-rejudge.md); ruling 31).
+
+- **TC-209 and TC-210: RECORDED pass** (Sol: earned).
+- **TC-036 and TC-211: NEEDS-JUDGEMENT** (Sol: honest). TC-036 owes a
+  person's re-sync of a stamped adoption, and TC-211 owes the SR-161 record
+  producer. Their rows, WI-684 and WI-688, stay open with the owed act in
+  their Context. The checkpoint suppresses a second draft only while a row
+  is open, so closing them would re-mint them at every merge.
+- **TC-055: RECORDED pass, by a cross-family judge.** The first session
+  was the rendering code's own model family, which TC-055's Method excludes,
+  so Sol found its pass unearned. Its record was withdrawn in the lane. Codex
+  Sol then critiqued the same 30-shot matrix
+  ([sol-tc055.md](../reviews/2026-09-27-wave5/sol-tc055.md)). Its one
+  finding, T4 labels too small at 390 px, came from downsampling a 24,076 px
+  screenshot to one image. Re-judged on 58 native-resolution tiles
+  ([sol-tc055-t4.md](../reviews/2026-09-27-wave5/sol-tc055-t4.md)), T4
+  passes, so the verdict is APPROVE on T2, T4, T5 and T8. The coordinator
+  recorded it through the kit's writer, naming the judge. Lesson for the
+  next critique: attach tall screenshots as native tiles, never whole.
+
+Folded, not filed: TC-036's `inputs` omit `RESYNC_PACK.md` (into WI-684).
+`inspection-procedures.md` hand-restates results inside a declared input,
+beside the observation writer (into WI-688). The adjudicator's non-blocking
+dashboard observation (the What drill's scroll card shows 9 of 31 SN blocks
+with no visible affordance under overlay scrollbars) is recorded here for
+the owner. **Open count: 21** (20 queued, 1 deferred).
+
+Commit bar at the re-judges: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0 (three observation records accepted), approve-modified
+current, `gen_open_items` current, `check_docs --stale` 0 broken (one link
+to the withdrawn record, in Sol's cross-review, made plain text), smoke 1697
+passed / 3 skipped, seconds 29.7 s within 60 s. No code changed. Trunk before
+this squash: e5b25bd6.
