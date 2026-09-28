@@ -3,13 +3,28 @@ id = "WI-703"
 title = "re-judge TC-055: declared inputs changed [sha256:8c0356ccd9e0] at merge 4ecdc99"
 workstream = "process"
 sr_refs = ["SR-054"]
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 needs = ["WI-701"]
 brief = "rejudge"
 adjudicates = ["TC-055"]
 +++
+
+## Deliverable
+
+Re-judged at 4b7f6dae, after WI-701, by a cross-family Critique session
+(Codex Sol) over 180 native-resolution tiles the coordinator rendered
+without judging. `OUTCOME: RECORDED result=fail`. The verdict:
+`docs/reviews/wi-703-re-judge-tc-055-declared-inpu/001-ADJUDICATE-4b7f6dae.md`.
+The record: `docs/test/observations/TC-055.2026-09-28T094119Z.toml`.
+
+1680 px approves, and WI-701's T5 fix holds at 390 and 1680 px. What
+remains is T4 at 390 px, where labels sit exactly on the approved TC-121
+shrink floor, and T5 at 1280 px on the far-right card under the overflow
+edge fade. Changing the floor amends approved design rows, so it goes to the
+owner as **OI-96** (recommendation (a): a rendered-pixel minimum). The fail
+is kept until the owner rules and TC-055 is re-judged.
 
 ## Context
 

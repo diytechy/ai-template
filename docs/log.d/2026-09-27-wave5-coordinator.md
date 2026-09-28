@@ -629,3 +629,26 @@ settled. That happens only when an amendment and its act share one merge,
 as the coordinator's hand path made them here. WI-706 is closed with that
 stated, and the gap is recorded for the owner. **Open count: 15** (14 queued,
 1 deferred).
+
+### WI-703: TC-055 re-judged on the fixed dashboard, and OI-96 for the shrink floor
+
+After WI-701 landed, the coordinator rendered the matrix at 4b7f6dae and cut
+180 native-resolution tiles, without judging them. Codex Sol judged them
+cross-family, one width per pass
+([390](../reviews/2026-09-27-wave5/sol-tc055c-390.md),
+[1280](../reviews/2026-09-27-wave5/sol-tc055c-1280.md),
+[1680](../reviews/2026-09-27-wave5/sol-tc055c-1680.md)). 1680 px approves,
+and WI-701's T5 fix holds at 390 and 1680 px. Two findings remain:
+- T4 at 390 px, on labels exactly at the approved TC-121 shrink floor;
+- T5 at 1280 px, on the far-right card. The coordinator's look at the tile
+  suggests the overflow edge fade rather than the de-emphasis. It is
+  recorded as the judge ruled.
+**TC-055 records FAIL again**, and the fail is kept. The floor is approved
+design (LLR-116, TC-121), so the question is the owner's: **OI-96**
+(pending, typed brief, recommendation (a): a rendered-pixel minimum).
+Across three cross-family passes, the judge's per-width calls moved
+between runs on the same rendering code. A single Critique pass is a noisy
+instrument, and the log records each.
+
+Commit bar at WI-703: all green; smoke 1798 passed / 3 skipped, seconds 29.2 s. Trunk before this
+squash: 312b2033.
