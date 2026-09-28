@@ -306,6 +306,12 @@ Questions:
   decomposition stops there. Keep the `SN→SR→LLR→TC` tiers required by the
   selected verification method and real verification links intact; this is a
   review judgment, not a row-count quota or a new schema.
+- **Coverage by children is earned, not assumed** (the kit repository's ruling
+  of record: `OI-72`). An LLR may be satisfied by its parent's coverage. An SR
+  may be satisfied by its children only when the children span the SR's full
+  dimensional space and are not interdependent; otherwise the honest states are
+  a recorded orphan or a direct TC. No validator settles this, and none is
+  likely to be efficient: it rests on the author's and the reviewer's reading.
 
 ## 4. Validation instruments
 
@@ -445,6 +451,14 @@ failures hide in FIELDS.
   what is left as a **worklist**, warn-first — a row whose frame is the only
   record of an unresolved question gets a reviewed entry in the detector's
   allow file rather than a silent deletion.
+- **A cell is not a receipt — test it on a reader with no history.** A cell
+  written just after a correction tends to answer the version it replaced ("no
+  longer counts drafts", "now read from the registry", "only the declared
+  set"): it is a receipt for the fix, and it reads as a rule only to someone
+  who saw the fix. The test is cheap: hand the cell alone to a fresh context
+  and ask it to restate what the row requires. If its restatement reconstructs
+  the correction ("so it used to count drafts"), the cell carries provenance;
+  rewrite it as what holds, and put the correction in the log.
 - **One vocabulary per axis, across every tier.** If three tiers say `Drafted`
   and the fourth says something else for the same state, a reader must learn a
   different field per tier and every cross-tier query grows a special case.

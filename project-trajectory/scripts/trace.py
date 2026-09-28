@@ -3356,7 +3356,7 @@ def build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
         label = (
             "(SRs with no linked stakeholder need)"
             if sn_ids
-            else "(system requirements)"
+            else "(system specifications)"
         )
         roots.append(_group(label, [sr_node(s) for s in rootless_srs]))
     rootless_llrs = [lr for lr in llrs if not sr_ids & set(refs(lr.get("SR-Refs")))]
@@ -5842,8 +5842,8 @@ def render_report(reg, findings, args, forest):
             "| Metric | Count |",
             "|---|---|",
             f"| Stakeholder needs (SN) | {len(sn_ids)} |",
-            f"| System requirements (SR) | {len(srs)} |",
-            f"| Low-level requirements (LLR) | {len(llrs)} |",
+            f"| System specifications (SR) | {len(srs)} |",
+            f"| Design expectations (LLR) | {len(llrs)} |",
             f"| Test cases (TC) | {len(tcs)} |",
         ]
         + evidence_metric_rows(tcs)

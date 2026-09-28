@@ -121,8 +121,8 @@ docs/privacy-check is enabled and the effective git author email is not in the
 exempt allowlist — an unattended run under a private identity is the
 history-leak disaster case (process-options.md "Commit identity & privacy").
 
-Contracts: IF-015 — the interface seam this module declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
+Contracts: IF-015, IF-253 — the interface seams this module declares (process.md
+§8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-015: the unattended coordinator's effect on the repository it runs
     in. A plain launch drives the claim / work / merge cycle by COMMITTING to
@@ -140,6 +140,17 @@ Contract IF-015: the unattended coordinator's effect on the repository it runs
     wrong identity — when the agent executable is missing, the working directory
     is not a git repository, or a privacy-checked repo's effective author email
     is not in the exempt allowlist.
+
+Contract IF-253: the per-model guardrails payloads a repository may vendor
+    beside its default core. A file `docs/guardrails/core.<substring>.md`, the
+    substring one or more characters, is a payload for every model whose name
+    contains that substring, matched case-insensitively as the guardrails policy
+    matches. When several match, the longest substring wins and equal lengths
+    fall to name order. The payload replaces `core.md` for that session: its
+    BEGIN/END KIT CORE block is injected when it carries one, else the whole
+    file. A session the policy does not guard reads no payload, and an
+    unreadable chosen file is treated as an absent core. The kit ships no
+    payload and names no model; the file names are the repository's.
 """
 
 import argparse
@@ -597,13 +608,30 @@ def guardrails_apply(policy, model):
     return any(t in m for t in toks)
 
 
-def guardrails_core(root):
+def guardrails_core(root, model=""):
     """The always-on core to prepend to a quick-tier session's prompt, or None.
     Vendored verbatim as docs/guardrails/core.md; the BEGIN/END KIT CORE block is
     extracted when present, else the whole file. Absent -> None (the caller warns
-    once and runs without it — guardrails accelerate, they are not a gate)."""
+    once and runs without it — guardrails accelerate, they are not a gate).
+
+    A repo may vendor one payload per model substring beside it,
+    `core.<substring>.md`, for a model that wants a different posture: the
+    payload whose substring `model` contains replaces core.md, chosen by the
+    policy's own matcher, the longest substring winning so a narrower payload
+    beats a broader one. The substrings are the repo's file names, so the kit
+    names no model.
+
+    Implements: SR-223, LLR-280
+    """
+    gdir = root / "docs" / "guardrails"
+    stems = sorted(
+        (p.name[len("core.") : -len(".md")] for p in gdir.glob("core.?*.md")),
+        key=lambda sub: (-len(sub), sub),
+    )
+    chosen = next((sub for sub in stems if guardrails_apply(sub, model)), None)
+    name = "core.{}.md".format(chosen) if chosen else "core.md"
     try:
-        text = (root / "docs" / "guardrails" / "core.md").read_text(encoding="utf-8")
+        text = (gdir / name).read_text(encoding="utf-8")
     except OSError:
         return None
     m = KIT_CORE_RE.search(text)
@@ -898,7 +926,7 @@ def compose_session_prompt(
     base = resume_reconcile + body + loop_provenance_note()
     if not guardrails_apply(guardrails_policy, model):
         return base, False
-    core = guardrails_core(root)
+    core = guardrails_core(root, model)
     if core:
         return core + "\n\n---\n\n" + base, True
     if not warned_no_core:

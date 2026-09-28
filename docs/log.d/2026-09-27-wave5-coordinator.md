@@ -448,3 +448,64 @@ Commit bar at the second re-judges: `check_trajectory --strict` clean, `trace
 --strict-integrity` 0, approve-modified current, `gen_open_items` current,
 `check_docs --stale` 0 broken, smoke 1697 passed / 3 skipped, seconds 27.4 s
 within 60 s. No code changed. Trunk before this squash: 8bebd4cf.
+
+### WI-615 lands: the doctrine sitting, seven of eight parts, and OI-95 for the eighth
+
+One builder, ten commits, three Codex Sol rounds (wave-5 rulings 33 to 36):
+[sol-wi615.md](../reviews/2026-09-27-wave5/sol-wi615.md),
+[sol-wi615-fix.md](../reviews/2026-09-27-wave5/sol-wi615-fix.md),
+[sol-wi615-fix2.md](../reviews/2026-09-27-wave5/sol-wi615-fix2.md).
+The parts built:
+- "When a guard is owed" and the fan-out rules, stated once in PROCESS.md
+  and linked from the briefs;
+- the reviewer brief's spec of record;
+- the adopter-true worker brief;
+- the children-coverage rule;
+- the knowledge-pack edits, among them a `subagent-brief` skill and
+  multi-file skills (the B5 defect fixed);
+- the terminology pass, *system specification* and *design expectation*
+  in prose, labels and the report table;
+- PROCESS.md §4's absolutes rule made matrix-wide.
+
+Sol's first round found three shipped behaviours no row claimed: per-model
+guardrail payloads, the skills-index description floor, and whole-directory
+materialization. They are now traced, and the two with no honest approved
+parent became labelled derived requirements, SR-223 and SR-224. The
+second round moved the floor off SR-112, which it had been hung on
+"by ruling, not by fit", and gave `--check` its own exit-code interface row.
+Byte budgets: AGENTS.template.md 9,996 of 10,000, PROCESS.md +2,208 and
+PROCESS_OPTIONS.md +619, both watched.
+
+Part 7 (WI-610) asks where the Review-Verdict trailer rides, which only the
+owner can decide, so it becomes **OI-95** (pending, typed brief,
+recommendation (a): amend OI-76's wording to the code). It is not built. The
+merge conflicted in the watermark (trunk's, re-bumped), three registries
+(merged table by table) and RESYNC_PACK (both kept; only WI-615's three
+entries re-anchored to `[since 47f8b573]`, because WI-651's entry already
+reads `[since e520b6e6]`). **Open count: 21** (20 queued, 1 deferred).
+
+The merge's slow modules found a red that WI-615 did not cause.
+`tests/test_traj_render.py`'s theme lock (TC-122: one `prefers-color-scheme`
+block, at `:root`) failed on the shipped dashboard. WI-633's per-need style
+had carried its own dark-mode `@media` block scoped to `.detail`, which is
+emitted only when assumption rows exist. WI-655 wrote the first real DA
+rows, so trunk has been red on this slow test since WI-655 landed; that
+merge did not run `test_traj_render`. The coordinator made the fix at the
+root: a `--danger` token in both theme blocks under `:root`, read by the
+per-need style. The page golden `tests/golden/dashboard-no-assumptions.html`
+was regenerated for that intended change (the two token lines). Lesson: a
+lane that writes the first rows of a registry changes what every emitter
+renders, so run the dashboard's slow modules at its merge.
+
+Commit bar at WI-615: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs --stale` 0 broken, smoke 1708 passed / 3 skipped, seconds 26.6 s
+within 60 s. The touched slow modules plus both ratchets (test_prompts,
+test_agent_loop, test_skills_sync, test_bootstrap, test_trace_golden,
+test_traj_render, test_traj_views, test_gen_okf, test_gen_trajectory,
+test_mapping_purpose, test_dogfood_sync, test_rule_sync, test_skills_index,
+test_check_docs, test_trajectory_arch, test_module_size_ratchet,
+test_complexity_ratchet, test_resync_pack, test_frame_context,
+test_skill_materialization, test_guardrails_payload), run by the
+coordinator: 595 passed / 2 skipped. `check_complexity --mode enforce`: OK,
+204 rows. Trunk before this squash: 47f8b573.

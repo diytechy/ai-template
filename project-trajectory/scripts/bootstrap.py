@@ -186,7 +186,7 @@ each holds only its `-000` placeholder rows (ignored, like every `-000`), so a
 single-module project can simply leave them empty. THE TWO ARE DIFFERENT TIERS
 and the distinction is the one worth learning first: an `external.toml`
 `[boundary.B-##]` row is a crossing of your SYSTEM boundary, and it is what your
-system requirements form around; an `IF-###` row is a concrete interface
+system specifications form around; an `IF-###` row is a concrete interface
 definition, and it ties BACK to a crossing (`interface_from_external` /
 `interface_to_external`) only when it realizes one. Fill in `IF-###` rows when
 this repo declares a contract — with another repo **or between its own modules**
@@ -570,16 +570,41 @@ def _skill_rel(spec, name_dir, rel):
     return (Path(spec["skills_dir"]) / name_dir.name / rel).as_posix()
 
 
+def skill_copies(skill_dir, name, spec):
+    """Every `(source file, dest-relative path)` one skill materializes as for
+    one agent. The unit is the skill's whole directory, not its SKILL.md: a
+    skill may cite a file beside it, and `gen_skills_index --check-agents`
+    compares the file set, so a SKILL.md-only copy is drifted from its first
+    write.
+
+    Implements: SR-112, LLR-279
+    """
+    return [
+        (
+            f,
+            "{}/{}/{}".format(
+                spec["skills_dir"], name, f.relative_to(skill_dir).as_posix()
+            ),
+        )
+        for f in sorted(skill_dir.rglob("*"))
+        if f.is_file()
+    ]
+
+
 def materialize_agent_layer(dest, agents, skills, dry_run, force):
     """Copy the selected skills (and the inert hook example) into each chosen
-    agent's native location. Returns a list of created dest-relative paths."""
+    agent's native location, each skill as the files `skill_copies` names.
+    Returns a list of created dest-relative paths.
+
+    Implements: SR-112, LLR-279
+    """
     created = []
     for agent in agents:
         spec = AGENTS[agent]
         for name, src in skills:
-            dst_rel = "{}/{}/SKILL.md".format(spec["skills_dir"], name)
-            if copy_if_new(src, dest / dst_rel, dry_run, force):
-                created.append(dst_rel)
+            for src_file, dst_rel in skill_copies(src.parent, name, spec):
+                if copy_if_new(src_file, dest / dst_rel, dry_run, force):
+                    created.append(dst_rel)
         # The inert hook example is optional — an agent with no shipped hook
         # config (codex) declares no `hooks_src` and simply gets its skills.
         if not spec.get("hooks_src"):
@@ -2361,7 +2386,7 @@ MAPPING = [
 def mapping_entries():
     """`MAPPING` normalized to `(src, dst, requirement_ref)` triples.
 
-    A row may carry an OPTIONAL third element — a system-requirement id stating
+    A row may carry an OPTIONAL third element — a system-specification id stating
     why the file ships (SR-163). The reader is TOLERANT: a bare `(src, dst)` pair
     is accepted and yields `ref = None`, and a bare pair is by definition an
     unmapped-entry warning. So a downstream inventory keeps working with no flag
@@ -2478,8 +2503,9 @@ def delivery_inventory():
             exclusions[rel] = "scope: this-repo skill; never materialized downstream"
             continue
         for spec in AGENTS.values():
-            conditional.append(
-                (rel, "{}/{}/SKILL.md".format(spec["skills_dir"], skill_md.parent.name))
+            conditional.extend(
+                (f.relative_to(KIT).as_posix(), dst)
+                for f, dst in skill_copies(skill_md.parent, skill_md.parent.name, spec)
             )
     for rows in KNOWLEDGE_PACKS.values():
         for label, _topic, _domain in rows:

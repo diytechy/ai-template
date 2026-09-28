@@ -1076,7 +1076,11 @@ behavior**, so a fresh scaffold pays nothing.
   still escalates above it, so it never caps escalation. **Set the tier while
   filing or triaging the WI:** `quick` for mechanical, off-spine work, `medium` by
   default, `strong` only for design-shaping or spine-touching changes — a
-  deliberate planner decision, never a mid-loop downgrade.
+  deliberate planner decision, never a mid-loop downgrade. The discriminator is
+  how much the spec leaves open: a Done-when that determines the diff builds at
+  `quick`; bounded choices a reviewer can check against the spec, at `medium`;
+  an open design decision, at `strong` — or back to planning, since a build that
+  must settle the design is a plan in disguise.
   **Multi-WI assignments (WI-133 → the scheduler).** Independent, off-spine
   dev slices may still batch onto one branch — one Build pass per WI, one
   review round over the combined diff (`--wi "WI-a;WI-b"`); `schedule.py`
@@ -1416,7 +1420,11 @@ should, mutating **nothing** in the workspace.
   **verbatim** under `docs/guardrails/` — `core.md` is the whole upstream
   always-on file; its `BEGIN/END KIT CORE` block is what gets injected (the
   whole file if it carries no such markers). Playbooks (`PLAN.md`, `CODE.md`, …)
-  sit beside it so the core's routing table resolves.
+  sit beside it so the core's routing table resolves. **One payload per model
+  substring:** a `core.<substring>.md` beside it replaces `core.md` for a
+  session whose model contains that substring (the policy's own matcher; the
+  longest substring wins). The policy still decides *whether* to inject; the
+  file names are the repo's, so the kit names no model.
 - **`[policies] guardrails`** in `docs/process.toml` (scaffolded `off`). The
   value is case-insensitive:
   - `off` → never inject; `all` → every session.

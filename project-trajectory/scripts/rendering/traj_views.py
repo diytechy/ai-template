@@ -330,8 +330,7 @@ NEED_DA_STYLE = (
     ".detail .need-da h4{font-size:var(--small);margin:0 0 .3rem;}"
     ".detail .need-da ul{margin:.2rem 0;padding-left:1.1rem;}"
     ".detail .need-da .da-facts{color:var(--muted);}"
-    ".detail .need-da .da-flag{color:#b91c1c;}"
-    "@media (prefers-color-scheme: dark){.detail .need-da .da-flag{color:#f87171;}}"
+    ".detail .need-da .da-flag{color:var(--danger);}"
     "</style>"
 )
 # Appended to the detail renderer's markup: the block is built and escaped here,

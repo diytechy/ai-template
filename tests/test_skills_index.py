@@ -81,3 +81,35 @@ def test_generator_rejects_name_dir_mismatch(tmp_path):
         assert False, "expected a ValueError on name/dir mismatch"
     except ValueError as e:
         assert "!=" in str(e)
+
+
+def test_check_refuses_a_description_under_the_floor(tmp_path, capsys, monkeypatch):
+    # The description is the only text an agent reads to decide whether to load
+    # a skill, so one too short to say WHEN to use it is a skill that never
+    # triggers. `--check` refuses it by name; one at the floor passes.
+    gen = load_script("gen_skills_index")
+    skills = tmp_path / "skills"
+    for name, desc in (("terse", "Use it."), ("ample", "x" * gen.DESCRIPTION_FLOOR)):
+        (skills / name).mkdir(parents=True)
+        (skills / name / "SKILL.md").write_text(
+            "---\nname: {}\ndescription: {}\n---\nbody\n".format(name, desc),
+            encoding="utf-8",
+        )
+    gen_argv = ["gen_skills_index.py", "--skills", str(skills)]
+    monkeypatch.setattr("sys.argv", gen_argv)
+    gen.main()  # writes a fresh INDEX.csv, so staleness is not what fails next
+    monkeypatch.setattr("sys.argv", gen_argv + ["--check"])
+    try:
+        gen.main()
+        assert False, "expected --check to refuse the short description"
+    except SystemExit as e:
+        assert e.code == 1
+    err = capsys.readouterr().err
+    assert "terse" in err and "ample" not in err
+    assert str(gen.DESCRIPTION_FLOOR) in err
+
+
+def test_every_shipped_description_clears_the_floor():
+    gen = load_script("gen_skills_index")
+    rows = gen.collect_skills(SKILLS)
+    assert gen.short_descriptions(rows) == []

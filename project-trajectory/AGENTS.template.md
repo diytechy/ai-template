@@ -1,9 +1,9 @@
 # AGENTS.md — Agent & Contributor Guide
 
 **What this file does:** the standing brief for any agent or human working in
-this repo — *how we build here*, so quality doesn't depend on who (or which
-model) shows up. It is loaded every session: keep it short and current.
-Project facts live in `docs/`; this file points at them.
+this repo — *how we build here*, so quality doesn't depend on who shows up.
+It is loaded every session: keep it short and current. Project facts live in
+`docs/`; this file points at them.
 
 <!-- kit-only -->
 > Scaffolds to `AGENTS.md` (the cross-tool standard) via `bootstrap.py`.
@@ -51,8 +51,8 @@ the ladder, and the ID scheme. The short version needed every session:
   concurrent ones) are authored Mermaid sequence diagrams in
   [docs/runtime-flows.md](docs/runtime-flows.md), kept current
   with the LLRs (`scripts/check_flows.py` enforces; §3).
-- **Releases (if versioned):** `DevStg-Release` runs the `release` tier plus
-  the generated checklist (`scripts/gen_release_checklist.py`).
+- **Versioned releases:** `DevStg-Release` adds the `release` tier and
+  `scripts/gen_release_checklist.py`.
 - **The code map is derived from the source AST**: per-module summary and
   public symbols with `Implements:` back-links, rendered live in
   `PROJECT_STATE.html`'s How-SW tab. **Read it to
@@ -78,8 +78,7 @@ Code a newcomer — human or model — can navigate without re-deriving the desi
   as a short list of well-named step calls; push logic into the steps.
 - **One fact, one home — in code, and across it.** No copy-paste logic;
   consolidate duplicates into a shared stage (PROCESS.md §3, 0→A→B).
-- **Intention-revealing names; no cryptic abbreviations.** Comments explain
-  *why*; the code says what.
+- **Intention-revealing names; no cryptic abbreviations.**
 - **Back-link to requirements** as far as `[checks] backlink_coverage_min`
   asks: `Implements: SR-007, LLR-014` on implementing symbols; test names
   embed the verified id.
@@ -128,8 +127,8 @@ Implements: SR-014, LLR-014
 """
 ```
 
-Keep tag names greppable; update the contract with the signature — a wrong
-contract is worse than none.
+Keep tag names greppable; a contract is a comment, so the promise rule above
+binds it.
 
 ## For analytics / data code
 
@@ -137,8 +136,8 @@ contract is worse than none.
   version/snapshot.
 - **Notebooks explore; modules ship.** Promote anything reused or tested into
   `src/` so it can be imported and unit-tested.
-- **Separate data I/O from transforms:** pure transforms unit-tested on small
-  fixtures; validate schema/shape at the boundary, failing loudly on surprises.
+- **Validate schema/shape at the data boundary**, failing loudly on surprises;
+  transforms are the pure core above.
 - **Test the math on hand-checked cases**, and **exercise the input space** —
   `scripts/gen_cases.py` derives boundary + combination cases from the SR's
   `Permutations` (process.md "Dimensional coverage").
@@ -168,6 +167,8 @@ Direct and concrete; explain the *why* before the *how*.
   (process-options.md "finding lifecycle"). An experiment with hypothesis +
   result beats confident guessing; peak confidence is when the 30-second
   recheck is cheapest (process.md §6).
+- **Not found where you looked is not absent.** Say where you searched; widen
+  it (other names, the value as well as its constant) before calling it missing.
 - **No sunk-cost shipping, keeping, or blind retries.** An approach found
   wrong late is still wrong — drop it; never retry past a failure whose cause
   you haven't found (process.md §6). A wrong design is escalated as a written

@@ -4,7 +4,7 @@
 # rows (trace.py ignores any id ending `-000`, so they are inert until deleted).
 #
 # WHY THIS FILE IS SEPARATE FROM interfaces.toml. A BOUNDARY crossing is a
-# frame-level fact — it is what your SYSTEM REQUIREMENTS form around, and it
+# frame-level fact — it is what your SYSTEM SPECIFICATIONS form around, and it
 # exists whether or not any module realizes it yet. An `IF-###` row in
 # interfaces.toml is a concrete internal seam definition; it ties BACK to a
 # crossing here (`interface_from_external` / `interface_to_external`) only when

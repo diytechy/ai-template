@@ -18,10 +18,11 @@ Usage:
     python scripts/gen_skills_index.py [--skills skills] [--check]
 
     --check   Exit nonzero (and print a diff-style note) if INDEX.csv is stale,
-              like `gen_arch_map.py --check`. Use in CI / a gate.
+              like `gen_arch_map.py --check`, or if a skill's description is
+              under DESCRIPTION_FLOOR characters. Use in CI / a gate.
     default   (Re)write skills/INDEX.csv from the SKILL.md files.
 
-Contracts: IF-019 — the interface seam this module declares (process.md §8; row of record in docs/requirements/interfaces.toml).
+Contracts: IF-019, IF-254 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-019: this module is the sole writer of `skills/INDEX.csv`, and the
     file's shape is the contract: a one-line GENERATED banner comment, then a
@@ -31,10 +32,16 @@ Contract IF-019: this module is the sole writer of `skills/INDEX.csv`, and the
     the index is a pure function of the source tree and never a second place to
     author applicability. It is written as bytes with LF endings on every
     platform, keeping the committed file diff-free across checkouts.
-    `--check` re-renders in memory, compares with line endings normalized —
-    row content, not the checkout's newline convention — and exits 1 with a
-    STALE line naming the path when they differ. An absent skills directory is
-    reported and exits 0, so a repo that vendors no skills pays nothing.
+
+Contract IF-254: `--check`'s exit code, the whole of it. It exits 1 when a
+    skill's description is under DESCRIPTION_FLOOR characters, printing one
+    SHORT line per such skill that names it, its length and the floor, before
+    comparing anything. It then re-renders the index in memory, compares with
+    line endings normalized — row content, not the checkout's newline
+    convention — and exits 1 with a STALE line naming the path when they
+    differ. It exits 0 when the index is fresh and every description clears
+    the floor, and 0 when the skills directory is absent, which is reported,
+    so a repo that vendors no skills pays nothing.
 """
 
 import argparse
@@ -192,6 +199,44 @@ GENERATED_BANNER = (
 )
 
 
+# The shortest `description` --check accepts, in characters. The description is
+# the only text an agent reads before deciding to load a skill, so it must say
+# WHEN to use it as well as what it does ("Use when <trigger> — <what>"); one
+# shorter than this cannot, and a skill that never triggers is dead weight.
+# Implements: SR-224, LLR-281
+DESCRIPTION_FLOOR = 100
+
+
+def short_descriptions(rows):
+    """The `(name, length)` of every row whose description is under the floor.
+
+    Implements: SR-224, LLR-281
+    """
+    return [
+        (row["name"], len(row["description"]))
+        for row in rows
+        if len(row["description"]) < DESCRIPTION_FLOOR
+    ]
+
+
+def refuse_short_descriptions(rows):
+    """`--check`'s floor: name each description under it and exit 1.
+
+    Implements: SR-224, LLR-281
+    """
+    short = short_descriptions(rows)
+    for name, length in short:
+        print(
+            "gen_skills_index: SHORT - {}: description is {} characters, under "
+            "the {}-character floor; say when to use the skill.".format(
+                name, length, DESCRIPTION_FLOOR
+            ),
+            file=sys.stderr,
+        )
+    if short:
+        sys.exit(1)
+
+
 def render_index(rows):
     """Render the rows as CSV text (LF-terminated, stable column order), led by
     `GENERATED_BANNER`."""
@@ -275,6 +320,7 @@ def main():
     new_text = render_index(rows)
 
     if args.check:
+        refuse_short_descriptions(rows)
         # Read as bytes and normalize newlines so the freshness check is stable
         # across platforms (a Windows checkout may hold CRLF; the generated text
         # is LF) — the row *content*, not the line ending, is what must match.

@@ -1,4 +1,4 @@
-# Low-Level Requirements (LLR-###) — the TOML registry CARRIER.
+# Design expectations (LLR-###) — the TOML registry CARRIER.
 #
 # ONE TABLE PER ROW, id-keyed with the prefix retained and the key BARE:
 # `[design.LLR-000]`. Refs are typed arrays, `Phase` is an int, and an EMPTY

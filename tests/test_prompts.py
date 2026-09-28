@@ -117,6 +117,76 @@ def test_the_reviewer_brief_carries_the_construction_first_clause():
     assert "REACHABLE bad state the design could have made unreachable" in reviewer
 
 
+def test_the_reviewer_brief_names_the_work_items_own_spec_as_the_spec_of_record():
+    # Specs live in the work-item files under docs/work/; `docs/specs/` holds
+    # only its README and inert example in a scaffold, so a brief sending the
+    # reviewer there sends it to an empty folder. No shipped prompt may still
+    # point at `docs/specs` as where open work lives.
+    reviewer = pr.load(pr.REVIEWER)
+    assert "each work item's own spec file under docs/work/" in reviewer
+    assert "`specref` target where that points elsewhere" in reviewer
+    for key in sorted(pr.KIT_PROMPTS):
+        assert "docs/specs" not in pr.load(key), key
+
+
+def test_the_reviewer_and_worker_briefs_link_the_guard_rule_and_restate_nothing():
+    # The rule for when a guard is owed has one home, PROCESS.md §3. Both the
+    # judge and the builder are pointed at it by its bullet name; neither copies
+    # its trust-boundary list, which is what would drift.
+    heading = '§3 "When a guard is owed"'
+    process = (KIT / "PROCESS.md").read_text(encoding="utf-8")
+    assert process.count("**When a guard is owed.**") == 1
+    for key in (pr.REVIEWER, pr.WORKER):
+        text = pr.load(key)
+        assert heading in text, key
+        assert "a file on disk, the network" not in text, key
+
+
+def test_the_fan_out_rule_has_one_home_and_no_brief_or_skill_restates_it():
+    # PROCESS.md §6 keeps both delegation kinds, names tiers, and forbids
+    # fan-out from the judging sessions. A copy in a prompt or a shipped skill
+    # would be a second home, and the first edit to the rule would miss it.
+    process = (KIT / "PROCESS.md").read_text(encoding="utf-8")
+    assert process.count("**Fan-out — two kinds, both kept, named by tier.**") == 1
+    rule = "adjudication session never fans"
+    assert process.count(rule) == 1
+    texts = {key: pr.load(key) for key in pr.KIT_PROMPTS}
+    for skill in sorted((KIT / "skills").glob("*/SKILL.md")):
+        texts[skill.parent.name] = skill.read_text(encoding="utf-8")
+    for name, text in texts.items():
+        assert "never fans out" not in text and rule not in text, name
+
+
+# The ids of this repository's own records. A kit-shipped brief that cites one
+# sends an adopter to a record that does not exist in their repository.
+_RECORD_ID = re.compile(r"\b(?:WI|SN|SR|LLR|TC|IF|OI|CMP|PB|PART|ASSET|REPO)-\d+\b")
+
+
+def test_the_worker_brief_sent_body_cites_no_record_of_this_repository():
+    # What survives the comment strip is what an adopter's session reads; the
+    # measured evidence behind its rules lives in the dispatcher notes, where
+    # the kit keeps its own history.
+    raw = (KIT / "prompts" / pr.KIT_PROMPTS[pr.WORKER]).read_text(encoding="utf-8")
+    body = pr.load(pr.WORKER)
+    assert _RECORD_ID.findall(body) == []
+    assert "concurrency-restructure" not in body
+    notes = raw[: raw.find("-->")]
+    assert "WI-540" in notes and "WI-538" in notes
+
+
+def test_the_worker_close_bar_points_at_its_homes_instead_of_restating_it():
+    # The bar is declared in two homes every scaffold carries: the step table
+    # check.py selects at the rung in docs/stage, and the test tier selector in
+    # docs/stack.ini [tiers]. A restatement naming a wall-time budget told a
+    # scaffold's worker to run a budget its repo does not declare.
+    worker = pr.load(pr.WORKER)
+    assert "`check.py`'s step table" in worker
+    assert "`docs/stack.ini` `[tiers]`" in worker
+    assert "wall-time budget" not in worker
+    template = (KIT / "stack.ini.template").read_text(encoding="utf-8")
+    assert "\n[tiers]\n" in template
+
+
 def test_the_worker_brief_carries_the_standing_state_ritual():
     # WI-506 (OI-57 ruled (b)): the worker gains a standing-state contract —
     # write the log.d fragment + the spec's own Context/Deliverable edits

@@ -17,7 +17,7 @@ round.
 
 ## Derived from the SN/SR intent, never from the TC
 
-A rubric is written from the **stakeholder-need / system-requirement intent** — what
+A rubric is written from the **stakeholder-need / system-specification intent** — what
 "good enough" *means* — **not** from the test case. That inversion is the point: a
 lax TC is caught and hardened rather than inherited. When a critique round proposes
 a measurable sub-criterion, it routes through the change-intake flow (process.md

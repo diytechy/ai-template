@@ -5964,7 +5964,8 @@ while iterating and the commit bar before every commit, and
 `prompts/CATALOG.md` carries its new digest.
 
 **What to do.** Re-sync `scripts/trace.py`, `scripts/kitlib/spine.py`,
-`prompts/worker.template.md` and `prompts/CATALOG.md`. If you keep a
+`prompts/worker.template.md`, `prompts/CATALOG.md` and
+`skills/spine-authoring/SKILL.md`. If you keep a
 customised worker brief, add the inner-loop sentence yourself and regenerate
 the catalogue with `gen_prompt_catalog.py`. Nothing in your registries
 changes.
@@ -6267,6 +6268,86 @@ the open-items view; both change shape. A direct caller of
 `spine_carrier.needs_from_text` passes the carrier of the file it read. An
 amendment session that re-anchors rows names only the rows its row's
 `Adjudicates` cell lists.
+
+### The reviewer and worker briefs: the spec of record, and adopter-true text [since 47f8b573]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The reviewer brief names each work item's own spec file
+under `docs/work/` (plus its `specref` target, where that points elsewhere) as
+the spec of record; it no longer sends the reviewer to `docs/specs/`, which in
+a scaffold holds only its README and inert example. `docs/process.md` §3 gains
+"When a guard is owed" (a guard only at a trust boundary, or for an
+irreversible or attack-exposed operation), and both briefs link to it rather
+than restating it. §6 states the fan-out rules once: both delegation kinds
+(down a tier, sideways to a peer tier) are kept, prose names tiers rather than
+models, and review, critique, design-check and adjudication sessions never fan
+out (prose, not enforcement). The spine-authoring skill states when a
+parent's coverage by its children is honest: an LLR may rest on its parent's
+coverage; an SR on its children only when they span its full dimensional space
+and are not interdependent, and otherwise it is a recorded orphan or carries a
+direct TC. The worker brief's sent body cites no record of the kit's own
+repository (the evidence behind its rules moved to its dispatcher notes), and
+its close-bar bullet points at `check.py`'s step table and `docs/stack.ini`
+`[tiers]` instead of naming a wall-time budget a scaffold does not declare.
+
+**What to do.** Re-sync `docs/process.md`, `prompts/reviewer.template.md`,
+`prompts/worker.template.md` and `prompts/CATALOG.md`.
+An operator override file passed with `--prompt-map` is yours: if it copied the
+old sentence, change it the same way.
+
+### A per-model guardrail payload, whole-directory skills, a `subagent-brief` skill, and the knowledge-pack review's doctrine edits [since 47f8b573]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `scripts/agent_loop.py` reads an optional
+`docs/guardrails/core.<substring>.md` beside the vendored `core.md`: a session
+whose model contains that substring gets that payload instead (the policy's own
+matcher; the longest substring wins). The `[policies] guardrails` value still
+decides whether anything is injected. `scripts/bootstrap.py` materializes a
+selected skill's whole directory, not only its `SKILL.md`, so a skill citing a
+file beside it arrives complete. A new kit skill, `subagent-brief`, states the
+seven-part brief and six-section return for a delegated task. `AGENTS.md` gains
+the partial-search bullet ("not found where you looked is not absent"), paid
+for by removing three restatements (the comment "why" line, the contract
+staleness line, the data-I/O split) and a shorter versioned-release line.
+`docs/process.md` §3 names the receipt
+mechanism behind the stand-alone rule, §6 states when to dispatch rather than
+work inline, and `docs/process-options.md` states the build-tier
+discriminator (how much the spec leaves open).
+
+**What to do.** Re-sync `scripts/agent_loop.py`, `scripts/bootstrap.py`,
+`docs/process.md`, `docs/process-options.md` and the new
+`skills/subagent-brief/` (materialize it with `bootstrap.py --agents <yours>`
+if you use skills). Merge the `AGENTS.md` bullet into your own copy by hand: it
+is the file you customize. Nothing changes for a repo that vendors no
+guardrails or no per-model payload.
+
+### "system requirement" → *system specification*; "low-level requirement" → *design expectation* (prose only) [since 47f8b573]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The kit's prose, prompts and dashboard labels call `SR-###`
+rows *system specifications* and `LLR-###` rows *design expectations*;
+`docs/process.md` §2 carries the two glossary lines. The rename is prose only:
+the `SR-`/`LLR-` prefixes, the registry file names
+(`system-requirements.toml`, `low-level-requirements.toml`), the TOML table
+names, the `DevStg-LLReqs` rung and the OKF export's concept types are
+unchanged, so no reader, id or path breaks. Two generated labels move with it:
+`trace.py`'s report counts table ("System specifications (SR)", "Design
+expectations (LLR)") and the dashboard's definition card ("… system
+specifications approved"). "Expectation" inside a need row stays ordinary
+English.
+
+**What to do.** Re-sync the kit files; regenerate `docs/test/report.md` and
+`PROJECT_STATE.html`, and update any golden test of your own that pins the old
+report or card labels. Separately, `docs/process.md` §4 now states the
+absolutes rule over the matrix `absolute_terms.py` scans (needs, system
+specifications, design expectations; never test cases), with its one waiver
+grammar. In your own prose, rename at your pace: grep for
+"system requirement" and "low-level requirement" and leave quotations, standards
+names and old logs as they are. `check_vocab.py` does not refuse the old words,
+because they remain correct inside quotations and file names.
 
 ## 5. Promotion: when this pack stops being prose
 

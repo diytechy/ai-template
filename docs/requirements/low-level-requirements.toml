@@ -2867,3 +2867,39 @@ rationale = """At merge the first-approval scope check read flips alone, and a r
 status = "Drafted"
 component = "CMP-006"
 phase = 6
+
+[design.LLR-279]
+sr_refs = ["SR-112"]
+title = "A skill materializes as its whole directory"
+module = "project-trajectory/scripts/bootstrap.py"
+code_symbol = "skill_copies/materialize_agent_layer"
+detail = """skill_copies(skill_dir, name, spec) names the files under a skill's directory, paired with their destinations at the same relative path under the agent's skills directory, so the unit a skill materializes as is its directory rather than its SKILL.md. materialize_agent_layer copies those pairs write-once for the chosen agents, and delivery_inventory lists the same pairs as the skill's conditional deliveries, so the scaffold copy and the delivered-package inventory read one statement of what a skill ships."""
+rationale = """The fan-out drift check compares the whole file set of a skill against its source, so a first copy of the SKILL.md alone is drifted from the moment it is written: the skill arrives without the file it cites, and the check fails until a refresh repairs it. Stating the unit once, and having the copy and the inventory both read it, keeps the scaffold, the refresh and the drift check agreeing on one file set; a directory walk written into each caller was the alternative, and it would let the two lists disagree."""
+test_refs = "(see TC-289)"
+status = "Drafted"
+component = "CMP-009"
+phase = 1
+
+[design.LLR-280]
+sr_refs = ["SR-223"]
+title = "The guardrails payload is chosen by the policy's substring matcher, longest first"
+module = "project-trajectory/scripts/agent_loop.py"
+code_symbol = "guardrails_core"
+detail = """guardrails_core(root, model) lists the vendored core.<substring>.md payloads beside docs/guardrails/core.md, orders their substrings longest first and then by name, and reads the first one that guardrails_apply matches against the model name, reading core.md when none matches or no model is named. The KIT CORE block is extracted from the chosen file as from the core, and an unreadable chosen file returns None, which compose_session_prompt already reports once and runs past. Whether a session is guarded stays compose_session_prompt's call on the policy, made before the payload is read."""
+rationale = """Reusing the policy's own matcher means one grammar decides both whether a session is guarded and which payload it gets, so a substring that guards a model also selects its payload. Ordering by length lets a narrower name refine a broader one without an ordering file a repository would have to keep in step with its payloads. The file names are the repository's, which keeps model names out of kit-owned text."""
+test_refs = "(see TC-290)"
+status = "Drafted"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-281]
+sr_refs = ["SR-224"]
+title = "The skills-index check refuses a description under the floor, by name"
+module = "project-trajectory/scripts/gen_skills_index.py"
+code_symbol = "refuse_short_descriptions/short_descriptions/DESCRIPTION_FLOOR"
+detail = """DESCRIPTION_FLOOR is the shortest description --check accepts, in characters, set at 100: room for a trigger and an effect ("Use when <trigger> - <what>"). short_descriptions(rows) returns the name and length of the rows under it, and refuse_short_descriptions(rows), called first by --check, prints one SHORT line per such skill naming it, its length and the floor, then exits 1. The regenerating path does not apply the floor, so a short description is refused where the index is checked rather than silently written."""
+rationale = """The floor is one declared number read by one function, so the check and its tests agree on it; a length written into the message and the comparison separately would drift. Refusing at --check rather than at regeneration keeps the generator total: the index still renders, and the gate that reads the generator's exit code is the one that says the description needs rewriting."""
+test_refs = "(see TC-291)"
+status = "Drafted"
+component = "CMP-009"
+phase = 6

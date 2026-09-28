@@ -222,8 +222,10 @@ Questions:
   generated pages — because the need tier's instruments are mostly not scripts;
   `.md` is deliberately excluded, since a document named in a cell is usually a
   citation), (iv) a direct-LLR fan-out over the declared bound (`SR_FANOUT_MAX`,
-  default 7), and (v) an opening that states a condition outside the four EARS
-  keywords. There is no shared-artifact census at SN: two needs may honestly
+  default 7), (v) an opening that states a condition outside the four EARS
+  keywords, and (vi) an absolute in a need, requirement or design cell whose
+  domain names nothing from a closed list (below). There is no shared-artifact
+  census at SN: two needs may honestly
   describe outcomes one file happens to serve without either deciding anything
   about it. A bound is deliberately
   not a cap: a hard cap invites merging two LLRs into one to slip under it,
@@ -232,6 +234,17 @@ Questions:
   artifact (`Rationale` at SR, `why` at SN), the
   `fan-out re-stamp: <reason>` phrase for fan-out — and the reason must be one a
   later reader can **argue with**. "Accepted" is not a reason.
+- **(d2) Is every absolute's domain really closed?** An absolute ("never",
+  "always", "every", "any", a clause-opening "no") is a promise every child keeps
+  under every condition. The advisory is silent when the words after it name a
+  registry, an id or a declared set, and that silence is lexical: ask whether the
+  named domain is one the system controls and someone actually declares, and
+  whether an unnamed one ("every commit", "each session") is closed anyway. Over
+  the open world or open time ("in every repo", "never silently") it is a premise
+  that can be sampled, not tested: bound it, or carry it as an assumption row. In
+  a need, a prohibited MECHANISM ("never from prose") is a design decision; move
+  it down a tier. Only then waive, as `recorded waiver: <reason>` in the reason
+  cell. Test cases are out: they state a method, not an obligation.
 - **Also ask:** does this row state a *package-wide property* (right-sizing,
   proportionality, one-definition-of-passing, refusal legibility)? Those are the
   rows a per-capability decomposition systematically misses — they end up as
@@ -293,6 +306,12 @@ Questions:
   decomposition stops there. Keep the `SN→SR→LLR→TC` tiers required by the
   selected verification method and real verification links intact; this is a
   review judgment, not a row-count quota or a new schema.
+- **Coverage by children is earned, not assumed** (the kit repository's ruling
+  of record: `OI-72`). An LLR may be satisfied by its parent's coverage. An SR
+  may be satisfied by its children only when the children span the SR's full
+  dimensional space and are not interdependent; otherwise the honest states are
+  a recorded orphan or a direct TC. No validator settles this, and none is
+  likely to be efficient: it rests on the author's and the reviewer's reading.
 
 ## 4. Validation instruments
 
@@ -432,6 +451,14 @@ failures hide in FIELDS.
   what is left as a **worklist**, warn-first — a row whose frame is the only
   record of an unresolved question gets a reviewed entry in the detector's
   allow file rather than a silent deletion.
+- **A cell is not a receipt — test it on a reader with no history.** A cell
+  written just after a correction tends to answer the version it replaced ("no
+  longer counts drafts", "now read from the registry", "only the declared
+  set"): it is a receipt for the fix, and it reads as a rule only to someone
+  who saw the fix. The test is cheap: hand the cell alone to a fresh context
+  and ask it to restate what the row requires. If its restatement reconstructs
+  the correction ("so it used to count drafts"), the cell carries provenance;
+  rewrite it as what holds, and put the correction in the log.
 - **One vocabulary per axis, across every tier.** If three tiers say `Drafted`
   and the fourth says something else for the same state, a reader must learn a
   different field per tier and every cross-tier query grows a special case.

@@ -1649,3 +1649,29 @@ verification = "Test"
 status = "Approved"
 phase = 6
 coincident = """The need asks for small changes staying cheap; the tests the spine links to a module, listed from the registries with no hand-kept map, are what a builder needs before changing it."""
+
+[requirement.SR-223]
+title = "A guarded session receives the guardrails payload vendored for its model"
+sn_refs = ["SN-026"]
+boundary_refs = ["B-05"]
+hat_refs = ["UNATTENDED-OPS"]
+requirement = "Where a repository vendors a guardrails payload for a model-name substring, the delivered loop content shall inject that payload, in place of the default guardrails core, into a guarded session whose model name contains that substring."
+rationale = """A DERIVED requirement, and labelled so. SN-026 asks that models be selected per job and capability level; it does not name what a session on a given model is told, so this obligation arrives through the unattended-operations lens rather than through the need's text. A guardrails posture written for one model is ritual noise to a stronger one and too little for a weaker one, and in an unattended run nobody watches a session drift: one core for every guarded model is the silent degrade that lens listens for. Selecting by a substring of the model name reuses the matcher the guardrails policy already applies, so one grammar decides both whether a session is guarded and what it is given, and the repository's own file names carry the mapping. A per-model key in the policy dial was the alternative, and it lost because a model name in shared configuration is the name that rots when models turn over. Fed back to the need: SN-026's acceptance could name a per-model posture; until it does, this row is derived and says so."""
+acceptance_criteria = "A guarded session on a model whose name contains a vendored payload's substring receives that payload and not the default core; when several vendored substrings match, the longest wins; a session on a model matching none receives the default core; a session the declared guardrails policy leaves unguarded receives nothing, whatever payloads are vendored; the kit ships no payload and names no model."
+priority = "C"
+verification = "Test"
+status = "Drafted"
+phase = 6
+
+[requirement.SR-224]
+title = "A skill whose description cannot say when to use it fails the skills-index check"
+sn_refs = ["SN-005"]
+boundary_refs = ["B-05"]
+hat_refs = ["FIRST-RUN-ADOPTER"]
+requirement = "If a skill's description is shorter than the declared description floor, then the kit's skills-index check shall fail, naming that skill."
+rationale = """A DERIVED requirement, and labelled so. SN-005 asks that agents and humans work from the same playbook; it does not name what a skill's description must carry, so this obligation arrives through the first-run-adopter lens rather than through the need's text. An agent reads only a skill's description to decide whether to load it, so a description too short to say when to use the skill is shipped guidance an adopter's agent never reads: the skill works only for someone who already knows it exists, the undocumented-knowledge failure that lens listens for. A length floor is a lexical proxy, not a proof that a description is good: it catches the one-line stub that cannot state a trigger and leaves the wording to review. A reviewer's judgement of every description was the alternative, and it lost as the only guard because nothing would re-ask it when a skill is added. Fed back to the need: SN-005's acceptance could name the skills' descriptions as part of the playbook; until it does, this row is derived and says so."""
+acceptance_criteria = "A skill whose description is shorter than the declared floor fails the check, which names that skill and not a skill at the floor; a description at the floor passes; the kit's shipped skills clear the floor."
+priority = "C"
+verification = "Test"
+status = "Drafted"
+phase = 6

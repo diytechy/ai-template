@@ -63,7 +63,7 @@ def test_resolve_reference_accepts_a_live_join():
 
 def test_resolve_reference_rejects_a_missing_sr():
     reason = gen_arch_map.resolve_requirement_reference("SR-404", SR_BY_ID, SN_IDS)
-    assert reason and "no live system requirement" in reason
+    assert reason and "no live system specification" in reason
 
 
 def test_resolve_reference_rejects_an_sr_with_no_live_need():

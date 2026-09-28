@@ -106,7 +106,8 @@ seconds (enforced locally now, not only in CI) + a deterministic membership
 ratchet — in `docs/stack.ini` `[smoke-budget]` + `tests/test_smoke_budget.py`
 (it bites if the tier grows back toward the full suite; re-stamp deliberately,
 reason in the log). Run the **full** unfiltered suite (`pytest -q -n auto`)
-after a broad script change. The
+once at phase close; mid-phase, only when it demonstrably fits inside one turn,
+and never end a turn waiting on one. The
 full `check.py --gate <gate>` is the **gate bar** (unfiltered suite + coverage):
 it belongs to gate advancement, phase close, and CI, not to each
 mid-phase slice; `--jobs 0` runs its independent steps concurrently. A per-WI

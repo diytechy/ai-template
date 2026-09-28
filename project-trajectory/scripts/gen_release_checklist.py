@@ -10,7 +10,7 @@ concrete and traceable instead of a vibe.
 
 It pulls, from `docs/`:
     - Stakeholder needs (SN) + their acceptance intent -> "Does the product meet the need?"
-    - System requirements whose Verification is Demonstration / Manual / Inspection
+    - System specifications whose Verification is Demonstration / Manual / Inspection
     - Release-tier test cases, and any non-automated (manual) test cases
     - Provided cross-project interfaces (IF, if present) -> contract still honored?
     - Performance budgets (PB, if present) -> still within allocation? (§9; the
@@ -40,7 +40,7 @@ of record in docs/requirements/interfaces.toml).
 Contract IF-018: the human release checklist, written as a Markdown document
     whose every item is `- [ ] <ID> — <what to confirm> (refs)`. It collects
     exactly the rows a machine cannot honestly close: stakeholder needs and
-    their acceptance intent, system requirements whose Verification is
+    their acceptance intent, system specifications whose Verification is
     Demonstration, Manual or Inspection, release-tier and manual test cases,
     the declared interface seams, and the performance budgets whose runtime
     tier never fails a gate. Its release-hygiene section always carries one

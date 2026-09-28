@@ -113,8 +113,8 @@ inside it, which lays down everything below; otherwise copy + rename by hand.
 
 ## ID scheme
 
-`SN-###` stakeholder need → `SR-###` system requirement (links SN) → `LLR-###`
-low-level requirement (links SR, names module/symbol) → `TC-###` test case
+`SN-###` stakeholder need → `SR-###` system specification (links SN) → `LLR-###`
+design expectation (links SR, names module/symbol) → `TC-###` test case
 (links the SR/LLR it verifies). Zero-padded, stable, never reused.
 
 ## Gates (advance only when criteria pass)

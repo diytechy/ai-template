@@ -1,4 +1,4 @@
-# System Requirements (SR-###) — the TOML registry CARRIER.
+# System specifications (SR-###) — the TOML registry CARRIER.
 #
 # ONE TABLE PER ROW, id-keyed with the prefix retained and the key BARE:
 # `[requirement.SR-000]`. Refs are typed arrays, `Phase` is an int, and an

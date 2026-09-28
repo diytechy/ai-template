@@ -680,10 +680,10 @@ notes = """Published contract, not a single consumer: 11 kit scripts read the SN
 owner = "project-trajectory/skills/"
 consumers = ["scripts/gen_skills_index", "scripts/bootstrap"]
 channel = "file"
-data = "SKILL.md frontmatter: name, scope, stacks, domains, phases, tags"
+data = "SKILL.md frontmatter: name, scope, stacks, domains, phases, tags; each other file in the skill directory, materialized with it at the same relative path"
 version = "v1"
 status = "Drafted"
-notes = """Low fan-out: two direct walkers of <skill>/SKILL.md - bootstrap (select_skills, scaffold-time filtering) and gen_skills_index (this row, the INDEX.csv generator). A closed, nameable set."""
+notes = """Low fan-out: two direct walkers of a skill directory - bootstrap (select_skills filtering on the SKILL.md frontmatter at scaffold time, then skill_copies materializing and inventorying the whole directory) and gen_skills_index (the INDEX.csv generator, and the fan-out drift check comparing the whole file set). A closed, nameable set."""
 
 [interface.IF-036]
 owner = "external:upstream docs"
@@ -2207,3 +2207,24 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """source - absolute_terms consumes NOTHING by design: rows in, advisories out, with no I/O, no git and no filesystem, reading only the waiver marker the text rules declare."""
+
+[interface.IF-253]
+rationale = """A repository that runs several model tiers wants a different guardrails posture per model, and the kit must not name a model to give it one. A file per model-name substring beside the default core lets the repository carry the mapping in its own file names, read by the same substring matcher the policy uses, so the choice is a reviewed file in the repository rather than a model name in shared configuration."""
+owner = "scripts/agent_loop"
+consumers = ["external:downstream adopter"]
+channel = "file"
+data = "core.<substring>.md beside the vendored guardrails core: a payload for models whose name contains the substring"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+interface_to_external = "B-05"
+notes = """Published contract, as the declared toolchain file is: the loop reads the file and the adopter authors it, so the owner is the module that states the naming rule and reads it. Ties to B-05 as part of the delivered loop's own contract with the repository it runs in."""
+
+[interface.IF-254]
+owner = "scripts/gen_skills_index"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "--check: 0 index fresh and descriptions at or over the floor, or no skills dir · 1 stale index or a description under the floor"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"

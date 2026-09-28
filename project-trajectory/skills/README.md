@@ -10,7 +10,9 @@ Contract IF-035: one skill is one directory holding a `SKILL.md` whose leading
     parsed, so a skill needing richer YAML is out of scope for both readers. The
     set is walked at scaffold time to select which skills a repo receives, and
     scanned again to regenerate the flat `INDEX.csv`, one row per skill, so
-    applicability can be read without opening every `SKILL.md`.
+    applicability can be read without opening every `SKILL.md`. Every other file
+    in the directory belongs to the skill (a reference it cites) and
+    materializes with it, byte for byte, to the same relative path.
 -->
 
 # Skills — portable accelerators (opt-in, per-agent materialized)
@@ -48,7 +50,7 @@ skills/
 ```yaml
 ---
 name: byte-budget-guard              # required; lowercase-hyphen; == dir name
-description: One sentence...          # required; when the agent should use it
+description: One sentence...          # required; when the agent should use it (>= 100 chars)
 stacks: [python, powershell, any]     # applicability: primary stacks it helps
 domains: [any]                        # web|game|hardware|data|any
 phases: [dev, gate]                   # setup|dev|gate|release
@@ -74,7 +76,8 @@ scope: this-repo                      # this-repo | kit  (see split below)
 ### Where a selected skill lands
 
 Bootstrap materializes each **selected** skill into the chosen agent's native
-skills location, copying the neutral `SKILL.md` verbatim:
+skills location, copying the neutral skill directory verbatim — its `SKILL.md`
+and any file beside it the skill cites:
 
 | Agent | Native location | Selector |
 |---|---|---|
@@ -121,7 +124,10 @@ python scripts/gen_skills_index.py            # in the kit root
 ```
 
 The generator is the source of truth for the index; a stale `INDEX.csv` is a
-finding (`--check` exits nonzero), like `gen_arch_map.py --check`.
+finding (`--check` exits nonzero), like `gen_arch_map.py --check`. `--check`
+also refuses a `description` under its floor (`DESCRIPTION_FLOOR`, 100
+characters): the description is all an agent reads before deciding to load a
+skill, so one too short to say *when* to use it never triggers.
 
 ## The matcher (deliberately trivial)
 

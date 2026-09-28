@@ -295,7 +295,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   :root {
     color-scheme: light dark;
     --bg:#f8fafc; --surface:#ffffff; --border:#e2e8f0; --text:#0f172a;
-    --muted:#64748b; --accent:#4f46e5;
+    --muted:#64748b; --accent:#4f46e5; --danger:#b91c1c;
     /* Focused dependency tracing: blue flows into the selected node; amber
        flows out. Both carry foreground ink, so both are theme tokens — and both
        sit deliberately OUTSIDE every declared concept palette. WI-435's first
@@ -364,7 +364,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   }
   @media (prefers-color-scheme: dark) {
     :root { --bg:#0b1120; --surface:#0f172a; --border:#1e293b; --text:#e2e8f0;
-            --muted:#94a3b8; --accent:#818cf8;
+            --muted:#94a3b8; --accent:#818cf8; --danger:#f87171;
             --trace-in:#60a5fa; --trace-out:#f59e0b;
             --shadow:0 1px 3px rgba(0,0,0,.4); }
   }
@@ -541,7 +541,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         <div class="card">
           <div class="label">Definition completeness</div>
           <div class="big">$def_pct%</div>
-          <div class="sub">$sr_verified of $sr_total system requirements approved</div>
+          <div class="sub">$sr_verified of $sr_total system specifications approved</div>
           <div class="meter def" role="img" aria-label="Definition completeness meter, $def_pct% filled"><span style="width:$def_pct%"></span></div>
         </div>
         <div class="card">

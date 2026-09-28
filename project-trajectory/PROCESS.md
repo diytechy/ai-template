@@ -96,11 +96,18 @@ only for an independent high-risk review (§6).
 | Prefix | Level | Parent link |
 |---|---|---|
 | `SN-###` | Stakeholder Need | — |
-| `SR-###` | System Requirement | `SN-Refs` |
-| `LLR-###` | Low-Level Requirement | `SR-Refs` (+ Module/CodeSymbol, Detail/Rationale) |
+| `SR-###` | System specification | `SN-Refs` |
+| `LLR-###` | Design expectation | `SR-Refs` (+ Module/CodeSymbol, Detail/Rationale) |
 | `TC-###` | Test Case | `Verifies` (SR/LLR) |
 
 Stable, zero-padded, never reused.
+
+- **Glossary — system specification.** `SR-###` rows are *system specifications*;
+  the `SR` prefix and the `system-requirements` file name are historical.
+- **Glossary — design expectation.** `LLR-###` rows are *design expectations*
+  (the `LLR` prefix, its file name and the `DevStg-LLReqs` rung are
+  historical); "expectation" inside a need row is ordinary English, not this
+  tier.
 
 ## 3. Traceability & anti-duplication
 
@@ -114,7 +121,10 @@ Stable, zero-padded, never reused.
   *this* document, no ruling, sitting, review-round or open-item reference, no
   decision id, no edit-history verb, no date stamp. Provenance belongs to the
   work-item registry and the log, and a row **obeys** the process rather than
-  citing it, so it reads stand-alone to someone with none of your history. Naming
+  citing it, so it reads stand-alone to someone with none of your history. The
+  mechanism is a receipt: a cell written just after a correction argues with the
+  version it replaced, and one whose correction a reader with no history can
+  reconstruct is carrying provenance. Naming
   the thing under specification — a script, an artifact path, the rubric a
   `Critique` row is judged against — is the *subject*, not provenance. `trace.py`
   gates under `--strict` on a work-item id or a process-doc citation and warns on
@@ -190,6 +200,13 @@ Stable, zero-padded, never reused.
   behavior, never re-derived at each caller — this is the antidote skill's
   "validate once at the boundary" applied at repo scale (vendored at
   `skills/antidote/`, a per-fix companion to this repo-scale doctrine).
+- **When a guard is owed.** A guard is owed only where the input crosses a
+  trust boundary — a file on disk, the network, a person, another process, or a
+  model's output — or where the operation is irreversible or exposed to attack.
+  Data this code produced in-process is trusted: fix the producer instead. Two
+  consequences: the registries are hand-edited files on disk, so validating
+  them is owed; and a model's output is a boundary, so validating structured
+  output is owed.
 - **A structural move is its own commit.** A behaviour-preserving move
   (a rename, an extraction, a file split) lands in a commit that changes no
   behaviour, before the change it enables. Each diff is then reviewable as one
@@ -666,13 +683,20 @@ hat reads the needs and requirements **against each other** for the conflicts a
 script can't see: contradictory acceptance criteria or limits, mutually exclusive
 behaviors, duplicate or overlapping requirements, ambiguous / underspecified
 needs, and overlapping module/hat ownership. One recurring ambiguity gets its own
-rule: **every comparative or absolute term in an acceptance criterion must name
-its predicate** — "identical" / "indistinguishable" / "equivalent" / "same as" /
+rule: **every comparative term in an acceptance criterion must name its
+predicate** — "identical" / "indistinguishable" / "equivalent" / "same as" /
 "matches" is untestable until it says identical *in what*, judged *how* ("cannot
 distinguish source by schema" → "identical field names and dtypes, per the
-IF-### row"). `trace.py` flags unpinned comparatives as **warn-only advisories**
-(a heuristic lint, never a gate failure); the reviewer pins the predicate or
-accepts the wording knowingly. This is the **consistency**
+IF-### row"). Its sibling covers the whole matrix: **every absolute in a need,
+a system specification or a design expectation** ("never", "always", "every",
+"any", a clause-opening "no") **must name the closed domain it ranges over** — a
+registry, an id space, a declared set; over the open world or open time it is a
+premise to bound or to carry as an assumption row. Test cases are out: they
+state a method, not an obligation. `trace.py` flags both as **warn-only
+advisories** (a heuristic lint, never a gate failure); the reviewer pins the
+predicate or domain, or accepts the wording knowingly — for an absolute, as the
+kit's one waiver grammar, `recorded waiver: <reason>` in the row's reason cell.
+This is the **consistency**
 complement to DevStg-Reqs's *completeness* criteria, not a restatement of them, and it is
 **human/LLM judgment, not a machine check** — classify it as a Manual/Analysis
 activity and never imply `trace.py` performs it. (An independent LLM reviewer
@@ -937,8 +961,8 @@ re-read each pass.
 
 **Model/agent tiering — recommend + record, not enforce.** The risk triage above
 is also a **tiering** axis: planning, decomposition, decisions, and high-risk
-review need a **strong model**; mechanical execution, well-specced builds, and
-low-risk/prose work tolerate a **cheaper tier**. Tiering down is **safe
+review need the **strong** tier; mechanical execution, well-specced builds, and
+low-risk/prose work tolerate a **cheaper** one (`medium`, `quick`). Tiering down is **safe
 specifically because of the gates** above — the harness + tests mean a cheaper
 executor can't silently drift past a check, a guarantee an ungated workflow can't
 make. The kit **cannot force** a model choice (a fast-moving, host-specific
@@ -946,18 +970,27 @@ concern); it offers a **recorded-tier-hint** convention instead: any planned
 unit of work (a thread, a phase, a `status.md` task) may carry a **model-tier
 hint** — metadata an agent reads and may act on, guidance like any other
 `AGENTS.md` directive, not a guarantee. Host-specific levers (e.g. a
-strong-model-plans/cheaper-model-executes mode, per-subagent model overrides,
+strong-plans/cheaper-executes mode, per-subagent model overrides,
 a model-selection command) are optional, documented per-host examples — name
-the pattern, never a vendor-specific model-selection engine. Tiering also applies
-**in flight**, not just as plan-time metadata: mid-session the driver **steps
-down** — hands a mechanical, well-specced subtask to a cheaper-tier subagent —
-**when the hand-off pays for itself** (spawning has its own cost, and an agent
-that already delegates readily needs no push), and **steps sideways** to
-a peer-tier subagent with a fresh, dedicated context when the work would
-otherwise crowd the driver's context (bulk asset/prose generation, a wide file
-sweep; the independent reviewer above is already this pattern). Hosts
-increasingly make these hand-offs automatically; the judgment stands wherever
-the lever is manual.
+the pattern, never a vendor-specific model-selection engine.
+
+**Fan-out — two kinds, both kept, named by tier.** Tiering also applies **in
+flight**: mid-session the driver **steps down** — hands a mechanical,
+well-specced subtask to a cheaper-tier subagent — **when the hand-off pays for
+itself** (spawning has its own cost), and **steps sideways** to a peer-tier
+subagent with a fresh, dedicated context when the work would otherwise crowd
+the driver's context (bulk asset/prose generation, a wide file sweep; the
+independent reviewer above is this pattern). Dispatch only when all three
+hold — the brief is shorter than the work, the result is an artifact the
+driver can check without redoing it, and the reading would otherwise crowd the
+driver's context; otherwise work inline. Prose names **tiers**, never
+models: the routing registry maps a tier to a model, and a model name in prose
+rots. **A review, critique, design-check or adjudication session never fans
+out**: a spawn there is unbudgeted, inherits full permissions, and leaves no
+trace in the session record the verdict is judged by. That rule is prose, not
+enforcement, until an observability design for spawns exists — no role is
+denied spawn tools today, and the one hook sees a single host's spawn tools —
+and fan-out budgets wait on the same design.
 
 **Decision-surfacing rate — same axis, set at setup.** The risk triage above
 also calibrates **how often the driver pauses for a human decision**. It is a

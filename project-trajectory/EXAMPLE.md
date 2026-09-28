@@ -42,7 +42,7 @@ need rather than maintained as a standing checklist. Maturity is the `status`
 field (`Drafted`/`Approved`) — the same word at every tier — never a section
 heading, and an absent key IS the empty cell.
 
-## 2. System Requirements — `requirements/system-requirements.toml`
+## 2. System specifications — `requirements/system-requirements.toml`
 
 ```toml
 [requirement.SR-001]
@@ -97,7 +97,7 @@ cross-cutting — it takes a CLOSED value naming a concern no component
 partition can express, never a domain or owner tag, and trace.py reports
 per-aspect SR counts when it is filled.
 
-## 3. Low-Level Requirements — `requirements/low-level-requirements.toml`
+## 3. Design expectations — `requirements/low-level-requirements.toml`
 
 ```toml
 [design.LLR-001]

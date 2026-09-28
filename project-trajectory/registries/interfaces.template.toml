@@ -21,7 +21,7 @@
 #
 # BOUNDARY vs INTERNAL, and it is the distinction worth learning first. A
 # crossing of your SYSTEM boundary is a row in registries/external.template.toml,
-# not here — that is the tier your system requirements form around. A row here
+# not here — that is the tier your system specifications form around. A row here
 # ties BACK to one, directionally, only when it REALIZES a crossing:
 #
 #     interface_from_external = "B-##"   the crossing comes IN

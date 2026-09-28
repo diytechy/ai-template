@@ -2,13 +2,61 @@
 id = "WI-615"
 title = "Doctrine sitting: the guard and fan-out rules, the reviewer and worker briefs, children coverage, OI-76's trailer text, the knowledge-pack edits, then the terminology pass"
 workstream = "process"
-specref = "docs/plans/2026-09-20-validation-gap-and-the-assumption-tier.md#11-staging"
+specref = ""
 buildtier = "medium"
 priority = 3
 safety_class = "ordinary"
 needs = []
 supersedes = "WI-609;WI-613;WI-614;WI-556;WI-668;WI-610;WI-536"
 +++
+
+## Deliverable
+
+Built by one builder in ten commits with three Codex Sol rounds (wave-5
+arbitration rulings 33 to 36), SOUND at bccfae71. Seven of the eight parts
+are built. Part 7 (WI-610) is routed to the owner as OI-95.
+
+- **WI-609:** the reviewer brief names each work item's own spec under
+  `docs/work/` (and its `specref` target) as the spec of record. No prompt
+  says `docs/specs` (grep, and a test).
+- **WI-613:** PROCESS.md §3 "When a guard is owed", with the reviewer and
+  worker briefs linking to it rather than restating it.
+- **WI-614:** PROCESS.md §6's fan-out paragraph: down-tier and peer-tier
+  kept, tiers never models, and no fan-out from review, critique,
+  design-check or adjudication sessions. The rule has one home (a test).
+- **WI-556:** the spine-authoring skill's children-coverage rule, citing
+  OI-72 as the kit repository's ruling of record, in all three copies.
+- **WI-668:** the worker brief's sent body cites no meta-repo record, its
+  close bar points at `check.py`'s step table and `[tiers]`, and the
+  session-protocol skill's full-suite order is settled.
+- **WI-536:** the knowledge-pack edits. The partial-search bullet is in
+  AGENTS.template.md. There is a new `subagent-brief` skill, the receipt
+  doctrine is in spine-authoring §6, and the build-tier discriminator is in
+  PROCESS_OPTIONS. `gen_skills_index --check` has a description floor under
+  a labelled derived SR-224 (LLR-281, TC-291, IF-254 as its exit contract).
+  `guardrails_core` selects a per-model payload under a derived SR-223
+  (LLR-280, TC-290, IF-253). Whole-directory skill materialization and
+  `delivery_inventory` share `bootstrap.skill_copies` (LLR-279, TC-289; B5
+  fixed).
+- **The terminology pass**, last: PROCESS.md §2's glossary lines (including
+  that "expectation" inside a need is ordinary English). Kit prose, the
+  dashboard card and trace.py's report table say *system specification* and
+  *design expectation*. The OKF export's concept types stay: they are a data
+  vocabulary pinned by approved TC-105. Also folded in: PROCESS.md §4's
+  absolutes rule now spans needs, system specifications and design
+  expectations (never test cases), with one waiver grammar.
+
+Byte budgets: AGENTS.template.md 9,996 of 10,000 (re-stamped), CLAUDE.md
+unchanged, byte-budget-guard 4,496 of 5,000, PROCESS.md 92,484 (+2,208,
+watched), PROCESS_OPTIONS.md 193,432 (+619, watched).
+
+Not built, routed: **part 7 (WI-610, OI-76's trailer text) is OI-95**, an
+owner question with a typed brief; the recommendation is (a), amend the
+ruling's wording to the code. Recorded, not edited: approved registry rows
+that still say "system requirement" (SN-037, SN-038; SR-162, SR-163,
+SR-193, SR-194, SR-196, SR-201, SR-205, SR-206, SR-212, SR-217, SR-219;
+TC-105's method, which names the OKF types). `gen_skills_index.py --check`
+without `--skills` silently checks nothing in this repository.
 
 ## Context
 

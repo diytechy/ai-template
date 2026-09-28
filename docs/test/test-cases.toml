@@ -2830,3 +2830,36 @@ max_age = 90
 sampling = "sampled"
 sample_size = 5
 acceptance_rule = "All five sampled readers state what their part does and why it exists, in agreement with the part's linked rows; one reader who cannot is a failing sample."
+
+[test.TC-289]
+verifies = ["SR-112", "LLR-279", "IF-035"]
+level = "Unit"
+method = """A planted one-skill kit under a temporary directory: a SKILL.md and a companion file it cites. (a) THE COPY: materialize_agent_layer for one agent creates both files under that agent's skills directory, the companion byte-identical to its source, and check_agent_sync over the planted source and the copy reports no drift over one skill. (b) THE INVENTORY: with the kit root pointed at the planted kit, delivery_inventory lists the companion file as a physical source and lists both the SKILL.md and the companion as conditional deliveries for every agent skills directory."""
+tier = "Smoke"
+expected = "Satisfies SR-112 AcceptanceCriteria for a multi-file skill: the first copy already matches its source, so there is no drift for the check to find, and the delivered-package inventory accounts for the companion file"
+automated = "Yes"
+evidence = "tests/test_skill_materialization.py::test_a_multi_file_skill_materializes_whole_and_passes_the_drift_check; tests/test_skill_materialization.py::test_the_delivery_inventory_lists_a_skills_companion_file"
+status = "Drafted"
+phase = 1
+
+[test.TC-290]
+verifies = ["SR-223", "LLR-280", "IF-253"]
+level = "Unit"
+method = """A planted vendored guardrails set under a temporary directory: a default core, a payload for a broad substring and a payload for a narrower substring containing it, the narrower one wrapped in a KIT CORE block with text outside it. (a) THE SELECTOR: guardrails_core returns the narrower payload's block, without the text outside it, for a model containing both substrings; the broader payload for a model containing only the broader one; the default core for a model containing neither and for a call naming no model. (b) THE SESSION: compose_session_prompt under an all policy prepends the narrower payload and not the default core for a matching model; under a policy excepting that model it guards nothing and injects no payload."""
+tier = "Smoke"
+expected = "Satisfies SR-223 AcceptanceCriteria: the longest matching vendored substring selects the payload, a model matching none gets the default core, and the policy alone decides whether anything is injected"
+automated = "Yes"
+evidence = "tests/test_guardrails_payload.py::test_the_longest_matching_substring_selects_the_payload; tests/test_guardrails_payload.py::test_a_guarded_session_carries_its_payload_and_the_policy_still_decides"
+status = "Drafted"
+phase = 6
+
+[test.TC-291]
+verifies = ["SR-224", "LLR-281", "IF-254"]
+level = "Unit"
+method = """(a) THE REFUSAL: a planted skills directory under a temporary directory holds one skill whose description is under the floor and one exactly at it; after the index is written, --check exits 1, its error output names the short skill and the floor and does not name the skill at the floor. (b) THE SHIPPED SET: short_descriptions over the kit's own skills returns nothing."""
+tier = "Smoke"
+expected = "Satisfies SR-224 AcceptanceCriteria: a description under the floor fails the check by name, one at the floor passes, and every shipped skill clears it"
+automated = "Yes"
+evidence = "tests/test_skills_index.py::test_check_refuses_a_description_under_the_floor; tests/test_skills_index.py::test_every_shipped_description_clears_the_floor"
+status = "Drafted"
+phase = 6

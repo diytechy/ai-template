@@ -99,7 +99,7 @@
 #   DevStg-Boundary   ... and the system frame
 #   DevStg-Reqs       ... and the requirements
 #   DevStg-Arch       ... and the partition
-#   DevStg-LLReqs     ... and the low-level requirements
+#   DevStg-LLReqs     ... and the design expectations
 #   DevStg-Tests      ... and the test cases
 #   DevStg-Impl       ... and the implementation
 #   DevStg-Release    everything (the most conservative setting)

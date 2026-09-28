@@ -2019,7 +2019,7 @@ MAPPING_FINDING_POLICY = {
 
 def load_spine_index(root, sr_registry=SR_REGISTRY, sn_registry=SN_REGISTRY):
     """`(sr_by_id, sn_ids)` for the SR-163 join: a `{SR-ID: row}` map of live
-    system requirements and the set of live stakeholder-need ids, both `-000`
+    system specifications and the set of live stakeholder-need ids, both `-000`
     example rows dropped. Empty containers when a registry is absent — a repo
     with no spine has nothing to resolve against, and the checker says so by
     reporting every reference unresolved rather than by crashing."""
@@ -2039,7 +2039,7 @@ def load_spine_index(root, sr_registry=SR_REGISTRY, sn_registry=SN_REGISTRY):
 
 
 def resolve_requirement_reference(ref, sr_by_id, sn_ids):
-    """`None` when `ref` names a live system requirement whose stakeholder-need
+    """`None` when `ref` names a live system specification whose stakeholder-need
     references resolve to at least one live need; otherwise a short reason the
     reference does not resolve. The SR-163 file→requirement→need join, stated
     once so the checker and its TC read it the same way.
@@ -2051,10 +2051,10 @@ def resolve_requirement_reference(ref, sr_by_id, sn_ids):
         return "carries no reference"
     sr = sr_by_id.get(ref)
     if sr is None:
-        return "names no live system requirement"
+        return "names no live system specification"
     needs = [n for n in _kitspine.refs(sr.get("SN-Refs")) if n in sn_ids]
     if not needs:
-        return "system requirement resolves to no live stakeholder need"
+        return "system specification resolves to no live stakeholder need"
     return None
 
 

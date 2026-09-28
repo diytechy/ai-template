@@ -18,7 +18,7 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into approval or arrives approved, `--approves` names it or `--reattests` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 61 changed, 39 added, 1 removed since the snapshot; ruling(s): OI-37, OI-85, OI-88, WI-539, WI-553, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-616, WI-619, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679.
+- `docs/requirements/interfaces.toml` — 62 changed, 41 added, 1 removed since the snapshot; ruling(s): OI-37, OI-85, OI-88, WI-539, WI-553, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-616, WI-619, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-587.
 
 ## Assumptions and surrogates owing an approval
@@ -621,7 +621,7 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 86 chain(s): SR-006, SR-007, SR-009, SR-011, SR-015, SR-017, SR-022, SR-024, SR-027, SR-031, SR-033, SR-035, SR-040, SR-043, SR-049, SR-070, SR-111, SR-112, SR-113, SR-129, SR-137, SR-140, SR-144, SR-146, SR-147, SR-149, SR-150, SR-154, SR-156, SR-157, SR-158, SR-159, SR-161, SR-162, SR-163, SR-164, SR-165, SR-166, SR-167, SR-168, SR-169, SR-173, SR-174, SR-175, SR-176, SR-177, SR-178, SR-180, SR-181, SR-182, SR-183, SR-185, SR-186, SR-187, SR-188, SR-189, SR-190, SR-191, SR-192, SR-193, SR-194, SR-195, SR-196, SR-197, SR-198, SR-199, SR-200, SR-201, SR-202, SR-203, SR-204, SR-205, SR-206, SR-207, SR-208, SR-210, SR-211, SR-212, SR-213, SR-214, SR-215, SR-217, SR-218, SR-219, SR-220, SR-221</summary>
+<summary>Waiting for automated adjudication — 88 chain(s): SR-006, SR-007, SR-009, SR-011, SR-015, SR-017, SR-022, SR-024, SR-027, SR-031, SR-033, SR-035, SR-040, SR-043, SR-049, SR-070, SR-111, SR-112, SR-113, SR-129, SR-137, SR-140, SR-144, SR-146, SR-147, SR-149, SR-150, SR-154, SR-156, SR-157, SR-158, SR-159, SR-161, SR-162, SR-163, SR-164, SR-165, SR-166, SR-167, SR-168, SR-169, SR-173, SR-174, SR-175, SR-176, SR-177, SR-178, SR-180, SR-181, SR-182, SR-183, SR-185, SR-186, SR-187, SR-188, SR-189, SR-190, SR-191, SR-192, SR-193, SR-194, SR-195, SR-196, SR-197, SR-198, SR-199, SR-200, SR-201, SR-202, SR-203, SR-204, SR-205, SR-206, SR-207, SR-208, SR-210, SR-211, SR-212, SR-213, SR-214, SR-215, SR-217, SR-218, SR-219, SR-220, SR-221, SR-223, SR-224</summary>
 
 ## SR-006 — Gate/tier harness enforces required steps
 
@@ -901,6 +901,31 @@ _traced — routes to adjudication_
 - **Coincident**
   - before: (empty)
   - after: The need asks for a repository paying only for what it uses; one neutral skill source with a checked, generated per-agent fan-out is that outcome, since no hand-kept copy exists to drift.
+
+### LLR LLR-279 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-279
+- **SR-Refs**: SR-112
+- **Title**: A skill materializes as its whole directory
+- **Module**: project-trajectory/scripts/bootstrap.py
+- **CodeSymbol**: skill_copies/materialize_agent_layer
+- **Detail**: skill_copies(skill_dir, name, spec) names the files under a skill's directory, paired with their destinations at the same relative path under the agent's skills directory, so the unit a skill materializes as is its directory rather than its SKILL.md. materialize_agent_layer copies those pairs write-once for the chosen agents, and delivery_inventory lists the same pairs as the skill's conditional deliveries, so the scaffold copy and the delivered-package inventory read one statement of what a skill ships.
+- **Rationale**: The fan-out drift check compares the whole file set of a skill against its source, so a first copy of the SKILL.md alone is drifted from the moment it is written: the skill arrives without the file it cites, and the check fails until a refresh repairs it. Stating the unit once, and having the copy and the inventory both read it, keeps the scaffold, the refresh and the drift check agreeing on one file set; a directory walk written into each caller was the alternative, and it would let the two lists disagree.
+- **TestRefs**: (see TC-289)
+- **Status**: Drafted
+- **Component**: CMP-009
+- **Phase**: 1
+
+### TC TC-289 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-289
+- **Verifies**: SR-112;LLR-279;IF-035
+- **Level**: Unit
+- **Method**: A planted one-skill kit under a temporary directory: a SKILL.md and a companion file it cites. (a) THE COPY: materialize_agent_layer for one agent creates both files under that agent's skills directory, the companion byte-identical to its source, and check_agent_sync over the planted source and the copy reports no drift over one skill. (b) THE INVENTORY: with the kit root pointed at the planted kit, delivery_inventory lists the companion file as a physical source and lists both the SKILL.md and the companion as conditional deliveries for every agent skills directory.
+- **Tier**: Smoke
+- **Expected**: Satisfies SR-112 AcceptanceCriteria for a multi-file skill: the first copy already matches its source, so there is no drift for the check to find, and the delivered-package inventory accounts for the companion file
+- **Automated**: Yes
+- **Evidence**: tests/test_skill_materialization.py::test_a_multi_file_skill_materializes_whole_and_passes_the_drift_check; tests/test_skill_materialization.py::test_the_delivery_inventory_lists_a_skills_companion_file
+- **Status**: Drafted
+- **Phase**: 1
 
 ## SR-113 — Dev-setup wires the process floor
 
@@ -2391,5 +2416,99 @@ _traced — routes to adjudication_
 - **Boundary-Refs**
   - before: B-05
   - after: B-09
+
+## SR-223 — A guarded session receives the guardrails payload vendored for its model
+
+> **Requirement.** Where a repository vendors a guardrails payload for a model-name substring, the delivered loop content shall inject that payload, in place of the default guardrails core, into a guarded session whose model name contains that substring.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-026 asks that models be selected per job and capability level; it does not name what a session on a given model is told, so this obligation arrives through the unattended-operations lens rather than through the need's text. A guardrails posture written for one model is ritual noise to a stronger one and too little for a weaker one, and in an unattended run nobody watches a session drift: one core for every guarded model is the silent degrade that lens listens for. Selecting by a substring of the model name reuses the matcher the guardrails policy already applies, so one grammar decides both whether a session is guarded and what it is given, and the repository's own file names carry the mapping. A per-model key in the policy dial was the alternative, and it lost because a model name in shared configuration is the name that rots when models turn over. Fed back to the need: SN-026's acceptance could name a per-model posture; until it does, this row is derived and says so.
+
+_No approved baseline — absent from the docs/archive/last_approved snapshot — awaiting its first approval; current state only._
+
+### SR SR-223 (current)
+- **SR-ID**: SR-223
+- **Title**: A guarded session receives the guardrails payload vendored for its model
+- **SN-Refs**: SN-026
+- **Boundary-Refs**: B-05
+- **Hat-Refs**: UNATTENDED-OPS
+- **Requirement**: Where a repository vendors a guardrails payload for a model-name substring, the delivered loop content shall inject that payload, in place of the default guardrails core, into a guarded session whose model name contains that substring.
+- **Rationale**: A DERIVED requirement, and labelled so. SN-026 asks that models be selected per job and capability level; it does not name what a session on a given model is told, so this obligation arrives through the unattended-operations lens rather than through the need's text. A guardrails posture written for one model is ritual noise to a stronger one and too little for a weaker one, and in an unattended run nobody watches a session drift: one core for every guarded model is the silent degrade that lens listens for. Selecting by a substring of the model name reuses the matcher the guardrails policy already applies, so one grammar decides both whether a session is guarded and what it is given, and the repository's own file names carry the mapping. A per-model key in the policy dial was the alternative, and it lost because a model name in shared configuration is the name that rots when models turn over. Fed back to the need: SN-026's acceptance could name a per-model posture; until it does, this row is derived and says so.
+- **AcceptanceCriteria**: A guarded session on a model whose name contains a vendored payload's substring receives that payload and not the default core; when several vendored substrings match, the longest wins; a session on a model matching none receives the default core; a session the declared guardrails policy leaves unguarded receives nothing, whatever payloads are vendored; the kit ships no payload and names no model.
+- **Priority**: C
+- **Verification**: Test
+- **Status**: Drafted
+- **Phase**: 6
+
+### LLR LLR-280 (current)
+- **LLR-ID**: LLR-280
+- **SR-Refs**: SR-223
+- **Title**: The guardrails payload is chosen by the policy's substring matcher, longest first
+- **Module**: project-trajectory/scripts/agent_loop.py
+- **CodeSymbol**: guardrails_core
+- **Detail**: guardrails_core(root, model) lists the vendored core.<substring>.md payloads beside docs/guardrails/core.md, orders their substrings longest first and then by name, and reads the first one that guardrails_apply matches against the model name, reading core.md when none matches or no model is named. The KIT CORE block is extracted from the chosen file as from the core, and an unreadable chosen file returns None, which compose_session_prompt already reports once and runs past. Whether a session is guarded stays compose_session_prompt's call on the policy, made before the payload is read.
+- **Rationale**: Reusing the policy's own matcher means one grammar decides both whether a session is guarded and which payload it gets, so a substring that guards a model also selects its payload. Ordering by length lets a narrower name refine a broader one without an ordering file a repository would have to keep in step with its payloads. The file names are the repository's, which keeps model names out of kit-owned text.
+- **TestRefs**: (see TC-290)
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### TC TC-290 (current)
+- **TC-ID**: TC-290
+- **Verifies**: SR-223;LLR-280;IF-253
+- **Level**: Unit
+- **Method**: A planted vendored guardrails set under a temporary directory: a default core, a payload for a broad substring and a payload for a narrower substring containing it, the narrower one wrapped in a KIT CORE block with text outside it. (a) THE SELECTOR: guardrails_core returns the narrower payload's block, without the text outside it, for a model containing both substrings; the broader payload for a model containing only the broader one; the default core for a model containing neither and for a call naming no model. (b) THE SESSION: compose_session_prompt under an all policy prepends the narrower payload and not the default core for a matching model; under a policy excepting that model it guards nothing and injects no payload.
+- **Tier**: Smoke
+- **Expected**: Satisfies SR-223 AcceptanceCriteria: the longest matching vendored substring selects the payload, a model matching none gets the default core, and the policy alone decides whether anything is injected
+- **Automated**: Yes
+- **Evidence**: tests/test_guardrails_payload.py::test_the_longest_matching_substring_selects_the_payload; tests/test_guardrails_payload.py::test_a_guarded_session_carries_its_payload_and_the_policy_still_decides
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
+
+> **Requirement.** If a skill's description is shorter than the declared description floor, then the kit's skills-index check shall fail, naming that skill.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-005 asks that agents and humans work from the same playbook; it does not name what a skill's description must carry, so this obligation arrives through the first-run-adopter lens rather than through the need's text. An agent reads only a skill's description to decide whether to load it, so a description too short to say when to use the skill is shipped guidance an adopter's agent never reads: the skill works only for someone who already knows it exists, the undocumented-knowledge failure that lens listens for. A length floor is a lexical proxy, not a proof that a description is good: it catches the one-line stub that cannot state a trigger and leaves the wording to review. A reviewer's judgement of every description was the alternative, and it lost as the only guard because nothing would re-ask it when a skill is added. Fed back to the need: SN-005's acceptance could name the skills' descriptions as part of the playbook; until it does, this row is derived and says so.
+
+_No approved baseline — absent from the docs/archive/last_approved snapshot — awaiting its first approval; current state only._
+
+### SR SR-224 (current)
+- **SR-ID**: SR-224
+- **Title**: A skill whose description cannot say when to use it fails the skills-index check
+- **SN-Refs**: SN-005
+- **Boundary-Refs**: B-05
+- **Hat-Refs**: FIRST-RUN-ADOPTER
+- **Requirement**: If a skill's description is shorter than the declared description floor, then the kit's skills-index check shall fail, naming that skill.
+- **Rationale**: A DERIVED requirement, and labelled so. SN-005 asks that agents and humans work from the same playbook; it does not name what a skill's description must carry, so this obligation arrives through the first-run-adopter lens rather than through the need's text. An agent reads only a skill's description to decide whether to load it, so a description too short to say when to use the skill is shipped guidance an adopter's agent never reads: the skill works only for someone who already knows it exists, the undocumented-knowledge failure that lens listens for. A length floor is a lexical proxy, not a proof that a description is good: it catches the one-line stub that cannot state a trigger and leaves the wording to review. A reviewer's judgement of every description was the alternative, and it lost as the only guard because nothing would re-ask it when a skill is added. Fed back to the need: SN-005's acceptance could name the skills' descriptions as part of the playbook; until it does, this row is derived and says so.
+- **AcceptanceCriteria**: A skill whose description is shorter than the declared floor fails the check, which names that skill and not a skill at the floor; a description at the floor passes; the kit's shipped skills clear the floor.
+- **Priority**: C
+- **Verification**: Test
+- **Status**: Drafted
+- **Phase**: 6
+
+### LLR LLR-281 (current)
+- **LLR-ID**: LLR-281
+- **SR-Refs**: SR-224
+- **Title**: The skills-index check refuses a description under the floor, by name
+- **Module**: project-trajectory/scripts/gen_skills_index.py
+- **CodeSymbol**: refuse_short_descriptions/short_descriptions/DESCRIPTION_FLOOR
+- **Detail**: DESCRIPTION_FLOOR is the shortest description --check accepts, in characters, set at 100: room for a trigger and an effect ("Use when <trigger> - <what>"). short_descriptions(rows) returns the name and length of the rows under it, and refuse_short_descriptions(rows), called first by --check, prints one SHORT line per such skill naming it, its length and the floor, then exits 1. The regenerating path does not apply the floor, so a short description is refused where the index is checked rather than silently written.
+- **Rationale**: The floor is one declared number read by one function, so the check and its tests agree on it; a length written into the message and the comparison separately would drift. Refusing at --check rather than at regeneration keeps the generator total: the index still renders, and the gate that reads the generator's exit code is the one that says the description needs rewriting.
+- **TestRefs**: (see TC-291)
+- **Status**: Drafted
+- **Component**: CMP-009
+- **Phase**: 6
+
+### TC TC-291 (current)
+- **TC-ID**: TC-291
+- **Verifies**: SR-224;LLR-281;IF-254
+- **Level**: Unit
+- **Method**: (a) THE REFUSAL: a planted skills directory under a temporary directory holds one skill whose description is under the floor and one exactly at it; after the index is written, --check exits 1, its error output names the short skill and the floor and does not name the skill at the floor. (b) THE SHIPPED SET: short_descriptions over the kit's own skills returns nothing.
+- **Tier**: Smoke
+- **Expected**: Satisfies SR-224 AcceptanceCriteria: a description under the floor fails the check by name, one at the floor passes, and every shipped skill clears it
+- **Automated**: Yes
+- **Evidence**: tests/test_skills_index.py::test_check_refuses_a_description_under_the_floor; tests/test_skills_index.py::test_every_shipped_description_clears_the_floor
+- **Status**: Drafted
+- **Phase**: 6
 
 </details>
