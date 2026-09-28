@@ -796,3 +796,11 @@ Recorded for the owner, a kit observation: the first-approval brief cannot
 show a form finding the gate raises only on Approved rows, so every
 adjudicator must flip and run `--strict` to see it. **Open count: 10**
 (9 queued, 1 deferred).
+
+Batch E's sweep minted WI-715 (SR-226's chain: the six cell fixes).
+**Open count: 11.** WI-697 (TC-279's re-judge) cannot be briefed: the kit's
+re-judge composer refuses an assumption-only case ("TC-279 has no
+`Verifies` cell"). The same gap let batch C's first-approval brief skip
+TC-279 silently. Both are the same surface as WI-667 (how assumption
+evidence reaches the adjudication machinery), so the gap is folded into
+WI-667's Context and Done-when, and WI-697 now waits on WI-667.

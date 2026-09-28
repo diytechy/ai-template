@@ -31,8 +31,11 @@ and `intake._census_drafts` under that row.
 
 Noted 2026-09-27 (the WI-689 consolidation verdict, `docs/reviews/wi-689-adjudicate-queue-overlap-af58/001-ADJUDICATE-e26e22a.md`, confirmed by Codex Sol): this row's scope is gated on an owner ruling that re-arms the red-TC rung, but no `needs` target or open item carries that gate, so the row reads claimable while it cannot be built. When the ruling's row is filed, add it to `needs`.
 
+Folded 2026-09-28 (the fifth coordinator session), on the same surface, how an assumption-evidence case reaches the adjudication machinery: an assumption-only test case (one that verifies a DA and no SR or LLR, like TC-279 for DA-011) is invisible to two of the kit's own briefs. The first-approval composer renders chains by SR, so it never showed TC-279: spine-acts batch C approved WI-696 with TC-279 unjudged in its scope. The re-judge composer refuses outright ("TC-279 has no `Verifies` cell"), so WI-697 (TC-279's re-judge) is held. Both composers need an arm for an assumption-only case, rendered under its assumption's chain as the assumptions approval brief already does.
+
 ## Done-when
 
+- An assumption-only test case (verifying a DA and no SR or LLR) is rendered by both the first-approval and the re-judge briefs under its assumption's chain, with a test for each; WI-697's brief then composes.
 - A row states how a red assumption-evidence case is routed, and it is
   approved through the normal route.
 - `gap_census` carries the assumption half under its own prefix, and a test

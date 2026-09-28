@@ -5,6 +5,7 @@ workstream = "process"
 specref = "docs/test/test-cases.toml"
 buildtier = "medium"
 safety_class = "adjudication"
+needs = ["WI-667"]
 brief = "rejudge"
 adjudicates = ["TC-279"]
 +++
@@ -22,3 +23,5 @@ The merge checkpoint at bcf1e9a found observation test case TC-279 due for re-ju
 - Inputs digest at bcf1e9a: sha256:cf0861ee8f1dfb8f0fbd5c026dfdbb1e60894baf9006c2319fabeffbd17ea9a2
 
 The check that filed this hashed the declared inputs and ran no model. Re-judge the case by its Method and record the result with `python scripts/record_observation.py --tc TC-279 --outcome pass|fail --by "<who or what observed>"`.
+Held 2026-09-28 by the kit itself: `adjudicate_brief.compose` refuses this row's re-judge brief ("TC-279 has no `Verifies` cell"). TC-279 is an assumption-only observation case: it evidences DA-011 and verifies no SR or LLR. A brief that cannot be composed is a hold for a human, never a downgrade to an ordinary session (the module's rule 3). The composer gap is folded into WI-667. This row waits there, and closing it now would let the next merge re-mint it.
+
