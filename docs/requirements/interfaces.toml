@@ -168,9 +168,11 @@
 #                    why. A boundary row with neither is one `trace.py`
 #                    advisory; a `bridged_by` entry no assumption row declares
 #                    is a `trace.py --strict` finding. The whole rule waits for
-#                    the first real row in `assumptions.toml`: none exists here
-#                    yet, and no live row carries either cell yet, so both
-#                    return with the first one.
+#                    the first real row in `assumptions.toml`; this repository
+#                    has its rows, so every boundary row here carries one of
+#                    the two. A registry format an adopter writes is
+#                    coincident: the seam delivers the format, and what the
+#                    rows say is judged at their own tiers.
 #
 #   notes            OPTIONAL free prose about the row. A reason cell: argument,
 #                    never citation. Honesty valve — the word `source` (produces
@@ -221,6 +223,7 @@ data = "docs/test/report.md — metric counts, the orphan and finding lists, the
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+bridged_by = ["DA-001"]
 
 [interface.IF-166]
 owner = "scripts/trace"
@@ -230,6 +233,7 @@ data = "docs/test/report.html — a self-contained collapsible <details> tree of
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+bridged_by = ["DA-001"]
 
 [interface.IF-002]
 owner = "scripts/check_docs"
@@ -271,6 +275,7 @@ data = "docs/test/perf-report.md — one row per in-tier budget: status, PB id, 
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The report states each in-tier budget's measured value against its budget; the stated result is the outcome, and what it gates is the harness's own verdict."""
 
 [interface.IF-005]
 owner = "scripts/check_privacy"
@@ -352,6 +357,7 @@ data = "docs/okf/ — one GENERATED-bannered file per concept, sorted, clockless
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The exported concept files are the output an adopter asked for, regenerated whole from the registries; the files are the outcome."""
 
 [interface.IF-013]
 owner = "scripts/check"
@@ -361,6 +367,7 @@ data = "0 pass · 1 fail · 2 usage"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+bridged_by = ["DA-001", "DA-002"]
 
 [interface.IF-014]
 owner = "scripts/bootstrap"
@@ -370,6 +377,7 @@ data = "the scaffolded template tree written under the destination root"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+bridged_by = ["DA-002", "DA-009", "DA-014"]
 
 [interface.IF-015]
 owner = "scripts/agent_loop"
@@ -379,6 +387,7 @@ data = "0 DONE · 2 preflight · 3 BLOCKED · 4 stall · 5 WAITING · 6 budget �
 version = "v4"
 status = "Drafted"
 interface_to_external = "B-05"
+bridged_by = ["DA-006", "DA-013"]
 
 [interface.IF-016]
 owner = "scripts/check_vendored"
@@ -388,6 +397,7 @@ data = "one WARN line per drifted or missing vendored file, then an OK, finding-
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The drift lines name each vendored file that no longer matches its source, which is the reader's whole outcome: they learn which copy to refresh."""
 
 [interface.IF-017]
 owner = "scripts/gen_cases"
@@ -397,6 +407,7 @@ data = "cases as table | params | toml | csv"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The generated cases are the output the person asked for; nothing interprets them between the generator and the test author who pastes them."""
 notes = "source"
 
 [interface.IF-018]
@@ -407,6 +418,7 @@ data = "docs/release-checklist.md — one `- [ ] <ID> — <what to confirm> (ref
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The file lists each item a person must confirm before release; listing it is the whole promise, and the confirmation is the release act's own."""
 
 [interface.IF-019]
 owner = "scripts/gen_skills_index"
@@ -416,6 +428,7 @@ data = "skills/INDEX.csv: banner comment, header, one row per skill (name, scope
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The index row per skill is what an agent or a person reads to find a skill; the listing is the outcome."""
 
 [interface.IF-020]
 owner = "scripts/subagent_gate"
@@ -425,6 +438,7 @@ data = "0 allow, ask or defer · 2 deny"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-04"
+coincident = """The exit code is the spawn decision itself: the agent CLI admits or refuses the spawn on it, so the reading is the outcome."""
 
 [interface.IF-169]
 owner = "scripts/subagent_gate"
@@ -434,6 +448,7 @@ data = "one JSON line: hookSpecificOutput with permissionDecision allow | ask | 
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-04"
+coincident = """The decision line is what the agent CLI acts on, allow, ask or deny with its reason; the reading is the outcome."""
 
 [interface.IF-170]
 owner = "scripts/subagent_gate"
@@ -443,6 +458,7 @@ data = "one tab-separated line per non-deferred decision - tool, decision, reaso
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The log line records each decision where the loop and a person read it back; the record is the outcome."""
 
 [interface.IF-151]
 owner = "scripts/subagent_gate"
@@ -461,6 +477,7 @@ data = "id-keyed TOML, one file per spine tier; ids are the table keys"
 version = "v2"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
 notes = """Published contract, not a single consumer: 14+ kit scripts independently join the SR registry (trace, spine_rules, gen_okf, plan_briefs, check_trajectory, agent_loop and more), and every downstream adopter fills in their own copy and reads it with the same shipped scripts - naming one reader would misstate the file's role. Ties to B-05 as the template's own delivered spine-registry format."""
 
 [interface.IF-161]
@@ -471,6 +488,7 @@ data = "test-cases.toml: id-keyed TOML, one [test.TC-###] table per case; ids ar
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
 
 [interface.IF-022]
 owner = "docs/stack.ini"
@@ -480,6 +498,7 @@ data = "sections: paths, product, tiers, coverage, arch-map, readability, step:N
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
 notes = """Published contract, not a single consumer: 9 kit scripts read docs/stack.ini directly (check, agent_common, dispatch, check_doc_refs, check_trajectory, integrate, run_menu, trunk_step, plus this row), and every downstream adopter authors their own copy - naming one reader would misstate the file's role. Ties to B-05 as the template's own delivered declared-policy format."""
 
 [interface.IF-023]
@@ -490,6 +509,7 @@ data = "one Markdown spec per row; status is the directory"
 version = "v3"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
 notes = """Published contract, not a single consumer: at least 9 kit scripts walk the docs/work/ spec folder through the shared kitlib.registry/agent_common readers (check_trajectory, gen_trajectory, schedule, wi_convert, intake, dispatch, traj_panels, traj_status and more), and every downstream adopter's own WI registry is content they author - naming one reader would misstate the file's role. Ties to B-05 as the template's own delivered work-item format."""
 
 [interface.IF-058]
@@ -511,6 +531,7 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
 notes = """sink - the assembled briefs feed the round's fresh sessions (agent_loop.run_dual_plan_round drives it in-process). Published contract, not a single consumer: reads both the SR registry (14+ readers, IF-021's population) and interfaces.toml (11 readers, IF-057's population); every downstream adopter fills in their own copies. Ties to B-05 as the template's own delivered spine-registry format."""
 
 [interface.IF-060]
@@ -560,6 +581,7 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
 notes = """sink - the coverage report feeds the dual-plan round's critique/arbiter sessions and the human, not a kit module (the agent_loop consumer seam is IF-060's to declare). Published contract, not a single consumer: 11 kit scripts join interfaces.toml directly (baseline_snapshot, check_trajectory, gen_arch_map, gen_okf, gen_release_checklist, intake, migrate_carrier, plan_briefs, trace, traj_status, traj_views, plus this row), and every downstream adopter fills in their own IF registry. Ties to B-05 as the template's own delivered spine-registry format."""
 
 [interface.IF-024]
@@ -569,6 +591,7 @@ channel = "file"
 version = "v3"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
 notes = """Published contract, not a single consumer: same population as IF-023/054/079 - the WI registry is read directly by gen_trajectory's own facade main() (this read stays local, unlike the docs/stage read it delegates to traj_parse, IF-052) alongside 8+ other kit scripts, and every downstream adopter's own registry is content they author. Ties to B-05 as the template's own delivered work-item format."""
 
 [interface.IF-025]
@@ -613,6 +636,7 @@ data = "root-level Markdown plus everything under docs"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The seam is the documentation tree itself, root-level Markdown and everything under docs, which a reader navigates as it stands; its links resolving and its vision declared once, as the documentation check reads it, is the outcome the reader asked for, with no party between the checked tree and the reading."""
 notes = """Published contract, not a single consumer: this row and check_doc_refs each walk the whole docs tree for their own purpose, and check_vocab/check_privacy sweep it as part of a broader whole-repo scan - an open, ever-growing population as every downstream adopter authors their own docs tree and validates it with the same shipped checker. Ties to B-05 as the template's own delivered doc-tree convention."""
 
 [interface.IF-031]
@@ -639,6 +663,7 @@ channel = "file"
 version = "v2"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
 notes = """Published contract, not a single consumer: same population as IF-021 - 14+ kit scripts join the SR registry, and every downstream adopter fills in their own copy. Ties to B-05 as the template's own delivered spine-registry format."""
 
 [interface.IF-034]
@@ -648,6 +673,7 @@ channel = "file"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
 notes = """Published contract, not a single consumer: 11 kit scripts read the SN registry directly (baseline_snapshot, check_docs, check_flows, check_need_form, spine_rules, gen_okf, hats, migrate_carrier, trace, traj_parse, plus this row), and every downstream adopter authors their own stakeholder-needs. Ties to B-05 as the template's own delivered spine-registry format."""
 
 [interface.IF-035]
@@ -676,6 +702,7 @@ data = "sections: attestation, policies, checks; one key = value per line"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The dial file is what the owner edits and every enforcer reads; one value per dial, read alike by each reader, is the outcome the owner asked for."""
 
 [interface.IF-163]
 owner = "docs/status.md"
@@ -693,6 +720,7 @@ data = "docs/status.md — the block between the GENERATED STATUS markers: deriv
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The generated status block shows the derived stage, the counts and the ready frontier the reader came for; the block is the outcome."""
 
 [interface.IF-038]
 owner = "docs/process.toml"
@@ -702,6 +730,7 @@ data = "off | ask | deny"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The declared subagent-gate value is what the gate enforces; the reading is the outcome."""
 notes = """Published contract, not a single consumer: 9 kit scripts read docs/process.toml directly (agent_common, agent_loop, bootstrap, check_privacy, check_trajectory, dispatch, gen_arch_map, gen_okf, plus this row), and every downstream adopter authors their own dials (gate_policy, push, review_rounds, subagent_gate). Ties to B-05 as the template's own delivered declared-policy format."""
 
 [interface.IF-039]
@@ -804,6 +833,7 @@ data = "one capability per line as name, tab, description, in declaration order"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The listing names each declared capability for the launcher to offer; the list is the outcome."""
 
 [interface.IF-157]
 owner = "scripts/run_menu"
@@ -822,6 +852,7 @@ data = "the launched capability's code passed through · 0 --list or a menu quit
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The exit code passes the launched capability's own result through, or names why nothing ran; the reading is the outcome."""
 
 [interface.IF-049]
 owner = "docs/stack.ini"
@@ -831,6 +862,7 @@ data = "[run] section: one name = command line per capability, plus a desc line"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
 notes = """Published contract, not a single consumer: same population as IF-022/068 - 9 kit scripts read docs/stack.ini directly, and every downstream adopter authors their own [run] section. Ties to B-05 as the template's own delivered declared-policy format."""
 
 [interface.IF-050]
@@ -858,6 +890,7 @@ data = "row Status: Drafted | Approved | Founded"
 version = "v2"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
 component = "CMP-006"
 notes = """Published contract, not a single consumer: same population as IF-021/033 - 14+ kit scripts join the SR registry, and every downstream adopter fills in their own copy. Ties to B-05 as the template's own delivered spine-registry format."""
 
@@ -889,6 +922,7 @@ version = "v2"
 status = "Drafted"
 component = "CMP-008"
 interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
 notes = """Published contract, not a single consumer: same population as IF-023/024/079 - 9+ kit scripts walk the WI registry, and every downstream adopter's own registry is content they author. Ties to B-05 as the template's own delivered work-item format."""
 
 [interface.IF-055]
@@ -944,6 +978,7 @@ data = "[agent-loop]: model, model-map"
 version = "v2"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
 notes = "built and consumed together; same population as IF-022/049 - this row's own read routes through agent_common.read_agent_loop_config rather than a bespoke parse, but docs/stack.ini remains the same 9-plus-reader published contract, and every downstream adopter authors their own copy. Ties to B-05 as the template's own delivered declared-policy format."
 
 [interface.IF-069]
@@ -992,6 +1027,7 @@ data = "status: pending | ruled"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
 notes = "built and consumed together; published contract, not a single consumer - 7 kit scripts read the OI registry directly (check_docs, check_trajectory, gen_open_items, intake, migrate_carrier, trace, traj_status), and every downstream adopter authors their own decisions. Ties to B-05 as the template's own delivered spine-registry format."
 
 [interface.IF-074]
@@ -1002,6 +1038,7 @@ data = "docs/open-items.html — pending decisions, approval and re-attest chain
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The page lists the pending decisions and the re-attestation chains for the owner to rule on; showing them is the page's whole promise, and the ruling is the authority crossing's own."""
 
 [interface.IF-075]
 rationale = """Split out of reattest_lines rather than reimplemented, because a second copy of the baseline derivation in a second module is the paraphrase-not-decompose failure this kit exists to prevent. The cross-component import (Generators -> Traceability core) is declared here rather than retagged: the model belongs with the registries it reads, and the renderer belongs with the generators."""
@@ -1051,6 +1088,7 @@ version = "v2"
 status = "Drafted"
 component = "CMP-006"
 interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
 notes = """Published contract, not a single consumer: same population as IF-023/024/054 - this row's own read_specs/spec_paths IS the format's definition module, and 8+ other kit scripts walk the same WI registry; every downstream adopter's own registry is content they author. Ties to B-05 as the template's own delivered work-item format."""
 
 [interface.IF-159]
@@ -1071,6 +1109,7 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 interface_to_external = "B-05"
+bridged_by = ["DA-013"]
 
 [interface.IF-154]
 owner = "scripts/integrate"
@@ -1109,6 +1148,7 @@ data = "0 all clean · 1 any failure, the offending file named"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+bridged_by = ["DA-013"]
 component = "CMP-008"
 
 [interface.IF-155]
@@ -1286,6 +1326,7 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 interface_to_external = "B-05"
+coincident = """The frontier or simulation lines are what the caller asked the scheduler for; the output is the outcome."""
 
 [interface.IF-097]
 owner = "scripts/prompts"
@@ -1657,6 +1698,7 @@ version = "v1"
 status = "Drafted"
 component = "CMP-007"
 interface_from_external = "B-01"
+bridged_by = ["DA-003", "DA-004"]
 interface_to_external = "B-04"
 notes = """The FACING row for the hook floor, and it is deliberately separate from the rows that model the floor's COMPOSITION. Those state which script the hook runs - an internal call between two in-tree endpoints - while the crossing is the contract git holds the hook to: git invokes, the exit code admits or refuses. A tie-back on an internal-call row would claim a realization that row's own contract does not state, so the gap was never a missing surface but a missing FACING. The bypass rides the contract rather than hiding behind it: what discharges `no unchecked write enters governed state` is this seam PAIRED with a re-run of the same bar away from the bypass, never this seam alone."""
 
@@ -1669,6 +1711,7 @@ version = "v1"
 status = "Drafted"
 component = "CMP-007"
 interface_to_external = "B-04"
+bridged_by = ["DA-004"]
 notes = """Ties back to the VERDICT crossing only, and the asymmetry with the commit-side hook is recorded rather than smoothed away. SR-020 carries both the write-in and the verdict-out crossing, but what this hook gates is content LEAVING the machine, while the write-in crossing describes the one write path INTO governed state; claiming it here would widen that crossing by assertion instead of by a frame decision. If the frame intends its write-in crossing to cover the whole git hook floor in both directions, the crossing's own text is what needs widening, not this row's attribution."""
 
 [interface.IF-136]
@@ -1705,6 +1748,7 @@ data = "docs/requirements/components.derived.toml — [derived], [component_view
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The derived component view is regenerated whole from the registries and read as it stands; the file is the outcome."""
 
 [interface.IF-141]
 rationale = """The derivation is IMPORTED, not re-implemented: a second copy would be a second answer, and the whole point of the cell is that a parent re-ruling propagates with no child edit."""
@@ -1748,6 +1792,7 @@ data = "severity: OK · SKIP · WARN · FAIL"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+coincident = """The severity alphabet is the protocol a reader and a caller act on, and it is honoured by construction across the shipped checkers; the reading is the outcome."""
 rationale = """The PROTOCOL is fixed here, never the DISPOSITION: per-class severity stays each requirement's own declaration, and fixing it here would over-constrain rows whose needs differ.
 
 Two clauses are deliberately absent. "Every degrade is named, never silent" is not stated: SR-181's acceptance permits a silent degrade where no prior committed state exists while SN-008 forbids one, so stating it would red an Approved row on the day this one landed. And the closed set is four DISPOSITIONS, not twelve exact tokens: the delivered checkers spell those four with twelve labels, and this row states the contract they already honour, not a rename they do not."""

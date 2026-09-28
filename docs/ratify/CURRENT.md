@@ -18,8 +18,572 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into approval or arrives approved, `--approves` names it or `--reattests` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 21 changed, 39 added, 1 removed since the snapshot; ruling(s): OI-37, OI-85, OI-88, WI-539, WI-553, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-616, WI-619, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679.
+- `docs/requirements/interfaces.toml` — 61 changed, 39 added, 1 removed since the snapshot; ruling(s): OI-37, OI-85, OI-88, WI-539, WI-553, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-616, WI-619, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-587.
+
+## Assumptions and surrogates owing an approval
+
+### DA-001 — Drafted, never approved
+
+**Relied on by.**
+
+- SR-163 — Every shipped file maps to a stakeholder outcome: Every file the delivered package ships shall map, through the declared shipped-file inventory and its recorded exclusions, to at least one system requirement whose references resolve to a stakeholder need — generated outputs mapping through their generator — with missing files, stale inventory entries, unresolved references and unmapped files reported under the declared warning-to-gating policy.
+
+**Serving.**
+
+- SN-038 — Scope: template (adopters + this repo). An adopter can determine why every file supplied by the kit exists and which stakeholder outcome it supports.
+
+**Lands on.**
+
+- B-09 — EXT-006 (Human operator)
+
+**Cells.**
+
+- **Assumption**: A spine the strict traceability check passes with zero orphans is one a reviewer can rely on: each traced row says something a reviewer would act on, and its links are the ones a reviewer would draw.
+- **HoldsWhen**: Rows are authored and adjudicated under the spine-authoring question list, and the reviewer reads the generated views rather than the raw registries.
+- **Obstacle**: Every row resolves and every row says nothing: an orphan-free spine whose rows are vacuous, or whose links were drawn to satisfy the check rather than the argument.
+- **ObstacleHats**: TEST-ENGINEER
+- **Status**: Drafted
+- **Standing**: active
+
+**Evidenced by.** no test case
+
+_Evidence level now: assumed (computed at render time from the current results and the clock; not compared by the freshness check)._
+
+**Falsifier.** A reviewer new to the spine, sampling traced rows through the generated views, finds a row that says nothing they would rely on, or a link they would not have drawn.
+
+### DA-002 — Drafted, never approved
+
+**Relied on by.**
+
+- SR-010 — Scaffold runs green out of the box: The delivered scaffold generator shall produce a scaffold whose harness runs green immediately after generation.
+- SR-032 — Onboarding and dev-setup scaffold: The onboarding and dev-setup templates shall scaffold and run to a green developer setup.
+
+**Serving.**
+
+- SN-001 — An adopting team can add this process to a new or existing repository and get a working gated, requirement-traced process, without hand-building the tooling.
+- SN-007 — The people maintaining this kit hold it to its own standard: it stays traceable and tested through every change.
+
+**Lands on.**
+
+- B-01 — EXT-001 (Development session)
+- B-09 — EXT-006 (Human operator)
+
+**Cells.**
+
+- **Assumption**: A scaffold whose harness runs green straight after generation is one an adopting team can work in: it can write its first registry rows and advance through its first gate without reading the kit's source.
+- **HoldsWhen**: The team's stack is one of the shipped profiles, and the team reads the adoption guide before first use.
+- **Obstacle**: A team scaffolds green, never fills a registry, and operates a spine that resolves and says nothing, because the step from the green scaffold to a first real row needs knowledge only the kit's source holds.
+- **ObstacleHats**: FIRST-RUN-ADOPTER
+- **Status**: Drafted
+- **Standing**: active
+
+**Evidenced by.** no test case
+
+_Evidence level now: assumed (computed at render time from the current results and the clock; not compared by the freshness check)._
+
+**Falsifier.** A first-time team, given a shipped profile and the adoption guide, fails to reach a first filled registry without reading the kit's source.
+
+### DA-003 — Drafted, never approved
+
+**Relied on by.**
+
+- SR-139 — Approval as an ordinal over a derived spine stage: The kit shall express human approval authority as a cumulative level naming the highest spine tier a human still approves, compared against a separately derived SPINE STAGE via a declared, auditable rung ordering — every unreadable or out-of-range input resolving toward MORE human involvement.
+- SR-140 — Each acceptance is recorded by a copy riding its own approval commit: The kit shall record each acceptance as a byte-identical copy of the accepted
+registries riding the same reviewed commit as the approval itself - so the
+commit, its date and its author come from git rather than from a cell, and the
+transition accepted and the acting reviewer that accepted it are distinguishable
+BY QUERY, an approval delegated to automation on a tier the declared approval
+level released from a human one.
+- SR-178 — Text that has moved away from its acceptance record is reported: The kit shall report any recorded artifact whose text has moved away from the
+copy recording its acceptance - stakeholder needs included - regardless of any
+Status movement.
+- SR-179 — The acceptance record can only be written by copying live text: The kit shall refuse a recorded copy that is not byte-identical, in the commit
+that writes it, to the live text it claims to record - so the only path into the
+record runs through the live registry first.
+
+**Serving.**
+
+- SN-029 — An autonomous run gets as far as it honestly can. Once triggered, the coordinator stops for a human judgement only when the declared approval level reserves that tier for a human, when a round cannot converge on its own, or when requirement/test documentation is introduced or amended such that the gate drops below what automation is permitted to attest. On every tier released to automation, an approval still happens as a review from a declared perspective against the row's actual evidence, and leaves a record naming who or what approved it — releasing a tier means the review is delegated, never skipped.
+
+**Lands on.**
+
+- B-02 — EXT-006 (Human operator)
+
+**Cells.**
+
+- **Assumption**: A changed Status cell on a rung the declared approval level holds for a human means a human actually exercised the judgement that Status asserts.
+- **HoldsWhen**: The row's rung is at or below the rung the declared approval level holds for a human, and the change is committed by a person rather than by an unattended run.
+- **Obstacle**: A Status change on a human-held rung arrives in a commit an unattended run authored, or a person flips the cell without reading the row it approves.
+- **ObstacleHats**: SECURITY
+- **Status**: Drafted
+- **Standing**: active
+
+**Evidenced by.** no test case
+
+_Evidence level now: assumed (computed at render time from the current results and the clock; not compared by the freshness check)._
+
+**Falsifier.** A commit carrying the loop's provenance trailer that changes a Status cell on a human-held rung.
+
+### DA-004 — Drafted, never approved
+
+**Relied on by.**
+
+- SR-017 — Always-on secrets floor: When a session attempts to commit or push content matching a secret pattern, the system shall refuse at the hook floor — scanning every commit's staged diff, message and outgoing range regardless of the privacy toggle, and naming the finding — unless the declared secrets_scan dial is explicitly false.
+- SR-018 — Privacy gate two-axis: When the declared privacy_check dial is on, the system shall additionally refuse, at the same hook floor, a commit or push carrying a PII/identity class — exempting configured author identities.
+- SR-019 — Pre-commit hook floor: The pre-commit hook shall run the integrity + secrets floor on every commit, agent-neutrally — a LOCAL floor, bypassable by the session (git commit --no-verify), so it discharges "no unchecked write enters governed state" only as a PAIR with the hosted re-run of the same bar (SR-151/SR-152), never alone.
+- SR-020 — Pre-push hook outgoing scan: The pre-push hook shall scan the outgoing commit range and block a push that publishes a secret or (under privacy-check) a private identity.
+- SR-209 — Every commit the loop makes carries a checked provenance trailer: When a commit is made from a process the unattended loop started, or is merged in a lane the loop owns from the point the loop took that lane over, the delivered commit floor shall refuse it unless it carries a valid provenance trailer naming the loop and its session.
+
+**Serving.**
+
+- SN-009 — A team is protected from publishing a secret or private identity: in a repository that adopts this process, it is caught before it publishes, without extra setup.
+- SN-005 — AI agents and humans work from the same playbook, and the process is enforced agent-neutrally — by git hooks + CI — not by trusting whichever agent showed up.
+- SN-029 — An autonomous run gets as far as it honestly can. Once triggered, the coordinator stops for a human judgement only when the declared approval level reserves that tier for a human, when a round cannot converge on its own, or when requirement/test documentation is introduced or amended such that the gate drops below what automation is permitted to attest. On every tier released to automation, an approval still happens as a review from a declared perspective against the row's actual evidence, and leaves a record naming who or what approved it — releasing a tier means the review is delegated, never skipped.
+
+**Lands on.**
+
+- B-01 — EXT-001 (Development session)
+
+**Cells.**
+
+- **Assumption**: A write the local hook floor admitted was checked: the floor was not bypassed, or a re-run of the same bar away from the session agrees with it.
+- **HoldsWhen**: Commits and pushes are made through the installed hooks rather than with them skipped, or a re-run of the declared bar away from the session is in place for each change that reaches a shared branch.
+- **Obstacle**: A commit or push made with the hooks skipped (a --no-verify commit or push, or a checkout where the hooks were never installed) admits an unchecked write, and nothing re-runs the bar before it is shared.
+- **ObstacleHats**: SECURITY
+- **Status**: Drafted
+- **Standing**: active
+
+**Evidenced by.** no test case
+
+_Evidence level now: assumed (computed at render time from the current results and the clock; not compared by the freshness check)._
+
+**Falsifier.** A pushed commit carrying a secret-class match the hook would have refused, or a merged commit whose re-run bar is red while its local hooks reported green.
+
+### DA-005 — Drafted, never approved
+
+**Relied on by.**
+
+- SR-151 — Hosted CI runs the declared bar per trigger: The shipped reference CI workflow shall invoke, for each declared hosted trigger (push, pull request, schedule) across its declared OS x Python matrix, the same documented harness entry point at the tier the declared moment-to-tier table assigns to that moment.
+- SR-152 — Hosted CI verdict is the harness's own: The hosted CI job verdict shall carry the harness's own exit for the declared bar — the job failing when the harness exits nonzero, with a step log naming each step's outcome and no silently skipped required step — as the declared backstop re-run behind the bypassable local hook floor.
+
+**Serving.**
+
+- SN-005 — AI agents and humans work from the same playbook, and the process is enforced agent-neutrally — by git hooks + CI — not by trusting whichever agent showed up.
+- SN-004 — A team advances only through explicit approval gates (DevStg-Reqs→DevStg-Tests→DevStg-Impl→…), and a gate passes only when its mechanical bar is met.
+- SN-008 — A reader can believe a pass verdict: gates are honest, and a pass verdict never hides a skipped check, a stub, or an unmet declared criterion.
+
+**Lands on.**
+
+- B-09 — EXT-006 (Human operator)
+
+**Cells.**
+
+- **Assumption**: Where hosted CI is configured, the runner honours the shipped workflow: each declared trigger runs the documented harness entry point at the tier the declared moment-to-tier table assigns, across the declared OS and Python matrix, and the job's verdict is the harness's own exit.
+- **HoldsWhen**: The repository's workflow is the shipped reference workflow, unedited, and the hosted runner executes workflow files as its provider documents them.
+- **Obstacle**: The runner, a provider default or an edited copy suppresses a declared run or a step (a disabled schedule, a path filter, a skipped job, a continue-on-error), and a change is shared behind a verdict no bar produced.
+- **ObstacleHats**: UNATTENDED-OPS
+- **Status**: Drafted
+- **Standing**: active
+
+**Evidenced by.** no test case
+
+_Evidence level now: assumed (computed at render time from the current results and the clock; not compared by the freshness check)._
+
+**Falsifier.** A declared trigger with no hosted run, or a hosted job reported passing whose step log lacks the harness invocation at its declared tier.
+
+### DA-006 — Drafted, never approved
+
+**Relied on by.**
+
+- SR-026 — Coordinator resumes headless: The delivered coordinator shall resume headless with stdin closed, never blocking on a prompt: a worker resumes from its explicit claimed assignment plus the committed trailer evidence on its branch, and the integrator derives claim and queue state from trunk history alone — the generated status surface never a session input.
+- SR-028 — Coordinator typed outcomes: The delivered coordinator shall end each session in a typed outcome code, guard a zero-commit HEAD, and report an all-ERROR stall as an unavailable agent rather than a work stall.
+- SR-148 — Autonomous loop work selection: what it derives from, and in what order: The delivered loop content shall select the work an unattended run does next from the repository's tracked registries and git history alone, in this order: ready adjudication rows first, as a stable partition applied at admission rather than by renumbering the ruled rank table; then unresolved handback records; then the earliest incomplete spine tier in SN-to-SR-to-LLR-to-TC order; then implementation work after test-case layout is complete — with the eligible set and its order deterministic, an item whose declared safety, policy or plan-mode inputs are missing, undeclared or contradictory failing closed for that item alone, human holds applied only from the declared approval level, nothing admitted past a human-held stop, no prose surface and no predefined track in the derivation, no hand-curated next-work or run-phase pointer surface shipped for any live instruction or executable surface to read, write, validate, generate or link, and the status surface a session reads generated and freshness-gated rather than hand-copied.
+- SR-156 — Bounded lanes narrowing to one gated landing: The delivered loop content shall run ready work on bounded, mutually isolated lanes and narrow every lane back to the integration branch through one serial, fail-closed seam that runs the declared bar on the composed tree — parking a red candidate and stopping the queue loudly, draining claiming to a clean merged stop under a declared pause, and reconstructing claim and queue state from version-control history alone at any crash boundary, never a half-integrated authoritative state.
+- SR-171 — Bounded retry on a declared transient model limit: The delivered loop content shall retry a declared transient provider limit under a bounded backoff, surfacing the wait so a throttled run is distinguishable from a wedged one, rather than ending the run.
+- SR-172 — A stalled session ends at its declared limit: The delivered loop content shall end a session that has made no declared progress within its declared stall limit, reporting the stall as its own outcome rather than as success or as an ordinary failure.
+
+**Serving.**
+
+- SN-006 — An agent can run unattended and resume from repository text alone. Such a run never waits for interactive input, and reports its failures clearly. It also stays safe: declared limits bound the workers it may set running and the actions it takes that cannot be undone, and only an override a human provides — never one the model can set — may relax those limits. That safety is supervision rather than an absolute: the layer's first obligation is to move forward as far as it can, and it surfaces to a human when it cannot proceed — so a fault in the machinery that carries a limit degrades to a recorded condition, not to a stopped run.
+- SN-025 — With no human curating what comes next, a configured LLM agent implements toward the vision — fully autonomously where enabled — deriving its own next work from the repository's tracked state. (The launcher that starts it is SN-034's obligation; this need is the self-direction.)
+- SN-029 — An autonomous run gets as far as it honestly can. Once triggered, the coordinator stops for a human judgement only when the declared approval level reserves that tier for a human, when a round cannot converge on its own, or when requirement/test documentation is introduced or amended such that the gate drops below what automation is permitted to attest. On every tier released to automation, an approval still happens as a review from a declared perspective against the row's actual evidence, and leaves a record naming who or what approved it — releasing a tier means the review is delegated, never skipped.
+- SN-027 — A team gets more than one piece of ready work moving at once: ready work fans out across bounded parallel lanes, while mutation of the integration branch stays serialized and gated.
+- SN-008 — A reader can believe a pass verdict: gates are honest, and a pass verdict never hides a skipped check, a stub, or an unmet declared criterion.
+- SN-010 — A reader can navigate the documentation and trust it: navigable and honest — links resolve, the vision is declared once, and generated views cannot silently rot.
+
+**Lands on.**
+
+- B-09 — EXT-006 (Human operator)
+
+**Cells.**
+
+- **Assumption**: The model runner follows the runner contract: it reads its prompt from stdin, exits with the documented codes, ends rather than waits when it needs input it cannot have, and leaves its work as commits in its own lane, so the work the owner reads back is the work the loop asked for.
+- **HoldsWhen**: A runner and model listed in the declared agent registry, at the command-line version the loop was tested against.
+- **Obstacle**: A runner update changes its exit codes, its commit behaviour or what it does on a closed stdin, and every loop requirement relying on the contract loses its premise at once.
+- **ObstacleHats**: UNATTENDED-OPS
+- **Status**: Drafted
+- **Standing**: active
+
+**Evidenced by.** no test case
+
+_Evidence level now: assumed (computed at render time from the current results and the clock; not compared by the freshness check)._
+
+**Falsifier.** A routed session whose exit code, stdin behaviour or commit shape falls outside the documented runner contract.
+
+### DA-007 — Drafted, never approved
+
+**Relied on by.**
+
+- SR-154 — Independent review routed across families: When unattended work reaches integration, the delivered loop content shall obtain each review or critique verdict the declared policy requires from a session that did not author the work — resolved per in-process phase and tier from the delivered agent registry's declared (family x model x tier) rows and only while the declared consent surface that turns managed selection on is present, drawn from a different model family wherever one is configured, degrading only to the documented same-family mode — with every selection logged before launch and a non-converging rework loop escalated through the declared approval level.
+- SR-155 — Contested planning rounds for marked work: Where work is declared as contested planning, the delivered loop content shall produce the selected decomposition through a bounded round of two independently authored rival plans — cross-critiqued, mechanically coverage-compared and arbitrated by fresh sessions — committing the selected outcome atomically as registry-valid queued rows and surfacing a non-converging round through the declared approval level, never falling back to a single uncontested plan silently.
+- SR-184 — Critique acceptance records intent-derived rubric anchors: Where a delivered capability requires Critique acceptance, the delivered acceptance record shall identify a fresh reviewer session that did not author the artifact, apply a written rubric derived from the applicable SN/SR intent, and record each verdict and finding against numbered rubric-anchor ids.
+
+**Serving.**
+
+- SN-026 — The repo owner can configure several LLM families — selected per job and per capability level — so that work benefiting from an independent second opinion is automatically routed to a *different* family wherever that is configured.
+- SN-024 — A reviewer can trust subjective/perceptual acceptance — a realistic-looking render, an artifact comparison with no crisp measurable interface — because it is adjudicated by an independent critical eye against a written rubric, never by the session that authored the artifact.
+- SN-006 — An agent can run unattended and resume from repository text alone. Such a run never waits for interactive input, and reports its failures clearly. It also stays safe: declared limits bound the workers it may set running and the actions it takes that cannot be undone, and only an override a human provides — never one the model can set — may relax those limits. That safety is supervision rather than an absolute: the layer's first obligation is to move forward as far as it can, and it surfaces to a human when it cannot proceed — so a fault in the machinery that carries a limit degrades to a recorded condition, not to a stopped run.
+- SN-002 — A reviewer can trust the chain from need to requirement to design to test because it is mechanically verified, not manually asserted: every requirement links to a need and a test before a gate.
+
+**Lands on.**
+
+- B-09 — EXT-006 (Human operator)
+
+**Cells.**
+
+- **Assumption**: A review or critique session that did not author the work, drawn from a different model family where one is configured, finds defects the authoring session was blind to, so its verdict adds evidence the author's own could not.
+- **HoldsWhen**: At least two model families are configured and routable, the reviewer receives the written rubric or the requirement text rather than the author's self-assessment, and the reviewing family is not the authoring one.
+- **Obstacle**: Families trained alike share the same blind spots, or the brief carries the author's framing into the review, and the second opinion agrees for the wrong reasons.
+- **ObstacleHats**: TEST-ENGINEER
+- **Status**: Drafted
+- **Standing**: active
+
+**Evidenced by.** no test case
+
+_Evidence level now: assumed (computed at render time from the current results and the clock; not compared by the freshness check)._
+
+**Falsifier.** A defect found after acceptance that the independent reviewer's recorded verdict passed, and that a person or a later reviewer finds plainly visible in the reviewed artifact.
+
+### DA-008 — Drafted, never approved
+
+**Relied on by.**
+
+- SR-026 — Coordinator resumes headless: The delivered coordinator shall resume headless with stdin closed, never blocking on a prompt: a worker resumes from its explicit claimed assignment plus the committed trailer evidence on its branch, and the integrator derives claim and queue state from trunk history alone — the generated status surface never a session input.
+- SR-028 — Coordinator typed outcomes: The delivered coordinator shall end each session in a typed outcome code, guard a zero-commit HEAD, and report an all-ERROR stall as an unavailable agent rather than a work stall.
+- SR-171 — Bounded retry on a declared transient model limit: The delivered loop content shall retry a declared transient provider limit under a bounded backoff, surfacing the wait so a throttled run is distinguishable from a wedged one, rather than ending the run.
+- SR-172 — A stalled session ends at its declared limit: The delivered loop content shall end a session that has made no declared progress within its declared stall limit, reporting the stall as its own outcome rather than as success or as an ordinary failure.
+
+**Serving.**
+
+- SN-006 — An agent can run unattended and resume from repository text alone. Such a run never waits for interactive input, and reports its failures clearly. It also stays safe: declared limits bound the workers it may set running and the actions it takes that cannot be undone, and only an override a human provides — never one the model can set — may relax those limits. That safety is supervision rather than an absolute: the layer's first obligation is to move forward as far as it can, and it surfaces to a human when it cannot proceed — so a fault in the machinery that carries a limit degrades to a recorded condition, not to a stopped run.
+- SN-025 — With no human curating what comes next, a configured LLM agent implements toward the vision — fully autonomously where enabled — deriving its own next work from the repository's tracked state. (The launcher that starts it is SN-034's obligation; this need is the self-direction.)
+
+**Lands on.**
+
+- B-10 — EXT-005 (Model provider API(s) / CLI(s))
+
+**Cells.**
+
+- **Assumption**: The scripted runner reproduces a real runner's argv and stdin handling, exit codes and commit effects; it reproduces no judgement, so nothing about the quality of a model's work is evidenced by a test run against it.
+- **HoldsWhen**: Loop tests that assert protocol behaviour (what is sent, what code comes back, what lands as a commit), never the content a model would produce.
+- **Obstacle**: A real runner behaviour the script does not model (a partial write, streamed output, a timeout, an interactive prompt) that the loop depends on.
+- **ObstacleHats**: TEST-ENGINEER
+- **Status**: Drafted
+- **Standing**: active
+
+**Evidenced by.** no test case
+
+_Evidence level now: assumed (computed at render time from the current results and the clock; not compared by the freshness check)._
+
+**Falsifier.** A loop defect seen with a real runner that the scripted runner cannot reproduce.
+
+**Surrogate.** SUR-001 — Scripted model runner, emulating EXT-005 (Model provider API(s) / CLI(s))
+
+### DA-009 — Drafted, never approved
+
+**Relied on by.**
+
+- SR-010 — Scaffold runs green out of the box: The delivered scaffold generator shall produce a scaffold whose harness runs green immediately after generation.
+- SR-032 — Onboarding and dev-setup scaffold: The onboarding and dev-setup templates shall scaffold and run to a green developer setup.
+
+**Serving.**
+
+- SN-001 — An adopting team can add this process to a new or existing repository and get a working gated, requirement-traced process, without hand-building the tooling.
+- SN-007 — The people maintaining this kit hold it to its own standard: it stays traceable and tested through every change.
+
+**Lands on.**
+
+- B-01 — EXT-001 (Development session)
+- B-04 — EXT-001 (Development session)
+
+**Cells.**
+
+- **Assumption**: A scaffold generated into a temporary directory behaves like a fresh adopter repository for the writes the suite makes into it and the verdicts it reads back.
+- **HoldsWhen**: The same shipped profile, a clean supported Python and git on the path, with no hooks, attributes or configuration inherited from the machine running the suite.
+- **Obstacle**: An adopter environment property the temporary directory lacks (hooks already installed, line-ending conversion, a monorepo layout, a path with spaces) changes a verdict the suite saw pass.
+- **ObstacleHats**: CROSS-PLATFORM
+- **Status**: Drafted
+- **Standing**: active
+
+**Evidenced by.** no test case
+
+_Evidence level now: assumed (computed at render time from the current results and the clock; not compared by the freshness check)._
+
+**Falsifier.** An adopter-reported scaffold failure that the suite's scaffold fixture passes.
+
+**Surrogate.** SUR-002 — Scaffold surrogate, emulating EXT-001 (Development session)
+
+### DA-010 — Drafted, never approved
+
+**Relied on by.**
+
+- SR-052 — Dashboard accessibility (rubric-adjudicated): The state view the delivered generators produce shall be operable and readable without a pointer or full color perception: every interactive element (tabs, expandable blocks, SVG nodes with detail panels) is keyboard-reachable and carries an accessible name (title/aria/visible text); no information is encoded by color alone (status/phase/type encodings carry a text or shape cue); text keeps readable contrast against its fill.
+- SR-053 — Dashboard UI uniformity (rubric-adjudicated): The state view the delivered generators produce shall read as one system across its tabs and views: one type scale and spacing rhythm; one status/phase/type color vocabulary applied consistently wherever the same concept renders; uniform node, edge, legend, and detail-panel styling across the SVG emitters; the same interaction idiom (expand, hover, detail) wherever the same structure appears.
+- SR-054 — Dashboard usability (rubric-adjudicated): The state view the delivered generators produce shall support its core reading tasks with low friction: a first-time reviewer finds the project state, the next work, and how the parts connect, each within one tab switch; views default to a legible density (start-collapsed per the greater-than-3 rule) and reveal detail without losing context; labels stay readable at default zoom with no clipped or overlapping text.
+
+**Serving.**
+
+- SN-024 — A reviewer can trust subjective/perceptual acceptance — a realistic-looking render, an artifact comparison with no crisp measurable interface — because it is adjudicated by an independent critical eye against a written rubric, never by the session that authored the artifact.
+- SN-023 — A reviewer can see the project's progress and how its parts connect from one dashboard-like file.
+
+**Lands on.**
+
+- B-09 — EXT-006 (Human operator)
+
+**Cells.**
+
+- **Assumption**: A vision model judging the rendered state view against its written rubric reaches the verdict a human reviewer reading the same render would.
+- **HoldsWhen**: An image-capable model; the rubric carries its accumulated anchors; a static render at a declared width, theme and tab.
+- **Obstacle**: A model revision shifts judgement silently, or the rubric overfits to anchors accumulated under one model's eye.
+- **Status**: Drafted
+- **Standing**: active
+
+**Evidenced by.** no test case
+
+_Evidence level now: assumed (computed at render time from the current results and the clock; not compared by the freshness check)._
+
+**Falsifier.** A periodic human reading of the same renders that disagrees with the critic's recorded verdict.
+
+**Surrogate.** SUR-003 — Render critic, emulating EXT-006 (Human operator)
+
+### DA-011 — Drafted, never approved
+
+**Relied on by.**
+
+- SR-216 — Each change is measured by the project's declared readability measures, and a worsening is reported with the part it worsens: When a change is submitted for acceptance, the delivered harness shall report together every worsening that the project's declared readability and structure measures find in the parts the change touches, naming each measure and part.
+
+**Serving.**
+
+- SN-041 — Scope: template (adopters + this repo). A person reading a project's code or analytics long after it was written can understand what each part does and why it exists, and can change one part without having to understand or rework unrelated parts.
+
+**Lands on.**
+
+- B-09 — EXT-006 (Human operator)
+
+**Cells.**
+
+- **Assumption**: What a random sample of the code's parts shows about its readability holds for the parts the sample did not reach: where each reader new to a sampled part can say what it does and why it exists, from its code and the records linked to it and without asking its author, a reader new to any other part can too.
+- **HoldsWhen**: Parts are drawn at random from the whole source the project's readability and structure measures cover, never chosen by their authors; the parts share the project's conventions and carry back-links to the requirement and design rows that say why they exist; each reader has not worked on the part and reads its records through the generated views.
+- **Obstacle**: The sample misses the parts that are hard to read (a legacy module, a hand-tuned path, a part whose reason lives only in its author's head), and a clean sample stands for code it does not represent.
+- **ObstacleHats**: MAINTAINER
+- **Status**: Drafted
+- **Standing**: active
+
+**Evidenced by.** TC-279
+
+_Evidence level now: specified (computed at render time from the current results and the clock; not compared by the freshness check)._
+
+**Falsifier.** A reader new to a sampled part cannot say what it does or why it exists from its code and linked records; or a part outside an earlier clean sample is found that no new reader can explain.
+
+### DA-012 — Drafted, never approved
+
+**Relied on by.**
+
+- SR-034 — Kit scripts run on stdlib plus ledger-declared dependencies: Every kit script shall run on a clean Python 3.11+ using the standard library plus only those non-stdlib dependencies declared as a reviewed row in the dependency ledger.
+- SR-046 — Declared runnable capabilities reachable from the repository root: The launchers at the repository root shall expose every declared runnable capability consistently to an interactive operator, to a direct caller naming one capability, and to automated discovery - from a single declaration, on Windows and POSIX alike.
+- SR-114 — Kit scripts run across the supported OSes: The kit scripts shall run on Python 3.11+ across Linux, Windows and macOS.
+- SR-160 — Front-door launchers for the two universal contributor actions: The delivered scaffold shall place both universal contributor actions — preparing the development environment, and resuming the automated development loop — as launchers at the repository root for each supported platform, each starting its action as a single step — locating a working interpreter by RUNNING a candidate and reporting clearly rather than crashing cryptically when none resolves or a Store alias exits nonzero — or documenting the one platform-required step where a single click is impossible.
+
+**Serving.**
+
+- SN-011 — An adopting team can run every check on a clean Python 3.11+ with minimal, argued dependencies — stdlib by default, a non-stdlib dependency admitted only through a reviewed ledger row — on Windows and POSIX (and macOS).
+- SN-001 — An adopting team can add this process to a new or existing repository and get a working gated, requirement-traced process, without hand-building the tooling.
+- SN-035 — Scope: this repo (adopters advised). A person working on this repository can open one launcher that lists the repository's available actions and runs the one they choose, on each platform this repository supports; adopters are told the pattern exists.
+- SN-003 — A team can use this process on a stack whose tools it declares in a stack profile: it is stack-agnostic, and a non-Python project adopts it by re-pointing the harness at that stack's tools, with Python only as the reference.
+- SN-034 — Scope: template (adopters + this repo). A person setting up to work on the repository can start each of the two universal contributor actions — preparing their development environment, and resuming the automated development loop — with a single action from the repository's front door, on Windows, macOS and Linux alike (one click where the platform allows it; one obvious command where it does not).
+
+**Lands on.**
+
+- B-04 — EXT-001 (Development session)
+- B-09 — EXT-006 (Human operator)
+
+**Cells.**
+
+- **Assumption**: A supported platform, and a Python release of 3.11 or later that the declared test matrix did not sample, run the kit's scripts and root launchers as the sampled ones do.
+- **HoldsWhen**: A CPython release of 3.11 or later with its standard library intact, on Linux, Windows or macOS, and a test matrix that samples the oldest supported release and the latest one.
+- **Obstacle**: A later interpreter release changes or removes a standard-library behaviour a kit script relies on, or a platform changes how a shell or launcher starts a script, and a check crashes or gives a different verdict on the adopter's machine.
+- **ObstacleHats**: CROSS-PLATFORM
+- **Status**: Drafted
+- **Standing**: active
+
+**Evidenced by.** no test case
+
+_Evidence level now: assumed (computed at render time from the current results and the clock; not compared by the freshness check)._
+
+**Falsifier.** A kit script or root launcher failing, or giving a different verdict, on a supported platform and interpreter release the test matrix did not sample.
+
+### DA-013 — Drafted, never approved
+
+**Relied on by.**
+
+- SR-156 — Bounded lanes narrowing to one gated landing: The delivered loop content shall run ready work on bounded, mutually isolated lanes and narrow every lane back to the integration branch through one serial, fail-closed seam that runs the declared bar on the composed tree — parking a red candidate and stopping the queue loudly, draining claiming to a clean merged stop under a declared pause, and reconstructing claim and queue state from version-control history alone at any crash boundary, never a half-integrated authoritative state.
+- SR-170 — Shared authority surfaces are the serial actor's alone: The delivered loop content shall write the shared records it derives - the compiled activity log and the generated project-state artifacts - only from the serial merge step and only against the merged tree, never from a parallel work branch.
+
+**Serving.**
+
+- SN-027 — A team gets more than one piece of ready work moving at once: ready work fans out across bounded parallel lanes, while mutation of the integration branch stays serialized and gated.
+- SN-008 — A reader can believe a pass verdict: gates are honest, and a pass verdict never hides a skipped check, a stub, or an unmet declared criterion.
+- SN-025 — With no human curating what comes next, a configured LLM agent implements toward the vision — fully autonomously where enabled — deriving its own next work from the repository's tracked state. (The launcher that starts it is SN-034's obligation; this need is the self-direction.)
+- SN-010 — A reader can navigate the documentation and trust it: navigable and honest — links resolve, the vision is declared once, and generated views cannot silently rot.
+
+**Lands on.**
+
+- B-01 — EXT-001 (Development session)
+
+**Cells.**
+
+- **Assumption**: Work reaches the integration branch only through the gated path: a loop lane through the serial integrator that runs the declared bar on the composed tree, and a person's change through the hook floor and the declared bar.
+- **HoldsWhen**: No one hand-merges a loop lane or pushes to the integration branch around the merge slot; where someone does, the merge-slot sweep is run after it.
+- **Obstacle**: A person hand-merges a loop lane or pushes straight to the integration branch, and a composed tree that never ran the declared bar becomes the state every later lane builds on.
+- **ObstacleHats**: INTEGRITY-RECOVERABILITY
+- **Status**: Drafted
+- **Standing**: active
+
+**Evidenced by.** no test case
+
+_Evidence level now: assumed (computed at render time from the current results and the clock; not compared by the freshness check)._
+
+**Falsifier.** An integration-branch commit whose tree fails the declared bar, or a merged lane with no merge-slot intake record.
+
+### DA-014 — Drafted, never approved
+
+**Relied on by.**
+
+- SR-036 — Deliberate re-sync integration: A re-sync of an existing adoption shall integrate relevant kit updates without clobbering the adopter's filled-in files, per the documented re-sync procedure — take kit-owned scripts/hooks wholesale, regenerate generated docs, and preserve filled-in registries/config.
+- SR-138 — Legacy config converts automatically and totally: The delivered scaffold generator's documented migration pass — run by both scaffolding and the documented re-sync — shall fold every legacy one-word policy file into the single policy declaration home and delete it, never deleting a file whose value it did not manage to write.
+
+**Serving.**
+
+- SN-001 — An adopting team can add this process to a new or existing repository and get a working gated, requirement-traced process, without hand-building the tooling.
+- SN-007 — The people maintaining this kit hold it to its own standard: it stays traceable and tested through every change.
+- SN-028 — The repo owner can find and change every policy dial in one home — a single hand-edited, machine-read file — and a repo that declares the same dial twice is REFUSED rather than resolved by precedence.
+
+**Lands on.**
+
+- B-01 — EXT-001 (Development session)
+- B-04 — EXT-001 (Development session)
+
+**Cells.**
+
+- **Assumption**: An adopter moves to a newer kit through the scaffold's re-run or the documented re-sync procedure, which run the kit's migration pass and preserve the adopter's own files, rather than by copying kit files over by hand.
+- **HoldsWhen**: The adopter follows the documented upgrade route and reads its re-sync entries for the range it crosses.
+- **Obstacle**: An adopter hand-copies a newer kit over an old checkout, the migration pass never runs, and the first run meets the legacy-file refusal, or a filled-in file is lost, with nothing explaining why.
+- **ObstacleHats**: FIRST-RUN-ADOPTER
+- **Status**: Drafted
+- **Standing**: active
+
+**Evidenced by.** no test case
+
+_Evidence level now: assumed (computed at render time from the current results and the clock; not compared by the freshness check)._
+
+**Falsifier.** An adopter report of the legacy-file refusal, or of a clobbered filled-in file, after an upgrade that bypassed the documented route.
+
+### DA-015 — Drafted, never approved
+
+**Relied on by.**
+
+- SR-220 — Overlapping queued work is consolidated through one judgement per queue state: While the queued work items include a set that overlaps, the delivered loop content shall hand that set to a single judgement, at most once for any one state of the queued work items and never while another judgement is in progress, queued over an item of the set, or queued to run before it, whose outcome takes effect only as a recorded restructuring in which each absorbed item is closed in a terminal state naming its one successor, its scope text unchanged.
+
+**Serving.**
+
+- SN-025 — With no human curating what comes next, a configured LLM agent implements toward the vision — fully autonomously where enabled — deriving its own next work from the repository's tracked state. (The launcher that starts it is SN-034's obligation; this need is the self-direction.)
+
+**Lands on.**
+
+- B-09 — EXT-006 (Human operator)
+
+**Cells.**
+
+- **Assumption**: A fresh model session asked to judge whether queued work items overlap, from a brief the loop composed from the registries, judges as the owner would: the items it merges overlap, and the successor it names carries their scope.
+- **HoldsWhen**: A runner and model at a strong tier listed in the declared agent registry; the brief carries each item's full scope text; the owner reads the recorded restructuring where the queue is shown.
+- **Obstacle**: The session merges items that do not overlap, or names a successor that drops part of an absorbed scope, and no one reads the recorded restructuring.
+- **ObstacleHats**: PRODUCT-FITNESS
+- **Status**: Drafted
+- **Standing**: active
+
+**Evidenced by.** no test case
+
+_Evidence level now: assumed (computed at render time from the current results and the clock; not compared by the freshness check)._
+
+**Falsifier.** An owner reversing a recorded consolidation, or re-filing scope an absorbed item carried.
+
+### SUR-001 — Drafted, never approved
+
+**Name.** Scripted model runner
+
+**Emulates.**
+
+- EXT-005 (Model provider API(s) / CLI(s))
+
+**Description.** A scripted stand-in the loop tests launch in place of a model runner's command line: it answers the runner contract (prompt on stdin, an exit code, commits in its lane) from a per-test action script, so the loop's protocol is tested with no model called. Carried by the FAKE_AGENT harness in tests/test_agent_loop.py.
+
+**Cells.**
+
+- **Status**: Drafted
+
+**Named by.**
+
+- DA-008 — The scripted runner reproduces a real runner's argv and stdin handling, exit codes and commit effects; it reproduces no judgement, so nothing about the quality of a model's work is evidenced by a test run against it.
+
+
+### SUR-002 — Drafted, never approved
+
+**Name.** Scaffold surrogate
+
+**Emulates.**
+
+- EXT-001 (Development session)
+
+**Description.** A fresh scaffold bootstrapped into a temporary directory and driven by running the kit's actual commands, as a development session in an adopter's repository would. Carried by the suite's scaffold fixture in tests/conftest.py.
+
+**Cells.**
+
+- **Status**: Drafted
+
+**Named by.**
+
+- DA-009 — A scaffold generated into a temporary directory behaves like a fresh adopter repository for the writes the suite makes into it and the verdicts it reads back.
+
+
+### SUR-003 — Drafted, never approved
+
+**Name.** Render critic
+
+**Emulates.**
+
+- EXT-006 (Human operator)
+
+**Description.** The render-dashboard-critique skill with an image-capable model: it screenshots the state view across the declared width, theme and tab matrix and judges the renders against the written rubric, standing in for the human reader of the view.
+
+**Cells.**
+
+- **Status**: Drafted
+
+**Named by.**
+
+- DA-010 — A vision model judging the rendered state view against its written rubric reaches the verdict a human reviewer reading the same render would.
+
 
 ## Stakeholder needs and stakeholders owing an act
 
@@ -57,7 +621,82 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 15 chain(s): SR-017, SR-140, SR-146, SR-147, SR-154, SR-156, SR-157, SR-163, SR-176, SR-178, SR-183, SR-198, SR-207, SR-215, SR-220</summary>
+<summary>Waiting for automated adjudication — 86 chain(s): SR-006, SR-007, SR-009, SR-011, SR-015, SR-017, SR-022, SR-024, SR-027, SR-031, SR-033, SR-035, SR-040, SR-043, SR-049, SR-070, SR-111, SR-112, SR-113, SR-129, SR-137, SR-140, SR-144, SR-146, SR-147, SR-149, SR-150, SR-154, SR-156, SR-157, SR-158, SR-159, SR-161, SR-162, SR-163, SR-164, SR-165, SR-166, SR-167, SR-168, SR-169, SR-173, SR-174, SR-175, SR-176, SR-177, SR-178, SR-180, SR-181, SR-182, SR-183, SR-185, SR-186, SR-187, SR-188, SR-189, SR-190, SR-191, SR-192, SR-193, SR-194, SR-195, SR-196, SR-197, SR-198, SR-199, SR-200, SR-201, SR-202, SR-203, SR-204, SR-205, SR-206, SR-207, SR-208, SR-210, SR-211, SR-212, SR-213, SR-214, SR-215, SR-217, SR-218, SR-219, SR-220, SR-221</summary>
+
+## SR-006 — Gate/tier harness enforces required steps
+
+> **Requirement.** The delivered harness shall run the required steps of the gate that must next be passed (the strictness selector cached in docs/stage) and fail that gate when a required tool is missing, reporting SKIP(missing) rather than silently passing — and, on a claimed work branch (one whose history holds a docs/work/active/<branch>/ claim), SKIP its generated-artifact freshness steps with a stated trunk-lane reason, generated artifacts being trunk-only, while every non-freshness step still runs.
+
+> **Rationale.** Realizes SN-004 (gates enforce their bar), SN-008 (no false green) and the dissolved edge expectation that a missing tool fails, never skips. A sanctioned SKIP class of this harness's own step plan is not a second crossing observable, it is the same one qualified. The skip is not a weakening: a work branch cannot commit generated artifacts at all (concurrency-restructure §5.2), so demanding their freshness there would force the very conflict the rule deletes; the skip is reported, never silent, and any signal ambiguity resolves toward the full trunk bar.
+
+
+### SR SR-006
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a gate that passes only when its bar is met and a pass verdict that hides no skipped check; the harness running the declared steps, and failing on a missing tool, is that verdict as the reader receives it, with no party between the run and the report.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-007 — Declared stack profile, refused when it is broken
+
+> **Requirement.** The delivered harness shall read the toolchain (format/lint/test commands, tiers, coverage, arch-map mode) from the declared stack profile so a stack swap edits only that declaration, failing loudly on a malformed profile or a non-integer coverage threshold rather than proceeding on a bad one.
+
+> **Rationale.** Realizes SN-003 — the kit is stack-agnostic; the harness is re-pointed by declaration, not by editing a kit script. Reading a declaration and REFUSING a broken one are one obligation, not two: a reader that proceeds on a malformed profile has not read it. A MISSING DECLARED BINARY is deliberately no part of it — SR-006 already states that verbatim as its own ("fail that gate when a required tool is missing"), which is why LLR-008 decomposes from both rows rather than one.
+
+
+### SR SR-007
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a toolchain swapped by editing one declaration; the harness reading its commands from that declaration, and refusing a broken one, is that outcome itself.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-009 — Conditional scaffold profiles
+
+> **Requirement.** The delivered scaffold generator shall seed only the artifacts a chosen profile uses, omitting Python-only files for a non-Python stack.
+
+> **Rationale.** Realizes SN-003 (portability) and SN-012 (right-sizing — a repo gets only what it uses).
+
+
+### SR SR-009
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a non-Python stack adopting the kit and a repository getting only what it uses; the set a profile seeds is exactly what the team receives, so the generator's output is the outcome.
+
+## SR-011 — Idempotent re-runnable scaffold
+
+> **Requirement.** The delivered scaffold generator shall skip an existing file on a re-run unless an explicit overwrite is requested.
+
+> **Rationale.** Realizes SN-001 (safe drop-in onto an existing repo) and SN-007 — an adopter picking up kit updates must not lose their own edits, and a scaffolder that overwrites cannot be run twice, so it stops being run at all. Overwrite-always with a backup copy was rejected: it leaves the repo carrying a second copy of every file it touched. The deliberate kit-vs-project merge is a separate, operator-driven process (SR-036).
+
+
+### SR SR-011
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a re-run that costs the adopter none of its own edits; a re-run leaving each existing file byte-unchanged unless an overwrite is asked for is that outcome itself.
+
+## SR-015 — Performance-budget back-links
+
+> **Requirement.** The delivered performance-budgets registry (PB-###) shall keep every row's Refs resolvable to a real SR/LLR/Module.
+
+> **Rationale.** Realizes SN-002 — a budget row that cannot be traced to a requirement, design item or module cannot demonstrate what it constrains, so the off-spine budget rows stay traceable to the spine. Deliberate pair: this row states the delivered data invariant; the checker that polices it is the harness's, decomposing under SR-157 — an on-purpose split, not an echo. SN-002 is the only basis: hat.PERFORMANCE's failure class is a speed or size risk left unassessed, or a budget with no measurement behind it, which says nothing about whether a trace reference resolves.
+
+
+### SR SR-015
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a budget row a reviewer can trace to what it constrains; each unresolvable reference reported is that traceability's verdict, read directly by the reviewer.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
 
 ## SR-017 — Always-on secrets floor
 
@@ -65,6 +704,11 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
 
 > **Rationale.** Realizes SN-009 — a credential that reaches a shared branch must be treated as disclosed and rotated, and expunging it from history is a rewrite every clone has to follow, so the cheap moment to catch it is before the commit and the expensive one is any moment after. Folding the scan into the privacy toggle was rejected: that makes the highest-severity check opt-in alongside a preference. The one opt-out is an explicit declaration, so turning it off is a visible act.
 
+
+### SR SR-017
+- **DA-Refs**
+  - before: (empty)
+  - after: DA-004
 
 ### LLR LLR-205, Drafted — never approved
 - **Detail**
@@ -79,6 +723,226 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
   - before: Drives check_privacy.py's Scanner (secrets floor) and agent_common.py's redact_secrets against a shared sample set, three ways. FIRST, a five-sample driven table: a PEM private-key block now catches on both sides (was floor-catch/redactor-miss); a Bearer token, a short GitHub token and a short API key stay floor-miss/redactor-catch, the three DELIBERATE threshold asymmetries kitlib.secret_classes.SECRET_CLASSES states per class rather than leaving as a side effect of two literals. SECOND, one canonical positive sample per declared class, proving each side's claimed pattern actually reaches its consumer (TOKEN_RES/KEY_RE and _SECRET_RES are comprehensions over the shared table, not hand copies, so a class dropped from a consumer's derivation fails even if the table still looks right). THIRD, a frozen, independent record of every pattern each module compiled BEFORE this table existed, compared by matching behavior (not string equality, since one class's two spellings differ only in a character-class member order proven immaterial) over threshold-straddling probes per class - the regression witness that nothing caught before is caught less after.
   - after: Drives check_privacy.py's Scanner (secrets floor) and agent_common.py's redact_secrets against a shared sample set, three ways. FIRST, a five-sample decision table: a PEM private-key block is caught by both the floor and the redactor, while a Bearer token, a short GitHub token and a short API key are caught by the redactor alone, the three DELIBERATE threshold asymmetries kitlib.secret_classes.SECRET_CLASSES declares per class rather than leaving as a side effect of two literals. SECOND, one canonical positive sample per declared class, proving each side's claimed pattern reaches its consumer (TOKEN_RES/KEY_RE and _SECRET_RES are comprehensions over the shared table, not hand copies, so a class dropped from a consumer's derivation fails even where the table looks right). THIRD, a frozen, independent pattern record per module, compared by matching behavior (not string equality, since one class's two spellings differ only in a character-class member order proven immaterial) over threshold-straddling probes per class, so no class is caught less than that record catches.
 
+## SR-022 — Vendored-doc drift
+
+> **Requirement.** The delivered vendored-doc drift check shall detect a vendored copy of an upstream doc drifting from its source.
+
+> **Rationale.** Realizes SN-010 — a stale vendored doc is caught, not silently trusted.
+
+
+### SR SR-022
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for documentation a reader can trust; a drifted vendored copy reported as a finding is that outcome, with nothing between the comparison and the report.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-024 — Permutation case generation
+
+> **Requirement.** The delivered permutation-case generator shall expand a Permutations spec into concrete dimensional cases.
+
+> **Rationale.** Realizes SN-002 — dimensional coverage is generated from the SR's declared inputs, not hand-listed. Systematic expansion reduces the risk that a dimensional combination is omitted, which is the charter's coverage half. Generation does NOT answer the charter's second half: showing that an enforcer fails when it should is demonstrated by negative or planted-failure tests, and a hand-listed negative case can demonstrate it. Those negative tests remain a separate obligation, not this row's.
+
+
+### SR SR-024
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for dimensional coverage generated rather than hand-listed; the expanded case set is that output, whole.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-027 — Coordinator preflight
+
+> **Requirement.** The delivered coordinator shall refuse a broken footing in preflight — not a git repo, no agent CLI, a private author under privacy-check, or a second coordinator in the same checkout while another holds its lock — exiting a typed nonzero code rather than hanging.
+
+> **Rationale.** Realizes SN-006 and the dissolved edge expectation that a preflight on a non-git working directory reports and exits nonzero rather than hanging — a run that starts on a broken footing fails later and further from the cause, and an unattended loop cannot be asked what went wrong. Continuing with a warning was rejected: each of these conditions makes every subsequent step meaningless, so a typed nonzero exit is what lets the caller act on it. A second coordinator in the same checkout is a FOURTH broken footing, not a separate obligation: it fails in the same direction, at the same moment, through the same refusal. Two coordinators in one checkout write the same working tree and the loser's commits interleave into the winner's diff where no review will separate them; coordinating by convention was rejected there for the reason that keeps it here — the failure is silent and shows up only as a garbled history. The lock machinery decomposes to LLR-029/LLR-030.
+
+
+### SR SR-027
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a run that refuses a broken footing rather than hanging; the typed nonzero exit before the run starts is that outcome, read by whoever launched it.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-031 — Declared-policy readers agree
+
+> **Requirement.** Every delivered enforcer of a declared policy dial shall read the same value for that dial as every other enforcer — one parse, one answer, across the hooks, the loop and the checkers alike.
+
+> **Rationale.** Realizes SN-004 (policies drive the gate) and SN-005 (one source, every enforcer reads it the same way). Partition with SR-137 (census): the one-home surface and its checked shape are SR-137's obligations at B-01/B-04 — read off that row's current crossings rather than restated here, so a revision there cannot leave a stale pair here — while this row is the package-wide coherence property those mechanics serve. ONE HOME: the two-grammars-agree observable lives HERE and nowhere else. SR-137 stated it too and the texts had already diverged, only this row's naming the trailing-comment decoy that once made the privacy gate fail OPEN; the duplicate clause is struck from SR-137 and nothing of its wording was unique. The shared-parse mechanism and the legacy migration-window read decompose to this row's LLRs.
+
+
+### SR SR-031
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for one declared value per policy dial, read the same way by every enforcer; the enforcers agreeing is that outcome, a property of the delivered code with no outside party in it.
+
+## SR-033 — Release checklist generation
+
+> **Requirement.** The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate.
+
+> **Rationale.** Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did.
+
+
+### SR SR-033
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a release gate whose warn-tier budgets reach a reader; the emitted checklist listing each budget is that outcome, and ticking it off is the release act's own.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-035 — No language-specific token in the shipped scheme
+
+> **Requirement.** The delivered process and ID scheme shall carry no language-specific token in the shipped registries and ID vocabulary, such that a non-Python adopter's scaffold passes the delivered registry checks unmodified.
+
+> **Rationale.** Realizes SN-003 — a method that presumes one language is re-derived by every adopter on a different stack, and the re-derivation is where the traceability guarantees get dropped. Shipping per-stack variants was rejected: it multiplies the surface that must stay consistent.
+
+
+### SR SR-035
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a non-Python adopter passing the registry checks unmodified; the shipped scheme carrying no language-specific token is what makes that true, with nothing outside the package involved.
+
+## SR-040 — Per-phase routing and review dial
+
+> **Requirement.** The delivered coordinator shall route each in-process session phase (PLAN/BUILD/REVIEW-A/REVIEW-B/DESIGN-CHECK/CRITIQUE) through its declared per-phase command template, falling back to the single declared command — surfacing the declared reviewer dial at run start without enforcing it.
+
+> **Rationale.** Realizes SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run — two samples of one model share blind spots, so a review by the family that built the change agrees with it for the wrong reasons; cross-family routing is what makes the second opinion independent, and one model for every phase was rejected on that basis. Dispatch stays keyed off the in-process session phase because the alternative, a per-phase code branch, makes adding a phase a code change and so discourages adding one. THIS ROW CARRIED A RESUME-SURFACE SIZE TRIPWIRE AND NO LONGER DOES, and the two lenses that reached it are answered here rather than deleted with it. Both were premised on a session INHERITING a resume surface that grows across runs: a view must stay usable as its content volume grows (hat.UX-ENGINEER), and at 3am the reader of that surface is another automated step, which needs the growth legible from the artifact rather than from a human noticing (hat.UNATTENDED-OPS). Neither premise survives the one-engine coordinator — no session inherits a resume surface any more, and the status page is a generated integrator artifact whose size the generator owns, so there is no growing view to keep usable and no 3am artifact whose growth an automated reader must judge. The lenses are not overruled; their subject is gone. If a per-session resume surface is ever reintroduced, both apply again on the same reasoning, and the warn-not-fail severity they… [130 more chars — read the registry row]
+
+
+### SR SR-040
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for an unattended run whose per-phase sessions start as declared; routing each phase through its declared command template, and surfacing the reviewer dial at run start, is that outcome, and what the invoked runner then does is the routed session's own requirement.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09;B-10
+
+## SR-043 — Subagent spawn gate
+
+> **Requirement.** While an unattended run is in progress, the delivered subagent-spawn gate shall refuse or defer subagent spawns per the declared subagent-gate dial in the single policy declaration home (off|ask|deny; absent=off; the legacy one-word file is still read through the migration window), honor a launcher-set SUBAGENT_GATE=allow override the model cannot set, and fail open on any error so a broken gate never wedges the tools.
+
+> **Rationale.** Realizes SN-006 (a walk-away run stays safe — bounded, supervised fan-out with the override held by the human, not the model) and SN-012 (opt-in: absent/off is a vacuous allow, so a non-adopter pays nothing). Supervision, not security — a model that can edit files can remove the hook (adapted from stop-subagent-fanout, MIT; spec docs/archive/INTEGRATION_PLAN.md Phase 4). C-SEC-2 asks that the irreversible actions an unattended run can take be enumerated, each naming the dial or human authority that permits it — which is this row exactly, for the one action that starts further actors. A direct hit, and the reason this row is not accretion: its parentage was real and lived only in SN-006's `why` cell until the safety half moved into that need's normative text at this same pass. WHY THE FAIL-OPEN ARM IS DELIBERATE: SN-006 asks that the unattended layer keep moving and surface to the human only where it cannot proceed, so a gate that wedges every tool on its own bug is the failure this clause was written against; what an error never relaxes is the human-held override itself, which the model cannot set.
+
+
+### SR SR-043
+- **Coincident**
+  - before: (empty)
+  - after: The need scopes this as supervision rather than security: a spawn refused, deferred or admitted per the declared dial, with the human-held override honoured and a broken gate failing open, is the outcome, and the gate's decision is what the session receives.
+
+## SR-049 — Derived stage from artifact states
+
+> **Requirement.** The delivered harness shall derive the stage the project is currently at from the spine artifact states alone, caching it as a derived value — never accepting a hand-set one — with a post-attestation amendment dropping the derived stage exactly as a newly introduced draft does, and the pending-amendment count carried beside the draft count so the pending state never hides.
+
+> **Rationale.** SSOT applied to the gate itself: a hand-set marker can be bumped without the work; deriving it makes gate advancement mechanical (SN-004) and un-gameable (SN-008). The hybrid cache keeps the value readable on checkout; --check guards rot. SN-029 is a parent because this row's shall is the only place in the SR layer stating that an amended requirement drops the derived stage exactly as a newly introduced one does — SR-139 states which tiers are held, SR-140 what an acceptance record contains, and SR-148 loop selection, none of them the drop clause.
+
+
+### SR SR-049
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a gate advanced only by the work and a verdict no hand can bump; a stage derived from the artifact states alone, with the pending state shown, is that outcome as the reader reads it.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-070 — Generated views are offline, deterministic and drift-checkable
+
+> **Requirement.** The delivered generator set shall derive each artifact it produces from the tracked registries alone — self-contained and usable without network access, byte-stable across regeneration from unchanged sources, and carrying a freshness contract that fails when the committed copy has drifted from those sources — omitting a view whose source registries the adopting repository does not carry rather than emitting an empty one.
+
+> **Rationale.** Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-038; with SN-012, since a repository that carries no source registry pays nothing for the view that registry would have fed. ONE DECISION PER ROW: the INTEGRITY of a generated artifact and what the state view must SHOW are two unrelated obligations, and this row holds the first alone. They fail independently: a view can be perfectly offline, deterministic and drift-checkable while showing nothing about the work in flight or how the parts connect. The content half sheds along the conjunction SN-023 itself draws ("progress AND how its parts connect") to SR-168 and SR-169; this row keeps the artifact-integrity contract alone. The subject is "each artifact the generator set produces" rather than "each view" deliberately: the knowledge-export bundle is not a view, and a fourth row minted to hold it would be the filler tier the ruling forbids. The child/parent phase spread is untouched and is intended — this split is by observable class, not by phase, a partition that was considered and rejected.
+
+
+### SR SR-070
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for generated views that cannot silently rot and cost a repository nothing it does not use; a view derived from the tracked registries alone, byte-stable, failing its freshness contract when stale and omitted where its sources are absent, is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-111 — Kit-version stamp
+
+> **Requirement.** The delivered scaffold generator shall record a kit-version stamp carrying the kit commit SHA and date, marked -dirty on an uncommitted kit tree.
+
+> **Rationale.** Realizes SN-007 — without a recorded origin an adopter cannot tell which kit version they are on, so a re-sync degrades from a diff into a guess and the ADOPTING.md re-sync procedure has no baseline to diff against. Deriving the version from file hashes was rejected: it reports that something differs without saying from what. The stamp is what lets a maintainer identify the upstream version a scaffold came from and compute a re-sync diff.
+
+
+### SR SR-111
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for an adopter able to pick up kit updates from a known base; the stamp recording the kit commit a scaffold came from is that base, written by the generator itself.
+
+## SR-112 — Checked per-agent skill fan-out
+
+> **Requirement.** The per-agent skill copies shall be a checked, generated fan-out of the one neutral skill source.
+
+> **Rationale.** Realizes the dissolved edge expectation that a generated artifact drifting from its source fails its --check — one skill maintained in three agent-specific copies rots into three different skills, and the copy an agent actually loads is the one nobody edited. Maintaining a single shared directory was rejected because each agent harness looks in its own path; the fan-out is forced, so the copies are generated and drift is a finding. Generated marking is what stops a maintainer editing a disposable copy.
+
+
+### SR SR-112
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a repository paying only for what it uses; one neutral skill source with a checked, generated per-agent fan-out is that outcome, since no hand-kept copy exists to drift.
+
+## SR-113 — Dev-setup wires the process floor
+
+> **Requirement.** The delivered developer setup shall wire the pre-commit process floor from its baseline.
+
+> **Rationale.** Realizes SN-001 — a process floor that needs a separate opt-in step is active only for the contributors who already knew about it, which is the reverse of what a floor is for. Documenting the git command was rejected: the floor then protects the rung the contributor read about rather than the one they actually run.
+
+
+### SR SR-113
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a working gated process without hand-building the tooling; the developer setup wiring the commit floor is that outcome in the adopter's checkout.
+
+## SR-129 — Registry representation migration
+
+> **Requirement.** The delivered harness shall convert the work-item registry between its current and legacy representations without losing or altering any cell, refusing a conversion whose declared inputs it cannot vouch for and any conversion attempted while either representation is in use.
+
+> **Rationale.** WHAT THE ROW STATES IS THE CAPABILITY. The spec folder layout (status = directory, TOML frontmatter, Deliverable in the body), the retired flat CSV and the drained-stop mechanics are implementation and history, which the requirement tier does not carry: layout and claim detection belong to LLR-136, and the current-and-legacy carriers to that design row's cells as current-carrier evidence. The 140-cell lesson: an unproven representation change is where a registry silently loses cells. The converter is the migration path every adopter of the folder home takes, and the single spec writer the filing seam reuses (concurrency-restructure spec, Phase 2). A converter is the check on a representation change, and the charter's second half — can it be shown to fail when it should — is exactly what a cell-exact round-trip over the live registry provides; the 140-cell lesson in this row's own rationale is that failure class already observed once.
+
+
+### SR SR-129
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a registry whose cells survive a change of representation; a conversion preserving every cell, and refusing where it cannot vouch for its inputs or either form is in use, is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-01;B-09
+
+## SR-137 — One policy home, with a checked shape
+
+> **Requirement.** The kit shall read every process policy dial from a single policy declaration home whose line shape is a checked contract (one key = value per line under a bare [section] header; no dotted keys, inline tables or multi-line strings), refusing — never resolving by precedence — a repo in which any dial is declared both there and in its legacy one-word file.
+
+> **Rationale.** Two grammars read this file — `tomllib` in Python and the three git hooks in pure sh, so a Python-less box still fails closed on a declared privacy gate (M-42). TOML is far more expressive than a `grep -E` can follow, so every shape only one reader understands is a silent flip of a security gate; the first cut shipped five such shapes, three of them fail-OPEN. Narrowing the shape and CHECKING the narrowing is what makes one file safe for two readers. ONE HOME: the two-grammars-agree observable — the same answer from the hooks' sh and `tomllib` over the adversarial file-shape table — is SR-031's and SR-031's alone. Both rows claimed it and the texts had already DIVERGED, only SR-031's naming the trailing-comment decoy that once made the privacy gate fail OPEN, which is the whole reason the table exists. The partition that survives: SR-031 states the package-wide coherence property (every enforcer reads one value per dial, both grammars agreeing) at B-05; this row states the dial's HOME and its CHECKED SHAPE, and the refusals a session gets back, at B-01/B-04. What stays here is the shape check's own fail-safe direction — a shape only one reader understands is refused AND still reads ON in both — because that is a property of the narrowing, not of the comparison. The crossing attribution, read against external.toml: B-02 carries exactly three things - rulings, attestations and Status flips - and this row's shall contains none of them. Its subject is the dial file's HOME and SHA… [940 more chars — read the registry row]
+
+
+### SR SR-137
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for one home for every dial and a double declaration refused rather than resolved; the refusal naming the dial and both files is what the session receives, so the check's verdict is the outcome.
+
 ## SR-140 — Each acceptance is recorded by a copy riding its own approval commit
 
 > **Requirement.** The kit shall record each acceptance as a byte-identical copy of the accepted
@@ -91,6 +955,11 @@ level released from a human one.
 > **Rationale.** Attestation STATE is already the row's own Status - spine_rules derives the spine STAGE from those cells and reads no other source - so a separate ledger is a second home for a fact the row already carries, and three of its seven columns duplicated cells outright (Decision=approved|meaning IS Status; superseded IS SupersededBy). What a ledger gets right is the BASELINE ITSELF: answering 'has this been approved' by walking git for the newest commit where a row read Verified is sound only while every amendment flips its row in the same commit - which is neither the sanctioned staged-amendment path nor the approval ladder, so the walk returns HEAD and the diff is empty BY CONSTRUCTION on exactly the rows a sitting exists to judge.
 The record is therefore a whole-file copy of the accepted registries into docs/archive/last_approved/, riding the SAME reviewed commit as the approval. Three things follow. First, the commit, its date and its author come FROM that commit, so no cell has to carry them and no cell can lie about them. Second, the record is diffable by every git tool and by eye - a record only a script can read is a record only a script can audit. Third, the copy MUST ride the approval commit, because riding it is the only thing that makes "this copy is what was blessed" decidable. Anti-laundering rests on the MIRROR INVARIANT - any commit touching the record must leave it byte-identical to its live counterpart, so the only way to write text INTO the record is to write it … [1709 more chars — read the registry row]
 
+
+### SR SR-140
+- **DA-Refs**
+  - before: (empty)
+  - after: DA-003
 
 ### LLR LLR-173
 - **Detail**
@@ -105,12 +974,39 @@ The record is therefore a whole-file copy of the accepted registries into docs/a
   - before: Run the record half of the baseline-snapshot suite over real temp repos - the half TC-153 does not cover, which is drift. (a) VACUITY: with no snapshot directory every reader is vacuous by ABSENCE, load_all returns None rather than {}, and the mechanical flip is a no-op before the first signing. (b) THE BOOTSTRAP GUARD: copy_live REFUSES to create the directory without seed=True, and --seed is proven UNREACHABLE from every loop module, hook and check step, so the first snapshot can only ride the owner's signing commit. (c) THE COPY CONTRACT: the copy is byte-for-byte and preserves repo-relative paths, and a stale other-carrier file for the same stem is DELETED in the same act (or the next resolve raises "exists under BOTH carriers"). (d) UNANCHORED, BOTH DIRECTIONS: an approved row absent from the snapshot is reported, an approval whose snapshot copy reads BELOW approval is reported (the case that is only decidable because the copy keeps each row's own Status cell), a registry missing from an EXISTING snapshot is reported, and an unparseable snapshot RAISES rather than reading as empty. (e) The snapshot-directory constant has ONE value in both homes, and the `intake.py snapshot` CLI seeds then refreshes. The MIRROR INVARIANT half is TC-173's, so it is not covered twice.
   - after: Run the record half of the baseline-snapshot suite over real temp repos - the half TC-153 does not cover, which is drift. (a) VACUITY: with no snapshot directory every reader is vacuous by ABSENCE, load_all returns None rather than {}, and the mechanical flip is a no-op before the first signing. (b) THE BOOTSTRAP GUARD: copy_live REFUSES to create the directory without seed=True, and --seed is proven UNREACHABLE from every loop module, hook and check step, so the first snapshot can only ride the owner's signing commit. (c) THE COPY CONTRACT: the copy is byte-for-byte and preserves repo-relative paths, and a stale other-carrier file for the same stem is DELETED in the same act (or the next resolve raises "exists under BOTH carriers"). (d) UNANCHORED, BOTH DIRECTIONS: an approved row absent from the snapshot is reported, an approval whose snapshot copy reads BELOW approval is reported (the case that is only decidable because the copy keeps each row's own Status cell), each as true of an approved need and an approved stakeholder as of a spine row, a registry missing from an EXISTING snapshot is reported, and an unparseable snapshot RAISES rather than reading as empty. (e) The snapshot-directory constant has ONE value in both homes, and the `intake.py snapshot` CLI seeds then refreshes. The MIRROR INVARIANT half is TC-173's, so it is not covered twice.
 
+## SR-144 — Every lane close is a terminal state with an immutable record
+
+> **Requirement.** The delivered loop content shall close a lane that cannot finish into a TERMINAL partial state that merges like any other branch, with one immutable per-close report naming the claimed outcome, the reason, the commit range and the keep/discard split — refusing a report that declares neither a split nor an explicit deferral, and refusing a second close of the same event rather than overwriting the first.
+
+> **Rationale.** Five successive dedup mechanisms leaked because each reconstructed the return event from a MUTABLE proxy; a document that never moves dissolves the class instead of mitigating it. The refusals are what make "immutable" a property rather than a claim. The split is a field because its absence once merged rejected code onto trunk: silence about it is different from saying "I could not judge", and only silence is unactionable. A claim a dead lane never releases is C-UNA-3's deadlocked-until-morning case, and the immutable per-close record is C-UNA-5's answer to a failure that pages nobody — a close no one can read is externally indistinguishable from a run that finished.
+
+
+### SR SR-144
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for parallel work whose failures leave a clean, reviewable state; a lane closed into a terminal partial state with one immutable report is that state, written by the loop itself.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-01;B-09
+
 ## SR-146 — Prompts are reviewable files with a per-session audit trail
 
 > **Requirement.** Every prompt the delivered loop launches shall be a shipped, reviewable file with strictly filled slots — listed by digest in a freshness-gated generated catalogue, each session recording which template it used and the fingerprint of what it rendered to.
 
 > **Rationale.** Prose steers the sessions this loop launches and had been reviewable only by reading Python source, which makes the process trusted rather than inspectable. The audit trail is the part that makes the move useful rather than cosmetic: without a per-session digest, "which instruction did this session see" stays an inference. (The argv-vs-shell-string transport decision is design, and lives one tier down in LLR-163.) C-SEC-5 requires that content composed for dispatch to an external model runner carry a DECLARED inclusion rule rather than an implicit one — a prompt assembled inside source is an unreviewed egress path no write-side gate covers, and shipping it as a reviewable file with a digest is what makes that rule readable.
 
+
+### SR SR-146
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for prompts held to the same playbook as everything else; each prompt being a shipped file whose digest is catalogued, and each session recording the template it used, is that outcome, whatever the runner then does with the prompt.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-05;B-10
 
 ### LLR LLR-273 — ADDED since the snapshot, Drafted — never approved
 - **LLR-ID**: LLR-273
@@ -143,6 +1039,11 @@ The record is therefore a whole-file copy of the accepted registries into docs/a
 > **Rationale.** THE ROW STATES ONE OBLIGATION, and the migration history - the two prior carriers and the cutover - is no part of it: normative history and a merged decision have no place at the requirement tier, and a rationale is where that account may live. The two-carrier split has no recorded rationale and costs on both sides. Reading 32 need rows takes ~166 code lines across 14 functions in 8 modules - six bespoke scanners, two of them F5 twins pinned by nothing but a docstring, which have already drifted once and rendered a phantom root in the dashboard - while reading all 436 SR+LLR+TC rows takes csv.DictReader. CSV also cannot represent the cells that actually exist: five hold a literal pipe, 552 hold commas, the longest is 1,553 characters, and an embedded newline has no representation at all. A structured carrier turns three integrity rules into properties of the parse - a duplicate id becomes a decode error, a ref list becomes a typed array (retiring the split-on-whitespace rule that read `and` as an orphan), and an empty cell becomes an absent key, so `unset` and `set to empty` stop being the same value. The converter is the migration's evidence, not its convenience: SR-129's 140-cell lesson is that an unproven representation change is exactly where a registry silently loses cells. ONE ROW because the single-carrier claim and its converter-proof are one contract — the converter is the migration's evidence — and the converter's mechanics already decompose to this row's LLR chain;… [330 more chars — read the registry row]
 
 
+### SR SR-147
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a spine a machine can verify; one machine-parseable representation, reached by a migration proven over the live registries, is the precondition that verification reads, delivered by the package alone.
+
 ### LLR LLR-277 — ADDED since the snapshot, Drafted — never approved
 - **LLR-ID**: LLR-277
 - **SR-Refs**: SR-147
@@ -167,12 +1068,54 @@ The record is therefore a whole-file copy of the accepted registries into docs/a
 - **Status**: Drafted
 - **Phase**: 6
 
+## SR-149 — Retired-vocabulary refusal in authored surfaces
+
+> **Requirement.** The harness shall report every occurrence of a retired process tag in a live authored surface — naming the file and line and the vocabulary that replaces it, at a severity that warns by default and fails under --strict — reporting none in a declared historical, generated or attestation-quoting surface, nor in a line or file marked as a declaration site.
+
+> **Rationale.** Realizes SN-004 (the ladder's vocabulary is the one the project is held to) and SN-010 (docs stay honest). This check is a CONDITION of the vocabulary conversion rather than a follow-up, on measured evidence: an earlier sweep removed a retired-tag construct from this repo's own open-items registry and it REGENERATED within days, caught only by an audit. A ~2,500-edit conversion held in place by attention is a conversion that comes undone. The carve-outs are as load-bearing as the rule: history is not rewritten and an attestation is never re-worded, because a swept sign-off makes a signed record claim something was signed that was not. C-MNT-3 gives every declared vocabulary value exactly one normative definition in one home; a retired tag surviving in a live authored surface is a second, contradictory definition of the same word, which is why the earlier sweep regenerated within days when only attention held it.
+
+
+### SR SR-149
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for authored surfaces that stay honest to the current vocabulary; each retired tag reported with its file, line and replacement is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-150 — Stakeholder-need cells stay in stakeholder language
+
+> **Requirement.** The harness shall report each stakeholder-need `need` cell that contains an internal path, an implementation-only identifier or a process citation, naming the row and the offending phrase — at a severity that warns by default and fails only under --strict, exempting a name declared on a reviewed exception list that ships empty (a name that is itself a user-facing interface belongs in a need), and reporting nothing for acceptance or engineering-requirement cells, which SN-033 exempts by its own text.
+
+> **Rationale.** Realizes SN-033 — its approved acceptance commissions exactly this check, and until this row it did not exist. The need tier was measured clean when this landed (0 of 27 cells), and the row sits deliberately AHEAD of the SR re-tier's churn: locking the clean state in costs one warn-first step now; trusting a large re-statement pass not to dirty it costs an audit later. Warn-first is the ruled posture, not a softness — a form heuristic over approved stakeholder prose must not gate without an owner ruling, and that ruling has not been made.
+
+
+### SR SR-150
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a stakeholder recognizing their outcome in each need; each offending phrase reported with its row is what the author needs to fix it, and the report is the check's whole promise.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
 ## SR-154 — Independent review routed across families
 
 > **Requirement.** When unattended work reaches integration, the delivered loop content shall obtain each review or critique verdict the declared policy requires from a session that did not author the work — resolved per in-process phase and tier from the delivered agent registry's declared (family x model x tier) rows and only while the declared consent surface that turns managed selection on is present, drawn from a different model family wherever one is configured, degrading only to the documented same-family mode — with every selection logged before launch and a non-converging rework loop escalated through the declared approval level.
 
 > **Rationale.** Realizes SN-026 (cross-family second opinions — every prior carrier of this contract demoted as routing machinery, so the sn_refs join forced the mint; SR-155 cites SN-026 too, for the planner pair, but only this row states the second opinion itself), SN-024 (an author cannot judge its own output) and SN-006. One row because routing, scheduling, scoring and escalation are one delivered contract — that the second opinion happens, independently, or its absence is documented — whose mechanics are the component details below it. The row also carries SN-026's DECLARATION and CONSENT half — `docs/agents.toml`'s pair-rows and the `docs/agents-enabled` surface whose presence turns managed selection on. That half had ZERO textual occurrence anywhere in the SR layer while `orphans=0` still held, because an orphan count proves a need has a citing row and never that the row carries the whole need. Managed selection is opt-in by consent rather than by configuration alone: a repository that declares families without dropping the surface has declared a capability, not turned one on, and the row now says so where a check can read it.
 
+
+### SR SR-154
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09;B-10
+- **DA-Refs**
+  - before: (empty)
+  - after: DA-007
 
 ### LLR LLR-262, Drafted — never approved
 - **Detail**
@@ -186,6 +1129,14 @@ The record is therefore a whole-file copy of the accepted registries into docs/a
 > **Rationale.** Realizes SN-027 WHOLE — ready work fans out across bounded parallel lanes and that fan-out narrows to one serialized gated seam before anything lands, in the need's own words — with SN-008 (the seam is fail-closed) and SN-025 (recovery from version-control history alone). ONE DECISION PER ROW: "serial integration is one delivered contract" is sound for the SEAM, but lane execution, claim authority and the trunk-side mint of work-item identity are not the seam, and a row stating the seam alone leaves SN-027's FIRST half — bounded lanes, isolated working trees, a worker ceiling — stated nowhere. This row therefore states the whole lane LIFECYCLE (claim, run isolated, close, land), which is what closes that hole; the trunk-only authority contract sheds to SR-170. The two fail independently: a perfectly serialized landing that lets a lane commit a regenerated artifact satisfies this row and not that one. Terminal close is SR-144's and is not restated here — one SR per (need, property), and both rows sit under SN-027 — so what this row carries of it is only that a terminal branch still lands through the one serial seam.
 
 
+### SR SR-156
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-01;B-10
+- **DA-Refs**
+  - before: (empty)
+  - after: DA-006;DA-013
+
 ### LLR LLR-262, Drafted — never approved
 - **Detail**
   - before: The coordinator's session log records each session's phase and its exact commit range (`# commits: before..after`); session_range and parse_range read it, and range_paths lists the paths the range changed with renames split. scope_offenders names every changed path other than the REVIEW session's own verdict file, the round file named for the session's train, ordinal and logged phase under any reviewed sha and tag; record paths are not exempt. Right after a REVIEW session the loop asks scope_offenders of the range it just took and, on any offender, stops the run needing a human with the paths named; a session log is append-only evidence, so every reader takes each log as the commit that ADDED it recorded it (log_history, review_logs), never at the branch tip, and the merge ladder's review-scope rung first refuses by name any commit in the lane that modified or deleted a session log, then asks the same function of every REVIEW session log the branch committed (review_scope_refusal) and refuses the merge by name, an unreadable log or range refusing too. After a REVIEW or CRITIQUE session, uncommitted changes not present before it, other than the coordinator's own session log, fail the draw through the existing failed-draw path - the route cooled and the same phase re-drawn - with those paths stashed under one entry named for the session, so the re-drawn session starts clean; when that stash fails the run stops needing a human with the paths and the failure named, and nothing is re-drawn. read_verdict reads the verdict blob as committed at HEAD in both arms, so an uncommitted verdict is never routed on. logged_rounds reads each round at the end of its session's recorded range, and only when that range changed the round file: a later commit rewriting the file changes nothing the gate counts, a file its session never committed is no round, and a key whose logs record different phases or ranges yields none. done_when.items reads a spec's Done-when section, through kitlib.registry.done_when_section, as items: a list item with its continuation lines, or a prose paragraph, across subsections. changes compares a claim-time text with a later one after stripping ticks, strikethrough and whitespace; a later item carries a claim-time one when it equals it or extends it with evidence in the form closed specs use - appended text opening with an evidence separator (a dash, an arrow, a bracket, a bar or a check mark) and carrying an evidence token (a capitalised completion word such as LANDED or DONE, a path or test id, a backticked name, or a commit sha) - while any other appended text, after closing punctuation or not, is a change; and every claim-time item not carried is reported as changed and every later item carrying none as added. The claim warns by name on stderr for each claimed row with no Done-when item and still claims. When a review round is composed, the brief gains a block quoting each change between the spec under active/<train>/ at the lane's base and the lane's own copy. At merge the intake mints one brief-less adjudication row per claimed non-adjudication row whose closed spec's Done-when changed against trunk's pre-merge copy under active/<branch>/, titled per row and branch so a re-run dedupes, its Context quoting each change.
@@ -197,6 +1148,16 @@ The record is therefore a whole-file copy of the accepted registries into docs/a
 
 > **Rationale.** Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (the tracked work-item graph the loop derives its next work from is kept coherent). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Deliberate pair (census F6): the PB-format invariant itself is SR-015's; this row's decomposition carries the checker. Fan-out re-stamp: the delivered contract is one — a named, row-and-cell-attributed finding at a declared severity, gating or advisory — while the rule inventory it ranges over is open by this row's own acceptance ("a rule added at one of those sites is in this row's scope by default"), so the child count tracks the number of declared rules rather than the number of decisions this row makes, and would climb back through any bound a split bought.
 
+
+### SR SR-157
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a chain that is mechanically verified rather than asserted, work-registry contradictions that surface rather than hide, and small changes kept cheap; each declared rule violation reported naming its row and cell, with the declared failure set gating and advisories not, is that verification's verdict as the reader receives it. Whether a row that passes every rule says something worth relying on is not this row's claim.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
 
 ### LLR LLR-272 — ADDED since the snapshot, Drafted — never approved
 - **LLR-ID**: LLR-272
@@ -259,12 +1220,80 @@ The record is therefore a whole-file copy of the accepted registries into docs/a
 - **Status**: Drafted
 - **Phase**: 6
 
+## SR-158 — Documentation drift reds or warns per its declared tier
+
+> **Requirement.** The delivered harness shall report a documentation surface that has drifted from what it claims — a broken intra-repo link, a missing vision declaration, a reference to an absent path or symbol, a stale generated doc, or a declared figure without its provenance — at the declared warn-or-gate severity for each class.
+
+> **Rationale.** Realizes SN-010 (navigable, honest documentation) and SN-008 (a green never hides a stale claim). One row because the delivered contract is one honesty verdict over the documentation surfaces; the individual checkers and their carve-outs are component details.
+
+
+### SR SR-158
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for documentation that cannot silently rot and a pass that hides nothing; each drift class reported at its declared severity is that outcome, read directly by the reader.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-159 — Declared-architecture connectivity gaps are reported
+
+> **Requirement.** The delivered harness shall report declared-architecture connectivity gaps — an unresolvable interface row, an undeclared endpoint or direction, a cross-component import no declared interface covers, an invalid spec interface citation, and a top view past its declared bound — warn-first with --strict gating, vacuous where the optional inventories are absent.
+
+> **Rationale.** Realizes SN-023 (the parts' connections are as much of the truth as the requirement tree, checked mechanically warn-first — the need's own words), SN-002 (interface rows stay resolvable) and SN-012 (opt-out and vacuity keep the layer free for non-users). One row: the delivered contract is one connectivity verdict; the checkers below it are its decomposition.
+
+
+### SR SR-159
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a reviewer seeing how the parts connect from a chain that is checked; each declared-architecture gap reported is that outcome, since the gaps are what would make the drawn connections unreliable.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-161 — Decompositions carry a perspective record
+
+> **Requirement.** The delivered planning content shall leave, with every decomposition it produces, a machine-readable record of the declared review perspectives — each perspective's applicability decision and the requirements or explicit no-finding it produced — such that an applicable declared perspective missing from the record is a reportable finding.
+
+> **Rationale.** Realizes SN-036 — a decomposition produced from one perspective can look complete while omitting security, operations or first-use failures, and the omission is invisible unless the record names what was considered. SN-036 had no citing SR. The declared-perspective inventory is the ruled hats roster; the record proves coverage and provenance while adequacy stays with the independent review, exactly as the need partitions it.
+
+
+### SR SR-161
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for each decomposition examined from every declared perspective; the machine-readable record of each perspective's decision, and the finding when an applicable one is missing, is that outcome, and whether the resulting requirements are adequate is left to independent review, as the need states.
+
+## SR-162 — Requirement boundary references resolve against the declared frame
+
+> **Requirement.** The delivered harness shall resolve every system-requirement boundary reference, and every declared interface's endpoint pair and signal type, against the declared external frame — an unresolvable crossing failing the strict trace naming the row — reporting requirements naming no crossing, crossings named by no requirement, declared crossings with no realizing interface row, an interface declaring no endpoint pair or no signal type from the closed discrete/variable vocabulary, and a seam joined to a counterpart whose signal type is incompatible with its own, each as an advisory, and staying vacuous for a project declaring no frame.
+
+> **Rationale.** Realizes SN-037 — every promised behavior's entry and exit locatable at a declared boundary, unresolved references mechanical findings, in the need's own words. SN-037 had no citing SR even though the machinery is already delivered (the frame registry, the boundary-reference field, the resolution and coverage rules); this row is the obligation that machinery enforces. Severity split deliberately: resolution hard, coverage advisory — the ruled warn-first sequencing while the corpus converges. The row also carries SN-037's SIGNAL-TYPING half — "every referenced interface identifies its boundary endpoints and whether its signal is discrete or variable ... incompatible signal types are mechanical findings". That half had ZERO textual occurrence in the SR layer while `orphans=0` held, even though `interfaces.toml` already carries a `signal` cell on every row (many of them typed `variable` by a recorded default with a re-type note, which is exactly the state a check is owed for). NAMED RESIDUAL, stated rather than quietly dropped: the need's last clause — that a reviewed change altering one side of the requirement/interface relationship carries or justifies the corresponding change on the other — is a REVIEW obligation this row does not claim to mechanize.
+
+
+### SR SR-162
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a stakeholder seeing where each promised behaviour enters or leaves the system; each reference resolved against the declared frame, and each gap reported, is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
 ## SR-163 — Every shipped file maps to a stakeholder outcome
 
 > **Requirement.** Every file the delivered package ships shall map, through the declared shipped-file inventory and its recorded exclusions, to at least one system requirement whose references resolve to a stakeholder need — generated outputs mapping through their generator — with missing files, stale inventory entries, unresolved references and unmapped files reported under the declared warning-to-gating policy.
 
 > **Rationale.** Realizes SN-038 — a supplied file with no recorded purpose is inherited scope creep, and its absence of purpose must be a named coverage finding rather than hidden in the tree. SN-038 had no citing SR. The scaffold MAPPING is the natural declared inventory: it already enumerates what ships, so the coverage universe is a declaration that exists rather than a second list that drifts.
 
+
+### SR SR-163
+- **DA-Refs**
+  - before: (empty)
+  - after: DA-001
 
 ### LLR LLR-203
 - **Detail**
@@ -323,12 +1352,166 @@ The record is therefore a whole-file copy of the accepted registries into docs/a
 - **Status**: Drafted
 - **Phase**: 6
 
+## SR-164 — Stakeholder-need scope is a declared, checked value
+
+> **Requirement.** Every non-example stakeholder-need row shall carry a scope value from the declared closed vocabulary (template / this repository / both), with a missing or out-of-vocabulary value reported by the harness naming the row.
+
+> **Rationale.** Realizes SN-039 — a need whose audience is ambiguous gets enforced against the wrong repositories, and the scope must be a value a check can read, not inferred from prose. SN-039 had no citing SR. The field enters the SN carrier schema in the scheduled schema batch, per the need's own acceptance, rather than as a one-off column.
+
+
+### SR SR-164
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for an adopter telling each need's scope without inferring it; the scope value on each row, checked against its closed vocabulary, is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-165 — The component partition carries a reproducible derivation record
+
+> **Requirement.** The delivered planning content shall leave, with every component partition it produces, a machine-readable derivation record in the tracked component registry rather than session prose — the candidate partitions considered, the declared objective and constraints they were scored against, each candidate's score, the selected partition, and the human ruling that named the components and adopted it — such that a live component row whose record omits any of those elements, or a selection the recorded scores do not rank first without a recorded human override, is a reportable finding.
+
+> **Rationale.** Realizes SN-040 — a free-form partition leaves no record of the alternatives weighed, so the next reviser cannot tell load-bearing boundaries from accidents; the record is what lets the choice be re-examined. SN-040 had no citing SR, even as the P5 partition work performed exactly this record. Reproducibility is stated as a recomputation from the record's own declared inputs, not as a reviewer re-running a model session, because only the former can fail — the SR-161 form applied to the partition instead of the perspective set. B-05 alone: the human ruling is an element the record must carry, not an observable the system states at the authority input, which is SR-139's and SR-140's ground.
+
+
+### SR SR-165
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a repeatable explanation of the component partition; the recorded candidates, objective, scores, selection and human ruling are that explanation, and a record missing any of them is reported.
+
+## SR-166 — The delivered package materializes where its manifest declares it will
+
+> **Requirement.** The delivered package shall be consumable at its own declared shipped-file manifest — every file the manifest names materialized at its declared destination in a fresh scaffold, and this repository's own instance carrying the structure of the template it ships — with a declared destination a fresh scaffold does not carry, and a structural divergence between the shipped template and this repository's instance, each failing rather than degrading the delivered package silently.
+
+> **Rationale.** Realizes SN-001 (an adopting team gets a working, gated, requirement-traced process without hand-building the tooling — which presupposes that what arrives is whole) and SN-007 (the kit is held to the standard it ships). The observable is B-05's own artifact-shaped one: the package exists, is complete, and is consumable at the manifest it declares. Verification evidence is named rather than owed: tests/test_bootstrap.py drives bootstrap.py's MAPPING against the file lists a fresh scaffold must carry, and tests/test_dogfood_sync.py pins this repository's own instance against the template it ships, so the manifest cannot declare one thing and the package deliver another. Deliberately distinct from its two neighbours: SR-163 asks why each shipped file EXISTS (SN-038, purpose coverage), SR-010 asks whether the generated scaffold runs GREEN, and this row asks whether what was promised ARRIVES WHERE IT WAS PROMISED. DELIBERATELY NARROW: manifest PRESENCE — a named source the package does not carry, and a shipped file the manifest does not name — is SR-163's alone, reported under its configurable warn-versus-gate policy, because two rows prescribing different outcomes for one observable is a contradiction an implementer can only resolve by violating one of them. What is left is what SR-163 does not ask: not whether a file is accounted for, but whether it LANDS — at its declared destination in a fresh scaffold, and in this repository's own instance of the template it ships.
+
+
+### SR SR-166
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a delivered package that arrives complete and a kit held to its own template; every manifest file materialized at its declared destination, and a divergence failing, is that outcome, checkable against the package alone.
+
+## SR-167 — Performance-budget breaches red their hard-gated rows
+
+> **Requirement.** The delivered harness shall fail the bar it runs exactly when an in-tier hard-gated performance-budget row breaches — its measured metric worse than its absolute Budget, or regressed beyond its declared Tolerance band around the committed baseline — while warn-gated rows and out-of-tier rows only warn, and a metric with no measurement this run is a reported skip, never a silent pass.
+
+> **Rationale.** Realizes SN-008 (a reader can believe a green — a breach on a row the project chose to hard-gate must red the run, not ride as a tracked number) and SN-012 (the perf layer is opt-in; a repo declaring no PB rows pays nothing, while one that does gets the same honest-gate discipline as every other check). This row is the requirement home for the perf verdict itself: SR-006 states the step plan and the missing-tool refusal, SR-015 the PB back-link invariant, and SR-033 only the warn-tier, never-fails side, so the exit contract the perf step already implements, decomposes and proves had no requirement stating it. One row for BOTH breach arms deliberately — absolute and regression are one delivered exit contract, the SR-157 one-verdict shape, and a regression-only framing is the symptom, not the boundary. THE REQUIREMENT NAMES NO ARTIFACT: the comparator is not on the declared delivered-artifact list — it is the harness's internal perf step — so the SR states the harness-verdict observable and the comparator is named only in acceptance as the current carrier, the SR-157/SR-158 pattern. Vacuous in THIS repository — no performance-budgets registry exists here and the perf layer is declared absent — but the template ships the layer, and a shipped layer owes a stated, tested obligation even where locally unused. One act is deliberately still owed: LLR-014.sr_refs and TC-014.verifies are NOT re-pointed here — both rows are Approved, so amending their cells overrides attestation, which … [456 more chars — read the registry row]
+
+
+### SR SR-167
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a pass verdict that hides no breached budget and budgets that cost only where adopted; failing the bar on an in-tier hard-gated breach, and reporting an unmeasured metric as a skip, is that verdict.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-168 — The state view shows current progress and next work
+
+> **Requirement.** The delivered generator set shall produce one state view from which a reviewer reads the adopted repository's completeness, its requirement decomposition, its planned and in-flight work, and any declared hold on that work, without consulting a second surface.
+
+> **Rationale.** Realizes SN-023's FIRST conjunct — a reviewer sees the project's progress from one dashboard-like file — with SN-010 (what the reviewer reads there is the generated truth, never a hand-kept summary of it). ONE DECISION PER ROW: the integrity of a generated artifact (SR-070) and what that artifact must SHOW are two obligations that fail independently. This row is the progress half; SR-169 is the connection half, along the conjunction SN-023 itself draws. Deliberately NOT folded back into SR-070: a state view that regenerates deterministically, offline and drift-checkably while omitting the work in flight satisfies that row completely and this one not at all. Deliberately NOT folded into SR-169 either: a complete progress view can carry no seam graph whatsoever — the state this repository was in before its interface registry existed — so the two are separately observable and separately buildable. `phase` inherits the parent's 1 rather than tracking its children (which span 1 through 4), because a phase records WHEN a piece shipped, and child-later-than-parent is the ordinary case.
+
+
+### SR SR-168
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a reviewer seeing progress from one file; the one state view carrying completeness, decomposition, work and holds is that outcome, rendered by the kit.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-169 — The state view shows how the parts connect
+
+> **Requirement.** The delivered generator set shall render the adopted repository's declared components and the interfaces between them as a navigable graph — showing which components sit inside which at more than one level, drawing an interface whose endpoint lies inside an unopened container to that container's edge, and showing a stated "no interfaces declared" view rather than an empty one when the repository carries the component and interface registries but declares no interface in them (a repository carrying no such registry at all omits the view under SR-070, not under this row).
+
+> **Rationale.** Realizes SN-023's SECOND conjunct, in the need's own words: the relationships between the parts (which module talks to which, over what contract) are as much of the project's truth as its requirement tree, and scattering them hides architectural drift. ONE DECISION PER ROW: artifact integrity is SR-070's, view content is this tier's, and the content half divides exactly where SN-023 divides. Kept separate from SR-168 rather than filed as one content row because the two fail independently and are built by different means — the progress views read the requirement and work registries, this one reads the declared component and interface registries, and either can be complete while the other is absent. The empty-view clause is load-bearing: a repository that has declared no interfaces yet must get a stated, legible surface, because an empty graph is indistinguishable from a broken generator. WORDED FOR A COLD READER: the row had read "structural units", "seams terminating at the containing boundary" and "the artifact contract's omission rule" — vocabulary a first-time reader cannot resolve, the last of them an internal cross-reference with no id. Same obligations, plainer words, and the absent-registry case now names SR-070 explicitly; the empty-vs-absent split itself is unchanged. `phase` inherits the parent's 1; its children span 1 and 2, the ordinary child-later-than-parent case, which is intended.
+
+
+### SR SR-169
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a reviewer seeing how the parts connect; the navigable component and interface graph is that outcome, rendered by the kit.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-173 — Shared regeneration is ordered and commits no partial result
+
+> **Requirement.** The delivered loop content shall regenerate the shared derived artifacts in declared dependency order, stopping at the first failure and committing no partially regenerated set.
+
+> **Rationale.** THE TRANSACTIONALITY HALF of three obligations that fail independently: ordering and all-or-nothing are one decision about a regeneration run, and they are not the same decision as who is allowed to write (SR-170) or how identity is allocated (SR-174). A regeneration that runs in the right order and still commits half a set satisfies neither, which is what makes them separable. Realizes SN-008 - a first failure that stops loudly beats a half-regenerated set that reads as complete - and SN-010.
+THE GUARANTEE IS "COMMITS NO PARTIAL SET" RATHER THAN "LEAVES NONE BEHIND", and the narrower wording is the one the delivered behaviour supports: the regeneration step touches git NOT AT ALL, so on a first failure it exits nonzero having run no later step, with HEAD unmoved and nothing committed - and it DELIBERATELY LEAVES the already-green steps' output dirty in the working tree, because the design assigns the commit to the caller (LLR-142's "never commits; the caller owns the commit"). The residue is not tolerated, it is REQUIRED: TC-170's own evidence test asserts `git status --porcelain` is NON-EMPTY after the failure, so an implementation that cleaned up after itself would fail the test that holds this row. The transactional rollback a reader might otherwise expect exists, but it belongs to the WRAPPING callers (the integrator and intake each reset the branch to its last work commit on failure) and is their obligation, not this row's - which is why stating it here would credit thi… [58 more chars — read the registry row]
+
+
+### SR SR-173
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for generated views that are never committed half-regenerated; ordered regeneration that stops at the first failure and commits no partial set is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-01;B-09
+
+## SR-174 — Work-item identity is allocated once and never re-issued
+
+> **Requirement.** The delivered loop content shall allocate each work-item identity at most once, so that no two concurrent actors receive the same identity and an identity freed by a deletion is never re-issued.
+
+> **Rationale.** Identity allocation is its own decision, not a consequence of serialization: serializing the writer makes a COLLISION unlikely and does nothing about RE-USE, which is the half that silently re-points every commit message and archived document citing the freed id. The non-reuse clause has a `shall` of its own here rather than living in SR-170's acceptance, which is a cell that cannot mint a requirement. Realizes SN-008 and SN-025.
+
+
+### SR SR-174
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for ids a reader can trust to name one thing; an identity allocated at most once and not re-issued after a deletion is that outcome, held by the loop's own allocation.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-01
+
+## SR-175 — Declared inclusion rule for content dispatched to a model provider
+
+> **Requirement.** The delivered loop content shall compose what it dispatches to an external model runner under a DECLARED inclusion rule rather than an implicit one — the content eligible for each dispatched brief, and what is excluded, readable as a declared set — with the basis on which repository content crosses to a declared provider stated as the scope of the consent the enabling surface grants, never presented as a technical bound on what an invoked runner reads.
+
+> **Rationale.** Repository content is briefed to external model providers, and for an adopter that content's history carries every contributor's name, email and timestamp — personal data crossing with no declared basis or exclusion in any need. SN-026's own text governs WHICH model runs, never WHAT IT IS SHOWN, so this obligation is content beyond the parent's demand — derived from the data-protection lens, with the security and legal lenses converging on the same boundary control (three charters, three reasons, one crossing), rather than from the need's text, which is what makes the derivation reviewable and lets the need owner see it fed back (the alternative, amending SN-026, was deliberately not taken alongside: one rule, one home — option analysis in docs/plans/2026-08-17-wi468-obligation-intake-options.md §1 option (b)). WHAT EXISTS TODAY IS A DISCIPLINE, NOT A DECLARATION: the push channel is measurably narrow — an allowlist-only planning surface, the project log excluded BY NAME in three composers, zero authorship fields formatted into any prompt — but the rule lives as a convention inside the composing functions, unfalsifiable because no requirement stated it; this row converts it into a stated one and the chain below pins the conventions as they exist. NOT YET MECHANIZED, stated rather than implied: the declared-set surface itself (a per-row inclusion/exclusion field on the provider registry, or a policy dial) and the planted-credential dispatch block in the acceptance are not buil… [510 more chars — read the registry row]
+
+
+### SR SR-175
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The row promises the declared inclusion rule and the stated scope of consent, and deliberately claims no bound on what an invoked runner reads; the declaration itself is the outcome, so no premise about the runner carries it.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-10
+
 ## SR-176 — A privacy finding persists by class and location, never by value
 
 > **Requirement.** Any durable record the delivered kit produces of a secrets or privacy finding shall identify the finding by its class and location, never by the matched value.
 
 > **Rationale.** The finding record is the one artifact guaranteed to contain the personal data it reports, created by the control itself — SN-009 defeating itself, since a scanner that catches a value and then echoes it into a committed artifact has published what it protected. The intake proposal's measurement (docs/plans/2026-08-17-wi468-obligation-intake-options.md §2 option (b)) grounds the row: the scanner mints no record of its own (check_privacy prints location, label and the MATCHED VALUE to stdout and writes nothing), but an unattended run's transcript is committed bookkeeping, so the durable copy of every finding is the session log — and the transcript path redacts credential shapes only. DELIBERATE NARROWING of the charter's ask, recorded here as the deriving decision: C-DPR-2 asks for a retention limit and an access rule, and a kit cannot honestly promise either over an adopter's git history (committed content is effectively forever; access is the host's) — what it CAN promise is that the matched value never reaches durable storage, which moots both. MECHANIZED TODAY for the always-on class: the transcript writer redacts the credential shapes and its summary line names class and count, never the value — pinned by the chain below. NOT YET MECHANIZED, stated rather than implied: the PII/identity classes the privacy gate adds are not in the redaction set, so for an adopter with the gate on a PII finding echoed into a session transcript would persist — closing that, on the same seam,… [26 more chars — read the registry row]
 
+
+### SR SR-176
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a secret or identity not republished by the kit's own records; a finding recorded by its class and location, and not by the matched value, is that outcome in each record the kit writes.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
 
 ### LLR LLR-205, Drafted — never approved
 - **Detail**
@@ -343,6 +1526,23 @@ The record is therefore a whole-file copy of the accepted registries into docs/a
   - before: Drives check_privacy.py's Scanner (secrets floor) and agent_common.py's redact_secrets against a shared sample set, three ways. FIRST, a five-sample driven table: a PEM private-key block now catches on both sides (was floor-catch/redactor-miss); a Bearer token, a short GitHub token and a short API key stay floor-miss/redactor-catch, the three DELIBERATE threshold asymmetries kitlib.secret_classes.SECRET_CLASSES states per class rather than leaving as a side effect of two literals. SECOND, one canonical positive sample per declared class, proving each side's claimed pattern actually reaches its consumer (TOKEN_RES/KEY_RE and _SECRET_RES are comprehensions over the shared table, not hand copies, so a class dropped from a consumer's derivation fails even if the table still looks right). THIRD, a frozen, independent record of every pattern each module compiled BEFORE this table existed, compared by matching behavior (not string equality, since one class's two spellings differ only in a character-class member order proven immaterial) over threshold-straddling probes per class - the regression witness that nothing caught before is caught less after.
   - after: Drives check_privacy.py's Scanner (secrets floor) and agent_common.py's redact_secrets against a shared sample set, three ways. FIRST, a five-sample decision table: a PEM private-key block is caught by both the floor and the redactor, while a Bearer token, a short GitHub token and a short API key are caught by the redactor alone, the three DELIBERATE threshold asymmetries kitlib.secret_classes.SECRET_CLASSES declares per class rather than leaving as a side effect of two literals. SECOND, one canonical positive sample per declared class, proving each side's claimed pattern reaches its consumer (TOKEN_RES/KEY_RE and _SECRET_RES are comprehensions over the shared table, not hand copies, so a class dropped from a consumer's derivation fails even where the table looks right). THIRD, a frozen, independent pattern record per module, compared by matching behavior (not string equality, since one class's two spellings differ only in a character-class member order proven immaterial) over threshold-straddling probes per class, so no class is caught less than that record catches.
 
+## SR-177 — Fan-out utilisation reported from the run's own telemetry
+
+> **Requirement.** The delivered loop content shall report, per run, the utilisation of the fan-out it commissions — the lanes configured, the lanes actually occupied, and the work integrated per unit of wall time — derived from the run's own recorded telemetry, reported and never gated, with no declared improvement target.
+
+> **Rationale.** The charter refuses a declared budget with no measurement behind it, and SN-027 is that finding inverted — the system's most complex machinery justified by a throughput claim no instrument measures, flagged unfalsifiable as written by three independent derivations. The intake proposal (docs/plans/2026-08-17-wi468-obligation-intake-options.md §3 option (b)) is DELIBERATELY LESS than the charter asks — the narrowing is the decision: C-PRF-1 wants a declared improvement over the serial semantic on a declared workload, but the wall time of an LLM loop is dominated by provider latency and model choice, so a numeric target would pin machine, provider and model conditions the kit does not control (one machine is one data point) — this row makes the throughput claim OBSERVABLE rather than BUDGETED. The concrete argument the instrument earns its keep: the lanes dial is undeclared in this repository and defaults to 1, so the machinery SN-027 justifies by fan-out runs SERIAL here and nothing today would say so — this report's first run would have printed lanes=1. SN-027's own `why` states the same structural claim, so the need and the instrument stop overclaiming together. NOT DECOMPOSED, stated rather than implied: nothing aggregates the existing per-session telemetry (wall seconds, api seconds, turns — the session-log headers and the iteration index) by lane or by run, so there is no seam to pin and no test to cite; the row lands Drafted-undecomposed with the aggregation surface as it… [69 more chars — read the registry row]
+
+
+### SR SR-177
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a team seeing whether its parallel lanes pay off; the per-run utilisation reported from the run's own telemetry is that outcome, reported and not gated.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
 ## SR-178 — Text that has moved away from its acceptance record is reported
 
 > **Requirement.** The kit shall report any recorded artifact whose text has moved away from the
@@ -356,6 +1556,7 @@ WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-w
 
 
 ### SR SR-178
+_approved — re-attestation owed_
 - **AcceptanceCriteria**
   - before: An artifact whose normative text has moved since the copy that recorded its acceptance is reported whether or not its Status moved; an approved cell moving under a row still claiming approval is reported, a merely traced cell moving is not, and a row below approval has no claim to fall from and is never reported; the status marker itself is never read as the movement, so a flip is neither an amendment nor a mask for one; and a stakeholder need is held to the same rule despite carrying no status cell for the amendment machinery to watch.
   - after: An artifact whose normative text has moved since the copy that recorded its acceptance is reported whether or not its Status moved; an approved cell moving under a row still claiming approval is reported, a merely traced cell moving is not, and a row below approval has no claim to fall from and is never reported; the status marker itself is never read as the movement, so a flip is neither an amendment nor a mask for one; and a stakeholder need is held to the same rule.
@@ -375,6 +1576,10 @@ carrying no status cell - regardless of any Status movement.
   - after: The kit shall report any recorded artifact whose text has moved away from the
 copy recording its acceptance - stakeholder needs included - regardless of any
 Status movement.
+_traced — routes to adjudication_
+- **DA-Refs**
+  - before: (empty)
+  - after: DA-003
 
 ### LLR LLR-158
 - **Detail**
@@ -453,12 +1658,75 @@ Status movement.
 - **Status**: Drafted
 - **Phase**: 6
 
+## SR-180 — A design row is discharged only by a realization symbol that resolves
+
+> **Requirement.** If none of the realization symbols a design-tier row names resolves within any implementation unit that same row names, then the delivered harness shall report that row as undischarged.
+
+> **Rationale.** Realizes SN-002 — the chain from need to test is trustworthy because it is mechanically verified rather than manually asserted, and the bottom rung of that chain is the claim a design row makes that the code it names exists. Without this row the spine states a terminating condition for every tier except the one that decides when decomposition is finished: a reader learns from the registries when a need is answered, when a requirement is decomposed and when a test verifies it, and cannot learn from them when a design row is done. The condition that settles it is built and gates, so what the spine lacks is the statement, not the mechanism, and an adopter inherits the gate without inheriting any statement of what it demands.
+
+Realizes SN-003 in the row's altitude, which is the load-bearing half of the wording rather than a stylistic preference. The obligation names no language: a realization symbol, an implementation unit, and a rule that decides whether the one resolves in the other are terms every stack carries, and the resolution rule is read from the declared stack profile exactly as the harness commands are. A row naming one language's file extension would ship one stack's requirement to every adopter — and it would buy nothing, because the association is answerable off the shelf in any stack by a multi-language tag index that asks only whether a name exists in a unit. What has to hold is the association; the form it is recorded in is no part of the obligation, which is wha… [1042 more chars — read the registry row]
+
+
+### SR SR-180
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a chain verified rather than asserted; a design row reported undischarged when none of its named symbols resolves is that verification's verdict.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-181 — A spine edit that lowers the effective stage surfaces as a phase change
+
+> **Requirement.** The delivered harness shall require, at authoring time, that any registry edit which drops the derived effective stage carry a Phase tag on every row it added or moved a stage-affecting cell on that is NOT the phase the settled work already stood in — a new (higher) phase, or an already-open lower one — except a decrease landing exactly on the DevStg-LLReqs to DevStg-Arch transition, which is within-phase decomposition rework and carries no such obligation.
+
+> **Rationale.** Realizes SN-004: an edit that regresses the spine's own derived readiness without opening a new phase is a gate advanced past what the tree actually shows, the false green SN-008 exists to refuse. Ruled in docs/plans/2026-08-21-stage-unification-plan.md §4 and the owner's answer §6.1: phase stays a pure function of the registries (no stored counter, alternative (ii) declined) — the decrease rule is an authoring-time check on the row tags themselves rather than a second phase concept that could drift against them, and `docs/stage` records the derived phase exactly as `docs/gate` did. The one exemption is deliberately narrow: the owner confirmed exactly the one-rung `DevStg-LLReqs -> DevStg-Arch` permutation (the permitted decomposition cycle), not a wider Arch-tier allowance, because a deep decomposition would otherwise run the phase counter up for churn that is not a scope regression. This row corrects a mis-trace: `derive_stage.phase_rule_findings` previously declared `Implements: SR-139`, crediting a requirement about approval authority (which tier a human holds) with a realization edge from a function that states a different obligation entirely (a spine edit's own honesty about scope). The false edge is removed and this row states the obligation the function actually implements, and the function's declaration now points at it.
+
+
+### SR SR-181
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a gate that drops honestly; a stage-dropping edit required to carry its phase tag where it is authored is that honesty, enforced by the harness.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-182 — Duplicated function bodies in the kit's own scripts are measured against a stamped baseline, never gated
+
+> **Requirement.** The delivered harness shall report the kit's own duplicated-function-body count against a stamped baseline at a warn-only severity, never gating a bar on it.
+
+> **Rationale.** Realizes SN-007 (the kit holds itself to its own standard): the consolidation doctrine states the goal in prose, and a number that moves is what proves it is not just prose. Deliberately narrower than an earlier, retired duplication-census step that GATED on an unbounded population where most of its findings registered as accepted idioms — that step was torn down and duplication left unbounded by design, and this row does not revisit that: the response clause's "never gating" is not a style choice, it is the boundary this row states as the obligation itself. One row because the standing measurement and its never-gating posture are one contract: a version of this check that gated would be a different requirement, not a stricter reading of this one.
+
+
+### SR SR-182
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for maintainers holding the kit to its own standard; the duplication count reported against its stamped baseline is the measurement that standard reads, and it gates nothing.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
 ## SR-183 — Per-function complexity is measured against a stamped baseline, and gated only where a repo opts in
 
 > **Requirement.** The delivered harness shall report each source function's cognitive complexity against a stamped per-function baseline, failing a declared gate on any divergence from that baseline only where the repo has enabled the gating mode.
 
 > **Rationale.** Realizes SN-007 (the kit holds itself to its own standard) and SN-012 (a heavy layer costs a repo that does not use it nothing). Cognitive complexity rather than a branch count because the two are not interchangeable: charging an increment per level of NESTING separates a deeply nested function from a flat one with the same number of branches, which is the property a reader pays for and the one a branch count cannot express — a measured population of functions here scores far apart on the two. Standard library rather than a linter because the strictest form of the dependency rule applies to a check an adopter runs: a sensor that forced every adopter to install a tool is a sensor most adopters would disable, and a baseline coupled to a third-party tool's counting rules is a property of that tool's version rather than of the code. The response clause carries BOTH postures in one row because they are one contract read at two settings — the measurement and its baseline are identical either way, and only the exit code differs; a version that could not report would be a different requirement, but a version that can gate is this one enabled.
 
+
+### SR SR-183
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for maintainers holding the kit to its own standard while small changes stay cheap; each function's complexity reported against its baseline, and gated only where a repository opts in, is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
 
 ### LLR LLR-206, Drafted — never approved
 - **Rationale**
@@ -470,12 +1738,223 @@ Status movement.
   - before: Synthetic project-trajectory/scripts/ fixtures under tmp_path, run through check_complexity.py as a subprocess the way an adopter's stack.ini would: --report prints the bare census of every function and exits 0; a census matching a stamped baseline reports OK unchanged and exits 0 under --mode enforce; a function pushed above its entry is reported with the delta and the three sanctioned remedies and exits nonzero under enforce; a function simplified below its entry, and a baselined function that no longer exists, are each reported as an invitation to re-stamp downward and exit nonzero under enforce; a suppression-shaped comment in the fixture source changes no score (there is no inline pragma); repeated --include globs widen the scanned surface; and an absent source directory is vacuously OK. Re-tiered into conftest.SLOW_MODULES because each case pays interpreter startup — the in-process metric is TC-202's.
   - after: Synthetic project-trajectory/scripts/ fixtures under tmp_path, run through check_complexity.py as a subprocess the way an adopter's stack.ini would: --report prints the bare census of every function and exits 0; a census matching a stamped baseline reports OK unchanged and exits 0 under --mode enforce; a function pushed above its entry is reported with the delta and the three sanctioned remedies and exits nonzero under enforce; a function simplified below its entry, and a baselined function that no longer exists, are each reported as an invitation to re-stamp downward and exit nonzero under enforce; a suppression-shaped comment in the fixture source changes no score (there is no inline pragma); repeated --include globs widen the scanned surface; and an absent source directory is vacuously OK. The module runs at the full tier, each case paying interpreter startup; the in-process metric is TC-202's.
 
+## SR-185 — Coordinated requirement/interface change review
+
+> **Requirement.** When a reviewed change alters one side of a requirement/interface relationship, the change record shall identify the affected counterpart and carry the corresponding change or an explicit justification for retaining it.
+
+> **Rationale.** Carries the final clause of SN-037 as a separate semantic review obligation because SR-162 already owns the mechanical frame and interface resolution. A citation-only provenance check cannot establish that a changed signal or requirement still means the same thing at its counterpart; the record must expose the decision for an independent review.
+
+
+### SR SR-185
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for an architecture that changes with the promises it serves; the change record naming the affected counterpart, with the change or its justification, is that outcome, judged by review.
+
+## SR-186 — Proportionate requirement decomposition
+
+> **Requirement.** The delivered requirements process shall require each additional child within a required tier to carry an independent decision or verification purpose, and record the stopping decision in the scoped decomposition record, while retaining the required SN-to-SR-to-LLR-to-TC tiers and linking real verification to the existing obligation.
+
+> **Rationale.** Carries SN-012's unowned granularity clause as a process requirement on what the delivered process requires and records. A child that only paraphrases a parent or duplicates another child's verification adds review and maintenance cost without an independent decision. The process records the stopping decision within the required spine; this row does not guarantee adopter behavior beyond that record, and it never permits omitting a required SN→SR→LLR→TC tier or replacing real verification with a count. It does not impose a row-count cap, deletion quota, or new machine gate. Existing process doctrine and the spine-authoring adjudicator questions are the source of the judgment, while mechanism-specific evidence remains with its current SR.
+
+
+### SR SR-186
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a decomposition that stays proportionate; each additional child's recorded purpose, and the recorded stopping decision, is that outcome, judged by review.
+
+## SR-187 — Each boundary crossing belongs to one declared system of interest
+
+> **Requirement.** The delivered harness shall read, for each boundary crossing of the declared frame, which of two systems of interest it belongs to — the system in operation or the system that builds and delivers it — reporting a crossing that declares neither.
+
+> **Rationale.** A stakeholder's outcome lands where a person meets the system in use, so an assumption carrying a system reading to that outcome needs a crossing of the system in operation to land on; a frame drawn only around the system that builds and delivers the kit had to leave those crossings out, and the assumptions serving its needs would have nowhere to land. The value sits on the crossing rather than on the party because one party takes part in both systems — the operator develops the kit and also runs it. The closed pair means the same in every adopting repository, where the system in operation is that repository's own product. A crossing with no value is reported rather than refused, so a frame written before the cell existed keeps passing when an adopter upgrades.
+
+
+### SR SR-187
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a stakeholder seeing where each promised behaviour crosses the boundary and a premise's landing being placeable; each crossing's declared system, and a crossing declaring none reported, is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-188 — A need met in operation has a requirement or assumption reaching an operation crossing
+
+> **Requirement.** Where an approved stakeholder of a stakeholder need is a party with a crossing in the system in operation, the delivered harness shall report the need when none of its requirements references an operation crossing and no assumption those requirements rely on lands on one.
+
+> **Rationale.** A need about what a person experiences while the system runs, answered only by requirements stated at the crossings of the system that builds and delivers it, means the frame has no crossing where the outcome lands. That is how a frame can leave out the very crossings where its stakeholders' value arrives and still pass every reference check. Nothing else joins a need's stakeholder to the frame, so this report is the one place the gap shows.
+
+
+### SR SR-188
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a reviewer seeing where each outcome's delivery lands; the need reported when nothing answering it reaches an operation crossing is that visibility, read directly.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-189 — Each need resolves to the declared stakeholders whose outcome it is
+
+> **Requirement.** The delivered harness shall resolve each stakeholder need's stakeholder references against the declared stakeholder list, and each stakeholder's party against the declared frame, reporting a need that names no stakeholder.
+
+> **Rationale.** A need with no named owner has nobody who can confirm it is still wanted, and a stakeholder's party is what lets the need's outcome be placed on the frame. The link lives on the need, pointing at the stakeholder, so the relation has one home; a short list beside the needs keeps the stakeholders where the rows citing them already are, rather than in a registry of their own. A stakeholder is not a review perspective: a stakeholder owns an outcome, while a perspective owns a question put to each decomposition, so no perspective becomes a stakeholder row.
+
+
+### SR SR-189
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for each need naming whose outcome it is; the stakeholder references resolved, and a need naming none reported, is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-190 — A need's source pointer resolves to a document and anchor
+
+> **Requirement.** Where a stakeholder need records the document it was drawn from, the delivered harness shall resolve that pointer to an existing file and anchor.
+
+> **Rationale.** A need drawn from a longer document — an owner's statement of design constraints, an adopter's needs catalog — drifts from it unseen unless the need says where it came from. The need stays the canonical obligation and the document is its provenance, so the pointer takes a cell of its own instead of a place in the need's text, which is kept free of repository paths so a stakeholder can read it. A pointer that does not resolve is the same rot as a dead link, and fails the same way.
+
+
+### SR SR-190
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a need checkable against the document it was drawn from; the pointer resolving to an existing file and anchor is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-191 — Domain assumptions are rows of their own
+
+> **Requirement.** Where a project declares its frame, the delivered process shall hold each domain assumption that a requirement's argument relies on as a row of its own stating where its outcome lands, what it assumes, the conditions under which it holds, the obstacle under which it fails, its maturity and its validity.
+
+> **Rationale.** A requirement states what the system does at its own interface, and a stakeholder need states what a person experiences; between them sits a claim about the world, and a false one makes a fully verified system deliver nothing. Unrecorded, the claim cannot be tested. A row gives it an id, so evidence about it is counted apart from evidence about the system's behavior, and one row cited wherever the claim applies replaces the same sentence written into every requirement it touches. The rows live apart from the frame, whose rows change only by ruling, so approving an assumption never carries unrelated drift in the frame's rows with it. Maturity and validity are separate fields because an approved assumption can later be shown false. Without a declared frame there is no crossing for an assumption to land on, so the tier applies only where a frame is declared.
+
+
+### SR SR-191
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for each premise recorded once, with where its outcome lands, when it holds and what would break it; the assumption row holding those cells is that record.
+
+## SR-192 — A test stand-in for an outside party is a surrogate row naming the parties it emulates
+
+> **Requirement.** The delivered process shall record each stand-in that answers for an external party in tests as a surrogate row naming the external parties it emulates, cited by the assumption that states its fidelity.
+
+> **Rationale.** A stand-in for an outside party — a scripted model runner, a fresh scaffold in a temporary directory, a model judging a render in place of a person — is evidence only as far as it matches the party it replaces, and that match is itself an assumption. Recording the stand-in with its fidelity assumption lets cheap, continuous evidence against the stand-in sit beside sparse evidence that the stand-in still matches. A stand-in is not a frame entity, whose enabling class means something the system depends on to run. Stand-ins for a project's own parts would name components approved at a later rung than the one that approves this row, so they belong to design-tier assumptions and are not accepted here.
+
+
+### SR SR-192
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for each premise recorded and checked; a stand-in recorded as a surrogate row naming the parties it answers for is that record, and its fidelity is stated by the assumption that names it.
+
+## SR-193 — Each requirement cites its assumptions or records why it needs none
+
+> **Requirement.** The delivered harness shall report each system requirement that neither cites the assumptions its argument relies on nor records why its own specification alone delivers its needs.
+
+> **Rationale.** An empty cell asserts nothing, so a requirement citing no assumption cannot be read as one that needs none: the absence is unknown, and only an explicit waiver says the system's own behavior is the outcome. The need link stays on the requirement, because one interface serves several arguments and inheriting needs through an assumption would give a requirement the needs of an assumption it merely shares a seam with. Reporting rather than failing keeps the classification a worklist until the gate that relies on it is enabled.
+
+
+### SR SR-193
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for each requirement naming its premises or saying why it needs none; each requirement doing neither reported is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-194 — Each requirement declares its form
+
+> **Requirement.** The delivered harness shall report each system requirement that declares no form from the closed set of three: met at an interface, resting on an assumption, or a cross-cutting property of the whole system.
+
+> **Rationale.** A requirement reached by no interface looks the same as one meant to rest only on an assumption unless the row says which it is, so a missing interface hides behind a legitimate exception. A closed cell whose absence is reported, rather than a default, keeps the omission visible. A property of every delivered capability at once is met at no single seam, which is why it is the third form rather than a kind of interface.
+
+
+### SR SR-194
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a reviewer seeing how each requirement is met; each requirement declaring no form reported is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-195 — An assumption lands where each stakeholder it serves is
+
+> **Requirement.** The delivered harness shall report each stakeholder need an assumption serves that none of the assumption's landing crossings reaches, and each landing crossing that reaches none of those needs, where a crossing reaches a need when it belongs to the party of one of the need's approved stakeholders or to a party that mediates for it.
+
+> **Rationale.** An assumption exists to carry a system reading to a stakeholder's outcome, so it has to land where that stakeholder is — directly, or through a party that carries the stakeholder's writes and shows them the system's verdicts, as a development session does for its operator. A landing anywhere else bridges to no one the need names. The served needs are derived through the requirements citing the assumption, so the need link keeps its one home on the requirement. Only approved stakeholders are read, because a stakeholder still in draft has not been agreed as anyone's. A fidelity assumption is the exception, because its claim is about a stand-in matching an outside party rather than about a stakeholder's outcome.
+
+
+### SR SR-195
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a premise shown landing where its stakeholders are; each unreached need and each idle landing reported is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-196 — An assumption no requirement cites, or nothing could falsify, is reported
+
+> **Requirement.** The delivered harness shall report an assumption that no system requirement cites or that declares no falsifying signal.
+
+> **Rationale.** An assumption no requirement relies on is documentation with no argument behind it, and one with no stated falsifier cannot be tested, because nothing says which observation would show it false. Both are worklist items rather than failures: an assumption is often written before the requirement that will cite it, and a falsifier sometimes needs a signal that does not exist yet.
+
+
+### SR SR-196
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for each relied-on premise being checkable; an assumption no requirement cites, or one declaring no falsifier, reported is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-197 — A test case evidences assumptions in a field of its own
+
+> **Requirement.** The delivered harness shall accept a test case that evidences assumptions in place of, or beside, the requirements and design rows it verifies, placing a test case that evidences only assumptions in every phase of the requirements that cite them.
+
+> **Rationale.** Evidence about an assumption is not evidence about the system's behavior, and counting both in one field would merge the two obligations the argument separates: that the system does what its requirements say, and that what they say reaches the outcome. A separate reference keeps the verified-requirement join exactly what it was, and lets a test of an assumption stand alone where no requirement is its subject. Every reader that counts evidence has to make the same split, or two views of one test case disagree about what it proves. Phase follows the requirements that rely on the assumption, because an assumption has no phase of its own.
+
+
+### SR SR-197
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a premise's evidence counted apart from the system's; a test case naming the assumptions it evidences, placed in the phases of the requirements citing them, is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
 ## SR-198 — An observation test declares what it reads, how long its result holds, and how it samples
 
 > **Requirement.** The delivered harness shall report an observation test case that omits the inputs its judgment reads, its result lifetime or, where it evidences an assumption, its sampling policy, and refuse one declaring a lifetime shorter than seven days, an input path outside the repository, or a sampling policy outside the closed pair of sampled and monitored.
 
 > **Rationale.** An observation — a person reading a render, a critique of a rendered view, a measurement taken across an adopter's first week — cannot be rerun for every tree, so its result is trusted only while the state it judged is unchanged, and for a declared time. Declaring the inputs it reads is what lets a changed input make the result stale without a model call; the lifetime floor keeps a judgment from being demanded more often than it can honestly be taken. The author proposes the lifetime and the row's approval accepts it, because how fast a premise can change is a judgment about the world. A sampled result supports a positive claim only under a stated sampling model, so the model is declared where a project wants that claim. Omissions are reported rather than refused so observation tests written before these cells existed keep passing on upgrade; the declarations are approved content because they state how the row's claim is kept current.
 
+
+### SR SR-198
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for an observation's result that goes stale honestly; the declaration of its inputs, lifetime and sampling, with an omission reported and a malformed one refused, is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
 
 ### LLR LLR-233
 - **Detail**
@@ -494,12 +1973,148 @@ Status movement.
 - **Status**: Drafted
 - **Phase**: 6
 
+## SR-199 — Observation results are recorded apart from their test case
+
+> **Requirement.** The delivered process shall record each observation result apart from its test case, with its outcome, when it was observed, who or what observed it, when it expires and a digest of the inputs it judged.
+
+> **Rationale.** Keeping a result on the approved test case would mix what the test is with what it last found, and would force the row's re-attestation after every sample. A result carries what it judged — the digest of the rows and artifacts its test case declares it reads — so a later change to those inputs makes it stale without a clock, and it carries an expiry so it cannot stand forever. One record serves assumption observations and the verdicts of inspection, critique and attestation tests alike, so all of them share one freshness rule. Automated tests need no such record: their results join the harness's tree-bound evidence record.
+
+
+### SR SR-199
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for each premise showing whether a current result evidences it; the observation result recorded apart, with its outcome, observer, expiry and judged digest, is that record.
+
+## SR-200 — An assumption's evidence level is derived from current results
+
+> **Requirement.** The delivered harness shall derive each assumption's evidence level from current results alone, treating a result as not current once it expires or once the digest of its test case's declared inputs differs from the digest it judged.
+
+> **Rationale.** Approval blesses a row's text and says nothing about whether it holds, so whether an assumption is evidenced is a property of results and never of a cell. One freshness rule — expiry or a changed judged state, whichever comes first — serves both assumption results and the re-judging of observation tests, so the two never disagree about what is stale. Expiry returns the level to specified rather than to falsified, because an old pass is missing evidence, not contrary evidence.
+
+
+### SR SR-200
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a premise relied on without evidence being visible as such; the evidence level derived from current results alone is that visibility.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-201 — A falsified assumption is reported with everything that relies on it
+
+> **Requirement.** When an assumption is recorded as falsified, or an observation result evidencing it fails, the delivered harness shall report every system requirement and test case that relies on it.
+
+> **Rationale.** One assumption can sit under many requirements — every seam where the system consumes a model's output rests on the model runner honoring its contract — so when it is shown false, each of them loses part of its argument at once. Reporting the whole set turns one falsification into a worklist instead of a search. A failing sample is evidence against the assumption, but recording it as false is a judgment, so the report never flips the validity cell itself.
+
+
+### SR SR-201
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a premise shown false being reported with what relies on it; every requirement and test case relying on it reported is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-202 — An accepted risk reopens on a failed sample or on any change to what it was accepted for
+
+> **Requirement.** When a sample for an assumption relied on under an accepted risk fails, or the text of the assumption or of a need it served when the risk was accepted changes after that acceptance, the delivered harness shall read the assumption as unproven until the risk is accepted again or current evidence arrives.
+
+> **Rationale.** A recorded accepted risk is a judgment about a particular assumption serving particular needs, so it cannot outlive a change to either, nor a sample showing the assumption failing. Binding the acceptance to the texts as they stood when it was made is what keeps a later, separate re-approval of a changed need from silently carrying the old risk forward. A clock would reopen it for no reason and teach readers to re-accept by reflex, so time alone never reopens it. Accepting again is a reviewed approval, like the first acceptance.
+
+
+### SR SR-202
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for an accepted risk that cannot quietly outlive what it accepted; the assumption read as unproven on a failed sample or a changed text is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-203 — The approval brief presents each assumption with its argument
+
+> **Requirement.** The delivered approval brief shall present each assumption and surrogate awaiting approval with the requirements citing it, the needs it serves, the crossings its outcome lands on, its evidence and its falsifier.
+
+> **Rationale.** An assumption is approved for what it lets the requirements claim, so the approver's decision is whether those requirements may rely on it. The brief therefore leads with the citing requirements and the needs they reach, then gives the assumption's evidence and what would show it false; judged apart from its citing rows, an assumption is approved in the abstract. The spine's existing brief renders only requirements, design rows and test cases. A fidelity assumption and its surrogate are judged together because each is meaningless without the other.
+
+
+### SR SR-203
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for an owner approving a premise for what it lets the requirements claim; the brief showing each assumption's citing requirements, needs, landings, evidence and falsifier is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-204 — The assumption tier joins the stage at its first approval, each tier read on its own
+
+> **Requirement.** While the assumption, surrogate or stakeholder tier holds an approved row, the delivered stage derivation shall read that tier's rows at its rung — assumptions and surrogates at the boundary rung, stakeholders at the needs rung — reading each tier's status apart from the other tiers that share its registry file.
+
+> **Rationale.** A new registry holding only Drafted rows reads, to the boundary rung, as a frame declared and not approved, so reading it before its first approval would lower the derived stage of every committed tree in between. Reading a tier only once one of its rows is approved puts the switch in the commit that approves the first batch, so no committed tree reads that drop, and it needs no separate setting that could disagree with the rows. The start of reading and the per-tier reading are one contract: from the moment a tier is read at all it has to be read on its own, or the first approval in a shared file would answer for every other tier in it, and two readers of one file would disagree about what a status covers.
+
+
+### SR SR-204
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a gate that moves only on the work; the assumption, surrogate and stakeholder tiers read at their rungs once one of their rows is approved, each on its own status, is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-205 — With the assumption gate on, the boundary rung requires approved, active assumptions that reach their stakeholders
+
+> **Requirement.** Where the assumption gate is enabled, the delivered harness shall fail the boundary gate for each system requirement not recorded as coincident that cites no assumption or cites an assumption which is not approved, not active, does not reach the stakeholders of its needs, or is a fidelity assumption naming a surrogate that is not approved.
+
+> **Rationale.** Without a gate the assumption rows are optional documentation: a requirement could cite a draft, a falsified premise or one landing nowhere its stakeholders are, and still pass. At the boundary rung only maturity can be judged, because test results do not exist until the harness has run; evidence is the release rung's question. The gate is opt-in because it asks for a written argument behind every requirement, a cost a small project may rightly decline.
+
+
+### SR SR-205
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a boundary gate that holds each requirement to its premises; the failure naming the requirement, the assumption and the unmet condition is the gate's verdict.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-206 — With the assumption gate on, release requires current evidence or an accepted risk for every relied-on assumption
+
+> **Requirement.** Where the assumption gate is enabled, the delivered harness shall fail the release gate for each assumption a system requirement relies on that has neither a current passing result of the kind its evidencing test cases declare nor a recorded accepted risk, counting a sampled result only under a declared sampling model.
+
+> **Rationale.** A passed sparse sample shows only that a problem was not found in that sample — small random panels find anywhere from about half to nearly all of the known problems — so it can falsify an assumption but cannot prove one, and the gate accepts it only where a declared sampling model justifies a positive claim. The honest alternatives are to narrow the assumption's holding conditions until an automated check covers it, or to accept the risk on the record. Evidence is judged at release because that is the one rung where results exist.
+
+
+### SR SR-206
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a release gate that holds each relied-on premise to current evidence or an accepted risk; the failure naming the assumption is the gate's verdict.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
 ## SR-207 — An approval act refuses to carry drift it does not itself approve
 
 > **Requirement.** The kit shall refuse to refresh a registry's acceptance record in an approval act while any row of that registry that the act neither approves nor re-attests has approved text differing from its recorded copy.
 
 > **Rationale.** The recorded copy is the approver's asserted definition of the whole file, so refreshing it copies every row as it now stands. While any single approval in an act was enough to refresh the file, one row's approval silently blessed every other row's unreviewed edit. Refusing row by row keeps the copy to what someone saw, and it works for any number of tiers in one file, where splitting files or keying approvals by tier would each have needed a new approval identity through the whole approval path. Stakeholder needs stay outside this rule until their own text is compared with a recorded copy, which this row does not add.
 
+
+### SR SR-207
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for an approval act that blesses only what it shows; refusing to refresh a record while unapproved drift sits beside the approved rows is that outcome.
 
 ### LLR LLR-245
 - **Detail**
@@ -511,12 +2126,114 @@ Status movement.
   - before: Driven on real git repositories through the snapshot command, parameterized over every row-compared tier: requirements, design rows, test cases, interfaces, components, the frame's entities, crossings and relationships, assumptions and surrogates. For each, an act approving row A while row B of the same tier carries drifted approved text is refused naming B and the cell; naming the registry alone in the approves option does not clear B; adding B through the re-attests option clears it, and the act's record names B. In a file holding two tiers, drift in one tier refuses an act approving a row of the other. A registry with no drifted row outside the act refreshes as before. Seven drifted rows are all named, with none cut off. A drifted need is not covered.
   - after: Driven on real git repositories through the snapshot command, parameterized over every row-compared tier: requirements, design rows, test cases, interfaces, components, the frame's entities, crossings and relationships, assumptions and surrogates, needs and stakeholders. For each, an act approving row A while row B of the same tier carries drifted approved text is refused naming B and the cell; naming the registry alone in the approves option does not clear B; adding B through the re-attests option clears it, and the act's record names B. In a file holding two tiers, drift in one tier refuses an act approving a row of the other. A registry with no drifted row outside the act refreshes as before. Seven drifted rows are all named, with none cut off. A drifted approved need refuses an act naming the needs registry, naming the need and the cell, until the re-attests option names it, and the act ledger then records it.
 
+## SR-208 — The loop never changes a status the approval level holds for a human
+
+> **Requirement.** Where the declared approval level holds an off-spine registry's rung for a human, the delivered loop shall refuse any change it makes to that registry's status cells before the change lands on trunk.
+
+> **Rationale.** The approval level names the rungs a human still approves, and an automated approval of the spine's own rows is already refused. The frame, assumption, surrogate and component registries carry status cells of their own that no automated path was stopped from changing, because the one setting that would stop it defaults to allowing. A policy that declares a rung human-held without refusing the automated path is a claim, not a control.
+
+
+### SR SR-208
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a held tier changed only by a person; the loop's own status changes refused before they land is that outcome for the one writer the kit controls, and whether a person's change reflects judgement is not this row's claim.
+
+## SR-210 — A loop commit that changes a human-held status is reported
+
+> **Requirement.** The delivered harness shall report each commit carrying the loop's provenance trailer that changes a status cell on a rung the declared approval level holds for a human.
+
+> **Rationale.** A changed status on a human-held rung is supposed to mean that a human judged. The one observation that would show otherwise is such a change arriving in a commit the loop made, and checking the committed history for it turns that premise into something the harness can falsify rather than trust.
+
+
+### SR SR-210
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a reviewer seeing a machine change a human-held tier; each loop-trailered commit that changes a held status reported is that outcome.
+
+## SR-211 — Each boundary interface is bridged or coincident
+
+> **Requirement.** The delivered harness shall report each interface realizing a boundary crossing that neither names the assumptions carrying its reading to an outcome nor records why its reading is the outcome.
+
+> **Rationale.** A requirement is testable only if the interface it is met at is defined or its reading is clearly assumed. The allocation is recorded on the interface, which is approved at the architecture rung where interfaces are, so an assumption approved earlier at the boundary rung is never edited to point at a seam approved later. The requirement a seam answers stays derived through the interface's owner, because stating it on the interface would give that relation a second home.
+
+
+### SR SR-211
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a reviewer seeing, for each boundary seam, what carries its reading to an outcome; each boundary interface doing neither reported is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-212 — With the assumption gate on, interface-form requirements are bridged at their crossings and reached and bridged at the architecture rung
+
+> **Requirement.** Where the assumption gate is enabled, the delivered harness shall fail, for each system requirement of interface form, the boundary gate when the requirement is not recorded as coincident and names a crossing on which no assumption it cites lands, and the architecture gate when no boundary interface reaches it or a reaching boundary interface neither records it as coincident nor bridges it by an assumption the requirement also cites.
+
+> **Rationale.** A requirement meant to be met at an interface is not testable until that interface exists and its reading is either the outcome or carried by an assumption the requirement itself relies on. The frame's crossings are the first such interfaces: they are approved with the frame at the boundary rung, before any interface row exists, and an assumption already names the crossing it lands on, so the requirement is judged against them there. Judging it again at the architecture rung, against the boundary interfaces that realize the crossings, keeps interfaces after the requirements they answer. Minting interface rows to match a count would produce seams with no contract behind them, so the check reports the gap rather than inventing the seam.
+
+
+### SR SR-212
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a gate that holds interface-form requirements to their crossings and seams; each failure naming the requirement and the crossing or interface is the gate's verdict.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-213 — A review perspective that voices a stakeholder resolves to that stakeholder
+
+> **Requirement.** The delivered harness shall resolve each review perspective's recorded stakeholder against the declared stakeholder list, reporting a perspective that names an undeclared stakeholder.
+
+> **Rationale.** Derived through the maintainer's lens rather than from a need's text: a reader who meets a perspective years later has to be able to tell why it exists. Some perspectives are a stakeholder's voice used as a lens — the first-time adopter's question is the adopting team's — and recording which stakeholder a perspective speaks for lets it be re-pointed or retired when that stakeholder changes; an anchor to a frame party instead breaks when the party is dropped. The link is optional because a perspective owns a question, not an outcome, and most perspectives voice no one.
+
+
+### SR SR-213
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for each perspective traceable to whose voice it is; the recorded stakeholder resolved, and an undeclared one reported, is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-214 — An assumption's obstacle records the perspectives that raised it
+
+> **Requirement.** The delivered harness shall resolve each assumption's recorded obstacle perspectives against the declared review perspectives, reporting a perspective that is not declared.
+
+> **Rationale.** An obstacle is what a perspective's question produces when put to an assumption — asking what happens when an input is missing, stale or half-written writes one directly — so recording which perspective raised it shows a reviewer which failure classes have been put to the assumption. Only positive provenance is recorded, because a per-perspective record of not applying would have no reader.
+
+
+### SR SR-214
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for an obstacle's origin being checkable; each named perspective resolved against the roster, and an undeclared one reported, is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
 ## SR-215 — At a checkpoint, a changed or expired observation test is queued once for re-judging
 
 > **Requirement.** When a work item merges or a release is prepared, the delivered harness shall file one re-judge work item for each observation test case whose declared inputs changed since its last result or whose last result expired, never filing a second while one is open.
 
 > **Rationale.** A judgment made by inspection, critique or observation holds only for the state it looked at, and nothing re-fires it once that state moves. Hashing each test case's declared inputs at a merge or a release costs no model call, so the expensive part — the re-judgment — runs only when something it looked at changed or its result aged out, and one open item per test case keeps a busy week from filing the same judgment many times.
 
+
+### SR SR-215
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for an observation's result re-judged when what it judged changes; one re-judge item filed per stale case is that outcome, and the judging itself is the re-judge item's own.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-01
 
 ### LLR LLR-265 — ADDED since the snapshot, Drafted — never approved
 - **LLR-ID**: LLR-265
@@ -542,6 +2259,57 @@ Status movement.
 - **Status**: Drafted
 - **Phase**: 6
 
+## SR-217 — A requirement implemented before its test cases were approved is reported
+
+> **Requirement.** The delivered harness shall report each system requirement approved after the project's declared starting point whose implementation has landed on trunk while any of its test cases was not yet approved for it, reading the order from the committed history.
+
+> **Rationale.** Tests written after the code tend to describe what the code does rather than what was required, so the order is the evidence that a passing run means the requirement is met. The stage ladder puts test cases before implementation for a project as a whole, but not requirement by requirement, and the committed history is the one record of order that no cell can restate after the fact. Code declaring which requirement or design row it implements is the one event that marks an implementation landing. A requirement's approval is its entry into scope, so judging only requirements approved after a declared starting point keeps a project that adopts the rule from being judged on history written before it; a project that declares none is judged whole. A test case is evidence for a requirement only once it is approved while it names that requirement: dated from its own approval alone, a test case approved for something else could be re-pointed at code already written and lend it an order it never had. A test case not yet approved is the same gap at its widest, since its passing run shows only that the code does what unapproved text says; the report names it with a warning rather than withholding the result, which a reviewer can still weigh.
+
+
+### SR SR-217
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for the record showing a requirement's test cases approved before its implementation; each requirement implemented ahead of an approved test case, reported from the committed history, is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-218 — The state view shows, for each need, the assumptions it relies on and their evidence
+
+> **Requirement.** The delivered state view shall show, for each stakeholder need, the assumptions its requirements rely on, with each assumption's validity and evidence level.
+
+> **Rationale.** The need promises that a reviewer can see what each outcome relies on and whether it has been checked. The per-assumption reports and the approval brief answer other questions — what is wrong now, and what is being approved — and neither lets a reviewer start from an outcome. Deriving the view from the registries and results keeps it from going stale the way a hand-written summary does, and marking a failed or unevidenced premise in words as well as color keeps the signal readable for a reader who does not see color.
+
+
+### SR SR-218
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a reviewer seeing each outcome's premises and whether they are evidenced; the per-need view of each assumption with its validity and evidence level is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
+## SR-219 — A requirement's system of interest is derived from its crossings, and one spanning both is reported
+
+> **Requirement.** The delivered harness shall derive each system requirement's system of interest from the crossings its boundary references name, reporting a requirement whose crossings belong to both systems.
+
+> **Rationale.** Where a requirement sits follows from the crossings it names, so writing it on the requirement as well would give the fact a second home that can disagree with the first. A requirement naming crossings of both systems states one obligation about two systems of interest, whose halves are verified against different parties; reporting it is how such a row gets split.
+
+
+### SR SR-219
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a stakeholder seeing which system each promised behaviour belongs to; the system derived from a requirement's crossings, and a requirement spanning both reported, is that outcome.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+
 ## SR-220 — Overlapping queued work is consolidated through one judgement per queue state
 
 > **Requirement.** While the queued work items include a set that overlaps, the delivered loop content shall hand that set to a single judgement, at most once for any one state of the queued work items and never while another judgement is in progress, queued over an item of the set, or queued to run before it, whose outcome takes effect only as a recorded restructuring in which each absorbed item is closed in a terminal state naming its one successor, its scope text unchanged.
@@ -556,6 +2324,12 @@ Status movement.
 - **Requirement**
   - before: While the queued work items include a set that overlaps, the delivered loop content shall hand that set to a single judgement, at most once for any one state of the queued rows and never beside another queued or active judgement, and shall enact the judgement's outcome as a recorded restructuring, each absorbed item closed in a terminal state naming its one successor with its scope text unchanged.
   - after: While the queued work items include a set that overlaps, the delivered loop content shall hand that set to a single judgement, at most once for any one state of the queued work items and never while another judgement is in progress, queued over an item of the set, or queued to run before it, whose outcome takes effect only as a recorded restructuring in which each absorbed item is closed in a terminal state naming its one successor, its scope text unchanged.
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-01;B-10
+- **DA-Refs**
+  - before: (empty)
+  - after: DA-015
 
 ### LLR LLR-210
 _approved — re-attestation owed_
@@ -600,5 +2374,22 @@ _traced — routes to adjudication_
 - **Evidence**: tests/test_intake.py::test_the_consolidation_census_dry_run_names_the_cluster_and_mints_nothing; tests/test_intake.py::test_the_consolidation_census_mints_one_row_then_says_why_not_again; tests/test_intake.py::test_a_refused_consolidation_mint_says_why_on_stderr_and_exits_1; tests/test_intake.py::test_the_consolidation_census_says_why_it_proposes_nothing
 - **Status**: Drafted
 - **Phase**: 5
+
+## SR-221 — A builder changing a module can list the tests the spine links to it
+
+> **Requirement.** The delivered harness shall list, for a module a design row names, the test files the requirement spine links to it through the design rows naming it, the test cases verifying those rows and those cases' evidence, derived from the registries with no hand-kept map.
+
+> **Rationale.** A DERIVED requirement: SN-012 asks that small changes stay cheap and does not name a test listing, so this obligation arrives through two lenses rather than through the need's text. The performance lens prices operator time: a builder iterating on one module either reruns the whole suite, minutes each time, or guesses which tests matter. The test-engineer lens names what the guess costs: tests picked by file name are a fraction of those exercising a module, because cases are named for the behaviour they drive and driven suites for the script they run, so a green from them has not examined what the module's design rows claim. The spine already records which tests carry each design row's evidence, so the listing reads it. It is an inner loop only: the commit bar still runs before every commit, and making a module-scoped subset the bar was considered and rejected, since a change that breaks another module through a shared import would then commit green.
+
+
+### SR SR-221
+_approved — re-attestation owed_
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for small changes staying cheap; the tests the spine links to a module, listed from the registries with no hand-kept map, are what a builder needs before changing it.
+_traced — routes to adjudication_
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
 
 </details>

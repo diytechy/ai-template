@@ -470,6 +470,41 @@ def test_reattest_brief_stays_silent_for_an_approved_undrifted_chain(tmp_path):
     assert "SR-001" not in proc.stdout
 
 
+def _brief_sections(trace_mod, root, srs, tcs, ids):
+    """`{row id: section text}` of the assumptions approval brief, rendered as
+    `--approve assumptions` renders it, for the rows `ids` names."""
+    text = "\n".join(trace_mod.assumption_brief_lines(root, srs, tcs, ids=ids))
+    return {
+        chunk.split(None, 1)[0]: chunk
+        for chunk in text.split("\n### ")[1:]
+        if chunk.split(None, 1)
+    }
+
+
+def _assert_assumption_only_cases_on_their_brief(trace_mod, root, reg):
+    """Each live case evidencing assumptions only is named in the rendered
+    approval-brief section of every assumption it evidences, and the check
+    bites: with the case's Assumption-Refs taken away, those sections no longer
+    name it. The ids are passed explicitly, so the sections still render once
+    the rows are approved. Returns the assumption-only cases."""
+    refs = trace_mod.refs
+    only = [
+        t
+        for t in reg.tcs
+        if not refs(t.get("Verifies")) and refs(t.get("Assumption-Refs"))
+    ]
+    ids = sorted({d for t in only for d in refs(t.get("Assumption-Refs"))})
+    rendered = _brief_sections(trace_mod, root, reg.srs, reg.tcs, ids)
+    for tc in only:
+        tid = tc["TC-ID"]
+        bare = [dict(t, **{"Assumption-Refs": ""}) if t is tc else t for t in reg.tcs]
+        stripped = _brief_sections(trace_mod, root, reg.srs, bare, ids)
+        for did in refs(tc.get("Assumption-Refs")):
+            assert tid in rendered.get(did, ""), (tid, did)
+            assert tid not in stripped.get(did, ""), (tid, did)
+    return only
+
+
 def test_reattest_model_owed_row_count_matches_the_live_drafted_llr_tc_census():
     """The number this widening is FOR: `docs/stage`'s `drafted` figure counts
     every `Drafted` SR/LLR/TC row (+ SN drafts) live in this repo's own
@@ -492,11 +527,15 @@ def test_reattest_model_owed_row_count_matches_the_live_drafted_llr_tc_census():
     import spine_rules as _spine_rules  # noqa: E402
 
     reg = _trace.load_registries(ROOT / "docs")
+    # A case evidencing assumptions ONLY names no requirement or design row, so
+    # no requirement's chain reaches it: it is surfaced on its assumption's
+    # approval brief instead, asserted there rather than counted here.
+    assumption_only = _assert_assumption_only_cases_on_their_brief(_trace, ROOT, reg)
     live_drafted = sum(
         1
         for rows in (reg.srs, reg.llrs, reg.tcs)
         for row in rows
-        if _spine_rules.is_drafted(row)
+        if _spine_rules.is_drafted(row) and row not in assumption_only
     )
     model = _trace.reattest_model(ROOT, reg.srs, reg.llrs, reg.tcs)
     # Unique (kind, id), not a raw sum: a TC cited by more than one SR's chain

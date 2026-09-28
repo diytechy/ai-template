@@ -2814,3 +2814,19 @@ automated = "Yes"
 evidence = "tests/test_snapshot_readers.py::test_a_reattestation_outside_the_amendment_scope_is_refused_by_name; tests/test_snapshot_readers.py::test_a_reattestation_inside_the_amendment_scope_merges; tests/test_snapshot_readers.py::test_a_mixed_approval_and_reattestation_act_merges; tests/test_snapshot_readers.py::test_a_mixed_act_reattesting_outside_its_amendment_scope_is_refused"
 status = "Drafted"
 phase = 6
+
+[test.TC-279]
+level = "Inspection"
+method = """Follow the sampled new-reader inspection in docs/test/inspection-procedures.md#sampled-new-reader-inspection: draw the declared number of parts at random from the source the project's readability and structure measures cover, give each to a reader who has not worked on it, and have that reader say, from the part's code and the records linked to it and without asking its author, what the part does and why it exists; record each statement beside the part's linked requirement and design rows."""
+tier = "Release"
+expected = "Each sampled reader states what the part does and why it exists, in agreement with the part's linked rows; a reader who cannot, or whose statement contradicts those rows, is a failing sample and falsification evidence against DA-011"
+automated = "No"
+evidence = "docs/test/inspection-procedures.md#sampled-new-reader-inspection-result"
+status = "Drafted"
+phase = 6
+assumption_refs = ["DA-011"]
+inputs = ["docs/test/inspection-procedures.md", "DA-011", "project-trajectory/scripts", "docs/requirements/system-requirements.toml", "docs/requirements/low-level-requirements.toml"]
+max_age = 90
+sampling = "sampled"
+sample_size = 5
+acceptance_rule = "All five sampled readers state what their part does and why it exists, in agreement with the part's linked rows; one reader who cannot is a failing sample."

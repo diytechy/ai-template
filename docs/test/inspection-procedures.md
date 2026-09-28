@@ -1,7 +1,7 @@
 # Inspection procedures
 
 These are the durable procedures for the three drafted decomposition
-inspections, one section per subject. Each result subsection stays explicit
+inspections and one sampled assumption inspection, one section per subject. Each result subsection stays explicit
 until a reviewer records the person, date, and result. Results below distinguish
 completed document inspections from an incomplete positive sample; none is an
 artifact approval or a machine-coverage result.
@@ -72,6 +72,34 @@ output. TC-211 is not reported fully passed, and its method is not weakened to
 obtain a pass. The remaining work is the existing SR-161 implementation and an
 Inspection of a complete produced sample. No new carrier or machine gate was
 introduced by this sitting.
+
+## Sampled new-reader inspection
+
+A sampled observation of an assumption, not of a requirement: it evidences
+DA-011, that what a random sample of the code's parts shows about its
+readability holds for the parts the sample did not reach. Draw five parts at
+random from the source the declared readability and structure measures cover,
+never parts their authors choose, a part being one function, class or
+module-level block with its own back-link. Give each to a reader who has not
+worked on it: a person, or a fresh model session that did not author the part,
+told which. The reader reads only the part's code and the records it links to,
+through the generated views, and states what the part does and why it exists,
+without asking its author. Record each statement beside the part's linked
+requirement and design rows, and judge whether the two agree. The case declares
+the source tree and the requirement and design registries as its inputs, so a
+change to either makes its result stale.
+
+A reader who cannot say what the part does or why it exists, or whose
+statement contradicts the linked rows, is a failing sample and falsification
+evidence against DA-011, whatever the other samples show. A passing sample
+bounds discovery; it does not show the assumption holds for the parts it did
+not reach.
+
+### Sampled new-reader inspection result
+
+**NOT YET TAKEN.** No sample has been drawn. The case is Drafted with its
+assumption, and its first result is recorded through the observation writer
+once the case is approved.
 
 ## Bounded abnormal inputs for the OI-85 inspection
 

@@ -9,12 +9,190 @@
 #   [surrogate.SUR-###]   a stand-in for outside parties in tests, named by the
 #                         assumption stating its fidelity
 #
-# EMPTY BY DESIGN, FOR NOW. The tier and its checks ship first; this
-# repository's own assumption and surrogate rows are written and approved in a
-# later reviewed act. Until a real assumption row exists, the requirement
-# classification and form reports stay silent here, as they do in any project
-# that has not adopted the tier.
+# EVERY ROW HERE IS DRAFTED. Each is a newly derived claim, not a transcription:
+# nothing wrote these premises down before, so each waits for its own reviewed
+# approval act, where an assumption and the surrogate its fidelity names are
+# judged together. Until one is approved the tier's stage arm stays off, so
+# these rows move no derived stage. The requirement classification, form and
+# interface-bridging reports read them already, warn-only.
+#
+# WHERE THEY LAND. An assumption's outcome lands where a person meets the kit in
+# use: the human operator's own crossings (B-02 authority, B-09 read) or the
+# development session's, which mediates for that operator (B-01 writes, B-04
+# verdicts). A fidelity assumption lands on a crossing of the party its
+# surrogate emulates instead. The delivered package's crossing, B-05, is never a
+# landing: no stakeholder meets the kit there.
 #
 # The record of what was approved (`docs/archive/last_approved/`) holds no copy
 # of this file yet, and must not be given one early: the first copy is written
 # by the approval act that approves this file's first row.
+
+[assumption.DA-001]
+effect_at = ["B-09"]
+assumption = """A spine the strict traceability check passes with zero orphans is one a reviewer can rely on: each traced row says something a reviewer would act on, and its links are the ones a reviewer would draw."""
+holds_when = """Rows are authored and adjudicated under the spine-authoring question list, and the reviewer reads the generated views rather than the raw registries."""
+obstacle = """Every row resolves and every row says nothing: an orphan-free spine whose rows are vacuous, or whose links were drawn to satisfy the check rather than the argument."""
+falsifier = """A reviewer new to the spine, sampling traced rows through the generated views, finds a row that says nothing they would rely on, or a link they would not have drawn."""
+obstacle_hats = ["TEST-ENGINEER"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-002]
+effect_at = ["B-01", "B-09"]
+assumption = """A scaffold whose harness runs green straight after generation is one an adopting team can work in: it can write its first registry rows and advance through its first gate without reading the kit's source."""
+holds_when = """The team's stack is one of the shipped profiles, and the team reads the adoption guide before first use."""
+obstacle = """A team scaffolds green, never fills a registry, and operates a spine that resolves and says nothing, because the step from the green scaffold to a first real row needs knowledge only the kit's source holds."""
+falsifier = """A first-time team, given a shipped profile and the adoption guide, fails to reach a first filled registry without reading the kit's source."""
+obstacle_hats = ["FIRST-RUN-ADOPTER"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-003]
+effect_at = ["B-02"]
+assumption = """A changed Status cell on a rung the declared approval level holds for a human means a human actually exercised the judgement that Status asserts."""
+holds_when = """The row's rung is at or below the rung the declared approval level holds for a human, and the change is committed by a person rather than by an unattended run."""
+obstacle = """A Status change on a human-held rung arrives in a commit an unattended run authored, or a person flips the cell without reading the row it approves."""
+falsifier = """A commit carrying the loop's provenance trailer that changes a Status cell on a human-held rung."""
+obstacle_hats = ["SECURITY"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-004]
+effect_at = ["B-01"]
+assumption = """A write the local hook floor admitted was checked: the floor was not bypassed, or a re-run of the same bar away from the session agrees with it."""
+holds_when = """Commits and pushes are made through the installed hooks rather than with them skipped, or a re-run of the declared bar away from the session is in place for each change that reaches a shared branch."""
+obstacle = """A commit or push made with the hooks skipped (a --no-verify commit or push, or a checkout where the hooks were never installed) admits an unchecked write, and nothing re-runs the bar before it is shared."""
+falsifier = """A pushed commit carrying a secret-class match the hook would have refused, or a merged commit whose re-run bar is red while its local hooks reported green."""
+obstacle_hats = ["SECURITY"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-005]
+effect_at = ["B-09"]
+assumption = """Where hosted CI is configured, the runner honours the shipped workflow: each declared trigger runs the documented harness entry point at the tier the declared moment-to-tier table assigns, across the declared OS and Python matrix, and the job's verdict is the harness's own exit."""
+holds_when = """The repository's workflow is the shipped reference workflow, unedited, and the hosted runner executes workflow files as its provider documents them."""
+obstacle = """The runner, a provider default or an edited copy suppresses a declared run or a step (a disabled schedule, a path filter, a skipped job, a continue-on-error), and a change is shared behind a verdict no bar produced."""
+falsifier = """A declared trigger with no hosted run, or a hosted job reported passing whose step log lacks the harness invocation at its declared tier."""
+obstacle_hats = ["UNATTENDED-OPS"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-006]
+effect_at = ["B-09"]
+assumption = """The model runner follows the runner contract: it reads its prompt from stdin, exits with the documented codes, ends rather than waits when it needs input it cannot have, and leaves its work as commits in its own lane, so the work the owner reads back is the work the loop asked for."""
+holds_when = """A runner and model listed in the declared agent registry, at the command-line version the loop was tested against."""
+obstacle = """A runner update changes its exit codes, its commit behaviour or what it does on a closed stdin, and every loop requirement relying on the contract loses its premise at once."""
+falsifier = """A routed session whose exit code, stdin behaviour or commit shape falls outside the documented runner contract."""
+obstacle_hats = ["UNATTENDED-OPS"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-007]
+effect_at = ["B-09"]
+assumption = """A review or critique session that did not author the work, drawn from a different model family where one is configured, finds defects the authoring session was blind to, so its verdict adds evidence the author's own could not."""
+holds_when = """At least two model families are configured and routable, the reviewer receives the written rubric or the requirement text rather than the author's self-assessment, and the reviewing family is not the authoring one."""
+obstacle = """Families trained alike share the same blind spots, or the brief carries the author's framing into the review, and the second opinion agrees for the wrong reasons."""
+falsifier = """A defect found after acceptance that the independent reviewer's recorded verdict passed, and that a person or a later reviewer finds plainly visible in the reviewed artifact."""
+obstacle_hats = ["TEST-ENGINEER"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-008]
+effect_at = ["B-10"]
+realized_by = "SUR-001"
+assumption = """The scripted runner reproduces a real runner's argv and stdin handling, exit codes and commit effects; it reproduces no judgement, so nothing about the quality of a model's work is evidenced by a test run against it."""
+holds_when = """Loop tests that assert protocol behaviour (what is sent, what code comes back, what lands as a commit), never the content a model would produce."""
+obstacle = """A real runner behaviour the script does not model (a partial write, streamed output, a timeout, an interactive prompt) that the loop depends on."""
+falsifier = """A loop defect seen with a real runner that the scripted runner cannot reproduce."""
+obstacle_hats = ["TEST-ENGINEER"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-009]
+effect_at = ["B-01", "B-04"]
+realized_by = "SUR-002"
+assumption = """A scaffold generated into a temporary directory behaves like a fresh adopter repository for the writes the suite makes into it and the verdicts it reads back."""
+holds_when = """The same shipped profile, a clean supported Python and git on the path, with no hooks, attributes or configuration inherited from the machine running the suite."""
+obstacle = """An adopter environment property the temporary directory lacks (hooks already installed, line-ending conversion, a monorepo layout, a path with spaces) changes a verdict the suite saw pass."""
+falsifier = """An adopter-reported scaffold failure that the suite's scaffold fixture passes."""
+obstacle_hats = ["CROSS-PLATFORM"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-010]
+effect_at = ["B-09"]
+realized_by = "SUR-003"
+assumption = """A vision model judging the rendered state view against its written rubric reaches the verdict a human reviewer reading the same render would."""
+holds_when = """An image-capable model; the rubric carries its accumulated anchors; a static render at a declared width, theme and tab."""
+obstacle = """A model revision shifts judgement silently, or the rubric overfits to anchors accumulated under one model's eye."""
+falsifier = """A periodic human reading of the same renders that disagrees with the critic's recorded verdict."""
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-011]
+effect_at = ["B-09"]
+assumption = """What a random sample of the code's parts shows about its readability holds for the parts the sample did not reach: where each reader new to a sampled part can say what it does and why it exists, from its code and the records linked to it and without asking its author, a reader new to any other part can too."""
+holds_when = """Parts are drawn at random from the whole source the project's readability and structure measures cover, never chosen by their authors; the parts share the project's conventions and carry back-links to the requirement and design rows that say why they exist; each reader has not worked on the part and reads its records through the generated views."""
+obstacle = """The sample misses the parts that are hard to read (a legacy module, a hand-tuned path, a part whose reason lives only in its author's head), and a clean sample stands for code it does not represent."""
+falsifier = """A reader new to a sampled part cannot say what it does or why it exists from its code and linked records; or a part outside an earlier clean sample is found that no new reader can explain."""
+obstacle_hats = ["MAINTAINER"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-012]
+effect_at = ["B-04", "B-09"]
+assumption = """A supported platform, and a Python release of 3.11 or later that the declared test matrix did not sample, run the kit's scripts and root launchers as the sampled ones do."""
+holds_when = """A CPython release of 3.11 or later with its standard library intact, on Linux, Windows or macOS, and a test matrix that samples the oldest supported release and the latest one."""
+obstacle = """A later interpreter release changes or removes a standard-library behaviour a kit script relies on, or a platform changes how a shell or launcher starts a script, and a check crashes or gives a different verdict on the adopter's machine."""
+falsifier = """A kit script or root launcher failing, or giving a different verdict, on a supported platform and interpreter release the test matrix did not sample."""
+obstacle_hats = ["CROSS-PLATFORM"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-013]
+effect_at = ["B-01"]
+assumption = """Work reaches the integration branch only through the gated path: a loop lane through the serial integrator that runs the declared bar on the composed tree, and a person's change through the hook floor and the declared bar."""
+holds_when = """No one hand-merges a loop lane or pushes to the integration branch around the merge slot; where someone does, the merge-slot sweep is run after it."""
+obstacle = """A person hand-merges a loop lane or pushes straight to the integration branch, and a composed tree that never ran the declared bar becomes the state every later lane builds on."""
+falsifier = """An integration-branch commit whose tree fails the declared bar, or a merged lane with no merge-slot intake record."""
+obstacle_hats = ["INTEGRITY-RECOVERABILITY"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-014]
+effect_at = ["B-01", "B-04"]
+assumption = """An adopter moves to a newer kit through the scaffold's re-run or the documented re-sync procedure, which run the kit's migration pass and preserve the adopter's own files, rather than by copying kit files over by hand."""
+holds_when = """The adopter follows the documented upgrade route and reads its re-sync entries for the range it crosses."""
+obstacle = """An adopter hand-copies a newer kit over an old checkout, the migration pass never runs, and the first run meets the legacy-file refusal, or a filled-in file is lost, with nothing explaining why."""
+falsifier = """An adopter report of the legacy-file refusal, or of a clobbered filled-in file, after an upgrade that bypassed the documented route."""
+obstacle_hats = ["FIRST-RUN-ADOPTER"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-015]
+effect_at = ["B-09"]
+assumption = """A fresh model session asked to judge whether queued work items overlap, from a brief the loop composed from the registries, judges as the owner would: the items it merges overlap, and the successor it names carries their scope."""
+holds_when = """A runner and model at a strong tier listed in the declared agent registry; the brief carries each item's full scope text; the owner reads the recorded restructuring where the queue is shown."""
+obstacle = """The session merges items that do not overlap, or names a successor that drops part of an absorbed scope, and no one reads the recorded restructuring."""
+falsifier = """An owner reversing a recorded consolidation, or re-filing scope an absorbed item carried."""
+obstacle_hats = ["PRODUCT-FITNESS"]
+status = "Drafted"
+standing = "active"
+
+[surrogate.SUR-001]
+name = "Scripted model runner"
+emulates = ["EXT-005"]
+description = """A scripted stand-in the loop tests launch in place of a model runner's command line: it answers the runner contract (prompt on stdin, an exit code, commits in its lane) from a per-test action script, so the loop's protocol is tested with no model called. Carried by the FAKE_AGENT harness in tests/test_agent_loop.py."""
+status = "Drafted"
+
+[surrogate.SUR-002]
+name = "Scaffold surrogate"
+emulates = ["EXT-001"]
+description = """A fresh scaffold bootstrapped into a temporary directory and driven by running the kit's actual commands, as a development session in an adopter's repository would. Carried by the suite's scaffold fixture in tests/conftest.py."""
+status = "Drafted"
+
+[surrogate.SUR-003]
+name = "Render critic"
+emulates = ["EXT-006"]
+description = """The render-dashboard-critique skill with an image-capable model: it screenshots the state view across the declared width, theme and tab matrix and judges the renders against the written rubric, standing in for the human reader of the view."""
+status = "Drafted"

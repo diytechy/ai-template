@@ -339,11 +339,10 @@ KIT = ROOT / "project-trajectory"
 # below fail once the live table exists, so the commit that writes the rows
 # must drop the entry here, which arms the live leg and its floor. The
 # stakeholder list left this set at the C1 sitting commit (WI-643), which wrote
-# STK-01..STK-04.
-# The assumptions registry ships EMPTY here the same way: its assumption and
-# surrogate rows are later reviewed content, and the commit that writes them
-# drops its two entries.
-LIVE_ROWS_PENDING = frozenset({"DA-ID", "SUR-ID"})
+# STK-01..STK-04, and the assumptions registry's two tiers left it when this
+# repository's assumption and surrogate rows were written, Drafted, at C2
+# (WI-655). The set stays for the next registry that ships before its rows.
+LIVE_ROWS_PENDING = frozenset()
 
 
 def _toml_keys(path, table):
@@ -476,8 +475,7 @@ def test_the_live_registries_carry_more_than_the_template_example(tmp_path):
         # person); "more than the example" is still the property.
         "STK-ID": 1,
         # An assumption is one claim about the world, and a surrogate one
-        # stand-in; "more than the example" is the property here too. Held back
-        # by LIVE_ROWS_PENDING until this repository's rows are written.
+        # stand-in; "more than the example" is the property here too.
         "DA-ID": 1,
         "SUR-ID": 1,
     }

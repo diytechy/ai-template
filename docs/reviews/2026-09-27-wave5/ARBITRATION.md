@@ -268,3 +268,91 @@ such.
     to ask for as its own item. **SOL** on LLR-158 (`APPROVAL_ACT_CSVS` also
     holds the two assumption tiers) and TC-167 (IF-126 is now cited by
     TC-271): both amended in place under the original grant.
+
+26. **WI-655 (f78d875f), major: two DA placements — SOL.** DA-005's premise
+    (a hosted verdict the operator reads) lands on B-09, not the
+    governed-write crossing B-01. SR-157 only reports declared rule
+    violations and does not rest on DA-001's premise that resolved rows are
+    semantically trustworthy, so its citation goes and SR-157 takes an honest
+    `coincident` reason.
+
+27. **WI-655, major: four `boundary_refs` re-points break the builder's own
+    rule — SOL, bounded.** SR-146 still requires shipped prompt files (B-05
+    stays), SR-156 spans serial integration writes (B-01) as well as the
+    runner (B-10), SR-170 governs writes through B-01, and SR-215 files a work
+    item through B-01. `boundary_refs` is a multi-valued traced cell. **Ruling:**
+    each SR lists every crossing its approved text names. Splitting a row
+    would amend approved requirement text, which this lane's grant excludes,
+    as it did for SR-139. A frame-spanning SR that results is named as a
+    remaining advisory, not split here.
+
+28. **WI-655, major: TC-279 does not evidence DA-011 — SOL.** DA-011's
+    antecedent (the readability measures report no worsening) is never
+    established by a sample of arbitrary parts, and the case declares none of
+    what its judgement reads. **Ruling:** the smaller honest remedy.
+    Re-author Drafted DA-011 to the spine map's D5 premise (the sampled
+    reader's result generalizes beyond the sample), and declare the source
+    tree and the linked registries as TC-279's inputs so a change stales it.
+
+29. **WI-655, minor: IF-030's shared waiver — SOL.** Its data is the whole
+    documentation tree, not one registry format. It gets its own
+    `coincident` reason.
+
+30. **WI-655, minor: the census test checks the model, not the brief —
+    SOL.** It renders the assumptions approval brief and asserts that TC-279
+    appears on it.
+
+31. **The re-judges (ef5184cf), blocker: TC-055's pass is unearned — SOL.**
+    TC-055's approved Method asks for "a fresh, family-heterogeneous CRITIQUE
+    session", and the adjudicator is the same model family as the rendering
+    code's authors. Disclosure is not the degraded path SR-154 allows, which
+    requires a cross-family draw to be configured and unavailable, with the
+    selection logged before launch. Here a cross-family judge (Codex Sol) was
+    available. **Ruling:** the same-family observation record is dropped in
+    the lane before merge. Nothing on trunk records it, so nothing is
+    softened. Its verdict file stays as the record of a session that did not
+    qualify. Codex Sol critiques the same 30-shot matrix against
+    `docs/rubrics/dashboard-usability.md` in a second verdict, and the
+    coordinator records that result through the kit's writer, naming Sol as
+    the judge. TC-209 and TC-210's passes and both NEEDS-JUDGEMENT calls stand
+    (Sol: earned, honest). The two NEEDS-JUDGEMENT rows, WI-684 (TC-036) and
+    WI-688 (TC-211), stay open with their owed act stated. Closing them would
+    make every later merge re-mint them, because the checkpoint suppresses a
+    second draft only while a row is open. The two surface findings fold
+    into them. TC-036's `inputs` omit `RESYNC_PACK.md`, where the procedure
+    lives (WI-684). `docs/test/inspection-procedures.md` hand-restates
+    results inside a declared input while the observation writer is the one
+    authority (WI-688, whose owed act re-runs a procedure there).
+
+32. **WI-655, confirmation round (063e4225) — SOL on SR-174, applied by the
+    coordinator.** Rulings 26 to 30 are confirmed, and Sol found nine of the
+    builder's extra re-points honest. The builder asked whether SR-174 (work
+    item id allocation) crosses B-01. It does: it allocates and permanently
+    reserves ids through trunk-side registry mints, a governed state write.
+    That is one traced cell, so the coordinator sets `boundary_refs =
+    ["B-01"]` at integration, as ruling 23 did for wording.
+
+33. **WI-615 (e520b6e6..307d795d), the blocker: three shipped behaviours no
+    row claims — SOL.** The per-model guardrail payload selection (a new
+    file-read seam), `gen_skills_index --check`'s description floor (a new
+    exit arm under approved LLR-025 and TC-025), and whole-directory skill
+    materialization (IF-035 still declares only `SKILL.md`). The builder
+    found no honest parent and minted nothing. Wave-4 ruling 5 governs:
+    untraced shipped behaviour is the defect the kit exists to prevent, and
+    "no parent" is answered by a labelled derived requirement (the
+    spine-authoring skill's rule (c)), not by leaving it untraced. **Ruling:**
+    the coordinator grants SR-223 (derived, only if no approved SR honestly
+    parents a behaviour), LLR-279 to LLR-281, TC-289 to TC-292, IF-253 and
+    IF-254. It also grants amendment authority, in place, status left
+    Approved, over LLR-025 and TC-025 (the floor's exit arm) and over IF-035's
+    row and Contract body (companion files).
+
+34. **WI-615, major: `delivery_inventory` is never exercised, and two
+    in-process tests sit in slow modules — SOL.** A planted companion-file
+    assertion drives `delivery_inventory`, and the pure regressions move to
+    fast modules and are traced as Smoke (D31), each red first.
+
+35. **WI-615, minor: AGENTS.template.md lost "versioned releases" — SOL.**
+    The byte payment dropped the qualifier that makes `DevStg-Release`
+    conditional, which PROCESS.md states. It is restored within the
+    10,000-byte cap, and the row is re-stamped.

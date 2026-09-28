@@ -1,0 +1,17 @@
+<!-- Codex Sol confirmation of WI-655's fix round, 063e4225; ruling 32. Links re-rooted from the removed worktree. -->
+
+063e4225 NOT YET SOUND
+
+- **major** — SR-174 remains incorrectly assigned only to B-09. Its requirement allocates and permanently reserves work-item identities, implemented by trunk-side registry mints; that is a governed state write under B-01, not a read/report across B-09. Evidence: [system-requirements.toml:996](../../../docs/requirements/system-requirements.toml), [low-level-requirements.toml:1533](../../../docs/requirements/low-level-requirements.toml), [external.toml:145](../../../docs/requirements/external.toml). Fix: change SR-174 to `boundary_refs = ["B-01"]`.
+
+Rulings 26–30 are otherwise resolved:
+
+- DA-005 is on B-09, and SR-157 replaces DA-001 with an honest coincident reason that disclaims semantic trust: [assumptions.toml:70](../../../docs/requirements/assumptions.toml), [system-requirements.toml:751](../../../docs/requirements/system-requirements.toml).
+- The four ruled re-points match their text: SR-146 B-05/B-10, SR-156 B-01/B-10, SR-170 B-01/B-09, and SR-215 B-01: [system-requirements.toml:607](../../../docs/requirements/system-requirements.toml), [system-requirements.toml:737](../../../docs/requirements/system-requirements.toml), [system-requirements.toml:938](../../../docs/requirements/system-requirements.toml), [system-requirements.toml:1555](../../../docs/requirements/system-requirements.toml).
+- DA-011 now states D5’s sampling-generalization premise; TC-279 declares the source tree and linked SR/LLR registries. Both remain Drafted, and the procedure explicitly says **NOT YET TAKEN**: [assumptions.toml:132](../../../docs/requirements/assumptions.toml), [test-cases.toml:2761](../../../docs/test/test-cases.toml), [inspection-procedures.md:98](../../../docs/test/inspection-procedures.md).
+- IF-030’s reason now concerns the checked documentation tree itself: [interfaces.toml:631](../../../docs/requirements/interfaces.toml).
+- The census renders the assumptions brief, requires each assumption-only TC to appear, then removes its in-memory `Assumption-Refs` and requires disappearance: [test_trace_briefs.py:473](../../../tests/test_trace_briefs.py), [test_trace_briefs.py:484](../../../tests/test_trace_briefs.py). Direct invocation passed, and the rendered brief contains `DA-011 — Evidenced by TC-279`.
+
+Eight extra re-points sampled against their text were honest: SR-028, SR-040, SR-129, SR-144, SR-148, SR-155, SR-171, SR-173 and SR-220 at [system-requirements.toml:197](../../../docs/requirements/system-requirements.toml), [system-requirements.toml:297](../../../docs/requirements/system-requirements.toml), [system-requirements.toml:470](../../../docs/requirements/system-requirements.toml), [system-requirements.toml:592](../../../docs/requirements/system-requirements.toml), [system-requirements.toml:637](../../../docs/requirements/system-requirements.toml), [system-requirements.toml:723](../../../docs/requirements/system-requirements.toml), [system-requirements.toml:952](../../../docs/requirements/system-requirements.toml), [system-requirements.toml:981](../../../docs/requirements/system-requirements.toml), and [system-requirements.toml:1625](../../../docs/requirements/system-requirements.toml).
+
+The live advisory computation returns exactly SR-139, SR-146 and SR-148 as frame-spanning; the commit message honestly names all three as remaining. No split was attempted.

@@ -318,3 +318,40 @@ test_module_size_ratchet, test_complexity_ratchet, test_resync_pack,
 test_frame_context, test_rule_sync, test_dogfood_sync, test_derive_stage),
 run by the coordinator: 636 passed / 2 skipped. `check_complexity --mode
 enforce`: OK, 204 rows. Trunk before this squash: e520b6e6.
+
+WI-651's post-merge sweep minted two rows: WI-693 (amendments of LLR-158,
+LLR-173 and the other amended rows) and WI-694 (the first approval of
+WI-651's new Drafted rows). **Open count: 22.**
+
+### WI-655 lands: C2, the assumption and surrogate rows, and every SR's and boundary interface's bridging
+
+One builder, three Codex Sol rounds (wave-5 rulings 26 to 30 and 32):
+[sol-wi655.md](../reviews/2026-09-27-wave5/sol-wi655.md),
+[sol-wi655-fix.md](../reviews/2026-09-27-wave5/sol-wi655-fix.md).
+DA-001 to DA-015 and SUR-001 to SUR-003 are Drafted, and every SR carries
+`da_refs` or `coincident` (78 coincident). 72 `boundary_refs` moved off
+B-05, each listing every crossing its approved text names. All 43 boundary
+interfaces carry `bridged_by` or `coincident`.
+The bridging report reads 0, from 43 with the DAs and no interface cells.
+fig: `python project-trajectory/scripts/trace.py --root .`, lines containing "realizes boundary crossing", at the landing tree.
+Sol's rounds moved DA-005 to its real crossing and took SR-157 off DA-001.
+They restored B-01 wherever an SR governs a write. They re-authored DA-011
+to the D5 premise, with TC-279's inputs declared so a change stales it. They
+gave IF-030 its own waiver and made the census test render the brief.
+The coordinator set SR-174's crossing to B-01 at integration (ruling 32).
+Remaining, named: three frame-spanning SRs (SR-139, SR-146, SR-148), B-11
+unnamed, SN-040's gap, the 114 "no Form" advisories (form is outside this
+row's grant; C3 or C4 takes it), and SN-007's missing derived obligation (for
+the owner). The merge conflicted in `docs/id-watermark` (trunk's, re-bumped)
+and `docs/test/test-cases.toml` (merged table by table). **Open count: 21.**
+
+Commit bar at WI-655: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs --stale` 0 broken, smoke 1697 passed / 3 skipped, seconds 34.6 s
+within 60 s. The touched modules plus both ratchets (test_trace_briefs,
+test_dogfood_sync, test_assumption_rules, test_frame_context, test_rule_sync,
+test_cell_classes, test_id_watermark, test_external_frame, test_frame_rules,
+test_frame_system, test_trace_interfaces, test_assumptions_registry,
+test_derive_stage, test_module_size_ratchet, test_complexity_ratchet), run by
+the coordinator: 507 passed / 1 skipped. `check_complexity --mode enforce`:
+OK, 204 rows. Trunk before this squash: 47198652.
