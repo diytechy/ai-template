@@ -619,3 +619,13 @@ Commit bar at batch C: `check_trajectory --strict` clean, `trace
 and live were equal), approve-modified current, `gen_open_items` current,
 `check_docs --stale` 0 broken, smoke 1798 passed / 3 skipped, seconds 28.5 s
 within 60 s. Trunk before this squash: e1b7cf9f.
+
+Batch C's sweep minted two rows. WI-707 is the one folded follow-up. WI-706,
+an amendment adjudication of LLR-173, is redundant: LLR-173 was judged and
+re-attested inside the same squash. The sweep's amendment trigger
+(`staged_spine_amendments`) does not check whether the merged range also
+re-attests the row, so it mints for an amendment the range already
+settled. That happens only when an amendment and its act share one merge,
+as the coordinator's hand path made them here. WI-706 is closed with that
+stated, and the gap is recorded for the owner. **Open count: 15** (14 queued,
+1 deferred).
