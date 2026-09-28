@@ -12,7 +12,7 @@ _Baseline: `docs/requirements/interfaces.toml` copied 2026-08-30 (580df781)._
 _Baseline: `docs/requirements/external.toml` copied 2026-09-27 (efa9e3cd)._
 _Baseline: `docs/requirements/components.toml` copied 2026-08-30 (580df781)._
 
-_Approval provenance: the last commit to move a `Status` cell in a snapshotted registry is eecd656d (2026-09-28) — the record's maturity cells have not moved since._
+_Approval provenance: the last commit to move a `Status` cell in a snapshotted registry is 5934f4c3 (2026-09-28) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
