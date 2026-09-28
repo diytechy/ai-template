@@ -145,3 +145,103 @@ such.
     Only the claim and the merge slot were replaced by a hand lane and a
     squash-merge plus `sweep --merged`. The pause is left in place, and
     whether it still stands is put to the owner.
+
+11. **WI-616 (3241f337), the blocker: approved LLR-203 made false — SOL.**
+    The new LLR-275 and LLR-276 own the SR-163 resolver, classes and policy
+    table that LLR-203's detail and rationale say no design row names. The
+    builder reported it and stopped, as the brief says. **Ruling:** the
+    coordinator grants amendment authority over LLR-203's `detail` and
+    `rationale`, in place, status left Approved. The amendment is minimal:
+    those mechanisms are now owned by LLR-275 and LLR-276. The merge's sweep
+    mints its adjudication.
+
+12. **WI-616, major: LLR-274's tokenization text is not the code's — SOL.**
+    Commas are segment boundaries inside a clause, not clause delimiters, and
+    TC-273 relies on that. Drafted LLR-274 is re-authored to state clause
+    versus segment exactly.
+
+13. **WI-616, major: the SR-184 fix exempts every Inspection row — SOL.** The
+    false positive is a row whose SUBJECT is a Critique record. A blanket
+    Inspection exemption would also hide a real two-methods row, an
+    Inspection row that directs an independent verdict. **Ruling:** the
+    suppression is subject-aware, and TC-275 gains the counterexample that
+    must still warn.
+
+14. **WI-616, major: three sweep classifications and SN-003's rewrite — SOL.**
+    SR-137 ("no dotted keys"), SR-144 ("merges like any other branch") and
+    SR-177 ("no threshold") state enforced obligations, not case
+    descriptions. They are reclassified as closed normative obligations, and
+    the totals are recomputed. SN-003's "a language other than Python" is
+    still an open world. **Ruling:** it is bounded to what the kit actually
+    offers (a stack the adopter declares a profile for), in the builder's
+    words. It is a need, so it goes to the owner's brief, not to an
+    adjudicator.
+
+15. **WI-616, major: TC-276 is vacuous about registry ids — SOL.** It passes
+    on generic path validation. **Ruling:** the test shows that an id
+    selects the registry's support path, and that changing only the named row
+    changes its digest, and Drafted TC-276 says so.
+
+16. **WI-616, minor: warn-only is unpinned — SOL.** `absolute_advis` joins
+    the never-gates exit-code regression, and a positive advisory is driven
+    through `trace.analyze`.
+
+17. **WI-651 (ba72cad8): the need-tier refusal, stopped on approved rows —
+    GRANT.** The builder compared the need and stakeholder tiers and showed
+    them in the brief, but it stopped before the refresh's refusal and
+    `--reattests SN-###` (Done-when bullet 2). Approved LLR-245 and TC-240
+    say the needs file "is outside SNAPSHOT_TIERS and stays outside" and
+    that a drifted need is not covered. The governing text is the owner's
+    OI-91 ruling (a), "fund the detector", which this row realises. Those
+    rows state the pre-ruling design, and approved SR-207 already asks that
+    "every tier [be] compared with its recorded copy". **Ruling:** the
+    coordinator grants amendment authority, in place, status left Approved,
+    over LLR-245 and TC-240, over SR-178's requirement where it says needs
+    carry "no status cell", and over LLR-173 and its case so that
+    `unanchored_findings` covers the need tiers. The merge's sweep mints
+    their adjudication. It is the same detector, so it is finished in this
+    lane.
+
+18. **WI-616, second round (fd2d5de0): the subject test is token
+    co-occurrence — SOL, bounded.** Rulings 11, 12 and 14 to 16 are
+    confirmed. The exemption fires on any Inspection requirement containing
+    both "Critique" and "record", so "the view links to a Critique record"
+    is exempted while its acceptance directs a verdict. A full parse is
+    disproportionate for a warn-only advisory. The requirement cell already
+    has a subject slot, the text before its `shall` (the EARS form the
+    spine-authoring skill prescribes). **Ruling:** exempt only when that
+    subject names a Critique record. TC-275 gains the passing-mention
+    counterexample, both words present outside the subject, which must warn.
+
+19. **WI-651 (ba72cad8), major: legacy Markdown needs are never compared —
+    SOL.** The kit still supports a `stakeholder-needs.md` carrier (WI-671's
+    own subject), and the drift comparison loads needs through a reader that
+    knows only TOML and CSV, so a Markdown adopter's drifted need reads as no
+    drift. One carrier-aware need-tier loader serves both sides, and a
+    Markdown scaffold regression covers it.
+
+20. **WI-651, major: LLR-271 and LLR-273 each hold two decisions — SOL.** The
+    builder flagged this deviation itself (three ids for five concerns). The
+    spine-authoring skill's "one decision per row" governs. **Ruling:** the
+    coordinator grants LLR-277, LLR-278 and TC-278. Both rows are split,
+    TC-269 and TC-272 re-pointed, and TC-271's stamp and scope clauses split
+    into two cases.
+
+21. **WI-651, major: coverage gaps — SOL.** STK drift; Status on all four
+    tiers and Phase on SR, LLR and TC (parametrized); and a mixed
+    amendment-plus-first-approval act equivalent to batch B's seq 4, so that
+    the legitimate case stays legitimate.
+
+22. **WI-651, minor: IF citations and a back-link — SOL.** TC-271 cites
+    IF-091 and IF-126, TC-272 cites IF-112, IF-126's note no longer says no
+    case cites it, and `load_all` carries `Implements: SR-178, LLR-271`.
+
+23. **Two trivial wording minors, applied by the coordinator at
+    integration.** WI-616's test module introduction
+    (`tests/test_verification_coherence.py`) still describes the exemption
+    broadly, while its tests are correctly bounded (Sol at 3f9bd487: SOUND,
+    one minor). WI-657's write-up opening still says the prototype "produced
+    every number here", while its narrowed scope sits four lines below (Sol
+    at 5c8706da: one minor). Each is a phrase and neither touches behaviour,
+    so the coordinator corrects both in the landing commit instead of spending
+    a builder round and a review on a sentence.

@@ -198,6 +198,21 @@ _PREDICATE_RE = re.compile(
 )
 
 
+def _inspects_critique_record(row):
+    """True for an Inspection row whose requirement's SUBJECT is a Critique
+    record: the text before its first `shall` (the EARS subject, with any
+    fronted condition) names both "Critique" and a "record". A requirement with
+    no `shall` has no subject to read, so nothing is exempt."""
+    if (row.get("Verification") or "").strip() != "Inspection":
+        return False
+    requirement = row.get("Requirement") or ""
+    shall = _SHALL_RE.search(requirement)
+    if shall is None:
+        return False
+    subject = requirement[: shall.start()]
+    return bool(_CRITIQUE_WORD_RE.search(subject) and _RECORD_WORD_RE.search(subject))
+
+
 def verification_coherence_advisories(srs):
     """Warn-only: a real SR row whose PROSE names a critique instrument while its
     `Verification` field declares some other method.
@@ -230,6 +245,20 @@ def verification_coherence_advisories(srs):
     standing false accusation on a correct row, which is the fastest way to
     teach an author to skip this pipe.
 
+    NOT ON AN INSPECTION ROW WHOSE SUBJECT IS A CRITIQUE RECORD. Measured on
+    SR-184: its requirement obliges Critique acceptance records, and a person
+    inspecting such a record reads its rubric and its verdicts, so naming them
+    states WHAT is inspected, not a second method. The subject is the
+    `Requirement` cell's text before its first `shall`, where the EARS form puts
+    what the row obliges: an Inspection row whose subject names both "Critique"
+    and a "record" is exempt, while one naming them only after the `shall` ("the
+    view shall link to its Critique record") is about something else and still
+    warns, as does a requirement with no `shall`. Any other Inspection row warns
+    too, because one whose acceptance directs an independent CRITIQUE or APPROVE
+    verdict does state two methods. The subject test is lexical; a subject that
+    names a Critique record without being about one would be exempted, an
+    under-detect accepted knowingly.
+
     ONE DIRECTION ONLY. A `Verification=Critique` row that names no instrument is
     NOT reported: the rubric it is judged against is the `docs/rubrics/`
     convention's business and a row may legitimately leave the naming to its TC,
@@ -245,7 +274,7 @@ def verification_coherence_advisories(srs):
     out = []
     for rid, r in _real(srs, "SR-ID"):
         method = (r.get("Verification") or "").strip()
-        if not method or method == "Critique":
+        if not method or method == "Critique" or _inspects_critique_record(r):
             continue
         hits = [
             cell
@@ -992,6 +1021,11 @@ _CRITIQUE_INSTRUMENT_RE = re.compile(
     r"(?<!\w)(?:CRITIQUE|APPROVE|VERDICT)(?!\w)|(?i:\brubrics?\b)"
 )
 
+# The subject test's two words (`_inspects_critique_record`), whole-word and
+# case-insensitive: the requirement cell spells them as prose, not as markers.
+_CRITIQUE_WORD_RE = re.compile(r"\bcritique\b", re.IGNORECASE)
+_RECORD_WORD_RE = re.compile(r"\brecords?\b", re.IGNORECASE)
+
 _PY_ARTIFACT_RE = re.compile(r"\b[A-Za-z_][\w./-]*\.py\b")
 
 # THE RECORDED PER-ROW WAIVER MARKER: `recorded waiver: <reason>`, written in the
@@ -1021,7 +1055,8 @@ _PY_ARTIFACT_RE = re.compile(r"\b[A-Za-z_][\w./-]*\.py\b")
 #
 # NOTE: `form_findings` does not itself suppress on this marker — a recorded
 # one-`shall` waiver's finding still fires, accepted knowingly. The artifact
-# advisories are its readers.
+# advisories are its readers, and so is the absolute-term rule in the sibling
+# `absolute_terms.py`, which imports this pattern rather than restating it.
 _WAIVER_RE = re.compile(r"recorded waiver:", re.IGNORECASE)
 
 # The declared SR->direct-LLR fan-out bound (re-tier v2 R3). A DIAL of the

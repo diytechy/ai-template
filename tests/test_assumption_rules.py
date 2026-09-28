@@ -880,6 +880,19 @@ def test_an_input_inside_the_repository_passes(rules, name):
     assert rules.observation_tc_findings([_obs(Inputs=name)]) == ([], [])
 
 
+@pytest.mark.parametrize("name", ["SR-184", "LLR-233", "TC-055", "SN-043", "DA-001"])
+def test_a_registry_row_id_is_a_legal_declared_input(rules, name):
+    """TC-276: an input may name a registry row by its id rather than a file,
+    the row's cells being what the judgment reads. An id is inside the
+    repository by construction, so it is never judged as an escaping path,
+    alone or beside a path entry."""
+    assert rules.input_escape(name) is None
+    assert rules.observation_tc_findings([_obs(Inputs=name)]) == ([], [])
+    assert rules.observation_tc_findings(
+        [_obs(Inputs="docs/test/inspection-procedures.md;" + name)]
+    ) == ([], [])
+
+
 @pytest.mark.parametrize("policy", ["sampled", "monitored"])
 def test_both_sampling_policies_pass(rules, policy):
     assert rules.observation_tc_findings([_sampled(Sampling=policy)]) == ([], [])

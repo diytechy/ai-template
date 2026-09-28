@@ -2008,6 +2008,7 @@ def backlink_report(src_roots, root, exts=BACKLINK_EXTS, registry=LLR_REGISTRY):
 # commit taken once that class reaches zero. Missing files and stale exclusions
 # are already delivered and gated by the dogfood/bootstrap checks, so they gate
 # here too (they stand at zero, or those checks are already red).
+# Implements: SR-163, LLR-276
 MAPPING_FINDING_POLICY = {
     "missing_file": "gate",
     "stale_entry": "gate",
@@ -2041,7 +2042,10 @@ def resolve_requirement_reference(ref, sr_by_id, sn_ids):
     """`None` when `ref` names a live system requirement whose stakeholder-need
     references resolve to at least one live need; otherwise a short reason the
     reference does not resolve. The SR-163 file→requirement→need join, stated
-    once so the checker and its TC read it the same way."""
+    once so the checker and its TC read it the same way.
+
+    Implements: SR-163, LLR-276
+    """
     ref = (ref or "").strip()
     if not ref:
         return "carries no reference"
@@ -2123,6 +2127,8 @@ def mapping_purpose_findings(
       unresolved_reference — a reference that does not resolve SR → live need.
       missing_file         — a declared destination that is absent and not excluded.
       stale_entry          — a declared exclusion whose destination is now present.
+
+    Implements: SR-163, LLR-276
     """
     entries = list(entries)
     absences = dict(declared_absences)
@@ -2164,7 +2170,10 @@ def mapping_purpose_report(findings, policy=MAPPING_FINDING_POLICY):
     """`(lines, ok)` — the per-finding report and whether the inventory passes.
     `ok` is False exactly when a finding's class is policied `gate`; warn-classed
     findings (unresolved references, unmapped files) are reported and counted but
-    never fail the run, so the burn-down is visible without a flag day."""
+    never fail the run, so the burn-down is visible without a flag day.
+
+    Implements: SR-163, LLR-276
+    """
     counts = {}
     lines = []
     for cls, dst, detail in findings:

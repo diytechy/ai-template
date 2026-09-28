@@ -254,6 +254,8 @@ try:
     from assumption_rules import observation_evidence_findings
     from assumption_rules import assumption_chain
     import record_observation
+    from absolute_terms import absolute_advisories, absolute_report_lines
+    from absolute_terms import absolute_summary
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -304,6 +306,8 @@ except ImportError:  # pragma: no cover - in-process fallback
     from assumption_rules import observation_evidence_findings
     from assumption_rules import assumption_chain
     import record_observation
+    from absolute_terms import absolute_advisories, absolute_report_lines
+    from absolute_terms import absolute_summary
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -5049,6 +5053,7 @@ class Findings:
     provenance_advis: list = field(default_factory=list)
     sr_fanout_advis: list = field(default_factory=list)
     verif_coherence_advis: list = field(default_factory=list)
+    absolute_advis: list = field(default_factory=list)
     budget_findings: list = field(default_factory=list)
     module_findings: list = field(default_factory=list)
     component_findings: list = field(default_factory=list)
@@ -5638,6 +5643,9 @@ def analyze(reg, args):
     # and reporting it under the acceptance-criteria counter would mis-name it
     # (it scans Requirement and Rationale too). Never joins a failure set.
     verif_coherence_advis = verification_coherence_advisories(srs)
+    # Warn-only, its own pipe (never the ac-advisories counter): open-world
+    # absolutes in needs, SRs and LLRs; absolute_terms states the predicate.
+    absolute_advis = absolute_advisories(reg.sn_needs, srs, llrs)
 
     # Drafted artifacts (derived-gate model §3): the rows exempted from the
     # child-completeness orphan rules + the --require-verified criterion. Listed
@@ -5665,6 +5673,7 @@ def analyze(reg, args):
         provenance_advis=provenance_advis,
         sr_fanout_advis=sr_fanout_advis,
         verif_coherence_advis=verif_coherence_advis,
+        absolute_advis=absolute_advis,
         budget_findings=budget_findings,
         module_findings=module_findings,
         component_findings=component_findings,
@@ -5945,6 +5954,7 @@ def render_report(reg, findings, args, forest):
         if not verif_coherence_advis
         else [f"- {f}" for f in verif_coherence_advis]
     )
+    lines += absolute_report_lines(findings.absolute_advis)
     lines += ["", "## Fan-out advisories (warn-only)", ""]
     lines += (
         ["None. No SR's direct-LLR fan-out exceeds the declared bound."]
@@ -6147,6 +6157,7 @@ def render_console(reg, findings, args, out, html_out):
         + provenance_advis
         + sr_fanout_advis
         + verif_coherence_advis
+        + absolute_summary(findings.absolute_advis)
         + watermark_advis
     ):
         print(f"WARNING (advisory): {a}")

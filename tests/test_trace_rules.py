@@ -1298,7 +1298,10 @@ def test_the_two_tiering_detectors_warn_but_never_gate():
     def ns(strict=False, strict_integrity=False):
         return argparse.Namespace(strict=strict, strict_integrity=strict_integrity)
 
-    for attr in ("sr_artifact_advis", "sr_fanout_advis"):
+    # The absolute-term advisory rides the same warn-first ruling: the live
+    # registries trip it by the hundred (its positive half through
+    # `trace.analyze` is pinned in tests/test_absolute_terms.py).
+    for attr in ("sr_artifact_advis", "sr_fanout_advis", "absolute_advis"):
         loud = _findings_stub(trace, **{attr: ["SR-101 tripped the detector"]})
         # Under the LOUDEST flag the kit has, and under the always-on integrity
         # floor, and with no flag at all: still 0.

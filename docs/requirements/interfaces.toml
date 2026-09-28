@@ -2151,3 +2151,14 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """No tie-back: the argv comes in from the person recovering or completing a merge, and the frame declares no inbound crossing for an invocation. The merge slot runs the same intake through the importer seam of the mint, with the outcomes it reads off the merged branch."""
+
+[interface.IF-252]
+rationale = """The absolute-term rule carries its own vocabulary tables and tokenization, so it sits beside the text rules as a pure sibling the checker composes and stays its only caller; drawing the seam here keeps the checker growing by composition lines alone while the rule stays testable on in-memory rows, and keeps the text-rule module from growing past its size pin."""
+owner = "scripts/absolute_terms"
+requestors = ["scripts/trace"]
+channel = "call"
+data = "advisory: absolute_advisories(needs, srs, llrs), one per row and cell; absolute_summary and absolute_report_lines; absolutes(cell); ABSOLUTE_CELLS"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """source - absolute_terms consumes NOTHING by design: rows in, advisories out, with no I/O, no git and no filesystem, reading only the waiver marker the text rules declare."""

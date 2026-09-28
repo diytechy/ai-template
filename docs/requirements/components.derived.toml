@@ -18,8 +18,8 @@
 
 [derived]
 components = 4
-design_rows = 246
-seam_rows = 200
+design_rows = 249
+seam_rows = 201
 requirements_placed = 108
 requirements_unplaced = 6
 seams_unplaced = 0
@@ -176,6 +176,8 @@ llr_refs = [
   "LLR-259",
   "LLR-260",
   "LLR-263",
+  "LLR-274",
+  "LLR-276",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -199,6 +201,7 @@ modules = [
   "project-trajectory/registries/stakeholder-needs.template.toml",
   "project-trajectory/registries/system-requirements.template.toml",
   "project-trajectory/registries/test-cases.template.toml",
+  "project-trajectory/scripts/absolute_terms.py",
   "project-trajectory/scripts/acceptance_record.py",
   "project-trajectory/scripts/assumption_rules.py",
   "project-trajectory/scripts/baseline_snapshot.py",
@@ -263,6 +266,7 @@ seam_internal_refs = [
   "IF-217",
   "IF-220",
   "IF-226",
+  "IF-252",
 ]
 seam_boundary_refs = [
   "IF-001",
@@ -897,6 +901,7 @@ llr_refs = [
   "LLR-203",
   "LLR-208",
   "LLR-258",
+  "LLR-275",
 ]
 hat_refs = [
   "ACCESSIBILITY",

@@ -6192,6 +6192,36 @@ the merge owed are never minted. A direct caller of `consolidate.
 consolidation_successors` or `reabsorption_refusal` now passes the spec bodies
 (`consolidate.spec_bodies(root)`).
 
+### An absolute-term advisory over needs, requirements and design rows, and no method-coherence advisory on an inspected Critique record [since 0ded5c77]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `trace.py` reports a new warn-only class, "Absolute-term
+advisories", from the new sibling `scripts/absolute_terms.py`: an absolute
+("never", "always", "every", "each", "all", "any", or a clause-opening "no",
+"none", "nothing") in a need's `need` or `acceptance`, a requirement's
+`requirement` or `acceptance_criteria`, or a design row's `detail`, whose domain
+names nothing from a closed list (a registry and its row nouns, an id, a
+declared set). Test cases are not scanned. The report lists one line per row
+and cell; the console prints a single count line; the exit code never changes.
+`recorded waiver: <reason>` in the tier's reason cell (`why`, `rationale`)
+silences the row, the same marker the artifact-naming advisories read. The
+tokenization and word lists are documented in the module. Separately, the
+verification-coherence advisory no longer fires on an `Inspection` requirement
+whose `requirement` subject, the text before its `shall`, names a Critique
+record (both "Critique" and "record"), since a rubric or verdict named there is
+what is inspected; any other Inspection row still warns. The spine-authoring skill gains question §2(d2), whether an
+absolute's domain is really closed.
+
+**What to do.** Re-sync `scripts/absolute_terms.py` (new; `trace.py` imports it,
+so copy both or the checker ImportErrors), `scripts/trace.py`,
+`scripts/trace_text.py`, `scripts/bootstrap.py` and
+`skills/spine-authoring/SKILL.md`. Nothing gates, so no row must change, but the
+first run on a registry written before the rule lists many rows: read the list
+as a worklist, and for each absolute name its domain, bound it, carry it as an
+assumption row, or record a waiver. A golden test over `trace.py`'s report
+gains the new section.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

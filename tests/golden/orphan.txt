@@ -103,6 +103,10 @@ None. No living spine cell carries a citation frame.
 
 None. No requirement states two verification methods.
 
+## Absolute-term advisories (warn-only)
+
+None. No absolute names an open domain.
+
 ## Fan-out advisories (warn-only)
 
 None. No SR's direct-LLR fan-out exceeds the declared bound.

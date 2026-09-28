@@ -66,7 +66,7 @@ What it creates in the destination:
     docs/knowledge/README.md                  <- knowledge/README.template.md
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.toml                  <- registries/test-cases.template.toml
-    scripts/trace.py, trace_text.py, spine_rules.py, derive_stage.py, record_test_evidence.py, record_observation.py, check.py, check_flows.py, check_docs.py, check_perf.py,
+    scripts/trace.py, trace_text.py, absolute_terms.py, spine_rules.py, derive_stage.py, record_test_evidence.py, record_observation.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_coverage.py, check_readability.py, check_complexity.py, flag_axis.py, check_test_first.py, check_assumption_gate.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py, gen_components.py
     scripts/traj_display.py, traj_parse.py, traj_status.py
@@ -2049,6 +2049,10 @@ MAPPING = [
     # scaffold missing it gets an ImportError on the first check. Copied
     # together, always.
     ("scripts/trace_text.py", "scripts/trace_text.py"),
+    # The absolute-term rule, trace_text.py's pure sibling: trace.py imports it
+    # unguarded and it imports trace_text.py's waiver marker, so the two ship
+    # together or the first check ImportErrors.
+    ("scripts/absolute_terms.py", "scripts/absolute_terms.py", "SR-157"),
     # OI-12: the spine's registry CARRIER — the one home
     # for the TOML tier tables, the key->column vocabulary and both readers.
     # Imported by trace.py and check_trajectory.py (and by the rest of the
@@ -2454,6 +2458,8 @@ def delivery_inventory():
     The physical walk is what makes a deleted MAPPING row observable. Generated
     outputs name their generator source so the purpose checker can inherit that
     source's MAPPING reference instead of inventing a second purpose cell.
+
+    Implements: SR-163, LLR-275
     """
     sources = {
         p.relative_to(KIT).as_posix()

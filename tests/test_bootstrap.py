@@ -202,6 +202,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/pending.py",
         "scripts/coherence.py",
         "scripts/frame_rules.py",
+        "scripts/absolute_terms.py",
         "scripts/assumption_rules.py",
         "scripts/acceptance_record.py",
         "scripts/agent_session.py",

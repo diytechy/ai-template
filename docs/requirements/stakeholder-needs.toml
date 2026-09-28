@@ -120,7 +120,7 @@ acceptance = """The strict traceability check reports **zero orphans** across th
 status = "Approved"
 stakeholder_refs = ["STK-02"]
 tags = ["templates", "scripts"]
-need ="""A team in any language can use this process: it is **stack-agnostic**, and a non-Python project adopts it by re-pointing the harness at that stack's tools, with Python only as the reference."""
+need ="""A team can use this process on a stack whose tools it declares in a stack profile: it is **stack-agnostic**, and a non-Python project adopts it by re-pointing the harness at that stack's tools, with Python only as the reference."""
 why = "*Stack-agnostic with Python-first reference scripts.*"
 priority = "M"
 acceptance = """The toolchain is declared once, in a single declared configuration file; a stack swap edits that declaration, not a kit script; a non-Python bootstrap profile omits Python-only artifacts."""
@@ -162,7 +162,7 @@ acceptance = """The declared bar is green before a change lands. The Full-suite 
 [need.SN-008]
 status = "Approved"
 stakeholder_refs = ["STK-03"]
-need = """A reader can believe a **pass verdict**: gates are **honest**, and a pass verdict never hides a skipped check, a stub, or an unmet criterion."""
+need = """A reader can believe a **pass verdict**: gates are **honest**, and a pass verdict never hides a skipped check, a stub, or an unmet declared criterion."""
 why = """*Trust what ships*; a false pass is worse than a failure. The verdict is named as a verdict — the word PASS — never by hue: a colour word as the only name for the system's most important signal does not exist for a substantial class of readers, and the kit's console output carries zero ANSI colour in any case."""
 priority = "M"
 acceptance = """The harness **fails** (not skips) on a missing required tool — the explicitly-requested `--lenient` local mode is the one sanctioned degrade to SKIP (SR-006), never a CI/gate default; the no-stub detector and the privacy/secrets floor run at their declared gate."""
@@ -171,7 +171,7 @@ acceptance = """The harness **fails** (not skips) on a missing required tool —
 status = "Approved"
 stakeholder_refs = ["STK-02"]
 tags = ["personal-data", "scripts"]
-need ="""A team is protected from publishing a **secret or private identity**: it is caught before it publishes, in **every** repo, without extra setup."""
+need ="""A team is protected from publishing a **secret or private identity**: in a repository that adopts this process, it is caught before it publishes, without extra setup."""
 why = "Trust + safety; a leaked key or PII is near-irreversible once pushed."
 priority = "M"
 acceptance = """The always-on secrets floor scans every commit's staged diff, message, and outgoing range; the privacy gate adds PII/identity classes when the `privacy_check` dial is on."""
@@ -232,7 +232,7 @@ tags = ["unattended", "loop"]
 need ="""**With no human curating what comes next**, a configured LLM agent implements toward the vision — fully autonomously where enabled — deriving its own next work from the repository's tracked state. (The launcher that starts it is SN-034's obligation; this need is the self-direction.)"""
 why = """Walk-away autonomy is the whole promise of the unattended layer: if a human must hand-maintain a next-step pointer, the loop is attended in practice and the pointer rots against the registry it paraphrases. Extends SN-006 (a *resumable* unattended run) into a *self-directing* one."""
 priority = "S"
-acceptance = """A plain launch derives what to do next from the tracked WI DAG plus Git — never from prose or a hand-maintained pointer, and never from predefined tracks; the ready frontier is ordered deterministically, so two readers of the same registry dispatch the same work; the status surface a human reads is generated, never hand-copied."""
+acceptance = """A plain launch derives what to do next from the tracked WI DAG plus Git alone; the ready frontier is ordered deterministically, so two readers of the same registry dispatch the same work; the status surface a human reads is generated from that tracked state."""
 
 [need.SN-026]
 status = "Approved"

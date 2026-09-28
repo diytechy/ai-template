@@ -182,3 +182,54 @@ The verdict's two side findings were folded, not filed. WI-667's gate has no
 the two lanes at once" sentence was replaced. **Open count after: 19**
 (18 queued, 1 deferred): the kit's machinery closed its own judgement, and
 the seven rows it minted are real owed work. None of them is a consolidation.
+
+### The remaining groups, first wave: WI-620, WI-651, WI-616, WI-657 (part 4)
+
+Four builders at once, each in its own worktree cut from 0ded5c77, with
+disjoint surfaces: WI-615 waits on WI-616 (both edit the spine-authoring
+skill), and WI-655 waits on WI-616 by the WI-689 verdict. The spine
+adjudications WI-682 and WI-683 wait for the adjudication rows this wave's
+merges mint, so that they are judged together in one sitting and one act.
+
+### WI-616 lands: absolutes, the check then the sweep, with batch B's returns
+
+One builder, three Codex Sol rounds (wave-5 rulings 11 to 18, and 23):
+[sol-wi616.md](../reviews/2026-09-27-wave5/sol-wi616.md),
+[sol-wi616-fix.md](../reviews/2026-09-27-wave5/sol-wi616-fix.md),
+[sol-wi616-fix2.md](../reviews/2026-09-27-wave5/sol-wi616-fix2.md).
+The absolutes check (`absolute_terms.py`) scans needs, SRs and LLRs,
+warn-only. The sweep record, `docs/plans/2026-09-28-absolutes-sweep.md`,
+bounded SN-003, SN-008 and SN-009, moved SN-025's mechanisms down to SR-148,
+and needed no SR rewrite. Batch B's six returned rows are re-authored and
+still Drafted. LLR-203 and LLR-233 are amended in place.
+fig: `python project-trajectory/scripts/trace.py --root .` console line, "278 absolute-term advisories (SN 30, SR 98, LLR 150)", at the builder's tip 3241f337.
+
+The Sol rounds found, among others: approved LLR-203 made false by the new
+SR-163 design rows (amendment granted, ruling 11); a blanket Inspection
+exemption that would hide a real two-methods row (made subject-aware,
+rulings 13 and 18); three sweep rows misclassified; and a vacuous TC-276. For
+the owner: the four SN amendments go to your brief, once WI-651 puts needs in
+the drift comparison. SN-025's acceptance lost its "never from prose, never
+predefined tracks" wording (SR-148 carries it), which bears on the batch-B
+adjudicator's advice to widen SN-025 for SR-220. **Open count: 18**
+(17 queued, 1 deferred).
+
+The merge composed two reds the builder's modules could not see. First,
+`trace.analyze` was 242 lines against its 240-line composer budget
+(tests/test_trace_coherence.py), from WI-616's four-line comment. The
+coordinator trimmed the comment to two lines; nothing was re-stamped.
+Second, the smoke membership was 1697 against its 1690 ceiling, from real
+in-process growth in WI-679 and WI-616. It was re-stamped 1690 -> 1765 in
+`docs/stack.ini` with its reason; the 60 s budget stands. Wave-5 ruling 23's
+docstring correction is in the same commit.
+
+Commit bar at WI-616: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0 (drafts 18), approve-modified current, `gen_open_items`
+current, `check_docs --stale` 0 broken, smoke 1694 passed / 3 skipped,
+**seconds 28.5 s within 60 s**. The touched slow modules plus both ratchets
+(test_trace_rules, test_trace_golden, test_mapping_purpose_cli,
+test_bootstrap, test_trace_briefs, test_check_complexity_cli,
+test_baseline_drift, test_module_size_ratchet, test_complexity_ratchet,
+test_resync_pack, test_frame_context, test_rule_sync, test_assumption_rules),
+run by the coordinator: 411 passed. `check_complexity --mode enforce`: OK,
+204 rows. Trunk before this squash: 0ded5c77.

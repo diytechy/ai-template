@@ -28,8 +28,11 @@ is edited. Id prefixes and rung names (`DevStg-LLReqs`) are unchanged here; the
 prefix rename is a separate deferred item, taken last. `RESYNC_PACK.md` §4 is
 the concept-rename table, and `check_vocab` may need the new words.
 
+Folded 2026-09-28 (WI-616's landing, the fifth coordinator session): WI-616 extended the absolutes check from acceptance criteria to the whole matrix (needs, SRs and LLRs, never TCs; `project-trajectory/scripts/absolute_terms.py`, the spine-authoring skill's §2(d2) closed-domain question), but PROCESS.md §4 still states the absolutes rule for acceptance criteria only. WI-616 left it alone so as not to collide with this row's PROCESS.md sitting. Restate §4's rule to the matrix the check now covers, with its one waiver grammar (`recorded waiver:`), inside this sitting's byte budget.
+
 ## Done-when
 
+- PROCESS.md §4 states the absolutes rule over the matrix `absolute_terms.py` checks (needs, SRs, LLRs; never TCs), not acceptance criteria alone.
 - PROCESS.md carries the glossary lines, including the ordinary-"expectation"
   note.
 - Kit docs, prompts and dashboard labels call SR rows system specifications and

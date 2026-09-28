@@ -2,13 +2,53 @@
 id = "WI-616"
 title = "Absolutes: extend the check to needs, SRs and LLRs, then run the OI-37 sweep with it and route the rewrites for approval (S1)"
 workstream = "scripts"
-specref = "docs/plans/2026-09-23-owner-notes-spine-sessions-and-tests.md#11-absolutes-note-0"
+specref = ""
 buildtier = "strong"
 priority = 3
 safety_class = "ordinary"
 needs = []
 supersedes = "WI-617"
 +++
+
+## Deliverable
+
+Built by one builder in three Codex Sol rounds (wave-5 arbitration rulings
+11 to 18, and 23), SOUND at 3f9bd487.
+
+- **The check.** `project-trajectory/scripts/absolute_terms.py` (new, a pure
+  sibling of trace_text) scans needs, SRs and LLRs, never TCs. It is
+  warn-first (never the exit code, pinned in the never-gates regression) and
+  has one waiver grammar, `recorded waiver:`. Its tokenization and
+  suppression predicate are documented where the check lives: clauses end at
+  a semicolon, colon, parenthesis or sentence stop, and a comma cuts a clause
+  into segments. Tests cover a closed-domain absolute (suppressed), an
+  open-world one (warned) and a waived one. The spine-authoring skill gains
+  the closed-domain question (§2(d2)), kit master and this repo's copy
+  byte-identical. Live console: 278 absolute-term advisories (SN 30, SR 98,
+  LLR 150), so precision on the requirement tier is low.
+- **The sweep** is recorded in `docs/plans/2026-09-28-absolutes-sweep.md`.
+  Of 48 need absolutes: 33 closed, 4 not a promise over a domain, 3 bounded
+  by rewrite (SN-003, SN-008, SN-009), 3 mechanisms moved down a tier
+  (SN-025; SR-148 carries them), 5 premises. Of 166 requirement absolutes:
+  160 closed, 4 not a promise, 2 premises. No SR cell needed bounding. The
+  premises are listed for C2 (WI-655), not written into it.
+- **Amended in place, status left Approved:** SN-003, SN-008, SN-009 and
+  SN-025 (needs, for the owner's brief); LLR-203 (SR-163's mechanisms are now
+  owned by LLR-275 and LLR-276); LLR-233 (a registry row id is a legal
+  declared input).
+- **Batch B's returns**, re-authored and still Drafted: LLR-205, LLR-206,
+  LLR-262, TC-201, TC-203 and TC-204 (split: the CLI bite moves to a new Full
+  TC-274).
+- **Ride-alongs.** SR-163's checker has design rows (LLR-275, LLR-276). The
+  SR-184 Critique-advisory false positive is fixed: an Inspection row is
+  exempt only when its requirement's subject, the text before `shall`, names
+  a Critique record. New Drafted rows: LLR-274 to LLR-276, TC-273 to TC-276,
+  IF-252.
+
+Not this row's, recorded for others. PROCESS.md §4 still states the
+absolutes rule for acceptance criteria only; that is folded into WI-615.
+Needs are not in the drift comparison until WI-651 lands, so the four SN
+amendments surface on the owner's brief then.
 
 ## Context
 
@@ -33,7 +73,7 @@ sweep is its own item.
 Folded 2026-09-27 (spine-acts batch B's close, the fifth coordinator session): WI-681's
 first-approval adjudication RETURNED six rows on this row's surface (spine text, routed to a
 spine-acts batch), and its `## Dispositions` draft was folded here instead of minted. The fixes are
-stated in that draft ([`docs/archive/work/complete/WI-681-adjudicate-batch-b-first-approvals.md`](../../archive/work/complete/WI-681-adjudicate-batch-b-first-approvals.md),
+stated in that draft ([`docs/archive/work/complete/WI-681-adjudicate-batch-b-first-approvals.md`](WI-681-adjudicate-batch-b-first-approvals.md),
 items 1, 2, 3 and 5), its verdict (`docs/reviews/wi-681-adjudicate-batch-b-first-approvals/001-ADJUDICATE-1ea526a.md`) and wave-5 arbitration rulings 2 and 3
 (`docs/reviews/2026-09-27-wave5/ARBITRATION.md`). LLR-205's rationale ends in a sentence stating its
 own status and the authority that will sign it, calls itself "a live, dated finding" and cites a dated

@@ -1,0 +1,7 @@
+<!-- Codex Sol confirmation of WI-616's third round, 3f9bd487; ruling 23. Links re-rooted from the removed worktree. -->
+
+3f9bd487 SOUND
+
+- **[minor]** New: the test module introduction still broadly says an Inspection row naming a rubric or verdict describes what is inspected, without limiting that statement to a Critique-record subject ([test_verification_coherence.py:6](../../../tests/test_verification_coherence.py)). The executable tests are correctly bounded.
+
+Confirmed: the implementation reads only text before the first `shall` and rejects no-`shall` exemptions ([trace_text.py:201](../../../project-trajectory/scripts/trace_text.py)); live SR-184 names the Critique acceptance record in that subject and remains silent ([system-requirements.toml:1042](../../../docs/requirements/system-requirements.toml)); TC-275 specifies both counterexamples ([test-cases.toml:2739](../../../docs/test/test-cases.toml)), implemented at [test_verification_coherence.py:55](../../../tests/test_verification_coherence.py) and [test_verification_coherence.py:67](../../../tests/test_verification_coherence.py). The implementation docstring ([trace_text.py:248](../../../project-trajectory/scripts/trace_text.py)), audit row ([enforcement-audit.md:55](../../../docs/enforcement-audit.md)), and RESYNC entry ([RESYNC_PACK.md:6195](../../../project-trajectory/RESYNC_PACK.md)) agree. Direct probes passed; pytest could not initialize because the read-only environment has no writable temporary directory.
