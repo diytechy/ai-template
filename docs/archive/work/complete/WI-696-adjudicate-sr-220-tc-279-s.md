@@ -1,14 +1,22 @@
 +++
-id = "WI-683"
-title = "adjudicate: LLR-264, LLR-265, SR-220, TC-260, TC-261 - spine row(s) authored Drafted on merged trunk 464dc7a..77fb093 await a FIRST APPROVAL; read the whole chain, then approve (flip + snapshot) or return with findings"
+id = "WI-696"
+title = "adjudicate: SR-220, TC-279 - spine row(s) authored Drafted on merged trunk 4719865..bcf1e9a await a FIRST APPROVAL; read the whole chain, then approve (flip + snapshot) or return with findings"
 workstream = "process"
 sr_refs = ["SR-220"]
-specref = "docs/requirements/system-requirements.toml"
-buildtier = "strong"
+specref = ""
+buildtier = "medium"
 safety_class = "adjudication"
 brief = "first-approval"
-adjudicates = ["LLR-264", "LLR-265", "SR-220", "TC-260", "TC-261"]
+adjudicates = ["SR-220", "TC-279"]
 +++
+
+## Deliverable
+
+Ruled in spine-acts batch C by an independent Fable adjudicator from the kit's own brief, cross-reviewed by Codex Sol over four rounds (wave-5 rulings 37, 38, 44, 45). The verdict (`docs/reviews/wi-696-adjudicate-sr-220-tc-279-s/001-ADJUDICATE-1d84d77c.md`) ends:
+
+    OUTCOME: APPROVE rows=1
+
+The act (ledger seq 5) was narrowed to the LLR and TC registries (ruling 38): 31 rows approved, 9 amendment rows re-attested. The SR registry was not copied, so SR-220, SR-223 and SR-224 stay Drafted, and the SR-tier amendments (WI-695's cells, SR-178) stay drifted and visible for a later act. Batch C's returns are one follow-up, drafted in WI-695's `## Dispositions` and minted at this merge.
 
 ## Context
 
@@ -16,11 +24,8 @@ Derived from `staged_drafted_rows` on the merged commit (§A5.2).
 These spine rows are BELOW approval and no act has blessed them.
 Each line: registry row / what the lane did.
 
-- SR-220 amended in `docs/requirements/system-requirements.toml` (AcceptanceCriteria, Requirement)
-- LLR-264 authored in `docs/requirements/low-level-requirements.toml`
-- LLR-265 authored in `docs/requirements/low-level-requirements.toml`
-- TC-260 authored in `docs/test/test-cases.toml`
-- TC-261 authored in `docs/test/test-cases.toml`
+- SR-220 amended in `docs/requirements/system-requirements.toml` (Boundary-Refs, DA-Refs)
+- TC-279 authored in `docs/test/test-cases.toml`
 
 Outcomes (owner ruling 2026-09-01): read each row's WHOLE CHAIN — the
 parent SR, the sibling LLRs, the test cases — and either APPROVE (move
@@ -48,5 +53,5 @@ Advisory registry joins (WI-388; never gating):
 - IF-050 scripts/derive_stage -> scripts/check;scripts/agent_common;scripts/check_trajectory;scripts/traj_parse;scripts/intake: file docs/stage — key = value fields plus a sha256 fingerprint of the declared inputs
 - IF-053 scripts/schedule <- scripts/census;scripts/dispatch;scripts/intake: call load_wis · _load, frontier, kind_of · SAFETY_CLASSES — the symbols census, dispatch and intake take; no write…
 - IF-090 scripts/intake <- scripts/integrate;scripts/dispatch;scripts/agent_loop: call intake_after_merge (integrate) · mint_gap_rows (dispatch) · context_block (agent_loop, advisory)
-- IF-091 scripts/acceptance_record <- scripts/intake;scripts/integrate: call staged_spine_amendments and staged_drafted_rows records (intake) · the lane_approval_refusal text (integrate)…
+- IF-091 scripts/acceptance_record <- scripts/intake;scripts/integrate: call staged_spine_amendments and staged_drafted_rows records (intake) · the merge_approval_refusal text, the amend…
 - IF-092 scripts/wi_convert <- scripts/intake: call wi_convert.COLUMNS (the 19-column row schema) and write_spec_file; ConvertError is the mint's refusal input

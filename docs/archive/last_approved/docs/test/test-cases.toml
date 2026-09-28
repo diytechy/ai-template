@@ -1668,9 +1668,9 @@ phase = 5
 [test.TC-167]
 verifies = ["SR-140", "LLR-173", "IF-123", "IF-128", "IF-129"]
 level = "Integration"
-method = """Run the record half of the baseline-snapshot suite over real temp repos - the half TC-153 does not cover, which is drift. (a) VACUITY: with no snapshot directory every reader is vacuous by ABSENCE, load_all returns None rather than {}, and the mechanical flip is a no-op before the first signing. (b) THE BOOTSTRAP GUARD: copy_live REFUSES to create the directory without seed=True, and --seed is proven UNREACHABLE from every loop module, hook and check step, so the first snapshot can only ride the owner's signing commit. (c) THE COPY CONTRACT: the copy is byte-for-byte and preserves repo-relative paths, and a stale other-carrier file for the same stem is DELETED in the same act (or the next resolve raises "exists under BOTH carriers"). (d) UNANCHORED, BOTH DIRECTIONS: an approved row absent from the snapshot is reported, an approval whose snapshot copy reads BELOW approval is reported (the case that is only decidable because the copy keeps each row's own Status cell), a registry missing from an EXISTING snapshot is reported, and an unparseable snapshot RAISES rather than reading as empty. (e) The snapshot-directory constant has ONE value in both homes, and the `intake.py snapshot` CLI seeds then refreshes. The MIRROR INVARIANT half is TC-173's, so it is not covered twice."""
+method = """Run the record half of the baseline-snapshot suite over real temp repos - the half TC-153 does not cover, which is drift. (a) VACUITY: with no snapshot directory every reader is vacuous by ABSENCE, load_all returns None rather than {}, and the mechanical flip is a no-op before the first signing. (b) THE BOOTSTRAP GUARD: copy_live REFUSES to create the directory without seed=True, and --seed is proven UNREACHABLE from every loop module, hook and check step, so the first snapshot can only ride the owner's signing commit. (c) THE COPY CONTRACT: the copy is byte-for-byte and preserves repo-relative paths, and a stale other-carrier file for the same stem is DELETED in the same act (or the next resolve raises "exists under BOTH carriers"). (d) UNANCHORED, BOTH DIRECTIONS: an approved row absent from the snapshot is reported, an approval whose snapshot copy reads BELOW approval is reported (the case that is only decidable because the copy keeps each row's own Status cell), each as true of an approved need and an approved stakeholder as of a spine row, a registry missing from an EXISTING snapshot is reported, and an unparseable snapshot RAISES rather than reading as empty. (e) The snapshot-directory constant has ONE value in both homes, and the `intake.py snapshot` CLI seeds then refreshes. The MIRROR INVARIANT half is TC-173's, so it is not covered twice."""
 tier = "Full"
-expected = "Satisfies SR-140 AcceptanceCriteria via the LLR-173 detail contract, and covers the IF-123 provider seam with the two seams this module itself consumes (IF-128 the carrier, IF-129 the comparison basis). The three CONSUMPTION rows IF-124/125/126 are the consumers' own to cover; IF-124 rides TC-161, and IF-125/126 are uncited today"
+expected = "Satisfies SR-140 AcceptanceCriteria via the LLR-173 detail contract, and covers the IF-123 provider seam with the two seams this module itself consumes (IF-128 the carrier, IF-129 the comparison basis). The three CONSUMPTION rows IF-124/125/126 are the consumers' own to cover; IF-124 rides TC-161, IF-126 rides TC-271, and IF-125 is uncited today"
 automated = "Yes"
 evidence = "tests/test_baseline_snapshot.py"
 status = "Approved"
@@ -1862,6 +1862,7 @@ automated = "Yes"
 evidence = """tests/test_handback.py; tests/test_kitlib_station.py; tests/test_import_layers.py::test_no_new_import_cycle; tests/test_import_layers.py::test_the_graph_sees_imports_inside_function_bodies"""
 status = "Approved"
 phase = 5
+
 [test.TC-194]
 verifies = ["SR-168", "LLR-198"]
 level = "Integration"
@@ -2004,6 +2005,7 @@ automated = "Yes"
 evidence = """tests/test_trace_coherence.py::test_the_orphan_rules_emit_sr_then_llr_then_tc_then_sn; tests/test_trace_coherence.py::test_a_drafted_row_stands_the_child_rules_down_but_not_its_sn_link; tests/test_trace_coherence.py::test_off_spine_backlinks_resolve_against_ids_and_llr_module_paths; tests/test_trace_coherence.py::test_component_membership_is_checked_from_the_primitive_side; tests/test_trace_coherence.py::test_the_knowledge_ref_resolves_only_the_pack_prefix; tests/test_trace_coherence.py::test_the_phase_scope_always_covers_the_foundation_phase; tests/test_trace_coherence.py::test_the_status_criterion_defers_out_of_phase_and_stands_down_for_drafted; tests/test_trace_coherence.py::test_registries_is_frozen_and_total; tests/test_trace_coherence.py::test_the_loader_is_the_only_construction_site_of_registries; tests/test_trace_coherence.py::test_findings_list_defaults_are_per_instance; tests/test_trace_coherence.py::test_the_two_post_analyze_fields_are_declared_not_conjured; tests/test_trace_coherence.py::test_analysis_flags_takes_a_record_or_a_namespace; tests/test_trace_coherence.py::test_no_caller_forges_an_argparse_namespace_for_the_engine; tests/test_trace_coherence.py::test_the_coherence_rules_import_no_sibling_of_scripts; tests/test_trace_coherence.py::test_trace_re_exports_every_moved_name; tests/test_trace_coherence.py::test_analyze_is_a_composer_and_stays_one"""
 status = "Approved"
 phase = 5
+
 [test.TC-198]
 verifies = ["SR-161", "LLR-202"]
 level = "Unit"
@@ -2040,12 +2042,12 @@ phase = 5
 [test.TC-201]
 verifies = ["SR-017", "SR-176", "LLR-205"]
 level = "Integration"
-method = """Drives check_privacy.py's Scanner (secrets floor) and agent_common.py's redact_secrets against a shared sample set, three ways. FIRST, a five-sample driven table: a PEM private-key block now catches on both sides (was floor-catch/redactor-miss); a Bearer token, a short GitHub token and a short API key stay floor-miss/redactor-catch, the three DELIBERATE threshold asymmetries kitlib.secret_classes.SECRET_CLASSES states per class rather than leaving as a side effect of two literals. SECOND, one canonical positive sample per declared class, proving each side's claimed pattern actually reaches its consumer (TOKEN_RES/KEY_RE and _SECRET_RES are comprehensions over the shared table, not hand copies, so a class dropped from a consumer's derivation fails even if the table still looks right). THIRD, a frozen, independent record of every pattern each module compiled BEFORE this table existed, compared by matching behavior (not string equality, since one class's two spellings differ only in a character-class member order proven immaterial) over threshold-straddling probes per class - the regression witness that nothing caught before is caught less after."""
+method = """Drives check_privacy.py's Scanner (secrets floor) and agent_common.py's redact_secrets against a shared sample set, three ways. FIRST, a five-sample decision table: a PEM private-key block is caught by both the floor and the redactor, while a Bearer token, a short GitHub token and a short API key are caught by the redactor alone, the three DELIBERATE threshold asymmetries kitlib.secret_classes.SECRET_CLASSES declares per class rather than leaving as a side effect of two literals. SECOND, one canonical positive sample per declared class, proving each side's claimed pattern reaches its consumer (TOKEN_RES/KEY_RE and _SECRET_RES are comprehensions over the shared table, not hand copies, so a class dropped from a consumer's derivation fails even where the table looks right). THIRD, a frozen, independent pattern record per module, compared by matching behavior (not string equality, since one class's two spellings differ only in a character-class member order proven immaterial) over threshold-straddling probes per class, so no class is caught less than that record catches."""
 tier = "Full"
 expected = "Satisfies SR-017's and SR-176's acceptance for the mechanized classes via the LLR-205 detail contract; asserting one side's list contains the other's is explicitly not the test, since the thresholds differ by recorded decision"
 automated = "Yes"
 evidence = """tests/test_kitlib_secret_classes.py"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-202]
@@ -2062,23 +2064,23 @@ phase = 5
 [test.TC-203]
 verifies = ["SR-183", "LLR-206"]
 level = "Integration"
-method = """Synthetic project-trajectory/scripts/ fixtures under tmp_path, run through check_complexity.py as a subprocess the way an adopter's stack.ini would: --report prints the bare census of every function and exits 0; a census matching a stamped baseline reports OK unchanged and exits 0 under --mode enforce; a function pushed above its entry is reported with the delta and the three sanctioned remedies and exits nonzero under enforce; a function simplified below its entry, and a baselined function that no longer exists, are each reported as an invitation to re-stamp downward and exit nonzero under enforce; a suppression-shaped comment in the fixture source changes no score (there is no inline pragma); repeated --include globs widen the scanned surface; and an absent source directory is vacuously OK. Re-tiered into conftest.SLOW_MODULES because each case pays interpreter startup — the in-process metric is TC-202's."""
+method = """Synthetic project-trajectory/scripts/ fixtures under tmp_path, run through check_complexity.py as a subprocess the way an adopter's stack.ini would: --report prints the bare census of every function and exits 0; a census matching a stamped baseline reports OK unchanged and exits 0 under --mode enforce; a function pushed above its entry is reported with the delta and the three sanctioned remedies and exits nonzero under enforce; a function simplified below its entry, and a baselined function that no longer exists, are each reported as an invitation to re-stamp downward and exit nonzero under enforce; a suppression-shaped comment in the fixture source changes no score (there is no inline pragma); repeated --include globs widen the scanned surface; and an absent source directory is vacuously OK. The module runs at the full tier, each case paying interpreter startup; the in-process metric is TC-202's."""
 tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-206 (parent SR-183) for the CLI modes and exit codes"
 automated = "Yes"
 evidence = "tests/test_check_complexity_cli.py"
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-204]
-verifies = ["SR-163"]
+verifies = ["SR-163", "LLR-275", "LLR-276"]
 level = "Integration"
-method = """The direct test on SR-163: the tolerant reference cell and the four-class checker, proven catching each class on a planted scaffold, and standing green over the real delivered-package universe. THE CELL: bootstrap.mapping_entries() normalizes every MAPPING row to (source, destination, reference), a bare pair surviving as reference None with no flag day, adding and dropping no rows. THE INDEPENDENT UNIVERSE: bootstrap.delivery_inventory() walks every physical kit source and classifies it as a MAPPING source, a reasoned kit-only exclusion, or a conditional materialization; it separately enumerates generator outputs, which inherit their generator source's reference. The real-row end-to-end bite removes process.toml.template -> docs/process.toml from MAPPING in the child process while leaving the source in the package, drives gen_arch_map.main() through --mapping-purpose, and requires a gate-class missing_file report naming the omitted source. THE CHECKER, gen_arch_map.mapping_purpose_findings, driven on one synthetic inventory carrying exactly one defect of each class plus a clean control: a bare pair is reported UNMAPPED; a reference naming no live requirement, or one whose requirement resolves to no live stakeholder need, is reported UNRESOLVED; a declared destination that is absent and unexcluded is reported MISSING; a declared exclusion whose destination has materialized is reported STALE, with the lifecycle marker exempting only a path whose presence is a legal state, and the mapped-present control raising nothing. THE POLICY: unmapped and unresolved are warn-first and missing and stale gate, so a warn-only inventory passes and one gate-class finding fails it. THE STANDING EVIDENCE, over the live package census, MAPPING literal and this repository's real spine: no missing file and no stale exclusion survives (the checker passes), every filled reference resolves SR to a live need, every generated output maps through its generator declaration, and the remaining unmapped warnings expose both unfilled MAPPING rows and unfilled derived/materialized deliveries without a flag day."""
+method = """The direct test on SR-163: the tolerant reference cell and the four-class checker, proven catching each class on a planted scaffold, and standing green over the real delivered-package universe. THE CELL: bootstrap.mapping_entries() normalizes every MAPPING row to (source, destination, reference), a bare pair surviving as reference None with no flag day, adding and dropping no rows. THE INDEPENDENT UNIVERSE: bootstrap.delivery_inventory() walks every physical kit source and classifies it as a MAPPING source, a reasoned kit-only exclusion, or a conditional materialization; it separately enumerates generator outputs, which inherit their generator source's reference. THE CHECKER, gen_arch_map.mapping_purpose_findings, driven on one synthetic inventory carrying exactly one defect of each class plus a clean control: a bare pair is reported UNMAPPED; a reference naming no live requirement, or one whose requirement resolves to no live stakeholder need, is reported UNRESOLVED; a declared destination that is absent and unexcluded is reported MISSING; a declared exclusion whose destination has materialized is reported STALE, with the lifecycle marker exempting only a path whose presence is a legal state, and the mapped-present control raising nothing. THE POLICY: unmapped and unresolved are warn-first and missing and stale gate, so a warn-only inventory passes and one gate-class finding fails it. THE STANDING EVIDENCE, over the live package census, MAPPING literal and this repository's real spine: no missing file and no stale exclusion survives (the checker passes), every filled reference resolves SR to a live need, every generated output maps through its generator declaration, and the remaining unmapped warnings expose both unfilled MAPPING rows and unfilled derived/materialized deliveries without a flag day."""
 tier = "Smoke"
 expected = "Satisfies SR-163 AcceptanceCriteria: the independently enumerated delivered-package universe is diffed against MAPPING plus reasoned exclusions; an omitted real shipped source and each of the four finding classes are reported under the declared warn-versus-gate policy; and a file's purpose maps through a requirement reference that resolves SR to a live stakeholder need, with a generated output inheriting its generator's mapping"
 automated = "Yes"
-evidence = """tests/test_mapping_purpose.py::test_checker_catches_unmapped_file; tests/test_mapping_purpose.py::test_checker_catches_unresolved_reference; tests/test_mapping_purpose.py::test_checker_catches_missing_file; tests/test_mapping_purpose.py::test_checker_catches_stale_entry; tests/test_mapping_purpose.py::test_stale_arm_exempts_the_lifecycle_marker; tests/test_mapping_purpose.py::test_policy_is_warn_first_for_the_reference_classes; tests/test_mapping_purpose.py::test_generated_output_inherits_its_generator_mapping; tests/test_mapping_purpose.py::test_real_mapping_has_no_gate_class_findings; tests/test_mapping_purpose.py::test_every_filled_reference_resolves; tests/test_mapping_purpose.py::test_delivery_census_classifies_every_physical_package_source; tests/test_mapping_purpose_cli.py::test_cli_mapping_purpose_gates_when_real_shipped_row_is_removed"""
-status = "Drafted"
+evidence = """tests/test_mapping_purpose.py::test_checker_catches_unmapped_file; tests/test_mapping_purpose.py::test_checker_catches_unresolved_reference; tests/test_mapping_purpose.py::test_checker_catches_missing_file; tests/test_mapping_purpose.py::test_checker_catches_stale_entry; tests/test_mapping_purpose.py::test_stale_arm_exempts_the_lifecycle_marker; tests/test_mapping_purpose.py::test_policy_is_warn_first_for_the_reference_classes; tests/test_mapping_purpose.py::test_generated_output_inherits_its_generator_mapping; tests/test_mapping_purpose.py::test_real_mapping_has_no_gate_class_findings; tests/test_mapping_purpose.py::test_every_filled_reference_resolves; tests/test_mapping_purpose.py::test_delivery_census_classifies_every_physical_package_source"""
+status = "Approved"
 phase = 5
 
 [test.TC-205]
@@ -2117,11 +2119,11 @@ phase = 5
 [test.TC-208]
 verifies = ["SR-220", "LLR-210", "IF-177", "IF-178"]
 level = "Integration"
-method = "Driven in process, in a fast module, on hand-built rows and a directory tree with no git. THE SELECTION, its candidate sets seeded from the queue-conflict detector's pairs and its recorded digest hashing the spine registries through the carrier resolver: the queue digest moves for each of the four fields that change the question and stands still for the two that do not; a malformed digest cell reads as no recorded digest; each of the two new signals fires where the pair producer is blind and the module signal does not fire on a bare module name; two disjoint overlapping pairs make ONE candidate set; two rows only the queue-conflict detector pairs (near-identical titles, different specs, no shared edge or module) still make a candidate set; and the spine digest moves with a CSV-only carrier's content and is refused when both carriers are present. THE GUARDS: no row is drafted beside a queued or active judgement, and the refusal names it; a queue state a done consolidation row already carries drafts nothing, naming that row; a consolidation's own successor seeds no candidate set; re-absorbing a row a consolidation minted is refused by name; a malformed verdict block refuses, naming what is wrong, and never defaults; the close refuses by name a row that is no longer queued; for a spec in the registry's LF format, an absorbed row's spec, less exactly the inserted Deliverable section, equals the original byte for byte, its SpecRef kept."
+method = "Driven in process, in a fast module, on hand-built rows and a directory tree with no git. THE SELECTION, its candidate sets seeded from the queue-conflict detector's pairs and its recorded digest hashing the spine registries through the carrier resolver: the queue digest moves for each of the four fields that change the question and stands still for the two that do not; a malformed digest cell reads as no recorded digest; each of the two new signals fires where the pair producer is blind and the module signal does not fire on a bare module name; two disjoint overlapping pairs make ONE candidate set; two rows only the queue-conflict detector pairs (near-identical titles, different specs, no shared edge or module) still make a candidate set; and the spine digest moves with a CSV-only carrier's content and is refused when both carriers are present. THE POPULATION: two judgement rows sharing a spec make no candidate set and leave the queue digest unmoved, and the example row makes none. THE GUARDS: no row is drafted while a judgement is active, while another consolidation row is queued, while a queued judgement names a candidate row, or while a queued judgement's priority equals or exceeds the consolidation's so that the scheduler orders it first, and each refusal names that judgement; a queued judgement naming no candidate at a lower priority refuses nothing; a queue state a done consolidation row already carries drafts nothing, naming that row; the successor of a done consolidation row whose recorded outcome is consolidate and whose draft supersedes the absorbed rows seeds no candidate set; a consolidation row whose recorded outcome is queue, queue-with-edge or return-to-draft, one cancelled, or one whose scope carries no recorded verdict makes no successor, and a hand consolidation's host seeds a candidate set and may be re-absorbed; the brief's prior-consolidation lines mark each absorbed row as judged, naming its judging row, or by hand, row by row within one successor's absorbed set, and a hand host a judgement later absorbed leaves both absorptions listed, each with its own marks; re-absorbing a row a consolidation judgement minted is refused by name; a malformed verdict block refuses, naming what is wrong, and never defaults; the close refuses by name a row that is no longer queued; for a spec in the registry's LF format, an absorbed row's spec, less exactly the inserted Deliverable section, equals the original byte for byte, its SpecRef kept."
 tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-210 (parent SR-220): the selection and the guards, each decided without a repository"
 automated = "Yes"
-evidence = "tests/test_consolidate.py::test_the_queue_digest_covers_the_four_fields_that_change_the_question; tests/test_consolidate.py::test_a_malformed_digests_cell_reads_as_no_recorded_digest; tests/test_consolidate.py::test_a_shared_open_item_edge_is_a_commissioning_signal; tests/test_consolidate.py::test_the_module_signal_reads_both_the_llr_join_and_the_row_prose; tests/test_consolidate.py::test_the_module_signal_does_not_fire_on_a_bare_module_name; tests/test_consolidate.py::test_two_disjoint_overlapping_pairs_make_one_candidate_set; tests/test_consolidate.py::test_a_pair_only_the_queue_conflict_detector_sees_seeds_a_cluster; tests/test_consolidate.py::test_the_spine_digest_hashes_whichever_carrier_is_live; tests/test_consolidate.py::test_no_row_is_minted_beside_another_judgement; tests/test_consolidate.py::test_a_queue_state_that_has_been_judged_is_never_judged_again; tests/test_consolidate.py::test_a_consolidations_own_successor_does_not_seed_the_next_census; tests/test_consolidate.py::test_re_absorbing_a_row_a_consolidation_minted_is_refused_by_name; tests/test_consolidate.py::test_a_malformed_verdict_block_refuses_and_never_defaults; tests/test_consolidate.py::test_the_close_refuses_a_row_that_left_the_queue_by_name; tests/test_consolidate.py::test_an_absorbed_rows_scope_text_is_byte_identical_and_specref_kept"
+evidence = "tests/test_consolidate.py::test_the_queue_digest_covers_the_four_fields_that_change_the_question; tests/test_consolidate.py::test_a_malformed_digests_cell_reads_as_no_recorded_digest; tests/test_consolidate.py::test_a_shared_open_item_edge_is_a_commissioning_signal; tests/test_consolidate.py::test_the_module_signal_reads_both_the_llr_join_and_the_row_prose; tests/test_consolidate.py::test_the_module_signal_does_not_fire_on_a_bare_module_name; tests/test_consolidate.py::test_two_disjoint_overlapping_pairs_make_one_candidate_set; tests/test_consolidate.py::test_a_pair_only_the_queue_conflict_detector_sees_seeds_a_cluster; tests/test_consolidate.py::test_the_spine_digest_hashes_whichever_carrier_is_live; tests/test_consolidate.py::test_no_row_is_minted_while_a_judgement_is_in_progress; tests/test_consolidate.py::test_no_row_is_minted_beside_a_pending_consolidation; tests/test_consolidate.py::test_a_queued_judgement_naming_a_candidate_refuses_by_name; tests/test_consolidate.py::test_a_queued_judgement_naming_no_candidate_holds_nothing_back; tests/test_consolidate.py::test_a_judgement_row_is_never_a_candidate_and_never_moves_the_queue_digest; tests/test_consolidate.py::test_the_example_row_is_never_a_candidate; tests/test_consolidate.py::test_a_queue_state_that_has_been_judged_is_never_judged_again; tests/test_consolidate.py::test_a_consolidations_own_successor_does_not_seed_the_next_census; tests/test_consolidate.py::test_a_hand_consolidations_host_is_not_read_as_judged; tests/test_consolidate.py::test_a_judgement_that_enacted_no_consolidation_makes_no_successor; tests/test_consolidate.py::test_a_consolidation_scope_with_no_recorded_verdict_makes_no_successor; tests/test_consolidate.py::test_a_queued_judgement_that_would_run_first_refuses_by_name; tests/test_consolidate.py::test_prior_labels_a_hand_consolidation_as_unjudged; tests/test_consolidate.py::test_prior_absorbs_reports_each_consolidations_absorbed_set; tests/test_consolidate.py::test_prior_keeps_an_absorption_after_its_successor_is_itself_absorbed; tests/test_consolidate.py::test_re_absorbing_a_row_a_consolidation_minted_is_refused_by_name; tests/test_consolidate.py::test_a_malformed_verdict_block_refuses_and_never_defaults; tests/test_consolidate.py::test_the_close_refuses_a_row_that_left_the_queue_by_name; tests/test_consolidate.py::test_an_absorbed_rows_scope_text_is_byte_identical_and_specref_kept"
 status = "Approved"
 phase = 5
 
@@ -2475,7 +2477,7 @@ phase = 6
 [test.TC-240]
 verifies = ["SR-207", "LLR-245"]
 level = "Integration"
-method = "Driven on real git repositories through the snapshot command, parameterized over every row-compared tier: requirements, design rows, test cases, interfaces, components, the frame's entities, crossings and relationships, assumptions and surrogates. For each, an act approving row A while row B of the same tier carries drifted approved text is refused naming B and the cell; naming the registry alone in the approves option does not clear B; adding B through the re-attests option clears it, and the act's record names B. In a file holding two tiers, drift in one tier refuses an act approving a row of the other. A registry with no drifted row outside the act refreshes as before. Seven drifted rows are all named, with none cut off. A drifted need is not covered."
+method = "Driven on real git repositories through the snapshot command, parameterized over every row-compared tier: requirements, design rows, test cases, interfaces, components, the frame's entities, crossings and relationships, assumptions and surrogates, needs and stakeholders. For each, an act approving row A while row B of the same tier carries drifted approved text is refused naming B and the cell; naming the registry alone in the approves option does not clear B; adding B through the re-attests option clears it, and the act's record names B. In a file holding two tiers, drift in one tier refuses an act approving a row of the other. A registry with no drifted row outside the act refreshes as before. Seven drifted rows are all named, with none cut off. A drifted approved need refuses an act naming the needs registry, naming the need and the cell, until the re-attests option names it, and the act ledger then records it."
 tier = "Full"
 expected = "Satisfies SR-207's acceptance: a drifted row outside the act refuses the refresh naming row and cell; adding it clears the refusal and is named in the record; no drift refreshes as before; every compared tier covered, including tiers sharing a file."
 automated = "Yes"
@@ -2690,4 +2692,219 @@ expected = "Satisfies LLR-262's pure rules: only the REVIEW session's own verdic
 automated = "Yes"
 evidence = "tests/test_review_scope.py; tests/test_done_when.py"
 status = "Approved"
+phase = 6
+
+[test.TC-260]
+verifies = ["SR-220", "LLR-264", "IF-243"]
+level = "Integration"
+method = "Driven through intake's command line on a real git repository. A queue of two rows sharing one spec of record: under --dry-run the census prints both ids and the shared-spec finding and moves no commit; without it the census mints one queued row whose brief is consolidate and whose Adjudicates cell names both rows, prints the digests pair that row's Digests cell records, and a second run prints a reason naming that row and moves no commit. A queue whose two rows share nothing prints the census's no-overlap reason and mints nothing. Each of those runs exits 0. With an uncommitted edit to a path the mint must write, the census exits 1, its reason on stderr prefixed `intake: ` and naming the path, and moves no commit."
+tier = "Full"
+expected = "Satisfies LLR-264 (parent SR-220): the census runs as a command, says why when it proposes nothing, and mints its one row only when asked to."
+automated = "Yes"
+evidence = "tests/test_intake.py::test_the_consolidation_census_dry_run_names_the_cluster_and_mints_nothing; tests/test_intake.py::test_the_consolidation_census_mints_one_row_then_says_why_not_again; tests/test_intake.py::test_a_refused_consolidation_mint_says_why_on_stderr_and_exits_1; tests/test_intake.py::test_the_consolidation_census_says_why_it_proposes_nothing"
+status = "Approved"
+phase = 5
+
+[test.TC-261]
+verifies = ["SR-215", "LLR-265", "IF-244"]
+level = "Integration"
+method = "Driven through intake's command line on real git repositories. A range that amends an approved row, with two early closes on file and their reports, only one of which the range's merge landed: a sweep naming that one mints the range's amendment row and that close's disposition and not the other close's, and the same sweep again mints nothing. One hand merge that hands over a Drafted row, closes a claimed row with its Done-when reworded, closes a sampled clean row and merges an adjudication row drafting a follow-up, beside a sampled clean close already on file: naming the three with the claimed row's branch mints the first-approval row, the spot check of the sampled row it closed and not of the one on file, the drafted follow-up and the Done-when adjudication, and names on stderr the clean row that branch never claimed; naming a branch holding no claim mints no Done-when row and prints one stderr line naming the row, the branch and that the check did not run. A merged row whose spec is in two terminal folders, or in none, exits 1 naming it and moves no commit; a missing range end, a zero-length range and a missing branch each exit 1 and move no commit; naming rows together with the terminal scan is refused by the parser. A merge whose commit changes an observation case's declared input mints one re-judge row for that case, and the same sweep again mints none while it is open. The range shape without named rows judges no close on file, and the bare sweep judges the terminal folders."
+tier = "Full"
+expected = "Satisfies LLR-265 (parent SR-215): a merge made outside the slot gets the rows the slot would have minted for exactly the rows it closed, the merge checkpoint's re-judge rows included, and never a second."
+automated = "Yes"
+evidence = "tests/test_intake.py::test_merged_mints_what_the_named_rows_owe_and_nothing_else; tests/test_intake.py::test_merged_mints_every_arm_the_slot_would_have_for_a_hand_merge; tests/test_intake.py::test_merged_says_by_name_when_the_done_when_arm_cannot_run; tests/test_intake.py::test_merged_refuses_a_row_no_terminal_folder_holds; tests/test_intake.py::test_merged_refuses_a_row_two_terminal_folders_hold; tests/test_intake.py::test_merged_needs_a_real_range_and_the_lane_branch; tests/test_intake.py::test_merged_and_with_terminal_are_one_question_asked_two_ways; tests/test_intake.py::test_a_sweep_after_a_hand_merge_runs_the_merge_checkpoint; tests/test_intake.py::test_a_range_sweep_mints_the_range_and_touches_no_terminal_folder; tests/test_intake.py::test_a_bare_sweep_still_walks_the_terminal_folders"
+status = "Approved"
+phase = 6
+
+[test.TC-273]
+verifies = ["SR-157", "LLR-274", "IF-252"]
+level = "Unit"
+method = """absolute_advisories, absolutes, absolute_summary and absolute_report_lines called on in-memory rows. THE MATRIX: an open-world absolute in a need's need or acceptance, a requirement's Requirement or AcceptanceCriteria, or a design row's Detail is one advisory naming the tier, row and cell, while the same text in why or Rationale raises nothing; the tier table holds no test-case tier and the function takes no test-case rows; a -000 placeholder row raises nothing. THE PREDICATE: an absolute whose domain names a declared set, a registry, a registry row noun, an id or an id token is suppressed; one over the open world or open time (every repo, never silently, always on, any broken link, all tools) warns; a row whose reason cell carries `recorded waiver:` raises nothing on any tier, while the marker written into the scanned cell, or a reason cell that mentions a waiver without the marker, waives nothing. THE TOKENIZATION: a hyphenated compound is not an absolute; a negative warns only when it opens a clause, never inside one or after a comma; no before a comparative is a bound and all after at is emphasis; a quantifier's domain is a six-word window inside its own comma segment, while never and always read their whole clause across commas; matching is whole-word and case-insensitive. THE OUTPUT: one advisory per row and cell quotes each term with the words after it and points the waiver at the tier's reason cell; the console summary is no line for no advisories and one line counting them per tier otherwise; the report section is its heading and one bullet per advisory, or a none line. THE CHECKER: a planted open-world absolute driven through trace.analyze lands in absolute_advis and in no other findings list, and the exit code stays 0 under --strict, under --strict-integrity and with no flag."""
+tier = "Smoke"
+expected = "Satisfies LLR-274 (parent SR-157): the ruled cells of needs, requirements and design rows are scanned warn-only and a test case never is; a closed-domain absolute is suppressed, an open-world one is reported naming its row and cell, and a recorded waiver in the tier's reason cell silences the row; the tokenization behaves as documented where the rule lives"
+automated = "Yes"
+evidence = "tests/test_absolute_terms.py"
+status = "Approved"
+phase = 6
+
+[test.TC-274]
+verifies = ["SR-163", "LLR-276"]
+level = "Integration"
+method = """The real-row end-to-end bite on SR-163's checker: remove process.toml.template -> docs/process.toml from MAPPING in a child process while leaving the source in the package, drive gen_arch_map.main() through --mapping-purpose, and require a gate-class missing_file report naming the omitted source."""
+tier = "Full"
+expected = "Satisfies SR-163 AcceptanceCriteria for a real shipped file: a source that ships while its inventory row is gone is reported under the gating class through the delivered command"
+automated = "Yes"
+evidence = "tests/test_mapping_purpose_cli.py::test_cli_mapping_purpose_gates_when_real_shipped_row_is_removed"
+status = "Approved"
+phase = 6
+
+[test.TC-275]
+verifies = ["SR-157"]
+level = "Unit"
+method = """verification_coherence_advisories called on in-memory requirements. One verified by Inspection whose requirement's subject, the text before its shall, names a Critique acceptance record, with prose naming a rubric and a VERDICT, raises nothing; the same row with Verification Test, Analysis or Demonstration raises one advisory naming the row, the cells and the method. An Inspection row whose requirement is about something else and whose acceptance directs a fresh CRITIQUE session to return APPROVE raises one advisory naming the row, the cell and Inspection; so does one naming a Critique record only after its shall (a view that links to the record), one whose requirement has no shall, and one whose requirement mentions Critique without naming a record."""
+tier = "Smoke"
+expected = "Satisfies SR-157's advisory class for method coherence: an Inspection row whose requirement subject, before its shall, is a Critique record is not reported for naming what it inspects, while an Inspection row directing an independent verdict, one naming a Critique record only in its response, and a mechanized row making the same claim still are"
+automated = "Yes"
+evidence = "tests/test_verification_coherence.py"
+status = "Approved"
+phase = 6
+
+[test.TC-276]
+verifies = ["SR-198", "LLR-233"]
+level = "Unit"
+method = """A registry row id as a declared input, three ways. THE DECLARATION: observation_tc_findings and input_escape called on an in-memory observation case whose inputs name a registry row by id (SR-184, LLR-233, TC-055, SN-043, DA-001), alone and beside a repository path: the id is not an escaping path and the case raises no failure and no advisory. THE SUPPORT PATHS: the re-judge checkpoint's support paths for an id are the registry directories and never a file named after the id, while a path input is its own support path. THE DIGEST: over a two-row requirement registry under a temporary directory, the writer's inputs digest of SR-184 differs from that of an id no row carries, stays unchanged when only the other row is edited, and changes when only SR-184 is edited."""
+tier = "Smoke"
+expected = "Satisfies LLR-233 (parent SR-198): a registry row id is a legal declared input beside a repository path, never judged as an escaping path, and it stands for that row's cells, which the checkpoint reads from the registry and the digest follows row by row"
+automated = "Yes"
+evidence = "tests/test_assumption_rules.py::test_a_registry_row_id_is_a_legal_declared_input; tests/test_registry_id_inputs.py"
+status = "Approved"
+phase = 6
+
+[test.TC-269]
+verifies = ["SR-178", "LLR-271"]
+level = "Integration"
+method = "Driven on scaffolds made by the kit's bootstrap. An approved need is recorded by a seed; with no text moved it owes nothing, and after its need cell is amended, status left Approved, the comparison reports it as drifted naming that cell, and the re-attestation brief from the command line shows its block with the cell before and after. An approved stakeholder whose description is amended is reported and briefed the same way. A Drafted stakeholder recorded by a seed, then approved in an act naming the needs registry, is named among the rows the act ledger's newest entry approved. Through the scaffold's own snapshot command, an act naming the needs registry is refused while an approved need's text moved, naming the need and the cell, and re-attesting the need re-anchors it: the copy equals the live file, the act ledger names it, and it owes nothing."
+tier = "Full"
+expected = "Satisfies LLR-271 (parent SR-178): a need or stakeholder whose approved text moved is reported and briefed with its diff, holds an act copying the needs registry until re-attested, and an act approving a stakeholder records it in the act ledger."
+automated = "Yes"
+evidence = "tests/test_snapshot_readers.py::test_a_drifted_approved_need_is_reported_and_briefed_with_its_diff; tests/test_snapshot_readers.py::test_a_drifted_approved_stakeholder_is_reported_and_briefed; tests/test_snapshot_readers.py::test_an_approved_stakeholder_is_recorded_by_the_act_that_approves_it; tests/test_snapshot_readers.py::test_a_drifted_need_refuses_the_snapshot_until_it_is_reattested"
+status = "Approved"
+phase = 6
+
+[test.TC-270]
+verifies = ["SR-157", "LLR-272"]
+level = "Integration"
+method = "Driven through the command line on a scaffold made by the kit's bootstrap. With one requirement phased, a test case written with neither status nor phase and a need written with no status, and the ids recorded: the strict integrity run fails with exactly three integrity findings, naming the test case's Status and Phase cells and the need's Status cell, and none for the requirement carrying both. The re-attestation brief renders the requirement's chain with the test case in it, and the need's block labelled as having no Status cell. With the cells written, the strict integrity run passes. In memory, for each of the need, requirement, design and test-case tiers a row missing Status, and for each of the requirement, design and test-case tiers a row missing Phase in a phased spine, is exactly one finding naming that row and cell, and the missing Phase is none once no row is phased."
+tier = "Full"
+expected = "Satisfies LLR-272 (parent SR-157): a spine row missing its Status cell, or its Phase cell once the spine is phased, is an integrity finding naming the row and the cell, and the brief does not omit it."
+automated = "Yes"
+evidence = "tests/test_snapshot_readers.py::test_a_row_missing_its_status_or_phase_cell_is_an_integrity_finding; tests/test_snapshot_readers.py::test_each_tiers_missing_cell_is_named"
+status = "Approved"
+phase = 6
+
+[test.TC-271]
+verifies = ["SR-178", "LLR-273", "IF-126"]
+level = "Integration"
+method = "Driven on real git repositories. A record seeded at one commit whose test-case copy alone is re-written at a later one, the directory-wide stamp naming the later commit: the re-attestation brief from the command line names the requirement and design registries' copies with the seeding commit and the test-case registry's with the later one, the open-items view lists the same pairs, and the model's entry carries each spine registry's own stamp; the first-approval brief's anchor names the design registry it copies with the seeding commit alone."
+tier = "Full"
+expected = "Satisfies LLR-273 (parent SR-178): each owner and judge surface names the commit that last wrote each registry's own copy."
+automated = "Yes"
+evidence = "tests/test_snapshot_readers.py::test_the_owners_brief_and_open_items_name_each_registrys_own_copy; tests/test_adjudicate_brief.py::test_the_first_approval_anchor_names_the_copied_registrys_own_copy"
+status = "Approved"
+phase = 6
+
+[test.TC-272]
+verifies = ["SR-147", "LLR-277", "IF-112"]
+level = "Unit"
+method = "In memory, and over real git repositories and a scaffold for the history reader and the legacy carrier. Under the TOML carrier, a comment-only text, a text whose only table row sits inside a stakeholder's description string, and an empty text yield no need, while the markdown carrier reads the same string text's row; a TOML text that does not parse and a carrier the need tier does not have raise, and the refusing reader names the file. The README floor and the approval view's need prose read no need from a TOML file declaring none, and the README floor refuses an unparseable one naming the file. The record's history reader reads no need at a commit whose needs file declares none, and refuses one at a commit whose needs file does not parse, naming the commit and the file. A scaffold whose needs file is markdown records its approved need, reports it drifted naming the cell once amended, refuses an act copying it until the need is re-attested, and reports nothing unanchored."
+tier = "Smoke"
+expected = "Satisfies LLR-277 (parent SR-147): no reader of a needs file chooses its carrier by guessing, an unparseable TOML needs file refuses naming the file, and a markdown needs file is compared like a TOML one."
+automated = "Yes"
+evidence = "tests/test_spine_carrier.py::test_needs_from_text_takes_the_carrier_from_the_file_not_the_text; tests/test_spine_carrier.py::test_needs_or_refuse_names_the_file_it_cannot_read; tests/test_spine_carrier.py::test_every_needs_text_caller_takes_the_carrier_from_the_file; tests/test_snapshot_readers.py::test_the_snapshot_history_reader_takes_the_needs_carrier_from_the_file; tests/test_snapshot_readers.py::test_a_markdown_needs_file_is_compared_like_a_toml_one"
+status = "Drafted"
+phase = 6
+
+[test.TC-278]
+verifies = ["SR-178", "LLR-278", "IF-091"]
+level = "Integration"
+method = "Driven on real git repositories made from scaffolds. An adjudication lane claiming an amendment row scoped to one requirement, whose act re-attests two amended requirements, is refused at merge naming the one outside the scope; an act re-attesting only the scoped row merges, and the same act claimed by a first-approval row is refused naming the row, since that lane holds no re-attestation scope. One act that approves a Drafted requirement and re-attests an amended one, claimed by a first-approval row scoped to the first and an amendment row scoped to the second, merges; the same act whose amendment row is scoped to another requirement is refused naming the re-attested row."
+tier = "Full"
+expected = "Satisfies LLR-278 (parent SR-178): a re-attestation outside the amendment row's Adjudicates scope is refused at merge by name, and an act whose approvals and re-attestations each lie in the scope of the row claiming them merges."
+automated = "Yes"
+evidence = "tests/test_snapshot_readers.py::test_a_reattestation_outside_the_amendment_scope_is_refused_by_name; tests/test_snapshot_readers.py::test_a_reattestation_inside_the_amendment_scope_merges; tests/test_snapshot_readers.py::test_a_mixed_approval_and_reattestation_act_merges; tests/test_snapshot_readers.py::test_a_mixed_act_reattesting_outside_its_amendment_scope_is_refused"
+status = "Approved"
+phase = 6
+
+[test.TC-279]
+level = "Inspection"
+method = """Follow the sampled new-reader inspection in docs/test/inspection-procedures.md#sampled-new-reader-inspection: draw the declared number of parts at random from the source the project's readability and structure measures cover, give each to a reader who has not worked on it, and have that reader say, from the part's code and the records linked to it and without asking its author, what the part does and why it exists; record each statement beside the part's linked requirement and design rows."""
+tier = "Release"
+expected = "Each sampled reader states what the part does and why it exists, in agreement with the part's linked rows; a reader who cannot, or whose statement contradicts those rows, is a failing sample and falsification evidence against DA-011"
+automated = "No"
+evidence = "docs/test/inspection-procedures.md#sampled-new-reader-inspection-result"
+status = "Drafted"
+phase = 6
+assumption_refs = ["DA-011"]
+inputs = ["docs/test/inspection-procedures.md", "DA-011", "project-trajectory/scripts", "docs/requirements/system-requirements.toml", "docs/requirements/low-level-requirements.toml"]
+max_age = 90
+sampling = "sampled"
+sample_size = 5
+acceptance_rule = "All five sampled readers state what their part does and why it exists, in agreement with the part's linked rows; one reader who cannot is a failing sample."
+
+[test.TC-289]
+verifies = ["SR-112", "LLR-279", "IF-035"]
+level = "Unit"
+method = """A planted one-skill kit under a temporary directory: a SKILL.md and a companion file it cites. (a) THE COPY: materialize_agent_layer for one agent creates both files under that agent's skills directory, the companion byte-identical to its source, and check_agent_sync over the planted source and the copy reports no drift over one skill. (b) THE INVENTORY: with the kit root pointed at the planted kit, delivery_inventory lists the companion file as a physical source and lists both the SKILL.md and the companion as conditional deliveries for every agent skills directory."""
+tier = "Smoke"
+expected = "Satisfies SR-112 AcceptanceCriteria for a multi-file skill: the first copy already matches its source, so there is no drift for the check to find, and the delivered-package inventory accounts for the companion file"
+automated = "Yes"
+evidence = "tests/test_skill_materialization.py::test_a_multi_file_skill_materializes_whole_and_passes_the_drift_check; tests/test_skill_materialization.py::test_the_delivery_inventory_lists_a_skills_companion_file"
+status = "Approved"
+phase = 1
+
+[test.TC-290]
+verifies = ["SR-223", "LLR-280", "IF-253"]
+level = "Unit"
+method = """A planted vendored guardrails set under a temporary directory: a default core, a payload for a broad substring and a payload for a narrower substring containing it, the narrower one wrapped in a KIT CORE block with text outside it. (a) THE SELECTOR: guardrails_core returns the narrower payload's block, without the text outside it, for a model containing both substrings; the broader payload for a model containing only the broader one; the default core for a model containing neither and for a call naming no model. (b) THE SESSION: compose_session_prompt under an all policy prepends the narrower payload and not the default core for a matching model; under a policy excepting that model it guards nothing and injects no payload."""
+tier = "Smoke"
+expected = "Satisfies SR-223 AcceptanceCriteria: the longest matching vendored substring selects the payload, a model matching none gets the default core, and the policy alone decides whether anything is injected"
+automated = "Yes"
+evidence = "tests/test_guardrails_payload.py::test_the_longest_matching_substring_selects_the_payload; tests/test_guardrails_payload.py::test_a_guarded_session_carries_its_payload_and_the_policy_still_decides"
+status = "Drafted"
+phase = 6
+
+[test.TC-291]
+verifies = ["SR-224", "LLR-281", "IF-254"]
+level = "Unit"
+method = """(a) THE REFUSAL: a planted skills directory under a temporary directory holds one skill whose description is under the floor and one exactly at it; after the index is written, --check exits 1, its error output names the short skill and the floor and does not name the skill at the floor. (b) THE SHIPPED SET: short_descriptions over the kit's own skills returns nothing."""
+tier = "Smoke"
+expected = "Satisfies SR-224 AcceptanceCriteria: a description under the floor fails the check by name, one at the floor passes, and every shipped skill clears it"
+automated = "Yes"
+evidence = "tests/test_skills_index.py::test_check_refuses_a_description_under_the_floor; tests/test_skills_index.py::test_every_shipped_description_clears_the_floor"
+status = "Approved"
+phase = 6
+
+[test.TC-296]
+verifies = ["SR-054", "LLR-285"]
+level = "Unit"
+method = """Sweep every fresh emitter document, one fixture per emitter (the committed dashboard is an older renderer's markup, so it is left out), and derive from each document's stylesheet every rule whose selector puts a de-emphasis state class (the dim and trace-muted states the page scripts toggle) on a node shape that document draws with a label. Model the rule's paint as the browser applies it: its shorthand filter functions as colour matrices over sRGB channels, then its opacity composited over the page surface, refusing a rule that sets any other property or names an unmodelled filter function. For every node the rule reaches, resolve its fill, its label ink (inline, else the most specific stylesheet rule for its classes) and, where it carries a descend arrow, its per-node ring ink or the accent fallback, in both themes and over both page surfaces, and assert each ink clears 4.5:1 against the de-emphasised fill. Assert the sweep reached the drill block, the icicle cell, the flat-roadmap work item and the knowledge concept, with the descend arrow among them."""
+tier = "Full"
+parameters = "tests/traj_fixtures.py (_every_emitter_document: the seven fresh emitter fixtures)"
+expected = """Every de-emphasised label and descend arrow clears 4.5:1 against its own de-emphasised fill in both themes; the sweep reaches all four label-bearing node shapes and at least ten arrow checks, so it cannot pass vacuously."""
+automated = "Yes"
+evidence = "tests/test_traj_render_sweeps.py::test_t5_a_deemphasised_node_keeps_body_text_contrast_in_both_themes"
+status = "Drafted"
+phase = 6
+
+[test.TC-292]
+verifies = ["SR-225", "LLR-282"]
+level = "Unit"
+method = """A policy file under a temporary directory declares the dial. (a) THE THREE VALUES: off, record and escalate-first each read as themselves and raise no conflict. (b) UNDECLARED: an attestation section without the key, and no policy file at all, read off. (c) ONE NORMALIZATION: a padded value and two mixed-case values read as their trimmed, lowercased word and raise no conflict, and mode_word trims and lowercases text and answers None for a number. (d) UNRECOGNIZED: a misspelled value yields exactly one conflict naming the key and each of the three values and not the rung message, and reads record; a boolean value is refused by name and reads record. (e) THE SHIPPED VALUES: the template declares off and this repository's policy file record."""
+tier = "Smoke"
+expected = "Satisfies SR-225 AcceptanceCriteria: the dial's three values read as declared, trimmed and case-folded, an undeclared dial reads off, and a value outside the three is refused where the policy file is checked and read as asking for a record"
+automated = "Yes"
+evidence = "tests/test_decision_record.py::test_each_declared_value_reads_as_itself; tests/test_decision_record.py::test_an_undeclared_dial_reads_off; tests/test_decision_record.py::test_an_unrecognized_value_is_refused_and_read_as_record; tests/test_decision_record.py::test_a_padded_or_mixed_case_value_is_accepted_as_the_reader_reads_it; tests/test_decision_record.py::test_the_reader_and_the_validator_share_one_normalization; tests/test_decision_record.py::test_a_wrong_typed_value_is_refused; tests/test_decision_record.py::test_the_template_ships_off_and_this_repo_records"
+status = "Drafted"
+phase = 6
+
+[test.TC-293]
+verifies = ["SR-225", "LLR-283", "IF-256"]
+level = "Unit"
+method = """The kitlib.decisions call surface over record texts planted in memory, clause by clause. (a) SOUND: a record with two complete entries, one hoisted, and a record with no entries and an empty hoist, yield no finding. (b) EACH REQUIRED KEY: its absence yields one finding per entry naming the entry and the key; a number, a boolean, a list and a table in it each yield exactly the not-text finding; an empty, a spaces-only and a whitespace-only value yield exactly the blank finding for the first four keys and nothing for review. (c) SHAPE: an entry that is not a table, a decision key that is not a table, an entry id outside D-<digits> and an unparseable text each yield one finding. (d) THE HOIST: a hoist that is a string, a list holding a number, a mixed list or a table, a missing hoist, and a hoisted id the record lacks each yield one finding. (e) EXTRA KEYS on an entry yield none. (f) NEVER RAISES: nine hostile texts each return a list of strings. (g) INERT: a half-filled -000 entry, hoisted, yields none, and the shipped template yields none and carries the -000 example with every required key and an empty review. (h) THE PATH AND THE OBLIGATION: a run's path is one file under the records directory with a / becoming -, and owed holds under record and escalate-first for a complete, a cancelled, a partial and a mixed close, and not under off or for no outcomes. (i) THE NOTE: session_note is empty under off, names the path, every required key and the hoist under record, and adds a sentence under escalate-first; session_body appends it to a build session's body and to an adjudication session's body under record and to neither under off, and reviewer_prompt's brief does not carry it under record."""
+tier = "Smoke"
+expected = "Satisfies SR-225 AcceptanceCriteria: each shape, required-key and hoist defect is reported by entry, extra keys are not judged, the findings never raise, a -000 entry is never judged, every close owes a record under a recording dial, and a build or adjudication session is told its record's path while a review session is not"
+automated = "Yes"
+evidence = "tests/test_decision_record.py::test_a_sound_record_yields_no_finding; tests/test_decision_record.py::test_a_record_with_no_entries_is_sound; tests/test_decision_record.py::test_each_missing_required_key_is_reported_by_entry; tests/test_decision_record.py::test_each_required_key_holding_non_text_is_reported; tests/test_decision_record.py::test_each_required_key_left_blank; tests/test_decision_record.py::test_a_non_table_entry_is_reported; tests/test_decision_record.py::test_a_decision_key_that_is_not_a_table_is_reported; tests/test_decision_record.py::test_a_malformed_hoist_is_reported; tests/test_decision_record.py::test_extra_keys_on_an_entry_are_not_judged; tests/test_decision_record.py::test_the_findings_never_raise; tests/test_decision_record.py::test_a_hoist_naming_an_absent_entry_is_reported; tests/test_decision_record.py::test_a_missing_hoist_is_reported; tests/test_decision_record.py::test_an_entry_id_outside_the_numbering_is_reported; tests/test_decision_record.py::test_an_unparseable_record_is_one_finding; tests/test_decision_record.py::test_a_000_entry_is_inert; tests/test_decision_record.py::test_the_shipped_template_is_sound_and_carries_the_example; tests/test_decision_record.py::test_the_record_path_is_one_file_per_run; tests/test_decision_record.py::test_which_closes_owe_a_record; tests/test_decision_record.py::test_the_session_note_names_the_path_only_under_a_recording_dial; tests/test_decision_record.py::test_a_build_session_is_handed_the_note_by_the_dial; tests/test_decision_record.py::test_an_adjudication_session_is_handed_the_note_too; tests/test_decision_record.py::test_a_review_session_is_not_handed_the_note"
+status = "Drafted"
+phase = 6
+
+[test.TC-294]
+verifies = ["SR-225", "LLR-284", "IF-255"]
+level = "Integration"
+method = """A claimed lane in a temporary git repository, closed into a terminal folder, whose record file, when present, is committed on the lane's branch at its run's path, with the trunk's policy file declaring the dial. (a) OWED: under record and under escalate-first, a lane closed complete and one closed cancelled with no record are refused by the merge ladder, the refusal naming the record's path, and a lane closed partial with no record is refused by the rung, naming the path. (b) OFF: with the dial off and with it undeclared, the ladder's refusal, if any, does not name the record and the rung returns nothing. (c) PRESENT: under record and escalate-first, a lane closed complete carrying a sound record passes the rung and nothing is reported, and so does a lane closed partial carrying one. (d) MALFORMED: a record whose entry lacks its alternative passes the rung and the report names the path, the entry and the key. (e) CONFIGURATION FIRST: a misspelled dial makes the ladder refuse naming the key and the value, not the record's path; a padded and two mixed-case dials each read as their word, so a lane without its record is refused naming the path and a lane carrying it is refused by neither the configuration nor the record."""
+tier = "Full"
+expected = "Satisfies SR-225 AcceptanceCriteria: under a recording dial a complete, cancelled or partial close without its record is refused naming the path, a malformed record is reported without refusing, a misspelled dial is refused as configuration before any record is read, and under off nothing is read"
+automated = "Yes"
+evidence = "tests/test_decision_record_merge.py::test_a_recording_dial_refuses_a_close_without_its_record; tests/test_decision_record_merge.py::test_the_off_dial_reads_nothing; tests/test_decision_record_merge.py::test_a_lane_carrying_its_record_passes_the_rung; tests/test_decision_record_merge.py::test_a_malformed_entry_is_reported_and_does_not_refuse; tests/test_decision_record_merge.py::test_a_partial_close_without_its_record_is_refused_too; tests/test_decision_record_merge.py::test_a_partial_close_carrying_its_record_passes_the_rung; tests/test_decision_record_merge.py::test_a_dial_typo_is_refused_as_configuration_before_any_record; tests/test_decision_record_merge.py::test_a_padded_or_mixed_case_dial_reads_as_its_word"
+status = "Drafted"
 phase = 6

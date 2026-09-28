@@ -3,12 +3,20 @@ id = "WI-693"
 title = "adjudicate: LLR-158, LLR-173, LLR-245, SR-178, TC-167, TC-240 - approved/routed cell(s) amended on merged trunk e520b6e..fe96ec6 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-178"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-158", "LLR-173", "LLR-245", "SR-178", "TC-167", "TC-240"]
 +++
+
+## Deliverable
+
+Ruled in spine-acts batch C by an independent Fable adjudicator from the kit's own brief, cross-reviewed by Codex Sol over four rounds (wave-5 rulings 37, 38, 44, 45). The verdict (`docs/reviews/wi-693-adjudicate-llr-158-llr-173/001-ADJUDICATE-1d84d77c.md`) ends:
+
+    VERDICT: MEANING rows=6
+
+The act (ledger seq 5) was narrowed to the LLR and TC registries (ruling 38): 31 rows approved, 9 amendment rows re-attested. The SR registry was not copied, so SR-220, SR-223 and SR-224 stay Drafted, and the SR-tier amendments (WI-695's cells, SR-178) stay drifted and visible for a later act. Batch C's returns are one follow-up, drafted in WI-695's `## Dispositions` and minted at this merge.
 
 ## Context
 
@@ -52,3 +60,21 @@ Advisory registry joins (WI-388; never gating):
 - IF-166 scripts/trace -> external:downstream adopter: file docs/test/report.html — a self-contained collapsible <details> tree of the SN -> SR -> LLR -> TC forest, writ…
 - IF-021 docs/requirements/ -> scripts/trace;external:downstream adopter: file id-keyed TOML, one file per spine tier; ids are the table keys
 - IF-161 docs/test/ -> scripts/acceptance_record;scripts/adjudicate_brief;scripts/agent_loop;scripts/baseline_snapshot;scripts/check_doc_refs;scripts/check_flows;scripts/check_trajectory;scripts/gen_okf;scripts/gen_release_checklist;scripts/intake;scripts/spine_rules;scripts/trace;scripts/traj_parse;external:downstream adopter: file test-cases.toml: id-keyed TOML, one [test.TC-###] table per case; ids are the table keys
+
+
+## Follow-up: no disposition owed
+
+The adjudication is recorded at
+`docs/reviews/wi-693-adjudicate-llr-158-llr-173/001-ADJUDICATE-1d84d77c.md`,
+governing line `VERDICT: MEANING rows=6`. At the first sitting LLR-173 was
+withheld and a one-clause corrective draft sat here; the coordinator amended
+the clause in place (2f9912cb, wave-5 ruling 37, status left Approved), the
+second sitting blessed the cell on its text, and all six rows are named in
+batch C's `--reattests`. No draft remains, so nothing is minted at this row's
+merge.
+
+Surfaced, not owed here: the older history sentences the verdict's
+non-blocking findings list (LLR-245's "two snapshot tests", LLR-158's
+status-fold parenthetical, TC-167's "uncited today", SR-178's "last to
+reach"), which predate or sit beside this amendment and are a clarity sweep
+of their own.

@@ -2,12 +2,20 @@
 id = "WI-691"
 title = "adjudicate: LLR-205, LLR-206, LLR-262, LLR-274, LLR-275, LLR-276, TC-201, TC-203, TC-204, TC-273, TC-274, TC-275, TC-276 - spine row(s) authored Drafted on merged trunk 0ded5c7..da7ad24 await a FIRST APPROVAL; read the whole chain, then approve (flip + snapshot) or return with findings"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "first-approval"
 adjudicates = ["LLR-205", "LLR-206", "LLR-262", "LLR-274", "LLR-275", "LLR-276", "TC-201", "TC-203", "TC-204", "TC-273", "TC-274", "TC-275", "TC-276"]
 +++
+
+## Deliverable
+
+Ruled in spine-acts batch C by an independent Fable adjudicator from the kit's own brief, cross-reviewed by Codex Sol over four rounds (wave-5 rulings 37, 38, 44, 45). The verdict (`docs/reviews/wi-691-adjudicate-llr-205-llr-206/001-ADJUDICATE-1d84d77c.md`) ends:
+
+    OUTCOME: APPROVE rows=13
+
+The act (ledger seq 5) was narrowed to the LLR and TC registries (ruling 38): 31 rows approved, 9 amendment rows re-attested. The SR registry was not copied, so SR-220, SR-223 and SR-224 stay Drafted, and the SR-tier amendments (WI-695's cells, SR-178) stay drifted and visible for a later act. Batch C's returns are one follow-up, drafted in WI-695's `## Dispositions` and minted at this merge.
 
 ## Context
 

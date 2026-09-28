@@ -455,3 +455,16 @@ such.
     WI-695 Dispositions draft lists all thirteen. The SR registry is not
     copied in this act, so nothing already recorded changes; the fix is in
     the verdict and the draft.
+
+45. **Batch C, round 4 (83aac17f) — SOL, applied by the coordinator.** The
+    four new withholds and the 66/13 machine line are confirmed. One stale
+    sentence remained in WI-695's Dispositions: it called SR-180 "silent on
+    SN-003", which the third sitting had corrected (the row serves SN-003
+    through its own skipped-with-reason clause). It is one sentence, so the
+    coordinator corrects it at integration, as ruling 23 did. Batch C lands
+    by replaying its act on trunk. WI-701 and WI-557 had added Drafted rows
+    to the LLR and TC registries since the lane was cut, so the lane's
+    copies no longer equal trunk's live files. The coordinator therefore
+    merged the verdicts and the 31 flips, kept trunk's snapshot record, and
+    re-ran the adjudicator's exact snapshot command against trunk. The new
+    Drafted rows ride along as Drafted.

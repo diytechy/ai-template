@@ -2047,7 +2047,7 @@ tier = "Full"
 expected = "Satisfies SR-017's and SR-176's acceptance for the mechanized classes via the LLR-205 detail contract; asserting one side's list contains the other's is explicitly not the test, since the thresholds differ by recorded decision"
 automated = "Yes"
 evidence = """tests/test_kitlib_secret_classes.py"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-202]
@@ -2069,7 +2069,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-206 (parent SR-183) for the CLI modes and exit codes"
 automated = "Yes"
 evidence = "tests/test_check_complexity_cli.py"
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-204]
@@ -2080,7 +2080,7 @@ tier = "Smoke"
 expected = "Satisfies SR-163 AcceptanceCriteria: the independently enumerated delivered-package universe is diffed against MAPPING plus reasoned exclusions; an omitted real shipped source and each of the four finding classes are reported under the declared warn-versus-gate policy; and a file's purpose maps through a requirement reference that resolves SR to a live stakeholder need, with a generated output inheriting its generator's mapping"
 automated = "Yes"
 evidence = """tests/test_mapping_purpose.py::test_checker_catches_unmapped_file; tests/test_mapping_purpose.py::test_checker_catches_unresolved_reference; tests/test_mapping_purpose.py::test_checker_catches_missing_file; tests/test_mapping_purpose.py::test_checker_catches_stale_entry; tests/test_mapping_purpose.py::test_stale_arm_exempts_the_lifecycle_marker; tests/test_mapping_purpose.py::test_policy_is_warn_first_for_the_reference_classes; tests/test_mapping_purpose.py::test_generated_output_inherits_its_generator_mapping; tests/test_mapping_purpose.py::test_real_mapping_has_no_gate_class_findings; tests/test_mapping_purpose.py::test_every_filled_reference_resolves; tests/test_mapping_purpose.py::test_delivery_census_classifies_every_physical_package_source"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-205]
@@ -2702,7 +2702,7 @@ tier = "Full"
 expected = "Satisfies LLR-264 (parent SR-220): the census runs as a command, says why when it proposes nothing, and mints its one row only when asked to."
 automated = "Yes"
 evidence = "tests/test_intake.py::test_the_consolidation_census_dry_run_names_the_cluster_and_mints_nothing; tests/test_intake.py::test_the_consolidation_census_mints_one_row_then_says_why_not_again; tests/test_intake.py::test_a_refused_consolidation_mint_says_why_on_stderr_and_exits_1; tests/test_intake.py::test_the_consolidation_census_says_why_it_proposes_nothing"
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-261]
@@ -2713,7 +2713,7 @@ tier = "Full"
 expected = "Satisfies LLR-265 (parent SR-215): a merge made outside the slot gets the rows the slot would have minted for exactly the rows it closed, the merge checkpoint's re-judge rows included, and never a second."
 automated = "Yes"
 evidence = "tests/test_intake.py::test_merged_mints_what_the_named_rows_owe_and_nothing_else; tests/test_intake.py::test_merged_mints_every_arm_the_slot_would_have_for_a_hand_merge; tests/test_intake.py::test_merged_says_by_name_when_the_done_when_arm_cannot_run; tests/test_intake.py::test_merged_refuses_a_row_no_terminal_folder_holds; tests/test_intake.py::test_merged_refuses_a_row_two_terminal_folders_hold; tests/test_intake.py::test_merged_needs_a_real_range_and_the_lane_branch; tests/test_intake.py::test_merged_and_with_terminal_are_one_question_asked_two_ways; tests/test_intake.py::test_a_sweep_after_a_hand_merge_runs_the_merge_checkpoint; tests/test_intake.py::test_a_range_sweep_mints_the_range_and_touches_no_terminal_folder; tests/test_intake.py::test_a_bare_sweep_still_walks_the_terminal_folders"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-273]
@@ -2724,7 +2724,7 @@ tier = "Smoke"
 expected = "Satisfies LLR-274 (parent SR-157): the ruled cells of needs, requirements and design rows are scanned warn-only and a test case never is; a closed-domain absolute is suppressed, an open-world one is reported naming its row and cell, and a recorded waiver in the tier's reason cell silences the row; the tokenization behaves as documented where the rule lives"
 automated = "Yes"
 evidence = "tests/test_absolute_terms.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-274]
@@ -2735,7 +2735,7 @@ tier = "Full"
 expected = "Satisfies SR-163 AcceptanceCriteria for a real shipped file: a source that ships while its inventory row is gone is reported under the gating class through the delivered command"
 automated = "Yes"
 evidence = "tests/test_mapping_purpose_cli.py::test_cli_mapping_purpose_gates_when_real_shipped_row_is_removed"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-275]
@@ -2746,7 +2746,7 @@ tier = "Smoke"
 expected = "Satisfies SR-157's advisory class for method coherence: an Inspection row whose requirement subject, before its shall, is a Critique record is not reported for naming what it inspects, while an Inspection row directing an independent verdict, one naming a Critique record only in its response, and a mechanized row making the same claim still are"
 automated = "Yes"
 evidence = "tests/test_verification_coherence.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-276]
@@ -2757,7 +2757,7 @@ tier = "Smoke"
 expected = "Satisfies LLR-233 (parent SR-198): a registry row id is a legal declared input beside a repository path, never judged as an escaping path, and it stands for that row's cells, which the checkpoint reads from the registry and the digest follows row by row"
 automated = "Yes"
 evidence = "tests/test_assumption_rules.py::test_a_registry_row_id_is_a_legal_declared_input; tests/test_registry_id_inputs.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-269]
@@ -2768,7 +2768,7 @@ tier = "Full"
 expected = "Satisfies LLR-271 (parent SR-178): a need or stakeholder whose approved text moved is reported and briefed with its diff, holds an act copying the needs registry until re-attested, and an act approving a stakeholder records it in the act ledger."
 automated = "Yes"
 evidence = "tests/test_snapshot_readers.py::test_a_drifted_approved_need_is_reported_and_briefed_with_its_diff; tests/test_snapshot_readers.py::test_a_drifted_approved_stakeholder_is_reported_and_briefed; tests/test_snapshot_readers.py::test_an_approved_stakeholder_is_recorded_by_the_act_that_approves_it; tests/test_snapshot_readers.py::test_a_drifted_need_refuses_the_snapshot_until_it_is_reattested"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-270]
@@ -2779,7 +2779,7 @@ tier = "Full"
 expected = "Satisfies LLR-272 (parent SR-157): a spine row missing its Status cell, or its Phase cell once the spine is phased, is an integrity finding naming the row and the cell, and the brief does not omit it."
 automated = "Yes"
 evidence = "tests/test_snapshot_readers.py::test_a_row_missing_its_status_or_phase_cell_is_an_integrity_finding; tests/test_snapshot_readers.py::test_each_tiers_missing_cell_is_named"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-271]
@@ -2790,7 +2790,7 @@ tier = "Full"
 expected = "Satisfies LLR-273 (parent SR-178): each owner and judge surface names the commit that last wrote each registry's own copy."
 automated = "Yes"
 evidence = "tests/test_snapshot_readers.py::test_the_owners_brief_and_open_items_name_each_registrys_own_copy; tests/test_adjudicate_brief.py::test_the_first_approval_anchor_names_the_copied_registrys_own_copy"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-272]
@@ -2812,7 +2812,7 @@ tier = "Full"
 expected = "Satisfies LLR-278 (parent SR-178): a re-attestation outside the amendment row's Adjudicates scope is refused at merge by name, and an act whose approvals and re-attestations each lie in the scope of the row claiming them merges."
 automated = "Yes"
 evidence = "tests/test_snapshot_readers.py::test_a_reattestation_outside_the_amendment_scope_is_refused_by_name; tests/test_snapshot_readers.py::test_a_reattestation_inside_the_amendment_scope_merges; tests/test_snapshot_readers.py::test_a_mixed_approval_and_reattestation_act_merges; tests/test_snapshot_readers.py::test_a_mixed_act_reattesting_outside_its_amendment_scope_is_refused"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-279]
@@ -2839,7 +2839,7 @@ tier = "Smoke"
 expected = "Satisfies SR-112 AcceptanceCriteria for a multi-file skill: the first copy already matches its source, so there is no drift for the check to find, and the delivered-package inventory accounts for the companion file"
 automated = "Yes"
 evidence = "tests/test_skill_materialization.py::test_a_multi_file_skill_materializes_whole_and_passes_the_drift_check; tests/test_skill_materialization.py::test_the_delivery_inventory_lists_a_skills_companion_file"
-status = "Drafted"
+status = "Approved"
 phase = 1
 
 [test.TC-290]
@@ -2861,7 +2861,7 @@ tier = "Smoke"
 expected = "Satisfies SR-224 AcceptanceCriteria: a description under the floor fails the check by name, one at the floor passes, and every shipped skill clears it"
 automated = "Yes"
 evidence = "tests/test_skills_index.py::test_check_refuses_a_description_under_the_floor; tests/test_skills_index.py::test_every_shipped_description_clears_the_floor"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-296]

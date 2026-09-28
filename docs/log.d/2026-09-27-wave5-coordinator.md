@@ -574,3 +574,48 @@ test_approval_level, test_resync_pack, test_frame_context,
 test_derive_stage), run by the coordinator: 676 passed / 2 skipped.
 `check_complexity --mode enforce`: OK, 204 rows. Trunk before this squash:
 4b7f6dae.
+
+WI-557's sweep minted WI-705 (the first approval of WI-557's Drafted rows).
+
+### Spine-acts batch C lands: nine rows, one narrowed act
+
+One independent Fable adjudicator judged the nine adjudication rows the
+kit's post-merge sweeps had minted. There were four amendment rows (WI-682,
+WI-690, WI-693, WI-695) and five first-approval rows (WI-683, WI-691,
+WI-694, WI-696, WI-702). Codex Sol cross-reviewed over four rounds
+([sol-batchc.md](../reviews/2026-09-27-wave5/sol-batchc.md),
+[sol-batchc-fix.md](../reviews/2026-09-27-wave5/sol-batchc-fix.md),
+[sol-batchc-fix2.md](../reviews/2026-09-27-wave5/sol-batchc-fix2.md);
+wave-5 rulings 37, 38, 44, 45).
+
+- The first act refused on LLR-173, whose rewritten detail recorded its own
+  arming history. The coordinator amended that one sentence to the
+  adjudicator's standing wording, after checking it against the code.
+- Sol then found the first full act unsound. Four of twelve sampled
+  WI-695 `coincident` waivers restated the need to make coincidence true.
+  SR-224's deriving hat cannot reach SN-005, and TC-290 does not test
+  SR-223's last clause. **The act was narrowed to the LLR and TC
+  registries.** The SR registry is not copied, so SR-220, SR-223 and SR-224
+  stay Drafted, and WI-695's cells and SR-178 stay drifted and visible.
+- The re-sitting applied the test "does the requirement's effect alone
+  deliver the outcome its cited need states?" to every waiver: 66 blessed,
+  13 withheld. It returned SR-223, SR-224, TC-290 and TC-272.
+- **Act seq 5 approved 31 LLR and TC rows and re-attested 9 amendment
+  rows.** WI-701 and WI-557 had added Drafted rows to the LLR and TC
+  registries since the lane was cut, so the act was replayed on trunk with
+  the adjudicator's exact command. The new Drafted rows ride along as
+  Drafted, and both copies equal their live files.
+- **Folded, not filed:** batch C's three follow-up drafts (the thirteen
+  waivers; SR-223 with TC-290 and SR-224; TC-272's tier) are one draft in
+  WI-695's Dispositions, so the sweep mints one row. For the owner: SR-224
+  waits on SN-005's applicability tags, which are a need, so yours.
+- Derived-requirement advice for the owner: widen SN-025 for SR-220; keep
+  SR-223 derived; tag SN-005 `process` for SR-224.
+
+**Open count: 14** (13 queued, 1 deferred): nine adjudication rows closed.
+
+Commit bar at batch C: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0 (the SR copy's last writer stays 464dc7ac, where copy
+and live were equal), approve-modified current, `gen_open_items` current,
+`check_docs --stale` 0 broken, smoke 1798 passed / 3 skipped, seconds 28.5 s
+within 60 s. Trunk before this squash: e1b7cf9f.
