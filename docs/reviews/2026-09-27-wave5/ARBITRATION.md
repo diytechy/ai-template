@@ -567,3 +567,34 @@ such.
     SR-176 were already among the first act's 75, so the ledger rightly
     records 76. The coordinator corrects the verdict's sentence at
     integration, as ruling 23 did, and the landing commit states 76.
+
+53. **WI-620 (126cf5f2..20ad13c0) — SOL on all seven.** The governing texts
+    are the owner-ruled retention plan
+    (`docs/plans/2026-08-29-adjudicator-session-retention-plan.md`) and the
+    absorbed WI-551, WI-605 and WI-606 Done-when blocks.
+    - **(a) Retention narrowed the ruled design.** A clear point has no
+      related queued adjudication or active lane; resets fire on
+      loaded-skill and CLI-version drift; keep-warm is bounded to one turn;
+      and a raising retained launch retires the session. LLR-270 and TC-266
+      to TC-268 state all of it, and each clause gets a test.
+    - **(b) Keep-warm, enabled, is unsafe.** It must never block the
+      dispatcher tick, race a lane on the same retained session, write the
+      store without the coordinator lock, or move trunk outside the
+      serialized telemetry path. **Bounded:** keep-warm runs only when it can
+      honour all four, under a lease or lock, and otherwise skips with a
+      logged reason. An enabled-path test shows the skip and the serialized
+      commit. The dial still ships at 0.
+    - **(c)** Codex occupancy reads the effective launch environment, and
+      the dedicated `CODEX_HOME` the owner ruled is materialized when
+      retention is enabled, with a route-level test.
+    - **(d)** Raw usage is kept byte-verbatim beside the parsed object, with
+      mutation tests per provider.
+    - **(e)** "Every call goes through the service" is pinned structurally:
+      a direct provider-CLI launch or a second session-log writer outside
+      the service fails a test, with mutation tests.
+    - **(f)** Retention gets its own labelled derived requirement. The
+      coordinator grants SR-227; LLR-270 and TC-266 to TC-268 re-point to
+      it.
+    - **(g)** IF-044 and IF-065 state the surface they carry, each cited by a
+      case that drives it (IF-248 and IF-249 remain reserved if a seam needs
+      its own row).

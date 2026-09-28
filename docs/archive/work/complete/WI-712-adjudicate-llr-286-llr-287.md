@@ -3,12 +3,20 @@ id = "WI-712"
 title = "adjudicate: LLR-286, LLR-287, SR-226, TC-299, TC-300 - spine row(s) authored Drafted on merged trunk ec05c5c..cfef8d1 await a FIRST APPROVAL; read the whole chain, then approve (flip + snapshot) or return with findings"
 workstream = "process"
 sr_refs = ["SR-226"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "first-approval"
 adjudicates = ["LLR-286", "LLR-287", "SR-226", "TC-299", "TC-300"]
 +++
+
+## Deliverable
+
+Ruled in spine-acts batch E by an independent Fable adjudicator from the kit's own brief, routed pointer cells included; cross-reviewed SOUND by Codex Sol. The verdict (`docs/reviews/wi-712-adjudicate-llr-286-llr-287/001-ADJUDICATE-8cd77ea6.md`) ends:
+
+    OUTCOME: RETURN rows=5
+
+The one act (ledger seq 7) approved LLR-286, TC-299 and TC-296. SR-226, LLR-287 and TC-300 returned on form findings the gate raises only on Approved rows, which the adjudicator found by driving the flipped tree; the follow-up is WI-712's one Dispositions draft, minted at this merge.
 
 ## Context
 
@@ -50,3 +58,72 @@ Advisory registry joins (WI-388; never gating):
 - IF-071 scripts/schedule <- scripts/gen_trajectory: call load_registry_rows, load_wis, frontier, evaluate; empty when the module is absent
 - IF-102 scripts/spine_carrier <- scripts/trace;scripts/acceptance_record;scripts/check_trajectory;scripts/gen_arch_map;scripts/plan_coverage;scripts/spine_rules;scripts/traj_status;scripts/check_test_first;scripts/rejudge;scripts/retire: call spine_carrier.load / resolve / stem / carriers / rows_from_text / rows_seq_from_text / status_cells; rows und…
 - IF-227 scripts/traj_parse <- scripts/gen_trajectory: call need_assumptions(root) -> {need id: {assumptions: [{id, text, standing, level, citing}], coincident, unclassi…
+
+## Dispositions
+
+The adjudication is recorded at
+`docs/reviews/wi-712-adjudicate-llr-286-llr-287/001-ADJUDICATE-8cd77ea6.md`,
+governing line `OUTCOME: RETURN rows=5`: LLR-286 and TC-299 are APPROVED
+(flipped and anchored by batch E's act); SR-226, LLR-287 and TC-300 are
+RETURNED and stay `Drafted`, every cell byte-exact. One draft, one lane: the
+three rows are one chain, and the kit's requirement-form gate
+(`trace_text.form_findings`, gating under `trace.py --strict` once a row is
+Approved) is what the SR's first finding and both child findings clear.
+
+```toml
+title = "SR-226 chain: one shall, no coincident waiver, B-01; close LLR-287's 'such as' and TC-300's 'minimal'"
+workstream = "process"
+safety_class = "spine"
+buildtier = "quick"
+priority = 3
+specref = "docs/requirements/system-requirements.toml"
+sr_refs = ["SR-226"]
+bar = "DevStg-Reqs"
+```
+
+IN SCOPE — six cells across three rows, amended in place with every status
+left `Drafted`, then the first-approval adjudication the merge's sweep mints.
+Before handing back, flip the three rows to `Approved` in the working tree,
+run `python project-trajectory/scripts/trace.py --root . --strict`, confirm
+`form-findings=0`, and flip them back: the gate is silent on a Drafted row.
+
+1. `SR-226.requirement`: it carries two `shall`s ("shall write ... and shall
+   report ..."), against PROCESS.md §3 ("one requirement, one `shall`"; the
+   Singular characteristic), and the form gate reports an Approved SR with
+   more than one. Re-word to ONE `shall` over the row's one decision — the
+   record a retired row leaves, found by its id — with the same-change write,
+   the four cells and the two warn-only reports kept as the response's
+   qualifiers. NOT a split: the acceptance criteria stay byte-exact, the
+   obligation set is unchanged, and LLR-286, LLR-287, TC-299 and TC-300 keep
+   their `SR-Refs`/`Verifies`.
+2. `SR-226.coincident`: drop the cell. It fails approved SR-193's test ("why
+   its own specification ALONE delivers its needs"): the rationale itself
+   says SN-010's text does not name this outcome, and SN-010 is delivered
+   jointly with the link check, the vision tag and every generated
+   artifact's `--check`. The row is honestly unclassified, the state the SR
+   rung reports without failing, until OI-97 gives the tier a class for a
+   derived requirement. Do not invent a DA and do not re-word the waiver.
+3. `SR-226.boundary_refs`: add `B-01`. The text's "write, in the same change
+   that deletes the row" is a governed write from a session into a registry
+   and a tracked record — B-01's crossing, carried for the same reason by
+   SR-174 and SR-176. B-09 stays.
+4. `LLR-287.rationale`: "a clone with less history, such as a shallow
+   checkout in continuous integration, reads unknown" — `such as` is an
+   open-ended enumeration the form gate refuses ("the scope cannot be
+   closed ... enumerate it"). Keep the argument; close the set to the
+   checkouts `retire.records` reads as unknown (an uncommitted record, a
+   shallow clone, a squashed history) and drop the escape phrase.
+5. `TC-300.method` and `TC-300.parameters`: "the shared minimal project" —
+   `minimal` is on the form gate's vague-term list ("no test can settle it —
+   name the measurable"). It is a fixture's nickname, not a threshold: name
+   the fixture (`tests/traj_fixtures.py make_repo`, with `_rendered_history`
+   for the committed variants) in a `parameters` cell, and let Method say
+   "the shared fixture project". No arm of the Method changes.
+
+OUT OF SCOPE: SR-226's rationale (it argues the derived lens correctly and
+feeds back upward), its acceptance criteria, `Hat-Refs` MAINTAINER and
+`SN-Refs` SN-010; every other cell of LLR-287 and TC-300 (read at HEAD and
+found blessable; Detail, Title, Expected and every evidence pointer stand);
+the two approved children; `retire.py`, `traj_views.py`, `gen_trajectory.py`
+and their tests; and the `Form` advisory `trace.py` prints on SR-226 (no SR
+in the registry declares one).

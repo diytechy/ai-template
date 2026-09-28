@@ -779,3 +779,20 @@ since a re-judge before the owner rules on the shrink floor would fail
 again on T4 at 390 px. WI-711, a one-clause authoring edit to Drafted
 TC-296, was done by the coordinator as the batch-D adjudicator drafted it,
 and TC-296 goes to the next batch. **Open count: 11** (10 queued, 1 deferred).
+
+### Spine-acts batch E lands: WI-712 and WI-714
+
+One independent Fable adjudicator judged WI-618's rows (WI-712) and TC-296
+(WI-714), and ruled the routed pointer cells the brief does not render.
+Codex Sol cross-reviewed it SOUND
+([sol-batche.md](../reviews/2026-09-27-wave5/sol-batche.md)). Act seq 7
+approved LLR-286, TC-299 and TC-296. SR-226, LLR-287 and TC-300 returned
+on form findings the gate raises only on Approved rows: two `shall`s, an
+unsupported waiver and a missing B-01 on SR-226, "such as" on LLR-287,
+"minimal" on TC-300. The adjudicator found them by driving the flipped tree
+and corrected the verdict before the act. The follow-up is one Dispositions
+draft, minted at this merge; the coordinator corrected its cell count.
+Recorded for the owner, a kit observation: the first-approval brief cannot
+show a form finding the gate raises only on Approved rows, so every
+adjudicator must flip and run `--strict` to see it. **Open count: 10**
+(9 queued, 1 deferred).

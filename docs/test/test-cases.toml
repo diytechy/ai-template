@@ -2884,7 +2884,7 @@ parameters = "tests/traj_fixtures.py (_every_emitter_document: the seven fresh e
 expected = """Every de-emphasised label and descend arrow clears 4.5:1 against its own de-emphasised fill in both themes; the sweep reaches all four label-bearing node shapes and at least ten arrow checks, so it cannot pass vacuously."""
 automated = "Yes"
 evidence = "tests/test_traj_render_sweeps.py::test_t5_a_deemphasised_node_keeps_body_text_contrast_in_both_themes"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-292]
@@ -2928,7 +2928,7 @@ tier = "Full"
 expected = "Satisfies SR-226 AcceptanceCriteria: a retirement removes exactly its row and writes its record for one commit, every refusal writes nothing, the record survives the log fold, a spent id without a record and a record moved after landing are each reported, and neither report fails a check"
 automated = "Yes"
 evidence = "tests/test_retire.py::test_retiring_a_live_row_removes_it_and_writes_its_record; tests/test_retire.py::test_a_retirement_without_a_successor_records_none; tests/test_retire.py::test_each_refusal_writes_nothing; tests/test_retire.py::test_an_id_already_recorded_is_refused; tests/test_retire.py::test_the_log_fold_leaves_retirement_records_in_place; tests/test_retire.py::test_the_seed_declares_the_spent_ids_once; tests/test_retire.py::test_a_spent_id_without_a_record_is_reported; tests/test_retire.py::test_the_missing_rule_is_pure_over_its_four_sets; tests/test_retire.py::test_an_unreadable_record_is_reported; tests/test_retire.py::test_a_record_changed_after_it_landed_is_reported; tests/test_retire.py::test_an_uncommitted_record_is_not_an_edit; tests/test_retire.py::test_off_git_the_edit_report_is_silent; tests/test_retire.py::test_the_reports_never_change_the_exit_code; tests/test_retire.py::test_trace_prints_the_reports_as_advisories; tests/test_retire.py::test_the_seed_never_declares_an_excluded_id; tests/test_retire.py::test_a_malformed_exclusion_is_refused; tests/test_retire.py::test_the_census_is_replaced_only_before_it_lands; tests/test_retire.py::test_a_shallow_clone_says_the_record_is_unverifiable; tests/test_retire.py::test_a_record_outside_the_declared_format_is_unreadable; tests/test_retire.py::test_the_final_newline_alone_is_not_a_body; tests/test_retire.py::test_an_exclusion_run_excludes_every_id_in_it_and_nothing_else"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-300]
