@@ -125,3 +125,23 @@ such.
    A nested hand chain regression asserts both events and their per-row
    provenance. `sweep --help` describes `--branch` as the merged lane whose
    pre-merge claim is checked.
+
+10. **WI-689 under the owner's pause — COORDINATOR, the owner may
+    overturn.** WI-679's end-to-end bullet asks that the kit's census,
+    judgement and close run on the live queue. `integrate.py claim` refused
+    WI-689: `docs/work/pause` has held the frontier since 2026-09-04, by owner
+    direction, and unpausing is "a reviewed deletion commit". That is the
+    owner's act, not the coordinator's. **Ruling:** every step the pause
+    allows ran through the kit, and nothing was replaced by judgement:
+    - the sweep and the census minted the rows (`intake.py sweep --merged`,
+      `intake.py consolidate`);
+    - an independent Fable adjudicator judged WI-689 from
+      `adjudicate_brief.compose`'s consolidate brief, and Codex Sol found the
+      verdict SOUND;
+    - the close ran `handback._consolidation_close`, the kit's own arm with
+      `close_refusal` over the trunk registry, on the hand lane. It was called
+      in the same sequence `_archive_one_adjudication_row` uses, pointed at
+      `queued/` because nothing was claimed into `active/`.
+    Only the claim and the merge slot were replaced by a hand lane and a
+    squash-merge plus `sweep --merged`. The pause is left in place, and
+    whether it still stands is put to the owner.

@@ -29,6 +29,8 @@ requirement citing its assumptions claimed built), draft the requirement or
 design row that states it, and wire the assumption half into `gap_census`
 and `intake._census_drafts` under that row.
 
+Noted 2026-09-27 (the WI-689 consolidation verdict, `docs/reviews/wi-689-adjudicate-queue-overlap-af58/001-ADJUDICATE-e26e22a.md`, confirmed by Codex Sol): this row's scope is gated on an owner ruling that re-arms the red-TC rung, but no `needs` target or open item carries that gate, so the row reads claimable while it cannot be built. When the ruling's row is filed, add it to `needs`.
+
 ## Done-when
 
 - A row states how a red assumption-evidence case is routed, and it is

@@ -138,3 +138,47 @@ test_module_size_ratchet, test_complexity_ratchet, test_resync_pack,
 test_dogfood_sync, test_rule_sync, test_schedule), run by the coordinator:
 443 passed / 2 skipped. `check_complexity --mode enforce`: OK, 204 rows,
 unchanged. Trunk before this squash: 464dc7ac.
+
+### WI-679's end-to-end run: the kit's sweep, census, judgement and close on the live queue
+
+**Open count before: 12** (11 queued, 1 deferred), at 77fb0936.
+
+1. **The post-merge sweep**, `intake.py sweep --before 464dc7ac --after
+   77fb0936 --branch build/wi-679 --merged WI-679`, minted seven rows
+   (21d8f49d). WI-682 is the amendment adjudication of LLR-210 and TC-208.
+   WI-683 is the first approval of SR-220, LLR-264, LLR-265, TC-260 and
+   TC-261. WI-684 to WI-688 re-judge TC-036, TC-055, TC-209, TC-210 and
+   TC-211, the five observation cases the hand merges had never checkpointed.
+   It said by name that WI-679's Done-when check could not run (no trunk
+   claim of a hand-cut lane). **Open: 19.**
+2. **The census**, `intake.py consolidate --dry-run` and then without the
+   flag, did not refuse, although seven adjudications were queued: guard 1's
+   narrowing working. It proposed 7 candidates (WI-615, WI-616, WI-620,
+   WI-651, WI-655, WI-657, WI-667), digests `af589a4f5319|edd7832b0dd6`, on
+   ten overlap lines (a shared spec, a shared plan, and `trace.py`,
+   `acceptance_record.py` and `gen_skills_index.py` touched by several). It
+   minted WI-689 (e26e22aa). **Open: 20.**
+3. **The claim was refused** by the owner's `docs/work/pause` (since
+   2026-09-04). Wave-5 ruling 10 records how the rest ran. Every step but the
+   claim and the merge slot went through the kit; the pause stands, and is
+   put to the owner.
+4. **The judgement.** An independent Fable adjudicator judged WI-689 from the
+   kit's consolidate brief: `OUTCOME: QUEUE-WITH-EDGE needs=WI-655 absorbs=-`,
+   with the block `edges = ["WI-655 needs WI-616"]` (d60e549d). WI-616's
+   absolutes sweep produces the open-world-absolute list "for C2", and
+   WI-655 is C2 and rewrites the same SRs' assumption and boundary cells. So
+   C2 follows. Every other pair was judged separate work that merely shares
+   files, so nothing was absorbed. Codex Sol found the verdict SOUND and re-ran
+   the close's refusal logic: the digest was exact, all seven were queued, and
+   the counters were reconciled ([sol-wi689.md](../reviews/2026-09-27-wave5/sol-wi689.md)).
+5. **The close.** `handback._consolidation_close`, with `close_refusal` over
+   the trunk registry, enacted it: "outcome queue-with-edge (0 absorbed, 1
+   edge(s), 0 returned)". WI-655's `needs` became `["WI-643", "WI-616"]`, and
+   WI-689 moved to `docs/work/complete/` (0fbd91fa on the lane, squashed
+   here).
+
+The verdict's two side findings were folded, not filed. WI-667's gate has no
+`needs` target, which is noted in its Context. WI-657's stale "do not run
+the two lanes at once" sentence was replaced. **Open count after: 19**
+(18 queued, 1 deferred): the kit's machinery closed its own judgement, and
+the seven rows it minted are real owed work. None of them is a consolidation.
