@@ -18,6 +18,13 @@ the plan while the owner is away, with every assumption and decision taken on
 the way, is recorded in
 [`2026-09-25-assumption-tier-spine-map.md`](2026-09-25-assumption-tier-spine-map.md).
 
+Also open for owner ruling:
+[`2026-09-28-duplicated-stage-detection.md`](2026-09-28-duplicated-stage-detection.md)
+— WI-624's research result (S14): call-sequence and near-miss detection
+measured against this repository's past consolidations, with the ground truth,
+each method's recall and noise, and a recommendation. It adopts nothing; its
+producing script sits beside it.
+
 The live planning surface. **Start at
 [`2026-08-15-review-package.md`](2026-08-15-review-package.md)** — the one
 document the pending review sitting runs from; the 2026-08-15 plan set

@@ -233,3 +233,36 @@ test_baseline_drift, test_module_size_ratchet, test_complexity_ratchet,
 test_resync_pack, test_frame_context, test_rule_sync, test_assumption_rules),
 run by the coordinator: 411 passed. `check_complexity --mode enforce`: OK,
 204 rows. Trunk before this squash: 0ded5c77.
+
+WI-616's post-merge sweep (`intake.py sweep --merged WI-616`) minted three
+rows. WI-690 is the amendment adjudication of LLR-203 and LLR-233; WI-691 is
+the first approval of the re-authored and new Drafted rows; WI-692 is a
+sampled spot check of WI-616's clean close. **Open count: 21** (20 queued,
+1 deferred).
+
+### WI-657 part 4 lands; the row stays open for one owner question
+
+WI-624's research write-up, `docs/plans/2026-09-28-duplicated-stage-detection.md`,
+went through two Codex Sol rounds
+([sol-wi657.md](../reviews/2026-09-27-wave5/sol-wi657.md),
+[sol-wi657-fix.md](../reviews/2026-09-27-wave5/sol-wi657-fix.md)); the
+coordinator corrected the last phrase at integration (ruling 23). Its ground
+truth is 39 instances read from 13 consolidation commits' own diffs. No
+function-level method both finds shared stages and stays quiet: call
+sequences found 11 of 12 stages at 4,988 to 21,300 pairs, and none of 36
+sampled findings was an extractable stage. It recommends adopting nothing,
+and offers a warn-only near-miss report (5 of 6 pairs at Jaccard 0.7 or
+more were real duplicates the census misses).
+
+Part 2 stopped correctly. The stage-gated sensor steps (`complexity`,
+`dupes-census`, and now `smoke` and `readability`) never select at the
+derived stage, which has not read DevStg-Impl since 2026-08-20. Moving their
+rung contradicts OI-68 Q3's ruled "runs at DevStg-Impl", so it is put to the
+owner, and WI-657 stays open for it with a Done-when bullet. The live
+duplicates the research sampled are recorded in WI-545's Context for the
+owner's burn-down call, not as obligations. **Open count unchanged at 21.**
+
+Commit bar at WI-657 part 4: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs --stale` 0 broken, smoke 1694 passed / 3 skipped, seconds 49.4 s
+within 60 s (two builder lanes on the box). The change is documents only.

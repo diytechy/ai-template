@@ -19,6 +19,8 @@ and `dispatch.py` — the modules the OI-70 repair rows (`WI-552`, `WI-553`)
 change. Sequencing it behind them avoids two ratchet re-stamps and a merge
 conflict (`docs/handoff-2026-08-31.md` §2).
 
+Recorded 2026-09-28 (WI-657 part 4's research sample, `docs/plans/2026-09-28-duplicated-stage-detection.md`), for the owner's burn-down decision and not an obligation of this row: live code duplicates the samples turned up. `intake.normalize_bar` and `integrate._normalize_bar` (one bar vocabulary in two tables); `plan_artifacts.parse_plan_wis` (its docstring still cites the retired F5 rule); the two `_clip` functions, whose elision markers have diverged; `trace.if_note_advisories` and `trace_text.cite_advisories`; `check_trajectory.approval_brief_findings` and `trace.ruled_open_item_texts`; `trunk_step`'s two argv builders; `spec_move.rewrite_text` and `trunk_step.rebase_links`; and the four small census copies. A split this row makes may take one where it is a pure move.
+
 ## Done-when
 
 - `tests/test_module_size_ratchet.py` names this row as the debt owner in its

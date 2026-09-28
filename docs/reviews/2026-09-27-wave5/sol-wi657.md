@@ -1,0 +1,7 @@
+<!-- Codex Sol (gpt-5.6-sol, medium) review of WI-657 part 4, build/wi-657-r 0ded5c77..ff1fb457, read-only. Links re-rooted from the removed worktree. -->
+
+ff1fb457 NOT YET SOUND
+
+- **minor** — The claim that “Every figure below comes from that one command” is false. The cited prototype only prints pair counts at HEAD ([measure.py:553](../../../docs/plans/2026-09-28-duplicated-stage-detection-measure.py)); it cannot produce the `5/5/52` census/baseline figures ([write-up:320](../../../docs/plans/2026-09-28-duplicated-stage-detection.md)) or WI-679’s `12` signals ([write-up:240](../../../docs/plans/2026-09-28-duplicated-stage-detection.md)). Concrete fix: narrow the provenance statement and add separate `fig:` derivations/commands for those figures.
+
+- **minor** — “Four of the thirteen commits … consolidated tables and constants” is contradicted by the report’s own classification ([write-up:283](../../../docs/plans/2026-09-28-duplicated-stage-detection.md)). Only WI-498, WI-520, and `dd7bc7fd` are data/constants; WI-465 introduced `pin_autocrlf` calls without removing copies ([write-up:98](../../../docs/plans/2026-09-28-duplicated-stage-detection.md), [write-up:107](../../../docs/plans/2026-09-28-duplicated-stage-detection.md)). Concrete fix: say three commits consolidated data/constants and describe WI-465 separately as a call-site consolidation invisible to the function-body methods.

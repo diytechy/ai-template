@@ -41,8 +41,11 @@ ratchet test's tier, or a step the bar skips) and say so in the Deliverable.
 
 NOT IN SCOPE: refactoring other functions to lower their numbers.
 
+**State after the 2026-09-28 integration: part 4 has landed; one owner-gated question remains.** WI-624's research write-up is `docs/plans/2026-09-28-duplicated-stage-detection.md` (reviewed by Codex Sol over two rounds, `docs/reviews/2026-09-27-wave5/sol-wi657.md` and `sol-wi657-fix.md`). It adopts nothing and recommends option (a), with a warn-only near-miss report offered as (b). The finding above (the per-commit bar never selects `[step:complexity]`) is measured there: since 2026-08-20 the derived stage has read DevStg-Arch, DevStg-LLReqs and DevStg-Tests, never DevStg-Impl, so no derived-stage gate run has ever selected the complexity step. The same holds for `[step:dupes-census]` (its census now reads 5/5/52 against a 0/0/0 stamp, unseen), and `[step:smoke]` and `[step:readability]` no longer select at DevStg-LLReqs. The builder's proposed fix is `from-stage = DevStg-Reqs` on `[step:complexity]`, with an in-process test. It stopped because OI-68 Q3's ruled text defines ARMED as "runs at DevStg-Impl", and moving the rung is the owner's to confirm. LLR-206 (Drafted) would be re-authored to match.
+
 ## Done-when
 
+- The owner rules whether the stage-gated sensor steps (`complexity`, `dupes-census`, `readability`, and `smoke` as the same case) select below their declared rung. If yes, the steps select at the repository's actual stage, with a test, and LLR-206 matches; if no, the reason is recorded here.
 - `python project-trajectory/scripts/check_complexity.py --mode enforce`
   passes at the landing commit, and the Deliverable pastes its output.
 - Every upward re-stamp carries its reason at the baseline entry.
