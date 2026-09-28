@@ -3,12 +3,16 @@ id = "WI-711"
 title = "TC-296 Method: state the standing reason the sweep excludes the committed dashboard, not its status"
 workstream = "process"
 sr_refs = ["SR-054"]
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "quick"
 priority = 3
 safety_class = "spine"
 bar = "DevStg-Tests"
 +++
+
+## Deliverable
+
+Done by the coordinator as the batch-D adjudicator drafted it (a one-clause authoring edit to Drafted TC-296): its method's parenthesis now states the standing reason the sweep leaves the committed dashboard out (the case asserts the current emitter, which only a document rendered now evidences; the committed artifact's freshness is SR-070's contract), not the row's own status. TC-296 stays Drafted, and its first approval goes to the next spine-acts batch.
 
 ## Context
 

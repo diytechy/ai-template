@@ -771,3 +771,11 @@ the coordinator: 448 passed / 2 skipped. `check_complexity --mode enforce`:
 OK, 204 rows. The merge conflicted only in the watermark (trunk's,
 re-bumped). The auto-merged registries were checked, and every row keeps
 its status and phase. Trunk before this squash: ec05c5ce.
+
+WI-618's sweep minted WI-712 (the first approval of WI-618's Drafted rows)
+and WI-713. WI-713 is TC-055's re-judge, legitimately due because the Retired
+tab changed the rendering code. It now waits on OI-96 by a `needs` edge,
+since a re-judge before the owner rules on the shrink floor would fail
+again on T4 at 390 px. WI-711, a one-clause authoring edit to Drafted
+TC-296, was done by the coordinator as the batch-D adjudicator drafted it,
+and TC-296 goes to the next batch. **Open count: 11** (10 queued, 1 deferred).
