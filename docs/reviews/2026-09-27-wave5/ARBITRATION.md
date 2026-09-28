@@ -643,3 +643,14 @@ such.
     clock that crosses the lease's end between successive reads, and it fails
     on the split form. The lock-contention fallback is confirmed safe, and
     the text of LLR-270 and TC-267 stands.
+
+57. **WI-719, spot check of WI-620's close (3807c068) — SOL on both.** A
+    clause that asks for a test over a *recorded* fixture is not met by a
+    fixture built from documented shapes, however openly labelled. WI-606's
+    "a recorded fixture of that CLI's output" and WI-551's "occupancy parsing
+    from recorded fixtures" are therefore NOT MET for codex and opencode,
+    and openly owed. They are not "MET with a caveat". **Ruling:** the
+    verdict re-accounts them as unmet and owed; the fold into WI-541 stands
+    and names WI-551's clause beside WI-606's. The clause census is
+    corrected to 19 (13 absorbed). Nothing is drafted: the close stands, and
+    the owed work has a home.

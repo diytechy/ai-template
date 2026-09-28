@@ -895,3 +895,38 @@ test_module_size_ratchet and test_complexity_ratchet. `check_complexity
 --mode enforce`: OK, 203 rows. WI-541 (verify the retention layer on this
 box) and WI-545 are unblocked. **Open count: 10** (9 queued, 1 deferred)
 before the sweep.
+
+### WI-620's sweep, and WI-719 lands: the spot check of its close
+
+WI-620's sweep (d7e1be0e) minted three rows:
+- WI-717: the amendment adjudication of LLR-177 and TC-172;
+- WI-718: the first approval of WI-620's fourteen Drafted rows;
+- WI-719: a sampled spot check of the close.
+
+**Open count: 13** (12 queued, 1 deferred). WI-716, WI-717 and WI-718 went
+to one batch-F sitting.
+
+**WI-719.** An independent Fable adjudicator checked WI-620's nineteen
+clauses. Codex Sol cross-reviewed it
+([sol-wi719.md](../reviews/2026-09-27-wave5/sol-wi719.md)) and found two
+recorded-fixture clauses marked MET over fixtures built from documented
+shapes. Ruling 57: a clause that asks for a recorded fixture is not met by a
+constructed one, however openly labelled. The correction re-accounted them,
+and Sol confirmed it SOUND
+([sol-wi719-fix.md](../reviews/2026-09-27-wave5/sol-wi719-fix.md)). The
+tally is thirteen met, one met by supersession, and four clause parts
+openly owed. `OUTCOME: FOLLOW-UP drafts=0`.
+
+The owed parts lived only on closed surfaces, so nothing open tracked them.
+The coordinator folded them into WI-541 instead of filing a row, as the
+verdict proposed:
+- WI-541's occupancy clause now also names the first corrected-occupancy
+  log;
+- two new Done-when bullets carry the live fixture recordings (WI-606's and
+  WI-551's clauses) and the opencode pathway re-check (WI-606's last,
+  verbatim).
+
+The verdict's one observation, a stale sentence in `session_adapters.py`'s
+docstring (it named `agent_session` as its importer; `session_service` is),
+was corrected at the merge. Trunk before this squash: d7e1be0e.
+**Open count: 12** (11 queued, 1 deferred).

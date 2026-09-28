@@ -1,0 +1,7 @@
+<!-- Codex Sol confirmation of WI-719's correction, 890afb27: SOUND. Links re-rooted from the removed worktree. -->
+
+890afb27 SOUND
+
+- [blocker] None.
+- [major] None. WI-606 and WI-551 are explicitly NOT MET for Codex/OpenCode ([verdict:187](../../../docs/reviews/wi-719-spot-check-the-clean-close-of/001-SPOTCHECK-d7e1be0e.md), [verdict:251](../../../docs/reviews/wi-719-spot-check-the-clean-close-of/001-SPOTCHECK-d7e1be0e.md)); the roll-up and follow-up agree ([verdict:121](../../../docs/reviews/wi-719-spot-check-the-clean-close-of/001-SPOTCHECK-d7e1be0e.md), [WI-719:23](../../../docs/archive/work/complete/WI-719-spot-check-the-clean-close-of.md)). The first fold bullet names only the relevant WI-606 and WI-551 clauses ([verdict:317](../../../docs/reviews/wi-719-spot-check-the-clean-close-of/001-SPOTCHECK-d7e1be0e.md), [verdict:325](../../../docs/reviews/wi-719-spot-check-the-clean-close-of/001-SPOTCHECK-d7e1be0e.md)).
+- [minor] None. The census is consistently 19 total and 13 absorbed—explicitly thirteen quoted clauses and arithmetically 3+5+5 ([verdict:123](../../../docs/reviews/wi-719-spot-check-the-clean-close-of/001-SPOTCHECK-d7e1be0e.md), [verdict:356](../../../docs/reviews/wi-719-spot-check-the-clean-close-of/001-SPOTCHECK-d7e1be0e.md), [WI-719:19](../../../docs/archive/work/complete/WI-719-spot-check-the-clean-close-of.md)). No new finding introduced.

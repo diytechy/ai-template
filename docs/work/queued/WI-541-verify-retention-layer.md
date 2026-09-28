@@ -19,6 +19,19 @@ verifies (as the session service's keep operation, after WI-620), so the edge
 follows the successor. (`WI-552` makes this strand
 class visible at mint time.)
 
+**Folded 2026-09-28 from WI-719** (the sampled spot check of WI-620's close,
+wave-5 ruling 57). WI-620 closed with four clause parts openly owed, and
+they are recorded here because this row's live runs on this box produce
+them:
+- WI-606's recorded-fixture clause, and its opencode pathway re-check;
+- WI-551's recorded-fixture clause;
+- the log-fragment half of WI-605's third clause.
+
+The permission classifier refused the builders' live codex and opencode
+runs, so those runs need the owner, or a session they authorize. The
+verdict is
+`docs/reviews/wi-719-spot-check-the-clean-close-of/001-SPOTCHECK-d7e1be0e.md`.
+
 ## Done-when
 
 - The context window each routed family reports on this machine is recorded
@@ -28,7 +41,29 @@ class visible at mint time.)
   provider compacts, or the compaction is logged on the session's row.
 - Occupancy on a real multi-step, tool-using adjudication is checked against
   the latest request's prompt size, the rule the reset trusts, and any
-  disagreement is recorded.
+  disagreement is recorded. The log fragment names the first session log
+  written under the corrected occupancy meaning (the latest request's prompt
+  over the window), and its `context-pct` reads at or under 100 (WI-605's
+  third clause, second half).
+- The first live `codex exec --json` and `opencode run --format json`
+  sessions on this box are recorded into `tests/golden/sessions/`, in place
+  of the documented-shape fixtures (`codex-exec-json.jsonl`,
+  `codex-rollout.jsonl`, `opencode-run-json.jsonl`). Their NOT LIVE first
+  lines are removed, `tests/test_session_adapters.py`'s provenance note and
+  TC-262/263/264/267's method cells say so, and the adapter tests stay green
+  over the recordings. A shape the installed CLI emits differently from the
+  documented one is a finding on the adapter, filed, not patched into the
+  fixture. This carries WI-606's third clause ("a test over a recorded
+  fixture of that CLI's output") and WI-551's third ("each provider's resume
+  and occupancy parsing from recorded fixtures"); `codex-rollout.jsonl`
+  serves both.
+- The opencode pathway checks (stdin prompt delivery, the global `--auto`
+  flag, final-text-only stdout under `--format json`, auth) are re-run on
+  the installed opencode over the changed route, with their output quoted
+  in the log fragment. `docs/agents.toml`'s OPENCODE family and row notes
+  record the version actually tested. A failing check disables the route
+  or is filed, and the version is not bumped over it (WI-606's last clause,
+  carried verbatim).
 - The codex and opencode cache TTLs and the resume replay time at 100k–700k
   tokens are measured.
 - Each reading is in the log fragment with its producing command under `fig:`,

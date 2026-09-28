@@ -15,7 +15,7 @@ the program, and a stand-in agent (a test double, an adopter's wrapper) that
 is none of the three gets the plain adapter, which changes nothing.
 
 Stdlib only, Python 3.11+, Windows/POSIX. A coordinator-layer module: the
-session layer (`agent_session`) imports it, and it imports no kit sibling.
+session service (`session_service`) imports it, and it imports no kit sibling.
 
 Contracts: IF-245 — the interface seam this module declares (process.md §8;
 row of record in docs/requirements/interfaces.toml).
