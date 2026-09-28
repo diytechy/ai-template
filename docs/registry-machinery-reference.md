@@ -830,7 +830,8 @@ actions. A row declaring no scope at all REFUSES: an unstated boundary read as
 
 A `consolidate` adjudication row carries `Digests = "<queue sha>|<spine sha>"`:
 the queue sha over the sorted `(id, title, needs, safety_class)` of every
-`queued/` row, and the spine sha over the three spine registries as they were
+queued WORK row (`queued/`, judgement rows left out, since a judgement is never
+a candidate), and the spine sha over the three spine registries as they were
 when the census asked its question. Empty on every row that is not a
 consolidation.
 

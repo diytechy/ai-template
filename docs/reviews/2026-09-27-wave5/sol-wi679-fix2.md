@@ -1,0 +1,5 @@
+<!-- Codex Sol confirmation of WI-679's third round, fb9ca52a. Links re-rooted. -->
+
+fb9ca52a SOUND
+
+- blocker/major/minor — none. `prior_absorbs` retains nested events ([consolidate.py:387](../../../project-trajectory/scripts/consolidate.py)); regression asserts both events, provenance, and exact Guard 3 successor `{WI-020}` ([test_consolidate.py:633](../../../tests/test_consolidate.py), [test_consolidate.py:656](../../../tests/test_consolidate.py), [test_consolidate.py:661](../../../tests/test_consolidate.py)). `--branch` accurately describes the merged lane and pre-merge claim ([intake.py:3162](../../../project-trajectory/scripts/intake.py)). LLR-210 and TC-208 add only the nested-event behavior and its evidence ([low-level-requirements.toml:2223](../../../docs/requirements/low-level-requirements.toml), [test-cases.toml:2120](../../../docs/test/test-cases.toml)). No new findings.

@@ -2456,11 +2456,25 @@ def test_the_mint_refuses_a_draft_that_absorbs_a_consolidations_own_successor():
         {"WI-ID": "WI-005", "Status": "restructured", "Supersedes": "", "Title": "a"},
         {"WI-ID": "WI-101", "Status": "queued", "Supersedes": "WI-005", "Title": "b"},
         {"WI-ID": "WI-102", "Status": "queued", "Supersedes": "", "Title": "c"},
+        # The judgement that absorbed WI-005: without it and its recorded
+        # verdict, WI-101 is a hand consolidation's host, which no judgement
+        # protects.
+        {
+            "WI-ID": "WI-004",
+            "Status": "done",
+            "Brief": "consolidate",
+            "Adjudicates": "WI-005",
+            "Title": "j",
+        },
     ]
+    bodies = {
+        "WI-004": '\n## Consolidation\n\n```toml\noutcome = "consolidate"\n```\n'
+        '\n## Dispositions\n\n```toml\ntitle = "b"\nsupersedes = ["WI-005"]\n```\n'
+    }
     ok = [{"title": "fine", "supersedes": ["WI-102"]}]
-    assert intake._pre_mint_refusal(ok, "the census", registry) is None
+    assert intake._pre_mint_refusal(ok, "the census", registry, bodies) is None
     bad = [{"title": "overturn", "supersedes": ["WI-101"]}]
-    refusal = intake._pre_mint_refusal(bad, "the census", registry)
+    refusal = intake._pre_mint_refusal(bad, "the census", registry, bodies)
     assert refusal and "WI-101" in refusal and "RETURN-TO-DRAFT" in refusal
     assert "the census" in refusal
 
@@ -2548,6 +2562,269 @@ def test_a_bare_sweep_still_walks_the_terminal_folders(tmp_path, capsys):
     assert _sweep(root) == 0
     assert "sweep minted 1 row(s)." in capsys.readouterr().out
     assert any("work/partial/WI-005" in ref for ref in _minted_specrefs(root))
+
+
+# --- `sweep --merged`: the merge-slot intake for a merge the slot did not make --
+#
+# A hand merge (a coordinator squash-merging a lane) lands work without
+# `integrate_one`, so nothing mints what the merge owed. The range sweep
+# re-runs the diff triggers and the merge checkpoint but has no outcomes map;
+# `--with-terminal` supplies one for EVERY close the repository ever made.
+# `--merged` names the rows this merge closed, and their outcome is read from
+# the terminal folder each one is in.
+
+
+def hand_merged_repo(tmp_path):
+    """`sweep_repo`, plus a SECOND early close with its own report that the
+    hand merge did not land: the row a whole-history scan would wrongly judge."""
+    root, before, after = sweep_repo(tmp_path)
+    write_spec(root, "partial", "WI-006", slug="older", specref="seed.txt")
+    write_close_report(root, "WI-006", "wi-006", tier="strong")
+    _commit(root, "an older early close", when=T_LATER + 10)
+    return root, before, _rev(root)
+
+
+def test_merged_mints_what_the_named_rows_owe_and_nothing_else(tmp_path, capsys):
+    root, before, after = hand_merged_repo(tmp_path)
+    argv = ("--before", before, "--after", after, "--branch", "wi-005")
+    argv += ("--merged", "WI-005")
+    assert _sweep(root, *argv) == 0
+    assert "sweep minted 2 row(s)." in capsys.readouterr().out
+    refs = _minted_specrefs(root)
+    # The range's amendment row, and the named early close's disposition...
+    assert any("work/partial/WI-005" in ref for ref in refs), refs
+    assert len(_adjudications(root)) == 2
+    # ...and never the close this merge did not land.
+    assert not any("work/partial/WI-006" in ref for ref in refs), refs
+    # Idempotent like every sweep: the titles are the events' identities.
+    assert _sweep(root, *argv) == 0
+    assert len(_adjudications(root)) == 2
+
+
+def test_merged_refuses_a_row_no_terminal_folder_holds(tmp_path, capsys):
+    root, before, after = hand_merged_repo(tmp_path)
+    head = _rev(root)
+    argv = ("--before", before, "--after", after, "--branch", "wi-005")
+    assert _sweep(root, *argv, "--merged", "WI-005;WI-003") == 1
+    err = capsys.readouterr().err
+    assert "WI-003" in err and "terminal" in err
+    assert _rev(root) == head, "a refusal mints nothing"
+
+
+def test_merged_refuses_a_row_two_terminal_folders_hold(tmp_path, capsys):
+    """Two folders holding one row is two outcomes for one close; reading the
+    first found would judge a close the merge may not have made."""
+    root, before, after = hand_merged_repo(tmp_path)
+    write_spec(root, "complete", "WI-005", slug="returned", specref="seed.txt")
+    _commit(root, "the same row closed twice", when=T_LATER + 20)
+    head = _rev(root)
+    argv = ("--before", before, "--after", head, "--branch", "wi-005")
+    assert _sweep(root, *argv, "--merged", "WI-005") == 1
+    err = capsys.readouterr().err
+    assert "WI-005" in err and "exactly one terminal folder" in err
+    assert _rev(root) == head
+
+
+def test_merged_and_with_terminal_are_one_question_asked_two_ways(tmp_path):
+    root, before, after = hand_merged_repo(tmp_path)
+    with pytest.raises(SystemExit):
+        _sweep(root, "--merged", "WI-005", "--with-terminal")
+
+
+def test_merged_needs_a_real_range_and_the_lane_branch(tmp_path, capsys):
+    """`--merged` judges ONE merge: the range it landed and the lane it landed
+    from. A zero-length range judges no merge at all, and without the branch the
+    Done-when arm could not look for the claim, so both refuse before anything
+    is read."""
+    root, before, after = hand_merged_repo(tmp_path)
+    head = _rev(root)
+    for argv in (
+        ("--branch", "wi-005", "--merged", "WI-005"),
+        (
+            "--before",
+            after,
+            "--after",
+            after,
+            "--branch",
+            "wi-005",
+            "--merged",
+            "WI-005",
+        ),
+        (
+            "--before",
+            "HEAD",
+            "--after",
+            "HEAD",
+            "--branch",
+            "wi-005",
+            "--merged",
+            "WI-005",
+        ),
+    ):
+        assert _sweep(root, *argv) == 1, argv
+        assert "range" in capsys.readouterr().err, argv
+    assert _sweep(root, "--before", before, "--after", after, "--merged", "WI-005") == 1
+    assert "--branch" in capsys.readouterr().err
+    assert _rev(root) == head
+
+
+def hand_lane_repo(tmp_path):
+    """`(root, before, after)`: ONE hand merge that lands four closes and an
+    SR row handed over `Drafted`. Before it, trunk holds WI-007's claim under
+    `active/wi-007/` with its Done-when; the merge closes WI-007 into
+    `complete/` with that Done-when reworded, closes the clean row WI-008 (the
+    spot check samples every 4th id), and merges the adjudication WI-009 whose
+    `## Dispositions` drafts a follow-up. A clean close WI-012 already on file
+    (also sampled) is one this merge did not land."""
+    root = git_repo(tmp_path)
+    write_sr(root)
+    write_spec(root, "complete", "WI-012", slug="older", specref="seed.txt")
+    write_spec(
+        root, "active/wi-007", "WI-007", specref="seed.txt", body=DONE_WHEN_AT_CLAIM
+    )
+    _commit(root, "claim: WI-007 -> active/wi-007 (bookkeeping)", T_CODE)
+    before = _rev(root)
+    for stale in (root / "docs" / "work" / "active" / "wi-007").glob("*.md"):
+        stale.unlink()
+    reworded = DONE_WHEN_AT_CLAIM.replace("60 fps", "30 fps")
+    write_spec(root, "complete", "WI-007", body=reworded)
+    write_spec(root, "complete", "WI-008", slug="clean", specref="seed.txt")
+    write_spec(
+        root,
+        "complete",
+        "WI-009",
+        slug="judged",
+        safety_class="adjudication",
+        body=(
+            "\n## Dispositions\n\n```toml\n"
+            'title = "follow up the widget judgement"\n'
+            'workstream = "process"\nbuildtier = "medium"\n```\n'
+        ),
+    )
+    write_sr(root, requirement="fresh draft", status="Drafted")
+    _commit(root, "WI-007: the squash-merged lane, closed by hand", when=T_LATER)
+    _released(root)
+    return root, before, _rev(root)
+
+
+def _titles(root):
+    return {r["Title"] for r in queued_rows(root).values()}
+
+
+def test_merged_mints_every_arm_the_slot_would_have_for_a_hand_merge(tmp_path, capsys):
+    root, before, after = hand_lane_repo(tmp_path)
+    argv = ("--before", before, "--after", after, "--branch", "wi-007")
+    assert _sweep(root, *argv, "--merged", "WI-007;WI-008;WI-009") == 0
+    titles = _titles(root)
+    # (a2) the first-approval row over the SR the merge handed over Drafted,
+    assert any("FIRST APPROVAL" in t and "SR-001" in t for t in titles), titles
+    # the clean-close spot check of the sampled row it closed, and not of the
+    # sampled row already on file,
+    assert any("spot-check the clean close of WI-008" in t for t in titles), titles
+    assert not any("WI-012" in t for t in titles), titles
+    # (d) the follow-up the merged adjudication drafted,
+    assert "follow up the widget judgement" in titles, titles
+    # and the Done-when arm, which found WI-007's claim under the named branch.
+    assert any("Done-when WI-007 changed" in t for t in titles), titles
+    # The two rows that branch never claimed say so, one line each.
+    err = capsys.readouterr().err
+    assert "WI-008" in err and "Done-when check did not run" in err
+    assert "WI-009" not in err  # an adjudication row is excluded by rule (R3)
+
+
+def test_merged_says_by_name_when_the_done_when_arm_cannot_run(tmp_path, capsys):
+    root, before, after = hand_lane_repo(tmp_path)
+    argv = ("--before", before, "--after", after, "--branch", "build/wi-007")
+    assert _sweep(root, *argv, "--merged", "WI-007") == 0
+    err = capsys.readouterr().err
+    line = [ln for ln in err.splitlines() if "WI-007" in ln]
+    assert len(line) == 1 and "Done-when check did not run" in line[0], err
+    assert "build/wi-007" in line[0]
+    assert not any("Done-when WI-007 changed" in t for t in _titles(root))
+
+
+# --- `consolidate`: the consolidation census as a command ----------------------
+#
+# The dispatcher's idle arm mints the census's row and discards its reason. A
+# person running the census (a coordinator, or an adopter without the loop)
+# needs the reason as much as the row: "nothing overlaps" and "a judgement
+# already names these rows" are both answers.
+
+
+def overlap_repo(tmp_path, *, overlap=True):
+    """Two queued rows that share one spec of record (or do not), on a repo
+    whose spine registry is the census's spec-of-record probe."""
+    root = git_repo(tmp_path)
+    write_sr(root)
+    write_spec(
+        root, "queued", "WI-010", slug="alpha", title="Alpha", specref="seed.txt"
+    )
+    write_spec(
+        root,
+        "queued",
+        "WI-011",
+        slug="beta",
+        title="Beta",
+        specref="seed.txt" if overlap else "docs/stack.ini",
+    )
+    _commit(root, "an overlapping queue", when=T_CODE)
+    return root
+
+
+def _consolidate(root, *extra):
+    return intake.main(["--root", str(root), "consolidate", *extra])
+
+
+def test_the_consolidation_census_dry_run_names_the_cluster_and_mints_nothing(
+    tmp_path, capsys
+):
+    root = overlap_repo(tmp_path)
+    head = _rev(root)
+    assert _consolidate(root, "--dry-run") == 0
+    out = capsys.readouterr().out
+    assert "WI-010;WI-011" in out and "share one spec of record" in out
+    assert "dry run" in out
+    assert _rev(root) == head and _adjudications(root) == []
+
+
+def test_the_consolidation_census_mints_one_row_then_says_why_not_again(
+    tmp_path, capsys
+):
+    root = overlap_repo(tmp_path)
+    assert _consolidate(root) == 0
+    out = capsys.readouterr().out
+    assert "consolidation census minted 1 row(s)" in out
+    (row,) = _adjudications(root)
+    assert row["Brief"] == "consolidate"
+    assert row["Adjudicates"] == "WI-010;WI-011"
+    # The printed digests pair IS the recorded cell.
+    assert row["Digests"] and "digests {}".format(row["Digests"]) in out
+    head = _rev(root)
+    assert _consolidate(root) == 0
+    out = capsys.readouterr().out
+    assert row["WI-ID"] in out and "never stacks" in out
+    assert _rev(root) == head
+
+
+def test_a_refused_consolidation_mint_says_why_on_stderr_and_exits_1(tmp_path, capsys):
+    """A mint refusal is a failure, not an answer: the census found a cluster
+    and nothing was filed. An uncommitted edit to a path the mint must write
+    (the id watermark) is the refusal the bookkeeping commit makes."""
+    root = overlap_repo(tmp_path)
+    mark = root / "docs" / "id-watermark"
+    mark.write_text(mark.read_text(encoding="utf-8") + "# edit\n", encoding="utf-8")
+    head = _rev(root)
+    assert _consolidate(root) == 1
+    err = capsys.readouterr().err
+    assert err.startswith("intake: ") and "id-watermark" in err, err
+    assert _rev(root) == head and _adjudications(root) == []
+
+
+def test_the_consolidation_census_says_why_it_proposes_nothing(tmp_path, capsys):
+    root = overlap_repo(tmp_path, overlap=False)
+    assert _consolidate(root) == 0
+    assert "no queued rows overlap" in capsys.readouterr().out
+    assert _adjudications(root) == []
 
 
 # --- SR-215 at the merge checkpoint (TC-248's merge half) ---------------------
@@ -2639,6 +2916,28 @@ def test_a_merge_changing_an_observation_input_mints_one_rejudge_item(tmp_path):
     minted, refusal = intake.intake_after_merge(root, before, _rev(root), {}, "wi-004")
     assert refusal is None, refusal
     assert minted == []
+    assert len(_rejudge_rows(root)) == 1
+
+
+def test_a_sweep_after_a_hand_merge_runs_the_merge_checkpoint(tmp_path, capsys):
+    """A merge made outside the slot runs no checkpoint, so a changed
+    observation input files nothing until someone sweeps the range. The sweep's
+    range shape runs the checkpoint at `--after`, which is the command a person
+    who merged by hand runs."""
+    root = observed_repo(tmp_path)
+    before = _rev(root)
+    (root / "src" / "page.txt").write_text("changed\n", encoding="utf-8", newline="\n")
+    write_spec(root, "complete", "WI-005", slug="lane", specref="seed.txt")
+    _commit(root, "a squash-merged lane, its spec closed by hand", when=T_CODE + 100)
+    after = _rev(root)
+    argv = ("--before", before, "--after", after, "--branch", "wi-005")
+    assert _sweep(root, *argv, "--merged", "WI-005") == 0
+    assert "sweep minted 1 row(s)." in capsys.readouterr().out
+    (row,) = _rejudge_rows(root)
+    assert row["Adjudicates"] == "TC-001"
+    # The same sweep again files none while that row is open.
+    assert _sweep(root, *argv, "--merged", "WI-005") == 0
+    assert "nothing to mint." in capsys.readouterr().out
     assert len(_rejudge_rows(root)) == 1
 
 

@@ -2129,3 +2129,25 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """source - consumes no declared seam: pure text functions plus one read of the claim-time copy through kitlib.git. The section itself comes from kitlib.registry.done_when_section, so the tolerant heading rule keeps one home. Ticks, strikethrough and appended evidence in the form closed specs use (an evidence separator and an evidence token) read as the item unchanged; any other appended text is a change, closing punctuation or not, because that is how an item gets narrowed."""
+
+[interface.IF-243]
+rationale = """Running the consolidation census is a person's act whenever the loop is not the one running it, and a census that proposes nothing is the usual answer, so the command prints the census's own reason to keep that answer legible. Minting through the mint's one bookkeeping commit keeps the person's uncommitted work in the checkout out of the commit and in place."""
+owner = "scripts/intake"
+requestors = ["external:downstream adopter"]
+channel = "cli"
+data = "consolidate [--dry-run] [--root] · exit 0 minted one row, proposed nothing (its reason printed) or dry run · 1 the mint refused, nothing minted"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """No tie-back: the argv comes in from the person running the census, and the frame declares no inbound crossing for an invocation. The dispatcher's idle arm mints the same draft through the importer seam of the mint."""
+
+[interface.IF-244]
+rationale = """A merge made outside the merge slot mints nothing, so the person who made it runs the slot's intake by hand; naming the rows that merge closed gives the sweep the outcomes map the slot reads off the branch, which neither the range shape nor the whole-history terminal scan supplies. Minting through the mint's one bookkeeping commit keeps that person's uncommitted work out of the commit and in place."""
+owner = "scripts/intake"
+requestors = ["external:downstream adopter"]
+channel = "cli"
+data = "sweep [--before SHA] [--after SHA] [--branch LABEL] [--with-terminal | --merged WI-###[;WI-###]] [--root] · 0 minted or none owed · 1 refused"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """No tie-back: the argv comes in from the person recovering or completing a merge, and the frame declares no inbound crossing for an invocation. The merge slot runs the same intake through the importer seam of the mint, with the outcomes it reads off the merged branch."""

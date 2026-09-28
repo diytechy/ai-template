@@ -27,10 +27,21 @@ THE THREE GUARDS, and why a census needs guards a merge hook does not. A mint at
 merge fires on an event; a census fires on a STATE, so it will fire again on the
 next tick unless something remembers. All three are read off typed cells:
 
-  1. **Never stack a judgement.** `_pending_refusal`: no row is minted while any
-     adjudication row is queued or active. A consolidation must not judge a row a
-     lane is holding, and two judgements in the frontier at once is the shape the
-     scheduler's rank-1 exclusivity exists to avoid.
+  1. **Never stack a judgement.** A consolidation never judges a row another
+     judgement is about to judge, and never judges a row a lane holds. Three
+     refusals carry it (`_pending_refusal`, `_touch_refusal`): none while any
+     judgement is ACTIVE (its landing moves the queue or the spine this row
+     would record, so the close would refuse by drift); none while another
+     consolidation is pending; and none while a QUEUED judgement's
+     `Adjudicates` names a row of the candidate set, or while one would run
+     BEFORE this row under the scheduler's own ordering (`_order_refusal`). A
+     queued judgement that does neither holds nothing back: judgements are
+     exclusive, so one the scheduler runs after this row cannot move anything
+     it judges. (Refusing on ANY queued judgement starved the census in a loop
+     that always has one open, which is how this repository's own 2026-09-27
+     consolidation came to be done by hand.) Judgement rows are also never
+     CANDIDATES — absorbing one would archive a judgement nobody performed —
+     and never move the queue digest, which is taken over the same population.
   2. **A judged queue state is never judged again.** `_judged_refusal`: the
      minted row carries `Digests` — the queue sha and the spine sha it saw — and
      a `consolidate` row carrying THIS queue sha, in ANY status including the
@@ -39,8 +50,15 @@ next tick unless something remembers. All three are read off typed cells:
      judgement forever.
   3. **A consolidation does not re-litigate its own output.** A successor is
      recognisable from the registry alone — it is a row whose `Supersedes` names
-     a `restructured` row, and only a consolidation close files a row there — so
-     `_seed_pairs` drops any pair involving one. Its successors still reach the
+     a `restructured` row that a consolidation judgement ENACTED: a closed
+     `consolidate` row whose recorded `## Consolidation` outcome is
+     `consolidate` and whose `## Dispositions` draft supersedes that row
+     (`enacted_absorbs`) — so `_seed_pairs` drops any pair involving one. A
+     judgement that queued, edged or returned the rows, or was cancelled,
+     enacted nothing, and a mere `Adjudicates` scope is the question, not the
+     answer. A HAND consolidation (a trunk commit standing in for the close)
+     absorbs rows the same way and records no judgement, so its host is not
+     read as judged: it seeds clusters and may be absorbed like any row. Its successors still reach the
      brief (as open rows, and as `{prior}`), because a cluster formed for other
      reasons may legitimately contain one; what they never do is SEED a cluster.
      Re-absorbing one is refused outright at the mint (`reabsorption_refusal`),
@@ -79,9 +97,11 @@ import tomllib
 from pathlib import Path
 
 import agent_common as ac
+import schedule
 import spec_move
 import spine_carrier
 from kitlib import registry as kitregistry
+from kitlib.spine import is_example
 
 WORK = "docs/work"
 #: Terminal history's home since WI-504 — the archive half of the one registry
@@ -127,7 +147,21 @@ LLR_REGISTRY = "docs/requirements/low-level-requirements.toml"
 #: Statuses a row occupies while it is still somebody's to run.
 OPEN_STATUSES = frozenset({"draft", "queued", "active", "deferred"})
 QUEUED = "queued"
+ACTIVE = "active"
+#: The status a closed row's `complete/` folder reads as: the only one in which
+#: a consolidation's verdict has been enacted (its merge minted the successor).
+DONE = "done"
 RESTRUCTURED = "restructured"
+#: The `SafetyClass` every judgement row carries, whatever its brief.
+JUDGEMENT = "adjudication"
+#: The `{prior}` marker on an absorbed row no judgement enacted. The brief tells
+#: the judge that overturning an earlier consolidation pages the owner, which is
+#: true of a judged absorption and false of a hand commit, so each absorbed row
+#: says which it was.
+# Implements: SR-220, LLR-210
+HAND_LABEL = "(by hand)"
+#: ...and the marker on one a judgement enacted, naming the judging row.
+JUDGED_LABEL = "(judged by {})"
 
 #: How many hex characters of each sha the cell carries. Twelve is the same
 #: width `gen_prompt_catalog` publishes: long enough that a collision is not a
@@ -167,9 +201,29 @@ def queued_rows(rows):
     return [r for r in rows if _cell(r, "Status") == QUEUED]
 
 
+def is_judgement(row):
+    """Whether a row is a judgement (an adjudication row, whatever its brief)."""
+    return _cell(row, "SafetyClass").lower() == JUDGEMENT
+
+
+def queued_work(rows):
+    """The census's POPULATION: the queued rows that are work, not judgements.
+
+    A judgement is never a candidate: absorbing one would archive a judgement
+    nobody performed, and two verdict grammars do not merge into one row. The
+    queue digest is taken over the same population, so a judgement minted or
+    closed beside an unchanged work queue does not make that queue a new
+    question. Every digest recorded before this rule was taken while no
+    judgement was queued (guard 1 refused otherwise), so none of them moves.
+
+    Implements: SR-220, LLR-210
+    """
+    return [r for r in queued_rows(rows) if not is_judgement(r)]
+
+
 def queue_digest(rows):
     """The sha of the QUEUE STATE: sorted `(id, title, needs, safety_class)`
-    over the `queued/` rows (plan §1.3).
+    over the queued work rows (plan §1.3; `queued_work`).
 
     FOUR FIELDS AND NOT THE WHOLE ROW, deliberately. The question a
     consolidation answers is "are these the same work item, and may they run
@@ -188,7 +242,7 @@ def queue_digest(rows):
             _cell(r, "Predecessors"),
             _cell(r, "SafetyClass"),
         )
-        for r in queued_rows(rows)
+        for r in queued_work(rows)
     )
     return _sha("\n".join("\x1f".join(parts) for parts in keyed))
 
@@ -242,17 +296,87 @@ def _superseded(row):
     return {tok.strip() for tok in _cell(row, "Supersedes").split(";") if tok.strip()}
 
 
-def consolidation_successors(rows):
-    """The ids of rows a consolidation MINTED — read from the registry, not
-    remembered.
+def enacted_absorbs(rows, bodies):
+    """`{judging id: [absorbed ids]}` for every consolidation judgement that
+    ENACTED an absorption, read from the registry and the judging rows' own
+    recorded verdicts. `bodies` is `spec_bodies`' `{wi id: body}`.
 
-    A successor is a row whose `Supersedes` names a `restructured` row, and that
-    is exact rather than heuristic: `restructured/` is the one terminal folder a
-    lane may not close into, so only a consolidation close (or a hand trunk
-    commit standing in for one) puts a row there. Counting `len(Supersedes) > 1`
-    instead would have been a guess — a disposition names one predecessor and a
-    consolidation that absorbed exactly one row would be invisible."""
-    absorbed = {_cell(r, "WI-ID") for r in rows if _cell(r, "Status") == RESTRUCTURED}
+    THE ANSWER, NOT THE QUESTION. A `consolidate` row's `Adjudicates` cell is
+    the scope it was asked about; a verdict of `queue`, `queue-with-edge` or
+    `return-to-draft`, or a cancelled row, absorbed nothing in it. So a row
+    counts only when it closed (`done`: its merge minted the successor), its
+    `## Consolidation` block parses with outcome `consolidate` (`parse_verdict`),
+    and its `## Dispositions` draft supersedes the row (`absorbed_ids`), which
+    is the value the mint acted on; the absorbed row must also BE
+    `restructured`. A hand trunk commit leaves no such record, which is the
+    truth about it: nobody judged it. A declared "by hand" cell would be a
+    second source that could disagree with this one.
+
+    Implements: SR-220, LLR-210
+    """
+    restructured = {
+        _cell(r, "WI-ID") for r in rows if _cell(r, "Status") == RESTRUCTURED
+    }
+    out = {}
+    for row in consolidations(rows):
+        wid = _cell(row, "WI-ID")
+        if _cell(row, "Status") != DONE:
+            continue
+        absorbed = [
+            a
+            for a in _enacted_supersedes("\n" + ((bodies or {}).get(wid) or ""), wid)
+            if a in restructured
+        ]
+        if absorbed:
+            out[wid] = absorbed
+    return out
+
+
+def _enacted_supersedes(text, where):
+    """The ids one judging spec's verdict absorbed: its `## Dispositions`
+    drafts' `supersedes` when its `## Consolidation` outcome is `consolidate`,
+    else none. A block that does not parse enacted nothing: the close and the
+    mint refuse a malformed verdict, so no absorption rode on one."""
+    record, _refusal = parse_verdict(text, where)
+    if record is None or record["outcome"] != "consolidate":
+        return []
+    drafts = []
+    for block in _section_blocks(text, DISPOSITIONS_SECTION) or []:
+        try:
+            drafts.append(tomllib.loads(block))
+        except tomllib.TOMLDecodeError:
+            continue
+    return absorbed_ids(drafts)
+
+
+def judged_absorbed(rows, bodies):
+    """`{absorbed id: judging id}` for every row a judgement enacted the
+    absorption of (`enacted_absorbs`).
+
+    Implements: SR-220, LLR-210
+    """
+    return {
+        absorbed: judge
+        for judge, ids in sorted(enacted_absorbs(rows, bodies).items())
+        for absorbed in ids
+    }
+
+
+def consolidation_successors(rows, bodies):
+    """The ids of rows a consolidation JUDGEMENT minted — read from the
+    registry, not remembered.
+
+    A successor is a row whose `Supersedes` names a row a judgement enacted the
+    absorption of (`judged_absorbed`). Counting `len(Supersedes) > 1` instead
+    would have been a guess — a disposition names one predecessor and a
+    consolidation that absorbed exactly one row would be invisible. A hand
+    consolidation's host is NOT one: reading it as judged switched guard 3 on
+    for a question no judge answered, so the census could neither propose it
+    nor let a judge absorb it.
+
+    Implements: SR-220, LLR-210
+    """
+    absorbed = set(judged_absorbed(rows, bodies))
     return {
         _cell(r, "WI-ID")
         for r in rows
@@ -261,22 +385,52 @@ def consolidation_successors(rows):
 
 
 def prior_absorbs(rows):
-    """`{consolidation id: [absorbed ids]}` for every consolidation that has
-    already run — the `{prior}` evidence (plan §1.4).
+    """`{successor id: [absorbed ids]}` for every absorption on record — the
+    `{prior}` evidence (plan §1.4).
 
-    Derived from the ABSORBED rows' own status and lineage rather than from any
-    verdict file: a verdict is a claim, the registry is the record, and rule 1
-    of `adjudicate_brief` says a judge's evidence comes from the second."""
+    Read from each successor's `Supersedes` against the rows that ARE
+    `restructured`, which is where the mint writes the lineage (a `Supersedes`
+    naming a row that is not `restructured` is a continuation of a partial or
+    cancelled predecessor, not an absorption). EVERY such event, whatever the
+    successor's own status now: a host may itself be absorbed later (a hand
+    host is an ordinary row), and the chain's first event is exactly the one a
+    judge may be about to re-litigate, so it stays on record after its
+    successor goes `restructured` too. Derived from the registry rather than
+    from any verdict file: a verdict is a claim, the registry is the record,
+    and rule 1 of `adjudicate_brief` says a judge's evidence comes from the
+    second.
+
+    Implements: SR-220, LLR-210
+    """
+    restructured = {
+        _cell(r, "WI-ID") for r in rows if _cell(r, "Status") == RESTRUCTURED
+    }
     out = {}
     for row in rows:
-        if _cell(row, "Status") != RESTRUCTURED:
-            continue
-        for successor in sorted(_superseded(row)):
-            out.setdefault(successor, [])
-            wid = _cell(row, "WI-ID")
-            if wid and wid not in out[successor]:
-                out[successor].append(wid)
-    return {succ: sorted(ids) for succ, ids in out.items()}
+        wid = _cell(row, "WI-ID")
+        absorbed = sorted(_superseded(row) & restructured)
+        if wid and absorbed:
+            out[wid] = absorbed
+    return out
+
+
+def prior_line(successor, absorbed, judged):
+    """One `{prior}` line: the successor and each absorbed row with its
+    provenance, so a mixed absorption (a judgement's, then a hand commit's) is
+    never all called one thing. `judged` is `judged_absorbed`'s map.
+
+    Implements: SR-220, LLR-210
+    """
+    return "- {} absorbed {}".format(
+        successor,
+        ", ".join(
+            "{} {}".format(
+                wid,
+                JUDGED_LABEL.format(judged[wid]) if wid in judged else HAND_LABEL,
+            )
+            for wid in absorbed
+        ),
+    )
 
 
 # --- the two signals the mechanical pre-filter does not carry ------------------
@@ -385,7 +539,7 @@ def _model(rows):
     ]
 
 
-def pair_findings(root, rows):
+def pair_findings(root, rows, bodies=None):
     """`[(first, second, finding)]` over the QUEUED rows — the mechanical
     pre-filter (`queue_conflict_pairs`) plus the two signals of plan §1.3.
 
@@ -394,10 +548,12 @@ def pair_findings(root, rows):
     the ticks that actually run a census."""
     import check_trajectory as ct
 
-    queued = queued_rows(rows)
+    # The `-000` example documents the format and is inert everywhere else; in
+    # the population it paired with seven rows of this repository's queue.
+    queued = [r for r in queued_work(rows) if not is_example(_cell(r, "WI-ID"))]
     out = list(ct.queue_conflict_pairs(_model(queued)))
     llrs = _llr_rows(root)
-    bodies = spec_bodies(root)
+    bodies = spec_bodies(root) if bodies is None else bodies
     facts = {
         _cell(r, "WI-ID"): (
             _commissioning_docs(r),
@@ -434,7 +590,7 @@ def pair_findings(root, rows):
     return sorted(set(out))
 
 
-def _seed_pairs(rows, findings):
+def _seed_pairs(rows, findings, bodies):
     """The findings that may SEED a cluster: everything except a pair involving
     a row an earlier consolidation minted (guard 3).
 
@@ -444,7 +600,7 @@ def _seed_pairs(rows, findings):
     plan's §4 third measurement is unreachable: after a close absorbs two rows
     the successor inherits their overlaps, so the very next census would mint a
     judgement over the judgement it just enacted."""
-    minted = consolidation_successors(rows)
+    minted = consolidation_successors(rows, bodies)
     return [f for f in findings if f[0] not in minted and f[1] not in minted]
 
 
@@ -460,8 +616,9 @@ def clusters(root, rows):
 
     Implements: SR-220, LLR-210
     """
-    findings = pair_findings(root, rows)
-    seeds = _seed_pairs(rows, findings)
+    bodies = spec_bodies(root)
+    findings = pair_findings(root, rows, bodies)
+    seeds = _seed_pairs(rows, findings, bodies)
     ids = sorted({f[0] for f in seeds} | {f[1] for f in seeds})
     if len(ids) < 2:
         return [], []
@@ -473,18 +630,47 @@ def clusters(root, rows):
 
 
 def _pending_refusal(rows):
-    """Guard 1: no judgement is minted beside another judgement."""
-    live = [
+    """Guard 1, the half decided before the census: no judgement in progress,
+    and no other consolidation pending (this module's header says why)."""
+    active = sorted(
         _cell(r, "WI-ID")
         for r in rows
-        if _cell(r, "SafetyClass").lower() == "adjudication"
-        and _cell(r, "Status") in ("queued", "active")
-    ]
-    if live:
+        if is_judgement(r) and _cell(r, "Status") == ACTIVE
+    )
+    if active:
         return (
-            "an adjudication row is already {} ({}) - a consolidation never "
-            "stacks on another judgement and never judges a row a lane "
-            "holds".format("queued or active", ";".join(sorted(live)))
+            "a judgement is in progress ({}) - its landing moves the queue or "
+            "the spine this consolidation would record, so the census waits "
+            "for it".format(";".join(active))
+        )
+    pending = sorted(
+        _cell(r, "WI-ID") for r in consolidations(rows) if _cell(r, "Status") == QUEUED
+    )
+    if pending:
+        return (
+            "a consolidation is already queued ({}) - a consolidation never "
+            "stacks on another consolidation".format(";".join(pending))
+        )
+    return None
+
+
+def _touch_refusal(rows, ids):
+    """Guard 1, the half decided against the candidate set: no queued
+    judgement's `Adjudicates` names one of `ids`."""
+    chosen = set(ids)
+    hits = []
+    for row in queued_rows(rows):
+        named = {t.strip() for t in _cell(row, "Adjudicates").split(";")} & chosen
+        if is_judgement(row) and named:
+            hits.append(
+                "{} names {}".format(_cell(row, "WI-ID"), ";".join(sorted(named)))
+            )
+    if hits:
+        return (
+            "a queued judgement names a candidate row ({}) - a consolidation "
+            "never stacks on another judgement of the same rows".format(
+                ", ".join(sorted(hits))
+            )
         )
     return None
 
@@ -507,7 +693,7 @@ def _judged_refusal(rows, queue_sha):
     return None
 
 
-def reabsorption_refusal(rows, absorbed):
+def reabsorption_refusal(rows, absorbed, bodies):
     """Guard 3's hard half: a draft may not absorb a row an earlier
     consolidation MINTED.
 
@@ -517,7 +703,7 @@ def reabsorption_refusal(rows, absorbed):
     silently replaced by a second machine mint. `intake._supersedes_refusal`
     covers the adjacent case — absorbing a row already ABSORBED — which is a
     lineage chain rather than an overturned judgement."""
-    minted = consolidation_successors(rows)
+    minted = consolidation_successors(rows, bodies)
     hit = sorted(set(absorbed) & minted)
     if hit:
         return (
@@ -527,6 +713,50 @@ def reabsorption_refusal(rows, absorbed):
             "nothing minted".format(";".join(hit), "a row" if len(hit) == 1 else "rows")
         )
     return None
+
+
+def _order_refusal(rows):
+    """Guard 1, the half that makes its no-race argument TRUE: no queued
+    judgement may run before the consolidation this census would mint.
+
+    The argument for letting an unrelated queued judgement stand is that it
+    cannot run first, so it cannot move what the consolidation judges. That is
+    the SCHEDULER's answer, so it is asked of the scheduler: the would-be row
+    (its priority, its kind, an id above every id on file, which is where the
+    allocator puts it) is ordered with the registry by `schedule.evaluate`, and
+    every queued judgement ahead of it refuses the mint by name. An operator
+    priority at or above `PRIORITY` is the case this catches.
+
+    Implements: SR-220, LLR-210
+    """
+    probe = {
+        "WI-ID": _next_id(rows),
+        "Title": "the consolidation this census would mint",
+        "Status": QUEUED,
+        "SafetyClass": JUDGEMENT,
+        "Priority": str(PRIORITY),
+    }
+    order = [rec["id"] for rec in schedule.evaluate(schedule.load_wis(rows + [probe]))]
+    judgements = {_cell(r, "WI-ID") for r in queued_rows(rows) if is_judgement(r)}
+    ahead = [wid for wid in order[: order.index(probe["WI-ID"])] if wid in judgements]
+    if ahead:
+        return (
+            "a queued judgement would run before this consolidation in the "
+            "scheduler's order ({}) - its landing would move what the "
+            "consolidation judges, so a consolidation never stacks behind "
+            "it".format(";".join(ahead))
+        )
+    return None
+
+
+def _next_id(rows):
+    """An id above every WI id on file, in the allocator's zero-padded shape."""
+    numbers = [
+        int(m.group(1))
+        for r in rows
+        if (m := re.match(r"WI-(\d+)$", _cell(r, "WI-ID")))
+    ]
+    return "WI-{:03d}".format(max(numbers, default=0) + 1)
 
 
 # --- the draft -----------------------------------------------------------------
@@ -553,6 +783,9 @@ def census_draft(root, rows=None):
     ids, findings = clusters(root, rows)
     if not ids:
         return None, "no queued rows overlap - there is nothing to consolidate"
+    refusal = _touch_refusal(rows, ids) or _order_refusal(rows)
+    if refusal:
+        return None, refusal
     specref = _specref(root)
     if not specref:
         return None, (
@@ -594,8 +827,8 @@ def _context(ids, findings, cell):
     outcome would be the mint pre-judging its own judge."""
     return (
         "Minted by the CONSOLIDATION CENSUS (the 2026-09-02 backlog-restructure "
-        "plan §1.3), which runs from an idle station with no other judgement "
-        "queued or active. The candidate cluster is {n} queued row(s): {ids}.\n\n"
+        "plan §1.3), which runs from an idle station with no judgement in "
+        "progress and none queued over these rows or ahead of this one. The candidate cluster is {n} queued row(s): {ids}.\n\n"
         "The mechanical pre-filter selected them; it has concluded NOTHING. "
         "Each line below is a hint a string comparison can produce, and two "
         "rows deliberately cut from one plan share its path and always will:\n\n"
@@ -631,6 +864,21 @@ OUTCOMES = ("queue", "queue-with-edge", "return-to-draft", "consolidate")
 #: prevent.
 VERDICT_KEYS = frozenset({"outcome", "edges", "returns", "finding"})
 _FENCE_RE = re.compile(r"```toml\s*\n(.*?)```", re.S)
+#: Where the verdict's drafted successor lives in the same spec: the value the
+#: mint reads (`intake.parse_dispositions` validates it; this reads only its
+#: `supersedes`, for the enacted-absorption record).
+DISPOSITIONS_SECTION = "## Dispositions"
+
+
+def _section_blocks(text, heading):
+    """The fenced `toml` blocks under `heading` in one spec's text, up to the
+    next `## ` heading, or None when the heading is absent."""
+    _head, sep, tail = (text or "").partition("\n" + heading)
+    if not sep:
+        return None
+    return _FENCE_RE.findall(tail.split("\n## ", 1)[0])
+
+
 #: One `queue-with-edge` edge: the waiter, then the row it must wait on.
 _EDGE_RE = re.compile(r"^(WI-\d+)\s+needs\s+(WI-\d+)$")
 #: The frontmatter `needs = [...]` line, rewritten surgically so the rest of a
@@ -652,10 +900,9 @@ def parse_verdict(text, where):
 
     Implements: SR-220, LLR-210
     """
-    _head, sep, tail = text.partition("\n" + VERDICT_SECTION)
-    if not sep:
+    blocks = _section_blocks(text, VERDICT_SECTION)
+    if blocks is None:
         return None, None
-    blocks = _FENCE_RE.findall(tail.split("\n## ", 1)[0])
     if len(blocks) != 1:
         return None, "{}: {} carries {} toml block(s) - one verdict, one block".format(
             where, VERDICT_SECTION, len(blocks)
@@ -965,7 +1212,7 @@ def close_refusal(root, record, absorbed, rows, where, *, scope, drafts, recorde
         refusal = rung(root, record, absorbed, rows, where, scope, drafts, recorded)
         if refusal:
             return refusal
-    return reabsorption_refusal(rows, absorbed)
+    return reabsorption_refusal(rows, absorbed, spec_bodies(root))
 
 
 def _touched(record, absorbed):

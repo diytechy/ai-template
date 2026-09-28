@@ -1015,7 +1015,7 @@ def consolidate_values(root, row):
         "digests": "recorded at the mint: {}\nas the tree is now:    {}".format(
             recorded, cons.digests(root, rows)
         ),
-        "prior": _prior_lines(cons, rows),
+        "prior": _prior_lines(cons, rows, cons.spec_bodies(root)),
     }, None
 
 
@@ -1084,15 +1084,19 @@ def _other_open_rows(rows, scope):
     return "\n".join(sorted(lines))
 
 
-def _prior_lines(cons, rows):
+def _prior_lines(cons, rows, bodies):
     """`{prior}`: what every earlier consolidation absorbed, from the REGISTRY
-    (the absorbed rows' own status and lineage) and never from a verdict file —
-    rule 1, a judge's evidence is a record and not a claim."""
+    (the successors' lineage and the judging rows' recorded verdicts) and never
+    from a verdict file - rule 1, a judge's evidence is a record and not a
+    claim. Each absorbed row says whether a judgement enacted it or a hand
+    commit did (`cons.prior_line`), because the brief's "overturning one pages
+    the owner" is true only of the first."""
     prior = cons.prior_absorbs(rows)
     if not prior:
         return NO_PRIOR
+    judged = cons.judged_absorbed(rows, bodies)
     return "\n".join(
-        "- {} absorbed {}".format(succ, ";".join(prior[succ])) for succ in sorted(prior)
+        cons.prior_line(succ, prior[succ], judged) for succ in sorted(prior)
     )
 
 

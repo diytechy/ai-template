@@ -120,7 +120,9 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
     # test listing's argv joined them, driven by the adopter's session too,
     # and so did the release re-judge checkpoint's argv (IF-229), run by the
     # person preparing a release, and the flag-axis census's argv (IF-240),
-    # run by the adopter's session.
+    # run by the adopter's session. So did the consolidation census's argv
+    # (IF-243) and the merge-slot intake's recovery sweep (IF-244), each run by
+    # the person operating the process by hand.
     assert [u["id"] for u in frame["untied"]] == [
         "IF-032",
         "IF-036",
@@ -135,5 +137,7 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
         "IF-229",
         "IF-233",
         "IF-240",
+        "IF-243",
+        "IF-244",
     ]
     assert all(u["reason"].startswith("No tie-back") for u in frame["untied"])

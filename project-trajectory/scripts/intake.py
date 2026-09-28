@@ -74,11 +74,11 @@ what the mint wrote and mints NOTHING, and every derived title is deterministic
 intake.py sweep --before <sha> --after <sha>` — is idempotent by exact-title
 dedup.
 
-Contracts: IF-090, IF-229 — the interface seams this module declares (process.md
-§8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-090, IF-229, IF-243, IF-244 — the interface seams this module
+declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-090: the trunk-side intake mint, by importer.
-    `intake_after_merge(root, before, after, outcomes, branch)` is integrate's
+    `intake_after_merge(root, before, after, outcomes, branch, label="")` is integrate's
     post-merge arm: it mints one landed merge's forced rows — the amendment
     adjudications, the FIRST-APPROVAL adjudications over the `Drafted` rows the
     lane handed over on rungs the dial releases (owner ruling 2026-09-01: a lane
@@ -105,6 +105,29 @@ Contract IF-229: the release checkpoint, as a command.
     discarded. The release checklist names this command as a required item.
     `release` is the only checkpoint it accepts: the merge checkpoint runs only
     inside the merge slot, once per merged work item.
+
+Contract IF-243: the consolidation census, as a command.
+    `intake.py [--root <dir>] consolidate [--dry-run]` prints the census's
+    candidate set, its digests and its pre-filter findings, then mints the one
+    queued `consolidate` adjudication row through the mint's bookkeeping commit
+    and exits 0; with `--dry-run` it mints nothing. When the census proposes
+    nothing it prints the census's reason and exits 0, because nothing to
+    consolidate is the healthy answer; a mint refusal prints
+    `intake: <reason>` to stderr and exits 1.
+
+Contract IF-244: the merge-slot intake, re-run by hand.
+    `intake.py [--root <dir>] sweep [--before <sha>] [--after <sha>]
+    [--branch <label>] [--with-terminal | --merged WI-###[;WI-###]]` mints what
+    a landed merge owed, as one bookkeeping commit, idempotent by exact-title
+    dedup. A range judges the diff triggers and the merge checkpoint at
+    `--after`; `--merged` adds the closes of exactly the named rows, each
+    outcome read from the one terminal folder holding it, which is what a merge
+    made outside the slot owes, and needs a range of two different commits and
+    the `--branch` the merge landed from, whose claim the Done-when check reads
+    (a row with no claim there is named on stderr); `--with-terminal`, or no
+    range at all, judges every close on file. A `--merged` row no single
+    terminal folder holds, a `--merged` without its range or branch, or any
+    mint refusal, mints nothing and exits 1 with `intake: <reason>`.
 """
 
 from __future__ import annotations
@@ -298,6 +321,9 @@ _WI_FILE_RE = re.compile(r"^WI-(\d+)-.+\.md$")
 # a report, raise on its undeclared directory, then SILENTLY SKIP it while the
 # id mint counted it as taken.
 REPORTS = "docs/handbacks"
+# Where a claim puts a lane's specs, one folder per branch: the Done-when arm's
+# claimed text is read from here at the pre-merge revision.
+ACTIVE_DIR = "docs/work/active"
 _REPORT_FRONT_RE = re.compile(r"\+\+\+\n(.*?)\n\+\+\+", re.S)
 # The folder -> outcome map the by-hand sweep walks. THREE folders, not four:
 # `restructured/` is terminal but is not a lane OUTCOME — no branch closes into
@@ -1150,13 +1176,28 @@ def _done_when_drafts(root, before, outcomes, branch):
     row must not declare a brief the kit cannot assemble. An adjudication row's
     own lane is skipped (R3: no recursion).
 
+    NEVER SILENT WHEN IT WAS ASKED TO LOOK. With a claim branch named, a closed
+    row whose claim is not under `active/<branch>/` at `before` gets one stderr
+    line naming it and why the check did not run: a skip that says nothing reads
+    as a check that ran and found nothing (a hand-cut lane, never claimed on
+    trunk, is the ordinary case). With no branch, the caller is a whole-history
+    scan that has no one claim to compare against, and the arm does not run.
+
     Implements: SR-156, LLR-262
     """
     drafts = []
     for wi_id in sorted(outcomes or {}):
         found = _closed_spec(root, wi_id, dirs=("complete", "partial", "cancelled"))
-        claimed = kdone.claimed_text(root, before, branch, wi_id) if branch else None
-        if found is None or claimed is None or _is_adjudication(found[1]):
+        if found is None or _is_adjudication(found[1]) or not branch:
+            continue
+        claimed = kdone.claimed_text(root, before, branch, wi_id)
+        if claimed is None:
+            _say(
+                "{}: the Done-when check did not run - no claim of it under "
+                "{}/{}/ at {}, so there is no claimed Done-when to compare the "
+                "close against".format(wi_id, ACTIVE_DIR, branch, str(before)[:10]),
+                err=True,
+            )
             continue
         relpath = found[0]
         try:
@@ -2124,7 +2165,7 @@ def _inject_open_item(root, draft, wi_id):
     return dict(draft, needs=needs), None
 
 
-def _pre_mint_refusal(drafts, subject_verb, registry):
+def _pre_mint_refusal(drafts, subject_verb, registry, bodies):
     """The pre-mint sweep: every draft past `_mint_shape_refusal` with the
     registry in hand. The FIRST refusal, or None.
 
@@ -2149,7 +2190,7 @@ def _pre_mint_refusal(drafts, subject_verb, registry):
         # lives in `consolidate` beside the census that has to state it; this is
         # its call site.
         refusal = consolidate.reabsorption_refusal(
-            registry, supersedes_ids(draft.get("supersedes"))
+            registry, supersedes_ids(draft.get("supersedes")), bodies
         )
         if refusal:
             return "{}: {}".format(subject_verb, refusal)
@@ -2246,8 +2287,15 @@ def _mint(root, drafts, subject_verb):
     drafts = [d for d in drafts if str(d["title"]).strip() not in titles]
     if not drafts:
         return [], None
+    # The enacted-consolidation record guard 3 reads lives in the judging rows'
+    # spec bodies; only a draft that supersedes anything needs it read.
+    bodies = (
+        consolidate.spec_bodies(root)
+        if any(d.get("supersedes") for d in drafts)
+        else {}
+    )
     refusal = _pre_mint_refusal(
-        drafts, subject_verb, registry
+        drafts, subject_verb, registry, bodies
     ) or _supersede_source_refusal(root, drafts, subject_verb)
     if refusal:
         return [], refusal
@@ -2328,7 +2376,7 @@ def _mint_message(minted, subject_verb):
     )
 
 
-def intake_after_merge(root, before, after, outcomes=None, branch=""):
+def intake_after_merge(root, before, after, outcomes=None, branch="", label=""):
     """THE MERGE-SLOT ARM: triggers (a), (a2), (b), (d) and (e) for one landed
     merge. `([(wi_id, relpath)], refusal)`. Serial by construction — the caller
     is `integrate.integrate_one`, inside the held slot, so SR-215's merge
@@ -2352,7 +2400,10 @@ def intake_after_merge(root, before, after, outcomes=None, branch=""):
     if refusal:
         return [], refusal
     drafts += rejudges
-    label = "intake at merge of {}".format(branch or str(after)[:7])
+    # `branch` is the CLAIM identity the Done-when arm looks under; `label`,
+    # when given, only names the mint commit, so a sweep's range label is never
+    # mistaken for a lane.
+    label = "intake at merge of {}".format(label or branch or str(after)[:7])
     return _mint(root, drafts, label)
 
 
@@ -2441,29 +2492,117 @@ def _cmd_sweep(args):
     file's path. Sweeping twice produces the same title twice and the mint's
     exact-title dedup answers it; a genuinely second close is a second report
     and so a second row. That dedup is what makes BOTH shapes re-runnable.
+
+    Implements: SR-215, LLR-265
     """
     root = Path(args.root).resolve()
-    ranged = bool(args.before or args.after)
+    ranged = bool(args.before or args.after or args.merged)
     before, after = args.before or "HEAD", args.after or "HEAD"
-    # ONE walk over the three TERMINAL folders, not one loop per outcome: the
-    # only thing that differs is the folder -> outcome name, which
-    # `integrate.OUTCOME_DIRS` already states once. `None` is the range shape's
-    # answer and is NOT `{}` — it says "this sweep judged no close at all",
-    # which is what keeps triggers (b)/(d) out of an out-of-band range.
-    outcomes = None
-    if args.with_terminal or not ranged:
-        outcomes = {
-            "WI-" + hit.group(1): outcome
-            for status_dir, outcome in sorted(SWEEP_OUTCOMES.items())
-            for path in _terminal_hits(root, status_dir, "WI-*.md")
-            if (hit := _WI_FILE_RE.match(path.name))
-        }
-    branch = args.branch or ("sweep {}..{}".format(before, after) if ranged else "")
-    minted, refusal = intake_after_merge(root, before, after, outcomes, branch)
+    outcomes, refusal = _sweep_outcomes(root, args, ranged)
+    if refusal:
+        return _cli_result(refusal, "")
+    label = args.branch or ("sweep {}..{}".format(before, after) if ranged else "")
+    # Only `--merged` names ONE lane's merge, so only it hands the Done-when arm
+    # a claim identity; a range or history scan labels its commit and no more.
+    claim = args.branch if args.merged else ""
+    minted, refusal = intake_after_merge(
+        root, before, after, outcomes, claim, label=label
+    )
     # `_mint` already announced each row it wrote ("intake: minted <id> at
     # <path>"), so the ending is a COUNT and never a second listing.
     ok = "sweep minted {} row(s).".format(len(minted)) if minted else "nothing to mint."
     return _cli_result(refusal, ok)
+
+
+def _sweep_outcomes(root, args, ranged):
+    """`(outcomes, refusal)`: which closes this sweep judges.
+
+    ONE walk over the three TERMINAL folders, not one loop per outcome: the
+    only thing that differs is the folder -> outcome name, which
+    `integrate.OUTCOME_DIRS` already states once. `None` is the range shape's
+    answer and is NOT `{}` — it says "this sweep judged no close at all",
+    which is what keeps triggers (b)/(d) out of an out-of-band range.
+    `--merged` answers with exactly the named rows, after its shape refusal.
+
+    Implements: SR-215, LLR-265
+    """
+    if args.merged:
+        refusal = _merged_shape_refusal(root, args)
+        if refusal:
+            return None, refusal
+        return merged_outcomes(root, _split(args.merged))
+    if args.with_terminal or not ranged:
+        return {
+            "WI-" + hit.group(1): outcome
+            for status_dir, outcome in sorted(SWEEP_OUTCOMES.items())
+            for path in _terminal_hits(root, status_dir, "WI-*.md")
+            if (hit := _WI_FILE_RE.match(path.name))
+        }, None
+    return None, None
+
+
+def _merged_shape_refusal(root, args):
+    """Why `--merged` cannot judge this invocation, or None: it names ONE merge,
+    so it needs the range that merge landed (`--before` and `--after`, two
+    different commits) and the lane branch whose claim the Done-when arm reads.
+
+    Implements: SR-215, LLR-265
+    """
+    if not (args.before and args.after):
+        return "--merged judges one merge: give its range, --before and --after"
+    shas = []
+    for rev in (args.before, args.after):
+        code, out = ac.git(root, "rev-parse", "--verify", "--quiet", rev + "^{commit}")
+        if code != 0 or not out.strip():
+            return "--merged: {!r} names no commit, so the range is unknown".format(rev)
+        shas.append(out.strip())
+    if shas[0] == shas[1]:
+        return (
+            "--merged: --before and --after are one commit, a zero-length range "
+            "that landed no merge; give the trunk commits before the merge and "
+            "after its specs were closed"
+        )
+    if not args.branch:
+        return (
+            "--merged needs --branch, the lane the merge landed from: the "
+            "Done-when check reads that lane's claim"
+        )
+    return None
+
+
+def merged_outcomes(root, ids):
+    """`({wi id: outcome}, None)` for the rows a merge outside the slot
+    closed, each outcome read from the terminal folder its spec is in, or
+    `({}, refusal)` naming a row no terminal folder holds.
+
+    THE OUTCOMES MAP A HAND MERGE NEVER BUILT. `integrate_one` reads it off the
+    branch it merges; a coordinator who squash-merges a lane and closes its spec
+    on trunk has only the ids. The range sweep alone judges no close, and
+    `--with-terminal` judges every close the repository ever made (a disposition
+    and a sampled spot check per old close), so neither is what that merge owed.
+    A row in no terminal folder refuses rather than being dropped: an owed
+    judgement nobody mints is the silence this module exists to end.
+
+    Implements: SR-215, LLR-265
+    """
+    outcomes, missing = {}, []
+    for wi_id in ids:
+        found = [
+            outcome
+            for status_dir, outcome in sorted(SWEEP_OUTCOMES.items())
+            if _terminal_hits(root, status_dir, wi_id + "-*.md")
+        ]
+        if len(found) == 1:
+            outcomes[wi_id] = found[0]
+        else:
+            missing.append(wi_id)
+    if missing:
+        return {}, (
+            "--merged names {} - not in exactly one terminal folder ({}), so its "
+            "close cannot be judged; close the spec first. Nothing "
+            "minted".format(";".join(missing), ", ".join(sorted(SWEEP_OUTCOMES)))
+        )
+    return outcomes, None
 
 
 # --- the session-hold arms (ruled decision 2, owner 2026-07-31; §A8) -----------
@@ -2886,6 +3025,38 @@ def _cmd_census(args):
     )
 
 
+def _cmd_consolidate(args):
+    """The consolidation census by hand: print its candidate set and findings,
+    or the reason it proposes nothing, and mint its one row unless
+    `--dry-run`. The dispatcher's idle arm (`mint_consolidation`) discards the
+    reason, which a person running the census needs as much as the row.
+
+    Implements: SR-220, LLR-264
+    """
+    root = Path(args.root).resolve()
+    draft, reason = consolidate.census_draft(root)
+    if draft is None:
+        _say("consolidation census: {}.".format(reason))
+        return 0
+    _say(
+        "consolidation census: {} candidate row(s) {}, digests {}:\n{}".format(
+            len(draft["adjudicates"]),
+            ";".join(draft["adjudicates"]),
+            draft["digests"],
+            "\n".join(
+                line for line in draft["context"].splitlines() if line.startswith("> ")
+            ),
+        )
+    )
+    if args.dry_run:
+        _say("dry run - nothing minted.")
+        return 0
+    minted, refusal = _mint(root, [draft], "consolidation census")
+    return _cli_result(
+        refusal, "consolidation census minted {} row(s).".format(len(minted))
+    )
+
+
 def _cmd_rejudge(args):
     """Release preparation's entry to SR-215: file one re-judge row per
     observation test case due at `--rev` (HEAD by default). Release is a
@@ -2988,13 +3159,35 @@ def main(argv=None):
     )
     sweep.add_argument("--before", help="pre-merge trunk sha (trigger a)")
     sweep.add_argument("--after", help="post-merge trunk sha (trigger a)")
-    sweep.add_argument("--branch", default="", help="mint subject (default: the range)")
-    sweep.add_argument("--with-terminal", action="store_true", help="terminal scan too")
+    sweep.add_argument(
+        "--branch",
+        default="",
+        help="the merged lane: with --merged, the branch whose pre-merge claim "
+        "the Done-when check reads (required there); it also names the mint "
+        "commit (default: the range)",
+    )
+    scan = sweep.add_mutually_exclusive_group()
+    scan.add_argument("--with-terminal", action="store_true", help="terminal scan too")
+    scan.add_argument(
+        "--merged",
+        metavar="WI-###[;WI-###]",
+        help="the rows a merge outside the slot closed: judge exactly their "
+        "closes, each outcome read from its terminal folder",
+    )
     sweep.set_defaults(func=_cmd_sweep)
     census_cmd = sub.add_parser(
         "census", help="derive the gap census and mint gap-closure rows"
     )
     census_cmd.set_defaults(func=_cmd_census)
+    cons_cmd = sub.add_parser(
+        "consolidate",
+        help="the consolidation census: mint one consolidate adjudication row "
+        "over the overlapping queued rows, or say why there is none",
+    )
+    cons_cmd.add_argument(
+        "--dry-run", action="store_true", help="print the census, mint nothing"
+    )
+    cons_cmd.set_defaults(func=_cmd_consolidate)
     rejudge_cmd = sub.add_parser(
         "rejudge",
         help="release preparation's checkpoint (SR-215): one re-judge row per "

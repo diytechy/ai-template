@@ -66,3 +66,62 @@ such.
    inputs. The coordinator's hand squash-merges do not run the kit's merge
    checkpoint, so the rows were never minted. That is the hand path bypassing
    the kit's machinery, WI-679's surface, and it is folded there.
+
+5. **WI-679 (f646eff0), the blocker: `sweep --merged` skips the Done-when
+   arm silently — SOL, bounded.** The builder's report says the Done-when
+   check "stays skipped for hand lanes", because a hand-cut lane has no
+   `active/<branch>/` claim on trunk. That is true, but the new design row
+   LLR-265 promises the check. `_done_when_drafts` then continues silently
+   when it cannot find the claim, and a silent skip reads as a check that ran
+   and found nothing. The governing text is the kit's own all-or-nothing rule
+   for evidence (`adjudicate_brief`'s rule 2, and LLR-265 as written).
+   **Ruling:** `--merged` requires a real range (`--before` differs from
+   `--after`). The coordinator's degenerate `--before HEAD --after HEAD` form
+   is withdrawn: batching spine acts by hand is not a kit path to serve. The
+   Done-when arm runs when `--branch` names a claim it can find. When it
+   cannot, it prints one line naming the row and why the arm did not run, and
+   LLR-265 says so. It is never silent. The regression drives a changed
+   Done-when end to end.
+
+6. **WI-679, major: guard 3 keyed on a judgement's scope, not its outcome —
+   SOL.** `judged_absorbed` counts any `consolidate` row's `Adjudicates`,
+   whatever the verdict. A judgement that chose `queue` or returned, or one
+   cancelled, would make a later hand host read as machine-judged. The same
+   defect the builder removed (a mark that claims a judgement nobody made)
+   would come back in another form. **Ruling:** a successor is read from a
+   judgement that ENACTED a consolidation: its recorded `## Consolidation`
+   outcome is `consolidate`, and the absorbed set is the one its drafts name
+   (`parse_verdict`, `absorbed_ids`). `{prior}` labels provenance row by row,
+   so a mixed hand-and-judged absorption is not all called "by hand". Tests
+   cover a `queue` verdict, a returned or cancelled one, and mixed
+   absorption.
+
+7. **WI-679, major: the no-race argument is not enforced — SOL.** The
+   rewritten guard 1 lets a queued judgement that names no candidate stand,
+   because it "cannot run before" a priority-9 consolidation. The scheduler
+   does not guarantee that: an operator priority can rank a judgement at or
+   above it. Drift would refuse the stale close in the end, but a guard whose
+   stated argument is false is the larger defect. **Ruling:** enforce the
+   invariant in the guard, not in the scheduler. The census refuses, by name,
+   while a queued judgement would sort at or before the consolidation under
+   the scheduler's own ordering (reuse it, don't restate it). A regression
+   covers equal and higher priority.
+
+8. **WI-679, major: TC-260 and TC-261 do not cover their design rows clause
+   by clause — SOL.** Each clause LLR-264 and LLR-265 state gets a test that
+   fails if it breaks: the printed digests pair and the refusal's stderr and
+   exit 1 (LLR-264); the spot check, the merged adjudication's Dispositions
+   draft, the first-approval trigger, the Done-when arm (both branches, per
+   ruling 5) and the duplicate-folder refusal (LLR-265). A clause no test can
+   reach leaves the row.
+
+9. **WI-679, second round (1b783955) — SOL on both.** Rulings 5 to 8 are
+   confirmed implemented. The builder's side fix to `prior_absorbs`, which
+   now reads lineage from the successors' `Supersedes`, drops every successor
+   that was itself later restructured. The same round made a hand host
+   absorbable (ruling 6), so a nested chain is now a live case, and LLR-210's
+   and TC-208's "every earlier absorption" would be false of it. **Ruling:**
+   an absorption event stays in `{prior}` after its successor is re-absorbed.
+   A nested hand chain regression asserts both events and their per-row
+   provenance. `sweep --help` describes `--branch` as the merged lane whose
+   pre-merge claim is checked.

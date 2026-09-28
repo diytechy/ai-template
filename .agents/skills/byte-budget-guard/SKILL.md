@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,992 | 2026-09-27 | +12: WI-649 — the ladder line points at process.md §4 for who signs |
 | `CLAUDE.md` | **8,500** | 7,977 | 2026-09-27 | +2: WI-652 re-measures the smoke tier on the 4-core box |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,491 | 2026-09-27 | WI-657 PROCESS and PROCESS_OPTIONS row restamps |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,488 | 2026-09-27 | WI-679 PROCESS_OPTIONS row restamp |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill
 about 10%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
@@ -46,7 +46,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
 | `project-trajectory/PROCESS.md` | 90,276 | 2026-09-27 | **+323** WI-657: §3 gains "a structural move is its own commit" |
-| `project-trajectory/PROCESS_OPTIONS.md` | 192,513 | 2026-09-27 | **+2,696** WI-657: the Complexity ratchet opt-in layer and its index row |
+| `project-trajectory/PROCESS_OPTIONS.md` | 192,813 | 2026-09-27 | **+300** WI-679: consolidation runs through the census, a hand commit the fallback |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

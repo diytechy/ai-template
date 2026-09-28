@@ -32,12 +32,20 @@ def _row(wid, **kw):
     return row
 
 
-def _repo(tmp_path, rows=(), llrs=""):
+def _repo(tmp_path, rows=(), llrs="", bodies=None):
     """A tree with a work folder written by the real converter and the three
-    spine registries present, so the digests are computed over real files."""
+    spine registries present, so the digests are computed over real files.
+    `bodies` appends a spec body to the named rows' files (a judging row's
+    recorded `## Consolidation` block and `## Dispositions` draft)."""
     work = tmp_path / "docs" / "work"
     for row in rows:
-        wi_convert.write_spec_file(work, row)
+        rel = wi_convert.write_spec_file(work, row)
+        body = (bodies or {}).get(row["WI-ID"])
+        if body:
+            path = work / rel
+            path.write_text(
+                path.read_text(encoding="utf-8") + body, encoding="utf-8", newline="\n"
+            )
     req = tmp_path / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
     (req / "system-requirements.toml").write_text("", encoding="utf-8", newline="\n")
@@ -269,26 +277,105 @@ def test_a_queue_with_no_overlap_selects_nothing(tmp_path):
 # --- the guards ----------------------------------------------------------------
 
 
-def test_no_row_is_minted_beside_another_judgement(tmp_path):
+def _judge(wid, status="queued", **kw):
+    """A judgement row: the `adjudication` safety class, whatever its brief."""
+    return _row(wid, Status=status, SafetyClass="adjudication", **kw)
+
+
+def test_no_row_is_minted_while_a_judgement_is_in_progress(tmp_path):
+    """An ACTIVE judgement refuses whatever it names: its landing moves the
+    queue or the spine the new row would record, so the consolidation's close
+    would refuse by drift after a strong-tier session had been spent on it.
+    (`active/` has no directory in `wi_convert.STATUS_DIRS` - a claimed spec
+    lives under `active/<branch>/` - so the rows are handed to the guard
+    directly rather than written.)"""
     rows = [
         _row("WI-001", SpecRef="docs/plans/a.md"),
         _row("WI-002", SpecRef="docs/plans/a.md"),
-        _row("WI-003", SafetyClass="adjudication"),
+    ]
+    repo = _repo(tmp_path, rows)
+    held = rows + [_judge("WI-004", status="active", Adjudicates="SR-001")]
+    draft, why = consolidate.census_draft(repo, held)
+    assert draft is None
+    assert "WI-004" in why and "in progress" in why
+
+
+def test_no_row_is_minted_beside_a_pending_consolidation(tmp_path):
+    """Two consolidations never share the frontier, even over disjoint rows:
+    the first one's close compares the queue it judged, and the second one's
+    successor would move it."""
+    rows = [
+        _row("WI-001", SpecRef="docs/plans/a.md"),
+        _row("WI-002", SpecRef="docs/plans/a.md"),
+        _judge("WI-009", Brief="consolidate", Adjudicates="WI-050;WI-051"),
     ]
     repo = _repo(tmp_path, rows)
     draft, why = consolidate.census_draft(repo, rows)
     assert draft is None
-    assert "WI-003" in why and "never stacks" in why
-    # ...and the same for one a lane is HOLDING. (`active/` has no directory in
-    # `wi_convert.STATUS_DIRS` — a claimed spec lives under `active/<branch>/`
-    # — so the row is handed to the guard directly rather than written.)
-    held = [
-        rows[0],
-        rows[1],
-        _row("WI-004", Status="active", SafetyClass="adjudication"),
+    assert "WI-009" in why and "never stacks" in why
+
+
+def test_a_queued_judgement_naming_a_candidate_refuses_by_name(tmp_path):
+    """The guard's purpose at row grain: a consolidation never judges a row
+    another pending judgement is about to judge."""
+    rows = [
+        _row("WI-001", SpecRef="docs/plans/a.md"),
+        _row("WI-002", SpecRef="docs/plans/a.md"),
+        _judge("WI-003", Brief="disposition", Adjudicates="WI-002"),
     ]
-    draft, why = consolidate.census_draft(repo, held)
-    assert draft is None and "WI-004" in why
+    repo = _repo(tmp_path, rows)
+    draft, why = consolidate.census_draft(repo, rows)
+    assert draft is None
+    assert "WI-003" in why and "WI-002" in why and "never stacks" in why
+
+
+def test_a_queued_judgement_naming_no_candidate_holds_nothing_back(tmp_path):
+    """THE STARVATION THIS REMOVES: three unrelated adjudications queued in this
+    repository's own loop kept the census from ever running. A queued judgement
+    cannot run beside the consolidation (judgements are exclusive and the
+    consolidation's priority puts it first), so one that names none of the
+    candidates changes nothing the consolidation would judge."""
+    rows = [
+        _row("WI-001", SpecRef="docs/plans/a.md"),
+        _row("WI-002", SpecRef="docs/plans/a.md"),
+        _judge("WI-003", Brief="amendment", Adjudicates="SR-001;LLR-001"),
+        _judge("WI-004", Brief="first-approval"),
+    ]
+    repo = _repo(tmp_path, rows)
+    draft, why = consolidate.census_draft(repo, rows)
+    assert why is None, why
+    assert draft["adjudicates"] == ["WI-001", "WI-002"]
+
+
+def test_a_judgement_row_is_never_a_candidate_and_never_moves_the_queue_digest(
+    tmp_path,
+):
+    """A judgement is not a work item to absorb: absorbing one would archive a
+    judgement nobody performed, and two verdict grammars do not merge. And the
+    queue digest is over the same population, so a judgement minted or closed
+    beside an unchanged work queue does not re-arm the census over it. (Every
+    digest recorded before this rule was taken with no judgement queued, so it
+    is unchanged by it.)"""
+    work = [_row("WI-001", Title="Alpha"), _row("WI-002", Title="Beta")]
+    judgements = [
+        _judge("WI-003", SpecRef="docs/plans/a.md"),
+        _judge("WI-004", SpecRef="docs/plans/a.md"),
+    ]
+    repo = _repo(tmp_path, work + judgements)
+    assert consolidate.clusters(repo, work + judgements) == ([], [])
+    assert consolidate.queue_digest(work + judgements) == consolidate.queue_digest(work)
+
+
+def test_the_example_row_is_never_a_candidate(tmp_path):
+    """The `-000` example is the format's documentation, inert everywhere else;
+    a census that paired it would hand a judge the template's own example to
+    absorb (it paired with seven rows of this repository's queue)."""
+    rows = [
+        _row("WI-000", SpecRef="docs/plans/a.md"),
+        _row("WI-001", SpecRef="docs/plans/a.md"),
+    ]
+    repo = _repo(tmp_path, rows)
+    assert consolidate.clusters(repo, rows) == ([], [])
 
 
 def test_a_queue_state_that_has_been_judged_is_never_judged_again(tmp_path):
@@ -334,12 +421,69 @@ def test_a_changed_queue_is_a_new_question(tmp_path):
     assert again["digests"] != draft["digests"]
 
 
+def _verdict_body(outcome, absorbed=()):
+    """A judging row's recorded verdict: its `## Consolidation` block and, for
+    a consolidation, the one `## Dispositions` draft superseding `absorbed`."""
+    extra = {
+        "return-to-draft": 'returns = ["WI-001"]\nfinding = "contradicts SR-001"\n',
+        "queue-with-edge": 'edges = ["WI-002 needs WI-001"]\n',
+    }.get(outcome, "")
+    # The shape a closed judging spec has: its Deliverable first (the close
+    # writes it), then the Context, the verdict block and the draft.
+    body = "\n## Deliverable\n\nJudged.\n\n## Context\n\nThe cluster.\n"
+    body += '\n## Consolidation\n\n```toml\noutcome = "{}"\n{}```\n'.format(
+        outcome, extra
+    )
+    if absorbed:
+        body += (
+            '\n## Dispositions\n\n```toml\ntitle = "the successor"\n'
+            'workstream = "process"\nbuildtier = "medium"\n'
+            "supersedes = [{}]\n```\n".format(
+                ", ".join('"{}"'.format(a) for a in absorbed)
+            )
+        )
+    return body
+
+
+def _judged(wid, absorbed, outcome="consolidate", status="done"):
+    """`(row, {wid: body})`: the archived consolidation row that judged the
+    `;`-joined `absorbed` scope, and the verdict it recorded - the record a
+    successor's standing is read from."""
+    ids = [a for a in absorbed.split(";") if a]
+    row = _judge(wid, status=status, Brief="consolidate", Adjudicates=absorbed)
+    enacted = ids if outcome == "consolidate" else ()
+    return row, {wid: _verdict_body(outcome, enacted)}
+
+
 def test_a_consolidations_own_successor_does_not_seed_the_next_census(tmp_path):
     """Plan §4's third measurement: after the close absorbed two rows, the
     census mints nothing — "the digest changed but the only overlap is the
     consolidation's own successor". A successor is recognisable from the
-    registry alone (it supersedes a `restructured` row), so the census can
-    decline to re-litigate the judgement it just enacted."""
+    registry alone (it supersedes a `restructured` row that a consolidation
+    judgement's `Adjudicates` names), so the census can decline to re-litigate
+    the judgement it just enacted."""
+    rows = [
+        _row("WI-001", Status="restructured", SpecRef="docs/plans/a.md"),
+        _row("WI-002", Status="restructured", SpecRef="docs/plans/a.md"),
+        _row("WI-010", SpecRef="docs/plans/a.md", Supersedes="WI-001;WI-002"),
+        _row("WI-003", SpecRef="docs/plans/a.md"),
+    ]
+    judge, bodies = _judged("WI-008", "WI-001;WI-002")
+    rows.append(judge)
+    repo = _repo(tmp_path, rows, bodies=bodies)
+    assert consolidate.consolidation_successors(rows, bodies) == {"WI-010"}
+    ids, _findings = consolidate.clusters(repo, rows)
+    assert ids == []
+    draft, why = consolidate.census_draft(repo, rows)
+    assert draft is None and "nothing to consolidate" in why
+
+
+def test_a_hand_consolidations_host_is_not_read_as_judged(tmp_path):
+    """A hand trunk commit absorbs rows exactly as a close does, and records no
+    judgement. Reading its host as judged would switch guard 3 on for a
+    question no judge answered, so the host is an ordinary row: it seeds a
+    candidate set, and a verdict may absorb it without the refusal that
+    protects a judged successor."""
     rows = [
         _row("WI-001", Status="restructured", SpecRef="docs/plans/a.md"),
         _row("WI-002", Status="restructured", SpecRef="docs/plans/a.md"),
@@ -347,11 +491,94 @@ def test_a_consolidations_own_successor_does_not_seed_the_next_census(tmp_path):
         _row("WI-003", SpecRef="docs/plans/a.md"),
     ]
     repo = _repo(tmp_path, rows)
-    assert consolidate.consolidation_successors(rows) == {"WI-010"}
-    ids, _findings = consolidate.clusters(repo, rows)
-    assert ids == []
+    assert consolidate.consolidation_successors(rows, {}) == set()
+    assert consolidate.clusters(repo, rows)[0] == ["WI-003", "WI-010"]
+    assert consolidate.reabsorption_refusal(rows, ["WI-010"], {}) is None
+    # A judgement that enacted OTHER rows does not make this host judged either.
+    judge, bodies = _judged("WI-008", "WI-050;WI-051")
+    assert consolidate.consolidation_successors(rows + [judge], bodies) == set()
+
+
+@pytest.mark.parametrize(
+    "outcome,status",
+    [
+        ("queue", "done"),
+        ("queue-with-edge", "done"),
+        ("return-to-draft", "done"),
+        ("consolidate", "cancelled"),
+    ],
+)
+def test_a_judgement_that_enacted_no_consolidation_makes_no_successor(outcome, status):
+    """Guard 3 reads the OUTCOME, never the question: a consolidation row whose
+    scope named these rows but which queued them, returned them or was
+    cancelled absorbed nothing, so a host a hand commit later made over the
+    same rows is still unjudged."""
+    rows = [
+        _row("WI-001", Status="restructured"),
+        _row("WI-002", Status="restructured"),
+        _row("WI-010", Supersedes="WI-001;WI-002"),
+    ]
+    judge, bodies = _judged("WI-008", "WI-001;WI-002", outcome=outcome, status=status)
+    if status == "cancelled":
+        bodies = {"WI-008": _verdict_body("consolidate", ["WI-001", "WI-002"])}
+    assert consolidate.consolidation_successors(rows + [judge], bodies) == set()
+
+
+def test_a_consolidation_scope_with_no_recorded_verdict_makes_no_successor():
+    rows = [
+        _row("WI-001", Status="restructured"),
+        _row("WI-010", Supersedes="WI-001"),
+        _judge("WI-008", status="done", Brief="consolidate", Adjudicates="WI-001"),
+    ]
+    assert consolidate.consolidation_successors(rows, {"WI-008": ""}) == set()
+
+
+def test_a_queued_judgement_that_would_run_first_refuses_by_name(tmp_path):
+    """Guard 1's no-race argument, ENFORCED: a queued judgement that names no
+    candidate may stand only where the scheduler's own ordering runs the
+    consolidation before it. An operator priority equal to the
+    consolidation's (the id breaks the tie, and the older row wins) or above
+    it puts that judgement first, and its landing would move what the
+    consolidation judged."""
+    work = [
+        _row("WI-001", SpecRef="docs/plans/a.md"),
+        _row("WI-002", SpecRef="docs/plans/a.md"),
+    ]
+    repo = _repo(tmp_path, work)
+    for priority in (str(consolidate.PRIORITY), str(consolidate.PRIORITY + 3)):
+        rows = work + [_judge("WI-003", Brief="amendment", Priority=priority)]
+        draft, why = consolidate.census_draft(repo, rows)
+        assert draft is None, priority
+        assert "WI-003" in why and "before" in why, why
+    rows = work + [_judge("WI-003", Brief="amendment", Priority="8")]
     draft, why = consolidate.census_draft(repo, rows)
-    assert draft is None and "nothing to consolidate" in why
+    assert why is None, why
+
+
+def test_prior_labels_a_hand_consolidation_as_unjudged():
+    """The judge reads `{prior}` before absorbing anything, and the brief tells
+    it that overturning an earlier consolidation pages the owner. A hand
+    consolidation carries no judgement to overturn, so its line says so."""
+    brief = load_script("adjudicate_brief")
+    judge, bodies = _judged("WI-008", "WI-002;WI-003")
+    rows = [
+        _row("WI-001", Status="restructured"),
+        _row("WI-002", Status="restructured"),
+        _row("WI-003", Status="restructured"),
+        _row("WI-004", Status="restructured"),
+        _row("WI-010", Supersedes="WI-001"),
+        _row("WI-011", Supersedes="WI-002"),
+        # MIXED: a judgement absorbed WI-003 and a hand commit later added WI-004.
+        _row("WI-012", Supersedes="WI-003;WI-004"),
+        judge,
+    ]
+    lines = brief._prior_lines(consolidate, rows, bodies).splitlines()
+    hand = " " + consolidate.HAND_LABEL
+    assert lines == [
+        "- WI-010 absorbed WI-001" + hand,
+        "- WI-011 absorbed WI-002 (judged by WI-008)",
+        "- WI-012 absorbed WI-003 (judged by WI-008), WI-004" + hand,
+    ]
 
 
 def test_a_successor_is_read_from_lineage_and_not_from_how_many_it_absorbed():
@@ -365,7 +592,8 @@ def test_a_successor_is_read_from_lineage_and_not_from_how_many_it_absorbed():
         _row("WI-002", Status="partial"),
         _row("WI-011", Supersedes="WI-002"),
     ]
-    assert consolidate.consolidation_successors(rows) == {"WI-010"}
+    judge, bodies = _judged("WI-008", "WI-001")
+    assert consolidate.consolidation_successors(rows + [judge], bodies) == {"WI-010"}
 
 
 def test_re_absorbing_a_row_a_consolidation_minted_is_refused_by_name():
@@ -373,24 +601,64 @@ def test_re_absorbing_a_row_a_consolidation_minted_is_refused_by_name():
     §1.3) — the owner's to rule, never a second machine mint. Distinct from
     `intake._supersedes_refusal`'s absorbed arm, which refuses continuing a row
     somebody already absorbed (a lineage chain)."""
-    rows = [_row("WI-001", Status="restructured"), _row("WI-010", Supersedes="WI-001")]
-    assert consolidate.reabsorption_refusal(rows, ["WI-099"]) is None
-    why = consolidate.reabsorption_refusal(rows, ["WI-010", "WI-099"])
+    rows = [
+        _row("WI-001", Status="restructured"),
+        _row("WI-010", Supersedes="WI-001"),
+    ]
+    judge, bodies = _judged("WI-008", "WI-001")
+    rows.append(judge)
+    assert consolidate.reabsorption_refusal(rows, ["WI-099"], bodies) is None
+    why = consolidate.reabsorption_refusal(rows, ["WI-010", "WI-099"], bodies)
     assert "WI-010" in why and "RETURN-TO-DRAFT" in why
     assert "WI-099" not in why  # only the edges the draft actually held
 
 
 def test_prior_absorbs_reports_each_consolidations_absorbed_set():
     rows = [
-        _row("WI-001", Status="restructured", Supersedes="WI-010"),
-        _row("WI-002", Status="restructured", Supersedes="WI-010"),
-        _row("WI-003", Status="restructured", Supersedes="WI-011"),
-        _row("WI-004", Status="cancelled", Supersedes="WI-011"),
+        _row("WI-001", Status="restructured"),
+        _row("WI-002", Status="restructured"),
+        _row("WI-003", Status="restructured"),
+        _row("WI-004", Status="cancelled"),
+        _row("WI-010", Supersedes="WI-001;WI-002"),
+        # A lineage naming a row that is not `restructured` is a continuation
+        # (a partial or cancelled predecessor), not an absorption.
+        _row("WI-011", Supersedes="WI-003;WI-004"),
     ]
     assert consolidate.prior_absorbs(rows) == {
         "WI-010": ["WI-001", "WI-002"],
         "WI-011": ["WI-003"],
     }
+
+
+def test_prior_keeps_an_absorption_after_its_successor_is_itself_absorbed():
+    """A hand host is an ordinary row, so a later judgement may absorb it, and
+    that makes a CHAIN: the hand commit absorbed WI-001 and WI-002 into WI-010,
+    then a consolidation judgement absorbed WI-010 and WI-003 into WI-020.
+    Both events are earlier absorptions, so both reach `{prior}`, each absorbed
+    row marked with its own provenance. Dropping the first because its
+    successor went `restructured` would hide from the judge the very hand
+    consolidation it may be about to re-litigate."""
+    brief = load_script("adjudicate_brief")
+    judge, bodies = _judged("WI-015", "WI-003;WI-010")
+    rows = [
+        _row("WI-001", Status="restructured"),
+        _row("WI-002", Status="restructured"),
+        _row("WI-003", Status="restructured"),
+        _row("WI-010", Status="restructured", Supersedes="WI-001;WI-002"),
+        _row("WI-020", Supersedes="WI-003;WI-010"),
+        judge,
+    ]
+    assert consolidate.prior_absorbs(rows) == {
+        "WI-010": ["WI-001", "WI-002"],
+        "WI-020": ["WI-003", "WI-010"],
+    }
+    hand = " " + consolidate.HAND_LABEL
+    assert brief._prior_lines(consolidate, rows, bodies).splitlines() == [
+        "- WI-010 absorbed WI-001" + hand + ", WI-002" + hand,
+        "- WI-020 absorbed WI-003 (judged by WI-015), WI-010 (judged by WI-015)",
+    ]
+    # ...and the judged successor is guard 3's, the hand-absorbed rows' is not.
+    assert consolidate.consolidation_successors(rows, bodies) == {"WI-020"}
 
 
 # --- the draft ------------------------------------------------------------------
@@ -554,7 +822,17 @@ def _rec(outcome="consolidate", **kw):
     return record
 
 
-def _close(tmp_path, rows, record, absorbed, *, scope=None, drafts=None, recorded=None):
+def _close(
+    tmp_path,
+    rows,
+    record,
+    absorbed,
+    *,
+    scope=None,
+    drafts=None,
+    recorded=None,
+    bodies=None,
+):
     """`close_refusal` over a real tree, with the cluster and the digest pair
     defaulting to the ones the census itself would have recorded — so a test
     that is about ONE rung is not tripped by another.
@@ -563,7 +841,9 @@ def _close(tmp_path, rows, record, absorbed, *, scope=None, drafts=None, recorde
     of its own (a claimed spec lives under `active/<branch>/`), so a fixture row
     modelling a claimed one is handed to the guard rather than written."""
     repo = _repo(
-        tmp_path, [r for r in rows if r.get("Status") in wi_convert.STATUS_DIRS]
+        tmp_path,
+        [r for r in rows if r.get("Status") in wi_convert.STATUS_DIRS],
+        bodies=bodies,
     )
     if recorded is None:
         recorded = consolidate.digests(repo, rows)
@@ -698,12 +978,15 @@ def test_the_close_refuses_the_lineage_the_mint_would_have_refused(tmp_path):
         _row("WI-412", Supersedes="WI-390"),
         _row("WI-401"),
     ]
+    judge, bodies = _judged("WI-380", "WI-390")
+    rows.append(judge)
     why = _close(
         tmp_path,
         rows,
         _rec(),
         ["WI-401", "WI-412"],
         scope={"WI-401", "WI-412"},
+        bodies=bodies,
     )
     assert why and "WI-412" in why and "RETURN-TO-DRAFT" in why
 

@@ -6,8 +6,11 @@
      field. Its three questions survive here verbatim; what is new is the
      fourth exit — CONSOLIDATE — and the census that mints this row.
 
-     WHEN IT IS SENT. A census over the QUEUED rows only, run from an IDLE
-     station with no other adjudication queued or active. It clusters rows by
+     WHEN IT IS SENT. A census over the QUEUED work rows only (never a
+     judgement row, never the -000 example), run from an IDLE station with no
+     judgement in progress, no other consolidation queued, and no queued
+     judgement naming a row of the cluster or ordered to run before this row.
+     It clusters rows by
      the mechanical pre-filter (near-duplicate title, shared SR-Refs, shared
      SpecRef) plus two signals a queue accumulates on its own: rows commissioned
      by ONE plan document or open item, and rows whose SR-Refs reach the same
@@ -32,7 +35,9 @@
        {digests}     the queue + spine digest pair this verdict is recorded
                      against, so a stale verdict is detectable rather than
                      assumed fresh.
-       {prior}       the absorb sets of every ARCHIVED consolidate row.
+       {prior}       every earlier absorption, from the successors' lineage,
+                     each absorbed row marked `(judged by WI-###)` when a
+                     consolidation judgement enacted it, else `(by hand)`.
        {verdict}     the repo path this session writes its verdict to.
        {wi}          this adjudication row's own id, for the result trailer.
 
@@ -82,7 +87,7 @@ Look for exactly three shapes, in this order:
 
 2. **Scope overlap.** Two rows that would edit the same behaviour from two directions. Ask: if both are claimed on the same day by two lanes, do they collide? If they collide but each is still its own decision, the answer is a `needs` edge. If they are ONE decision that was written down twice — or a decision and a second half of itself — the answer is consolidation.
 
-3. **Already answered.** A row asks for something an open or CLOSED row already did, or that was deliberately refuted. A refuted proposal returning under a new title is the failure mode that costs the most. So is re-absorbing a row an earlier consolidation already minted: read `{prior}` before you absorb anything, and if the honest answer is that an earlier consolidation got it wrong, say `return-to-draft` and NAME that consolidation — that pages the owner, and it is the right cost.
+3. **Already answered.** A row asks for something an open or CLOSED row already did, or that was deliberately refuted. A refuted proposal returning under a new title is the failure mode that costs the most. So is re-absorbing a row an earlier consolidation already minted: read `{prior}` before you absorb anything, and if the honest answer is that an earlier consolidation got it wrong, say `return-to-draft` and NAME that consolidation — that pages the owner, and it is the right cost. An absorbed row marked `(by hand)` in `{prior}` records no judgement: a successor whose every absorbed row is so marked is an ordinary row, and absorbing it overturns nothing.
 
 Then choose ONE outcome:
 

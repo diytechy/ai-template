@@ -6146,6 +6146,52 @@ lane's merge; a hook that auto-stages files into a reviewer's commit would do
 that. Expect claim warnings for rows without a Done-when, including rows the
 intake mint files; nothing refuses yet.
 
+### The consolidation census runs beside unrelated judgements, a hand consolidation reads as unjudged, and two intake commands [since 464dc7ac]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The consolidation census no longer refuses while ANY
+adjudication row is queued. It refuses while a judgement is in progress,
+while another `consolidate` row is queued, while a queued judgement's
+`Adjudicates` names a row of its candidate set, or while a queued judgement
+would run before it in the scheduler's own order (an operator `Priority` at or
+above 9); an unrelated, lower-priority queued judgement holds nothing back, so
+a loop that always has one open can still consolidate.
+Judgement rows and the `-000` example row are never candidates, and judgement
+rows no longer enter the queue digest (every digest recorded before this was
+taken with no judgement queued, so none moves). A consolidation's successor,
+which guard 3 keeps from seeding a cluster and from being re-absorbed, is now
+read from the judgement that ENACTED it: a closed `consolidate` row whose own
+spec records a `## Consolidation` outcome of `consolidate` and whose
+`## Dispositions` draft supersedes the absorbed row. A judgement that queued or
+returned its rows, a cancelled one, or a hand consolidation (a trunk commit
+moving rows to `restructured/`) makes no successor, so that host is an ordinary
+candidate. The consolidate brief's `{prior}` lines are read from the
+successors' `Supersedes` (they were read from the absorbed rows' own cell,
+which a real close never writes) and mark each absorbed row `(judged by
+WI-###)` or `(by hand)`.
+Two commands: `intake.py consolidate [--dry-run]` runs the census, printing
+its candidate set or its reason, and mints the one row; `intake.py sweep
+--before <sha> --after <sha> --branch <lane> --merged WI-###[;WI-###]` re-runs
+the merge-slot intake for a merge made outside the slot, judging the closes of
+exactly the named rows (each outcome read from its terminal folder) beside the
+range's diff triggers and the merge checkpoint's re-judge drafts; it refuses
+without a two-commit range or the branch, and names on stderr each row whose
+Done-when check could not run because that branch holds no claim of it. The `adjudicate-consolidate` prompt and
+`PROCESS_OPTIONS.md`'s `restructured` definition say the same.
+
+**What to do.** Re-sync `scripts/consolidate.py`, `scripts/intake.py`,
+`scripts/adjudicate_brief.py`, `prompts/adjudicate-consolidate.template.md`
+and `prompts/CATALOG.md`. If you consolidated by hand in the past, those hosts
+now seed the census like any row, so the next census may propose absorbing
+one; that is the judgement the hand commit skipped. If you merge lanes by hand
+rather than through `integrate.py integrate`, run `intake.py sweep --before
+<trunk before the merge> --after <trunk after closing its specs> --branch
+<the lane's branch> --merged <the rows it closed>` after each one, or the rows
+the merge owed are never minted. A direct caller of `consolidate.
+consolidation_successors` or `reabsorption_refusal` now passes the spec bodies
+(`consolidate.spec_bodies(root)`).
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

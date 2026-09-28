@@ -2,13 +2,59 @@
 id = "WI-679"
 title = "Run queue consolidation through the kit's own census, adjudication and close, and repair what kept this repository's 2026-09-27 consolidation out of it"
 workstream = "process"
-specref = "docs/log.d/2026-09-27-wave4-consolidation.md"
+specref = ""
 sr_refs = ["SR-220"]
 needs = []
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 4
 +++
+
+## Deliverable
+
+Built by one builder in three Codex Sol rounds (wave-5 arbitration rulings
+5 to 9), SOUND at fb9ca52a. The end-to-end bullet is the coordinator's, run
+on trunk in the commits right after this close. Its record, with the census
+output, the verdict and the open count before and after, is the section
+"WI-679's end-to-end run" in `docs/log.d/2026-09-27-wave5-coordinator.md`.
+
+- **Guard 1 (`_pending_refusal`), changed.** The census now refuses only
+  while a judgement is active, while another consolidation row is queued,
+  while a queued judgement's `Adjudicates` names a candidate row, or while a
+  queued judgement would sort at or before the consolidation in
+  `schedule.evaluate`'s own order. Each refusal names the judgement. The
+  population is queued work rows: judgement rows and the `-000` example are
+  never candidates (the example had been one).
+- **The surface signal: not added, on measurement.** At 8aae3af3 (the 50-row
+  queue before the hand consolidation) the existing signals found 12 of the
+  66 table pairs and joined 1 of 11 groups. With the population fix, the
+  one-union candidate set holds 34 of the table's 40 ids, and 6 of the 11
+  groups whole. A component signal found 0 of 66 pairs. A module-by-spec
+  signal bought one more group for about 200 more noise lines in the brief.
+  Grouping by shared surface is the judge's reading, which the brief already
+  asks for.
+- **Guard 3: the hand hosts are not judged.** A successor is read only from
+  a judgement that ENACTED a consolidation: a done `consolidate` row whose
+  recorded outcome is `consolidate` and whose draft supersedes the absorbed
+  row. A hand consolidation's host is an ordinary row. `{prior}` marks each
+  absorbed row "judged by WI-###" or "by hand", and keeps an absorption event
+  after its successor is itself absorbed. No live host needed a mark.
+- **The hand-merge gap.** `intake.py sweep --merged WI-### --branch <lane>
+  --before <pre-squash> --after HEAD` mints what the merge slot's
+  `intake_after_merge` would have: amendment and first-approval rows,
+  dispositions and spot checks, merged adjudications' drafts, and the
+  re-judge checkpoint. It says by name when the Done-when arm cannot run
+  (a hand-cut lane has no trunk claim). `intake.py consolidate [--dry-run]`
+  runs the census.
+- **SR-220** states one obligation with one `shall` and stays Drafted.
+  LLR-210 and TC-208 were amended in place (status Approved). LLR-264,
+  LLR-265, TC-260, TC-261, IF-243 and IF-244 are new Drafted rows. PROCESS.md
+  has no queue-consolidation rule, so the one doctrine sentence went at the
+  `restructured` definition in PROCESS_OPTIONS.md (+300 bytes, re-stamped).
+
+Recorded, not built: a hand-merged `consolidate` row that is then swept
+enacts absorption without `close_refusal`'s scope and drift rungs; and
+`handback.close_adjudication` has no CLI.
 
 ## Context
 
@@ -57,7 +103,7 @@ Folded 2026-09-27 (spine-acts batch B's close): WI-681 APPROVED LLR-210, TC-208 
 RETURNED SR-220, whose requirement carries two `shall`s ("shall hand that set to a single judgement,
 ... and shall enact the judgement's outcome ..."), a form finding `trace.py --strict` gates on an
 Approved row. The fix is item 4 of WI-681's Dispositions
-([`docs/archive/work/complete/WI-681-adjudicate-batch-b-first-approvals.md`](../../archive/work/complete/WI-681-adjudicate-batch-b-first-approvals.md)): drop the
+([`docs/archive/work/complete/WI-681-adjudicate-batch-b-first-approvals.md`](WI-681-adjudicate-batch-b-first-approvals.md)): drop the
 second `shall`, or split the enactment into its own row under SN-025. This row realises SR-220 and
 may restate it anyway, so the fix is taken here. The adjudicator recommends the owner widen SN-025's
 acceptance ("the loop keeps its own queue free of duplicated work") and keep the derived label until

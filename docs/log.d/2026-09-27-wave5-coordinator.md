@@ -95,3 +95,46 @@ was at 88% CPU from desktop applications. As a control, the same tier at the
 parent commit 1ea526ac, in a fresh worktree at the same minute, took 197.7 s;
 it took 42.1 s there two hours earlier. The change moves specs and registry
 cells and adds no test.
+
+### WI-679 lands: consolidation through the kit's own census, judgement and close
+
+One builder, three Codex Sol rounds (wave-5 rulings 5 to 9): NOT YET SOUND
+at f646eff0 (a silent Done-when skip, guard 3 keyed on scope rather than an
+enacted outcome, an unenforced ordering argument, thin coverage), NOT YET
+SOUND at 1b783955 (a nested absorption dropped from `{prior}`), SOUND at
+fb9ca52a: [sol-wi679.md](../reviews/2026-09-27-wave5/sol-wi679.md),
+[sol-wi679-fix.md](../reviews/2026-09-27-wave5/sol-wi679-fix.md),
+[sol-wi679-fix2.md](../reviews/2026-09-27-wave5/sol-wi679-fix2.md).
+
+What it decided (the Deliverable has the detail):
+- **Guard 1 narrows.** A queued judgement blocks the census only when it
+  names a candidate row or would run first in the scheduler's own order, so
+  an unrelated open adjudication no longer freezes consolidation forever.
+  Judgement rows and the `-000` example are no longer candidates.
+- **No surface signal.** At 8aae3af3 the old signals joined 1 of the 11 hand
+  groups (12 of 66 pairs). With the population fix, the candidate set holds
+  34 of the 40 grouped ids, and 6 groups whole. A component signal found 0 of
+  66, and a module-by-spec signal bought one group for about 200 noise lines.
+  fig: `measure_census.py` and `measure_surface.py` over a detached worktree
+  at 8aae3af3 (the builder's scratch scripts, recorded in its report).
+- **Guard 3 reads only an enacted consolidation**, so the wave-4 hand hosts
+  are ordinary rows again, and `{prior}` labels each absorption "judged by"
+  or "by hand".
+- **The hand-merge gap has a command:** `intake.py sweep --merged`, run after
+  each hand squash-merge, mints what the merge slot would have.
+
+LLR-210 and TC-208 are amended in place (status Approved); SR-220 (one
+`shall` now), LLR-264, LLR-265, TC-260, TC-261, IF-243 and IF-244 are
+Drafted. Those rows are minted for adjudication by the sweep below, not
+hand-filed into a batch. **Open count: 12** (11 queued, 1 deferred).
+
+Commit bar at WI-679: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0 (drafts 11), approve-modified current, `gen_open_items`
+current, `check_docs --stale` 0 broken, smoke 1661 passed / 3 skipped,
+**seconds 28.2 s within 60 s** on a quiet box. Touched modules, slow ones
+included, plus both ratchets (test_consolidate, test_consolidate_close,
+test_intake, test_rejudge, test_adjudicate_brief, test_frame_context,
+test_module_size_ratchet, test_complexity_ratchet, test_resync_pack,
+test_dogfood_sync, test_rule_sync, test_schedule), run by the coordinator:
+443 passed / 2 skipped. `check_complexity --mode enforce`: OK, 204 rows,
+unchanged. Trunk before this squash: 464dc7ac.

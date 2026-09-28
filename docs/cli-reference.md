@@ -450,15 +450,17 @@ _hats.py — the HATS ROSTER reader: which declared expert perspectives apply to
 
 ### `scripts/intake`
 _intake.py — the unified trunk-side intake mint (WI-388; docs/concurrency-v2.md §A5.2)._
-Contracts (interfaces): IF-090, IF-229
+Contracts (interfaces): IF-090, IF-229, IF-243, IF-244
 
 | Option | Help |
 |---|---|
 | `--root` | repo root (default: .) |
 | `--before` | pre-merge trunk sha (trigger a) |
 | `--after` | post-merge trunk sha (trigger a) |
-| `--branch` | mint subject (default: the range) |
+| `--branch` | the merged lane: with --merged, the branch whose pre-merge claim the Done-when check reads (required there); it also names the mint commit (default: the range) |
 | `--with-terminal` | terminal scan too |
+| `--merged` | the rows a merge outside the slot closed: judge exactly their closes, each outcome read from its terminal folder |
+| `--dry-run` | print the census, mint nothing |
 | `--checkpoint` |  |
 | `--rev` | the commit judged (default: HEAD) |
 | `--rows` | spine row id(s), ;-joined (SR-/LLR-/TC-) |

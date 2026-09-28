@@ -1,0 +1,11 @@
+<!-- Codex Sol confirmation of WI-679's second round, 1b783955; ruling 9 in ARBITRATION.md. Links re-rooted. -->
+
+1b783955 NOT YET SOUND
+
+- **major** — `prior_absorbs` omits an earlier absorption once its successor is itself restructured. The function promises every recorded absorption but excludes every restructured successor ([consolidate.py:387](../../../project-trajectory/scripts/consolidate.py), [consolidate.py:408](../../../project-trajectory/scripts/consolidate.py)). That conflicts with the supported behavior that a hand-created successor may be reabsorbed ([test_consolidate.py:481](../../../tests/test_consolidate.py)) and makes LLR-210/TC-208’s “each/every earlier absorption” claim false ([low-level-requirements.toml:2223](../../../docs/requirements/low-level-requirements.toml), [test-cases.toml:2120](../../../docs/test/test-cases.toml)). The current regression incorrectly treats a restructured successor’s `Supersedes` as irrelevant ([test_consolidate.py:622](../../../tests/test_consolidate.py)). Fix: retain prior absorption events after their successor is reabsorbed; add a valid nested hand-consolidation chain asserting both events and their row-level provenance.
+
+- **minor** — `sweep --help` still describes `--branch` as a mint subject, although it is now required as the lane’s claim identity ([intake.py:3162](../../../project-trajectory/scripts/intake.py)). Fix the help text to say it names the merged lane whose pre-merge claim is checked.
+
+Rulings 5–8 themselves are implemented: real-range/branch refusal and loud Done-when skips ([intake.py:2544](../../../project-trajectory/scripts/intake.py), [intake.py:1179](../../../project-trajectory/scripts/intake.py)); enacted-outcome Guard 3 and per-row labels ([consolidate.py:299](../../../project-trajectory/scripts/consolidate.py), [consolidate.py:413](../../../project-trajectory/scripts/consolidate.py)); scheduler-order reuse ([consolidate.py:714](../../../project-trajectory/scripts/consolidate.py)); and expanded TC-260/TC-261 coverage ([test-cases.toml:2695](../../../docs/test/test-cases.toml), [test-cases.toml:2706](../../../docs/test/test-cases.toml)).
+
+Pytest could not collect because the read-only environment provided no writable temporary directory.

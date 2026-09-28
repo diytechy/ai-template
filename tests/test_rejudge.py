@@ -617,7 +617,7 @@ def test_the_release_mint_runs_the_mint_checks(tmp_path, monkeypatch):
     head = _git(root, "rev-parse", "HEAD").strip()
     seen = []
 
-    def sentinel(drafts, subject_verb, registry):
+    def sentinel(drafts, subject_verb, registry, bodies):
         seen.append([d["title"] for d in drafts])
         return "SENTINEL mint-check refusal"
 

@@ -1717,8 +1717,31 @@ def test_prior_names_what_earlier_consolidations_absorbed(tmp_path):
                 "Title": "the successor",
                 "Supersedes": "WI-390;WI-391",
             },
+            # The judgement that absorbed them: without its recorded verdict the
+            # line is labelled by hand (tests/test_consolidate.py pins that arm).
+            {
+                "WI-ID": "WI-389",
+                "Title": "the consolidation that judged them",
+                "Status": "done",
+                "SafetyClass": "adjudication",
+                "Brief": "consolidate",
+                "Adjudicates": "WI-390;WI-391",
+            },
         ],
+    )
+    # ...and the verdict it recorded: guard 3 reads the ENACTED outcome.
+    (judge,) = (repo / "docs" / "work" / "complete").glob("WI-389-*.md")
+    judge.write_text(
+        judge.read_text(encoding="utf-8")
+        + "\n## Deliverable\n\nJudged.\n\n## Context\n\nThe census's cluster.\n"
+        + '\n## Consolidation\n\n```toml\noutcome = "consolidate"\n```\n'
+        + '\n## Dispositions\n\n```toml\ntitle = "the successor"\n'
+        + 'supersedes = ["WI-390", "WI-391"]\n```\n',
+        encoding="utf-8",
+        newline="\n",
     )
     values, why = ab.consolidate_values(repo, rows["WI-420"])
     assert why is None, why
-    assert values["prior"] == "- WI-395 absorbed WI-390;WI-391"
+    assert values["prior"] == (
+        "- WI-395 absorbed WI-390 (judged by WI-389), WI-391 (judged by WI-389)"
+    )

@@ -1921,7 +1921,7 @@ nothing re-claims it and the remainder is carried by a new WI. `restructured` is
 the **fourth**: a consolidation ABSORBED the row into a successor — neither
 refuted (`cancelled`) nor stopped early (`partial`) — so its scope text stays
 byte-identical, its `Deliverable` is the one line `Restructured into
-WI-<successor>.`, and its inbound hard edges re-point to that successor. An unknown status refuses rather than buckets.
+WI-<successor>.`, and its inbound hard edges re-point to that successor. A consolidation runs through the kit's census, an independent judgement and its close (`intake.py consolidate` files the one judgement row); a hand trunk commit is the fallback when that path cannot run, never the path, and records no judgement, so the census reads its successor as an ordinary row. An unknown status refuses rather than buckets.
 
 **Validation** — `check_trajectory.py`, wired as the `trajectory` gate step from
 DevStg-Tests. Every `Predecessors` WI id (hard or soft) resolves to a real work
