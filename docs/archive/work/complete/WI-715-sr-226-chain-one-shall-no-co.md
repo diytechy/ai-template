@@ -3,12 +3,16 @@ id = "WI-715"
 title = "SR-226 chain: one shall, no coincident waiver, B-01; close LLR-287's 'such as' and TC-300's 'minimal'"
 workstream = "process"
 sr_refs = ["SR-226"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "quick"
 priority = 3
 safety_class = "spine"
 bar = "DevStg-Reqs"
 +++
+
+## Deliverable
+
+Built by one builder, reviewed SOUND by Codex Sol at 2305a648 (`docs/reviews/2026-09-27-wave5/sol-wi715.md`). The six cell fixes batch E's adjudicator drafted, on three Drafted rows: SR-226 states one `shall` (the record and its two warn-only reports as the observable responses), drops the `coincident` waiver it could not honestly hold under approved SR-193 (now unclassified), and adds B-01; LLR-287's rationale closes its "such as" to the case set `retire.records` tests; TC-300 names its fixture in a new `parameters` cell instead of "minimal". With the three rows approved in a scratch tree, `trace.py --strict` shows no form finding. The rows stay Drafted for the next spine-acts batch.
 
 ## Context
 

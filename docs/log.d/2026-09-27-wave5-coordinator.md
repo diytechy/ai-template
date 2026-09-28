@@ -804,3 +804,13 @@ re-judge composer refuses an assumption-only case ("TC-279 has no
 TC-279 silently. Both are the same surface as WI-667 (how assumption
 evidence reaches the adjudication machinery), so the gap is folded into
 WI-667's Context and Done-when, and WI-697 now waits on WI-667.
+
+### WI-715 lands: SR-226's chain made approvable
+
+One builder, one Codex Sol round, SOUND at 2305a648
+([sol-wi715.md](../reviews/2026-09-27-wave5/sol-wi715.md)). The six cell
+fixes are in: SR-226 has one `shall`, no waiver it cannot hold, and B-01;
+LLR-287 has no "such as"; TC-300 has no "minimal". The rows stay Drafted,
+and a scratch flip shows no form finding. The sweep mints their first
+approval. Trunk before this squash: 9b16cde1. **Open count: 10**
+(9 queued, 1 deferred).
