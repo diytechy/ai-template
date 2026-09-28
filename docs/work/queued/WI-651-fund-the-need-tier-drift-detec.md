@@ -23,10 +23,13 @@ IN SCOPE: add the need tier to the snapshot comparison (row-level refusal then c
 
 Extended 2026-09-27 (arbitration ruling 15(i) of `docs/reviews/2026-09-26-wave3/ARBITRATION.md`): the stakeholder tier (`STK-ID` in the needs file) is absent from `SNAPSHOT_TIERS` too, so the C1 sitting's approval of STK-01..STK-04 is recorded only in the snapshot stamp's ref text and not in `docs/archive/last_approved/acts.toml`'s row list (IF-220). Add the stakeholder tier with the need tier, with a regression showing an approved STK row recorded by the act ledger.
 
+Folded 2026-09-27 (the fifth coordinator session, batch B's filing): a spine row with NO `status` cell is invisible to the snapshot's readers. WI-657 authored TC-256 and WI-672 authored TC-258 with neither `status` nor `phase` (and LLR-261 and LLR-263 with no `phase`); `trace.py --strict-integrity` reported 0 integrity findings, and `trace.py --approve modified` rendered neither case, so the two rows owed a first approval no brief showed. The coordinator filled the cells by hand in the batch-B filing commit. What is left is the checker: TC-003 says an empty field is flagged, and an absent key is not.
+
 ## Done-when
 
 - A drifted approved need is reported by the snapshot comparison and appears in `trace.py --approve modified`'s brief with its diff; a test drives both on a scaffold.
 - `intake.py snapshot` refuses an unnamed drifted need as it does the other tiers, and `--reattests SN-###` re-anchors it.
+- A spine row missing its `status` cell, or its `phase` cell once the spine is phased, is an integrity finding naming the row and the cell, and `trace.py --approve modified` cannot silently omit it; a test drives both on a scaffold.
 - The commit bar passes.
 - Every absorbed row's Done-when quoted below holds; their per-row commit-bar lines are this row's one bar.
 

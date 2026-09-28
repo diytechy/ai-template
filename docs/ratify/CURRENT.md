@@ -790,8 +790,9 @@ _traced — routes to adjudication_
 - **Rationale**: Mutually exclusive booleans packed into one enum state make a function's cases countable and its call sites legible. Counting the candidates in the per-change report makes a new one visible when a change adds it, and counters the cheap way to lower an operation count, fusing unrelated functions behind a mode flag. It reports and never refuses because many a two-flag function is the right shape: a count of candidates is a prompt to look, not a defect. Counting only positional literals keeps the call-site count to the switches a reader cannot decode; a keyword literal is named at the call, and most are a library's own signature no project can change.
 - **Status**: Drafted
 - **Component**: CMP-007
+- **Phase**: 6
 
-### TC TC-256 — ADDED since the snapshot
+### TC TC-256 — ADDED since the snapshot, Drafted — never approved
 - **TC-ID**: TC-256
 - **Verifies**: SR-216;LLR-261;IF-239;IF-240
 - **Level**: Unit
@@ -800,6 +801,8 @@ _traced — routes to adjudication_
 - **Expected**: Satisfies LLR-261: per module, functions with two or more boolean parameters and positional boolean-literal call sites counted with totals, one-flag functions and keyword literals not; a rise above the stamped per-module row reported as a worsening naming the module; never a refusal, even when declared gating.
 - **Automated**: Yes
 - **Evidence**: tests/test_flag_axis.py
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-220 — Overlapping queued work is consolidated through one judgement per queue state
 
@@ -892,6 +895,7 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **Rationale**: SR-221 asks for the tests the spine links to a module, derived from the registries. The link already exists as three cells the rows carry, a design row's Module and a test case's Verifies and Evidence, so the listing is a join over them and keeps no second map. A drafted case is included because the builder iterating is often the one writing it. Resolving by stem as well as by path keeps the command usable from a file name, and an ambiguous name is refused with its candidates rather than answered for one of them. It is an act-and-exit arm of the spine checker's command line, which already loads both registries, so it adds no command and no import edge; the pure half sits beside the Evidence cell's reading in the row vocabulary.
 - **Status**: Drafted
 - **Component**: CMP-006
+- **Phase**: 6
 
 ### TC TC-258 (current)
 - **TC-ID**: TC-258
@@ -902,5 +906,7 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **Expected**: Satisfies LLR-263 and IF-233: the module map through design rows and resolution by path, suffix or stem; --tests-for listing from the registries and stack.ini of the directory --docs names, with exits 0, 1 and 2; and the live map reaching suites not named for their module
 - **Automated**: Yes
 - **Evidence**: tests/test_evidence_join.py::test_the_module_map_follows_design_rows_not_file_names; tests/test_evidence_join.py::test_a_module_resolves_by_path_suffix_or_stem; tests/test_evidence_join.py::test_the_command_prints_one_test_file_per_line; tests/test_evidence_join.py::test_the_command_reads_the_declared_test_root; tests/test_evidence_join.py::test_the_command_reads_the_docs_directory_it_is_pointed_at; tests/test_evidence_join.py::test_the_command_refuses_an_unknown_or_ambiguous_module; tests/test_evidence_join.py::test_the_live_map_reaches_tests_not_named_for_their_module
+- **Status**: Drafted
+- **Phase**: 6
 
 </details>

@@ -2730,6 +2730,7 @@ detail = """module_tests(llrs, tcs, module, test_root) returns, sorted and disti
 rationale = """SR-221 asks for the tests the spine links to a module, derived from the registries. The link already exists as three cells the rows carry, a design row's Module and a test case's Verifies and Evidence, so the listing is a join over them and keeps no second map. A drafted case is included because the builder iterating is often the one writing it. Resolving by stem as well as by path keeps the command usable from a file name, and an ambiguous name is refused with its candidates rather than answered for one of them. It is an act-and-exit arm of the spine checker's command line, which already loads both registries, so it adds no command and no import edge; the pure half sits beside the Evidence cell's reading in the row vocabulary."""
 status = "Drafted"
 component = "CMP-006"
+phase = 6
 
 [design.LLR-261]
 sr_refs = ["SR-216"]
@@ -2740,6 +2741,7 @@ detail = """flag_axis.reading(tree) counts one module's flag functions, each fun
 rationale = """Mutually exclusive booleans packed into one enum state make a function's cases countable and its call sites legible. Counting the candidates in the per-change report makes a new one visible when a change adds it, and counters the cheap way to lower an operation count, fusing unrelated functions behind a mode flag. It reports and never refuses because many a two-flag function is the right shape: a count of candidates is a prompt to look, not a defect. Counting only positional literals keeps the call-site count to the switches a reader cannot decode; a keyword literal is named at the call, and most are a library's own signature no project can change."""
 status = "Drafted"
 component = "CMP-007"
+phase = 6
 
 [design.LLR-262]
 sr_refs = ["SR-154", "SR-156"]

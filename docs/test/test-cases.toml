@@ -2656,6 +2656,8 @@ tier = "Smoke"
 expected = "Satisfies LLR-263 and IF-233: the module map through design rows and resolution by path, suffix or stem; --tests-for listing from the registries and stack.ini of the directory --docs names, with exits 0, 1 and 2; and the live map reaching suites not named for their module"
 automated = "Yes"
 evidence = """tests/test_evidence_join.py::test_the_module_map_follows_design_rows_not_file_names; tests/test_evidence_join.py::test_a_module_resolves_by_path_suffix_or_stem; tests/test_evidence_join.py::test_the_command_prints_one_test_file_per_line; tests/test_evidence_join.py::test_the_command_reads_the_declared_test_root; tests/test_evidence_join.py::test_the_command_reads_the_docs_directory_it_is_pointed_at; tests/test_evidence_join.py::test_the_command_refuses_an_unknown_or_ambiguous_module; tests/test_evidence_join.py::test_the_live_map_reaches_tests_not_named_for_their_module"""
+status = "Drafted"
+phase = 6
 
 [test.TC-256]
 verifies = ["SR-216", "LLR-261", "IF-239", "IF-240"]
@@ -2665,6 +2667,8 @@ tier = "Smoke"
 expected = "Satisfies LLR-261: per module, functions with two or more boolean parameters and positional boolean-literal call sites counted with totals, one-flag functions and keyword literals not; a rise above the stamped per-module row reported as a worsening naming the module; never a refusal, even when declared gating."
 automated = "Yes"
 evidence = "tests/test_flag_axis.py"
+status = "Drafted"
+phase = 6
 
 [test.TC-257]
 verifies = ["SR-154", "SR-156", "LLR-262", "IF-242"]
