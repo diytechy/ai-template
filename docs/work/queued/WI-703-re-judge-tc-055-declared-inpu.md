@@ -6,6 +6,7 @@ sr_refs = ["SR-054"]
 specref = "docs/test/test-cases.toml"
 buildtier = "medium"
 safety_class = "adjudication"
+needs = ["WI-701"]
 brief = "rejudge"
 adjudicates = ["TC-055"]
 +++
@@ -44,3 +45,5 @@ Advisory registry joins (WI-388; never gating):
 - IF-056 scripts/check_trajectory <- scripts/gen_trajectory: call check_trajectory loaders: validate, read_registry_rows, load_wis, load_known_srs, read_trajectory_enabled, WI…
 - IF-071 scripts/schedule <- scripts/gen_trajectory: call load_registry_rows, load_wis, frontier, evaluate; empty when the module is absent
 - IF-083 scripts/check_trajectory <- scripts/rendering/traj_views: call check_trajectory joins: read_rows, load_seams, component_top_view, _norm_module, _split_refs, SR_CSV, TOP_VIE…
+Held 2026-09-28 by the coordinator: this re-judge waits on WI-701, which fixes the dashboard findings TC-055's cross-family Critique recorded as a fail at 8bebd4cf (`docs/reviews/wi-698-re-judge-tc-055-declared-inpu/`). The judge must be of a different model family from the rendering code's authors, and must be given every shot as native-resolution tiles (wave-5 ruling 31).
+

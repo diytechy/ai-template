@@ -528,6 +528,7 @@ def _tier_col_width(blocks):
     return max(TIER_COL_MIN, min(MAX_TIER_COL, content + TIER_COL_PAD))
 
 
+# Implements: SR-054, LLR-285
 DRILL_STYLE = (
     "<style>"
     # WI-294b (119-CRITIQUE U1/U3): the phase-accent key used to be its own
@@ -585,7 +586,10 @@ DRILL_STYLE = (
     "marker-end:var(--arrow-in);}"
     ".drill[data-focused-trace] .wire.trace-out{stroke:var(--trace-out);stroke-width:var(--w-emph);opacity:var(--o-full);"
     "marker-end:var(--arrow-out);}"
-    ".drill[data-focused-trace] .block.trace-muted{opacity:var(--o-ghost);}"
+    # The default render selects a block, so a block outside the trace is the
+    # state a reader first meets: it takes the page's one node de-emphasis
+    # (`--mute`, which keeps the label's and the arrow's contrast), not a fade.
+    ".drill[data-focused-trace] .block.trace-muted{filter:var(--mute);}"
     ".drill[data-focused-trace] .block.trace-in rect{stroke:var(--trace-in);stroke-width:var(--w-emph);}"
     ".drill[data-focused-trace] .block.trace-out rect{stroke:var(--trace-out);stroke-width:var(--w-emph);}"
     ".drill[data-focused-trace] .block.trace-focus rect{stroke:var(--ring,var(--text));stroke-width:var(--w-emph);}"

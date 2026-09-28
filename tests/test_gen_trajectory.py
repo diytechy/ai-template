@@ -244,6 +244,37 @@ def test_clip_edge_marker_is_gated_on_actual_overflow(tmp_path):
     assert "addEventListener('scroll'" in text
 
 
+def test_clip_edge_marker_marks_a_vertical_cut_too(tmp_path):
+    """The `.view` card is height-capped, so a drill layer taller than the cap —
+    the What root layer shows 9 of 31 needs — is cut at its BOTTOM edge, where an
+    overlay scrollbar shows nothing until the reader happens to scroll. The same
+    edge marker the right-hand cut carries marks it: a bottom-edge fade on a
+    `.clipb` class toggled from the vertical overflow measure, cleared at the
+    bottom, and the two fades compose where a card is cut on both edges."""
+    make_repo(tmp_path)
+    write_arch_src(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert ".view.clipb" in text and ".tablescroll.clipb" in text
+    assert "mask-image: linear-gradient(to top" in text
+    both = re.search(r"\.view\.clipr\.clipb[^{]*\{([^}]*)\}", text)
+    assert both, "no rule composing the right and bottom fades"
+    assert "to left" in both.group(1) and "to top" in both.group(1)
+    assert "mask-composite: intersect" in both.group(1)
+    base_view = re.search(r"\.view \{[^}]*\}", text).group(0)
+    assert "mask-image" not in base_view
+    m = re.search(r"classList\.toggle\('clipb',([^;]+);", text)
+    assert m, "no .clipb toggle emitted"
+    assert "scrollHeight" in m.group(1) and "clientHeight" in m.group(1)
+    assert "scrollTop" in m.group(1)
+    # A mask clips everything outside the box it masks, the focus outline
+    # included, so a keyboard-focused cut card lost its ring; the ring is drawn
+    # inside the box, where the fade reaches only its cut edge.
+    ring = re.search(r"\.view:focus-visible[^{]*\{([^}]*)\}", text).group(1)
+    offset = re.search(r"outline-offset:\s*(-?[\d.]+)px", ring)
+    assert offset and float(offset.group(1)) < 0, ring
+
+
 def test_drill_focus_ring_is_distinct_from_the_active_accent(tmp_path):
     """080-CRITIQUE #5 (WI-258): the drill keyboard-focus ring used #b45309 — byte-
     identical to the `active — you are here` status accent (--active) — so a focused-

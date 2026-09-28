@@ -2863,3 +2863,15 @@ automated = "Yes"
 evidence = "tests/test_skills_index.py::test_check_refuses_a_description_under_the_floor; tests/test_skills_index.py::test_every_shipped_description_clears_the_floor"
 status = "Drafted"
 phase = 6
+
+[test.TC-296]
+verifies = ["SR-054", "LLR-285"]
+level = "Unit"
+method = """Sweep every fresh emitter document, one fixture per emitter (the committed dashboard is an older renderer's markup, so it is left out), and derive from each document's stylesheet every rule whose selector puts a de-emphasis state class (the dim and trace-muted states the page scripts toggle) on a node shape that document draws with a label. Model the rule's paint as the browser applies it: its shorthand filter functions as colour matrices over sRGB channels, then its opacity composited over the page surface, refusing a rule that sets any other property or names an unmodelled filter function. For every node the rule reaches, resolve its fill, its label ink (inline, else the most specific stylesheet rule for its classes) and, where it carries a descend arrow, its per-node ring ink or the accent fallback, in both themes and over both page surfaces, and assert each ink clears 4.5:1 against the de-emphasised fill. Assert the sweep reached the drill block, the icicle cell, the flat-roadmap work item and the knowledge concept, with the descend arrow among them."""
+tier = "Full"
+parameters = "tests/traj_fixtures.py (_every_emitter_document: the seven fresh emitter fixtures)"
+expected = """Every de-emphasised label and descend arrow clears 4.5:1 against its own de-emphasised fill in both themes; the sweep reaches all four label-bearing node shapes and at least ten arrow checks, so it cannot pass vacuously."""
+automated = "Yes"
+evidence = "tests/test_traj_render_sweeps.py::test_t5_a_deemphasised_node_keeps_body_text_contrast_in_both_themes"
+status = "Drafted"
+phase = 6

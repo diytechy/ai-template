@@ -370,3 +370,88 @@ such.
     `--check`'s whole exit contract (`channel = "exit-code"`). LLR-025 and
     TC-025 go back to their approved text, reverting this lane's amendments,
     and IF-019 returns to the file seam.
+
+37. **Batch C (6e55d405): the act refused on LLR-173 — ADJUDICATOR,
+    coordinator amends.** WI-651's rewrite of LLR-173's detail is true of the
+    code but ends with the row's own history ("it was armed there at
+    migration step 7 and not before"). That is the cell-hygiene defect batch
+    B returned TC-203 for, so the adjudicator withheld its blessing, and the
+    snapshot refused the act on the unblessed drift, as it should. Batch B's
+    TC-055 precedent (rulings 1 and 4) governs. **Ruling:** the coordinator
+    amends that one sentence in place, status left Approved, to the standing
+    wording the adjudicator drafted. The coordinator checked it against
+    `baseline_snapshot.unanchored_findings`: it is vacuous until the record
+    holds a registry, and armed at every gate. The adjudicator re-judges the
+    cell, and the one act is re-taken.
+
+38. **Batch C (edaf0fa9) — SOL on all three majors; the act is narrowed to
+    the LLR and TC registries.** Sol sampled twelve of the 79 WI-695
+    `coincident` waivers and found four that restate the need to make
+    coincidence true (SR-015, SR-024, SR-031, SR-112). The coordinator
+    checked SR-015: its waiver says "the need asks for a budget row a
+    reviewer can trace", and SN-002 asks for a trustworthy need-to-test
+    chain, with no budget row in it. Four of twelve is too many to let the
+    other 75 ride on one sitting's blessing. SR-224's deriving hat cannot
+    reach SN-005 (the hat fires on `scripts|templates|process`, and SN-005 is
+    tagged `shell` only). TC-290 claims SR-223's acceptance without testing
+    its last clause ("the kit ships no payload and names no model").
+    **Ruling:** the act is reverted in the lane and re-taken over the LLR and
+    TC registries only. The SR registry is not copied, so WI-695's 79 cells
+    and WI-693's SR-178 stay drifted and visible, and SR-220, SR-223 and
+    SR-224 stay Drafted. The adjudicator re-sits WI-695 with the stated test
+    (does the requirement's effect alone deliver the cited need's outcome?)
+    over all 79. It withholds each waiver that fails and drafts one
+    follow-up for the corrections. It returns SR-224 (the SN-005 tag is the
+    owner's, a need), and SR-223 with TC-290. The act's stated count of 92
+    re-attestations was a reporting slip; the ledger lists 89 (Sol's
+    minor).
+
+39. **WI-557 (f88d04b1), the blocker: partial closes exempted — SOL.** The
+    owner's OI-74 says "every delegated run closes with one record", and
+    OI-75 makes the record owed at a delegated run's close. The builder
+    exempted a partial close so that a lane the machinery closed after a
+    crash is not stranded. That reason is real, but only the owner can make
+    the exception. The kit's own rule is that a refusal is a hold for a
+    human, not a strand. **Ruling:** the exemption goes. A partial close
+    without its record is refused like the others, naming the path, so a
+    person can write it. If the owner wants the exception, OI-74 or OI-75
+    is amended.
+
+40. **WI-557, major: the supervisor resume prompt — BUILDER.** No
+    supervisor resume prompt exists in the kit any more: the one the spec
+    names lived in `docs/status.md` and was retired, and no prompt template
+    carries one (`project-trajectory/prompts/`). The loop's own sessions are
+    pointed at the record (`agent_loop.session_body`), and the doctrine layer
+    states the obligation for a supervisor's sitting. That is the honest
+    reading of a clause whose surface is gone, and the Deliverable says so.
+
+41. **WI-557, major: a dial typo arms the record refusal — SOL.** The
+    configuration refusal runs before the record rung, one normalization
+    (trim, lowercase) is shared by the reader and the validator, and a typo,
+    a trimmed value and a mixed-case value are tested through the merge path.
+
+42. **WI-557, majors: coverage and IF-255 — SOL.** TC-293 and TC-294 cover
+    LLR-283 and LLR-284 clause by clause: non-table entries, every required
+    key's non-text and blank cases, malformed `high_risk`, ignored extra keys,
+    never-raise, and the build, adjudication and review routing. IF-255 is
+    split: the TOML record stays a file seam (IF-255), and the imported API
+    becomes IF-256 (granted already), each with its Contract body and cited
+    by a test that fails if the seam goes.
+
+43. **WI-557, minors: SR-225's two `shall`s — SOL; red-first — recorded.**
+    SR-225 gets one governing `shall`, with refusal and report as its two
+    observable responses. The red summaries are in the builder's report (a
+    collection ImportError for the fast module; 10 of 10 failed for the merge
+    module), and the landing log records them.
+
+44. **Batch C, round 3 (d4e0f392) — SOL on four more waivers.** The narrowed
+    act is confirmed exact: 16 LLR and 15 TC flips, 9 re-attestations, no SR
+    touched. Git confirms the squash leaves the SR copy's last writer at
+    464dc7ac, where copy and live were equal. In a fresh twelve-row sample of
+    the 70 waivers the second sitting blessed, SR-011, SR-111, SR-147 and
+    SR-149 fail the ruling-38 test. The sitting itself notes each is silent
+    on a cited need, and calls SR-111 and SR-147 preconditions rather than
+    delivered outcomes. **Ruling:** the four join the withheld set, and the
+    WI-695 Dispositions draft lists all thirteen. The SR registry is not
+    copied in this act, so nothing already recorded changes; the fix is in
+    the verdict and the draft.

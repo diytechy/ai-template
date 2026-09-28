@@ -65,10 +65,17 @@
     /* stroke — a hairline separator, a node's own outline, any connector
        (edge/wire/port/containment arrow), and the focus/hover emphasis. */
     --w-hair:.5; --w-node:1; --w-line:1.5; --w-emph:2.5;
-    /* alpha — a background wash, a de-emphasised node, a faint outline, an
-       advisory (soft) edge, an ordinary edge, and the reset to fully opaque. */
-    --o-wash:.05; --o-dim:.15; --o-ghost:.35; --o-soft:.65;
+    /* alpha — a background wash, a de-emphasised edge, an advisory (soft)
+       edge, an ordinary edge, and the reset to fully opaque. */
+    --o-wash:.05; --o-dim:.15; --o-soft:.65;
     --o-muted:.85; --o-full:1;
+    /* de-emphasis — a NODE outside the current selection or hover. Its hue is
+       drained toward its own grey, so its label and its descend arrow keep
+       body-text contrast against it (T5). Opacity is the rejected idiom: it
+       blends the ink and the fill toward the page together, and a .35 fade
+       left a white label on a phase fill below 2:1. An engine that ignores a
+       filter on SVG content draws the node unfaded, losing only the emphasis. */
+    --mute:saturate(.2);
     /* corner — legend chip, small control, card/panel, and a full pill. */
     --r-chip:3px; --r-ctl:6px; --r-card:12px; --r-pill:999px;
     --shadow:0 1px 3px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.04);
@@ -174,8 +181,10 @@
      and carries a narrow-width scroll cue (SR-054 T4) so nothing reads as
      truncated-without-affordance. */
   .tablescroll { overflow:auto; }
+  /* Drawn INSIDE the box: the edge fades below are masks, and a mask clips
+     whatever paints outside the box it masks, the focus outline included. */
   .view:focus-visible, .tablescroll:focus-visible {
-     outline:2px solid var(--accent); outline-offset:2px; }
+     outline:2px solid var(--accent); outline-offset:-2px; }
   .scrollcue { display:none; margin:.1rem 0 .5rem; color:var(--muted);
      font-size:var(--small); font-weight:600; grid-column:1 / -1; }
   /* WI-256: the cue is driven by ACTUAL overflow (JS toggles `.cued` when a
@@ -196,12 +205,27 @@
   .view.clipr, .tablescroll.clipr {
      -webkit-mask-image: linear-gradient(to left, transparent, #000 2.2rem);
              mask-image: linear-gradient(to left, transparent, #000 2.2rem); }
+  /* The card is height-capped as well, so a layer taller than the cap is cut
+     at its BOTTOM edge, where an overlay scrollbar shows nothing until the
+     reader scrolls. `.clipb` marks that cut the same way, from the vertical
+     overflow measure, and the two fades intersect on a card cut on both edges. */
+  .view.clipb, .tablescroll.clipb {
+     -webkit-mask-image: linear-gradient(to top, transparent, #000 2.2rem);
+             mask-image: linear-gradient(to top, transparent, #000 2.2rem); }
+  .view.clipr.clipb, .tablescroll.clipr.clipb {
+     -webkit-mask-image: linear-gradient(to left, transparent, #000 2.2rem),
+                         linear-gradient(to top, transparent, #000 2.2rem);
+     -webkit-mask-composite: source-in;
+             mask-image: linear-gradient(to left, transparent, #000 2.2rem),
+                         linear-gradient(to top, transparent, #000 2.2rem);
+             mask-composite: intersect; }
   #ice .cell rect { stroke:rgba(255,255,255,.35); stroke-width:var(--w-hair); cursor:pointer;
         transition:opacity .1s ease; }
   #ice .cell text { fill:#fff; font-size:var(--nlabel); pointer-events:none; }
   #ice .cell .sub { font-size:var(--nsub); }
   #ice .lane-head { fill:var(--muted); font-size:var(--nhead); font-weight:700; letter-spacing:.06em; }
-  .cell.dim, .wi.dim, .edge.dim { opacity:var(--o-dim); }
+  .cell.dim, .wi.dim { filter:var(--mute); }
+  .edge.dim { opacity:var(--o-dim); }
   #ice .cell.hl rect { stroke:var(--ring,#f59e0b); stroke-width:var(--w-emph); }
   .cell:focus, .wi:focus { outline:none; }
   #dag .wi rect { stroke:rgba(15,23,42,.15); stroke-width:var(--w-node); cursor:pointer;
@@ -438,6 +462,7 @@
         // WI-258: fade the right (clip) edge while content is cut there — same
         // actual-overflow signal as `.cued`, cleared once scrolled to the end.
         el.classList.toggle('clipr', over && el.scrollLeft < el.scrollWidth - el.clientWidth - 1);
+        el.classList.toggle('clipb', el.scrollHeight > el.clientHeight + 1 && el.scrollTop < el.scrollHeight - el.clientHeight - 1);
       }
     }
     window.__syncCues = syncScrollCues;

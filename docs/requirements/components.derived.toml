@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 257
+design_rows = 258
 seam_rows = 203
 requirements_placed = 110
 requirements_unplaced = 6
@@ -920,6 +920,7 @@ llr_refs = [
   "LLR-275",
   "LLR-279",
   "LLR-281",
+  "LLR-285",
 ]
 hat_refs = [
   "ACCESSIBILITY",

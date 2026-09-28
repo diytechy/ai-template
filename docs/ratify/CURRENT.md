@@ -621,7 +621,7 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 88 chain(s): SR-006, SR-007, SR-009, SR-011, SR-015, SR-017, SR-022, SR-024, SR-027, SR-031, SR-033, SR-035, SR-040, SR-043, SR-049, SR-070, SR-111, SR-112, SR-113, SR-129, SR-137, SR-140, SR-144, SR-146, SR-147, SR-149, SR-150, SR-154, SR-156, SR-157, SR-158, SR-159, SR-161, SR-162, SR-163, SR-164, SR-165, SR-166, SR-167, SR-168, SR-169, SR-173, SR-174, SR-175, SR-176, SR-177, SR-178, SR-180, SR-181, SR-182, SR-183, SR-185, SR-186, SR-187, SR-188, SR-189, SR-190, SR-191, SR-192, SR-193, SR-194, SR-195, SR-196, SR-197, SR-198, SR-199, SR-200, SR-201, SR-202, SR-203, SR-204, SR-205, SR-206, SR-207, SR-208, SR-210, SR-211, SR-212, SR-213, SR-214, SR-215, SR-217, SR-218, SR-219, SR-220, SR-221, SR-223, SR-224</summary>
+<summary>Waiting for automated adjudication — 89 chain(s): SR-006, SR-007, SR-009, SR-011, SR-015, SR-017, SR-022, SR-024, SR-027, SR-031, SR-033, SR-035, SR-040, SR-043, SR-049, SR-054, SR-070, SR-111, SR-112, SR-113, SR-129, SR-137, SR-140, SR-144, SR-146, SR-147, SR-149, SR-150, SR-154, SR-156, SR-157, SR-158, SR-159, SR-161, SR-162, SR-163, SR-164, SR-165, SR-166, SR-167, SR-168, SR-169, SR-173, SR-174, SR-175, SR-176, SR-177, SR-178, SR-180, SR-181, SR-182, SR-183, SR-185, SR-186, SR-187, SR-188, SR-189, SR-190, SR-191, SR-192, SR-193, SR-194, SR-195, SR-196, SR-197, SR-198, SR-199, SR-200, SR-201, SR-202, SR-203, SR-204, SR-205, SR-206, SR-207, SR-208, SR-210, SR-211, SR-212, SR-213, SR-214, SR-215, SR-217, SR-218, SR-219, SR-220, SR-221, SR-223, SR-224</summary>
 
 ## SR-006 — Gate/tier harness enforces required steps
 
@@ -860,6 +860,48 @@ _traced — routes to adjudication_
 - **Boundary-Refs**
   - before: B-05
   - after: B-09
+
+## SR-054 — Dashboard usability (rubric-adjudicated)
+
+> **Requirement.** The state view the delivered generators produce shall support its core reading tasks with low friction: a first-time reviewer finds the project state, the next work, and how the parts connect, each within one tab switch; views default to a legible density (start-collapsed per the greater-than-3 rule) and reveal detail without losing context; labels stay readable at default zoom with no clipped or overlapping text.
+
+> **Rationale.** Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded judgement, re-judged when a declared input changes or the record expires rather than on every commit — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today.
+
+
+### SR SR-054
+- **Boundary-Refs**
+  - before: B-05
+  - after: B-09
+- **DA-Refs**
+  - before: (empty)
+  - after: DA-010
+
+### LLR LLR-285 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-285
+- **SR-Refs**: SR-054
+- **Hat-Refs**: ACCESSIBILITY
+- **Title**: A de-emphasised node drains its hue, not its contrast (T5 core)
+- **Module**: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/rendering/traj_render.py;project-trajectory/scripts/rendering/traj_panels.py
+- **CodeSymbol**: HTML_TEMPLATE/DRILL_STYLE/_know_panel
+- **Detail**: The mechanized core of usability anchor T5 (docs/rubrics/dashboard-usability.md) for a node outside the current selection or hover. The rules that de-emphasise a label-bearing node set one declared page token, --mute, a partial desaturation, and nothing else: the drill's trace-muted block, which the default render reaches because it selects a block, and the hover dim of the icicle cell, the flat-roadmap work item and the knowledge concept. A desaturation moves a colour toward its own grey rather than toward the page behind it, so a node's label ink and its fill are not blended into one another, and the label and the descend arrow clear the body-text floor, 4.5:1, against the de-emphasised fill in both themes. A connector (a wire or an edge) is not a control and keeps its opacity fade. SCOPE: a de-emphasis rule sets opacity or a filter and nothing else, so its paint stays arithmetic, and the shorthand filter functions are modelled as the colour matrices the browser applies to sRGB channels. An engine that ignores a filter on SVG content draws the node unfaded, which loses the emphasis but not the contrast. Whether what remains reads as a selection stays perceptual under LLR-055/TC-055.
+- **Rationale**: Opacity is the obvious de-emphasis and the wrong one for a node that carries a label: it composites the ink and the fill toward the page together, so the ratio between them collapses. A .35 fade left white labels on the phase fills between 1.6:1 and 2:1 on the light page, and clearing 4.5:1 by opacity alone needs a fade of .98, which is no fade. A precomputed muted fill per node was rejected because every emitter would then carry a second fill per node and a second set of arrow markers, where one token and one declaration per rule carry the same guarantee. Hue is the channel left: draining it lets a node recede without touching the arithmetic that keeps its label legible.
+- **TestRefs**: (see TC-296)
+- **Status**: Drafted
+- **Component**: CMP-009
+- **Phase**: 6
+
+### TC TC-296 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-296
+- **Verifies**: SR-054;LLR-285
+- **Level**: Unit
+- **Method**: Sweep every fresh emitter document, one fixture per emitter (the committed dashboard is an older renderer's markup, so it is left out), and derive from each document's stylesheet every rule whose selector puts a de-emphasis state class (the dim and trace-muted states the page scripts toggle) on a node shape that document draws with a label. Model the rule's paint as the browser applies it: its shorthand filter functions as colour matrices over sRGB channels, then its opacity composited over the page surface, refusing a rule that sets any other property or names an unmodelled filter function. For every node the rule reaches, resolve its fill, its label ink (inline, else the most specific stylesheet rule for its classes) and, where it carries a descend arrow, its per-node ring ink or the accent fallback, in both themes and over both page surfaces, and assert each ink clears 4.5:1 against the de-emphasised fill. Assert the sweep reached the drill block, the icicle cell, the flat-roadmap work item and the knowledge concept, with the descend arrow among them.
+- **Tier**: Full
+- **Parameters**: tests/traj_fixtures.py (_every_emitter_document: the seven fresh emitter fixtures)
+- **Expected**: Every de-emphasised label and descend arrow clears 4.5:1 against its own de-emphasised fill in both themes; the sweep reaches all four label-bearing node shapes and at least ten arrow checks, so it cannot pass vacuously.
+- **Automated**: Yes
+- **Evidence**: tests/test_traj_render_sweeps.py::test_t5_a_deemphasised_node_keeps_body_text_contrast_in_both_themes
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-070 — Generated views are offline, deterministic and drift-checkable
 

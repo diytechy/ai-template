@@ -509,3 +509,30 @@ test_complexity_ratchet, test_resync_pack, test_frame_context,
 test_skill_materialization, test_guardrails_payload), run by the
 coordinator: 595 passed / 2 skipped. `check_complexity --mode enforce`: OK,
 204 rows. Trunk before this squash: 47f8b573.
+
+### WI-701 lands: the dashboard's T5 contrast fixed, T4 at 390 px measured within its floor
+
+One builder, one Codex Sol round, SOUND at 86ea26c8
+([sol-wi701.md](../reviews/2026-09-27-wave5/sol-wi701.md)). The two T5
+findings had one cause. Every node de-emphasis faded by opacity, and white
+labels on phase fills fell to 1.28 to 2.0:1. All four de-emphasis rules now
+use one `:root` token, `--mute: saturate(.2)`, pinned by new Drafted
+LLR-285 and TC-296, red first. T4 at 390 px sits exactly on TC-121's scale
+floor (labels at 6.2 and 5.27 px), so nothing changed. For the owner:
+SHRINK_FLOOR looks miscalibrated for today's node type, and moving it is an
+LLR-116 and TC-121 amendment. The What drill's overflow card fades its
+bottom edge. **Open count: 21** (20 queued, 1 deferred).
+
+Commit bar at WI-701: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs --stale` 0 broken, smoke 1708 passed / 3 skipped, seconds 30.9 s
+within 60 s. The dashboard's slow modules plus both ratchets
+(test_traj_render, test_traj_render_sweeps, test_traj_views,
+test_traj_panels, test_gen_trajectory, test_traj_graph, test_gen_open_items,
+test_dogfood_sync, test_rule_sync, test_module_size_ratchet,
+test_complexity_ratchet, test_resync_pack), run by the coordinator: 306
+passed / 1 skipped (20 min 52 s, with three agents on the box).
+`check_complexity --mode enforce`: OK, 204 rows. The dashboard was
+regenerated at the merge, which clears the builder's one stale-artifact red.
+WI-703 (TC-055's re-judge) now waits on WI-701 by a `needs` edge. Trunk
+before this squash: 1d84d77c.

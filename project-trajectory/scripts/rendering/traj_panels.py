@@ -272,7 +272,11 @@ def _know_panel(root, svg, details):
 
     Above the LLR-052 `>3` type threshold the panel renders the START-COLLAPSED
     type-tiered drill (`know_view`, WI-159 — the T2 density fix); at or below it,
-    the flat concept graph (`know_graph`) below."""
+    the flat concept graph (`know_graph`) below. A concept node outside the
+    hovered one's neighbourhood takes the page's one node de-emphasis
+    (`--mute`), so its label keeps its contrast.
+
+    Implements: SR-054, LLR-285"""
     tab = tab_button("know", "Knowledge (OKF)")
     legend = "".join(
         '<span><i style="background:{}"></i>{}</span>'.format(c, html.escape(t))
@@ -287,7 +291,8 @@ def _know_panel(root, svg, details):
         "#knowgraph .knode rect{stroke:rgba(15,23,42,.15);stroke-width:var(--w-node);"
         "cursor:pointer;transition:opacity .1s ease;}"
         "#knowgraph .knode text{fill:#fff;font-size:var(--nlabel);pointer-events:none;}"
-        "#knowgraph .knode.dim,#knowgraph .kedge.dim{opacity:var(--o-dim);}"
+        "#knowgraph .knode.dim{filter:var(--mute);}"
+        "#knowgraph .kedge.dim{opacity:var(--o-dim);}"
         "#knowgraph .knode.hl rect{stroke:var(--ring,#f59e0b);stroke-width:var(--w-emph);}"
         # U3 (dashboard-uniformity): the directed-dependency edge shares the drill
         # `.wire` idiom — one `--muted` stroke token (was a hardcoded #94a3b8 that

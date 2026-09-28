@@ -430,7 +430,6 @@ WEIGHT_TOKENS = {
     "opacity": [
         "--o-wash",
         "--o-dim",
-        "--o-ghost",
         "--o-soft",
         "--o-muted",
         "--o-full",

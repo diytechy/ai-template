@@ -2,13 +2,44 @@
 id = "WI-701"
 title = "Dashboard: clear TC-055's cross-family Critique findings (T5 contrast of the selection fade and the light-theme descend arrows, T4 labels at 390 px)"
 workstream = "dashboard"
-specref = "docs/reviews/wi-698-re-judge-tc-055-declared-inpu/001-ADJUDICATE-8bebd4cf.md"
+specref = ""
 sr_refs = ["SR-054"]
 needs = []
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Built by one builder, reviewed SOUND by Codex Sol at 86ea26c8. The last
+Done-when bullet (TC-055 re-judged cross-family) is WI-703's, which waits on
+this row and runs in the commits right after this close. Its record is the
+log fragment's section "WI-703: TC-055 re-judged on the fixed dashboard".
+
+- **T5 (both findings, one cause).** Every node de-emphasis faded by
+  opacity (`.35` on the drill's trace-muted, `.15` on the icicle, flat
+  roadmap and knowledge hover dims), which left white labels on phase fills
+  at 1.28 to 2.0:1. Reaching 4.5:1 by opacity alone needs .98. All four
+  rules now use one theme-invariant `:root` token, `--mute: saturate(.2)`.
+  Edge fades keep their opacity, and `--o-ghost` is gone. TC-296 (Drafted,
+  under new Drafted LLR-285) computes each de-emphasised node's label
+  contrast in both themes, red at 1.28:1 before the fix. The model matched
+  Chrome's rendered pixels on five sampled blocks.
+- **T4 at 390 px: within the approved floor, nothing changed.** Every
+  diagram wider than its card renders at exactly SHRINK_FLOOR 0.62, so node
+  labels land at 6.2 px (`--nlabel`) and 5.27 px (`--nsub`), the floor
+  TC-121 pins. Recorded for the owner: the floor's own comment calls about
+  5 px illegible, so SHRINK_FLOOR looks miscalibrated for today's 10 and
+  8.5 px node type. Moving it means amending LLR-116 and TC-121.
+- **The What drill's overflow card** fades its bottom edge while content is
+  cut below (`.clipb`, beside `.clipr`). A keyboard focus ring hidden by the
+  mask is now drawn inside the box.
+- The page golden is regenerated for the intended CSS and JS only.
+
+Also recorded: the rubric's T5 does not yet say its de-emphasis half is now
+a test (LLR-285, TC-296). The rubric is a declared input of TC-055, so it is
+left for a change that re-judges TC-055 anyway.
 
 ## Context
 

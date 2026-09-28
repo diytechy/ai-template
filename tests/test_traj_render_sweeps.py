@@ -739,3 +739,194 @@ def test_u3_knowledge_edge_stroke_uses_the_shared_muted_token(tmp_path):
         in css
     )
     assert "#knowgraph .kedge{fill:none;stroke:#94a3b8" not in css
+
+
+# --- T5: a de-emphasised node keeps body-text contrast (LLR-285) --------------
+# A selection or hover state de-emphasises every node it does not name, and the
+# drill's default render selects one, so the de-emphasised state is what a reader
+# first sees. Painted as OPACITY, it composites a node's label ink and its fill
+# toward the page background together, and the ratio between them collapses: at
+# .35 a white label on a phase fill fell below 1.5:1 on the light page. The check
+# models what each declared de-emphasis rule paints (its filter functions and its
+# opacity, the only two properties such a rule may set) and holds every emitted
+# node's label, and its descend arrow, to the body-text floor in both themes.
+DEEMPHASIS_STATES = {"dim", "trace-muted"}  # the state classes the scripts toggle
+T5_BODY_FLOOR = 4.5  # the body-text floor T5 extends to every control
+_CSS_RULE = re.compile(r"([^{}]+)\{([^{}]*)\}")
+_NODE_G = re.compile(r'<g class="([^"]*)"([^>]*>.*?)</g>', re.S)
+
+
+def _rgb(hexval):
+    h = hexval.lstrip("#")
+    h = "".join(c * 2 for c in h) if len(h) == 3 else h
+    return [int(h[i : i + 2], 16) for i in (0, 2, 4)]
+
+
+def _filter_matrix(fn, amount):
+    """The Filter Effects colour matrix of one shorthand filter function, over
+    sRGB-encoded channels (the space the shorthand functions run in)."""
+    if fn == "grayscale":
+        fn, amount = "saturate", 1 - min(amount, 1.0)
+    assert fn == "saturate", "unmodelled filter function: {}".format(fn)
+    s = amount
+    return [
+        [0.213 + 0.787 * s, 0.715 - 0.715 * s, 0.072 - 0.072 * s],
+        [0.213 - 0.213 * s, 0.715 + 0.285 * s, 0.072 - 0.072 * s],
+        [0.213 - 0.213 * s, 0.715 - 0.715 * s, 0.072 + 0.928 * s],
+    ]
+
+
+def _resolve_token(css, value):
+    """`var(--x)` resolved to its `:root` declaration, whatever its type."""
+    m = re.fullmatch(r"var\(\s*(--[\w-]+)\s*\)", value.strip())
+    if not m:
+        return value.strip()
+    root = re.search(r":root\s*\{(.*?)\}", css, re.S).group(1)
+    hit = re.search(re.escape(m.group(1)) + r"\s*:\s*([^;]+);", root)
+    assert hit, "undeclared token {}".format(m.group(1))
+    return hit.group(1).strip()
+
+
+def _deemphasis_paint(css, decls):
+    """`paint(hex, backdrop) -> hex`: what one de-emphasis rule makes of a colour
+    drawn inside the node, composited over the page surface behind it."""
+    props = dict(
+        (k.strip(), v.strip()) for k, v in re.findall(r"([\w-]+)\s*:\s*([^;]+)", decls)
+    )
+    assert set(props) <= {"opacity", "filter"}, (
+        "a de-emphasis rule may set only opacity and filter, so its paint stays "
+        "modelled: {}".format(sorted(props))
+    )
+    alpha = float(_resolve_token(css, props.get("opacity", "1")))
+    matrices = [
+        _filter_matrix(fn, float(a.strip("% ")) / (100 if "%" in a else 1))
+        for fn, a in re.findall(
+            r"([a-z-]+)\(([^)]*)\)", _resolve_token(css, props.get("filter", ""))
+        )
+    ]
+
+    def paint(hexval, backdrop):
+        c = _rgb(hexval)
+        for m in matrices:
+            c = [
+                max(0.0, min(255.0, sum(m[i][j] * c[j] for j in range(3))))
+                for i in range(3)
+            ]
+        mixed = [alpha * v + (1 - alpha) * b for v, b in zip(c, _rgb(backdrop))]
+        return "#" + "".join("{:02x}".format(round(v)) for v in mixed)
+
+    return paint
+
+
+def _theme_paint(css, value, dark):
+    """A paint value as the browser resolves it in one theme; an undeclared
+    token (the per-node `--ring` outside its host) takes the var() fallback."""
+    m = re.fullmatch(r"var\(\s*(--[\w-]+)\s*(?:,\s*(.+))?\)", value.strip())
+    if not m:
+        return value.strip()
+    try:
+        return _css_var(css, m.group(1), dark=dark)
+    except AttributeError:
+        return _theme_paint(css, m.group(2), dark)
+
+
+def _label_ink(css, node, classes):
+    """A node's label ink: its own inline `fill`, else the most specific
+    stylesheet rule reaching `.<class>… text` for this node's classes."""
+    inline = re.search(r'<text\b[^>]*\bfill="([^"]+)"', node)
+    if inline:
+        return inline.group(1)
+    best = (0, None)
+    for sel, body in _CSS_RULE.findall(css):
+        fill = re.search(r"(?:^|[;\s{])fill\s*:\s*([^;}]+)", body)
+        for part in sel.split(",") if fill else ():
+            m = re.search(r"((?:\.[\w-]+)+)\s+(?:text|tspan)$", part.strip())
+            need = set(m.group(1).lstrip(".").split(".")) if m else None
+            if need and need <= classes and len(need) > best[0]:
+                best = (len(need), fill.group(1).strip())
+    assert best[1], ("no label ink resolves for", sorted(classes))
+    return best[1]
+
+
+def _deemphasis_rules(css, page):
+    """`(selector, node classes, declarations)` for every stylesheet rule that
+    de-emphasises a LABEL-BEARING node this document draws — derived from the
+    emitted CSS and markup, so a new node shape or state joins by existing. A
+    rule reaching only edges (no label) is not a control and is left out."""
+    drawn = [set(c.split()) for c, g in _NODE_G.findall(page) if "<text" in g]
+    for sel, decls in _CSS_RULE.findall(css):
+        for part in sel.split(","):
+            classes = set(re.findall(r"\.([\w-]+)", (part.split() or [""])[-1]))
+            if classes & DEEMPHASIS_STATES:
+                node = classes - DEEMPHASIS_STATES
+                if any(node <= d for d in drawn):
+                    yield part.strip(), node, decls
+
+
+# Both themes, over both page surfaces a diagram can sit on.
+THEME_SURFACES = [(dark, s) for dark in (False, True) for s in ("--surface", "--bg")]
+
+
+def _reached_nodes(page, node):
+    """`(class attr, body)` of every label-bearing node a rule for `node` reaches."""
+    return [
+        (cls, g)
+        for cls, g in _NODE_G.findall(page)
+        if node <= set(cls.split()) and "<text" in g
+    ]
+
+
+def _node_inks(css, g, classes, dark):
+    """`(fill, [(kind, ink), ...])` for one node in one theme: its label ink, and
+    the descend arrow's ink (its own ring, else the accent fallback) if it has one."""
+    fill = re.search(r'<rect\b[^>]*fill="([^"]+)"', g).group(1)
+    inks = [("label", _theme_paint(css, _label_ink(css, g, classes), dark))]
+    if 'class="cedge"' in g:
+        ring = re.search(r"--ring:(#[0-9a-fA-F]{6})", g)
+        inks.append(
+            ("arrow", ring.group(1) if ring else _css_var(css, "--accent", dark))
+        )
+    return _theme_paint(css, fill, dark), inks
+
+
+def _deemphasised_pairs(css, page):
+    """`(context, ink, fill)` as painted, for every ink on every node every
+    de-emphasis rule in this document reaches, in both themes."""
+    for part, node, decls in _deemphasis_rules(css, page):
+        paint = _deemphasis_paint(css, decls)
+        for g_cls, g in _reached_nodes(page, node):
+            for dark, surface in THEME_SURFACES:
+                under = _css_var(css, surface, dark=dark)
+                fill, inks = _node_inks(css, g, set(g_cls.split()), dark)
+                for kind, ink in inks:
+                    context = (part, frozenset(node), g_cls, dark, surface, kind)
+                    yield context, paint(ink, under), paint(fill, under)
+
+
+def test_t5_a_deemphasised_node_keeps_body_text_contrast_in_both_themes(tmp_path):
+    """dashboard-usability.md T5 / LLR-285: every rule that de-emphasises a
+    label-bearing node is modelled as the browser paints it, and every node it
+    reaches keeps its label ink, and its descend arrow where it carries one, at
+    the body-text floor against its own de-emphasised fill, composited over
+    either page surface, in both themes.
+
+    Swept over the FRESH emitter documents only: the committed dashboard is an
+    older renderer's markup, and this asserts the current emitter."""
+    kinds, shapes, rules = collections.Counter(), set(), set()
+    for label, page in _every_emitter_document(tmp_path):
+        if label == "shipped":
+            continue
+        css = "\n".join(re.findall(r"<style>(.*?)</style>", page, re.S))
+        for context, ink, fill in _deemphasised_pairs(css, page):
+            ratio = _wcag(ink, fill)
+            assert ratio >= T5_BODY_FLOOR, (label,) + context + (ink, fill, ratio)
+            kinds[context[-1]] += 1
+            shapes |= context[1]
+            rules.add((label, context[0]))
+    # Non-vacuous: every label-bearing node shape the emitters de-emphasise was
+    # reached, and the descend arrow among them.
+    assert {"block", "cell", "wi", "knode"} <= shapes, shapes
+    assert len(rules) >= 4 and kinds["label"] >= 100 and kinds["arrow"] >= 10, (
+        rules,
+        kinds,
+    )

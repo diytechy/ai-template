@@ -6349,6 +6349,25 @@ grammar. In your own prose, rename at your pace: grep for
 names and old logs as they are. `check_vocab.py` does not refuse the old words,
 because they remain correct inside quotations and file names.
 
+### The dashboard de-emphasises a node by draining its hue, and marks a card cut at its bottom edge [since 1d84d77c]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A node outside the current selection or hover (the drill's
+unselected blocks, which the default render shows because it selects one, and
+the hover dim of the icicle, the flat roadmap and the knowledge graph) was
+faded with opacity, which blended its label into its fill; it is now
+desaturated through one declared page token, `--mute`, so its label and descend
+arrow keep body-text contrast in both themes. The `--o-ghost` opacity token,
+which only that fade used, is gone. A diagram card taller than its height cap
+now fades its bottom edge while content is cut there, as it already did its
+right edge, and a scroll region's focus ring is drawn inside the card so the
+edge fade cannot hide it.
+
+**What to do.** Regenerate the dashboard. A stylesheet or template of your own
+that referenced `--o-ghost` should use `--mute` for a node, or `--o-dim` for an
+edge.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
