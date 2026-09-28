@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 258
-seam_rows = 203
-requirements_placed = 110
+design_rows = 261
+seam_rows = 205
+requirements_placed = 111
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -571,6 +571,7 @@ sr_refs = [
   "SR-215",
   "SR-220",
   "SR-223",
+  "SR-225",
 ]
 sr_shared_refs = [
   "SR-139",
@@ -648,6 +649,9 @@ llr_refs = [
   "LLR-264",
   "LLR-265",
   "LLR-280",
+  "LLR-282",
+  "LLR-283",
+  "LLR-284",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -679,6 +683,7 @@ modules = [
   "project-trajectory/scripts/intake.py",
   "project-trajectory/scripts/integrate.py",
   "project-trajectory/scripts/kitlib/authority.py",
+  "project-trajectory/scripts/kitlib/decisions.py",
   "project-trajectory/scripts/kitlib/done_when.py",
   "project-trajectory/scripts/kitlib/provenance.py",
   "project-trajectory/scripts/kitlib/station.py",
@@ -727,6 +732,8 @@ seam_internal_refs = [
   "IF-197",
   "IF-228",
   "IF-242",
+  "IF-255",
+  "IF-256",
 ]
 seam_boundary_refs = [
   "IF-001",

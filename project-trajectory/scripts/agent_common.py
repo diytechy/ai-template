@@ -80,6 +80,7 @@ from pathlib import Path
 try:
     from kitlib import authority as _kitauthority
     from kitlib import config as _kitconfig
+    from kitlib import decisions as _kitdecisions
     from kitlib import ladder as _kitladder
     from kitlib import provenance as _kitprovenance
     from kitlib import registry as _kitregistry
@@ -90,6 +91,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import authority as _kitauthority
     from kitlib import config as _kitconfig
+    from kitlib import decisions as _kitdecisions
     from kitlib import ladder as _kitladder
     from kitlib import provenance as _kitprovenance
     from kitlib import registry as _kitregistry
@@ -338,6 +340,7 @@ PROCESS_ONLY_KEYS = {
     ("attestation", "complete_review"): "str",
     ("attestation", "complete_sample_rate"): "int",
     ("attestation", "adjudication_review"): "str",
+    ("attestation", "decision_recording"): "str",
     # The reverse back-link coverage bar (OI-42 ruled (e), WI-486). It sits in
     # `[checks]` beside six BOOLEANS and is an INT, which is exactly why it
     # needs the type check: its reader
@@ -1125,6 +1128,35 @@ def adjudication_review(docs):
     return "when-minting"
 
 
+# The `decision_recording` alphabet is the record's own (`kitlib.decisions`),
+# so the dial reader, the merge slot's rung and the session note spell it one
+# way. Safe to arm at birth, like `adjudication_review`: no legacy value exists.
+# Implements: SR-225, LLR-282
+DECISION_RECORDING_MODES = _kitdecisions.MODES
+PROCESS_KEY_VOCAB[("attestation", "decision_recording")] = set(DECISION_RECORDING_MODES)
+
+
+def decision_recording(docs):
+    """The `[attestation] decision_recording` dial as one of
+    `DECISION_RECORDING_MODES`.
+
+    UNDECLARED reads `"off"`, the template's shipped value: no repo owes a
+    record until its owner asks for one. DECLARED BUT UNRECOGNIZED reads
+    `"record"`: the owner asked for something, and the failure that matters is
+    silently recording nothing — `config_conflicts` refuses the value loudly
+    upstream, and this reader keeps the obligation for anyone who did not run
+    that gate. The dial allocates the owner's reading; it never moves what must
+    reach the owner through the process's exits, at any setting.
+
+    Implements: SR-225, LLR-282
+    """
+    table = process_config(docs).get("attestation")
+    if not (isinstance(table, dict) and "decision_recording" in table):
+        return "off"
+    declared = mode_word(table.get("decision_recording"))
+    return declared if declared in DECISION_RECORDING_MODES else "record"
+
+
 def adjudication_review_owed(docs, brief, drafts):
     """Does a committing ADJUDICATE session owe a review round — ONE reader for
     the round scheduler and the merge gate, so the two cannot disagree.
@@ -1332,29 +1364,70 @@ def _key_value_findings(data, section, key, kind):
                 PROCESS_TOML, section, key, value, low_high[0], low_high[1]
             )
         ]
+    return _vocab_findings(section, key, value)
+
+
+def _vocab_findings(section, key, value):
+    """The VOCABULARY finding for one declared dial, [] when it is in its
+    closed alphabet or the dial declares none. Its own function because the
+    rung dial and a named-mode dial each need their own words, and the two
+    messages together took `_key_value_findings` past its complexity ceiling."""
     vocab = PROCESS_KEY_VOCAB.get((section, key))
-    if vocab is not None and str(value).strip() not in vocab:
-        # THE LEGACY ORDINAL IS NOT A CONFLICT. `approval_through` reads it,
-        # translates it and warns; saying it twice — once as a refusal here and
-        # once as a warning there — would make a kit upgrade look like a broken
-        # config to a repo whose dial is merely old.
-        if isinstance(value, int) and not isinstance(value, bool):
-            return []
-        return [
-            "docs/{} [{}] {} = {!r} names no rung. Legal values are {} (and "
-            "`{}` for 'nothing is human-held'). It falls back to the most "
-            "conservative setting rather than to what was probably meant: an "
-            "unrecognized dial that guessed would read as LESS human "
-            "involvement than the owner asked for.".format(
-                PROCESS_TOML,
-                section,
-                key,
-                value,
-                ", ".join("`{}`".format(r) for r in _kitladder.STAGE_ORDER),
-                _kitstage.BELOW,
-            )
-        ]
-    return []
+    if vocab is None:
+        return []
+    if vocab is not APPROVAL_DIAL_RUNGS:
+        return _mode_vocab_findings(section, key, value, vocab)
+    if str(value).strip() in vocab:
+        return []
+    # THE LEGACY ORDINAL IS NOT A CONFLICT. `approval_through` reads it,
+    # translates it and warns; saying it twice — once as a refusal here and
+    # once as a warning there — would make a kit upgrade look like a broken
+    # config to a repo whose dial is merely old.
+    if isinstance(value, int) and not isinstance(value, bool):
+        return []
+    return [
+        "docs/{} [{}] {} = {!r} names no rung. Legal values are {} (and "
+        "`{}` for 'nothing is human-held'). It falls back to the most "
+        "conservative setting rather than to what was probably meant: an "
+        "unrecognized dial that guessed would read as LESS human "
+        "involvement than the owner asked for.".format(
+            PROCESS_TOML,
+            section,
+            key,
+            value,
+            ", ".join("`{}`".format(r) for r in _kitladder.STAGE_ORDER),
+            _kitstage.BELOW,
+        )
+    ]
+
+
+def mode_word(value):
+    """A named-mode dial's value as its readers compare it — trimmed and
+    lowercased — or None for a value that is not text. ONE normalization for
+    the reader and the validator, so a value the reader honours is never
+    refused and a value it would not honour always is.
+
+    Implements: SR-225, LLR-282
+    """
+    return value.strip().lower() if isinstance(value, str) else None
+
+
+def _mode_vocab_findings(section, key, value, vocab):
+    """A named-mode dial's vocabulary finding, in its own words: the rung
+    message would tell its reader to pick a `DevStg-*` rung for a dial that
+    takes none."""
+    if mode_word(value) in vocab:
+        return []
+    return [
+        "docs/{} [{}] {} = {!r} is not one of {}. An unrecognized value is "
+        "refused rather than guessed at.".format(
+            PROCESS_TOML,
+            section,
+            key,
+            value,
+            ", ".join("`{}`".format(v) for v in sorted(vocab)),
+        )
+    ]
 
 
 def config_conflicts(docs):

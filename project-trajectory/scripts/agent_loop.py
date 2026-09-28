@@ -210,6 +210,10 @@ from kitlib import done_when as kdone
 # run, and the trailer line every session it starts is told to write.
 from kitlib import provenance as kprovenance
 
+# The delegated-decisions record (SR-225): the note a delegated session is
+# handed when the dial asks its run for a record.
+from kitlib import decisions as kdecisions
+
 # The WI-218 split: the session-launch layer (slice B), the shared coordinator
 # primitives + the dual-plan runner (slice C), and (until Phase 5) the parallel dispatcher/
 # integrator (slice D) live in their own modules. These bindings keep
@@ -855,7 +859,7 @@ def session_body(root, worker, current_wi, session, sha, reviews_dir, templates)
         body, why = adjudicate_brief.compose(root, row, verdict_path, templates)
         if body is None:
             return None, None, why, ""
-        return body, verdict_path, None, brief
+        return body + decision_record_note(root, worker), verdict_path, None, brief
     return (
         worker_prompt(
             root,
@@ -865,11 +869,24 @@ def session_body(root, worker, current_wi, session, sha, reviews_dir, templates)
             worker["base"],
             worker["rework"],
             worker["assigned"],
-        ),
+        )
+        + decision_record_note(root, worker),
         None,
         None,
         "",
     )
+
+
+def decision_record_note(root, worker):
+    """The delegated-decisions note for this lane's session, or "" when the
+    repository's `[attestation] decision_recording` dial is `off` or there is no
+    lane. Appended at the one fork every build and adjudication session takes,
+    so both altitudes that close a lane are told where the record the merge
+    slot asks for belongs, and a reviewer, which closes nothing, is not."""
+    if not worker:
+        return ""
+    mode = agent_common.decision_recording(Path(root) / "docs")
+    return kdecisions.session_note(mode, worker["train"])
 
 
 # What a held adjudication row tells the human, appended to the stop banner.

@@ -2916,3 +2916,39 @@ test_refs = "(see TC-296)"
 status = "Drafted"
 component = "CMP-009"
 phase = 6
+
+[design.LLR-282]
+sr_refs = ["SR-225"]
+title = "The decision_recording dial reads off when undeclared and record when unrecognized"
+module = "project-trajectory/scripts/agent_common.py"
+code_symbol = "decision_recording/DECISION_RECORDING_MODES/mode_word"
+detail = """decision_recording(docs) reads [attestation] decision_recording from the policy file through process_config and returns one of DECISION_RECORDING_MODES, which is kitlib.decisions.MODES (off, record, escalate-first): off when the key is not declared, the value's mode_word when that is one of the modes, and record for any other declared value, a wrong-typed one included. mode_word(value) is the one normalization, the value trimmed and lowercased, or None for a value that is not text. The key is registered in PROCESS_ONLY_KEYS as a str and in PROCESS_KEY_VOCAB as the three modes; config_conflicts compares a named-mode dial's value through the same mode_word, so a padded or mixed-case value the reader honours is not refused and another value is, the refusal listing that dial's own words rather than the approval rungs' message."""
+rationale = """Undeclared reads off because the template ships off and a repository that never set the dial has asked for nothing. Declared but unrecognized reads record because the owner asked for something and the failure that matters is silently recording nothing; the loud refusal is config_conflicts', and the reader keeps the obligation for a caller that did not run it. One normalization serves the reader and the validator, so the two cannot disagree about which values are the dial's. The alphabet is the record module's, so the reader, the merge-slot check and the session note cannot spell it three ways."""
+test_refs = "(see TC-292)"
+status = "Drafted"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-283]
+sr_refs = ["SR-225"]
+title = "The decisions record's path, format findings, obligation and session note"
+module = "project-trajectory/scripts/kitlib/decisions.py"
+code_symbol = "DECISIONS_DIR/MODES/REQUIRED_KEYS/record_path/record_findings/owed/session_note"
+detail = """A kitlib module importing nothing, whose functions read no file, git or environment. record_path(run) is DECISIONS_DIR/<run>.toml under docs/decisions, a / in the run's name becoming -. record_findings(text) parses the text as TOML, returning one finding when it does not parse, and otherwise one finding per defect: a decision key that is not a table, an entry of that table whose id is not D-<digits>, an entry that is not a table, a key of REQUIRED_KEYS (decided, alternative, reversal_cost, why_not_escalated, review) absent or not a string, one of the first four blank after trimming, a top-level high_risk that is absent or not a list of strings, and each hoisted id the decision table lacks; an id ending -000 is skipped wherever it appears, and keys beyond REQUIRED_KEYS are not judged. It does not raise. owed(mode, outcomes) is true for mode record or escalate-first with at least one outcome, whatever the outcome, a partial close included. session_note(mode, run) returns the empty string for off and otherwise the instruction naming record_path(run), the required keys, the hoist and the rule that the record is not an exit, with one further sentence under escalate-first preferring the exits over deciding."""
+rationale = """The format, the obligation and the note live in one module so the merge slot and the session read one definition of where a record belongs and what it must carry. The findings are strings rather than a refusal because the requirement reports a malformed entry without refusing, and a finding per field lets that report name the entry and the field. The obligation reads no outcome word because every delegated run closes with its record."""
+test_refs = "(see TC-293)"
+status = "Drafted"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-284]
+sr_refs = ["SR-225"]
+title = "The merge slot refuses a close that owes its decisions record and carries none"
+module = "project-trajectory/scripts/integrate.py"
+code_symbol = "_decision_record_refusal/_close_record_refusal"
+detail = """_decision_record_refusal(root, branch, outcomes) is a rung of _merge_refusal, taken through _close_record_refusal directly after the per-close report rung. It reads the dial through agent_common.decision_recording from the trunk's docs and returns None at once under off. Otherwise it first returns the first config_conflicts finding, when there is one, as the refusal, so a dial value outside its alphabet is refused as configuration before the record is read. It then reads record_path(branch) off the branch's tree with git show; when the path is absent and kitlib.decisions.owed holds for the branch's outcomes it returns a refusal naming the branch, the path and the dial; when the path is present it prints one line per record_findings finding, naming the path, and returns None. docs/decisions/ joins the surfaces an adjudication-only lane may touch without falling off the no-bar path, since an adjudicator writes its record there. agent_loop.session_body appends session_note for the lane's branch, read under the same dial, to the body of a build or an adjudication session; a review session's brief is composed by reviewer_prompt, apart from that fork, and is not handed it."""
+rationale = """The record is read off the branch's tree, like the per-close report, so the refusal and the close it judges are one fact read once. The rung sits beside that report rung because both are owed close artifacts, and before the bar rung because it is a single git read that a refused lane should not pay a bar to reach. The configuration is judged inside the rung, before the read, because the reader keeps the obligation for a value it does not recognize and a typo would otherwise be refused as a missing record. The note is appended where the loop already forks every build from every adjudication, so both altitudes that close a lane are told the path the merge slot will read."""
+test_refs = "(see TC-294)"
+status = "Drafted"
+component = "CMP-008"
+phase = 6

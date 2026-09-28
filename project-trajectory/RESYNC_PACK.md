@@ -6368,6 +6368,40 @@ edge fade cannot hide it.
 that referenced `--o-ghost` should use `--mute` for a node, or `--o-dim` for an
 edge.
 
+### The delegated-decisions record and the `decision_recording` dial [since 4b7f6dae]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A new `[attestation] decision_recording` dial in
+`docs/process.toml` (`"off"` | `"record"` | `"escalate-first"`), shipped
+`"off"`; an undeclared key reads `"off"`, and a value outside the three is
+refused where the policy file is checked. Under `"record"` or
+`"escalate-first"` each delegated run owes a record of the calls it made on the
+owner's behalf, one TOML file per run at `docs/decisions/<run>.toml` (a lane's
+run is named by its branch), in the format of the new
+`decisions.template.toml`, scaffolded to
+`docs/decisions/run-000-example.toml`: a top-level `high_risk` list, then one
+`[decision.D-<n>]` table per call with `decided`, `alternative`,
+`reversal_cost`, `why_not_escalated` and a `review` cell the owner fills in
+place. The merge slot refuses a lane that closed without its record, a
+partial close included, and reports a malformed entry without refusing; a dial
+value outside its three is refused as configuration first. The loop hands each
+build and adjudication session the path. New module
+`scripts/kitlib/decisions.py`. The doctrine is the new process-options layer
+"Delegated decisions record". A named-mode dial (`decision_recording`,
+`adjudication_review`) is now validated trimmed and case-folded, the way its
+reader reads it, and an unrecognized value is refused with the dial's own
+vocabulary rather than the approval rungs' message.
+
+**What to do.** Re-sync the kit files, `scripts/kitlib/` as a whole. Add
+`decision_recording = "off"` under `[attestation]` in your `docs/process.toml`
+(the kit-owned template carries it; an absent key already reads `"off"`, so
+nothing changes until you set it). Copy `docs/decisions/run-000-example.toml`
+from the template if you want the example beside your records. Before setting
+`"record"`, merge the lanes in flight: a lane claimed before the dial was set
+was never told to write its record, and its merge would be refused until
+someone writes it.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -219,6 +219,20 @@ def test_stack_ini_declares_every_template_section():
     assert stack_section_drift(tmpl, live) is None
 
 
+def test_process_toml_declares_the_templates_keys_section_by_section():
+    # The policy home's STRUCTURE: this repo declares exactly the template's
+    # sections and, in each, exactly its keys. VALUES are this repo's own (its
+    # dial settings); a key one side lacks is a dial the other cannot turn. The
+    # `[checks]` values are pinned separately, in test_rule_sync.
+    tmpl = tomllib.loads(
+        (ROOT / "project-trajectory" / "process.toml.template").read_text("utf-8")
+    )
+    live = tomllib.loads((ROOT / "docs" / "process.toml").read_text("utf-8"))
+    assert sorted(live) == sorted(tmpl)
+    for section in tmpl:
+        assert sorted(live[section]) == sorted(tmpl[section]), section
+
+
 def test_dev_setup_carries_no_engine_line_to_pin():
     # dev-setup is a bespoke meta-repo rewrite, not a launcher: it invokes no
     # agent_loop engine, so the engine-line pin correctly does not apply. This

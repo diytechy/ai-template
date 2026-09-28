@@ -536,3 +536,41 @@ passed / 1 skipped (20 min 52 s, with three agents on the box).
 regenerated at the merge, which clears the builder's one stale-artifact red.
 WI-703 (TC-055's re-judge) now waits on WI-701 by a `needs` edge. Trunk
 before this squash: 1d84d77c.
+
+WI-701's sweep minted WI-704 (the first approval of LLR-285 and TC-296).
+
+### WI-557 lands: the delegated-decisions record under the decision_recording dial
+
+One builder, two Codex Sol rounds (wave-5 rulings 39 to 43):
+[sol-wi557.md](../reviews/2026-09-27-wave5/sol-wi557.md),
+[sol-wi557-fix.md](../reviews/2026-09-27-wave5/sol-wi557-fix.md).
+It is the owner's OI-74 and OI-75 built: a per-run TOML record, a three-value
+dial (this repository sets "record"), a merge-ladder refusal naming the
+missing record as a hold for a person, and a PROCESS_OPTIONS layer. Sol's
+first round removed the builder's partial-close exemption, because the
+owner's text says every delegated run. It also judged the dial's
+configuration before the record, split the file and call seams, and made
+SR-225 a one-`shall` labelled derived requirement. The coordinator ruled for
+the builder on the supervisor-resume clause, whose surface is retired.
+**Open count: 22** (21 queued, 1 deferred).
+
+The merge composed one red: the smoke membership, 1801 against 1765, from
+real in-memory growth (WI-557's 89 format and dial cases, WI-701's contrast
+sweep, WI-615's four regressions moved to fast modules). It was re-stamped
+1765 -> 1875 in `docs/stack.ini` with its reason; the 60 s budget stands.
+The merge also conflicted in the watermark (trunk's, re-bumped), two
+registries (merged table by table) and RESYNC (both kept; WI-557's entry
+re-anchored to `[since 4b7f6dae]`).
+
+Commit bar at WI-557: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs --stale` 0 broken, smoke 1798 passed / 3 skipped, seconds 51.4 s
+within 60 s (two agents on the box). The touched slow modules plus both
+ratchets (test_decision_record, test_decision_record_merge,
+test_integrate_admission, test_agent_loop, test_bootstrap, test_dogfood_sync,
+test_rule_sync, test_module_size_ratchet, test_complexity_ratchet,
+test_process_config, test_handback, test_verdict_record,
+test_approval_level, test_resync_pack, test_frame_context,
+test_derive_stage), run by the coordinator: 676 passed / 2 skipped.
+`check_complexity --mode enforce`: OK, 204 rows. Trunk before this squash:
+4b7f6dae.

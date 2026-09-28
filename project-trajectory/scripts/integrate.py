@@ -167,6 +167,7 @@ import bookkeeping
 import score_reviews
 import spec_move
 from kitlib import authority as _kitauthority
+from kitlib import decisions as kdecisions
 from kitlib import provenance as _kitprovenance
 from kitlib import done_when as kdone
 from kitlib import verdict as kverdict
@@ -1884,6 +1885,9 @@ _ADJUDICATION_SURFACES = (
     # touches a report falls off the no-bar path into the full bar — a
     # ~11-minute penalty for editing a document no product bar can speak to.
     "docs/handbacks/",
+    # SR-225's per-run decisions record: an adjudicator owes one at its close
+    # under a recording dial, and no product bar can speak to it either.
+    "docs/decisions/",
 )
 
 
@@ -2795,6 +2799,62 @@ def _partial_report_refusal(root, branch, outcomes):
     return None
 
 
+def _decision_record_refusal(root, branch, outcomes):
+    """SR-225: a delegated run's close owes its decisions record. A refusal
+    string, or None.
+
+    Under `[attestation] decision_recording` at `record` or `escalate-first`,
+    a lane whose claimed rows closed must carry its record at
+    `kitlib.decisions.record_path(branch)` on the BRANCH's tree, read like the
+    per-close report beside it — a partial close included, since every
+    delegated run closes with its record; the refusal is a hold for a person to
+    write it. A record that is there but malformed is reported and merges: the
+    owner can read what it says, and a refusal over one field would strand
+    finished work for a reporting defect. Under `off` nothing is read.
+
+    THE CONFIGURATION IS JUDGED FIRST. The reader keeps the obligation for a
+    value it does not recognize, so a typo in the dial would otherwise surface
+    here as a missing record and mask the real fault; `config_conflicts` names
+    the bad value before any record is read.
+
+    Implements: SR-225, LLR-284
+    """
+    docs = Path(root) / "docs"
+    mode = ac.decision_recording(docs)
+    if mode == "off":
+        return None
+    conflicts = ac.config_conflicts(docs)
+    if conflicts:
+        return "{}; nothing was merged".format(conflicts[0])
+    rel = kdecisions.record_path(branch)
+    code, text = ac.git(root, "show", "{}:{}".format(branch, rel))
+    if code != 0:
+        if kdecisions.owed(mode, (outcomes or {}).values()):
+            return (
+                "{} closed without its decisions record ({}): [attestation] "
+                "decision_recording = {!r} makes the record owed at every "
+                "close, even with no entries - write it on the branch; nothing "
+                "was merged".format(branch, rel, mode)
+            )
+        return None
+    for finding in kdecisions.record_findings(text):
+        print("integrate: decisions record {}: {}".format(rel, finding))
+    return None
+
+
+def _close_record_refusal(root, branch, outcomes):
+    """The close's OWED RECORDS, one rung: the per-close report a partial close
+    owes (SR-144), then the decisions record a delegated run owes (SR-225). Both
+    are artifacts the close must carry on the branch's tree; `or` keeps the
+    cheapest-first order and stops at the first refusal.
+
+    Implements: SR-144, SR-225, LLR-284
+    """
+    return _partial_report_refusal(root, branch, outcomes) or _decision_record_refusal(
+        root, branch, outcomes
+    )
+
+
 def _merge_refusal(root, branch, wi_ids):
     """The merge slot's refusal ladder: `(outcomes, refusal)` - the first reason
     this branch may not merge, or the outcomes the merge needs and None.
@@ -2825,7 +2885,7 @@ def _merge_refusal(root, branch, wi_ids):
         )
     # Sequential, not a tuple of calls: a tuple would EVALUATE every rung before
     # testing the first, which is exactly the cheapest-first ordering thrown away.
-    refusal = _partial_report_refusal(root, branch, outcomes)  # SR-144
+    refusal = _close_record_refusal(root, branch, outcomes)  # SR-144, SR-225
     if refusal:
         return outcomes, refusal
     refusal = _minted_id_refusal(root, branch, wi_ids)  # RULING R1

@@ -1,0 +1,39 @@
+# The decisions record of the delegated build of WI-557 on build/wi-557 — the
+# first record under the dial it builds. Format: decisions.template.toml.
+
+high_risk = ["D-001", "D-002", "D-003"]
+
+[decision.D-001]
+decided = "Authored SR-225 as a labelled derived requirement parented on SN-029 through the UNATTENDED-OPS hat, rather than citing an approved SR."
+alternative = "Cite an approved SR under SN-006 or SN-029 (none states a record of delegated calls), or parent the row on SN-006 instead."
+reversal_cost = "An amendment of a Drafted row before its approval; after approval, an amendment and a re-approval."
+why_not_escalated = "The note granted SR-225 for exactly this case, and the row is Drafted: its approval stays the adjudicator's act, which is where the choice of parent gets judged."
+review = ""
+
+[decision.D-002]
+decided = "The mechanical close is the merge slot, per lane: a lane is a delegated run, and its record lives at docs/decisions/<branch>.toml. A supervising sitting's record is doctrine only; nothing enforces it."
+alternative = "Treat a whole unattended run (the supervisor's sitting) as the unit and enforce it at the loop's end, which has no close machinery to hang a refusal on."
+reversal_cost = "Moderate: the rung, the note and the doctrine would move to a new close point; the file format is unaffected."
+why_not_escalated = "The ruling names the handback report as the precedent, and that report is checked per lane at the merge slot; the lane is the only close the machinery owns."
+review = ""
+
+[decision.D-003]
+decided = "The dial's configuration check runs inside the record rung, before the record is read, rather than as its own rung in the merge ladder. (This entry first recorded a partial-close exemption; the coordinator's arbitration ruled it out, and a partial close now owes its record like any other.)"
+alternative = "Add a separate configuration rung to _merge_refusal ahead of the record rung, or move the verdict gate's config_conflicts call earlier for every lane."
+reversal_cost = "One function moved; the refusal text and the tests are unchanged."
+why_not_escalated = "A separate rung takes _merge_refusal past its complexity ceiling, and moving the whole-repo check earlier for every lane would reorder refusals the dial does not concern; inside the rung it runs only when the dial asks for a record."
+review = ""
+
+[decision.D-004]
+decided = "The dial reads off when undeclared and record when declared with an unrecognized value, and the vocabulary refusal now uses the dial's own words for a named-mode dial."
+alternative = "Read an unrecognized value as off, and leave the rung-only refusal message, which also misdescribed adjudication_review."
+reversal_cost = "One reader branch and one message branch in agent_common."
+why_not_escalated = "It follows the fail-direction the sibling review dials already take (the failure that matters is silently doing nothing), and the message fix changes wording only."
+review = ""
+
+[decision.D-005]
+decided = "Added an [attestation]-and-every-section key-parity test to test_dogfood_sync, since no test enforced template-versus-repo structure outside [checks]."
+alternative = "Rely on the existing [checks] parity test in test_rule_sync alone."
+reversal_cost = "Delete one test."
+why_not_escalated = "The note asks for structural parity held by the dogfood-sync test; the test adds a check and changes no behaviour."
+review = ""

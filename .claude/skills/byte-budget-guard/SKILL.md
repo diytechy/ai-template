@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,996 | 2026-09-28 | +4: WI-615 — the partial-search bullet, paid for by three de-duplications |
 | `CLAUDE.md` | **8,500** | 7,977 | 2026-09-27 | +2: WI-652 re-measures the smoke tier on the 4-core box |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,496 | 2026-09-28 | WI-615 row restamps |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,493 | 2026-09-28 | WI-557 restamps the PROCESS_OPTIONS row |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill
 about 10%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
@@ -46,7 +46,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
 | `project-trajectory/PROCESS.md` | 92,484 | 2026-09-28 | **+2,208** WI-615: the guard, fan-out, dispatch, receipt, absolutes and glossary rules |
-| `project-trajectory/PROCESS_OPTIONS.md` | 193,432 | 2026-09-28 | **+619** WI-615: the build-tier discriminator and per-model guardrail payloads |
+| `project-trajectory/PROCESS_OPTIONS.md` | 196,681 | 2026-09-28 | **+3,249** WI-557: the delegated-decisions record layer |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

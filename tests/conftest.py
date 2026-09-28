@@ -378,6 +378,7 @@ SLOW_MODULES = frozenset(
         "test_trace_hats_driven",  # 62 s: scaffold + trace.py --strict subprocess, twice
         "test_prompts_driven",  # 54 s: a full bootstrap, then the loader over it
         "test_snapshot_readers",  # a bootstrap per case, trace.py subprocesses and real git repos
+        "test_decision_record_merge",  # claims and closes a lane in a real git repo per case
     }
 )
 

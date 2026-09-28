@@ -18,7 +18,7 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into approval or arrives approved, `--approves` names it or `--reattests` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 62 changed, 41 added, 1 removed since the snapshot; ruling(s): OI-37, OI-85, OI-88, OI-95, WI-539, WI-553, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-619, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679.
+- `docs/requirements/interfaces.toml` — 62 changed, 43 added, 1 removed since the snapshot; ruling(s): OI-37, OI-85, OI-88, OI-95, WI-539, WI-553, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-619, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-587.
 
 ## Assumptions and surrogates owing an approval
@@ -621,7 +621,7 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 89 chain(s): SR-006, SR-007, SR-009, SR-011, SR-015, SR-017, SR-022, SR-024, SR-027, SR-031, SR-033, SR-035, SR-040, SR-043, SR-049, SR-054, SR-070, SR-111, SR-112, SR-113, SR-129, SR-137, SR-140, SR-144, SR-146, SR-147, SR-149, SR-150, SR-154, SR-156, SR-157, SR-158, SR-159, SR-161, SR-162, SR-163, SR-164, SR-165, SR-166, SR-167, SR-168, SR-169, SR-173, SR-174, SR-175, SR-176, SR-177, SR-178, SR-180, SR-181, SR-182, SR-183, SR-185, SR-186, SR-187, SR-188, SR-189, SR-190, SR-191, SR-192, SR-193, SR-194, SR-195, SR-196, SR-197, SR-198, SR-199, SR-200, SR-201, SR-202, SR-203, SR-204, SR-205, SR-206, SR-207, SR-208, SR-210, SR-211, SR-212, SR-213, SR-214, SR-215, SR-217, SR-218, SR-219, SR-220, SR-221, SR-223, SR-224</summary>
+<summary>Waiting for automated adjudication — 90 chain(s): SR-006, SR-007, SR-009, SR-011, SR-015, SR-017, SR-022, SR-024, SR-027, SR-031, SR-033, SR-035, SR-040, SR-043, SR-049, SR-054, SR-070, SR-111, SR-112, SR-113, SR-129, SR-137, SR-140, SR-144, SR-146, SR-147, SR-149, SR-150, SR-154, SR-156, SR-157, SR-158, SR-159, SR-161, SR-162, SR-163, SR-164, SR-165, SR-166, SR-167, SR-168, SR-169, SR-173, SR-174, SR-175, SR-176, SR-177, SR-178, SR-180, SR-181, SR-182, SR-183, SR-185, SR-186, SR-187, SR-188, SR-189, SR-190, SR-191, SR-192, SR-193, SR-194, SR-195, SR-196, SR-197, SR-198, SR-199, SR-200, SR-201, SR-202, SR-203, SR-204, SR-205, SR-206, SR-207, SR-208, SR-210, SR-211, SR-212, SR-213, SR-214, SR-215, SR-217, SR-218, SR-219, SR-220, SR-221, SR-223, SR-224, SR-225</summary>
 
 ## SR-006 — Gate/tier harness enforces required steps
 
@@ -2550,6 +2550,103 @@ _No approved baseline — absent from the docs/archive/last_approved snapshot �
 - **Expected**: Satisfies SR-224 AcceptanceCriteria: a description under the floor fails the check by name, one at the floor passes, and every shipped skill clears it
 - **Automated**: Yes
 - **Evidence**: tests/test_skills_index.py::test_check_refuses_a_description_under_the_floor; tests/test_skills_index.py::test_every_shipped_description_clears_the_floor
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-225 — A delegated run closes with a record of the calls it made, where the declared dial asks for one
+
+> **Requirement.** Where the declared decision-recording dial asks for a record, the delivered loop content shall judge a closing lane against that run's decisions record, refusing to integrate the lane when the record is absent, naming where it belongs, and reporting without refusing each entry of a present record that omits a required disclosure field or leaves one blank.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-029 asks that a run released to automation get as far as it honestly can, and that an approval it makes on a released tier leave a record naming who made it; it does not name the other calls a delegated run makes on the owner's behalf, the ones too settled to hold the run for and not settled enough to be history, so this obligation arrives through the unattended-operations lens rather than through the need's text. A call nobody is told about is the failure that lens listens for: it pages nobody, and a run that looks green is green partly because nothing looked at what it chose. A prose instruction to list such calls was tried and measurably degraded within one session, the fields left out as soon as nothing read them, so the record carries required fields and the close that owes it refuses silence. The obligation is keyed to a dial because how much of the owner's reading a run may claim is the owner's to set; it ships off, so a repository owes nothing until its owner asks. Every close owes the record, a partial close included, because every delegated run closes with one; a lane the machinery closed with no session present is refused too, and that refusal is a hold for a person to write the record rather than a strand. A malformed entry is reported rather than refused, because the record is there and readable and a refusal would hold finished work for a reporting defect. A value of the dial outside its alphabet is judged before the re… [503 more chars — read the registry row]
+
+_No approved baseline — absent from the docs/archive/last_approved snapshot — awaiting its first approval; current state only._
+
+### SR SR-225 (current)
+- **SR-ID**: SR-225
+- **Title**: A delegated run closes with a record of the calls it made, where the declared dial asks for one
+- **SN-Refs**: SN-029
+- **Boundary-Refs**: B-09;B-10
+- **Hat-Refs**: UNATTENDED-OPS
+- **Requirement**: Where the declared decision-recording dial asks for a record, the delivered loop content shall judge a closing lane against that run's decisions record, refusing to integrate the lane when the record is absent, naming where it belongs, and reporting without refusing each entry of a present record that omits a required disclosure field or leaves one blank.
+- **Rationale**: A DERIVED requirement, and labelled so. SN-029 asks that a run released to automation get as far as it honestly can, and that an approval it makes on a released tier leave a record naming who made it; it does not name the other calls a delegated run makes on the owner's behalf, the ones too settled to hold the run for and not settled enough to be history, so this obligation arrives through the unattended-operations lens rather than through the need's text. A call nobody is told about is the failure that lens listens for: it pages nobody, and a run that looks green is green partly because nothing looked at what it chose. A prose instruction to list such calls was tried and measurably degraded within one session, the fields left out as soon as nothing read them, so the record carries required fields and the close that owes it refuses silence. The obligation is keyed to a dial because how much of the owner's reading a run may claim is the owner's to set; it ships off, so a repository owes nothing until its owner asks. Every close owes the record, a partial close included, because every delegated run closes with one; a lane the machinery closed with no session present is refused too, and that refusal is a hold for a person to write the record rather than a strand. A malformed entry is reported rather than refused, because the record is there and readable and a refusal would hold finished work for a reporting defect. A value of the dial outside its alphabet is judged before the re… [503 more chars — read the registry row]
+- **AcceptanceCriteria**: With the dial off or undeclared, a lane is judged by nothing here and no record is read; with the dial at record or escalate-first, a lane whose work closed complete, cancelled or partial without its record at its run's path is refused, the refusal naming that path, and one carrying its record passes this check; in a present record, an entry that is not a table, an entry lacking what was decided, the alternative passed over, the reversal cost, why it was not escalated or the review cell, or carrying one that is not text, or leaving one of the first four blank, a hoist that is absent or not a list of entry ids, and a hoist naming an entry the record lacks, are each reported naming the entry, none refuses, and keys beyond the required ones are not judged; an entry numbered -000 is never judged; a value of the dial outside its three, compared trimmed and case-folded, is refused where the policy file is checked, and at the close it is refused as configuration before the record is read; a session handed a lane to build or to adjudicate under a recording dial is told the path its record belongs at, and a review session is not.
+- **Priority**: S
+- **Verification**: Test
+- **Status**: Drafted
+- **Phase**: 6
+
+### LLR LLR-282 (current)
+- **LLR-ID**: LLR-282
+- **SR-Refs**: SR-225
+- **Title**: The decision_recording dial reads off when undeclared and record when unrecognized
+- **Module**: project-trajectory/scripts/agent_common.py
+- **CodeSymbol**: decision_recording/DECISION_RECORDING_MODES/mode_word
+- **Detail**: decision_recording(docs) reads [attestation] decision_recording from the policy file through process_config and returns one of DECISION_RECORDING_MODES, which is kitlib.decisions.MODES (off, record, escalate-first): off when the key is not declared, the value's mode_word when that is one of the modes, and record for any other declared value, a wrong-typed one included. mode_word(value) is the one normalization, the value trimmed and lowercased, or None for a value that is not text. The key is registered in PROCESS_ONLY_KEYS as a str and in PROCESS_KEY_VOCAB as the three modes; config_conflicts compares a named-mode dial's value through the same mode_word, so a padded or mixed-case value the reader honours is not refused and another value is, the refusal listing that dial's own words rather than the approval rungs' message.
+- **Rationale**: Undeclared reads off because the template ships off and a repository that never set the dial has asked for nothing. Declared but unrecognized reads record because the owner asked for something and the failure that matters is silently recording nothing; the loud refusal is config_conflicts', and the reader keeps the obligation for a caller that did not run it. One normalization serves the reader and the validator, so the two cannot disagree about which values are the dial's. The alphabet is the record module's, so the reader, the merge-slot check and the session note cannot spell it three ways.
+- **TestRefs**: (see TC-292)
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### LLR LLR-283 (current)
+- **LLR-ID**: LLR-283
+- **SR-Refs**: SR-225
+- **Title**: The decisions record's path, format findings, obligation and session note
+- **Module**: project-trajectory/scripts/kitlib/decisions.py
+- **CodeSymbol**: DECISIONS_DIR/MODES/REQUIRED_KEYS/record_path/record_findings/owed/session_note
+- **Detail**: A kitlib module importing nothing, whose functions read no file, git or environment. record_path(run) is DECISIONS_DIR/<run>.toml under docs/decisions, a / in the run's name becoming -. record_findings(text) parses the text as TOML, returning one finding when it does not parse, and otherwise one finding per defect: a decision key that is not a table, an entry of that table whose id is not D-<digits>, an entry that is not a table, a key of REQUIRED_KEYS (decided, alternative, reversal_cost, why_not_escalated, review) absent or not a string, one of the first four blank after trimming, a top-level high_risk that is absent or not a list of strings, and each hoisted id the decision table lacks; an id ending -000 is skipped wherever it appears, and keys beyond REQUIRED_KEYS are not judged. It does not raise. owed(mode, outcomes) is true for mode record or escalate-first with at least one outcome, whatever the outcome, a partial close included. session_note(mode, run) returns the empty string for off and otherwise the instruction naming record_path(run), the required keys, the hoist and the rule that the record is not an exit, with one further sentence under escalate-first preferring the exits over deciding.
+- **Rationale**: The format, the obligation and the note live in one module so the merge slot and the session read one definition of where a record belongs and what it must carry. The findings are strings rather than a refusal because the requirement reports a malformed entry without refusing, and a finding per field lets that report name the entry and the field. The obligation reads no outcome word because every delegated run closes with its record.
+- **TestRefs**: (see TC-293)
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### LLR LLR-284 (current)
+- **LLR-ID**: LLR-284
+- **SR-Refs**: SR-225
+- **Title**: The merge slot refuses a close that owes its decisions record and carries none
+- **Module**: project-trajectory/scripts/integrate.py
+- **CodeSymbol**: _decision_record_refusal/_close_record_refusal
+- **Detail**: _decision_record_refusal(root, branch, outcomes) is a rung of _merge_refusal, taken through _close_record_refusal directly after the per-close report rung. It reads the dial through agent_common.decision_recording from the trunk's docs and returns None at once under off. Otherwise it first returns the first config_conflicts finding, when there is one, as the refusal, so a dial value outside its alphabet is refused as configuration before the record is read. It then reads record_path(branch) off the branch's tree with git show; when the path is absent and kitlib.decisions.owed holds for the branch's outcomes it returns a refusal naming the branch, the path and the dial; when the path is present it prints one line per record_findings finding, naming the path, and returns None. docs/decisions/ joins the surfaces an adjudication-only lane may touch without falling off the no-bar path, since an adjudicator writes its record there. agent_loop.session_body appends session_note for the lane's branch, read under the same dial, to the body of a build or an adjudication session; a review session's brief is composed by reviewer_prompt, apart from that fork, and is not handed it.
+- **Rationale**: The record is read off the branch's tree, like the per-close report, so the refusal and the close it judges are one fact read once. The rung sits beside that report rung because both are owed close artifacts, and before the bar rung because it is a single git read that a refused lane should not pay a bar to reach. The configuration is judged inside the rung, before the read, because the reader keeps the obligation for a value it does not recognize and a typo would otherwise be refused as a missing record. The note is appended where the loop already forks every build from every adjudication, so both altitudes that close a lane are told the path the merge slot will read.
+- **TestRefs**: (see TC-294)
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### TC TC-292 (current)
+- **TC-ID**: TC-292
+- **Verifies**: SR-225;LLR-282
+- **Level**: Unit
+- **Method**: A policy file under a temporary directory declares the dial. (a) THE THREE VALUES: off, record and escalate-first each read as themselves and raise no conflict. (b) UNDECLARED: an attestation section without the key, and no policy file at all, read off. (c) ONE NORMALIZATION: a padded value and two mixed-case values read as their trimmed, lowercased word and raise no conflict, and mode_word trims and lowercases text and answers None for a number. (d) UNRECOGNIZED: a misspelled value yields exactly one conflict naming the key and each of the three values and not the rung message, and reads record; a boolean value is refused by name and reads record. (e) THE SHIPPED VALUES: the template declares off and this repository's policy file record.
+- **Tier**: Smoke
+- **Expected**: Satisfies SR-225 AcceptanceCriteria: the dial's three values read as declared, trimmed and case-folded, an undeclared dial reads off, and a value outside the three is refused where the policy file is checked and read as asking for a record
+- **Automated**: Yes
+- **Evidence**: tests/test_decision_record.py::test_each_declared_value_reads_as_itself; tests/test_decision_record.py::test_an_undeclared_dial_reads_off; tests/test_decision_record.py::test_an_unrecognized_value_is_refused_and_read_as_record; tests/test_decision_record.py::test_a_padded_or_mixed_case_value_is_accepted_as_the_reader_reads_it; tests/test_decision_record.py::test_the_reader_and_the_validator_share_one_normalization; tests/test_decision_record.py::test_a_wrong_typed_value_is_refused; tests/test_decision_record.py::test_the_template_ships_off_and_this_repo_records
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-293 (current)
+- **TC-ID**: TC-293
+- **Verifies**: SR-225;LLR-283;IF-256
+- **Level**: Unit
+- **Method**: The kitlib.decisions call surface over record texts planted in memory, clause by clause. (a) SOUND: a record with two complete entries, one hoisted, and a record with no entries and an empty hoist, yield no finding. (b) EACH REQUIRED KEY: its absence yields one finding per entry naming the entry and the key; a number, a boolean, a list and a table in it each yield exactly the not-text finding; an empty, a spaces-only and a whitespace-only value yield exactly the blank finding for the first four keys and nothing for review. (c) SHAPE: an entry that is not a table, a decision key that is not a table, an entry id outside D-<digits> and an unparseable text each yield one finding. (d) THE HOIST: a hoist that is a string, a list holding a number, a mixed list or a table, a missing hoist, and a hoisted id the record lacks each yield one finding. (e) EXTRA KEYS on an entry yield none. (f) NEVER RAISES: nine hostile texts each return a list of strings. (g) INERT: a half-filled -000 entry, hoisted, yields none, and the shipped template yields none and carries the -000 example with every required key and an empty review. (h) THE PATH AND THE OBLIGATION: a run's path is one file under the records directory with a / becoming -, and owed holds under record and escalate-first for a complete, a cancelled, a partial and a mixed close, and not under off or for no outcomes. (i) THE NOTE: session_note is empty under off, names the path, every required key and the hoist under record, and adds a s… [216 more chars — read the registry row]
+- **Tier**: Smoke
+- **Expected**: Satisfies SR-225 AcceptanceCriteria: each shape, required-key and hoist defect is reported by entry, extra keys are not judged, the findings never raise, a -000 entry is never judged, every close owes a record under a recording dial, and a build or adjudication session is told its record's path while a review session is not
+- **Automated**: Yes
+- **Evidence**: tests/test_decision_record.py::test_a_sound_record_yields_no_finding; tests/test_decision_record.py::test_a_record_with_no_entries_is_sound; tests/test_decision_record.py::test_each_missing_required_key_is_reported_by_entry; tests/test_decision_record.py::test_each_required_key_holding_non_text_is_reported; tests/test_decision_record.py::test_each_required_key_left_blank; tests/test_decision_record.py::test_a_non_table_entry_is_reported; tests/test_decision_record.py::test_a_decision_key_that_is_not_a_table_is_reported; tests/test_decision_record.py::test_a_malformed_hoist_is_reported; tests/test_decision_record.py::test_extra_keys_on_an_entry_are_not_judged; tests/test_decision_record.py::test_the_findings_never_raise; tests/test_decision_record.py::test_a_hoist_naming_an_absent_entry_is_reported; tests/test_decision_record.py::test_a_missing_hoist_is_reported; tests/test_decision_record.py::test_an_entry_id_outside_the_numbering_is_reported; tests/test_decision_record.py::test_an_unparseable_record_is_one_finding; tests/test_decision_record.py::test_a_000_entry_is_inert; tests/test_decision_record.py::test_the_shipped_template_is_sound_and_carries_the_example; tests/test_decision_record.py::test_the_record_path_is_one_file_per_run; tests/test_decision_record.py::test_which_closes_owe_a_record; tests/test_decision_record.py::test_the_session_note_names_the_path_only_under_a_recording_dial; tests/test_decision_record.py::test_a_build_session_is_handed_the_note_by_the_dial; te… [157 more chars — read the registry row]
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-294 (current)
+- **TC-ID**: TC-294
+- **Verifies**: SR-225;LLR-284;IF-255
+- **Level**: Integration
+- **Method**: A claimed lane in a temporary git repository, closed into a terminal folder, whose record file, when present, is committed on the lane's branch at its run's path, with the trunk's policy file declaring the dial. (a) OWED: under record and under escalate-first, a lane closed complete and one closed cancelled with no record are refused by the merge ladder, the refusal naming the record's path, and a lane closed partial with no record is refused by the rung, naming the path. (b) OFF: with the dial off and with it undeclared, the ladder's refusal, if any, does not name the record and the rung returns nothing. (c) PRESENT: under record and escalate-first, a lane closed complete carrying a sound record passes the rung and nothing is reported, and so does a lane closed partial carrying one. (d) MALFORMED: a record whose entry lacks its alternative passes the rung and the report names the path, the entry and the key. (e) CONFIGURATION FIRST: a misspelled dial makes the ladder refuse naming the key and the value, not the record's path; a padded and two mixed-case dials each read as their word, so a lane without its record is refused naming the path and a lane carrying it is refused by neither the configuration nor the record.
+- **Tier**: Full
+- **Expected**: Satisfies SR-225 AcceptanceCriteria: under a recording dial a complete, cancelled or partial close without its record is refused naming the path, a malformed record is reported without refusing, a misspelled dial is refused as configuration before any record is read, and under off nothing is read
+- **Automated**: Yes
+- **Evidence**: tests/test_decision_record_merge.py::test_a_recording_dial_refuses_a_close_without_its_record; tests/test_decision_record_merge.py::test_the_off_dial_reads_nothing; tests/test_decision_record_merge.py::test_a_lane_carrying_its_record_passes_the_rung; tests/test_decision_record_merge.py::test_a_malformed_entry_is_reported_and_does_not_refuse; tests/test_decision_record_merge.py::test_a_partial_close_without_its_record_is_refused_too; tests/test_decision_record_merge.py::test_a_partial_close_carrying_its_record_passes_the_rung; tests/test_decision_record_merge.py::test_a_dial_typo_is_refused_as_configuration_before_any_record; tests/test_decision_record_merge.py::test_a_padded_or_mixed_case_dial_reads_as_its_word
 - **Status**: Drafted
 - **Phase**: 6
 

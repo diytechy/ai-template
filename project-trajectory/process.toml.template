@@ -158,6 +158,21 @@ complete_sample_rate = 4
 #                    check: no round.
 #   "always"       — every adjudication gets one
 adjudication_review = "when-minting"
+# Whether a DELEGATED run owes the owner a record of the calls it made on the
+# owner's behalf — one TOML file per run under docs/decisions/, one entry per
+# decision, each saying what was decided, the alternative, the reversal cost and
+# why it was not escalated, with a `review` cell the owner fills in place. The
+# format and the routing doctrine are process-options.md "Delegated decisions
+# record". The dial allocates the owner's reading; it never moves what must go
+# to the owner through the process's exits — those bind at every setting.
+#   "off"            — no record is owed (the shipped value)
+#   "record"         — a delegated run's close owes its record: the merge slot
+#                      refuses a lane that closed its work without one, and
+#                      reports a malformed entry without refusing
+#   "escalate-first" — as "record", and sessions prefer the exits over
+#                      deciding: delegate less, ask more
+# An undeclared key reads "off"; a value outside the three is refused.
+decision_recording = "off"
 
 [policies]
 # Who may publish (`git push`) this repo — was docs/push-policy.

@@ -27,6 +27,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Gate authority levels | a repo approves fewer tiers by hand than the default | `docs/process.toml` `[attestation] human_approval_through` + a deviation register |
 | Agent iteration branch & sync | you want agent-driven work to land as curated, reviewable history | a branch + sync cadence, wired into hooks |
 | Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py` + `dispatch.py`/`lane.py`, `integrate.py`, `agents.toml`, the launchers |
+| Delegated decisions record | a run acts on the owner's behalf while the owner is away (unattended or delegated) | `docs/process.toml` `[attestation] decision_recording` + one `docs/decisions/<run>.toml` per run |
 | Critique verification & the critique loop | a requirement's acceptance is **subjective** | a critique round + `Attest`/critique TCs |
 | Dual-plan decomposition | a goal is design-shaping enough that one planner's WI decomposition should not go unchallenged | two rival plans + a coverage diff + one critique round + an arbiter verdict (`docs/plans/`) |
 | Tier-conditional guardrails | an unattended run maps different model tiers to different phases | `docs/process.toml` `[policies] guardrails` |
@@ -639,7 +640,9 @@ Where the process says *ask / pause / solicit clarification*, an autonomous
 driver decides and appends to the `log.md` Decisions log (§5): what was
 chosen, why, the alternatives, `Revert cost: LOW|MEDIUM|HIGH`, `Model:`. A
 decision is never a license to expand scope — one that would contradict an
-approved owner decision is a Blocked item, not a new decision.
+approved owner decision is a Blocked item, not a new decision. Under a
+recording `decision_recording` dial, a call the owner should see is disclosed
+in the run's "Delegated decisions record" as well.
 
 ### LLM-Attest (replaces human Attest at `autonomous`)
 
@@ -1233,6 +1236,57 @@ double-click wrappers, scaffolded like `run.*` and **inert** until the
 `AGENT_CMD` slot is filled (guidance + nonzero exit). `--interactive` boots a
 single hands-on session at the mapped tier instead of the loop. A repo that
 doesn't want the entry point deletes the launchers; the protocol stands alone.
+
+## Delegated decisions record
+
+**Applies when** a run acts on the owner's behalf while the owner is away — the
+unattended loop's build and adjudication sessions, or a supervising session
+handed the owner's authority for a run. Governed by `docs/process.toml`
+`[attestation] decision_recording`: `"off"` (shipped), `"record"`, or
+`"escalate-first"`.
+
+**The record.** One TOML file per delegated run at `docs/decisions/<run>.toml`
+— a lane's run is named by its branch, a supervising sitting names its own —
+in the format of `decisions.template.toml`: a top-level `high_risk` list naming
+the entries the owner should read first, then one `[decision.D-<n>]` table per
+call carrying `decided`, `alternative`, `reversal_cost`, `why_not_escalated`
+and `review = ""`. The owner reviews **in place**: any string in `review` marks
+the entry reviewed, with meaning the owner's own; nothing reads the cell, and
+the file is not immutable. The fields are required because a prose list of
+calls loses them as soon as nothing reads them.
+
+**The record is not an exit.** It tells the owner about calls already made.
+Work still routes only through the process's exits — a successor work item, an
+open item the owner rules, a Blocked item — and a call that is the owner's to
+make goes there, never only into the record.
+
+**Route on the action, never on confidence.** The initial table, which the
+owner may adjust:
+
+| The action | Route |
+|---|---|
+| irreversible or external (a push, deleting reviewed text, a purchase), a ruled open item, the approval dial | the exits — never decided under delegation |
+| touches a registry, the spine or a kit-owned file | decide, and record it (at minimum) |
+| scratch work, regenerating a generated file | decide silently |
+
+Under `escalate-first`, a call that could go either way takes the exits:
+delegate less, ask more. **The confidence ratchet is one-way:** low confidence,
+or a reviewer's dissent, may promote a call (silent to recorded, recorded to an
+exit); high confidence or consensus never demotes one, because a model's
+self-assessment is too unreliable to route on. **The dial never moves the
+safety boundary:** it allocates the owner's reading, and the exits bind at
+every setting, `off` included.
+
+**What the close enforces.** Under `record` or `escalate-first` the merge slot
+refuses a lane that closed without its record — an empty one is a valid
+record — naming the path, a partial close included: every delegated run closes
+with its record, and the refusal is a hold for a person to write it. A
+malformed entry is reported, never refused, and a dial value outside its three
+is refused as configuration before any record is read. The loop hands each
+build and adjudication session the path.
+
+**An overturned entry** is named in the owner's `review` note, and a work item
+is minted to undo or redo the call. The record never carries that work.
 
 ## Critique verification & the critique loop
 

@@ -45,6 +45,8 @@ What it creates in the destination:
                                                 declared expert perspectives every
                                                 applicable decomposition faces; OWNER
                                                 text — adopters are expected to edit)
+    docs/decisions/run-000-example.toml        <- decisions.template.toml  (the
+                                                delegated-decisions record's format)
     docs/work/queued/WI-000-example.md         <- work/WI-000.template.md  (the
                                                 registry's spec-folder home; the
                                                 other status dirs get .gitkeep)
@@ -1946,6 +1948,9 @@ MAPPING = [
     # `-000` example is documentation, exactly like the `-000` row it mirrors.
     # The status directories themselves are created below (GITKEEP_DIRS).
     ("work/WI-000.template.md", "docs/work/queued/WI-000-example.md"),
+    # The delegated-decisions record's format, as the -000 example beside where
+    # each run's record lands (SR-225); inert, since its one entry is -000.
+    ("decisions.template.toml", "docs/decisions/run-000-example.toml", "SR-225"),
     # ...and the location->status contract, stated INSIDE the registry it governs.
     # The WI-000 exemplar documents the SPEC FORMAT; this README documents the
     # FOLDER — the eight status directories, and the one rule a reader keeps
@@ -2062,6 +2067,10 @@ MAPPING = [
     # `record_observation.py` read and write through it, so the must-be-whole
     # rule applies on the first check a scaffold runs.
     ("scripts/kitlib/observation.py", "scripts/kitlib/observation.py"),
+    # WI-557 added `decisions`: the delegated-decisions record's path, format
+    # and obligation (SR-225); `integrate.py`, `agent_loop.py` and
+    # `agent_common.py` import it, so the package must stay whole.
+    ("scripts/kitlib/decisions.py", "scripts/kitlib/decisions.py", "SR-225"),
     # WI-636 added `provenance` and `authority`: the loop's `Loop-Session`
     # trailer and marker, and the approval-rung tables with the one dial
     # comparison. `agent_common.py`, `integrate.py`, `check.py` and

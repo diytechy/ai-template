@@ -1,0 +1,33 @@
+# docs/decisions/<run>.toml — ONE delegated run's DECISIONS RECORD: the calls
+# the run made on the owner's behalf that deserve the owner's second look.
+# The doctrine (what to record, what goes to the owner instead, what an
+# overturned entry costs) is the process options' "Delegated decisions record"
+# layer; the `[attestation] decision_recording` dial in docs/process.toml
+# decides whether a run owes one.
+#
+# ONE FILE PER RUN, named by the lane's branch (a `/` becomes `-`), so two
+# lanes never write one file. A supervisor's sitting names its own file the
+# same way: one run, one file.
+#
+# THIS FILE IS THE EXAMPLE. An entry numbered -000 is never judged, so it may
+# stay here as a reference; a real record numbers its entries D-001, D-002, ...
+#
+# EVERY ENTRY CARRIES THESE KEYS, all as text:
+#   decided            what was decided
+#   alternative        the option passed over
+#   reversal_cost      what undoing it would cost
+#   why_not_escalated  why it did not go to the owner through the exits
+#   review             EMPTY until the owner writes a note — any string marks
+#                      the entry reviewed, with meaning the owner's own. The
+#                      owner edits this file in place; nothing reads the cell.
+# An entry may carry further keys of the writer's own; they are not judged.
+
+# The entries the writer judges deserve the owner's eyes first; empty when none.
+high_risk = ["D-000"]
+
+[decision.D-000]
+decided = "What was decided, in one sentence a stranger can check against the diff."
+alternative = "The option passed over, stated so the owner could choose it instead."
+reversal_cost = "What undoing it would cost: a commit, an amendment and re-approval, a migration."
+why_not_escalated = "Why this was the run's call and not the owner's: the routing rule it fell under."
+review = ""

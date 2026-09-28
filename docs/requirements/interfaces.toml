@@ -2228,3 +2228,25 @@ data = "--check: 0 index fresh and descriptions at or over the floor, or no skil
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
+
+[interface.IF-255]
+rationale = """A delegated run's record is a file the session that made the calls writes and the merge slot reads off the lane's branch, and the owner edits in place afterwards. Declaring the file's path and fields as one contract keeps the writer and the reader on one shape, so a record a session writes to its instructions is the record the slot looks for."""
+owner = "scripts/kitlib/decisions"
+consumers = ["scripts/integrate"]
+channel = "file"
+data = "docs/decisions/<run>.toml: high_risk (entry ids); [decision.D-<n>] decided, alternative, reversal_cost, why_not_escalated, review"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """The owner is the module that states the file's shape; the file itself arrives as a commit on the lane's branch, authored by the delegated session the loop briefed, and the merge slot reads it off that branch. The owner of the project edits its review cells in place afterwards; no reader judges a review cell, so the note carries whatever meaning the owner gives it. An entry numbered -000 is the shipped example and is never judged."""
+
+[interface.IF-256]
+rationale = """The merge slot, the loop and the dial reader each ask the record's questions - where a run's record belongs, what makes an entry malformed, whether a close owes one, what a session is told, and which words the dial takes - and answering them in three places is how a session gets told one path while the slot reads another. One imported module answers all of them."""
+owner = "scripts/kitlib/decisions"
+requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/agent_common"]
+channel = "call"
+data = "MODES; REQUIRED_KEYS; record_path(run) -> path; record_findings(text) -> [finding]; owed(mode, outcomes) -> bool; session_note(mode, run) -> text"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """source - the module imports nothing and reads no file, git or environment, so every answer is a function of its arguments; the git read of a record and the policy-file read of the dial stay with the merge slot and the dial reader."""
