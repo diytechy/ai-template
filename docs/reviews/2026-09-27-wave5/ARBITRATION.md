@@ -356,3 +356,17 @@ such.
     The byte payment dropped the qualifier that makes `DevStg-Release`
     conditional, which PROCESS.md states. It is restored within the
     10,000-byte cap, and the row is re-stamped.
+
+36. **WI-615, fix round (51c9de2f) — SOL on both.** Rulings 34 and 35 are
+    confirmed, and so are SR-223 (derived, honest) and LLR-279 under SR-112.
+    Two points remain. The description floor still hangs on SR-112, which
+    obliges checked per-agent copies and says nothing about whether a
+    description is adequate. The builder itself wrote "by ruling, not by
+    fit", and that is the silent parenting of a derived obligation the
+    spine-authoring skill forbids. And IF-019 is the INDEX.csv file seam,
+    while PROCESS.md makes a CLI's exit code an interface row of its own.
+    **Ruling:** the coordinator grants SR-224 for the floor as a labelled
+    derived requirement. LLR-281 and TC-291 claim it, and IF-254 carries
+    `--check`'s whole exit contract (`channel = "exit-code"`). LLR-025 and
+    TC-025 go back to their approved text, reverting this lane's amendments,
+    and IF-019 returns to the file seam.

@@ -3,12 +3,22 @@ id = "WI-698"
 title = "re-judge TC-055: declared inputs changed [sha256:6c4263144267] at merge d79e039"
 workstream = "process"
 sr_refs = ["SR-054"]
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "rejudge"
 adjudicates = ["TC-055"]
 +++
+
+## Deliverable
+
+Re-judged at 8bebd4cf in the coordinator's hand lane (build/wi-698), `OUTCOME: RECORDED result=fail`. Verdict: `docs/reviews/wi-698-re-judge-tc-055-declared-inpu/`. Result record: `docs/test/observations/TC-055.2026-09-28T075357Z.toml`, written by the kit's observation writer.
+
+The judge was Codex Sol, cross-family, as TC-055's Method requires, over all
+180 native-resolution tiles of the matrix rendered at HEAD by an adjudicator
+session that did not judge it. CHANGES-REQUESTED: T4 at 390 px, and T5 at
+390 px (light-theme descend arrows) and at 1680 px (the default selection
+fade). The dashboard work those findings owe is filed as its own row.
 
 ## Context
 

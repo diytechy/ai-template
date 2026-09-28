@@ -398,3 +398,53 @@ current, `gen_open_items` current, `check_docs --stale` 0 broken (one link
 to the withdrawn record, in Sol's cross-review, made plain text), smoke 1697
 passed / 3 skipped, seconds 29.7 s within 60 s. No code changed. Trunk before
 this squash: e5b25bd6.
+
+The re-judges' own sweep minted three more re-judge rows at once: WI-698
+(TC-055), WI-699 (TC-209) and WI-700 (TC-210), each "declared inputs changed".
+The records were judged at fe96ec69, and WI-651 and WI-655 landed before them.
+What moved was SR-054's `boundary_refs` and `da_refs`, SR-184's `da_refs`,
+SR-185's `coincident`, and a new TC-279 section in
+`docs/test/inspection-procedures.md`. The rubric and the rendering code did
+not move. So the machinery is right that the records are stale, but three
+things about the observation surface cost a re-judge here, and they are
+recorded for the owner:
+- a registry-id input digests the row's traced pointer cells, which "re-open
+  no attestation" everywhere else;
+- a whole-file input stales every case declaring it, whichever section
+  changed;
+- the re-judge brief lists every declared input rather than the ones that
+  changed, so a judge must diff to find out.
+Coordinator lesson: judge observation re-judges on the latest trunk, and land
+them before lanes that touch their inputs. **Open count: 24.**
+
+### The second re-judges: WI-698 to WI-700, and TC-055's first qualifying result
+
+On trunk at 8bebd4cf, a fresh Fable adjudicator re-judged TC-209 and TC-210
+(RECORDED pass, both: the input changes touched neither procedure nor
+acceptance). For TC-055 it only rendered the declared matrix at HEAD and cut
+all 30 shots into 180 unscaled native-resolution tiles, because it is the
+same family as the rendering code's authors. Codex Sol judged it
+cross-family, one width per pass
+([390](../reviews/2026-09-27-wave5/sol-tc055b-390.md),
+[1280](../reviews/2026-09-27-wave5/sol-tc055b-1280.md),
+[1680](../reviews/2026-09-27-wave5/sol-tc055b-1680.md)). 1280 px approves.
+At 1680 px the default selection fade leaves the When roadmap's non-selected
+phase cards pale with white text (T5). At 390 px the light-theme descend
+arrows wash into pastel blocks (T5), and diagram labels are small (T4).
+The coordinator looked at the 1680 px tile, not as judge but to rule out a
+capture state: the default render auto-selects a card, so the fade is what a
+reader first sees. **TC-055 records FAIL.** The same judge's focused T4-at-390
+pass at fe96ec69 is recorded as a disagreement. So the pass recorded an hour
+earlier from downsampled whole images was the judge's miss, not the
+dashboard's health. A failing result is kept.
+
+The dashboard work those findings owe had no open row, so **WI-701 is
+filed**, together with the What drill's scroll-affordance observation. Its
+Done-when ends in a cross-family re-judge that records a pass.
+**Open count: 22** (21 queued, 1 deferred): WI-698 to WI-700 closed, WI-701
+filed.
+
+Commit bar at the second re-judges: `check_trajectory --strict` clean, `trace
+--strict-integrity` 0, approve-modified current, `gen_open_items` current,
+`check_docs --stale` 0 broken, smoke 1697 passed / 3 skipped, seconds 27.4 s
+within 60 s. No code changed. Trunk before this squash: 8bebd4cf.

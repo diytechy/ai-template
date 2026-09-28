@@ -3,12 +3,16 @@ id = "WI-700"
 title = "re-judge TC-210: declared inputs changed [sha256:2eb6379200f0] at merge d79e039"
 workstream = "process"
 sr_refs = ["SR-185"]
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "rejudge"
 adjudicates = ["TC-210"]
 +++
+
+## Deliverable
+
+Re-judged at 8bebd4cf in the coordinator's hand lane (build/wi-698), `OUTCOME: RECORDED result=pass`. Verdict: `docs/reviews/wi-700-re-judge-tc-210-declared-inpu/`. Result record: `docs/test/observations/TC-210.2026-09-28T074513Z.toml`, written by the kit's observation writer.
 
 ## Context
 
