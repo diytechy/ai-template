@@ -394,3 +394,20 @@ FAILED tests/test_mapping_purpose_cli.py::test_cli_mapping_purpose_gates_when_re
   72.8 s against 60 s, with WI-545's fix builder running tests beside it.
   That is contention, and the budget is not re-stamped. The spine and doc
   checks and the live approval brief are current.
+
+### WI-738 lands: the spot check of WI-736's close, CONFIRMED
+
+An independent Opus spot-checker verified the three replacements
+programmatically, and probed the plain adapter over gemini results
+([record](../reviews/wi-738-spot-check-the-clean-close-of/001-SPOTCHECK-5b75c39a.md)).
+
+- **Its observations** went to batch J's sitting adjudicator as chain
+  evidence:
+  - SR-227's "one bounded turn" is true only on the claude adapter;
+  - "by one writer" against the lock-free tombstone;
+  - the conversation id of an unread runner;
+  - `adapter_for`'s prefix match.
+- **Not filed:** no new row.
+- **Bar:** smoke `1901 passed, 3 skipped` (78.8 s, with an adjudicator and
+  a reviewer running beside it; a records-only lane). The spine and doc
+  checks are clean.
