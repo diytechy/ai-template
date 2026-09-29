@@ -7,10 +7,12 @@ specref = "docs/requirements/system-requirements.toml"
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
-adjudicates = ["LLR-223", "SR-177", "TC-267"]
+adjudicates = ["LLR-222", "LLR-223", "LLR-286", "SR-177", "SR-193", "TC-267"]
 +++
 
 ## Context
+
+Carry-over added 2026-09-29 by the coordinator, from spine-acts batches G and H. LLR-222 and LLR-286 were blessed as MEANING in both batches, and SR-193 as CLARITY in batch H, but none could be anchored: the LLR snapshot was blocked by LLR-223 and the SR snapshot by SR-177, and WI-732 has now answered both. They are added to `adjudicates` so this brief shows them. Re-attest them in this act with this row's own amendments.
 
 Derived from `staged_spine_amendments` on the merged commit (§A5.2).
 Approved and ROUTED traced cells only; other traced cells are silent
