@@ -30,9 +30,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   11. First jobs:
   - WI-721, because the full unfiltered suite is red on four slow-tier
     failures and its wall time jumped;
-  - the owner's items (OI-97, the live codex and opencode runs, and the
-    four need re-attestations); OI-95 and OI-96 are ruled, and WI-722
-    (OI-96's floor) stays deferred until the queue has mostly drained;
+  - the owner's items (the live codex and opencode runs, and the four
+    need re-attestations); OI-95 to OI-97 are ruled, and WI-722 (OI-96's
+    floor) stays deferred until the queue has mostly drained;
   - WI-720's cell fixes, then the queue.
 
   The owner re-assigned the roles for the next session: Codex Sol builds
@@ -45,8 +45,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   gate's four steps (behind `[checks] assumption_gate = false`), and C2's
   assumption and surrogate rows with every SR's bridging. C3 (evidence) and
   C4 (activation) come next. WI-667 decides how a red assumption's evidence
-  reaches the adjudication machinery, and OI-97 how a jointly delivered
-  need is classified.
+  reaches the adjudication machinery, and WI-723 builds OI-97's
+  joint-delivery class.
 - **Sister plan — one plan still owed:** every question in the
   [notes on spine, sessions and tests](plans/2026-09-23-owner-notes-spine-sessions-and-tests.md)
   §5 is ruled except S11, whose direction (one trunk commit per work item)
