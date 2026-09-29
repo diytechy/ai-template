@@ -1038,3 +1038,30 @@ commit is documents plus one spec. The budget is not re-stamped, and WI-721
 re-measures on a quiet box.
 
 **Open count: 11** (10 queued, 1 deferred), against 13 at the start.
+
+### Owner direction: one commit per item on main, lane tips in `archive/lanes`
+
+The owner asked how lane branches get removed, since reviews cite commit
+ids. The kit's answer is RULING-6: the loop's integrator merges `--no-ff`,
+so lane commits stay reachable through trunk's second parent, and its
+unload runs `git branch -d` safely.
+
+The coordinator handoffs since 2026-09-26 told hand integrations to squash
+instead. A squash leaves lane commits only on the branch. `integrate.py
+audit --since 1ea526ac^` flags every hand integration of this session as
+a non-merge product commit.
+
+The owner preferred a legible main: one commit per work item, or per batch
+of items, which is sister-plan S11's direction, still awaiting its plan.
+The lane's round commits are kept on a side branch instead of in main's
+history. So:
+- all 60 `build/*` tips were folded into `archive/lanes`, one commit per
+  lane: an empty tree, with the lane tip as its second parent;
+- each tip was verified reachable before its branch was deleted, and
+  cited shas were spot-checked reachable (706cadc7, d6ee9cd3, aad52b75,
+  890afb27, 63ef10c1, 2305a648);
+- the handoff states the hand-integration recipe: squash, commit, archive
+  the tip, verify, delete the branch, sweep.
+
+The loop's integrator still merges `--no-ff`. Moving it is S11's plan and
+an amendment to RULING-6.

@@ -55,13 +55,14 @@ Nothing is in flight. Every lane launched this session has landed, and no
 worktree remains. Trunk is `refactor_again` at bc3310f3, and nothing is
 pushed.
 
-Every `build/*` branch is kept, 60 of them, all local. A hand squash-merge
-leaves the lane's own commits only on its branch, and the review files and
-ARBITRATION.md cite those shas (706cadc7, d6ee9cd3, and others). Deleting a
-branch would leave those citations pointing at commits git eventually
-garbage-collects. The loop's `integrate.py` removes a lane's worktree and
-branch at its own merge. Hand merges bypass that, and whether to archive
-the branches (a tag per lane, then delete the branch) is the owner's call.
+**No `build/*` branch remains.** A squash leaves a lane's own commits only
+on its branch, and the review files and ARBITRATION.md cite those shas
+(706cadc7, d6ee9cd3, and others). So at the owner's direction, all 60 lane
+tips were folded into one side branch, `archive/lanes`, and then deleted.
+Each tip is one `-p` parent of a commit whose tree is empty, and each was
+verified reachable before its branch went. Every cited sha stays
+reachable, and survives a push, without touching main's history. See "Hand
+integration" below.
 
 ## Your first jobs, in order
 
@@ -147,10 +148,13 @@ the branches (a tag per lane, then delete the branch) is the owner's call.
     changed ones;
   - the absolutes check keeps reporting the absolutes the sweep judged
     closed.
-- **The 60 local `build/*` branches** (see "What happened"): keep them, or
-  archive each as a tag and delete it. There are also four non-lane
-  branches whose fate is yours: `MultiRepoSupport`, `contract_split`,
-  `template-review-fixes` and `wi-657-pre-rebase`.
+- **S11 for the loop.** Hand integration now follows your direction
+  (below). The loop's `integrate.py` still merges `--no-ff` under
+  RULING-6, and its `audit` flags every squash commit. Moving the loop to
+  squash-plus-archive is S11's plan and a RULING-6 amendment, designed with
+  S9's reviewer-commit check.
+- **Four non-lane branches** are yours to decide on: `MultiRepoSupport`,
+  `contract_split`, `template-review-fixes` and `wi-657-pre-rebase`.
 - Unchanged: merge-to-main and push (`push = "human"`).
 
 ## Roles for the next session (owner direction, 2026-09-28)
@@ -212,6 +216,30 @@ reviews" bullets, and its rule that the coordinator arbitrates alone.
     from the family that wrote the code under judgement. For TC-055's
     critique: a Claude judge for rendering code Sol wrote, a non-Claude
     judge for code Claude wrote.
+
+## Hand integration: one commit per item, lane tips archived (owner direction, 2026-09-28)
+
+Main's history stays legible: **one commit per work item**, or per batch of
+items landed together, as the S11 direction reads. The lane's round commits
+are kept, off main, in `archive/lanes`.
+
+1. Squash-merge (`git merge --squash build/wi-NNN`) and integrate as the
+   wave-4 recipe says, with the corrections below.
+2. Commit it. The message names the item, the final reviewed sha, the
+   review rounds and the bar that ran.
+3. Archive the lane tip. This touches neither the working tree nor main:
+
+       git update-ref refs/heads/archive/lanes $(git commit-tree archive/lanes^{tree} -p archive/lanes -p build/wi-NNN -m "archive: build/wi-NNN at <sha8>")
+
+4. Check `git merge-base --is-ancestor build/wi-NNN archive/lanes`, then
+   `git worktree remove <path>` and `git branch -D build/wi-NNN`.
+5. Run the sweep (`intake.py sweep --merged ...`).
+
+Reviews and ARBITRATION.md keep citing round shas, which stay reachable
+through the archive. The findings and their fixes are also recorded in
+prose in the log, so the trail does not depend on any sha. `integrate.py
+audit` flags these squash commits until S11's ruling. Expect that, and
+don't "fix" it with a `--no-ff` merge.
 
 ## Corrections to the role and the loop
 

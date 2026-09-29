@@ -50,7 +50,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   [notes on spine, sessions and tests](plans/2026-09-23-owner-notes-spine-sessions-and-tests.md)
   §5 is ruled except S11, whose direction (one trunk commit per work item)
   needs its own plan before any ruling; design S9's reviewer-commit check with
-  it. S7's session service has landed, writing S8's adopted OTel schema, with
+  it. Hand integration already follows it (owner direction 2026-09-28): one
+  squash commit per item, with lane tips kept reachable in `archive/lanes`. S7's session service has landed, writing S8's adopted OTel schema, with
   retention shipped off; its live verification is WI-541. S6 is designed
   with the assumption tier before its C3. S14's flag-axis count and
   duplicate-detection research have both landed.
