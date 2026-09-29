@@ -480,3 +480,21 @@ programmatically, and probed the plain adapter over gemini results
   budget. check_trajectory --strict, trace --strict-integrity (0; drafts
   3), gen_open_items, gen_trajectory, derive_stage, check_docs and the live
   approval brief are current.
+
+### WI-740 lands: keep-warm pings only a route whose runner bounds one turn
+
+- **Build and review:** one Sol build and one Sonnet round, SOUND.
+- **The major, accepted as built:** the one-turn capability is inferred
+  from whether an adapter overrides `one_turn`, not declared. The
+  adjudicator's draft required that "a runner gaining a one-turn bound
+  later needs no second edit", which the inference delivers, and every
+  shipped adapter classifies correctly. The trade-off is recorded for this
+  merge's adjudication
+  ([sonnet-wi740.md](../reviews/2026-09-28-wave6/sonnet-wi740.md)).
+- **What landed:** LLR-270's `detail` and TC-268's `method` take the drafted
+  text, and the twin test pins the rule.
+- **Trunk before this squash:** 4cbb73cf.
+- **Bar:** smoke `1903 passed, 3 skipped` (one new test). Its seconds read
+  72.4 s against 60 s, with WI-722's Sonnet review running tests beside it.
+  That is contention, and the budget is not re-stamped. The spine and doc
+  checks and the live approval brief are current.

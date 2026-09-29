@@ -472,6 +472,15 @@ class KeepWarmer:
         self.root = Path(root)
         self.cfg = cfg
         self.registry = registry
+        self.routes = {
+            route_id
+            for route_id, row in registry.items()
+            if session_adapters.adapter_for(
+                agent_session.build_argv(
+                    row.cmd_template, row.model or "", KEEPWARM_PROMPT
+                )[0]
+            ).bounds_one_turn()
+        }
         self.runner = runner
         self.clock = clock
         self.dirty = dirty or (
@@ -503,7 +512,7 @@ class KeepWarmer:
             now=self.clock(),
             work_pending=work_pending,
             holder="keep-warm:" + uuid.uuid4().hex,
-            routes=set(self.registry),
+            routes=self.routes,
         )
         if reason:
             lines.append("keep-warm: skipped ({})".format(reason))

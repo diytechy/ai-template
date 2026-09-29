@@ -240,6 +240,13 @@ class PlainAdapter:
         no such bound."""
         return list(argv)
 
+    def bounds_one_turn(self):
+        """Whether this adapter overrides the no-bound `one_turn` default.
+
+        Implements: SR-227, LLR-270
+        """
+        return type(self).one_turn is not PlainAdapter.one_turn
+
 
 def _result_event(stream):
     """The `type: result` event of a stream-json transcript, else the last

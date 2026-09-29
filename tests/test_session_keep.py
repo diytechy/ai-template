@@ -522,12 +522,12 @@ def test_an_adjudication_waits_out_a_keep_warm_lease_then_runs_unretained(
 
 
 class _Row:
-    def __init__(self, family):
+    def __init__(self, family, cmd_template=None):
         self.id = family + "-ROUTE"
         self.family = family
         self.model = "m"
         self.tier = "strong"
-        self.cmd_template = TEMPLATES[family]
+        self.cmd_template = cmd_template or TEMPLATES[family]
         self.env = ""
 
 
@@ -548,6 +548,31 @@ def test_keep_warm_skips_a_session_an_adjudication_holds(tmp_path):
         tmp_path, ON, now=10**10, work_pending=True, holder="keep-warm:x"
     )
     assert ping is None and reason.startswith("the session is leased to adjudicate:")
+
+
+def test_keep_warm_pings_only_a_route_whose_adapter_bounds_one_turn(tmp_path):
+    _adjudicate(tmp_path, ON, _claude_stream(10))
+    seen = []
+    opencode = svc.KeepWarmer(
+        tmp_path,
+        ON,
+        {"ANTHROPIC-ROUTE": _Row("ANTHROPIC", "opencode run -m anthropic/model")},
+        runner=_launch(_claude_stream(11), seen=seen),
+        clock=lambda: 10**10,
+        dirty=lambda: False,
+    )
+
+    assert opencode.tick(work_pending=True) == []
+    assert opencode.thread is None
+    assert "lease" not in _state(tmp_path)
+    assert seen == []
+
+    claude = _warmer(tmp_path, _launch(_claude_stream(11), seen=seen))
+    assert claude.tick(work_pending=True) == []
+    claude.thread.join(10)
+    assert seen
+    argv = seen[0]
+    assert argv[argv.index("--max-turns") + 1] == "1"
 
 
 def _warmer(tmp_path, runner, dirty=lambda: False):

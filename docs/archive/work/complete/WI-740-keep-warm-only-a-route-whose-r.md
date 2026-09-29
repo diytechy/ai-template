@@ -3,11 +3,38 @@ id = "WI-740"
 title = "Keep warm only a route whose runner bounds a call to one turn: an ANTHROPIC-family route served through opencode, codex or any other runner is pinged today with no turn bound, which breaks SR-227's approved keep-warm clause"
 workstream = "process"
 sr_refs = ["SR-227"]
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "medium"
 priority = 3
 safety_class = "spine"
 +++
+
+## Deliverable
+
+Keep-warm now pings only a route whose runner's adapter bounds a call to one
+turn, which restores SR-227's approved keep-warm clause for every
+configuration. No shipped configuration changes behaviour.
+
+- **The code:**
+  - `KeepWarmer` restricts its lease-eligible routes through
+    `session_adapters.adapter_for` over each row's command template, once, at
+    construction;
+  - `PlainAdapter.bounds_one_turn` reports whether an adapter bounds
+    `one_turn`, so a runner that gains the bound needs no second edit, and
+    `session_keep` carries no runner-name list;
+  - a non-bounding route takes no lease and starts no ping, and its
+    retention is untouched.
+- **The rows:**
+  - LLR-270's `detail` takes the drafted replacement, and its `code_symbol`
+    the new symbol. It stays Approved.
+  - TC-268's `method` takes the drafted insertion. It stays Drafted.
+  - The opencode and claude twin test pins the rule.
+- **Evidence:** red, then green. The affected modules ran `111 passed`.
+- **Review:** Sonnet found it SOUND
+  ([sonnet-wi740.md](../../../reviews/2026-09-28-wave6/sonnet-wi740.md)).
+  - Its one major (the capability inferred from the override, not declared)
+    is accepted as built, because the draft required no second edit.
+  - The trade-off is for the adjudication this merge mints to weigh.
 
 ## Context
 
