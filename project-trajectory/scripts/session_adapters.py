@@ -30,8 +30,8 @@ Contract IF-245: the per-CLI adapter surface. `adapter_for(argv)` returns the
     scratch, code)` returns the session's result text and removes the scratch
     file; `raw_usage(stream)` returns the CLI's usage-bearing events as a JSON
     array whose members are the CLI's own lines, byte for byte, or "" when it
-    emitted none (claude's usage rides its result event, so its raw usage is
-    that event's `usage`, `modelUsage` and cost values, as emitted);
+    emitted none (claude's raw usage is the whole result event line verbatim;
+    the line carries result text, so the log writer redacts header values);
     `usage(stream)` returns the usage record, one dict with exactly the keys
     of `USAGE_KEYS` for every CLI: the OpenTelemetry GenAI usage names pinned
     by `OTEL_SEMCONV`, input counted inclusive of cached input, the derived

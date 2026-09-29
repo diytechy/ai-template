@@ -584,7 +584,7 @@ def test_a_keep_warm_ping_is_one_bounded_turn_off_the_tick_and_recorded_on_it(
     assert warmer.thread is not None and warmer.thread.is_alive()
     assert _state(tmp_path)["lease"]["holder"].startswith("keep-warm:")
     lines = warmer.tick(work_pending=True)
-    assert lines == [] or lines == ["keep-warm: skipped (a ping is in flight)"]
+    assert lines == ["keep-warm: skipped (a ping is in flight)"]
     assert committed == []  # nothing recorded while the ping runs
     release.set()
     warmer.thread.join(10)

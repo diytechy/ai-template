@@ -3,12 +3,42 @@ id = "WI-720"
 title = "SR-222/SR-227 chains: name the provider column, drop the decision frame, restate the history and time-relative sentences as standing prose, describe claude's raw-usage line as the code holds it, and pin TC-268's second-tick assertion"
 workstream = "process"
 sr_refs = ["SR-222", "SR-227"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "quick"
 priority = 3
 safety_class = "spine"
 bar = "DevStg-Reqs"
 +++
+
+## Deliverable
+
+Fourteen cells across ten Drafted rows are restated as the standing
+system, every status left Drafted, for the first-approval adjudication the
+sweep mints:
+
+- **SR-222:** the requirement and acceptance name the route's `provider`
+  (from its roster row, for every routed call) and `gen_ai.provider.name`
+  (where the runner reports one). The decision frame is gone from the
+  rationale.
+- **SR-227:** the rationale states the standing cost of a fresh adjudicator
+  per item. The review noted that the builder also dropped the "hour-long
+  cache / standing process" comparison in that sentence; it is accepted as
+  still true, for the adjudication to judge.
+- **LLR-266 to LLR-270:** each detail and rationale carries no history or
+  receipt. LLR-268 and `session_adapters.py`'s IF-245 docstring describe
+  claude's raw usage as the whole result event line, verbatim.
+- **TC-262, TC-264:** the expected cells state conditions, not "as before"
+  or "defects fixed".
+- **TC-268:** its evidence asserts the second tick's skip line exactly.
+  HEAD already produces it deterministically, so the test was green before
+  and after.
+
+**Evidence:** the session modules ran `103 passed` (builder and reviewer).
+With the rows flipped to Approved, `trace.py --strict` showed no
+requirement-form finding.
+
+**Review:** the Sonnet reviewer found it SOUND at 9a7c063d, with one minor
+finding ([sonnet-wi720.md](../../../reviews/2026-09-28-wave6/sonnet-wi720.md)).
 
 ## Context
 

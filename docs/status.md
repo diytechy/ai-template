@@ -33,12 +33,15 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   - the owner's items (the live codex and opencode runs, and the four
     need re-attestations); OI-95 to OI-97 are ruled, and WI-722 (OI-96's
     floor) stays deferred until the queue has mostly drained;
-  - WI-720's cell fixes, then the queue.
+  - the first-approval adjudication the sweep mints for SR-222's and
+    SR-227's chains, then the queue.
 
   The owner re-assigned the roles for the next session: Codex Sol builds
   through the CLI, Claude Sonnet reviews, and an independent Opus agent
   arbitrates and adjudicates. File new work into an open item's Context
-  before minting a row. Recheck Git and the generated frontier before
+  before minting a row. The builders' `codex exec` launch runs under a
+  temporary `Bash(codex exec *)` allow rule in `.claude/settings.local.json`
+  (owner, 2026-09-28): remove it when the queue drains. Recheck Git and the generated frontier before
   choosing work; earlier handoffs are historical context.
 - **Assumption tier — C1 and C2 have landed and are approved:** the
   redrawn frame, checkpoint re-judging of observation tests, the assumption
