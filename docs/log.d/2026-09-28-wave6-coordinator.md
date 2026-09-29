@@ -179,3 +179,24 @@ CONFIRMED
   budget. check_trajectory --strict, trace --strict-integrity,
   gen_open_items, gen_trajectory, derive_stage, check_docs and the live
   approval brief are current.
+
+### WI-727 lands: the router's hit test pre-filters by bounds, and the slowest test drops from 980 s to about 40 s
+
+- **Build and review:** one Sol build and one fix round, with two Sonnet
+  rounds.
+  - Round 1 found the pre-check unsound in floating point, by fuzzing: a
+    rectangle touching a wire's box could be skipped one ULP past it. The
+    output was byte-identical on today's data, so the defect was latent.
+  - The fix round added a documented half-grid margin, the counterexample,
+    and a seeded oracle test.
+  - Round 2: SOUND at 427fbaf4, with a 520,000-case fuzz clean and
+    independent byte-identical renders.
+- **Accepted minors:** the margin is empirical, and one boundary test is not
+  a float guard.
+- **Owed:** the slowest-30 re-measure, taken at the phase-close full run.
+- **Trunk before this squash:** 3e8a87d2.
+- **Bar:** smoke `1899 passed, 3 skipped`, unchanged, because
+  `test_traj_graph` is in the slow tier. Its seconds read 77.4 s against
+  60 s, with WI-545's fix builder and the batch-H adjudicator running tests
+  beside it. That is contention, not this lane, and the budget is not
+  re-stamped. The spine and doc checks are clean.

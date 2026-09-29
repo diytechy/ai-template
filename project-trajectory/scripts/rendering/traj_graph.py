@@ -237,10 +237,30 @@ def _seg_hits_rect(x1, y1, x2, y2, rect):
 
 def _polyline_hits(pts, rects):
     """True when any segment of the polyline `pts` crosses any rect in `rects`."""
-    for i in range(len(pts) - 1):
-        x1, y1 = pts[i]
-        x2, y2 = pts[i + 1]
-        for r in rects:
+    if len(pts) < 2:
+        return False
+    x_lo = min(x for x, _y in pts)
+    x_hi = max(x for x, _y in pts)
+    y_lo = min(y for _x, y in pts)
+    y_hi = max(y for _x, y in pts)
+    for r in rects:
+        rx, ry, rw, rh = r
+        # WHY: the narrow phase counts an edge touch as a hit, while rx + rw and
+        # ry + rh can round just beyond that same mathematical edge. Rendered
+        # geometry is on a 0.1px grid, so reject only across a gap larger than half
+        # a grid step: this broad phase remains a conservative bbox superset despite
+        # float addition error, without sending remote boxes through every segment.
+        margin = 0.05
+        if (
+            rx - x_hi > margin
+            or x_lo - (rx + rw) > margin
+            or ry - y_hi > margin
+            or y_lo - (ry + rh) > margin
+        ):
+            continue
+        for i in range(len(pts) - 1):
+            x1, y1 = pts[i]
+            x2, y2 = pts[i + 1]
             if _seg_hits_rect(x1, y1, x2, y2, r):
                 return True
     return False

@@ -17,6 +17,7 @@ sibling's own namespace, so patching through the facade would silently miss.
 """
 
 import math
+import random
 import re
 
 from conftest import ROOT, load_script
@@ -96,9 +97,10 @@ def test_deep_chain_renders_without_recursionerror(tmp_path):
 # crosses, and crossings fall in open space rather than under labels / port fans.
 
 
-def _sample_path_d(d, n=48):
+def _sample_path_d(d, n=48, geometry=None):
     """A path `d` of M / L / C commands -> a polyline (the same cubic sampling the
     router's own hit-test uses), so a test can assert what a viewer's eye follows."""
+    geometry = geometry or load_script("gen_trajectory")
     toks = re.findall(r"[MLC]|-?[\d.]+", d)
     pts, i, cur = [], 0, None
     while i < len(toks):
@@ -113,18 +115,120 @@ def _sample_path_d(d, n=48):
             p2 = (float(toks[i + 2]), float(toks[i + 3]))
             e = (float(toks[i + 4]), float(toks[i + 5]))
             i += 6
-            gt = load_script("gen_trajectory")
-            pts.extend(gt._cubic_points(cur, p1, p2, e, n)[1:])
+            pts.extend(geometry._cubic_points(cur, p1, p2, e, n)[1:])
             cur = e
     return pts
 
 
-def _polyline_crosses(pts, rect):
-    gt = load_script("gen_trajectory")
+def _polyline_crosses(pts, rect, geometry=None):
+    geometry = geometry or load_script("gen_trajectory")
     return any(
-        gt._seg_hits_rect(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], rect)
+        geometry._seg_hits_rect(
+            pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], rect
+        )
         for i in range(len(pts) - 1)
     )
+
+
+def test_polyline_hit_test_rejects_rectangles_outside_the_path_bounds(monkeypatch):
+    # A rectangle whose bounding box is disjoint from the whole path cannot hit any
+    # segment. The live Knowledge graph has ~900 boxes, so sending every one through
+    # Liang-Barsky for every sampled segment turns that impossibility into the
+    # router's dominant cost as the registry grows.
+    gt = load_script("gen_trajectory")
+    calls = []
+    real_hit = gt.traj_graph._seg_hits_rect
+
+    def counting_hit(*args):
+        calls.append(args)
+        return real_hit(*args)
+
+    monkeypatch.setattr(gt.traj_graph, "_seg_hits_rect", counting_hit)
+    assert not gt.traj_graph._polyline_hits(
+        [(0.0, 0.0), (10.0, 10.0)],
+        [(100.0, 100.0, 20.0, 20.0), (-40.0, -30.0, 5.0, 5.0)],
+    )
+    assert calls == []
+
+
+def _polyline_hit_oracle(geometry, pts, rects):
+    return any(
+        geometry._seg_hits_rect(*pts[i], *pts[i + 1], rect)
+        for i in range(len(pts) - 1)
+        for rect in rects
+    )
+
+
+def test_polyline_hit_test_keeps_a_rounded_flush_edge_candidate():
+    gt = load_script("gen_trajectory")
+    pts = [(10.431583, 10.307511), (-3.82, -18.52)]
+    rect = (-9.65, -20.82, 5.83, 7.29)
+    assert gt._seg_hits_rect(*pts[0], *pts[1], rect)
+    assert gt.traj_graph._polyline_hits(pts, [rect])
+
+
+def test_polyline_hit_test_includes_bbox_edge_and_degenerate_rect_touches():
+    gt = load_script("gen_trajectory")
+    cases = [
+        ([(0.0, 5.0), (-2.0, 5.0)], (0.0, 0.0, 10.0, 10.0)),
+        ([(10.0, 5.0), (12.0, 5.0)], (0.0, 0.0, 10.0, 10.0)),
+        ([(5.0, 0.0), (5.0, -2.0)], (0.0, 0.0, 10.0, 10.0)),
+        ([(5.0, 10.0), (5.0, 12.0)], (0.0, 0.0, 10.0, 10.0)),
+        ([(10.0, 10.0), (12.0, 12.0)], (0.0, 0.0, 10.0, 10.0)),
+        ([(-2.0, 5.0), (2.0, 5.0)], (0.0, 0.0, 0.0, 10.0)),
+        ([(5.0, -2.0), (5.0, 2.0)], (0.0, 0.0, 10.0, 0.0)),
+    ]
+    for pts, rect in cases:
+        assert _polyline_hit_oracle(gt, pts, [rect])
+        assert gt.traj_graph._polyline_hits(pts, [rect])
+
+
+def test_polyline_hit_test_matches_segment_oracle_for_seeded_flush_edges():
+    gt = load_script("gen_trajectory")
+    rng = random.Random(727)
+    cases = [
+        (
+            [(10.431583, 10.307511), (-3.82, -18.52)],
+            [(-9.65, -20.82, 5.83, 7.29)],
+        )
+    ]
+    for _ in range(400):
+        rx_i, ry_i = rng.randint(-2000, 2000), rng.randint(-2000, 2000)
+        rw_i, rh_i = rng.randint(0, 1000), rng.randint(0, 1000)
+        rx, ry = rx_i / 100, ry_i / 100
+        rw, rh = rw_i / 100, rh_i / 100
+        left, right = rx, (rx_i + rw_i) / 100
+        top, bottom = ry, (ry_i + rh_i) / 100
+        side = rng.randrange(4)
+        if side == 0:
+            pts = [(left, top - 2.0), (left, bottom + 2.0)]
+        elif side == 1:
+            pts = [(right, top - 2.0), (right, bottom + 2.0)]
+        elif side == 2:
+            pts = [(left - 2.0, top), (right + 2.0, top)]
+        else:
+            pts = [(left - 2.0, bottom), (right + 2.0, bottom)]
+        cases.append((pts, [(rx, ry, rw, rh)]))
+    for _ in range(100):
+        pts = [
+            (rng.randint(-3000, 3000) / 100, rng.randint(-3000, 3000) / 100)
+            for _ in range(3)
+        ]
+        rects = [
+            (
+                rng.randint(-2000, 2000) / 100,
+                rng.randint(-2000, 2000) / 100,
+                rng.randint(0, 1000) / 100,
+                rng.randint(0, 1000) / 100,
+            )
+            for _ in range(2)
+        ]
+        cases.append((pts, rects))
+
+    for pts, rects in cases:
+        assert gt.traj_graph._polyline_hits(pts, rects) == _polyline_hit_oracle(
+            gt, pts, rects
+        )
 
 
 def test_route_edges_detours_around_a_blocking_box():
@@ -717,6 +821,7 @@ def _wire_through_box_violations(markup):
     node box that is not its own source/target — the T8 through-box invariant. Each
     `<svg>` is a self-contained drill layer with its OWN coordinate system, so wires
     are only ever tested against boxes in the SAME svg (a panel concatenates many)."""
+    geometry = load_script("gen_trajectory")
     num = r"(-?[\d.]+)"
     bad = []
     for svg in re.findall(r"<svg\b.*?</svg>", markup, re.S):
@@ -740,10 +845,11 @@ def _wire_through_box_violations(markup):
             r'<path class="(?:wire|swedge|kedge|edge(?: soft)?)"[^>]*?d="([^"]+)"', svg
         )
         for d in wires:
-            pts = _sample_path_d(d)
+            pts = _sample_path_d(d, geometry=geometry)
             if len(pts) < 2:
                 continue
             start, end = pts[0], pts[-1]
+            candidates = []
             for r in rects:
                 rx, ry, rw, rh = r
                 on_src = (
@@ -752,9 +858,39 @@ def _wire_through_box_violations(markup):
                 on_tgt = abs(end[0] - rx) < 10 and ry - 3 <= end[1] <= ry + rh + 3
                 if on_src or on_tgt:
                     continue
-                if _polyline_crosses(pts, r):
+                candidates.append(r)
+            if geometry.traj_graph._polyline_hits(pts, candidates):
+                # The shipped invariant is normally green. Preserve exact per-box
+                # diagnostics on the exceptional path without recomputing the same
+                # path bounds for every box on every successful sweep.
+                for r in candidates:
+                    if not _polyline_crosses(pts, r, geometry):
+                        continue
                     bad.append((d, r))
     return bad
+
+
+def test_wire_sweep_loads_geometry_once(monkeypatch):
+    # The real-scale sweep compares every wire with every unrelated box. Loading the
+    # whole dashboard generator for each pair turned that linear geometry operation
+    # into hundreds of thousands of repeated imports.
+    loads = []
+    real_load = load_script
+
+    def counting_load(name):
+        loads.append(name)
+        return real_load(name)
+
+    monkeypatch.setitem(
+        _wire_through_box_violations.__globals__, "load_script", counting_load
+    )
+    markup = (
+        '<svg><rect x="30" y="30" width="25" height="40"></rect>'
+        '<rect x="65" y="30" width="25" height="40"></rect>'
+        '<path class="wire" d="M0,50 C25,50 75,50 110,50"></path></svg>'
+    )
+    assert len(_wire_through_box_violations(markup)) == 2
+    assert loads == ["gen_trajectory"]
 
 
 def test_meta_containerized_sw_wires_avoid_unrelated_boxes():

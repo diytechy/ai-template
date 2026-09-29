@@ -2,13 +2,52 @@
 id = "WI-727"
 title = "Bound the real-scale wire-routing tests: one test_traj_graph case takes 790 s alone and sets the full suite's critical path"
 workstream = "process"
-specref = "tests/test_traj_graph.py"
+specref = ""
 sr_refs = []
 needs = []
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 2
 +++
+
+## Deliverable
+
+The cost was a real inefficiency, and it is fixed in the router itself, so
+the dashboard generator also stops paying it.
+
+- **The profile:** on the live Knowledge graph (904 nodes, 1,047 wires),
+  `_polyline_hits` dominated, with 46.7 million `_seg_hits_rect` calls
+  (76 s cumulative). Emitting the registries took 0.5 s.
+- **The fix** (`rendering/traj_graph.py`): a bounding-box pre-check skips
+  every rectangle outside a wire's box before any segment test. It keeps a
+  documented half-grid margin (0.05 px), so it only skips a rectangle that
+  no segment can hit, even when the rectangle's edges round past the box.
+  The real-scale T8 sweep also loads its geometry once.
+- **The measurements:**
+  - `test_meta_knowledge_and_when_wires_avoid_unrelated_boxes`, alone: 980 s
+    before, 36 s after the first round, and 50 s after the fix round (the
+    builder, on a shared box). Under `-n 2` it ran in 37.7 s (reviewer).
+  - `test_prereq_toolchain`'s 291 s case takes 10 s alone, so it was load.
+    That case launches two nested pytest runs on purpose.
+- **The output is unchanged:** the live Knowledge and When renders are
+  byte-identical to f1733daa, checked independently in both review rounds.
+- **The tests:**
+  - the first review's float counterexample, as a regression test;
+  - a seeded property test against the nested-loop oracle.
+
+  Both fail without the margin. An exact-boundary test covers the bounds
+  logic at exact floats.
+- **Review:** Sonnet reviewed it in two rounds.
+  - [Round 1](../../../reviews/2026-09-28-wave6/sonnet-wi727-r1.md): NOT
+    YET SOUND, with a blocker. The pre-check was unsound under floating
+    point, and a fuzz found 21 false rejections.
+  - [Round 2](../../../reviews/2026-09-28-wave6/sonnet-wi727-r2.md): SOUND
+    at 427fbaf4. Its fuzz over 520,000 cases, up to ±1e13, found no false
+    rejection.
+- **Still to record:** the full suite's slowest-30 list. It is taken at this
+  wave's phase-close full run, which covers this lane and WI-545, and is
+  recorded in the log. The spec file's name is shortened by one character
+  to meet the 37-character stem ceiling.
 
 ## Context
 
