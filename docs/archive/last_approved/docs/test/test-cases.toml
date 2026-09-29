@@ -507,13 +507,13 @@ status = "Approved"
 phase = 1
 
 [test.TC-048]
-verifies = ["SR-154", "LLR-048"]
+verifies = ["SR-154", "LLR-048", "IF-260"]
 level = "Integration"
 method = "Run Critique scope detection and redacted rubric/intent/artifact brief cases."
 tier = "Full"
 expected = """Only Critique-scoped builds schedule a fresh heterogeneous critic and its prompt excludes self-assessment."""
 automated = "Yes"
-evidence = """tests/test_agent_loop_critique.py::test_critique_scheduled_when_critique_sr_in_scope; tests/test_agent_loop_critique.py::test_no_critique_when_no_critique_sr; tests/test_agent_loop_critique.py::test_critique_prompt_is_redacted_and_carries_rubric_and_intent"""
+evidence = """tests/test_agent_loop_critique.py::test_session_brief_surface_is_reexported_from_its_behavior_module; tests/test_agent_loop_critique.py::test_critique_scheduled_when_critique_sr_in_scope; tests/test_agent_loop_critique.py::test_no_critique_when_no_critique_sr; tests/test_agent_loop_critique.py::test_critique_prompt_is_redacted_and_carries_rubric_and_intent"""
 status = "Approved"
 phase = 1
 
@@ -786,13 +786,13 @@ status = "Approved"
 phase = 1
 
 [test.TC-080]
-verifies = ["SR-159", "LLR-042"]
+verifies = ["SR-159", "LLR-042", "IF-263"]
 level = "Integration"
 method = """Run endpoint/direction, source-sink, Active-citation, Contracts, opt-out, and strict non-gating coverage cases."""
 tier = "Full"
 expected = """Every declared coverage gap warns without failing and each suppression/vacuity case stays silent."""
 automated = "Yes"
-evidence = """tests/test_trajectory_arch.py::test_interface_coverage_warns; tests/test_trajectory_arch.py::test_uncovered_direction_warns; tests/test_trajectory_arch.py::test_source_sink_marker_suppresses_direction_warn; tests/test_trajectory_arch.py::test_seam_tc_citation_warn; tests/test_trajectory_arch.py::test_contracts_docstring_citation_warns; tests/test_trajectory_arch.py::test_interface_warns_never_fail_strict; tests/test_trajectory_arch.py::test_interface_check_off_silences"""
+evidence = """tests/test_trajectory_arch.py::test_architecture_rules_are_reexported_from_their_behavior_module; tests/test_trajectory_arch.py::test_interface_coverage_warns; tests/test_trajectory_arch.py::test_uncovered_direction_warns; tests/test_trajectory_arch.py::test_source_sink_marker_suppresses_direction_warn; tests/test_trajectory_arch.py::test_seam_tc_citation_warn; tests/test_trajectory_arch.py::test_contracts_docstring_citation_warns; tests/test_trajectory_arch.py::test_interface_warns_never_fail_strict; tests/test_trajectory_arch.py::test_interface_check_off_silences"""
 status = "Approved"
 phase = 1
 
@@ -1479,13 +1479,13 @@ status = "Approved"
 phase = 1
 
 [test.TC-150]
-verifies = ["SR-137", "LLR-155"]
+verifies = ["SR-137", "LLR-155", "IF-261"]
 level = "Integration"
 method = """Run the process-config suite: it sources the SHIPPED hook's own sh functions and drives them against `tomllib` over a table of adversarial file shapes (trailing comments, dotted keys, inline tables, uppercase TRUE, BOM, CRLF, wrong section), asserts the two agree on every shape and that an unparseable file reads ON in both, and drives the mixed-config refusal and the wrong-typed-dial refusal."""
 tier = "Full"
 expected = "Satisfies SR-137 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_process_config.py"
+evidence = "tests/test_process_config.py::test_declared_policy_surface_is_reexported_from_its_behavior_module; tests/test_process_config.py"
 status = "Approved"
 phase = 5
 
@@ -1727,7 +1727,7 @@ method = """Plant credential-shaped values (an API key, a Bearer token, an AWS k
 tier = "Full"
 expected = "Satisfies SR-176's planted-value observable for the mechanized classes via the LLR-177 detail contract"
 automated = "Yes"
-evidence = "tests/test_agent_loop.py::test_session_log_redacts_credential_shapes; tests/test_agent_loop.py::test_session_log_redacts_credential_shapes_in_header_values; tests/test_session_service.py::test_a_credential_in_a_raw_usage_line_is_redacted_in_the_log_header"
+evidence = "tests/test_agent_loop_support.py::test_session_log_redacts_credential_shapes; tests/test_agent_loop_support.py::test_session_log_redacts_credential_shapes_in_header_values; tests/test_session_service.py::test_a_credential_in_a_raw_usage_line_is_redacted_in_the_log_header"
 status = "Approved"
 phase = 4
 
@@ -2018,13 +2018,13 @@ status = "Approved"
 phase = 5
 
 [test.TC-199]
-verifies = ["LLR-203"]
+verifies = ["LLR-203", "IF-262"]
 level = "Integration"
 method = """The inventory's two delivered finding classes, driven where each one can actually fail. THE DOGFOOD DIRECTION, in process against the live MAPPING literal: a declared destination that this repository neither carries nor serves in place out of the kit tree, and which no absence declaration covers, is reported by name; a declared absence whose destination has materialized is reported as stale, with the lifecycle marker exempting only the paths whose presence is a legal state; and the walk is bite-proofed by removing one declared entry and asserting its destination reappears in the finding set, so a walk that had quietly stopped looking could not pass. THE PACKAGE DIRECTION, asked of a REAL bootstrapped scaffold rather than of the kit tree, because the kit's own scripts directory holds every file and a partial copy reads green there: the copied helper package must hold exactly the kit's module set - a missing or stale MAPPING row is named as the cause - and must import from where a shipped script sits; and a shipped script importing a sibling the inventory omits is reported against the MAPPING literal read as an AST, never as a whole-file regex, so a comment naming a module cannot mark it mapped. The two package-direction test nodes are ALSO TC-176's evidence, where they attest LLR-181/SR-166's materialization claim; TC-199 reads the same nodes for a different arm - LLR-203's MISSING-FILES finding, a MAPPING row absent from the shipped helper package - and asserts nothing about SR-166. One test, two arms, each traced to the row that owns it."""
 tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-203 only — its delivered inventory arm; SR-163's complete file-to-requirement join and shipped-file universe are NOT covered here"
 automated = "Yes"
-evidence = """tests/test_dogfood_sync.py::test_scaffold_mapping_covered_or_declared; tests/test_dogfood_sync.py::test_scaffold_omissions_list_is_current; tests/test_dogfood_sync.py::test_bite_scaffold_walk_catches_an_undeclared_absence; tests/test_bootstrap.py::test_the_common_package_ships_complete; tests/test_bootstrap.py::test_every_sibling_imported_module_is_shipped_by_mapping"""
+evidence = """tests/test_dogfood_sync.py::test_scaffold_mapping_covered_or_declared; tests/test_dogfood_sync.py::test_scaffold_omissions_list_is_current; tests/test_dogfood_sync.py::test_bite_scaffold_walk_catches_an_undeclared_absence; tests/test_bootstrap.py::test_bootstrap_reexports_the_manifest_behavior_module; tests/test_bootstrap.py::test_the_common_package_ships_complete; tests/test_bootstrap.py::test_every_sibling_imported_module_is_shipped_by_mapping"""
 status = "Approved"
 phase = 5
 
@@ -2968,12 +2968,12 @@ phase = 6
 [test.TC-264]
 verifies = ["SR-222", "LLR-268"]
 level = "Unit"
-method = "Over the recorded fixture of each runner (claude LIVE; codex and opencode NOT LIVE, built from documented event shapes, their live recording owed to a person), assert each adapter's usage record carries the pinned revision and the OpenTelemetry names with input counted inclusive of cached input and fresh input derived by one formula: claude's input is its fresh, cache-read and cache-write counts summed, its reasoning is read from output_tokens_details.thinking_tokens, its response model is the model its last request named although a background model's usage sits beside it, or, with no assistant event, the one matching modelUsage entry, and its default provider name is anthropic; codex's input already counts cached input, its unreported cache write and reasoning stay empty, and its default provider name is openai even when its runner is reconfigured to another provider because that reconfiguration is not detected; opencode's steps are summed with reasoning inside output and its provider name is empty; a stand-in's provider name is empty; and every runner's record carries exactly the same columns."
+method = "Over the recorded fixture of each runner (claude LIVE; codex and opencode NOT LIVE, built from documented event shapes, their live recording owed to a person), assert each adapter's usage record carries the pinned revision and the OpenTelemetry names with input counted inclusive of cached input and fresh input derived by one formula: claude's input is its fresh, cache-read and cache-write counts summed, its reasoning is read from output_tokens_details.thinking_tokens, its response model is the model its last request named although a background model's usage sits beside it, or, with no assistant event, the one matching modelUsage entry, and its default provider name is anthropic; codex's input already counts cached input, its unreported cache write and reasoning stay empty, and its default provider name is openai even when its runner is reconfigured to another provider because that reconfiguration is not detected; opencode's steps are summed with reasoning inside output and its provider name is empty; a stand-in's provider name is empty; a runner other than claude, codex and opencode, over output carrying no claude-shaped result (a gemini --output-format json result), gets the same columns with its runner, its provider name, its raw usage and every token count empty; and every runner's record carries exactly the same columns."
 tier = "Smoke"
 expected = "Satisfies LLR-268 (parent SR-222): one usage record per runner in the pinned vocabulary, inclusive input, derived fresh input, raw usage verbatim and unreported counts empty; claude's reasoning count is read from output_tokens_details.thinking_tokens, and its response model is filled from the request that answered even when a background model's usage sits beside it."
 automated = "Yes"
 evidence = "tests/test_session_service.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-265]

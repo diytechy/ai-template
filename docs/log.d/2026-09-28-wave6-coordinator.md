@@ -443,3 +443,40 @@ programmatically, and probed the plain adapter over gemini results
   - check_docs was 0 broken after one historical link to WI-545's old queued
     path (`docs/ai-template-redesign-2026-09-05-codex/BACKLOG-MIGRATION.md`)
     was repointed to the archive.
+
+### Spine-acts batch J (WI-737): SR-222, SR-227 and TC-264 approved; the chain that went round four times is anchored
+
+- **The sitting:** a fourth independent Opus adjudicator, one act (seq 12).
+  WI-738's spot check reached it as chain evidence.
+- **Approved and anchored:** all three rows.
+- **Drafts:** down to 3.
+- **One follow-up, a code gap** from the spot check. Keep-warm selects by
+  family, and only the claude adapter adds `--max-turns 1`, so an
+  ANTHROPIC-family route through another runner would be pinged with no
+  turn bound. No shipped route does this. It is drafted as a successor
+  (the code, LLR-270, TC-268 plus a test), not a return of correct text.
+- **Cross-review:** Sonnet found the act SOUND, with two recorded minors
+  ([sonnet-batch-j.md](../reviews/2026-09-28-wave6/sonnet-batch-j.md)).
+- **At the merge:** it landed onto a trunk that WI-545 had moved, with no
+  conflict.
+- **Trunk before this squash:** 3d59c003.
+- **The snapshot re-taken at the merge:**
+  - Batch J's act copied the TC registry at 349eef9d. Trunk's live
+    `test-cases.toml` had since gained WI-545's traced-cell moves
+    (`verifies` and `evidence` on TC-048, TC-080, TC-150, TC-199 and TC-172).
+    So the squashed copy was not byte-identical, and `trace
+    --strict-integrity` reported one approval-record finding.
+  - Before re-taking anything, `refresh_refusal`, run read-only on the
+    merged tree, accepted the adjudicator's exact arguments. Traced cells
+    are not approved-text drift.
+  - The coordinator reset `docs/archive/last_approved/` to trunk's pre-act
+    state and re-ran the same `intake.py snapshot --approves
+    "docs/requirements/system-requirements.toml=WI-737;docs/test/test-cases.toml=WI-737"`
+    on the merged tree. That records act seq 12 as the adjudicator took it,
+    and brings integrity back to 0.
+  - The judgement is unchanged. Only the copy's bytes now include the moves
+    WI-739 adjudicates as routed cells.
+- **Bar:** smoke `1902 passed, 3 skipped`, 49.4 s against 60 s, within
+  budget. check_trajectory --strict, trace --strict-integrity (0; drafts
+  3), gen_open_items, gen_trajectory, derive_stage, check_docs and the live
+  approval brief are current.

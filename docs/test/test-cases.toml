@@ -2973,7 +2973,7 @@ tier = "Smoke"
 expected = "Satisfies LLR-268 (parent SR-222): one usage record per runner in the pinned vocabulary, inclusive input, derived fresh input, raw usage verbatim and unreported counts empty; claude's reasoning count is read from output_tokens_details.thinking_tokens, and its response model is filled from the request that answered even when a background model's usage sits beside it."
 automated = "Yes"
 evidence = "tests/test_session_service.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-265]

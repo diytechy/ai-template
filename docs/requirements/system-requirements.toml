@@ -1712,7 +1712,7 @@ rationale = """A DERIVED requirement, and labelled so. SN-026 asks that the owne
 acceptance_criteria = "For a recorded session of the claude, codex and opencode runners, the record carries the vocabulary's usage names and the revision they are pinned to; its input count includes cached input; its fresh input equals input less cache read and cache write; its raw usage reproduces the runner's usage events exactly; a count the runner does not report is empty, not zero; the route's provider column is filled from its roster row, the runner column is filled, and gen_ai.provider.name is anthropic for claude and openai for codex, also when that runner is reconfigured to another provider, and empty for opencode; a successful call's usage survives in the record even where the runner's result text is read from a separate file; and occupancy is the latest request's prompt over the model's window, blank where the runner reports no window, so no session reports occupancy above 100% because counts accumulated across its requests; and a session of any other runner, a stand-in included, carries the same columns, with its runner and its gen_ai.provider.name empty, and every count or raw usage the loop cannot read from the runner's output empty."
 priority = "S"
 verification = "Test"
-status = "Drafted"
+status = "Approved"
 phase = 6
 da_refs = ["DA-016"]
 
@@ -1726,6 +1726,6 @@ rationale = """A DERIVED requirement, and labelled so. SN-025 asks that a config
 acceptance_criteria = "With the dial at zero, an adjudication launches exactly as a fresh session: no session id minted, no resume argument, no retention state written, no keep-warm call made. With the dial on, an adjudication of a retained class resumes the route's retained session by its id in the runner's own resume form, or starts one whose id is recorded; an adjudication meeting a held session waits a bounded time and then runs unretained, stating why; a session whose latest request's occupancy reaches the dial, whose governing inputs (agent guides, policy file, loaded skills, the adjudication template) changed, or whose runner version changed is marked draining and is still resumed while a queued adjudication, or a lane out on work, belongs to a chain it judged, and is retired at the first launch where none does; a call that exits non-zero, times out, reports an error or fails to launch retires the session at once; a keep-warm call is one bounded turn, recorded like any other call, never blocks the scheduler, and never runs while another call holds the session; and the retention state is only ever written whole, by one writer at a time."
 priority = "S"
 verification = "Test"
-status = "Drafted"
+status = "Approved"
 phase = 6
 da_refs = ["DA-017"]
