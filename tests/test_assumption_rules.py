@@ -303,9 +303,25 @@ def test_a_joint_requirement_and_sibling_with_no_shared_need_are_reported(rules)
         ),
         _sr("SR-002", **{"SN-Refs": "SN-002"}),
     ]
+    assert rules.classify_srs(srs, DAS)["SR-001"] == "unclassified"
     failures, advisories = rules.sr_classification_advisories(srs, DAS)
     assert failures == []
     assert len(_named(advisories, "SR-001", "SR-002", "need")) == 1, advisories
+
+
+def test_one_shared_sibling_makes_a_mixed_sibling_list_joint(rules):
+    srs = [
+        _sr(
+            "SR-001",
+            **{"SN-Refs": "SN-001", "Delivered-With": "SR-002;SR-003"},
+        ),
+        _sr("SR-002", **{"SN-Refs": "SN-001"}),
+        _sr("SR-003", **{"SN-Refs": "SN-002"}),
+    ]
+    assert rules.classify_srs(srs, DAS)["SR-001"] == "joint"
+    failures, advisories = rules.sr_classification_advisories(srs, DAS)
+    assert failures == []
+    assert len(_named(advisories, "SR-001", "SR-003", "need")) == 1, advisories
 
 
 @pytest.mark.parametrize("empty", ["", "   "])

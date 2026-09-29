@@ -3,12 +3,42 @@ id = "WI-729"
 title = "Batch G returns: name the adapter as gen_ai.provider.name's source, give SR-227's shall its mint and held-session cases, restate LLR-266's two phrases, pin TC-264's revision asserts, and make the joint class need a sibling that shares a need (LLR-223, TC-220, the classifier)"
 workstream = "process"
 sr_refs = ["SR-222", "SR-227", "SR-193"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "medium"
 priority = 3
 safety_class = "spine"
 bar = "DevStg-Reqs"
 +++
+
+## Deliverable
+
+Batch G's nine returns are answered in eleven items, every status left as it
+was.
+
+- **SR-222 and LLR-268:** the adapter names `gen_ai.provider.name`
+  (anthropic, openai, or empty for a provider-agnostic runner). TC-264 names
+  each, and the codex and opencode cases now assert the pinned revision.
+- **SR-227:** its one `shall` covers resume, mint-and-record, and the
+  bounded wait on a held session before running unretained with the reason
+  recorded.
+- **LLR-266:** "as before" and the false "already carried" are gone.
+- **The classifier:** `assumption_rules._classify` makes a row joint only
+  when at least one declared sibling shares one of its needs, as SR-193 says.
+  LLR-223 and TC-220 state it. The tests pin the disjoint-only case
+  (unclassified and reported) and the mixed case (joint, with the disjoint
+  sibling reported).
+- **Optional items, taken:** LLR-222's title, and SR-193's and SR-177's
+  rationales as standing prose.
+- **`session_adapters.py`:** its history comments are restated.
+- **Evidence:** red, then green, in `test_assumption_rules`. The affected
+  modules ran `370 passed` (builder) and `318 passed` (reviewer). With the
+  rows flipped, there is no requirement-form finding.
+- **Review:** Sonnet found it SOUND at 7a4d1ef9, with no findings
+  ([sonnet-wi729.md](../../../reviews/2026-09-28-wave6/sonnet-wi729.md)).
+- **Owed at this merge's adjudication:** the batch-G carry-over. That is the
+  first approvals of LLR-267, LLR-269, LLR-270 and TC-262, and the
+  re-attestations of LLR-222, TC-222 and LLR-286. The coordinator writes it
+  into the minted adjudication row.
 
 ## Context
 

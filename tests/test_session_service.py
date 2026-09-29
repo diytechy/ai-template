@@ -112,6 +112,7 @@ def test_claude_reasoning_tokens_are_read_from_the_field_the_cli_emits():
 
 def test_codex_usage_is_mapped_inclusive_with_fresh_input_derived():
     usage = adapters.adapter_for(["codex"]).usage(_fixture("codex-exec-json.jsonl"))
+    assert usage["semconv"].endswith("@" + PINNED)
     assert usage["cli"] == "codex"
     assert usage["gen_ai.provider.name"] == "openai"
     assert usage["gen_ai.usage.input_tokens"] == 24763  # codex counts cache inside
@@ -127,7 +128,9 @@ def test_opencode_usage_is_summed_over_its_steps_and_made_inclusive():
     usage = adapters.adapter_for(["opencode"]).usage(
         _fixture("opencode-run-json.jsonl")
     )
+    assert usage["semconv"].endswith("@" + PINNED)
     assert usage["cli"] == "opencode"
+    assert usage["gen_ai.provider.name"] == ""
     assert usage["gen_ai.usage.input_tokens"] == (9800 + 0 + 0) + (150 + 9800 + 40)
     assert usage["gen_ai.usage.cache_read.input_tokens"] == 9800
     assert usage["gen_ai.usage.cache_write.input_tokens"] == 40

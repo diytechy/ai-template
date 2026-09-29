@@ -473,7 +473,7 @@ def _classify(row, declared, requirements):
     ]
     if undeclared or unknown_siblings:
         cls = None
-    elif siblings:
+    elif any(sid not in disjoint_siblings for sid in siblings):
         cls = "joint"
     elif cited and waiver:
         cls = "both"

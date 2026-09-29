@@ -4,10 +4,10 @@
 The kit launches three agent CLIs (claude, codex, opencode) and each speaks
 differently: which flag makes it emit structured output, where its final text
 is, which events carry its token usage, and how full its context window is.
-Scattered through role code those differences multiplied — the codex route
-threw its usage away on every successful call, and the loop computed context
-occupancy from cumulative counters. So each CLI gets ONE adapter here, and
-every other module asks the adapter instead of knowing the CLI.
+Scattered through role code those differences would multiply. Each CLI gets
+ONE adapter here, so every route preserves its usage and computes context
+occupancy from the latest request, and every other module asks the adapter
+instead of knowing the CLI.
 
 An adapter is chosen by the CLI actually launched (the argv's executable
 name), not by the routed family: the flags and the output grammar belong to
@@ -203,7 +203,8 @@ def _ensure(argv, *tokens):
 class PlainAdapter:
     """The adapter for a CLI the kit does not know: it adds no flag, returns
     the stream as the result, and reads a claude-shaped result event if one
-    is there, so a stand-in agent is accounted exactly as before."""
+    is there. A stand-in therefore keeps its argv, final text and usage in the
+    shape the claude reader returns."""
 
     cli = ""
 
@@ -219,8 +220,7 @@ class PlainAdapter:
         return ""
 
     def usage(self, stream):
-        """A stand-in agent's result read the claude-shaped way, as the kit
-        always read one; the provider stays unnamed."""
+        """Read a stand-in's claude-shaped result; leave its provider unnamed."""
         return _claude_usage(self.cli, self.provider, stream)
 
     def context(self, stream, env=None, session_id=""):
@@ -274,11 +274,11 @@ def _claude_usage(cli, provider, stream):
 
     claude reports cached input APART from input (`input_tokens` is the fresh
     part), so the inclusive input is their sum. Its reasoning count is
-    `usage.output_tokens_details.thinking_tokens` (the old reader looked for a
-    `reasoning_tokens` field no CLI emits). The response model is the model
-    the session's last assistant event named, else the result's own `model`,
-    else the one `modelUsage` entry whose counters match the result's usage —
-    never blank merely because a background model's entry sits beside it.
+    `usage.output_tokens_details.thinking_tokens`. The response model is the
+    model the session's last assistant event named, else the result's own
+    `model`, else the one `modelUsage` entry whose counters match the result's
+    usage — never blank merely because a background model's entry sits beside
+    it.
 
     Implements: SR-222, LLR-268
     """

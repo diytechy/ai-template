@@ -162,3 +162,20 @@ CONFIRMED
   the budget is not re-stamped. check_trajectory --strict, trace
   --strict-integrity, gen_open_items, gen_trajectory, derive_stage,
   check_docs and the live approval brief are current.
+
+### WI-729 lands: batch G's returns answered
+
+- **Build and review:** one Sol build, and one Sonnet round, SOUND with no
+  findings ([sonnet-wi729.md](../reviews/2026-09-28-wave6/sonnet-wi729.md)).
+- **What landed:** eleven items across SR-222, SR-227, LLR-266, LLR-268,
+  TC-264, LLR-223 and TC-220, plus the three optional rationale and title
+  items. Among them is the classifier fix: joint needs a sibling that shares
+  a need.
+- **Next:** the sweep mints the adjudication. The coordinator adds the
+  batch-G carry-over to it: first approvals LLR-267, LLR-269, LLR-270 and
+  TC-262, and re-attestations LLR-222, TC-222 and LLR-286.
+- **Trunk before this squash:** a20b496a.
+- **Bar:** smoke `1899 passed, 3 skipped`, 49.2 s against 60 s, within
+  budget. check_trajectory --strict, trace --strict-integrity,
+  gen_open_items, gen_trajectory, derive_stage, check_docs and the live
+  approval brief are current.
