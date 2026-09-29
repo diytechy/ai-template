@@ -86,3 +86,41 @@ CONFIRMED
   check_trajectory --strict, trace --strict-integrity, gen_open_items,
   gen_trajectory, derive_stage, check_docs, and the live approval brief
   (`trace.py --approve modified`) are current.
+
+### WI-721 lands: the slow-tier reds cleared, and the full unfiltered suite green
+
+- **Build and review:** one Sol build and one Sol fix round, with two
+  Sonnet rounds.
+  - [Round 1](../reviews/2026-09-28-wave6/sonnet-wi721-r1.md): SOUND, with
+    one major. Approved LLR-286 still said "TOML registry", narrower than
+    the fixed reader.
+  - The fix round amended that one cell in place under the coordinator's
+    grant, listed the new test in TC-299's evidence, and aligned IF-102's
+    docstring.
+  - [Round 2](../reviews/2026-09-28-wave6/sonnet-wi721-r2.md): SOUND at
+    d7c43118.
+- **What landed:** `retire.live_ids` reads through `spine_carrier`, so the
+  three trace goldens pass with no golden regenerated. The skills-index test
+  pins STALE again.
+- **The full unfiltered suite:** `4816 passed, 15 skipped, 18 warnings in
+  4998.50s (1:23:18)`, run with `--durations=30`.
+  - It ran on e86cae4f plus this lane, in a throwaway worktree, with the
+    WI-723 builder and reviewers sharing the box.
+  - The durations are pasted in WI-721's Deliverable.
+  - Two tests dominate the critical path:
+    `test_traj_graph.py::test_meta_knowledge_and_when_wires_avoid_unrelated_boxes`
+    at 1160.6 s, and its fallback-graph sibling at 392.7 s.
+  - Both route over graphs built from the live registries, and the router
+    has not changed since 2026-09-06. So the jump from about 10 minutes
+    follows the spine's growth.
+  - Alone, on a mostly quiet box, the first takes **790.5 s** of call time
+    (`1 passed in 965.37s`). No parallelism can finish the suite faster.
+  - Filed as **WI-727**: profile the router, fix the cost or bound the test
+    at a real scale, and re-measure.
+- **Owed:** LLR-286's amendment goes to the next spine-acts batch.
+- **Trunk before this squash:** 5124c932. The full-suite run did not
+  include WI-723, which landed first; the next phase-close run covers both.
+- **Bar:** smoke `1898 passed, 3 skipped`, 54.6 s against 60 s, within
+  budget on a quiet box. check_trajectory --strict, trace
+  --strict-integrity, gen_open_items, gen_trajectory, derive_stage,
+  check_docs and the live approval brief are current.

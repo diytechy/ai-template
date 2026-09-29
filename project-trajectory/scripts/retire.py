@@ -231,17 +231,22 @@ def _recorded(root):
 
 
 def live_ids(root):
-    """`{space: {number}}` of the rows each spine registry holds now."""
+    """`{space: {number}}` of the rows each spine registry holds now.
+
+    Read through the carrier that trace.py uses, so a legacy CSV or Markdown
+    registry and its TOML successor answer the same live-id question.
+    """
     out = {}
     for space, rel in TIERS:
-        text = _read(Path(root) / rel)
-        if text is None:
-            continue
-        try:
-            rows = tomllib.loads(text).get(_table(space)) or {}
-        except tomllib.TOMLDecodeError:
-            continue
-        for rid in rows:
+        path = Path(root) / rel
+        id_col = space + "-ID"
+        rows = (
+            spine_carrier.load_need_tier(path, id_col)
+            if space == "SN"
+            else spine_carrier.load(path, id_col)
+        )
+        for row in rows:
+            rid = str(row.get(id_col) or "").strip()
             parsed = _split(rid)
             if parsed and parsed[0] == space:
                 out.setdefault(space, set()).add(parsed[1])

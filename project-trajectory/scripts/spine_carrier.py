@@ -55,8 +55,9 @@ in docs/requirements/interfaces.toml).
 Contract IF-102: the carrier's whole read surface, as trace.py imports it — and
     as the spine readers that JOINED it read it rather than each restating the
     vocabulary: acceptance_record, check_trajectory, gen_arch_map,
-    plan_coverage, spine_rules, and traj_status through check_trajectory's
-    module attribute. SPINE_TABLE maps an id column to its TOML tier table
+    plan_coverage, spine_rules, traj_status through check_trajectory's module
+    attribute, check_test_first, rejudge, and retire. SPINE_TABLE maps an id
+    column to its TOML tier table
     (SR-ID -> requirement, LLR-ID -> design, TC-ID -> test) and SPINE_COLUMN
     maps a carrier key to today's column name. rows_from_text(text, id_col,
     carrier) returns {id: row} under those names, or None — never {} — when a

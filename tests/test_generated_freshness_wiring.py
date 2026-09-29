@@ -189,7 +189,9 @@ def test_skills_index_step_reds_when_a_skill_is_added(tmp_path):
     planted = kit / "skills" / "planted-skill"
     planted.mkdir()
     (planted / "SKILL.md").write_text(
-        "---\nname: planted-skill\ndescription: a skill the index never heard of\n"
+        "---\nname: planted-skill\ndescription: Use when a newly added skill must "
+        "appear in the generated applicability index that agents consult to select "
+        "their task instructions.\n"
         "scope: kit\n---\nbody\n",
         encoding="utf-8",
     )

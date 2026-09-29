@@ -28,13 +28,13 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   [handoff-2026-09-28-wave5-coordinator.md](handoff-2026-09-28-wave5-coordinator.md).
   Every group the previous handoff listed has landed, and the open count is
   11. First jobs:
-  - WI-721, because the full unfiltered suite is red on four slow-tier
-    failures and its wall time jumped;
+  - one spine-acts batch for the first approvals and amendments the
+    wave's lanes left (the adjudication rows the sweeps minted, and
+    LLR-286's in-place amendment), by an independent Opus adjudicator;
   - the owner's items (the live codex and opencode runs, and the four
     need re-attestations); OI-95 to OI-97 are ruled, and WI-722 (OI-96's
     floor) stays deferred until the queue has mostly drained;
-  - the first-approval adjudication the sweep mints for SR-222's and
-    SR-227's chains, then the queue.
+  - then the queue.
 
   The owner re-assigned the roles for the next session: Codex Sol builds
   through the CLI, Claude Sonnet reviews, and an independent Opus agent

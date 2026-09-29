@@ -17,7 +17,14 @@ import tomllib
 
 import pytest
 
-from conftest import SCRIPTS, load_script, pin_autocrlf, run_py
+from conftest import (
+    SCRIPTS,
+    load_script,
+    make_minimal_project,
+    pin_autocrlf,
+    record_ids,
+    run_py,
+)
 
 rt = load_script("retire")
 tr = load_script("trace")
@@ -295,6 +302,24 @@ def test_a_spent_id_without_a_record_is_reported(repo):
     _write(repo, SR_PATH, SR_TOML)
     assert _retire(repo, "SR-002", "--reason", "Gone.").returncode == 0
     assert rt.retirement_findings(repo) == []
+
+
+def test_legacy_registry_rows_are_live_and_only_a_spent_id_is_reported(scaffold):
+    make_minimal_project(scaffold)
+    record_ids(scaffold)
+    watermark = scaffold / "docs" / "id-watermark"
+    watermark.write_text(
+        watermark.read_text(encoding="utf-8").replace("SR = 1", "SR = 2"),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    found = rt.retirement_findings(scaffold)
+
+    assert len(found) == 1
+    assert "SR-002" in found[0]
+    for live in ("SN-001", "SR-001", "LLR-001", "TC-001"):
+        assert live not in found[0]
 
 
 def test_the_missing_rule_is_pure_over_its_four_sets():
