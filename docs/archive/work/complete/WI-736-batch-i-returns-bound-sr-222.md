@@ -3,12 +3,32 @@ id = "WI-736"
 title = "Batch I returns: bound SR-222's usage record to the runners the loop reads (the shipped gemini route is not one) and add TC-264's case for any other runner; put SR-227's keep-warm and whole-write acceptance clauses into its shall"
 workstream = "process"
 sr_refs = ["SR-222", "SR-227"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "medium"
 priority = 3
 safety_class = "spine"
 bar = "DevStg-Reqs"
 +++
+
+## Deliverable
+
+Batch I's exact draft is applied verbatim, and the three rows stay Drafted
+for the first approval this merge mints.
+
+- **SR-222:** bounded to the runners the loop reads (claude, codex and
+  opencode). Any other runner, including the shipped gemini route and a
+  stand-in, is recorded with its runner, provider name, raw usage and
+  counts empty. The ambiguous "including when reconfigured" clause is gone.
+- **SR-227:** its `shall` now carries the whole-write, single-writer and
+  bounded non-blocking keep-warm clauses its acceptance obliged.
+- **TC-264:** its Method, and a new test, cover a gemini-shaped result under
+  the plain adapter. The test passed before any change, because the
+  behaviour is present.
+- **Code:** no change.
+- **Review:** Sonnet found it SOUND, with the replacements verified verbatim
+  by a programmatic diff. One minor was accepted as recorded: the fixture's
+  `session_id` fills the conversation id, a column the draft does not cover
+  ([sonnet-wi736.md](../../../reviews/2026-09-28-wave6/sonnet-wi736.md)).
 
 ## Context
 

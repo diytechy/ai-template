@@ -163,6 +163,26 @@ def test_every_provider_row_carries_the_same_columns():
     assert all(set(row) == set(adapters.USAGE_KEYS) for row in rows)
 
 
+def test_gemini_usage_is_recorded_with_unread_values_empty():
+    result = json.dumps(
+        {
+            "session_id": "example-session",
+            "response": "done",
+            "stats": {"models": {}, "tools": {}, "files": {}},
+        }
+    )
+    usage = adapters.adapter_for(["gemini", "--output-format", "json"]).usage(result)
+    empty_keys = (
+        "cli",
+        "gen_ai.provider.name",
+        "raw-usage",
+        *adapters.USAGE_COUNT_KEYS,
+        "fresh-input-tokens",
+    )
+    assert all(usage[key] == "" for key in empty_keys)
+    assert set(usage) == set(adapters.USAGE_KEYS)
+
+
 # --- act: one path launches every call (TC-265) --------------------------------
 
 

@@ -316,3 +316,81 @@ An independent Opus spot-checker found every item met
   --strict, trace --strict-integrity (drafts=6), gen_open_items,
   gen_trajectory, derive_stage, check_docs and the live approval brief are
   current.
+
+### The second full unfiltered suite: one red from WI-545, and WI-727's re-measure
+
+- **The run:** trunk 69902bc9 plus build/wi-545 at 7de50658, in a
+  throwaway worktree, under load from the batch-I adjudicator, the
+  WI-735 spot-checker and two Sonnet reviews. The command was
+  `GIT_CEILING_DIRECTORIES=C:/Projects/ai-template.wt python -m pytest -q
+  -n auto -p no:cacheprovider --durations=30`:
+
+```
+179.35s call     tests/test_prereq_toolchain.py::test_a_gate_closed_run_announces_itself_at_both_ends
+124.60s call     tests/test_dispatch.py::test_a_needs_human_worker_hands_back_and_the_run_keeps_going
+103.70s call     tests/test_dispatch.py::test_the_dispatcher_mints_the_consolidation_row_for_an_overlapping_queue
+85.62s call     tests/test_traj_graph.py::test_meta_knowledge_and_when_wires_avoid_unrelated_boxes
+58.16s call     tests/test_traj_graph.py::test_t8_no_wire_passes_through_an_unrelated_node_box
+55.53s call     tests/test_integrate_station.py::test_claim_build_and_integrate_end_to_end
+53.66s call     tests/test_traj_graph.py::test_fallback_dag_and_sw_graph_wires_avoid_unrelated_boxes
+53.06s call     tests/test_old_kit_resync.py::test_node_adopter_upgrade_preserves_populated_owner_content
+52.66s call     tests/test_dispatch.py::test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges
+49.10s call     tests/test_check_perf.py::test_harness_runs_perf_at_g3
+48.03s call     tests/test_check_privacy.py::test_meta_repo_tree_passes_the_secrets_floor
+46.56s call     tests/test_dispatch.py::test_drive_end_to_end_claims_builds_merges_and_drains
+45.56s call     tests/test_integrate_unload.py::test_the_queue_exits_nonzero_when_a_merged_branch_stays_held
+43.93s call     tests/test_trajectory.py::test_deep_acyclic_chain_validates_without_recursionerror
+40.62s call     tests/test_verdict_record.py::test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel
+40.60s call     tests/test_integrate_unload.py::test_the_queue_gcs_a_clean_worker_worktree_end_to_end
+40.04s call     tests/test_dispatch.py::test_drive_stops_on_a_red_refresh_bar
+39.30s call     tests/test_traj_panels.py::test_meta_spine_renders_the_knowledge_graph_at_real_scale
+38.48s call     tests/test_traj_graph.py::test_deep_chain_renders_without_recursionerror
+37.09s call     tests/test_dispatch.py::test_residue_settled_at_barrier_open_is_counted_in_the_drained_banner
+36.61s call     tests/test_dispatch.py::test_empty_frontier_rung_one_mints_gap_rows_then_drives_them
+33.58s call     tests/test_dispatch.py::test_the_spine_batch_admits_first_and_together
+33.39s call     tests/test_integrate_admission.py::test_a_lane_that_moves_a_held_status_is_refused_at_the_merge_slot
+33.02s call     tests/test_trajectory.py::test_deep_cycle_reported_cleanly_not_recursionerror
+31.39s call     tests/test_check_harness.py::test_smoke_tier_runs_only_smoke_and_skips_coverage_gate
+30.01s call     tests/test_traj_status.py::test_core_collection_runs_without_the_rendering_package
+29.79s call     tests/test_agent_loop_review.py::test_escalation_tiers_up_after_swap
+29.35s call     tests/test_pre_commit_hook.py::test_hook_privacy_author_guard
+28.17s call     tests/test_check_harness.py::test_unmarked_test_runs_in_full_tier
+28.09s call     tests/test_bootstrap.py::test_domain_skills_require_matching_explicit_opt_in
+FAILED tests/test_mapping_purpose_cli.py::test_cli_mapping_purpose_gates_when_real_shipped_row_is_removed
+1 failed, 4836 passed, 15 skipped, 18 warnings in 3951.89s (1:05:51)
+```
+
+- **The one failure** is WI-545's:
+  `test_mapping_purpose_cli::test_cli_mapping_purpose_gates_when_real_shipped_row_is_removed`.
+  - The test rebinds `bootstrap.MAPPING`, which after the split is an
+    alias of `kitlib/bootstrap_manifest.MAPPING`, so the rebinding no
+    longer reaches the check.
+  - This is a class both path-keyed sweeps missed: rebinding a moved symbol
+    through its old module.
+  - WI-545's fix round 3 fixes it and sweeps for the class.
+- **The wall time** is 1:05:51 under load, against 1:23:18 at WI-721's run
+  and 1:51:23 at the wave-5 close.
+- **WI-727's re-measure:**
+  `test_meta_knowledge_and_when_wires_avoid_unrelated_boxes` now takes
+  85.6 s under full load, against 1160.6 s at WI-721's run. The critical
+  path is now `test_prereq_toolchain`'s nested-pytest case at 179 s,
+  which takes 10 s alone, so that is load.
+
+### WI-736 lands: batch I's exact returns applied
+
+- **Build and review:** one Sol build and one Sonnet round, SOUND. The
+  replacements were verified verbatim by a programmatic diff.
+  - One minor was accepted as recorded: the fixture's `session_id` fills
+    the conversation id, a column the draft does not cover
+    ([sonnet-wi736.md](../reviews/2026-09-28-wave6/sonnet-wi736.md)).
+- **What landed:**
+  - SR-222 bounded to claude, codex and opencode, with any other runner
+    recorded empty;
+  - SR-227's `shall` carrying its keep-warm and whole-write clauses;
+  - TC-264 covering the gemini case.
+- **Next:** the sweep mints the three rows' first approval.
+- **Trunk before this squash:** a0445a80.
+- **Bar:** smoke `1901 passed, 3 skipped` (one new test). Its seconds read
+  72.8 s against 60 s, with WI-545's fix builder running tests beside it.
+  That is contention, and the budget is not re-stamped. The spine and doc
+  checks and the live approval brief are current.
