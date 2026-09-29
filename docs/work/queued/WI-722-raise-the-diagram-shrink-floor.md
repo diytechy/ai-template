@@ -12,6 +12,26 @@ safety_class = "spine"
 
 ## Context
 
+HELD 2026-09-29, mid-lane. The first build is on `build/wi-722` at d451cb64.
+Sonnet found it NOT YET SOUND
+(`docs/reviews/2026-09-28-wave6/sonnet-wi722-r1.md`):
+- the node sub-label token (8.5 px) is below the 9 px floor at natural size;
+- so `min-width` exceeded `max-width`, and every diagram rendered at a
+  fixed width;
+- the tests re-derived the floor with the same formula, and so could not
+  see it.
+
+The owner's direction for the fix round (OI-96, DIRECTION 2026-09-29) is:
+- raise the node type scale to 12 px labels and 10.5 px sub-labels;
+- keep a 9 px floor for every label, so a diagram shrinks to about 86% of
+  its natural width before it scrolls;
+- the tests must assert that the floor never exceeds the natural width;
+- re-check the rubric's T7 sentence and LLR-116 and TC-121 against the new
+  numbers.
+
+WI-713, TC-055's cross-family re-judge, follows, with a non-Codex judge,
+because Codex wrote the rendering.
+
 Released 2026-09-29 by the coordinator, under the owner's OI-96 condition. After the wave-6 lanes, the only queued rows left besides WI-739 and WI-740 are gated on the owner or on a person: WI-541, WI-657, WI-667 and WI-697, and WI-684 and WI-688. So the queue is "mostly free". WI-713, TC-055's cross-family re-judge, follows this row. The judge must be from a family other than this row's builder's.
 
 DEFERRED by the owner's direction (2026-09-28, ruling OI-96): the fix is

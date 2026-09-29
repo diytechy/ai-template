@@ -25,32 +25,29 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-09-28-wave5-coordinator.md](handoff-2026-09-28-wave5-coordinator.md).
-  Every group the previous handoff listed has landed, and the open count is
-  11. First jobs:
-  - one spine-acts batch for the first approvals and amendments the
-    wave's lanes left (the adjudication rows the sweeps minted, and
-    LLR-286's in-place amendment), by an independent Opus adjudicator;
-  - the owner's items (the live codex and opencode runs, and the four
-    need re-attestations); OI-95 to OI-97 are ruled, and WI-722 (OI-96's
-    floor) was released on 2026-09-29, with WI-713's re-judge behind it;
-  - then the queue.
+  [handoff-2026-09-29-wave6-coordinator.md](handoff-2026-09-29-wave6-coordinator.md).
+  The open count is 10. First jobs:
+  - the keep-warmer start-failure fix, an exact adjudicator draft;
+  - the diagram shrink floor's fix round, held mid-lane on the owner's
+    direction in OI-96: a 12 px and 10.5 px type scale with a 9 px floor;
+  - TC-055's cross-family re-judge after it, with a non-Codex judge;
+  - then the owner's items, most of which gate the rest of the queue.
 
-  The owner re-assigned the roles for the next session: Codex Sol builds
-  through the CLI, Claude Sonnet reviews, and an independent Opus agent
-  arbitrates and adjudicates. File new work into an open item's Context
-  before minting a row. The builders' `codex exec` launch runs under a
-  temporary `Bash(codex exec *)` allow rule in `.claude/settings.local.json`
-  (owner, 2026-09-28): remove it when the queue drains. Recheck Git and the generated frontier before
-  choosing work; earlier handoffs are historical context.
+  The roles hold: Codex Sol builds through the CLI and the coordinator
+  commits for it, Claude Sonnet reviews, and an independent Opus agent
+  arbitrates, adjudicates and spot-checks. File new work into an open
+  item's Context before minting a row. The builders' `codex exec` launch
+  runs under a temporary `Bash(codex exec *)` allow rule in
+  `.claude/settings.local.json` (owner, 2026-09-28): remove it when the
+  queue drains. Recheck Git and the generated frontier before choosing
+  work; earlier handoffs are historical context.
 - **Assumption tier — C1 and C2 have landed and are approved:** the
   redrawn frame, checkpoint re-judging of observation tests, the assumption
   gate's four steps (behind `[checks] assumption_gate = false`), and C2's
   assumption and surrogate rows with every SR's bridging. C3 (evidence) and
   C4 (activation) come next. WI-667 decides how a red assumption's evidence
   reaches the adjudication machinery. OI-97's joint-delivery class has
-  landed; its amendments and nine re-opened rows await the next
-  spine-acts batch.
+  landed and is anchored.
 - **Sister plan — one plan still owed:** every question in the
   [notes on spine, sessions and tests](plans/2026-09-23-owner-notes-spine-sessions-and-tests.md)
   §5 is ruled except S11, whose direction (one trunk commit per work item)

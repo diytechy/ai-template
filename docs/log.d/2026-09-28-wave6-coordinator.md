@@ -524,3 +524,31 @@ real defect it reproduced
   paths converge on one row, which the sweep mints.
 - **Cross-review:** Sonnet found the act SOUND, with no findings
   ([sonnet-batch-k.md](../reviews/2026-09-28-wave6/sonnet-batch-k.md)).
+
+### The close: WI-722 held on the owner's direction, the handoff written
+
+- **WI-722's first build** (`build/wi-722` at d451cb64) was NOT YET SOUND
+  ([sonnet-wi722-r1.md](../reviews/2026-09-28-wave6/sonnet-wi722-r1.md)).
+  The node sub-label token (8.5 px) is below the 9 px floor at natural size,
+  so `min-width` exceeded `max-width` and every diagram became fixed-width.
+  The tests mirrored the formula and could not see it.
+- **The owner's direction:** asked to choose the value, the owner said "I'm
+  okay with any recommendation on the visibility, I have no strong
+  preference". The recommendation is recorded in OI-96 and WI-722: a 12 px
+  and 10.5 px type scale, a 9 px floor, and tests asserting that the floor
+  never exceeds the natural width. The lane is held for the next session's
+  fix round.
+- **WI-744** (the keep-warmer start failure) was given its SpecRef, which
+  the adjudicator's draft had omitted.
+- **Open count at the close: 10** (9 queued, 1 deferred), against 11 at the
+  start.
+  - This session minted 22 rows, 13 of them adjudication and spot-check
+    bookkeeping, and closed 23.
+  - The handoff gives the owner the backlog's shape and the consolidation
+    options: park the gated rows, fold WI-697 into WI-667, and choose the
+    spot-check rate.
+  - The re-judge rows re-score against existing procedures and rubrics.
+    They create none.
+- **The phase-close full unfiltered suite** was running on trunk at the
+  close. Its result is appended below when it finishes.
+- **Handoff:** [../handoff-2026-09-29-wave6-coordinator.md](../handoff-2026-09-29-wave6-coordinator.md).

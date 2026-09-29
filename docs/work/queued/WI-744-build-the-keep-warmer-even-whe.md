@@ -1,6 +1,7 @@
 +++
 id = "WI-744"
 title = "Build the keep-warmer even when one routing row's argv cannot be built: KeepWarmer builds every row's argv at construction, so a row the prompt-transport check refuses raises and stops the dispatcher before its first poll with the dial on"
+specref = "docs/requirements/low-level-requirements.toml"
 workstream = "process"
 sr_refs = ["SR-227"]
 buildtier = "medium"
