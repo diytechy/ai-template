@@ -22,7 +22,7 @@ still hold, with the corrections below folded in. This session's record:
 ## What happened
 
 **The open count is 11 at the start and 11 at the end** (10 queued, 1
-deferred). Twenty-two rows were minted and twenty-three closed; most mints
+deferred). Twenty-three rows were minted (WI-745 at the close) and twenty-three closed; most mints
 were the bookkeeping the loop generates (see "The backlog" below).
 
 - **Owner rulings:** OI-95 (a), OI-96 (a), and OI-97 (a) with its directions.
