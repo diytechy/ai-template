@@ -12,6 +12,8 @@ safety_class = "spine"
 
 ## Context
 
+Released 2026-09-29 by the coordinator, under the owner's OI-96 condition. After the wave-6 lanes, the only queued rows left besides WI-739 and WI-740 are gated on the owner or on a person: WI-541, WI-657, WI-667 and WI-697, and WI-684 and WI-688. So the queue is "mostly free". WI-713, TC-055's cross-family re-judge, follows this row. The judge must be from a family other than this row's builder's.
+
 DEFERRED by the owner's direction (2026-09-28, ruling OI-96): the fix is
 ruled, but it and TC-055's re-judge (WI-713, which needs this row) wait until
 the rest of the queue is mostly done. The owner's words: "I would prefer for

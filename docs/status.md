@@ -33,7 +33,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
     LLR-286's in-place amendment), by an independent Opus adjudicator;
   - the owner's items (the live codex and opencode runs, and the four
     need re-attestations); OI-95 to OI-97 are ruled, and WI-722 (OI-96's
-    floor) stays deferred until the queue has mostly drained;
+    floor) was released on 2026-09-29, with WI-713's re-judge behind it;
   - then the queue.
 
   The owner re-assigned the roles for the next session: Codex Sol builds
