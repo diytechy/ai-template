@@ -21,7 +21,7 @@ still hold, with the corrections below folded in. This session's record:
 
 ## What happened
 
-**The open count went from 11 at the start to 10 at the end** (9 queued, 1
+**The open count is 11 at the start and 11 at the end** (10 queued, 1
 deferred). Twenty-two rows were minted and twenty-three closed; most mints
 were the bookkeeping the loop generates (see "The backlog" below).
 
@@ -42,7 +42,9 @@ were the bookkeeping the loop generates (see "The backlog" below).
 - **Full unfiltered suite:**
   - WI-721's run was green, 4816 passed in 1:23:18.
   - A second run on WI-545's lane found one red, since fixed.
-  - The phase-close run is recorded at the end of the log fragment.
+  - The phase-close run on a4919610 gave `1 failed, 4839 passed, 15
+    skipped in 0:44:43`. The one failure is a test fixture coupled to the
+    live spine: no LLR is Drafted any more. It is filed as WI-745.
   - The critical path fell from a 1160 s router test (WI-727's fix) to under
     3 minutes.
 
@@ -51,13 +53,16 @@ through `archive/lanes`.
 
 ## Your first jobs, in order
 
-1. **WI-744** (the keep-warmer start failure): a quick Sol build.
+1. **WI-745** first, so the full suite is green again: a quick Sol build.
+   The re-seed test in `test_baseline_snapshot` must plant its own Drafted
+   LLR instead of relying on a live one.
+2. **WI-744** (the keep-warmer start failure): a quick Sol build.
    - `KeepWarmer.__init__` builds every routing row's argv. On Windows a
      `{prompt}` row behind a `.cmd` shim raises, and the dispatcher stops
      before its first poll when the keep-warm dial is on.
    - The row is an exact adjudicator draft: leave a refused row out, and add
      one cross-platform test.
-2. **WI-722** (the diagram shrink floor): held mid-lane.
+3. **WI-722** (the diagram shrink floor): held mid-lane.
    - The first build (`build/wi-722` at d451cb64, worktree
      `C:/Projects/ai-template.wt/wi-722`) was NOT YET SOUND. The sub-label
      token (8.5 px) sits below the 9 px floor, so every diagram became
@@ -66,10 +71,10 @@ through `archive/lanes`.
      to 12 px labels and 10.5 px sub-labels, keep a 9 px floor, and assert
      that the floor never exceeds the natural width.
    - Send a fix round to the same lane.
-3. **WI-713** (TC-055's re-judge) after WI-722. Codex wrote the rendering,
+4. **WI-713** (TC-055's re-judge) after WI-722. Codex wrote the rendering,
    so the judge must be non-Codex (a Claude session), reading
    native-resolution tiles.
-4. **The owner's items below**, several of which gate the rest of the queue.
+5. **The owner's items below**, several of which gate the rest of the queue.
 
 ## The backlog, and what the owner asked about it
 
@@ -94,7 +99,7 @@ person.
 
 | Kind | Rows |
 |---|---|
-| Buildable now | WI-744, WI-722 |
+| Buildable now | WI-745, WI-744, WI-722 |
 | Follows WI-722 | WI-713 |
 | Gated on the owner | WI-541 (live model runs), WI-657 (the rung question), WI-667 (re-arming the red-TC rung; WI-697 waits on it) |
 | Gated on a person's act | WI-684 (TC-036: a person's re-sync of a stamped adoption), WI-688 (TC-211: needs the SR-161 perspective-record producer built) |

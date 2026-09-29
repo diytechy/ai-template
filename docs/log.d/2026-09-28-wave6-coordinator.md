@@ -552,3 +552,56 @@ real defect it reproduced
 - **The phase-close full unfiltered suite** was running on trunk at the
   close. Its result is appended below when it finishes.
 - **Handoff:** [../handoff-2026-09-29-wave6-coordinator.md](../handoff-2026-09-29-wave6-coordinator.md).
+
+### The phase-close full unfiltered suite: one red, filed as WI-745
+
+On trunk a4919610, after batch K, in a throwaway worktree, the command was
+`GIT_CEILING_DIRECTORIES=C:/Projects/ai-template.wt python -m pytest -q
+-n auto -p no:cacheprovider --durations=30`:
+
+```
+FAILED tests/test_baseline_snapshot.py::test_a_RESEED_over_a_standing_record_is_judged_over_the_WHOLE_tree
+88.95s call     tests/test_prereq_toolchain.py::test_a_gate_closed_run_announces_itself_at_both_ends
+76.29s call     tests/test_dispatch.py::test_the_dispatcher_mints_the_consolidation_row_for_an_overlapping_queue
+48.65s call     tests/test_traj_graph.py::test_meta_knowledge_and_when_wires_avoid_unrelated_boxes
+43.91s call     tests/test_traj_graph.py::test_t8_no_wire_passes_through_an_unrelated_node_box
+39.80s call     tests/test_bootstrap.py::test_knowledge_pack_materialization_is_write_once_and_forceable
+39.53s call     tests/test_agent_loop_review.py::test_winstay_biases_the_next_review_draw_over_the_weighted_baseline
+35.72s call     tests/test_traj_graph.py::test_fallback_dag_and_sw_graph_wires_avoid_unrelated_boxes
+33.09s call     tests/test_bootstrap.py::test_knowledge_library_is_opt_in_by_declared_domain
+32.87s call     tests/test_integrate_station.py::test_claim_build_and_integrate_end_to_end
+32.74s call     tests/test_trajectory.py::test_deep_acyclic_chain_validates_without_recursionerror
+31.64s call     tests/test_check_privacy.py::test_meta_repo_tree_passes_the_secrets_floor
+31.30s call     tests/test_dispatch.py::test_drive_end_to_end_claims_builds_merges_and_drains
+30.01s call     tests/test_dispatch.py::test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges
+28.89s call     tests/test_verdict_record.py::test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel
+28.59s call     tests/test_dispatch.py::test_a_needs_human_worker_hands_back_and_the_run_keeps_going
+28.56s call     tests/test_traj_panels.py::test_meta_spine_renders_the_knowledge_graph_at_real_scale
+28.38s call     tests/test_integrate_unload.py::test_the_queue_gcs_a_clean_worker_worktree_end_to_end
+28.26s call     tests/test_dispatch.py::test_drive_stops_on_a_red_refresh_bar
+28.20s call     tests/test_old_kit_resync.py::test_node_adopter_upgrade_preserves_populated_owner_content
+27.84s call     tests/test_integrate_unload.py::test_the_queue_exits_nonzero_when_a_merged_branch_stays_held
+27.15s call     tests/test_dispatch.py::test_empty_frontier_rung_one_mints_gap_rows_then_drives_them
+26.78s call     tests/test_agent_loop_review.py::test_reviewer_outage_parks_review_owed_then_resume_draws_the_round
+25.48s call     tests/test_trajectory.py::test_deep_cycle_reported_cleanly_not_recursionerror
+24.74s call     tests/test_traj_graph.py::test_deep_chain_renders_without_recursionerror
+23.47s call     tests/test_check_docs.py::test_meta_repo_has_zero_unexplained_orphans
+23.30s call     tests/test_bootstrap.py::test_domain_skills_require_matching_explicit_opt_in
+22.86s call     tests/test_pre_commit_hook.py::test_hook_privacy_author_guard
+22.74s call     tests/test_dispatch.py::test_residue_settled_at_barrier_open_is_counted_in_the_drained_banner
+21.63s call     tests/test_baseline_snapshot.py::test_an_AMEND_PLUS_FLIP_authorises_ITS_OWN_row_and_no_other
+21.39s call     tests/test_verdict_record.py::test_the_newest_attestation_at_a_tree_governs_the_cross_check
+FAILED tests/test_baseline_snapshot.py::test_a_RESEED_over_a_standing_record_is_judged_over_the_WHOLE_tree
+1 failed, 4839 passed, 15 skipped, 18 warnings in 2683.18s (0:44:43)
+```
+
+- **The failure** is data coupling, not a product defect:
+  - the test flips the first live `status = "Drafted"` LLR;
+  - spine-acts batch I approved the last Drafted LLRs (LLR-266 to LLR-270),
+    so the fixture substring no longer exists.
+
+  The module is slow-tier, so no lane's run reached it. It is filed as
+  **WI-745**, a quick fix: plant the Drafted row in the fixture, as
+  `_seeded_with_a_drafted_sr` already does for SRs.
+- **The wall time** fell to 44:43, from 1:51:23 at the wave-5 close, and
+  the critical path is now under 90 s.

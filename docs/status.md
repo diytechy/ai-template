@@ -26,7 +26,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 
 - **RESUME HERE:** start with the coordinator's
   [handoff-2026-09-29-wave6-coordinator.md](handoff-2026-09-29-wave6-coordinator.md).
-  The open count is 10. First jobs:
+  The open count is 11. First jobs:
+  - the re-seed test fixture, so the phase-close full suite is green again;
   - the keep-warmer start-failure fix, an exact adjudicator draft;
   - the diagram shrink floor's fix round, held mid-lane on the owner's
     direction in OI-96: a 12 px and 10.5 px type scale with a 9 px floor;
