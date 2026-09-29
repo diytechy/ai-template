@@ -68,7 +68,7 @@ THE TRAILER is the machine half, the `Bar-Green:` pattern applied to a verdict:
     Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex>
 
 It rides the commit that RECORDS the round, is written by the coordinator (never
-by a session), and is additive — an adopter whose loop does not write one yet
+by a session; OI-76's ruling as corrected by OI-95, 2026-09-28), and is additive — an adopter whose loop does not write one yet
 pays nothing, because the round file's own filename carries the reviewed sha and
 resolves to the same identity.
 

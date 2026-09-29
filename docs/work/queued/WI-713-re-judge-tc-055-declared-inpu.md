@@ -6,7 +6,7 @@ sr_refs = ["SR-054"]
 specref = "docs/test/test-cases.toml"
 buildtier = "medium"
 safety_class = "adjudication"
-needs = ["OI-96"]
+needs = ["WI-722"]
 brief = "rejudge"
 adjudicates = ["TC-055"]
 +++
@@ -46,4 +46,5 @@ Advisory registry joins (WI-388; never gating):
 - IF-071 scripts/schedule <- scripts/gen_trajectory: call load_registry_rows, load_wis, frontier, evaluate; empty when the module is absent
 - IF-083 scripts/check_trajectory <- scripts/rendering/traj_views: call check_trajectory joins: read_rows, load_seams, component_top_view, _norm_module, _split_refs, SR_CSV, TOP_VIE…
 Held 2026-09-28 by the coordinator: TC-055 records a cross-family FAIL whose remaining T4 finding sits on the approved shrink floor, so this re-judge waits on the owner's ruling of OI-96 (the floor), after which it is re-judged cross-family over native tiles (wave-5 ruling 31).
+OI-96 ruled 2026-09-28 (a), a rendered-pixel floor: WI-722 builds it, and the owner deferred both it and this re-judge until the rest of the queue is mostly done, so this row needs WI-722.
 

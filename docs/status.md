@@ -30,8 +30,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   11. First jobs:
   - WI-721, because the full unfiltered suite is red on four slow-tier
     failures and its wall time jumped;
-  - the owner's items (OI-95, OI-96, OI-97, the live codex and opencode
-    runs, and the four need re-attestations);
+  - the owner's items (OI-97, the live codex and opencode runs, and the
+    four need re-attestations); OI-95 and OI-96 are ruled, and WI-722
+    (OI-96's floor) stays deferred until the queue has mostly drained;
   - WI-720's cell fixes, then the queue.
 
   The owner re-assigned the roles for the next session: Codex Sol builds
