@@ -124,6 +124,14 @@ def test_codex_usage_is_mapped_inclusive_with_fresh_input_derived():
     assert usage["gen_ai.conversation.id"] == "0199a213-81c0-7800-8aa1-bbab2a035a53"
 
 
+def test_codex_provider_name_stays_at_its_default_when_reconfigured():
+    adapter = adapters.adapter_for(
+        ["codex", "exec", "-c", 'model_provider="third-party"']
+    )
+    usage = adapter.usage(_fixture("codex-exec-json.jsonl"))
+    assert usage["gen_ai.provider.name"] == "openai"
+
+
 def test_opencode_usage_is_summed_over_its_steps_and_made_inclusive():
     usage = adapters.adapter_for(["opencode"]).usage(
         _fixture("opencode-run-json.jsonl")
@@ -151,6 +159,7 @@ def test_every_provider_row_carries_the_same_columns():
             ("python", "claude-stream-json.jsonl"),
         )
     ]
+    assert rows[-1]["gen_ai.provider.name"] == ""
     assert all(set(row) == set(adapters.USAGE_KEYS) for row in rows)
 
 

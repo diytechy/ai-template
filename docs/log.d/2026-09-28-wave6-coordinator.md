@@ -240,3 +240,33 @@ CONFIRMED
   beside it. That is contention on a lane that changes only records, and the
   budget is not re-stamped. The spine and doc checks and the live approval
   brief are current.
+
+### WI-732 lands: batch H's returns answered; the first arbitration of the new roles
+
+- **Build and review:** one Sol build and one Sonnet round, NOT YET SOUND
+  on one major.
+  - The review held that the new DA-016 and DA-017 belong at B-10, the
+    model-runner crossing. The builder had chosen B-09.
+  - An independent Opus arbiter ruled for the builder
+    ([ARBITRATION.md](../reviews/2026-09-28-wave6/ARBITRATION.md),
+    ruling 1). An outcome lands at the stakeholder's crossing (SR-195), and
+    the kit's reach check penalises B-10 here.
+  - With the only finding overruled, the lane lands as built.
+- **What landed:** SR-177's and LLR-223's blocking cells now say exactly
+  what their rows hold, which the review probed. Also:
+  - SR-222 and LLR-268: the runner's default provider, reconfiguration not
+    detected;
+  - SR-227: a bounded wait, stating why;
+  - LLR-266: its absolute dropped;
+  - SR-222 and SR-227 bridged through DA-016 and DA-017.
+- **Kit gap recorded, not filed** (from the arbitration): SR-195 and
+  SR-212's Boundary arm collide for any future `form = "interface"` SR at a
+  crossing with no stakeholder party (B-10, B-11). It is latent, since no
+  SR declares a Form, and belongs to the assumption tier's C3/C4 design.
+- **Owed:** the adjudication this merge mints also takes the carry-over.
+- **Trunk before this squash:** 69902bc9.
+- **Bar:** smoke `1900 passed, 3 skipped` (one new test). Its seconds read
+  116.4 s against 60 s, with the full unfiltered suite (`-n auto`) and a
+  Sonnet confirmation running beside it. That is contention, and the budget
+  is not re-stamped. The spine and doc checks and the live approval brief
+  are current.

@@ -3,12 +3,48 @@ id = "WI-732"
 title = "Batch H returns: fix gen_ai.provider.name for reconfigurable runners (SR-222, LLR-268, TC-264), close SR-227's held-session acceptance, drop LLR-266's -o absolute, keep SR-177's rationale inside its acceptance, scope LLR-223's contradiction advisory to the joint class"
 workstream = "process"
 sr_refs = ["SR-222", "SR-227", "SR-177", "SR-193"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "medium"
 priority = 3
 safety_class = "spine"
 bar = "DevStg-Reqs"
 +++
+
+## Deliverable
+
+Batch H's seven returns are answered, every status left as it was.
+
+- **The two registry-blocking cells:**
+  - SR-177's rationale states only the gap its acceptance holds;
+  - LLR-223's contradiction sentence is scoped to the classes SR-193,
+    TC-220 and the code report (a joint row with a waiver; a non-joint row
+    with DA-Refs and a waiver).
+
+  The review probed both and found them exact.
+- **SR-222 and LLR-268:** `gen_ai.provider.name` holds the runner's default
+  provider (anthropic for claude, openai for codex, empty for a
+  provider-agnostic runner or a stand-in), and a runner reconfigured to
+  another provider is not detected. TC-264 and its tests cover the
+  reconfigured codex and the stand-in.
+- **SR-227:** it "waits a bounded time and then runs unretained, stating
+  why". TC-267 and its test assert that the reason names the holder.
+- **LLR-266:** its absolute over adopter templates is gone.
+- **Classification:** SR-222 and SR-227 are bridged through two new Drafted
+  assumptions, both landing at B-09:
+  - DA-016: runners serve their default provider unless reconfigured;
+  - DA-017: a provider honours its documented resume form.
+
+  The review wanted B-10. An independent Opus arbiter ruled B-09, the
+  stakeholder's crossing, per SR-195 and the kit's own reach check
+  ([ARBITRATION.md](../../../reviews/2026-09-28-wave6/ARBITRATION.md),
+  ruling 1).
+- **Evidence:** both new assertions already held, because the behaviour was
+  present. The required modules ran `370 passed, 1 skipped` (builder) and
+  `319 passed` (reviewer). The flip probe found no form finding.
+- **Review:** [sonnet-wi732.md](../../../reviews/2026-09-28-wave6/sonnet-wi732.md).
+- **Owed at this merge's adjudication:** the carry-over, which is the first
+  approvals of LLR-267, LLR-269 and LLR-270, and the re-attestations of
+  LLR-222, LLR-286 and SR-193. The coordinator adds them to the minted rows.
 
 ## Context
 

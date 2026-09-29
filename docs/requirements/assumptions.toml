@@ -179,6 +179,26 @@ obstacle_hats = ["PRODUCT-FITNESS"]
 status = "Drafted"
 standing = "active"
 
+[assumption.DA-016]
+effect_at = ["B-09"]
+assumption = """A claude runner serves Anthropic and a codex runner serves OpenAI unless its route or runner configuration redirects it to another provider."""
+holds_when = """The routed runner uses its default provider configuration, with no provider override in the route or the runner's own configuration."""
+obstacle = """A route or runner configuration redirects the call to another provider while the usage record continues to name the runner's default provider."""
+falsifier = """A routed claude or codex call made with no provider override is served by a provider other than the runner's named default."""
+obstacle_hats = ["PERFORMANCE"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-017]
+effect_at = ["B-09"]
+assumption = """A supported model runner's documented resume form continues the session named by its session id, preserving the transcript that the retained adjudication is meant to reuse."""
+holds_when = """The session still exists at the provider and the runner version is one whose mint and resume forms the kit supports."""
+obstacle = """The provider expires or replaces the session, or a runner update changes resume semantics, and a call presented as resumed starts from a different transcript."""
+falsifier = """A supported runner accepts a retained session id in its documented resume form but the resulting adjudication does not continue that session's transcript."""
+obstacle_hats = ["INTEGRITY-RECOVERABILITY"]
+status = "Drafted"
+standing = "active"
+
 [surrogate.SUR-001]
 name = "Scripted model runner"
 emulates = ["EXT-005"]

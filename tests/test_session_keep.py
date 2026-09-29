@@ -506,13 +506,16 @@ def test_the_store_lock_excludes_a_second_holder(tmp_path):
         pass  # free again once released
 
 
-def test_an_adjudication_waits_out_a_keep_warm_lease_then_runs_unretained(tmp_path):
+def test_an_adjudication_waits_out_a_keep_warm_lease_then_runs_unretained(
+    tmp_path, capsys
+):
     _adjudicate(tmp_path, ON, _claude_stream(10))
     ping, reason = keep.take_warm_lease(
         tmp_path, ON, now=10**10, work_pending=True, holder="keep-warm:x"
     )
     assert ping is not None and reason is None
     assert _keep(tmp_path, ON, lease_wait=0) is None  # never races the ping
+    assert "held by keep-warm:x" in capsys.readouterr().err
 
 
 # --- keep-warm (TC-268) -------------------------------------------------------------
