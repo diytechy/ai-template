@@ -2,12 +2,21 @@
 id = "WI-742"
 title = "adjudicate: TC-268 - spine row(s) authored Drafted on merged trunk 4cbb73c..3ecef62 await a FIRST APPROVAL; read the whole chain, then approve (flip + snapshot) or return with findings"
 workstream = "process"
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "first-approval"
 adjudicates = ["TC-268"]
 +++
+
+## Deliverable
+
+`OUTCOME: APPROVE rows=1`, from spine-acts batch K, act seq 13. The verdict
+is
+[001-ADJUDICATE-768b209.md](../../../reviews/wi-742-adjudicate-tc-268-spine-row/001-ADJUDICATE-768b209.md).
+
+TC-268 is approved and anchored. Every Method clause maps to a named test,
+and a flip showed no form finding.
 
 ## Context
 

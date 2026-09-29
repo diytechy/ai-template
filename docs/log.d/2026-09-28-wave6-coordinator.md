@@ -511,3 +511,16 @@ real defect it reproduced
 - **Folded, not filed:** batch K's adjudicator found the same defect
   independently and drafted it in WI-741's Dispositions. That draft is the
   one successor, so no second row.
+
+### Spine-acts batch K (WI-741, WI-742): TC-268 approved, LLR-270 re-attested
+
+- **The sitting:** a fifth independent Opus adjudicator, one act (seq 13).
+- **Approved:** TC-268.
+- **Re-attested:** LLR-270. The review's inferred-capability major does not
+  make its text untrue.
+- **Drafts:** down to 2.
+- **One successor:** the keep-warmer start failure on a refused Windows
+  `.cmd` row. The WI-743 spot check found it independently. Both draft
+  paths converge on one row, which the sweep mints.
+- **Cross-review:** Sonnet found the act SOUND, with no findings
+  ([sonnet-batch-k.md](../reviews/2026-09-28-wave6/sonnet-batch-k.md)).

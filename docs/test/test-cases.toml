@@ -3017,5 +3017,5 @@ tier = "Smoke"
 expected = "Satisfies LLR-270 (parent SR-227) for keep-warm: one bounded turn off the scheduler's thread, never racing another call on the session, recorded like any other call through the serialised telemetry path."
 automated = "Yes"
 evidence = "tests/test_session_keep.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
