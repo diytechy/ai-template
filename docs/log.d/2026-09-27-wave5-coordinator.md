@@ -979,3 +979,62 @@ note points at the brief's aftermath, never restates it.
 
 Trunk before this squash: e827e697.
 **Open count: 9** (8 queued, 1 deferred) before the sweep.
+
+### The close-out: the full suite, WI-721, and the next session's roles
+
+The full unfiltered suite, run once and quietly at bc3310f3
+(`python -m pytest -q -n auto -p no:cacheprovider`):
+
+    FAILED tests/test_check_docs.py::test_meta_repo_has_zero_unexplained_orphans
+    FAILED tests/test_generated_freshness_wiring.py::test_skills_index_step_reds_when_a_skill_is_added
+    FAILED tests/test_trace_golden.py::test_golden_clean_spine - AssertionError: ...
+    FAILED tests/test_trace_golden.py::test_golden_offspine_rich_spine - Assertio...
+    FAILED tests/test_trace_golden.py::test_golden_orphaned_spine - AssertionErro...
+    5 failed, 4810 passed, 15 skipped, 18 warnings in 6683.90s (1:51:23)
+
+- The orphan was the new handoff before `docs/status.md` linked it, and
+  this commit clears it.
+- The three trace goldens fail on a false retirement advisory:
+  `retire.live_ids` reads only TOML, so every live row of a CSV-registry
+  scaffold reads as spent without a record.
+- The skills-index test's planted skill trips the newer 100-character
+  description floor before the STALE it pins.
+- The wall time was about 10 minutes before; the cause is unmeasured.
+
+Each of these landed unseen, because lanes run their named slow modules,
+not the slow tier. No open item holds either surface, so they are filed as
+one row, **WI-721**, with the wall-time measurement.
+
+**The derived stage reads DevStg-Impl** since batch C (eecd656d). So
+`[step:complexity]` (green, 203 rows) and `[step:dupes-census]` now select
+at their ruled rung. The census warns 5/5/52 against its 0/0/0 stamp; its
+five exact-body groups are named in WI-545's Context. WI-657's owner
+question narrows to selecting below the rung when the stage falls back,
+which is recorded in its Context.
+
+**Roles for the next session, the owner's direction:**
+- Codex Sol builds through the CLI, in `workspace-write` with the primary's
+  `.git` added. This is untested, and a refusal goes to the owner.
+- Claude Sonnet reviews.
+- An independent Opus agent arbitrates disagreements and takes the spine
+  adjudications and spot checks, in place of Fable.
+
+The handoff states each one.
+
+**Branches:** no worktree remains. The 60 local `build/*` branches are
+kept, because the review files cite lane commits that exist only on them
+after a squash. Archiving them as tags is the owner's call.
+
+Commit bar at the close-out:
+- `check_trajectory --strict` clean, `trace --strict-integrity` 0,
+  approve-modified current, `gen_open_items` current, `check_docs --stale`
+  0 broken;
+- smoke 1890 passed / 3 skipped.
+
+**The smoke seconds read 85.5 s, over the 60 s budget. This is load, not
+the change.** The box was running a game, Discord and three editor windows,
+and no code has changed since the quiet 41.7 s reading at 2d264589. This
+commit is documents plus one spec. The budget is not re-stamped, and WI-721
+re-measures on a quiet box.
+
+**Open count: 11** (10 queued, 1 deferred), against 13 at the start.
