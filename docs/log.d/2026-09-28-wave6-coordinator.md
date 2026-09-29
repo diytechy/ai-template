@@ -498,3 +498,16 @@ programmatically, and probed the plain adapter over gemini results
   72.4 s against 60 s, with WI-722's Sonnet review running tests beside it.
   That is contention, and the budget is not re-stamped. The spine and doc
   checks and the live approval brief are current.
+
+### WI-743 lands: the spot check of WI-740's close, FOLLOW-UP
+
+An independent Opus spot-checker confirmed WI-740's items, and found one
+real defect it reproduced
+([record](../reviews/wi-743-spot-check-the-clean-close-of/001-SPOTCHECK-3ecef627.md)).
+
+- **The defect:** `KeepWarmer.__init__` now builds every row's argv, so on
+  Windows a `{prompt}` row behind a `.cmd` shim raises. With the keep-warm
+  dial on, the dispatcher then fails at start.
+- **Folded, not filed:** batch K's adjudicator found the same defect
+  independently and drafted it in WI-741's Dispositions. That draft is the
+  one successor, so no second row.
