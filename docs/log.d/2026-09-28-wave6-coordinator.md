@@ -270,3 +270,22 @@ CONFIRMED
   Sonnet confirmation running beside it. That is contention, and the budget
   is not re-stamped. The spine and doc checks and the live approval brief
   are current.
+
+### WI-735 lands: the spot check of WI-732's close, CONFIRMED
+
+An independent Opus spot-checker found every item met
+([record](../reviews/wi-735-spot-check-the-clean-close-of/001-SPOTCHECK-03debc71.md)).
+
+- **Its four observations** fall on cells under batch I's adjudication:
+  - SR-222's acceptance wording;
+  - the provider pairs appearing at the SR tier;
+  - LLR-223's silence on failed rows;
+  - SR-177's "stated build gap" acceptance clause.
+
+  They were sent to the sitting adjudicator as chain evidence, rather than
+  filed.
+- **Not filed:** no new row.
+- **Bar:** smoke `1900 passed, 3 skipped`, taking 162.8 s with the full
+  unfiltered suite and the batch-I adjudicator running beside it. The
+  seconds are contention on a records-only lane and not budget evidence.
+  The spine and doc checks are clean.
