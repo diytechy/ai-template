@@ -200,3 +200,43 @@ CONFIRMED
   60 s, with WI-545's fix builder and the batch-H adjudicator running tests
   beside it. That is contention, not this lane, and the budget is not
   re-stamped. The spine and doc checks are clean.
+
+### Spine-acts batch H (WI-730, WI-731): TC-262 approved, TC-220 and TC-222 re-attested; the SR and LLR anchoring held again
+
+- **The sitting:** one fresh independent Opus adjudicator, one act (seq 10).
+  It judged the batch-G carry-over afresh.
+- **Anchored:**
+  - TC-262 is approved;
+  - TC-220 and TC-222 are re-attested.
+- **Approved but not flipped:** LLR-267, LLR-269 and LLR-270.
+- **Blessed but not anchored:** SR-193, LLR-222 and LLR-286.
+- **Not blessed:**
+  - SR-177: WI-729's optional rationale rewrite states an obligation wider
+    than its acceptance;
+  - LLR-223: its contradiction sentence is wider than SR-193, TC-220 and the
+    code.
+
+  Each holds a whole registry.
+- **Returned:**
+  - SR-222, LLR-268 and TC-264: a codex routed to a third-party provider is
+    recorded as `openai`;
+  - SR-227: its "declared bound" is a code default, and its reason goes only
+    to stderr;
+  - LLR-266: its absolute over adopter templates.
+- **Follow-up:** one consolidated draft in WI-731. The sweep mints it.
+- **Cross-review:** Sonnet found the act SOUND, with no findings, and
+  reproduced every return
+  ([sonnet-batch-h.md](../reviews/2026-09-28-wave6/sonnet-batch-h.md)).
+- **A pattern, noted for the owner:**
+  - This is the second sitting in a row where one unblessed row held back a
+    whole registry's anchoring. Both blockers are single clauses in cells
+    the previous lane rewrote, and one came from an optional item.
+  - For the lanes that answer returns, the coordinator now asks the builder
+    to answer the blocking rows first and to take no optional item that
+    touches an approved cell.
+- **Trunk before this squash:** b689eada.
+- **Bar:** smoke `1899 passed, 3 skipped`. Its seconds read 85.3 s against
+  60 s, with a Sonnet confirmation running the agent-loop test modules
+  beside it. That is contention on a lane that changes only records, and the
+  budget is not re-stamped. The spine and doc checks and the live approval
+  brief are current.

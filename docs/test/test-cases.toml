@@ -2951,7 +2951,7 @@ tier = "Smoke"
 expected = "Satisfies LLR-266 (parent SR-222) for capture: the usage of a successful codex and opencode call survives verbatim in the record; codex's final text is its last-message file and opencode's is its last speaking step."
 automated = "Yes"
 evidence = "tests/test_session_adapters.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-263]

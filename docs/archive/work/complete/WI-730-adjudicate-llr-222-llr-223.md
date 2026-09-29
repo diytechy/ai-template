@@ -3,12 +3,30 @@ id = "WI-730"
 title = "adjudicate: LLR-222, LLR-223, SR-177, SR-193, TC-220 - approved/routed cell(s) amended on merged trunk a20b496..17c54c2 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-177", "SR-193"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-222", "LLR-223", "LLR-286", "SR-177", "SR-193", "TC-220", "TC-222"]
 +++
+
+## Deliverable
+
+`VERDICT: MEANING rows=7`, from spine-acts batch H, act seq 10. An independent
+Opus adjudicator ruled it. The verdict is
+[001-ADJUDICATE-3e8a87d.md](../../../reviews/wi-730-adjudicate-llr-222-llr-223/001-ADJUDICATE-3e8a87d.md).
+
+- **Re-attested and anchored:** TC-220 and TC-222.
+- **Blessed but not anchored:** SR-193 (CLARITY), LLR-222 and LLR-286. The
+  SR and LLR registries could not be copied.
+- **Not blessed:**
+  - SR-177: its rationale states an aggregation obligation wider than its
+    acceptance;
+  - LLR-223: its contradiction sentence covers any Delivered-With beside a
+    waiver, where SR-193, TC-220 and the code report it only for a joint row.
+
+  These two block the SR and LLR snapshots. Both are carried in WI-731's
+  Dispositions draft.
 
 ## Context
 
