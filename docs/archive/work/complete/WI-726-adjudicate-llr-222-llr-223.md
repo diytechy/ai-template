@@ -3,12 +3,32 @@ id = "WI-726"
 title = "adjudicate: LLR-222, LLR-223, SR-015, SR-033, SR-111, SR-174, SR-177, SR-193, SR-223, SR-225, TC-220, TC-222 - approved/routed cell(s) amended on merged trunk e86cae4..3b87247 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-015", "SR-033", "SR-111", "SR-174", "SR-177", "SR-193", "SR-223", "SR-225"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-222", "LLR-223", "SR-015", "SR-033", "SR-111", "SR-174", "SR-177", "SR-193", "SR-223", "SR-225", "TC-220", "TC-222"]
 +++
+
+## Deliverable
+
+`VERDICT: MEANING rows=12`, from spine-acts batch G, act seq 9. The verdict is
+[001-ADJUDICATE-f1733da.md](../../../reviews/wi-726-adjudicate-llr-222-llr-223/001-ADJUDICATE-f1733da.md).
+
+- **Re-attested and anchored:** SR-015, SR-033, SR-111, SR-174, SR-177,
+  SR-193, SR-223 and SR-225. Each `delivered_with` was judged against OI-97:
+  the siblings share the need, no assumption is inherited, and each row's
+  output crosses a boundary.
+- **Blessed but not anchored:** LLR-222 and TC-222. The LLR and TC snapshot
+  is refused while LLR-223 and TC-220 drift.
+- **Returned:**
+  - LLR-223: "entries are declared requirements sharing a need" reads as
+    every sibling sharing a need, where SR-193 says one or more.
+  - `assumption_rules._classify` classifies a row whose only sibling shares
+    no need as `joint`, contrary to SR-193. The cross-review reproduced this.
+  - TC-220: no case asserts that class.
+
+  These are folded into WI-724's one Dispositions draft.
 
 ## Context
 
@@ -60,3 +80,23 @@ Advisory registry joins (WI-388; never gating):
 - IF-166 scripts/trace -> external:downstream adopter: file docs/test/report.html — a self-contained collapsible <details> tree of the SN -> SR -> LLR -> TC forest, writ…
 - IF-014 scripts/bootstrap -> external:downstream adopter: bytes the scaffolded template tree written under the destination root
 - IF-015 scripts/agent_loop -> external:downstream adopter: git 0 DONE · 2 preflight · 3 BLOCKED · 4 stall · 5 WAITING · 6 budget · 7 NEEDS-HUMAN · 8 paused · 9 REVIEW-OWED …
+
+## Returned rows (follow-up consolidated into WI-724)
+
+The adjudication is recorded at
+`docs/reviews/wi-726-adjudicate-llr-222-llr-223/001-ADJUDICATE-f1733da.md`,
+governing line `VERDICT: MEANING rows=12`.
+
+- Re-attested in batch G's act: SR-015, SR-033, SR-111, SR-174, SR-177,
+  SR-193, SR-223 and SR-225.
+- Blessed but not anchored: LLR-222 and TC-222. Their registries' copy is
+  refused while LLR-223 and TC-220 hold drifted approved text.
+- Returned: LLR-223 (its joint condition departs from SR-193's, and the
+  classifier matches neither) and TC-220 (no case asserts the class of a row
+  whose siblings share no need).
+
+The corrective work is one draft, consolidated with WI-724's returns into one
+lane, in `## Dispositions` of
+`docs/work/queued/WI-724-adjudicate-llr-266-llr-267.md` (items 7 to 11, and
+the carry-over list). It is not drafted a second time here, so that intake
+mints it once.

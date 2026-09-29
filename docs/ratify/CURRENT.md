@@ -621,67 +621,7 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 19 chain(s): SR-015, SR-033, SR-111, SR-174, SR-177, SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211, SR-214, SR-222, SR-223, SR-224, SR-225, SR-226, SR-227</summary>
-
-## SR-015 — Performance-budget back-links
-
-> **Requirement.** The delivered performance-budgets registry (PB-###) shall keep every row's Refs resolvable to a real SR/LLR/Module.
-
-> **Rationale.** Realizes SN-002 — a budget row that cannot be traced to a requirement, design item or module cannot demonstrate what it constrains, so the off-spine budget rows stay traceable to the spine. Deliberate pair: this row states the delivered data invariant; the checker that polices it is the harness's, decomposing under SR-157 — an on-purpose split, not an echo. SN-002 is the only basis: hat.PERFORMANCE's failure class is a speed or size risk left unassessed, or a budget with no measurement behind it, which says nothing about whether a trace reference resolves.
-
-
-### SR SR-015
-- **Delivered-With**
-  - before: (empty)
-  - after: SR-157
-
-## SR-033 — Release checklist generation
-
-> **Requirement.** The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate.
-
-> **Rationale.** Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did.
-
-
-### SR SR-033
-- **Delivered-With**
-  - before: (empty)
-  - after: SR-006;SR-049
-
-## SR-111 — Kit-version stamp
-
-> **Requirement.** The delivered scaffold generator shall record a kit-version stamp carrying the kit commit SHA and date, marked -dirty on an uncommitted kit tree.
-
-> **Rationale.** Contributes to SN-001's re-sync clause (a re-sync onto an existing repo never clobbers the repo's own files) by supplying the kit base that re-sync diffs from — without a recorded origin an adopter cannot tell which kit version they are on, so a re-sync degrades from a diff into a guess and the ADOPTING.md re-sync procedure has no baseline to diff against. Deriving the version from file hashes was rejected: it reports that something differs without saying from what. The stamp is what lets a maintainer identify the upstream version a scaffold came from and compute a re-sync diff.
-
-
-### SR SR-111
-- **Delivered-With**
-  - before: (empty)
-  - after: SR-011;SR-036
-
-## SR-174 — Work-item identity is allocated once and never re-issued
-
-> **Requirement.** The delivered loop content shall allocate each work-item identity at most once, so that no two concurrent actors receive the same identity and an identity freed by a deletion is never re-issued.
-
-> **Rationale.** Identity allocation is its own decision, not a consequence of serialization: serializing the writer makes a COLLISION unlikely and does nothing about RE-USE, which is the half that silently re-points every commit message and archived document citing the freed id. The non-reuse clause has a `shall` of its own here rather than living in SR-170's acceptance, which is a cell that cannot mint a requirement. Contributes to SN-025 (the ready frontier ordered deterministically, so two readers of the same registry dispatch the same work) by supplying a work-item identity that names one record for every reader, before and after a deletion.
-
-
-### SR SR-174
-- **Delivered-With**
-  - before: (empty)
-  - after: SR-148;SR-170
-
-## SR-177 — Fan-out utilisation reported from the run's own telemetry
-
-> **Requirement.** The delivered loop content shall report, per run, the utilisation of the fan-out it commissions — the lanes configured, the lanes actually occupied, and the work integrated per unit of wall time — derived from the run's own recorded telemetry, reported and never gated, with no declared improvement target.
-
-> **Rationale.** The charter refuses a declared budget with no measurement behind it, and SN-027 is that finding inverted — the system's most complex machinery justified by a throughput claim no instrument measures, flagged unfalsifiable as written by three independent derivations. The intake proposal (docs/plans/2026-08-17-wi468-obligation-intake-options.md §3 option (b)) is DELIBERATELY LESS than the charter asks — the narrowing is the decision: C-PRF-1 wants a declared improvement over the serial semantic on a declared workload, but the wall time of an LLM loop is dominated by provider latency and model choice, so a numeric target would pin machine, provider and model conditions the kit does not control (one machine is one data point) — this row makes the throughput claim OBSERVABLE rather than BUDGETED. The concrete argument the instrument earns its keep: the lanes dial is undeclared in this repository and defaults to 1, so the machinery SN-027 justifies by fan-out runs SERIAL here and nothing today would say so — this report's first run would have printed lanes=1. SN-027's own `why` states the same structural claim, so the need and the instrument stop overclaiming together. NOT DECOMPOSED, stated rather than implied: nothing aggregates the existing per-session telemetry (wall seconds, api seconds, turns — the session-log headers and the iteration index) by lane or by run, so there is no seam to pin and no test to cite; the row lands Drafted-undecomposed with the aggregation surface as it… [69 more chars — read the registry row]
-
-
-### SR SR-177
-- **Delivered-With**
-  - before: (empty)
-  - after: SR-156;SR-170
+<summary>Waiting for automated adjudication — 12 chain(s): SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211, SR-214, SR-222, SR-224, SR-226, SR-227</summary>
 
 ## SR-189 — Each need resolves to the declared stakeholders whose outcome it is
 
@@ -719,14 +659,6 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
 
 > **Rationale.** An empty cell asserts nothing, so a requirement citing no assumption cannot be read as one that needs none: the absence is unknown, and only an explicit waiver says the system's own behavior is the outcome. The need link stays on the requirement, because one interface serves several arguments and inheriting needs through an assumption would give a requirement the needs of an assumption it merely shares a seam with. Reporting rather than failing keeps the classification a worklist until the gate that relies on it is enabled.
 
-
-### SR SR-193
-- **AcceptanceCriteria**
-  - before: A requirement citing one or more assumptions, each a declared assumption, is classified bridged; a requirement recording a waiver that states why its specification alone delivers its needs is classified coincident; a requirement with neither is reported as unclassified without failing the check; an empty citation list counts as no citation; a citation naming an undeclared assumption fails the check naming the requirement; a requirement carrying both a citation and a waiver is reported without failing the check; the requirement's need references are unchanged, and an assumption's needs are derived from the requirements citing it; changing the citations re-opens no attestation, while declaring or changing the waiver re-opens the requirement's; a project with no assumption registry is vacuous.
-  - after: A requirement citing one or more assumptions, each a declared assumption, is classified bridged; a requirement naming in Delivered-With one or more declared requirements that share at least one of its needs is classified joint; a requirement recording a waiver that states why its specification alone delivers its needs is classified coincident; a requirement with none of the three is reported as unclassified without failing the check; an empty list counts as absent; a citation naming an undeclared assumption, or a sibling naming an undeclared requirement, fails the check naming the requirement; a declared sibling sharing none of the row's needs is reported without failing; a joint requirement may also cite assumptions of its own, and inherits none from its siblings; a requirement carrying both assumption citations and a waiver, or both joint delivery and a waiver, is reported without failing the check; the requirement's need references are unchanged, and an assumption's needs are derived only from the requirements citing it; changing assumption citations re-opens no attestation, while declaring or changing Delivered-With or the waiver re-opens the requirement's; a project with no assumption registry is vacuous.
-- **Requirement**
-  - before: The delivered harness shall report each system requirement that neither cites the assumptions its argument relies on nor records why its own specification alone delivers its needs.
-  - after: The delivered harness shall report each system requirement that neither cites the assumptions its argument relies on, names the sibling requirements that jointly deliver its needs, nor records why its own specification alone delivers its needs.
 
 ### LLR LLR-222
 _approved — re-attestation owed_
@@ -849,16 +781,20 @@ _traced — routes to adjudication_
 > **Rationale.** A DERIVED requirement, and labelled so. SN-026 asks that the owner can configure several model families and route work among them per job and capability level; it does not name a usage record, so this obligation arrives through two lenses rather than through the need's text. The performance lens listens for measurements that cannot be compared, or are unavailable, being read as a reliable total: routing among families is a cost and quality choice, and the choice is blind when one family's calls record their usage and another's do not, or when the runners disagree on what "input tokens" means (two count cached input apart from input, one counts it inside), so one column would hold two incompatible numbers. The consistency lens listens for readers disagreeing after a one-sided change: when each launching role keeps its own launch and logging path, a usage fix lands in one path and not the others. A published vocabulary avoids inventing a log format for a problem that is not novel; because it has no tagged release, the record pins the exact revision it follows. The raw usage is kept verbatim so a mapping later found wrong is re-derived rather than lost. Occupancy is kept apart from billed tokens because they answer different questions: billed tokens are summed over every request the session made, while how full a context is depends on the latest request alone, and a session reset that read the first as the second would fire on sessions that are nowhere near full. Fed back to the… [170 more chars — read the registry row]
 
 
-### SR SR-222, Drafted — never approved
-- **AcceptanceCriteria**
-  - before: For a recorded session of each routed runner, the record carries the vocabulary's usage names and the revision they are pinned to; its input count includes cached input; its fresh input equals input less cache read and cache write; its raw usage reproduces the runner's usage events exactly; a count the runner does not report is empty, not zero; the provider and runner columns are filled; a successful call's usage survives in the record even where the runner's result text is read from a separate file; and occupancy is the latest request's prompt over the model's window, blank where the runner reports no window, so no session reports occupancy above 100% because counts accumulated across its requests.
-  - after: For a recorded session of each routed runner, the record carries the vocabulary's usage names and the revision they are pinned to; its input count includes cached input; its fresh input equals input less cache read and cache write; its raw usage reproduces the runner's usage events exactly; a count the runner does not report is empty, not zero; the route's provider column is filled from its roster row, the runner column is filled, and gen_ai.provider.name is filled where the runner reports one and empty where it does not; a successful call's usage survives in the record even where the runner's result text is read from a separate file; and occupancy is the latest request's prompt over the model's window, blank where the runner reports no window, so no session reports occupancy above 100% because counts accumulated across its requests.
-- **Rationale**
-  - before: A DERIVED requirement, and labelled so. SN-026 asks that the owner can configure several model families and route work among them per job and capability level; it does not name a usage record, so this obligation arrives through two lenses rather than through the need's text. The performance lens listens for measurements that cannot be compared, or are unavailable, being read as a reliable total: routing among families is a cost and quality choice, and the choice is blind when one family's calls record their usage and another's do not, or when the runners disagree on what "input tokens" means (two count cached input apart from input, one counts it inside), so one column would hold two incompatible numbers. The consistency lens listens for readers disagreeing after a one-sided change: when each launching role keeps its own launch and logging path, a usage fix lands in one path and not the others. Adopting a published vocabulary rather than inventing a log format was the owner's choice, since the problem is not novel; every name in it is still at development stability and its repository moved in 2026 with no tagged release, so the record pins the exact revision it follows. The raw usage is kept verbatim so a mapping later found wrong is re-derived rather than lost. Occupancy is kept apart from billed tokens because they answer different questions: billed tokens are summed over every request the session made, while how full a context is depends on the latest request alone, and a session reset that read the first as the second would fire on sessions that are nowhere near full. Fed back to the need: SN-026's acceptance could name comparable per-family usage as what makes routing among families an informed choice; until it does, this row is derived and says so.
-  - after: A DERIVED requirement, and labelled so. SN-026 asks that the owner can configure several model families and route work among them per job and capability level; it does not name a usage record, so this obligation arrives through two lenses rather than through the need's text. The performance lens listens for measurements that cannot be compared, or are unavailable, being read as a reliable total: routing among families is a cost and quality choice, and the choice is blind when one family's calls record their usage and another's do not, or when the runners disagree on what "input tokens" means (two count cached input apart from input, one counts it inside), so one column would hold two incompatible numbers. The consistency lens listens for readers disagreeing after a one-sided change: when each launching role keeps its own launch and logging path, a usage fix lands in one path and not the others. A published vocabulary avoids inventing a log format for a problem that is not novel; because it has no tagged release, the record pins the exact revision it follows. The raw usage is kept verbatim so a mapping later found wrong is re-derived rather than lost. Occupancy is kept apart from billed tokens because they answer different questions: billed tokens are summed over every request the session made, while how full a context is depends on the latest request alone, and a session reset that read the first as the second would fire on sessions that are nowhere near full. Fed back to the need: SN-026's acceptance could name comparable per-family usage as what makes routing among families an informed choice; until it does, this row is derived and says so.
-- **Requirement**
-  - before: The delivered loop content shall record every model session it launches, whichever provider command-line runner serves it, in one usage record: token usage under a published usage vocabulary pinned to a named revision, input counted inclusive of cached input, fresh input derived by one formula, the runner's raw usage kept verbatim, the provider and the runner that produced the row named, and the context occupancy of the session's latest request kept apart from its billed tokens.
-  - after: The delivered loop content shall record every model session it launches, whichever provider command-line runner serves it, in one usage record: token usage under a published usage vocabulary pinned to a named revision, input counted inclusive of cached input, fresh input derived by one formula, the runner's raw usage kept verbatim, the route's provider filled from its roster row for every routed call, the runner named, the vocabulary's gen_ai.provider.name filled where the runner reports one, and the context occupancy of the session's latest request kept apart from its billed tokens.
+### SR SR-222 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
+- **SR-ID**: SR-222
+- **Title**: Every model session is recorded in one usage record, whichever provider CLI serves it
+- **SN-Refs**: SN-026
+- **Boundary-Refs**: B-10
+- **Hat-Refs**: PERFORMANCE;CONSISTENCY
+- **Requirement**: The delivered loop content shall record every model session it launches, whichever provider command-line runner serves it, in one usage record: token usage under a published usage vocabulary pinned to a named revision, input counted inclusive of cached input, fresh input derived by one formula, the runner's raw usage kept verbatim, the route's provider filled from its roster row for every routed call, the runner named, the vocabulary's gen_ai.provider.name filled where the runner reports one, and the context occupancy of the session's latest request kept apart from its billed tokens.
+- **Rationale**: A DERIVED requirement, and labelled so. SN-026 asks that the owner can configure several model families and route work among them per job and capability level; it does not name a usage record, so this obligation arrives through two lenses rather than through the need's text. The performance lens listens for measurements that cannot be compared, or are unavailable, being read as a reliable total: routing among families is a cost and quality choice, and the choice is blind when one family's calls record their usage and another's do not, or when the runners disagree on what "input tokens" means (two count cached input apart from input, one counts it inside), so one column would hold two incompatible numbers. The consistency lens listens for readers disagreeing after a one-sided change: when each launching role keeps its own launch and logging path, a usage fix lands in one path and not the others. A published vocabulary avoids inventing a log format for a problem that is not novel; because it has no tagged release, the record pins the exact revision it follows. The raw usage is kept verbatim so a mapping later found wrong is re-derived rather than lost. Occupancy is kept apart from billed tokens because they answer different questions: billed tokens are summed over every request the session made, while how full a context is depends on the latest request alone, and a session reset that read the first as the second would fire on sessions that are nowhere near full. Fed back to the… [170 more chars — read the registry row]
+- **AcceptanceCriteria**: For a recorded session of each routed runner, the record carries the vocabulary's usage names and the revision they are pinned to; its input count includes cached input; its fresh input equals input less cache read and cache write; its raw usage reproduces the runner's usage events exactly; a count the runner does not report is empty, not zero; the route's provider column is filled from its roster row, the runner column is filled, and gen_ai.provider.name is filled where the runner reports one and empty where it does not; a successful call's usage survives in the record even where the runner's result text is read from a separate file; and occupancy is the latest request's prompt over the model's window, blank where the runner reports no window, so no session reports occupancy above 100% because counts accumulated across its requests.
+- **Priority**: S
+- **Verification**: Test
+- **Status**: Drafted
+- **Phase**: 6
 
 ### LLR LLR-266, Drafted — never approved
 - **Detail**
@@ -896,18 +832,6 @@ _traced — routes to adjudication_
   - before: Satisfies LLR-268 (parent SR-222): one usage record per runner in the pinned vocabulary, inclusive input, derived fresh input, raw usage verbatim, unreported counts empty, and the two claude defects fixed.
   - after: Satisfies LLR-268 (parent SR-222): one usage record per runner in the pinned vocabulary, inclusive input, derived fresh input, raw usage verbatim and unreported counts empty; claude's reasoning count is read from output_tokens_details.thinking_tokens, and its response model is filled from the request that answered even when a background model's usage sits beside it.
 
-## SR-223 — A guarded session receives the guardrails payload vendored for its model
-
-> **Requirement.** Where a repository vendors a guardrails payload for a model-name substring, the delivered loop content shall inject that payload, in place of the default guardrails core, into a guarded session whose model name contains that substring.
-
-> **Rationale.** A DERIVED requirement, and labelled so. SN-026 asks that models be selected per job and capability level; it does not name what a session on a given model is told, so this obligation arrives through the unattended-operations lens rather than through the need's text. A guardrails posture written for one model is ritual noise to a stronger one and too little for a weaker one, and in an unattended run nobody watches a session drift: one core for every guarded model is the silent degrade that lens listens for. Selecting by a substring of the model name reuses the matcher the guardrails policy already applies, so one grammar decides both whether a session is guarded and what it is given, and the repository's own file names carry the mapping. A per-model key in the policy dial was the alternative, and it lost because a model name in shared configuration is the name that rots when models turn over. Fed back to the need: SN-026's acceptance could name a per-model posture; until it does, this row is derived and says so.
-
-
-### SR SR-223
-- **Delivered-With**
-  - before: (empty)
-  - after: SR-154;SR-175
-
 ## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
 
 > **Requirement.** If a skill's description is shorter than the declared description floor, then the kit's skills-index check shall fail, naming that skill.
@@ -929,18 +853,6 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Verification**: Test
 - **Status**: Drafted
 - **Phase**: 6
-
-## SR-225 — A delegated run closes with a record of the calls it made, where the declared dial asks for one
-
-> **Requirement.** Where the declared decision-recording dial asks for a record, the delivered loop content shall judge a closing lane against that run's decisions record, refusing to integrate the lane when the record is absent, naming where it belongs, and reporting without refusing each entry of a present record that omits a required disclosure field or leaves one blank.
-
-> **Rationale.** A DERIVED requirement, and labelled so. SN-029 asks that a run released to automation get as far as it honestly can, and that an approval it makes on a released tier leave a record naming who made it; it does not name the other calls a delegated run makes on the owner's behalf, the ones too settled to hold the run for and not settled enough to be history, so this obligation arrives through the unattended-operations lens rather than through the need's text. A call nobody is told about is the failure that lens listens for: it pages nobody, and a run that looks green is green partly because nothing looked at what it chose. A prose instruction to list such calls was tried and measurably degraded within one session, the fields left out as soon as nothing read them, so the record carries required fields and the close that owes it refuses silence. The obligation is keyed to a dial because how much of the owner's reading a run may claim is the owner's to set; it ships off, so a repository owes nothing until its owner asks. Every close owes the record, a partial close included, because every delegated run closes with one; a lane the machinery closed with no session present is refused too, and that refusal is a hold for a person to write the record rather than a strand. A malformed entry is reported rather than refused, because the record is there and readable and a refusal would hold finished work for a reporting defect. A value of the dial outside its alphabet is judged before the re… [503 more chars — read the registry row]
-
-
-### SR SR-225
-- **Delivered-With**
-  - before: (empty)
-  - after: SR-139;SR-140
 
 ## SR-226 — A retired spine row leaves one record of its own, found by its id
 
@@ -966,10 +878,20 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 > **Rationale.** A DERIVED requirement, and labelled so. SN-025 asks that a configured agent implement toward the vision with no human curating what comes next; it does not name retaining a session, so this obligation arrives through three lenses rather than through the need's text. The performance lens listens for an operating-cost risk left unassessed: a run that spins a fresh adjudicator for every small work item reloads the spine on each call, and the usage record makes that cost visible, while resuming a session by id uses the provider's prompt cache. The unattended-operations lens listens for a silent degrade: a retained session that has filled, or judges under rules that have since changed, or that a failed call left in an unknown state, degrades every later judgement with nothing paging anyone, so the drain, the change rules and the immediate retirement are part of the obligation, not tuning. The integrity lens listens for a durable artifact updated in place without an all-or-nothing guarantee and for a claim nothing can reclaim: two calls resuming one transcript at once corrupt it, so one call at a time holds a session, under a hold that expires when its holder is gone. Retiring only when no work the session has a stake in is pending is what keeps a review, rework and re-review round trip in one session, which is the continuity the layer exists for; a session is retained as a transcript a bounded process replays, never as a long-lived process, so an unattended run still cannot wait o… [327 more chars — read the registry row]
 
 
-### SR SR-227, Drafted — never approved
-- **Rationale**
-  - before: A DERIVED requirement, and labelled so. SN-025 asks that a configured agent implement toward the vision with no human curating what comes next; it does not name retaining a session, so this obligation arrives through three lenses rather than through the need's text. The performance lens listens for an operating-cost risk left unassessed: an unattended run that re-spun a fresh adjudicator for every small work item reloaded the spine each time, and its usage was extreme, while resuming a session by id costs about what a standing process would under the provider's hour-long prompt cache. The unattended-operations lens listens for a silent degrade: a retained session that has filled, or judges under rules that have since changed, or that a failed call left in an unknown state, degrades every later judgement with nothing paging anyone, so the drain, the change rules and the immediate retirement are part of the obligation, not tuning. The integrity lens listens for a durable artifact updated in place without an all-or-nothing guarantee and for a claim nothing can reclaim: two calls resuming one transcript at once corrupt it, so one call at a time holds a session, under a hold that expires when its holder is gone. Retiring only when no work the session has a stake in is pending is what keeps a review, rework and re-review round trip in one session, which is the continuity the layer exists for; a session is retained as a transcript a bounded process replays, never as a long-lived process, so an unattended run still cannot wait on a prompt. The dial is keyed off because turning it on is the owner's decision once the layer has been verified where it runs. Fed back to the need: SN-025's acceptance could name bounded operating cost per judgement as part of what lets a run proceed with no human curating it; until it does, this row is derived and says so.
-  - after: A DERIVED requirement, and labelled so. SN-025 asks that a configured agent implement toward the vision with no human curating what comes next; it does not name retaining a session, so this obligation arrives through three lenses rather than through the need's text. The performance lens listens for an operating-cost risk left unassessed: a run that spins a fresh adjudicator for every small work item reloads the spine on each call, and the usage record makes that cost visible, while resuming a session by id uses the provider's prompt cache. The unattended-operations lens listens for a silent degrade: a retained session that has filled, or judges under rules that have since changed, or that a failed call left in an unknown state, degrades every later judgement with nothing paging anyone, so the drain, the change rules and the immediate retirement are part of the obligation, not tuning. The integrity lens listens for a durable artifact updated in place without an all-or-nothing guarantee and for a claim nothing can reclaim: two calls resuming one transcript at once corrupt it, so one call at a time holds a session, under a hold that expires when its holder is gone. Retiring only when no work the session has a stake in is pending is what keeps a review, rework and re-review round trip in one session, which is the continuity the layer exists for; a session is retained as a transcript a bounded process replays, never as a long-lived process, so an unattended run still cannot wait on a prompt. The dial is keyed off because turning it on is the owner's decision once the layer has been verified where it runs. Fed back to the need: SN-025's acceptance could name bounded operating cost per judgement as part of what lets a run proceed with no human curating it; until it does, this row is derived and says so.
+### SR SR-227 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
+- **SR-ID**: SR-227
+- **Title**: Where the retention dial is on, an adjudication resumes a retained session and resets it only when that is safe
+- **SN-Refs**: SN-025
+- **Boundary-Refs**: B-10
+- **Hat-Refs**: PERFORMANCE;UNATTENDED-OPS;INTEGRITY-RECOVERABILITY
+- **Requirement**: Where the declared adjudicator retention dial is above zero, the delivered loop content shall launch each adjudication of a retained class in its model runner's resume form against a session an earlier adjudication on the same route started, recording each such call like any other, draining the session when its latest request's occupancy reaches the dial or the inputs it judges under change, retiring it only when no work it has a stake in is pending, retiring it at once when a call on it fails, and letting no two calls use one retained session at once.
+- **Rationale**: A DERIVED requirement, and labelled so. SN-025 asks that a configured agent implement toward the vision with no human curating what comes next; it does not name retaining a session, so this obligation arrives through three lenses rather than through the need's text. The performance lens listens for an operating-cost risk left unassessed: a run that spins a fresh adjudicator for every small work item reloads the spine on each call, and the usage record makes that cost visible, while resuming a session by id uses the provider's prompt cache. The unattended-operations lens listens for a silent degrade: a retained session that has filled, or judges under rules that have since changed, or that a failed call left in an unknown state, degrades every later judgement with nothing paging anyone, so the drain, the change rules and the immediate retirement are part of the obligation, not tuning. The integrity lens listens for a durable artifact updated in place without an all-or-nothing guarantee and for a claim nothing can reclaim: two calls resuming one transcript at once corrupt it, so one call at a time holds a session, under a hold that expires when its holder is gone. Retiring only when no work the session has a stake in is pending is what keeps a review, rework and re-review round trip in one session, which is the continuity the layer exists for; a session is retained as a transcript a bounded process replays, never as a long-lived process, so an unattended run still cannot wait o… [327 more chars — read the registry row]
+- **AcceptanceCriteria**: With the dial at zero, an adjudication launches exactly as a fresh session: no session id minted, no resume argument, no retention state written, no keep-warm call made. With the dial on, an adjudication of a retained class resumes the route's retained session by its id in the runner's own resume form, or starts one whose id is recorded; a session whose latest request's occupancy reaches the dial, whose governing inputs (agent guides, policy file, loaded skills, the adjudication template) changed, or whose runner version changed is marked draining and is still resumed while a queued adjudication, or a lane out on work, belongs to a chain it judged, and is retired at the first launch where none does; a call that exits non-zero, times out, reports an error or fails to launch retires the session at once; a keep-warm call is one bounded turn, recorded like any other call, never blocks the scheduler, and never runs while another call holds the session; and the retention state is only ever written whole, by one writer at a time.
+- **Priority**: S
+- **Verification**: Test
+- **Status**: Drafted
+- **Phase**: 6
 
 ### LLR LLR-270, Drafted — never approved
 - **Rationale**

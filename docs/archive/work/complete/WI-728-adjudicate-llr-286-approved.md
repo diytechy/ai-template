@@ -2,12 +2,23 @@
 id = "WI-728"
 title = "adjudicate: LLR-286 - approved/routed cell(s) amended on merged trunk 5124c93..d05b4b0 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-286"]
 +++
+
+## Deliverable
+
+`VERDICT: MEANING rows=1`, from spine-acts batch G. The verdict is
+[001-ADJUDICATE-f1733da.md](../../../reviews/wi-728-adjudicate-llr-286-approved/001-ADJUDICATE-f1733da.md).
+
+LLR-286's amendment is blessed: "live" means live in any carrier form,
+which matches SR-226, and TC-299's new case drives it. It is not anchored
+yet, because the LLR registry's snapshot is refused while WI-726's returned
+LLR-223 drifts. Its re-attestation is owed, and it is carried in WI-724's
+Dispositions draft.
 
 ## Context
 

@@ -124,3 +124,41 @@ CONFIRMED
   budget on a quiet box. check_trajectory --strict, trace
   --strict-integrity, gen_open_items, gen_trajectory, derive_stage,
   check_docs and the live approval brief are current.
+
+### Spine-acts batch G (WI-724, WI-726, WI-728): eight SRs re-attested, nine rows returned, the LLR and TC anchoring held
+
+- **The sitting:** one independent Opus adjudicator, which directed none of
+  the amendments, sat once over three kit-composed briefs and took one act
+  (seq 9). Every routed pointer cell was ruled. A flip showed no
+  requirement-form finding.
+- **Re-attested and anchored:** SR-015, SR-033, SR-111, SR-174, SR-177,
+  SR-193, SR-223 and SR-225. These are the seven `delivered_with` rows and
+  SR-193, each judged against OI-97.
+- **Returned:**
+  - SR-222 ("where the runner reports one");
+  - SR-227 (its shall has no mint case or held-session case);
+  - LLR-266 (history, and a false "already carried");
+  - LLR-268 (the provider name's source is decomposed nowhere);
+  - TC-264 (the revision is asserted for claude only);
+  - LLR-223 and TC-220. `assumption_rules._classify` classifies a row whose
+    only sibling shares no need as `joint`, contrary to SR-193. That is a
+    defect WI-723 landed and its two review rounds missed.
+- **Held:** LLR-267, LLR-269, LLR-270 and TC-262 are approved in the verdict
+  but still Drafted. LLR-222, TC-222 and LLR-286 are blessed but not
+  anchored. The snapshot refuses the LLR and TC registries while the returned
+  LLR-223 and TC-220 drift, which is the brief's own stop case. Both the
+  adjudicator and the cross-review confirmed it with
+  `baseline_snapshot.refresh_refusal`.
+- **Follow-up:** one consolidated Dispositions draft in WI-724. The sweep at
+  this merge mints it, carrying the owed first approvals and
+  re-attestations.
+- **Cross-review:** Sonnet found the act SOUND, with one minor
+  ([sonnet-batch-g.md](../reviews/2026-09-28-wave6/sonnet-batch-g.md)). It
+  reproduced every return against the code.
+- **Trunk before this squash:** f1733daa.
+- **Bar:** smoke `1898 passed, 3 skipped`. Its seconds read 63.0 s
+  against 60 s, with WI-545's builder and a Sonnet review running tests
+  beside it. That is contention on a lane that changes only records, and
+  the budget is not re-stamped. check_trajectory --strict, trace
+  --strict-integrity, gen_open_items, gen_trajectory, derive_stage,
+  check_docs and the live approval brief are current.

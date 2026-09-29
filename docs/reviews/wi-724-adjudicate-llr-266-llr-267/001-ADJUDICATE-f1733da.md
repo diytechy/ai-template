@@ -1,0 +1,60 @@
+# ADJUDICATE — WI-724 — first approval at f1733da
+
+Independent adjudication, spine-acts batch G, of the nine rows the brief marks
+`[AWAITING FIRST APPROVAL]`: SR-222, SR-227, LLR-266 to LLR-270, TC-262 and
+TC-264. TC-268 is another adjudication's row and was read as chain evidence
+only; TC-263, TC-265, TC-266 and TC-267 are approved and were read as the
+chain. The brief is the kit's own (`adjudicate_brief.compose`). The routed
+pointer cells, which the brief does not all render, were read from the
+registries and are ruled on each line. The three observations WI-725's spot
+check folded into this row's Context were checked against HEAD and are
+judged as part of the chain. `Approved` blesses the TEXT; whether the tests
+pass is the harness's answer.
+
+Method, stated once: each row restated as the obligation it imposes, then
+read upward (SN-026, SN-025; hats PERFORMANCE, CONSISTENCY, UNATTENDED-OPS,
+INTEGRITY-RECOVERABILITY; B-10), sideways (sibling LLRs under each SR) and
+downward (`session_adapters.py`, `session_service.py`, `session_keep.py`, and
+the three test modules at HEAD). A standing cell states what holds now, never
+its own history (spine-authoring §6).
+
+- [RETURN] SR-222 -> the delivered loop content records every model session it launches, whichever runner serves it, in one usage record (a pinned published vocabulary, inclusive input, one fresh-input formula, the raw usage verbatim, the roster provider and the runner named, `gen_ai.provider.name`, occupancy kept apart from billed tokens) -> `SN-Refs` SN-026 HOLDS as a labelled derived row (PERFORMANCE and CONSISTENCY each name a failure the row prevents); `Boundary-Refs` B-10 HOLDS; LLR-266 to LLR-269 decompose it and TC-262 to TC-265 drive it -> NOT ready. The Requirement ("the vocabulary's gen_ai.provider.name filled where the runner reports one") and the AcceptanceCriteria ("filled where the runner reports one and empty where it does not") describe a source that does not exist. No runner reports a provider. The adapter names it as a constant: `ClaudeAdapter.provider = "anthropic"` and `CodexAdapter.provider = "openai"`, and the opencode and plain adapters leave it `""` (`session_adapters.py` 216, 349, 453, 625). A builder who read the row would try to read the provider from the stream and would leave it empty for every runner, and the tests assert the constants (`test_session_service.py` 63, 116). Restate the clause as what holds: the adapter names the provider its runner serves, and leaves it empty where the runner may route to any provider (the opencode gateway). This is WI-725's observation 3; it holds.
+- [RETURN] SR-227 -> where the adjudicator retention dial is above zero, retained-class adjudications reuse a route's session in the runner's resume form, each call recorded, drained at the dial or on a governing-input change, retired only at a clear point, retired at once on a failed call, never used by two calls at once -> `SN-Refs` SN-025 HOLDS as a labelled derived row (three hats, three stated failures); `Boundary-Refs` B-10 HOLDS; LLR-270 decomposes it and TC-266 to TC-268 drive it -> NOT ready on its one `shall`. The shall says each adjudication of a retained class is launched in the resume form, against a session an earlier adjudication on the same route started. That promise is broken by the row's own acceptance and by its child. The acceptance's "or starts one whose id is recorded" covers the first launch on a route and every launch after a retirement. LLR-270's `keep_for` runs the adjudication unretained, saying why, when another call holds the lease past `lease_wait`. So a correct implementation fails the literal shall (spine-authoring §2(d2): an absolute is a promise every child keeps). Restate the response so it covers all three cases: resume the route's active, unheld session; otherwise mint one and record its id; and a held session is waited on for a bounded time and then run unretained, saying why. Carry that last clause into the acceptance too. The Rationale, restated by WI-720, is blessable as it stands.
+- [RETURN] LLR-266 -> `adapter_for` picks the adapter by the launched executable's basename; `prepare` adds each runner's structured-output flags once; the adapter, not the launch, reads the final text; `raw_usage` returns the usage-bearing events as the runner's own lines -> `SR-Refs` SR-222 HOLDS; `Component` CMP-008 and `Module`/`CodeSymbol` resolve -> NOT ready on two phrases in `Detail` (WI-725 observation 1; both hold). (a) "so a stand-in agent is accounted as before" is time-relative, the same class WI-720 removed from TC-262. State the condition: a stand-in gets the plain adapter, which leaves argv, final text and usage as the claude-shaped reader returns them. (b) "codex gets --json beside the --output-last-message temp file it already carried" is untrue. `CodexAdapter.prepare` adds both `--json` and `-o` (`_codex_lastmsg_setup(_ensure(argv, "--json"))`, line 437), and none of the three codex `cmd_template`s in `docs/agents.toml` carries `-o`. Say the adapter adds both.
+- [APPROVE] LLR-267 -> `context(stream, env, session_id)` returns the final request's `(session_id, used, window, pct)`: claude from the last assistant event's input plus cache read plus cache creation, with the window from the modelUsage entry of the model that request named; codex never from the cumulative exec usage but from the rollout under the launch's `CODEX_HOME`; opencode from the last step_finish with no window guessed; the service writes the four columns for every call -> `SR-Refs` SR-222 HOLDS: it decomposes the parent's occupancy clause, and TC-263 (approved) drives every arm. The Detail and Rationale state the standing mechanism and the reason (cumulative counters overstate occupancy; a guessed window is what a reset rule would act on). -> ready. No `requirement form` finding in the scratch flip.
+- [RETURN] LLR-268 -> `usage(stream)` returns exactly the `USAGE_KEYS` columns per runner through the one `usage_record` builder: inclusive input, derived fresh input, unreported counts empty, a per-runner mapping, and raw usage verbatim -> `SR-Refs` SR-222 HOLDS -> NOT ready on one gap that follows SR-222's finding. The Detail lists `gen_ai.provider.name` among the columns but never says where claude's or codex's value comes from; only opencode's absence is stated ("no provider or response model is named"). No sibling LLR carries the clause either. So SR-222's provider-name clause is decomposed nowhere, and the code's constants (`anthropic`, `openai`, `""` for opencode and the plain adapter) are undocumented at the design tier. State them here, in the same lane that restates SR-222.
+- [APPROVE] LLR-269 -> a role hands a `Call` its data only; `act` builds, prepares, launches headless or attached, reads the final text through the adapter, and fills the accounting, with a raising launch accounted and re-raised; `record` writes one log overlaid by that accounting and commits it; `call` is act then record; every launching role goes through it and nothing else calls `run_session`, `run_attached` or the log writer -> `SR-Refs` SR-222 HOLDS: it is the consistency lens's one path, and TC-265 (approved) drives it, including the structural guards -> ready. No history in Detail or Rationale; no form finding in the scratch flip.
+- [APPROVE] LLR-270 -> config read with typed defaults and inert at dial 0; one JSON record per route under the primary checkout, written whole under an exclusive stale-after-two-minutes lock, with a lease; mint or resume before a launch, drain and clear-point retirement over the lineage-closed chain; resume and mint forms per runner under dedicated homes; bookkeeping after, with immediate retirement on failure; a lockless tombstone for a raising launch; keep-warm off the dispatcher's thread and recorded on it over a clean trunk -> `SR-Refs` SR-227 HOLDS: every mechanism decomposes a clause of the parent's requirement or acceptance, including the mint and unretained cases the parent's shall omits (the finding above is the parent's). `Hat-Refs` is rightly empty. WI-720 restated the time-relative phrase WI-718 returned ("exactly a fresh session's") -> ready. Its text does not change with SR-227's restatement. No form finding in the scratch flip.
+- [APPROVE] TC-262 -> over recorded fixtures driven through `act` with an injected runner (the codex and opencode fixtures stated NOT LIVE, as their first lines say): the adapter is chosen by the executable's name; codex `--json` goes beside the last-message file and is not doubled; codex's success returns the last-message text and keeps its usage line; opencode `--format json` returns the last speaking step and keeps both step_finish events; non-JSON output passes through with no usage; and, per runner, a usage line shaped so re-serialising would change it is held byte for byte in the raw usage and in the record beside the parsed counts -> `Verifies` SR-222, LLR-266 and IF-245 HOLD. Every clause maps to a case in `tests/test_session_adapters.py` (67-140, 216-259), and the Expected states the condition WI-720 restated -> ready. The Method stays true when LLR-266's two phrases are restated (it says "beside the last-message file" and never "already carried"). Smoke tier honest: the module is not in `SLOW_MODULES`.
+- [RETURN] TC-264 -> over each runner's fixture, each adapter's record carries the pinned revision and the OpenTelemetry names, with inclusive input and one fresh formula; per-runner specifics; every record carries the same columns -> `Verifies` SR-222 and LLR-268 HOLD -> NOT ready (WI-725 observation 2; it holds). The Method says "assert each adapter's usage record carries the pinned revision", but only claude's `semconv` is asserted (`test_session_service.py` 61; the codex and opencode cases at 113-138 never read it). A row claims what its evidence asserts: add the assertion to the codex and opencode cases, or narrow the Method. The same lane should name the provider-name assertions the cases already make (`anthropic`, `openai`) and add opencode's empty one, so the case verifies SR-222's restated clause.
+
+Also read, and not rows of this act: `session_adapters.py`'s module docstring ("the codex route threw its usage away on every successful call") and `_claude_usage`'s "the old reader looked for …", plus the plain adapter's "as the kit always read one" (lines 206 and 223). Each describes history. The returning lane touches the file, so it should restate them.
+
+## The act, and why the approved rows are not flipped here
+
+LLR-267, LLR-269, LLR-270 and TC-262 are approved on their text. Their flip
+needs the anchoring copy of `low-level-requirements.toml` and
+`test-cases.toml`, and that copy is REFUSED at this tree. Checked read-only
+with `baseline_snapshot.refresh_refusal` over the full intended act: it names
+LLR-223 (`Detail`) and TC-220 (`Expected`, `Method`). Both are approved rows
+whose amended text this same sitting RETURNED under WI-726, so neither may be
+re-attested. The brief's rule for that refusal is to stop before the approval
+commit and leave the flips uncommitted, so the scratch flips were reverted
+and no row here changes `Status`. The four approvals stand as ruled, and they
+are owed to the first act that can copy those two registries. That is the act
+after LLR-223 and TC-220 are resolved; the Dispositions draft says so.
+
+Form gate: LLR-267, LLR-269, LLR-270 and TC-262 were flipped in the working
+tree and driven through `trace.py --root . --strict`. There was no
+`requirement form` finding, only the expected pre-snapshot approval-record
+and integrity findings on the four rows. The flips were then reverted.
+
+Tests I ran at f1733da (not claimed): `python -m pytest -q -n auto
+tests/test_assumption_rules.py tests/test_cell_classes.py
+tests/test_session_adapters.py tests/test_session_service.py
+tests/test_session_keep.py tests/test_retire.py` gave **351 passed in 52.82s**.
+
+Dispositions: one draft in this spec's `## Dispositions`, consolidated with
+WI-726's returns (one lane, one adjudication at its merge).
+
+OUTCOME: RETURN rows=9
