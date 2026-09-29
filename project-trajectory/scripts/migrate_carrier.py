@@ -141,10 +141,12 @@ REF_COLS = {
     "Hat-Refs",
     # SR-189: a need's stakeholders, STK ids, which hold no separator.
     "Stakeholder-Refs",
-    # SR-193: a requirement's assumptions; SR-191/SR-192: an assumption's
-    # landing crossings and obstacle perspectives, a surrogate's emulated
-    # parties. Every entry is an id or a hat name, which holds no separator.
+    # SR-193: a requirement's assumptions and joint-delivery siblings;
+    # SR-191/SR-192: an assumption's landing crossings and obstacle
+    # perspectives, a surrogate's emulated parties. Every entry is an id or a
+    # hat name, which holds no separator.
     "DA-Refs",
+    "Delivered-With",
     "EffectAt",
     "ObstacleHats",
     "Emulates",
@@ -303,11 +305,13 @@ KEY = {
     "Party": "party",
     "Stakeholder-Refs": "stakeholder_refs",
     "Source": "source",
-    # the requirement's assumption citations, waiver and form (SR-193, SR-194)
-    # and the assumptions registry's own cells (SR-191, SR-192). Never
+    # the requirement's assumption citations, joint-delivery siblings, waiver
+    # and form (SR-193, SR-194), and the assumptions registry's own cells
+    # (SR-191, SR-192). Never
     # converted from a legacy carrier; declared as the writer half of the one
     # pinned bijection.
     "DA-Refs": "da_refs",
+    "Delivered-With": "delivered_with",
     "Coincident": "coincident",
     "Form": "form",
     "EffectAt": "effect_at",

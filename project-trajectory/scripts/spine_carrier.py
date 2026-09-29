@@ -336,10 +336,12 @@ SPINE_COLUMN = {
     "source": "Source",
     "phase": "Phase",
     "aspect": "Aspect",
-    # The requirement's assumption citations and its waiver (SR-193), and its
-    # form (SR-194). `coincident` is declared ONCE, here, and an interface row's
-    # waiver reads the same column: one key, one column name, repo-wide (D-3).
+    # The requirement's assumption citations, joint-delivery siblings and
+    # waiver (SR-193), and its form (SR-194). `coincident` is declared ONCE,
+    # here, and an interface row's waiver reads the same column: one key, one
+    # column name, repo-wide (D-3).
     "da_refs": "DA-Refs",
+    "delivered_with": "Delivered-With",
     "coincident": "Coincident",
     "form": "Form",
     "superseded_by": "SupersededBy",

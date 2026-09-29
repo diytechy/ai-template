@@ -48,8 +48,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   gate's four steps (behind `[checks] assumption_gate = false`), and C2's
   assumption and surrogate rows with every SR's bridging. C3 (evidence) and
   C4 (activation) come next. WI-667 decides how a red assumption's evidence
-  reaches the adjudication machinery, and WI-723 builds OI-97's
-  joint-delivery class.
+  reaches the adjudication machinery. OI-97's joint-delivery class has
+  landed; its amendments and nine re-opened rows await the next
+  spine-acts batch.
 - **Sister plan — one plan still owed:** every question in the
   [notes on spine, sessions and tests](plans/2026-09-23-owner-notes-spine-sessions-and-tests.md)
   §5 is ruled except S11, whose direction (one trunk commit per work item)

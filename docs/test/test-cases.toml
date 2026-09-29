@@ -2257,9 +2257,9 @@ phase = 6
 [test.TC-220]
 verifies = ["SR-193", "LLR-222", "LLR-223"]
 level = "Unit"
-method = "sr_classification_advisories and da_citing_srs called on in-memory rows. A requirement citing declared assumptions is bridged; one with a waiver is coincident; one with neither is reported unclassified; one with both is reported; an empty or whitespace-only citation list counts as absent; a citation naming an undeclared assumption is a failure naming the requirement. da_citing_srs returns each assumption's citing requirements, and the served needs read through them match the requirements' SN-Refs. No assumptions registry makes every call vacuous. The template's example requirement carries both new keys."
+method = "sr_classification_advisories and da_citing_srs called on in-memory rows. A requirement citing declared assumptions is bridged; one naming declared siblings that share a need is joint; one with a waiver is coincident; one with none is reported unclassified. Joint with direct assumption citations stays joint and inherits no sibling assumptions; joint with a waiver is reported. A declared sibling sharing no need is reported; a sibling naming an undeclared requirement or a citation naming an undeclared assumption is a failure naming the requirement. A citation with a waiver is reported; an empty or whitespace-only list counts as absent. da_citing_srs returns each assumption's directly citing requirements, and the served needs read through them match those requirements' SN-Refs. No assumptions registry makes every call vacuous. The template's example requirement carries all three classification keys."
 tier = "Smoke"
-expected = "Satisfies SR-193's acceptance: bridged, coincident, unclassified and both classified as stated; an undeclared citation fails; need references unchanged and an assumption's needs derived; no registry is vacuous."
+expected = "Satisfies SR-193's acceptance: bridged, joint, coincident, unclassified and contradictory combinations classified as stated; an undeclared reference fails; a disjoint sibling reports; need references and direct assumption coupling stay unchanged; no registry is vacuous."
 automated = "Yes"
 evidence = "tests/test_assumption_rules.py"
 status = "Approved"
@@ -2279,9 +2279,9 @@ phase = 6
 [test.TC-222]
 verifies = ["SR-189", "SR-190", "SR-193", "SR-194", "SR-197", "SR-198", "SR-211", "SR-214", "LLR-225"]
 level = "Integration"
-method = "Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation."
+method = "Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Delivered-With, Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation."
 tier = "Full"
-expected = "Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell re-opens its row's."
+expected = "Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell, including Delivered-With, re-opens its row's."
 automated = "Yes"
 evidence = "tests/test_cell_classes.py"
 status = "Approved"

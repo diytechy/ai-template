@@ -58,3 +58,31 @@ CONFIRMED
   WI-723's builder and a Sonnet confirmation running tests beside it. That
   is contention, not this documentation-only lane. The spine and doc checks
   are clean.
+
+### WI-723 lands: the joint-delivery class (OI-97 (a))
+
+- **Build and review:** one Sol build and one Sol fix round, with two
+  Sonnet rounds.
+  - [Round 1](../reviews/2026-09-28-wave6/sonnet-wi723-r1.md): NOT YET
+    SOUND. SR-024's sibling was not argued from its rationale.
+    `assumption_rules.py` had reached exactly 1000 SLOC by cutting the
+    explanations out of its advisory text, and it computed undeclared ids
+    in two places.
+  - [Round 2](../reviews/2026-09-28-wave6/sonnet-wi723-r2.md): SOUND at
+    35444157. The builder accepted every finding, so no arbitration.
+- **What landed:** `delivered_with` and the joint class, with SR-193's chain
+  amended in place.
+  - Seven rows are joint: SR-015, SR-033, SR-111, SR-174, SR-177, SR-223 and
+    SR-225.
+  - SR-024 and SR-129 stay unclassified, because no rationale sentence
+    carries a sibling.
+  - The ratchet is re-stamped at 1028 with its reason.
+- **Owed:** the amendments and the nine rows' re-opened attestations go to
+  the next spine-acts batch.
+- **Trunk before this squash:** e86cae4f.
+- **Bar:** smoke `1898 passed, 3 skipped` (eight new tests). Its seconds
+  read 136.5 s against 60 s, with WI-721's full unfiltered suite running
+  `-n auto` on the same box, so this is contention and not re-stamped.
+  check_trajectory --strict, trace --strict-integrity, gen_open_items,
+  gen_trajectory, derive_stage, check_docs, and the live approval brief
+  (`trace.py --approve modified`) are current.

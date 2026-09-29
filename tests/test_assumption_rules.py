@@ -213,12 +213,112 @@ def test_each_requirement_is_classified_by_its_citations_and_its_waiver(rules):
     assert not _named(advisories, "SR-001") and not _named(advisories, "SR-002")
     assert len(_named(advisories, "SR-003")) == 1, advisories
     assert len(_named(advisories, "SR-004")) == 1, advisories
+    assert _named(advisories, "SR-004", "contradict", "keep the one that is true")
     assert len(advisories) == 2, advisories
+
+
+def test_unclassified_advisory_explains_every_missing_classification(rules):
+    _failures, advisories = rules.sr_classification_advisories([_sr("SR-001")], DAS)
+    message = advisories[0]
+    assert "cites no assumption in DA-Refs" in message
+    assert "names no sibling requirement in Delivered-With" in message
+    assert "records no Coincident waiver" in message
+    assert "why its own specification alone delivers its needs" in message
+
+
+def test_a_requirement_naming_declared_siblings_with_a_shared_need_is_joint(rules):
+    srs = [
+        _sr(
+            "SR-001",
+            **{"SN-Refs": "SN-001", "Delivered-With": "SR-002;SR-003"},
+        ),
+        _sr("SR-002", **{"SN-Refs": "SN-001"}),
+        _sr("SR-003", **{"SN-Refs": "SN-001;SN-002"}),
+    ]
+    assert "joint" in rules.SR_CLASSES
+    assert rules.classify_srs(srs, DAS)["SR-001"] == "joint"
+    failures, advisories = rules.sr_classification_advisories(srs, DAS)
+    assert not _named(failures, "SR-001"), failures
+    assert not _named(advisories, "SR-001"), advisories
+
+
+def test_a_joint_requirement_may_also_cite_its_own_assumptions(rules):
+    srs = [
+        _sr(
+            "SR-001",
+            **{
+                "SN-Refs": "SN-001",
+                "DA-Refs": "DA-001",
+                "Delivered-With": "SR-002",
+            },
+        ),
+        _sr("SR-002", **{"SN-Refs": "SN-001", "DA-Refs": "DA-002"}),
+    ]
+    assert rules.classify_srs(srs, DAS)["SR-001"] == "joint"
+    # Joint delivery does not inherit a sibling's assumptions: the one
+    # derivation still reads only each requirement's direct citations.
+    assert rules.da_citing_srs(srs) == {
+        "DA-001": ["SR-001"],
+        "DA-002": ["SR-002"],
+    }
+
+
+def test_a_joint_requirement_with_a_coincident_waiver_is_reported(rules):
+    srs = [
+        _sr(
+            "SR-001",
+            **{
+                "SN-Refs": "SN-001",
+                "Delivered-With": "SR-002",
+                "Coincident": "Its own specification delivers the need.",
+            },
+        ),
+        _sr("SR-002", **{"SN-Refs": "SN-001"}),
+    ]
+    assert rules.classify_srs(srs, DAS)["SR-001"] == "joint"
+    failures, advisories = rules.sr_classification_advisories(srs, DAS)
+    assert not _named(failures, "SR-001"), failures
+    assert len(_named(advisories, "SR-001", "Coincident")) == 1, advisories
+    assert _named(advisories, "SR-001", "contradicts", "keep the one that is true")
+
+
+def test_a_joint_requirement_naming_an_undeclared_sibling_fails(rules):
+    srs = [
+        _sr(
+            "SR-001",
+            **{"SN-Refs": "SN-001", "Delivered-With": "SR-009"},
+        )
+    ]
+    failures, advisories = rules.sr_classification_advisories(srs, DAS)
+    assert len(_named(failures, "SR-001", "SR-009")) == 1, failures
+    assert "SR-001" not in rules.classify_srs(srs, DAS)
+    assert advisories == []
+
+
+def test_a_joint_requirement_and_sibling_with_no_shared_need_are_reported(rules):
+    srs = [
+        _sr(
+            "SR-001",
+            **{"SN-Refs": "SN-001", "Delivered-With": "SR-002"},
+        ),
+        _sr("SR-002", **{"SN-Refs": "SN-002"}),
+    ]
+    failures, advisories = rules.sr_classification_advisories(srs, DAS)
+    assert failures == []
+    assert len(_named(advisories, "SR-001", "SR-002", "need")) == 1, advisories
 
 
 @pytest.mark.parametrize("empty", ["", "   "])
 def test_an_empty_or_whitespace_citation_counts_as_absent(rules, empty):
     srs = [_sr("SR-001", **{"DA-Refs": empty})]
+    assert rules.classify_srs(srs, DAS) == {"SR-001": "unclassified"}
+    failures, advisories = rules.sr_classification_advisories(srs, DAS)
+    assert failures == [] and len(_named(advisories, "SR-001")) == 1, advisories
+
+
+@pytest.mark.parametrize("empty", ["", "   "])
+def test_an_empty_or_whitespace_joint_list_counts_as_absent(rules, empty):
+    srs = [_sr("SR-001", **{"Delivered-With": empty})]
     assert rules.classify_srs(srs, DAS) == {"SR-001": "unclassified"}
     failures, advisories = rules.sr_classification_advisories(srs, DAS)
     assert failures == [] and len(_named(advisories, "SR-001")) == 1, advisories
@@ -273,8 +373,8 @@ def test_the_template_example_requirement_carries_both_new_keys():
         )
     )
     example = template["requirement"]["SR-000"]
-    assert "da_refs" in example and "coincident" in example, sorted(example)
-    for key in ("da_refs", "coincident", "form"):
+    assert {"da_refs", "coincident", "delivered_with"} <= set(example), sorted(example)
+    for key in ("da_refs", "coincident", "delivered_with", "form"):
         assert key in SPINE.SPINE_TIER_KEYS["SR-ID"], key
 
 

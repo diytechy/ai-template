@@ -80,6 +80,7 @@ verification = "Test"
 status = "Approved"
 phase = 1
 aspect = "perf"
+delivered_with = ["SR-157"]
 
 [requirement.SR-017]
 title = "Always-on secrets floor"
@@ -246,6 +247,7 @@ priority = "S"
 verification = "Test"
 status = "Approved"
 phase = 1
+delivered_with = ["SR-006", "SR-049"]
 
 [requirement.SR-034]
 title = "Kit scripts run on stdlib plus ledger-declared dependencies"
@@ -419,6 +421,7 @@ priority = "M"
 verification = "Test"
 status = "Approved"
 phase = 1
+delivered_with = ["SR-011", "SR-036"]
 
 [requirement.SR-112]
 title = "Checked per-agent skill fan-out"
@@ -1000,6 +1003,7 @@ priority = "M"
 verification = "Test"
 status = "Approved"
 phase = 4
+delivered_with = ["SR-148", "SR-170"]
 
 [requirement.SR-175]
 title = "Declared inclusion rule for content dispatched to a model provider"
@@ -1041,6 +1045,7 @@ priority = "C"
 verification = "Test"
 status = "Approved"
 phase = 4
+delivered_with = ["SR-156", "SR-170"]
 
 [requirement.SR-180]
 title = "A design row is discharged only by a realization symbol that resolves"
@@ -1239,9 +1244,9 @@ title = "Each requirement cites its assumptions or records why it needs none"
 sn_refs = ["SN-043"]
 boundary_refs = ["B-09"]
 hat_refs = ["TEST-ENGINEER"]
-requirement = "The delivered harness shall report each system requirement that neither cites the assumptions its argument relies on nor records why its own specification alone delivers its needs."
+requirement = "The delivered harness shall report each system requirement that neither cites the assumptions its argument relies on, names the sibling requirements that jointly deliver its needs, nor records why its own specification alone delivers its needs."
 rationale = """An empty cell asserts nothing, so a requirement citing no assumption cannot be read as one that needs none: the absence is unknown, and only an explicit waiver says the system's own behavior is the outcome. The need link stays on the requirement, because one interface serves several arguments and inheriting needs through an assumption would give a requirement the needs of an assumption it merely shares a seam with. Reporting rather than failing keeps the classification a worklist until the gate that relies on it is enabled."""
-acceptance_criteria = "A requirement citing one or more assumptions, each a declared assumption, is classified bridged; a requirement recording a waiver that states why its specification alone delivers its needs is classified coincident; a requirement with neither is reported as unclassified without failing the check; an empty citation list counts as no citation; a citation naming an undeclared assumption fails the check naming the requirement; a requirement carrying both a citation and a waiver is reported without failing the check; the requirement's need references are unchanged, and an assumption's needs are derived from the requirements citing it; changing the citations re-opens no attestation, while declaring or changing the waiver re-opens the requirement's; a project with no assumption registry is vacuous."
+acceptance_criteria = "A requirement citing one or more assumptions, each a declared assumption, is classified bridged; a requirement naming in Delivered-With one or more declared requirements that share at least one of its needs is classified joint; a requirement recording a waiver that states why its specification alone delivers its needs is classified coincident; a requirement with none of the three is reported as unclassified without failing the check; an empty list counts as absent; a citation naming an undeclared assumption, or a sibling naming an undeclared requirement, fails the check naming the requirement; a declared sibling sharing none of the row's needs is reported without failing; a joint requirement may also cite assumptions of its own, and inherits none from its siblings; a requirement carrying both assumption citations and a waiver, or both joint delivery and a waiver, is reported without failing the check; the requirement's need references are unchanged, and an assumption's needs are derived only from the requirements citing it; changing assumption citations re-opens no attestation, while declaring or changing Delivered-With or the waiver re-opens the requirement's; a project with no assumption registry is vacuous."
 priority = "M"
 verification = "Test"
 status = "Approved"
@@ -1655,6 +1660,7 @@ priority = "C"
 verification = "Test"
 status = "Approved"
 phase = 6
+delivered_with = ["SR-154", "SR-175"]
 
 [requirement.SR-224]
 title = "A skill whose description cannot say when to use it fails the skills-index check"
@@ -1681,6 +1687,7 @@ priority = "S"
 verification = "Test"
 status = "Approved"
 phase = 6
+delivered_with = ["SR-139", "SR-140"]
 
 [requirement.SR-226]
 title = "A retired spine row leaves one record of its own, found by its id"

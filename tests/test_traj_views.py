@@ -1251,7 +1251,7 @@ acceptance = "The owner reads it."
 """
 
 
-def _view_sr(sid, need, da_refs=(), coincident=""):
+def _view_sr(sid, need, da_refs=(), coincident="", delivered_with=()):
     cells = [
         "[requirement.{}]".format(sid),
         'title = "{} title"'.format(sid),
@@ -1267,6 +1267,12 @@ def _view_sr(sid, need, da_refs=(), coincident=""):
         cells.append("da_refs = [{}]".format(", ".join('"%s"' % d for d in da_refs)))
     if coincident:
         cells.append('coincident = "{}"'.format(coincident))
+    if delivered_with:
+        cells.append(
+            "delivered_with = [{}]".format(
+                ", ".join('"%s"' % sibling for sibling in delivered_with)
+            )
+        )
     return "\n".join(cells) + "\n\n"
 
 
@@ -1277,6 +1283,7 @@ _VIEW_SRS = (
     + _view_sr("SR-004", "SN-002", coincident="Loading is the outcome.")
     + _view_sr("SR-005", "SN-003")
     + _view_sr("SR-006", "SN-003", ("DA-003",))
+    + _view_sr("SR-007", "SN-003", delivered_with=("SR-006",))
 )
 
 _VIEW_TCS = """[test.TC-010]
@@ -1394,6 +1401,7 @@ def test_need_assumptions_derives_each_need_s_premises_once(tmp_path):
     assert view["SN-002"]["coincident"] and not view["SN-002"]["assumptions"]
     third = view["SN-003"]
     assert third["unclassified"] == ["SR-005"]
+    assert third["joint"] == [{"id": "SR-007", "with": ["SR-006"]}]
     assert [a["id"] for a in third["assumptions"]] == ["DA-003"]
 
 
@@ -1414,6 +1422,7 @@ def test_each_need_s_detail_lists_its_assumptions_with_their_evidence(tmp_path):
     assert "coincident" in second
     third = _unstyled_text(details["SN-003"]["assumptions"])
     assert "SR-005" in third and "unclassified" in third
+    assert "SR-007" in third and "jointly with SR-006" in third
     # One relied on with no current evidence is labelled in words too.
     assert "DA-003" in third and "NO CURRENT EVIDENCE" in third
     # A need whose premises are all evidenced carries no such label.

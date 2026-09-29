@@ -6543,6 +6543,27 @@ homes first (for example `CODEX_HOME=out/adjudicator/home/openai codex login`,
 and `CLAUDE_CONFIG_DIR=out/adjudicator/home/anthropic claude` once
 interactively); a retained launch without them fails and retires its session.
 
+### Requirement joint-delivery classification [since 28d35286]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The optional system-requirement key `delivered_with` carries
+the ids of sibling requirements that jointly deliver a shared need. The
+assumption-tier report classifies such a row `joint`, fails an undeclared
+sibling, warns when siblings share no need or a joint row also claims its own
+specification delivers the need alone, and does not inherit assumptions between
+siblings. Changing the cell is approved-content drift and re-opens the row's
+attestation. The per-need state view names joint rows and their siblings.
+
+**What to do.** Take the updated requirement schema, carrier maps, template,
+assumption rules and state-view modules together. For a requirement that only
+delivers its need with sibling requirements, add `delivered_with = ["SR-..."]`
+using declared siblings that share a need, then re-attest that requirement. Do
+not copy a sibling's assumption citations: each row continues to cite only the
+premises its own argument relies on. Repositories not using joint delivery need
+no registry edit, and the assumption tier remains warn-only until its declared
+gate is armed.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

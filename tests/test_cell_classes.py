@@ -39,7 +39,8 @@ _DA = ("docs/requirements/assumptions.toml", "DA-ID")
 CELL_CLASSES = [
     (*_SR, "SR-001", "DA-Refs", "traced"),
     (*_SR, "SR-002", "Coincident", "approved"),
-    (*_SR, "SR-003", "Form", "approved"),
+    (*_SR, "SR-003", "Delivered-With", "approved"),
+    (*_SR, "SR-004", "Form", "approved"),
     (*_TC, "TC-001", "Assumption-Refs", "traced"),
     (*_TC, "TC-002", "Inputs", "approved"),
     (*_TC, "TC-003", "MaxAge", "approved"),
@@ -57,6 +58,16 @@ CELL_CLASSES = [
     (*_EXT, "EXT-001", "Mediates", "approved"),
     (*_DA, "DA-001", "ObstacleHats", "traced"),
 ]
+
+
+def test_delivered_with_has_a_carrier_key_and_is_approved_content():
+    assert MIGRATE.KEY["Delivered-With"] == "delivered_with"
+    assert (
+        acceptance_record.spine_cell_class(
+            "docs/requirements/system-requirements.toml", "Delivered-With"
+        )
+        == "approved"
+    )
 
 
 def _cell_rows(value):

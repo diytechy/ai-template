@@ -335,8 +335,10 @@ SPINE_TRACED_CELLS = {
 # item.) The assumption tier's STATEMENTS join it by name rather than by the
 # residual (LLR-225): a requirement's `Coincident` waiver and `Form`, and a test
 # case's declared `Inputs`, `MaxAge`, `Sampling`, `SampleSize` and
-# `AcceptanceRule`, each a claim the row makes.
-# Implements: SR-193, SR-194, SR-198, LLR-225
+# `AcceptanceRule`, each a claim the row makes. `Delivered-With` joins the
+# approved half under LLR-222: changing which siblings jointly deliver the need
+# changes the requirement's own argument, rather than merely re-pointing trace.
+# Implements: SR-193, SR-194, SR-198, LLR-222, LLR-225
 SPINE_APPROVED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
         {
@@ -347,6 +349,7 @@ SPINE_APPROVED_CELLS = {
             "Permutations",
             "Priority",
             "Verification",
+            "Delivered-With",
             "Coincident",
             "Form",
         }

@@ -621,7 +621,226 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 3 chain(s): SR-222, SR-224, SR-227</summary>
+<summary>Waiting for automated adjudication — 18 chain(s): SR-015, SR-033, SR-111, SR-174, SR-177, SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211, SR-214, SR-222, SR-223, SR-224, SR-225, SR-227</summary>
+
+## SR-015 — Performance-budget back-links
+
+> **Requirement.** The delivered performance-budgets registry (PB-###) shall keep every row's Refs resolvable to a real SR/LLR/Module.
+
+> **Rationale.** Realizes SN-002 — a budget row that cannot be traced to a requirement, design item or module cannot demonstrate what it constrains, so the off-spine budget rows stay traceable to the spine. Deliberate pair: this row states the delivered data invariant; the checker that polices it is the harness's, decomposing under SR-157 — an on-purpose split, not an echo. SN-002 is the only basis: hat.PERFORMANCE's failure class is a speed or size risk left unassessed, or a budget with no measurement behind it, which says nothing about whether a trace reference resolves.
+
+
+### SR SR-015
+- **Delivered-With**
+  - before: (empty)
+  - after: SR-157
+
+## SR-033 — Release checklist generation
+
+> **Requirement.** The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate.
+
+> **Rationale.** Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did.
+
+
+### SR SR-033
+- **Delivered-With**
+  - before: (empty)
+  - after: SR-006;SR-049
+
+## SR-111 — Kit-version stamp
+
+> **Requirement.** The delivered scaffold generator shall record a kit-version stamp carrying the kit commit SHA and date, marked -dirty on an uncommitted kit tree.
+
+> **Rationale.** Contributes to SN-001's re-sync clause (a re-sync onto an existing repo never clobbers the repo's own files) by supplying the kit base that re-sync diffs from — without a recorded origin an adopter cannot tell which kit version they are on, so a re-sync degrades from a diff into a guess and the ADOPTING.md re-sync procedure has no baseline to diff against. Deriving the version from file hashes was rejected: it reports that something differs without saying from what. The stamp is what lets a maintainer identify the upstream version a scaffold came from and compute a re-sync diff.
+
+
+### SR SR-111
+- **Delivered-With**
+  - before: (empty)
+  - after: SR-011;SR-036
+
+## SR-174 — Work-item identity is allocated once and never re-issued
+
+> **Requirement.** The delivered loop content shall allocate each work-item identity at most once, so that no two concurrent actors receive the same identity and an identity freed by a deletion is never re-issued.
+
+> **Rationale.** Identity allocation is its own decision, not a consequence of serialization: serializing the writer makes a COLLISION unlikely and does nothing about RE-USE, which is the half that silently re-points every commit message and archived document citing the freed id. The non-reuse clause has a `shall` of its own here rather than living in SR-170's acceptance, which is a cell that cannot mint a requirement. Contributes to SN-025 (the ready frontier ordered deterministically, so two readers of the same registry dispatch the same work) by supplying a work-item identity that names one record for every reader, before and after a deletion.
+
+
+### SR SR-174
+- **Delivered-With**
+  - before: (empty)
+  - after: SR-148;SR-170
+
+## SR-177 — Fan-out utilisation reported from the run's own telemetry
+
+> **Requirement.** The delivered loop content shall report, per run, the utilisation of the fan-out it commissions — the lanes configured, the lanes actually occupied, and the work integrated per unit of wall time — derived from the run's own recorded telemetry, reported and never gated, with no declared improvement target.
+
+> **Rationale.** The charter refuses a declared budget with no measurement behind it, and SN-027 is that finding inverted — the system's most complex machinery justified by a throughput claim no instrument measures, flagged unfalsifiable as written by three independent derivations. The intake proposal (docs/plans/2026-08-17-wi468-obligation-intake-options.md §3 option (b)) is DELIBERATELY LESS than the charter asks — the narrowing is the decision: C-PRF-1 wants a declared improvement over the serial semantic on a declared workload, but the wall time of an LLM loop is dominated by provider latency and model choice, so a numeric target would pin machine, provider and model conditions the kit does not control (one machine is one data point) — this row makes the throughput claim OBSERVABLE rather than BUDGETED. The concrete argument the instrument earns its keep: the lanes dial is undeclared in this repository and defaults to 1, so the machinery SN-027 justifies by fan-out runs SERIAL here and nothing today would say so — this report's first run would have printed lanes=1. SN-027's own `why` states the same structural claim, so the need and the instrument stop overclaiming together. NOT DECOMPOSED, stated rather than implied: nothing aggregates the existing per-session telemetry (wall seconds, api seconds, turns — the session-log headers and the iteration index) by lane or by run, so there is no seam to pin and no test to cite; the row lands Drafted-undecomposed with the aggregation surface as it… [69 more chars — read the registry row]
+
+
+### SR SR-177
+- **Delivered-With**
+  - before: (empty)
+  - after: SR-156;SR-170
+
+## SR-189 — Each need resolves to the declared stakeholders whose outcome it is
+
+> **Requirement.** The delivered harness shall resolve each stakeholder need's stakeholder references against the declared stakeholder list, and each stakeholder's party against the declared frame, reporting a need that names no stakeholder.
+
+> **Rationale.** A need with no named owner has nobody who can confirm it is still wanted, and a stakeholder's party is what lets the need's outcome be placed on the frame. The link lives on the need, pointing at the stakeholder, so the relation has one home; a short list beside the needs keeps the stakeholders where the rows citing them already are, rather than in a registry of their own. A stakeholder is not a review perspective: a stakeholder owns an outcome, while a perspective owns a question put to each decomposition, so no perspective becomes a stakeholder row.
+
+
+### TC TC-222
+- **Expected**
+  - before: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell re-opens its row's.
+  - after: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell, including Delivered-With, re-opens its row's.
+- **Method**
+  - before: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
+  - after: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Delivered-With, Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
+
+## SR-190 — A need's source pointer resolves to a document and anchor
+
+> **Requirement.** Where a stakeholder need records the document it was drawn from, the delivered harness shall resolve that pointer to an existing file and anchor.
+
+> **Rationale.** A need drawn from a longer document — an owner's statement of design constraints, an adopter's needs catalog — drifts from it unseen unless the need says where it came from. The need stays the canonical obligation and the document is its provenance, so the pointer takes a cell of its own instead of a place in the need's text, which is kept free of repository paths so a stakeholder can read it. A pointer that does not resolve is the same rot as a dead link, and fails the same way.
+
+
+### TC TC-222
+- **Expected**
+  - before: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell re-opens its row's.
+  - after: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell, including Delivered-With, re-opens its row's.
+- **Method**
+  - before: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
+  - after: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Delivered-With, Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
+
+## SR-193 — Each requirement cites its assumptions or records why it needs none
+
+> **Requirement.** The delivered harness shall report each system requirement that neither cites the assumptions its argument relies on, names the sibling requirements that jointly deliver its needs, nor records why its own specification alone delivers its needs.
+
+> **Rationale.** An empty cell asserts nothing, so a requirement citing no assumption cannot be read as one that needs none: the absence is unknown, and only an explicit waiver says the system's own behavior is the outcome. The need link stays on the requirement, because one interface serves several arguments and inheriting needs through an assumption would give a requirement the needs of an assumption it merely shares a seam with. Reporting rather than failing keeps the classification a worklist until the gate that relies on it is enabled.
+
+
+### SR SR-193
+- **AcceptanceCriteria**
+  - before: A requirement citing one or more assumptions, each a declared assumption, is classified bridged; a requirement recording a waiver that states why its specification alone delivers its needs is classified coincident; a requirement with neither is reported as unclassified without failing the check; an empty citation list counts as no citation; a citation naming an undeclared assumption fails the check naming the requirement; a requirement carrying both a citation and a waiver is reported without failing the check; the requirement's need references are unchanged, and an assumption's needs are derived from the requirements citing it; changing the citations re-opens no attestation, while declaring or changing the waiver re-opens the requirement's; a project with no assumption registry is vacuous.
+  - after: A requirement citing one or more assumptions, each a declared assumption, is classified bridged; a requirement naming in Delivered-With one or more declared requirements that share at least one of its needs is classified joint; a requirement recording a waiver that states why its specification alone delivers its needs is classified coincident; a requirement with none of the three is reported as unclassified without failing the check; an empty list counts as absent; a citation naming an undeclared assumption, or a sibling naming an undeclared requirement, fails the check naming the requirement; a declared sibling sharing none of the row's needs is reported without failing; a joint requirement may also cite assumptions of its own, and inherits none from its siblings; a requirement carrying both assumption citations and a waiver, or both joint delivery and a waiver, is reported without failing the check; the requirement's need references are unchanged, and an assumption's needs are derived only from the requirements citing it; changing assumption citations re-opens no attestation, while declaring or changing Delivered-With or the waiver re-opens the requirement's; a project with no assumption registry is vacuous.
+- **Requirement**
+  - before: The delivered harness shall report each system requirement that neither cites the assumptions its argument relies on nor records why its own specification alone delivers its needs.
+  - after: The delivered harness shall report each system requirement that neither cites the assumptions its argument relies on, names the sibling requirements that jointly deliver its needs, nor records why its own specification alone delivers its needs.
+
+### LLR LLR-222
+_approved — re-attestation owed_
+- **Detail**
+  - before: The requirement tier gains da_refs (a list, mapped to DA-Refs and listed in migrate_carrier.REF_COLS) and coincident (free text, mapped to Coincident). coincident is declared once in the column map and shared with the interface tier, as the one-key-one-column rule requires. The template's SR-000 row carries both keys so the dogfood rule sees them shipped.
+  - after: The requirement tier carries da_refs (a list, mapped to DA-Refs and listed in migrate_carrier.REF_COLS), delivered_with (a list, mapped to Delivered-With and listed in REF_COLS) and coincident (free text, mapped to Coincident). Delivered-With is approved content in acceptance_record.SPINE_APPROVED_CELLS, so changing the joint-delivery argument re-opens attestation; DA-Refs remains traced. coincident is declared once in the column map and shared with the interface tier, as the one-key-one-column rule requires. The template's SR-000 row carries all three keys so the dogfood rule sees them shipped.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: SPINE_TIER_KEYS/SPINE_COLUMN/KEY
+  - after: SPINE_TIER_KEYS/SPINE_COLUMN/KEY/SPINE_APPROVED_CELLS
+- **Module**
+  - before: project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/registries/system-requirements.template.toml
+  - after: project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/scripts/acceptance_record.py;project-trajectory/registries/system-requirements.template.toml
+
+### LLR LLR-223
+_approved — re-attestation owed_
+- **Detail**
+  - before: sr_classification_advisories(srs, das) returns (failures, advisories). A non-empty DA-Refs whose every entry is a declared assumption classifies the requirement bridged; a non-empty Coincident classifies it coincident; neither is an advisory naming it unclassified; both is an advisory naming it; an entry naming an undeclared assumption is a failure. An empty or whitespace-only list counts as absent. da_citing_srs(srs) returns {DA id: [SR ids]}, the one derivation of an assumption's citing requirements, from which its served needs are read through SN-Refs; nothing records needs on the assumption. Vacuous when the assumptions registry is absent.
+  - after: sr_classification_advisories(srs, das) returns (failures, advisories). A non-empty Delivered-With whose entries are declared requirements sharing a need classifies the requirement joint, including when the row also carries DA-Refs; it imports no sibling assumptions. A non-empty DA-Refs whose every entry is a declared assumption otherwise classifies it bridged; a non-empty Coincident classifies it coincident; none is an advisory naming it unclassified. DA-Refs with Coincident, or Delivered-With with Coincident, is an advisory naming the contradiction; a sibling sharing no need is an advisory; an entry naming an undeclared assumption or requirement is a failure. An empty or whitespace-only list counts as absent. da_citing_srs(srs) returns {DA id: [SR ids]}, the one derivation of an assumption's citing requirements, from which its served needs are read through SN-Refs; nothing records needs on the assumption. Vacuous when the assumptions registry is absent.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: sr_classification_advisories/da_citing_srs
+  - after: SR_CLASSES/sr_classification_advisories/da_citing_srs
+
+### TC TC-220
+- **Expected**
+  - before: Satisfies SR-193's acceptance: bridged, coincident, unclassified and both classified as stated; an undeclared citation fails; need references unchanged and an assumption's needs derived; no registry is vacuous.
+  - after: Satisfies SR-193's acceptance: bridged, joint, coincident, unclassified and contradictory combinations classified as stated; an undeclared reference fails; a disjoint sibling reports; need references and direct assumption coupling stay unchanged; no registry is vacuous.
+- **Method**
+  - before: sr_classification_advisories and da_citing_srs called on in-memory rows. A requirement citing declared assumptions is bridged; one with a waiver is coincident; one with neither is reported unclassified; one with both is reported; an empty or whitespace-only citation list counts as absent; a citation naming an undeclared assumption is a failure naming the requirement. da_citing_srs returns each assumption's citing requirements, and the served needs read through them match the requirements' SN-Refs. No assumptions registry makes every call vacuous. The template's example requirement carries both new keys.
+  - after: sr_classification_advisories and da_citing_srs called on in-memory rows. A requirement citing declared assumptions is bridged; one naming declared siblings that share a need is joint; one with a waiver is coincident; one with none is reported unclassified. Joint with direct assumption citations stays joint and inherits no sibling assumptions; joint with a waiver is reported. A declared sibling sharing no need is reported; a sibling naming an undeclared requirement or a citation naming an undeclared assumption is a failure naming the requirement. A citation with a waiver is reported; an empty or whitespace-only list counts as absent. da_citing_srs returns each assumption's directly citing requirements, and the served needs read through them match those requirements' SN-Refs. No assumptions registry makes every call vacuous. The template's example requirement carries all three classification keys.
+
+### TC TC-222
+- **Expected**
+  - before: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell re-opens its row's.
+  - after: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell, including Delivered-With, re-opens its row's.
+- **Method**
+  - before: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
+  - after: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Delivered-With, Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
+
+## SR-194 — Each requirement declares its form
+
+> **Requirement.** The delivered harness shall report each system requirement that declares no form from the closed set of three: met at an interface, resting on an assumption, or a cross-cutting property of the whole system.
+
+> **Rationale.** A requirement reached by no interface looks the same as one meant to rest only on an assumption unless the row says which it is, so a missing interface hides behind a legitimate exception. A closed cell whose absence is reported, rather than a default, keeps the omission visible. A property of every delivered capability at once is met at no single seam, which is why it is the third form rather than a kind of interface.
+
+
+### TC TC-222
+- **Expected**
+  - before: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell re-opens its row's.
+  - after: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell, including Delivered-With, re-opens its row's.
+- **Method**
+  - before: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
+  - after: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Delivered-With, Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
+
+## SR-197 — A test case evidences assumptions in a field of its own
+
+> **Requirement.** The delivered harness shall accept a test case that evidences assumptions in place of, or beside, the requirements and design rows it verifies, placing a test case that evidences only assumptions in every phase of the requirements that cite them.
+
+> **Rationale.** Evidence about an assumption is not evidence about the system's behavior, and counting both in one field would merge the two obligations the argument separates: that the system does what its requirements say, and that what they say reaches the outcome. A separate reference keeps the verified-requirement join exactly what it was, and lets a test of an assumption stand alone where no requirement is its subject. Every reader that counts evidence has to make the same split, or two views of one test case disagree about what it proves. Phase follows the requirements that rely on the assumption, because an assumption has no phase of its own.
+
+
+### TC TC-222
+- **Expected**
+  - before: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell re-opens its row's.
+  - after: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell, including Delivered-With, re-opens its row's.
+- **Method**
+  - before: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
+  - after: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Delivered-With, Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
+
+## SR-198 — An observation test declares what it reads, how long its result holds, and how it samples
+
+> **Requirement.** The delivered harness shall report an observation test case that omits the inputs its judgment reads, its result lifetime or, where it evidences an assumption, its sampling policy, and refuse one declaring a lifetime shorter than seven days, an input path outside the repository, or a sampling policy outside the closed pair of sampled and monitored.
+
+> **Rationale.** An observation — a person reading a render, a critique of a rendered view, a measurement taken across an adopter's first week — cannot be rerun for every tree, so its result is trusted only while the state it judged is unchanged, and for a declared time. Declaring the inputs it reads is what lets a changed input make the result stale without a model call; the lifetime floor keeps a judgment from being demanded more often than it can honestly be taken. The author proposes the lifetime and the row's approval accepts it, because how fast a premise can change is a judgment about the world. A sampled result supports a positive claim only under a stated sampling model, so the model is declared where a project wants that claim. Omissions are reported rather than refused so observation tests written before these cells existed keep passing on upgrade; the declarations are approved content because they state how the row's claim is kept current.
+
+
+### TC TC-222
+- **Expected**
+  - before: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell re-opens its row's.
+  - after: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell, including Delivered-With, re-opens its row's.
+- **Method**
+  - before: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
+  - after: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Delivered-With, Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
+
+## SR-211 — Each boundary interface is bridged or coincident
+
+> **Requirement.** The delivered harness shall report each interface realizing a boundary crossing that neither names the assumptions carrying its reading to an outcome nor records why its reading is the outcome.
+
+> **Rationale.** A requirement is testable only if the interface it is met at is defined or its reading is clearly assumed. The allocation is recorded on the interface, which is approved at the architecture rung where interfaces are, so an assumption approved earlier at the boundary rung is never edited to point at a seam approved later. The requirement a seam answers stays derived through the interface's owner, because stating it on the interface would give that relation a second home.
+
+
+### TC TC-222
+- **Expected**
+  - before: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell re-opens its row's.
+  - after: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell, including Delivered-With, re-opens its row's.
+- **Method**
+  - before: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
+  - after: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Delivered-With, Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
+
+## SR-214 — An assumption's obstacle records the perspectives that raised it
+
+> **Requirement.** The delivered harness shall resolve each assumption's recorded obstacle perspectives against the declared review perspectives, reporting a perspective that is not declared.
+
+> **Rationale.** An obstacle is what a perspective's question produces when put to an assumption — asking what happens when an input is missing, stale or half-written writes one directly — so recording which perspective raised it shows a reviewer which failure classes have been put to the assumption. Only positive provenance is recorded, because a per-perspective record of not applying would have no reader.
+
+
+### TC TC-222
+- **Expected**
+  - before: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell re-opens its row's.
+  - after: Satisfies the cell-class clauses of SR-189, SR-190, SR-193, SR-194, SR-197, SR-198, SR-211 and SR-214: each traced cell re-opens no attestation and each approved cell, including Delivered-With, re-opens its row's.
+- **Method**
+  - before: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
+  - after: Driven on git repositories through the amendment classifier. Changing an approved row's traced cell — a requirement's DA-Refs, a test case's Assumption-Refs, a need's Stakeholder-Refs or Source, an interface's BridgedBy, an assumption's ObstacleHats — reports no drift from the recorded copy. Changing an approved cell — a requirement's Delivered-With, Coincident or Form, a test case's Inputs, MaxAge, Sampling, SampleSize or AcceptanceRule, an interface's Coincident, a stakeholder's name, description or party, a crossing's System, an entity's Mediates — is reported as drift owed a re-attestation.
 
 ## SR-222 — Every model session is recorded in one usage record, whichever provider CLI serves it
 
@@ -677,6 +896,18 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
   - before: Satisfies LLR-268 (parent SR-222): one usage record per runner in the pinned vocabulary, inclusive input, derived fresh input, raw usage verbatim, unreported counts empty, and the two claude defects fixed.
   - after: Satisfies LLR-268 (parent SR-222): one usage record per runner in the pinned vocabulary, inclusive input, derived fresh input, raw usage verbatim and unreported counts empty; claude's reasoning count is read from output_tokens_details.thinking_tokens, and its response model is filled from the request that answered even when a background model's usage sits beside it.
 
+## SR-223 — A guarded session receives the guardrails payload vendored for its model
+
+> **Requirement.** Where a repository vendors a guardrails payload for a model-name substring, the delivered loop content shall inject that payload, in place of the default guardrails core, into a guarded session whose model name contains that substring.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-026 asks that models be selected per job and capability level; it does not name what a session on a given model is told, so this obligation arrives through the unattended-operations lens rather than through the need's text. A guardrails posture written for one model is ritual noise to a stronger one and too little for a weaker one, and in an unattended run nobody watches a session drift: one core for every guarded model is the silent degrade that lens listens for. Selecting by a substring of the model name reuses the matcher the guardrails policy already applies, so one grammar decides both whether a session is guarded and what it is given, and the repository's own file names carry the mapping. A per-model key in the policy dial was the alternative, and it lost because a model name in shared configuration is the name that rots when models turn over. Fed back to the need: SN-026's acceptance could name a per-model posture; until it does, this row is derived and says so.
+
+
+### SR SR-223
+- **Delivered-With**
+  - before: (empty)
+  - after: SR-154;SR-175
+
 ## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
 
 > **Requirement.** If a skill's description is shorter than the declared description floor, then the kit's skills-index check shall fail, naming that skill.
@@ -698,6 +929,18 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Verification**: Test
 - **Status**: Drafted
 - **Phase**: 6
+
+## SR-225 — A delegated run closes with a record of the calls it made, where the declared dial asks for one
+
+> **Requirement.** Where the declared decision-recording dial asks for a record, the delivered loop content shall judge a closing lane against that run's decisions record, refusing to integrate the lane when the record is absent, naming where it belongs, and reporting without refusing each entry of a present record that omits a required disclosure field or leaves one blank.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-029 asks that a run released to automation get as far as it honestly can, and that an approval it makes on a released tier leave a record naming who made it; it does not name the other calls a delegated run makes on the owner's behalf, the ones too settled to hold the run for and not settled enough to be history, so this obligation arrives through the unattended-operations lens rather than through the need's text. A call nobody is told about is the failure that lens listens for: it pages nobody, and a run that looks green is green partly because nothing looked at what it chose. A prose instruction to list such calls was tried and measurably degraded within one session, the fields left out as soon as nothing read them, so the record carries required fields and the close that owes it refuses silence. The obligation is keyed to a dial because how much of the owner's reading a run may claim is the owner's to set; it ships off, so a repository owes nothing until its owner asks. Every close owes the record, a partial close included, because every delegated run closes with one; a lane the machinery closed with no session present is refused too, and that refusal is a hold for a person to write the record rather than a strand. A malformed entry is reported rather than refused, because the record is there and readable and a refusal would hold finished work for a reporting defect. A value of the dial outside its alphabet is judged before the re… [503 more chars — read the registry row]
+
+
+### SR SR-225
+- **Delivered-With**
+  - before: (empty)
+  - after: SR-139;SR-140
 
 ## SR-227 — Where the retention dial is on, an adjudication resumes a retained session and resets it only when that is safe
 

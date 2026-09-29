@@ -120,6 +120,7 @@ THRESHOLD = 1000
 # on its date would falsify it. They are not re-pointed for the same reason this
 # repo does not restate a rule in five files: the owner has one home, above.
 BASELINE = {
+    "assumption_rules.py": 1028,  # +28 (1000 -> 1028) 2026-09-29, WI-723 review fix: restore the explanatory classification advisories and make `_classify` the one derivation of undeclared assumptions, undeclared siblings and siblings sharing no need. The module owns this cohesive pure rule family; extracting the 28 lines would create a shallow seam solely to evade the threshold. Reviewed bump, reason in this commit's body.
     # +76 (4511 -> 4587), WI-284: the generated Ready-frontier block — the
     # scheduler-derived forward-looking WI list that makes the forward-only
     # cascade structurally impossible (a `done` WI can't linger in status.md).

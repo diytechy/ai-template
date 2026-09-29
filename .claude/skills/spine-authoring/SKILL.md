@@ -169,6 +169,15 @@ Questions:
     response is*, not *when the row applies*. Fronting it would change the
     obligation. This is why the checker warns rather than gates: only you can
     tell those two apart.
+- **(b3) Does a joint-delivery row still state behaviour at a BOUNDARY?** Read
+  every requirement named in `Delivered-With` and the assumptions each sibling
+  cites directly. Check that their obligations and premises align around the
+  shared need; never import one sibling's assumptions into another. Then apply
+  the tier test: a row whose own output crosses a boundary is a real SR even
+  when siblings complete the need with it, while a row whose output crosses no
+  boundary and is consumed only by a sibling is a design decision and belongs
+  at LLR. The shared-need checker is a detector; alignment and tier remain the
+  adjudicator's judgement.
 - **(c) If the obligation arrived through a lens rather than the need's text,
   RECORD the lens.** This is DO-178C's **derived requirement** class: content
   beyond what the parent demands, legitimate *because* it is (i) recorded as

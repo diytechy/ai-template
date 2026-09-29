@@ -360,9 +360,10 @@ def _da_item(a):
 def need_assumption_block(entry):
     """The markup one need's detail panel shows (SR-218): every assumption its
     requirements cite, once, with its validity, evidence level and citing
-    requirements; that the need is answered by coincident requirements alone;
-    or the unclassified requirements that leave a gap. `""` for no entry, or
-    one with nothing to say.
+    requirements; each requirement delivered jointly with named siblings; that
+    the need is answered by coincident requirements alone; or the unclassified
+    requirements that leave a gap. `""` for no entry, or one with nothing to
+    say.
 
     Implements: SR-218, LLR-258"""
     if not entry:
@@ -370,6 +371,17 @@ def need_assumption_block(entry):
     parts = []
     if entry["assumptions"]:
         parts.append("<ul>{}</ul>".format("".join(map(_da_item, entry["assumptions"]))))
+    if entry["joint"]:
+        parts.append(
+            "<p>Joint delivery: {}.</p>".format(
+                "; ".join(
+                    "{} jointly with {}".format(
+                        esc(item["id"]), esc(", ".join(item["with"]))
+                    )
+                    for item in entry["joint"]
+                )
+            )
+        )
     if entry["coincident"]:
         parts.append(
             "<p>Every requirement of this need is coincident: its own "

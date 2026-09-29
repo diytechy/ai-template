@@ -240,11 +240,14 @@ STANDING_VALUES = ("active", "falsified")
 # Implements: SR-192, LLR-221
 SUR_REQUIRED = ("Name", "Emulates", "Description", "Status")
 
-# How a requirement relates to the assumptions under it (SR-193). `bridged`: it
-# cites declared assumptions; `coincident`: its waiver says its own
-# specification delivers its needs; `unclassified`: neither; `both`: a citation
-# and a waiver at once, which contradict each other.
-SR_CLASSES = ("bridged", "coincident", "unclassified", "both")
+# How a requirement's argument delivers its needs (SR-193). `bridged`: it cites
+# declared assumptions; `joint`: it names the sibling requirements that deliver
+# the need with it; `coincident`: its own specification delivers its needs;
+# `unclassified`: none of those; `both`: an assumption citation and a
+# coincident waiver at once, which contradict each other. A joint row may also
+# cite assumptions of its own without inheriting any from its siblings.
+# Implements: SR-193, LLR-223
+SR_CLASSES = ("bridged", "joint", "coincident", "unclassified", "both")
 
 # AN OBSERVATION CASE'S DECLARATION CELLS (SR-198), in the carrier's column
 # names: the cells an automated case has no use for, since the harness reruns
@@ -450,19 +453,35 @@ def da_citing_srs(srs):
     return out
 
 
-def _classify(row, declared):
-    """`(class, undeclared)` for one requirement: its `SR_CLASSES` member, or
-    None when a citation names an assumption the registry does not declare."""
+def _classify(row, declared, requirements):
+    """Return one requirement's class and every reference advisory fact.
+
+    This is the one parse of the classification cells. Callers either expose
+    the class or format these facts; they do not re-derive reference state.
+    """
     cited = refs(row.get("DA-Refs"))
+    siblings = refs(row.get("Delivered-With"))
     waiver = _cell(row, "Coincident")
     undeclared = [did for did in cited if did not in declared]
-    if undeclared:
-        return None, undeclared
-    if cited and waiver:
-        return "both", []
-    if cited:
-        return "bridged", []
-    return ("coincident" if waiver else "unclassified"), []
+    unknown_siblings = [sid for sid in siblings if sid not in requirements]
+    row_needs = set(refs(row.get("SN-Refs")))
+    disjoint_siblings = [
+        sid
+        for sid in siblings
+        if sid in requirements
+        and row_needs.isdisjoint(refs(requirements[sid].get("SN-Refs")))
+    ]
+    if undeclared or unknown_siblings:
+        cls = None
+    elif siblings:
+        cls = "joint"
+    elif cited and waiver:
+        cls = "both"
+    elif cited:
+        cls = "bridged"
+    else:
+        cls = "coincident" if waiver else "unclassified"
+    return cls, undeclared, unknown_siblings, disjoint_siblings
 
 
 def classify_srs(srs, das):
@@ -478,25 +497,23 @@ def classify_srs(srs, das):
     if not _adopted(das):
         return {}
     declared = dict(_real(das, "DA-ID"))
-    out = {}
-    for sid, row in _real(srs, "SR-ID"):
-        cls, _undeclared = _classify(row, declared)
-        if cls:
-            out[sid] = cls
-    return out
+    requirements = dict(_real(srs, "SR-ID"))
+    return {
+        sid: cls
+        for sid, row in requirements.items()
+        if (cls := _classify(row, declared, requirements)[0])
+    }
 
 
 def sr_classification_advisories(srs, das):
     """SR-193's classification, as `(failures, advisories)`.
 
-    A requirement citing declared assumptions is bridged and one carrying a
-    `Coincident` waiver is coincident; neither is reported. One with neither is
-    an advisory naming it unclassified, and one carrying both is an advisory
-    naming it: reported rather than failed, so the classification stays a
-    worklist until a gate relies on it. A citation naming an undeclared
-    assumption is a FAILURE naming the requirement; the caller joins it to the
-    frame class beside the tier's other reference rules. The requirement's
-    `SN-Refs` are never read or changed here.
+    A requirement naming declared siblings with a shared need is joint; it may
+    also cite assumptions of its own. A joint row carrying a `Coincident`
+    waiver, a declared sibling sharing no need, an unclassified row and the
+    existing assumption-plus-waiver `both` class are advisories. An undeclared
+    assumption or sibling is a FAILURE naming the requirement. The requirement's
+    `SN-Refs` are read only to compare sibling scope and are never changed.
 
     VACUOUS until the registry holds a real assumption row.
 
@@ -505,25 +522,43 @@ def sr_classification_advisories(srs, das):
     if not _adopted(das):
         return [], []
     declared = dict(_real(das, "DA-ID"))
+    requirements = dict(_real(srs, "SR-ID"))
     failures, advisories = [], []
-    for sid, row in _real(srs, "SR-ID"):
-        cls, undeclared = _classify(row, declared)
+    for sid, row in requirements.items():
+        cls, undeclared, unknown_siblings, disjoint_siblings = _classify(
+            row, declared, requirements
+        )
         failures += [
-            "SR {} DA-Refs names {}, which is not a declared assumption".format(
-                sid, did
-            )
+            f"SR {sid} DA-Refs names {did}, which is not a declared assumption"
             for did in undeclared
+        ]
+        failures += [
+            f"SR {sid} Delivered-With names {sibling}, which is not a declared SR"
+            for sibling in unknown_siblings
+        ]
+        advisories += [
+            f"SR {sid} names sibling {sibling} in Delivered-With, but the two "
+            f"requirements share no need; keep only siblings that jointly deliver "
+            f"one of {sid}'s needs"
+            for sibling in disjoint_siblings
         ]
         if cls == "unclassified":
             advisories.append(
-                "SR {} is unclassified: it cites no assumption in DA-Refs and records "
-                "no Coincident waiver saying why its own specification delivers its "
-                "needs".format(sid)
+                f"SR {sid} is unclassified: it cites no assumption in DA-Refs, "
+                "names no sibling requirement in Delivered-With, and records no "
+                "Coincident waiver saying why its own specification alone delivers "
+                "its needs"
             )
         elif cls == "both":
             advisories.append(
-                "SR {} cites assumptions in DA-Refs AND records a Coincident waiver — "
-                "the two contradict each other; keep the one that is true".format(sid)
+                f"SR {sid} cites assumptions in DA-Refs AND records a Coincident "
+                "waiver — the two contradict each other; keep the one that is true"
+            )
+        elif cls == "joint" and _cell(row, "Coincident"):
+            advisories.append(
+                f"SR {sid} names siblings in Delivered-With AND records a Coincident "
+                "waiver — joint delivery contradicts the claim that its own "
+                "specification alone delivers its needs; keep the one that is true"
             )
     return failures, advisories
 

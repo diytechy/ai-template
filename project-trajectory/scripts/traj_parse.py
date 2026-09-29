@@ -21,12 +21,13 @@ Contract IF-052: the dashboard's Process tab reads the recorded derived stage
     describe one commit.
 Contract IF-227: the per-need assumption view's data, which the gen_trajectory
     facade reads and hands to `traj_views.need_assumption_block`.
-    `need_assumptions(root)` returns `{need id: {"assumptions", "coincident",
-    "unclassified"}}` for every need, each assumption a dict of `id`, `text`,
+    `need_assumptions(root)` returns `{need id: {"assumptions", "joint",
+    "coincident", "unclassified"}}` for every need, each assumption a dict of `id`, `text`,
     `standing`, `level` (one of `assumption_rules.EVIDENCE_LEVELS`) and
     `citing` (the need's requirement ids citing it), listed once in
-    first-cited order; `coincident` is a bool and `unclassified` a list of
-    requirement ids. It returns `{}` when the assumptions registry is absent or
+    first-cited order; `joint` lists each joint requirement and its siblings,
+    `coincident` is a bool and `unclassified` a list of requirement ids. It
+    returns `{}` when the assumptions registry is absent or
     holds only the template's `-000` rows, which is the view's omit condition,
     so a project without the tier renders byte-identically. The evidence level
     is read over the current results, with the clock, on every render.
@@ -167,7 +168,7 @@ def _needs_srs(srs):
 
 def need_assumptions(root):
     """The per-need assumption view's data (SR-218): `{need id: {"assumptions",
-    "coincident", "unclassified"}}` for every need, or `{}` when the registry
+    "joint", "coincident", "unclassified"}}` for every need, or `{}` when the registry
     holds no real assumption, which is how a project that has not adopted the
     tier gets no section at all.
 
@@ -175,9 +176,10 @@ def need_assumptions(root):
     assumption the need's requirements cite, as `{id, text, standing, level,
     citing}`: its validity (`Standing`), its evidence level from
     `assumption_rules.evidence_level` over the current results, and the need's
-    requirements citing it. `coincident` is true when the need has
-    requirements and every one is coincident; `unclassified` names each that
-    neither cites an assumption nor records why it needs none
+    requirements citing it. `joint` names each joint requirement and the
+    siblings its `Delivered-With` cell records; `coincident` is true when the
+    need has requirements and every one is coincident; `unclassified` names
+    each that neither cites an assumption nor records how its needs are delivered
     (`assumption_rules.classify_srs`). Derived from the registries and the
     results on every render, never kept.
 
@@ -213,6 +215,14 @@ def need_assumptions(root):
                     "citing": citing,
                 }
                 for did, citing in cited.items()
+            ],
+            "joint": [
+                {
+                    "id": r["SR-ID"],
+                    "with": ct._split_refs(r.get("Delivered-With", "")),
+                }
+                for r in rows
+                if classes.get(r["SR-ID"]) == "joint"
             ],
             "coincident": bool(rows)
             and all(classes.get(r["SR-ID"]) == "coincident" for r in rows),

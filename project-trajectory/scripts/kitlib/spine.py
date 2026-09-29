@@ -794,10 +794,13 @@ SPINE_TIER_KEYS = {
         "aspect",
         # The requirement's assumption citations (SR-193): `da_refs` names the
         # assumptions its argument relies on, a POINTER into the assumptions
-        # registry; `coincident` records why its own specification alone
-        # delivers its needs, and `form` (SR-194) says how it is met, one of
-        # FORM_VALUES below. Those two are statements the row makes.
+        # registry; `delivered_with` names the sibling requirements that join
+        # it in delivering its needs; `coincident` records why its own
+        # specification alone delivers its needs, and `form` (SR-194) says how
+        # it is met, one of FORM_VALUES below. The latter three are statements
+        # the row makes.
         "da_refs",
+        "delivered_with",
         "coincident",
         "form",
     ),
