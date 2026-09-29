@@ -7,10 +7,12 @@ specref = "docs/requirements/system-requirements.toml"
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "first-approval"
-adjudicates = ["LLR-266", "LLR-268", "SR-222", "SR-227", "TC-264"]
+adjudicates = ["LLR-266", "LLR-267", "LLR-268", "LLR-269", "LLR-270", "SR-222", "SR-227", "TC-262", "TC-264"]
 +++
 
 ## Context
+
+Carry-over added 2026-09-29 by the coordinator, from spine-acts batch G. LLR-267, LLR-269, LLR-270 and TC-262 were APPROVED in batch G's WI-724 verdict, but their Status flip was held: the LLR and TC snapshot was refused while WI-726's returned LLR-223 and TC-220 drifted. They are added to `adjudicates` so this brief renders them. Judge them afresh on the current text (WI-729 did not touch them), and flip them in this act if they still hold.
 
 Derived from `staged_drafted_rows` on the merged commit (§A5.2).
 These spine rows are BELOW approval and no act has blessed them.

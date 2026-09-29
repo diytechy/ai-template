@@ -7,10 +7,12 @@ specref = "docs/requirements/system-requirements.toml"
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
-adjudicates = ["LLR-222", "LLR-223", "SR-177", "SR-193", "TC-220"]
+adjudicates = ["LLR-222", "LLR-223", "LLR-286", "SR-177", "SR-193", "TC-220", "TC-222"]
 +++
 
 ## Context
+
+Carry-over added 2026-09-29 by the coordinator, from spine-acts batch G (WI-724/WI-726/WI-728, act seq 9). TC-222 and LLR-286 were blessed in batch G (MEANING) but could not be anchored, because the LLR and TC snapshot was refused while LLR-223 and TC-220 drifted. They are added to `adjudicates` so this brief shows them. LLR-222 was already in scope. Re-attest them in this act together with this row's own amendments once the snapshot can take the LLR and TC registries.
 
 Derived from `staged_spine_amendments` on the merged commit (§A5.2).
 Approved and ROUTED traced cells only; other traced cells are silent
