@@ -3,12 +3,29 @@ id = "WI-733"
 title = "adjudicate: LLR-223, SR-177, TC-267 - approved/routed cell(s) amended on merged trunk 69902bc..03debc7 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-177"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-222", "LLR-223", "LLR-286", "SR-177", "SR-193", "TC-267"]
 +++
+
+## Deliverable
+
+`VERDICT: MEANING rows=6`, from spine-acts batch I, act seq 11. An independent
+Opus adjudicator ruled it. The verdict is
+[001-ADJUDICATE-22e7b24.md](../../../reviews/wi-733-adjudicate-llr-223-sr-177-t/001-ADJUDICATE-22e7b24.md).
+
+- **Re-attested and anchored:**
+  - SR-177 and SR-193 (CLARITY);
+  - LLR-222, LLR-223, LLR-286 and TC-267 (MEANING).
+
+  This includes the batch G and H carry-over.
+- **Recorded, not drafted:** WI-735's observations 3 and 4.
+  - LLR-223 is silent on a failed, never-classified row. The check already
+    fails, naming the row.
+  - SR-177's acceptance ends in "the row's stated build gap". Whoever builds
+    the aggregation must amend its acceptance and rationale together.
 
 ## Context
 

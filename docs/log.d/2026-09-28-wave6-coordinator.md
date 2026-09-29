@@ -289,3 +289,30 @@ An independent Opus spot-checker found every item met
   unfiltered suite and the batch-I adjudicator running beside it. The
   seconds are contention on a records-only lane and not budget evidence.
   The spine and doc checks are clean.
+
+### Spine-acts batch I (WI-733, WI-734): the LLR registry unblocked; LLR-266 to LLR-270 approved, six rows re-attested
+
+- **The sitting:** a third independent Opus adjudicator, one act (seq 11).
+  WI-735's spot-check observations reached it as chain evidence.
+- **Approved and anchored:** LLR-266 to LLR-270.
+- **Re-attested:**
+  - SR-177 and SR-193 (CLARITY);
+  - LLR-222, LLR-223, LLR-286 and TC-267 (MEANING).
+
+  Three registries were copied. This clears the whole batch G and H
+  carry-over.
+- **Drafts:** down from 11 to 6.
+- **Returned, with an exact narrow draft:**
+  - SR-222 and TC-264: bound the usage record to the runners the loop reads;
+    the shipped gemini route is not one;
+  - SR-227: its `shall` must carry the keep-warm and whole-write clauses its
+    acceptance obliges.
+- **Recorded, not filed:** WI-735's observations 3 and 4.
+- **Cross-review:** Sonnet found the act SOUND, with no findings
+  ([sonnet-batch-i.md](../reviews/2026-09-28-wave6/sonnet-batch-i.md)).
+- **Trunk before this squash:** 5c71129f.
+- **Bar:** smoke `1900 passed, 3 skipped` (100.3 s, with the full
+  unfiltered suite running beside it; a records-only lane). check_trajectory
+  --strict, trace --strict-integrity (drafts=6), gen_open_items,
+  gen_trajectory, derive_stage, check_docs and the live approval brief are
+  current.
