@@ -31,8 +31,8 @@ not the 5.5 the handoff names.
   ([sonnet-wi720.md](../reviews/2026-09-28-wave6/sonnet-wi720.md)). Its one
   minor finding (SR-227's rationale also lost the cache comparison) is
   accepted as still true.
-- **What landed:** fourteen cells on ten Drafted rows, the IF-245 docstring
-  sentence, and TC-268's evidence pinned to the skip line.
+- **What landed:** thirteen registry cells on nine Drafted rows, the IF-245
+  docstring sentence, and TC-268's evidence pinned to the skip line.
 - **Next:** the sweep mints the rows' first approval.
 - **Trunk before this squash:** 4dd6827d.
 - **Bar:** smoke `1890 passed, 3 skipped`. Its seconds read 64.7 s and
@@ -41,3 +41,20 @@ not the 5.5 the handoff names.
   apps, a game) and this cells-only lane is not a regression; the budget is
   not re-stamped. check_trajectory --strict, trace --strict-integrity,
   gen_open_items, gen_trajectory, derive_stage and check_docs are clean.
+
+### WI-725 lands: the spot check of WI-720's close, CONFIRMED
+
+An independent Opus spot-checker judged WI-720's close at bbe00d8a:
+CONFIRMED
+([record](../reviews/wi-725-spot-check-the-clean-close-of/001-SPOTCHECK-bbe00d8a.md)).
+
+- **Folded into WI-724's Context:** three observations on the rows WI-724
+  adjudicates, plus a docstring note. These are LLR-266's remaining history
+  phrases and a false "already carried" claim, TC-264's Method overclaiming
+  the pinned revision, and SR-222's "where the runner reports one".
+- **Corrected:** the cell count in WI-720's Deliverable and above.
+- **Not filed:** no new row.
+- **Bar:** smoke `1890 passed, 3 skipped`. Its seconds read 329.0 s, with
+  WI-723's builder and a Sonnet confirmation running tests beside it. That
+  is contention, not this documentation-only lane. The spine and doc checks
+  are clean.

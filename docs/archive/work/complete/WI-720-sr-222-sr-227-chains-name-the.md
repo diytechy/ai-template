@@ -12,9 +12,10 @@ bar = "DevStg-Reqs"
 
 ## Deliverable
 
-Fourteen cells across ten Drafted rows are restated as the standing
-system, every status left Drafted, for the first-approval adjudication the
-sweep mints:
+Thirteen registry cells across nine Drafted rows are restated as the
+standing system, every status left Drafted, for the first-approval
+adjudication the sweep mints. TC-268's evidence test and the IF-245
+docstring sentence change with them:
 
 - **SR-222:** the requirement and acceptance name the route's `provider`
   (from its roster row, for every routed call) and `gen_ai.provider.name`

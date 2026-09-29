@@ -55,3 +55,26 @@ Advisory registry joins (WI-388; never gating):
 - IF-162 docs/agents-enabled -> scripts/agent_route;scripts/dispatch: file one registry id per line in preference order, optional <PHASE>=<weight> annotations; presence turns managed r…
 - IF-053 scripts/schedule <- scripts/census;scripts/dispatch;scripts/intake: call load_wis · _load, frontier, kind_of · SAFETY_CLASSES — the symbols census, dispatch and intake take; no write…
 - IF-064 scripts/agent_session <- scripts/agent_loop;scripts/session_service;scripts/plan_runner: call build_argv, run_session, parse_json_result and the console renderers
+
+Folded 2026-09-28 from WI-725's spot check of WI-720's close
+(`docs/reviews/wi-725-spot-check-the-clean-close-of/001-SPOTCHECK-bbe00d8a.md`).
+Judge these as part of the chain. Each is a return with findings if it
+holds:
+
+1. **LLR-266 `detail`** still reads as history in two places:
+   - "so a stand-in agent is accounted as before", the time-relative kind
+     WI-720 fixed in TC-262;
+   - "the --output-last-message temp file it already carried", which is
+     untrue: `CodexAdapter.prepare` adds `--json` and `-o`, and no codex
+     template in `docs/agents.toml` carries `-o`.
+2. **TC-264 `method`** claims that each adapter's record carries the pinned
+   revision, but only claude's `semconv` is asserted. The fix is to add the
+   assert to the codex and opencode usage tests, or to narrow the Method.
+3. **SR-222's "where the runner reports one":** the adapters name the
+   provider as a constant, and no runner reports it. Decide whether the
+   wording should say the adapter names it.
+
+Beside the rows, and not for this act: `session_adapters.py`'s module
+docstring and the "old reader" note in `_claude_usage` still describe
+history. A returning lane that touches the file should restate them.
+
