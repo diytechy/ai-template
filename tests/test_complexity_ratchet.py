@@ -46,7 +46,9 @@ BASELINE = {
     # Model-slug refusal; run_session the H-2 interrupt kill-tree handler;
     # sync_agent_skills the M-14 orphan-deletion sweep; run_dual_plan_round
     # the L-29 unfileable-plan PAGE guard.
-    ("agent_loop.py", "critique_brief"): 11,
+    # RE-KEYED, NOT RE-STAMPED, 2026-09-29, WI-545: the function moved
+    # VERBATIM from agent_loop.py to agent_brief.py; complexity stays 11.
+    ("agent_brief.py", "critique_brief"): 11,
     # WI-483 slice 5 (2026-08-23): `main` DELETED, 27 -> under the limit. The
     # loop's whole startup resolution — the effective root, the five phase maps,
     # the enable-list, the declared dials, the dual-plan round, the iteration
@@ -157,8 +159,10 @@ BASELINE = {
     # that decides the tier once, and two one-line public wrappers. Every
     # resulting function is under the limit — decomposition, the escape this
     # ratchet prefers over a bump.
+    # RE-KEYED, NOT RE-STAMPED, 2026-09-29, WI-545: the function moved
+    # VERBATIM from check_trajectory.py to trajectory_arch.py; complexity stays 20.
     (
-        "check_trajectory.py",
+        "trajectory_arch.py",
         "interface_findings",
     ): 20,  # RE-STAMPED DOWN -2 (22 -> 20) 2026-08-23, WI-455: the endpoint
     # orientation left this function. `load_ifs` now resolves each row into
@@ -190,7 +194,9 @@ BASELINE = {
     # (a plain sequential function, well under the bound) so this entry is
     # the walk's own irreducible branching, not an un-decomposed rule.
     # Reviewed bump, reason in docs/log.d/2026-08-23-wi502-codesymbol-crosscheck.md.
-    ("check_trajectory.py", "codesymbol_crosscheck_findings"): 13,
+    # RE-KEYED, NOT RE-STAMPED, 2026-09-29, WI-545: the function moved
+    # VERBATIM from check_trajectory.py to trajectory_arch.py; complexity stays 13.
+    ("trajectory_arch.py", "codesymbol_crosscheck_findings"): 13,
     (
         "acceptance_record.py",
         "committed_snapshot_findings",
@@ -247,8 +253,10 @@ BASELINE = {
         "gen_okf.py",
         "_doc_title_and_summary",
     ): 14,  # -4 (18 -> 14) 2026-08-29, WI-533 follow-up (cross-family review F9): `_strip_html_comments` EXTRACTED, which is the FIX and not a refactor — the whole-line skip dropped everything after a `-->`, so a doc whose contract header shares a line with its heading lost its title. A comment is a SPAN: the helper takes the `in_comment` state and its two transitions out of the line classifier, hands back what the line states outside the comment, and the classifier reads that remainder like any other line. Re-stamped DOWNWARD in the same commit, as this file requires. Earlier +5 (13 -> 18) 2026-08-29 WI-533 (OI-67 slice 6): a leading HTML comment is skipped WHOLE — the `in_comment` state and its two transitions (a multi-line `<!--` opens it, a `-->` closes it) join the line classifier, because a Markdown owner's `Contracts:` header spans lines and its interior was being read as the guide's first paragraph. Reviewed bump, reason in docs/log.d/2026-08-29-wi533-arm-the-gate.md.
+    # RE-KEYED, NOT RE-STAMPED, 2026-09-29, WI-545: the function moved
+    # VERBATIM from check_trajectory.py to trajectory_arch.py; complexity stays 11.
     (
-        "check_trajectory.py",
+        "trajectory_arch.py",
         "contract_body_findings",
     ): 11,  # NEW 2026-08-29 WI-533 (OI-67 slice 6): the armed definition gate — the opt-out, the vacuity, the per-row split between an external-owned row (its own helper) and an in-tree owner (declared-not-stated), and the stray arm (its own helper). Two arms were extracted to land at 11 rather than the 18 the first cut measured. Reviewed entry, reason in docs/log.d/2026-08-29-wi533-arm-the-gate.md.
     # ENTRY DELETED (11 -> under the limit) 2026-08-29, WI-533 follow-up

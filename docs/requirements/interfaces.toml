@@ -1459,7 +1459,7 @@ notes = """cross-component crossing declared per the architecture rule: this mod
 [interface.IF-109]
 rationale = """A cell lost in translation would either skip a required round or narrow what the model was told - neither of which fails loudly."""
 owner = "scripts/spine_carrier"
-requestors = ["scripts/agent_loop"]
+requestors = ["scripts/agent_brief"]
 channel = "call"
 data = "spine_carrier.load over the SR and TC tiers; SR Verification gates the critique round, SR and TC prose rides verbatim into the brief"
 carried_by = "IF-102"
@@ -2316,3 +2316,39 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """source - the module launches nothing and writes no log; its only effects are the retained-session records and the store lock under out/adjudicator, and the dedicated CLI home directories it creates there."""
+
+[interface.IF-260]
+owner = "scripts/agent_brief"
+requestors = ["scripts/agent_loop"]
+channel = "call"
+data = "brief constructors, prompt routing, guardrails payload selection, and assignment-facing lane evidence"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-261]
+owner = "scripts/agent_policy"
+requestors = ["scripts/agent_common"]
+channel = "call"
+data = "process-config readers and findings, approval authority decisions, and normalized coordinator dials"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-262]
+owner = "scripts/kitlib/bootstrap_manifest"
+requestors = ["scripts/bootstrap"]
+channel = "call"
+data = "MAPPING and mapping_entries: the ordered scaffold source, destination, and optional requirement-reference inventory"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+
+[interface.IF-263]
+owner = "scripts/trajectory_arch"
+requestors = ["scripts/check_trajectory"]
+channel = "call"
+data = "architecture inventories and findings for seams, contracts, components, code symbols, and spec boundaries"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"

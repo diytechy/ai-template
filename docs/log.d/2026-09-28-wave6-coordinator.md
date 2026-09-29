@@ -411,3 +411,35 @@ programmatically, and probed the plain adapter over gemini results
 - **Bar:** smoke `1901 passed, 3 skipped` (78.8 s, with an adjudicator and
   a reviewer running beside it; a records-only lane). The spine and doc
   checks are clean.
+
+### WI-545 lands: the decomposition debt paid, by pure moves into four deep modules
+
+- **The moves:**
+  - `agent_brief`, `agent_policy` and `trajectory_arch` are extracted from
+    `agent_loop`, `agent_common` and `check_trajectory`, and
+    `kitlib/bootstrap_manifest` from `bootstrap`;
+  - each move is AST byte-identical, with the old modules re-exporting;
+  - two test monoliths are split, and four size baselines lowered.
+- **Build and review:** one Sol build and three fix rounds, with four
+  Sonnet rounds. Each round found something the split had silently
+  narrowed or broken:
+  - the complexity keys;
+  - path-keyed content scans, including SR-175's egress sweep, which read
+    re-export stubs;
+  - a test rebinding `bootstrap.MAPPING` through the alias. The full
+    unfiltered suite found this one; no reviewer's module list reached it.
+- **Lesson** (the handoff's, again): a move keeps behaviour but breaks every
+  consumer that addresses the code by where it used to live, whether by
+  file path, module key or rebinding. Only the full suite covers all of
+  them. It ran before this landing, and runs again at the phase close.
+- **At the merge:** the generated `docs/id-watermark` conflicted (IF and DA
+  both raised) and was regenerated with `--bump-ids`. Integrity is 0, and
+  the traced-cell moves leave batch I's anchored LLR snapshot clean.
+- **Trunk before this squash:** 205d02cf.
+- **Bar:**
+  - smoke `1902 passed, 3 skipped`, 51.2 s against 60 s, within budget;
+  - check_trajectory --strict, trace --strict-integrity, gen_open_items,
+    gen_trajectory, derive_stage and the live approval brief are current;
+  - check_docs was 0 broken after one historical link to WI-545's old queued
+    path (`docs/ai-template-redesign-2026-09-05-codex/BACKLOG-MIGRATION.md`)
+    was repointed to the archive.

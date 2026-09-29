@@ -118,9 +118,11 @@ def test_a_SCAFFOLDED_but_unsigned_snapshot_is_VACUOUS_TOO(tmp_path):
     (snap / "README.md").write_text("# stamp\n", encoding="utf-8")
     assert SNAP.exists(root) is True  # the directory really is there...
     assert SNAP.unanchored_findings(root) == []  # ...and it still claims nothing
-    # The pin is only worth having if bootstrap really does scaffold it so.
-    boot = (SCRIPTS / "bootstrap.py").read_text(encoding="utf-8")
-    assert "docs/archive/last_approved/README.md" in boot
+    # The pin is only worth having if the bootstrap manifest really ships it.
+    manifest = (SCRIPTS / "kitlib" / "bootstrap_manifest.py").read_text(
+        encoding="utf-8"
+    )
+    assert "docs/archive/last_approved/README.md" in manifest
 
 
 def test_the_shipped_README_describes_the_writer_that_exists():
@@ -950,6 +952,8 @@ def test_seed_is_unreachable_from_every_loop_module_and_hook():
         SCRIPTS / name
         for name in (
             "agent_loop.py",
+            "agent_brief.py",
+            "agent_policy.py",
             "dispatch.py",
             "agent_session.py",
             "session_adapters.py",

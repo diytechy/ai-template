@@ -101,7 +101,7 @@ phase = 1
 [design.LLR-010]
 sr_refs = ["SR-010"]
 title = "Scaffold writer"
-module = "project-trajectory/scripts/bootstrap.py"
+module = "project-trajectory/scripts/bootstrap.py;project-trajectory/scripts/kitlib/bootstrap_manifest.py"
 code_symbol = "MAPPING/main"
 detail = """Writes the mapped kit files into --dest so the generated harness runs green out of the box."""
 test_refs = "(see TC-010)"
@@ -389,7 +389,7 @@ phase = 1
 [design.LLR-037]
 sr_refs = ["SR-040"]
 title = "Per-phase cmd map and the reviewer dial"
-module = "project-trajectory/scripts/agent_loop.py"
+module = "project-trajectory/scripts/agent_loop.py;project-trajectory/scripts/agent_brief.py"
 code_symbol = "session_template/parse_map/read_declared"
 detail = """cmd_map parsed by parse_map (same KEY=value syntax; templates may not contain , or ; — the dispatcher wrapper covers those); session_template(phase) falls back to AGENT_CMD; every map entry preflighted (parse + executable); review-policy read via read_declared and printed in the banner."""
 test_refs = "(see TC-040)"
@@ -444,7 +444,7 @@ phase = 1
 [design.LLR-042]
 sr_refs = ["SR-159"]
 title = "Architecture-connectivity coverage warns"
-module = "project-trajectory/scripts/check_trajectory.py"
+module = "project-trajectory/scripts/trajectory_arch.py"
 code_symbol = "interface_findings/arch_inventory"
 detail = "Emits opt-out warn-first findings for missing endpoints/directions, uncited Active seams, and dangling Contracts citations without changing exit status. A source/sink note suppresses its declared direction case; the opt-out home is docs/process.toml [checks] interfaces_check = false; a small or absent inventory is vacuous."
 test_refs = "(see TC-080)"
@@ -477,7 +477,7 @@ phase = 1
 [design.LLR-045]
 sr_refs = ["SR-154"]
 title = "Managed review dispatch"
-module = "project-trajectory/scripts/agent_loop.py"
+module = "project-trajectory/scripts/agent_loop.py;project-trajectory/scripts/agent_brief.py"
 code_symbol = "main/reviewer_prompt/phase_tier"
 detail = "Schedules review-policy sessions in managed mode, constructs redacted prompt-map briefs, parses verdicts, logs selections, and preserves unmanaged behavior. A declared review policy of N schedules N reviewer sessions (0/1/2 -> zero/one/two); a broken prompt map fails preflight before any session launches; an absent enable-list keeps the legacy unmanaged behavior. The queued phases are always NAMED by the caller and never defaulted: a fresh round names the declared span, and a resume names exactly the phases the branch's committed evidence still owes at the governing identity - so an empty list is an empty round rather than a full one, and the untracked owed-round marker contributes advisory fields only, never a round."
 test_refs = "(see TC-082)"
@@ -511,7 +511,7 @@ phase = 1
 [design.LLR-048]
 sr_refs = ["SR-154"]
 title = "Independent critique dispatch"
-module = "project-trajectory/scripts/agent_loop.py"
+module = "project-trajectory/scripts/agent_brief.py"
 code_symbol = "load_critique_srs/build_scope_srs/critique_brief/critique_prompt"
 detail = "Detects Critique-scoped builds and assembles a fresh family-heterogeneous rubric/intent/artifact brief with no self-assessment. Only a Critique-scoped build schedules the session — any other build does not; the brief carries rubric, intent and artifact recipe and excludes the build transcript as well as self-assessment."
 test_refs = "(see TC-048)"
@@ -522,7 +522,7 @@ phase = 1
 [design.LLR-049]
 sr_refs = ["SR-159"]
 title = "Bounded software top view"
-module = "project-trajectory/scripts/check_trajectory.py"
+module = "project-trajectory/scripts/trajectory_arch.py"
 code_symbol = "component_top_view/component_findings/module_components/load_cmps/_cmp_roots"
 detail = "Derives component roots and uncontained modules; enforces TOP_VIEW_MAX — 10 uncontained top-level modules — with nesting, opt-out ([checks] components_check = false), and vacuity rules. An oversized uncontained view warns plain and fails --strict; valid containment clears it, and nested components count only at their top-level roots."
 test_refs = "(see TC-049)"
@@ -634,7 +634,7 @@ phase = 4
 [design.LLR-061]
 sr_refs = ["SR-026"]
 title = "Explicit WI/train/worktree worker assignment"
-module = "project-trajectory/scripts/agent_loop.py"
+module = "project-trajectory/scripts/agent_loop.py;project-trajectory/scripts/agent_brief.py"
 code_symbol = "build_worker_assignment/worker_prompt/assignment_block"
 detail = "Replaces internal --track assumptions with explicit --wi/--train/worktree assignment; assembles the worker prompt from AGENTS.md + WI row + SpecRef + predecessor context + train diff + rework finding (never the generated status surface), plus - on a lane claimed with more than one row - every assigned row with its id, title, SpecRef and walk state (built / started, not closed / this session's focus / not started), taken from the SAME two-part completion predicate the walk itself reads - a committed WI: trailer AND the spec gone from active/<branch>/ - so the brief can never call a row the walk will return to `built`, and a batch session's brief names the whole claim rather than only the row it walked to; collision-safe per-assignment logs/review evidence naming the exact reviewed commit; the --track lane machinery is retired outright. The assignment is the branch integrate.py's claim cut, and the session tag defaults to the branch name; the prompt never includes docs/status.md; a worker branch never edits root status, another branch's claims, the root log or generated artifacts; the result channel is committed trailer evidence (WI: / Blocked-WI: + BlockRef:)."
 test_refs = "(see TC-061)"
@@ -645,7 +645,7 @@ phase = 4
 [design.LLR-067]
 sr_refs = ["SR-159"]
 title = "Cross-component import coverage"
-module = "project-trajectory/scripts/check_trajectory.py"
+module = "project-trajectory/scripts/trajectory_arch.py"
 code_symbol = "cross_component_findings/arch_inventory"
 detail = "Joins imports, component membership, and declared seams; reports uncovered cross-component edges with strict/plain and vacuity rules. Uncovered mapped edges warn plain and fail --strict; a covering seam (in either direction), an intra-component or unmapped edge, absent imports, the opt-out, and an edge whose destination is a declared shared-kernel module (docs/kernel-modules-allow, checked before the seam/overlap split) each stay silent. The module inventory joined against is scanned LIVE from the source tree under [paths] src (gen_arch_map.scan_inventory), never parsed back out of a committed map, so the join cannot read a stale inventory."
 test_refs = "(see TC-067)"
@@ -656,7 +656,7 @@ phase = 1
 [design.LLR-068]
 sr_refs = ["SR-159"]
 title = "Spec interface-section validation"
-module = "project-trajectory/scripts/check_trajectory.py"
+module = "project-trajectory/scripts/trajectory_arch.py"
 code_symbol = "spec_interface_findings/_spec_interfaces_section"
 detail = """Validates armed spec interface ids, Proposed rationale, and the intra-module escape with warn-first/strict severity."""
 test_refs = "(see TC-068)"
@@ -1557,7 +1557,7 @@ phase = 4
 [design.LLR-155]
 sr_refs = ["SR-137", "SR-139"]
 title = "The config layer: one reader, checked shape, one comparison"
-module = "project-trajectory/scripts/agent_common.py"
+module = "project-trajectory/scripts/agent_policy.py"
 code_symbol = "process_config/process_shape_findings/config_conflicts/approval_through/human_holds"
 detail = """`process_config` parses `docs/process.toml` once; `declared_policy` reads a dial through it with the legacy file as fallback; `process_shape_findings` refuses every line shape the hooks' sh cannot follow; `config_conflicts` returns refusal STRINGS (never raises — `dispatch.run` sits in the tick loop's caller, where an exception would rewrite an exit-code contract) covering the double-declaration, the wrong type and the out-of-range value; `approval_level` + `human_holds` are the ordinal and the ONE comparison every consumer makes."""
 rationale = """Five entry points read policy without passing through `agent_loop.main`, so the refusal has to live where the value is read. The comparison is stated once for the same reason the shape is checked: the failure modes here are silent, and a rule restated at four call sites is four chances to state it differently."""
@@ -1760,7 +1760,7 @@ phase = 1
 [design.LLR-172]
 sr_refs = ["SR-165"]
 title = "Component derivation record: element completeness + the ranking recompute"
-module = "project-trajectory/scripts/check_trajectory.py"
+module = "project-trajectory/scripts/trajectory_arch.py"
 code_symbol = "component_findings"
 detail = """Extends the existing component pass — the one home that already reads docs/requirements/components.toml and already emits CMP findings — with the derivation-record rules SR-165 states, rather than adding a second reader of the same registry. Per live CMP row: the record must declare the candidate partitions considered, the objective and the constraints they were scored against, a score per candidate, the selected partition, and the human ruling that named the components and adopted it; a missing element is one finding naming the row AND the element. Two derived rules on top of presence, because presence alone is satisfiable by a record that says nothing: (1) THE RANKING RECOMPUTES — re-rank the recorded candidates from the record's own objective, constraints and scores and compare with the recorded order, a mismatch being a finding, which is what makes the record falsifiable without a reviewer re-running a model session; (2) A SELECTION THE SCORES DO NOT RANK FIRST is a finding unless the record carries a human override naming that choice, so a legitimate "the scores said A, the human chose B" is expressible and an unexplained one is not. Vacuous by construction on a project declaring no components, and on the example -000 rows. NOT BUILT YET: the record cells do not exist on the CMP schema today — recorded as open debt on this row and TC-166; SR-165 carries Test verification precisely because the check is mechanizable, and this is the debt that verification incurs, recorded rather than silently owed."""
 rationale = """The check belongs where component_findings already is for the reason the census keeps applying: a second module reading components.toml would be a second answer to "is this partition recorded", and the two would drift. The recompute is the load-bearing half — an element-presence check passes on a record whose scores contradict its own conclusion, which is the exact failure SN-040 exists to catch (the next reviser cannot tell load-bearing boundaries from accidents). The override arm is what stops the recompute rule from forbidding human judgement: the requirement is that a departure from the scores is RECORDED, never that it is disallowed."""
@@ -2135,7 +2135,7 @@ phase = 5
 [design.LLR-203]
 sr_refs = ["SR-163"]
 title = "The shipped-file inventory, its declared exclusions, and its tolerant purpose reference"
-module = "project-trajectory/scripts/bootstrap.py"
+module = "project-trajectory/scripts/kitlib/bootstrap_manifest.py"
 code_symbol = "MAPPING"
 detail = """MAPPING is the declaration SR-163's own reasoning designates as the coverage universe: one row per shipped source, the destination it lands at in a scaffold, a prose comment saying why it ships, and OPTIONALLY a third cell naming the requirement that is the reason. The cell is tolerant by construction - mapping_entries normalizes every row to (source, destination, reference) and a bare pair survives as a reference of None - so filling it is a burn-down and no flag day is forced. All four of the parent's finding classes run over the inventory today; two of them are this row's own arms and are described next. STALE ENTRIES AND MISSING DESTINATIONS, in the dogfood direction: the scaffold-coverage walk reports every MAPPING destination this repository neither carries, nor serves in place out of the kit tree, nor declares as an absence, and its honesty half reports a declared exclusion whose destination has since materialized - so the exclusion list can only shrink, never mask a backfill. MISSING FILES, in the package direction: the completeness check asks a REAL scaffold whether the copied helper package holds exactly the kit's module set, naming a MAPPING row that is missing or stale, and the sibling-import closure reports a shipped script importing a file the inventory omits - the class this repository has shipped once, invisible in the kit tree because its own scripts directory holds every file. docs/declared-absences is the recorded-exclusions carrier both dogfood arms read, parsed by check_doc_refs.load_declared_absences, with a marker for the paths whose presence is a legal state. THE SHIPPED TREE, walked independently of the inventory so that deleting a row stays observable: delivery_inventory enumerates every physical file under the kit, classifies each as a MAPPING source, a reasoned kit-only exclusion or a conditional materialization, and separately enumerates the generated outputs, which inherit their generator source's reference rather than carrying a second purpose cell. Its exclusion carrier is the mechanically parsed mapping-source-exclusions, one `<source> — <reason>` row per kit-only file, the separator a literal spaced EM DASH the parser partitions on — a hyphen row is silently skipped, excludes nothing, and its source resurfaces as a gate-class missing-file finding. The installer is one of those rows rather than an exemption asserted in prose at its own module. NOT DISCHARGED, and stated here rather than left to be rediscovered: the reference cell is mostly UNFILLED, so the join the parent asks for is declared and running rather than complete - the unmapped class is warn and not gate precisely because filling it is the migration, and a coverage reading taken today measures the burn-down and not the obligation. And the consumers of the cell are decomposed apart from it: the SR-to-need resolution, the four finding classes and the table that decides which of them warns and which gates are general mechanisms this row names as facts about the inventory without owning; LLR-276 owns them, and LLR-275 owns the independent walk of the shipped tree, so the delivered half of the parent's obligation is traced through those two rows."""
 rationale = """Naming the INVENTORY, and only the inventory, is what keeps this row falsifiable. The declaration, its exclusion carrier and the two dogfood arms that walk it are this row's subject and are driven by its own tests; the resolver, the four finding classes and their warn-to-gate table are separate mechanisms that consume the cell, and a row that annexed them would be claiming a decomposition it does not make. Naming them as facts about the inventory while recording which design rows OWN them is the load-bearing half - a design row describing only what it owns would read as though the parent's obligation were discharged the moment its own arms were, and the next reviser would have to re-derive by inspection how much of the purpose cell is actually filled and where its consumers are traced. The tolerance of the cell is the other deliberate choice: a mandatory reference would have forced a flag day across the whole inventory to buy a coverage number, where a warn class over an optional cell buys the same number as a burn-down and costs an adopter carrying no spine nothing."""
@@ -2301,7 +2301,7 @@ phase = 6
 [design.LLR-218]
 sr_refs = ["SR-191", "SR-192"]
 title = "The assumptions registry: tiers, schema, carrier, template and scaffold"
-module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/scripts/bootstrap.py;project-trajectory/registries/assumptions.template.toml"
+module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/scripts/kitlib/bootstrap_manifest.py;project-trajectory/registries/assumptions.template.toml"
 code_symbol = "OFFSPINE_TABLE/OFFSPINE_KEYS/MAPPING"
 detail = "A new registry at docs/requirements/assumptions.toml with two tiers keyed by their own id columns: OFFSPINE_TABLE[\"DA-ID\"] = \"assumption\" with keys effect_at (a list of crossing ids), assumption, holds_when, obstacle, falsifier, accepted_risk, realized_by, obstacle_hats, status and standing; OFFSPINE_TABLE[\"SUR-ID\"] = \"surrogate\" with name, emulates (a list of entity ids), description and status. List keys join migrate_carrier.REF_COLS. The template carries a DA-000 row landing on B-000 and a SUR-000 row emulating EXT-000, every key present so the dogfood rule sees each one shipped; bootstrap.MAPPING scaffolds it for every profile that scaffolds the frame, and its docstring list names it. The dogfood registry list gains both tiers on the one path with their floors."
 status = "Approved"
@@ -2583,7 +2583,7 @@ phase = 6
 [design.LLR-246]
 sr_refs = ["SR-208"]
 title = "Refusing a loop-made status change on a held off-spine registry, at every loop writer"
-module = "project-trajectory/scripts/acceptance_record.py;project-trajectory/scripts/integrate.py;project-trajectory/scripts/intake.py;project-trajectory/scripts/handback.py;project-trajectory/scripts/agent_common.py;project-trajectory/scripts/check.py;project-trajectory/scripts/bookkeeping.py;project-trajectory/scripts/kitlib/authority.py"
+module = "project-trajectory/scripts/acceptance_record.py;project-trajectory/scripts/integrate.py;project-trajectory/scripts/intake.py;project-trajectory/scripts/handback.py;project-trajectory/scripts/agent_common.py;project-trajectory/scripts/agent_policy.py;project-trajectory/scripts/check.py;project-trajectory/scripts/bookkeeping.py;project-trajectory/scripts/kitlib/authority.py"
 code_symbol = "staged_status_moves/held_status_refusal/_held_status_refusal/_claim_locked/_mint/_commit_residue_as_is/commit_telemetry/APPROVAL_RUNGS/_commit_object/dial_at/read_dial/merge_status_moves/pending_status_moves"
 detail = "staged_status_moves(root, base, head) reports every change to a status cell of an off-spine registry between two trees or between a base and the index, rows added or removed with a status included; the needs file is read for its stakeholder tier. held_status_refusal(dial, moves) refuses each move whose registry rung the dial holds, per the rung maps in kitlib/authority.py (re-exported by agent_common as APPROVAL_RUNGS), which gain the assumptions registry at DevStg-Boundary and the needs file, needs and stakeholders alike, at DevStg-Needs; an unmapped registry reads held. Every live judgement reads the dial through kitlib.authority.dial_at, which reads the dial committed in a named tree, or staged in the index, translating each legacy spelling exactly as agent_common.approval_through does and printing nothing; no live judgement reads the working file. Every loop writer, under the loop marker, runs the refusal through agent_common.loop_held_status_refusal on the exact tree it is about to write, against the dial committed on trunk, immediately before its commit or commit-tree: the claim (integrate._claim_locked) and the mint (intake._mint) both commit through bookkeeping._commit_object, which performs the check between write-tree and commit-tree against the dial committed in the commit's parent; every handback commit, including _commit_residue_as_is; and agent_common.commit_telemetry. integrate._merge_refusal runs it again, after the approval-act refusal, over the whole range of every loop lane, whoever runs the slot and with no exemption window, which also catches the commits an AI session makes itself; a lane is the loop's when its claim, or any commit one of the loop's own writers made in its range, carries the loop trailer. A check step `held-status` in the pre-commit failing set, armed only when the loop marker is set, covers a session commit made through the hook, judging the index against the dial committed at HEAD; during a merge it judges the staged result against its first parent, less each status a merged side already carries. A person's commit, made with no loop marker, is not judged where it is made, and a lane that is not the loop's is not judged at the slot."
 status = "Approved"
@@ -2747,7 +2747,7 @@ phase = 6
 [design.LLR-262]
 sr_refs = ["SR-154", "SR-156"]
 title = "The record a merge judges stays as its author committed it"
-module = "project-trajectory/scripts/kitlib/verdict.py;project-trajectory/scripts/kitlib/done_when.py;project-trajectory/scripts/agent_loop.py;project-trajectory/scripts/integrate.py;project-trajectory/scripts/intake.py"
+module = "project-trajectory/scripts/kitlib/verdict.py;project-trajectory/scripts/kitlib/done_when.py;project-trajectory/scripts/agent_loop.py;project-trajectory/scripts/agent_brief.py;project-trajectory/scripts/integrate.py;project-trajectory/scripts/intake.py"
 code_symbol = "parse_range/session_range/range_paths/scope_offenders/session_scope_offenders/log_history/review_logs/review_scope_refusal/logged_rounds;items/has_done_when/changes/describe/claimed_text;read_verdict/judging_session_integrity/stash_leftovers/done_when_flag_block;_review_scope_refusal/_done_when_warning;_done_when_drafts"
 detail = """The coordinator's session log records each session's phase and its exact commit range (`# commits: before..after`); session_range and parse_range read it, and range_paths lists the paths the range changed with renames split. scope_offenders names every changed path other than the REVIEW session's own verdict file, the round file named for the session's train, ordinal and logged phase under any reviewed sha and tag; record paths are not exempt. Right after a REVIEW session the loop asks scope_offenders of the range it just took and, on any offender, stops the run needing a human with the paths named; a session log is append-only evidence, so every reader takes each log as the commit that ADDED it recorded it (log_history, review_logs), never at the branch tip, and the merge ladder's review-scope rung first refuses by name any commit in the lane that modified or deleted a session log, then asks the same function of every REVIEW session log the branch committed (review_scope_refusal) and refuses the merge by name, an unreadable log or range refusing too. After a REVIEW or CRITIQUE session, uncommitted changes not present before it, other than the coordinator's own session log, fail the draw through the existing failed-draw path - the route cooled and the same phase re-drawn - with those paths stashed under one entry named for the session, so the re-drawn session starts clean; when that stash fails the run stops needing a human with the paths and the failure named, and nothing is re-drawn. read_verdict reads the verdict blob as committed at HEAD in both arms, so an uncommitted verdict is never routed on. logged_rounds reads each round at the end of its session's recorded range, and only when that range changed the round file: a later commit rewriting the file changes nothing the gate counts, a file its session never committed is no round, and a key whose logs record different phases or ranges yields none. done_when.items reads a spec's Done-when section, through kitlib.registry.done_when_section, as items: a list item with its continuation lines, or a prose paragraph, across subsections. changes compares a claim-time text with a later one after stripping ticks, strikethrough and whitespace; a later item carries a claim-time one when it equals it or extends it with evidence in the form closed specs use - appended text opening with an evidence separator (a dash, an arrow, a bracket, a bar or a check mark) and carrying an evidence token (a capitalised completion word from the closed set LANDED, DONE, MET, VERIFIED, SHIPPED, PASSED, FIXED and COVERED, a path or test id, a backticked name, or a commit sha) - while any other appended text, after closing punctuation or not, is a change; and every claim-time item not carried is reported as changed and every later item carrying none as added. The claim warns by name on stderr for each claimed row with no Done-when item and still claims. When a review round is composed, the brief gains a block quoting each change between the spec under active/<train>/ at the lane's base and the lane's own copy. At merge the intake mints one brief-less adjudication row per claimed non-adjudication row whose closed spec's Done-when changed against trunk's pre-merge copy under active/<branch>/, titled per row and branch so a re-run dedupes, its Context quoting each change."""
 rationale = """Every merge is judged from records - the verdict files, the Done-when checklist - and each of them could be changed by the lane being judged: a reviewer committing work beside its verdict, a later session rewriting an earlier round, a builder rewording its own Done-when. Nothing on a commit reliably names its role, but the coordinator's session log does, so the checks key on it and are re-derived at merge from what was committed rather than trusted from the loop. Reading a round as its session committed it removes the rewrite without adding a refusal. The Done-when claim rule warns rather than refuses because the intake mint still files its derived rows without a Done-when, and a refusal would park every one of them."""
@@ -2883,7 +2883,7 @@ phase = 1
 [design.LLR-280]
 sr_refs = ["SR-223"]
 title = "The guardrails payload is chosen by the policy's substring matcher, longest first"
-module = "project-trajectory/scripts/agent_loop.py"
+module = "project-trajectory/scripts/agent_brief.py"
 code_symbol = "guardrails_core"
 detail = """guardrails_core(root, model) lists the vendored core.<substring>.md payloads beside docs/guardrails/core.md, orders their substrings longest first and then by name, and reads the first one that guardrails_apply matches against the model name, reading core.md when none matches or no model is named. The KIT CORE block is extracted from the chosen file as from the core, and an unreadable chosen file returns None, which compose_session_prompt already reports once and runs past. Whether a session is guarded stays compose_session_prompt's call on the policy, made before the payload is read."""
 rationale = """Reusing the policy's own matcher means one grammar decides both whether a session is guarded and which payload it gets, so a substring that guards a model also selects its payload. Ordering by length lets a narrower name refine a broader one without an ordering file a repository would have to keep in step with its payloads. The file names are the repository's, which keeps model names out of kit-owned text."""
@@ -2920,7 +2920,7 @@ phase = 6
 [design.LLR-282]
 sr_refs = ["SR-225"]
 title = "The decision_recording dial reads off when undeclared and record when unrecognized"
-module = "project-trajectory/scripts/agent_common.py"
+module = "project-trajectory/scripts/agent_policy.py"
 code_symbol = "decision_recording/DECISION_RECORDING_MODES/mode_word"
 detail = """decision_recording(docs) reads [attestation] decision_recording from the policy file through process_config and returns one of DECISION_RECORDING_MODES, which is kitlib.decisions.MODES (off, record, escalate-first): off when the key is not declared, the value's mode_word when that is one of the modes, and record for any other declared value, a wrong-typed one included. mode_word(value) is the one normalization, the value trimmed and lowercased, or None for a value that is not text. The key is registered in PROCESS_ONLY_KEYS as a str and in PROCESS_KEY_VOCAB as the three modes; config_conflicts compares a named-mode dial's value through the same mode_word, so a padded or mixed-case value the reader honours is not refused and another value is, the refusal listing that dial's own words rather than the approval rungs' message."""
 rationale = """Undeclared reads off because the template ships off and a repository that never set the dial has asked for nothing. Declared but unrecognized reads record because the owner asked for something and the failure that matters is silently recording nothing; the loud refusal is config_conflicts', and the reader keeps the obligation for a caller that did not run it. One normalization serves the reader and the validator, so the two cannot disagree about which values are the dial's. The alphabet is the record module's, so the reader, the merge-slot check and the session note cannot spell it three ways."""

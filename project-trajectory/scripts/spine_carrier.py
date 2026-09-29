@@ -107,11 +107,12 @@ Contract IF-108: plan_briefs reads the system-requirements and interfaces
     under either carrier; an absent registry is [], and one that exists and
     will not parse raises instead of quietly narrowing what the planner is told.
 
-Contract IF-109: agent_loop reads SR and TC rows through load() for two
+Contract IF-109: agent_brief reads SR and TC rows through load() for two
     purposes at once — the SR Verification cell decides whether a critique
     round is owed, and SR/TC prose is lifted verbatim into the session brief.
     Both take the same rows under the same column names, so a gate decision and
-    the brief beside it can never be drawn from different vocabularies.
+    the brief beside it can never be drawn from different vocabularies;
+    agent_loop re-exports the behavior surface.
 
 Contract IF-110: the unified mint reads the LLR, TC, IF, CMP and open-item
     registries through load() to decide what already exists before it places a

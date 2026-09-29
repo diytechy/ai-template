@@ -21,6 +21,16 @@ from conftest import (
 
 agent_loop = load_script("agent_loop")
 
+
+def test_session_brief_surface_is_reexported_from_its_behavior_module():
+    agent_brief = load_script("agent_brief")
+    for name in ("critique_brief", "worker_prompt", "reviewer_prompt"):
+        exported = getattr(agent_loop, name)
+        owned = getattr(agent_brief, name)
+        assert exported.__module__ == "agent_brief"
+        assert exported.__code__.co_code == owned.__code__.co_code
+
+
 # The fake agent: a critic (prompt names a verdict path) writes its scripted
 # verdict + commits; a builder commits `WI-050: ...` progress (so build_scope_srs
 # reads WI-050 off the commit subject) and, after N builds, writes DONE.

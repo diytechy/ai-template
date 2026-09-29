@@ -154,6 +154,7 @@ SLOW_MODULES = frozenset(
         "test_traj_parse",  # source loaders + the git/subprocess seam
         "test_agent_loop_review",  # review-tail subprocess rounds
         "test_agent_loop",  # agent_loop.py subprocess loops
+        "test_agent_loop_support",  # coordinator lock + durable log/index support
         # WI-277 split test_agent_loop.py by behavior boundary. Both inherit the
         # parent's tier with the split (behavior-preserving); test_agent_loop_routing
         # is genuinely in-process, and re-tiering it is a separate MEASURED call.
@@ -186,6 +187,7 @@ SLOW_MODULES = frozenset(
         # decision, deliberately not taken here.)
         "test_trajectory_staged",  # --staged git-effect + git-time recovery
         "test_trajectory_arch",  # decision over architecture inputs
+        "test_trajectory_phase",  # phase anchors + approval-brief evidence
         "test_trajectory_specs",  # decision over spec bodies
         "test_trajectory_holdban",  # WI-553 hold-by-rename detector on git scaffolds
         "test_components_registry",  # components gate on scaffolds

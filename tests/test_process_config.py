@@ -39,6 +39,16 @@ ac = load_script("agent_common")
 bootstrap = load_script("bootstrap")
 check_privacy = load_script("check_privacy")
 
+
+def test_declared_policy_surface_is_reexported_from_its_behavior_module():
+    policy = load_script("agent_policy")
+    for name in ("process_config", "config_conflicts", "human_holds"):
+        exported = getattr(ac, name)
+        owned = getattr(policy, name)
+        assert exported.__module__ == "agent_policy"
+        assert exported.__code__.co_code == owned.__code__.co_code
+
+
 HOOK = KIT / "hooks" / "pre-commit"
 
 

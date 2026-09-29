@@ -1,9 +1,10 @@
 """WI-509 (OI-59 ruled (a)+(c)): pin the kit-path invariant.
 
 `bootstrap.py` deliberately never copies *itself* into a scaffold - it is not
-a row in its own `MAPPING` (the kit folder is the tool; the adopter's
-scaffolded repo is the product; option (b), shipping a second installer copy
-into the scaffold, was DECLINED by the ruling because two installers drift).
+a row in `bootstrap_manifest.py`'s `MAPPING` (the kit folder is the tool; the
+adopter's scaffolded repo is the product; option (b), shipping a second
+installer copy into the scaffold, was DECLINED by the ruling because two
+installers drift).
 That means any instructing surface that tells a reader to *run* `bootstrap.py`
 must address a path that actually exists from the reader's assumed working
 directory - never a bare `scripts/bootstrap.py`, which resolves (from inside
@@ -16,7 +17,7 @@ follower got `can't open file ... scripts/bootstrap.py`.
 Two tiers, because the kit ships instructions from two different assumed
 CWDs (both real, both used elsewhere in the kit's own prose):
 
-- **STRICT surfaces** - every file `bootstrap.py`'s own `MAPPING` copies or
+- **STRICT surfaces** - every file `bootstrap_manifest.py`'s `MAPPING` copies or
   generates into an adopter's scaffolded repo (its SOURCE, read from this kit
   checkout), plus `RESYNC_PACK.md` (its recipes describe actions taken while
   standing in an ALREADY-ADOPTED repo, per its own §1 procedure). The reader's
@@ -39,8 +40,8 @@ CWDs (both real, both used elsewhere in the kit's own prose):
 is the machinery, not an instruction pointing at it from somewhere else.
 
 The machinery filename (`bootstrap.py`) and the two migration/sync flags this
-pin cares about are read from `bootstrap.py` itself (`MAPPING` for the
-filename check; `--migrate-config`/`--sync` are named directly in OI-59's
+pin cares about are read from their owning modules (`bootstrap_manifest.py` for
+the inventory; `--migrate-config`/`--sync` are named directly in OI-59's
 ruling and confirmed present in `bootstrap.py`'s own `argparse` surface below)
 rather than hand-listed, so the pin cannot drift from the one home for the
 inventory it is a claim about.
@@ -51,6 +52,7 @@ import re
 from conftest import KIT, ROOT
 
 BOOTSTRAP_PY = KIT / "scripts" / "bootstrap.py"
+BOOTSTRAP_MANIFEST_PY = KIT / "scripts" / "kitlib" / "bootstrap_manifest.py"
 
 # The two migration/sync flags OI-59's ruling names explicitly. Asserted
 # present in bootstrap.py's own argparse surface (not just assumed) so this
@@ -86,12 +88,13 @@ _FRAMED_SURFACES = (
 
 
 def _mapping_sources():
-    """The `(source, dest)` pairs bootstrap.py's own MAPPING declares - the
+    """The `(source, dest)` pairs bootstrap_manifest.py's MAPPING declares - the
     one home for "what does a scaffold receive", read rather than hand-kept."""
-    text = BOOTSTRAP_PY.read_text(encoding="utf-8")
+    text = BOOTSTRAP_MANIFEST_PY.read_text(encoding="utf-8")
     m = re.search(r"^MAPPING = \[(.*?)^\]", text, re.S | re.M)
     assert m, (
-        "bootstrap.py's `MAPPING = [...]` list was not found by this test's "
+        "bootstrap_manifest.py's `MAPPING = [...]` list was not found by this "
+        "test's "
         "regex - MAPPING's shape changed; update "
         "tests/test_kit_path_invariant.py's `_mapping_sources` to match."
     )
@@ -102,8 +105,8 @@ def _mapping_sources():
         r'\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*(?:,\s*"[^"]+"\s*)?\)', m.group(1)
     )
     assert pairs, (
-        "tests/test_kit_path_invariant.py parsed bootstrap.py's MAPPING as "
-        "empty - the parsing regex is stale."
+        "tests/test_kit_path_invariant.py parsed bootstrap_manifest.py's "
+        "MAPPING as empty - the parsing regex is stale."
     )
     return pairs
 
@@ -137,8 +140,8 @@ def test_bootstrap_stays_out_of_its_own_mapping():
     pairs = _mapping_sources()
     offenders = [dest for _src, dest in pairs if "bootstrap.py" in dest]
     assert not offenders, (
-        "bootstrap.py MAPPING now copies itself into the scaffold at "
-        f"{offenders} - OI-59 ruled (a): the kit folder is the tool, the "
+        "bootstrap_manifest.py MAPPING now copies bootstrap.py into the "
+        f"scaffold at {offenders} - OI-59 ruled (a): the kit folder is the tool, the "
         "scaffold is the product, and bootstrap.py must stay out of its own "
         "MAPPING. If this is a deliberate reversal it needs a fresh OI ruling, "
         "not a silent MAPPING row."

@@ -2099,8 +2099,8 @@ def mapping_purpose_findings(
 ):
     """The four SR-163 finding classes over a shipped-file inventory, as a list
     of `(class, destination, detail)` tuples. PURE: every environment fact is an
-    injected value, so the same function grades the real `bootstrap.MAPPING` and
-    a planted scaffold identically.
+    injected value, so the same function grades the real
+    `kitlib.bootstrap_manifest.MAPPING` and a planted scaffold identically.
 
       `entries`            — iterable of `(src, dst, ref)` (bootstrap.mapping_entries
                              shape; `ref` None for a bare pair).
@@ -2207,9 +2207,11 @@ def mapping_purpose_over_repo(
 ):
     """Run the SR-163 checker over THIS repo's real inventory and return the four
     finding classes. The ONE delivered path that assembles every environment fact
-    the pure `mapping_purpose_findings` needs — the shipped-file inventory
-    (`bootstrap.mapping_entries()`), the SR/SN spine (`load_spine_index`), and the
-    declared-absences ledger (`check_doc_refs.load_declared_absences`) — so the
+    the pure `mapping_purpose_findings` needs — the canonical shipped-file
+    inventory (`kitlib.bootstrap_manifest.MAPPING`, read by the compatibility
+    re-export `bootstrap.mapping_entries()`), the SR/SN spine
+    (`load_spine_index`), and the declared-absences ledger
+    (`check_doc_refs.load_declared_absences`) — so the
     `--mapping-purpose` CLI mode and TC-204 grade the same code over the same repo,
     not two hand-assembled copies that can drift.
 
@@ -2257,9 +2259,10 @@ def _mapping_purpose_exit(src_roots, args):
     (a missing file or a stale exclusion); unmapped bare pairs and unresolved
     references are reported and counted but never fail the run, so the reference
     burn-down is visible on every invocation without a flag day. Ignores
-    `src_roots` — the inventory it grades is `bootstrap.MAPPING`, not the scanned
-    source tree — and takes `--root` for the repo whose spine and ledger it reads,
-    the same knob `--backlink-coverage` uses."""
+    `src_roots` — the inventory it grades is
+    `kitlib.bootstrap_manifest.MAPPING`, not the scanned source tree — and takes
+    `--root` for the repo whose spine and ledger it reads, the same knob
+    `--backlink-coverage` uses."""
     findings = mapping_purpose_over_repo(args.root)
     lines, ok = mapping_purpose_report(findings)
     for line in lines:
@@ -2361,8 +2364,8 @@ def main():
         "--mapping-purpose",
         action="store_true",
         help="REPORT MODE (writes nothing, needs no --doc): grade the shipped-file "
-        "inventory (bootstrap.MAPPING) for SR-163 — each entry maps through a "
-        "requirement reference to a live stakeholder need, its destination exists, "
+        "inventory (kitlib.bootstrap_manifest.MAPPING) for SR-163 — each entry maps "
+        "through a requirement reference to a live stakeholder need, its destination exists, "
         "and no declared exclusion is stale. Warn-first: exits 1 only on a "
         "gate-class finding (missing file / stale exclusion); unmapped and "
         "unresolved rows are reported but never gate (the burn-down)",

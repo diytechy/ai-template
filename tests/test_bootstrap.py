@@ -118,6 +118,7 @@ def test_scaffold_contains_expected_files(scaffold):
         # expectation readable beside the other scripts.
         "scripts/kitlib/__init__.py",
         "scripts/kitlib/authority.py",
+        "scripts/kitlib/bootstrap_manifest.py",
         "scripts/kitlib/config.py",
         "scripts/kitlib/decisions.py",
         "scripts/kitlib/done_when.py",
@@ -148,6 +149,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/check_privacy.py",
         "scripts/check_vendored.py",
         "scripts/check_trajectory.py",
+        "scripts/trajectory_arch.py",
         "scripts/schedule.py",
         "scripts/subagent_gate.py",
         "scripts/agent_route.py",
@@ -194,6 +196,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "agent-resume.sh",
         "agent-resume.command",
         "scripts/agent_loop.py",
+        "scripts/agent_brief.py",
         "scripts/dispatch.py",
         "scripts/lane.py",
         "scripts/handback.py",
@@ -213,6 +216,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/session_service.py",
         "scripts/session_keep.py",
         "scripts/agent_common.py",
+        "scripts/agent_policy.py",
         "scripts/plan_runner.py",
     ]:
         assert (scaffold / rel).exists(), "missing from scaffold: " + rel
@@ -1360,6 +1364,15 @@ def test_bootstrap_imports_only_the_common_package():
             )
 
 
+def test_bootstrap_reexports_the_manifest_behavior_module():
+    """The scaffold inventory has one package-owned behavior seam."""
+    from kitlib import bootstrap_manifest
+
+    bootstrap = load_script("bootstrap")
+    assert bootstrap.MAPPING is bootstrap_manifest.MAPPING
+    assert bootstrap.mapping_entries.__module__ == "kitlib.bootstrap_manifest"
+
+
 def test_every_sibling_imported_module_is_shipped_by_mapping():
     """A shipped script's sibling imports must themselves be in MAPPING.
 
@@ -1380,17 +1393,19 @@ def test_every_sibling_imported_module_is_shipped_by_mapping():
     # matches script names in docstrings and comments, which would silently
     # mark an unmapped module as mapped - a false negative on exactly the
     # module someone next mentions in prose (WI-379 review round 1).
-    bootstrap_tree = ast.parse((SCRIPTS / "bootstrap.py").read_text(encoding="utf-8"))
+    manifest_tree = ast.parse(
+        (SCRIPTS / "kitlib" / "bootstrap_manifest.py").read_text(encoding="utf-8")
+    )
     mapping_node = next(
         (
             node.value
-            for node in bootstrap_tree.body
+            for node in manifest_tree.body
             if isinstance(node, ast.Assign)
             and any(isinstance(t, ast.Name) and t.id == "MAPPING" for t in node.targets)
         ),
         None,
     )
-    assert mapping_node is not None, "bootstrap.py no longer defines MAPPING"
+    assert mapping_node is not None, "bootstrap_manifest.py no longer defines MAPPING"
     # PACKAGES COUNT AS MODULES, BOTH SIDES OF THE COMPARISON (WI-448). Before
     # `kitlib/` this collapsed every MAPPING literal to a bare stem and globbed
     # only top-level `*.py`, so a package was invisible TWICE: `from kitlib

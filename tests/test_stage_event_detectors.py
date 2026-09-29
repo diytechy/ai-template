@@ -341,7 +341,7 @@ def test_read_declared_is_not_documented_as_a_docs_gate_reader():
 
     retired = "still the reader for"
     assert retired not in (kitconfig.read_declared.__doc__ or "")
-    assert retired not in (SCRIPTS / "agent_common.py").read_text(encoding="utf-8")
+    assert retired not in (SCRIPTS / "agent_policy.py").read_text(encoding="utf-8")
     assert kitconfig.read_declared is AC.read_declared
     # ...and `docs/gate` is still the deliberate NON-row it always was, which is
     # WHY no call site could ever have reached it through `declared_policy`.

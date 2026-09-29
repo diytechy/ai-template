@@ -359,13 +359,18 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # copy of the rung table; only a rendered re-attestation brief asks, so
     # every other trace run stays free of agent_common's import. Reason in
     # docs/log.d/2026-09-26-wave3-build.md.
-    assert 14 <= deferred <= 28, (
+    # RE-STAMPED 28 -> 29 (2026-09-29, WI-545): the pure behavior split moved
+    # worker-prompt context assembly to agent_brief while adjudication routing
+    # stayed in agent_loop. Both already defer their distinct intake reads, so
+    # one former module edge now appears on both sides of the new seam; no
+    # function acquired an import and the cycle set below is unchanged.
+    assert 14 <= deferred <= 29, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..28 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..29 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "
-        "WI-521 now owns reducing: re-stamp only with the reason.".format(deferred)
+        "WI-545 now owns reducing: re-stamp only with the reason.".format(deferred)
     )
 
 
@@ -377,7 +382,7 @@ def test_no_new_import_cycle():
         "the import-cycle census changed.\n"
         "  found:    {}\n"
         "  baseline: {}\n"
-        "A cycle that GREW or APPEARED is decomposition work (WI-521) — do "
+        "A cycle that GREW or APPEARED is decomposition work (WI-545) — do "
         "NOT widen CYCLES to get green, because editing this list IS "
         "accepting what it measures. A cycle that SHRANK is a win: re-stamp "
         "the entry downward, or delete it, in the same commit, with the "

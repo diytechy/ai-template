@@ -52,11 +52,11 @@ def test_cli_mapping_purpose_gates_when_real_shipped_row_is_removed():
     code = """
 import sys
 sys.path.insert(0, {scripts!r})
-import bootstrap
 import gen_arch_map
+from kitlib import bootstrap_manifest
 
-bootstrap.MAPPING = [
-    row for row in bootstrap.MAPPING if row[1] != "docs/process.toml"
+bootstrap_manifest.MAPPING = [
+    row for row in bootstrap_manifest.MAPPING if row[1] != "docs/process.toml"
 ]
 sys.argv = [
     "gen_arch_map.py", "--mapping-purpose", "--root", {root!r}

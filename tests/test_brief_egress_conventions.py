@@ -25,7 +25,7 @@ PROMPTS = REPO / "project-trajectory" / "prompts"
 # The modules that compose content for dispatch to an external model runner
 # (LLR-176's enumerated composing path).
 COMPOSING_MODULES = (
-    "agent_loop.py",  # worker_prompt / critique_brief
+    "agent_brief.py",  # worker_prompt / critique_brief
     "plan_briefs.py",  # the dual-plan round's allowlist surface
     "adjudicate_brief.py",  # compose: spec + report + oneline/name-status logs
     "intake.py",  # context_block

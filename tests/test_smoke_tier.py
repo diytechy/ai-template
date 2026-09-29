@@ -34,11 +34,13 @@ def test_wi277_split_modules_stay_slow():
     for stem in (
         "test_trajectory_staged",
         "test_trajectory_arch",
+        "test_trajectory_phase",
         "test_trajectory_specs",
         "test_trace_rules",
         "test_trace_briefs",
         "test_agent_loop_routing",
         "test_agent_loop_policy",
+        "test_agent_loop_support",
         "test_traj_status",
         "test_traj_panels",
         "test_traj_views",
