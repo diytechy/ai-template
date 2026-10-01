@@ -14,9 +14,14 @@ Fixture provenance, stated because the two kinds differ:
   rate-limit event, narrowing the init event to its identity fields and
   rewriting the working path.
 - `codex-exec-json.jsonl`, `codex-rollout.jsonl` and `opencode-run-json.jsonl`
-  are NOT LIVE: each is built from the CLI's documented event shapes and says
-  so on its first line. Recording them live, and re-running the opencode
-  pathway checks on the installed version, is owed to a person.
+  are LIVE, recorded 2026-09-30 (WI-541) on codex-cli 0.157.1 and opencode
+  1.18.29: one tool-using read of a one-line file, then the answer. The codex
+  exec stream is the stdout verbatim (`codex exec --json --sandbox read-only`,
+  no model pinned). The rollout is the same run's file under `~/.codex/
+  sessions`, trimmed to the session_meta identity fields, the task events and
+  the two token_count events (the account ids, injected instructions and rate
+  limits are dropped). The opencode run is `opencode run --format json` on
+  `opencode-go/kimi-k3`, working path rewritten to a neutral `work` directory.
 """
 
 import json
@@ -177,7 +182,7 @@ def test_opencode_occupancy_is_the_last_steps_prompt_and_no_window_is_guessed():
     _, used, window, pct = adapters.adapter_for(["opencode"]).context(
         _fixture("opencode-run-json.jsonl")
     )
-    assert used == 150 + 9800 + 40
+    assert used == 3107 + 7680
     assert window == "" and pct == ""
 
 
@@ -185,23 +190,23 @@ def test_codex_exec_usage_is_cumulative_so_no_occupancy_is_read_from_it():
     session_id, used, window, pct = adapters.adapter_for(["codex"]).context(
         _fixture("codex-exec-json.jsonl")
     )
-    assert session_id == "0199a213-81c0-7800-8aa1-bbab2a035a53"
+    assert session_id == "01a0f5b5-ff52-73c1-b233-c11dd3defd4d"
     assert (used, window, pct) == ("", "", "")
 
 
 def test_codex_occupancy_reads_the_last_request_from_its_rollout(tmp_path):
-    thread = "0199a213-81c0-7800-8aa1-bbab2a035a53"
-    day = tmp_path / "sessions" / "2026" / "09" / "28"
+    thread = "01a0f5b5-ff52-73c1-b233-c11dd3defd4d"
+    day = tmp_path / "sessions" / "2026" / "09" / "30"
     day.mkdir(parents=True)
-    (day / "rollout-2026-09-28T05-10-01-{}.jsonl".format(thread)).write_text(
+    (day / "rollout-2026-09-30T23-25-40-{}.jsonl".format(thread)).write_text(
         _fixture("codex-rollout.jsonl"), encoding="utf-8"
     )
     _, used, window, pct = adapters.adapter_for(["codex"]).context(
         _fixture("codex-exec-json.jsonl"), env={"CODEX_HOME": str(tmp_path)}
     )
-    assert used == 12463  # the last request's inclusive input, not 24763
-    assert window == 272000
-    assert pct == round(12463 * 100 / 272000)
+    assert used == 15224  # the last request's inclusive input, not 30378
+    assert window == 258400
+    assert pct == round(15224 * 100 / 258400)
 
 
 def test_an_unknown_cli_reports_no_occupancy():

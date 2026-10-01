@@ -4,8 +4,8 @@ Every model call the kit makes goes through `session_service`: `act` launches
 it (through the launched CLI's adapter) and accounts it, `record` writes its
 one session log and commits it. These tests drive both in memory with an
 injected runner, over the recorded fixtures `tests/test_session_adapters.py`
-describes (`tests/golden/sessions/`; the claude one is LIVE, the codex and
-opencode ones are NOT LIVE and owed a live recording by a person).
+describes (`tests/golden/sessions/`; all three are LIVE: the claude one
+recorded 2026-09-28, the codex and opencode ones 2026-09-30, WI-541).
 """
 
 import ast
@@ -115,13 +115,13 @@ def test_codex_usage_is_mapped_inclusive_with_fresh_input_derived():
     assert usage["semconv"].endswith("@" + PINNED)
     assert usage["cli"] == "codex"
     assert usage["gen_ai.provider.name"] == "openai"
-    assert usage["gen_ai.usage.input_tokens"] == 24763  # codex counts cache inside
-    assert usage["gen_ai.usage.cache_read.input_tokens"] == 24448
-    assert usage["gen_ai.usage.cache_write.input_tokens"] == ""  # not reported
-    assert usage["gen_ai.usage.output_tokens"] == 122
-    assert usage["gen_ai.usage.reasoning.output_tokens"] == ""
-    assert usage["fresh-input-tokens"] == 24763 - 24448
-    assert usage["gen_ai.conversation.id"] == "0199a213-81c0-7800-8aa1-bbab2a035a53"
+    assert usage["gen_ai.usage.input_tokens"] == 30378  # codex counts cache inside
+    assert usage["gen_ai.usage.cache_read.input_tokens"] == 27392
+    assert usage["gen_ai.usage.cache_write.input_tokens"] == ""  # codex 0.157.1 now reports 0; the adapter does not read it (WI-541 finding)
+    assert usage["gen_ai.usage.output_tokens"] == 47
+    assert usage["gen_ai.usage.reasoning.output_tokens"] == 0
+    assert usage["fresh-input-tokens"] == 30378 - 27392
+    assert usage["gen_ai.conversation.id"] == "01a0f5b5-ff52-73c1-b233-c11dd3defd4d"
 
 
 def test_codex_provider_name_stays_at_its_default_when_reconfigured():
@@ -139,14 +139,14 @@ def test_opencode_usage_is_summed_over_its_steps_and_made_inclusive():
     assert usage["semconv"].endswith("@" + PINNED)
     assert usage["cli"] == "opencode"
     assert usage["gen_ai.provider.name"] == ""
-    assert usage["gen_ai.usage.input_tokens"] == (9800 + 0 + 0) + (150 + 9800 + 40)
-    assert usage["gen_ai.usage.cache_read.input_tokens"] == 9800
-    assert usage["gen_ai.usage.cache_write.input_tokens"] == 40
+    assert usage["gen_ai.usage.input_tokens"] == (10483 + 0 + 0) + (3107 + 7680 + 0)
+    assert usage["gen_ai.usage.cache_read.input_tokens"] == 7680
+    assert usage["gen_ai.usage.cache_write.input_tokens"] == 0
     # Reasoning is included in output, as the convention asks.
-    assert usage["gen_ai.usage.output_tokens"] == (40 + 12) + (5 + 0)
-    assert usage["gen_ai.usage.reasoning.output_tokens"] == 12
-    assert usage["fresh-input-tokens"] == 150 + 9800
-    assert usage["gen_ai.conversation.id"] == "ses_6a1f0c2e5ffeQk2VbQ9rX1a7Lm"
+    assert usage["gen_ai.usage.output_tokens"] == (99 + 86) + (14 + 39)
+    assert usage["gen_ai.usage.reasoning.output_tokens"] == 86 + 39
+    assert usage["fresh-input-tokens"] == 10483 + 3107
+    assert usage["gen_ai.conversation.id"] == "ses_f0a498817ffe2U5tfcBE7s7Q2I"
 
 
 def test_every_provider_row_carries_the_same_columns():
@@ -204,7 +204,7 @@ def test_act_launches_through_the_adapter_and_accounts_the_call(tmp_path):
     assert m["role"] == "BUILD" and m["provider"] == "OPENAI"
     assert m["roster-row"] == "OPENAI-SOL" and m["tier"] == "strong"
     assert m["gen_ai.request.model"] == "m"
-    assert m["gen_ai.usage.input_tokens"] == 24763
+    assert m["gen_ai.usage.input_tokens"] == 30378
     assert m["usage-status"] == "known"
 
 

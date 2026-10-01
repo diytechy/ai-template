@@ -1,9 +1,6 @@
-{"fixture_note": "NOT LIVE: built from the documented `codex exec --json` event shapes (thread.started, turn.started, item.*, turn.completed with cumulative usage), not recorded from a CLI run. The live recording is owed to a person."}
-Reading prompt from stdin...
-{"type":"thread.started","thread_id":"0199a213-81c0-7800-8aa1-bbab2a035a53"}
+{"type":"thread.started","thread_id":"01a0f5b5-ff52-73c1-b233-c11dd3defd4d"}
 {"type":"turn.started"}
-{"type":"item.completed","item":{"id":"item_0","type":"reasoning","text":"**Reading the file**"}}
-{"type":"item.started","item":{"id":"item_1","type":"command_execution","command":"bash -lc 'cat word.txt'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
-{"type":"item.completed","item":{"id":"item_1","type":"command_execution","command":"bash -lc 'cat word.txt'","aggregated_output":"PINEAPPLE is the word.\n","exit_code":0,"status":"completed"}}
-{"type":"item.completed","item":{"id":"item_2","type":"agent_message","text":"PINEAPPLE"}}
-{"type":"turn.completed","usage":{"input_tokens":24763,"cached_input_tokens":24448,"output_tokens":122}}
+{"type":"item.started","item":{"id":"item_0","type":"command_execution","command":"\"C:\\\\Program Files\\\\PowerShell\\\\7\\\\pwsh.exe\" -Command 'Get-Content -LiteralPath word.txt'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_0","type":"command_execution","command":"\"C:\\\\Program Files\\\\PowerShell\\\\7\\\\pwsh.exe\" -Command 'Get-Content -LiteralPath word.txt'","aggregated_output":"PINEAPPLE is the word.\r\n","exit_code":0,"status":"completed"}}
+{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"PINEAPPLE"}}
+{"type":"turn.completed","usage":{"input_tokens":30378,"cached_input_tokens":27392,"cache_write_input_tokens":0,"output_tokens":47,"reasoning_output_tokens":0}}

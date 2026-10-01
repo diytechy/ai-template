@@ -5,9 +5,8 @@ occupancy, draining and resetting, and the keep-warm ping are all ordinary
 calls through `session_service`, and the layer is INERT at the shipped
 `[adjudicator] context_reset_pct = 0`. The rules and the store are
 `session_keep`'s. Driven in memory with an injected launch over the recorded
-fixtures in `tests/golden/sessions/` (the claude one LIVE; the codex and
-opencode ones NOT LIVE, built from documented event shapes and owed a live
-recording by a person). The store lives under a temporary repository root.
+fixtures in `tests/golden/sessions/` (all three LIVE: the claude one
+recorded 2026-09-28, the codex and opencode ones 2026-09-30, WI-541). The store lives under a temporary repository root.
 """
 
 import json
@@ -180,8 +179,8 @@ def test_the_loop_retains_nothing_at_the_shipped_dial(tmp_path):
     "family,session_id,used",
     [
         ("ANTHROPIC", None, 48267),
-        ("OPENAI", "0199a213-81c0-7800-8aa1-bbab2a035a53", ""),
-        ("OPENCODE", "ses_6a1f0c2e5ffeQk2VbQ9rX1a7Lm", 9990),
+        ("OPENAI", "01a0f5b5-ff52-73c1-b233-c11dd3defd4d", ""),
+        ("OPENCODE", "ses_f0a498817ffe2U5tfcBE7s7Q2I", 10787),
     ],
 )
 def test_a_first_adjudication_mints_and_the_next_resumes(
@@ -233,13 +232,13 @@ def test_a_retained_codex_route_runs_under_its_dedicated_home_and_reads_occupanc
     """The route-level path: a retained codex adjudication launches with the
     dedicated CODEX_HOME the owner ruled for retention, and its occupancy is
     read from the rollout under that home."""
-    thread = "0199a213-81c0-7800-8aa1-bbab2a035a53"
+    thread = "01a0f5b5-ff52-73c1-b233-c11dd3defd4d"
     kept = _keep(tmp_path, ON, "OPENAI")
     home = Path(kept.home_env["CODEX_HOME"])
     assert home.is_dir() and home.parent.parent == keep.store_dir(tmp_path)
-    day = home / "sessions" / "2026" / "09" / "28"
+    day = home / "sessions" / "2026" / "09" / "30"
     day.mkdir(parents=True)
-    (day / "rollout-2026-09-28T05-10-01-{}.jsonl".format(thread)).write_text(
+    (day / "rollout-2026-09-30T23-25-40-{}.jsonl".format(thread)).write_text(
         _fixture("codex-rollout.jsonl"), encoding="utf-8"
     )
     envs = []
@@ -252,14 +251,14 @@ def test_a_retained_codex_route_runs_under_its_dedicated_home_and_reads_occupanc
         )
     )
     assert envs[0]["CODEX_HOME"] == str(home)
-    assert out.metrics["context-used"] == 12463
-    assert keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE")["pct"] == 5
+    assert out.metrics["context-used"] == 15224
+    assert keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE")["pct"] == 6
 
 
 def test_an_unretained_codex_call_reads_occupancy_under_the_inherited_home(
     tmp_path, monkeypatch
 ):
-    thread = "0199a213-81c0-7800-8aa1-bbab2a035a53"
+    thread = "01a0f5b5-ff52-73c1-b233-c11dd3defd4d"
     day = tmp_path / "home" / "sessions" / "2026"
     day.mkdir(parents=True)
     (day / "rollout-x-{}.jsonl".format(thread)).write_text(
@@ -267,7 +266,7 @@ def test_an_unretained_codex_call_reads_occupancy_under_the_inherited_home(
     )
     monkeypatch.setenv("CODEX_HOME", str(tmp_path / "home"))
     out = svc.act(_call(tmp_path, "OPENAI", None, _launch(_fixture(STREAMS["OPENAI"]))))
-    assert out.metrics["context-used"] == 12463  # env=None inherits CODEX_HOME
+    assert out.metrics["context-used"] == 15224  # env=None inherits CODEX_HOME
 
 
 # --- dial on: the reset rules (TC-267) ------------------------------------------

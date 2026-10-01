@@ -76,3 +76,20 @@ The owner authorizes the live codex and opencode runs on this box ("You can
 perform the test"). This clears the gate the permission classifier left on the
 runs; the row is claimable by a session that performs them. The retention dial
 stays at 0 (its turning on is still the owner's act).
+
+## Progress 2026-09-30
+
+Done (log fragment `docs/log.d/2026-09-30-wi541-live-recordings.md`): the live
+codex and opencode recordings replace the three fixtures; the adapter tests, TC-262,
+TC-264 and TC-267's method cells say so; the opencode pathway re-check on 1.18.29
+is recorded in `docs/agents.toml`; the codex window (258,400) and the last-request
+occupancy are recorded.
+
+Still owed, and this row stays open for them:
+- the compaction-ceiling run (auto-compact window set low), occupancy on a real
+  multi-step adjudication, the cache TTLs, and replay time at 100k–700k tokens;
+- a recording of the kit's own route command: the classifier refused
+  `--dangerously-bypass-approvals-and-sandbox`, so the fixture came from
+  `--sandbox read-only` with no model pinned;
+- a finding on the codex adapter: 0.157.1 reports `cache_write_input_tokens`, which
+  the adapter records as "not reported" (the TC-264 usage formula's codex arm).
