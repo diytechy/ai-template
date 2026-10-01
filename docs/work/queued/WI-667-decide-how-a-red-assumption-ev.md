@@ -42,3 +42,10 @@ Folded 2026-09-28 (the fifth coordinator session), on the same surface, how an a
   shows a red assumption case minting the ruled row kind while the
   requirement half's output is unchanged.
 - The commit bar passes.
+
+## Owner position 2026-09-30 (open; not yet a ruling)
+
+See WI-697: the owner doubts an assumption is verified rather than asserted
+(Status carries it). That bears on the first Done-when (composer arm for an
+assumption-only case) and on whether a "red assumption case" exists at all.
+Resolve it before building either.

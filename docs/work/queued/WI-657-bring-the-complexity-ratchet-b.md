@@ -94,3 +94,13 @@ needed.
 - Any prototype stays out of the gate and the commit bar.
 - No detector is adopted by this item; adoption is the owner's ruling on the
   result.
+
+## Owner direction 2026-09-30 (mechanization open)
+
+The rung need not gate a sensor in every case: what a step is *for* decides when
+it runs. The complexity sensor exists to improve code quality, so it should run
+whenever code is built, which depends wholly on the work item and not on the
+repo's derived stage. The owner is unsure how to mechanize that. Candidates to
+weigh when ruling: select by what the WI changes (code touched) rather than by
+`from-stage`; or declare per-step a trigger other than a stage rung. This
+bears on OI-68 Q3's "ARMED at DevStg-Impl" text.

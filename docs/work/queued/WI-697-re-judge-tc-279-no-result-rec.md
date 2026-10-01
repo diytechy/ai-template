@@ -25,3 +25,11 @@ The merge checkpoint at bcf1e9a found observation test case TC-279 due for re-ju
 The check that filed this hashed the declared inputs and ran no model. Re-judge the case by its Method and record the result with `python scripts/record_observation.py --tc TC-279 --outcome pass|fail --by "<who or what observed>"`.
 Held 2026-09-28 by the kit itself: `adjudicate_brief.compose` refuses this row's re-judge brief ("TC-279 has no `Verifies` cell"). TC-279 is an assumption-only observation case: it evidences DA-011 and verifies no SR or LLR. A brief that cannot be composed is a hold for a human, never a downgrade to an ordinary session (the module's rule 3). The composer gap is folded into WI-667. This row waits there, and closing it now would let the next merge re-mint it.
 
+
+## Owner position 2026-09-30 (open; not yet a ruling)
+
+The owner recalls earlier discussion and doubts that an assumption can be
+*verified*: it can only be *asserted*, and its Status is the likely right
+record, following the other spine registries. If that holds, TC-279 (an
+observation case that "verifies" DA-011) is mis-modelled, and the fix is to the
+model, not a composer arm. Decide this before WI-667's first Done-when is built.

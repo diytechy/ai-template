@@ -69,3 +69,10 @@ verdict is
 - Each reading is in the log fragment with its producing command under `fig:`,
   and the retention dial in `docs/process.toml` is left at 0: turning it on is
   the owner's act.
+
+## Owner direction 2026-09-30
+
+The owner authorizes the live codex and opencode runs on this box ("You can
+perform the test"). This clears the gate the permission classifier left on the
+runs; the row is claimable by a session that performs them. The retention dial
+stays at 0 (its turning on is still the owner's act).
