@@ -82,3 +82,21 @@ assumption holds; only a failed one is evidence that it does not").
    (gate) were built or designed for the evidence model; C3 shrinks to the
    falsification route and C5 loses its evidence arm. File the amendments through
    the artifact adjudication route when ruled.
+
+### Addendum to the proposed ruling 2026-10-02 (the falsifier)
+
+5. The `falsifier` stays a description of the observable that would show the
+   assumption false (REAssuRE's and UL 4600's cell; plan §5), never a link. An
+   observer, judge or outcome review reads it and tries to produce that signal,
+   following the observation case's `Method` (for TC-279, the sampled new-reader
+   procedure in `docs/test/inspection-procedures.md`); the Method says how to look,
+   the falsifier says what counts as wrong. It is tried against the real thing,
+   never a surrogate built from the system under test (plan §8: such a surrogate
+   cannot falsify assumptions the two share).
+6. A failed attempt is falsification evidence and a person or adjudication sets
+   `standing = falsified`; a passed attempt proves nothing beyond the sample (plan §7),
+   so an assumption stays `Approved` and `active` by default.
+7. Accepted consequences, not to be built: nothing checks that a falsifier is
+   observable (a missing one stays an advisory, `no_falsifier_advisories`), and
+   nothing connects a failed observation to `standing`; that step is a person's
+   act. A falsifier no one can reproduce simply never fires.
