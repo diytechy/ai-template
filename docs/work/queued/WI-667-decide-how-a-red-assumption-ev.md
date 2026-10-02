@@ -57,3 +57,28 @@ typed. An assumption row already carries `status` (Drafted/Approved) and a
 separate `standing` (`active` | `falsified`). The owner's position (no evidence
 for an assumption, only a status) would mean: drop `assumption_refs` on test
 cases, and let a falsified `standing`, set by a person, be the only signal.
+
+## Proposed ruling 2026-10-02 (for the owner's signature; not yet a ruling)
+
+Basis: `docs/plans/2026-09-20-validation-gap-and-the-assumption-tier.md` §5 (status
+and standing are separate) and §7 ("a passed sparse probe is not evidence that an
+assumption holds; only a failed one is evidence that it does not").
+
+1. An assumption carries `status` (Drafted | Approved) and `standing` (active |
+   falsified), plus its `falsifier`. It has no evidence level and no positive
+   evidence: drop the `assumed | specified | monitored | sampled` ladder and any
+   rule that the gate needs current evidence for an assumption.
+2. The only evidence-shaped signal is falsification: a failing observation
+   (`record_observation.py --outcome fail`) or an adjudication/outcome review
+   finding. A person or an adjudication then sets `standing = falsified`; the
+   `accepted_risk` reopen triggers stay.
+3. So no "red assumption case" exists to route: the census's assumption half
+   (WI-631's `assumptions=True`) and this row's second and third Done-when lines
+   are dropped, not built. The first Done-when line stays, narrowed: the first-approval
+   and re-judge briefs render an assumption-only observation case (TC-279) under its
+   assumption's chain, because it verifies no SR or LLR.
+4. Cost to check before signing: SN-043's text ("premises ... are recorded and
+   checked") and the plan's C3 (`assumption_refs`, per-observation results) and C5
+   (gate) were built or designed for the evidence model; C3 shrinks to the
+   falsification route and C5 loses its evidence arm. File the amendments through
+   the artifact adjudication route when ruled.

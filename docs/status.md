@@ -62,7 +62,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   gate's four steps (behind `[checks] assumption_gate = false`), and C2's
   assumption and surrogate rows with every SR's bridging. C3 (evidence) and
   C4 (activation) come next, but the owner doubts an assumption has evidence
-  at all (WI-667, WI-697): settle that before building C3. OI-97's joint-delivery class has
+  at all (WI-667, WI-697). A proposed ruling awaits the owner's signature
+  in WI-667: status and standing only, falsification as the one signal, no
+  evidence ladder; settle it before building C3. OI-97's joint-delivery class has
   landed and is anchored.
 - **Sister plan — one plan still owed:** every question in the
   [notes on spine, sessions and tests](plans/2026-09-23-owner-notes-spine-sessions-and-tests.md)

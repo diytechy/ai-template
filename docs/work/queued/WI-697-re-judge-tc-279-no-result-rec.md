@@ -33,3 +33,8 @@ The owner recalls earlier discussion and doubts that an assumption can be
 record, following the other spine registries. If that holds, TC-279 (an
 observation case that "verifies" DA-011) is mis-modelled, and the fix is to the
 model, not a composer arm. Decide this before WI-667's first Done-when is built.
+
+Proposed ruling 2026-10-02: see WI-667's "Proposed ruling". Under it TC-279 stays
+as a falsification check only (a failing sample is evidence against DA-011; a
+passing one proves nothing), and this re-judge still waits on WI-667's narrowed
+first Done-when.
