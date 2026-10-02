@@ -49,3 +49,11 @@ See WI-697: the owner doubts an assumption is verified rather than asserted
 (Status carries it). That bears on the first Done-when (composer arm for an
 assumption-only case) and on whether a "red assumption case" exists at all.
 Resolve it before building either.
+
+Reference for the ruling (2026-10-02): the spine's `Status` vocabulary is
+closed, `Drafted`, `Approved`, `Founded` (PROCESS.md §4). `Approved` blesses the
+row's text; `Founded` is computed (the artifacts the row calls for exist), never
+typed. An assumption row already carries `status` (Drafted/Approved) and a
+separate `standing` (`active` | `falsified`). The owner's position (no evidence
+for an assumption, only a status) would mean: drop `assumption_refs` on test
+cases, and let a falsified `standing`, set by a person, be the only signal.
