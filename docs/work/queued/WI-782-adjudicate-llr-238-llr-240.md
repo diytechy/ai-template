@@ -7,10 +7,12 @@ specref = "docs/requirements/system-requirements.toml"
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
-adjudicates = ["LLR-238", "LLR-240", "LLR-243", "LLR-258", "SR-191", "SR-192", "SR-197", "SR-198", "SR-199", "SR-201", "SR-202", "SR-203", "SR-206", "SR-218", "TC-227", "TC-233", "TC-234", "TC-235", "TC-238", "TC-251"]
+adjudicates = ["SR-200", "LLR-237", "TC-232", "LLR-238", "LLR-240", "LLR-243", "LLR-258", "SR-191", "SR-192", "SR-197", "SR-198", "SR-199", "SR-201", "SR-202", "SR-203", "SR-206", "SR-218", "TC-227", "TC-233", "TC-234", "TC-235", "TC-238", "TC-251"]
 +++
 
 ## Context
+
+Carried in by the coordinator 2026-10-03, mid-sitting: SR-200, LLR-237 and TC-232, the three approved rows WI-771 retired (successors SR-201, LLR-238 and TC-233; records under `docs/log.d/retired/`). Intake's amendment walk reads only rows still present in the live registry, so a removal mints no adjudication. The combined act's copy was refused naming them, so this sitting judges the removals too.
 
 Derived from `staged_spine_amendments` on the merged commit (§A5.2).
 Approved and ROUTED traced cells only; other traced cells are silent
