@@ -25,15 +25,15 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-03-wave8-coordinator.md](handoff-2026-10-03-wave8-coordinator.md)
+  [handoff-2026-10-03-wave9-coordinator.md](handoff-2026-10-03-wave9-coordinator.md)
+  (with the wave-8 handoff it names for roles, tools and recipe)
   (new roles from 2026-10-03: Claude Opus builds at medium effort, Codex Luna
   reviews at high), then apply the owner's 2026-09-30/10-02 directions below
   (each is also noted in its WI row; the 2026-10-02 rulings are in WI-541; the
   assumption ruling is cited in the validation plan's 2026-10-03 supersession
   note; TC-279's first result is recorded). Order:
-  1. One combined sitting over the adjudications the evidence-ladder and the
-     TC-309/TC-310 test merges minted (see the queue); then WI-777 (TC-055 re-judge, now
-     that the rendered assumption view has changed).
+  1. One combined sitting over WI-782 and WI-783 (one act); WI-777 (TC-055
+     re-judge, the rendered assumption view having changed).
   2. WI-688 second to last; its judge sitting is WI-541's multi-step occupancy
      run, and WI-541 closes with it. WI-625 (deferred) last.
   - **WI-684:** re-sync `C:\Projects\FileBackup` (stamp `9b697cc`) as a

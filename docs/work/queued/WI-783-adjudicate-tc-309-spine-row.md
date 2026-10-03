@@ -6,10 +6,12 @@ specref = "docs/test/test-cases.toml"
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "first-approval"
-adjudicates = ["TC-309"]
+adjudicates = ["TC-309", "TC-310"]
 +++
 
 ## Context
+
+Carried in by the coordinator 2026-10-03: TC-310, returned by WI-780 for its tests only; WI-781 changed its tests and not its text, so no mint routes it. Sit this row with WI-782 in one combined act: WI-782's drifted approved TC rows block any first-approval copy of the test-case registry until they are re-attested.
 
 Derived from `staged_drafted_rows` on the merged commit (§A5.2).
 These spine rows are BELOW approval and no act has blessed them.

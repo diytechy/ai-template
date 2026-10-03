@@ -367,3 +367,11 @@ with one assertion, at `3dc73563`.
 At the landing, `test-cases.toml` conflicted with WI-771's edits. The coordinator
 first took trunk's side by mistake, then redid it with the table-wise merger, and
 checked that both lanes' cells were present.
+
+### Cutover to wave 9 (owner, 2026-10-03)
+
+The owner asked for a handoff (session context full) and a consolidation check.
+`intake.py consolidate --dry-run` finds no overlapping queued rows. WI-782 and
+WI-783 are separate adjudication rows that must share one act. TC-310 is carried
+into WI-783. The resume map is
+[handoff-2026-10-03-wave9-coordinator.md](../handoff-2026-10-03-wave9-coordinator.md).
