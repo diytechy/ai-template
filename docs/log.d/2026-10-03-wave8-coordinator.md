@@ -263,3 +263,27 @@ file is a byte-copy of the template's boilerplate
 landing. The README is restored to the template's bytes. The index moves to
 `docs/README.md`, whose stale "resume from the September 26 handoff" pointer now
 defers to `status.md`.
+
+### Spine-acts batch P (WI-775, WI-776): act seq 23, retaken after arbitration
+
+A fresh independent Claude Opus 5.5 adjudicator ruled both WI-775 rows MEANING and
+blessed them. On WI-776 it approved LLR-296 and TC-306, and returned TC-309 and
+TC-310. TC-310 was first approved, then returned before the act when its flip
+raised a `trace.py --strict` "minimal" finding.
+
+Codex Luna's cross-review of the act (`1345a7c8`) found everything right except
+SR-215's re-attested rationale ([review](../reviews/2026-10-03-wave8/luna-wi775.md)).
+An independent Opus arbiter ruled **B**
+([ARBITRATION.md](../reviews/2026-10-03-wave8/ARBITRATION.md)): a release or
+stage-gate trigger makes a case due at its checkpoint with no input change, so the
+rationale misleads.
+
+A plain revert could not retake the act: a commit that writes a snapshot copy
+unequal to the live registry is itself a finding. So the coordinator rebuilt the
+lane from the pre-act commit and retook seq 23 without SR-215 (`b74f6a81`).
+`1345a7c8` is kept in `archive/lanes`. The coordinator verified the retake: the SR
+copy is unchanged, the two copies equal live, there are two flips, and the seq-23
+lists are right. That replaced a second Luna round.
+
+SR-215 stays drifted until WI-776's successor lands, and its sitting must be
+combined with WI-771's, which drifts the same registries.

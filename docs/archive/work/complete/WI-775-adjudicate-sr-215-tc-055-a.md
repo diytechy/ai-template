@@ -3,12 +3,20 @@ id = "WI-775"
 title = "adjudicate: SR-215, TC-055 - approved/routed cell(s) amended on merged trunk f2bc66c..ba68016 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-215"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["SR-215", "TC-055"]
 +++
+
+## Deliverable
+
+Act seq 23 (retaken): TC-055's `expected` amendment ruled MEANING and re-attested.
+SR-215's `rationale`, ruled MEANING and first blessed, was NOT re-attested.
+Codex Luna's cross-review found it misleading, and an independent Opus arbiter
+ruled B (`docs/reviews/2026-10-03-wave8/ARBITRATION.md`). Its exact replacement
+rides WI-776's drafted successor.
 
 ## Context
 
