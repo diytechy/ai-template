@@ -6,6 +6,7 @@ tmp tree from this repository's real registries. No `test_` prefix, so it is
 never collected.
 """
 
+import re
 import shutil
 
 from conftest import ROOT, load_script
@@ -16,8 +17,9 @@ SR_REL = "docs/requirements/system-requirements.toml"
 
 def _tree(tmp_path):
     """A tmp repo carrying this repo's seven real registries at their real
-    paths. Everything the module reads resolves off `root`, so nothing else of
-    the repo needs to come along."""
+    paths. SR, LLR and TC statuses start Approved so tests plant their own
+    maturity moves instead of depending on the live spine's approval progress.
+    Everything resolves off `root`, so nothing else needs to come along."""
     root = tmp_path / "repo"
     for rel in SNAP.SNAPSHOTTED:
         src = ROOT / rel
@@ -26,6 +28,18 @@ def _tree(tmp_path):
         dest = root / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dest)
+        if rel in (
+            SR_REL,
+            "docs/requirements/low-level-requirements.toml",
+            "docs/test/test-cases.toml",
+        ):
+            dest.write_bytes(
+                re.sub(
+                    rb'(?m)^status = "[^"]+"',
+                    b'status = "Approved"',
+                    dest.read_bytes(),
+                )
+            )
     return root
 
 
