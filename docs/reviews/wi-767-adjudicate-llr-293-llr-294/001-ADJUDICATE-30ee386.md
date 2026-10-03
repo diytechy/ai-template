@@ -12,3 +12,10 @@ TC-279 is in this row's `adjudicates` list, but the first-approval brief did not
 No row is approved, so there is no flip and no snapshot. The follow-up is drafted in `## Dispositions` of `docs/work/queued/WI-767-adjudicate-llr-293-llr-294.md`.
 
 OUTCOME: RETURN rows=4
+
+## Addendum 2026-10-03 (after the Sonnet cross-review of eb709653)
+
+The rulings and the machine line above stand. Two things change.
+
+1. **Where the follow-up lives.** This spec no longer carries its own draft. All four returned rows move into the single combined successor drafted in WI-766's Dispositions section (`docs/work/queued/WI-766-adjudicate-llr-254-sr-215-t.md`). One lane is needed because two would couple through the snapshot.
+2. **Stage-gate routing.** The coordinator routed it within the owner's direction, and I agree. SR-215 keeps "when a stage gate is checked", since WI-747's signed direction names a stage gate as a trigger kind. The command entry moves to LLR-255, the intake.py row. TC-248's Method states the stage-gate CLI test. The shipped gate-advance skill gains the required step at the gate. My earlier "no gate surface names that command" overstated the gap: PROCESS.md and RESYNC_PACK.md do name it. What is missing is a prompt AT the gate.
