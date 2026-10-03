@@ -7,10 +7,13 @@ specref = "docs/test/test-cases.toml"
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "rejudge"
+needs = ["WI-775"]
 adjudicates = ["TC-055"]
 +++
 
 ## Context
+
+Ordered after WI-775 by the coordinator (2026-10-03): WI-775 adjudicates TC-055's amended `expected`, so judge the case on settled text.
 
 The merge checkpoint at ba68016 found observation test case TC-055 due for re-judging.
 

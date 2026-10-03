@@ -71,6 +71,17 @@ This wave's record:
   - WI-771 filed.
 - Nothing is pushed. Lane tips are in `archive/lanes`. Approval acts run to
   seq 22.
+- **The queue went from 7 open to 9.** Twelve rows were minted (WI-766..WI-777)
+  and ten closed.
+  - `intake.py consolidate --dry-run` at handoff reports no overlapping queued
+    rows. The growth is the adjudication chain, not unconsolidated duplicates:
+    each merge minted its sittings, and each return minted a follow-up whose
+    merge minted the next sitting.
+  - Three return rounds came from imprecise row text. That pattern is what the
+    first correction below targets.
+  - The order is mechanical: WI-771 needs WI-775 and WI-776, and WI-777 needs
+    WI-775. The generated frontier therefore shows WI-775, WI-776 and WI-697
+    ready.
 - **Coordinator tools** are kept outside the repo in
   `C:/Projects/ai-template.wt/coordinator-tools/` (see the README there):
   - `compose.py` composes adjudication briefs;
