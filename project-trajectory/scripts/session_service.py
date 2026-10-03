@@ -472,15 +472,16 @@ class KeepWarmer:
         self.root = Path(root)
         self.cfg = cfg
         self.registry = registry
-        self.routes = {
-            route_id
-            for route_id, row in registry.items()
-            if session_adapters.adapter_for(
-                agent_session.build_argv(
+        self.routes = set()
+        for route_id, row in registry.items():
+            try:
+                argv, _ = agent_session.build_argv(
                     row.cmd_template, row.model or "", KEEPWARM_PROMPT
-                )[0]
-            ).bounds_one_turn()
-        }
+                )
+            except ValueError:
+                continue  # A route that cannot launch cannot be pinged.
+            if session_adapters.adapter_for(argv).bounds_one_turn():
+                self.routes.add(route_id)
         self.runner = runner
         self.clock = clock
         self.dirty = dirty or (

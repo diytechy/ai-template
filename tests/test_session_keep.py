@@ -530,6 +530,27 @@ class _Row:
         self.env = ""
 
 
+def test_keep_warmer_excludes_a_route_whose_argv_is_refused(tmp_path, monkeypatch):
+    def refuse_prompt_transport(argv, stdin_input):
+        if argv[0] == "gemini":
+            raise ValueError("prompt-in-argv refused")
+
+    monkeypatch.setattr(
+        svc.agent_session, "_validate_prompt_transport", refuse_prompt_transport
+    )
+    warmer = svc.KeepWarmer(
+        tmp_path,
+        ON,
+        {
+            "GEMINI-ROUTE": _Row("GEMINI", "gemini -p {prompt}"),
+            "ANTHROPIC-ROUTE": _Row("ANTHROPIC"),
+        },
+    )
+    assert isinstance(warmer, svc.KeepWarmer)
+    assert "GEMINI-ROUTE" not in warmer.routes
+    assert "ANTHROPIC-ROUTE" in warmer.routes
+
+
 def test_keep_warm_is_due_only_for_an_active_anthropic_session_with_work():
     record = {"state": "active", "family": "ANTHROPIC", "last_used_epoch": 0}
     assert keep.keepwarm_due(record, ON, now=3001, work_pending=True)

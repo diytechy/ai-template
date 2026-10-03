@@ -1,13 +1,31 @@
 +++
 id = "WI-744"
 title = "Build the keep-warmer even when one routing row's argv cannot be built: KeepWarmer builds every row's argv at construction, so a row the prompt-transport check refuses raises and stops the dispatcher before its first poll with the dial on"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 workstream = "process"
 sr_refs = ["SR-227"]
 buildtier = "medium"
 priority = 3
 safety_class = "spine"
 +++
+
+## Deliverable
+
+The keep-warmer is built even when a routing row's command line cannot be:
+`KeepWarmer.__init__` leaves out a row whose argv `agent_session.build_argv`
+refuses with `ValueError`, so `dispatch.run` no longer stops before its first poll
+with the keep-warm dial on. Every other row is classified as before.
+
+- **Code:** `project-trajectory/scripts/session_service.py`, `KeepWarmer.__init__`:
+  the route set is built in a loop that skips a refused row.
+- **Test:** `tests/test_session_keep.py::test_keep_warmer_excludes_a_route_whose_argv_is_refused`
+  forces the refusal on every platform (monkeypatching the prompt-transport check)
+  and asserts the warmer is built, the refused row is absent and the claude row
+  present. Red before the fix, green after.
+- **Rows:** none changed (LLR-270 already states the obligation).
+- **Review:** Sonnet 5.5, SOUND at 9d19e88d
+  (`docs/reviews/2026-10-02-wave7/sonnet-wi744.md`); its one minor (a malformed
+  template is skipped too) accepted as built.
 
 ## Context
 
