@@ -41,3 +41,11 @@ bypass flag the classifier refused the agent) in a terminal: same event shapes,
 final text PINEAPPLE, reasoning tokens 27, cache write 0; the adapter parses it.
 The route-command item is closed. The compaction-ceiling run, real multi-step
 occupancy, TTLs and replay times remain open.
+
+**Addendum 2026-10-02 (measurements).** Codex honours
+`-c model_auto_compact_token_limit` and compacted at the low limit (the exec stream
+shows no compaction event; the rollout does; nothing in the scripts sets `compacted`).
+At 212k tokens (82% of the 258,400 window) a resume replays in 6 to 7 s with the
+cache and 10 to 11 s without it; the cache hit after ~6 idle minutes and missed
+after ~13.5, so its TTL is between the two. The 100k to 700k wording is not reachable
+on this model; the real multi-step adjudication occupancy remains open.

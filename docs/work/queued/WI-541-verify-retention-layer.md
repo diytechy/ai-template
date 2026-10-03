@@ -142,3 +142,20 @@ usage 425,078 input, 224,768 cached, which is why the exec stream's usage is a r
 total). Cache TTL probes (resume after 6 and then 10 further idle minutes) were started
 in the background; results go in the log fragment if they land. Not done: occupancy on a
 real multi-step adjudication brief through the kit's own session path.
+
+### Cache TTL probes, measured 2026-10-02 (same ~212k-token codex thread)
+
+Each probe is one `codex exec resume` replaying the whole thread; the usage figures
+are cumulative, so each is the difference from the previous `turn.completed`.
+- After ~6 min idle (20:40:29 to 20:46:41): 7 s wall; 214,127 input tokens, 212,352 of
+  them cached: a cache HIT.
+- After ~13.5 min idle (20:46:48 to about 21:00:19; the owner's machine slept, which
+  paused the script's own timer, so the real gap is taken from the output files'
+  timestamps): 11 s wall; 214,146 input tokens, 0 cached: a cache MISS, and the
+  replay cost a full re-read.
+So codex's prompt-cache TTL on this box lies between 6 and about 13.5 minutes
+(consistent with a roughly 10-minute window, but not pinned to it). A keep-warm ping
+must therefore fire inside 6 minutes to be safe; a 10-minute cadence is unproven.
+Replay time at 212k tokens: 6 to 7 s cached, 10 to 11 s uncached. One sample each, one
+model, one box. 700k is unreachable (window 258,400); occupancy on a real multi-step
+adjudication through the kit's own session path is still owed.
