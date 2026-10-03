@@ -2654,8 +2654,8 @@ phase = 6
 sr_refs = ["SR-215"]
 title = "The checkpoint re-judge decision"
 module = "project-trajectory/scripts/rejudge.py"
-code_symbol = "observation_test_cases/checkpoint_drafts/_open_rejudge/due_cases/BRIEF/CHECKPOINTS"
-detail = "A pure sibling of consolidate.py that intake imports. observation_test_cases(root, rev) reads the observation cases at a revision. checkpoint_drafts(root, rev, checkpoint) digests each case's declared inputs as read from git at that revision, not from the working tree, and drafts one re-judge work item for each case whose digest differs from its latest record's judged digest, whose latest record has expired, or which has no record. A case declaring no inputs is judged by expiry and absence alone. A committed link is not content: it is never written into the extracted tree and is excluded from the digest by the observation writer's own link predicate, so a declared link reads as absent, a link inside a declared directory contributes nothing, and a change to a link's target makes no case due. _open_rejudge(rows, tc) finds an open re-judge item for the case by its typed cells, never by title, because a title match would also find the closed items in the archive. A draft names the case and what changed, and its title carries the case id and the digest prefix. No model runs."
+code_symbol = "observation_test_cases/checkpoint_for/checkpoint_drafts/_open_rejudge/due_cases/BRIEF/CHECKPOINTS"
+detail = "A sibling of consolidate.py imported by intake. observation_test_cases(root, rev) reads observation cases at a revision. due_cases(root, rev, now, checkpoint) reads committed inputs and records and uses the cadence decision to apply the configured closed-WI floor and declared trigger. No record is due immediately; expired records bypass the floor. Without a trigger, changed input digests are due under the floor; without inputs, only absence and expiry fire. checkpoint_drafts drafts each due case once, suppressing an open item by typed Brief and Adjudicates cells, never by title. It names the case, reason, rubric and changed inputs or trigger. Committed links are excluded by the observation writer’s own link predicate. No model runs."
 status = "Approved"
 component = "CMP-008"
 phase = 6
@@ -3096,3 +3096,22 @@ test_refs = "TC-305"
 status = "Approved"
 component = "CMP-009"
 phase = 4
+[design.LLR-293]
+sr_refs = ["SR-215"]
+title = "The observation cadence policy"
+module = "project-trajectory/scripts/observation_cadence.py"
+code_symbol = "Cadence"
+detail = "Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules and interface owners, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. Gate preparation files due cases through `python scripts/intake.py rejudge --checkpoint stage-gate`; release preparation uses `python scripts/intake.py rejudge --checkpoint release`. History is cached per result commit; malformed policy and unreadable history raise ValueError. Zero explicitly disables the default floor."
+status = "Drafted"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-294]
+sr_refs = ["SR-215"]
+title = "The observation rubric-reference advisory"
+module = "project-trajectory/scripts/observation_cadence.py"
+code_symbol = "observation_rubric_findings"
+detail = "observation_rubric_findings returns one warning for each real observation case omitting Rubric. Automated and example cases are excluded. check_trajectory prints the warnings before its no-WI return and never promotes them under strict. Creation requires the numbered rubric first."
+status = "Drafted"
+component = "CMP-008"
+phase = 6

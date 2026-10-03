@@ -85,9 +85,9 @@ worked on it: a person, or a fresh model session that did not author the part,
 told which. The reader reads only the part's code and the records it links to,
 through the generated views, and states what the part does and why it exists,
 without asking its author. Record each statement beside the part's linked
-requirement and design rows, and judge whether the two agree. The case declares
-the source tree and the requirement and design registries as its inputs, so a
-change to either makes its result stale.
+requirement and design rows, and judge whether the two agree. Sampling reads
+that source scope and its linked rows; re-judgement follows TC-279's declared
+trigger and the [observation rule](../../project-trajectory/PROCESS.md#observation-judgement).
 
 A reader who cannot say what the part does or why it exists, or whose
 statement contradicts the linked rows, is a failing sample and falsification

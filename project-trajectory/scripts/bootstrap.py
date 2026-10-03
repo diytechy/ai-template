@@ -93,6 +93,7 @@ What it creates in the destination:
                                                 three triggers + drafts-not-mints,
                                                 the context block, the gate-policy
                                                 flip arms; WI-388)
+    scripts/observation_cadence.py              (observation cadence and rubric advisory)
     scripts/rejudge.py                         (the checkpoint re-judge decision the
                                                 mint files at a merge and at release;
                                                 SR-215)

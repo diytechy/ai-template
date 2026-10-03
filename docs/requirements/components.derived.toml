@@ -18,8 +18,8 @@
 
 [derived]
 components = 4
-design_rows = 273
-seam_rows = 219
+design_rows = 275
+seam_rows = 221
 requirements_placed = 114
 requirements_unplaced = 6
 seams_unplaced = 0
@@ -357,6 +357,8 @@ seam_boundary_refs = [
   "IF-258",
   "IF-262",
   "IF-265",
+  "IF-269",
+  "IF-270",
 ]
 
 [component_view.CMP-007]
@@ -671,6 +673,8 @@ llr_refs = [
   "LLR-288",
   "LLR-289",
   "LLR-290",
+  "LLR-293",
+  "LLR-294",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -711,6 +715,7 @@ modules = [
   "project-trajectory/scripts/kitlib/station.py",
   "project-trajectory/scripts/kitlib/verdict.py",
   "project-trajectory/scripts/lane.py",
+  "project-trajectory/scripts/observation_cadence.py",
   "project-trajectory/scripts/plan_artifacts.py",
   "project-trajectory/scripts/plan_briefs.py",
   "project-trajectory/scripts/plan_coverage_step.py",
@@ -769,6 +774,7 @@ seam_internal_refs = [
   "IF-261",
   "IF-264",
   "IF-266",
+  "IF-269",
 ]
 seam_boundary_refs = [
   "IF-001",
@@ -1091,6 +1097,7 @@ seam_boundary_refs = [
   "IF-254",
   "IF-257",
   "IF-264",
+  "IF-270",
 ]
 
 [unplaced]

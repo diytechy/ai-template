@@ -2840,6 +2840,9 @@ def observed_repo(tmp_path):
     import kitlib.observation as kit_obs
 
     root = git_repo(tmp_path)
+    (root / "docs" / "process.toml").write_text(
+        "[checks]\nobservation_min_work_items = 1\n", encoding="utf-8", newline="\n"
+    )
     (root / "src").mkdir()
     (root / "src" / "page.txt").write_text(
         "as judged\n", encoding="utf-8", newline="\n"
@@ -2885,6 +2888,13 @@ def test_a_merge_changing_an_observation_input_mints_one_rejudge_item(tmp_path):
     # A merge that changes the declared input files exactly one re-judge row.
     before = _rev(root)
     (root / "src" / "page.txt").write_text("changed\n", encoding="utf-8", newline="\n")
+    write_spec(
+        root,
+        "../archive/work/complete",
+        "WI-010",
+        slug="closed-merge",
+        specref="seed.txt",
+    )
     _commit(root, "the merged branch's delta", when=T_CODE + 100)
     minted, refusal = intake.intake_after_merge(root, before, _rev(root), {}, "wi-003")
     assert refusal is None, refusal
@@ -2916,7 +2926,9 @@ def test_a_sweep_after_a_hand_merge_runs_the_merge_checkpoint(tmp_path, capsys):
     root = observed_repo(tmp_path)
     before = _rev(root)
     (root / "src" / "page.txt").write_text("changed\n", encoding="utf-8", newline="\n")
-    write_spec(root, "complete", "WI-005", slug="lane", specref="seed.txt")
+    write_spec(
+        root, "../archive/work/complete", "WI-005", slug="lane", specref="seed.txt"
+    )
     _commit(root, "a squash-merged lane, its spec closed by hand", when=T_CODE + 100)
     after = _rev(root)
     argv = ("--before", before, "--after", after, "--branch", "wi-005")

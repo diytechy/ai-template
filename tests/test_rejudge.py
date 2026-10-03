@@ -15,6 +15,8 @@ revision, and the release half drives the intake mint's bookkeeping commit.
 """
 
 import datetime
+import csv
+import io
 import os
 import subprocess
 
@@ -129,6 +131,8 @@ def git_repo(tmp_path):
     _write(root, "src/a.txt", "a, as judged\n")
     _write(root, "src/b.txt", "b, as judged\n")
     _write(root, "src/c.txt", "c, as judged\n")
+    # Digest-focused legacy fixtures disable cadence; cadence tests set 2.
+    _write(root, "docs/process.toml", "[checks]\nobservation_min_work_items = 0\n")
     _write(root, TC_CSV, TEST_CASES)
     write_spec(root, "docs/work/queued", "WI-001", "Some unrelated work")
     _commit(root, "seed")
@@ -179,6 +183,178 @@ def judged_repo(tmp_path, *, expired=(), unrecorded=()):
             )
         record(root, tc, observed=observed, expires=expires, inputs=inputs.get(tc))
     return root, _commit(root, "judged")
+
+
+def cadence_repo(tmp_path, trigger="", floor=2, *, expired=(), unrecorded=()):
+    root, _ = judged_repo(tmp_path, expired=expired, unrecorded=unrecorded)
+    reader = csv.DictReader(io.StringIO(TEST_CASES))
+    out = io.StringIO()
+    writer = csv.DictWriter(
+        out, fieldnames=[*reader.fieldnames, "Trigger", "MinWorkItems"]
+    )
+    writer.writeheader()
+    for row in reader:
+        if row["TC-ID"] == "TC-002":
+            row.update(Trigger=trigger, MinWorkItems=floor)
+        writer.writerow(row)
+    _write(root, TC_CSV, out.getvalue())
+    _write(root, "docs/process.toml", "[checks]\nobservation_min_work_items = 2\n")
+    _write(
+        root,
+        "docs/requirements/low-level-requirements.toml",
+        '[design.LLR-001]\nmodule = "src/a.txt"\ncomponent = "CMP-001"\n',
+    )
+    return root, _commit(root, "cadence policy")
+
+
+def close_work(root, number):
+    write_spec(root, "docs/archive/work/complete", f"WI-{number:03}", "closed work")
+    return _commit(root, "closed work")
+
+
+def case_due(root, sha, checkpoint="merge"):
+    return any(
+        d["tc"] == "TC-002"
+        for d in rejudge.due_cases(root, sha, NOW, checkpoint=checkpoint)
+    )
+
+
+@pytest.mark.parametrize(
+    "trigger,checkpoint,path",
+    [
+        ("files:src/*.txt", "merge", "src/b.txt"),
+        ("component:CMP-001", "merge", "src/a.txt"),
+        ("release", "release", None),
+        ("stage-gate", "stage-gate", None),
+        ("", "merge", "src/b.txt"),
+    ],
+)
+def test_trigger_waits_for_closed_work_floor(tmp_path, trigger, checkpoint, path):
+    root, _ = cadence_repo(tmp_path, trigger)
+    if path:
+        _write(root, path, "trigger moved\n")
+    sha = close_work(root, 10)
+    assert not case_due(root, sha, checkpoint)
+    sha = close_work(root, 11)
+    assert case_due(root, sha, checkpoint)
+    assert rejudge.checkpoint_drafts(root, sha, checkpoint, now=NOW)
+
+
+@pytest.mark.parametrize(
+    "trigger,checkpoint,path",
+    [
+        ("files:other/*.txt", "merge", "src/b.txt"),
+        ("component:CMP-001", "merge", "src/b.txt"),
+        ("release", "merge", "src/a.txt"),
+        ("stage-gate", "release", "src/a.txt"),
+        ("", "merge", "other/a.txt"),
+    ],
+)
+def test_floor_alone_does_not_fire_trigger(tmp_path, trigger, checkpoint, path):
+    root, _ = cadence_repo(tmp_path, trigger)
+    _write(root, path, "unrelated\n")
+    close_work(root, 10)
+    sha = close_work(root, 11)
+    assert not case_due(root, sha, checkpoint)
+
+
+def test_case_floor_can_raise_but_not_lower_default(tmp_path):
+    root, _ = cadence_repo(tmp_path, "files:src/*", floor=1)
+    _write(root, "src/a.txt", "changed\n")
+    sha = close_work(root, 10)
+    assert not case_due(root, sha)
+    sha = close_work(root, 11)
+    assert case_due(root, sha)
+
+
+def test_raised_floor_and_bookkeeping_do_not_count(tmp_path):
+    root, _ = cadence_repo(tmp_path, "files:src/*", floor=3)
+    _write(root, "src/a.txt", "changed\n")
+    close_work(root, 10)
+    close_work(root, 11)
+    _write(root, "notes.txt", "bookkeeping\n")
+    sha = _commit(root, "mint: WI-012")
+    assert not case_due(root, sha)
+    sha = close_work(root, 12)
+    assert case_due(root, sha)
+
+
+@pytest.mark.parametrize("state", ["expired", "unrecorded"])
+def test_first_judgement_and_expiry_bypass_trigger_and_floor(tmp_path, state):
+    root, sha = cadence_repo(tmp_path, "release", **{state: ("TC-002",)})
+    assert case_due(root, sha)
+
+
+def test_trigger_reads_committed_revision_and_new_result_resets_floor(tmp_path):
+    root, sha = cadence_repo(tmp_path, "files:src/*")
+    close_work(root, 10)
+    sha = close_work(root, 11)
+    _write(root, "src/a.txt", "working tree only\n")
+    assert not case_due(root, sha)
+
+    sha = _commit(root, "trigger change")
+    assert case_due(root, sha)
+    record(
+        root,
+        "TC-002",
+        observed=NOW,
+        expires=NOW + datetime.timedelta(days=30),
+        inputs=["src/a.txt", "src/b.txt"],
+    )
+    _commit(root, "fresh judgement")
+    _write(root, "src/b.txt", "changed again\n")
+    sha = close_work(root, 12)
+    assert not case_due(root, sha)
+
+
+def test_undeclared_process_policy_uses_ten_closed_work_items(tmp_path):
+    root, _ = cadence_repo(tmp_path)
+    (root / "docs/process.toml").unlink()
+    _write(root, "src/b.txt", "changed\n")
+    for number in range(10, 19):
+        sha = close_work(root, number)
+    assert not case_due(root, sha)
+    sha = close_work(root, 19)
+    assert case_due(root, sha)
+
+
+def test_existing_archive_edits_do_not_count_as_new_closed_work(tmp_path):
+    root, _ = cadence_repo(tmp_path, "release")
+    close_work(root, 10)
+    _write(
+        root, "docs/archive/work/complete/WI-010-thing.md", "changed archive prose\n"
+    )
+    sha = _commit(root, "archive maintenance")
+    assert not case_due(root, sha, "release")
+
+
+def test_trajectory_rubric_warning_survives_strict_and_no_work_items(tmp_path):
+    _write(tmp_path, TC_CSV, TEST_CASES)
+    proc = run_py([SCRIPTS / "check_trajectory.py", "--strict"], tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WARN" in proc.stderr and "TC-002" in proc.stderr and "Rubric" in proc.stderr
+
+
+def test_release_trigger_rejudge_brief_still_composes(tmp_path):
+    root, _ = cadence_repo(tmp_path, "release")
+    close_work(root, 10)
+    close_work(root, 11)
+    values, refusal = adjudicate_brief.rejudge_values(root, {"Adjudicates": "TC-002"})
+    assert refusal is None
+    assert values["tc"] == "TC-002"
+
+
+def test_component_trigger_matches_interface_owner_module_name(tmp_path):
+    root, _ = cadence_repo(tmp_path, "component:CMP-002")
+    _write(
+        root,
+        "docs/requirements/interfaces.toml",
+        '[interface.IF-001]\nowner = "scripts/logic"\ncomponent = "CMP-002"\n',
+    )
+    _write(root, "project-trajectory/scripts/logic.py", "# component changed\n")
+    close_work(root, 10)
+    sha = close_work(root, 11)
+    assert case_due(root, sha)
 
 
 def drafts_by_case(drafts):
@@ -365,6 +541,48 @@ def _queued_rejudges(root):
         for r in acommon.read_spec_rows(root / "docs" / "work")
         if r["Status"] == "queued" and r.get("Brief") == rejudge.BRIEF
     ]
+
+
+def test_stage_gate_trigger_is_filed_through_the_cli_not_at_merge(tmp_path, capsys):
+    # The CLI offers CHECKPOINTS[1:]: merge must stay first, or a by-hand merge
+    # checkpoint becomes a CLI choice.
+    assert rejudge.CHECKPOINTS[0] == "merge"
+    root, _ = cadence_repo(tmp_path, "stage-gate")
+    close_work(root, 10)
+    sha = close_work(root, 11)
+    assert rejudge.checkpoint_drafts(root, sha, "merge", now=NOW) == []
+    assert _queued_rejudges(root) == []
+    args = ["--root", str(root), "rejudge", "--checkpoint", "stage-gate", "--rev", sha]
+    assert intake.main(args) == 0, capsys.readouterr()
+    minted = _queued_rejudges(root)
+    assert [r["Adjudicates"] for r in minted] == ["TC-002"]
+    assert "stage-gate" in minted[0]["Title"]
+    assert intake.main(args) == 0, capsys.readouterr()
+    assert len(_queued_rejudges(root)) == 1
+    row = {"WI-ID": minted[0]["WI-ID"], "Adjudicates": "TC-002"}
+    values, why = adjudicate_brief.rejudge_values(root, row)
+    assert why is None, why
+    assert values["tc"] == "TC-002"
+
+
+@pytest.mark.parametrize(
+    "trigger,expected",
+    [
+        ("release", "release"),
+        ("stage-gate", "stage-gate"),
+        ("files:src/*", "merge"),
+        ("component:CMP-001", "merge"),
+        ("", "merge"),
+    ],
+)
+def test_checkpoint_for_maps_explicit_triggers(monkeypatch, trigger, expected):
+    monkeypatch.setattr(
+        rejudge,
+        "observation_test_cases",
+        lambda root, rev: [{"TC-ID": "TC-002", "Trigger": trigger}],
+    )
+    assert rejudge.checkpoint_for(None, "HEAD", "TC-002") == expected
+    assert rejudge.checkpoint_for(None, "HEAD", "TC-absent") == "merge"
 
 
 def test_the_release_subcommand_mints_for_an_expired_result_once(tmp_path, capsys):

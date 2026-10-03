@@ -63,12 +63,17 @@ Contract IF-017: LLR-024's obligation delivered as a CLI here, and a crossing
 """
 
 import argparse
+import csv
 import itertools
 import re
+import sys
+
+import spine_carrier
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
+from kitlib.spine import REGISTRY_KEYS
 
 
 def parse_spec(spec):
@@ -215,22 +220,28 @@ def emit_csv_rows(cases, args, strategy, param_str):
     # The LEGACY carrier's paste form, kept for a repo that has not run
     # migrate_carrier yet (the TOML form above is the one the shipped
     # registries take). Header order is the template's key order.
-    print(
-        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,"
-        "Evidence,Status,Phase,Assumption-Refs,Inputs,MaxAge,Sampling,"
-        "SampleSize,AcceptanceRule"
-    )
+    columns = [
+        "TC-ID",
+        *(spine_carrier.SPINE_COLUMN[k] for k in REGISTRY_KEYS["TC-ID"]),
+    ]
+    writer = csv.DictWriter(sys.stdout, columns, lineterminator="\n")
+    writer.writeheader()
     for c in cases:
-        print(
-            'TC-xxx,{},Unit,{} combination,{},"{}",'
-            '"Satisfies {} AcceptanceCriteria",Yes,(fill: evidence ref),'
-            "Drafted,,,,,,,".format(
-                args.id or "SR-xxx",
-                strategy,
-                args.tier,
-                param_str(c),
-                args.id or "SR-xxx",
-            )
+        writer.writerow(
+            {
+                "TC-ID": "TC-xxx",
+                "Verifies": args.id or "SR-xxx",
+                "Level": "Unit",
+                "Method": "{} combination".format(strategy),
+                "Tier": args.tier,
+                "Parameters": param_str(c),
+                "Expected": "Satisfies {} AcceptanceCriteria".format(
+                    args.id or "SR-xxx"
+                ),
+                "Automated": "Yes",
+                "Evidence": "(fill: evidence ref)",
+                "Status": "Drafted",
+            }
         )
 
 

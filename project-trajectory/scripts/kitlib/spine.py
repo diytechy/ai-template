@@ -840,6 +840,9 @@ SPINE_TIER_KEYS = {
         # five are statements the row makes.
         "inputs",
         "max_age",
+        "rubric",
+        "trigger",
+        "min_work_items",
         "sampling",
         "sample_size",
         "acceptance_rule",

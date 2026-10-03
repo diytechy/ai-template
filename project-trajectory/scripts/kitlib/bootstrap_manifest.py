@@ -620,6 +620,7 @@ MAPPING = [
     # and `gen_release_checklist.py` import it unguarded, so a scaffold without
     # it can neither mint at a merge nor print its release checklist.
     ("scripts/rejudge.py", "scripts/rejudge.py", "SR-215"),
+    ("scripts/observation_cadence.py", "scripts/observation_cadence.py", "SR-215"),
     # The pending-owner-action read model (WI-483 slice 3): the other half of
     # the same question the census asks — what the OWNER owes, rather than what
     # the registries lack. It used to live in traj_status.py, which made the

@@ -252,7 +252,7 @@ status = "Approved"
 phase = 1
 
 [test.TC-024]
-verifies = ["SR-024", "LLR-024"]
+verifies = ["SR-024", "LLR-024", "IF-270"]
 level = "Unit"
 method = "Run the gen-cases suite; the spec grammar expands to the expected case set."
 tier = "Full"
@@ -395,6 +395,10 @@ status = "Approved"
 phase = 1
 inputs = ["project-trajectory/ADOPTING.md", "project-trajectory/skills/downstream-resync/SKILL.md", "SR-036"]
 max_age = 90
+rubric = "docs/rubrics/resync-inspection.md"
+trigger = "files:project-trajectory/ADOPTING.md;project-trajectory/skills/downstream-resync/*"
+min_work_items = 10
+
 
 [test.TC-037]
 verifies = ["SR-157", "LLR-034"]
@@ -574,6 +578,10 @@ status = "Approved"
 phase = 3
 inputs = ["docs/rubrics/dashboard-usability.md", "SR-054", "LLR-055", "project-trajectory/scripts/gen_trajectory.py", "project-trajectory/scripts/rendering"]
 max_age = 90
+rubric = "docs/rubrics/dashboard-usability.md"
+trigger = "component:CMP-009"
+min_work_items = 10
+
 
 [test.TC-056]
 verifies = ["SR-168", "LLR-056", "IF-093", "IF-094"]
@@ -2139,6 +2147,10 @@ status = "Approved"
 phase = 5
 inputs = ["docs/test/inspection-procedures.md", "SR-184"]
 max_age = 90
+rubric = "docs/rubrics/critique-provenance.md"
+trigger = "release"
+min_work_items = 10
+
 
 [test.TC-210]
 verifies = ["SR-185"]
@@ -2152,6 +2164,10 @@ status = "Approved"
 phase = 5
 inputs = ["docs/test/inspection-procedures.md", "SR-185"]
 max_age = 90
+rubric = "docs/rubrics/counterpart-review.md"
+trigger = "release"
+min_work_items = 10
+
 
 [test.TC-211]
 verifies = ["SR-186"]
@@ -2165,6 +2181,10 @@ status = "Approved"
 phase = 5
 inputs = ["docs/test/inspection-procedures.md", "SR-186"]
 max_age = 90
+rubric = "docs/rubrics/decomposition-proportionality.md"
+trigger = "release"
+min_work_items = 10
+
 
 [test.TC-212]
 verifies = ["SR-187", "LLR-211", "LLR-212"]
@@ -2554,9 +2574,9 @@ phase = 6
 [test.TC-247]
 verifies = ["SR-215", "LLR-254", "IF-228"]
 level = "Integration"
-method = "checkpoint_drafts driven on a real git repository. An observation case whose declared input changed since its latest record gets one draft naming it and the input; one whose record expired gets one; one with no record gets one; an unchanged, unexpired one gets none; a case declaring no inputs is judged by expiry and absence alone. An open re-judge item for a case, found by its typed cells, suppresses a second draft; a closed item in the archive with an identical title does not. Inputs are read at the given revision: an uncommitted edit to an input changes nothing. A committed link is excluded: a result recorded through the writer on a declared link, or on a directory holding one, is not due at the checkpoint where the platform cannot create a link, a change to the link's target does not make it due, and a directory link to itself is harmless. No agent command is spawned."
+method = "checkpoint_drafts driven on a real git repository. No result and expiry are due independently of the floor. Changed inputs with no trigger are due only under the configured closed-WI floor. File, component, release and stage-gate triggers are due only when they fire and the floor is met; a case may raise but cannot lower the default floor. An open typed re-judge item suppresses a second; a closed archived item with the same title does not. Policy and inputs are read at the given revision: uncommitted changes affect neither. Committed links are excluded, including self-links and platforms checking them out as text. No model runs."
 tier = "Full"
-expected = "Satisfies SR-215's acceptance: a changed, expired or unjudged observation case gets exactly one open re-judge item naming it and what changed; an unchanged one gets none; an open item suppresses another; no model runs; a case with no inputs judged by expiry."
+expected = "Satisfies SR-215 acceptance: missing or expired evidence is due; other judgements obey their trigger and floor, and each due case has at most one open re-judge item."
 automated = "Yes"
 evidence = "tests/test_rejudge.py"
 status = "Approved"
@@ -2565,7 +2585,7 @@ phase = 6
 [test.TC-248]
 verifies = ["SR-215", "LLR-255", "IF-229"]
 level = "Integration"
-method = "Driven through intake on a real git repository. A merged work item whose merge changes an observation case's declared input mints one re-judge item; a second merge while that item is open mints none. The release subcommand mints for a case whose record expired, and the generated release checklist carries a required item naming that command and the number of due cases. Minting runs through the mint path's checks, and a checkout holding an unrelated uncommitted edit keeps it."
+method = "Driven through intake on a real git repository. A merged work item satisfying an observation case’s trigger and closed-WI floor mints one re-judge item; another merge while it is open mints none. Release preparation mints for expired or release-triggered due cases; the generated checklist counts cases using the release checkpoint. Minting follows the mint checks and preserves unrelated uncommitted edits."
 tier = "Full"
 expected = "Satisfies SR-215's acceptance at both checkpoints: a work-item merge and release preparation each file one re-judge item per due case and never a second while one is open."
 automated = "Yes"
@@ -2836,11 +2856,15 @@ evidence = "docs/test/inspection-procedures.md#sampled-new-reader-inspection-res
 status = "Drafted"
 phase = 6
 assumption_refs = ["DA-011"]
-inputs = ["docs/test/inspection-procedures.md", "DA-011", "project-trajectory/scripts", "docs/requirements/system-requirements.toml", "docs/requirements/low-level-requirements.toml"]
+inputs = ["docs/rubrics/sampled-new-reader.md", "DA-011"]
 max_age = 90
 sampling = "sampled"
 sample_size = 5
 acceptance_rule = "All five sampled readers state what their part does and why it exists, in agreement with the part's linked rows; one reader who cannot is a failing sample."
+rubric = "docs/rubrics/sampled-new-reader.md"
+trigger = "release"
+min_work_items = 10
+
 
 [test.TC-289]
 verifies = ["SR-112", "LLR-279", "IF-035"]
@@ -3074,3 +3098,24 @@ automated = "Yes"
 evidence = "tests/test_traj_lanes.py"
 status = "Approved"
 phase = 4
+[test.TC-306]
+verifies = ["SR-215", "LLR-293", "IF-269"]
+level = "Integration"
+method = "Drive committed file, component, release and stage-gate triggers and an undeclared input-change case. Assert due and not-due, floor blocking and threshold crossing, a raised floor and a lower attempted override, bookkeeping exclusion, first judgement and expiry bypass, revision-bound reads and a fresh record resetting the floor."
+tier = "Full"
+expected = "Only the declared trigger after the closed-WI floor fires; absence and expiry bypass both."
+automated = "Yes"
+evidence = "tests/test_rejudge.py"
+status = "Drafted"
+phase = 6
+
+[test.TC-307]
+verifies = ["SR-215", "LLR-294", "IF-269"]
+level = "Unit"
+method = "Call the rubric advisory with a missing observation reference, a declared reference, an automated case and an example case."
+tier = "Smoke"
+expected = "Only the real observation with a missing reference produces a warning naming its case and rubric."
+automated = "Yes"
+evidence = "tests/test_rejudge_rubric.py"
+status = "Drafted"
+phase = 6

@@ -1113,9 +1113,10 @@ def _prior_lines(cons, rows, bodies):
 
 # --- the checkpoint re-judge brief (SR-215) -----------------------------------
 
-# The case cells `{case}` lists. Method and Expected are REQUIRED: they are the
-# whole instruction, and a dash there would read as "nothing to check".
-REJUDGE_CELLS = ("Verifies", "Method", "Expected")
+# The case cells `{case}` lists, each REQUIRED: Method and Expected are the
+# whole instruction, a dash there would read as "nothing to check", and MaxAge
+# is the expiry backstop the cadence floor never overrides.
+REJUDGE_CELLS = ("Verifies", "Method", "Expected", "MaxAge")
 
 
 def rejudge_values(root, row):
@@ -1138,7 +1139,12 @@ def rejudge_values(root, row):
         )
     tc = scope[0]
     try:
-        due = [d for d in rejudge.due_cases(root, "HEAD") if d["tc"] == tc]
+        checkpoint = rejudge.checkpoint_for(root, "HEAD", tc)
+        due = [
+            d
+            for d in rejudge.due_cases(root, "HEAD", checkpoint=checkpoint)
+            if d["tc"] == tc
+        ]
     except rejudge.RejudgeError as exc:
         return None, "the re-judge decision could not be read: {}".format(exc)
     if not due:
@@ -1146,19 +1152,20 @@ def rejudge_values(root, row):
     case = due[0]["row"]
     cells = {name: (case.get(name) or "").strip() for name in REJUDGE_CELLS}
     missing = [name for name, value in cells.items() if not value]
-    if not (case.get("MaxAge") or "").strip():
-        missing.append("MaxAge")
     if missing:
         return None, "{} has no `{}` cell".format(tc, "`, `".join(missing))
     inputs = (case.get("Inputs") or "").strip()
+    rubric = (case.get("Rubric") or "").strip()
     text = (
         "- {tc} — verifies {Verifies}\n"
         "  - Method: {Method}\n"
         "  - Expected: {Expected}\n"
         "  - Declared inputs: {inputs}\n"
+        "  - Rubric: {rubric}\n"
         "  - Result lifetime: {age} days"
     ).format(
         tc=tc,
+        rubric=rubric or "none declared",
         inputs=inputs or "none declared, so only its expiry makes it due",
         age=case["MaxAge"].strip(),
         **cells,

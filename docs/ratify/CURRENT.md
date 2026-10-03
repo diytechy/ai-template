@@ -18,7 +18,7 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into approval or arrives approved, `--approves` names it or `--reattests` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 66 changed, 57 added, 1 removed since the snapshot; ruling(s): OI-37, OI-74, OI-75, OI-85, OI-88, OI-95, WI-539, WI-545, WI-553, WI-557, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-618, WI-619, WI-620, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679, WI-746, WI-748.
+- `docs/requirements/interfaces.toml` — 66 changed, 59 added, 1 removed since the snapshot; ruling(s): OI-37, OI-74, OI-75, OI-85, OI-88, OI-95, WI-539, WI-545, WI-553, WI-557, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-618, WI-619, WI-620, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679, WI-746, WI-748.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-587.
 
 ## Assumptions and surrogates owing an approval
@@ -679,7 +679,184 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 1 chain(s): SR-224</summary>
+<summary>Waiting for automated adjudication — 7 chain(s): SR-036, SR-054, SR-184, SR-185, SR-186, SR-215, SR-224</summary>
+
+## SR-036 — Deliberate re-sync integration
+
+> **Requirement.** A re-sync of an existing adoption shall integrate relevant kit updates without clobbering the adopter's filled-in files, per the documented re-sync procedure — take kit-owned scripts/hooks wholesale, regenerate generated docs, and preserve filled-in registries/config.
+
+> **Rationale.** Realizes SN-001 and SN-007 — picking up kit updates is a deliberate diff-and-merge, not a mechanical operation: bootstrap.py supplies the docs/kit-version stamp and --force (SR-011), while the operator makes the overwrite-vs-preserve call, aided by the downstream-resync skill.
+
+
+### TC TC-036
+- **MinWorkItems**
+  - before: (empty)
+  - after: 10
+- **Rubric**
+  - before: (empty)
+  - after: docs/rubrics/resync-inspection.md
+- **Trigger**
+  - before: (empty)
+  - after: files:project-trajectory/ADOPTING.md;project-trajectory/skills/downstream-resync/*
+
+## SR-054 — Dashboard usability (rubric-adjudicated)
+
+> **Requirement.** The state view the delivered generators produce shall support its core reading tasks with low friction: a first-time reviewer finds the project state, the next work, and how the parts connect, each within one tab switch; views default to a legible density (start-collapsed per the greater-than-3 rule) and reveal detail without losing context; labels stay readable at default zoom with no clipped or overlapping text.
+
+> **Rationale.** Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded judgement, re-judged when a declared input changes or the record expires rather than on every commit — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today.
+
+
+### TC TC-055
+- **MinWorkItems**
+  - before: (empty)
+  - after: 10
+- **Rubric**
+  - before: (empty)
+  - after: docs/rubrics/dashboard-usability.md
+- **Trigger**
+  - before: (empty)
+  - after: component:CMP-009
+
+## SR-184 — Critique acceptance records intent-derived rubric anchors
+
+> **Requirement.** Where a delivered capability requires Critique acceptance, the delivered acceptance record shall identify a fresh reviewer session that did not author the artifact, apply a written rubric derived from the applicable SN/SR intent, and record each verdict and finding against numbered rubric-anchor ids.
+
+> **Rationale.** Carries SN-024's omitted author-independence, rubric provenance and anchor obligation as one coherent Critique acceptance decision. It applies to attended and unattended Critique acceptance; SR-154 remains the home of the underlying brief, unattended scheduling, consent, family selection and family diversity, degradation and escalation, and SR-155 remains the contested-plan state machine. LLR-048 already assembles the rubric/intent/artifact brief and LLR-076 already refuses a missing dual-plan rubric; those mechanisms remain under SR-154 rather than being re-homed here. The acceptance record's process/provenance completeness is inspectable, while artifact adequacy remains the independent Critique judgment.
+
+
+### TC TC-209
+- **MinWorkItems**
+  - before: (empty)
+  - after: 10
+- **Rubric**
+  - before: (empty)
+  - after: docs/rubrics/critique-provenance.md
+- **Trigger**
+  - before: (empty)
+  - after: release
+
+## SR-185 — Coordinated requirement/interface change review
+
+> **Requirement.** When a reviewed change alters one side of a requirement/interface relationship, the change record shall identify the affected counterpart and carry the corresponding change or an explicit justification for retaining it.
+
+> **Rationale.** Carries the final clause of SN-037 as a separate semantic review obligation because SR-162 already owns the mechanical frame and interface resolution. A citation-only provenance check cannot establish that a changed signal or requirement still means the same thing at its counterpart; the record must expose the decision for an independent review.
+
+
+### TC TC-210
+- **MinWorkItems**
+  - before: (empty)
+  - after: 10
+- **Rubric**
+  - before: (empty)
+  - after: docs/rubrics/counterpart-review.md
+- **Trigger**
+  - before: (empty)
+  - after: release
+
+## SR-186 — Proportionate requirement decomposition
+
+> **Requirement.** The delivered requirements process shall require each additional child within a required tier to carry an independent decision or verification purpose, and record the stopping decision in the scoped decomposition record, while retaining the required SN-to-SR-to-LLR-to-TC tiers and linking real verification to the existing obligation.
+
+> **Rationale.** Carries SN-012's unowned granularity clause as a process requirement on what the delivered process requires and records. A child that only paraphrases a parent or duplicates another child's verification adds review and maintenance cost without an independent decision. The process records the stopping decision within the required spine; this row does not guarantee adopter behavior beyond that record, and it never permits omitting a required SN→SR→LLR→TC tier or replacing real verification with a count. It does not impose a row-count cap, deletion quota, or new machine gate. Existing process doctrine and the spine-authoring adjudicator questions are the source of the judgment, while mechanism-specific evidence remains with its current SR.
+
+
+### TC TC-211
+- **MinWorkItems**
+  - before: (empty)
+  - after: 10
+- **Rubric**
+  - before: (empty)
+  - after: docs/rubrics/decomposition-proportionality.md
+- **Trigger**
+  - before: (empty)
+  - after: release
+
+## SR-215 — At a checkpoint, a changed or expired observation test is queued once for re-judging
+
+> **Requirement.** When a work item merges, a release is prepared or a stage gate is checked, the delivered harness shall file one re-judge work item per due observation case: one with no result, one whose result expired, or one whose declared trigger fires after its work-item floor; an undeclared trigger preserves input-change triggering under that floor. It keeps at most one open item per case.
+
+> **Rationale.** Judgements cost time and model calls and vary across sessions. A fixed rubric makes the pass criterion reviewable; a closed-work floor and explicit trigger avoid frequent re-judgements, while first judgement and expiry keep missing or old evidence from standing indefinitely.
+
+
+### SR SR-215
+- **AcceptanceCriteria**
+  - before: At a work-item merge and at release preparation, each observation test case has its declared inputs hashed; one whose digest differs from its last result's judged digest, or whose last result has expired, or which has no result yet, gets exactly one open re-judge work item naming it and what changed; an unchanged, unexpired one gets none; a later checkpoint while that item is open adds none; the check runs no model; an observation test case declaring no inputs is judged by its expiry alone.
+  - after: Every observation case references a numbered rubric written before its first judgement; existing omissions warn. No result is due immediately; expiry is a backstop independent of the floor. Otherwise matching files, a tagged component, release or a stage gate makes it due only after the configured number of closed WIs since its latest record was committed; a case may raise that floor. With no trigger, only changed declared inputs fire under the floor. Inputs and policy are read at the checkpoint revision. An open re-judge item suppresses a second; the decision runs no model.
+- **Rationale**
+  - before: A judgment made by inspection, critique or observation holds only for the state it looked at, and nothing re-fires it once that state moves. Hashing each test case's declared inputs at a merge or a release costs no model call, so the expensive part — the re-judgment — runs only when something it looked at changed or its result aged out, and one open item per test case keeps a busy week from filing the same judgment many times.
+  - after: Judgements cost time and model calls and vary across sessions. A fixed rubric makes the pass criterion reviewable; a closed-work floor and explicit trigger avoid frequent re-judgements, while first judgement and expiry keep missing or old evidence from standing indefinitely.
+- **Requirement**
+  - before: When a work item merges or a release is prepared, the delivered harness shall file one re-judge work item for each observation test case whose declared inputs changed since its last result or whose last result expired, never filing a second while one is open.
+  - after: When a work item merges, a release is prepared or a stage gate is checked, the delivered harness shall file one re-judge work item per due observation case: one with no result, one whose result expired, or one whose declared trigger fires after its work-item floor; an undeclared trigger preserves input-change triggering under that floor. It keeps at most one open item per case.
+
+### LLR LLR-254
+_approved — re-attestation owed_
+- **Detail**
+  - before: A pure sibling of consolidate.py that intake imports. observation_test_cases(root, rev) reads the observation cases at a revision. checkpoint_drafts(root, rev, checkpoint) digests each case's declared inputs as read from git at that revision, not from the working tree, and drafts one re-judge work item for each case whose digest differs from its latest record's judged digest, whose latest record has expired, or which has no record. A case declaring no inputs is judged by expiry and absence alone. A committed link is not content: it is never written into the extracted tree and is excluded from the digest by the observation writer's own link predicate, so a declared link reads as absent, a link inside a declared directory contributes nothing, and a change to a link's target makes no case due. _open_rejudge(rows, tc) finds an open re-judge item for the case by its typed cells, never by title, because a title match would also find the closed items in the archive. A draft names the case and what changed, and its title carries the case id and the digest prefix. No model runs.
+  - after: A sibling of consolidate.py imported by intake. observation_test_cases(root, rev) reads observation cases at a revision. due_cases(root, rev, now, checkpoint) reads committed inputs and records and uses the cadence decision to apply the configured closed-WI floor and declared trigger. No record is due immediately; expired records bypass the floor. Without a trigger, changed input digests are due under the floor; without inputs, only absence and expiry fire. checkpoint_drafts drafts each due case once, suppressing an open item by typed Brief and Adjudicates cells, never by title. It names the case, reason, rubric and changed inputs or trigger. Committed links are excluded by the observation writer’s own link predicate. No model runs.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: observation_test_cases/checkpoint_drafts/_open_rejudge/due_cases/BRIEF/CHECKPOINTS
+  - after: observation_test_cases/checkpoint_for/checkpoint_drafts/_open_rejudge/due_cases/BRIEF/CHECKPOINTS
+
+### LLR LLR-293 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-293
+- **SR-Refs**: SR-215
+- **Title**: The observation cadence policy
+- **Module**: project-trajectory/scripts/observation_cadence.py
+- **CodeSymbol**: Cadence
+- **Detail**: Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules and interface owners, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. Gate preparation files due cases through `python scripts/intake.py rejudge --checkpoint stage-gate`; release preparation uses `python scripts/intake.py rejudge --checkpoint release`. History is cached per result commit; malformed policy and unreadable history raise ValueError. Zero explicitly disables the default floor.
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### LLR LLR-294 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-294
+- **SR-Refs**: SR-215
+- **Title**: The observation rubric-reference advisory
+- **Module**: project-trajectory/scripts/observation_cadence.py
+- **CodeSymbol**: observation_rubric_findings
+- **Detail**: observation_rubric_findings returns one warning for each real observation case omitting Rubric. Automated and example cases are excluded. check_trajectory prints the warnings before its no-WI return and never promotes them under strict. Creation requires the numbered rubric first.
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### TC TC-247
+- **Expected**
+  - before: Satisfies SR-215's acceptance: a changed, expired or unjudged observation case gets exactly one open re-judge item naming it and what changed; an unchanged one gets none; an open item suppresses another; no model runs; a case with no inputs judged by expiry.
+  - after: Satisfies SR-215 acceptance: missing or expired evidence is due; other judgements obey their trigger and floor, and each due case has at most one open re-judge item.
+- **Method**
+  - before: checkpoint_drafts driven on a real git repository. An observation case whose declared input changed since its latest record gets one draft naming it and the input; one whose record expired gets one; one with no record gets one; an unchanged, unexpired one gets none; a case declaring no inputs is judged by expiry and absence alone. An open re-judge item for a case, found by its typed cells, suppresses a second draft; a closed item in the archive with an identical title does not. Inputs are read at the given revision: an uncommitted edit to an input changes nothing. A committed link is excluded: a result recorded through the writer on a declared link, or on a directory holding one, is not due at the checkpoint where the platform cannot create a link, a change to the link's target does not make it due, and a directory link to itself is harmless. No agent command is spawned.
+  - after: checkpoint_drafts driven on a real git repository. No result and expiry are due independently of the floor. Changed inputs with no trigger are due only under the configured closed-WI floor. File, component, release and stage-gate triggers are due only when they fire and the floor is met; a case may raise but cannot lower the default floor. An open typed re-judge item suppresses a second; a closed archived item with the same title does not. Policy and inputs are read at the given revision: uncommitted changes affect neither. Committed links are excluded, including self-links and platforms checking them out as text. No model runs.
+
+### TC TC-248
+- **Method**
+  - before: Driven through intake on a real git repository. A merged work item whose merge changes an observation case's declared input mints one re-judge item; a second merge while that item is open mints none. The release subcommand mints for a case whose record expired, and the generated release checklist carries a required item naming that command and the number of due cases. Minting runs through the mint path's checks, and a checkout holding an unrelated uncommitted edit keeps it.
+  - after: Driven through intake on a real git repository. A merged work item satisfying an observation case’s trigger and closed-WI floor mints one re-judge item; another merge while it is open mints none. Release preparation mints for expired or release-triggered due cases; the generated checklist counts cases using the release checkpoint. Minting follows the mint checks and preserves unrelated uncommitted edits.
+
+### TC TC-306 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-306
+- **Verifies**: SR-215;LLR-293;IF-269
+- **Level**: Integration
+- **Method**: Drive committed file, component, release and stage-gate triggers and an undeclared input-change case. Assert due and not-due, floor blocking and threshold crossing, a raised floor and a lower attempted override, bookkeeping exclusion, first judgement and expiry bypass, revision-bound reads and a fresh record resetting the floor.
+- **Tier**: Full
+- **Expected**: Only the declared trigger after the closed-WI floor fires; absence and expiry bypass both.
+- **Automated**: Yes
+- **Evidence**: tests/test_rejudge.py
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-307 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-307
+- **Verifies**: SR-215;LLR-294;IF-269
+- **Level**: Unit
+- **Method**: Call the rubric advisory with a missing observation reference, a declared reference, an automated case and an example case.
+- **Tier**: Smoke
+- **Expected**: Only the real observation with a missing reference produces a warning naming its case and rubric.
+- **Automated**: Yes
+- **Evidence**: tests/test_rejudge_rubric.py
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
 

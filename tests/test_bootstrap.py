@@ -205,6 +205,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/census.py",
         "scripts/consolidate.py",
         "scripts/rejudge.py",
+        "scripts/observation_cadence.py",
         "scripts/pending.py",
         "scripts/coherence.py",
         "scripts/frame_rules.py",
@@ -898,6 +899,7 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
     # explicit; a `live_status = true` or `subagent_gate = "ask"` here would be
     # a behaviour flip smuggled in under a re-homing.
     assert cfg["checks"] == {
+        "observation_min_work_items": 10,
         "trajectory_check": True,
         "interfaces_check": True,
         "components_check": True,

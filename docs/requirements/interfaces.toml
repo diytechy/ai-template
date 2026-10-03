@@ -1381,7 +1381,7 @@ component = "CMP-008"
 
 [interface.IF-102]
 owner = "scripts/spine_carrier"
-requestors = ["scripts/trace", "scripts/acceptance_record", "scripts/check_trajectory", "scripts/gen_arch_map", "scripts/plan_coverage", "scripts/spine_rules", "scripts/traj_status", "scripts/check_test_first", "scripts/rejudge", "scripts/retire"]
+requestors = ["scripts/trace", "scripts/acceptance_record", "scripts/check_trajectory", "scripts/gen_arch_map", "scripts/plan_coverage", "scripts/spine_rules", "scripts/traj_status", "scripts/check_test_first", "scripts/rejudge", "scripts/retire", "scripts/observation_cadence"]
 channel = "call"
 data = "spine_carrier.load / resolve / stem / carriers / rows_from_text / rows_seq_from_text / status_cells; rows under today's column names, None on a TOML decode error"
 version = "v1"
@@ -1970,7 +1970,7 @@ notes = """cross-component crossing declared per the architecture rule: check_te
 [interface.IF-200]
 rationale = """An observation test case's declaration is judged by the same pure join layer as the assumption tier, beside it rather than inside the tier's entry point, because the declaration applies to every case the harness cannot rerun whether or not the frame declares a crossing; drawing the seam here keeps the checker growing by composition lines alone while the rules stay testable on in-memory rows."""
 owner = "scripts/assumption_rules"
-requestors = ["scripts/trace", "scripts/rejudge", "scripts/record_observation"]
+requestors = ["scripts/trace", "scripts/rejudge", "scripts/record_observation", "scripts/observation_cadence"]
 channel = "call"
 data = "observation_tc_findings -> (failures, advisories); data: is_observation_tc, sampling_model_declared, input_escape, input_path"
 version = "v1"
@@ -2392,3 +2392,22 @@ version = "v1"
 status = "Drafted"
 component = "CMP-007"
 rationale = "The hook must select opted-in sensors without inheriting the full gate plan or copying its selection logic."
+[interface.IF-269]
+owner = "scripts/observation_cadence"
+requestors = ["scripts/rejudge", "scripts/check_trajectory"]
+channel = "call"
+data = "Cadence(root, revision, snapshot, checkpoint, git).eligible(row, since, checkpoint) -> bool; observation_rubric_findings(rows) -> warnings. Reads committed process policy and closed-WI git history."
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "One cadence decision hides history and trigger interpretation from snapshot extraction, while the same observation policy module supplies the rubric advisory to trajectory validation."
+
+[interface.IF-270]
+owner = "scripts/spine_carrier"
+requestors = ["scripts/gen_cases"]
+channel = "call"
+data = "SPINE_COLUMN: TOML registry key -> legacy column name; used with kitlib.spine.REGISTRY_KEYS to construct the ordered TC CSV header."
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+rationale = "The generated legacy case header must use the registry vocabulary instead of copying it, so new observation cells stay paste-ready without a second schema."

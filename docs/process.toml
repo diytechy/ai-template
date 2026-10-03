@@ -229,6 +229,8 @@ guardrails = "off"
 blackout = ""
 
 [checks]
+# Closed WIs between observation judgements; case MinWorkItems may raise it.
+observation_min_work_items = 10
 # IS THIS CHECK ON — the six dials folded in from their one-word files by the
 # 2026-08-11 overturn of WI-423. Every key below is this repo's CURRENT
 # behaviour written down, not a new decision: it declared none of these files,

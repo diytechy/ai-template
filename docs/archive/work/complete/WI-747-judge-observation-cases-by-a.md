@@ -2,13 +2,39 @@
 id = "WI-747"
 title = "Judge an observation case against a rubric, and re-judge it by a declared trigger no faster than every N work items"
 workstream = "process"
-specref = "project-trajectory/scripts/rejudge.py"
+specref = ""
 sr_refs = ["SR-215"]
 needs = []
 buildtier = "medium"
 safety_class = "spine"
 priority = 3
 +++
+
+## Deliverable
+
+An observation case is judged against a numbered rubric written before its first
+judgement, and re-judged by a declared trigger no faster than every N closed work
+items:
+
+- **Cadence** (`observation_cadence.py`, LLR-293): counts distinct terminal archived
+  WI ids added since the latest observation record, at the checkpoint revision;
+  the floor is the greater of `[checks] observation_min_work_items` (default 10)
+  and a case's `min_work_items`. `files:`, `component:`, `release` and
+  `stage-gate` triggers fire only past the floor; an undeclared trigger keeps the
+  input-digest rule; first judgement and expiry bypass the floor.
+- **Checkpoints:** `intake.py rejudge --checkpoint` accepts `release` and
+  `stage-gate` (fix round 1: the stage-gate trigger had no production caller);
+  `rejudge.checkpoint_for` maps a case's trigger to its checkpoint.
+- **Rubrics:** five numbered rubrics under `docs/rubrics/`; every observation row
+  references one; `check_trajectory` warns on an omission (LLR-294).
+- **Bound:** SR-215 and LLR-254 amended (adjudication at merge); LLR-293/294,
+  TC-306/307 added Drafted for first approval; TC-279 trimmed to its rubric and
+  DA-011 with `trigger = "release"`. PROCESS.md +1,450 bytes (94,466).
+- **Reviews:** Sonnet 5.5, NOT YET SOUND at dfe92989 (the stage-gate caller);
+  SOUND at d4f991a0 with four minors, three folded in at the landing, LLR-255 left
+  as is on the reviewer's recommendation. The coordinator kept SR-215's
+  requirement cell free of the command (ruling R2) and tagged `checkpoint_for`
+  LLR-254.
 
 ## Context
 

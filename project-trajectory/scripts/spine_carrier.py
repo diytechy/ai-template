@@ -52,6 +52,12 @@ Every caller does its own reading, so a script keeps deciding its own I/O.
 Contracts: IF-102, IF-104, IF-105, IF-106, IF-107, IF-108, IF-109, IF-110, IF-111, IF-112, IF-114, IF-118, IF-265, IF-119, IF-120, IF-122, IF-128, IF-133, IF-142, IF-178 — the seams this module declares (process.md §8; rows of record
 in docs/requirements/interfaces.toml).
 
+Contracts: IF-270 — the registry column vocabulary used by the case generator.
+
+Contract IF-270: SPINE_COLUMN maps TOML registry keys to legacy column names. Together
+    with kitlib.spine.REGISTRY_KEYS it supplies the complete ordered header of a
+    registry tier, including cells a generated automated case leaves blank.
+
 Contract IF-265: `load(path, "OI-ID")` supplies the scheduler's IF-073
     owner-registry rows under carrier-neutral column names. An absent file
     returns no rows; malformed content raises rather than publishing an empty
@@ -371,6 +377,9 @@ SPINE_COLUMN = {
     "assumption_refs": "Assumption-Refs",
     "inputs": "Inputs",
     "max_age": "MaxAge",
+    "rubric": "Rubric",
+    "trigger": "Trigger",
+    "min_work_items": "MinWorkItems",
     "sampling": "Sampling",
     "sample_size": "SampleSize",
     "acceptance_rule": "AcceptanceRule",

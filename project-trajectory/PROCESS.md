@@ -786,6 +786,28 @@ keep the LLR** — the standard reading puts `Demonstration` closer to `Test`, a
 regardless of method** — for human methods the TC records the procedure
 (`Automated=No`, usually `Tier=Release`), which is how the release checklist finds it.
 
+### Observation judgement
+
+Write an observation case’s numbered pass/fail rubric in `docs/rubrics/` and
+reference it in `Rubric` **before its first judgement**; its procedure remains
+the how. Existing omissions warn in `check_trajectory`.
+A case with no result is due immediately; `MaxAge` expiry remains the backstop,
+bypassing the cadence floor. Otherwise re-judge only when `Trigger` fires and
+at least `[checks] observation_min_work_items` closed WIs have elapsed (default
+10; zero disables the floor). A case’s `MinWorkItems` may raise that floor.
+Count distinct WI IDs first added to `docs/archive/work/complete`, `cancelled`
+or `partial` after the commit adding its latest observation record; mint and
+bookkeeping commits do not count. Read policy, records and inputs at the
+checkpoint revision. `Trigger` is `files:<semicolon-separated globs>` (changed
+repository paths), `component:CMP-###` (modules/owners tagged by LLR/IF rows),
+`release`, or `stage-gate` (that explicit checkpoint). Without a trigger, retain
+the input-digest change rule under the floor. First judgement and expiry also
+apply to cases without inputs. `Tier` still selects harness cost; it does not
+implicitly declare an observation trigger. `rejudge.checkpoint_drafts` accepts
+merge, release and stage-gate checkpoints; gate preparation runs
+`python scripts/intake.py rejudge --checkpoint stage-gate`. Keep one open re-judge WI per case;
+the decision runs no model.
+
 **Test tiers (run cost vs. confidence).** Running the whole suite every iteration
 gets untenable as a project grows (and CI has time/quota limits), so each
 `TC-###` carries a **`Tier`**: `Smoke` (fast, run every iteration / on every

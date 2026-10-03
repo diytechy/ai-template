@@ -172,7 +172,7 @@ REF_COLS = {
 # numbers. A value that does not parse is preserved as text, as for `Phase`, so
 # `assumption_rules.observation_tc_findings` can name it rather than the
 # conversion dropping it.
-INT_COLS = {"Phase", "MaxAge", "SampleSize"}
+INT_COLS = {"Phase", "MaxAge", "SampleSize", "MinWorkItems"}
 
 # column -> TOML key. EXPLICIT, never derived: a derivation turns `SR-ID` into
 # `s_r_i_d`, and the column name is a repo-wide term (D-3) that deserves a
@@ -329,6 +329,9 @@ KEY = {
     "Assumption-Refs": "assumption_refs",
     "Inputs": "inputs",
     "MaxAge": "max_age",
+    "Rubric": "rubric",
+    "Trigger": "trigger",
+    "MinWorkItems": "min_work_items",
     "Sampling": "sampling",
     "SampleSize": "sample_size",
     "AcceptanceRule": "acceptance_rule",

@@ -227,6 +227,8 @@ guardrails = "off"
 blackout = "12:00-12:00"
 
 [checks]
+# Closed WIs between observation judgements; case MinWorkItems may raise it.
+observation_min_work_items = 10
 # IS THIS CHECK ON. Six dials that used to be one-word files under docs/ and
 # that no scaffold ever wrote, so ABSENCE was the declaration — which is what
 # the owner overturned WI-423 over (2026-08-11): a repo that has decided

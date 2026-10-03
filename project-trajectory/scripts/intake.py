@@ -3052,10 +3052,10 @@ def _cmd_consolidate(args):
 
 
 def _cmd_rejudge(args):
-    """Release preparation's entry to SR-215: file one re-judge row per
-    observation test case due at `--rev` (HEAD by default). Release is a
-    person's act, so the release checklist names this command as a required
-    item rather than anything running it unasked.
+    """Release and stage-gate preparation's entry to SR-215: file one re-judge
+    row per observation test case due at `--checkpoint` and `--rev` (HEAD by
+    default). Both are a person's act, so the release checklist names this
+    command as a required item rather than anything running it unasked.
 
     Implements: SR-215, LLR-255
     """
@@ -3184,13 +3184,13 @@ def main(argv=None):
     cons_cmd.set_defaults(func=_cmd_consolidate)
     rejudge_cmd = sub.add_parser(
         "rejudge",
-        help="release preparation's checkpoint (SR-215): one re-judge row per "
-        "observation test case whose inputs changed since its latest result, "
-        "whose result expired, or which has none (merges check in the slot)",
+        help="file due re-judges at release/stage-gate; merges check in the slot",
     )
-    # RELEASE ONLY: a by-hand merge checkpoint would judge a commit no merge
+    # PREPARATION ONLY: a by-hand merge checkpoint would judge a commit no merge
     # landed, once per invocation rather than once per merged work item.
-    rejudge_cmd.add_argument("--checkpoint", required=True, choices=("release",))
+    rejudge_cmd.add_argument(
+        "--checkpoint", required=True, choices=rejudge.CHECKPOINTS[1:]
+    )
     rejudge_cmd.add_argument(
         "--rev", default="HEAD", help="the commit judged (default: HEAD)"
     )
