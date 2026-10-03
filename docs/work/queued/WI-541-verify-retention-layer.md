@@ -191,3 +191,21 @@ adjudication through the kit's own session path is still owed.
   route is `claude -p`, the main-conversation bucket, so a keep-warm cadence depends on
   how the box authenticates; `claude -p "hello" --output-format json` shows which TTL
   was written (`usage.cache_creation.ephemeral_1h_input_tokens` vs `_5m_`).
+
+### Second TTL series, 2026-10-02 (machine awake throughout; same thread)
+
+Timestamps are the probe script's own epoch seconds; each figure is the difference of
+the cumulative `turn.completed` usage.
+- Warm-up, 351 s (5.9 min) after the previous call: 9 s wall; 214,165 input, 214,016
+  cached: a HIT.
+- Next, 602 s (10.0 min) idle: 40 s wall; 214,188 input, 7,296 cached (only the small
+  system prefix): a MISS, and a slow one (40 s vs 11 s on the earlier miss, so uncached
+  replay time varies widely).
+- The 20 and 30 minute probes were stopped as uninformative once 10 minutes missed.
+Across both series the cache hit at about 6 minutes (twice) and missed at 10 and 13.5
+minutes, so on this box and default model the effective TTL sits between 6 and 10
+minutes, matching OpenAI's older "5 to 10 minutes of inactivity" in-memory behaviour and
+NOT the documented 30-minute minimum for GPT-5.6 and later. The model this CLI ran was
+the codex default (the rollout names it), so the doc's model scope may not cover it;
+that is unverified. A keep-warm ping for the codex route should fire at or under 5
+minutes. Finer probes (7, 8, 9 minutes) were not run.
