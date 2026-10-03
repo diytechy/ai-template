@@ -6,13 +6,13 @@ _Baseline: `docs/archive/last_approved` — each registry's copy, named by the c
 
 _Baseline: `docs/requirements/stakeholder-needs.toml` copied 2026-09-27 (efa9e3cd)._
 _Baseline: `docs/requirements/system-requirements.toml` copied 2026-10-03 (1fda46ed)._
-_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-10-03 (1fda46ed)._
-_Baseline: `docs/test/test-cases.toml` copied 2026-10-03 (1fda46ed)._
+_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-10-03 (eda73ca3)._
+_Baseline: `docs/test/test-cases.toml` copied 2026-10-03 (eda73ca3)._
 _Baseline: `docs/requirements/interfaces.toml` copied 2026-08-30 (580df781)._
 _Baseline: `docs/requirements/external.toml` copied 2026-09-27 (efa9e3cd)._
 _Baseline: `docs/requirements/components.toml` copied 2026-08-30 (580df781)._
 
-_Approval provenance: the last commit to move a `Status` cell in a snapshotted registry is 7733e2bf (2026-10-03) — the record's maturity cells have not moved since._
+_Approval provenance: the last commit to move a `Status` cell in a snapshotted registry is eda73ca3 (2026-10-03) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
@@ -654,7 +654,19 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 1 chain(s): SR-224</summary>
+<summary>Waiting for automated adjudication — 2 chain(s): SR-186, SR-224</summary>
+
+## SR-186 — Proportionate requirement decomposition
+
+> **Requirement.** The delivered requirements process shall require each additional child within a required tier to carry an independent decision or verification purpose, and record the stopping decision in the scoped decomposition record, while retaining the required SN-to-SR-to-LLR-to-TC tiers and linking real verification to the existing obligation.
+
+> **Rationale.** Carries SN-012's unowned granularity clause as a process requirement on what the delivered process requires and records. A child that only paraphrases a parent or duplicates another child's verification adds review and maintenance cost without an independent decision. The process records the stopping decision within the required spine; this row does not guarantee adopter behavior beyond that record, and it never permits omitting a required SN→SR→LLR→TC tier or replacing real verification with a count. It does not impose a row-count cap, deletion quota, or new machine gate. Existing process doctrine and the spine-authoring adjudicator questions are the source of the judgment, while mechanism-specific evidence remains with its current SR.
+
+
+### TC TC-211
+- **Inputs**
+  - before: docs/test/inspection-procedures.md;SR-186
+  - after: docs/test/inspection-procedures.md;SR-186;docs/ai-template-redesign-2026-09-05-codex/DECOMPOSITION-AMENDMENTS.md;docs/ai-template-redesign-2026-09-05-codex/DECOMPOSITION-AMENDMENTS.perspectives.toml
 
 ## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
 
