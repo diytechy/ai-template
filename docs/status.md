@@ -39,9 +39,17 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
     occupancy, cache TTLs, replay time, a recording of the kit's own route
     command (the classifier refused its bypass flag) and a codex adapter
     finding (`cache_write_input_tokens` now reported).
+  - **Carry TC-262, TC-263, TC-264 and TC-267 into the next spine-acts
+    adjudication** (WI-722's merge): `3e0a5f48` amended their approved method
+    cells on trunk outside a lane, so no adjudication was minted for them;
+    `docs/ratify/CURRENT.md` lists them. Add them to that row's `adjudicates`.
   - **WI-684:** re-sync `C:\Projects\FileBackup` (stamp `9b697cc`) as a
     scratch trial, after amending TC-036's inputs to add `RESYNC_PACK.md`.
+    **Not worked in the 2026-10-02 session:** the owner starts it on
+    2026-10-03 (US Central).
   - **WI-688:** now also builds the SR-161 perspective-record producer.
+    **Held by the owner (2026-10-02), second to last in the queue.** When it
+    runs, its judge sitting is WI-541's real multi-step occupancy run.
   - **Owner rulings still open:** WI-657 (sensors run by what the WI does, not
     by rung; mechanization undecided), WI-667 and WI-697 (the owner doubts an
     assumption has evidence; Status/standing only), and the rest of the
@@ -82,7 +90,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   retention shipped off; its live verification is WI-541 (partly done). S6 is designed
   with the assumption tier before its C3. S14's flag-axis count and
   duplicate-detection research have both landed.
-- **Next implementation:** WI-688 — resolve the existing SR-161 per-decomposition
+- **WI-688, when the owner releases it (held 2026-10-02):** resolve the existing SR-161 per-decomposition
   perspective-record gap and complete TC-211's normal sample. Follow the
   existing artifact adjudication route for the Drafted amendments; passing an
   Inspection does not approve its requirement. Keep the scope proportional to

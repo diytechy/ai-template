@@ -117,7 +117,9 @@ def test_codex_usage_is_mapped_inclusive_with_fresh_input_derived():
     assert usage["gen_ai.provider.name"] == "openai"
     assert usage["gen_ai.usage.input_tokens"] == 30378  # codex counts cache inside
     assert usage["gen_ai.usage.cache_read.input_tokens"] == 27392
-    assert usage["gen_ai.usage.cache_write.input_tokens"] == ""  # codex 0.157.1 now reports 0; the adapter does not read it (WI-541 finding)
+    assert (
+        usage["gen_ai.usage.cache_write.input_tokens"] == ""
+    )  # codex 0.157.1 now reports 0; the adapter does not read it (WI-541 finding)
     assert usage["gen_ai.usage.output_tokens"] == 47
     assert usage["gen_ai.usage.reasoning.output_tokens"] == 0
     assert usage["fresh-input-tokens"] == 30378 - 27392
