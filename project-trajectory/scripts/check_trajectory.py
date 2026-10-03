@@ -924,6 +924,21 @@ def load_known_ois(root):
     )
 
 
+def open_item_wi_ref_findings(root, wis):
+    """Resolve IF-073 pointers against the whole WI registry, history included.
+
+    Implements: SR-148, LLR-289
+    """
+    ids = {w["id"] for w in wis}
+    return [
+        "{}: wi_refs names unknown work item {}".format(row["OI-ID"], wid)
+        for row in spine_carrier.load(Path(root) / OPEN_ITEMS_REL, "OI-ID")
+        if not row["OI-ID"].endswith("-000")
+        for wid in _split_refs(row.get("WI-Refs", ""))
+        if wid not in ids
+    ]
+
+
 # --- the phase-anchor archetype + phase-drop detector (WI-093) -----------------
 # The derived model (docs/archive/specs/derived-gate-model.2026-07-20.md §7/§9.3)
 # structures a phase's pre-dev work as a first-class WI whose Title carries a
@@ -3294,6 +3309,7 @@ def main():
         + if_tc_errors
         + integrity
         + validate(wis, load_known_srs(root), load_known_ois(root))
+        + open_item_wi_ref_findings(root, wis)
     )
     # Specs act on declared interface boundaries (WI-191) — WARN plain, ERROR
     # under --strict (DevStg-Tests+); vacuous until a spec adopts an `## Interfaces` section.

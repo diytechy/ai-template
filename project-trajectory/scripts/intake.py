@@ -294,14 +294,14 @@ _DRAFT_KEYS = frozenset(
         # is a lineage fact, not a revival — the superseded row stays terminal
         # and its scope stays exactly what it was.
         "supersedes",
-        # OI-73 exit (B), as a typed dependency: where the answer is human-owed
+        # OI-73 exit (B), as an owner gate: where the answer is human-owed
         # and the adjudicator found no alternative route, the draft carries the
         # owner's brief here, as the typed `[open_item]` table
         # (`OPEN_ITEM_CELLS`). The mint creates a `pending` open item from it
-        # (id from the watermark's OI space) and lands that OI id in THIS
-        # successor's `needs`, so the ruling gates the successor's readiness
+        # (id from the watermark's OI space) and lists THIS successor in its
+        # `wi_refs`, so the ruling gates the successor's readiness
         # rather than relying on adjudicator restraint. A standalone OI exit no
-        # longer exists — the OI is always a dependency of a queued successor.
+        # longer exists — the OI always gates a queued successor (IF-073).
         "open_item",
     }
 )
@@ -2146,23 +2146,17 @@ def _announce_repoint(rel, replaced, dropped, into):
 
 
 def _inject_open_item(root, draft, wi_id):
-    """OI-73 exit (B): where a draft names a human-owed `open_item`, mint a
-    `pending` open item (id from the watermark's OI space) and land its id in
-    THIS successor's `needs` — BEFORE the row is written, so the ruling gates
-    the successor's readiness (a new waiting reason) instead of relying on
-    adjudicator restraint. No standalone OI exit exists. Returns `(draft,
-    refusal)`; the draft is unchanged when it names no open item. The brief
-    is the typed table both refusal rungs have already validated whole."""
+    """Mint the typed human-owed brief with the successor in IF-073's wi_refs.
+
+    The default still holds: this successor waits on the answer it raises.
+    No work-item edge is written; readiness reads the owner registry. Returns
+    `(draft, refusal)` with the draft's work-item-only needs unchanged.
+    """
     brief = draft.get("open_item")
     if not brief:
         return draft, None
-    oi_id, refusal = _mint_open_item(root, brief, wi_id)
-    if refusal:
-        return draft, refusal
-    needs = list(draft.get("needs") or [])
-    if oi_id not in needs:
-        needs.append(oi_id)
-    return dict(draft, needs=needs), None
+    _oi_id, refusal = _mint_open_item(root, brief, wi_id)
+    return draft, refusal
 
 
 def _pre_mint_refusal(drafts, subject_verb, registry, bodies):

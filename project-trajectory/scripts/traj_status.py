@@ -349,25 +349,20 @@ _FRONTIER_CAP = 12
 
 def _frontier_lines(root):
     """The `- **Ready frontier**` generated bullet: dependency-ready WIs in
-    scheduler order, id + one-line title. Empty when nothing is ready (a drained
-    or placeholder registry) OR when schedule.py is unavailable (a scaffold that
-    omits it), so the block stays byte-stable and vacuous."""
+    scheduler order, id + one-line title, followed by blocked rows and their gates.
+    Empty when neither list has rows or schedule.py is unavailable."""
     if traj_parse.schedule is None:
         return []
     try:
-        rows = traj_parse.schedule.load_registry_rows(
-            root / "docs/requirements/work-items.csv"
-        )
-        wis = traj_parse.schedule.load_wis(rows)
-        # reserved=None -> pure registry frontier; oi_status resolves hard
-        # open-item edges (OI-73) so a WI gated on a ruled OI is not shown
-        # forever waiting.
-        ready = traj_parse.schedule.frontier(
+        wis = traj_parse.schedule._load(root)
+        records = traj_parse.schedule.evaluate(
             wis, oi_status=traj_parse.schedule.load_oi_status(root)
         )
+        ready = [r for r in records if r["disposition"] == "ready"]
+        blocked = [r for r in records if r["disposition"] == "blocked"]
     except (OSError, ValueError):
         return []
-    if not ready:
+    if not ready and not blocked:
         return []
     titles = {w["id"]: w.get("title", "") for w in wis}
     prios = {w["id"]: w.get("priority", 0) for w in wis}
@@ -377,6 +372,8 @@ def _frontier_lines(root):
         "from the scheduler; a closed WI drops out automatically, so this list "
         "is never stale and never names a `done` id):_"
     ]
+    if not ready:
+        out = []
     for r in shown:
         wid = r["id"]
         p = prios.get(wid, 0)
@@ -389,6 +386,18 @@ def _frontier_lines(root):
                 len(ready) - _FRONTIER_CAP
             )
         )
+    if blocked:
+        out.append("- **Blocked** _(owner gates; see IF-073):_")
+        for r in blocked:
+            gates = "; ".join(
+                "[{} — {}](open-items.html#{})".format(o["id"], o["title"], o["id"])
+                for o in r["open_items"]
+            )
+            out.append(
+                "  - **{}** — {} — {}".format(
+                    r["id"], _clip_title(titles.get(r["id"], "")), gates
+                )
+            )
     return out
 
 

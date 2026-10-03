@@ -26,6 +26,7 @@ try:
     import agent_route
     import agent_session
     import prompts
+    import schedule
     import spine_carrier
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -33,6 +34,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     import agent_route
     import agent_session
     import prompts
+    import schedule
     import spine_carrier
 
 from kitlib import decisions as kdecisions
@@ -247,6 +249,21 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text="", assigned=None)
 
     Implements: SR-026, LLR-061
     """
+    held = next(
+        (
+            r
+            for r in schedule.evaluate(schedule._load(root))
+            if r["id"] == wi and r["disposition"] == "blocked"
+        ),
+        None,
+    )
+    if held:
+        gates = "; ".join(
+            "{} — {}".format(o["id"], o["title"]) for o in held["open_items"]
+        )
+        return "BLOCKED {}: {}. See docs/open-items.html; no worker assignment.".format(
+            wi, gates
+        )
     row = wi_rows.get(wi, {})
 
     preds = _predecessor_lines(wi_rows, row)

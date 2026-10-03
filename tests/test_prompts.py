@@ -40,6 +40,13 @@ plan_briefs = load_script("plan_briefs")
 # --- the catalogue ------------------------------------------------------------
 
 
+def test_disposition_brief_gates_the_successor_through_open_item_wi_refs():
+    text = pr.load(pr.ADJUDICATE_DISPOSITION)
+    assert "lists the successor in the open item's `wi_refs`" in text
+    assert "successor stays queued but blocked until the owner rules" in text
+    assert "lands its id in the successor's `needs`" not in text
+
+
 def test_every_declared_prompt_key_has_a_shipped_file():
     # The map is the contract: a key with no file is a session that cannot
     # launch, and a file with no key is prose nothing sends.

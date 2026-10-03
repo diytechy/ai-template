@@ -60,3 +60,18 @@ captions clipped under the boxes, a 54-character cut sized for the type WI-722
 raised). T8 fails at 1680 px (MAJOR) and 1280 px (MINOR): avoidable crossings in
 three diagrams. Recorded `fail` through `record_observation.py`, naming the judges.
 WI-722's floor itself held. Successor WI-750, filed by hand.
+
+### WI-746 lands: a pending open item's wi_refs blocks a queued row
+
+Sol built the owner's design. It found the kit already reads open-item ids in
+`needs` (approved TC-253 requires the reader), so it kept the reader, stopped intake
+writing them, and made `wi_refs` the gate. Sonnet 5.5: NOT YET SOUND at 56503928
+(the shipped disposition prompt still said intake writes the id into `needs`; four
+stale comments), SOUND at acc1e195. Retiring the legacy reader needs an adjudicated
+amendment of TC-253, IF-176 and LLR-058; left for the owner. OI-98 and OI-99 now hold
+WI-684 and WI-688 mechanically. Composed onto trunk, the smoke tier (which neither
+the builder's module runs nor the review covered) failed three tests the lane caused;
+the squash was backed out and a fix round cleared them: a `gates` name the ladder
+guard reads, deferred imports 31 -> 29, and the dashboard (+13,231 bytes, 3,013,555
+-> 3,026,786) re-stamped to 3,480,000, the file's ~15% headroom. SOUND at d1681906.
+Lesson: a builder's bar includes the whole smoke tier, not only its modules.

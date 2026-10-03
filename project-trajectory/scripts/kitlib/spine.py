@@ -202,8 +202,8 @@ def registry_row_hint(ids, frag):
 
 
 #: A hard, gating open-item edge token — an `OI-###` id in a `Predecessors`
-#: cell. OI-73 widened the `needs` grammar TOLERANTLY so an open-item ruling can
-#: gate a work item's readiness the way a predecessor WI does, without any bare
+#: cell. Nothing mints OI edges in `needs` now; TC-253 requires the legacy
+#: reader, so an existing open-item edge still gates readiness without any bare
 #: WI id changing meaning.
 _OI_TOKEN_RE = re.compile(r"^OI-\d+$")
 
@@ -211,15 +211,15 @@ _OI_TOKEN_RE = re.compile(r"^OI-\d+$")
 def split_pred_edges(value):
     """Split a `Predecessors` cell into `(hard_wi, hard_oi, soft_wi)`.
 
-    The `needs` token grammar, widened TOLERANTLY by OI-73's ruling so bare WI
-    ids keep meaning exactly what they meant (no downstream registry migrates):
+    The legacy `needs` token grammar stays readable for TC-253; nothing mints
+    OI edges now, and bare WI ids keep meaning exactly what they meant:
 
       `WI-###`   a HARD (blocking) edge — satisfied only when that WI integrates
                  `done`, the acyclicity rule's node set.
       `~WI-###`  a SOFT (advisory-ordering) edge — must resolve, never blocks.
       `OI-###`   a HARD edge on an OPEN-ITEM ruling — satisfied when that open
                  item leaves `pending` (`schedule.hard_preds_satisfied`), the
-                 typed dependency the OI-70/OI-73 exits mint. An OI edge is hard
+                 legacy dependency retained for TC-253. An OI edge is hard
                  BY RULING, so a `~` prefix on one is ignored rather than making
                  a soft OI edge — there is no such thing. OI ids are NOT graph
                  nodes (an open item never integrates), so they stay out of the

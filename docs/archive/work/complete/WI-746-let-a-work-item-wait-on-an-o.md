@@ -2,13 +2,44 @@
 id = "WI-746"
 title = "Let a work item wait on an open item: a queued row with an unruled open item is blocked, not schedulable, and says why"
 workstream = "process"
-specref = "project-trajectory/scripts/agent_common.py"
+specref = ""
 sr_refs = []
 needs = []
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+A queued work item can wait on an open item, and says so: the open-item registry
+owns the block (the owner's 2026-10-02 design), and the work-item row format is
+unchanged.
+
+- **Rule (IF-073, IF-054):** a queued row named in the `wi_refs` of an open item
+  whose `status` is `pending` is not offered by the shared readiness
+  (`schedule.hard_preds_satisfied`, mutex candidacy included); dispatch, integrate,
+  the status snapshot and `agent_brief` all read it through `schedule._load`. Ruling
+  the open item releases the row with no edit to it.
+- **Surfaces:** the status snapshot lists open items and blocked rows apart from the
+  ready frontier, each beside its gating open item's title and `open-items.html`
+  anchor; `agent_brief` returns a blocked notice; `check_trajectory` reports a
+  `wi_refs` entry naming no work item (ruled rows included, archived rows seen).
+- **Writer:** intake keeps the raising row in `wi_refs` and no longer adds an
+  open-item id to `needs`; the shipped disposition prompt says so. The existing
+  reader for open-item ids in `needs` is kept, because approved TC-253 requires it;
+  retiring it is an adjudicated amendment of TC-253, IF-176 and LLR-058 (owner's
+  call, not filed).
+- **Rows:** IF-054 and IF-073 amended (Drafted); IF-264, IF-265, LLR-288, LLR-289,
+  TC-301, TC-302 added Drafted. OI-98 (WI-684) and OI-99 (WI-688) filed pending;
+  the hand-written do-not-claim note removed from `docs/status.md`.
+- **Docs:** stated once in IF-073 and IF-054; PROCESS.md (+131 bytes),
+  `docs/work/README.md` and the templates link to it; a RESYNC_PACK entry.
+- **Reviews:** Sonnet 5.5, NOT YET SOUND at 56503928 (a stale shipped prompt), SOUND
+  at acc1e195; composed onto trunk the smoke tier then failed three tests the lane
+  caused (a `gates` name the ladder guard reads, two new deferred imports, the
+  dashboard past its byte budget), fixed at d1681906 and confirmed SOUND
+  (`docs/reviews/2026-10-02-wave7/sonnet-wi746-r1.md` to `-r3.md`).
 
 ## Context
 
