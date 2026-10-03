@@ -21,13 +21,13 @@ def generate(tmp_path, monkeypatch, rows=None):
             '[test.TC-280]\nassumption_refs = ["DA-011"]\nautomated = "Yes"\n',
             encoding="utf-8",
         )
+    registry = docs / "requirements/assumptions.toml"
+    before = registry.read_bytes() if rows is not None else None
     monkeypatch.setattr(sys, "argv", ["gen_release_checklist", "--docs", str(docs)])
     monkeypatch.setattr(release, "_rejudge_checklist_line", lambda root: "rejudge")
     release.main()
     if rows is not None:
-        assert (docs / "requirements/assumptions.toml").read_text(
-            encoding="utf-8"
-        ) == rows
+        assert registry.read_bytes() == before
     return (docs / "release-checklist.md").read_text(encoding="utf-8")
 
 
@@ -44,6 +44,7 @@ def test_assumptions_section_and_marker(tmp_path, monkeypatch):
         "- [ ] ASSUMPTION DA-011 — has its falsifier been observed? "
         "A reader cannot explain it. (method: TC-279)"
     ) in text
+    assert "TC-280" not in text
     assert "a person sets `standing`" in text
 
 

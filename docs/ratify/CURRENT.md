@@ -715,10 +715,10 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
 ### TC TC-309, Drafted — never approved
 - **Expected**
   - before: The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing MaxAge refuses with its reason.
-  - after: The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing Method, Expected or MaxAge refuses with its reason.
+  - after: The complete re-judge brief shows the observation case beneath its assumption chain, and an undeclared assumption or a missing Method, Expected or MaxAge refuses with its reason.
 - **Method**
   - before: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no MaxAge refuses naming that cell; neither returns a brief.
-  - after: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no Method, no Expected or no MaxAge refuses naming that cell; none returns a brief.
+  - after: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing appear above the observation case and its Method. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no Method, no Expected or no MaxAge refuses naming that cell; none returns a brief.
 - **Evidence**
   - before: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_lifetime
   - after: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_cell
@@ -733,10 +733,10 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
 ### TC TC-309, Drafted — never approved
 - **Expected**
   - before: The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing MaxAge refuses with its reason.
-  - after: The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing Method, Expected or MaxAge refuses with its reason.
+  - after: The complete re-judge brief shows the observation case beneath its assumption chain, and an undeclared assumption or a missing Method, Expected or MaxAge refuses with its reason.
 - **Method**
   - before: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no MaxAge refuses naming that cell; neither returns a brief.
-  - after: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no Method, no Expected or no MaxAge refuses naming that cell; none returns a brief.
+  - after: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing appear above the observation case and its Method. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no Method, no Expected or no MaxAge refuses naming that cell; none returns a brief.
 - **Evidence**
   - before: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_lifetime
   - after: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_cell
