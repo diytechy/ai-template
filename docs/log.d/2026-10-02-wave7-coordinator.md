@@ -179,3 +179,16 @@ snapshot was then retaken on the merged tree (no refusal, `last_approved/` reset
 exact command re-run) as seq 19. Both cross-reviewed SOUND by Sonnet. The temp volume
 filled once mid-review again (a reviewer's test hit `OSError`); free space hovers
 around 2 GB, consumed outside this session.
+
+### WI-657 lands: sensor steps run on their rung OR their declared paths; the ratchet is green
+
+Sol's first build wired `check.py --path-triggered` into the pre-commit hook, which on
+trunk's red complexity ratchet (23 rows) would have refused every script commit, and
+included smoke. The coordinator stopped it before review; the fix round (resumed after
+the Codex usage limit) greened the ratchet (WI-545's 8 moved rows re-pointed, 7 rows
+stamped with reasons) and kept smoke out of the hook. Sonnet: SOUND at 9c472f7b. At the
+landing the merged tree failed the ratchet on WI-750's growth (`_route_edges` 40 -> 48,
+`_detour_d` 32 -> 33, a new 22-point test), stamped in this commit with the reason
+naming WI-750, since this is the first commit whose hook enforces the ratchet. The
+pre-commit hook now runs complexity, dupes-census and readability (~4 s) on every
+commit here. Lanes cut before this landing (WI-758, WI-747) will meet it at theirs.

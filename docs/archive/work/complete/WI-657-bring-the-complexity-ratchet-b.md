@@ -2,13 +2,38 @@
 id = "WI-657"
 title = "Code-quality sensors: bring the complexity ratchet back to green, add the flag-axis measure, ship the sensor's opt-in layer and skill, and research duplicated-stage detection (OI-68, S14)"
 workstream = "quality"
-specref = "project-trajectory/scripts/check_complexity.py"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 needs = ["WI-538"]
 supersedes = "WI-539;WI-623;WI-624"
 +++
+
+## Deliverable
+
+Parts 1 to 4 landed earlier (wave 4 and 5). The last part, the owner's 2026-10-02
+mechanization ruling, lands here:
+
+- **Selection:** a stage-gated sensor step may declare paths in `docs/stack.ini`;
+  either its `from-stage` rung or a change touching a declared path selects it,
+  and an unknown change runs it. A step's paths include its own baseline, script
+  and config. Without paths, selection stays rung-only (no adopter migration).
+- **Hook:** the pre-commit hook runs the path-triggered sensors (complexity,
+  dupes-census, readability; ~4 s); smoke stays out of the hook (the per-commit
+  smoke bar is run by hand) and is rung- or path-selected at gates.
+- **Ratchet green:** 8 rows re-pointed after WI-545's moves; 5 new and 2 grown rows
+  stamped with dated reasons naming the introducing work item; at landing, WI-750's
+  growth (`_route_edges` 40 -> 48, `_detour_d` 32 -> 33, one new test function)
+  stamped the same way, since this is the first commit whose hook enforces it.
+- **Rows:** LLR-195 and LLR-206 detail amended (Approved, for this merge's
+  adjudication; "ARMED" now means selected by rung OR path); IF-267, LLR-291,
+  TC-304 added Drafted. PROCESS.md +141, PROCESS_OPTIONS.md +315 bytes; a RESYNC
+  entry.
+- **Reviews:** the first build stopped by the coordinator before review (it would
+  have blocked every commit on the red ratchet and ran smoke in the hook); the fix
+  round reviewed SOUND by Sonnet 5.5 at 9c472f7b
+  (`docs/reviews/2026-10-02-wave7/sonnet-wi657.md`).
 
 ## Context
 

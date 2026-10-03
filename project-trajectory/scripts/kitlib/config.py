@@ -1,4 +1,4 @@
-"""Declared-policy files and console encoding — the kit's declared-policy readers.
+"""Declared policy readers: process toggles, stack-step selectors and console encoding.
 
 TWO READERS, ONE THEME: `first_declared_line` (and its two adapters) for the
 one-word `docs/<dial>` files, and `process_check` for a `[checks]` toggle in
@@ -36,6 +36,8 @@ copies can no longer disagree, so drift is UNREPRESENTABLE rather than detected.
 
 import sys
 import tomllib
+
+from . import ladder as _kitladder
 from pathlib import Path
 
 __all__ = [
@@ -46,6 +48,9 @@ __all__ = [
     "read_declared",
     "read_declared_lower",
     "utf8_console",
+    "step_paths",
+    "RETIRED_STAGE_ALIASES",
+    "step_threshold",
 ]
 
 
@@ -244,3 +249,122 @@ def utf8_console():
             stream.reconfigure(encoding="utf-8")
         except (AttributeError, ValueError):
             pass
+
+
+def step_paths(profile):
+    """Declared repo-relative fnmatch patterns, keyed by step; blanks opt out.
+
+    Commas or whitespace separate patterns. Values belong to the adopter's
+    stack, so the reader never infers paths from an executable or baseline.
+
+    Implements: SR-006, LLR-291
+    """
+    if profile is None:
+        return {}
+    return {
+        section[5:].strip(): tuple(
+            profile.get(section, "paths").replace(",", " ").split()
+        )
+        for section in profile.sections()
+        if section.startswith("step:")
+        and profile.get(section, "paths", fallback="").strip()
+    }
+
+
+# THE LEGACY `gates =` TRANSLATION, and it preserves an adopter's effective
+# behavior rather than the tag's face value (WI-498 slice 2). A `gates =` list
+# named the BARS a step ran at, and the bar was a MIN over every in-scope row:
+# `DevStg-Reqs` is the floor every repo sits at, while `DevStg-Tests` was reached
+# only by a spine already fully decomposed and TC'd — which is the DevStg-Impl
+# RUNG — and `DevStg-Impl` was never reached at all under the OI-30 D2 ceiling.
+# So the rung that reproduces each listed bar under an at-or-above rule is:
+RETIRED_STAGE_ALIASES = {  # check_vocab: allow
+    # The Reqs bar IS the floor every repo sits at.
+    "G1": _kitladder.STAGE_REQS,  # check_vocab: allow
+    # The Tests bar was reached ONLY by a spine already fully decomposed and
+    # TC'd, which on the ladder is the DevStg-Impl RUNG — three above the word
+    # it shares with the bar.
+    "G2": _kitladder.STAGE_IMPL,  # check_vocab: allow
+    "G3": _kitladder.STAGE_IMPL,  # check_vocab: allow
+    # The retired bar prefix (2026-08-18): its release alias resolves to
+    # `DevStg-Impl`, NOT to `DevStg-Release`: that bar never certified the
+    # Release rung, and the alias carries the correction.
+    "DevBar-Reqs": _kitladder.STAGE_REQS,  # check_vocab: allow
+    "DevBar-Tests": _kitladder.STAGE_IMPL,  # check_vocab: allow
+    "DevBar-Release": _kitladder.STAGE_IMPL,  # check_vocab: allow
+}
+
+_LEGACY_BAR_THRESHOLD = {
+    _kitladder.STAGE_REQS: _kitladder.STAGE_NEEDS,
+    _kitladder.STAGE_TESTS: _kitladder.STAGE_IMPL,
+    _kitladder.STAGE_IMPL: _kitladder.STAGE_IMPL,
+}
+
+# Sections already warned about, so the notice is ONCE PER RUN as promised and
+# not once per `steps()` call — the plan is built two or three times in a single
+# invocation (the lane map resolves at ALL; `--list` and the run each rebuild),
+# and a migration notice repeated per rebuild reads as a malfunction.
+_LEGACY_GATES_WARNED = set()
+
+
+def step_threshold(profile, section):
+    """The rung a declared `[step:<name>]` becomes relevant at.
+
+    `from-stage = <rung>` is the declared spelling: any of the eight ladder rungs,
+    and the step runs whenever the repo is AT OR ABOVE it. Default `DevStg-Impl`,
+    unchanged in value from the retired `gates =` default — a project-specific
+    gate grades a built thing.
+
+    `gates = <space/comma list>` IS ACCEPTED AND TRANSLATED, with one stderr line
+    per run. It is the retired membership spelling, and unlike the `--stage` CLI
+    aliases the FILE can be named here, so the notice says which section to fix
+    rather than leaving an adopter to guess. The lowest listed bar picks the rung
+    (`_LEGACY_BAR_THRESHOLD`); the retired `G1|G2|G3` tags translate first,  check_vocab: allow
+    exactly as they always did. Both spellings at once is an authoring error and
+    fails LOUDLY, like every other profile error — silently preferring one would
+    make a step's real threshold unreadable from the file.
+
+    Implements: SR-006, LLR-291
+    """
+    has_new = profile.has_option(section, "from-stage")
+    has_old = profile.has_option(section, "gates")
+    if has_new and has_old:
+        sys.exit(
+            "check: docs/stack.ini [{}] declares both `from-stage` and the "
+            "retired `gates` — keep `from-stage` and delete `gates`".format(section)
+        )
+    if has_new:
+        value = profile.get(section, "from-stage").strip()
+        if value not in _kitladder.LADDER_RUNGS:
+            sys.exit(
+                "check: docs/stack.ini [{}] from-stage is {!r}; expected one of "
+                "{}".format(section, value, "|".join(_kitladder.STAGE_ORDER))
+            )
+        return value
+    if not has_old:
+        return _kitladder.STAGE_IMPL
+    bars = []
+    for tok in profile.get(section, "gates").replace(",", " ").split():
+        tok = RETIRED_STAGE_ALIASES.get(tok, tok)
+        if tok not in _LEGACY_BAR_THRESHOLD:
+            sys.exit(
+                "check: docs/stack.ini [{}] gates has {!r}; expected a "
+                "space/comma list of {}".format(
+                    section, tok, "|".join(_LEGACY_BAR_THRESHOLD)
+                )
+            )
+        bars.append(tok)
+    if not bars:
+        return _kitladder.STAGE_IMPL
+    threshold = min((_LEGACY_BAR_THRESHOLD[b] for b in bars), key=_kitladder.stage_ord)
+    if section not in _LEGACY_GATES_WARNED:
+        _LEGACY_GATES_WARNED.add(section)
+        print(
+            "check: docs/stack.ini [{}] uses the RETIRED `gates =` membership "
+            "list — reading it as `from-stage = {}`. Selection is now AT OR "
+            "ABOVE one rung (OI-51); update the section to say so.".format(
+                section, threshold
+            ),
+            file=sys.stderr,
+        )
+    return threshold

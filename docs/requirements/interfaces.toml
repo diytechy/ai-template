@@ -2382,3 +2382,13 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 rationale = "Keep provider event shapes in the adapter while retained bookkeeping owns comparisons across calls and resets."
+
+[interface.IF-267]
+owner = "scripts/check"
+consumers = ["hooks/pre-commit"]
+channel = "cli"
+data = "--path-triggered: run only path-declaring steps except smoke selected by the shared rung-or-change rule; ordinary gate plans also use the rule and retain smoke"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+rationale = "The hook must select opted-in sensors without inheriting the full gate plan or copying its selection logic."
