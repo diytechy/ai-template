@@ -209,3 +209,9 @@ disproportionate), SOUND at c011016a after decomposition into six sibling helper
 (`_route_edges` 48 -> 38, `_detour_d` 33 -> 23) and the test oracle `_violations` (19)
 entered with its reason. The rubric's T8 now binds lane separation to TC-305.
 TC-055 is due again at this merge.
+
+### WI-764: LLR-292 and TC-305 approved (act seq 21)
+
+An independent Opus adjudicator approved the lane-separation rows; Sonnet: SOUND.
+Noted: the rubric's T8 still names the Knowledge graph, which no lane test covers
+(this repo emits no Knowledge tab; an intake item if one appears).

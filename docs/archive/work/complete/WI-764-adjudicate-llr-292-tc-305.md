@@ -2,12 +2,20 @@
 id = "WI-764"
 title = "adjudicate: LLR-292, TC-305 - spine row(s) authored Drafted on merged trunk 1d68869..5c74722 await a FIRST APPROVAL; read the whole chain, then approve (flip + snapshot) or return with findings"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "first-approval"
 adjudicates = ["LLR-292", "TC-305"]
 +++
+
+## Deliverable
+
+First approval of LLR-292 and TC-305 (act seq 21): an independent Claude Opus 5.5
+adjudicator approved both (lane separation, test-bound for TC-055's T8, beside
+LLR-120's box clearance with no clause held twice). Sonnet 5.5 cross-review: SOUND
+at 89310142. Noted, not filed: the rubric's T8 still names the Knowledge graph,
+which LLR-292 does not cover; this repo emits no Knowledge tab.
 
 ## Context
 

@@ -3072,5 +3072,5 @@ tier = "Full"
 expected = "Zero shared segments or end-to-end joins outside shared actual terminals in every wired view; the sweep and its collision oracle are non-vacuous."
 automated = "Yes"
 evidence = "tests/test_traj_lanes.py"
-status = "Drafted"
+status = "Approved"
 phase = 4
