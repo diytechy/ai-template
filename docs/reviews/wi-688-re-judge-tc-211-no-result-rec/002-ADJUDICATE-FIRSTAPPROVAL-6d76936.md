@@ -143,7 +143,7 @@ Over a temporary tree with a three-hat roster (one always, one reached by a pare
 Every other cell of TC-312 stays byte-exact. The `evidence` cell, `tests/test_hats_record.py`,
 already covers the new tests.
 
-OUTCOME: RETURN rows=2
+First sitting (superseded by the re-judgement below): RETURN rows=2
 
 ## Re-judgement after fix round 2 (2c6cfe29)
 
