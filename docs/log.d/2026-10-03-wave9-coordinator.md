@@ -43,3 +43,17 @@ OI-100 records three gaps. An amended need mints no adjudication: intake's amend
 walk is `SPINE_CSVS`, which covers requirements, design rows and test cases only. A
 held rung stops even a CLARITY verdict at the owner. And one MEANING row holds its
 CLARITY siblings in the same registry.
+
+### The full suite runs again; WI-784 fixes its two reds
+
+With the disk freed, the full unfiltered suite ran at `d040ad75`, its first run in
+three waves: **2 failed, 4929 passed, 13 skipped** in 572 s. Both reds are in
+slow-tier modules, which the commit bar does not run:
+
+- WI-746 linked the open-items registry from the shipped work README, a link a
+  scaffold without the registry breaks.
+- WI-747's cadence cells were unclassified in the approved/traced split.
+
+WI-784 was filed by hand. A Claude Opus builder fixed both, from red (2 failed) to
+green; the 28 affected modules gave 929 passed. Codex Luna (high) found it SOUND at
+`e7e0117d` with no findings ([review](../reviews/2026-10-03-wave9/luna-wi784.md)).

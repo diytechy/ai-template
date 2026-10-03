@@ -2,12 +2,28 @@
 id = "WI-784"
 title = "Fix the two slow-tier reds the full suite found: the work README's open-items link, and the cadence columns' cell class"
 workstream = "process"
-specref = "project-trajectory/scripts/acceptance_record.py"
+specref = ""
 sr_refs = ["SR-215"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 2
 +++
+
+## Deliverable
+
+Both slow-tier reds of the 2026-10-03 full-suite run are fixed:
+
+- The work README's owner-gate line is a code span, in the template and the
+  dogfooded copy, so a scaffold without the open-items registry reports only the
+  S-3 WARN.
+- `Trigger`, `Rubric` and `MinWorkItems` are classified approved by name in
+  `SPINE_APPROVED_CELLS`, keeping the residual's reading. The registry machinery
+  reference lists them, and RESYNC_PACK carries the entry.
+
+The Claude Opus builder ran the reds (2 failed) to green (2 passed): 929 passed
+across the 28 affected modules, and smoke within budget. Codex Luna (high) found it
+SOUND at e7e0117d with no findings
+(`docs/reviews/2026-10-03-wave9/luna-wi784.md`).
 
 ## Context
 
@@ -18,7 +34,7 @@ which the per-commit smoke bar does not run, and each was introduced by a recent
 landing:
 
 1. `tests/test_check_docs.py::test_an_absent_open_items_registry_is_itself_the_s3_finding`.
-   WI-746 (`9dbb5103`) wrote `owner gates follow [IF-073](../requirements/open-items.toml)`
+   WI-746 (`9dbb5103`) wrote `owner gates follow [IF-073](../../../work/requirements/open-items.toml)`
    into `project-trajectory/work/README.template.md` (line 25), which is copied to
    every scaffold's `docs/work/README.md`. In a scaffold without the open-items
    registry, that link is broken, so `check_docs` exits 1. The absence should be the
@@ -46,5 +62,3 @@ landing:
   `check_docs` are clean.
 - No spine row text changes. If the builder finds that a row's text must change to
   stay true, it stops and reports rather than amending.
-
-## Deliverable
