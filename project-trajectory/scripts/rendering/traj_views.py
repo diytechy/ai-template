@@ -312,20 +312,17 @@ def arch_icicle(root):
 
 
 # --- the per-need assumption view (SR-218) -----------------------------------
-# A reviewer starting from an outcome asks what it relies on and whether that
-# has been checked; the per-assumption reports and the approval brief answer
-# other questions. So each need's detail panel in the spine view lists the
+# A reviewer starting from an outcome asks what it relies on and whether any of
+# it has been shown false; the per-assumption reports and the approval brief
+# answer other questions. So each need's detail panel in the spine view lists the
 # assumptions its requirements cite, from `traj_parse.need_assumptions`. The
 # style and the one line of script the block needs are emitted only when a
 # block exists, so a project without the tier renders byte-identically.
 
-# The labels a falsified premise, and one relied on with no current evidence,
-# carry in words, so the signal survives for a reader who does not see color.
+# The label a falsified premise carries in words, so the signal survives for a
+# reader who does not see color. No premise is labelled for lacking a result:
+# an assumption carries no evidence level (owner ruling 2026-10-02).
 FALSIFIED_LABEL = "FALSIFIED"
-UNEVIDENCED_LABEL = "NO CURRENT EVIDENCE"
-# The evidence levels that are no current evidence: nothing could evidence it,
-# or nothing evidencing it has a current passing result.
-_UNEVIDENCED = frozenset({"assumed", "specified"})
 
 NEED_DA_STYLE = (
     "<style>.detail .need-da{margin-top:.6rem;border-top:1px solid var(--border);"
@@ -342,19 +339,25 @@ NEED_DA_JS = "\n        + (d.assumptions||'')"
 
 
 def _da_item(a):
-    """One relied-on assumption: its id, any label, its text, then its
-    validity, evidence level and citing requirements."""
-    flags = [FALSIFIED_LABEL] if a["standing"] == "falsified" else []
-    flags += [UNEVIDENCED_LABEL] if a["level"] in _UNEVIDENCED else []
+    """One relied-on assumption: its id, its label when falsified, its text,
+    then its status, validity, falsifier, the cases that can falsify it and
+    its citing requirements."""
+    flag = (
+        '<strong class="da-flag">{}</strong> '.format(FALSIFIED_LABEL)
+        if a["standing"] == "falsified"
+        else ""
+    )
     return (
         "<li><strong>{}</strong> {}{} "
-        '<span class="da-facts">validity: {} · evidence: {} · cited by {}</span>'
-        "</li>".format(
+        '<span class="da-facts">status: {} · validity: {} · falsifier: {} · '
+        "can be falsified by: {} · cited by {}</span></li>".format(
             esc(a["id"]),
-            "".join('<strong class="da-flag">{}</strong> '.format(f) for f in flags),
+            flag,
             esc(a["text"]),
+            esc(a["status"] or "unset"),
             esc(a["standing"] or "unset"),
-            esc(a["level"]),
+            esc(a["falsifier"] or "(none declared)"),
+            esc(", ".join(a["cases"]) or "no test case"),
             esc(", ".join(a["citing"])),
         )
     )
@@ -362,8 +365,8 @@ def _da_item(a):
 
 def need_assumption_block(entry):
     """The markup one need's detail panel shows (SR-218): every assumption its
-    requirements cite, once, with its validity, evidence level and citing
-    requirements; each requirement delivered jointly with named siblings; that
+    requirements cite, once, with its status, validity, falsifier, the cases
+    that can falsify it and its citing requirements; each requirement delivered jointly with named siblings; that
     the need is answered by coincident requirements alone; or the unclassified
     requirements that leave a gap. `""` for no entry, or one with nothing to
     say.

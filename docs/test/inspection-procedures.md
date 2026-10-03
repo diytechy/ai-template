@@ -75,7 +75,7 @@ introduced by this sitting.
 
 ## Sampled new-reader inspection
 
-A sampled observation of an assumption, not of a requirement: it evidences
+A sampled observation of an assumption, not of a requirement: it can falsify
 DA-011, that what a random sample of the code's parts shows about its
 readability holds for the parts the sample did not reach. Draw five parts at
 random from the source the declared readability and structure measures cover,

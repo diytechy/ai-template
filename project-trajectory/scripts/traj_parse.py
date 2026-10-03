@@ -23,14 +23,14 @@ Contract IF-227: the per-need assumption view's data, which the gen_trajectory
     facade reads and hands to `traj_views.need_assumption_block`.
     `need_assumptions(root)` returns `{need id: {"assumptions", "joint",
     "coincident", "unclassified"}}` for every need, each assumption a dict of `id`, `text`,
-    `standing`, `level` (one of `assumption_rules.EVIDENCE_LEVELS`) and
-    `citing` (the need's requirement ids citing it), listed once in
-    first-cited order; `joint` lists each joint requirement and its siblings,
-    `coincident` is a bool and `unclassified` a list of requirement ids. It
-    returns `{}` when the assumptions registry is absent or
-    holds only the template's `-000` rows, which is the view's omit condition,
-    so a project without the tier renders byte-identically. The evidence level
-    is read over the current results, with the clock, on every render.
+    `status`, `standing`, `falsifier`, `cases` (the test case ids naming it in
+    `Assumption-Refs`, which can falsify it) and `citing` (the need's
+    requirement ids citing it), listed once in first-cited order; `joint`
+    lists each joint requirement and its siblings, `coincident` is a bool and
+    `unclassified` a list of requirement ids. It returns `{}` when the
+    assumptions registry is absent or holds only the template's `-000` rows,
+    which is the view's omit condition, so a project without the tier renders
+    byte-identically. No evidence level is read: an assumption carries none.
 """
 
 import json
@@ -51,14 +51,11 @@ except ImportError:  # pragma: no cover - in-process fallback
 import check_trajectory as ct
 from kitlib import stage as _kitstage
 
-# Siblings: the assumption tier's pure rules and the one reader of what judging
-# an observation needs (IF-190, IF-215, IF-216). The per-need assumption view
-# (SR-218) takes an assumption's classification and evidence level from the
-# rules the checker applies, so the page and the checker cannot disagree about
-# what a requirement relies on or how well it is evidenced. Plain imports for
-# the same reason as `ct` above.
+# Sibling: the assumption tier's pure rules (IF-190). The per-need assumption
+# view (SR-218) takes a requirement's classification from the rules the checker
+# applies, so the page and the checker cannot disagree about what a
+# requirement relies on. Plain import for the same reason as `ct` above.
 import assumption_rules
-import record_observation
 
 # Sibling: the arch-map AST walk — sw_modules' source since WI-455 retired the
 # committed docs/architecture.md MODULE MAP block it used to parse back
@@ -173,15 +170,16 @@ def need_assumptions(root):
     tier gets no section at all.
 
     `assumptions` lists, once each and in first-cited order, every declared
-    assumption the need's requirements cite, as `{id, text, standing, level,
-    citing}`: its validity (`Standing`), its evidence level from
-    `assumption_rules.evidence_level` over the current results, and the need's
-    requirements citing it. `joint` names each joint requirement and the
-    siblings its `Delivered-With` cell records; `coincident` is true when the
+    assumption the need's requirements cite, as `{id, text, status, standing,
+    falsifier, cases, citing}`: its maturity (`Status`), its validity
+    (`Standing`), its `Falsifier`, the test cases naming it in
+    `Assumption-Refs` (those that can falsify it), and the need's requirements
+    citing it. No evidence level: an assumption carries none. `joint` names
+    each joint requirement and the siblings its `Delivered-With` cell records; `coincident` is true when the
     need has requirements and every one is coincident; `unclassified` names
     each that neither cites an assumption nor records how its needs are delivered
-    (`assumption_rules.classify_srs`). Derived from the registries and the
-    results on every render, never kept.
+    (`assumption_rules.classify_srs`). Derived from the registries on every
+    render, never kept.
 
     Implements: SR-218, LLR-258"""
     req = root / "docs" / "requirements"
@@ -189,48 +187,74 @@ def need_assumptions(root):
     if not das:
         return {}
     srs, _llrs, tcs = _spine(root, skip_example=True)
-    bifs = spine_carrier.load(req / "external.toml", "B-ID", keep_examples=False)
-    inputs = record_observation.evidence_inputs(root, tcs, das, bifs)
-    evidence = (inputs["records"], inputs["suite_proof"], inputs["digests"])
     declared = {r["DA-ID"]: r for r in das}
+    cases_of = _cases_by_assumption(tcs)
     classes = assumption_rules.classify_srs(srs, das)
     by_need = _needs_srs(srs)
+    return {
+        need["id"]: _need_entry(
+            by_need.get(need["id"], []), declared, classes, cases_of
+        )
+        for need in _sn_rows(root)
+    }
+
+
+# The cells one relied-on assumption shows, as `(key, column)`.
+_DA_FACTS = (
+    ("text", "Assumption"),
+    ("status", "Status"),
+    ("standing", "Standing"),
+    ("falsifier", "Falsifier"),
+)
+
+
+def _cases_by_assumption(tcs):
+    """`{assumption id: [test case ids]}`: the cases naming each assumption in
+    `Assumption-Refs`, in row order, the ones that can falsify it.
+
+    Implements: SR-218, LLR-258"""
     out = {}
-    for need in _sn_rows(root):
-        rows = by_need.get(need["id"], [])
-        cited = {}
-        for row in rows:
-            for did in ct._split_refs(row.get("DA-Refs", "")):
-                if did in declared:
-                    cited.setdefault(did, []).append(row["SR-ID"])
-        out[need["id"]] = {
-            "assumptions": [
-                {
-                    "id": did,
-                    "text": (declared[did].get("Assumption") or "").strip(),
-                    "standing": (declared[did].get("Standing") or "").strip(),
-                    "level": assumption_rules.evidence_level(
-                        declared[did], tcs, *evidence
-                    ),
-                    "citing": citing,
-                }
-                for did, citing in cited.items()
-            ],
-            "joint": [
-                {
-                    "id": r["SR-ID"],
-                    "with": ct._split_refs(r.get("Delivered-With", "")),
-                }
-                for r in rows
-                if classes.get(r["SR-ID"]) == "joint"
-            ],
-            "coincident": bool(rows)
-            and all(classes.get(r["SR-ID"]) == "coincident" for r in rows),
-            "unclassified": [
-                r["SR-ID"] for r in rows if classes.get(r["SR-ID"]) == "unclassified"
-            ],
-        }
+    for tc in tcs:
+        for did in ct._split_refs(tc.get("Assumption-Refs", "")):
+            out.setdefault(did, []).append(tc["TC-ID"])
     return out
+
+
+def _need_entry(rows, declared, classes, cases_of):
+    """One need's entry in the per-need view, from the requirements naming it
+    (`rows`): its relied-on assumptions, joint requirements, whether all are
+    coincident, and the unclassified ones.
+
+    Implements: SR-218, LLR-258"""
+    cited = {}
+    for row in rows:
+        for did in ct._split_refs(row.get("DA-Refs", "")):
+            if did in declared:
+                cited.setdefault(did, []).append(row["SR-ID"])
+    return {
+        "assumptions": [
+            {
+                "id": did,
+                **{k: (declared[did].get(c) or "").strip() for k, c in _DA_FACTS},
+                "cases": cases_of.get(did, []),
+                "citing": citing,
+            }
+            for did, citing in cited.items()
+        ],
+        "joint": [
+            {
+                "id": r["SR-ID"],
+                "with": ct._split_refs(r.get("Delivered-With", "")),
+            }
+            for r in rows
+            if classes.get(r["SR-ID"]) == "joint"
+        ],
+        "coincident": bool(rows)
+        and all(classes.get(r["SR-ID"]) == "coincident" for r in rows),
+        "unclassified": [
+            r["SR-ID"] for r in rows if classes.get(r["SR-ID"]) == "unclassified"
+        ],
+    }
 
 
 def spine_stats(root):

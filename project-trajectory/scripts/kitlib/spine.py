@@ -828,13 +828,13 @@ SPINE_TIER_KEYS = {
         "evidence",
         "status",
         "phase",
-        # The assumptions the case evidences (SR-197), a POINTER into the
+        # The assumptions the case can falsify (SR-197), a POINTER into the
         # assumptions registry beside `verifies`, which keeps naming only the
         # requirements and design rows it verifies.
         "assumption_refs",
         # An OBSERVATION case's declaration (SR-198), one recorded as not
         # automated: the repository paths or row ids its judgment reads, how
-        # many days its result holds, and, evidencing an assumption, whether it
+        # many days its result holds, and, citing an assumption, whether it
         # is `sampled` or `monitored`. A sampled one may declare its sampling
         # model as two flat cells, since the carrier refuses a nested table. All
         # five are statements the row makes.
@@ -1009,9 +1009,11 @@ SYSTEM_VALUES = ("operation", "delivery")
 # Implements: SR-194, LLR-224
 FORM_VALUES = ("interface", "assumption", "cross-cutting")
 
-# HOW AN OBSERVATION TEST CASE EVIDENCING AN ASSUMPTION SAMPLES (SR-198): a
+# HOW AN OBSERVATION TEST CASE CITING AN ASSUMPTION SAMPLES (SR-198): a
 # `sampled` result was taken over a sample of the population the assumption
-# speaks about, and a `monitored` one is read continuously in operation. And
+# speaks about, and a `monitored` one is read continuously in operation. Each
+# says how the case looks, never how well the assumption holds: an assumption
+# carries no evidence level (owner ruling 2026-10-02). And
 # THE LIFETIME FLOOR, in whole days: a judgment the harness cannot rerun is
 # trusted only for a declared time, and a lifetime under a week would demand it
 # more often than it can honestly be taken. The one judge of both is

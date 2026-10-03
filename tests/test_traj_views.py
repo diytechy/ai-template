@@ -1510,11 +1510,12 @@ def test_fit_lines_breaks_on_words_then_ellipsizes():
 
 # --- TC-251: the per-need assumption view (SR-218, LLR-258) -----------------
 # For each stakeholder need the spine view's detail panel lists the
-# assumptions its requirements rely on, each once, with its validity, its
-# evidence level and the requirements citing it; a need answered only by
-# coincident requirements says so, an unclassified requirement shows as the
-# gap, and a falsified or unevidenced premise is marked in words as well as in
-# color.
+# assumptions its requirements rely on, each once, with its status, its
+# validity, its falsifier, the cases that can falsify it and the requirements
+# citing it; a need answered only by coincident requirements says so, an
+# unclassified requirement shows as the gap, and a falsified premise is marked
+# in words as well as in color. No evidence level is shown: an assumption
+# carries none (owner ruling 2026-10-02).
 
 _GOLDEN_PAGE = ROOT / "tests" / "golden" / "dashboard-no-assumptions.html"
 
@@ -1603,16 +1604,26 @@ status = "Approved"
 """
 
 
-def _view_da(did, standing, text):
+def _view_da(did, standing, text, falsifier=""):
     return (
         '[assumption.{}]\neffect_at = ["B-01"]\nassumption = "{}"\n'
         'holds_when = "always"\nobstacle = "never"\nstatus = "Approved"\n'
-        'standing = "{}"\n\n'.format(did, text, standing)
+        'standing = "{}"\n{}\n'.format(
+            did,
+            text,
+            standing,
+            'falsifier = "{}"\n'.format(falsifier) if falsifier else "",
+        )
     )
 
 
 _VIEW_DAS = (
-    _view_da("DA-001", "active", "The verdict reaches the owner intact.")
+    _view_da(
+        "DA-001",
+        "active",
+        "The verdict reaches the owner intact.",
+        "A verdict the owner read differently from the run.",
+    )
     + _view_da("DA-002", "falsified", "The owner reads every verdict.")
     + _view_da("DA-003", "active", "Reports are opened within a day.")
 )
@@ -1629,10 +1640,11 @@ _VIEW_RECORD = {
 
 def _view_repo(root):
     """`make_repo`'s work items and README over a TOML spine with three needs:
-    SN-001 relies on DA-001 (through two requirements, evidenced by a current
-    passing observation) and DA-002 (falsified); SN-002 is answered only by
-    coincident requirements; SN-003 has an unclassified requirement beside one
-    relying on DA-003, which nothing evidences."""
+    SN-001 relies on DA-001 (through two requirements, with a current passing
+    observation of TC-010 on record, which shows no level) and DA-002
+    (falsified); SN-002 is answered only by coincident requirements; SN-003
+    has an unclassified requirement beside one relying on DA-003, which no
+    case names."""
     make_repo(root)
     req = root / "docs" / "requirements"
     for stale in (
@@ -1686,8 +1698,11 @@ def test_need_assumptions_derives_each_need_s_premises_once(tmp_path):
     assert [a["id"] for a in first["assumptions"]] == ["DA-001", "DA-002"]
     da1, da2 = first["assumptions"]
     assert da1["citing"] == ["SR-001", "SR-002"]
-    assert (da1["standing"], da1["level"]) == ("active", "monitored")
-    assert (da2["standing"], da2["level"]) == ("falsified", "assumed")
+    assert (da1["status"], da1["standing"]) == ("Approved", "active")
+    assert da1["falsifier"] == "A verdict the owner read differently from the run."
+    assert da1["cases"] == ["TC-010"]
+    assert (da2["standing"], da2["falsifier"], da2["cases"]) == ("falsified", "", [])
+    assert "level" not in da1 and "level" not in da2
     assert view["SN-002"]["coincident"] and not view["SN-002"]["assumptions"]
     third = view["SN-003"]
     assert third["unclassified"] == ["SR-005"]
@@ -1695,16 +1710,26 @@ def test_need_assumptions_derives_each_need_s_premises_once(tmp_path):
     assert [a["id"] for a in third["assumptions"]] == ["DA-003"]
 
 
-def test_each_need_s_detail_lists_its_assumptions_with_their_evidence(tmp_path):
+def test_each_need_s_detail_lists_its_assumptions_with_their_standing(tmp_path):
     root = _view_repo(tmp_path)
     proc = gen(root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     details = _need_details(html_of(root))
     first = _unstyled_text(details["SN-001"]["assumptions"])
-    # Every assumption the need's requirements cite, once, with its standing,
-    # its evidence level and the requirements citing it.
+    # Every assumption the need's requirements cite, once, with its status,
+    # its standing, its falsifier, the cases that can falsify it and the
+    # requirements citing it.
     assert first.count("DA-001") == 1 and first.count("DA-002") == 1
-    for needle in ("active", "monitored", "SR-001", "SR-002", "falsified"):
+    for needle in (
+        "status: Approved",
+        "active",
+        "A verdict the owner read differently from the run.",
+        "can be falsified by: TC-010",
+        "SR-001",
+        "SR-002",
+        "falsified",
+        "falsifier: (none declared)",
+    ):
         assert needle in first, needle
     # A falsified premise is labelled in words, not only by color.
     assert "FALSIFIED" in first
@@ -1713,10 +1738,11 @@ def test_each_need_s_detail_lists_its_assumptions_with_their_evidence(tmp_path):
     third = _unstyled_text(details["SN-003"]["assumptions"])
     assert "SR-005" in third and "unclassified" in third
     assert "SR-007" in third and "jointly with SR-006" in third
-    # One relied on with no current evidence is labelled in words too.
-    assert "DA-003" in third and "NO CURRENT EVIDENCE" in third
-    # A need whose premises are all evidenced carries no such label.
-    assert "NO CURRENT EVIDENCE" not in first.split("DA-002")[0]
+    # No premise is labelled for lacking evidence, and no level is shown.
+    assert "DA-003" in third and "can be falsified by: no test case" in third
+    for text in (first, third):
+        for absent in ("EVIDENCE", "evidence", "monitored", "specified", "assumed"):
+            assert absent not in text, (absent, text)
 
 
 def test_with_no_assumptions_registry_the_page_is_byte_identical_to_the_golden(

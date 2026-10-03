@@ -1,5 +1,5 @@
 """The assumption tier's rules, called on in-memory rows (TC-219, TC-220,
-TC-221, TC-224, TC-228, TC-232, TC-233).
+TC-221, TC-224, TC-228, TC-233, and the pure rules behind TC-235 and TC-238).
 
 `assumption_rules.py` is a pure join module beside `frame_rules.py`: it reads
 no file, so every rule here is driven with plain row dicts in the carrier's
@@ -11,9 +11,9 @@ A domain assumption is a claim about the world a requirement's argument relies
 on (SR-191), a surrogate is a stand-in for an outside party in tests (SR-192),
 each requirement cites its assumptions or records why it needs none (SR-193)
 and declares its form (SR-194), and an assumption nothing cites or nothing
-could falsify is reported (SR-196). An assumption's evidence level is derived
-from current results alone (SR-200), and one shown false is listed with
-everything relying on it (SR-201).
+could falsify is reported (SR-196). An assumption carries no evidence level
+(owner ruling 2026-10-02): one shown false is listed with everything relying on
+it (SR-201), and the release gate reads its standing (SR-206).
 
 The tier's two reach rules ride here too, on the same in-memory rows: an
 assumption lands where each stakeholder it serves is, directly or through a
@@ -1180,22 +1180,20 @@ def test_the_example_row_is_never_judged_for_its_perspectives(rules):
     assert rules.obstacle_hat_findings([example], set()) == []
 
 
-# --- TC-232: the evidence level, derived from current results (SR-200, LLR-237)
-# Whether an assumption is evidenced is a property of RESULTS: approval blesses
-# a row's text and says nothing about whether it holds. An automated case's
-# result is the harness's whole-suite evidence record, which names no case and
-# so proves a case only under the cumulative tier contract; an observation
-# case's result is its latest record, current while unexpired and while what it
-# judged is unchanged.
+# --- no evidence ladder (owner ruling 2026-10-02, WI-771) ----------------------
+# An assumption carries its status, its standing and its falsifier, and nothing
+# else about whether it holds: a passed observation proves nothing beyond its
+# sample, so no result raises an assumption to a level and no rule asks for
+# current evidence. The one evidence-shaped signal is falsification, a failing
+# observation, which the worklist below reports (TC-233); recording the
+# assumption false stays a person's act on its `Standing`.
 
 NOW = datetime.datetime(2026, 9, 15, 12, 0, 0, tzinfo=datetime.timezone.utc)
 DIGEST = "sha256:" + "11" * 32
-OTHER_DIGEST = "sha256:" + "22" * 32
 
 
 def _record(tid="TC-001", **cells):
-    """A passing record observed before NOW and expiring after it, judging the
-    digest the case's inputs have now."""
+    """A passing record observed before NOW and expiring after it."""
     rec = {
         "tc": tid,
         "outcome": "pass",
@@ -1209,207 +1207,122 @@ def _record(tid="TC-001", **cells):
     return rec
 
 
-def _auto(tid="TC-001", tier="Smoke", **cells):
-    """An automated case evidencing DA-001."""
-    row = {
-        "TC-ID": tid,
-        "Assumption-Refs": "DA-001",
-        "Automated": "Yes",
-        "Tier": tier,
-    }
-    row.update(cells)
-    return row
+@pytest.mark.parametrize(
+    "name",
+    [
+        "EVIDENCE_LEVELS",
+        "LEVEL_ASSUMED",
+        "LEVEL_SPECIFIED",
+        "LEVEL_MONITORED",
+        "LEVEL_SAMPLED",
+        "RISK_EVIDENCED",
+        "evidence_level",
+        "evidence_level_advisories",
+        "result_current",
+        "tier_covers",
+    ],
+)
+def test_no_evidence_level_is_declared_or_computed(rules, name):
+    assert not hasattr(rules, name), name
 
 
-def _suite(tier="full", outcome="pass", bound=True):
-    return {"outcome": outcome, "tier": tier, "bound": bound}
-
-
-def _level(rules, tcs, records=(), suite=None, digests=None, da=None, now=NOW):
-    return rules.evidence_level(
-        da or _da(),
+def _observed(rules, das, tcs, records=()):
+    return rules.observation_evidence_findings(
+        [_sr("SR-001", **{"DA-Refs": "DA-001"})],
+        das,
         tcs,
-        list(records),
-        suite,
-        {"TC-001": DIGEST} if digests is None else digests,
-        now=now,
+        [],
+        BIFS,
+        records=list(records),
+        raw_files={},
+        views={},
     )
 
 
-def test_the_four_levels_are_declared_in_order(rules):
-    assert rules.EVIDENCE_LEVELS == (
-        rules.LEVEL_ASSUMED,
-        rules.LEVEL_SPECIFIED,
-        rules.LEVEL_MONITORED,
-        rules.LEVEL_SAMPLED,
+def test_an_approved_active_assumption_with_no_result_is_not_reported(rules):
+    """Neither no citing case nor a citing case with no result is a finding: an
+    assumption is never asked for evidence that would show it holds."""
+    das = [_da(Status="Approved")]
+    assert _observed(rules, das, []) == ([], [])
+    assert _observed(rules, das, [_sampled()]) == ([], [])
+    assert _observed(rules, das, [_sampled()], [_record()]) == ([], [])
+
+
+def test_a_failing_record_is_the_one_signal_reported(rules):
+    _integrity, advisories = _observed(
+        rules, [_da(Status="Approved")], [_sampled()], [_record(outcome="fail")]
     )
-    assert rules.EVIDENCE_LEVELS == ("assumed", "specified", "monitored", "sampled")
+    assert len(advisories) == 1 and "DA-001" in advisories[0], advisories
+    assert "evidence level" not in advisories[0]
 
 
-def test_no_citing_case_gives_assumed(rules):
-    other = _sampled("TC-002", **{"Assumption-Refs": "DA-002"})
-    assert _level(rules, [other], [_record("TC-002")]) == rules.LEVEL_ASSUMED
+# --- TC-238's rule: the release half reads standing (SR-206, LLR-243) ----------
+# Pure, over in-memory rows; the step that runs it is driven on a scaffold in
+# tests/test_assumption_gate.py.
 
-
-def test_a_citing_case_with_no_result_gives_specified(rules):
-    assert _level(rules, [_sampled()]) == rules.LEVEL_SPECIFIED
-    assert _level(rules, [_auto()], suite=None) == rules.LEVEL_SPECIFIED
-
-
-# The cumulative tier contract (D23), table-first: (record tier, case tier,
-# whether the record proves the case).
-TIER_TABLE = [
-    ("full", "Smoke", True),
-    ("full", "Full", True),
-    ("full", "Release", False),
-    ("full", "", True),  # a blank case tier is Full, the kit's default row tier
-    ("release", "Smoke", True),
-    ("release", "Full", True),
-    ("release", "Release", True),
-    ("all", "Smoke", True),
-    ("all", "Full", True),
-    ("all", "Release", True),
-    ("smoke", "Smoke", False),  # a partial tier is not a whole-suite claim
-    ("smoke", "Full", False),
-    ("", "Smoke", False),
-    ("nightly", "Smoke", False),
+GATE_SRS = [
+    _sr("SR-001", **{"DA-Refs": "DA-001"}),
+    _sr("SR-002", **{"DA-Refs": "DA-002"}),
 ]
 
 
-@pytest.mark.parametrize("record_tier, case_tier, covers", TIER_TABLE)
-def test_tier_covers_follows_the_cumulative_tier_contract(
-    rules, record_tier, case_tier, covers
-):
-    assert rules.tier_covers(record_tier, case_tier) is covers
+def _released(rules, das, risks=None):
+    return rules.release_gate_findings(das, GATE_SRS, risks or {})
 
 
-def test_the_tier_ranks_agree_with_the_performance_gate(rules):
-    """One cumulative contract: the ranks this module reads are the ones the
-    performance gate already declares, so the two cannot drift apart."""
-    perf = load_script("check_perf")
-    assert rules.TIER_RANK == perf.TIER_ORDER
-    assert rules.DEFAULT_CASE_TIER == perf.DEFAULT_ROW_TIER
+def test_an_active_assumption_passes_release_whatever_its_results(rules):
+    assert _released(rules, [_da(Status="Approved")]) == []
 
 
-@pytest.mark.parametrize("record_tier, case_tier, covers", TIER_TABLE)
-def test_an_automated_case_reads_the_tree_bound_record_under_that_contract(
-    rules, record_tier, case_tier, covers
-):
-    level = _level(rules, [_auto(tier=case_tier)], suite=_suite(tier=record_tier))
-    assert level == (rules.LEVEL_MONITORED if covers else rules.LEVEL_SPECIFIED)
+def test_a_falsified_assumption_with_no_accepted_risk_fails_release(rules):
+    lines = _released(rules, [_da(Status="Approved", Standing="falsified")])
+    assert len(lines) == 1, lines
+    assert "DA-001" in lines[0] and "SR-001" in lines[0] and "falsified" in lines[0]
+    assert "no accepted risk" in lines[0]
 
 
-def test_a_failing_suite_record_gives_specified(rules):
-    level = _level(rules, [_auto()], suite=_suite(outcome="fail"))
-    assert level == rules.LEVEL_SPECIFIED
+def test_a_falsified_assumption_under_a_standing_accepted_risk_passes(rules):
+    da = _da(Status="Approved", Standing="falsified", AcceptedRisk="Ship it.")
+    assert _released(rules, [da], {"DA-001": (rules.RISK_COVERED, [])}) == []
 
 
-def test_a_passing_suite_record_bound_to_another_tree_gives_specified(rules):
-    level = _level(rules, [_auto()], suite=_suite(bound=False))
-    assert level == rules.LEVEL_SPECIFIED
+def test_a_falsified_assumption_under_a_reopened_risk_fails_naming_the_trigger(rules):
+    da = _da(Status="Approved", Standing="falsified", AcceptedRisk="Ship it.")
+    risks = {"DA-001": (rules.RISK_UNPROVEN, ["need SN-001's need changed"])}
+    lines = _released(rules, [da], risks)
+    assert len(lines) == 1 and "reopened" in lines[0], lines
+    assert "SN-001's need changed" in lines[0]
 
 
-def test_a_current_passing_sampled_observation_gives_sampled(rules):
-    assert _level(rules, [_sampled()], [_record()]) == rules.LEVEL_SAMPLED
+def test_an_uncited_falsified_assumption_is_not_judged_at_release(rules):
+    assert _released(rules, [_da("DA-009", Standing="falsified")]) == []
 
 
-def test_a_current_passing_monitored_observation_gives_monitored(rules):
-    case = _sampled(Sampling="monitored")
-    assert _level(rules, [case], [_record()]) == rules.LEVEL_MONITORED
+def test_an_accepted_risk_reads_covered_or_unproven_and_never_evidenced(rules):
+    """The risk's reading takes no level: with no act found it reads unproven,
+    and nothing a result says can make it moot."""
+    da = _da(AcceptedRisk="Ship it.")
+    state, reasons = rules.accepted_risk_state(da, None, [], [_sampled()], [_record()])
+    assert state == rules.RISK_UNPROVEN and reasons, (state, reasons)
+    assert rules.accepted_risk_state(_da(), None, []) == (None, [])
 
 
-def test_monitored_evidence_outranks_a_sampled_result(rules):
-    cases = [_sampled("TC-001"), _auto("TC-002")]
-    level = _level(rules, cases, [_record()], suite=_suite())
-    assert level == rules.LEVEL_MONITORED
+# --- TC-235's chain: what the brief shows for an assumption (SR-203) -----------
 
 
-def test_only_the_latest_record_counts(rules):
-    older_pass = _record(observed_at="2026-09-01T00:00:00Z")
-    newer_fail = _record(outcome="fail", observed_at="2026-09-02T00:00:00Z")
-    assert _level(rules, [_sampled()], [older_pass, newer_fail]) == (
-        rules.LEVEL_SPECIFIED
-    )
-
-
-def test_an_expired_record_gives_specified_and_never_touches_the_standing(rules):
-    da = _da(Status="Approved")
-    before = copy.deepcopy(da)
-    expired = _record(expires="2026-09-10T00:00:00Z")
-    assert _level(rules, [_sampled()], [expired], da=da) == rules.LEVEL_SPECIFIED
-    assert da == before
-    assert da["Standing"] == "active"
-
-
-def test_a_changed_judged_state_gives_specified_and_never_touches_the_standing(
-    rules,
-):
-    da = _da(Status="Approved")
-    before = copy.deepcopy(da)
-    level = _level(
-        rules, [_sampled()], [_record()], digests={"TC-001": OTHER_DIGEST}, da=da
-    )
-    assert level == rules.LEVEL_SPECIFIED
-    assert da == before
-
-
-def test_a_case_declaring_no_inputs_is_judged_by_expiry_alone(rules):
-    case = _sampled(Inputs=None)
-    stale_digest = _record(judged="")
-    assert (
-        _level(rules, [case], [stale_digest], digests={"TC-001": OTHER_DIGEST})
-        == rules.LEVEL_SAMPLED
-    )
-    expired = _record(judged="", expires="2026-09-10T00:00:00Z")
-    assert _level(rules, [case], [expired], digests={}) == rules.LEVEL_SPECIFIED
-
-
-def test_result_current_is_the_one_freshness_rule(rules):
-    case = _sampled()
-    assert rules.result_current(case, [_record()], None, {"TC-001": DIGEST}, now=NOW)
-    later = NOW + datetime.timedelta(days=30)
-    assert not rules.result_current(
-        case, [_record()], None, {"TC-001": DIGEST}, now=later
-    )
-    assert not rules.result_current(
-        case, [_record()], None, {"TC-001": OTHER_DIGEST}, now=NOW
-    )
-
-
-def test_no_cell_sets_the_level(rules):
-    """A cell claiming a level, or a standing, changes nothing: the level is
-    read from results alone."""
-    da = _da(Status="Approved", Evidence="monitored", Level="sampled")
-    assert _level(rules, [_sampled()], da=da) == rules.LEVEL_SPECIFIED
-    assert _level(rules, [], da=da) == rules.LEVEL_ASSUMED
-
-
-def _advisories(rules, das, tcs, records=()):
-    return rules.evidence_level_advisories(
-        das, tcs, list(records), None, {"TC-001": DIGEST}, now=NOW
-    )
-
-
-def test_an_approved_active_assumption_reading_assumed_is_one_advisory(rules):
-    lines = _advisories(rules, [_da(Status="Approved")], [])
-    assert len(lines) == 1 and "DA-001" in lines[0] and "assumed" in lines[0], lines
-
-
-def test_an_approved_active_assumption_reading_specified_is_one_advisory(rules):
-    lines = _advisories(rules, [_da(Status="Approved")], [_sampled()])
-    assert len(lines) == 1 and "DA-001" in lines[0], lines
-    assert "specified" in lines[0]
-
-
-def test_a_drafted_assumption_is_not_reported(rules):
-    assert _advisories(rules, [_da(Status="Drafted")], []) == []
-
-
-def test_an_evidenced_or_falsified_assumption_is_not_reported(rules):
-    evidenced = _advisories(rules, [_da(Status="Approved")], [_sampled()], [_record()])
-    assert evidenced == []
-    falsified = _da(Status="Approved", Standing="falsified")
-    assert _advisories(rules, [falsified], []) == []
+def test_the_chain_names_the_cases_that_can_falsify_it_and_no_level(rules):
+    reg = {
+        "srs": [_sr("SR-001", **{"DA-Refs": "DA-001"})],
+        "das": [_da()],
+        "tcs": [
+            _sampled("TC-001"),
+            _sampled("TC-009", **{"Assumption-Refs": "DA-009"}),
+        ],
+    }
+    chain = rules.assumption_chain("DA-001", reg)
+    assert chain["cases"] == ["TC-001"]
+    assert chain["falsifier"] == _da()["Falsifier"]
+    assert "level" not in chain
 
 
 # --- TC-233: the falsification worklist (SR-201, LLR-238) ---------------------
@@ -1445,6 +1358,9 @@ def test_a_falsified_assumption_lists_each_relying_row_exactly_once(rules):
         assert re.findall(r"\b{}\b".format(rid), line) == [rid], (rid, line)
     for absent in ("SR-003", "SN-009", "TC-009"):
         assert absent not in line
+    # The cases are named for what they can do, never as evidence it holds.
+    assert "can be falsified by TC-001, TC-002" in line, line
+    assert "evidenced by" not in line
 
 
 def test_a_failing_latest_record_is_falsification_evidence_and_leaves_the_standing(

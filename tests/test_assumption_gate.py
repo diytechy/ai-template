@@ -6,9 +6,10 @@ each requirement is gated at the rung where it can first be judged honestly:
 at DevStg-Boundary its maturity (`assumption-gate`, SR-205) and each
 interface-form requirement's crossings (`crossing-allocation`, SR-212's
 Boundary arm), at DevStg-Arch the boundary interfaces reaching it
-(`interface-allocation`, SR-212's Arch arm), and at DevStg-Release the
-evidence (`assumption-evidence`, SR-206). With the setting absent or off the
-same findings print as advisories and every step passes. The derived stage
+(`interface-allocation`, SR-212's Arch arm), and at DevStg-Release each
+relied-on assumption's standing (`assumption-evidence`, SR-206). With the
+setting absent or off the same findings print as advisories and every step
+passes. The derived stage
 never reads any of it.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES`: every case runs the
@@ -518,35 +519,31 @@ def test_the_arms_list_at_their_rungs_and_the_stage_fold_takes_no_interface(
 
 
 # --- TC-238: the release half (SR-206) -----------------------------------------
-# Each assumption is cited by one requirement and evidenced (or not) as its
-# case says: DA-001 by a current passing monitored observation; DA-002 by a
-# sampled one whose case declares a sampling model; DA-003, DA-004 and DA-005
-# by sampled ones whose case declares none, a size of 0, and a size without a
-# rule. DA-006 carries an accepted risk that still stands; DA-007 one reopened
-# by an edit to its text after the act that accepted it; DA-008 one that still
-# stands beside a sampled result with no sampling model, which the risk covers.
+# An assumption carries no evidence level (owner ruling 2026-10-02), so release
+# asks no assumption for a passing result: it reads standing. Each assumption is
+# cited by one requirement. DA-001 is active with no result at all, and DA-002
+# active beside a failing observation that no person has acted on: both pass,
+# since only a person or an adjudication sets standing. DA-003 is falsified with
+# no accepted risk; DA-004 falsified under a risk accepted in the act that
+# still stands; DA-005 falsified under a risk reopened by an edit to its text
+# after that act; DA-006 falsified under a risk reopened by a failing sample
+# recorded after it.
 
 RELEASE_DAS = (
     _assumption("DA-001")
     + _assumption("DA-002")
-    + _assumption("DA-003")
-    + _assumption("DA-004")
-    + _assumption("DA-005")
-    + _assumption("DA-006", accepted_risk="No operators to sample yet.")
-    + _assumption("DA-007", accepted_risk="No operators to sample yet.")
-    + _assumption("DA-008", accepted_risk="No operators to sample yet.")
+    + _assumption("DA-003", standing="falsified")
+    + _assumption("DA-004", standing="falsified", accepted_risk="Ship it anyway.")
+    + _assumption("DA-005", standing="falsified", accepted_risk="Ship it anyway.")
+    + _assumption("DA-006", standing="falsified", accepted_risk="Ship it anyway.")
 )
 
 RELEASE_SRS = "".join(
-    _requirement("SR-00{}".format(i), da=["DA-00{}".format(i)]) for i in range(1, 9)
+    _requirement("SR-00{}".format(i), da=["DA-00{}".format(i)]) for i in range(1, 7)
 )
 
 
-def _case(tid, did, sampling, **model):
-    extra = "".join(
-        "{} = {}\n".format(k, v if isinstance(v, int) else '"{}"'.format(v))
-        for k, v in model.items()
-    )
+def _case(tid, did, sampling):
     return (
         "\n[test.{}]\n"
         'assumption_refs = ["{}"]\n'
@@ -560,17 +557,11 @@ def _case(tid, did, sampling, **model):
         'inputs = ["docs/notes.md"]\n'
         "max_age = 30\n"
         'sampling = "{}"\n'
-        "{}"
-    ).format(tid, did, sampling, extra)
+    ).format(tid, did, sampling)
 
 
-RELEASE_TCS = (
-    _case("TC-001", "DA-001", "monitored")
-    + _case("TC-002", "DA-002", "sampled", sample_size=5, acceptance_rule="4 of 5")
-    + _case("TC-003", "DA-003", "sampled")
-    + _case("TC-004", "DA-004", "sampled", sample_size=0, acceptance_rule="all")
-    + _case("TC-005", "DA-005", "sampled", sample_size=5)
-    + _case("TC-008", "DA-008", "sampled")
+RELEASE_TCS = _case("TC-002", "DA-002", "sampled") + _case(
+    "TC-006", "DA-006", "sampled"
 )
 
 RELEASE = {
@@ -583,10 +574,9 @@ RELEASE = {
 }
 
 RELEASE_FAILURES = {
-    "DA-003": ("sampling model",),
-    "DA-004": ("sampling model",),
-    "DA-005": ("sampling model",),
-    "DA-007": ("reopened",),
+    "DA-003": ("falsified", "no accepted risk"),
+    "DA-005": ("falsified", "reopened"),
+    "DA-006": ("falsified", "reopened", "failed after the act"),
 }
 
 
@@ -624,7 +614,8 @@ def _observe(root, tid, outcome="pass"):
 
 def _release_repo(scaffold, gate):
     """The release project in a git repository: the assumptions approved, with
-    their accepted risks, in one act; then DA-007's text edited after it."""
+    their accepted risks, in one act; then DA-005's text edited after it, and
+    failing samples recorded against DA-002 and DA-006."""
     root = _project(scaffold, RELEASE, gate=gate)
     _git(root, "init", "-q")
     pin_autocrlf(root)
@@ -638,7 +629,7 @@ def _release_repo(scaffold, gate):
     _git(root, "commit", "-qm", "approve the assumptions and their accepted risks")
     da = root / DA_REL
     text = da.read_text(encoding="utf-8")
-    marker = "[assumption.DA-007]\n"
+    marker = "[assumption.DA-005]\n"
     head, tail = text.split(marker)
     da.write_text(
         head
@@ -651,19 +642,21 @@ def _release_repo(scaffold, gate):
         encoding="utf-8",
         newline="\n",
     )
-    for tid in ("TC-001", "TC-002", "TC-003", "TC-004", "TC-005", "TC-008"):
-        _observe(root, tid)
+    for tid in ("TC-002", "TC-006"):
+        _observe(root, tid, outcome="fail")
     return root
 
 
-def test_the_release_step_fails_each_assumption_without_evidence_or_risk(scaffold):
+def test_the_release_step_fails_each_falsified_assumption_no_standing_risk_covers(
+    scaffold,
+):
     root = _release_repo(scaffold, gate=True)
     proc = _step(root, "assumption-evidence")
     assert proc.returncode == 1, proc.stdout + proc.stderr
     lines = _findings(proc, "FAIL")
     for did, needles in RELEASE_FAILURES.items():
         assert len(_findings(proc, "FAIL", did, *needles)) == 1, (did, proc.stdout)
-    for did in ("DA-001", "DA-002", "DA-006", "DA-008"):
+    for did in ("DA-001", "DA-002", "DA-004"):
         assert not [line for line in lines if "assumption {},".format(did) in line], (
             did,
             lines,
@@ -695,23 +688,20 @@ def test_the_release_step_lists_at_the_release_rung_and_the_producer_pin_holds(
 
 
 def test_the_release_step_judges_a_project_that_declares_no_frame(scaffold):
-    """SR-206 has no frame exemption: with no crossing declared, a relied-on
-    assumption with no current evidence and no accepted risk still fails, and
-    one with a current passing monitored result still passes, its case's
-    inputs digested as they would be with a frame."""
+    """SR-206 has no frame exemption: with no crossing declared, a falsified
+    relied-on assumption with no accepted risk still fails, and an active one
+    with no result at all still passes."""
     files = {
         NEEDS_REL: NEEDS,
         SR_REL: _requirement("SR-001", da=["DA-001"])
         + _requirement("SR-002", da=["DA-002"]),
-        DA_REL: _assumption("DA-001") + _assumption("DA-002"),
-        TC_REL: _case("TC-001", "DA-001", "monitored"),
+        DA_REL: _assumption("DA-001") + _assumption("DA-002", standing="falsified"),
         "docs/notes.md": "What the operator is shown.\n",
     }
     root = _project(scaffold, files, gate=True, drop=[FRAME_REL])
-    _observe(root, "TC-001")
     proc = _step(root, "assumption-evidence")
     assert proc.returncode == 1, proc.stdout + proc.stderr
     lines = _findings(proc, "FAIL")
-    assert len(_findings(proc, "FAIL", "DA-002", "no current passing")) == 1, lines
+    assert len(_findings(proc, "FAIL", "DA-002", "falsified")) == 1, lines
     assert not [line for line in lines if "assumption DA-001," in line], lines
     assert len(lines) == 1, lines

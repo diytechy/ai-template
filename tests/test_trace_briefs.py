@@ -1235,7 +1235,7 @@ def test_a_released_rungs_re_attestation_renders_its_diff_in_the_collapsed_block
 # --- TC-235: the assumption section of the approval brief (SR-203, LLR-240) ---
 # An assumption is approved for what it lets the requirements claim, so its
 # section leads with the requirements citing it and the needs they reach, then
-# where its outcome lands, its evidence and what would show it false. The tree
+# where its outcome lands, the cases that can falsify it and its falsifier. The tree
 # below carries no snapshot and no git, so the brief is deterministic.
 
 _GOLDEN_BRIEF = ROOT / "tests" / "golden" / "approval-brief-no-assumptions.txt"
@@ -1407,8 +1407,8 @@ def test_an_assumption_leads_with_its_citing_requirements_and_needs(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     body = _section(_current(tmp_path), "### DA-001")
     # Citing requirements with their text first, then the needs derived
-    # through them, the landing crossing with its party, the evidencing case
-    # with the current evidence level, and the falsifier.
+    # through them, the landing crossing with its party, the cases that can
+    # falsify it, and the falsifier.
     _in_order(
         body,
         "SR-001",
@@ -1418,8 +1418,7 @@ def test_an_assumption_leads_with_its_citing_requirements_and_needs(tmp_path):
         "B-01",
         "EXT-001",
         "Operator",
-        "TC-001",
-        "specified",
+        "**Can be falsified by.** TC-001",
         "A run whose verdict nobody acknowledged.",
     )
     # Its own cells are shown.
@@ -1455,17 +1454,18 @@ def test_every_cell_of_an_owing_row_appears_in_its_section(tmp_path):
     assert "OPERATOR-HAT" in _section(text, "### DA-001")
 
 
-def test_the_evidence_line_says_it_is_computed_at_render_time(tmp_path):
-    """The evidence level reads the current results and the clock, so its line
-    says so, and the freshness comparison leaves it out, as it does the
-    git-derived stamps: an expiring sample must not stale a brief whose rows did
-    not move."""
+def test_no_assumption_shows_an_evidence_level(tmp_path):
+    """An assumption carries no evidence level (owner ruling 2026-10-02): its
+    section names the cases that can falsify it, never a level and never
+    "Evidenced by", and the freshness comparison sets no evidence line aside,
+    since none is rendered."""
     _assumption_tree(tmp_path)
     assert _brief(tmp_path).returncode == 0
-    line = next(ln for ln in _current(tmp_path).splitlines() if "Evidence level" in ln)
-    assert "computed at render time" in line
+    text = _current(tmp_path)
+    for absent in ("Evidence level", "Evidenced by", "level now"):
+        assert absent not in text, absent
     trace = load_script("trace")
-    assert line.startswith(trace._DERIVED_STAMP_PREFIXES)
+    assert not [p for p in trace._DERIVED_STAMP_PREFIXES if "vidence" in p]
 
 
 def test_a_fidelity_assumption_is_shown_beside_its_surrogate(tmp_path):

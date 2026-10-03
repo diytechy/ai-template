@@ -2,13 +2,43 @@
 id = "WI-771"
 title = "Drop the assumption evidence ladder: an assumption carries status, standing and a falsifier only"
 workstream = "process"
-specref = "project-trajectory/scripts/assumption_rules.py"
+specref = ""
 sr_refs = ["SR-200"]
 needs = ["WI-770", "WI-775", "WI-776"]
 buildtier = "strong"
 safety_class = "spine"
 priority = 3
 +++
+
+## Deliverable
+
+The evidence ladder is gone. An assumption carries status, standing and a
+falsifier only (the owner's signed 2026-10-02 ruling, items 1 and 4).
+
+- **Code.**
+  - The ladder and everything computing it are deleted.
+  - Briefs and the per-need view show status, standing, falsifier and "Can be
+    falsified by".
+  - The release gate reads standing: a falsified relied-on assumption blocks
+    unless an unreopened accepted risk covers it. The reopen triggers are
+    unchanged.
+  - The step keeps its `assumption-evidence` name, to avoid a contract change.
+  - `assumption_refs` and the sampling declarations stay as the falsification
+    pointer.
+- **Rows retired:** SR-200, LLR-237 and TC-232, with successors SR-201, LLR-238
+  and TC-233. Their records are in `docs/log.d/retired/`.
+- **Rows amended:**
+  - SR-198, SR-199, SR-202, SR-203, SR-206 and SR-218;
+  - LLR-240, LLR-243 and LLR-258;
+  - TC-235, TC-238 (now also verifying IF-216) and TC-251;
+  - TC-234, under a coordinator grant extension.
+  - Fix round 1 moved SR-191, SR-192, SR-197, SR-198, SR-201, LLR-238, TC-227 and
+    TC-233 to falsification wording: a test case never "evidences" an assumption.
+- **Follow-up, not done:** LLR-231 and TC-227's `method` keep the "assumption
+  evidence" group name. It is tied to the `assumption_evidence_rows` symbol and a
+  rendered label, so renaming it is a contract change.
+- **Reviews:** Codex Luna (high) found it NOT YET SOUND at 94ccce56 (SR-198's
+  "evidences an assumption") and SOUND at ec3a99ac.
 
 ## Context
 

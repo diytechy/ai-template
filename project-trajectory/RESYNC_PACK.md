@@ -6698,6 +6698,37 @@ release checklist for the next sign-off. Adopters whose automated test cases
 carry `Assumption-Refs` will see those cases drop from the assumptions method
 list; their registry references remain intact.
 
+### No assumption evidence ladder: standing and falsification only [since 1273a994]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** An assumption carries `status`, `standing` and its
+`falsifier`, and no evidence level: the `assumed | specified | monitored |
+sampled` ladder is gone, along with the advisory for an approved, active
+assumption with no current passing result. A passed observation proves nothing
+beyond its sample; the one evidence-shaped signal is a failing observation, and
+a person or an adjudication records it by setting `standing = "falsified"`. The
+approval brief and the dashboard's per-need view show an assumption's cells,
+standing and falsifier with its cases under **Can be falsified by**, never
+`Evidenced by` or a level. With `[checks] assumption_gate` on, the
+`assumption-evidence` release step (name kept) asks for no result: it fails a
+relied-on assumption only when it is `falsified` and no accepted risk that
+still stands covers it. A passing result no longer makes an accepted risk moot;
+its reopen triggers are unchanged, and `standing` is among the cells it is
+bound to, so a risk accepted while an assumption was active reopens once it is
+recorded falsified.
+
+**What to do.** Re-sync `scripts/assumption_rules.py`,
+`scripts/check_assumption_gate.py`, `scripts/record_observation.py`,
+`scripts/trace.py`, `scripts/traj_parse.py`, `scripts/rendering/traj_views.py`
+and `scripts/kitlib/spine.py`; regenerate the approval brief (`trace.py --approve
+modified --out docs/ratify/CURRENT.md`) and `PROJECT_STATE.html`. No registry
+cell changes: `assumption_refs`, `sampling`, `sample_size` and
+`acceptance_rule` stay. Amend your own requirement and test-case rows that
+promise an evidence level or a current-evidence release gate. With the gate
+on, review each relied-on assumption whose `standing` reads `falsified`: amend
+it, or accept the risk again in a reviewed act while it stands falsified.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

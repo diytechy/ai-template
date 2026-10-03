@@ -326,3 +326,33 @@ self-approve nor mint. The cost is the return chain: WI-747's text has now taken
 five sittings. The coordinator offered an S11 plan in which a lane is adjudicated
 before landing and its returns become fix rounds inside the lane; the owner has
 not ruled.
+
+### WI-771 lands: the assumption evidence ladder is dropped
+
+A Claude Opus builder followed kit-builder.md's rules (dispatched as
+`general-purpose` with Opus).
+
+- **Red, then green:** red was 20 + 18 failed. Green was every affected module,
+  and smoke 1941 passed.
+- **Rows retired:** SR-200, LLR-237 and TC-232, each with a successor.
+- **Rows amended:** eleven, plus TC-234. TC-234 is approved and outside the
+  census; its updated test already pinned "a passing result restores nothing",
+  and the coordinator extended the grant to cover it.
+- **Disk:** C: hit 0 bytes mid-build. The builder re-ran its tests in batches, and
+  the owner then freed space.
+
+Codex Luna (high) reviewed it twice:
+
+- NOT YET SOUND at `94ccce56`: SR-198 still said an observation case "evidences
+  an assumption" ([r1](../reviews/2026-10-03-wave8/luna-wi771-r1.md)).
+- Fix round 1 then moved twelve cells across eight rows to falsification wording,
+  including TC-227, whose `expected` quoted SR-197's old acceptance.
+- SOUND at `ec3a99ac` ([r2](../reviews/2026-10-03-wave8/luna-wi771-r2.md)).
+
+The landing:
+
+- The lane predated WI-778 and batch Q. Git line-merged the registries without
+  conflict, and the table-wise merger gave identical parsed registries.
+- The RESYNC entry was re-anchored at `1273a994`.
+- LLR-231 and TC-227's `method` keep the "assumption evidence" group name, which
+  is tied to a code symbol: a follow-up topic, not filed.
