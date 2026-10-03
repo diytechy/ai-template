@@ -3,12 +3,21 @@ id = "WI-765"
 title = "re-judge TC-055: declared inputs changed [sha256:716c0a85af65] at merge 5c74722"
 workstream = "process"
 sr_refs = ["SR-054"]
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "rejudge"
 adjudicates = ["TC-055"]
 +++
+
+## Deliverable
+
+TC-055 re-judged cross-family at 51c48d6e, after WI-758: **RECORDED pass**, the
+first pass of this wave (after WI-713 and WI-754 recorded fail). Three independent
+Claude Opus 5.5 judges, one per width, on 270 native tiles: T2, T4, T5 and T8
+(crossing legibility; lane separation and box clearance now test-bound) pass at
+every width, with MINOR notes only. Verdict:
+`docs/reviews/wi-765-re-judge-tc-055-declared-inpu/001-REJUDGE-51c48d6e.md`.
 
 ## Context
 

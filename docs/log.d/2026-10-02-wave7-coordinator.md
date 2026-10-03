@@ -215,3 +215,11 @@ TC-055 is due again at this merge.
 An independent Opus adjudicator approved the lane-separation rows; Sonnet: SOUND.
 Noted: the rubric's T8 still names the Knowledge graph, which no lane test covers
 (this repo emits no Knowledge tab; an intake item if one appears).
+
+### WI-765: TC-055 RECORDED pass
+
+After WI-758, rendered at 51c48d6e, 270 native tiles, three independent Opus judges:
+APPROVE at every width (T2, T4, T5, T8's crossing legibility; minor notes only), the
+first pass this wave after WI-713 and WI-754 failed. The shrink floor (WI-722), the
+caption fit (WI-750) and the lane separation (WI-758) together closed it; two of
+T8's clauses are now tests rather than judgements.
