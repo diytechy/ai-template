@@ -515,10 +515,10 @@ class CodexAdapter(PlainAdapter):
         the thread, so it is never read as occupancy. The source field is the
         LAST rollout `token_count` event's `info.last_token_usage.input_tokens`
         (codex counts cached input inside input), read from the rollout file
-        for this thread under the launch's `CODEX_HOME`, with
-        `info.model_context_window` as the window. With no `CODEX_HOME` in the
-        launch environment the rollout is not looked up in an ambient home,
-        which could hold another route's thread: occupancy stays blank.
+        for exactly this thread id under the codex home `_codex_home` resolves
+        (the launch's `CODEX_HOME`, else codex's own default), with
+        `info.model_context_window` as the window. With no rollout for this
+        thread there, occupancy stays blank.
 
         Implements: SR-222, LLR-267
         """
@@ -526,9 +526,8 @@ class CodexAdapter(PlainAdapter):
         for event, _ in json_events(stream):
             if event.get("type") == "thread.started" and event.get("thread_id"):
                 sid = event["thread_id"]
-        home = (env or {}).get("CODEX_HOME")
         used, window = "", ""
-        for event, _ in json_events(_codex_rollout(home, sid)):
+        for event, _ in json_events(_codex_rollout(env, sid)):
             info = _dig(event, "payload", "info")
             if _dig(event, "payload", "type") != "token_count":
                 continue
@@ -544,12 +543,7 @@ class CodexAdapter(PlainAdapter):
 
         Implements: SR-227, LLR-290
         """
-        rollout = [
-            e
-            for e, _ in json_events(
-                _codex_rollout((env or {}).get("CODEX_HOME"), session_id)
-            )
-        ]
+        rollout = [e for e, _ in json_events(_codex_rollout(env, session_id))]
         prompts = [
             _dig(e, "payload", "info", "last_token_usage", "input_tokens")
             for e in rollout
@@ -567,14 +561,30 @@ class CodexAdapter(PlainAdapter):
         }
 
 
-def _codex_rollout(home, thread_id):
-    """The newest rollout file's text for exactly `thread_id` under `home`,
-    or "" — the id makes the lookup exact, so no other thread is read."""
-    if not home or not thread_id:
+def _codex_home(env):
+    """The codex home a launch under `env` writes its rollouts to: its
+    `CODEX_HOME` when set and non-empty, else codex's own default, `.codex`
+    in the user's home (codex documents "default `CODEX_HOME` is
+    `~/.codex`"). None when no user home can be determined."""
+    explicit = (env or {}).get("CODEX_HOME")
+    if explicit:
+        return Path(explicit)
+    try:
+        return Path.home() / ".codex"
+    except (RuntimeError, OSError):
+        return None
+
+
+def _codex_rollout(env, thread_id):
+    """The newest rollout file's text for exactly `thread_id` under the codex
+    home `env` resolves to, or "" — the id makes the lookup exact, so no other
+    thread is read."""
+    home = _codex_home(env)
+    if home is None or not thread_id:
         return ""
     try:
         pattern = "**/rollout-*-{}.jsonl".format(thread_id)
-        found = list((Path(home) / "sessions").glob(pattern))
+        found = list((home / "sessions").glob(pattern))
         if not found:
             return ""
         newest = max(found, key=lambda p: (p.stat().st_mtime_ns, str(p)))
