@@ -3,12 +3,20 @@ id = "WI-772"
 title = "adjudicate: LLR-254, LLR-255, SR-215, TC-247, TC-248 - approved/routed cell(s) amended on merged trunk 00467fc..1ffd8c5 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-215"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-254", "LLR-255", "SR-215", "TC-247", "TC-248", "TC-036", "TC-055", "TC-209", "TC-210", "TC-211"]
 +++
+
+## Deliverable
+
+Spine-acts batch O (act seq 22): `MEANING rows=10`, all re-attested: SR-215,
+LLR-254, LLR-255, TC-247, TC-248, and the carried TC-036, TC-055, TC-209, TC-210
+and TC-211. A dated addendum records two misses that the cross-review found and
+that ride WI-773's follow-up: TC-055's `expected` still stated the old cadence
+when re-attested, and SR-215's rationale overclaimed the floor's bound.
 
 ## Context
 

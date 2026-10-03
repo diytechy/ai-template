@@ -688,7 +688,7 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 9 chain(s): SR-033, SR-036, SR-054, SR-146, SR-184, SR-185, SR-186, SR-215, SR-224</summary>
+<summary>Waiting for automated adjudication — 4 chain(s): SR-033, SR-146, SR-215, SR-224</summary>
 
 ## SR-033 — Release checklist generation
 
@@ -697,23 +697,8 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
 > **Rationale.** Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did. The assumptions section realizes SN-043 at the same gate: a premise can only be shown false by someone looking for its falsifier, so the checklist puts each active approved assumption, and any with no falsifier, in front of the person signing, marked apart from the requirement checks.
 
 
-### SR SR-033
-_approved — re-attestation owed_
-- **AcceptanceCriteria**
-  - before: Running the generator emits the checklist content: the perf-budget section lists each warn-tier PB with its id and allocation.
-  - after: Running the generator emits the checklist content: the perf-budget section lists each warn-tier PB with its id and allocation; a separate assumptions section lists each active Approved assumption and any assumption with no falsifier once, with an ASSUMPTION DA-id marker, its falsifier or an explicit missing-falsifier notice, and the observation case ids naming it, if present. A falsified or Drafted assumption with a falsifier is omitted. An absent assumptions registry produces no section or error. Checking an assumption asserts only not falsified; the generator does not change standing, which a person sets.
-- **Rationale**
-  - before: Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did.
-  - after: Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did. The assumptions section realizes SN-043 at the same gate: a premise can only be shown false by someone looking for its falsifier, so the checklist puts each active approved assumption, and any with no falsifier, in front of the person signing, marked apart from the requirement checks.
-- **Requirement**
-  - before: The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate.
-  - after: The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate and differentiable assumption confirmations.
-_traced — routes to adjudication_
-- **SN-Refs**
-  - before: SN-004
-  - after: SN-004;SN-043
-
-### LLR LLR-296 — ADDED since the snapshot, Drafted — never approved
+### LLR LLR-296 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **LLR-ID**: LLR-296
 - **SR-Refs**: SR-033
 - **Title**: Assumption confirmations in the release checklist
@@ -726,7 +711,8 @@ _traced — routes to adjudication_
 - **Component**: CMP-009
 - **Phase**: 6
 
-### TC TC-310 — ADDED since the snapshot, Drafted — never approved
+### TC TC-310 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **TC-ID**: TC-310
 - **Verifies**: LLR-296;IF-018
 - **Level**: Unit
@@ -738,42 +724,6 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-## SR-036 — Deliberate re-sync integration
-
-> **Requirement.** A re-sync of an existing adoption shall integrate relevant kit updates without clobbering the adopter's filled-in files, per the documented re-sync procedure — take kit-owned scripts/hooks wholesale, regenerate generated docs, and preserve filled-in registries/config.
-
-> **Rationale.** Realizes SN-001 and SN-007 — picking up kit updates is a deliberate diff-and-merge, not a mechanical operation: bootstrap.py supplies the docs/kit-version stamp and --force (SR-011), while the operator makes the overwrite-vs-preserve call, aided by the downstream-resync skill.
-
-
-### TC TC-036
-- **MinWorkItems**
-  - before: (empty)
-  - after: 10
-- **Rubric**
-  - before: (empty)
-  - after: docs/rubrics/resync-inspection.md
-- **Trigger**
-  - before: (empty)
-  - after: files:project-trajectory/ADOPTING.md;project-trajectory/skills/downstream-resync/*
-
-## SR-054 — Dashboard usability (rubric-adjudicated)
-
-> **Requirement.** The state view the delivered generators produce shall support its core reading tasks with low friction: a first-time reviewer finds the project state, the next work, and how the parts connect, each within one tab switch; views default to a legible density (start-collapsed per the greater-than-3 rule) and reveal detail without losing context; labels stay readable at default zoom with no clipped or overlapping text.
-
-> **Rationale.** Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded judgement, re-judged when a declared input changes or the record expires rather than on every commit — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today.
-
-
-### TC TC-055
-- **MinWorkItems**
-  - before: (empty)
-  - after: 10
-- **Rubric**
-  - before: (empty)
-  - after: docs/rubrics/dashboard-usability.md
-- **Trigger**
-  - before: (empty)
-  - after: component:CMP-009
-
 ## SR-146 — Prompts are reviewable files with a per-session audit trail
 
 > **Requirement.** Every prompt the delivered loop launches shall be a shipped, reviewable file with strictly filled slots — listed by digest in a freshness-gated generated catalogue, each session recording which template it used and the fingerprint of what it rendered to.
@@ -781,32 +731,8 @@ _traced — routes to adjudication_
 > **Rationale.** Prose steers the sessions this loop launches and had been reviewable only by reading Python source, which makes the process trusted rather than inspectable. The audit trail is the part that makes the move useful rather than cosmetic: without a per-session digest, "which instruction did this session see" stays an inference. (The argv-vs-shell-string transport decision is design, and lives one tier down in LLR-163.) C-SEC-5 requires that content composed for dispatch to an external model runner carry a DECLARED inclusion rule rather than an implicit one — a prompt assembled inside source is an unreviewed egress path no write-side gate covers, and shipping it as a reviewable file with a digest is what makes that rule readable.
 
 
-### LLR LLR-295 — ADDED since the snapshot, Drafted — never approved
-- **LLR-ID**: LLR-295
-- **SR-Refs**: SR-146;SR-215
-- **Title**: Assumption-only observation cases in adjudicator briefs
-- **Module**: project-trajectory/scripts/adjudicate_brief.py
-- **CodeSymbol**: _assumption_case_chain/_render_assumption_cases/_rejudge_case_text
-- **Detail**: Cases with Assumption-Refs and no Verifies render through trace.assumption_brief_lines, showing the assumption id, statement, falsifier and standing. First approval applies the same Drafted, scope and authority intersection as SR chains, lists the case cells and derives the test registry approval token without authorizing the assumption. Re-judge validates Method, Expected and MaxAge and shows the observation instruction beneath its assumption chain. An unresolved assumption refuses composition.
-- **Rationale**: A case outside the requirement forest must remain visible to its judge, while showing its premise must not widen the approval act to that premise. Reusing the assumption approval renderer gives the two briefs the same chain.
-- **TestRefs**: TC-308;TC-309
-- **Status**: Drafted
-- **Component**: CMP-008
-- **Phase**: 6
-
-### TC TC-308 — ADDED since the snapshot, Drafted — never approved
-- **TC-ID**: TC-308
-- **Verifies**: LLR-295;IF-115
-- **Level**: Unit
-- **Method**: Compose a first-approval brief scoped to a Drafted assumption-only case; assert its assumption statement, falsifier and standing, case Method, approval label and test-registry token are shown, without an assumption-registry token.
-- **Tier**: Smoke
-- **Expected**: The scoped observation case is visible under its assumption chain and the act grants no approval of the assumption.
-- **Automated**: Yes
-- **Evidence**: tests/test_assumption_observation_briefs.py::test_first_approval_shows_assumption_only_case
-- **Status**: Drafted
-- **Phase**: 6
-
-### TC TC-309 — ADDED since the snapshot, Drafted — never approved
+### TC TC-309 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **TC-ID**: TC-309
 - **Verifies**: LLR-295;IF-115
 - **Level**: Unit
@@ -818,60 +744,6 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-## SR-184 — Critique acceptance records intent-derived rubric anchors
-
-> **Requirement.** Where a delivered capability requires Critique acceptance, the delivered acceptance record shall identify a fresh reviewer session that did not author the artifact, apply a written rubric derived from the applicable SN/SR intent, and record each verdict and finding against numbered rubric-anchor ids.
-
-> **Rationale.** Carries SN-024's omitted author-independence, rubric provenance and anchor obligation as one coherent Critique acceptance decision. It applies to attended and unattended Critique acceptance; SR-154 remains the home of the underlying brief, unattended scheduling, consent, family selection and family diversity, degradation and escalation, and SR-155 remains the contested-plan state machine. LLR-048 already assembles the rubric/intent/artifact brief and LLR-076 already refuses a missing dual-plan rubric; those mechanisms remain under SR-154 rather than being re-homed here. The acceptance record's process/provenance completeness is inspectable, while artifact adequacy remains the independent Critique judgment.
-
-
-### TC TC-209
-- **MinWorkItems**
-  - before: (empty)
-  - after: 10
-- **Rubric**
-  - before: (empty)
-  - after: docs/rubrics/critique-provenance.md
-- **Trigger**
-  - before: (empty)
-  - after: release
-
-## SR-185 — Coordinated requirement/interface change review
-
-> **Requirement.** When a reviewed change alters one side of a requirement/interface relationship, the change record shall identify the affected counterpart and carry the corresponding change or an explicit justification for retaining it.
-
-> **Rationale.** Carries the final clause of SN-037 as a separate semantic review obligation because SR-162 already owns the mechanical frame and interface resolution. A citation-only provenance check cannot establish that a changed signal or requirement still means the same thing at its counterpart; the record must expose the decision for an independent review.
-
-
-### TC TC-210
-- **MinWorkItems**
-  - before: (empty)
-  - after: 10
-- **Rubric**
-  - before: (empty)
-  - after: docs/rubrics/counterpart-review.md
-- **Trigger**
-  - before: (empty)
-  - after: release
-
-## SR-186 — Proportionate requirement decomposition
-
-> **Requirement.** The delivered requirements process shall require each additional child within a required tier to carry an independent decision or verification purpose, and record the stopping decision in the scoped decomposition record, while retaining the required SN-to-SR-to-LLR-to-TC tiers and linking real verification to the existing obligation.
-
-> **Rationale.** Carries SN-012's unowned granularity clause as a process requirement on what the delivered process requires and records. A child that only paraphrases a parent or duplicates another child's verification adds review and maintenance cost without an independent decision. The process records the stopping decision within the required spine; this row does not guarantee adopter behavior beyond that record, and it never permits omitting a required SN→SR→LLR→TC tier or replacing real verification with a count. It does not impose a row-count cap, deletion quota, or new machine gate. Existing process doctrine and the spine-authoring adjudicator questions are the source of the judgment, while mechanism-specific evidence remains with its current SR.
-
-
-### TC TC-211
-- **MinWorkItems**
-  - before: (empty)
-  - after: 10
-- **Rubric**
-  - before: (empty)
-  - after: docs/rubrics/decomposition-proportionality.md
-- **Trigger**
-  - before: (empty)
-  - after: release
-
 ## SR-215 — At a checkpoint, an unjudged, expired or triggered observation test is queued once for re-judging
 
 > **Requirement.** When a work item merges, a release is prepared or a stage gate is checked, the delivered harness shall file one re-judge work item per due observation case: one with no result, one whose result expired, or one whose declared trigger fires after its work-item floor; with no declared trigger, a change to its declared inputs makes it due, subject to that floor. It keeps at most one open item per case, and reports each observation case that cites no written pass criteria as a warning.
@@ -879,98 +751,8 @@ _traced — routes to adjudication_
 > **Rationale.** Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor is a cost limit the owner directed (the PERFORMANCE lens): it lets an accepted judgement outlive changes to what it judged for at most the configured number of closed work items, while first judgement and expiry keep missing or old evidence from standing indefinitely.
 
 
-### SR SR-215
-- **AcceptanceCriteria**
-  - before: At a work-item merge and at release preparation, each observation test case has its declared inputs hashed; one whose digest differs from its last result's judged digest, or whose last result has expired, or which has no result yet, gets exactly one open re-judge work item naming it and what changed; an unchanged, unexpired one gets none; a later checkpoint while that item is open adds none; the check runs no model; an observation test case declaring no inputs is judged by its expiry alone.
-  - after: A case with no result is due at once, and a case whose result expired is due at once; neither waits for the floor. Otherwise a declared trigger (matching changed files, a change to a module tagged with the named component, release preparation, or a stage-gate check) makes a case due only once the configured number of closed work items has passed since its latest record was committed; a case may raise that number but not lower it. With no trigger, a change to its declared inputs makes it due, subject to the same floor; with neither a trigger nor inputs, only absence and expiry make it due. Inputs and policy are read at the checkpoint revision. An open re-judge item suppresses a second, and the decision runs no model. An observation case that cites no written pass criteria is reported as a warning, never a failure, including under strict checking.
-- **Coincident**
-  - before: The needs ask for an observation's result re-judged when what it judged changes; one re-judge item filed per stale case is that outcome, and the judging itself is the re-judge item's own.
-  - after: The needs ask that an accepted observation not stand on a state it never judged, and that it be judged against written criteria. Filing one re-judge item for each case that is unjudged, expired or triggered past its floor, and warning on a case that cites no criteria, is that outcome within the cost bound the floor sets. The judging itself is the re-judge item's own.
-- **Rationale**
-  - before: A judgment made by inspection, critique or observation holds only for the state it looked at, and nothing re-fires it once that state moves. Hashing each test case's declared inputs at a merge or a release costs no model call, so the expensive part — the re-judgment — runs only when something it looked at changed or its result aged out, and one open item per test case keeps a busy week from filing the same judgment many times.
-  - after: Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor is a cost limit the owner directed (the PERFORMANCE lens): it lets an accepted judgement outlive changes to what it judged for at most the configured number of closed work items, while first judgement and expiry keep missing or old evidence from standing indefinitely.
-- **Requirement**
-  - before: When a work item merges or a release is prepared, the delivered harness shall file one re-judge work item for each observation test case whose declared inputs changed since its last result or whose last result expired, never filing a second while one is open.
-  - after: When a work item merges, a release is prepared or a stage gate is checked, the delivered harness shall file one re-judge work item per due observation case: one with no result, one whose result expired, or one whose declared trigger fires after its work-item floor; with no declared trigger, a change to its declared inputs makes it due, subject to that floor. It keeps at most one open item per case, and reports each observation case that cites no written pass criteria as a warning.
-- **Title**
-  - before: At a checkpoint, a changed or expired observation test is queued once for re-judging
-  - after: At a checkpoint, an unjudged, expired or triggered observation test is queued once for re-judging
-
-### LLR LLR-254
-_approved — re-attestation owed_
-- **Detail**
-  - before: A pure sibling of consolidate.py that intake imports. observation_test_cases(root, rev) reads the observation cases at a revision. checkpoint_drafts(root, rev, checkpoint) digests each case's declared inputs as read from git at that revision, not from the working tree, and drafts one re-judge work item for each case whose digest differs from its latest record's judged digest, whose latest record has expired, or which has no record. A case declaring no inputs is judged by expiry and absence alone. A committed link is not content: it is never written into the extracted tree and is excluded from the digest by the observation writer's own link predicate, so a declared link reads as absent, a link inside a declared directory contributes nothing, and a change to a link's target makes no case due. _open_rejudge(rows, tc) finds an open re-judge item for the case by its typed cells, never by title, because a title match would also find the closed items in the archive. A draft names the case and what changed, and its title carries the case id and the digest prefix. No model runs.
-  - after: A sibling of consolidate.py imported by intake. observation_test_cases(root, rev) reads observation cases at a revision. checkpoint_for(root, rev, tc) returns the case's Trigger when it names the release or stage-gate checkpoint, else merge. due_cases(root, rev, now, checkpoint) reads committed inputs and records and uses the cadence decision to apply the configured closed-WI floor and declared trigger. A case with no record is due at once, and an expired record is due at once; neither waits for the floor. Without a trigger, a changed input digest is due subject to the floor; without inputs, only absence and expiry make a case due. checkpoint_drafts drafts each due case once, suppressing an open item by its typed Brief and Adjudicates cells, never by title. A draft names the case, the reason, the rubric and the changed inputs or the fired trigger, and its title carries the case id and the inputs-digest prefix. Committed links are excluded by the observation writer's own link predicate. No model runs.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: observation_test_cases/checkpoint_drafts/_open_rejudge/due_cases/BRIEF/CHECKPOINTS
-  - after: observation_test_cases/checkpoint_for/checkpoint_drafts/_open_rejudge/due_cases/BRIEF/CHECKPOINTS
-
-### LLR LLR-255
-- **Detail**
-  - before: intake_after_merge adds rejudge.checkpoint_drafts(root, after, "merge") to its drafts inside the held merge slot, so the check runs once per merged work item. mint_rejudge(root, rev, checkpoint) files them through _mint, and `intake.py rejudge --checkpoint release` is the release-preparation entry. Release preparation is a person's act, so the release checklist, a view that may not import intake, carries a required item from _rejudge_checklist_line naming that command and the count of due observation cases, read through rejudge's pure decision. The minted row's brief and verdict entries are added where its kind requires them. Filing goes through the mint path's staging, which has to stage and restore only what it wrote before this runs in a checkout holding uncommitted edits.
-  - after: intake_after_merge adds rejudge.checkpoint_drafts(root, after, "merge") to its drafts inside the held merge slot, so the check runs once per merged work item. mint_rejudge(root, rev, checkpoint) files them through _mint; `intake.py rejudge --checkpoint release` is the release-preparation entry and `intake.py rejudge --checkpoint stage-gate` the stage-gate-preparation entry, and the command refuses a merge checkpoint, which only the merge slot runs. Release and stage-gate preparation are a person's acts, so each is prompted where that person works. The release checklist, a view that may not import intake, carries a required item from _rejudge_checklist_line naming the release command and the count of observation cases due at the release checkpoint, read through rejudge's pure decision. The shipped gate-advance skill names the stage-gate command as a required step before a rung is signed. The minted row's brief and verdict entries are added where its kind requires them. Filing goes through the mint path's staging, which has to stage and restore only what it wrote before this runs in a checkout holding uncommitted edits.
-- **Title**
-  - before: The merge and release checkpoints file the re-judge items
-  - after: The merge, release and stage-gate checkpoints file the re-judge items
-
-### LLR LLR-293 — ADDED since the snapshot, Drafted — never approved
-- **LLR-ID**: LLR-293
-- **SR-Refs**: SR-215
-- **Title**: The observation cadence policy
-- **Module**: project-trajectory/scripts/observation_cadence.py
-- **CodeSymbol**: Cadence
-- **Detail**: Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules and interface owners, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. History is cached per result commit; malformed policy, an unknown trigger and unreadable history raise ValueError. Zero explicitly disables the default floor.
-- **Status**: Drafted
-- **Component**: CMP-008
-- **Phase**: 6
-
-### LLR LLR-294 — ADDED since the snapshot, Drafted — never approved
-- **LLR-ID**: LLR-294
-- **SR-Refs**: SR-215
-- **Title**: The observation rubric-reference advisory
-- **Module**: project-trajectory/scripts/observation_cadence.py
-- **CodeSymbol**: observation_rubric_findings
-- **Detail**: observation_rubric_findings returns one warning for each real observation case omitting Rubric, naming the case. Automated and example cases are excluded. check_trajectory prints the warnings before its no-WI return and never promotes them under strict.
-- **Status**: Drafted
-- **Component**: CMP-008
-- **Phase**: 6
-
-### LLR LLR-295 — ADDED since the snapshot, Drafted — never approved
-- **LLR-ID**: LLR-295
-- **SR-Refs**: SR-146;SR-215
-- **Title**: Assumption-only observation cases in adjudicator briefs
-- **Module**: project-trajectory/scripts/adjudicate_brief.py
-- **CodeSymbol**: _assumption_case_chain/_render_assumption_cases/_rejudge_case_text
-- **Detail**: Cases with Assumption-Refs and no Verifies render through trace.assumption_brief_lines, showing the assumption id, statement, falsifier and standing. First approval applies the same Drafted, scope and authority intersection as SR chains, lists the case cells and derives the test registry approval token without authorizing the assumption. Re-judge validates Method, Expected and MaxAge and shows the observation instruction beneath its assumption chain. An unresolved assumption refuses composition.
-- **Rationale**: A case outside the requirement forest must remain visible to its judge, while showing its premise must not widen the approval act to that premise. Reusing the assumption approval renderer gives the two briefs the same chain.
-- **TestRefs**: TC-308;TC-309
-- **Status**: Drafted
-- **Component**: CMP-008
-- **Phase**: 6
-
-### TC TC-247
-- **Expected**
-  - before: Satisfies SR-215's acceptance: a changed, expired or unjudged observation case gets exactly one open re-judge item naming it and what changed; an unchanged one gets none; an open item suppresses another; no model runs; a case with no inputs judged by expiry.
-  - after: Satisfies SR-215 acceptance: missing or expired evidence is due; other judgements obey their trigger and floor, and each due case has at most one open re-judge item.
-- **Method**
-  - before: checkpoint_drafts driven on a real git repository. An observation case whose declared input changed since its latest record gets one draft naming it and the input; one whose record expired gets one; one with no record gets one; an unchanged, unexpired one gets none; a case declaring no inputs is judged by expiry and absence alone. An open re-judge item for a case, found by its typed cells, suppresses a second draft; a closed item in the archive with an identical title does not. Inputs are read at the given revision: an uncommitted edit to an input changes nothing. A committed link is excluded: a result recorded through the writer on a declared link, or on a directory holding one, is not due at the checkpoint where the platform cannot create a link, a change to the link's target does not make it due, and a directory link to itself is harmless. No agent command is spawned.
-  - after: checkpoint_drafts driven on a real git repository. No result and expiry are due independently of the floor. Changed inputs with no trigger are due only once the configured closed-WI floor is met. File, component, release and stage-gate triggers are due only when they fire and the floor is met; a case may raise but cannot lower the default floor. A draft names the case, its reason, its rubric and the changed input or the fired trigger, and its title carries the case id and the inputs-digest prefix. An open typed re-judge item suppresses a second; a closed archived item with the same title does not. Policy and inputs are read at the given revision: uncommitted changes affect neither. Committed links are excluded, including self-links and platforms checking them out as text. No model runs.
-
-### TC TC-248
-_approved — re-attestation owed_
-- **Expected**
-  - before: Satisfies SR-215's acceptance at both checkpoints: a work-item merge and release preparation each file one re-judge item per due case and never a second while one is open.
-  - after: Satisfies SR-215's acceptance at every checkpoint: a work-item merge, release preparation and stage-gate preparation each file one re-judge item per due case and never a second while one is open.
-- **Method**
-  - before: Driven through intake on a real git repository. A merged work item whose merge changes an observation case's declared input mints one re-judge item; a second merge while that item is open mints none. The release subcommand mints for a case whose record expired, and the generated release checklist carries a required item naming that command and the number of due cases. Minting runs through the mint path's checks, and a checkout holding an unrelated uncommitted edit keeps it.
-  - after: Driven through intake on a real git repository. A merged work item satisfying an observation case's trigger and closed-WI floor mints one re-judge item; another merge while it is open mints none. The release command mints for an expired case and not twice while its item is open; at the release checkpoint a release-triggered case is drafted only once its floor is met. The generated release checklist carries one required item naming the release re-judge command and the count of cases due at the release checkpoint. The stage-gate command files one item for a stage-gate-triggered case past its floor, none at merge and none while one is open, and the command refuses a merge checkpoint. The shipped gate-advance skill names the stage-gate command as a required step before a rung is signed. Minting follows the mint checks and preserves unrelated uncommitted edits.
-_traced — routes to adjudication_
-- **Evidence**
-  - before: tests/test_rejudge.py; tests/test_intake.py
-  - after: tests/test_rejudge.py; tests/test_intake.py; tests/test_skills_index.py::test_gate_advance_names_the_stage_gate_rejudge_step
-
-### TC TC-306 — ADDED since the snapshot, Drafted — never approved
+### TC TC-306 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **TC-ID**: TC-306
 - **Verifies**: SR-215;LLR-293;IF-269
 - **Level**: Integration
@@ -982,31 +764,8 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-307 — ADDED since the snapshot, Drafted — never approved
-- **TC-ID**: TC-307
-- **Verifies**: SR-215;LLR-294;IF-269
-- **Level**: Unit
-- **Method**: Call the rubric advisory with a missing observation reference, a declared reference, an automated case and an example case.
-- **Tier**: Smoke
-- **Expected**: Only the real observation with a missing reference produces a warning naming its case and rubric.
-- **Automated**: Yes
-- **Evidence**: tests/test_rejudge_rubric.py
-- **Status**: Drafted
-- **Phase**: 6
-
-### TC TC-308 — ADDED since the snapshot, Drafted — never approved
-- **TC-ID**: TC-308
-- **Verifies**: LLR-295;IF-115
-- **Level**: Unit
-- **Method**: Compose a first-approval brief scoped to a Drafted assumption-only case; assert its assumption statement, falsifier and standing, case Method, approval label and test-registry token are shown, without an assumption-registry token.
-- **Tier**: Smoke
-- **Expected**: The scoped observation case is visible under its assumption chain and the act grants no approval of the assumption.
-- **Automated**: Yes
-- **Evidence**: tests/test_assumption_observation_briefs.py::test_first_approval_shows_assumption_only_case
-- **Status**: Drafted
-- **Phase**: 6
-
-### TC TC-309 — ADDED since the snapshot, Drafted — never approved
+### TC TC-309 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
 - **TC-ID**: TC-309
 - **Verifies**: LLR-295;IF-115
 - **Level**: Unit
@@ -1015,18 +774,6 @@ _traced — routes to adjudication_
 - **Expected**: The complete re-judge brief composes under the assumption chain.
 - **Automated**: Yes
 - **Evidence**: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case
-- **Status**: Drafted
-- **Phase**: 6
-
-### TC TC-311 — ADDED since the snapshot, Drafted — never approved
-- **TC-ID**: TC-311
-- **Verifies**: SR-215;LLR-294;IF-269
-- **Level**: Integration
-- **Method**: Run the trajectory check with --strict on a tree holding no work items and real observation cases with no rubric reference.
-- **Tier**: Full
-- **Expected**: The check exits 0 and prints a warning naming a case and its missing rubric; strict mode never promotes these warnings to a failure.
-- **Automated**: Yes
-- **Evidence**: tests/test_rejudge.py::test_trajectory_rubric_warning_survives_strict_and_no_work_items
 - **Status**: Drafted
 - **Phase**: 6
 

@@ -148,3 +148,47 @@ Sonnet 5.5 found it SOUND at `719dcaeb`
 At the landing, the RESYNC entry was re-anchored at the parent, `00467fc7`.
 
 Next is the combined sitting this merge's adjudications open (see the plan above).
+
+### Spine-acts batch O (WI-768, WI-769, WI-772, WI-773): act seq 22
+
+One independent Claude Opus 5.5 adjudicator sat over four briefs and took one
+combined act. The coordinator carried two sets of rows in:
+
+- TC-036, TC-055, TC-209, TC-210 and TC-211 into WI-772;
+- TC-307 and TC-279 into WI-773.
+
+The act:
+
+- **Re-attested (11):** SR-215, SR-033, LLR-254, LLR-255, TC-247, TC-248, TC-036,
+  TC-055, TC-209, TC-210 and TC-211.
+- **Approved (7):** LLR-293, LLR-294, LLR-295, TC-307, TC-311, TC-279 and TC-308.
+- **Returned (4):** TC-306 (LLR-293's refusals untested), LLR-296 (it lists every
+  assumption-naming test case, where SR-033 says observation cases), TC-309
+  (LLR-295's two refusals untested) and TC-310.
+
+The snapshot used one combined ref per registry (`WI-769+WI-773`) and was not
+refused. The pre-commit hook twice refused stale derived views until the
+adjudicator regenerated them into the act.
+
+Sonnet's cross-review ([r1](../reviews/2026-10-03-wave8/sonnet-batch-o-r1.md))
+found the act right and every ruling sound, but blocked the draft on two points:
+
+- Its one code change imported `assumption_rules` into `gen_release_checklist`
+  across components with no declared seam (`check_trajectory --strict` ERROR,
+  reproduced on a scratch copy).
+- TC-055 had been re-attested while its `expected` still stated the old cadence.
+
+The adjudicator revised the draft at `83c2f292`:
+
+- IF-200's requestors gain `gen_release_checklist`;
+- exact replacements for TC-055's `expected` and SR-215's overclaiming rationale;
+- an exact TC-306 refusal test;
+- dated addenda recording both misses.
+
+The coordinator confirmed the seam fix mechanically: `check_trajectory --strict`
+on a scratch copy exits 0 with the requestor edit, and ERRORs without it. That
+replaced a second Sonnet round. Act seq 22 stands; TC-055's prose is corrected
+through the follow-up lane, whose merge re-adjudicates it.
+
+SN-043's need-text amendment (WI-667) is the owner's to re-attest, beside SN-003,
+SN-008, SN-009 and SN-025.

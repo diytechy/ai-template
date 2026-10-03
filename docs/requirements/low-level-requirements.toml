@@ -3102,7 +3102,7 @@ title = "The observation cadence policy"
 module = "project-trajectory/scripts/observation_cadence.py"
 code_symbol = "Cadence"
 detail = "Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules and interface owners, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. History is cached per result commit; malformed policy, an unknown trigger and unreadable history raise ValueError. Zero explicitly disables the default floor."
-status = "Drafted"
+status = "Approved"
 component = "CMP-008"
 phase = 6
 
@@ -3112,7 +3112,7 @@ title = "The observation rubric-reference advisory"
 module = "project-trajectory/scripts/observation_cadence.py"
 code_symbol = "observation_rubric_findings"
 detail = "observation_rubric_findings returns one warning for each real observation case omitting Rubric, naming the case. Automated and example cases are excluded. check_trajectory prints the warnings before its no-WI return and never promotes them under strict."
-status = "Drafted"
+status = "Approved"
 component = "CMP-008"
 phase = 6
 
@@ -3124,7 +3124,7 @@ code_symbol = "_assumption_case_chain/_render_assumption_cases/_rejudge_case_tex
 detail = "Cases with Assumption-Refs and no Verifies render through trace.assumption_brief_lines, showing the assumption id, statement, falsifier and standing. First approval applies the same Drafted, scope and authority intersection as SR chains, lists the case cells and derives the test registry approval token without authorizing the assumption. Re-judge validates Method, Expected and MaxAge and shows the observation instruction beneath its assumption chain. An unresolved assumption refuses composition."
 rationale = "A case outside the requirement forest must remain visible to its judge, while showing its premise must not widen the approval act to that premise. Reusing the assumption approval renderer gives the two briefs the same chain."
 test_refs = "TC-308;TC-309"
-status = "Drafted"
+status = "Approved"
 component = "CMP-008"
 phase = 6
 

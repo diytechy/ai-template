@@ -237,12 +237,12 @@ da_refs = ["DA-002", "DA-009"]
 
 [requirement.SR-033]
 title = "Release checklist generation"
-sn_refs = ["SN-004"]
+sn_refs = ["SN-004", "SN-043"]
 boundary_refs = ["B-09"]
 hat_refs = ["PERFORMANCE"]
-requirement = """The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate."""
-rationale = """Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did."""
-acceptance_criteria = """Running the generator emits the checklist content: the perf-budget section lists each warn-tier PB with its id and allocation."""
+requirement = """The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate and differentiable assumption confirmations."""
+rationale = """Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did. The assumptions section realizes SN-043 at the same gate: a premise can only be shown false by someone looking for its falsifier, so the checklist puts each active approved assumption, and any with no falsifier, in front of the person signing, marked apart from the requirement checks."""
+acceptance_criteria = """Running the generator emits the checklist content: the perf-budget section lists each warn-tier PB with its id and allocation; a separate assumptions section lists each active Approved assumption and any assumption with no falsifier once, with an ASSUMPTION DA-id marker, its falsifier or an explicit missing-falsifier notice, and the observation case ids naming it, if present. A falsified or Drafted assumption with a falsifier is omitted. An absent assumptions registry produces no section or error. Checking an assumption asserts only not falsified; the generator does not change standing, which a person sets."""
 priority = "S"
 verification = "Test"
 status = "Approved"
@@ -1551,18 +1551,18 @@ phase = 6
 coincident = """The needs ask for an obstacle's origin being checkable; each named perspective resolved against the roster, and an undeclared one reported, is that outcome."""
 
 [requirement.SR-215]
-title = "At a checkpoint, a changed or expired observation test is queued once for re-judging"
+title = "At a checkpoint, an unjudged, expired or triggered observation test is queued once for re-judging"
 sn_refs = ["SN-024", "SN-008", "SN-043"]
 boundary_refs = ["B-01"]
 hat_refs = ["TEST-ENGINEER", "PERFORMANCE"]
-requirement = "When a work item merges or a release is prepared, the delivered harness shall file one re-judge work item for each observation test case whose declared inputs changed since its last result or whose last result expired, never filing a second while one is open."
-rationale = """A judgment made by inspection, critique or observation holds only for the state it looked at, and nothing re-fires it once that state moves. Hashing each test case's declared inputs at a merge or a release costs no model call, so the expensive part — the re-judgment — runs only when something it looked at changed or its result aged out, and one open item per test case keeps a busy week from filing the same judgment many times."""
-acceptance_criteria = "At a work-item merge and at release preparation, each observation test case has its declared inputs hashed; one whose digest differs from its last result's judged digest, or whose last result has expired, or which has no result yet, gets exactly one open re-judge work item naming it and what changed; an unchanged, unexpired one gets none; a later checkpoint while that item is open adds none; the check runs no model; an observation test case declaring no inputs is judged by its expiry alone."
+requirement = "When a work item merges, a release is prepared or a stage gate is checked, the delivered harness shall file one re-judge work item per due observation case: one with no result, one whose result expired, or one whose declared trigger fires after its work-item floor; with no declared trigger, a change to its declared inputs makes it due, subject to that floor. It keeps at most one open item per case, and reports each observation case that cites no written pass criteria as a warning."
+rationale = "Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor is a cost limit the owner directed (the PERFORMANCE lens): it lets an accepted judgement outlive changes to what it judged for at most the configured number of closed work items, while first judgement and expiry keep missing or old evidence from standing indefinitely."
+acceptance_criteria = "A case with no result is due at once, and a case whose result expired is due at once; neither waits for the floor. Otherwise a declared trigger (matching changed files, a change to a module tagged with the named component, release preparation, or a stage-gate check) makes a case due only once the configured number of closed work items has passed since its latest record was committed; a case may raise that number but not lower it. With no trigger, a change to its declared inputs makes it due, subject to the same floor; with neither a trigger nor inputs, only absence and expiry make it due. Inputs and policy are read at the checkpoint revision. An open re-judge item suppresses a second, and the decision runs no model. An observation case that cites no written pass criteria is reported as a warning, never a failure, including under strict checking."
 priority = "S"
 verification = "Test"
 status = "Approved"
 phase = 6
-coincident = """The needs ask for an observation's result re-judged when what it judged changes; one re-judge item filed per stale case is that outcome, and the judging itself is the re-judge item's own."""
+coincident = "The needs ask that an accepted observation not stand on a state it never judged, and that it be judged against written criteria. Filing one re-judge item for each case that is unjudged, expired or triggered past its floor, and warning on a case that cites no criteria, is that outcome within the cost bound the floor sets. The judging itself is the re-judge item's own."
 
 [requirement.SR-216]
 title = "Each change is measured by the project's declared readability measures, and a worsening is reported with the part it worsens"

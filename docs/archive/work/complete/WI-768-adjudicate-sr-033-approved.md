@@ -3,12 +3,19 @@ id = "WI-768"
 title = "adjudicate: SR-033 - approved/routed cell(s) amended on merged trunk 30ee386..4ba5890 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-033"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["SR-033"]
 +++
+
+## Deliverable
+
+Spine-acts batch O (act seq 22): SR-033's WI-667 amendment (the release
+checklist's assumptions section; `SN-Refs` gaining SN-043) ruled MEANING and
+re-attested by an independent Claude Opus 5.5 adjudicator in one combined act
+with WI-769, WI-772 and WI-773.
 
 ## Context
 

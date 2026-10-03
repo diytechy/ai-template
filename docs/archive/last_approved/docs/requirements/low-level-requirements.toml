@@ -2654,18 +2654,18 @@ phase = 6
 sr_refs = ["SR-215"]
 title = "The checkpoint re-judge decision"
 module = "project-trajectory/scripts/rejudge.py"
-code_symbol = "observation_test_cases/checkpoint_drafts/_open_rejudge/due_cases/BRIEF/CHECKPOINTS"
-detail = "A pure sibling of consolidate.py that intake imports. observation_test_cases(root, rev) reads the observation cases at a revision. checkpoint_drafts(root, rev, checkpoint) digests each case's declared inputs as read from git at that revision, not from the working tree, and drafts one re-judge work item for each case whose digest differs from its latest record's judged digest, whose latest record has expired, or which has no record. A case declaring no inputs is judged by expiry and absence alone. A committed link is not content: it is never written into the extracted tree and is excluded from the digest by the observation writer's own link predicate, so a declared link reads as absent, a link inside a declared directory contributes nothing, and a change to a link's target makes no case due. _open_rejudge(rows, tc) finds an open re-judge item for the case by its typed cells, never by title, because a title match would also find the closed items in the archive. A draft names the case and what changed, and its title carries the case id and the digest prefix. No model runs."
+code_symbol = "observation_test_cases/checkpoint_for/checkpoint_drafts/_open_rejudge/due_cases/BRIEF/CHECKPOINTS"
+detail = "A sibling of consolidate.py imported by intake. observation_test_cases(root, rev) reads observation cases at a revision. checkpoint_for(root, rev, tc) returns the case's Trigger when it names the release or stage-gate checkpoint, else merge. due_cases(root, rev, now, checkpoint) reads committed inputs and records and uses the cadence decision to apply the configured closed-WI floor and declared trigger. A case with no record is due at once, and an expired record is due at once; neither waits for the floor. Without a trigger, a changed input digest is due subject to the floor; without inputs, only absence and expiry make a case due. checkpoint_drafts drafts each due case once, suppressing an open item by its typed Brief and Adjudicates cells, never by title. A draft names the case, the reason, the rubric and the changed inputs or the fired trigger, and its title carries the case id and the inputs-digest prefix. Committed links are excluded by the observation writer's own link predicate. No model runs."
 status = "Approved"
 component = "CMP-008"
 phase = 6
 
 [design.LLR-255]
 sr_refs = ["SR-215"]
-title = "The merge and release checkpoints file the re-judge items"
+title = "The merge, release and stage-gate checkpoints file the re-judge items"
 module = "project-trajectory/scripts/intake.py;project-trajectory/scripts/gen_release_checklist.py"
 code_symbol = "intake_after_merge/mint_rejudge/_cmd_rejudge/_rejudge_checklist_line"
-detail = "intake_after_merge adds rejudge.checkpoint_drafts(root, after, \"merge\") to its drafts inside the held merge slot, so the check runs once per merged work item. mint_rejudge(root, rev, checkpoint) files them through _mint, and `intake.py rejudge --checkpoint release` is the release-preparation entry. Release preparation is a person's act, so the release checklist, a view that may not import intake, carries a required item from _rejudge_checklist_line naming that command and the count of due observation cases, read through rejudge's pure decision. The minted row's brief and verdict entries are added where its kind requires them. Filing goes through the mint path's staging, which has to stage and restore only what it wrote before this runs in a checkout holding uncommitted edits."
+detail = "intake_after_merge adds rejudge.checkpoint_drafts(root, after, \"merge\") to its drafts inside the held merge slot, so the check runs once per merged work item. mint_rejudge(root, rev, checkpoint) files them through _mint; `intake.py rejudge --checkpoint release` is the release-preparation entry and `intake.py rejudge --checkpoint stage-gate` the stage-gate-preparation entry, and the command refuses a merge checkpoint, which only the merge slot runs. Release and stage-gate preparation are a person's acts, so each is prompted where that person works. The release checklist, a view that may not import intake, carries a required item from _rejudge_checklist_line naming the release command and the count of observation cases due at the release checkpoint, read through rejudge's pure decision. The shipped gate-advance skill names the stage-gate command as a required step before a rung is signed. The minted row's brief and verdict entries are added where its kind requires them. Filing goes through the mint path's staging, which has to stage and restore only what it wrote before this runs in a checkout holding uncommitted edits."
 status = "Approved"
 component = "CMP-008"
 phase = 6
@@ -3096,3 +3096,46 @@ test_refs = "TC-305"
 status = "Approved"
 component = "CMP-009"
 phase = 4
+[design.LLR-293]
+sr_refs = ["SR-215"]
+title = "The observation cadence policy"
+module = "project-trajectory/scripts/observation_cadence.py"
+code_symbol = "Cadence"
+detail = "Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules and interface owners, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. History is cached per result commit; malformed policy, an unknown trigger and unreadable history raise ValueError. Zero explicitly disables the default floor."
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-294]
+sr_refs = ["SR-215"]
+title = "The observation rubric-reference advisory"
+module = "project-trajectory/scripts/observation_cadence.py"
+code_symbol = "observation_rubric_findings"
+detail = "observation_rubric_findings returns one warning for each real observation case omitting Rubric, naming the case. Automated and example cases are excluded. check_trajectory prints the warnings before its no-WI return and never promotes them under strict."
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-295]
+sr_refs = ["SR-146", "SR-215"]
+title = "Assumption-only observation cases in adjudicator briefs"
+module = "project-trajectory/scripts/adjudicate_brief.py"
+code_symbol = "_assumption_case_chain/_render_assumption_cases/_rejudge_case_text"
+detail = "Cases with Assumption-Refs and no Verifies render through trace.assumption_brief_lines, showing the assumption id, statement, falsifier and standing. First approval applies the same Drafted, scope and authority intersection as SR chains, lists the case cells and derives the test registry approval token without authorizing the assumption. Re-judge validates Method, Expected and MaxAge and shows the observation instruction beneath its assumption chain. An unresolved assumption refuses composition."
+rationale = "A case outside the requirement forest must remain visible to its judge, while showing its premise must not widen the approval act to that premise. Reusing the assumption approval renderer gives the two briefs the same chain."
+test_refs = "TC-308;TC-309"
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-296]
+sr_refs = ["SR-033"]
+title = "Assumption confirmations in the release checklist"
+module = "project-trajectory/scripts/gen_release_checklist.py"
+code_symbol = "assumption_checklist_lines"
+detail = "Read real DA rows through spine_carrier; emit a separate assumptions section with one ASSUMPTION DA-id item per active Approved row or row with no falsifier, including its falsifier or missing notice and TC ids naming it in Assumption-Refs. Missing registries and empty selections emit no section. Checklist generation writes no registry; checking a box asserts only not falsified, and a person sets standing. Existing sections and phase selection remain intact through named readers and section renderers."
+rationale = "Assumptions about people and environments often have no development observation; release sign-off needs a recall prompt distinguishable from a requirement check. Missing falsifiers must be visible even on unsettled rows."
+test_refs = "TC-310"
+status = "Drafted"
+component = "CMP-009"
+phase = 6
