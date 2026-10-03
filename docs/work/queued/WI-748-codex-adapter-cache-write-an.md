@@ -37,3 +37,8 @@ codex-cli 0.157.1 (`docs/work/queued/WI-541-verify-retention-layer.md`):
   tested, and the inference is labelled as inferred, not reported.
 - A shape the fixtures lack is recorded live, not hand-written (WI-541's rule).
 - The commit bar passes.
+
+Noted 2026-10-02 by WI-749's adjudication: TC-264's (approved) clause says codex's
+"unreported cache write" stays empty, true of the adapter today. Reading the field
+changes what that clause must say: amend TC-264 in this lane (status left Approved,
+for the merge's adjudication).

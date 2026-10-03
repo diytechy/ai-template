@@ -75,3 +75,14 @@ the squash was backed out and a fix round cleared them: a `gates` name the ladde
 guard reads, deferred imports 31 -> 29, and the dashboard (+13,231 bytes, 3,013,555
 -> 3,026,786) re-stamped to 3,480,000, the file's ~15% headroom. SOUND at d1681906.
 Lesson: a builder's bar includes the whole smoke tier, not only its modules.
+
+### WI-749: spine-acts sitting, six rows re-attested (act seq 14)
+
+An independent Claude Opus 5.5 adjudicator, working from the kit-composed brief in
+its own worktree, ruled LLR-116 and TC-121 (WI-722's floor) and TC-262, TC-263,
+TC-264 and TC-267 (`3e0a5f48`'s live recordings, carried in by the coordinator) all
+MEANING, and re-attested all six; no Dispositions. Sonnet's cross-review: SOUND.
+Because trunk had gained WI-746's Drafted rows since the lane was cut, the
+coordinator retook the snapshot on the merged tree: `refresh_refusal` returned no
+refusal for the same arguments, `last_approved/` was reset to trunk, and the exact
+command re-run (seq 14). TC-264's cache-write clause is now WI-748's to amend.

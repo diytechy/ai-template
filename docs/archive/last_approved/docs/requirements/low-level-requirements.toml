@@ -1149,8 +1149,8 @@ phase = 3
 sr_refs = ["SR-054"]
 title = "Viewport-fit by scale-to-fit with a legibility floor (T7 core)"
 module = "project-trajectory/scripts/rendering/traj_render.py"
-code_symbol = "_svg_fit_style/SHRINK_FLOOR"
-detail = """The mechanized core of usability anchor T7 (docs/rubrics/dashboard-usability.md). Every emitted SVG (all three wrappers: _svg_wrap for dag/sw/know, the icicle panel, _drill_layer_svg) carries width:100% + max-width:<natural> + min-width:<natural x SHRINK_FLOOR> instead of a FIXED pixel width, so a diagram fills its container and scales down as the viewport narrows. SCOPE and its deliberate narrowing: a view whose natural width exceeds 390 / SHRINK_FLOOR still scrolls horizontally WITH its cue — the row's own fallback rule made mechanical. Closing that remainder needs a narrow-width re-layout (stacked columns), which is not this row."""
+code_symbol = "_svg_fit_style/MIN_RENDERED_NODE_LABEL_PX/NODE_TYPE_PX"
+detail = """The mechanized core of usability anchor T7 (docs/rubrics/dashboard-usability.md). Every emitted SVG carries width:100% + max-width:<natural> + min-width:<ceil(natural x 9 / smallest emitted node type token in px)> instead of a FIXED pixel width, so a diagram fills its container and scales down until its smallest rendered node label reaches 9 px. The node type tokens are emitted from NODE_TYPE_PX (12 px labels, 10.5 px sub-labels, 13 px headlines). The minimum width is rounded up to a whole pixel so no node label renders below 9 px; it is derived from the smallest emitted token, not a hand-set ratio. A view whose minimum width exceeds its container scrolls horizontally WITH its cue. Closing that remainder needs a narrow-width re-layout (stacked columns), which is not this row."""
 rationale = """A fixed pixel width pins the rendered size whatever the container does, which is why every narrow view demanded sideways scroll and one graph clipped a component label mid-word. A viewBox alone cannot fix it — the fixed width still wins. The legibility floor exists because pure scale-to-fit TRADES this anchor for T4: a 900px graph squeezed into 390px shrinks a label past readable, so the floor stops the fix from creating the defect it is next to."""
 test_refs = "(see TC-121)"
 status = "Approved"
@@ -3034,5 +3034,29 @@ detail = """CONFIG. keep_config reads [adjudicator] (context_reset_pct 0..100, r
 rationale = """Retention is one more thing a call does, not a second launch path, so resume, occupancy, reset and keep-warm all go through act and record, and the rules and the store sit in their own module beside the service rather than in the roles. The layer ships off because turning it on is the owner's decision after it has been verified on the machine it runs on, and at the off dial the launch is exactly a fresh session's. The lock and the lease exist because a lane's worker and the dispatcher both reach the one store and the one transcript: a torn record or two calls resuming one session at once corrupts the state every later judgement reads. The clear point reads the queue and the lanes rather than the item alone because a draining session that retires while a successor of its own verdict is still queued breaks the round trip the layer exists for. The keep-warm ping is off the dispatcher's thread so a slow ping cannot stall the merges, and its record is on it so its commit is serialised with them. The dedicated homes keep a retained transcript out of a person's own sessions; credentials are provisioned into them by a person."""
 test_refs = "(see TC-266, TC-267, TC-268)"
 status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-288]
+sr_refs = ["SR-148"]
+title = "Registry-owned owner gates in shared readiness"
+module = "project-trajectory/scripts/schedule.py"
+code_symbol = "_load/load_wis/hard_preds_satisfied"
+detail = "Load IF-073 gates into internal scheduler data. The shared readiness predicate refuses a queued gated row, including mutex candidacy, and evaluate reports it blocked with every gating id and title. A ruled gate releases the row without editing it."
+rationale = "A human decision is not an integrated work predecessor; the owner registry already holds its state."
+test_refs = "TC-301"
+status = "Drafted"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-289]
+sr_refs = ["SR-148"]
+title = "Resolve owner gates against the whole work registry"
+module = "project-trajectory/scripts/check_trajectory.py"
+code_symbol = "open_item_wi_ref_findings"
+detail = "Report each real open item's wi_refs entry that names no work item, checking pending and ruled history against live and terminal work rows and ignoring example rows."
+rationale = "An unresolved gate cannot identify the work it is meant to hold."
+test_refs = "TC-302"
+status = "Drafted"
 component = "CMP-008"
 phase = 6
