@@ -12,7 +12,9 @@ independent Claude Opus agents adjudicate and judge.
   From this session on, the coordinator handles a sitting's return as a fix round
   inside the adjudication lane, re-judged by the same adjudicator, instead of
   drafting a `## Dispositions` follow-up that intake mints. The mechanical path
-  (integrator, intake, merge slot) is not changed yet; its plan is being drafted.
+  (integrator, intake, merge slot) is not changed yet. Its plan is
+  [plans/2026-10-03-s11-in-lane-adjudication.md](../plans/2026-10-03-s11-in-lane-adjudication.md),
+  with seven owner questions in its §6.
 - **Disk:** the owner freed 30+ GB, enough for the full unfiltered suite.
 - **Reworded needs:** "so long as the meaning has not changed, it can be reapproved
   automatically, this is part of the adjudication lane that I would expect the actual

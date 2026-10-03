@@ -62,9 +62,12 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   landed and is anchored.
 - **Sister plan — one plan still owed:** every question in the
   [notes on spine, sessions and tests](plans/2026-09-23-owner-notes-spine-sessions-and-tests.md)
-  §5 is ruled except S11, whose direction (one trunk commit per work item)
-  needs its own plan before any ruling; design S9's reviewer-commit check with
-  it. Hand integration already follows it (owner direction 2026-09-28): one
+  §5 is ruled except S11. The owner said yes to adjudication inside the lane
+  (2026-10-03): a return is fixed in the lane, not minted as a follow-up row.
+  Its plan, with S9's reviewer-commit check, is
+  [plans/2026-10-03-s11-in-lane-adjudication.md](plans/2026-10-03-s11-in-lane-adjudication.md).
+  Seven owner questions are in its §6, and nothing in the integrator is built
+  before they are ruled. Hand integration already follows it (owner direction 2026-09-28): one
   squash commit per item, with lane tips kept reachable in `archive/lanes`. S7's session service has landed, writing S8's adopted OTel schema, with
   retention shipped off; its live verification is WI-541 (partly done). S6 is designed
   with the assumption tier before its C3. S14's flag-axis count and
