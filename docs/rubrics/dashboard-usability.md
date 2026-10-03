@@ -14,7 +14,9 @@ Judge as a **first-time reviewer** opening the dashboard cold.
 > **T1, T3, T6 and T7 are bound as tests, not critique anchors** (owner rulings
 > 2026-07-26) — T1 to `LLR-115`/`TC-120`, T3 to `LLR-100`/`TC-103`, T6 to
 > `LLR-117`/`TC-122`, T7 to `LLR-116`/`TC-121`; none is **yours to judge**. The
-> live anchor set is **T2, T4, T5, T8**.
+> live anchor set is **T2, T4, T5, T8**. T8's box-clearance
+> (`LLR-120`/`TC-125`) and lane-separation (`LLR-292`/`TC-305`) clauses are
+> also test-bound; judge only the remaining crossing-legibility clause below.
 
 ## The core reading tasks (the concrete "one tab switch" list)
 
@@ -121,22 +123,31 @@ horizontal scrolling to read.
 **T8 — Edge routing legibility (owner acceptance, 2026-07-20 / WI-253).** In
 every wired diagram (When DAG, How-SW graph, Knowledge graph, the drill views,
 the Process hoops), a reader can follow any edge from source to target: **no
-edge passes through an unrelated node box**, and edge crossings are minimized —
+edge passes through an unrelated node box**, **distinct edges share neither a
+segment nor an end-to-end join outside a shared actual terminal**, and
+edge crossings are minimized —
 where a crossing is unavoidable it happens in open space, not under a label or
 port cluster. *Bad:* a dependency wire cuts straight through an intermediate
 WI's box so it reads as connected to it; three edges cross inside a port fan
 and the sources become unattributable.
 
-*The first clause of this anchor is now a test.* **No edge through an unrelated
+*The box-clearance clause of this anchor is now a test.* **No edge through an unrelated
 node box is bound to `LLR-120`/`TC-125`** (WI-320): every wire of every emitted
 diagram is sampled and measured against every node rect that is not its own
 endpoint, across the shipped artifact plus a fixture per emitter. A wire you see
 cutting a box it does not connect to is a **gap in `TC-125`** — route it through
 change-intake, never through a verdict.
 
-What stays yours is the second clause, which is the one a measurement cannot
-settle: **crossings minimized, and where unavoidable, in open space** rather than
-under a label or inside a port fan.
+*The lane-separation clause is also test-bound*, to **`LLR-292`/`TC-305`**:
+freshly emitted paths in How, When, Process and System context, including every
+drill layer, are checked for shared segments and end-to-end joins
+outside shared actual terminals. Sharing a node id does not excuse a join outside
+its port. A shared lane you see is a **gap in `TC-305`** — route it through
+change-intake, never through a verdict.
+
+What stays yours is the clause a measurement cannot settle: **crossings
+minimized, and where unavoidable, in open space** rather than under a label or
+inside a port fan.
 
 ## Notes for the critic
 

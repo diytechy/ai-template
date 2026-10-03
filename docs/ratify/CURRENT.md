@@ -679,7 +679,39 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 2 chain(s): SR-224, SR-227</summary>
+<summary>Waiting for automated adjudication — 3 chain(s): SR-054, SR-224, SR-227</summary>
+
+## SR-054 — Dashboard usability (rubric-adjudicated)
+
+> **Requirement.** The state view the delivered generators produce shall support its core reading tasks with low friction: a first-time reviewer finds the project state, the next work, and how the parts connect, each within one tab switch; views default to a legible density (start-collapsed per the greater-than-3 rule) and reveal detail without losing context; labels stay readable at default zoom with no clipped or overlapping text.
+
+> **Rationale.** Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded judgement, re-judged when a declared input changes or the record expires rather than on every commit — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today.
+
+
+### LLR LLR-292 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-292
+- **SR-Refs**: SR-054
+- **Title**: Separate emitted wire lanes (T8 objective floor)
+- **Module**: project-trajectory/scripts/rendering/traj_graph.py
+- **CodeSymbol**: _wire_channels/_route_edges/_detour_d
+- **Detail**: Across freshly emitted How, When, Process and System-context SVGs, including every drill layer, distinct edges do not overlap along a segment or join end-to-end outside a shared actual terminal. Give departures and arrivals separate channels per column and reserve terminal runs before selecting middle lanes. Shared node identity alone does not permit a join outside the node's port. Perpendicular crossings remain under the T8 critique; no claim is made that crossing count is minimal.
+- **Rationale**: A shared segment or collinear join makes two wires read as one connection. The emitted path geometry can settle that claim mechanically, including the final orthogonal conversion.
+- **TestRefs**: TC-305
+- **Status**: Drafted
+- **Component**: CMP-009
+- **Phase**: 4
+
+### TC TC-305 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-305
+- **Verifies**: SR-054;LLR-292
+- **Level**: Integration
+- **Method**: Generate the dashboard in memory from the live registries using the current emitter, then sweep every emitted SVG path in How, When, Process and System context, including every drill layer and external-party relationship. Compare collinear segments of distinct wires for positive overlap and authored command ends for end-to-end joins; permit only a point that is both paths' actual terminal, never a shared run. Assert each view emits wires. Pin the overlap oracle with the How hub's x=452 overlap and x=220 join, a perpendicular crossing, a separated pair and a shared terminal with and without a positive shared run, and a perpendicular corner join.
+- **Tier**: Full
+- **Expected**: Zero shared segments or end-to-end joins outside shared actual terminals in every wired view; the sweep and its collision oracle are non-vacuous.
+- **Automated**: Yes
+- **Evidence**: tests/test_traj_lanes.py
+- **Status**: Drafted
+- **Phase**: 4
 
 ## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
 

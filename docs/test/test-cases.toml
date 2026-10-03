@@ -3052,3 +3052,14 @@ automated = "Yes"
 evidence = "tests/test_session_keep.py"
 status = "Drafted"
 phase = 6
+
+[test.TC-305]
+verifies = ["SR-054", "LLR-292"]
+level = "Integration"
+method = "Generate the dashboard in memory from the live registries using the current emitter, then sweep every emitted SVG path in How, When, Process and System context, including every drill layer and external-party relationship. Compare collinear segments of distinct wires for positive overlap and authored command ends for end-to-end joins; permit only a point that is both paths' actual terminal, never a shared run. Assert each view emits wires. Pin the overlap oracle with the How hub's x=452 overlap and x=220 join, a perpendicular crossing, a separated pair and a shared terminal with and without a positive shared run, and a perpendicular corner join."
+tier = "Full"
+expected = "Zero shared segments or end-to-end joins outside shared actual terminals in every wired view; the sweep and its collision oracle are non-vacuous."
+automated = "Yes"
+evidence = "tests/test_traj_lanes.py"
+status = "Drafted"
+phase = 4
