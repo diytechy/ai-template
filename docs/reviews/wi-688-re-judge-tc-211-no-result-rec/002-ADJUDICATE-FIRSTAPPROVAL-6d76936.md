@@ -144,3 +144,29 @@ Every other cell of TC-312 stays byte-exact. The `evidence` cell, `tests/test_ha
 already covers the new tests.
 
 OUTCOME: RETURN rows=2
+
+## Re-judgement after fix round 2 (2c6cfe29)
+
+Re-judged 2026-10-03 by the same independent adjudicator (Claude Opus), on the lane at
+2c6cfe29. `hats.py` is byte-unchanged since 6d769360.
+
+Applied text, checked against this verdict by parsing the registries:
+- LLR-297 `detail`: both Fix 1 replacements are present and both old sentences are gone. Apart
+  from those two substitutions, LLR-297 equals its 6d769360 form, and every other LLR row is
+  unchanged.
+- TC-312 `method`: equals the Fix 3 block byte for byte. Every other TC-312 cell, and every other
+  TC row, is unchanged.
+- The new sentence in Fix 1 is true of the code. `write_record` writes to the `rel` it is given.
+  The convention it names is the one the spine-authoring skill's (c3) states ("next to its
+  decomposition record"). `subject` is written only when given, and `read_record` refuses a
+  record that lacks `recorded_by` or `recorded_on`.
+
+Tests: the lane's `tests/test_hats_record.py` with `tests/test_hats.py` gave 116 passed. The
+mutation probes were re-run independently against the lane's test file, on a scratch copy of the
+tree. Every one of P1-P13 is killed (P1: 3 failed; each of the others: 1 failed). P14 survives,
+as before; LLR-297 does not state it, so it is not a finding.
+
+- [APPROVE] LLR-297 -> hats.py record writes, at the caller's path, a perspective record holding rows, an optional subject and tags, a required recorded_by/recorded_on, and parents derived through SR-Refs, Verifies and a verified LLR's SR-Refs; per roster hat it writes applicability derived per parent need, applies_when and own-Hat-Refs production, plus an authored no_finding; it reports MISSING, STALE and CONFLICT warn-first, refuses an unknown row or a non-record, and is vacuous without a roster -> it answers the half of SR-161 that LLR-183 leaves NOT DISCHARGED, without overlapping LLR-183 or LLR-202, and TC-312 now verifies every clause -> ready: the text and the code agree clause for clause, and the debt it leaves (the dual-plan round) is stated.
+- [APPROVE] TC-312 -> over a temporary tree, prove each derivation, refusal, authorship rule, finding class, retention rule, the atomic write, vacuity and the CLI exit codes that LLR-297 states -> every Method clause maps to a test in tests/test_hats_record.py, and each of the 13 load-bearing mutations makes at least one test fail -> ready: no clause the Method claims is proven by a test that cannot fail.
+
+OUTCOME: APPROVE rows=2
