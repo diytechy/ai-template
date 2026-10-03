@@ -86,3 +86,10 @@ Because trunk had gained WI-746's Drafted rows since the lane was cut, the
 coordinator retook the snapshot on the merged tree: `refresh_refusal` returned no
 refusal for the same arguments, `last_approved/` was reset to trunk, and the exact
 command re-run (seq 14). TC-264's cache-write clause is now WI-748's to amend.
+
+### WI-751: first approval of the open-item gate's rows (act seq 15)
+
+An independent Claude Opus 5.5 adjudicator approved LLR-288, LLR-289 and TC-301 and
+returned TC-302 (archive resolution and the absent-registry case untested in its
+Method), drafting one exact replacement row. Sonnet's cross-review: SOUND. The lane
+was cut from the trunk tip, so its snapshot stands as taken.

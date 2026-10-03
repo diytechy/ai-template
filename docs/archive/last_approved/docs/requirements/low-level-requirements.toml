@@ -3045,7 +3045,7 @@ code_symbol = "_load/load_wis/hard_preds_satisfied"
 detail = "Load IF-073 gates into internal scheduler data. The shared readiness predicate refuses a queued gated row, including mutex candidacy, and evaluate reports it blocked with every gating id and title. A ruled gate releases the row without editing it."
 rationale = "A human decision is not an integrated work predecessor; the owner registry already holds its state."
 test_refs = "TC-301"
-status = "Drafted"
+status = "Approved"
 component = "CMP-008"
 phase = 6
 
@@ -3057,6 +3057,6 @@ code_symbol = "open_item_wi_ref_findings"
 detail = "Report each real open item's wi_refs entry that names no work item, checking pending and ruled history against live and terminal work rows and ignoring example rows."
 rationale = "An unresolved gate cannot identify the work it is meant to hold."
 test_refs = "TC-302"
-status = "Drafted"
+status = "Approved"
 component = "CMP-008"
 phase = 6

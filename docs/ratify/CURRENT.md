@@ -6,8 +6,8 @@ _Baseline: `docs/archive/last_approved` — each registry's copy, named by the c
 
 _Baseline: `docs/requirements/stakeholder-needs.toml` copied 2026-09-27 (efa9e3cd)._
 _Baseline: `docs/requirements/system-requirements.toml` copied 2026-09-29 (d46c5278)._
-_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-09-29 (a4919610)._
-_Baseline: `docs/test/test-cases.toml` copied 2026-09-29 (a4919610)._
+_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-10-02 (83db9d75)._
+_Baseline: `docs/test/test-cases.toml` copied 2026-10-02 (83db9d75)._
 _Baseline: `docs/requirements/interfaces.toml` copied 2026-08-30 (580df781)._
 _Baseline: `docs/requirements/external.toml` copied 2026-09-27 (efa9e3cd)._
 _Baseline: `docs/requirements/components.toml` copied 2026-08-30 (580df781)._
@@ -687,47 +687,6 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
 
 > **Rationale.** Without one precedence rule, the same repository can resume into implementation while returned obligations or prerequisite requirement tiers remain unresolved. That produces work against stale intent and makes repeated resumes select different next actions. A recorded selection class, source record and hold decision provide replayable evidence of the choice. ONE SR PER (need, property): the loop's work-selection invariant — what the next work derives from, in what order, and that no hand-curated pointer surface participates in it — is stated here and nowhere else, so no second row can drift from it. An explicit three-way partition was rejected: the partition already existed textually and still produced duplicated acceptance. The no-pointer obligation is stated for a migrated repository as well as a fresh scaffold, and the migrated half is the one that matters most: a fresh scaffold never had the files to keep, while an upgraded repository can retain the retired authority files and still pass. Fan-out re-stamp: this row states one decision — what an unattended run's next work derives from and in what order — and its children are the successive stages of that one selection, not separable contracts; the width is the deliberate consolidation of three rows that stated the same invariant into one, so re-splitting to satisfy the bound would restore the duplication the consolidation removed.
 
-
-### LLR LLR-288 — Drafted, never approved
-_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
-- **LLR-ID**: LLR-288
-- **SR-Refs**: SR-148
-- **Title**: Registry-owned owner gates in shared readiness
-- **Module**: project-trajectory/scripts/schedule.py
-- **CodeSymbol**: _load/load_wis/hard_preds_satisfied
-- **Detail**: Load IF-073 gates into internal scheduler data. The shared readiness predicate refuses a queued gated row, including mutex candidacy, and evaluate reports it blocked with every gating id and title. A ruled gate releases the row without editing it.
-- **Rationale**: A human decision is not an integrated work predecessor; the owner registry already holds its state.
-- **TestRefs**: TC-301
-- **Status**: Drafted
-- **Component**: CMP-008
-- **Phase**: 6
-
-### LLR LLR-289 — Drafted, never approved
-_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
-- **LLR-ID**: LLR-289
-- **SR-Refs**: SR-148
-- **Title**: Resolve owner gates against the whole work registry
-- **Module**: project-trajectory/scripts/check_trajectory.py
-- **CodeSymbol**: open_item_wi_ref_findings
-- **Detail**: Report each real open item's wi_refs entry that names no work item, checking pending and ruled history against live and terminal work rows and ignoring example rows.
-- **Rationale**: An unresolved gate cannot identify the work it is meant to hold.
-- **TestRefs**: TC-302
-- **Status**: Drafted
-- **Component**: CMP-008
-- **Phase**: 6
-
-### TC TC-301 — Drafted, never approved
-_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
-- **TC-ID**: TC-301
-- **Verifies**: LLR-288;IF-054;IF-073;IF-264;IF-265;IF-164
-- **Level**: Integration
-- **Method**: On a temporary spec registry, hold a queued row through a pending open item's wi_refs, verify the frontier and simulation omit it without stealing a mutex, then rule the item and verify readiness with the spec unchanged. Project ready and blocked rows apart in the frontier and status snapshot, with each gating id, title and owner-surface anchor. Check multiple gates, absent and example registries, and the worker brief's refusal.
-- **Tier**: Smoke
-- **Expected**: One readiness calculation drives every gate consumer; status remains the directory and ruling alone releases work.
-- **Automated**: Yes
-- **Evidence**: tests/test_open_item_readiness.py
-- **Status**: Drafted
-- **Phase**: 6
 
 ### TC TC-302 — Drafted, never approved
 _No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
