@@ -101,7 +101,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   ([plans/2026-08-22-interface-exception-dossier.md](plans/2026-08-22-interface-exception-dossier.md)),
   `OI-61` (c) deferred, and the wording round's two banked findings
   ([reviews/2026-08-24-draft-wording-round/RESUME.md](reviews/2026-08-24-draft-wording-round/RESUME.md)).
-- **Unfiled follow-ups** (topics, no ids): the stage-ladder program's deferred
+- **Unfiled follow-ups** (topics, no ids): the wave-9 log's session-close list (removed approved rows mint no adjudication; six batch-R row-text residues); the stage-ladder program's deferred
   codex round; the SN-036 coverage record (re-derive — basis reads
   `uncovered=0`); the archived [2026-08-01 handoff §6](archive/history/handoff-2026-08-01.md)
   findings; the [spine-restructure-2026-08-08.md](spine-restructure-2026-08-08.md)

@@ -105,3 +105,30 @@ per tile, so a 120-tile width was split by theme.
 All six approved, with zero findings
 ([verdict](../reviews/wi-777-re-judge-tc-055-declared-trig/001-REJUDGE-2e46707c.md)).
 Their verdicts were terser than WI-765's Opus judges', and the record says so.
+
+### Session close: state and follow-ups
+
+Trunk `refactor_again`, nothing pushed. Act seq 25. The full suite was last run at
+`d040ad75`; its two reds are fixed by WI-784, and it has not been re-run since. No
+coordinator work is ready: WI-688 and WI-684 wait on OI-99 and OI-98, WI-541 closes
+with WI-688, and WI-625 is deferred. Owed rulings: OI-100, the S11 plan's §6
+questions, and the four MEANING-ruled needs.
+
+Follow-ups noted, not filed:
+
+- **Removed rows are unrouted:** an approved row deleted from a registry mints no
+  adjudication (`staged_spine_amendments` iterates only the rows present after the
+  merge). It belongs with the S11 plan's slice 1, beside the re-mint fix.
+- **From the batch-R adjudicator:**
+  - SR-202 and `RISK_UNPROVEN` still say "unproven";
+  - TC-227's `method` says "count assumption evidence";
+  - SR-191's rationale says the tier applies only where a frame is declared, though
+    the SR-206 gate also judges frameless projects;
+  - IF-216's `requestors` omits `check_assumption_gate`;
+  - IF-115's `notes` calls `amendment` unrouted;
+  - SR-033's "once" is never tested with a row that qualifies twice.
+- **From the WI-784 builder:**
+  - the registry machinery reference's §10 SR approved cell omits `Delivered-With`;
+  - `SPINE_APPROVED_CELLS`' `Implements:` tag names no SR-215 row.
+- **The hook's dupes-census** warns of 5 groups over a 0 baseline (not a gate). It
+  predates this session's commits.
