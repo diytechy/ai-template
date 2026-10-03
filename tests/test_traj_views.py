@@ -1050,20 +1050,27 @@ def test_t7_every_emitted_svg_scales_to_fit(tmp_path):
 
 
 def test_t7_shrink_floor_keeps_labels_legible(tmp_path):
-    # The floor is the T4 half: pure scale-to-fit would squeeze a wide graph into
-    # 390px and shrink a 12px label past readable, so min-width pins how far the
-    # diagram may shrink. Assert the emitted ratio matches the declared constant
-    # rather than re-hardcoding it (one home for the number).
-    gt = load_script("gen_trajectory")
+    # Measure the emitted type at the emitted floor, not the implementation's
+    # formula: the first build's sub-label was below 9px even at natural size.
     make_repo(tmp_path)
     _spine_with_sns(tmp_path, 8)
     assert gen(tmp_path).returncode == 0
-    pairs = _FIT_RE.findall(html_of(tmp_path))
+    text = html_of(tmp_path)
+    tokens = dict(re.findall(r"--(n\w+):([\d.]+)px", text))
+    assert tokens.keys() == {"nlabel", "nsub", "nhead"}
+    assert float(tokens["nlabel"]) == 12
+    assert float(tokens["nsub"]) == 10.5
+    assert all(float(size) >= 9 for size in tokens.values()), tokens
+    pairs = _FIT_RE.findall(text)
     assert pairs, "vacuous - no responsive svg found"
     for natural, floor in pairs:
-        expected = int(float(natural) * gt.SHRINK_FLOOR)
-        assert abs(int(floor) - expected) <= 1, (natural, floor, expected)
-    assert 0 < gt.SHRINK_FLOOR < 1
+        natural, floor = int(natural), int(floor)
+        assert 0 < floor <= natural, (natural, floor)
+        rendered = [float(size) * floor / natural for size in tokens.values()]
+        assert min(rendered) >= 9, (tokens, natural, floor, rendered)
+        # Whole-pixel rounding may add less than one pixel of width. Removing
+        # that pixel must cross the floor, so fixed natural widths cannot pass.
+        assert min(float(size) * (floor - 1) / natural for size in tokens.values()) < 9
 
 
 # --- WI-318 / SR-054 T4: no label ink outside the block it belongs to ---------

@@ -1168,10 +1168,10 @@ phase = 3
 [test.TC-121]
 verifies = ["SR-054", "LLR-116"]
 level = "Unit"
-method = """Generate the dashboard and derive EVERY emitted <svg> from the document (not a hand list, so a fourth emitter cannot skip the rule); assert each carries the responsive style and none keeps a bare fixed width; assert the emitted min/max ratio equals the declared SHRINK_FLOOR constant."""
+method = """Generate the dashboard and derive EVERY emitted <svg> from the document (not a hand list, so a fourth emitter cannot skip the rule); assert each carries the responsive style and none keeps a bare fixed width. Read every emitted node type token; assert labels are 12 px and sub-labels 10.5 px, and every node type token is at least 9 px at natural size. For every emitted SVG, assert 0 < min-width <= natural width and every emitted node type token scaled by min-width / natural width is at least 9 px; assert reducing min-width by one pixel would put the smallest token below 9 px."""
 tier = "Full"
 parameters = "tests/test_gen_trajectory.py (8-SN fixture)"
-expected = """Every emitted svg scales to fit its container; zero svgs keep the pre-fix fixed-width shape; the shrink floor is pinned to the one declared constant rather than re-hardcoded in the test."""
+expected = """Every emitted SVG scales to fit its container; zero SVGs keep the pre-fix fixed-width shape. Every emitted node type token is at least 9 px at natural size and at the emitted minimum width, which never exceeds natural width and is the smallest whole-pixel width meeting the 9 px floor."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_t7_every_emitted_svg_scales_to_fit tests/test_traj_views.py::test_t7_shrink_floor_keeps_labels_legible"""
 status = "Approved"

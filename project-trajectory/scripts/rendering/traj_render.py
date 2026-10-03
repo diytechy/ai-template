@@ -64,14 +64,14 @@ _FOCUSABLE = re.compile(r"tabindex\s*=|<a\s[^>]*href\s*=", re.I)
 # The fix is scale-to-fit WITH A LEGIBILITY FLOOR, not unbounded scaling. Pure
 # scale-to-fit trades T7 for T4 — squeezing a 900px graph into 390px shrinks a
 # 12px label to ~5px, which is the "readable at default zoom" floor T4 forbids.
-# So the SVG scales down only to SHRINK_FLOOR of its natural width; past that it
-# stops shrinking and the container's existing scroll + `.scrollcue` affordance
-# takes over. That is the row's own rule — "keep the sideways-scroll hint only as
-# a fallback for content that genuinely cannot fit" — made mechanical, and it is
-# stated as residue rather than hidden: a view whose natural width exceeds
-# 390 / SHRINK_FLOOR still scrolls, with the cue.
+# Stop shrinking when the smallest emitted node type token reaches 9 CSS px;
+# past that width the container's existing scroll + `.scrollcue` takes over.
+# The same scale emits the CSS tokens, so the floor follows type-scale changes.
+# Round the minimum width UP: rounding down would let labels fall below 9px.
 # Implements: SR-054, LLR-116
-SHRINK_FLOOR = 0.62  # smallest fraction of natural width before scrolling resumes
+MIN_RENDERED_NODE_LABEL_PX = 9
+# Implements: SR-054, LLR-116
+NODE_TYPE_PX = {"nlabel": 12, "nsub": 10.5, "nhead": 13}
 
 
 def _svg_fit_style(width):
@@ -80,7 +80,8 @@ def _svg_fit_style(width):
 
     Implements: SR-054, LLR-116"""
     return "width:100%;max-width:{:.0f}px;min-width:{:.0f}px;height:auto".format(
-        width, width * SHRINK_FLOOR
+        width,
+        math.ceil(width * MIN_RENDERED_NODE_LABEL_PX / min(NODE_TYPE_PX.values())),
     )
 
 
@@ -173,8 +174,7 @@ def _svg_frame(width, height, body):
     outside the layout box (WI-367). The declared natural width grows with it, so a
     diagram that already fits its card renders at exactly its former scale and only
     the clipped stubs appear; one that was already scaled to fit shrinks by the pad
-    fraction (measured: the How-SW root layer 0.800 -> 0.782 CSS px per unit at
-    1680px, its 12px labels 9.60 -> 9.38px, far above the `SHRINK_FLOOR` floor)."""
+    fraction, subject to the shared rendered-label floor."""
     left, right, top, bottom = _ink_overflow(width, height, body)
     box_w, box_h = width + left + right, height + top + bottom
     return 'viewBox="{:d} {:d} {:.0f} {:.0f}" width="{:.0f}" style="{}"'.format(
