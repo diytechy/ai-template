@@ -767,7 +767,7 @@ When an **`Approved`** spine row is amended, `staged_spine_amendments` in
 |---|---|---|
 | SR | `SN-Refs`, `Boundary-Refs`, `Hat-Refs`, `Phase`, `Aspect`, `Lifecycle`, `DA-Refs` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification`, `Coincident`, `Form` |
 | LLR | `Module`, `CodeSymbol`, `TestRefs`, `Component`, `Phase`, `SR-Refs`, `Hat-Refs` | `Title`, `Detail`, `Rationale` |
-| TC | `Verifies`, `Evidence`, `Automated`, `Phase`, `Assumption-Refs` | `Method`, `Expected`, `Parameters`, `Level`, `Tier`, `Inputs`, `MaxAge`, `Sampling`, `SampleSize`, `AcceptanceRule` |
+| TC | `Verifies`, `Evidence`, `Automated`, `Phase`, `Assumption-Refs` | `Method`, `Expected`, `Parameters`, `Level`, `Tier`, `Inputs`, `MaxAge`, `Sampling`, `SampleSize`, `AcceptanceRule`, `Trigger`, `Rubric`, `MinWorkItems` |
 | SN | `Stakeholder-Refs`, `Source` | every other need cell (the residual) |
 | IF (off-spine) | `BridgedBy` | every other interface cell, `Coincident` included (the residual) |
 | DA (off-spine) | `ObstacleHats` | every other assumption cell, and every surrogate cell (the residual) |

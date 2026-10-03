@@ -6729,6 +6729,22 @@ promise an evidence level or a current-evidence release gate. With the gate
 on, review each relied-on assumption whose `standing` reads `falsified`: amend
 it, or accept the risk again in a reviewed act while it stands falsified.
 
+### The work README's owner-gate line, and the cadence cells' class [since 33bb54cd]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The work-directory README names the IF-073 owner gates as
+`requirements/open-items.toml` in a code span instead of a relative link, so a
+repo without the open-items registry no longer gets a broken-link failure from
+`check_docs` on top of the absent-registry warning. The test-case cells
+`Trigger`, `Rubric` and `MinWorkItems` are now named in the approved half of
+the cell split rather than reaching it through the residual; amending one on an
+approved case still owes a re-attest, as before.
+
+**What to do.** Re-copy `work/README.template.md` over `docs/work/README.md`
+(keeping any contract header you added above it) and re-sync
+`scripts/acceptance_record.py`. No registry cell changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

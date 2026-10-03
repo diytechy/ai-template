@@ -338,6 +338,9 @@ SPINE_TRACED_CELLS = {
 # `AcceptanceRule`, each a claim the row makes. `Delivered-With` joins the
 # approved half under LLR-222: changing which siblings jointly deliver the need
 # changes the requirement's own argument, rather than merely re-pointing trace.
+# An observation case's cadence cells `Trigger`, `Rubric` and `MinWorkItems`
+# join by name too (WI-784), keeping the residual's reading: like `MaxAge` and
+# `Inputs`, each states how the row's claim is judged or kept current.
 # Implements: SR-193, SR-194, SR-198, LLR-222, LLR-225
 SPINE_APPROVED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
@@ -369,6 +372,9 @@ SPINE_APPROVED_CELLS = {
             "Sampling",
             "SampleSize",
             "AcceptanceRule",
+            "Trigger",
+            "Rubric",
+            "MinWorkItems",
         }
     ),
 }
