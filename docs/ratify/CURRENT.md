@@ -697,18 +697,13 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
 > **Rationale.** Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did. The assumptions section realizes SN-043 at the same gate: a premise can only be shown false by someone looking for its falsifier, so the checklist puts each active approved assumption, and any with no falsifier, in front of the person signing, marked apart from the requirement checks.
 
 
-### TC TC-310 — Drafted, never approved
-_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
-- **TC-ID**: TC-310
-- **Verifies**: SR-033;LLR-296;IF-018
-- **Level**: Unit
-- **Method**: Generate release checklists from minimal registries: assert the assumptions heading and ASSUMPTION DA-id marker, falsifier and observation case id, and that an automated case naming the same assumption is not listed; include a missing-falsifier Drafted row; omit falsified and Drafted rows with falsifiers, and emit no section when every row is omitted; tolerate an absent registry without a section; assert the source registry remains byte-identical.
-- **Tier**: Smoke
-- **Expected**: Assumption confirmations are differentiable, absent-tolerant and read-only, with the ruled inclusion set.
-- **Automated**: Yes
-- **Evidence**: tests/test_release_assumptions.py
-- **Status**: Drafted
-- **Phase**: 6
+### TC TC-310, Drafted — never approved
+- **Expected**
+  - before: Assumption confirmations are differentiable, absent-tolerant and read-only, with the ruled inclusion set.
+  - after: Assumption confirmations are differentiable, absent-tolerant and read-only, with SR-033's inclusion set.
+- **Method**
+  - before: Generate release checklists from minimal registries: assert the assumptions heading and ASSUMPTION DA-id marker, falsifier and observation case id, and that an automated case naming the same assumption is not listed; include a missing-falsifier Drafted row; omit falsified and Drafted rows with falsifiers, and emit no section when every row is omitted; tolerate an absent registry without a section; assert the source registry remains byte-identical.
+  - after: Generate release checklists from fixture registries: assert the assumptions heading and ASSUMPTION DA-id marker, falsifier and observation case id, and that an automated case naming the same assumption is not listed; include a missing-falsifier Drafted row; omit falsified and Drafted rows with falsifiers, and emit no section when every row is omitted; tolerate an absent registry without a section; assert the source registry remains byte-identical.
 
 ## SR-146 — Prompts are reviewable files with a per-session audit trail
 
@@ -717,43 +712,39 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 > **Rationale.** Prose steers the sessions this loop launches and had been reviewable only by reading Python source, which makes the process trusted rather than inspectable. The audit trail is the part that makes the move useful rather than cosmetic: without a per-session digest, "which instruction did this session see" stays an inference. (The argv-vs-shell-string transport decision is design, and lives one tier down in LLR-163.) C-SEC-5 requires that content composed for dispatch to an external model runner carry a DECLARED inclusion rule rather than an implicit one — a prompt assembled inside source is an unreviewed egress path no write-side gate covers, and shipping it as a reviewable file with a digest is what makes that rule readable.
 
 
-### TC TC-309 — Drafted, never approved
-_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
-- **TC-ID**: TC-309
-- **Verifies**: LLR-295;IF-115
-- **Level**: Unit
-- **Method**: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no MaxAge refuses naming that cell; neither returns a brief.
-- **Tier**: Smoke
-- **Expected**: The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing MaxAge refuses with its reason.
-- **Automated**: Yes
-- **Evidence**: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_lifetime
-- **Status**: Drafted
-- **Phase**: 6
+### TC TC-309, Drafted — never approved
+- **Expected**
+  - before: The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing MaxAge refuses with its reason.
+  - after: The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing Method, Expected or MaxAge refuses with its reason.
+- **Method**
+  - before: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no MaxAge refuses naming that cell; neither returns a brief.
+  - after: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no Method, no Expected or no MaxAge refuses naming that cell; none returns a brief.
+- **Evidence**
+  - before: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_lifetime
+  - after: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_cell
 
 ## SR-215 — At a checkpoint, an unjudged, expired or triggered observation test is queued once for re-judging
 
 > **Requirement.** When a work item merges, a release is prepared or a stage gate is checked, the delivered harness shall file one re-judge work item per due observation case: one with no result, one whose result expired, or one whose declared trigger fires after its work-item floor; with no declared trigger, a change to its declared inputs makes it due, subject to that floor. It keeps at most one open item per case, and reports each observation case that cites no written pass criteria as a warning.
 
-> **Rationale.** Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor and the declared trigger are cost limits the owner directed (the PERFORMANCE lens): no change makes an accepted judgement due again within the configured number of closed work items of its latest record, and a declared trigger narrows which changes make it due at all, so a judgement can stand on changes it never judged until a qualifying change meets the floor or its result expires. First judgement and expiry keep missing or old evidence from standing indefinitely.
+> **Rationale.** Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor and the declared trigger are cost limits the owner directed (the PERFORMANCE lens): no change or checkpoint makes an accepted judgement due again within the configured number of closed work items of its latest record, and a declared trigger replaces input changes with the change or checkpoint it names, so a judgement can stand on changes it never judged until a qualifying change or checkpoint meets the floor or its result expires. First judgement and expiry keep missing or old evidence from standing indefinitely.
 
 
 ### SR SR-215
 - **Rationale**
   - before: Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor is a cost limit the owner directed (the PERFORMANCE lens): it lets an accepted judgement outlive changes to what it judged for at most the configured number of closed work items, while first judgement and expiry keep missing or old evidence from standing indefinitely.
-  - after: Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor and the declared trigger are cost limits the owner directed (the PERFORMANCE lens): no change makes an accepted judgement due again within the configured number of closed work items of its latest record, and a declared trigger narrows which changes make it due at all, so a judgement can stand on changes it never judged until a qualifying change meets the floor or its result expires. First judgement and expiry keep missing or old evidence from standing indefinitely.
+  - after: Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor and the declared trigger are cost limits the owner directed (the PERFORMANCE lens): no change or checkpoint makes an accepted judgement due again within the configured number of closed work items of its latest record, and a declared trigger replaces input changes with the change or checkpoint it names, so a judgement can stand on changes it never judged until a qualifying change or checkpoint meets the floor or its result expires. First judgement and expiry keep missing or old evidence from standing indefinitely.
 
-### TC TC-309 — Drafted, never approved
-_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
-- **TC-ID**: TC-309
-- **Verifies**: LLR-295;IF-115
-- **Level**: Unit
-- **Method**: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no MaxAge refuses naming that cell; neither returns a brief.
-- **Tier**: Smoke
-- **Expected**: The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing MaxAge refuses with its reason.
-- **Automated**: Yes
-- **Evidence**: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_lifetime
-- **Status**: Drafted
-- **Phase**: 6
+### TC TC-309, Drafted — never approved
+- **Expected**
+  - before: The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing MaxAge refuses with its reason.
+  - after: The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing Method, Expected or MaxAge refuses with its reason.
+- **Method**
+  - before: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no MaxAge refuses naming that cell; neither returns a brief.
+  - after: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no Method, no Expected or no MaxAge refuses naming that cell; none returns a brief.
+- **Evidence**
+  - before: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_lifetime
+  - after: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_cell
 
 ## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
 

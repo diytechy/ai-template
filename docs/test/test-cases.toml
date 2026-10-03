@@ -3133,20 +3133,20 @@ phase = 6
 [test.TC-309]
 verifies = ["LLR-295", "IF-115"]
 level = "Unit"
-method = "Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no MaxAge refuses naming that cell; neither returns a brief."
+method = "Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no Method, no Expected or no MaxAge refuses naming that cell; none returns a brief."
 tier = "Smoke"
-expected = "The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing MaxAge refuses with its reason."
+expected = "The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing Method, Expected or MaxAge refuses with its reason."
 automated = "Yes"
-evidence = "tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_lifetime"
+evidence = "tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_cell"
 status = "Drafted"
 phase = 6
 
 [test.TC-310]
 verifies = ["SR-033", "LLR-296", "IF-018"]
 level = "Unit"
-method = "Generate release checklists from minimal registries: assert the assumptions heading and ASSUMPTION DA-id marker, falsifier and observation case id, and that an automated case naming the same assumption is not listed; include a missing-falsifier Drafted row; omit falsified and Drafted rows with falsifiers, and emit no section when every row is omitted; tolerate an absent registry without a section; assert the source registry remains byte-identical."
+method = "Generate release checklists from fixture registries: assert the assumptions heading and ASSUMPTION DA-id marker, falsifier and observation case id, and that an automated case naming the same assumption is not listed; include a missing-falsifier Drafted row; omit falsified and Drafted rows with falsifiers, and emit no section when every row is omitted; tolerate an absent registry without a section; assert the source registry remains byte-identical."
 tier = "Smoke"
-expected = "Assumption confirmations are differentiable, absent-tolerant and read-only, with the ruled inclusion set."
+expected = "Assumption confirmations are differentiable, absent-tolerant and read-only, with SR-033's inclusion set."
 automated = "Yes"
 evidence = "tests/test_release_assumptions.py"
 status = "Drafted"
