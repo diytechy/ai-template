@@ -88,3 +88,8 @@ Two mint gaps surfaced; neither is filed yet:
   The next act's copy then refuses on it, and it surfaces only at that point.
 - **The re-mint trap** (S11 plan §4.2). Its landing sweep is recorded with the next
   commit.
+
+The landing sweep (`cbda7d44`) then minted **WI-785** over LLR-243 and TC-238: the
+re-mint trap, live. Both rows were byte-identical to their act-25 anchors at the
+mint. The coordinator closed WI-785 as already settled, citing the re-judgement and
+the act, without a second sitting. The S11 plan's slice 1 removes the trap.
