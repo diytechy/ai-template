@@ -159,3 +159,24 @@ must therefore fire inside 6 minutes to be safe; a 10-minute cadence is unproven
 Replay time at 212k tokens: 6 to 7 s cached, 10 to 11 s uncached. One sample each, one
 model, one box. 700k is unreachable (window 258,400); occupancy on a real multi-step
 adjudication through the kit's own session path is still owed.
+
+### What the published sources say about the codex cache TTL (looked up 2026-10-02)
+
+- OpenAI's prompt-caching guide: for GPT-5.6 and later, `prompt_cache_options.ttl` is
+  settable per request but its only supported value is `30m`, also the default: "A cached
+  prefix remains eligible for reuse for 30 minutes after its most recent write or reuse,
+  though OpenAI may retain it longer." Earlier models used `prompt_cache_retention`
+  (`in_memory`, about 5 to 10 minutes of inactivity up to an hour, or `24h`).
+- No source found shows the codex CLI exposing a TTL setting in `config.toml`, and a
+  third-party write-up (codex.danielvaughan.com, 2026-08-15) says codex sends no
+  client-side keep-alive pings. So the TTL is the provider's, not configurable in
+  practice (the one value is the default).
+- THIS BOX'S MEASUREMENT DISAGREES with a 30-minute floor: a miss after ~13.5 idle minutes
+  (above). "Eligible" is not a guarantee, and the cause is unexplained (one sample; the
+  owner's machine slept mid-gap; the resumed prefix, routing or eviction under load could
+  differ). Do not size a keep-warm cadence to 30 minutes on the docs' word; repeat the
+  probe before relying on either figure.
+- Claude Code, for comparison: its docs page and release notes describe a 5-minute
+  default with `ENABLE_PROMPT_CACHING_1H=1` selecting 1 hour (and
+  `FORCE_PROMPT_CACHING_5M=1` pinning 5 minutes); a third-party post claims the default
+  fell from 1 hour to 5 in March 2026, which I did not verify.
